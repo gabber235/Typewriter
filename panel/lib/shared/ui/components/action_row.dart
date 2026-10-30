@@ -185,18 +185,36 @@ class _ActionShortcutButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final loading = useState(false);
-    final hasInvoke = action.canInvoke && !loading.value;
+    final controller = useLoadingButtonController();
+    useListenable(controller);
+    useEffect(() {
+      final invoke = action.onInvoke;
+      controller.bind(
+        onPressed: invoke == null ? null : () => invoke(ref),
+        onError: (error) {
+          if (!context.mounted) return;
+          if (ScaffoldMessenger.maybeOf(context) != null) {
+            showErrorSnackBar(context, error);
+          }
+        },
+      );
+      return null;
+    }, [controller, action]);
+    final loading = controller.isLoading;
+    final hasInvoke = action.canInvoke && !loading;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       spacing: context.spacing.space2,
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (loading.value)
+        if (loading)
           const SizedBox.square(
             dimension: 12,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: CircularProgressIndicator(
+              semanticsLabel: "Loading",
+              strokeWidth: 2,
+            ),
           )
         else if (action.icon != null)
           action.icon!,
@@ -211,7 +229,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
 
     final pill = AnimatedOpacity(
       duration: 150.ms,
-      opacity: loading.value ? 0.7 : 1.0,
+      opacity: loading ? 0.7 : 1.0,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: DefaultTextStyle(
@@ -240,17 +258,7 @@ class _ActionShortcutButton extends HookConsumerWidget {
         message: action.description,
         child: InkWell(
           customBorder: const StadiumBorder(),
-          onTap: () async {
-            if (loading.value) return;
-            loading.value = true;
-            try {
-              await action.onInvoke!(ref);
-            } finally {
-              if (context.mounted) {
-                loading.value = false;
-              }
-            }
-          },
+          onTap: controller.handlePress,
           child: pill,
         ),
       ),

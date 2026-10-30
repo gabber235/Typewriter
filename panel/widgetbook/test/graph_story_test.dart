@@ -9,7 +9,7 @@ void main() {
   testWidgets("dragging the resize handle grows the node by whole cells", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(resizableElementUseCase))!;
+    final panel = await tester.pumpStory(resizableElementUseCase);
     expect(panel.shows("Quest 4 x 2"), isTrue);
 
     await tester.drag(
@@ -22,10 +22,10 @@ void main() {
   });
 
   testWidgets("a graph node keeps the place it is dragged to", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       graphUseCase,
       knobs: {"Content": "Simple"},
-    ))!;
+    );
     double offset() =>
         tester.getRect(find.text("Start")).top -
         tester.getRect(find.text("End")).top;

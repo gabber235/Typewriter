@@ -43,22 +43,14 @@ void main() {
       icon: skir.Icon.wrapSvg("<svg/>"),
       color: skir.Color(argb: -1),
     );
-    final published = skir.PublishedType(
-      definition: skir.TypeDefinition(
-        id: typeDefinition("example:Book", namespace: canonicalReadNamespace),
-        parameters: const [],
-        representation: skir.RepresentationTemplate.createRecord(
-          fields: const [],
-          abstract_: false,
-        ),
-        parents: const [],
+    final published = publishedType(
+      typeDefinition("example:Book", namespace: canonicalReadNamespace),
+      representation: skir.RepresentationTemplate.createRecord(
+        fields: const [],
+        abstract_: false,
       ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: const [],
-      ancestorTemplates: const [],
       display: display,
       searchKey: "book",
-      placementField: null,
     );
     final encoded = canonicalReadModels.project(
       published,

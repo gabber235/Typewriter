@@ -6,7 +6,7 @@ import "support/stories.dart";
 void main() {
   testWidgets("choosing another organization from the app bar breadcrumbs "
       "opens it", (tester) async {
-    final panel = (await tester.pumpStory(customAppBarUseCase))!;
+    final panel = await tester.pumpStory(customAppBarUseCase);
 
     await panel.tapOn(find.text("Acme").first);
     await panel.tapOn(find.text("Globex").last);

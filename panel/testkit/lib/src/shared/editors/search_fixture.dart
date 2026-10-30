@@ -1,6 +1,7 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/doubles/local_storage.dart";
 import "package:typewriter_testkit/src/doubles/search_history.dart";
 import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
@@ -104,7 +105,7 @@ final class SearchControlScenario {
         },
         catalogGeneration: generation,
       ),
-      control: skir.SearchControl(
+      control: searchControl(
         control: skir.BoundControl(
           binding: skir.BindingRef(
             bindingId: targetBinding,
@@ -115,27 +116,11 @@ final class SearchControlScenario {
           prefix: null,
           semanticLabel: null,
         ),
-        selectionMode: multiple
-            ? skir.SearchSelectionMode.multiple
-            : skir.SearchSelectionMode.single,
+        provider: selectedProvider,
         queryBinding: declareNamedBinding("query", textTemplate),
         summaryBinding: declareNamedBinding("summary", textTemplate),
-        maximumExtent: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapInteger("320"),
-        ),
-        provider: selectedProvider,
-        summary: null,
-        placeholder: null,
-        customValue: null,
-        initialQuery: null,
-        appearance: null,
-        content: null,
-        popup: null,
-        popupSide: null,
-        emptyText: null,
-        loadingText: null,
-        empty: null,
-        loading: null,
+        maximumExtent: 320,
+        multiple: multiple,
       ),
       storage: historyStorage ?? MemorySearchHistory(),
       historyNamespace: historyNamespace,
@@ -377,3 +362,19 @@ SearchResult customSearchResult(String id, skir.DataValue value) =>
         query: SearchQueryContext.empty,
       ),
     );
+
+/// Search history kept in [storage], reading values through [catalog] or
+/// else the test catalog.
+PortableLocalSearchHistoryStorage historyStorage(
+  FakeLocalStorage storage, {
+  CheckedEditorCatalog? catalog,
+}) => PortableLocalSearchHistoryStorage(
+  catalog: catalog ?? testCheckedCatalog(),
+  storage: storage,
+);
+
+/// One mapped result per id in [ids], each holding its id as text.
+List<SearchResult> mappedTextResults(List<String> ids) => [
+  for (final id in ids)
+    mappedSearchResult(id, skir.DataValue.wrapStringValue(id)),
+];

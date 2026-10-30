@@ -109,17 +109,19 @@ class PortableDiagnosticFrame extends HookWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            LabeledMessage(
-              label: label,
-              message: description,
-              labelStyle:
-                  style?.labelStyle.copyWith(
-                    color: authoredLabelColor
-                        ? style.labelStyle.color
-                        : color ?? style.labelStyle.color,
-                  ) ??
-                  context.theme.textTheme.labelLarge?.copyWith(color: color),
-              messageStyle: style?.descriptionStyle,
+            ExcludeSemantics(
+              child: LabeledMessage(
+                label: label,
+                message: description,
+                labelStyle:
+                    style?.labelStyle.copyWith(
+                      color: authoredLabelColor
+                          ? style.labelStyle.color
+                          : color ?? style.labelStyle.color,
+                    ) ??
+                    context.theme.textTheme.labelLarge?.copyWith(color: color),
+                messageStyle: style?.descriptionStyle,
+              ),
             ),
             if (hasLabel) const SizedBox(height: 6),
             AnimatedContainer(

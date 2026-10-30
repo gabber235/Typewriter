@@ -13,8 +13,7 @@ void main() {
   test(
     "detached save waits for its reservation before reading and capturing",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       var reads = 0;
       final resource = ScriptedValuePersistence(
         key: _key,
@@ -47,8 +46,7 @@ void main() {
   );
 
   test("refresh conflicts preserve the draft and prevent sending", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     final reports = captureFlutterErrors();
     var sends = 0;
     final resource = ScriptedValuePersistence(
@@ -74,8 +72,7 @@ void main() {
   test(
     "refresh failure releases the reservation and retains a retryable draft",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       var reads = 0;
       final resource = ScriptedValuePersistence(
         key: _key,
@@ -97,8 +94,7 @@ void main() {
   );
 
   test("confirmed deletion blocks submission", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     final reports = captureFlutterErrors();
     var sends = 0;
     final resource = ScriptedValuePersistence(
@@ -151,8 +147,7 @@ void main() {
   test(
     "uncertain delivery retains the reservation and replays without refresh",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       final resource = UncertainSaveResource(
         key: _key,
         current: savedTitleSnapshot(),
@@ -179,8 +174,7 @@ void main() {
   );
 
   test("concurrent flushes share one refresh and submission", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     final ready = Completer<EditorSnapshot?>();
     var reads = 0;
     var sends = 0;

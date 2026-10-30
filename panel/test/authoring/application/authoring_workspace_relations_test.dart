@@ -8,10 +8,8 @@ void main() {
   test(
     "deleting an owner removes the complete cascade from working queries",
     () async {
-      final workspace = await testWorld([
-        signedIn(ada, organization: acme),
-        realmServing(_document),
-      ]).openRealmEditing();
+      final workspace = await testWorld(adaServing(_document))
+          .openRealmEditing();
       final result = workspace.edit(
         label: "Delete book",
         policy: EditorCommitPolicy.applyResource,
@@ -91,10 +89,8 @@ void main() {
       final document = original.copyWith(
         catalog: CheckedEditorCatalog(changed.toFrozen()),
       );
-      final workspace = await testWorld([
-        signedIn(ada, organization: acme),
-        realmServing(document),
-      ]).openRealmEditing();
+      final workspace = await testWorld(adaServing(document))
+          .openRealmEditing();
       final before = workspace.document;
       final result = workspace.edit(
         label: "Invalid batch",
@@ -115,10 +111,7 @@ void main() {
 
   test("invalid relation locations reject their whole operation", () async {
     final document = _document;
-    final workspace = await testWorld([
-      signedIn(ada, organization: acme),
-      realmServing(document),
-    ]).openRealmEditing();
+    final workspace = await testWorld(adaServing(document)).openRealmEditing();
     final before = workspace.document;
     final result = workspace.edit(
       label: "Invalid connection",
@@ -146,10 +139,7 @@ void main() {
   });
   test("missing relation targets reject a prepared batch", () async {
     final document = _document;
-    final workspace = await testWorld([
-      signedIn(ada, organization: acme),
-      realmServing(document),
-    ]).openRealmEditing();
+    final workspace = await testWorld(adaServing(document)).openRealmEditing();
     final before = workspace.document;
     final missing = skir.ResourceId(value: "missing");
     final result = workspace.edit(

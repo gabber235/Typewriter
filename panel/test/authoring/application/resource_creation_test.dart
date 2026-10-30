@@ -19,8 +19,7 @@ void main() {
       "findings and saves it in its single store", (tester) async {
     final reply = Completer<void>();
     final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(saved),
+      ...adaServing(saved),
       heldPreparations(reply.future, findings: [detail]),
     ]);
 
@@ -75,8 +74,7 @@ void main() {
     ) async {
       final reply = Completer<void>();
       final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(saved),
+        ...adaServing(saved),
         heldPreparations(reply.future, findings: [detail]),
       ]);
 
@@ -97,8 +95,7 @@ void main() {
       "preparation", (tester) async {
     final reply = Completer<void>();
     final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(saved),
+      ...adaServing(saved),
       heldPreparations(reply.future, findings: [detail]),
     ]);
     final realm = panel.world.requireRealm;
@@ -116,8 +113,7 @@ void main() {
       "starts", (tester) async {
     final reply = Completer<void>()..complete();
     final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(saved),
+      ...adaServing(saved),
       heldPreparations(reply.future, findings: [detail]),
     ]);
     final realm = panel.world.requireRealm;

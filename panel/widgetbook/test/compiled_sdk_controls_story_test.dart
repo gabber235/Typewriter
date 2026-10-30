@@ -10,10 +10,10 @@ void main() {
     testWidgets("a $width wide Book inspector offers Iconify and SVG icons", (
       tester,
     ) async {
-      final panel = (await tester.pumpStory(
+      final panel = await tester.pumpStory(
         compiledBookUseCase,
         knobs: {"Inspector width": width},
-      ))!;
+      );
 
       expect(panel.shows("Iconify"), isTrue);
       expect(panel.shows("SVG"), isTrue);
@@ -21,12 +21,13 @@ void main() {
     });
   }
 
-  testWidgets("searching icons chooses the one the user picks", (
-    tester,
-  ) async {
-    final panel = (await tester.pumpStory(compiledBookUseCase))!;
+  testWidgets("searching icons chooses the one the user picks", (tester) async {
+    final panel = await tester.pumpStory(compiledBookUseCase);
 
-    await _choose(tester, panel, "mdi:account");
+    await tester.tapInStory(
+      find.byKey(const ValueKey("authored_search_summary")),
+    );
+    await tester.tapInStory(find.text("mdi:account").last);
 
     expect(panel.shows("mdi:account"), isTrue);
   });
@@ -34,10 +35,15 @@ void main() {
   testWidgets("Escape closes the icon search and keeps the chosen icon", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(compiledBookUseCase))!;
-    await _choose(tester, panel, "mdi:home");
+    final panel = await tester.pumpStory(compiledBookUseCase);
+    await tester.tapInStory(
+      find.byKey(const ValueKey("authored_search_summary")),
+    );
+    await tester.tapInStory(find.text("mdi:home").last);
 
-    await _openSearch(tester, panel);
+    await tester.tapInStory(
+      find.byKey(const ValueKey("authored_search_summary")),
+    );
     await panel.press(LogicalKeyboardKey.arrowDown);
     await panel.press(LogicalKeyboardKey.escape);
 
@@ -45,8 +51,9 @@ void main() {
   });
 
   testWidgets("an SVG icon takes its source as text", (tester) async {
-    final panel = (await tester.pumpStory(compiledBookUseCase))!;
-    const svg = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>';
+    final panel = await tester.pumpStory(compiledBookUseCase);
+    const svg =
+        '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>';
 
     await panel.tapOn(find.text("SVG"));
     final source = panel.fieldAt(visibleFieldValues().length - 1);
@@ -58,10 +65,10 @@ void main() {
 
   testWidgets("a Placement lays X and Y out side by side and keeps an exact "
       "write", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       compiledPlacementUseCase,
       knobs: {"Placement width": "340"},
-    ))!;
+    );
     final x = panel.field("X");
     final y = panel.field("Y");
     expect(x.rect.width, closeTo(y.rect.width, 0.01));
@@ -75,32 +82,14 @@ void main() {
   });
 
   testWidgets("a Tag edits its nested Placement once", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       compiledTagUseCase,
       knobs: {"Tag width": "340"},
-    ))!;
+    );
 
     await panel.field("Y").enter("13");
 
     expect(panel.field("Y").value, "13");
     expect(panel.field("X").value, "0");
   });
-}
-
-Future<void> _openSearch(WidgetTester tester, PanelDriver panel) async {
-  final summary = find.byKey(const ValueKey("authored_search_summary"));
-  await tester.ensureVisible(summary);
-  await panel.tapOn(summary);
-  await tester.runStory();
-}
-
-Future<void> _choose(
-  WidgetTester tester,
-  PanelDriver panel,
-  String icon,
-) async {
-  await _openSearch(tester, panel);
-  await tester.ensureVisible(find.text(icon).last);
-  await panel.tapOn(find.text(icon).last);
-  await tester.runStory();
 }

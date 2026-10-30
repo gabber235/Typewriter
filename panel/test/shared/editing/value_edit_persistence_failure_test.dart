@@ -12,8 +12,7 @@ final _title = editorRootPath.field("title");
 
 void main() {
   test("validation diagnostics survive preparation without a commit", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     const diagnostic = EditorDiagnostic(
       code: EditorDiagnosticCode.invalidValue,
       message: "The resource is invalid",
@@ -35,9 +34,7 @@ void main() {
       snapshot: snapshot,
       commitPolicy: EditorCommitPolicy.applyResource,
     ).acquire(workspace);
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
-    );
+    holdValueLease(workspace, _key);
     source.update(_title, skir.DataValue.wrapStringValue("Draft"));
 
     final result = await source.flush();
@@ -49,8 +46,7 @@ void main() {
   test(
     "unexpected preparation failure reports cause and sanitizes result",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       final cause = StateError("private preparation detail");
       final reports = <FlutterErrorDetails>[];
       final previousErrorHandler = FlutterError.onError;

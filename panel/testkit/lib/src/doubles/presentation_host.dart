@@ -214,3 +214,18 @@ final class FakePresentationHost extends ChangeNotifier
     return actionResult;
   }
 }
+
+/// A host that shows [root] over [bindings], expects writes of [expected]
+/// and applies each write to its document, refusing every one when
+/// [rejectWrites].
+FakePresentationHost documentHost(
+  skir.PresentationNode root, {
+  required Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings,
+  skir.TypeUse? expected,
+  bool rejectWrites = false,
+}) => FakePresentationHost(
+  document: FakePresentationHost.emptyDocument(root: root, bindings: bindings),
+  expected: expected,
+  updatesDocument: true,
+  rejectWrites: rejectWrites,
+);

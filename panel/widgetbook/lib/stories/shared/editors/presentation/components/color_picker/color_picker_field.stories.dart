@@ -27,18 +27,8 @@ Widget colorPickerFieldUseCase(BuildContext context) => Story(
         label: "Show format selector",
         initialValue: true,
       ),
-      mixed: context.knobs.boolean(
-        label: "Mixed selection",
-        initialValue: false,
-      ),
-      enabled: context.knobs.boolean(label: "Enabled", initialValue: true),
-      readOnly: context.knobs.boolean(label: "Read only", initialValue: false),
-      width: context.knobs.double.slider(
-        label: "Field width",
-        initialValue: 420,
-        min: 260,
-        max: 640,
-      ),
+      mixed: context.knobs.boolean(label: "Mixed selection"),
+      field: context.knobs.field(),
     ),
   ),
 );
@@ -52,9 +42,7 @@ class ColorPickerFieldStory extends HookWidget {
     this.showSwatch = true,
     this.showFormatSelector = true,
     this.mixed = false,
-    this.enabled = true,
-    this.readOnly = false,
-    this.width = 420,
+    this.field = const FieldKnobs(),
     super.key,
   });
 
@@ -63,9 +51,7 @@ class ColorPickerFieldStory extends HookWidget {
   final bool showSwatch;
   final bool showFormatSelector;
   final bool mixed;
-  final bool enabled;
-  final bool readOnly;
-  final double width;
+  final FieldKnobs field;
 
   static const _offeredSwatches = [0xFFE74C3C, 0xFF3498DB, 0xFF2ECC71];
 
@@ -85,22 +71,21 @@ class ColorPickerFieldStory extends HookWidget {
     }
 
     return SizedBox(
-      width: width,
+      width: field.width,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
           const Text("Tag color"),
+          // A mixed selection shows no value until the user edits it; the
+          // display knobs shape the field once it holds a value.
           if (showsMixed)
             ColorPickerField.mixed(
               includeAlpha: includeAlpha,
-              editingFormat: editingFormat,
-              showSwatch: showSwatch,
-              showFormatSelector: showFormatSelector,
               offeredSwatches: _offeredSwatches,
-              enabled: enabled,
-              readOnly: readOnly,
+              enabled: field.enabled,
+              readOnly: field.readOnly,
               onChanged: changed,
               onCleared: cleared,
             )
@@ -112,8 +97,8 @@ class ColorPickerFieldStory extends HookWidget {
               showSwatch: showSwatch,
               showFormatSelector: showFormatSelector,
               offeredSwatches: _offeredSwatches,
-              enabled: enabled,
-              readOnly: readOnly,
+              enabled: field.enabled,
+              readOnly: field.readOnly,
               onChanged: changed,
               onCleared: cleared,
             ),

@@ -8,7 +8,7 @@ import "support/stories.dart";
 void main() {
   testWidgets("a quest title enters editing with Enter and keeps its text "
       "after Escape", (tester) async {
-    final panel = (await tester.pumpStory(inputFieldContainerUseCase))!;
+    final panel = await tester.pumpStory(inputFieldContainerUseCase);
     final title = panel.fieldAt(0);
 
     await panel.press(LogicalKeyboardKey.tab);
@@ -23,7 +23,7 @@ void main() {
 
   testWidgets("a respawn delay explains invalid drafts and accepts a valid "
       "one", (tester) async {
-    final panel = (await tester.pumpStory(validatedTextFieldUseCase))!;
+    final panel = await tester.pumpStory(validatedTextFieldUseCase);
     final delay = panel.fieldAt(0);
     expect(delay.value, "30");
 
@@ -42,10 +42,10 @@ void main() {
   testWidgets("a mixed respawn delay takes the first valid edit", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       validatedTextFieldUseCase,
       knobs: {"Mixed selection": "true"},
-    ))!;
+    );
     final delay = panel.fieldAt(0);
     expect(delay.value, isNot("30"));
 

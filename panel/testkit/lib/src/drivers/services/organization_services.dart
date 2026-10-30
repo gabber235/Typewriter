@@ -1,7 +1,10 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/core/eventually.dart";
+import "package:typewriter_testkit/src/core/test_world.dart";
 import "package:typewriter_testkit/src/core/world.dart";
+import "package:typewriter_testkit/src/traits/services/services_backend.dart";
 
 /// The services of one organization as the panel's application layer sees
 /// them: the commands its editors and pages send and the services its
@@ -84,11 +87,33 @@ final class OrganizationServices {
     ),
   );
 
+  /// Keeps the organization's topology watched for the rest of the test and
+  /// returns the first topology it lists.
+  Future<skir.OrganizationTopologySnapshot> watchTopology() {
+    final topology = organizationTopologyControllerProvider(organization);
+    world.container.listen(topology, (_, _) {});
+    return world.container.read(topology.future);
+  }
+
   /// Keeps the organization's services projection watched for the rest of
   /// the test and returns the first services it lists.
   Future<List<skir.Service>> watch() {
     world.container.listen(_projection, (_, _) {});
     return world.container.read(_projection.future);
+  }
+
+  /// Announces [change] to the organization's services and returns the
+  /// services the watched projection lists once they satisfy [reached].
+  Future<List<skir.Service>> announce(
+    skir.OrganizationServicesChanged change,
+    bool Function(List<skir.Service> services) reached,
+  ) async {
+    world.nats.announceServices(organization, change);
+    return (await world.container.eventually(
+      _projection,
+      (value) => value.hasValue && reached(value.requireValue),
+      description: "the announced services",
+    )).requireValue;
   }
 
   /// The services the organization's projection lists once the changes
@@ -107,4 +132,15 @@ extension OrganizationServicesOfWorld on World {
   /// The services of [organization].
   OrganizationServices servicesOf(skir.RecordId organization) =>
       OrganizationServices(this, organization);
+
+  /// The services of [organization] once the world started, watched for the
+  /// rest of the test.
+  Future<OrganizationServices> watchedServicesOf(
+    skir.RecordId organization,
+  ) async {
+    await initialized();
+    final services = servicesOf(organization);
+    await services.watch();
+    return services;
+  }
 }

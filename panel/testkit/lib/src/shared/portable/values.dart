@@ -42,3 +42,13 @@ skir.DataValue namedRecord(
   actualType: type,
   payload: skir.DataValue.createRecord(fields: fields),
 );
+
+/// A record value of the named type [type] whose fields are [fields], in
+/// order.
+skir.DataValue namedRecordOf(
+  skir.NamedTypeUse type,
+  Map<String, skir.DataValue> fields,
+) => namedRecord(type, [
+  for (final MapEntry(:key, :value) in fields.entries)
+    skir.FieldValue(name: key, value: value),
+]);

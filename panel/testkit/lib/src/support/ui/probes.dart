@@ -134,3 +134,38 @@ extension Dragging on ComponentDriver {
     await settle();
   }
 }
+
+/// An 800 by 600 viewport labeled "Viewport" scrolling, in [reverse] when
+/// asked, a centered group of [slivers] followed by the [trailing] slivers.
+final class CenteredScrollStage extends StatelessWidget {
+  /// A stage centering [slivers] before [trailing].
+  const CenteredScrollStage({
+    required this.slivers,
+    this.trailing = const [],
+    this.reverse = false,
+    super.key,
+  });
+
+  /// The slivers the group centers.
+  final List<Widget> slivers;
+
+  /// The slivers after the centered group.
+  final List<Widget> trailing;
+
+  /// Whether the viewport scrolls in reverse.
+  final bool reverse;
+
+  @override
+  Widget build(BuildContext context) => LabeledBox(
+    "Viewport",
+    width: 800,
+    height: 600,
+    child: CustomScrollView(
+      reverse: reverse,
+      slivers: [
+        CenteredSliverMainAxisGroup(slivers: slivers),
+        ...trailing,
+      ],
+    ),
+  );
+}

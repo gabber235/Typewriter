@@ -4,17 +4,7 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("equal zooms in", (tester) async {
-    final focus = testFocusNode("Node");
-    final panel = await tester.pumpGraph(
-      Graph(
-        data: GraphData(
-          cellSize: 50,
-          elements: [graphNode("Node", focusNode: focus)],
-          edges: const [],
-        ),
-      ),
-    );
-    await panel.requestFocus(focus);
+    final panel = await tester.pumpFocusedNode("Node");
     expect(panel.graph.rectOf("Node").width / 100, closeTo(1, 1e-6));
 
     await panel.press(LogicalKeyboardKey.equal);
@@ -23,17 +13,7 @@ void main() {
   });
 
   testWidgets("minus zooms out", (tester) async {
-    final focus = testFocusNode("Node");
-    final panel = await tester.pumpGraph(
-      Graph(
-        data: GraphData(
-          cellSize: 50,
-          elements: [graphNode("Node", focusNode: focus)],
-          edges: const [],
-        ),
-      ),
-    );
-    await panel.requestFocus(focus);
+    final panel = await tester.pumpFocusedNode("Node");
 
     await panel.press(LogicalKeyboardKey.minus);
 
@@ -41,17 +21,7 @@ void main() {
   });
 
   testWidgets("digit 0 resets the zoom", (tester) async {
-    final focus = testFocusNode("Node");
-    final panel = await tester.pumpGraph(
-      Graph(
-        data: GraphData(
-          cellSize: 50,
-          elements: [graphNode("Node", focusNode: focus)],
-          edges: const [],
-        ),
-      ),
-    );
-    await panel.requestFocus(focus);
+    final panel = await tester.pumpFocusedNode("Node");
     await panel.press(LogicalKeyboardKey.equal);
     expect(panel.graph.rectOf("Node").width / 100, greaterThan(1));
 

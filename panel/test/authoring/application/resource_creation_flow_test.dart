@@ -10,10 +10,9 @@ void main() {
     (tester) async {
       final fixture = ResourceCreationFixture.library();
       final page = fixture.request("Page");
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.libraryDocument()),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(fixture.libraryDocument()),
+      );
 
       final creation = await panel.create(page);
       await panel.search.result("Create Book").tap();
@@ -36,10 +35,9 @@ void main() {
     (tester) async {
       final fixture = ResourceCreationFixture.library();
       final book = fixture.request("Book");
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.libraryDocument()),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(fixture.libraryDocument()),
+      );
       final realm = panel.world.requireRealm;
       // A nullable back reference prepares as null instead of asking.
       realm.answerPrepareStep = (step) async => switch (realm.document
@@ -81,10 +79,9 @@ void main() {
       final fixture = ResourceCreationFixture();
       final other = skir.ResourceId(value: "store:other");
       final book = fixture.request("Book");
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.withStores(fixture.document(), [other])),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(fixture.withStores(fixture.document(), [other])),
+      );
 
       final creation = await panel.create(book);
       expect(panel.search.result(other.value).isShown, isTrue);
@@ -103,10 +100,7 @@ void main() {
       final other = skir.ResourceId(value: "store:other");
       final book = fixture.request("Book");
       final document = fixture.withStores(fixture.document(), [other]);
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(document),
-      ]);
+      final panel = await tester.pumpPanel(adaServing(document));
 
       final creation = await panel.create(
         book,
@@ -131,10 +125,9 @@ void main() {
     (tester) async {
       final fixture = ResourceCreationFixture();
       final entry = fixture.request("Entry");
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.document(existing: true)),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(fixture.document(existing: true)),
+      );
 
       final creation = await panel.create(
         entry,
@@ -170,10 +163,7 @@ void main() {
           )
           .member
           .id;
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(document),
-      ]);
+      final panel = await tester.pumpPanel(adaServing(document));
 
       final creation = await panel.create(
         page,
@@ -207,10 +197,7 @@ void main() {
   ) async {
     final fixture = ResourceCreationFixture();
     final entry = fixture.request("Entry");
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.document()),
-    ]);
+    final panel = await tester.pumpPanel(adaServing(fixture.document()));
 
     final creation = await panel.create(entry);
     await panel.search.result("Create Page").tap();
@@ -242,10 +229,7 @@ void main() {
     "Escape during nested Book selection leaves no admitted resources",
     (tester) async {
       final fixture = ResourceCreationFixture();
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.document()),
-      ]);
+      final panel = await tester.pumpPanel(adaServing(fixture.document()));
 
       final creation = await panel.create(fixture.request("Entry"));
       await panel.search.result("Create Page").tap();
@@ -265,10 +249,9 @@ void main() {
   testWidgets("the keyboard reaches Back from the query of a nested choice "
       "and returns to the parent choice with its query", (tester) async {
     final fixture = ResourceCreationFixture();
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.document(existing: true)),
-    ]);
+    final panel = await tester.pumpPanel(
+      adaServing(fixture.document(existing: true)),
+    );
 
     await panel.create(fixture.request("Entry"));
     await panel.queryBar.type("Page");
@@ -293,10 +276,9 @@ void main() {
     (tester) async {
       final fixture = ResourceCreationFixture();
       final entry = fixture.request("Entry");
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.document(existing: true)),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(fixture.document(existing: true)),
+      );
 
       final creation = await panel.create(entry);
       await panel.search.result("Create Page").tap();
@@ -317,10 +299,7 @@ void main() {
   ) async {
     final fixture = ResourceCreationFixture();
     final report = fixture.request("Report");
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.document()),
-    ]);
+    final panel = await tester.pumpPanel(adaServing(fixture.document()));
 
     final creation = await panel.create(report);
     await panel.search.result("Create Book").tap();
@@ -338,10 +317,7 @@ void main() {
   ) async {
     final fixture = ResourceCreationFixture();
     final a = fixture.request("A");
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.document()),
-    ]);
+    final panel = await tester.pumpPanel(adaServing(fixture.document()));
 
     final creation = await panel.create(a);
     await panel.search.result("Create B").tap();
@@ -358,10 +334,7 @@ void main() {
     (tester) async {
       final fixture = ResourceCreationFixture(abstractReport: true);
       final report = fixture.request("Report");
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.document()),
-      ]);
+      final panel = await tester.pumpPanel(adaServing(fixture.document()));
 
       final creation = await panel.create(report);
       await panel.search.result("EmailDelivery").tap();

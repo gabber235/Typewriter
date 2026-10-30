@@ -135,10 +135,7 @@ final compiledBookResource = skir.ResourceId(value: "book:compiled.controls");
 /// Inspects [resource] of a Realm holding only it, saving through the same
 /// [RealmEditing] path a Realm surface uses.
 class _CompiledInspector extends HookWidget {
-  const _CompiledInspector({
-    required this.resource,
-    required this.record,
-  });
+  const _CompiledInspector({required this.resource, required this.record});
 
   final skir.ResourceId resource;
   final skir.AuthoringRecord record;

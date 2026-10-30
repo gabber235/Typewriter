@@ -1,4 +1,7 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/authoring/application/application.dart";
 import "package:typewriter_testkit/src/authoring/realm_world.dart";
 import "package:typewriter_testkit/src/drivers/authoring/surface_driver.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
@@ -12,6 +15,67 @@ extension EditingDrivers on PanelDriver {
     await settle();
     return editing;
   }
+
+  /// Shows the inspection of [fixture]'s resource for [role] above the
+  /// surface, editing it through the panel's editing under [policy], and
+  /// returns that editing.
+  Future<RealmEditing> inspectDraft(
+    AuthoredDraft fixture, {
+    EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
+    skir.PresentationRole role = skir.PresentationRole.inspector,
+  }) async {
+    final editing = await openEditing();
+    editing.form(fixture.draft.resources.keys.first, policy: policy);
+    await showAbove(
+      Scaffold(
+        body: AuthoredResourceInspection(
+          resource: fixture.resource,
+          workspace: editing,
+          commands: world.requireRealm.commands,
+          role: role,
+          commitPolicy: policy,
+        ),
+      ),
+    );
+    return editing;
+  }
+
+  /// Shows the inspector editor of [fixture]'s resource above the surface,
+  /// with a budget no test content exhausts, and returns the form it edits.
+  Future<RealmEditingBinding> editDraft(AuthoredDraft fixture) async {
+    final binding = (await openEditing()).form(fixture.resource);
+    await showAbove(
+      Scaffold(
+        body: AuthoredResourceEditor(
+          resource: fixture.resource,
+          document: binding.document,
+          edit: binding,
+          role: skir.PresentationRole.inspector,
+          budget: skir.EvaluationBudget(
+            maxSteps: 10000,
+            maxCollectionItems: 10000,
+          ),
+        ),
+      ),
+    );
+    return binding;
+  }
+
+  /// Shows [resource] of [document] in a workspace editor that cannot edit,
+  /// above the surface, with a small evaluation budget.
+  Future<void> showDocumentEditor(
+    skir.ResourceId resource,
+    AuthoringDocument document,
+  ) => showAbove(
+    Scaffold(
+      body: AuthoredResourceEditor(
+        resource: resource,
+        document: document,
+        role: skir.PresentationRole.workspace,
+        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+      ),
+    ),
+  );
 
   /// Closes the component [AboveSurfaceDrivers.showAbove] showed last, the
   /// way closing a pane unmounts it, and leaves the Realm open.

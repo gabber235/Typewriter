@@ -579,19 +579,9 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
       nodeId: "library.$kind.${reference.path.segments.single}",
       properties: skir.PresentationProperties.defaultInstance,
       header: null,
-      element: skir.PresentationElement.createTextInput(
-        control: skir.BoundControl(
-          binding: reference,
-          label: _literal(kind == "book" ? "title" : "name"),
-          description: null,
-          prefix: null,
-          semanticLabel: null,
-        ),
-        appearance: null,
-        content: null,
-        entry: null,
-        mappings: null,
-        options: skir.TextEditingOptions.defaultInstance,
+      element: textInputElement(
+        reference,
+        label: kind == "book" ? "title" : "name",
       ),
     );
     final label = skir.PresentationNode(
@@ -763,9 +753,8 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
     ),
   );
   return CheckedEditorCatalog(
-    skir.EditorCatalog(
+    testCatalogSnapshot(
       resourceDisplays: _libraryDisplays,
-      resourceOperations: const [],
       generation:
           generation ??
           skir.CatalogGeneration(value: realmFixtureGeneration.value),
@@ -774,12 +763,7 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
       realmRoot: _definition("realm"),
       presentations: descriptors,
       presentationMaterials: materials,
-      configuration: const [],
-      diagnostics: const [],
       endpointBindings: bindings,
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     ),
   );
 }
@@ -887,20 +871,12 @@ skir.PublishedType _published(
   Map<String, skir.TypeTemplate> fields = const {},
   List<String> ancestors = const [],
   String? searchKey,
-}) => skir.PublishedType(
-  searchKey: searchKey,
-  placementField: fields.containsKey("placement")
-      ? editorRootPath.field("placement")
-      : null,
-  definition: skir.TypeDefinition(
-    id: _definition(name),
-    parameters: const [],
-    representation: representation,
-    parents: [for (final ancestor in ancestors) _namedTemplate(ancestor)],
-  ),
-  display: defaultTypeDisplay(""),
-  status: skir.DeclarationStatus.ready,
-  effectiveFields: [
+}) => publishedType(
+  _definition(name),
+  representation: representation,
+  parents: [for (final ancestor in ancestors) _namedTemplate(ancestor)],
+  ancestors: [for (final ancestor in ancestors) _namedTemplate(ancestor)],
+  fields: [
     for (final field in fields.entries)
       skir.EffectiveFieldTemplate(
         key: field.key,
@@ -909,9 +885,10 @@ skir.PublishedType _published(
         rules: const [],
       ),
   ],
-  ancestorTemplates: [
-    for (final ancestor in ancestors) _namedTemplate(ancestor),
-  ],
+  searchKey: searchKey,
+  placementField: fields.containsKey("placement")
+      ? editorRootPath.field("placement")
+      : null,
 );
 
 /// The saved document of a Realm whose [book] owns the page `page:[id]`,

@@ -303,29 +303,21 @@ final _document = realmDocument(
     (libraryCatalog().snapshot.toMutable()
           ..types = [
             ...libraryCatalog().snapshot.types,
-            skir.PublishedType(
-              searchKey: null,
-              placementField: null,
-              display: defaultTypeDisplay(""),
-              status: skir.DeclarationStatus.ready,
-              definition: skir.TypeDefinition(
-                id: _inputType,
-                parameters: const [],
-                parents: const [],
-                representation: skir.RepresentationTemplate.createRecord(
-                  abstract_: false,
-                  fields: [
-                    for (final (owner, type) in _inputFields)
-                      skir.FieldDeclaration(
-                        owner: owner,
-                        type: type,
-                        overrides: const [],
-                        hasConstructorDefault: false,
-                      ),
-                  ],
-                ),
+            publishedType(
+              _inputType,
+              representation: skir.RepresentationTemplate.createRecord(
+                abstract_: false,
+                fields: [
+                  for (final (owner, type) in _inputFields)
+                    skir.FieldDeclaration(
+                      owner: owner,
+                      type: type,
+                      overrides: const [],
+                      hasConstructorDefault: false,
+                    ),
+                ],
               ),
-              effectiveFields: [
+              fields: [
                 for (final (owner, type) in _inputFields)
                   skir.EffectiveFieldTemplate(
                     key: owner.name,
@@ -334,7 +326,6 @@ final _document = realmDocument(
                     rules: const [],
                   ),
               ],
-              ancestorTemplates: const [],
             ),
           ]
           ..capabilities = [

@@ -97,6 +97,7 @@ class _Loading extends HookWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Typewriter",
+      debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
@@ -114,6 +115,7 @@ class _Error extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Typewriter",
+      debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),

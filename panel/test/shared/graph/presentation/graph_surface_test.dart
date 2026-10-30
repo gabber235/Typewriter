@@ -94,112 +94,25 @@ void main() {
   testWidgets("a reordered node keeps its state; a removed node drops it", (
     tester,
   ) async {
-    var nextToken = 0;
-    final disposed = <String>[];
-
-    final data = ValueNotifier(
-      GraphData(
-        cellSize: 50,
-        elements: [
-          graphNode(
-            "a",
-            priority: 0,
-            body: GraphIdentityProbe(
-              id: "a",
-              token: ++nextToken,
-              onDispose: disposed.add,
-            ),
-          ),
-          graphNode(
-            "b",
-            priority: 1,
-            body: GraphIdentityProbe(
-              id: "b",
-              token: ++nextToken,
-              onDispose: disposed.add,
-            ),
-          ),
-        ],
-        edges: const [],
-      ),
-    );
+    final probes = GraphIdentityProbes();
+    final data = ValueNotifier(probes.graph(["a", "b"]));
     addTearDown(data.dispose);
     await tester.pumpGraphData(data);
     expect(find.text("a:1"), findsOneWidget);
     expect(find.text("b:2"), findsOneWidget);
 
-    data.value = GraphData(
-      cellSize: 50,
-      elements: [
-        graphNode(
-          "b",
-          priority: 0,
-          body: GraphIdentityProbe(
-            id: "b",
-            token: ++nextToken,
-            onDispose: disposed.add,
-          ),
-        ),
-        graphNode(
-          "a",
-          priority: 1,
-          body: GraphIdentityProbe(
-            id: "a",
-            token: ++nextToken,
-            onDispose: disposed.add,
-          ),
-        ),
-      ],
-      edges: const [],
-    );
+    data.value = probes.graph(["b", "a"]);
     await tester.pump();
     expect(find.text("a:1"), findsOneWidget);
     expect(find.text("b:2"), findsOneWidget);
-    expect(disposed, isEmpty);
+    expect(probes.disposed, isEmpty);
 
-    data.value = GraphData(
-      cellSize: 50,
-      elements: [
-        graphNode(
-          "a",
-          priority: 0,
-          body: GraphIdentityProbe(
-            id: "a",
-            token: ++nextToken,
-            onDispose: disposed.add,
-          ),
-        ),
-      ],
-      edges: const [],
-    );
+    data.value = probes.graph(["a"]);
     await tester.pump();
     expect(find.text("a:1"), findsOneWidget);
-    expect(disposed, ["b"]);
+    expect(probes.disposed, ["b"]);
 
-    data.value = GraphData(
-      cellSize: 50,
-      elements: [
-        graphNode(
-          "a",
-          priority: 0,
-          body: GraphIdentityProbe(
-            id: "a",
-            token: ++nextToken,
-            onDispose: disposed.add,
-          ),
-        ),
-        graphNode(
-          "c",
-          priority: 1,
-          body: GraphIdentityProbe(
-            id: "c",
-            token: ++nextToken,
-            onDispose: disposed.add,
-          ),
-        ),
-      ],
-      edges: const [],
-    );
+    data.value = probes.graph(["a", "c"]);
     await tester.pump();
     expect(find.text("a:1"), findsOneWidget);
     expect(find.text("c:7"), findsOneWidget);

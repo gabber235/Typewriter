@@ -107,8 +107,7 @@ void main() {
   testWidgets(
     "combined manual work keeps existing Apply rules while another member saves",
     (tester) async {
-      final session = ScopedWorkSession();
-      addTearDown(session.dispose);
+      final session = testWorkSession();
       final saving = AutosavingOwner(session: session);
       final automatic = saving.owner;
       var manualSends = 0;

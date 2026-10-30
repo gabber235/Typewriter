@@ -6,16 +6,13 @@ import "package:widgetbook_workspace/stories/shared/editors/presentation/portabl
 import "support/stories.dart";
 
 void main() {
-  Future<PanelDriver> pump(WidgetTester tester, String layout) async =>
-      (await tester.pumpStory(
-        resourcesWorkspaceUseCase,
-        knobs: {"Layout": layout},
-      ))!;
-
   testWidgets("opening a graph element shows its fields in the inspector", (
     tester,
   ) async {
-    final panel = await pump(tester, "Graph");
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Graph"},
+    );
 
     await panel.tapOn(find.text("Reward").first);
 
@@ -25,7 +22,10 @@ void main() {
   testWidgets("dragging an element on the graph stores its new placement", (
     tester,
   ) async {
-    final panel = await pump(tester, "Graph");
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Graph"},
+    );
     await panel.item("Reward").select();
     expect(visibleFieldValues(), containsAllInOrder(["Reward", "7", "4"]));
 
@@ -40,7 +40,10 @@ void main() {
 
   testWidgets("editing a name in the inspector renames the element on the "
       "page", (tester) async {
-    final panel = await pump(tester, "Graph");
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Graph"},
+    );
     await panel.tapOn(find.text("Reward").first);
 
     await panel.fieldAt(0).enter("Treasure");
@@ -52,7 +55,10 @@ void main() {
   testWidgets("opening a timeline cue shows its frames in the inspector", (
     tester,
   ) async {
-    await pump(tester, "Timeline");
+    await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Timeline"},
+    );
 
     // The cue's label lets taps through to the cue beneath it.
     await tester.tap(find.text("Welcome dialogue").first, warnIfMissed: false);
@@ -67,7 +73,10 @@ void main() {
   testWidgets("a timeline track menu offers to disconnect or delete", (
     tester,
   ) async {
-    final panel = await pump(tester, "Timeline");
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Timeline"},
+    );
 
     await panel.tapOn(find.byTooltip("Show menu").first);
 

@@ -1,11 +1,18 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// User visible operation context attached to an unexpected panel mutation error.
-enum PanelMutationOperation { deleteService, signOut, updateService }
+enum PanelMutationOperation {
+  deleteService,
+  endProviderSession,
+  signOut,
+  updateService,
+}
 
 extension on PanelMutationOperation {
   String get description => switch (this) {
     PanelMutationOperation.deleteService => "deleting a service",
+    PanelMutationOperation.endProviderSession =>
+      "ending the identity provider session",
     PanelMutationOperation.signOut => "signing out",
     PanelMutationOperation.updateService => "updating a service",
   };

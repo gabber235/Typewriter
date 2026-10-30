@@ -17,8 +17,7 @@ void main() {
       ),
       validation: acceptTestEditorMutation,
     );
-    final work = ScopedWorkSession();
-    addTearDown(work.dispose);
+    final work = testWorkSession();
     final source = ValueEditingRegistration(
       targetId: key.identity,
       label: "Uncertain configuration",
@@ -26,7 +25,7 @@ void main() {
       snapshot: snapshot,
       commitPolicy: EditorCommitPolicy.applyResource,
     ).acquire(work);
-    addTearDown(work.lease(WorkDriverId(domain: "value", scope: key)).release);
+    holdValueLease(work, key);
     source.update(
       editorRootPath.field("name"),
       skir.DataValue.wrapStringValue("local draft"),

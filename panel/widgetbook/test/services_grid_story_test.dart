@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/data/features/topology.dart";
 import "package:widgetbook_workspace/stories/features/services/presentation/route.stories.dart";
 
@@ -56,7 +57,7 @@ void main() {
   });
 
   testWidgets("selecting a host in the graph inspects it", (tester) async {
-    final panel = (await tester.pumpStory(servicesPageUseCase))!;
+    final panel = await tester.pumpStory(servicesPageUseCase);
 
     await tester.tap(find.text("PAPER HOST").first);
     await tester.runStory();
@@ -76,10 +77,10 @@ void main() {
 
   testWidgets("a service inspector shows its connection", (tester) async {
     final service = completeTopologyScenario().services.first;
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       servicesInspectorUseCase,
       knobs: {"Selected": "Service ${service.name}, online"},
-    ))!;
+    );
 
     for (final label in [
       service.name,
@@ -98,10 +99,10 @@ void main() {
     tester,
   ) async {
     for (final host in completeTopologyScenario().topology.hosts) {
-      final panel = (await tester.pumpStory(
+      final panel = await tester.pumpStory(
         servicesInspectorUseCase,
-        knobs: {"Selected": _hostLabel(host)},
-      ))!;
+        knobs: {"Selected": hostOption(host)},
+      );
 
       expect(panel.shows("CAPABILITIES"), isTrue, reason: host.hostId.id);
       expect(panel.shows("RUNTIME HEALTH"), isTrue, reason: host.hostId.id);
@@ -113,15 +114,14 @@ void main() {
     tester,
   ) async {
     final host = completeTopologyScenario().topology.hosts.first;
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       servicesInspectorUseCase,
-      knobs: {"Selected": _hostLabel(host)},
-    ))!;
+      knobs: {"Selected": hostOption(host)},
+    );
     expect(panel.shows("Assigned Realm"), isFalse);
 
     await tester.ensureVisible(find.text("Host a Realm"));
-    tester.semantics.tap(_toggle("Host a Realm"));
-    await tester.runStory();
+    await panel.inspector.toggle("Host a Realm");
 
     expect(panel.shows("Assigned Realm"), isTrue);
   });
@@ -130,10 +130,10 @@ void main() {
     "from the name field, Tab reaches the Realm hosting toggle and Space turns it off",
     (tester) async {
       final host = completeTopologyScenario().topology.hosts.first;
-      final panel = (await tester.pumpStory(
+      final panel = await tester.pumpStory(
         servicesInspectorUseCase,
-        knobs: {"Selected": _hostLabel(host)},
-      ))!;
+        knobs: {"Selected": hostOption(host)},
+      );
 
       await panel.field("Name").focus();
       // The toggle reads its label twice, so focus is matched by containment.
@@ -154,15 +154,14 @@ void main() {
     tester,
   ) async {
     final host = completeTopologyScenario().topology.hosts.first;
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       servicesInspectorUseCase,
-      knobs: {"Selected": _hostLabel(host)},
-    ))!;
+      knobs: {"Selected": hostOption(host)},
+    );
     final targeted = panel.shows("Engine target");
 
     await tester.ensureVisible(find.text("Run an execution engine"));
-    tester.semantics.tap(_toggle("Run an execution engine"));
-    await tester.runStory();
+    await panel.inspector.toggle("Run an execution engine");
 
     expect(panel.shows("Engine target"), !targeted);
   });
@@ -173,10 +172,10 @@ void main() {
     final failed = completeTopologyScenario().topology.realms.firstWhere(
       (realm) => realm.state.status == skir.ChildRuntimeStatus.failed,
     );
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       servicesInspectorUseCase,
       knobs: {"Selected": "Realm ${failed.realmId.id}, Failed"},
-    ))!;
+    );
 
     expect(panel.shows(failed.state.message!), isTrue);
     expect(panel.shows("ASSIGNMENT"), isTrue);
@@ -189,23 +188,11 @@ void main() {
     final engine = completeTopologyScenario().topology.engines.firstWhere(
       (engine) => engine.state.status == skir.ChildRuntimeStatus.rolledBack,
     );
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       servicesInspectorUseCase,
       knobs: {"Selected": "Engine ${engine.engineId.id}, Rolled back"},
-    ))!;
+    );
 
     expect(panel.shows("Assigned Realm"), isTrue);
   });
 }
-
-/// The checkbox of the inspector toggle [label]; it reads its label twice,
-/// so the label is matched by containment.
-SemanticsFinder _toggle(String label) => find.semantics.byPredicate(
-  (node) =>
-      node.label.contains(label) &&
-      node.getSemanticsData().flagsCollection.isChecked != CheckedState.none,
-);
-
-/// The label the inspector story lists [host] under.
-String _hostLabel(skir.ServiceHost host) =>
-    "Host ${host.hostId.id}, ${hostRuntimeStatusLabel(host.state.status)}";

@@ -28,28 +28,12 @@ void main() {
           operations: operations,
           bindings: {
             _rootBinding: PortableExpressionBinding(
-              value: skir.DataValue.createRecord(
-                fields: [
-                  skir.FieldValue(
-                    name: "style",
-                    value: skir.DataValue.createNamed(
-                      actualType: _styleType,
-                      payload: skir.DataValue.createRecord(
-                        fields: [
-                          skir.FieldValue(
-                            name: "visible",
-                            value: skir.DataValue.wrapBoolean(visible),
-                          ),
-                          skir.FieldValue(
-                            name: "title",
-                            value: skir.DataValue.wrapStringValue("Original"),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              value: recordEditorValue({
+                "style": namedRecordOf(_styleType, {
+                  "visible": skir.DataValue.wrapBoolean(visible),
+                  "title": skir.DataValue.wrapStringValue("Original"),
+                }),
+              }),
               location: skir.ValueLocation(
                 resource: skir.ResourceId(value: "element:message"),
                 path: skir.ValuePath(segments: const []),
@@ -112,28 +96,12 @@ void main() {
           operations: testPortableOperations(),
           bindings: {
             _rootBinding: PortableExpressionBinding(
-              value: skir.DataValue.createRecord(
-                fields: [
-                  skir.FieldValue(
-                    name: "style",
-                    value: skir.DataValue.createNamed(
-                      actualType: _styleType,
-                      payload: skir.DataValue.createRecord(
-                        fields: [
-                          skir.FieldValue(
-                            name: "visible",
-                            value: skir.DataValue.wrapBoolean(true),
-                          ),
-                          skir.FieldValue(
-                            name: "title",
-                            value: skir.DataValue.wrapStringValue("Original"),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              value: recordEditorValue({
+                "style": namedRecordOf(_styleType, {
+                  "visible": skir.DataValue.wrapBoolean(true),
+                  "title": skir.DataValue.wrapStringValue("Original"),
+                }),
+              }),
               location: skir.ValueLocation(
                 resource: skir.ResourceId(value: "element:message"),
                 path: skir.ValuePath(segments: const []),
@@ -201,23 +169,10 @@ final _control = skir.NamedControl(
                 whenTrue: skir.PresentationNode(
                   nodeId: "style.visible",
                   properties: skir.PresentationProperties.defaultInstance,
-                  element: skir.PresentationElement.createText(
-                    value: skir.ExpressionNode.wrapLiteral(
+                  element: textElement(
+                    skir.ExpressionNode.wrapLiteral(
                       skir.DataValue.wrapStringValue("Custom style"),
                     ),
-                    color: null,
-                    sizing: null,
-                    fontWeight: null,
-                    fontItalic: null,
-                    fontOpticalSize: null,
-                    fontSlant: null,
-                    fontWidth: null,
-                    textAlignment: null,
-                    lineHeight: null,
-                    letterSpacing: null,
-                    decoration: null,
-                    semanticLabel: null,
-                    paragraph: skir.TextParagraph.defaultInstance,
                   ),
                   header: null,
                 ),
@@ -230,27 +185,16 @@ final _control = skir.NamedControl(
             skir.PresentationNode(
               nodeId: "style.title",
               properties: skir.PresentationProperties.defaultInstance,
-              element: skir.PresentationElement.createTextInput(
-                control: skir.BoundControl(
-                  binding: skir.BindingRef(
-                    bindingId: _rootBinding,
-                    path: skir.ValuePath(
-                      segments: [
-                        skir.PathSegment.createField(name: "style"),
-                        skir.PathSegment.createField(name: "title"),
-                      ],
-                    ),
+              element: textInputElement(
+                skir.BindingRef(
+                  bindingId: _rootBinding,
+                  path: skir.ValuePath(
+                    segments: [
+                      skir.PathSegment.createField(name: "style"),
+                      skir.PathSegment.createField(name: "title"),
+                    ],
                   ),
-                  label: null,
-                  description: null,
-                  prefix: null,
-                  semanticLabel: null,
                 ),
-                appearance: null,
-                content: null,
-                entry: null,
-                mappings: null,
-                options: skir.TextEditingOptions.defaultInstance,
               ),
               header: null,
             ),

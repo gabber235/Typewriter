@@ -1,48 +1,34 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-void main() {
-  final founder = role("founder", assignable: false);
-  final member = role("member", defaultRole: true);
-  final editor = role("editor");
-  final viewer = role("viewer");
-  final graceId = skir.recordId("user:grace");
+final _founder = role("founder", assignable: false);
+final _member = role("member", defaultRole: true);
+final _editor = role("editor");
+final _viewer = role("viewer");
 
+/// Every role of the organization.
+final _roles = [_founder, _member, _editor, _viewer];
+
+final _graceId = skir.recordId("user:grace");
+
+void main() {
   test("changing roles keeps the roles the editor cannot assign", () async {
     final world = testWorld([
       signedIn(ada, organization: acme),
       membership(
-        roles: [founder, member, editor, viewer],
+        roles: _roles,
         members: [
-          skir.OrganizationMember(
-            userId: graceId,
-            name: "Grace",
-            email: null,
-            avatarUrl: null,
-            roles: [founder, editor],
-            joinedAt: DateTime.utc(2026),
-          ),
+          member("Grace", roles: [_founder, _editor]),
         ],
       ),
     ]);
-    final members = world.container.listen(
-      organizationMembersProvider,
-      (_, _) {},
-    );
-    // The role editor shows the organization's roles while it is open.
-    final roles = world.container.listen(organizationRolesProvider, (_, _) {});
-    addTearDown(members.close);
-    addTearDown(roles.close);
-    await world.container.read(organizationMembersProvider.future);
+    final members = await world.openRoleEditor();
 
     expect(
-      await world.container
-          .read(organizationMembersProvider.notifier)
-          .ensureCorrectRoles(graceId, [viewer]),
-      unorderedEquals([founder, viewer]),
+      await members.ensureCorrectRoles(_graceId, [_viewer]),
+      unorderedEquals([_founder, _viewer]),
     );
   });
 
@@ -50,69 +36,31 @@ void main() {
     final world = testWorld([
       signedIn(ada, organization: acme),
       membership(
-        roles: [founder, member, editor, viewer],
+        roles: _roles,
         members: [
-          skir.OrganizationMember(
-            userId: graceId,
-            name: "Grace",
-            email: null,
-            avatarUrl: null,
-            roles: [editor],
-            joinedAt: DateTime.utc(2026),
-          ),
+          member("Grace", roles: [_editor]),
         ],
       ),
     ]);
-    final members = world.container.listen(
-      organizationMembersProvider,
-      (_, _) {},
-    );
-    // The role editor shows the organization's roles while it is open.
-    final roles = world.container.listen(organizationRolesProvider, (_, _) {});
-    addTearDown(members.close);
-    addTearDown(roles.close);
-    await world.container.read(organizationMembersProvider.future);
+    final members = await world.openRoleEditor();
 
-    expect(
-      await world.container
-          .read(organizationMembersProvider.notifier)
-          .ensureCorrectRoles(graceId, [founder, viewer]),
-      [viewer],
-    );
+    expect(await members.ensureCorrectRoles(_graceId, [_founder, _viewer]), [
+      _viewer,
+    ]);
   });
 
   test("clearing every role falls back to the default role", () async {
     final world = testWorld([
       signedIn(ada, organization: acme),
       membership(
-        roles: [founder, member, editor, viewer],
+        roles: _roles,
         members: [
-          skir.OrganizationMember(
-            userId: graceId,
-            name: "Grace",
-            email: null,
-            avatarUrl: null,
-            roles: [editor],
-            joinedAt: DateTime.utc(2026),
-          ),
+          member("Grace", roles: [_editor]),
         ],
       ),
     ]);
-    final members = world.container.listen(
-      organizationMembersProvider,
-      (_, _) {},
-    );
-    // The role editor shows the organization's roles while it is open.
-    final roles = world.container.listen(organizationRolesProvider, (_, _) {});
-    addTearDown(members.close);
-    addTearDown(roles.close);
-    await world.container.read(organizationMembersProvider.future);
+    final members = await world.openRoleEditor();
 
-    expect(
-      await world.container
-          .read(organizationMembersProvider.notifier)
-          .ensureCorrectRoles(graceId, const []),
-      [member],
-    );
+    expect(await members.ensureCorrectRoles(_graceId, const []), [_member]);
   });
 }

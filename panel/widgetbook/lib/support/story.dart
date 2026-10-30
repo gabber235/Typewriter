@@ -27,9 +27,7 @@ class Story extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final widgetbook = WidgetbookState.maybeOf(context);
-    final setsAppearance = traits.any(
-      (trait) => trait.slot == Slot.appearance,
-    );
+    final setsAppearance = traits.any((trait) => trait.slot == Slot.appearance);
     final darkTheme =
         !setsAppearance && Theme.of(context).brightness == Brightness.dark;
     // A new story, knob value or theme starts a new world.
@@ -85,6 +83,39 @@ extension StoryKnobs on KnobsBuilder {
 
   /// The seed story data is generated from; another seed reshuffles it, the
   /// same seed shows the same data on every reload.
-  int seed({int initialValue = 1}) =>
-      this.int.slider(label: "Seed", initialValue: initialValue, min: 1, max: 50);
+  int seed({int initialValue = 1}) => this.int.slider(
+    label: "Seed",
+    initialValue: initialValue,
+    min: 1,
+    max: 50,
+  );
+}
+
+/// How a form field story shows its field: whether it is enabled or read
+/// only, and how wide it is.
+final class FieldKnobs {
+  const FieldKnobs({
+    this.enabled = true,
+    this.readOnly = false,
+    this.width = 420,
+  });
+
+  final bool enabled;
+  final bool readOnly;
+  final double width;
+}
+
+/// The knobs every form field story offers.
+extension FieldStoryKnobs on KnobsBuilder {
+  /// The Enabled, Read only and Field width knobs.
+  FieldKnobs field() => FieldKnobs(
+    enabled: boolean(label: "Enabled", initialValue: true),
+    readOnly: boolean(label: "Read only", initialValue: false),
+    width: this.double.slider(
+      label: "Field width",
+      initialValue: 420,
+      min: 260,
+      max: 640,
+    ),
+  );
 }

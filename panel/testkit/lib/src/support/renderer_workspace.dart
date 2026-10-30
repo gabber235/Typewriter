@@ -8,6 +8,7 @@ import "package:typewriter_testkit/src/drivers/semantics.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation/resource_display_fixture.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
 import "package:typewriter_testkit/src/support/portable_operations.dart";
+import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 
 /// An authored document held by a [FakeRealm] that holds every save, edited
 /// through a [RealmEditing] binding on [resource]; everything lives until
@@ -319,26 +320,13 @@ authoredLinkCollection({
   );
   final appearanceText = presentationNode(
     "node.reference.name",
-    skir.PresentationElement.createText(
-      value: skir.ExpressionNode.createInput(
+    textElement(
+      skir.ExpressionNode.createInput(
         binding: configuredValueBindingId,
         path: skir.ValuePath(
           segments: [skir.PathSegment.createField(name: "name")],
         ),
       ),
-      color: null,
-      sizing: null,
-      fontWeight: null,
-      fontItalic: null,
-      fontOpticalSize: null,
-      fontSlant: null,
-      fontWidth: null,
-      textAlignment: null,
-      lineHeight: null,
-      letterSpacing: null,
-      decoration: null,
-      semanticLabel: null,
-      paragraph: skir.TextParagraph.defaultInstance,
     ),
   );
   final appearanceIcon = presentationNode(
@@ -357,31 +345,7 @@ authoredLinkCollection({
       size: null,
     ),
   );
-  final coloredIcon = presentationNode(
-    "node.reference.icon.color",
-    skir.PresentationElement.createContainer(
-      foregroundColor: null,
-      transition: null,
-      shadows: const [],
-      child: presentationNode(
-        "node.reference.icon.padding",
-        skir.PresentationElement.createPadding(
-          child: appearanceIcon,
-          top: 6,
-          start: 6,
-          end: 6,
-          bottom: 6,
-        ),
-      ),
-      border: null,
-      backgroundColor: skir.PresentationColor.wrapValue(
-        skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapInteger("4288585374"),
-        ),
-      ),
-      radius: skir.PresentationRadius.none,
-    ),
-  );
+  final coloredIcon = coloredIconTile("node.reference.icon", appearanceIcon);
   final appearanceCard = presentationNode(
     "node.reference.card",
     skir.PresentationElement.createAdaptiveLeading(
@@ -453,39 +417,30 @@ authoredLinkCollection({
     subject: rootTemplate,
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalog(
+    testCatalogSnapshot(
       resourceDisplays: [nameResourceDisplay(rootTemplate)],
-      resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: rootDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: linksOwner,
-                  type: setTemplate,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-                skir.FieldDeclaration(
-                  owner: nameOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
+        publishedType(
+          rootDefinition,
+          representation: skir.RepresentationTemplate.createRecord(
+            fields: [
+              skir.FieldDeclaration(
+                owner: linksOwner,
+                type: setTemplate,
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+              skir.FieldDeclaration(
+                owner: nameOwner,
+                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+            ],
+            abstract_: false,
           ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: [
+          fields: [
             skir.EffectiveFieldTemplate(
               key: "links",
               owner: linksOwner,
@@ -499,41 +454,20 @@ authoredLinkCollection({
               rules: const [],
             ),
           ],
-          ancestorTemplates: const [],
         ),
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: setDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createSequence(
-              item: linkTemplate,
-              kind: skir.CollectionKind.set_,
-            ),
-            parents: const [],
+        publishedType(
+          setDefinition,
+          representation: skir.RepresentationTemplate.createSequence(
+            item: linkTemplate,
+            kind: skir.CollectionKind.set_,
           ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: const [],
-          ancestorTemplates: const [],
         ),
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: linkDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createLink(
-              endpoint: sourceEndpoint,
-              target: rootTemplate,
-            ),
-            parents: const [],
+        publishedType(
+          linkDefinition,
+          representation: skir.RepresentationTemplate.createLink(
+            endpoint: sourceEndpoint,
+            target: rootTemplate,
           ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: const [],
-          ancestorTemplates: const [],
         ),
       ],
       relations: [
@@ -562,7 +496,6 @@ authoredLinkCollection({
           families: const [],
         ),
       ],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: adaptiveAppearance
           ? [
               skir.PresentationDescriptor(
@@ -588,9 +521,6 @@ authoredLinkCollection({
               ),
             ]
           : const [],
-      configuration: const [],
-      diagnostics: const [],
-
       endpointBindings: [
         skir.EndpointBindingTemplate(
           endpoint: sourceEndpoint,
@@ -609,9 +539,6 @@ authoredLinkCollection({
           containsCollection: true,
         ),
       ],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     ),
   );
   final target = skir.ResourceId(value: "resource:target");
@@ -831,77 +758,26 @@ CheckedEditorCatalog _collectionCatalog() {
       arguments: const [],
     ),
   };
-  skir.PublishedType published(
-    skir.TypeDefinitionId id,
-    skir.RepresentationTemplate representation, {
-    List<skir.EffectiveFieldTemplate> effective = const [],
-  }) => skir.PublishedType(
-    searchKey: null,
-    placementField: null,
-    definition: skir.TypeDefinition(
-      id: id,
-      parameters: const [],
-      representation: representation,
-      parents: const [],
-    ),
-    display: defaultTypeDisplay(""),
-    status: skir.DeclarationStatus.ready,
-    effectiveFields: effective,
-    ancestorTemplates: const [],
-  );
   return CheckedEditorCatalog(
-    skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
+    testCatalogSnapshot(
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
-        published(
-          root,
-          skir.RepresentationTemplate.createRecord(
-            abstract_: false,
-            fields: [
-              for (final field in fields.entries)
-                skir.FieldDeclaration(
-                  owner: skir.FieldOwner(definition: root, name: field.key),
-                  type: field.value,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-            ],
-          ),
-          effective: [
-            for (final field in fields.entries)
-              skir.EffectiveFieldTemplate(
-                key: field.key,
-                owner: skir.FieldOwner(definition: root, name: field.key),
-                type: field.value,
-                rules: const [],
-              ),
-          ],
-        ),
-        published(
+        recordType(root, fields),
+        publishedType(
           list,
-          skir.RepresentationTemplate.createSequence(
+          representation: skir.RepresentationTemplate.createSequence(
             item: text,
             kind: skir.CollectionKind.list,
           ),
         ),
-        published(
+        publishedType(
           map,
-          skir.RepresentationTemplate.createMapping(key: text, value: text),
+          representation: skir.RepresentationTemplate.createMapping(
+            key: text,
+            value: text,
+          ),
         ),
       ],
-      relations: const [],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     ),
   );
 }
@@ -923,20 +799,5 @@ skir.AuthoringRecord _collectionRecord(String field, skir.DataValue value) =>
 
 final _compactCard = presentationNode(
   "compact.root",
-  skir.PresentationElement.createText(
-    value: textLiteral("Compact card"),
-    color: null,
-    sizing: null,
-    fontWeight: null,
-    fontItalic: null,
-    fontOpticalSize: null,
-    fontSlant: null,
-    fontWidth: null,
-    textAlignment: null,
-    lineHeight: null,
-    letterSpacing: null,
-    decoration: null,
-    semanticLabel: null,
-    paragraph: skir.TextParagraph.defaultInstance,
-  ),
+  textElement(textLiteral("Compact card")),
 );

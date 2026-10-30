@@ -24,16 +24,7 @@ void main() {
     });
 
     testWidgets("in the narrowest desktop inspector", (tester) async {
-      final panel = await tester.pumpPanel(
-        const [],
-        at: PanelLocation.component(
-          SizedBox(
-            width: 1600,
-            height: 800,
-            child: InspectorScaffold(child: const SizedBox.expand()),
-          ),
-        ),
-      );
+      final panel = await tester.pumpDesktopInspector();
       await panel.selectAll([long]);
       await panel.inspector.focusHeading(long.id.formatted);
       for (var step = 0; step < 10; step++) {
@@ -49,16 +40,7 @@ void main() {
     tester,
   ) async {
     final pending = LoadingSelectableIdentifier("pending");
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        SizedBox(
-          width: 1600,
-          height: 800,
-          child: InspectorScaffold(child: const SizedBox.expand()),
-        ),
-      ),
-    );
+    final panel = await tester.pumpDesktopInspector();
     await panel.selectAll([item]);
     final selection = panel.container.read(selectionProvider.notifier);
     expect(panel.inspector.heading(item.id.formatted), findsOneWidget);
@@ -77,19 +59,10 @@ void main() {
   ) async {
     final page = ValueNotifier("First page");
     addTearDown(page.dispose);
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        SizedBox(
-          width: 1600,
-          height: 800,
-          child: InspectorScaffold(
-            child: ValueListenableBuilder(
-              valueListenable: page,
-              builder: (context, name, _) => Text(name),
-            ),
-          ),
-        ),
+    final panel = await tester.pumpDesktopInspector(
+      page: ValueListenableBuilder(
+        valueListenable: page,
+        builder: (context, name, _) => Text(name),
       ),
     );
     await panel.selectAll([item]);
@@ -106,16 +79,7 @@ void main() {
 
   testWidgets("period shrinks the inspector and comma restores it; with "
       "shift held, both take a larger step", (tester) async {
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        SizedBox(
-          width: 1600,
-          height: 800,
-          child: InspectorScaffold(child: const SizedBox.expand()),
-        ),
-      ),
-    );
+    final panel = await tester.pumpDesktopInspector();
     await panel.selectAll([item]);
     await panel.inspector.focusHeading(item.id.formatted);
     final original = panel.inspector.rect.width;

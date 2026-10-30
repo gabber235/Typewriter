@@ -56,6 +56,62 @@ skir.ServiceHost paperHost(
   state: state ?? hostRuntimeState(),
 );
 
+/// A Paper host `service_host:[id]` of [service], `service:[id]` by default,
+/// at [revision] that supports [engines], the paper
+/// engine by default, and has applied its first topology revision, reporting [state],
+/// nothing observed yet by default.
+skir.ServiceHost configuredPaperHost(
+  String id, {
+  skir.RecordId? service,
+  int revision = 1,
+  List<String> engines = const ["paper"],
+  skir.HostRuntimeState? state,
+}) => paperHost(
+  id,
+  service: service,
+  revision: revision,
+  engines: engines,
+  reconciled: skir.ReconciledRevision(desired: 1, applied: 1),
+  state: state ?? skir.HostRuntimeState.defaultInstance,
+);
+
+/// A topology of [hosts], [realms] and [engines], none by default.
+skir.OrganizationTopologySnapshot topologySnapshot({
+  List<skir.ServiceHost> hosts = const [],
+  List<skir.RealmInstance> realms = const [],
+  List<skir.EngineInstance> engines = const [],
+}) => skir.OrganizationTopologySnapshot(
+  hosts: hosts,
+  realms: realms,
+  engines: engines,
+);
+
+/// The change that configures [host] with [realm] and [engine], none by
+/// default, and removes the [removed] child resources.
+skir.HostConfigurationChange hostConfiguration(
+  skir.ServiceHost host, {
+  skir.RealmInstance? realm,
+  skir.EngineInstance? engine,
+  List<skir.RecordId> removed = const [],
+}) => skir.HostConfigurationChange(
+  host: host,
+  realm: realm,
+  engine: engine,
+  removedResources: removed,
+);
+
+/// The wire reply that lists [topology] to a topology watch.
+Uint8List topologyListReply(skir.OrganizationTopologySnapshot topology) => skir
+    .WatchOrganizationTopologyResponse
+    .serializer
+    .toBytes(skir.WatchOrganizationTopologyResponse.wrapList(topology));
+
+/// The wire reply that confirms a host configuration with [change].
+Uint8List configuredReply(skir.HostConfigurationChange change) => skir
+    .ConfigureServiceHostResponse
+    .serializer
+    .toBytes(skir.ConfigureServiceHostResponse.wrapSuccess(change));
+
 /// A host reporting [status], active by default, with [message], as of
 /// [updatedAt], 2026 by default.
 skir.HostRuntimeState hostRuntimeState({

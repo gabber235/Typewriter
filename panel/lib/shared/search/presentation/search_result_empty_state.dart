@@ -93,45 +93,29 @@ class _GuidanceOrEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final guidance = snapshot.guidance.toList()
       ..sort((a, b) => a.priority.compareTo(b.priority));
-    final Widget child;
-    if (guidance.isEmpty) {
-      child = const Text("No results found");
-    } else {
-      child = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final entry in guidance)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
-              child: LabeledMessage(
-                label: entry.title,
-                message: entry.description,
+    return Padding(
+      padding: EdgeInsets.all(context.spacing.space4),
+      child: guidance.isEmpty
+          ? const EmptyScreen(title: "No results found", small: true)
+          : EmptyScreen(
+              small: true,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final entry in guidance)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: context.spacing.space1,
+                      ),
+                      child: LabeledMessage(
+                        label: entry.title,
+                        message: entry.description,
+                      ),
+                    ),
+                ],
               ),
             ),
-        ],
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(18.0),
-      child: Column(
-        mainAxisAlignment: .center,
-        children: [
-          Expanded(
-            flex: 5,
-            child: const RiveAsset(
-              asset: "assets/cute_robot.riv",
-              stateMachineName: "Motion",
-            ),
-          ),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 500),
-            child: child,
-          ),
-          const Spacer(),
-        ],
-      ),
     );
   }
 }

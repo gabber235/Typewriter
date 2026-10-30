@@ -10,31 +10,7 @@ void main() {
     (tester) async {
       final fixture = AuthoredGraphFixture(candidateSearch: true);
       final requests = <skir.RealmPresentationSearchRequest>[];
-      final panel = await tester.pumpPanel(fixture.realm);
-      await panel.showAbove(
-        at: Alignment.topLeft,
-        SizedBox(
-          width: 160,
-          height: 80,
-          child: AuthoredResourceItem(
-            identifier: fixture.drag.primary,
-            resources: AuthoredResourcesContext(
-              authoringScope: fixture.scope,
-              binding: null,
-              scope: PortablePresentationScope(
-                bindings: const {},
-                operations: testPortableOperations(),
-                budget: skir.EvaluationBudget(
-                  maxSteps: 100,
-                  maxCollectionItems: 10,
-                ),
-              ),
-              canMutate: () => true,
-            ),
-            child: const Text("Source"),
-          ),
-        ),
-      );
+      final panel = await fixture.showSourceItem(tester);
       fixture.realmDouble.answerWatchSearch = (request) {
         requests.add(request);
         return Stream.value(
@@ -87,31 +63,7 @@ void main() {
     tester,
   ) async {
     final fixture = AuthoredGraphFixture();
-    final panel = await tester.pumpPanel(fixture.realm);
-    await panel.showAbove(
-      at: Alignment.topLeft,
-      SizedBox(
-        width: 160,
-        height: 80,
-        child: AuthoredResourceItem(
-          identifier: fixture.drag.primary,
-          resources: AuthoredResourcesContext(
-            authoringScope: fixture.scope,
-            binding: null,
-            scope: PortablePresentationScope(
-              bindings: const {},
-              operations: testPortableOperations(),
-              budget: skir.EvaluationBudget(
-                maxSteps: 100,
-                maxCollectionItems: 10,
-              ),
-            ),
-            canMutate: () => true,
-          ),
-          child: const Text("Source"),
-        ),
-      ),
-    );
+    final panel = await fixture.showSourceItem(tester);
     await panel.resources.row("Source").operations.choose("Move to");
     // The destination is a plain text field, not a candidate search.
     expect(

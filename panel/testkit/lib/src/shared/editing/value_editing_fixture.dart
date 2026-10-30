@@ -5,6 +5,16 @@ import "package:typewriter_panel/typewriter_panel.dart";
 typedef EditorCommitter = Future<TypedMutationResult> Function(
   EditorCommit commit,
 );
+
+/// A committer that records every commit in [commits] and saves [value] at
+/// revision 2.
+EditorCommitter recordingCommit(
+  List<EditorCommit> commits,
+  skir.DataValue value,
+) => (commit) async {
+  commits.add(commit);
+  return TypedMutationResult.success(revision: 2, value: value);
+};
 typedef EditorMutationValidator = EditorMutationResult Function(
   skir.ValuePath path,
   skir.DataValue value,

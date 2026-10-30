@@ -410,11 +410,7 @@ void main() {
             submissions: submissions,
             initial: original,
           );
-          final binding = workspace.attach(
-            boundPage.resource,
-            policy: EditorCommitPolicy.applyResource,
-          );
-          addTearDown(binding.detach);
+          final binding = workspace.form(boundPage.resource);
           addTearDown(workspace.dispose);
           addTearDown(submissions.dispose);
           addTearDown(realm.close);

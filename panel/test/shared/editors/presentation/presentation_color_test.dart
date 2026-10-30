@@ -7,11 +7,7 @@ import "package:typewriter_testkit/testing.dart";
 void main() {
   late PortablePresentationScope scope;
   setUp(() {
-    scope = PortablePresentationScope(
-      operations: testPortableOperations(),
-      bindings: const {},
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-    );
+    scope = unboundPresentationScope();
   });
   final appearance = SurfaceAppearance(
     color: Colors.black,
@@ -24,8 +20,6 @@ void main() {
     (tester) async {
       const accent = Color(0xff3366cc);
       const canvas = Color(0xff171c22);
-      var interaction = const PresentationInteraction();
-      late StateSetter update;
       final ambient = skir.PresentationColor.wrapAmbient(
         skir.PresentationAmbientColor.background,
       );
@@ -149,29 +143,11 @@ void main() {
           ),
         ),
       ], layout: _stretch);
-      await tester.showComponent(
-        Surface(
-          color: canvas,
-          child: Center(
-            child: SizedBox(
-              width: 400,
-              height: 100,
-              child: StatefulBuilder(
-                builder: (context, setState) {
-                  update = setState;
-                  return PresentationInteractionScope(
-                    value: interaction,
-                    child: PortablePresentationNodeRenderer(
-                      node: root,
-                      scope: scope,
-                      fillAvailableSpace: true,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
+      final interact = await tester.showInteractiveNode(
+        root,
+        scope: scope,
+        size: const Size(400, 100),
+        surface: canvas,
       );
       final text = find.text("Adventure");
       final surface = find.byType(SurfaceContainer);
@@ -189,7 +165,7 @@ void main() {
         (const PresentationInteraction(selected: true), 1.0),
         (const PresentationInteraction(selected: true, hovered: true), 0.7),
       ]) {
-        update(() => interaction = state);
+        interact(state);
         await tester.pumpAndSettle();
         final element = tester.element(text);
         final shown = Surface.appearanceOf(element);

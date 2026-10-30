@@ -6,6 +6,7 @@ import "package:typewriter_testkit/src/core/pump_panel.dart";
 import "package:typewriter_testkit/src/core/stage.dart";
 import "package:typewriter_testkit/src/doubles/presentation_host.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
+import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
 import "package:typewriter_testkit/src/support/portable_operations.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation/collection_editor_fixture.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation/value_inspector_fixture.dart";
@@ -27,6 +28,52 @@ BoundPresentationBinding wholeValueBinding(
     return const PortablePresentationWriteApplied();
   },
 );
+
+/// A 64 bit float.
+final float64 = skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour);
+
+/// A number input over the float binding [binding] that shows its value
+/// with two decimals in US English outside editing and, when [rounded],
+/// completes typing to the nearest half, ties to even.
+skir.NumericControl formattedNumberControl(
+  skir.ExpressionBindingId binding, {
+  bool rounded = false,
+}) {
+  final candidate = skir.ExpressionBindingId(value: "candidate");
+  final read = skir.ExpressionNode.createInput(
+    binding: candidate,
+    path: editorRootPath,
+  );
+  skir.ExpressionMapping mapping(skir.ExpressionNode body) =>
+      skir.ExpressionMapping(
+        inputBinding: declareBinding(candidate, scalarTemplate(float64)),
+        body: body,
+      );
+  return (skir.NumericControl.mutable()
+        ..control = (skir.BoundControl.mutable()
+          ..binding = skir.BindingRef(bindingId: binding, path: editorRootPath))
+        ..mappings = skir.ValueMappings(
+          completion: rounded
+              ? mapping(
+                  portableCall("number.round", [
+                    read,
+                    literalExpression(skir.DataValue.wrapFloat(0.5)),
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.RoundingMode.nearestTiesToEven.toDataValue(),
+                    ),
+                  ]),
+                )
+              : null,
+          display: mapping(
+            portableCall("number.format", [
+              read,
+              literalExpression(skir.DataValue.wrapInteger("2")),
+              textLiteral("en-US"),
+            ]),
+          ),
+        ))
+      .toFrozen();
+}
 
 /// Showing an authored presentation in the panel.
 extension ShowPresentation on WidgetTester {
@@ -52,35 +99,68 @@ extension ShowPresentation on WidgetTester {
     return showPresentationHost(host);
   }
 
-  /// Shows [root] rendered in [scope] and filling [size] under a
+  /// Shows the presentation [host] renders, disposing the host when the
+  /// test ends.
+  Future<PanelDriver> showRenderer(PortablePresentationHost host) {
+    if (host case final ChangeNotifier notifier) addTearDown(notifier.dispose);
+    return showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
+    );
+  }
+
+  /// Shows the number input [control] over a float binding that reads
+  /// [read] and keeps every value [write] receives.
+  Future<PanelDriver> showNumberInput(
+    skir.NumericControl control, {
+    required skir.DataValue Function() read,
+    required void Function(skir.DataValue value) write,
+  }) => showPresentation(
+    () => presentationNode(
+      "numeric",
+      skir.PresentationElement.wrapNumericInput(control),
+    ),
+    bindings: [
+      wholeValueBinding(
+        control.control.binding.bindingId,
+        skir.TypeUse.wrapScalar(float64),
+        read: read,
+        write: write,
+      ),
+    ],
+  );
+
+  /// Shows [root] rendered in [scope] and filling [size], on a [surface] of
+  /// that color when given, under a
   /// presentation interaction, and returns the function that replaces that
   /// interaction, the way pointer and focus changes do.
   Future<void Function(PresentationInteraction)> showInteractiveNode(
     skir.PresentationNode root, {
     required PortablePresentationScope scope,
     Size size = const Size(200, 260),
+    Color? surface,
   }) async {
     var interaction = const PresentationInteraction();
     late StateSetter update;
-    await showComponent(
-      Center(
-        child: SizedBox.fromSize(
-          size: size,
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              update = setState;
-              return PresentationInteractionScope(
-                value: interaction,
-                child: PortablePresentationNodeRenderer(
-                  node: root,
-                  scope: scope,
-                  fillAvailableSpace: true,
-                ),
-              );
-            },
-          ),
+    final centered = Center(
+      child: SizedBox.fromSize(
+        size: size,
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return PresentationInteractionScope(
+              value: interaction,
+              child: PortablePresentationNodeRenderer(
+                node: root,
+                scope: scope,
+                fillAvailableSpace: true,
+              ),
+            );
+          },
         ),
       ),
+    );
+    await showComponent(
+      surface == null ? centered : Surface(color: surface, child: centered),
     );
     return (next) => update(() => interaction = next);
   }
@@ -272,6 +352,26 @@ final class CollectionEditorStage extends ChangeNotifier {
 
 /// Showing a collection editor scenario in the panel.
 extension ShowCollectionEditor on CollectionEditorScenario {
+  /// Pumps the collection behind a [GatedRemovalHost] that holds every list
+  /// item removal until the returned gate answers, then waits for
+  /// [settlement] when given. The stage starts with the gated host.
+  Future<
+    ({
+      PanelDriver panel,
+      Completer<bool> gate,
+      GatedRemovalHost host,
+      CollectionEditorStage stage,
+    })
+  >
+  showGated(WidgetTester tester, {Completer<void>? settlement}) async {
+    final gate = Completer<bool>();
+    final gated = GatedRemovalHost(host, gate, settlement: settlement);
+    addTearDown(gated.dispose);
+    final stage = CollectionEditorStage(host: gated);
+    final panel = await show(tester, stage: stage);
+    return (panel: panel, gate: gate, host: gated, stage: stage);
+  }
+
   /// Pumps a fresh panel that shows the collection in a scroll view, inside
   /// [stage] or a default one.
   Future<PanelDriver> show(

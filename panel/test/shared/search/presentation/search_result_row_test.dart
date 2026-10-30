@@ -11,24 +11,10 @@ void main() {
     ) async {
       var rowActivations = 0;
       var innerActivations = 0;
-      final panel = await tester.pumpPanel(
-        const [],
-        // A dropdown gives its rows a bounded width.
-        at: PanelLocation.component(
-          SizedBox(
-            width: 360,
-            child: SearchResultRow(
-              row: searchRowContext(onTap: () => rowActivations++),
-              density: SearchResultDensity.card,
-              title: "Resource",
-              leading: const Icon(Icons.book),
-              kindLabel: "book",
-              body: TextButton(
-                onPressed: () => innerActivations++,
-                child: const Text("Inner action"),
-              ),
-            ),
-          ),
+      final panel = await tester.showComponent(
+        innerActionRow(
+          onRow: () => rowActivations++,
+          onInner: () => innerActivations++,
         ),
       );
 
@@ -42,24 +28,10 @@ void main() {
     testWidgets("Tab reaches the row but never that content", (tester) async {
       var rowActivations = 0;
       var innerActivations = 0;
-      final panel = await tester.pumpPanel(
-        const [],
-        // A dropdown gives its rows a bounded width.
-        at: PanelLocation.component(
-          SizedBox(
-            width: 360,
-            child: SearchResultRow(
-              row: searchRowContext(onTap: () => rowActivations++),
-              density: SearchResultDensity.card,
-              title: "Resource",
-              leading: const Icon(Icons.book),
-              kindLabel: "book",
-              body: TextButton(
-                onPressed: () => innerActivations++,
-                child: const Text("Inner action"),
-              ),
-            ),
-          ),
+      final panel = await tester.showComponent(
+        innerActionRow(
+          onRow: () => rowActivations++,
+          onInner: () => innerActivations++,
         ),
       );
 

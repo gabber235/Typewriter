@@ -23,6 +23,20 @@ extension SurfaceDrivers on PanelDriver {
     await settle();
   }
 
+  /// Navigates the seeded Realm to edit [resource] while the asking surface
+  /// stays current, the way inspecting it from that surface does.
+  Future<void> inspectForEditing(skir.ResourceId resource) async {
+    await container
+        .read(realmSurfaceNavigationProvider)
+        .navigate(
+          world.requireRealm.scope,
+          resource,
+          skir.ResourceNavigationMode.edit,
+          isCurrent: () => true,
+        );
+    await settle();
+  }
+
   /// The seeded Realm's saved document once the panel saved [saves] edits
   /// to it.
   Future<AuthoringDocument> savedAfter({int saves = 1}) async {

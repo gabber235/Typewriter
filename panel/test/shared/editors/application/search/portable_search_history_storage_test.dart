@@ -11,15 +11,11 @@ void main() {
       mappedSearchResult("first", skir.DataValue.wrapStringValue("First")),
       customSearchResult("typed", skir.DataValue.wrapStringValue("Typed")),
     ];
-    await PortableLocalSearchHistoryStorage(
-      catalog: testCheckedCatalog(),
-      storage: storage,
-    ).replaceResults(key: "recent", results: stored);
+    await historyStorage(storage)
+        .replaceResults(key: "recent", results: stored);
 
-    final loaded = await PortableLocalSearchHistoryStorage(
-      catalog: testCheckedCatalog(),
-      storage: storage,
-    ).loadValidResults(key: "recent", capacity: 5);
+    final loaded = await historyStorage(storage)
+        .loadValidResults(key: "recent", capacity: 5);
 
     expect([for (final result in loaded) result.id], ["first", "typed"]);
     expect([for (final result in loaded) result.title], ["first", "typed"]);
@@ -31,42 +27,27 @@ void main() {
 
   test("loading returns at most the capacity, oldest dropped", () async {
     final storage = FakeLocalStorage();
-    await PortableLocalSearchHistoryStorage(
-      catalog: testCheckedCatalog(),
-      storage: storage,
-    ).replaceResults(
+    await historyStorage(storage).replaceResults(
       key: "recent",
-      results: [
-        for (final id in ["newest", "middle", "oldest"])
-          mappedSearchResult(id, skir.DataValue.wrapStringValue(id)),
-      ],
+      results: mappedTextResults(["newest", "middle", "oldest"]),
     );
 
-    final loaded = await PortableLocalSearchHistoryStorage(
-      catalog: testCheckedCatalog(),
-      storage: storage,
-    ).loadValidResults(key: "recent", capacity: 2);
+    final loaded = await historyStorage(storage)
+        .loadValidResults(key: "recent", capacity: 2);
 
     expect([for (final result in loaded) result.id], ["newest", "middle"]);
   });
 
   test("each history key keeps its own selections", () async {
     final storage = FakeLocalStorage();
-    final history = PortableLocalSearchHistoryStorage(
-      catalog: testCheckedCatalog(),
-      storage: storage,
-    );
+    final history = historyStorage(storage);
     await history.replaceResults(
       key: "first",
-      results: [
-        mappedSearchResult("one", skir.DataValue.wrapStringValue("one")),
-      ],
+      results: mappedTextResults(["one"]),
     );
     await history.replaceResults(
       key: "second",
-      results: [
-        mappedSearchResult("two", skir.DataValue.wrapStringValue("two")),
-      ],
+      results: mappedTextResults(["two"]),
     );
 
     final first = await history.loadValidResults(key: "first", capacity: 5);
@@ -97,21 +78,9 @@ void main() {
     for (final MapEntry(key: name, value: breakEntry) in cases.entries) {
       test(name, () async {
         final storage = FakeLocalStorage();
-        await PortableLocalSearchHistoryStorage(
-          catalog: testCheckedCatalog(),
-          storage: storage,
-        ).replaceResults(
+        await historyStorage(storage).replaceResults(
           key: "recent",
-          results: [
-            mappedSearchResult(
-              "broken",
-              skir.DataValue.wrapStringValue("broken"),
-            ),
-            mappedSearchResult(
-              "valid",
-              skir.DataValue.wrapStringValue("valid"),
-            ),
-          ],
+          results: mappedTextResults(["broken", "valid"]),
         );
         final key = storage.items.keys.single;
         final [broken, valid] =
@@ -121,10 +90,8 @@ void main() {
           valid,
         ]);
 
-        final loaded = await PortableLocalSearchHistoryStorage(
-          catalog: testCheckedCatalog(),
-          storage: storage,
-        ).loadValidResults(key: "recent", capacity: 5);
+        final loaded = await historyStorage(storage)
+            .loadValidResults(key: "recent", capacity: 5);
 
         expect([for (final result in loaded) result.id], ["valid"]);
       });
@@ -138,25 +105,14 @@ void main() {
     ]) {
       test(name, () async {
         final storage = FakeLocalStorage();
-        await PortableLocalSearchHistoryStorage(
-          catalog: testCheckedCatalog(),
-          storage: storage,
-        ).replaceResults(
-          key: "recent",
-          results: [
-            mappedSearchResult(
-              "valid",
-              skir.DataValue.wrapStringValue("valid"),
-            ),
-          ],
-        );
+        await historyStorage(
+          storage,
+        ).replaceResults(key: "recent", results: mappedTextResults(["valid"]));
         storage.items[storage.items.keys.single] = stored;
 
         expect(
-          await PortableLocalSearchHistoryStorage(
-            catalog: testCheckedCatalog(),
-            storage: storage,
-          ).loadValidResults(key: "recent", capacity: 5),
+          await historyStorage(storage)
+              .loadValidResults(key: "recent", capacity: 5),
           isEmpty,
         );
       });
@@ -167,14 +123,14 @@ void main() {
     final storage = FakeLocalStorage();
     final kept = typeDefinition("Kept", namespace: "history.test");
     final removed = typeDefinition("Removed", namespace: "history.test");
-    await PortableLocalSearchHistoryStorage(
+    await historyStorage(
+      storage,
       catalog: testCheckedCatalog(
         types: [
           for (final type in [kept, removed])
             testPublishedRecord(type, const {}),
         ],
       ),
-      storage: storage,
     ).replaceResults(
       key: "recent",
       results: [
@@ -228,13 +184,13 @@ void main() {
       ],
     );
 
-    final loaded = await PortableLocalSearchHistoryStorage(
+    final loaded = await historyStorage(
+      storage,
       catalog: testCheckedCatalog(
         types: [
           for (final type in [kept]) testPublishedRecord(type, const {}),
         ],
       ),
-      storage: storage,
     ).loadValidResults(key: "recent", capacity: 5);
 
     expect([for (final result in loaded) result.id], ["kept"]);

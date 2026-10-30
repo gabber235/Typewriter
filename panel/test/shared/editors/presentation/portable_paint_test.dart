@@ -22,11 +22,7 @@ final coverTransform = find
 void main() {
   late PortablePresentationScope scope;
   setUp(() {
-    scope = PortablePresentationScope(
-      operations: testPortableOperations(),
-      bindings: const {},
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-    );
+    scope = unboundPresentationScope();
   });
 
   final selected = skir.PresentationStateMatch(

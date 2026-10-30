@@ -2,26 +2,17 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final catalog = CheckedEditorCatalog(
     (skir.EditorCatalog.mutable()
           ..types = [
-            skir.PublishedType(
-              searchKey: null,
-              placementField: null,
-              definition: skir.TypeDefinition(
-                id: skir.resourceIdType.definition,
-                parameters: const [],
-                representation: skir.RepresentationTemplate.createScalar(
-                  kind: skir.ScalarKind.text,
-                ),
-                parents: const [],
+            publishedType(
+              skir.resourceIdType.definition,
+              representation: skir.RepresentationTemplate.createScalar(
+                kind: skir.ScalarKind.text,
               ),
-              status: skir.DeclarationStatus.ready,
-              display: defaultTypeDisplay(""),
-              effectiveFields: const [],
-              ancestorTemplates: const [],
             ),
           ])
         .toFrozen(),

@@ -8,25 +8,11 @@ void main() {
   final host = ServiceIdentifier(
     skir.RecordId(table: "service", key: skir.RecordIdKey.wrapString("host")),
   );
-  final driver = WorkDriverId(
-    domain: "value",
-    scope: EditorResourceKey(scope: null, identity: host.resourceId),
-  );
 
   testWidgets("a draft already on screen offers no way to open it", (
     tester,
   ) async {
-    final work = testWorkSession();
-    textDraft(
-      work,
-      host,
-      label: "Host configuration",
-      saved: "original",
-      draft: "draft",
-    );
-    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
-    work.setDestination(driver, panel.inspectorDestination(host));
-    await panel.activity.open("1 draft");
+    final (:panel, draft: _) = await tester.openDraftActivity(host);
 
     panel.container.read(selectionProvider.notifier).selectAll([host]);
     await panel.settle();
@@ -38,17 +24,7 @@ void main() {
   testWidgets("opening a draft selects its resource and keeps the draft", (
     tester,
   ) async {
-    final work = testWorkSession();
-    final draft = textDraft(
-      work,
-      host,
-      label: "Host configuration",
-      saved: "original",
-      draft: "draft",
-    );
-    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
-    work.setDestination(driver, panel.inspectorDestination(host));
-    await panel.activity.open("1 draft");
+    final (:panel, :draft) = await tester.openDraftActivity(host);
 
     await panel.tapOn(panel.labeled("Open work").first);
 
@@ -61,17 +37,7 @@ void main() {
   });
 
   testWidgets("discarding a draft clears it from the activity", (tester) async {
-    final work = testWorkSession();
-    final draft = textDraft(
-      work,
-      host,
-      label: "Host configuration",
-      saved: "original",
-      draft: "draft",
-    );
-    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
-    work.setDestination(driver, panel.inspectorDestination(host));
-    await panel.activity.open("1 draft");
+    final (:panel, :draft) = await tester.openDraftActivity(host);
 
     await panel.tapOn(panel.labeled("Discard").first);
 

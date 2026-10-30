@@ -12,8 +12,7 @@ final _title = editorRootPath.field("title");
 
 void main() {
   test("same revision refresh adopts the authoritative value without sending the draft", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     var sends = 0;
     final resource = ScriptedValuePersistence(
       key: _key,

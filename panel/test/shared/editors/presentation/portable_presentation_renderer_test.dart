@@ -491,21 +491,13 @@ void main() {
             hasConstructorDefault: false,
           ),
       ];
-      final published = skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        definition: skir.TypeDefinition(
-          id: definition,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            abstract_: false,
-            fields: fields,
-          ),
-          parents: const [],
+      final published = publishedType(
+        definition,
+        representation: skir.RepresentationTemplate.createRecord(
+          abstract_: false,
+          fields: fields,
         ),
-        display: defaultTypeDisplay(""),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: [
+        fields: [
           for (final field in fields)
             skir.EffectiveFieldTemplate(
               key: field.owner.name,
@@ -514,7 +506,6 @@ void main() {
               rules: const [],
             ),
         ],
-        ancestorTemplates: const [],
       );
       final catalog =
           (skir.EditorCatalog.mutable()
@@ -970,10 +961,7 @@ void main() {
       expected: _integerType,
       updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    await tester.showRenderer(host);
     final text = find.text("Inherited text");
     expect(
       tester.widget<Text>(text).style?.fontFamily,
@@ -1015,10 +1003,7 @@ void main() {
       expected: _integerType,
       updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    final panel = await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    final panel = await tester.showRenderer(host);
     final title = semanticsLabeled("Section title").single;
     final body = semanticsLabeled("Section body").single;
     final surface = title.parent!;
@@ -1070,10 +1055,7 @@ void main() {
         expected: _integerType,
         updatesDocument: true,
       );
-      addTearDown(host.dispose);
-      await tester.showComponent(
-        Material(child: PortablePresentationRenderer(host: host)),
-      );
+      await tester.showRenderer(host);
       expect(find.text("Connected"), findsOneWidget);
       expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
       final context = tester.element(find.text("Connected"));
@@ -1102,18 +1084,12 @@ void main() {
     testWidgets("writes typed input as the host's expected $name", (
       tester,
     ) async {
-      final host = FakePresentationHost(
-        document: FakePresentationHost.emptyDocument(
-          root: _numericNode,
-          bindings: _integerBinding,
-        ),
+      final host = documentHost(
+        _numericNode,
+        bindings: _integerBinding,
         expected: expected,
-        updatesDocument: true,
       );
-      addTearDown(host.dispose);
-      final panel = await tester.showComponent(
-        Material(child: PortablePresentationRenderer(host: host)),
-      );
+      final panel = await tester.showRenderer(host);
 
       await panel.fieldAt(0).type(typed);
 
@@ -1134,10 +1110,7 @@ void main() {
       ),
       updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    final panel = await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    final panel = await tester.showRenderer(host);
 
     await panel.fieldAt(0).type("300");
 
@@ -1145,18 +1118,12 @@ void main() {
   });
 
   testWidgets("escape leaves typed values applied", (tester) async {
-    final host = FakePresentationHost(
-      document: FakePresentationHost.emptyDocument(
-        root: _numericNode,
-        bindings: _integerBinding,
-      ),
+    final host = documentHost(
+      _numericNode,
+      bindings: _integerBinding,
       expected: _integerType,
-      updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    final panel = await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    final panel = await tester.showRenderer(host);
     final field = panel.fieldAt(0);
 
     await field.type("7");
@@ -1189,19 +1156,13 @@ void main() {
   testWidgets("surfaces a write the host rejects beside its control", (
     tester,
   ) async {
-    final host = FakePresentationHost(
-      document: FakePresentationHost.emptyDocument(
-        root: _actionNode,
-        bindings: _integerBinding,
-      ),
+    final host = documentHost(
+      _actionNode,
+      bindings: _integerBinding,
       expected: _integerType,
-      updatesDocument: true,
       rejectWrites: true,
     );
-    addTearDown(host.dispose);
-    final panel = await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    final panel = await tester.showRenderer(host);
 
     await panel.fieldAt(0).type("8");
 
@@ -1212,18 +1173,12 @@ void main() {
   testWidgets("delivers the authored button action to the host", (
     tester,
   ) async {
-    final host = FakePresentationHost(
-      document: FakePresentationHost.emptyDocument(
-        root: _actionNode,
-        bindings: _integerBinding,
-      ),
+    final host = documentHost(
+      _actionNode,
+      bindings: _integerBinding,
       expected: _integerType,
-      updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    final panel = await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    final panel = await tester.showRenderer(host);
 
     await panel.tapOn(find.text("Run action"));
 
@@ -1325,10 +1280,7 @@ void main() {
       expected: _integerType,
       updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    final panel = await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    final panel = await tester.showRenderer(host);
 
     expect(panel.labeled("Presentation information"), findsOneWidget);
     expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
@@ -1338,18 +1290,12 @@ void main() {
   testWidgets("separates an unspecified header from its first control", (
     tester,
   ) async {
-    final host = FakePresentationHost(
-      document: FakePresentationHost.emptyDocument(
-        root: _headerNode,
-        bindings: _integerBinding,
-      ),
+    final host = documentHost(
+      _headerNode,
+      bindings: _integerBinding,
       expected: _integerType,
-      updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    await tester.showRenderer(host);
 
     final description = tester.getRect(find.text("Document description"));
     final control = visibleTextFields().single.screenRect;
@@ -1361,18 +1307,12 @@ void main() {
   testWidgets("does not repeat a control label supplied by its header", (
     tester,
   ) async {
-    final host = FakePresentationHost(
-      document: FakePresentationHost.emptyDocument(
-        root: _matchingHeaderNode,
-        bindings: _integerBinding,
-      ),
+    final host = documentHost(
+      _matchingHeaderNode,
+      bindings: _integerBinding,
       expected: _integerType,
-      updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    await tester.showRenderer(host);
 
     expect(find.text("Count"), findsOneWidget);
     expect(visibleTextFields().single.spoken, startsWith("Count"));
@@ -1381,18 +1321,12 @@ void main() {
   testWidgets("collapsing a header preserves a local invalid draft", (
     tester,
   ) async {
-    final host = FakePresentationHost(
-      document: FakePresentationHost.emptyDocument(
-        root: _headerNode,
-        bindings: _integerBinding,
-      ),
+    final host = documentHost(
+      _headerNode,
+      bindings: _integerBinding,
       expected: _integerType,
-      updatesDocument: true,
     );
-    addTearDown(host.dispose);
-    final panel = await tester.showComponent(
-      Material(child: PortablePresentationRenderer(host: host)),
-    );
+    final panel = await tester.showRenderer(host);
 
     await panel.field("Count").type("-");
     await panel.tapOn(find.tooltip("Collapse"));
@@ -1405,13 +1339,10 @@ void main() {
   testWidgets("narrow headers move trailing actions into overflow", (
     tester,
   ) async {
-    final host = FakePresentationHost(
-      document: FakePresentationHost.emptyDocument(
-        root: _overflowHeaderNode,
-        bindings: _integerBinding,
-      ),
+    final host = documentHost(
+      _overflowHeaderNode,
+      bindings: _integerBinding,
       expected: _integerType,
-      updatesDocument: true,
     );
     addTearDown(host.dispose);
     final panel = await tester.showComponent(
@@ -1547,50 +1478,13 @@ void main() {
           size: null,
         ),
       );
-      final coloredIcon = presentationNode(
-        "tag.icon.color",
-        skir.PresentationElement.createContainer(
-          foregroundColor: null,
-          transition: null,
-          shadows: const [],
-          child: presentationNode(
-            "tag.icon.padding",
-            skir.PresentationElement.createPadding(
-              child: icon,
-              top: 6,
-              start: 6,
-              end: 6,
-              bottom: 6,
-            ),
-          ),
-          border: null,
-          backgroundColor: skir.PresentationColor.wrapValue(
-            skir.ExpressionNode.wrapLiteral(
-              skir.DataValue.wrapInteger("4288585374"),
-            ),
-          ),
-          radius: skir.PresentationRadius.none,
-        ),
-      );
+      final coloredIcon = coloredIconTile("tag.icon", icon);
       final center = presentationNode(
         "tag.name",
-        skir.PresentationElement.createText(
-          value: skir.ExpressionNode.wrapLiteral(
+        textElement(
+          skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapStringValue(label),
           ),
-          color: null,
-          sizing: null,
-          fontWeight: null,
-          fontItalic: null,
-          fontOpticalSize: null,
-          fontSlant: null,
-          fontWidth: null,
-          textAlignment: null,
-          lineHeight: null,
-          letterSpacing: null,
-          decoration: null,
-          semanticLabel: null,
-          paragraph: skir.TextParagraph.defaultInstance,
         ),
       );
       final card = presentationNode(
@@ -1664,7 +1558,7 @@ void main() {
     final cell = tester.getRect(find.bySemanticsLabel("Placement"));
     final cellIcon = tester.getRect(find.bySemanticsLabel("Tag"));
     expect(cell.expandToInclude(cellIcon), cell);
-    expect(semanticsLabeled("Unnamed tag"), isEmpty);
+    expect(semanticsLabeled("Unnamed tag"), hasLength(1));
 
     await show(width: 180, tagName: "Quest");
     expect(tester.takeException(), isNull);
@@ -1683,8 +1577,8 @@ void main() {
     skir.PresentationNode textNode(skir.ExpressionNode weight) =>
         presentationNode(
           "styled.text",
-          skir.PresentationElement.createText(
-            value: skir.ExpressionNode.wrapLiteral(
+          textElement(
+            skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapStringValue("Styled title"),
             ),
             color: skir.PresentationColor.wrapValue(
@@ -1699,14 +1593,9 @@ void main() {
             fontItalic: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapFloat(1),
             ),
-            fontOpticalSize: null,
-            fontSlant: null,
-            fontWidth: null,
             textAlignment: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapStringValue("center"),
             ),
-            lineHeight: null,
-            letterSpacing: null,
             decoration: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapStringValue("underline"),
             ),
@@ -2493,24 +2382,11 @@ void main() {
         presentation: skir.SequencePresentation(
           item: presentationNode(
             "hierarchy.item",
-            skir.PresentationElement.createText(
-              value: skir.ExpressionNode.createInput(
+            textElement(
+              skir.ExpressionNode.createInput(
                 binding: itemBinding,
                 path: skir.ValuePath(segments: const []),
               ),
-              color: null,
-              sizing: null,
-              fontWeight: null,
-              fontItalic: null,
-              fontOpticalSize: null,
-              fontSlant: null,
-              fontWidth: null,
-              textAlignment: null,
-              lineHeight: null,
-              letterSpacing: null,
-              decoration: null,
-              semanticLabel: null,
-              paragraph: skir.TextParagraph.defaultInstance,
             ),
           ),
           empty: null,
@@ -2647,52 +2523,13 @@ final _polymorphicNode = presentationNode(
   ),
 );
 final _polymorphicCatalog = CheckedEditorCatalog(
-  skir.EditorCatalog(
-    resourceDisplays: const [],
-    resourceOperations: const [],
+  testCatalogSnapshot(
     generation: skir.CatalogGeneration(value: "test"),
     types: [
-      skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        display: defaultTypeDisplay(""),
-        definition: skir.TypeDefinition(
-          id: _iconifyDefinition,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              skir.FieldDeclaration(
-                owner: skir.FieldOwner(
-                  definition: _iconifyDefinition,
-                  name: "value",
-                ),
-                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-            ],
-            abstract_: false,
-          ),
-          parents: const [],
-        ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: [
-          skir.EffectiveFieldTemplate(
-            key: "value",
-            owner: skir.FieldOwner(
-              definition: _iconifyDefinition,
-              name: "value",
-            ),
-            type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-            rules: const [],
-          ),
-        ],
-        ancestorTemplates: const [],
-      ),
+      recordType(_iconifyDefinition, {
+        "value": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+      }),
     ],
-    relations: const [],
-    realmRoot: skir.TypeDefinitionId.defaultInstance,
-    presentations: const [],
     presentationMaterials: [
       skir.PresentationMaterial(
         inheritableNodes: const [],
@@ -2705,22 +2542,7 @@ final _polymorphicCatalog = CheckedEditorCatalog(
         role: skir.PresentationRole.inspector,
         layout: presentationNode(
           "iconify.value",
-          skir.PresentationElement.createTextInput(
-            control: skir.BoundControl(
-              binding: _configuredValueReference,
-              label: skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapStringValue("Icon"),
-              ),
-              description: null,
-              prefix: null,
-              semanticLabel: null,
-            ),
-            appearance: null,
-            content: null,
-            entry: null,
-            mappings: null,
-            options: skir.TextEditingOptions.defaultInstance,
-          ),
+          textInputElement(_configuredValueReference, label: "Icon"),
         ),
         dependencies: skir.PresentationDependencies.defaultInstance,
         subject: skir.TypeTemplate.createNamed(
@@ -2729,13 +2551,6 @@ final _polymorphicCatalog = CheckedEditorCatalog(
         ),
       ),
     ],
-    configuration: const [],
-    diagnostics: const [],
-
-    endpointBindings: const [],
-    capabilities: const [],
-    recommendations: const [],
-    roleFallbacks: const [],
   ),
 );
 final _actionNode = presentationNode(
@@ -2777,41 +2592,16 @@ final _actionNode = presentationNode(
 );
 final _compactNode = presentationNode(
   "compact.root",
-  skir.PresentationElement.createText(
-    value: skir.ExpressionNode.wrapLiteral(
+  textElement(
+    skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapStringValue("Compact card"),
     ),
-    color: null,
-    sizing: null,
-    fontWeight: null,
-    fontItalic: null,
-    fontOpticalSize: null,
-    fontSlant: null,
-    fontWidth: null,
-    textAlignment: null,
-    lineHeight: null,
-    letterSpacing: null,
-    decoration: null,
-    semanticLabel: null,
-    paragraph: skir.TextParagraph.defaultInstance,
   ),
 );
 final _headerNode = skir.PresentationNode(
   nodeId: "header.root",
   properties: skir.PresentationProperties.defaultInstance,
-  element: skir.PresentationElement.wrapNumericInput(
-    (skir.NumericControl.mutable()
-          ..control = skir.BoundControl(
-            binding: _reference,
-            label: skir.ExpressionNode.wrapLiteral(
-              skir.DataValue.wrapStringValue("Count"),
-            ),
-            description: null,
-            prefix: null,
-            semanticLabel: null,
-          ))
-        .toFrozen(),
-  ),
+  element: numericInputElement(_reference, label: "Count"),
   header: skir.PresentationHeader(
     binding: _reference,
     title: skir.PresentationHeaderTitle.wrapText(
@@ -2831,19 +2621,7 @@ final _headerNode = skir.PresentationNode(
 final _matchingHeaderNode = skir.PresentationNode(
   nodeId: "matching.header.root",
   properties: skir.PresentationProperties.defaultInstance,
-  element: skir.PresentationElement.wrapNumericInput(
-    (skir.NumericControl.mutable()
-          ..control = skir.BoundControl(
-            binding: _reference,
-            label: skir.ExpressionNode.wrapLiteral(
-              skir.DataValue.wrapStringValue("Count"),
-            ),
-            description: null,
-            prefix: null,
-            semanticLabel: null,
-          ))
-        .toFrozen(),
-  ),
+  element: numericInputElement(_reference, label: "Count"),
   header: skir.PresentationHeader(
     binding: _reference,
     title: skir.PresentationHeaderTitle.wrapText(

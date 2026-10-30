@@ -9,20 +9,11 @@ void main() {
     tester,
   ) async {
     final panel = await tester.showComponent(
-      LabeledBox(
-        viewport,
-        width: 800,
-        height: 600,
-        child: CustomScrollView(
-          slivers: [
-            CenteredSliverMainAxisGroup(
-              slivers: [
-                SliverToBoxAdapter(child: LabeledBox("First", height: 40)),
-                SliverToBoxAdapter(child: LabeledBox("Second", height: 60)),
-              ],
-            ),
-          ],
-        ),
+      CenteredScrollStage(
+        slivers: [
+          SliverToBoxAdapter(child: LabeledBox("First", height: 40)),
+          SliverToBoxAdapter(child: LabeledBox("Second", height: 60)),
+        ],
       ),
     );
 
@@ -36,26 +27,17 @@ void main() {
   ) async {
     var builds = 0;
     final panel = await tester.showComponent(
-      LabeledBox(
-        viewport,
-        width: 800,
-        height: 600,
-        child: CustomScrollView(
-          slivers: [
-            CenteredSliverMainAxisGroup(
-              slivers: [
-                SliverFixedExtentList.builder(
-                  itemExtent: 100,
-                  itemCount: 20,
-                  itemBuilder: (context, index) {
-                    builds++;
-                    return Text("item $index");
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
+      CenteredScrollStage(
+        slivers: [
+          SliverFixedExtentList.builder(
+            itemExtent: 100,
+            itemCount: 20,
+            itemBuilder: (context, index) {
+              builds++;
+              return Text("item $index");
+            },
+          ),
+        ],
       ),
     );
 
@@ -71,26 +53,13 @@ void main() {
     (tester) async {
       var taps = 0;
       final panel = await tester.showComponent(
-        LabeledBox(
-          viewport,
-          width: 800,
-          height: 600,
-          child: CustomScrollView(
-            slivers: [
-              CenteredSliverMainAxisGroup(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: LabeledBox(
-                      "Centered",
-                      height: 100,
-                      onTap: () => taps++,
-                    ),
-                  ),
-                ],
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 1000)),
-            ],
-          ),
+        CenteredScrollStage(
+          slivers: [
+            SliverToBoxAdapter(
+              child: LabeledBox("Centered", height: 100, onTap: () => taps++),
+            ),
+          ],
+          trailing: [const SliverToBoxAdapter(child: SizedBox(height: 1000))],
         ),
       );
 
@@ -113,26 +82,13 @@ void main() {
   ) async {
     var taps = 0;
     final panel = await tester.showComponent(
-      LabeledBox(
-        viewport,
-        width: 800,
-        height: 600,
-        child: CustomScrollView(
-          reverse: true,
-          slivers: [
-            CenteredSliverMainAxisGroup(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: LabeledBox(
-                    "Reversed",
-                    height: 100,
-                    onTap: () => taps++,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      CenteredScrollStage(
+        slivers: [
+          SliverToBoxAdapter(
+            child: LabeledBox("Reversed", height: 100, onTap: () => taps++),
+          ),
+        ],
+        reverse: true,
       ),
     );
 
@@ -223,21 +179,12 @@ void main() {
   ) async {
     var taps = 0;
     final panel = await tester.showComponent(
-      LabeledBox(
-        viewport,
-        width: 800,
-        height: 600,
-        child: CustomScrollView(
-          slivers: [
-            CenteredSliverMainAxisGroup(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: LabeledBox("Target", height: 100, onTap: () => taps++),
-                ),
-              ],
-            ),
-          ],
-        ),
+      CenteredScrollStage(
+        slivers: [
+          SliverToBoxAdapter(
+            child: LabeledBox("Target", height: 100, onTap: () => taps++),
+          ),
+        ],
       ),
     );
 

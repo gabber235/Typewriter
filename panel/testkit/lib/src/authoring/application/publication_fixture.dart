@@ -127,6 +127,26 @@ skir.PublicationStatus_Blocked blockedPublicationReview({
   pendingRoots: const [],
 );
 
+/// The publication view blocked on the problem "original": the value at
+/// [at] is unfinished, raised by the rule [origin] and backed by [evidence]
+/// when given.
+RealmPublicationView unfinishedValueBlocking(
+  skir.ValueLocation at, {
+  required skir.RuleOrigin origin,
+  skir.DiagnosticEvidence? evidence,
+}) => RealmPublicationView.blocked(
+  blockedPublicationReview(
+    problem: publicationProblem(
+      id: "original",
+      code: "unfinished_value",
+      message: "A required value is unfinished.",
+      primary: at,
+      origin: origin,
+      evidence: evidence,
+    ),
+  ),
+);
+
 /// The publication status of a [blockedPublicationReview] on [problem].
 skir.PublicationStatus blockedPublicationStatus({
   skir.PublicationDiagnosticDetails? problem,

@@ -15,7 +15,7 @@ void main() {
     testWidgets("the inspector offers $label for the selected resources", (
       tester,
     ) async {
-      final panel = (await tester.pumpStory(story))!;
+      final panel = await tester.pumpStory(story);
 
       // A button with a shortcut reads its key after its name.
       expect(panel.inspector.operations, contains(startsWith(label)));
@@ -25,10 +25,10 @@ void main() {
   testWidgets("a delete that one resource refuses says which and why", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       deleteOperationUseCase,
       knobs: {"Selected resources": "2", "Outcome": "Partly Fails"},
-    ))!;
+    );
 
     // The open confirmation keeps animating, so the steps run frames
     // instead of settling.

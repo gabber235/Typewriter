@@ -1,6 +1,9 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/core/pump_panel.dart";
+import "package:typewriter_testkit/src/core/stage.dart";
 import "package:typewriter_testkit/src/drivers/component_driver.dart";
+import "package:typewriter_testkit/src/drivers/panel_driver.dart";
 import "package:typewriter_testkit/src/drivers/semantics.dart";
 
 /// The inspector: the selected resources' fields and operations.
@@ -125,4 +128,18 @@ final class InspectorDriver extends ComponentDriver {
     await tester.tapAt(dialog.button(confirm ?? label).screenRect.center);
     await frames();
   }
+}
+
+/// An inspector beside a page on a desktop.
+extension PumpDesktopInspector on WidgetTester {
+  /// Pumps an [InspectorScaffold] of 1600 by 800 pixels showing [page]
+  /// beside the inspector.
+  Future<PanelDriver> pumpDesktopInspector({
+    Widget page = const SizedBox.expand(),
+  }) => pumpPanel(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(width: 1600, height: 800, child: InspectorScaffold(child: page)),
+    ),
+  );
 }

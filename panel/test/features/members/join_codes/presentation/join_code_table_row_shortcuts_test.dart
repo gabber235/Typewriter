@@ -16,24 +16,7 @@ void main() {
     testWidgets("${keyName(key, shifted: shifted)} on "
         "${selected ? "a selected" : "an unselected"} join code row invokes "
         "${invoked.isEmpty ? "nothing" : invoked.single}", (tester) async {
-      final row = await tester.pumpFocusedRow(
-        [
-          signedIn(ada, organization: acme),
-          membership(joinCodes: [_code]),
-        ],
-        (content, record) => JoinCodeTableRowShortcuts(
-          code: _code,
-          onToggleSelection: record("toggle"),
-          onSelectAll: record("select all"),
-          onClearSelection: record("clear"),
-          onCopy: record("copy"),
-          isSelected: selected,
-          hasSelection: selected,
-          onRevokeSelection: () async => record("revoke selection")(),
-          onFocusChange: (_) {},
-          child: content,
-        ),
-      );
+      final row = await tester.pumpJoinCodeRow(_code, selected: selected);
 
       await row.press(key, shifted: shifted);
 
@@ -45,24 +28,7 @@ void main() {
   testWidgets("Delete on an unselected join code row asks before revoking", (
     tester,
   ) async {
-    final row = await tester.pumpFocusedRow(
-      [
-        signedIn(ada, organization: acme),
-        membership(joinCodes: [_code]),
-      ],
-      (content, record) => JoinCodeTableRowShortcuts(
-        code: _code,
-        onToggleSelection: record("toggle"),
-        onSelectAll: record("select all"),
-        onClearSelection: record("clear"),
-        onCopy: record("copy"),
-        isSelected: false,
-        hasSelection: false,
-        onRevokeSelection: () async => record("revoke selection")(),
-        onFocusChange: (_) {},
-        child: content,
-      ),
-    );
+    final row = await tester.pumpJoinCodeRow(_code, selected: false);
 
     await row.press(LogicalKeyboardKey.delete);
 

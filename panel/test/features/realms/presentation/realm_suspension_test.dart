@@ -59,25 +59,9 @@ void main() {
   testWidgets("suspending a Realm takes focus away from its fields", (
     tester,
   ) async {
-    final connection = ValueNotifier(RealmConnectionState.online);
-    addTearDown(connection.dispose);
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        SizedBox.fromSize(
-          size: _workspace,
-          child: ValueListenableBuilder(
-            valueListenable: connection,
-            builder: (context, state, child) => RealmSuspensionBarrier(
-              interaction: RealmInteractionState(connectionState: state),
-              child: child!,
-            ),
-            child: const TextField(
-              decoration: InputDecoration(labelText: "Name"),
-            ),
-          ),
-        ),
-      ),
+    final (:panel, :connection) = await tester.pumpSuspendable(
+      const TextField(decoration: InputDecoration(labelText: "Name")),
+      size: _workspace,
     );
 
     await panel.field("Name").focus();
@@ -92,23 +76,9 @@ void main() {
   testWidgets("a suspended Realm keeps its content and resumes where it was", (
     tester,
   ) async {
-    final connection = ValueNotifier(RealmConnectionState.online);
-    addTearDown(connection.dispose);
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        SizedBox.fromSize(
-          size: _workspace,
-          child: ValueListenableBuilder(
-            valueListenable: connection,
-            builder: (context, state, child) => RealmSuspensionBarrier(
-              interaction: RealmInteractionState(connectionState: state),
-              child: child!,
-            ),
-            child: const CountingButton(),
-          ),
-        ),
-      ),
+    final (:panel, :connection) = await tester.pumpSuspendable(
+      const CountingButton(),
+      size: _workspace,
     );
 
     await panel.tapOn(find.text("Count 0"));

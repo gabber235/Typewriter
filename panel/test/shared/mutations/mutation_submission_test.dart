@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("retrying a failed local refresh of a request that was not submitted "
@@ -81,8 +82,7 @@ void main() {
   );
 
   test("a new attempt replaces only the same resource rejection", () async {
-    final journal = ScopedWorkSession();
-    addTearDown(journal.dispose);
+    final journal = testWorkSession();
     MutationSubmission<int> attempt(String id, String scope) =>
         MutationSubmission<int>(
           id: id,

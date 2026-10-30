@@ -22,7 +22,7 @@ Trait membershipService({
   Object? failure,
   Object? commandFailure,
 }) => _MembershipService(
-  FakeMembershipService(
+  () => FakeMembershipService(
     roles: roles,
     members: members,
     joinCodes: joinCodes,
@@ -30,28 +30,36 @@ Trait membershipService({
     failure: failure,
     commandFailure: commandFailure,
   ),
+  (
+    members: members?.length ?? 0,
+    joinCodes: joinCodes?.length ?? 0,
+    joinRequests: joinRequests?.length ?? 0,
+  ),
 );
 
+/// Builds a fresh service for each world, so a trait list shared between
+/// tests never carries one test's changes into the next.
 final class _MembershipService extends Trait {
-  const _MembershipService(this.service);
+  const _MembershipService(this.create, this.counts);
 
-  final FakeMembershipService service;
+  final FakeMembershipService Function() create;
+  final ({int members, int joinCodes, int joinRequests}) counts;
 
   @override
   Slot get slot => const Slot("membership");
 
   @override
   String get description =>
-      "membershipService(${service.members.length} members, "
-      "${service.joinCodes.length} join codes, "
-      "${service.joinRequests.length} join requests)";
+      "membershipService(${counts.members} members, "
+      "${counts.joinCodes} join codes, "
+      "${counts.joinRequests} join requests)";
 
   @override
   void applyTo(WorldBuilder world) => world.onStart((started) {
     final user = world.user;
     final organization = world.organizations.firstOrNull;
     if (user == null || organization == null) return;
-    service
+    create()
       ..latency = world.latency
       ..serve(
         started.nats,

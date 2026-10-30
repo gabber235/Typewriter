@@ -67,10 +67,9 @@ Widget servicesInspectorUseCase(BuildContext context) {
               selected([ServiceIdentifier(service.serviceId)]),
             ],
       for (final host in topology.hosts)
-        "Host ${host.hostId.id}, ${hostRuntimeStatusLabel(host.state.status)}":
-            [
-              selected([ServiceHostIdentifier(host.hostId)]),
-            ],
+        hostOption(host): [
+          selected([ServiceHostIdentifier(host.hostId)]),
+        ],
       for (final realm in topology.realms)
         "Realm ${realm.realmId.id}, ${childRuntimeStatusLabel(realm.state.status)}":
             [
@@ -84,6 +83,10 @@ Widget servicesInspectorUseCase(BuildContext context) {
     }),
   ], at: _servicesRoute);
 }
+
+/// How the inspector story names [host] among the resources it can select.
+String hostOption(skir.ServiceHost host) =>
+    "Host ${host.hostId.id}, ${hostRuntimeStatusLabel(host.state.status)}";
 
 /// The registration token input on the services page, where it binds a new
 /// service: an invalid token is refused before it is sent, a valid one

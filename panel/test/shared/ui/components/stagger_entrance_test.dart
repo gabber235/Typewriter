@@ -6,34 +6,11 @@ void main() {
   group("StaggerScope", () {
     testWidgets("orders entrances by vertical position", (tester) async {
       final panel = await tester.mountComponent(
-        SizedBox(
-          width: 300,
-          height: 300,
-          child: StaggerScope(
-            duration: const Duration(milliseconds: 200),
-            interval: const Duration(milliseconds: 100),
-            maxLaunchDuration: const Duration(seconds: 2),
-            curve: Curves.linear,
-            slideOffset: 0,
-            child: Stack(
-              children: const [
-                Positioned(
-                  top: 120,
-                  left: 0,
-                  child: StaggerEntrance(
-                    child: LabeledBox("bottom", width: 40, height: 20),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: StaggerEntrance(
-                    child: LabeledBox("top", width: 40, height: 20),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        const StaggerStage(
+          children: [
+            Positioned(top: 120, left: 0, child: EnteringBox("bottom")),
+            Positioned(top: 0, left: 0, child: EnteringBox("top")),
+          ],
         ),
       );
       // Render schedules published by the first frame's post-frame callback.
@@ -49,34 +26,11 @@ void main() {
       tester,
     ) async {
       final panel = await tester.mountComponent(
-        SizedBox(
-          width: 300,
-          height: 300,
-          child: StaggerScope(
-            duration: const Duration(milliseconds: 200),
-            interval: const Duration(milliseconds: 100),
-            maxLaunchDuration: const Duration(seconds: 2),
-            curve: Curves.linear,
-            slideOffset: 0,
-            child: Stack(
-              children: const [
-                Positioned(
-                  top: 0,
-                  left: 120,
-                  child: StaggerEntrance(
-                    child: LabeledBox("right", width: 40, height: 20),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: StaggerEntrance(
-                    child: LabeledBox("left", width: 40, height: 20),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        const StaggerStage(
+          children: [
+            Positioned(top: 0, left: 120, child: EnteringBox("right")),
+            Positioned(top: 0, left: 0, child: EnteringBox("left")),
+          ],
         ),
       );
       // Render schedules published by the first frame's post-frame callback.
@@ -90,56 +44,23 @@ void main() {
 
     testWidgets("nested scope reserves a contiguous group", (tester) async {
       final panel = await tester.mountComponent(
-        SizedBox(
-          width: 300,
-          height: 300,
-          child: StaggerScope(
-            duration: const Duration(milliseconds: 200),
-            interval: const Duration(milliseconds: 100),
-            maxLaunchDuration: const Duration(seconds: 2),
-            curve: Curves.linear,
-            slideOffset: 0,
-            child: Stack(
-              children: const [
-                Positioned(
-                  top: 0,
-                  child: StaggerEntrance(
-                    child: LabeledBox("before", width: 40, height: 20),
-                  ),
+        const StaggerStage(
+          children: [
+            Positioned(top: 0, child: EnteringBox("before")),
+            Positioned(
+              top: 50,
+              child: StaggerScope(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    EnteringBox("nested-one"),
+                    EnteringBox("nested-two"),
+                  ],
                 ),
-                Positioned(
-                  top: 50,
-                  child: StaggerScope(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        StaggerEntrance(
-                          child: LabeledBox(
-                            "nested-one",
-                            width: 40,
-                            height: 20,
-                          ),
-                        ),
-                        StaggerEntrance(
-                          child: LabeledBox(
-                            "nested-two",
-                            width: 40,
-                            height: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 200,
-                  child: StaggerEntrance(
-                    child: LabeledBox("after", width: 40, height: 20),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            Positioned(top: 200, child: EnteringBox("after")),
+          ],
         ),
       );
       // Render schedules published by the first frame's post-frame callback.
@@ -173,13 +94,8 @@ void main() {
             builder: (context, visible, child) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const StaggerEntrance(
-                  child: LabeledBox("initial", width: 40, height: 20),
-                ),
-                if (visible)
-                  const StaggerEntrance(
-                    child: LabeledBox("late", width: 40, height: 20),
-                  ),
+                const EnteringBox("initial"),
+                if (visible) const EnteringBox("late"),
               ],
             ),
           ),
@@ -208,20 +124,14 @@ void main() {
             builder: (context, visible, child) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const StaggerEntrance(
-                  child: LabeledBox("initial", width: 40, height: 20),
-                ),
+                const EnteringBox("initial"),
                 if (visible)
                   const StaggerScope(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        StaggerEntrance(
-                          child: LabeledBox("late-one", width: 40, height: 20),
-                        ),
-                        StaggerEntrance(
-                          child: LabeledBox("late-two", width: 40, height: 20),
-                        ),
+                        EnteringBox("late-one"),
+                        EnteringBox("late-two"),
                       ],
                     ),
                   ),
@@ -255,30 +165,10 @@ void main() {
             slideOffset: 0,
             child: Stack(
               children: const [
-                Positioned(
-                  top: 0,
-                  child: StaggerEntrance(
-                    child: LabeledBox("one", width: 40, height: 20),
-                  ),
-                ),
-                Positioned(
-                  top: 50,
-                  child: StaggerEntrance(
-                    child: LabeledBox("two", width: 40, height: 20),
-                  ),
-                ),
-                Positioned(
-                  top: 100,
-                  child: StaggerEntrance(
-                    child: LabeledBox("three", width: 40, height: 20),
-                  ),
-                ),
-                Positioned(
-                  top: 150,
-                  child: StaggerEntrance(
-                    child: LabeledBox("four", width: 40, height: 20),
-                  ),
-                ),
+                Positioned(top: 0, child: EnteringBox("one")),
+                Positioned(top: 50, child: EnteringBox("two")),
+                Positioned(top: 100, child: EnteringBox("three")),
+                Positioned(top: 150, child: EnteringBox("four")),
               ],
             ),
           ),
@@ -300,14 +190,7 @@ void main() {
           child: StaggerScope(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                StaggerEntrance(
-                  child: LabeledBox("one", width: 40, height: 20),
-                ),
-                StaggerEntrance(
-                  child: LabeledBox("two", width: 40, height: 20),
-                ),
-              ],
+              children: [EnteringBox("one"), EnteringBox("two")],
             ),
           ),
         ),
@@ -319,9 +202,7 @@ void main() {
     });
 
     testWidgets("asserts when an entrance has no scope", (tester) async {
-      await tester.mountComponent(
-        StaggerEntrance(child: LabeledBox("unscoped", width: 40, height: 20)),
-      );
+      await tester.mountComponent(EnteringBox("unscoped"));
 
       final exception = tester.takeException();
       expect(exception, isA<AssertionError>());
@@ -341,16 +222,8 @@ void main() {
               slideOffset: 0,
               sliver: SliverMainAxisGroup(
                 slivers: [
-                  SliverStaggerEntrance(
-                    sliver: SliverToBoxAdapter(
-                      child: LabeledBox("sliver-one", width: 40, height: 20),
-                    ),
-                  ),
-                  SliverStaggerEntrance(
-                    sliver: SliverToBoxAdapter(
-                      child: LabeledBox("sliver-two", width: 40, height: 20),
-                    ),
-                  ),
+                  EnteringSliverBox("sliver-one"),
+                  EnteringSliverBox("sliver-two"),
                 ],
               ),
             ),
@@ -388,16 +261,8 @@ void main() {
                   slideOffset: 0,
                   sliver: SliverMainAxisGroup(
                     slivers: [
-                      SliverStaggerEntrance(
-                        sliver: SliverToBoxAdapter(
-                          child: LabeledBox("data-one", width: 40, height: 20),
-                        ),
-                      ),
-                      SliverStaggerEntrance(
-                        sliver: SliverToBoxAdapter(
-                          child: LabeledBox("data-two", width: 40, height: 20),
-                        ),
-                      ),
+                      EnteringSliverBox("data-one"),
+                      EnteringSliverBox("data-two"),
                     ],
                   ),
                 ),
@@ -460,25 +325,8 @@ void main() {
                 duration: const Duration(milliseconds: 100),
                 sliver: SliverMainAxisGroup(
                   slivers: [
-                    const SliverStaggerEntrance(
-                      sliver: SliverToBoxAdapter(
-                        child: LabeledBox(
-                          "initial-sliver",
-                          width: 40,
-                          height: 20,
-                        ),
-                      ),
-                    ),
-                    if (visible)
-                      const SliverStaggerEntrance(
-                        sliver: SliverToBoxAdapter(
-                          child: LabeledBox(
-                            "late-sliver",
-                            width: 40,
-                            height: 20,
-                          ),
-                        ),
-                      ),
+                    const EnteringSliverBox("initial-sliver"),
+                    if (visible) const EnteringSliverBox("late-sliver"),
                   ],
                 ),
               ),
@@ -500,13 +348,7 @@ void main() {
         ReducedMotion(
           child: CustomScrollView(
             slivers: [
-              SliverStaggerScope(
-                sliver: SliverStaggerEntrance(
-                  sliver: SliverToBoxAdapter(
-                    child: LabeledBox("reduced-sliver", width: 40, height: 20),
-                  ),
-                ),
-              ),
+              SliverStaggerScope(sliver: EnteringSliverBox("reduced-sliver")),
             ],
           ),
         ),
@@ -523,15 +365,7 @@ void main() {
       addTearDown(() => FlutterError.onError = previousHandler);
 
       await tester.mountComponent(
-        CustomScrollView(
-          slivers: [
-            SliverStaggerEntrance(
-              sliver: SliverToBoxAdapter(
-                child: LabeledBox("unscoped-sliver", width: 40, height: 20),
-              ),
-            ),
-          ],
-        ),
+        CustomScrollView(slivers: [EnteringSliverBox("unscoped-sliver")]),
       );
 
       final exception = errors.first.exception;

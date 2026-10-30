@@ -6,21 +6,7 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("an empty query issues one Realm search and becomes ready", () async {
-    // A Realm that records every search and finds nothing, with its
-    // search started.
-    final world = testWorld([signedIn(ada, organization: acme), realm()]);
-    final requests = <skir.SearchAuthoringRequest>[];
-    world.requireRealm.answerSearch = (request) async {
-      requests.add(request);
-      return skir.SearchAuthoringResponse.createSuccess(
-        generation: world.requireRealm.document.generation,
-        hits: const [],
-        diagnostics: const [],
-      );
-    };
-    await world.openRealmEditing();
-    final controller = world.realmSearch();
-    await pumpEventQueue();
+    final (:controller, :requests) = await startedEmptyRealmSearch();
 
     expect(controller.snapshot.status, SearchSourceStatus.ready);
     expect(requests.map((request) => request.query), [""]);
@@ -29,21 +15,7 @@ void main() {
   test(
     "a changed query issues exactly one fresh Realm search for it",
     () async {
-      // A Realm that records every search and finds nothing, with its
-      // search started.
-      final world = testWorld([signedIn(ada, organization: acme), realm()]);
-      final requests = <skir.SearchAuthoringRequest>[];
-      world.requireRealm.answerSearch = (request) async {
-        requests.add(request);
-        return skir.SearchAuthoringResponse.createSuccess(
-          generation: world.requireRealm.document.generation,
-          hits: const [],
-          diagnostics: const [],
-        );
-      };
-      await world.openRealmEditing();
-      final controller = world.realmSearch();
-      await pumpEventQueue();
+      final (:controller, :requests) = await startedEmptyRealmSearch();
 
       controller.updateQuery("example");
       await pumpEventQueue();
@@ -87,19 +59,13 @@ void main() {
       final workspace = await world.openRealmEditing();
       final controller = world.realmSearch();
       await pumpEventQueue();
-      final binding = workspace.attach(
-        id,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      addTearDown(binding.detach);
-
-      binding.edit(
-        label: "Rename hit",
-        apply: (edit) => edit.set(
-          authoredFieldLocation(id, ["name"]),
-          skir.DataValue.wrapStringValue("Working name"),
-        ),
-      );
+      workspace
+          .form(id)
+          .setText(
+            "Rename hit",
+            authoredFieldLocation(id, ["name"]),
+            "Working name",
+          );
       await pumpEventQueue();
       final result =
           (controller.snapshot.nodes.single as SearchResultNode).result;

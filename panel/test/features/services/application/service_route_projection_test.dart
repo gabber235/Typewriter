@@ -10,11 +10,7 @@ final _service = service("one", status: null);
 
 final _host = paperHost("one", service: _service.serviceId);
 
-final _topology = skir.OrganizationTopologySnapshot(
-  hosts: [_host],
-  realms: [],
-  engines: [],
-);
+final _topology = topologySnapshot(hosts: [_host]);
 
 void main() {
   testWidgets("the open organization's services follow its backend", (

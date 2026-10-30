@@ -10,7 +10,7 @@ const _shortTitle = "Use at least three characters";
 void main() {
   testWidgets("a too short title says why and clears once corrected, keeping "
       "the field focused", (tester) async {
-    final panel = (await tester.pumpStory(portableFieldValidationUseCase))!;
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
     expect(panel.shows(_shortTitle), isTrue);
 
     await panel.field("Title").type("Find the lantern");
@@ -23,7 +23,7 @@ void main() {
 
   testWidgets("a collapsed quest still reports its field diagnostic and "
       "expands to the same draft", (tester) async {
-    final panel = (await tester.pumpStory(portableFieldValidationUseCase))!;
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
     await panel.field("Title").type("Fi");
     await tester.runStory();
 
@@ -37,10 +37,10 @@ void main() {
   });
 
   testWidgets("a quest that starts collapsed shows the marker", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       portableFieldValidationUseCase,
       knobs: {"Collapsed header": "true", "Diagnostic severity": "Warning"},
-    ))!;
+    );
 
     expect(panel.field("Title").exists, isFalse);
     expect(find.tooltip("1 field diagnostic"), findsOneWidget);
@@ -48,7 +48,7 @@ void main() {
 
   testWidgets("an objective count that is not a number keeps the draft and "
       "clears on correction", (tester) async {
-    final panel = (await tester.pumpStory(portableFieldValidationUseCase))!;
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
     final objectives = panel.field("Objectives");
 
     await objectives.type("-");
@@ -65,14 +65,14 @@ void main() {
 
   testWidgets("general feedback on a read only search result shows its message "
       "once focused from the keyboard", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       portableFieldValidationUseCase,
       knobs: {
         "General message": "true",
         "Presentation role": "Search result",
         "Read only": "true",
       },
-    ))!;
+    );
     expect(find.text(_shortTitle), findsNothing);
 
     for (var tab = 0; tab < 20 && !panel.shows(_shortTitle); tab++) {

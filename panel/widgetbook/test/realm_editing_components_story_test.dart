@@ -6,17 +6,10 @@ import "package:widgetbook_workspace/stories/authoring/presentation/realm_editin
 import "support/stories.dart";
 
 void main() {
-  Future<PanelDriver> typeArguments(
-    WidgetTester tester, [
-    Map<String, String> knobs = const {},
-  ]) => tester
-      .pumpStory(authoredTypeArgumentEditorUseCase, knobs: knobs)
-      .then((panel) => panel!);
-
   testWidgets("a type argument change is reviewed before it is staged", (
     tester,
   ) async {
-    final panel = await typeArguments(tester);
+    final panel = await tester.pumpStory(authoredTypeArgumentEditorUseCase);
 
     await panel.tapOn(find.text("Choose a type"));
     await panel.field("Choose Reward").enter("Coins");
@@ -30,11 +23,14 @@ void main() {
 
   testWidgets("a preview the Realm rejects names the problem and stages "
       "nothing", (tester) async {
-    final panel = await typeArguments(tester, {
-      "Second argument": "true",
-      "First argument chosen": "true",
-      "Realm preview": "Rejected",
-    });
+    final panel = await tester.pumpStory(
+      authoredTypeArgumentEditorUseCase,
+      knobs: {
+        "Second argument": "true",
+        "First argument chosen": "true",
+        "Realm preview": "Rejected",
+      },
+    );
 
     await panel.tapOn(find.tooltip("Clear Reward"));
     await panel.tapOn(find.text("Review type change"));
@@ -46,7 +42,10 @@ void main() {
   testWidgets("without the Realm the editor explains why it is disabled", (
     tester,
   ) async {
-    final panel = await typeArguments(tester, {"Realm connected": "false"});
+    final panel = await tester.pumpStory(
+      authoredTypeArgumentEditorUseCase,
+      knobs: {"Realm connected": "false"},
+    );
 
     expect(
       panel.shows("Connect to the Realm to change type arguments"),
@@ -61,7 +60,7 @@ void main() {
   testWidgets("a retained rename compares before, working and saved values", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(realmEditingReviewUseCase))!;
+    final panel = await tester.pumpStory(realmEditingReviewUseCase);
 
     for (final column in ["Before changes", "Working", "Saved"]) {
       expect(panel.shows(column), isTrue, reason: column);

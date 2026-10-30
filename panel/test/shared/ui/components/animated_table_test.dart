@@ -104,19 +104,9 @@ void main() {
   testWidgets("waits for the last outgoing row before showing empty", (
     tester,
   ) async {
-    final key = GlobalKey<AnimatedTableState>();
-    await tester.showComponent(
-      AnimatedTable(
-        key: key,
-        initialItemCount: 1,
-        emptyBuilder: (context) => const Text("Empty"),
-        rowBuilder: (context, index, animation) =>
-            const TableRow(children: [Text("Active")]),
-        transitionBuilder: fadeIn,
-      ),
-    );
+    final table = await tester.showActiveRowTable();
 
-    key.currentState!.removeItem(
+    table.removeItem(
       0,
       (context, animation) => const TableRow(children: [Text("Outgoing")]),
       duration: const Duration(milliseconds: 100),
@@ -135,19 +125,9 @@ void main() {
   testWidgets("keeps one table when data returns during empty transition", (
     tester,
   ) async {
-    final key = GlobalKey<AnimatedTableState>();
-    await tester.showComponent(
-      AnimatedTable(
-        key: key,
-        initialItemCount: 1,
-        emptyBuilder: (context) => const Text("Empty"),
-        rowBuilder: (context, index, animation) =>
-            const TableRow(children: [Text("Active")]),
-        transitionBuilder: fadeIn,
-      ),
-    );
+    final table = await tester.showActiveRowTable();
 
-    key.currentState!.removeItem(
+    table.removeItem(
       0,
       (context, animation) => const TableRow(children: [Text("Outgoing")]),
       duration: const Duration(milliseconds: 1),
@@ -155,7 +135,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2));
     expect(find.byType(Table), findsOneWidget);
 
-    key.currentState!.insertItem(0);
+    table.insertItem(0);
     await tester.pump();
     expect(find.byType(Table), findsOneWidget);
     expect(find.text("Empty"), findsNothing);

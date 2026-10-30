@@ -15,21 +15,18 @@ final _service = service(
   status: null,
 );
 
+/// Ada in Acme, which runs [_service].
+final _withService = [
+  signedIn(ada, organization: acme),
+  servicesService(services: [_service]),
+];
+
 void main() {
   testWidgets("a rejected name keeps the field, its text and selection, and "
       "a correction saves and clears the naming rule", (tester) async {
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      servicesService(services: [_service]),
-    ]);
+    final panel = await tester.pumpPanel(_withService);
     await panel.services.card("Discord service", "Gabber 235").select();
     await panel.field("Name").focus();
-    List<String> sentNames() => [
-      for (final request in panel.world.nats.requestsTo(_updateSubject))
-        skir.UpdateOrganizationServiceRequest.serializer
-            .fromBytes(request.payload)
-            .name,
-    ];
     final name = panel.field("Name");
 
     await panel
@@ -51,11 +48,15 @@ void main() {
           .textSelection,
       const TextSelection(baseOffset: 0, extentOffset: 1),
     );
-    expect(sentNames(), isEmpty);
+    expect(panel.world.nats.sentServiceNames(_updateSubject), isEmpty);
 
     await panel.field("Name").edit("gabber236");
 
-    await panel.eventually(() => expect(sentNames(), ["gabber236"]));
+    await panel.eventually(
+      () => expect(panel.world.nats.sentServiceNames(_updateSubject), [
+        "gabber236",
+      ]),
+    );
     expect(panel.shows(_nameRule), isFalse);
     expect(name.isFocused, isTrue);
 
@@ -64,24 +65,15 @@ void main() {
     expect(panel.shows(_nameRule), isTrue);
     expect(name.isFocused, isTrue);
     expect(name.value, "ga");
-    expect(sentNames(), ["gabber236"]);
+    expect(panel.world.nats.sentServiceNames(_updateSubject), ["gabber236"]);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets("resizing the window while a rejected name is typed keeps the "
       "field and raises nothing", (tester) async {
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      servicesService(services: [_service]),
-    ]);
+    final panel = await tester.pumpPanel(_withService);
     await panel.services.card("Discord service", "Gabber 235").select();
     await panel.field("Name").focus();
-    List<String> sentNames() => [
-      for (final request in panel.world.nats.requestsTo(_updateSubject))
-        skir.UpdateOrganizationServiceRequest.serializer
-            .fromBytes(request.payload)
-            .name,
-    ];
 
     await panel.field("Name").edit("ga");
     tester.view.physicalSize = const Size(1401, 900);
@@ -90,6 +82,6 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(panel.field("Name").isFocused, isTrue);
     expect(panel.field("Name").value, "ga");
-    expect(sentNames(), isEmpty);
+    expect(panel.world.nats.sentServiceNames(_updateSubject), isEmpty);
   });
 }

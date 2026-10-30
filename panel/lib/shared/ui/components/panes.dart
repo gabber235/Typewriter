@@ -31,6 +31,21 @@ class _PaneRegistration {
   }
 }
 
+/// A pane's focus scope, which Tab in the enclosing scope enters only while
+/// the pane holds something Tab can reach.
+///
+/// Tab enters a nested scope only by stopping on the scope node itself, which
+/// then hands focus to its first traversable child, so the scope must stay
+/// traversable. A pane without such content is skipped instead, so Tab never
+/// stops on an empty pane.
+class _PaneScopeNode extends FocusScopeNode {
+  _PaneScopeNode({super.debugLabel});
+
+  @override
+  bool get skipTraversal =>
+      super.skipTraversal || traversalDescendants.isEmpty;
+}
+
 class _PaneSnapshot {
   const _PaneSnapshot(this.registration, this.bounds);
   final _PaneRegistration registration;
@@ -256,7 +271,7 @@ class Pane extends StatefulWidget {
 }
 
 class _PaneState extends State<Pane> {
-  late final FocusScopeNode _scope;
+  late final _PaneScopeNode _scope;
   late final _PaneRegistration _registration;
   _PaneCoordinator? _coordinator;
   FocusType _focusType = FocusType.none;
@@ -264,7 +279,7 @@ class _PaneState extends State<Pane> {
   @override
   void initState() {
     super.initState();
-    _scope = FocusScopeNode(debugLabel: "Pane-${widget.id}");
+    _scope = _PaneScopeNode(debugLabel: "Pane-${widget.id}");
     _registration = _PaneRegistration(scope: _scope);
   }
 
@@ -318,7 +333,9 @@ class _PaneState extends State<Pane> {
   Widget build(BuildContext context) {
     Widget result = FocusScope(
       node: _scope,
-      skipTraversal: true,
+      // Explicit, since the widget otherwise copies the node's computed
+      // skipTraversal back into it and an empty first frame would stick.
+      skipTraversal: false,
       onFocusChange: (focused) {
         if (focused) _coordinator?.markActive(_registration);
         final type = FocusHighlighting.primaryAndChild(_scope);

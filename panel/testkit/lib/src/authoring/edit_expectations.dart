@@ -78,3 +78,29 @@ extension RemoteChange on AuthoringDocument {
     return edit.toDocument();
   }
 }
+
+/// An edit expectation that the text at [at] still reads [value].
+skir.EditExpectation textExpectation(skir.ValueLocation at, String value) =>
+    skir.EditExpectation.createValue(
+      at: at,
+      expected: skir.DataValue.wrapStringValue(value),
+    );
+
+/// An edit intent that sets the text at [at] to [value].
+skir.EditIntent setTextIntent(skir.ValueLocation at, String value) =>
+    skir.EditIntent.createSetValue(
+      at: at,
+      value: skir.DataValue.wrapStringValue(value),
+    );
+
+/// A prepared edit read from [saved], stating what it [expects] and the
+/// [intents] it applies.
+skir.PreparedEdit preparedEdit(
+  AuthoringDocument saved, {
+  required List<skir.EditExpectation> expects,
+  required List<skir.EditIntent> intents,
+}) => skir.PreparedEdit(
+  catalog: saved.generation,
+  expectations: expects,
+  intents: intents,
+);

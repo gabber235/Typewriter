@@ -1,6 +1,4 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
@@ -14,21 +12,7 @@ void main() {
         ], id: "child"),
         childInheritableNodes: ["child", "child.part", "child.remaining"],
         familyLayout: inheritedFieldColumn([
-          inspectorLayoutPart(
-            "family.outer",
-            inspectorDetailsPart,
-            body: inheritedFieldColumn([
-              inspectorLayoutPart("family.outer.heading", inspectorHeadingPart),
-              presentationNode(
-                "family.outer.content",
-                skir.PresentationElement.wrapText(
-                  (skir.TextContent.mutable()
-                        ..value = textLiteral("Outer content"))
-                      .toFrozen(),
-                ),
-              ),
-            ], id: "family.outer.body"),
-          ),
+          _outerDetails,
           inspectorLayoutPart("family.heading", inspectorHeadingPart),
           inspectorLayoutRemainder("family.remaining"),
         ], id: "family"),
@@ -64,21 +48,7 @@ void main() {
         ], id: "child"),
         childInheritableNodes: ["child", "child.part", "child.remaining"],
         familyLayout: inheritedFieldColumn([
-          inspectorLayoutPart(
-            "family.outer",
-            inspectorDetailsPart,
-            body: inheritedFieldColumn([
-              inspectorLayoutPart("family.outer.heading", inspectorHeadingPart),
-              presentationNode(
-                "family.outer.content",
-                skir.PresentationElement.wrapText(
-                  (skir.TextContent.mutable()
-                        ..value = textLiteral("Outer content"))
-                      .toFrozen(),
-                ),
-              ),
-            ], id: "family.outer.body"),
-          ),
+          _outerDetails,
           inspectorLayoutRemainder("family.remaining"),
         ], id: "family"),
         familyInheritableNodes: ["family", "family.outer", "family.remaining"],
@@ -99,3 +69,14 @@ void main() {
     },
   );
 }
+
+/// A details part "family.outer" whose body places its own heading above
+/// the text "Outer content".
+final _outerDetails = inspectorLayoutPart(
+  "family.outer",
+  inspectorDetailsPart,
+  body: inheritedFieldColumn([
+    inspectorLayoutPart("family.outer.heading", inspectorHeadingPart),
+    presentationText("family.outer.content", textLiteral("Outer content")),
+  ], id: "family.outer.body"),
+);

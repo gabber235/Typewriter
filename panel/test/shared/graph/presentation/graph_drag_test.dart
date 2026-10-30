@@ -8,19 +8,9 @@ void main() {
   testWidgets("dropping a node commits its snapped grid position", (
     tester,
   ) async {
-    final moves = <List<GraphMoveCommitPayload>>[];
-    final panel = await tester.pumpGraph(
-      Graph(
-        data: GraphData(
-          cellSize: _cell,
-          elements: [
-            graphNode("A", x: 2, y: 3, body: const DraggableGraphNode("A")),
-          ],
-          edges: const [],
-        ),
-        onElementsMoved: moves.add,
-      ),
-    );
+    final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+      graphNode("A", x: 2, y: 3, body: const DraggableGraphNode("A")),
+    ]);
 
     await panel.graph.drag("A", const Offset(_cell * 1, _cell * 2));
 
@@ -33,19 +23,9 @@ void main() {
     testWidgets("a drag of $distance pixels rounds to $cells cells", (
       tester,
     ) async {
-      final moves = <List<GraphMoveCommitPayload>>[];
-      final panel = await tester.pumpGraph(
-        Graph(
-          data: GraphData(
-            cellSize: _cell,
-            elements: [
-              graphNode("Snap", body: const DraggableGraphNode("Snap")),
-            ],
-            edges: const [],
-          ),
-          onElementsMoved: moves.add,
-        ),
-      );
+      final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+        graphNode("Snap", body: const DraggableGraphNode("Snap")),
+      ]);
 
       await panel.graph.drag(
         "Snap",
@@ -61,32 +41,22 @@ void main() {
   testWidgets("dragging a container moves elements fully inside it", (
     tester,
   ) async {
-    final moves = <List<GraphMoveCommitPayload>>[];
-    final panel = await tester.pumpGraph(
-      Graph(
-        data: GraphData(
-          cellSize: _cell,
-          elements: [
-            graphNode(
-              "Parent",
-              x: 1,
-              y: 1,
-              cells: 4,
-              body: const DraggableGraphNode("Parent"),
-            ),
-            graphNode(
-              "Child",
-              x: 2,
-              y: 2,
-              cells: 1,
-              body: const DraggableGraphNode("Child"),
-            ),
-          ],
-          edges: const [],
-        ),
-        onElementsMoved: moves.add,
+    final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+      graphNode(
+        "Parent",
+        x: 1,
+        y: 1,
+        cells: 4,
+        body: const DraggableGraphNode("Parent"),
       ),
-    );
+      graphNode(
+        "Child",
+        x: 2,
+        y: 2,
+        cells: 1,
+        body: const DraggableGraphNode("Child"),
+      ),
+    ]);
 
     await panel.graph.drag(
       "Parent",
@@ -104,22 +74,12 @@ void main() {
   testWidgets("dropping an element the graph does not know commits nothing", (
     tester,
   ) async {
-    final moves = <List<GraphMoveCommitPayload>>[];
-    final panel = await tester.pumpGraph(
-      Graph(
-        data: GraphData(
-          cellSize: _cell,
-          elements: [
-            graphNode(
-              "Stranger",
-              body: const DraggableGraphNode("Stranger", id: "unknown"),
-            ),
-          ],
-          edges: const [],
-        ),
-        onElementsMoved: moves.add,
+    final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+      graphNode(
+        "Stranger",
+        body: const DraggableGraphNode("Stranger", id: "unknown"),
       ),
-    );
+    ]);
 
     await panel.graph.drag("Stranger", const Offset(80, 40));
 

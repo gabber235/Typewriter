@@ -38,16 +38,7 @@ void main() {
   testWidgets(
     "creation search offers the concrete resources an owner can hold",
     (tester) async {
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(
-          AuthoringDocument(
-            catalog: shelfCatalog(),
-            entries: const {},
-            links: const [],
-          ),
-        ),
-      ]);
+      final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
       final controller = await panel.creationSearch();
 
       expect(controller.snapshot.status, SearchSourceStatus.ready);
@@ -72,16 +63,7 @@ void main() {
 
   testWidgets("a creation option reads the label, description, icon and "
       "color its type declares", (tester) async {
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(
-        AuthoringDocument(
-          catalog: shelfCatalog(),
-          entries: const {},
-          links: const [],
-        ),
-      ),
-    ]);
+    final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
     final controller = await panel.creationSearch();
 
     final book = controller.creationOption(testTypeId("Book"));
@@ -95,16 +77,15 @@ void main() {
   testWidgets("creation search does not depend on ownership endpoint order", (
     tester,
   ) async {
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(
+    final panel = await tester.pumpPanel(
+      adaServing(
         AuthoringDocument(
           catalog: shelfCatalog(reversedOwnership: true),
           entries: const {},
           links: const [],
         ),
       ),
-    ]);
+    );
     final controller = await panel.creationSearch();
 
     final section = controller.snapshot.nodes.single as SearchSectionNode;
@@ -117,16 +98,7 @@ void main() {
   });
 
   testWidgets("creation search filters by the resource label", (tester) async {
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(
-        AuthoringDocument(
-          catalog: shelfCatalog(),
-          entries: const {},
-          links: const [],
-        ),
-      ),
-    ]);
+    final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
     final controller = await panel.creationSearch();
 
     controller.updateQuery("Quest");
@@ -146,16 +118,7 @@ void main() {
   testWidgets(
     "scope keywords come from owner search keys and keep only types inside that scope",
     (tester) async {
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(
-          AuthoringDocument(
-            catalog: shelfCatalog(),
-            entries: const {},
-            links: const [],
-          ),
-        ),
-      ]);
+      final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
       final controller = await panel.creationSearch();
       final source = controller.source;
 
@@ -184,16 +147,15 @@ void main() {
   testWidgets("type and text filters apply before the creation result limit", (
     tester,
   ) async {
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(
+    final panel = await tester.pumpPanel(
+      adaServing(
         AuthoringDocument(
           catalog: shelfCatalog(manyEntries: true),
           entries: const {},
           links: const [],
         ),
       ),
-    ]);
+    );
     final controller = await panel.creationSearch();
     expect(
       (controller.snapshot.nodes.single as SearchSectionNode).children,

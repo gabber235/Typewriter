@@ -2,6 +2,8 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/core/pump_panel.dart";
+import "package:typewriter_testkit/src/drivers/mutations/save_activity_driver.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
 import "package:typewriter_testkit/src/shared/editing/value_editing_fixture.dart";
 import "package:typewriter_testkit/src/shared/editors/editor_fixture.dart";
@@ -65,6 +67,95 @@ ValueEditing editedResource(
   return source;
 }
 
+/// Holds the value lease of [key] in [work] until the test ends, the way an
+/// open editor keeps its resource.
+void holdValueLease(ScopedWorkSession work, EditorResourceKey key) =>
+    addTearDown(work.lease(WorkDriverId(domain: "value", scope: key)).release);
+
+/// A record whose text fields title and description hold [title] and
+/// [description], at [revision].
+EditorDocument titledRecordDocument({
+  String title = "Original",
+  String description = "Original description",
+  int revision = 1,
+}) => recordEditorDocument(
+  {
+    "title": skir.DataValue.wrapStringValue(title),
+    "description": skir.DataValue.wrapStringValue(description),
+  },
+  {
+    "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+    "description": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+  },
+  revision,
+);
+
+/// Confirms every save at the revision after the one it expected.
+Future<TypedMutationResult> confirmNextRevision(EditorCommit commit) async =>
+    MutationSuccess(
+      revision: commit.expectedRevision + 1,
+      value: commit.rootValue,
+    );
+
+/// The resource [key], labeled "Resource", holding [document] and saved
+/// through [commit] under [commitPolicy].
+ValueEditingRegistration resourceTarget(
+  EditorResourceKey key, {
+  required EditorDocument document,
+  EditorCommitter commit = confirmNextRevision,
+  EditorCommitPolicy commitPolicy = EditorCommitPolicy.applyResource,
+  EditorMutationValidator validation = acceptTestEditorMutation,
+  List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
+  String? contract,
+}) => fakeEditorTarget(
+  targetId: key.identity,
+  scope: key.scope,
+  label: "Resource",
+  document: document,
+  commit: commit,
+  commitPolicy: commitPolicy,
+  validation: validation,
+  validateDraft: validateDraft,
+  contract: contract,
+);
+
+/// The target [id] in the scope "realm", labeled [id], over [document];
+/// its saves succeed at revision 2.
+ValueEditingRegistration realmTarget(String id, EditorDocument document) =>
+    fakeEditorTarget(
+      targetId: id,
+      label: id,
+      scope: "realm",
+      document: document,
+      commit: (commit) async =>
+          MutationSuccess(revision: 2, value: commit.rootValue),
+    );
+
+/// The [resourceTarget] for [key], acquired in [work] and leased there until
+/// the test ends, the way an open editor holds it.
+ValueEditing heldResource(
+  ScopedWorkSession work,
+  EditorResourceKey key, {
+  required EditorDocument document,
+  EditorCommitter commit = confirmNextRevision,
+  EditorCommitPolicy commitPolicy = EditorCommitPolicy.applyResource,
+  EditorMutationValidator validation = acceptTestEditorMutation,
+  List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
+  String? contract,
+}) {
+  final editing = resourceTarget(
+    key,
+    document: document,
+    commit: commit,
+    commitPolicy: commitPolicy,
+    validation: validation,
+    validateDraft: validateDraft,
+    contract: contract,
+  ).acquire(work);
+  holdValueLease(work, key);
+  return editing;
+}
+
 /// The local work scope of the user `user` in the organization
 /// `organization:[organization]`, or outside every organization when null.
 LocalWorkScope workScopeIn(String? organization) => LocalWorkScope(
@@ -113,6 +204,23 @@ ValueEditing textDraft(
   return source;
 }
 
+/// A fresh work session whose resource [label], edited to "unsupported",
+/// already failed to save with [diagnostics].
+Future<ScopedWorkSession> rejectedWork(
+  String label,
+  List<EditorDiagnostic> diagnostics,
+) async {
+  final work = testWorkSession();
+  final source = editedResource(
+    work,
+    label,
+    draft: "unsupported",
+    commit: (_) async => MutationInvalid(diagnostics),
+  );
+  expect(await source.flush(), isA<MutationInvalid>());
+  return work;
+}
+
 /// Where work in the panel leads back to.
 extension WorkDestinations on PanelDriver {
   /// The inspector of [identity] on the route the panel shows now, as the
@@ -124,4 +232,34 @@ extension WorkDestinations on PanelDriver {
         path: path,
         identity: identity,
       );
+}
+
+/// The save activity of one draft that leads back to its resource.
+extension OpenDraftActivity on WidgetTester {
+  /// Pumps the save activity of a fresh work session whose one text draft of
+  /// [resource] reads "Host configuration", saved as "original" and edited
+  /// to "draft". The draft leads back to [resource]'s inspector, and the
+  /// activity's "1 draft" list is open.
+  Future<({PanelDriver panel, ValueEditing draft})> openDraftActivity(
+    ServiceIdentifier resource,
+  ) async {
+    final work = testWorkSession();
+    final draft = textDraft(
+      work,
+      resource,
+      label: "Host configuration",
+      saved: "original",
+      draft: "draft",
+    );
+    final panel = await pumpPanel(const [], at: saveActivityOf(work));
+    work.setDestination(
+      WorkDriverId(
+        domain: "value",
+        scope: EditorResourceKey(scope: null, identity: resource.resourceId),
+      ),
+      panel.inspectorDestination(resource),
+    );
+    await panel.activity.open("1 draft");
+    return (panel: panel, draft: draft);
+  }
 }

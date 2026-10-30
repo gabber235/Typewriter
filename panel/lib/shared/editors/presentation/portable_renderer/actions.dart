@@ -168,12 +168,14 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
       size: resolved.iconSize,
       color: resolved.iconColor,
     );
+    // The button shows progress until the action settles and refuses
+    // another press meanwhile.
     final callback = childScope.canExecuteActionFor(button.action)
-        ? () => unawaited(childScope.executeAction(button.action))
+        ? () => childScope.executeAction(button.action)
         : null;
     return switch (button.appearance?.variant) {
       final variant when variant == skir.ButtonVariant.filled =>
-        IconButton.filled(
+        LoadingIconButton.filled(
           statesController: states,
           style: style,
           tooltip: label,
@@ -181,14 +183,14 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
           icon: child,
         ),
       final variant when variant == skir.ButtonVariant.outlined =>
-        IconButton.outlined(
+        LoadingIconButton.outlined(
           statesController: states,
           style: style,
           tooltip: label,
           onPressed: callback,
           icon: child,
         ),
-      _ => IconButton(
+      _ => LoadingIconButton(
         statesController: states,
         style: style,
         tooltip: label,

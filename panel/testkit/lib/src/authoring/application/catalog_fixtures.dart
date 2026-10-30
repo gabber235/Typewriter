@@ -20,22 +20,20 @@ skir.PublishedType _publishedRecord({
   required skir.TypeDefinitionId definition,
   required List<skir.FieldDeclaration> fields,
   required List<skir.EffectiveFieldTemplate> effectiveFields,
-}) => skir.PublishedType(
-  searchKey: null,
-  placementField: null,
-  display: defaultTypeDisplay(""),
-  definition: skir.TypeDefinition(
-    id: definition,
-    parameters: const [],
-    representation: skir.RepresentationTemplate.createRecord(
-      fields: fields,
-      abstract_: false,
-    ),
-    parents: const [],
+}) => publishedType(
+  definition,
+  representation: skir.RepresentationTemplate.createRecord(
+    fields: fields,
+    abstract_: false,
   ),
-  status: skir.DeclarationStatus.ready,
-  effectiveFields: effectiveFields,
-  ancestorTemplates: const [],
+  fields: effectiveFields,
+);
+
+/// A document over [shelfCatalog] that holds no resources yet.
+AuthoringDocument emptyShelfDocument() => AuthoringDocument(
+  catalog: shelfCatalog(),
+  entries: const {},
+  links: const [],
 );
 
 /// A catalog where Shelves own Quest Books and each Book owns Entries, an
@@ -160,21 +158,13 @@ final class PageKindsFixture {
       required bool abstract,
       List<skir.NamedTypeTemplate> parents = const [],
       skir.TypeDisplay? display,
-    }) => skir.PublishedType(
-      searchKey: null,
-      placementField: null,
-      definition: skir.TypeDefinition(
-        id: id,
-        parameters: const [],
-        representation: skir.RepresentationTemplate.createRecord(
-          fields: const [],
-          abstract_: abstract,
-        ),
-        parents: parents,
+    }) => publishedType(
+      id,
+      representation: skir.RepresentationTemplate.createRecord(
+        fields: const [],
+        abstract_: abstract,
       ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: const [],
-      ancestorTemplates: parents,
+      parents: parents,
       display: display ?? defaultTypeDisplay(""),
     );
     final pageParent = skir.NamedTypeTemplate(
@@ -183,9 +173,7 @@ final class PageKindsFixture {
     );
     return PageKindsFixture._(
       catalog: CheckedEditorCatalog(
-        skir.EditorCatalog(
-          resourceDisplays: const [],
-          resourceOperations: const [],
+        testCatalogSnapshot(
           generation: skir.CatalogGeneration(value: "catalog:resources"),
           types: [
             published(page, abstract: true),
@@ -227,17 +215,6 @@ final class PageKindsFixture {
             ),
             published(unrelated, abstract: false),
           ],
-          relations: const [],
-          realmRoot: skir.TypeDefinitionId.defaultInstance,
-          presentations: const [],
-          presentationMaterials: const [],
-          configuration: const [],
-          diagnostics: const [],
-
-          endpointBindings: const [],
-          capabilities: const [],
-          recommendations: const [],
-          roleFallbacks: const [],
         ),
       ),
       page: page,
@@ -275,28 +252,18 @@ final class RewardContainerFixture {
       skir.TypeDefinitionId id, {
       List<skir.TypeParameter> parameters = const [],
       List<skir.NamedTypeTemplate> parents = const [],
-    }) => skir.PublishedType(
-      searchKey: null,
-      placementField: null,
-      definition: skir.TypeDefinition(
-        id: id,
-        parameters: parameters,
-        representation: skir.RepresentationTemplate.createRecord(
-          fields: const [],
-          abstract_: false,
-        ),
-        parents: parents,
+    }) => publishedType(
+      id,
+      representation: skir.RepresentationTemplate.createRecord(
+        fields: const [],
+        abstract_: false,
       ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: const [],
-      ancestorTemplates: parents,
-      display: defaultTypeDisplay(""),
+      parameters: parameters,
+      parents: parents,
     );
     return RewardContainerFixture._(
       catalog: CheckedEditorCatalog(
-        skir.EditorCatalog(
-          resourceDisplays: const [],
-          resourceOperations: const [],
+        testCatalogSnapshot(
           generation: skir.CatalogGeneration(value: "catalog:1"),
           types: [
             published(
@@ -325,17 +292,6 @@ final class RewardContainerFixture {
               ],
             ),
           ],
-          relations: const [],
-          realmRoot: skir.TypeDefinitionId.defaultInstance,
-          presentations: const [],
-          presentationMaterials: const [],
-          configuration: const [],
-          diagnostics: const [],
-
-          endpointBindings: const [],
-          capabilities: const [],
-          recommendations: const [],
-          roleFallbacks: const [],
         ),
       ),
       container: container,
@@ -396,59 +352,31 @@ final class AuthoredDraft {
     );
     final ruleOrigin = skir.RuleOrigin(owner: definition, ordinal: 0);
     final titleRule = skir.RuleId(origin: ruleOrigin, localIndex: 0);
-    final target = skir.PresentationTarget.createNamed(
-      definition: definition,
-      arguments: const [],
-    );
     final layout =
         inspectorLayout ??
         skir.PresentationNode(
           nodeId: "message.title",
           properties: skir.PresentationProperties.defaultInstance,
-          element: skir.PresentationElement.createTextInput(
-            control: skir.BoundControl(
-              binding: skir.BindingRef(
-                bindingId: configuredValueBindingId,
-                path: skir.ValuePath(
-                  segments: [skir.PathSegment.createField(name: fieldName)],
-                ),
+          element: textInputElement(
+            skir.BindingRef(
+              bindingId: configuredValueBindingId,
+              path: skir.ValuePath(
+                segments: [skir.PathSegment.createField(name: fieldName)],
               ),
-              label: null,
-              description: null,
-              prefix: null,
-              semanticLabel: null,
             ),
-            appearance: null,
-            content: null,
-            entry: null,
-            mappings: null,
-            options: skir.TextEditingOptions.defaultInstance,
           ),
           header: null,
         );
     final headerLayout = skir.PresentationNode(
       nodeId: "message.header",
       properties: skir.PresentationProperties.defaultInstance,
-      element: skir.PresentationElement.createText(
-        value: skir.ExpressionNode.createInput(
+      element: textElement(
+        skir.ExpressionNode.createInput(
           binding: configuredValueBindingId,
           path: skir.ValuePath(
             segments: [skir.PathSegment.createField(name: fieldName)],
           ),
         ),
-        color: null,
-        sizing: null,
-        fontWeight: null,
-        fontItalic: null,
-        fontOpticalSize: null,
-        fontSlant: null,
-        fontWidth: null,
-        textAlignment: null,
-        lineHeight: null,
-        letterSpacing: null,
-        decoration: null,
-        semanticLabel: null,
-        paragraph: skir.TextParagraph.defaultInstance,
       ),
       header: null,
     );
@@ -530,99 +458,43 @@ final class AuthoredDraft {
       header: null,
     );
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: generation,
         types: [
           if (namedText != null)
-            skir.PublishedType(
-              searchKey: null,
-              placementField: null,
-              display: defaultTypeDisplay(""),
-              definition: skir.TypeDefinition(
-                id: namedText.definition,
-                parameters: const [],
-                representation: skir.RepresentationTemplate.createScalar(
-                  kind: skir.ScalarKind.text,
-                ),
-                parents: const [],
+            publishedType(
+              namedText.definition,
+              representation: skir.RepresentationTemplate.createScalar(
+                kind: skir.ScalarKind.text,
               ),
-              status: skir.DeclarationStatus.ready,
-              effectiveFields: const [],
-              ancestorTemplates: const [],
             ),
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            display: defaultTypeDisplay(""),
-            definition: skir.TypeDefinition(
-              id: definition,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createRecord(
-                fields: [
-                  skir.FieldDeclaration(
-                    owner: skir.FieldOwner(
-                      definition: definition,
-                      name: fieldName,
-                    ),
-                    type: fieldType,
-                    overrides: const [],
-                    hasConstructorDefault: false,
-                  ),
-                ],
-                abstract_: false,
-              ),
-              parents: const [],
-            ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: [
-              skir.EffectiveFieldTemplate(
-                key: fieldName,
-                owner: skir.FieldOwner(definition: definition, name: fieldName),
-                type: fieldType,
-                rules: requireTitle ? [titleRule] : const [],
-              ),
-            ],
-            ancestorTemplates: const [],
+          recordType(
+            definition,
+            {fieldName: fieldType},
+            rules: {
+              fieldName: requireTitle ? [titleRule] : const [],
+            },
           ),
         ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: [
-          skir.PresentationDescriptor(
-            id: presentationId,
-            owner: skir.DeclarationOwner.defaultInstance,
-            target: target,
-            roles: [
-              skir.PresentationRole.workspace,
-              skir.PresentationRole.inspector,
-              skir.PresentationRole.item,
-            ],
-            priority: 0,
-          ),
+          typePresentation(presentationId, definition, [
+            skir.PresentationRole.workspace,
+            skir.PresentationRole.inspector,
+            skir.PresentationRole.item,
+          ]),
         ],
         presentationMaterials: [
-          skir.PresentationMaterial(
-            inheritableNodes: const [],
-
-            provider: presentationId,
-            target: target,
-            role: skir.PresentationRole.workspace,
-            layout: layout,
-            dependencies: skir.PresentationDependencies.defaultInstance,
-            subject: skir.TypeTemplate.createNamed(
-              definition: definition,
-              arguments: const [],
-            ),
+          typeMaterial(
+            presentationId,
+            definition,
+            skir.PresentationRole.workspace,
+            layout,
           ),
-          skir.PresentationMaterial(
-            inheritableNodes: const [],
-
-            provider: presentationId,
-            target: target,
-            role: skir.PresentationRole.inspector,
-            layout: skir.PresentationNode(
+          typeMaterial(
+            presentationId,
+            definition,
+            skir.PresentationRole.inspector,
+            skir.PresentationNode(
               nodeId: "message.inspector",
               properties: skir.PresentationProperties.defaultInstance,
               header: null,
@@ -636,24 +508,12 @@ final class AuthoredDraft {
                 ),
               ),
             ),
-            dependencies: skir.PresentationDependencies.defaultInstance,
-            subject: skir.TypeTemplate.createNamed(
-              definition: definition,
-              arguments: const [],
-            ),
           ),
-          skir.PresentationMaterial(
-            inheritableNodes: const [],
-
-            provider: presentationId,
-            target: target,
-            role: skir.PresentationRole.item,
-            layout: generatedGraphLayout,
-            dependencies: skir.PresentationDependencies.defaultInstance,
-            subject: skir.TypeTemplate.createNamed(
-              definition: definition,
-              arguments: const [],
-            ),
+          typeMaterial(
+            presentationId,
+            definition,
+            skir.PresentationRole.item,
+            generatedGraphLayout,
           ),
         ],
         configuration: requireTitle
@@ -706,12 +566,6 @@ final class AuthoredDraft {
                 ),
               ]
             : const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     final resource = skir.ResourceId(value: "message:one");
@@ -758,81 +612,38 @@ final class AuthoredDraft {
     final ruleOrigin = skir.RuleOrigin(owner: definition, ordinal: 0);
     final ruleId = skir.RuleId(origin: ruleOrigin, localIndex: 0);
     final configured = skir.ExpressionBindingId(value: "configured_value");
-    final target = skir.PresentationTarget.createNamed(
-      definition: definition,
-      arguments: const [],
-    );
     final path = skir.ValuePath(
       segments: [skir.PathSegment.createField(name: fieldName)],
     );
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: catalogGeneration,
         types: [
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            display: defaultTypeDisplay(""),
-            definition: skir.TypeDefinition(
-              id: definition,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createRecord(
-                fields: [
-                  skir.FieldDeclaration(
-                    owner: skir.FieldOwner(
-                      definition: definition,
-                      name: fieldName,
-                    ),
-                    type: skir.TypeTemplate.wrapScalar(
-                      skir.ScalarKind.createInteger(
-                        width: skir.IntegerWidth.signedThirtyTwo,
-                      ),
-                    ),
-                    overrides: const [],
-                    hasConstructorDefault: false,
-                  ),
-                ],
-                abstract_: false,
-              ),
-              parents: const [],
-            ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: [
-              skir.EffectiveFieldTemplate(
-                key: fieldName,
-                owner: skir.FieldOwner(definition: definition, name: fieldName),
-                type: skir.TypeTemplate.wrapScalar(
-                  skir.ScalarKind.createInteger(
-                    width: skir.IntegerWidth.signedThirtyTwo,
-                  ),
+          recordType(
+            definition,
+            {
+              fieldName: skir.TypeTemplate.wrapScalar(
+                skir.ScalarKind.createInteger(
+                  width: skir.IntegerWidth.signedThirtyTwo,
                 ),
-                rules: [ruleId],
               ),
-            ],
-            ancestorTemplates: const [],
+            },
+            rules: {
+              fieldName: [ruleId],
+            },
           ),
         ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: [
-          skir.PresentationDescriptor(
-            id: presentationId,
-            owner: skir.DeclarationOwner.defaultInstance,
-            target: target,
-            roles: [skir.PresentationRole.inspector],
-            priority: 0,
-          ),
+          typePresentation(presentationId, definition, [
+            skir.PresentationRole.inspector,
+          ]),
         ],
         presentationMaterials: [
-          skir.PresentationMaterial(
-            inheritableNodes: const [],
-
-            provider: presentationId,
-            target: target,
-            role: skir.PresentationRole.inspector,
-            layout: skir.PresentationNode(
+          typeMaterial(
+            presentationId,
+            definition,
+            skir.PresentationRole.inspector,
+            skir.PresentationNode(
               nodeId: fieldName,
               properties: skir.PresentationProperties.defaultInstance,
               element: skir.PresentationElement.wrapNumericInput(
@@ -850,11 +661,6 @@ final class AuthoredDraft {
                     .toFrozen(),
               ),
               header: null,
-            ),
-            dependencies: skir.PresentationDependencies.defaultInstance,
-            subject: skir.TypeTemplate.createNamed(
-              definition: definition,
-              arguments: const [],
             ),
           ),
         ],
@@ -897,12 +703,6 @@ final class AuthoredDraft {
             ],
           ),
         ],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     final resource = skir.ResourceId(value: "repeating:one");
@@ -944,10 +744,6 @@ final class AuthoredDraft {
       namespace: "test",
       name: "sequence.editor",
     );
-    final target = skir.PresentationTarget.createNamed(
-      definition: definition,
-      arguments: const [],
-    );
     final elementsDefinition = skir.TypeDefinitionId(
       typeId: skir.TypeId.createQualified(
         namespace: "test",
@@ -960,9 +756,7 @@ final class AuthoredDraft {
       arguments: const [],
     );
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: generation,
         types: [
           testPublishedRecord(definition, {"elements": elementsType}),
@@ -974,63 +768,24 @@ final class AuthoredDraft {
             ),
           ),
         ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: [
-          skir.PresentationDescriptor(
-            id: presentationId,
-            owner: skir.DeclarationOwner.defaultInstance,
-            target: target,
-            roles: [skir.PresentationRole.workspace],
-            priority: 0,
-          ),
+          typePresentation(presentationId, definition, [
+            skir.PresentationRole.workspace,
+          ]),
         ],
         presentationMaterials: [
-          skir.PresentationMaterial(
-            inheritableNodes: const [],
-
-            provider: presentationId,
-            target: target,
-            role: skir.PresentationRole.workspace,
-            layout: skir.PresentationNode(
+          typeMaterial(
+            presentationId,
+            definition,
+            skir.PresentationRole.workspace,
+            skir.PresentationNode(
               nodeId: "generated.root",
               properties: skir.PresentationProperties.defaultInstance,
               element: skir.PresentationElement.wrapChildren(
                 skir.ChildrenElement.createColumn(
                   children: [
                     skir.AxisChild.wrapFixed(
-                      skir.PresentationNode(
-                        nodeId: "sequence.graph",
-                        properties: skir.PresentationProperties.defaultInstance,
-                        element: skir.PresentationElement.createResources(
-                          control: skir.BoundControl(
-                            binding: skir.BindingRef(
-                              bindingId: configuredValueBindingId,
-                              path: skir.ValuePath(
-                                segments: [
-                                  skir.PathSegment.createField(
-                                    name: "elements",
-                                  ),
-                                ],
-                              ),
-                            ),
-                            label: null,
-                            description: null,
-                            prefix: null,
-                            semanticLabel: null,
-                          ),
-                          layout: skir.ResourcesLayout.createGraph(
-                            direction: skir.GraphDirection.leftToRight,
-                            appearance: null,
-                          ),
-                          order: null,
-                          itemBinding: declareNamedBinding(
-                            "resources.item",
-                            textTemplate,
-                          ),
-                        ),
-                        header: null,
-                      ),
+                      elementsGraphNode("sequence.graph", textTemplate),
                     ),
                   ],
                   layout: skir.AxisChildrenLayout(
@@ -1044,20 +799,8 @@ final class AuthoredDraft {
               ),
               header: null,
             ),
-            dependencies: skir.PresentationDependencies.defaultInstance,
-            subject: skir.TypeTemplate.createNamed(
-              definition: definition,
-              arguments: const [],
-            ),
           ),
         ],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     final resource = skir.ResourceId(value: "page:empty");
@@ -1124,9 +867,7 @@ final class AuthoredDraft {
           : [skir.FieldPatternSegment.createField(name: "width")],
     );
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: generation,
         types: [
           _publishedRecord(
@@ -1168,28 +909,14 @@ final class AuthoredDraft {
             ],
           ),
           if (collection)
-            skir.PublishedType(
-              searchKey: null,
-              placementField: null,
-              display: defaultTypeDisplay(""),
-              definition: skir.TypeDefinition(
-                id: placementList,
-                parameters: const [],
-                representation: skir.RepresentationTemplate.createSequence(
-                  item: placementTemplate,
-                  kind: skir.CollectionKind.list,
-                ),
-                parents: const [],
+            publishedType(
+              placementList,
+              representation: skir.RepresentationTemplate.createSequence(
+                item: placementTemplate,
+                kind: skir.CollectionKind.list,
               ),
-              status: skir.DeclarationStatus.ready,
-              effectiveFields: const [],
-              ancestorTemplates: const [],
             ),
         ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
-        presentations: const [],
-        presentationMaterials: const [],
         configuration: [
           skir.ConfigurationRecipe(
             origin: ruleOrigin,
@@ -1228,12 +955,6 @@ final class AuthoredDraft {
             ],
           ),
         ],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     final resource = skir.ResourceId(value: "tag:nested_rules");
@@ -1416,20 +1137,7 @@ skir.PresentationNode bookSectionsLayout({required bool showTitleEditor}) {
                   contentPadding: null,
                 ),
                 element: field == "title" && showTitleEditor
-                    ? skir.PresentationElement.createTextInput(
-                        control: skir.BoundControl(
-                          binding: binding("title"),
-                          label: null,
-                          description: null,
-                          prefix: null,
-                          semanticLabel: null,
-                        ),
-                        appearance: null,
-                        content: null,
-                        entry: null,
-                        mappings: null,
-                        options: skir.TextEditingOptions.defaultInstance,
-                      )
+                    ? textInputElement(binding("title"))
                     : skir.PresentationElement.createSpacer(
                         width: null,
                         height: null,

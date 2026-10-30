@@ -151,15 +151,7 @@ void main() {
       },
       links: const [],
     );
-    final host = AuthoredPresentationHost(
-      resource: fixture.resource,
-      source: observation,
-      material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.workspace,
-      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      capabilities: const PortablePresentationCapabilities(),
-    );
-    addTearDown(host.dispose);
+    final host = bareWorkspaceHost(fixture.resource, observation);
     final document = host.document;
     expect(
       document.diagnostics
@@ -224,15 +216,7 @@ void main() {
         ),
       ],
     );
-    final host = AuthoredPresentationHost(
-      resource: fixture.resource,
-      source: observation,
-      material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.workspace,
-      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      capabilities: const PortablePresentationCapabilities(),
-    );
-    addTearDown(host.dispose);
+    final host = bareWorkspaceHost(fixture.resource, observation);
     final document = host.document;
     final initialization = document.diagnostics.singleWhere(
       (finding) => finding.code == "initialization_pending",

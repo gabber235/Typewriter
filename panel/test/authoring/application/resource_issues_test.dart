@@ -43,17 +43,10 @@ void main() {
       final document = unfilled;
       final issues = ResourceIssues.evaluate(
         document: document,
-        publication: RealmPublicationView.blocked(
-          blockedPublicationReview(
-            problem: publicationProblem(
-              id: "original",
-              code: "unfinished_value",
-              message: "A required value is unfinished.",
-              primary: at,
-              origin: origin,
-              evidence: document.evidenceOf(id),
-            ),
-          ),
+        publication: unfinishedValueBlocking(
+          at,
+          origin: origin,
+          evidence: document.evidenceOf(id),
         ),
       );
       final unfinished = issues.findings
@@ -71,17 +64,10 @@ void main() {
     final previous = unfilled;
     final issues = ResourceIssues.evaluate(
       document: base,
-      publication: RealmPublicationView.blocked(
-        blockedPublicationReview(
-          problem: publicationProblem(
-            id: "original",
-            code: "unfinished_value",
-            message: "A required value is unfinished.",
-            primary: at,
-            origin: origin,
-            evidence: previous.evidenceOf(id),
-          ),
-        ),
+      publication: unfinishedValueBlocking(
+        at,
+        origin: origin,
+        evidence: previous.evidenceOf(id),
       ),
     );
     expect(
@@ -97,17 +83,10 @@ void main() {
   test(
     "retained publication reviews cannot refresh external runtime evidence",
     () {
-      final review = RealmPublicationView.blocked(
-        blockedPublicationReview(
-          problem: publicationProblem(
-            id: "original",
-            code: "unfinished_value",
-            message: "A required value is unfinished.",
-            primary: at,
-            origin: origin,
-            evidence: base.evidenceOf(id),
-          ),
-        ),
+      final review = unfinishedValueBlocking(
+        at,
+        origin: origin,
+        evidence: base.evidenceOf(id),
       );
       expect(review.projectSavedIssues(base).single.current, isTrue);
       for (final retained in [
@@ -131,17 +110,7 @@ void main() {
   test("missing witnesses never make saved findings current", () {
     final issues = ResourceIssues.evaluate(
       document: base,
-      publication: RealmPublicationView.blocked(
-        blockedPublicationReview(
-          problem: publicationProblem(
-            id: "original",
-            code: "unfinished_value",
-            message: "A required value is unfinished.",
-            primary: at,
-            origin: origin,
-          ),
-        ),
-      ),
+      publication: unfinishedValueBlocking(at, origin: origin),
     );
     expect(issues.savedFor(id).single.current, isFalse);
   });
@@ -154,17 +123,10 @@ void main() {
     );
     final issues = ResourceIssues.evaluate(
       document: changed,
-      publication: RealmPublicationView.blocked(
-        blockedPublicationReview(
-          problem: publicationProblem(
-            id: "original",
-            code: "unfinished_value",
-            message: "A required value is unfinished.",
-            primary: at,
-            origin: origin,
-            evidence: base.evidenceOf(id),
-          ),
-        ),
+      publication: unfinishedValueBlocking(
+        at,
+        origin: origin,
+        evidence: base.evidenceOf(id),
       ),
     );
     expect(issues.savedFor(id).single.current, isFalse);

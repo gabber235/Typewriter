@@ -8,7 +8,7 @@ void main() {
   testWidgets("reference choices explain why a page cannot be chosen", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(referencePickerUseCase))!;
+    final panel = await tester.pumpStory(referencePickerUseCase);
 
     await panel.tapOn(find.text("Choose a reference"));
 
@@ -19,13 +19,13 @@ void main() {
 
   testWidgets("without an incompatible page or creation only the compatible "
       "page is offered", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       referencePickerUseCase,
       knobs: {
         "Incompatible destination": "false",
         "Allow target creation": "false",
       },
-    ))!;
+    );
 
     await panel.tapOn(find.text("Choose a reference"));
 
@@ -37,10 +37,10 @@ void main() {
   testWidgets("an Entry joins the compatible current page without asking", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       resourceCreationFlowUseCase,
       knobs: {"Compatible current page": "true"},
-    ))!;
+    );
 
     await panel.tapOn(find.text("Create Entry"));
 
@@ -53,7 +53,7 @@ void main() {
   testWidgets("an Entry without a page creates its Page and Book on the way", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(resourceCreationFlowUseCase))!;
+    final panel = await tester.pumpStory(resourceCreationFlowUseCase);
 
     await panel.tapOn(find.text("Create Entry"));
     await panel.search.result("Create Page").tap();

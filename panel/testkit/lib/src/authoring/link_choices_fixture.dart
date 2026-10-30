@@ -2,6 +2,8 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/authoring/realm_world.dart";
+import "package:typewriter_testkit/src/core/test_world.dart";
 import "package:typewriter_testkit/src/support/portable_operations.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -47,18 +49,6 @@ final class LinkChoicesFixture {
       overrides: const [],
       hasConstructorDefault: false,
     );
-    skir.PublishedType published(
-      skir.TypeDefinition definition,
-      List<skir.EffectiveFieldTemplate> fields,
-    ) => skir.PublishedType(
-      searchKey: null,
-      placementField: null,
-      display: defaultTypeDisplay(""),
-      definition: definition,
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: fields,
-      ancestorTemplates: definition.parents,
-    );
     final sourceLinkTemplate = skir.TypeTemplate.createNamed(
       definition: sourceLink,
       arguments: const [],
@@ -76,13 +66,11 @@ final class LinkChoicesFixture {
       arguments: const [],
     );
     final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
-    final snapshot = skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
+    final snapshot = testCatalogSnapshot(
       generation: generation,
       types: [
         if (abstractWrapper)
-          published(
+          publishedDefinition(
             skir.TypeDefinition(
               id: abstractForm,
               parameters: const [],
@@ -94,7 +82,7 @@ final class LinkChoicesFixture {
             ),
             const [],
           ),
-        published(
+        publishedDefinition(
           skir.TypeDefinition(
             id: links,
             parameters: const [],
@@ -106,7 +94,7 @@ final class LinkChoicesFixture {
           ),
           const [],
         ),
-        published(
+        publishedDefinition(
           skir.TypeDefinition(
             id: node,
             parameters: const [],
@@ -137,7 +125,7 @@ final class LinkChoicesFixture {
             ),
           ],
         ),
-        published(
+        publishedDefinition(
           skir.TypeDefinition(
             id: wrapper,
             parameters: const [],
@@ -179,7 +167,7 @@ final class LinkChoicesFixture {
           (sourceLink, sourceEndpoint),
           (targetLink, targetEndpoint),
         ])
-          published(
+          publishedDefinition(
             skir.TypeDefinition(
               id: link.$1,
               parameters: const [],
@@ -224,12 +212,6 @@ final class LinkChoicesFixture {
           families: const [],
         ),
       ],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
       endpointBindings: [
         skir.EndpointBindingTemplate(
           endpoint: sourceEndpoint,
@@ -265,9 +247,6 @@ final class LinkChoicesFixture {
             containsCollection: directCollection,
           ),
       ],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     );
     final source = skir.ResourceId(value: "resource:source");
     final existingTarget = skir.ResourceId(value: "resource:existing");
@@ -381,6 +360,33 @@ final class LinkChoicesFixture {
 
 /// Showing and reading the link choices of a [LinkChoicesFixture].
 extension LinkChoicesViews on LinkChoicesFixture {
+  /// Mounts editing of [source] in a world serving the draft, shows its
+  /// link control, [readOnly] or not, and returns every location the link
+  /// field builder received. The builder shows a control through [wrap], or
+  /// as it is without one.
+  Future<List<skir.ValueLocation>> showWrappedLinkControl(
+    WidgetTester tester, {
+    bool readOnly = false,
+    Widget Function(Widget control)? wrap,
+  }) async {
+    final world = testWorld(adaServing(draft.toDocument()));
+    final binding = await world.mountEditing(tester, source.resource);
+    final wrapped = <skir.ValueLocation>[];
+    await tester.pumpWidget(
+      linkControl(
+        world: world,
+        binding: binding,
+        readOnly: readOnly,
+        linkFieldBuilder: (context, location, control) {
+          wrapped.add(location);
+          return wrap == null ? control : wrap(control);
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    return wrapped;
+  }
+
   /// The source's link control over [binding], shown in a panel over
   /// [world]: [source] or the fixture's source field, its presentation host
   /// disposed with the test.

@@ -70,9 +70,7 @@ void main() {
       final displayed = typeDefinition("SequencePage");
       final fallback = typeDefinition("ScenePage");
       final checked = CheckedEditorCatalog(
-        skir.EditorCatalog(
-          resourceDisplays: const [],
-          resourceOperations: const [],
+        testCatalogSnapshot(
           generation: skir.CatalogGeneration(value: "catalog:display"),
           types: [
             opaqueType(
@@ -87,17 +85,6 @@ void main() {
             ),
             opaqueType(fallback, const []),
           ],
-          relations: const [],
-          realmRoot: skir.TypeDefinitionId.defaultInstance,
-          presentations: const [],
-          presentationMaterials: const [],
-          configuration: const [],
-          diagnostics: const [],
-
-          endpointBindings: const [],
-          capabilities: const [],
-          recommendations: const [],
-          roleFallbacks: const [],
         ),
       );
 
@@ -205,43 +192,13 @@ void main() {
     final coin = typeDefinition("CoinReward");
     final parameter = skir.ParameterKey(owner: wrapper, index: 0);
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: skir.CatalogGeneration(value: "catalog:covariance"),
         types: [
           opaqueType(wrapper, [parameter]),
           opaqueType(reward, const []),
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            definition: skir.TypeDefinition(
-              id: coin,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.unknown,
-              parents: [
-                skir.NamedTypeTemplate(definition: reward, arguments: const []),
-              ],
-            ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: [
-              skir.NamedTypeTemplate(definition: reward, arguments: const []),
-            ],
-            display: defaultTypeDisplay(""),
-          ),
+          subtypeOf(coin, reward),
         ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     final actual = skir.TypeUse.createNamed(
@@ -301,55 +258,18 @@ void main() {
       ),
     ];
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: skir.CatalogGeneration(value: "catalog:specificity"),
         types: [
           opaqueType(wrapper, [parameter]),
           opaqueType(reward, const []),
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            definition: skir.TypeDefinition(
-              id: coin,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.unknown,
-              parents: [
-                skir.NamedTypeTemplate(definition: reward, arguments: const []),
-              ],
-            ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: [
-              skir.NamedTypeTemplate(definition: reward, arguments: const []),
-            ],
-            display: defaultTypeDisplay(""),
-          ),
+          subtypeOf(coin, reward),
         ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: descriptors,
         presentationMaterials: [
           for (final descriptor in descriptors)
-            skir.PresentationMaterial(
-              inheritableNodes: const [],
-
-              provider: descriptor.id,
-              target: descriptor.target,
-              role: skir.PresentationRole.workspace,
-              layout: skir.PresentationNode.defaultInstance,
-              dependencies: skir.PresentationDependencies.defaultInstance,
-              subject: presentationSubject(descriptor.target, wrapper),
-            ),
+            emptyWorkspaceMaterial(descriptor.id, descriptor.target, wrapper),
         ],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     final selected = checked.selectPresentation(
@@ -466,13 +386,10 @@ void main() {
     );
     final original = fixture.catalog.snapshot;
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: original.generation,
         types: original.types,
         relations: original.relations,
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: [
           ...original.presentations,
           skir.PresentationDescriptor(
@@ -485,20 +402,10 @@ void main() {
         ],
         presentationMaterials: [
           ...original.presentationMaterials,
-          skir.PresentationMaterial(
-            inheritableNodes: const [],
-
-            provider: tie,
-            target: target,
-            role: skir.PresentationRole.workspace,
-            layout: skir.PresentationNode.defaultInstance,
-            dependencies: skir.PresentationDependencies.defaultInstance,
-            subject: presentationSubject(target, fixture.root),
-          ),
+          emptyWorkspaceMaterial(tie, target, fixture.root),
         ],
         configuration: original.configuration,
         diagnostics: original.diagnostics,
-
         endpointBindings: original.endpointBindings,
         capabilities: original.capabilities,
         recommendations: original.recommendations,

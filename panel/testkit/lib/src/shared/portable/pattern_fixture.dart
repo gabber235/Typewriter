@@ -53,25 +53,7 @@ void runPatternRuleFixtureCase(Map<String, Object?> fixture) {
     "targets",
   }, "diagnostic");
   final catalog = testCheckedCatalog(
-    types: [
-      skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        display: defaultTypeDisplay(""),
-        definition: skir.TypeDefinition(
-          id: definition,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: const [],
-            abstract_: false,
-          ),
-          parents: const [],
-        ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: const [],
-        ancestorTemplates: const [],
-      ),
-    ],
+    types: [recordType(definition, {})],
     configuration: [
       skir.ConfigurationRecipe(
         origin: rule.origin,

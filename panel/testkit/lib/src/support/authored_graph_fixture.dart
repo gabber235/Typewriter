@@ -623,6 +623,38 @@ final class _GraphRealm extends Trait {
 
 /// Showing the graph Realm's page as an authored resources graph.
 extension AuthoredGraphViews on AuthoredGraphFixture {
+  /// Opens the graph Realm and shows the dragged primary resource as a lone
+  /// item reading "Source" in the top left corner above it, unbound and
+  /// free to change.
+  Future<PanelDriver> showSourceItem(WidgetTester tester) async {
+    final panel = await tester.pumpPanel(this.realm);
+    await panel.showAbove(
+      at: Alignment.topLeft,
+      SizedBox(
+        width: 160,
+        height: 80,
+        child: AuthoredResourceItem(
+          identifier: drag.primary,
+          resources: AuthoredResourcesContext(
+            authoringScope: scope,
+            binding: null,
+            scope: PortablePresentationScope(
+              bindings: const {},
+              operations: testPortableOperations(),
+              budget: skir.EvaluationBudget(
+                maxSteps: 100,
+                maxCollectionItems: 10,
+              ),
+            ),
+            canMutate: () => true,
+          ),
+          child: const Text("Source"),
+        ),
+      ),
+    );
+    return panel;
+  }
+
   /// Opens the graph Realm and shows its page's entries on a graph above it,
   /// bound to [bound] or the page. [sidebar] adds a drop target for the
   /// destination beside the graph, and each of [linkFields] a link field

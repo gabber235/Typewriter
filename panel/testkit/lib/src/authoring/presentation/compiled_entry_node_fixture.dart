@@ -268,32 +268,7 @@ AuthoringDocument compiledEntryNodeDocument({
 /// A fixture page workspace using the production resources graph and bindings.
 /// [element] is the type of one member link of the page elements.
 skir.PresentationNode compiledEntryGraphLayout(skir.TypeTemplate element) =>
-    skir.PresentationNode(
-      nodeId: "entry-fixture.graph",
-      properties: skir.PresentationProperties.defaultInstance,
-      header: null,
-      element: skir.PresentationElement.createResources(
-        control: skir.BoundControl(
-          binding: skir.BindingRef(
-            bindingId: skir.ExpressionBindingId(value: "configured_value"),
-            path: editorRootPath.field("elements"),
-          ),
-          label: null,
-          description: null,
-          prefix: null,
-          semanticLabel: null,
-        ),
-        layout: skir.ResourcesLayout.createGraph(
-          direction: skir.GraphDirection.leftToRight,
-          appearance: null,
-        ),
-        order: null,
-        itemBinding: skir.BindingDeclaration(
-          id: skir.ExpressionBindingId(value: "resources.item"),
-          type: element,
-        ),
-      ),
-    );
+    elementsGraphNode("entry-fixture.graph", element);
 
 /// Compiled entry documents with other item presentations.
 extension CompiledEntryItems on AuthoringDocument {

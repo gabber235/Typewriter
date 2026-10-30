@@ -16,10 +16,10 @@ void main() {
     testWidgets("the routed $routed opens at its own route under its title", (
       tester,
     ) async {
-      final panel = (await tester.pumpStory(
+      final panel = await tester.pumpStory(
         resourceSurfaceUseCase,
         knobs: {"Routed resource": routed},
-      ))!;
+      );
 
       expect(panel.path, endsWith("/resource/$resource"));
       expect(panel.shows(title), isTrue);
@@ -28,10 +28,10 @@ void main() {
   }
 
   testWidgets("a resource removed elsewhere says it is gone", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       resourceSurfaceUseCase,
       knobs: {"Routed resource": "Removed elsewhere"},
-    ))!;
+    );
 
     expect(panel.shows("This resource is no longer available"), isTrue);
     await tester.runStory();
@@ -52,7 +52,7 @@ void main() {
   });
 
   testWidgets("choosing a section in the navigator opens it", (tester) async {
-    final panel = (await tester.pumpStory(realmSectionsNavigatorUseCase))!;
+    final panel = await tester.pumpStory(realmSectionsNavigatorUseCase);
 
     await tester.tap(find.text("taxonomy"));
 
@@ -63,7 +63,7 @@ void main() {
   });
 
   testWidgets("choosing a page of the book opens it", (tester) async {
-    final panel = (await tester.pumpStory(resourceSurfaceUseCase))!;
+    final panel = await tester.pumpStory(resourceSurfaceUseCase);
 
     await tester.tap(find.text("Market"));
 

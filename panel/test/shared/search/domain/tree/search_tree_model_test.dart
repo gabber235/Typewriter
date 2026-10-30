@@ -7,11 +7,7 @@ void main() {
     test("builds one top level group for one top level section", () {
       final viewModel = buildSearchTreeViewModel(
         nodes: [
-          SearchNode.section(
-            id: "books",
-            title: "Books",
-            children: [resultNode("book-one")],
-          ),
+          sectionNode("books", [resultNode("book-one")], title: "Books"),
         ],
         isCollapsed: (_) => false,
       );
@@ -24,18 +20,14 @@ void main() {
     test("computes descendant counts in the same build", () {
       final viewModel = buildSearchTreeViewModel(
         nodes: [
-          SearchNode.section(
-            id: "root",
-            title: "Root",
-            children: [
-              resultNode("alpha"),
-              SearchNode.section(
-                id: "nested",
-                title: "Nested",
-                children: [resultNode("beta")],
-              ),
-            ],
-          ),
+          sectionNode("root", [
+            resultNode("alpha"),
+            SearchNode.section(
+              id: "nested",
+              title: "Nested",
+              children: [resultNode("beta")],
+            ),
+          ], title: "Root"),
         ],
         isCollapsed: (_) => false,
       );
@@ -49,7 +41,7 @@ void main() {
 
     test("sections are expanded by default", () {
       final viewModel = buildSearchTreeViewModel(
-        nodes: [SearchNode.section(id: "root", title: "Root")],
+        nodes: [sectionNode("root", const [], title: "Root")],
         isCollapsed: (_) => false,
       );
 
@@ -59,11 +51,7 @@ void main() {
     test("collapsed sections keep section rows and hide descendants", () {
       final viewModel = buildSearchTreeViewModel(
         nodes: [
-          SearchNode.section(
-            id: "root",
-            title: "Root",
-            children: [resultNode("alpha")],
-          ),
+          sectionNode("root", [resultNode("alpha")], title: "Root"),
         ],
         isCollapsed: {"root"}.contains,
       );
@@ -76,19 +64,7 @@ void main() {
 
     test("collapsed nested section remains in parent group rows", () {
       final viewModel = buildSearchTreeViewModel(
-        nodes: [
-          SearchNode.section(
-            id: "root",
-            title: "Root",
-            children: [
-              SearchNode.section(
-                id: "nested",
-                title: "Nested",
-                children: [resultNode("alpha")],
-              ),
-            ],
-          ),
-        ],
+        nodes: nestedSectionTree([resultNode("alpha")]),
         isCollapsed: {"nested"}.contains,
       );
 
@@ -102,19 +78,7 @@ void main() {
 
     test("collapsed nested section descendants are hidden", () {
       final viewModel = buildSearchTreeViewModel(
-        nodes: [
-          SearchNode.section(
-            id: "root",
-            title: "Root",
-            children: [
-              SearchNode.section(
-                id: "nested",
-                title: "Nested",
-                children: [resultNode("alpha"), resultNode("beta")],
-              ),
-            ],
-          ),
-        ],
+        nodes: nestedSectionTree([resultNode("alpha"), resultNode("beta")]),
         isCollapsed: {"nested"}.contains,
       );
 
@@ -127,19 +91,7 @@ void main() {
 
     test("nested section rows appear in the parent group body", () {
       final viewModel = buildSearchTreeViewModel(
-        nodes: [
-          SearchNode.section(
-            id: "root",
-            title: "Root",
-            children: [
-              SearchNode.section(
-                id: "nested",
-                title: "Nested",
-                children: [resultNode("alpha")],
-              ),
-            ],
-          ),
-        ],
+        nodes: nestedSectionTree([resultNode("alpha")]),
         isCollapsed: (_) => false,
       );
 
@@ -177,11 +129,7 @@ void main() {
     test("hidden result rows do not consume shortcut numbers", () {
       final viewModel = buildSearchTreeViewModel(
         nodes: [
-          SearchNode.section(
-            id: "hidden",
-            title: "Hidden",
-            children: [resultNode("hidden-result")],
-          ),
+          sectionNode("hidden", [resultNode("hidden-result")], title: "Hidden"),
           resultNode("visible-result"),
         ],
         isCollapsed: {"hidden"}.contains,

@@ -30,9 +30,17 @@ SearchNode resultNode(String id, {String? title, String? subtitle}) =>
       result: searchResult(id, title: title, subtitle: subtitle),
     );
 
-/// A section [id], titled [id], holding [children].
-SearchNode sectionNode(String id, List<SearchNode> children) =>
-    SearchNode.section(id: id, title: id, children: children);
+/// A section [id], titled [title] or else [id], holding [children].
+SearchNode sectionNode(String id, List<SearchNode> children, {String? title}) =>
+    SearchNode.section(id: id, title: title ?? id, children: children);
+
+/// A tree of section "root" holding only section "nested", which holds
+/// [results].
+List<SearchNode> nestedSectionTree(List<SearchNode> results) => [
+  sectionNode("root", [
+    sectionNode("nested", results, title: "Nested"),
+  ], title: "Root"),
+];
 
 /// The context of a search for [query] with the parsed [selectors].
 SearchQueryContext queryContext(
@@ -286,3 +294,21 @@ final class FakeSearchSource
     unawaited(_snapshots.close());
   }
 }
+
+/// A card result row "Resource" of kind book, as wide as a dropdown, whose
+/// body is the button "Inner action". [onRow] runs when the row activates
+/// and [onInner] when the button does.
+Widget innerActionRow({
+  required VoidCallback onRow,
+  required VoidCallback onInner,
+}) => SizedBox(
+  width: 360,
+  child: SearchResultRow(
+    row: searchRowContext(onTap: onRow),
+    density: SearchResultDensity.card,
+    title: "Resource",
+    leading: const Icon(Icons.book),
+    kindLabel: "book",
+    body: TextButton(onPressed: onInner, child: const Text("Inner action")),
+  ),
+);

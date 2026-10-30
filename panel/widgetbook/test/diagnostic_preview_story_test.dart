@@ -7,7 +7,7 @@ void main() {
   testWidgets("a dragged card still reports its failed operation", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(diagnosticPreviewUseCase))!;
+    final panel = await tester.pumpStory(diagnosticPreviewUseCase);
 
     expect(panel.shows("Village Market"), isTrue);
     expect(find.bySemanticsLabel("Presentation error"), findsOneWidget);
@@ -16,10 +16,10 @@ void main() {
   testWidgets("a dragged card after a save carries no feedback", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       diagnosticPreviewUseCase,
       knobs: {"Last operation": "Saved"},
-    ))!;
+    );
 
     expect(panel.shows("Village Market"), isTrue);
     expect(find.bySemanticsLabel("Presentation error"), findsNothing);

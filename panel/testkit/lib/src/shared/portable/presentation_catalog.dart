@@ -1,5 +1,6 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
 
 /// The binding a presentation reads its configured value through.
@@ -126,4 +127,57 @@ skir.PresentationMaterial inspectorMaterial(
   layout: presentationColumn("root", nodes),
   dependencies: skir.PresentationDependencies.defaultInstance,
   inheritableNodes: references ?? [for (final node in nodes) node.nodeId],
+);
+
+/// What a catalog's inspector shows for the complete selection of a type.
+extension InspectorPresentations on CheckedEditorCatalog {
+  /// The inspector presentation of the direct [field] of [owner].
+  EditorFieldPresentationSelection inspectorField(
+    skir.TypeDefinitionId owner,
+    String field,
+  ) => fieldPresentation(
+    completeSelection(owner),
+    field,
+    skir.PresentationRole.inspector,
+  );
+}
+
+/// The [role] material of presentation [provider] for the type [definition]
+/// without type arguments, laying out [layout] with no inheritable nodes.
+skir.PresentationMaterial typeMaterial(
+  skir.PresentationId provider,
+  skir.TypeDefinitionId definition,
+  skir.PresentationRole role,
+  skir.PresentationNode layout,
+) => skir.PresentationMaterial(
+  inheritableNodes: const [],
+  provider: provider,
+  target: skir.PresentationTarget.createNamed(
+    definition: definition,
+    arguments: const [],
+  ),
+  role: role,
+  layout: layout,
+  dependencies: skir.PresentationDependencies.defaultInstance,
+  subject: skir.TypeTemplate.createNamed(
+    definition: definition,
+    arguments: const [],
+  ),
+);
+
+/// Presentation [id] for the type [definition] without type arguments,
+/// serving [roles] at the lowest priority.
+skir.PresentationDescriptor typePresentation(
+  skir.PresentationId id,
+  skir.TypeDefinitionId definition,
+  List<skir.PresentationRole> roles,
+) => skir.PresentationDescriptor(
+  id: id,
+  owner: skir.DeclarationOwner.defaultInstance,
+  target: skir.PresentationTarget.createNamed(
+    definition: definition,
+    arguments: const [],
+  ),
+  roles: roles,
+  priority: 0,
 );

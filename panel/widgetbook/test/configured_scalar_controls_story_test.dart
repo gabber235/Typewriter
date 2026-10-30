@@ -8,7 +8,7 @@ void main() {
   testWidgets("a placement offset completes to the nearest half", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(configuredScalarControlsUseCase))!;
+    final panel = await tester.pumpStory(configuredScalarControlsUseCase);
     final offset = panel.field("Placement offset");
     expect(offset.value, "12.25");
 
@@ -23,10 +23,10 @@ void main() {
     await tester.pumpStory(configuredScalarControlsUseCase);
     final withIcon = tester.getTopLeft(find.text("Quest checkpoint")).dx;
 
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       configuredScalarControlsUseCase,
       knobs: {"Scalar remove icons": "true", "Scalar read only": "true"},
-    ))!;
+    );
 
     expect(panel.field("Checkpoint name").value, "Quest checkpoint");
     expect(panel.field("Checkpoint name").isReadOnly, isTrue);

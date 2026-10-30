@@ -1,10 +1,10 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("queued capture waits for confirmed state integration", () async {
-    final work = ScopedWorkSession();
-    addTearDown(work.dispose);
+    final work = testWorkSession();
     final integrated = Completer<void>();
     var revision = 0;
     final first = work.start(
@@ -49,8 +49,7 @@ void main() {
   test(
     "integration failure preserves acceptance and retries only integration",
     () async {
-      final work = ScopedWorkSession();
-      addTearDown(work.dispose);
+      final work = testWorkSession();
       final previousHandler = FlutterError.onError;
       FlutterError.onError = (_) {};
       addTearDown(() => FlutterError.onError = previousHandler);
@@ -92,8 +91,7 @@ void main() {
   test(
     "uncertain work retains its reservation while disjoint work proceeds",
     () async {
-      final work = ScopedWorkSession();
-      addTearDown(work.dispose);
+      final work = testWorkSession();
       var attempts = 0;
       final uncertain = work.start(
         PreparedCommit<int>(

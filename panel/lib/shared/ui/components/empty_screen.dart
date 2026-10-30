@@ -2,12 +2,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents the full screen empty state for a missing collection or resource.
 ///
-/// The optional action is rendered only when [buttonText] is supplied. This
-/// widget does not infer why the collection is empty or own the action's state;
-/// callers provide the message and recovery operation.
+/// The optional action is rendered only when [buttonText] is supplied, and
+/// [child] adds guidance below the [title], such as what a search accepts.
+/// This widget does not infer why the collection is empty or own the action's
+/// state; callers provide the message and recovery operation.
 class EmptyScreen extends HookConsumerWidget {
   const EmptyScreen({
-    required this.title,
+    this.title,
+    this.child,
     this.small = false,
     this.buttonText,
     this.onPressed,
@@ -15,7 +17,8 @@ class EmptyScreen extends HookConsumerWidget {
   }) : super();
 
   final bool small;
-  final String title;
+  final String? title;
+  final Widget? child;
   final String? buttonText;
   final VoidCallback? onPressed;
 
@@ -31,12 +34,20 @@ class EmptyScreen extends HookConsumerWidget {
             stateMachineName: "Motion",
           ),
         ),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineMedium!
-              .copyWith(fontSize: small ? 20 : 25, fontWeight: FontWeight.bold),
-        ),
+        if (title case final title?)
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+              fontSize: small ? 20 : 25,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        if (child case final child?)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: child,
+          ),
         SizedBox(height: small ? 12 : 24),
         if (buttonText != null)
           FilledButton.icon(

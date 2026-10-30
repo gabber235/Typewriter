@@ -8,7 +8,7 @@ void main() {
   testWidgets("clicking a card selects it and replaces the selection", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(selectableUseCase))!;
+    final panel = await tester.pumpStory(selectableUseCase);
     final mayor = panel.item("Meet The Mayor");
     final market = panel.item("Village Market");
 
@@ -21,7 +21,7 @@ void main() {
   });
 
   testWidgets("the add button adds a selectable card", (tester) async {
-    final panel = (await tester.pumpStory(selectableUseCase))!;
+    final panel = await tester.pumpStory(selectableUseCase);
 
     await panel.tapOn(find.byIcon(Icons.add));
 

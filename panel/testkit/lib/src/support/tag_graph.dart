@@ -3,6 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
 import "package:typewriter_testkit/src/support/portable_operations.dart";
+import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 
 /// Authored tags linked by their `next` field: by default `tag:one`
 /// (Alpha) leads to `tag:two` (Beta). An inspector material declares them
@@ -42,28 +43,20 @@ final class TagGraph {
       ],
     );
     final generation = skir.CatalogGeneration(value: "catalog:collections");
-    final published = skir.PublishedType(
-      searchKey: null,
-      placementField: null,
-      display: defaultTypeDisplay(""),
-      definition: skir.TypeDefinition(
-        id: type,
-        parameters: const [],
-        representation: skir.RepresentationTemplate.createRecord(
-          fields: [
-            _field(
-              type,
-              "name",
-              skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-            ),
-            _field(type, "next", listOfResourcesTemplate),
-          ],
-          abstract_: false,
-        ),
-        parents: const [],
+    final published = publishedType(
+      type,
+      representation: skir.RepresentationTemplate.createRecord(
+        fields: [
+          _field(
+            type,
+            "name",
+            skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+          ),
+          _field(type, "next", listOfResourcesTemplate),
+        ],
+        abstract_: false,
       ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: [
+      fields: [
         _effective(
           type,
           "name",
@@ -71,50 +64,27 @@ final class TagGraph {
         ),
         _effective(type, "next", listOfResourcesTemplate),
       ],
-      ancestorTemplates: const [],
     );
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: generation,
         types: [
           published,
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            display: defaultTypeDisplay(""),
-            definition: skir.TypeDefinition(
-              id: list,
-              parameters: [
-                skir.TypeParameter(
-                  key: listParameter,
-                  name: "T",
-                  bounds: const [],
-                ),
-              ],
-              representation: skir.RepresentationTemplate.createSequence(
-                item: skir.TypeTemplate.wrapParameter(listParameter),
-                kind: skir.CollectionKind.list,
-              ),
-              parents: const [],
+          publishedType(
+            list,
+            representation: skir.RepresentationTemplate.createSequence(
+              item: skir.TypeTemplate.wrapParameter(listParameter),
+              kind: skir.CollectionKind.list,
             ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: const [],
+            parameters: [
+              skir.TypeParameter(
+                key: listParameter,
+                name: "T",
+                bounds: const [],
+              ),
+            ],
           ),
         ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     final one = skir.ResourceId(value: "tag:one");

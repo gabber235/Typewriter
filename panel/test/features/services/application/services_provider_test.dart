@@ -16,22 +16,12 @@ void main() {
     ]);
     await world.initialized();
     world.container.listen(_services, (_, _) {});
-    Future<List<skir.Service>> announce(
-      skir.OrganizationServicesChanged change,
-      bool Function(List<skir.Service> services) reached,
-    ) async {
-      world.nats.announceServices(_organization, change);
-      return (await world.container.eventually(
-        _services,
-        (value) => value.hasValue && reached(value.requireValue),
-        description: "the announced services",
-      )).requireValue;
-    }
+    final services = world.servicesOf(_organization);
 
     await world.container.read(_services.future);
 
     expect(
-      await announce(
+      await services.announce(
         skir.OrganizationServicesChanged.wrapReplace([
           service("one", status: null),
         ]),
@@ -40,7 +30,7 @@ void main() {
       [service("one", status: null)],
     );
     expect(
-      await announce(
+      await services.announce(
         skir.OrganizationServicesChanged.wrapReplace([
           service("one", status: null),
           service("two", status: null),
@@ -51,14 +41,14 @@ void main() {
     );
     final updated = service("one", status: null, name: "Updated", revision: 2);
     expect(
-      await announce(
+      await services.announce(
         skir.OrganizationServicesChanged.wrapUpdate(updated),
         (services) => services.first.revision == 2,
       ),
       [updated, service("two", status: null)],
     );
     expect(
-      await announce(
+      await services.announce(
         skir.OrganizationServicesChanged.wrapRemove(
           service("two", status: null).serviceId,
         ),
@@ -87,17 +77,7 @@ void main() {
     ]);
     await world.initialized();
     world.container.listen(_services, (_, _) {});
-    Future<List<skir.Service>> announce(
-      skir.OrganizationServicesChanged change,
-      bool Function(List<skir.Service> services) reached,
-    ) async {
-      world.nats.announceServices(_organization, change);
-      return (await world.container.eventually(
-        _services,
-        (value) => value.hasValue && reached(value.requireValue),
-        description: "the announced services",
-      )).requireValue;
-    }
+    final services = world.servicesOf(_organization);
 
     expect(await world.container.read(_services.future), [current]);
 
@@ -111,7 +91,7 @@ void main() {
       );
     }
     final marker = service("marker", status: null);
-    await announce(
+    await services.announce(
       skir.OrganizationServicesChanged.wrapUpdate(marker),
       (services) => services.length == 2,
     );
@@ -145,22 +125,12 @@ void main() {
     ]);
     await world.initialized();
     world.container.listen(_services, (_, _) {});
-    Future<List<skir.Service>> announce(
-      skir.OrganizationServicesChanged change,
-      bool Function(List<skir.Service> services) reached,
-    ) async {
-      world.nats.announceServices(_organization, change);
-      return (await world.container.eventually(
-        _services,
-        (value) => value.hasValue && reached(value.requireValue),
-        description: "the announced services",
-      )).requireValue;
-    }
+    final services = world.servicesOf(_organization);
 
     await world.container.read(_services.future);
 
     expect(
-      await announce(
+      await services.announce(
         skir.OrganizationServicesChanged.wrapUpdate(heartbeat),
         (services) => services.single.state == heartbeat.state,
       ),
@@ -207,17 +177,7 @@ void main() {
     ]);
     await world.initialized();
     world.container.listen(_services, (_, _) {});
-    Future<List<skir.Service>> announce(
-      skir.OrganizationServicesChanged change,
-      bool Function(List<skir.Service> services) reached,
-    ) async {
-      world.nats.announceServices(_organization, change);
-      return (await world.container.eventually(
-        _services,
-        (value) => value.hasValue && reached(value.requireValue),
-        description: "the announced services",
-      )).requireValue;
-    }
+    final services = world.servicesOf(_organization);
 
     expect(await world.container.read(_services.future), hasLength(2));
     final reply = Completer<Uint8List>();
@@ -266,14 +226,14 @@ void main() {
       revision: 4,
     );
     expect(
-      await announce(
+      await services.announce(
         skir.OrganizationServicesChanged.wrapUpdate(later),
         (services) => services.single.revision == 4,
       ),
       [later],
     );
     expect(
-      await announce(
+      await services.announce(
         skir.OrganizationServicesChanged.wrapReplace([
           service("removed", status: null, revision: 1),
         ]),

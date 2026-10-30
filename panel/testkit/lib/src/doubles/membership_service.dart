@@ -64,17 +64,10 @@ final class FakeMembershipService {
     required String user,
     required skir.RecordId organization,
   }) {
-    void command<TRequest, TResponse>(
-      SkirRouteOperation<TResponse> operation,
-      skir.Serializer<TRequest> requests,
-      TResponse Function(TRequest request) reply,
-    ) => nats.registerHandler(operation.subject, (bytes) async {
-      await Future<void>.delayed(latency);
-      if (commandFailure case final error?) throw error;
-      return operation.responseSerializer.toBytes(
-        reply(requests.fromBytes(bytes)),
-      );
-    });
+    final command = nats.commands(
+      latency: latency,
+      failure: () => commandFailure,
+    );
 
     void watch<TResponse>(
       SkirRouteOperation<TResponse> operation,

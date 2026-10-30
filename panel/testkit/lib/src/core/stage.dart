@@ -64,11 +64,30 @@ class _PanelStageState extends State<PanelStage> {
       RouteLocation(:final route) => route,
       _ => _world.home,
     };
-    // The router admits the first navigation once the app mounted it.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // The router admits the first navigation once the app mounted it and
+    // settled its own initial route, so the test's location always lands
+    // last instead of racing the guards of that initial route.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      unawaited(_world.container.read(appRouterProvider).navigate(route));
+      final router = _world.container.read(appRouterProvider);
+      await _initialRouteSettled(router);
+      if (!mounted) return;
+      unawaited(router.navigate(route));
     });
+  }
+
+  /// Completes once [router] holds the page its initial route resolved to.
+  Future<void> _initialRouteSettled(StackRouter router) {
+    if (router.stack.isNotEmpty) return Future.value();
+    final settled = Completer<void>();
+    void check() {
+      if (router.stack.isEmpty) return;
+      router.removeListener(check);
+      settled.complete();
+    }
+
+    router.addListener(check);
+    return settled.future;
   }
 
   @override

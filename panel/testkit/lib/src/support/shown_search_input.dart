@@ -2,9 +2,12 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/doubles/presentation_host.dart";
 import "package:typewriter_testkit/src/doubles/projecting_host.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
+import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
+import "package:typewriter_testkit/src/support/portable_operations.dart";
 import "package:typewriter_testkit/src/support/shown_component.dart";
 
 /// A search over the static [choices], keyed by item id, that writes the
@@ -70,6 +73,57 @@ skir.SearchControl staticSearchControl({
     );
   if (summary != null) control.summary = summary;
   return control.toFrozen();
+}
+
+/// Shows a search over Alpha and Beta that writes the root of the value
+/// holding [value], Alpha by default, reporting each write to [onWrite] and
+/// reaching remote sources through [client] when given.
+Future<PanelDriver> showAlphaBetaSearch(
+  WidgetTester tester, {
+  String value = "Alpha",
+  void Function(skir.DataValue value)? onWrite,
+  Client? client,
+}) {
+  final target = skir.ExpressionBindingId(value: "target");
+  return tester.showComponent(
+    Scaffold(
+      body: PortableSearchInput(
+        control: staticSearchControl(
+          target: skir.BindingRef(bindingId: target, path: editorRootPath),
+          maximumExtent: 240,
+          choices: {
+            for (final choice in const ["Alpha", "Beta"])
+              choice.toLowerCase(): skir.DataValue.wrapStringValue(choice),
+          },
+          summary: presentationText(
+            "summary",
+            inputExpression(skir.ExpressionBindingId(value: "summary")),
+          ),
+        ),
+        scope: PortablePresentationScope(
+          operations: testPortableOperations(),
+          bindings: {
+            target: PortableExpressionBinding(
+              value: skir.DataValue.wrapStringValue(value),
+            ),
+          },
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          host: FakePresentationHost(
+            document: FakePresentationHost.emptyDocument(
+              catalog: CheckedEditorCatalog(
+                testCatalogSnapshot(
+                  generation: skir.CatalogGeneration(value: "catalog:static"),
+                ),
+              ),
+            ),
+            value: skir.DataValue.wrapStringValue(value),
+            onWrite: onWrite == null ? null : (_, written) => onWrite(written),
+          ),
+        ),
+        client: client,
+      ),
+    ),
+  );
 }
 
 /// Projects [resource] with an appearance named after its id.

@@ -2,7 +2,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Binds provider state to the route access coordinator used by the router.
 ///
-/// The binding owns the two provider subscriptions for its [access] instance.
+/// The binding owns the provider subscriptions for its [access] instance.
 /// It seeds both modules immediately, rebinds when the coordinator changes,
 /// and closes subscriptions before the widget is disposed. The child builder
 /// is rendered after the initial synchronous callbacks have populated access.
@@ -43,7 +43,7 @@ final class _RouteAccessBindingState extends ConsumerState<RouteAccessBinding> {
   void _bind() {
     _subscriptions = [
       bindAuthenticationRouteAccess(ref, widget.access.authentication),
-      bindOrganizationRouteAccess(ref, widget.access.organizations),
+      ...bindOrganizationRouteAccess(ref, widget.access.organizations),
     ];
   }
 

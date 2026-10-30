@@ -9,17 +9,13 @@ void main() {
     testWidgets("renders initial items with completed animations", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Alpha"),
-        const AnimatedItem(id: "b", label: "Beta"),
-      ]);
-
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      await tester.showAnimatedItems(
+        [
+          const AnimatedItem(id: "a", label: "Alpha"),
+          const AnimatedItem(id: "b", label: "Beta"),
+        ],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       expect(find.text("Alpha"), findsOneWidget);
@@ -31,16 +27,13 @@ void main() {
     testWidgets("inserts in the middle using the configured duration", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Alpha"),
-        const AnimatedItem(id: "c", label: "Gamma"),
-      ]);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        [
+          const AnimatedItem(id: "a", label: "Alpha"),
+          const AnimatedItem(id: "c", label: "Gamma"),
+        ],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       source.update([
@@ -65,16 +58,13 @@ void main() {
     testWidgets("keeps captured removed item for the removal duration", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Old Alpha"),
-        const AnimatedItem(id: "b", label: "Beta"),
-      ]);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        [
+          const AnimatedItem(id: "a", label: "Old Alpha"),
+          const AnimatedItem(id: "b", label: "Beta"),
+        ],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       source.update([const AnimatedItem(id: "b", label: "Beta")]);
@@ -96,18 +86,15 @@ void main() {
     testWidgets("handles mixed changes and reorder without index errors", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Alpha"),
-        const AnimatedItem(id: "b", label: "Beta"),
-        const AnimatedItem(id: "c", label: "Gamma"),
-        const AnimatedItem(id: "d", label: "Delta"),
-      ]);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        [
+          const AnimatedItem(id: "a", label: "Alpha"),
+          const AnimatedItem(id: "b", label: "Beta"),
+          const AnimatedItem(id: "c", label: "Gamma"),
+          const AnimatedItem(id: "d", label: "Delta"),
+        ],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       source.update([
@@ -130,16 +117,13 @@ void main() {
     });
 
     testWidgets("stays synchronized across rapid updates", (tester) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Alpha"),
-        const AnimatedItem(id: "b", label: "Beta"),
-      ]);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        [
+          const AnimatedItem(id: "a", label: "Alpha"),
+          const AnimatedItem(id: "b", label: "Beta"),
+        ],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       source.update([
@@ -171,15 +155,10 @@ void main() {
     testWidgets("updates payload without a structural animation", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Old"),
-      ]);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        [const AnimatedItem(id: "a", label: "Old")],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       source.update([const AnimatedItem(id: "a", label: "New")]);
@@ -195,13 +174,10 @@ void main() {
       final mutableItems = <AnimatedItem>[
         const AnimatedItem(id: "a", label: "Alpha"),
       ];
-      final source = AnimatedItemSource(mutableItems);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        mutableItems,
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       final previousSnapshot = source.renderedItems;
@@ -223,17 +199,13 @@ void main() {
     testWidgets("rejects duplicate identities on initial build", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Alpha"),
-        const AnimatedItem(id: "a", label: "Duplicate"),
-      ]);
-
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      await tester.showAnimatedItems(
+        [
+          const AnimatedItem(id: "a", label: "Alpha"),
+          const AnimatedItem(id: "a", label: "Duplicate"),
+        ],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       expect(tester.takeException(), isArgumentError);
@@ -242,15 +214,10 @@ void main() {
     testWidgets("rejects duplicate identities before changing state", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Alpha"),
-      ]);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        [const AnimatedItem(id: "a", label: "Alpha")],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       source.update([
@@ -275,15 +242,10 @@ void main() {
     testWidgets("synchronizes while unmounted and remounts latest items", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
-        const AnimatedItem(id: "a", label: "Alpha"),
-      ]);
-      await tester.showComponent(
-        AnimatedItems(
-          source: source,
-          insertDuration: insertion,
-          removeDuration: removal,
-        ),
+      final source = await tester.showAnimatedItems(
+        [const AnimatedItem(id: "a", label: "Alpha")],
+        insertDuration: insertion,
+        removeDuration: removal,
       );
 
       source.visible.value = false;
@@ -309,13 +271,10 @@ void main() {
   testWidgets("useAnimatedTable captures removed items and synchronizes", (
     tester,
   ) async {
-    final source = AnimatedItemSource([
+    final source = await tester.showAnimatedItems([
       const AnimatedItem(id: "a", label: "Alpha"),
       const AnimatedItem(id: "b", label: "Beta"),
-    ]);
-    await tester.showComponent(
-      AnimatedItems(source: source, layout: AnimatedItemsLayout.table),
-    );
+    ], layout: AnimatedItemsLayout.table);
 
     source.update([const AnimatedItem(id: "c", label: "Gamma")]);
     await tester.pump();
@@ -334,13 +293,10 @@ void main() {
   testWidgets("useAnimatedTable handles keyed reorder and rapid re-add", (
     tester,
   ) async {
-    final source = AnimatedItemSource([
+    final source = await tester.showAnimatedItems([
       const AnimatedItem(id: "a", label: "Alpha"),
       const AnimatedItem(id: "b", label: "Beta"),
-    ]);
-    await tester.showComponent(
-      AnimatedItems(source: source, layout: AnimatedItemsLayout.table),
-    );
+    ], layout: AnimatedItemsLayout.table);
 
     source.update([
       const AnimatedItem(id: "b", label: "Beta"),
@@ -372,13 +328,9 @@ void main() {
     testWidgets("${variant.name} uses its typed key and synchronizes", (
       tester,
     ) async {
-      final source = AnimatedItemSource([
+      final source = await tester.showAnimatedItems([
         const AnimatedItem(id: "a", label: "Alpha"),
-      ]);
-
-      await tester.showComponent(
-        AnimatedItems(source: source, layout: variant),
-      );
+      ], layout: variant);
 
       source.update([
         const AnimatedItem(id: "a", label: "Alpha"),

@@ -1,3 +1,4 @@
+import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -41,33 +42,23 @@ final class ParentFieldFixture {
     final declaredStyleTemplate = nullableStyle
         ? skir.TypeTemplate.createNullable(value: styleTemplate)
         : styleTemplate;
-    final catalogSnapshot = skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
+    final catalogSnapshot = testCatalogSnapshot(
       generation: skir.CatalogGeneration(value: generation),
       types: [
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: root,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: styleOwner,
-                  type: declaredStyleTemplate,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
+        publishedType(
+          root,
+          representation: skir.RepresentationTemplate.createRecord(
+            fields: [
+              skir.FieldDeclaration(
+                owner: styleOwner,
+                type: declaredStyleTemplate,
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+            ],
+            abstract_: false,
           ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: [
+          fields: [
             skir.EffectiveFieldTemplate(
               key: "style",
               owner: styleOwner,
@@ -75,78 +66,78 @@ final class ParentFieldFixture {
               rules: const [],
             ),
           ],
-          ancestorTemplates: const [],
         ),
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: style,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                if (!inheritedBold)
-                  skir.FieldDeclaration(
-                    owner: boldOwner,
-                    type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
-                    overrides: const [],
-                    hasConstructorDefault: false,
-                  ),
+        publishedType(
+          style,
+          representation: skir.RepresentationTemplate.createRecord(
+            fields: [
+              if (!inheritedBold)
                 skir.FieldDeclaration(
-                  owner: repetitionsOwner,
-                  type: skir.TypeTemplate.wrapScalar(
-                    skir.ScalarKind.createInteger(
-                      width: skir.IntegerWidth.signedThirtyTwo,
-                    ),
-                  ),
-                  overrides: const [],
-                  hasConstructorDefault: true,
-                ),
-                skir.FieldDeclaration(
-                  owner: bytesOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.bytes),
+                  owner: boldOwner,
+                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
                   overrides: const [],
                   hasConstructorDefault: false,
                 ),
-                skir.FieldDeclaration(
-                  owner: durationOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.duration),
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-                skir.FieldDeclaration(
-                  owner: timestampOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.timestamp),
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-                if (includeItems)
-                  skir.FieldDeclaration(
-                    owner: itemsOwner,
-                    type: skir.TypeTemplate.wrapNamed(
-                      skir.NamedTypeTemplate(
-                        definition: list,
-                        arguments: const [],
-                      ),
-                    ),
-                    overrides: const [],
-                    hasConstructorDefault: false,
+              skir.FieldDeclaration(
+                owner: repetitionsOwner,
+                type: skir.TypeTemplate.wrapScalar(
+                  skir.ScalarKind.createInteger(
+                    width: skir.IntegerWidth.signedThirtyTwo,
                   ),
-              ],
-              abstract_: false,
-            ),
-            parents: inheritedBold
-                ? [
+                ),
+                overrides: const [],
+                hasConstructorDefault: true,
+              ),
+              skir.FieldDeclaration(
+                owner: bytesOwner,
+                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.bytes),
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+              skir.FieldDeclaration(
+                owner: durationOwner,
+                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.duration),
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+              skir.FieldDeclaration(
+                owner: timestampOwner,
+                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.timestamp),
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+              if (includeItems)
+                skir.FieldDeclaration(
+                  owner: itemsOwner,
+                  type: skir.TypeTemplate.wrapNamed(
                     skir.NamedTypeTemplate(
-                      definition: baseStyle,
+                      definition: list,
                       arguments: const [],
                     ),
-                  ]
-                : const [],
+                  ),
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+            ],
+            abstract_: false,
           ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: [
+          parents: inheritedBold
+              ? [
+                  skir.NamedTypeTemplate(
+                    definition: baseStyle,
+                    arguments: const [],
+                  ),
+                ]
+              : const [],
+          ancestors: inheritedBold
+              ? [
+                  skir.NamedTypeTemplate(
+                    definition: baseStyle,
+                    arguments: const [],
+                  ),
+                ]
+              : const [],
+          fields: [
             skir.EffectiveFieldTemplate(
               key: "bold",
               owner: boldOwner,
@@ -191,38 +182,22 @@ final class ParentFieldFixture {
                 rules: const [],
               ),
           ],
-          ancestorTemplates: inheritedBold
-              ? [
-                  skir.NamedTypeTemplate(
-                    definition: baseStyle,
-                    arguments: const [],
-                  ),
-                ]
-              : const [],
         ),
         if (inheritedBold)
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            display: defaultTypeDisplay(""),
-            definition: skir.TypeDefinition(
-              id: baseStyle,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createRecord(
-                fields: [
-                  skir.FieldDeclaration(
-                    owner: boldOwner,
-                    type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
-                    overrides: const [],
-                    hasConstructorDefault: true,
-                  ),
-                ],
-                abstract_: false,
-              ),
-              parents: const [],
+          publishedType(
+            baseStyle,
+            representation: skir.RepresentationTemplate.createRecord(
+              fields: [
+                skir.FieldDeclaration(
+                  owner: boldOwner,
+                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
+                  overrides: const [],
+                  hasConstructorDefault: true,
+                ),
+              ],
+              abstract_: false,
             ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: [
+            fields: [
               skir.EffectiveFieldTemplate(
                 key: "bold",
                 owner: boldOwner,
@@ -230,55 +205,23 @@ final class ParentFieldFixture {
                 rules: const [],
               ),
             ],
-            ancestorTemplates: const [],
           ),
         if (includeItems)
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            display: defaultTypeDisplay(""),
-            definition: skir.TypeDefinition(
-              id: list,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createSequence(
-                item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                kind: skir.CollectionKind.list,
-              ),
-              parents: const [],
+          publishedType(
+            list,
+            representation: skir.RepresentationTemplate.createSequence(
+              item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+              kind: skir.CollectionKind.list,
             ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: const [],
           ),
       ],
-      relations: const [],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     );
     final resource = skir.ResourceId(value: "resource:parent");
-    final snapshot = skir.AuthoringState(
-      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-      generation: catalogSnapshot.generation,
-      resources: [
-        skir.AuthoringResource(
-          id: resource,
-          content: skir.AuthoringRecord(
-            configuration: skir.TypeSelection.wrapComplete(rootUse),
-            fields: [
-              skir.FieldValue(name: "style", value: skir.DataValue.unfilled),
-            ],
-          ),
-        ),
-      ],
-      links: const [],
-      findings: const [],
+    final snapshot = savedRecordState(
+      catalogSnapshot.generation,
+      resource,
+      rootUse,
+      [skir.FieldValue(name: "style", value: skir.DataValue.unfilled)],
     );
     skir.ValueLocation location(String field) => skir.ValueLocation(
       resource: resource,
@@ -404,19 +347,11 @@ final class PageCreationFixture {
       skir.RepresentationTemplate representation, {
       List<skir.NamedTypeTemplate> parents = const [],
       List<skir.EffectiveFieldTemplate> fields = const [],
-    }) => skir.PublishedType(
-      searchKey: null,
-      placementField: null,
-      display: defaultTypeDisplay(""),
-      definition: skir.TypeDefinition(
-        id: id,
-        parameters: const [],
-        representation: representation,
-        parents: parents,
-      ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: fields,
-      ancestorTemplates: parents,
+    }) => publishedType(
+      id,
+      representation: representation,
+      parents: parents,
+      fields: fields,
     );
     final bookPagesField = field(book, "pages", named(pages));
     final pageBookField = field(page, "book", named(pageLink));
@@ -427,9 +362,7 @@ final class PageCreationFixture {
     );
     final pageParent = template(page);
     final generation = skir.CatalogGeneration(value: "catalog:page creation");
-    final snapshot = skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
+    final snapshot = testCatalogSnapshot(
       generation: generation,
       types: [
         published(
@@ -516,11 +449,6 @@ final class PageCreationFixture {
           families: const [],
         ),
       ],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
       endpointBindings: [
         skir.EndpointBindingTemplate(
           endpoint: bookEndpoint,
@@ -569,9 +497,6 @@ final class PageCreationFixture {
             containsCollection: false,
           ),
       ],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     );
     final bookId = skir.ResourceId(value: "book:original");
     final pageId = skir.ResourceId(value: "page:created");
@@ -738,11 +663,8 @@ final class RelationEditFixture {
       arguments: const [],
     );
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: fixture.snapshot.generation,
-        types: const [],
         relations: [
           skir.RelationContract(
             id: relation,
@@ -763,15 +685,6 @@ final class RelationEditFixture {
             families: const [],
           ),
         ],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
       ),
     );
     return RelationEditFixture._(
@@ -863,24 +776,10 @@ final class CollectionRepairFixture {
       definition: itemDefinition,
       arguments: const [],
     );
-    skir.PublishedType published(
-      skir.TypeDefinition definition,
-      List<skir.EffectiveFieldTemplate> fields,
-    ) => skir.PublishedType(
-      searchKey: null,
-      placementField: null,
-      display: defaultTypeDisplay(""),
-      definition: definition,
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: fields,
-      ancestorTemplates: const [],
-    );
-    final catalogSnapshot = skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
+    final catalogSnapshot = testCatalogSnapshot(
       generation: skir.CatalogGeneration(value: "catalog:collection-repair"),
       types: [
-        published(
+        publishedDefinition(
           skir.TypeDefinition(
             id: root,
             parameters: const [],
@@ -918,7 +817,7 @@ final class CollectionRepairFixture {
             ),
           ],
         ),
-        published(
+        publishedDefinition(
           skir.TypeDefinition(
             id: textSetDefinition,
             parameters: const [],
@@ -930,7 +829,7 @@ final class CollectionRepairFixture {
           ),
           const [],
         ),
-        published(
+        publishedDefinition(
           skir.TypeDefinition(
             id: recordSetDefinition,
             parameters: const [],
@@ -942,7 +841,7 @@ final class CollectionRepairFixture {
           ),
           const [],
         ),
-        published(
+        publishedDefinition(
           skir.TypeDefinition(
             id: itemDefinition,
             parameters: const [],
@@ -969,35 +868,16 @@ final class CollectionRepairFixture {
           ],
         ),
       ],
-      relations: const [],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     );
     final resource = skir.ResourceId(value: "resource:collection-repair");
-    final snapshot = skir.AuthoringState(
-      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-      generation: catalogSnapshot.generation,
-      resources: [
-        skir.AuthoringResource(
-          id: resource,
-          content: skir.AuthoringRecord(
-            configuration: skir.TypeSelection.wrapComplete(rootUse),
-            fields: [
-              skir.FieldValue(name: "texts", value: skir.DataValue.unfilled),
-              skir.FieldValue(name: "records", value: skir.DataValue.unfilled),
-            ],
-          ),
-        ),
+    final snapshot = savedRecordState(
+      catalogSnapshot.generation,
+      resource,
+      rootUse,
+      [
+        skir.FieldValue(name: "texts", value: skir.DataValue.unfilled),
+        skir.FieldValue(name: "records", value: skir.DataValue.unfilled),
       ],
-      links: const [],
-      findings: const [],
     );
     skir.ValueLocation location(String field) => skir.ValueLocation(
       resource: resource,
@@ -1122,4 +1002,60 @@ final class ListRecordFixture {
   final skir.NamedTypeUse listType;
   final skir.InputToken absent;
   final skir.AuthoringState snapshot;
+}
+
+/// The saved authoring state of catalog [generation] holding only the record
+/// [resource] of [configuration] with [fields].
+skir.AuthoringState savedRecordState(
+  skir.CatalogGeneration generation,
+  skir.ResourceId resource,
+  skir.NamedTypeUse configuration,
+  List<skir.FieldValue> fields,
+) => skir.AuthoringState(
+  confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
+  generation: generation,
+  resources: [
+    skir.AuthoringResource(
+      id: resource,
+      content: skir.AuthoringRecord(
+        configuration: skir.TypeSelection.wrapComplete(configuration),
+        fields: fields,
+      ),
+    ),
+  ],
+  links: const [],
+  findings: const [],
+);
+
+/// The value the Realm prepares for [request]: a record of the requested
+/// selection holding [fields], with no findings.
+skir.PreparedValue preparedRecord(
+  skir.ValuePreparationRequest request,
+  List<skir.FieldValue> fields,
+) => skir.PreparedValue(
+  content: skir.PreparedContent.wrapRecord(
+    skir.AuthoringRecord(
+      configuration: request.recordSelection,
+      fields: fields,
+    ),
+  ),
+  findings: const [],
+);
+
+/// A workspace host of [resource] in [source] with no presentation material
+/// and nothing to edit through; it lives until the test ends.
+AuthoredPresentationHost bareWorkspaceHost(
+  skir.ResourceId resource,
+  AuthoringDocument source,
+) {
+  final host = AuthoredPresentationHost(
+    resource: resource,
+    source: source,
+    material: skir.PresentationMaterial.defaultInstance,
+    role: skir.PresentationRole.workspace,
+    budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+    capabilities: const PortablePresentationCapabilities(),
+  );
+  addTearDown(host.dispose);
+  return host;
 }

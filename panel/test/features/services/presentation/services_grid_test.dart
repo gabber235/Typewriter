@@ -37,7 +37,7 @@ final _realm = realmInstance(
   state: childRuntimeState(updatedAt: DateTime.utc(2026, 8, 20)),
 );
 
-final _topology = skir.OrganizationTopologySnapshot(
+final _topology = topologySnapshot(
   hosts: [_host],
   realms: [_realm],
   engines: [
@@ -118,10 +118,9 @@ void main() {
       signedIn(ada, organization: acme),
       servicesBackend(
         services: [_discord],
-        topology: skir.OrganizationTopologySnapshot(
-          hosts: [],
-          realms: _topology.realms,
-          engines: _topology.engines,
+        topology: topologySnapshot(
+          realms: [..._topology.realms],
+          engines: [..._topology.engines],
         ),
       ),
     ]);
@@ -248,7 +247,7 @@ void main() {
       signedIn(ada, organization: acme),
       servicesBackend(
         services: [_paper, _discord],
-        topology: skir.OrganizationTopologySnapshot(
+        topology: topologySnapshot(
           hosts: [_host],
           realms: [realm],
           engines: [

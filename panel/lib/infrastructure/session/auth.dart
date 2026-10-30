@@ -168,10 +168,14 @@ class Auth extends _$Auth {
     }
   }
 
-  /// Ends the provider session and removes its locally stored credentials.
+  /// Forgets the session locally, then ends the provider session in the
+  /// background.
   ///
-  /// A missing manager is treated as an already ended session. Mutation
-  /// instrumentation owns the visible operation status; provider invalidation
+  /// The panel is signed out once the stored session and tokens are gone, so
+  /// it never waits on the provider's end session flow (a browser sheet on
+  /// native platforms, another tab on the web). Failing to end the provider
+  /// session is reported and leaves the user signed out locally. A missing
+  /// manager is treated as an already ended session. Provider invalidation
   /// makes the signed out state observable to routes and transport clients.
   Future<void> signOut() async {
     debugPrint("Signing out");
@@ -179,9 +183,18 @@ class Auth extends _$Auth {
     if (manager == null) {
       return;
     }
+    // The end session request reads the current session when it starts, so it
+    // starts before the session is forgotten.
+    unawaited(
+      runPanelMutation(
+        operation: PanelMutationOperation.endProviderSession,
+        mutation: manager.logout,
+        recover: (_, _) {},
+      ),
+    );
     await runPanelMutation(
       operation: PanelMutationOperation.signOut,
-      mutation: () => Future.wait([manager.forgetUser(), manager.logout()]),
+      mutation: manager.forgetUser,
     );
     ref.invalidateSelf();
   }

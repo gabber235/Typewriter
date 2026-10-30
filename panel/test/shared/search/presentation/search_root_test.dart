@@ -81,28 +81,17 @@ void main() {
     tester,
   ) async {
     final source = FakeSearchSource();
-    final shown = ValueNotifier(true);
-    addTearDown(shown.dispose);
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        ValueListenableBuilder(
-          valueListenable: shown,
-          builder: (context, isShown, _) => isShown
-              ? SearchRoot(
-                  create: (_) => SearchController(
-                    session: searchSession(source),
-                    baseSelectors: const [],
-                  ),
-                  child: const SearchProbe(label: "Owned"),
-                )
-              : const SizedBox(),
+    await tester.showComponent(
+      SearchRoot(
+        create: (_) => SearchController(
+          session: searchSession(source),
+          baseSelectors: const [],
         ),
+        child: const SearchProbe(label: "Owned"),
       ),
     );
 
-    shown.value = false;
-    await panel.settle();
+    await tester.showComponent(const SizedBox());
 
     expect(source.disposeCount, 1);
   });
@@ -115,25 +104,14 @@ void main() {
       session: searchSession(source),
       baseSelectors: const [],
     );
-    final shown = ValueNotifier(true);
-    addTearDown(shown.dispose);
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        ValueListenableBuilder(
-          valueListenable: shown,
-          builder: (context, isShown, _) => isShown
-              ? SearchRoot.borrowed(
-                  controller: controller,
-                  child: const SearchProbe(label: "Borrowed"),
-                )
-              : const SizedBox(),
-        ),
+    await tester.showComponent(
+      SearchRoot.borrowed(
+        controller: controller,
+        child: const SearchProbe(label: "Borrowed"),
       ),
     );
 
-    shown.value = false;
-    await panel.settle();
+    await tester.showComponent(const SizedBox());
     expect(source.disposeCount, 0);
 
     controller.dispose();

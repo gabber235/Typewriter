@@ -410,50 +410,24 @@ void main() {
   });
 
   test("deletion cancels debounce and prevents its commit", () async {
-    final scheduler = ControlledScheduler();
-    var commits = 0;
-    final source = titleAndColorSource(
-      scheduler: scheduler,
-      commit: (_) async {
-        commits++;
-        return TypedMutationResult.success(
-          revision: 2,
-          value: titleAndColorValue(title: "New", color: "Red"),
-        );
-      },
-    );
-
-    source.update(title, skir.DataValue.wrapStringValue("New"));
-    final task = scheduler.tasks.single;
+    final commits = <EditorCommit>[];
+    final (:source, :task) = debouncedTitleEdit(commits);
     source.acceptRemoteDeletion();
 
     expect(task.cancelled, isTrue);
     expect(await task.completed, EditorTaskCompletion.cancelled);
-    expect(commits, 0);
+    expect(commits.length, 0);
     source.dispose();
   });
 
   test("dispose cancels debounce and prevents its commit", () async {
-    final scheduler = ControlledScheduler();
-    var commits = 0;
-    final source = titleAndColorSource(
-      scheduler: scheduler,
-      commit: (_) async {
-        commits++;
-        return TypedMutationResult.success(
-          revision: 2,
-          value: titleAndColorValue(title: "New", color: "Red"),
-        );
-      },
-    );
-
-    source.update(title, skir.DataValue.wrapStringValue("New"));
-    final task = scheduler.tasks.single;
+    final commits = <EditorCommit>[];
+    final (:source, :task) = debouncedTitleEdit(commits);
     source.dispose();
 
     expect(task.cancelled, isTrue);
     expect(await task.completed, EditorTaskCompletion.cancelled);
-    expect(commits, 0);
+    expect(commits.length, 0);
   });
 
   test("deletion cancels a retry without another commit", () async {

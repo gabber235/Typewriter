@@ -136,43 +136,7 @@ void main() {
   testWidgets("static results appear only once the search opens", (
     tester,
   ) async {
-    final panel = await tester.showComponent(
-      Scaffold(
-        body: PortableSearchInput(
-          control: staticSearchControl(
-            target: skir.BindingRef(bindingId: _target, path: editorRootPath),
-            maximumExtent: 240,
-            choices: {
-              for (final value in const ["Alpha", "Beta"])
-                value.toLowerCase(): skir.DataValue.wrapStringValue(value),
-            },
-            summary: presentationText("summary", inputExpression(_summary.id)),
-          ),
-          scope: PortablePresentationScope(
-            operations: testPortableOperations(),
-            bindings: {
-              _target: PortableExpressionBinding(
-                value: skir.DataValue.wrapStringValue("Alpha"),
-              ),
-            },
-            budget: skir.EvaluationBudget(
-              maxSteps: 100,
-              maxCollectionItems: 100,
-            ),
-            host: FakePresentationHost(
-              document: FakePresentationHost.emptyDocument(
-                catalog: CheckedEditorCatalog(
-                  testCatalogSnapshot(
-                    generation: skir.CatalogGeneration(value: "catalog:static"),
-                  ),
-                ),
-              ),
-              value: skir.DataValue.wrapStringValue("Alpha"),
-            ),
-          ),
-        ),
-      ),
-    );
+    final panel = await showAlphaBetaSearch(tester);
     expect(find.text("Alpha"), findsOneWidget);
     expect(find.text("Beta").hitTestable(), findsNothing);
 
@@ -184,43 +148,9 @@ void main() {
     tester,
   ) async {
     skir.DataValue? written;
-    final panel = await tester.showComponent(
-      Scaffold(
-        body: PortableSearchInput(
-          control: staticSearchControl(
-            target: skir.BindingRef(bindingId: _target, path: editorRootPath),
-            maximumExtent: 240,
-            choices: {
-              for (final value in const ["Alpha", "Beta"])
-                value.toLowerCase(): skir.DataValue.wrapStringValue(value),
-            },
-            summary: presentationText("summary", inputExpression(_summary.id)),
-          ),
-          scope: PortablePresentationScope(
-            operations: testPortableOperations(),
-            bindings: {
-              _target: PortableExpressionBinding(
-                value: skir.DataValue.wrapStringValue("Alpha"),
-              ),
-            },
-            budget: skir.EvaluationBudget(
-              maxSteps: 100,
-              maxCollectionItems: 100,
-            ),
-            host: FakePresentationHost(
-              document: FakePresentationHost.emptyDocument(
-                catalog: CheckedEditorCatalog(
-                  testCatalogSnapshot(
-                    generation: skir.CatalogGeneration(value: "catalog:static"),
-                  ),
-                ),
-              ),
-              value: skir.DataValue.wrapStringValue("Alpha"),
-              onWrite: (_, value) => written = value,
-            ),
-          ),
-        ),
-      ),
+    final panel = await showAlphaBetaSearch(
+      tester,
+      onWrite: (value) => written = value,
     );
     await panel.tapOn(panel.searchInput.summaryButton);
     await panel.fieldAt(0).focus();
@@ -233,43 +163,9 @@ void main() {
 
   testWidgets("Escape closes the search without choosing", (tester) async {
     skir.DataValue? written;
-    final panel = await tester.showComponent(
-      Scaffold(
-        body: PortableSearchInput(
-          control: staticSearchControl(
-            target: skir.BindingRef(bindingId: _target, path: editorRootPath),
-            maximumExtent: 240,
-            choices: {
-              for (final value in const ["Alpha", "Beta"])
-                value.toLowerCase(): skir.DataValue.wrapStringValue(value),
-            },
-            summary: presentationText("summary", inputExpression(_summary.id)),
-          ),
-          scope: PortablePresentationScope(
-            operations: testPortableOperations(),
-            bindings: {
-              _target: PortableExpressionBinding(
-                value: skir.DataValue.wrapStringValue("Alpha"),
-              ),
-            },
-            budget: skir.EvaluationBudget(
-              maxSteps: 100,
-              maxCollectionItems: 100,
-            ),
-            host: FakePresentationHost(
-              document: FakePresentationHost.emptyDocument(
-                catalog: CheckedEditorCatalog(
-                  testCatalogSnapshot(
-                    generation: skir.CatalogGeneration(value: "catalog:static"),
-                  ),
-                ),
-              ),
-              value: skir.DataValue.wrapStringValue("Alpha"),
-              onWrite: (_, value) => written = value,
-            ),
-          ),
-        ),
-      ),
+    final panel = await showAlphaBetaSearch(
+      tester,
+      onWrite: (value) => written = value,
     );
     await panel.tapOn(panel.searchInput.summaryButton);
     await panel.fieldAt(0).focus();
@@ -282,43 +178,7 @@ void main() {
   });
 
   testWidgets("an empty value shows the default placeholder", (tester) async {
-    await tester.showComponent(
-      Scaffold(
-        body: PortableSearchInput(
-          control: staticSearchControl(
-            target: skir.BindingRef(bindingId: _target, path: editorRootPath),
-            maximumExtent: 240,
-            choices: {
-              for (final value in const ["Alpha", "Beta"])
-                value.toLowerCase(): skir.DataValue.wrapStringValue(value),
-            },
-            summary: presentationText("summary", inputExpression(_summary.id)),
-          ),
-          scope: PortablePresentationScope(
-            operations: testPortableOperations(),
-            bindings: {
-              _target: PortableExpressionBinding(
-                value: skir.DataValue.wrapStringValue(""),
-              ),
-            },
-            budget: skir.EvaluationBudget(
-              maxSteps: 100,
-              maxCollectionItems: 100,
-            ),
-            host: FakePresentationHost(
-              document: FakePresentationHost.emptyDocument(
-                catalog: CheckedEditorCatalog(
-                  testCatalogSnapshot(
-                    generation: skir.CatalogGeneration(value: "catalog:static"),
-                  ),
-                ),
-              ),
-              value: skir.DataValue.wrapStringValue(""),
-            ),
-          ),
-        ),
-      ),
-    );
+    await showAlphaBetaSearch(tester, value: "");
 
     expect(find.text("Search"), findsOneWidget);
     expect(find.text("Beta"), findsNothing);
@@ -326,44 +186,7 @@ void main() {
 
   testWidgets("a borrowed client outlives the search input", (tester) async {
     final borrowedClient = UnavailableHttpClient();
-    await tester.showComponent(
-      Scaffold(
-        body: PortableSearchInput(
-          control: staticSearchControl(
-            target: skir.BindingRef(bindingId: _target, path: editorRootPath),
-            maximumExtent: 240,
-            choices: {
-              for (final value in const ["Alpha", "Beta"])
-                value.toLowerCase(): skir.DataValue.wrapStringValue(value),
-            },
-            summary: presentationText("summary", inputExpression(_summary.id)),
-          ),
-          scope: PortablePresentationScope(
-            operations: testPortableOperations(),
-            bindings: {
-              _target: PortableExpressionBinding(
-                value: skir.DataValue.wrapStringValue("Alpha"),
-              ),
-            },
-            budget: skir.EvaluationBudget(
-              maxSteps: 100,
-              maxCollectionItems: 100,
-            ),
-            host: FakePresentationHost(
-              document: FakePresentationHost.emptyDocument(
-                catalog: CheckedEditorCatalog(
-                  testCatalogSnapshot(
-                    generation: skir.CatalogGeneration(value: "catalog:static"),
-                  ),
-                ),
-              ),
-              value: skir.DataValue.wrapStringValue("Alpha"),
-            ),
-          ),
-          client: borrowedClient,
-        ),
-      ),
-    );
+    await showAlphaBetaSearch(tester, client: borrowedClient);
 
     await tester.pumpWidget(const SizedBox());
     expect(borrowedClient.closed, isFalse);
@@ -378,54 +201,13 @@ void main() {
       typeId: skir.TypeId.createQualified(namespace: "test", name: "Result"),
       revision: 1,
     );
-    final catalogSnapshot = skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
+    final catalogSnapshot = testCatalogSnapshot(
       generation: skir.CatalogGeneration(value: "catalog:http"),
       types: [
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: resultType,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: skir.FieldOwner(definition: resultType, name: "name"),
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: [
-            skir.EffectiveFieldTemplate(
-              key: "name",
-              owner: skir.FieldOwner(definition: resultType, name: "name"),
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              rules: const [],
-            ),
-          ],
-          ancestorTemplates: const [],
-        ),
+        recordType(resultType, {
+          "name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+        }),
       ],
-      relations: const [],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
     );
     final rowRead = skir.ExpressionNode.createInput(
       binding: row,
@@ -434,27 +216,14 @@ void main() {
     final resultNode = skir.PresentationNode(
       nodeId: "http_result",
       properties: skir.PresentationProperties.defaultInstance,
-      element: skir.PresentationElement.createText(
-        value: skir.ExpressionNode.wrapLiteral(
+      element: textElement(
+        skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue("HTTP result"),
         ),
-        color: null,
-        sizing: null,
-        fontWeight: null,
-        fontItalic: null,
-        fontOpticalSize: null,
-        fontSlant: null,
-        fontWidth: null,
-        textAlignment: null,
-        lineHeight: null,
-        letterSpacing: null,
-        decoration: null,
-        semanticLabel: null,
-        paragraph: skir.TextParagraph.defaultInstance,
       ),
       header: null,
     );
-    final control = skir.SearchControl(
+    final control = searchControl(
       control: skir.BoundControl(
         binding: skir.BindingRef(
           bindingId: target,
@@ -466,12 +235,6 @@ void main() {
         description: null,
         prefix: null,
         semanticLabel: null,
-      ),
-      selectionMode: skir.SearchSelectionMode.single,
-      queryBinding: _query,
-      summaryBinding: _summary,
-      maximumExtent: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapInteger("240"),
       ),
       provider: skir.SearchProvider.createHttpJson(
         uri: skir.ExpressionNode.wrapLiteral(
@@ -500,18 +263,9 @@ void main() {
         selectors: const [],
         timeoutMilliseconds: 1000,
       ),
-      summary: null,
-      placeholder: null,
-      customValue: null,
-      initialQuery: null,
-      appearance: null,
-      content: null,
-      popup: null,
-      popupSide: null,
-      emptyText: null,
-      loadingText: null,
-      empty: null,
-      loading: null,
+      queryBinding: _query,
+      summaryBinding: _summary,
+      maximumExtent: 240,
     );
     skir.DataValue? written;
     final client = MockClient((request) async {

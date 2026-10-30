@@ -14,6 +14,9 @@ final _organization = acme.organizationId;
 
 final _service = service("service1", name: "original", status: null);
 
+/// [_service] as a newer observation renamed it, at revision 4.
+final _newest = service("service1", name: "newest", revision: 4, status: null);
+
 final _host = paperHost(
   "paper",
   service: _service.serviceId,
@@ -26,11 +29,7 @@ final _acme = [
   signedIn(ada, organization: acme),
   servicesBackend(
     services: [_service],
-    topology: skir.OrganizationTopologySnapshot(
-      hosts: [_host],
-      realms: [],
-      engines: [],
-    ),
+    topology: topologySnapshot(hosts: [_host]),
   ),
 ];
 
@@ -46,9 +45,7 @@ void main() {
     test("a rename sends the name with the service's own revision and lists "
         "the confirmed service", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       final confirmed = service(
         "service1",
         name: "updated",
@@ -74,15 +71,8 @@ void main() {
 
     test("a delayed rename reply cannot replace a newer observation", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
-      final newest = service(
-        "service1",
-        name: "newest",
-        revision: 4,
-        status: null,
-      );
+      final services = await world.watchedServicesOf(_organization);
+      final newest = _newest;
       world.nats.registerHandler(_updateSubject, (_) {
         services.repository.acceptService(newest);
         return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
@@ -102,9 +92,7 @@ void main() {
     test("renaming a deleted service reports it unavailable as deleted and "
         "keeps the listed service", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _updateSubject,
         (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
@@ -129,9 +117,7 @@ void main() {
         "field", () async {
       final reports = captureFlutterErrors();
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _updateSubject,
         (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
@@ -157,9 +143,7 @@ void main() {
         "service without reporting an error", () async {
       final reports = captureFlutterErrors();
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       final actual = service(
         "service1",
         name: "canonical",
@@ -189,15 +173,8 @@ void main() {
         "observation and is never sent again", () async {
       final reports = captureFlutterErrors();
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
-      final newest = service(
-        "service1",
-        name: "newest",
-        revision: 4,
-        status: null,
-      );
+      final services = await world.watchedServicesOf(_organization);
+      final newest = _newest;
       world.nats.registerHandler(_updateSubject, (_) {
         services.repository.acceptService(newest);
         throw StateError("transport failed");
@@ -238,9 +215,7 @@ void main() {
     test("binding sends the registration token and lists the services the "
         "backend reports afterwards", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       final bound = service("bound", name: "bound", status: null);
       skir.BindServiceRequest? sent;
       world.nats.registerHandler(_bindSubject, (data) {
@@ -281,9 +256,7 @@ void main() {
         in rejections.entries) {
       test("a bind rejected for $reason fails with $code", () async {
         final world = testWorld(_acme);
-        await world.initialized();
-        final services = world.servicesOf(_organization);
-        await services.watch();
+        final services = await world.watchedServicesOf(_organization);
         world.nats.registerHandler(
           _bindSubject,
           (_) => skir.BindServiceResponse.serializer.toBytes(response),
@@ -302,9 +275,7 @@ void main() {
 
     test("a bind answered with an internal error stays uncertain", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _bindSubject,
         (_) => skir.BindServiceResponse.serializer.toBytes(
@@ -322,9 +293,7 @@ void main() {
         "the failed integration", () async {
       final reports = captureFlutterErrors();
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       world.container.listen(localWorkProvider, (_, _) {});
       world.nats.registerHandler(
         _bindSubject,
@@ -361,9 +330,7 @@ void main() {
   group("unbind", () {
     test("unbinding sends the service id and removes the service", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       skir.UnbindServiceRequest? sent;
       world.nats.registerHandler(_unbindSubject, (data) {
         sent = skir.UnbindServiceRequest.serializer.fromBytes(data);
@@ -390,9 +357,7 @@ void main() {
       test("an unbind rejected because $reason fails with $code and keeps "
           "the service", () async {
         final world = testWorld(_acme);
-        await world.initialized();
-        final services = world.servicesOf(_organization);
-        await services.watch();
+        final services = await world.watchedServicesOf(_organization);
         world.nats.registerHandler(
           _unbindSubject,
           (_) => skir.UnbindServiceResponse.serializer.toBytes(response),
@@ -413,9 +378,7 @@ void main() {
     test("an unbind answered with an internal error stays uncertain and keeps "
         "the service", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _unbindSubject,
         (_) => skir.UnbindServiceResponse.serializer.toBytes(
@@ -433,15 +396,8 @@ void main() {
     test("an unbind lost in transport keeps the newer observation", () async {
       final reports = captureFlutterErrors();
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
-      final newest = service(
-        "service1",
-        name: "newest",
-        revision: 4,
-        status: null,
-      );
+      final services = await world.watchedServicesOf(_organization);
+      final newest = _newest;
       world.nats.registerHandler(_unbindSubject, (_) {
         services.repository.acceptService(newest);
         throw StateError("transport failed");
@@ -461,9 +417,7 @@ void main() {
     test("an invalid configuration rejection shows the server's message as "
         "an invalid draft", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _configureSubject,
         (_) => skir.ConfigureServiceHostResponse.serializer.toBytes(
@@ -484,9 +438,7 @@ void main() {
     test("an Apply conflict reports the actual revision and the value a "
         "refresh would show", () async {
       final world = testWorld(_acme);
-      await world.initialized();
-      final services = world.servicesOf(_organization);
-      await services.watch();
+      final services = await world.watchedServicesOf(_organization);
       final actualHost = (_host.toMutable()..revision = 3).toFrozen();
       final actualRealm = skir.RealmInstance(
         realmId: skir.recordId("realm_instance:paper"),
@@ -502,12 +454,7 @@ void main() {
         _configureSubject,
         (_) => skir.ConfigureServiceHostResponse.serializer.toBytes(
           skir.ConfigureServiceHostResponse.createConflictError(
-            actual: skir.HostConfigurationChange(
-              host: actualHost,
-              realm: actualRealm,
-              engine: null,
-              removedResources: [],
-            ),
+            actual: hostConfiguration(actualHost, realm: actualRealm),
           ),
         ),
       );
@@ -520,11 +467,7 @@ void main() {
         conflict.actualValue,
         HostEditorSnapshot(
           actualHost,
-          skir.OrganizationTopologySnapshot(
-            hosts: [actualHost],
-            realms: [actualRealm],
-            engines: [],
-          ),
+          topologySnapshot(hosts: [actualHost], realms: [actualRealm]),
         ).document.confirmedValue,
       );
     });
@@ -545,9 +488,7 @@ void main() {
     for (final MapEntry(key: reason, value: response) in unavailable.entries) {
       test("an Apply rejected for $reason reports Apply unavailable", () async {
         final world = testWorld(_acme);
-        await world.initialized();
-        final services = world.servicesOf(_organization);
-        await services.watch();
+        final services = await world.watchedServicesOf(_organization);
         world.nats.registerHandler(
           _configureSubject,
           (_) =>

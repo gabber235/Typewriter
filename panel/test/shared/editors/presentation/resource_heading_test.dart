@@ -245,14 +245,7 @@ void main() {
             width: width,
             child: PortablePresentationNodeRenderer(
               node: node,
-              scope: PortablePresentationScope(
-                operations: testPortableOperations(),
-                bindings: const {},
-                budget: skir.EvaluationBudget(
-                  maxSteps: 1000,
-                  maxCollectionItems: 100,
-                ),
-              ),
+              scope: unboundPresentationScope(),
             ),
           ),
         ),
@@ -289,14 +282,7 @@ void main() {
               sizing: sizing,
               paragraph: _singleLine,
             ),
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: const {},
-              budget: skir.EvaluationBudget(
-                maxSteps: 1000,
-                maxCollectionItems: 100,
-              ),
-            ),
+            scope: unboundPresentationScope(),
           ),
         ),
       );
@@ -337,14 +323,7 @@ void main() {
               sizing: sizing,
               paragraph: _singleLine,
             ),
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: const {},
-              budget: skir.EvaluationBudget(
-                maxSteps: 1000,
-                maxCollectionItems: 100,
-              ),
-            ),
+            scope: unboundPresentationScope(),
           ),
         ),
       );
@@ -415,14 +394,7 @@ void main() {
             width: 150,
             child: PortablePresentationNodeRenderer(
               node: node,
-              scope: PortablePresentationScope(
-                operations: testPortableOperations(),
-                bindings: const {},
-                budget: skir.EvaluationBudget(
-                  maxSteps: 1000,
-                  maxCollectionItems: 100,
-                ),
-              ),
+              scope: unboundPresentationScope(),
             ),
           ),
         ),
@@ -466,14 +438,7 @@ void main() {
               height: 30,
               child: PortablePresentationNodeRenderer(
                 node: node,
-                scope: PortablePresentationScope(
-                  operations: testPortableOperations(),
-                  bindings: const {},
-                  budget: skir.EvaluationBudget(
-                    maxSteps: 1000,
-                    maxCollectionItems: 100,
-                  ),
-                ),
+                scope: unboundPresentationScope(),
               ),
             ),
           ),
@@ -491,14 +456,7 @@ void main() {
               width: 0,
               child: PortablePresentationNodeRenderer(
                 node: node,
-                scope: PortablePresentationScope(
-                  operations: testPortableOperations(),
-                  bindings: const {},
-                  budget: skir.EvaluationBudget(
-                    maxSteps: 1000,
-                    maxCollectionItems: 100,
-                  ),
-                ),
+                scope: unboundPresentationScope(),
               ),
             ),
           ),
@@ -524,14 +482,7 @@ void main() {
               sizing: sizing,
               paragraph: _singleLine,
             ),
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: const {},
-              budget: skir.EvaluationBudget(
-                maxSteps: 1000,
-                maxCollectionItems: 100,
-              ),
-            ),
+            scope: unboundPresentationScope(),
           ),
         ),
       ),

@@ -12,7 +12,7 @@ void main() {
   testWidgets("creating a page offers every concrete page type", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(authoredTypePickerUseCase))!;
+    final panel = await tester.pumpStory(authoredTypePickerUseCase);
 
     for (final type in ["Sequence", "Static", "Scene", "Manifest"]) {
       expect(panel.shows(type), isTrue, reason: type);
@@ -22,7 +22,7 @@ void main() {
 
   testWidgets("searching narrows the page types and a choice closes the "
       "picker", (tester) async {
-    final panel = (await tester.pumpStory(authoredTypePickerUseCase))!;
+    final panel = await tester.pumpStory(authoredTypePickerUseCase);
 
     await panel.field("Search resource types").enter("Sta");
     expect(panel.shows("Static"), isTrue);
@@ -35,10 +35,10 @@ void main() {
   testWidgets("an unfinished title is filled through the inspector", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       authoredResourceEditorUseCase,
       knobs: {"Title": "Unfinished"},
-    ))!;
+    );
     expect(panel.field("Title").value, isEmpty);
 
     await panel.field("Title").enter("Meet the mayor");

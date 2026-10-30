@@ -14,7 +14,7 @@ void main() {
   testWidgets("choosing an organization on the index page opens it", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(indexPageUseCase))!;
+    final panel = await tester.pumpStory(indexPageUseCase);
 
     await tester.tap(find.text("Acme"));
 
@@ -27,7 +27,7 @@ void main() {
   testWidgets("the organization selector switches to another organization", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(organizationSelectorUseCase))!;
+    final panel = await tester.pumpStory(organizationSelectorUseCase);
 
     await tester.tap(find.text("Acme").first);
     await tester.runStory();
@@ -47,7 +47,7 @@ void main() {
   testWidgets("the primary search finds organizations and the create command", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(primarySearchButtonUseCase))!;
+    final panel = await tester.pumpStory(primarySearchButtonUseCase);
 
     await tester.tap(panel.labeled("Search"));
     await tester.runStory();
@@ -64,7 +64,7 @@ void main() {
   testWidgets("a malformed registration token never reaches the backend", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(registrationTokenInputUseCase))!;
+    final panel = await tester.pumpStory(registrationTokenInputUseCase);
 
     await panel.field("Enter registration token").enter("short");
     await tester.tap(find.text("Connect"));
@@ -78,7 +78,7 @@ void main() {
   });
 
   testWidgets("a valid registration token binds a new service", (tester) async {
-    final panel = (await tester.pumpStory(registrationTokenInputUseCase))!;
+    final panel = await tester.pumpStory(registrationTokenInputUseCase);
     expect(panel.shows("No services connected"), isTrue);
 
     await panel.field("Enter registration token").enter("ABCDE12345");

@@ -9,16 +9,13 @@ final _name = editorRootPath.field("name");
 
 void main() {
   test("a draft projects only its edited paths and leaves with the draft", () {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
 
     expect(workspace.state.editorValues, isEmpty);
 
     final source =
-        fakeEditorTarget(
-            targetId: _key.identity,
-            scope: _key.scope,
-            label: "Resource",
+        resourceTarget(
+            _key,
             document: recordEditorDocument(
               {
                 "name": skir.DataValue.wrapStringValue("Canonical"),
@@ -35,7 +32,6 @@ void main() {
               1,
             ),
             validation: acceptTestEditorMutation,
-            commitPolicy: EditorCommitPolicy.applyResource,
             commit: (_) async => throw StateError("No save expected"),
           ).acquire(workspace)
           ..update(_name, skir.DataValue.wrapStringValue("Draft"));

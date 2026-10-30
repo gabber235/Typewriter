@@ -2,43 +2,34 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "organization_route_access_binding.freezed.dart";
-part "organization_route_access_binding.g.dart";
-
-@freezed
-abstract class _OrganizationAccessSnapshot with _$OrganizationAccessSnapshot {
-  const factory _OrganizationAccessSnapshot({
-    required AsyncValue<String?> principal,
-    required AsyncValue<List<skir.Organization>> membership,
-  }) = __OrganizationAccessSnapshot;
-}
-
-/// Combines principal and membership observations into one binding snapshot.
-///
-/// Keeping the observations together makes a session change one coherent
-/// route access update rather than two independently ordered callbacks.
-@riverpod
-_OrganizationAccessSnapshot _organizationAccessSnapshot(Ref ref) =>
-    _OrganizationAccessSnapshot(
-      principal: ref.watch(userIdProvider),
-      membership: ref.watch(organizationsProvider),
-    );
-
 /// Mirrors principal and organization membership providers into [access].
 ///
-/// The combined subscription fires immediately and on either dependency's
-/// change. [organizationRouteAccessState] intentionally reports loading or
-/// unavailable before exposing retained membership data.
-ProviderSubscription<Object?> bindOrganizationRouteAccess(
+/// Both subscriptions publish one state built from the current value of both
+/// providers. They listen to the providers themselves rather than to a
+/// combined derived provider, which Riverpod would only recompute on its next
+/// scheduled flush: a navigation that follows a membership mutation, such as
+/// opening an organization right after creating it, must already see the new
+/// membership. [organizationRouteAccessState] intentionally reports loading
+/// or unavailable before exposing retained membership data.
+List<ProviderSubscription<Object?>> bindOrganizationRouteAccess(
   WidgetRef ref,
   OrganizationRouteAccess access,
-) => ref.listenManual<_OrganizationAccessSnapshot>(
-  _organizationAccessSnapshotProvider,
-  (_, next) => access.setState(
-    organizationRouteAccessState(next.principal, next.membership),
-  ),
-  fireImmediately: true,
-);
+) {
+  void publish() => access.setState(
+    organizationRouteAccessState(
+      ref.read(userIdProvider),
+      ref.read(organizationsProvider),
+    ),
+  );
+  return [
+    ref.listenManual(userIdProvider, (_, _) => publish()),
+    ref.listenManual(
+      organizationsProvider,
+      (_, _) => publish(),
+      fireImmediately: true,
+    ),
+  ];
+}
 
 /// Converts principal and membership observations into route access state.
 ///

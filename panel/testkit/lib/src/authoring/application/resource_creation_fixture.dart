@@ -153,26 +153,20 @@ final class ResourceCreationFixture {
     String? parent,
   }) {
     _types.add(
-      skir.PublishedType(
-        searchKey: null,
-        placementField: fields.any((field) => field.key == "placement")
-            ? editorRootPath.field("placement")
-            : null,
-        definition: skir.TypeDefinition(
-          id: _id(name),
-          parameters: const [],
-          representation: representation,
-          parents: [if (parent != null) _template(parent)],
-        ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: fields,
-        ancestorTemplates: [if (parent != null) _template(parent)],
+      publishedType(
+        _id(name),
+        representation: representation,
+        parents: [if (parent != null) _template(parent)],
+        fields: fields,
         display: skir.TypeDisplay(
           name: name,
           description: "",
           icon: skir.Icon.wrapIconify(""),
           color: skir.Color(argb: 0xff607d8b.toSigned(32)),
         ),
+        placementField: fields.any((field) => field.key == "placement")
+            ? editorRootPath.field("placement")
+            : null,
       ),
     );
   }
@@ -318,40 +312,22 @@ final class ResourceCreationFixture {
       final owner = skir.EndpointId(value: "owns$name:first");
       types
         ..add(
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            definition: skir.TypeDefinition(
-              id: _id("Owned$name"),
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createLink(
-                endpoint: owner,
-                target: _named(name),
-              ),
-              parents: const [],
+          publishedType(
+            _id("Owned$name"),
+            representation: skir.RepresentationTemplate.createLink(
+              endpoint: owner,
+              target: _named(name),
             ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: const [],
             display: defaultTypeDisplay("Owned $name"),
           ),
         )
         ..add(
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            definition: skir.TypeDefinition(
-              id: _id("Owned${name}List"),
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createSequence(
-                item: _named("Owned$name"),
-                kind: skir.CollectionKind.list,
-              ),
-              parents: const [],
+          publishedType(
+            _id("Owned${name}List"),
+            representation: skir.RepresentationTemplate.createSequence(
+              item: _named("Owned$name"),
+              kind: skir.CollectionKind.list,
             ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: const [],
             display: defaultTypeDisplay("Owned $name list"),
           ),
         );
@@ -393,31 +369,24 @@ final class ResourceCreationFixture {
       );
     }
     types.add(
-      skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        definition: skir.TypeDefinition(
-          id: _id("Store"),
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            abstract_: false,
-            fields: [
-              for (final field in fields.entries)
-                skir.FieldDeclaration(
-                  owner: skir.FieldOwner(
-                    definition: _id("Store"),
-                    name: field.key,
-                  ),
-                  type: field.value,
-                  overrides: const [],
-                  hasConstructorDefault: false,
+      publishedType(
+        _id("Store"),
+        representation: skir.RepresentationTemplate.createRecord(
+          abstract_: false,
+          fields: [
+            for (final field in fields.entries)
+              skir.FieldDeclaration(
+                owner: skir.FieldOwner(
+                  definition: _id("Store"),
+                  name: field.key,
                 ),
-            ],
-          ),
-          parents: const [],
+                type: field.value,
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+          ],
         ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: [
+        fields: [
           for (final field in fields.entries)
             skir.EffectiveFieldTemplate(
               key: field.key,
@@ -426,7 +395,6 @@ final class ResourceCreationFixture {
               rules: const [],
             ),
         ],
-        ancestorTemplates: const [],
         display: defaultTypeDisplay("Store"),
       ),
     );

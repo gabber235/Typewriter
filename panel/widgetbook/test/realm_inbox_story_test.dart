@@ -16,10 +16,10 @@ void main() {
     testWidgets(
       "a $review review ${publishes ? "offers" : "withholds"} Publish",
       (tester) async {
-        final panel = (await tester.pumpStory(
+        final panel = await tester.pumpStory(
           realmInboxContentUseCase,
           knobs: {"Review": review},
-        ))!;
+        );
 
         expect(panel.labeled("Publish"), publishes ? findsOne : findsNothing);
         await tester.runStory();
@@ -30,10 +30,10 @@ void main() {
   testWidgets("a large review offers Publish below its changes", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       realmInboxContentUseCase,
       knobs: {"Review": "Large review"},
-    ))!;
+    );
 
     await tester.scrollUntilVisible(
       find.text("Publish"),
@@ -46,10 +46,10 @@ void main() {
   });
 
   testWidgets("a blocked review names the blocker", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       realmInboxContentUseCase,
       knobs: {"Review": "Blocked"},
-    ))!;
+    );
 
     expect(panel.shows("Publish blocked"), isTrue);
     expect(panel.shows("Dialogue points to a missing page"), isTrue);
@@ -57,7 +57,7 @@ void main() {
   });
 
   testWidgets("publishing a ready review publishes everything", (tester) async {
-    final panel = (await tester.pumpStory(realmInboxContentUseCase))!;
+    final panel = await tester.pumpStory(realmInboxContentUseCase);
 
     await tester.tap(panel.labeled("Publish"));
 
@@ -69,51 +69,30 @@ void main() {
 
   testWidgets("the app bar inbox opens by keyboard and publishes nothing "
       "once dismissed", (tester) async {
-    final panel = (await tester.pumpStory(realmInboxButtonUseCase))!;
+    final panel = await tester.pumpStory(realmInboxButtonUseCase);
 
-    await _shifted(tester, LogicalKeyboardKey.keyP);
+    await tester.pressInStory(LogicalKeyboardKey.keyP, shift: true);
     expect(panel.labeled("Publish"), findsOne);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.runStory();
     expect(panel.labeled("Publish"), findsNothing);
 
-    await _primary(tester, LogicalKeyboardKey.enter);
-    await _shifted(tester, LogicalKeyboardKey.keyP);
+    await tester.pressInStory(LogicalKeyboardKey.enter, primary: true);
+    await tester.pressInStory(LogicalKeyboardKey.keyP, shift: true);
     expect(panel.shows("Everything is published"), isFalse);
     expect(panel.labeled("Publish"), findsOne);
   });
 
   testWidgets("outside a Realm the app bar has no Realm inbox", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       realmInboxButtonUseCase,
       knobs: {"Review": "No realm open"},
-    ))!;
+    );
 
-    await _shifted(tester, LogicalKeyboardKey.keyP);
+    await tester.pressInStory(LogicalKeyboardKey.keyP, shift: true);
 
     expect(panel.shows("Realm inbox"), isFalse);
     expect(panel.labeled("Publish"), findsNothing);
   });
-}
-
-/// Presses [key] with Shift held and lets the story run; the driver's own
-/// keys wait for animations a story never finishes.
-Future<void> _shifted(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-  await tester.runStory();
-}
-
-/// Presses [key] with the platform's primary modifier and lets the story run.
-Future<void> _primary(WidgetTester tester, LogicalKeyboardKey key) async {
-  final modifier = switch (defaultTargetPlatform) {
-    TargetPlatform.macOS || TargetPlatform.iOS => LogicalKeyboardKey.metaLeft,
-    _ => LogicalKeyboardKey.controlLeft,
-  };
-  await tester.sendKeyDownEvent(modifier);
-  await tester.sendKeyEvent(key);
-  await tester.sendKeyUpEvent(modifier);
-  await tester.runStory();
 }

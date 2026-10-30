@@ -290,11 +290,7 @@ void main() {
           ),
         ], id: "child"),
         familyLayout: _detailsFamily,
-        familyInheritableNodes: const [
-          "family",
-          "family.details",
-          "family.remaining",
-        ],
+        familyInheritableNodes: _detailsFamilyNodes,
       );
       addTearDown(fixture.dispose);
       await tester.showPresentationHost(fixture.host, scrolls: true);
@@ -328,11 +324,7 @@ void main() {
         inspectorLayoutRemainder("child.remaining"),
       ], id: "child"),
       familyLayout: _detailsFamily,
-      familyInheritableNodes: const [
-        "family",
-        "family.details",
-        "family.remaining",
-      ],
+      familyInheritableNodes: _detailsFamilyNodes,
     );
     addTearDown(fixture.dispose);
     await tester.showPresentationHost(fixture.host, scrolls: true);
@@ -352,11 +344,7 @@ void main() {
         excludedFields: ["name"],
       ),
       familyLayout: _detailsFamily,
-      familyInheritableNodes: const [
-        "family",
-        "family.details",
-        "family.remaining",
-      ],
+      familyInheritableNodes: _detailsFamilyNodes,
     );
     addTearDown(fixture.dispose);
     await tester.showPresentationHost(fixture.host, scrolls: true);
@@ -388,11 +376,7 @@ void main() {
         inspectorLayoutRemainder("child.remaining"),
       ], id: "child"),
       familyLayout: _detailsFamily,
-      familyInheritableNodes: const [
-        "family",
-        "family.details",
-        "family.remaining",
-      ],
+      familyInheritableNodes: _detailsFamilyNodes,
     );
     addTearDown(fixture.dispose);
     await tester.showPresentationHost(fixture.host, scrolls: true);
@@ -407,11 +391,7 @@ void main() {
         inspectorLayoutPart("child.details", inspectorDetailsPart),
       ], id: "child"),
       familyLayout: _detailsFamily,
-      familyInheritableNodes: const [
-        "family",
-        "family.details",
-        "family.remaining",
-      ],
+      familyInheritableNodes: _detailsFamilyNodes,
     );
     addTearDown(fixture.dispose);
     await tester.showPresentationHost(fixture.host, scrolls: true);
@@ -482,6 +462,9 @@ void main() {
     expect(visibleFieldValues().last, "10, 20");
   });
 }
+
+/// The nodes of [_detailsFamily] a child may inherit.
+const _detailsFamilyNodes = ["family", "family.details", "family.remaining"];
 
 final _detailsFamily = inheritedFieldColumn([
   inspectorLayoutPart(

@@ -1,6 +1,9 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/doubles/provider_logout.dart";
+
+export "provider_logout.dart";
 
 /// A person who signs in to the panel in a test world.
 final class PanelUser {
@@ -31,8 +34,9 @@ final class PanelUser {
 /// The identity provider session of a test world.
 ///
 /// Replaces the identity provider client, the one source the panel derives
-/// signed in state, user identity and access tokens from. Signing out ends the
-/// session the way the real client does, so routes and transports react to it.
+/// signed in state, user identity and access tokens from. Signing out forgets
+/// the session the way the real client does, so routes and transports react to
+/// it, and asks [providerLogout] to end the provider session.
 final class FakeSession {
   FakeSession({this._user});
 
@@ -41,8 +45,11 @@ final class FakeSession {
   /// The signed in user, or null when nobody is signed in.
   PanelUser? get user => _user;
 
-  /// What the identity provider fails a sign out with; null lets it succeed.
+  /// What forgetting the local session fails with; null lets it succeed.
   Object? signOutFailure;
+
+  /// The identity provider's end session flow.
+  final providerLogout = FakeProviderLogout();
 
   /// How many more times the identity provider fails to start, the way an
   /// unreachable provider does.
@@ -158,8 +165,11 @@ final class _SignedOutManager extends OidcUserManager {
     dynamic extraStateData,
     List<String>? uiLocalesOverride,
     OidcProviderMetadata? discoveryDocumentOverride,
-  }) async {
-    if (session.signOutFailure case final failure?) throw failure;
+  }) {
+    // The real client reads the session when the request starts and ends
+    // nothing when it is already forgotten.
+    if (currentUser == null) return Future.value();
+    return session.providerLogout.end();
   }
 }
 

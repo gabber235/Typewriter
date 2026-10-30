@@ -8,7 +8,7 @@ void main() {
   testWidgets("Apply and Discard reconcile the field across repeated edits", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(applyControlsUseCase))!;
+    final panel = await tester.pumpStory(applyControlsUseCase);
     final field = panel.fieldAt(0);
     expect(panel.applyControls.actions, isEmpty);
 
@@ -32,10 +32,10 @@ void main() {
   testWidgets("a lost save reply keeps the edit and offers only Refresh", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       applyControlsUseCase,
       knobs: {"Save reply": "Lost"},
-    ))!;
+    );
     final field = panel.fieldAt(0);
 
     await field.type("Pending");

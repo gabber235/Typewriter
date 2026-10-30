@@ -7,6 +7,8 @@ import "package:typewriter_testkit/src/core/stage.dart";
 import "package:typewriter_testkit/src/core/test_world.dart";
 import "package:typewriter_testkit/src/core/trait.dart";
 import "package:typewriter_testkit/src/core/world.dart";
+import "package:typewriter_testkit/src/traits/authoring/realm.dart";
+import "package:typewriter_testkit/src/traits/session.dart";
 
 /// The [testWorld] of [traits] once its signed in session resolved, see
 /// [RealmWorld.whenSignedIn].
@@ -14,6 +16,29 @@ Future<World> signedInWorld(List<Trait> traits) async {
   final world = testWorld(traits);
   await world.whenSignedIn();
   return world;
+}
+
+/// The panel's search over an empty Realm of Ada's organization, once the
+/// Realm opened for editing and the first search answered. Every search the
+/// Realm receives records in requests, and none finds anything.
+Future<
+  ({SourceController controller, List<skir.SearchAuthoringRequest> requests})
+>
+startedEmptyRealmSearch() async {
+  final world = testWorld([signedIn(ada, organization: acme), realm()]);
+  final requests = <skir.SearchAuthoringRequest>[];
+  world.requireRealm.answerSearch = (request) async {
+    requests.add(request);
+    return skir.SearchAuthoringResponse.createSuccess(
+      generation: world.requireRealm.document.generation,
+      hits: const [],
+      diagnostics: const [],
+    );
+  };
+  await world.openRealmEditing();
+  final controller = world.realmSearch();
+  await pumpEventQueue();
+  return (controller: controller, requests: requests);
 }
 
 /// The panel's authoring state of a world's seeded Realm, for application
@@ -57,12 +82,7 @@ extension RealmWorld on World {
     );
     final opening = openRealmEditing();
     await tester.pumpAndSettle();
-    final binding = (await opening).attach(
-      resource,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
-    return binding;
+    return (await opening).form(resource);
   }
 
   /// The panel's publication view of the seeded Realm.
@@ -108,6 +128,62 @@ extension RealmWorld on World {
     addTearDown(controller.dispose);
     return controller;
   }
+}
+
+/// Forms over a Realm editing, as an open inspector holds them.
+extension RealmEditingForms on RealmEditing {
+  /// Stages [edit] as a new operation [label] that applies whole resources
+  /// and admits only its required dependencies, the way an operation
+  /// prefixes a draft, and returns the operation's group and how staging went.
+  ({EditGroupId group, EditStageResult staged}) stageRequired(
+    String label,
+    AuthoringEdit edit,
+  ) {
+    final group = workspace.createGroup(
+      label: label,
+      policy: EditorCommitPolicy.applyResource,
+      commits: EditCommitAdmission.requiredDependencies,
+    );
+    return (
+      group: group,
+      staged: stagePrepared(group: group, label: label, edit: edit.prepare()),
+    );
+  }
+
+  /// Opens [resource] in a form saved under [policy], applied with its
+  /// resource by default, and closes the form when the test ends.
+  RealmEditingBinding form(
+    skir.ResourceId resource, {
+    EditorCommitPolicy policy = EditorCommitPolicy.applyResource,
+  }) {
+    final binding = attach(resource, policy: policy);
+    addTearDown(binding.detach);
+    return binding;
+  }
+
+  /// Stages the edit [label] that sets the text at [at] to [value], in a
+  /// group of its own saved under [policy].
+  EditStageResult setText(
+    String label,
+    skir.ValueLocation at,
+    String value, {
+    EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
+  }) => edit(
+    label: label,
+    policy: policy,
+    apply: (edit) => edit.set(at, skir.DataValue.wrapStringValue(value)),
+  );
+}
+
+/// Edits through a form, as its fields make them.
+extension RealmEditingFormEdits on RealmEditingBinding {
+  /// Stages the edit [label] that sets the text at [at] to [value] in this
+  /// form's group.
+  EditStageResult setText(String label, skir.ValueLocation at, String value) =>
+      edit(
+        label: label,
+        apply: (edit) => edit.set(at, skir.DataValue.wrapStringValue(value)),
+      );
 }
 
 /// The world's own [Ref], for panel code that reads providers through one.

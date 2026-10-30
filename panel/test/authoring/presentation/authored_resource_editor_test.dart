@@ -12,17 +12,9 @@ void main() {
         fieldName: "name",
         initial: skir.DataValue.wrapStringValue("Saved"),
       );
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.draft.toDocument()),
-        heldSaves,
-      ]);
+      final panel = await tester.pumpPanel(fixture.servedHeld);
       final workspace = await panel.openEditing();
-      final binding = workspace.attach(
-        fixture.draft.resources.keys.first,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      addTearDown(binding.detach);
+      workspace.form(fixture.draft.resources.keys.first);
       final seeded = panel.world.requireRealm;
       await panel.showAbove(
         Scaffold(
@@ -75,24 +67,14 @@ void main() {
       fieldName: "name",
       initial: skir.DataValue.wrapStringValue("Saved"),
     );
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-      heldSaves,
-    ]);
+    final panel = await tester.pumpPanel(fixture.servedHeld);
     final workspace = await panel.openEditing();
-    final binding = workspace.attach(
-      fixture.draft.resources.keys.first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
+    final binding = workspace.form(fixture.draft.resources.keys.first);
     final seeded = panel.world.requireRealm;
-    binding.edit(
-      label: "Rename",
-      apply: (edit) => edit.set(
-        authoredFieldLocation(fixture.resource, ["name"]),
-        skir.DataValue.wrapStringValue("Local"),
-      ),
+    binding.setText(
+      "Rename",
+      authoredFieldLocation(fixture.resource, ["name"]),
+      "Local",
     );
     final remote = AuthoringEdit.fromDocument(seeded.document)
       ..set(
@@ -157,32 +139,10 @@ void main() {
         initial: initial,
         namedText: chapterType,
       );
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.draft.toDocument()),
-        heldSaves,
-      ]);
-      final workspace = await panel.openEditing();
-      final binding = workspace.attach(
-        fixture.resource,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      addTearDown(binding.detach);
+      final panel = await tester.pumpPanel(fixture.servedHeld);
+      final binding = await panel.editDraft(fixture);
+      final workspace = binding.workspace;
       final seeded = panel.world.requireRealm;
-      await panel.showAbove(
-        Scaffold(
-          body: AuthoredResourceEditor(
-            resource: fixture.resource,
-            document: binding.document,
-            edit: binding,
-            role: skir.PresentationRole.inspector,
-            budget: skir.EvaluationBudget(
-              maxSteps: 10000,
-              maxCollectionItems: 10000,
-            ),
-          ),
-        ),
-      );
       final chapter = authoredFieldLocation(fixture.resource, ["chapter"]);
       final saved = seeded.document;
 
@@ -218,31 +178,9 @@ void main() {
         initial: initial,
         namedText: chapterType,
       );
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.draft.toDocument()),
-        heldSaves,
-      ]);
-      final workspace = await panel.openEditing();
-      final binding = workspace.attach(
-        fixture.resource,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      addTearDown(binding.detach);
-      await panel.showAbove(
-        Scaffold(
-          body: AuthoredResourceEditor(
-            resource: fixture.resource,
-            document: binding.document,
-            edit: binding,
-            role: skir.PresentationRole.inspector,
-            budget: skir.EvaluationBudget(
-              maxSteps: 10000,
-              maxCollectionItems: 10000,
-            ),
-          ),
-        ),
-      );
+      final panel = await tester.pumpPanel(fixture.servedHeld);
+      final binding = await panel.editDraft(fixture);
+      final workspace = binding.workspace;
       await FieldDriver.at(tester, 0).type("new.chapter");
       await tester.pump();
 
@@ -271,27 +209,9 @@ void main() {
               fieldName: field,
               initial: skir.DataValue.unfilled,
             );
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.draft.toDocument()),
-        heldSaves,
-      ]);
-      final workspace = await panel.openEditing();
-      final binding = workspace.attach(
-        fixture.draft.resources.keys.first,
-        policy: EditorCommitPolicy.autosaveChanges,
-      );
-      addTearDown(binding.detach);
+      final panel = await tester.pumpPanel(fixture.servedHeld);
+      await panel.inspectDraft(fixture);
       final seeded = panel.world.requireRealm;
-      await panel.showAbove(
-        Scaffold(
-          body: AuthoredResourceInspection(
-            resource: fixture.resource,
-            workspace: workspace,
-            commands: seeded.commands,
-          ),
-        ),
-      );
       await FieldDriver.at(tester, 0).type(field == "priority" ? "3" : "new");
       await tester.pump(const Duration(milliseconds: 250));
       await tester.pump();
@@ -323,17 +243,9 @@ void main() {
 
   testWidgets("two inspectors share values and manual discard", (tester) async {
     final fixture = AuthoredDraft.titled();
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-      heldSaves,
-    ]);
+    final panel = await tester.pumpPanel(fixture.servedHeld);
     final workspace = await panel.openEditing();
-    final binding = workspace.attach(
-      fixture.draft.resources.keys.first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
+    workspace.form(fixture.draft.resources.keys.first);
     final seeded = panel.world.requireRealm;
     final commands = seeded.commands;
     await panel.showAbove(
@@ -378,39 +290,13 @@ void main() {
     tester,
   ) async {
     final fixture = AuthoredDraft.titled();
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-      heldSaves,
-    ]);
-    final workspace = await panel.openEditing();
-    final binding = workspace.attach(
-      fixture.draft.resources.keys.first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
-    await panel.showAbove(
-      Scaffold(
-        body: AuthoredResourceEditor(
-          resource: fixture.resource,
-          document: binding.document,
-          edit: binding,
-          role: skir.PresentationRole.inspector,
-          budget: skir.EvaluationBudget(
-            maxSteps: 10000,
-            maxCollectionItems: 10000,
-          ),
-        ),
-      ),
-    );
+    final panel = await tester.pumpPanel(fixture.servedHeld);
+    final binding = await panel.editDraft(fixture);
+    final workspace = binding.workspace;
     await FieldDriver.at(tester, 0).type("Retained");
     await panel.closeAbove();
     binding.detach();
-    final next = workspace.attach(
-      fixture.resource,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(next.detach);
+    final next = workspace.form(fixture.resource);
     await panel.showAbove(
       Scaffold(
         body: AuthoredResourceEditor(
@@ -431,24 +317,13 @@ void main() {
 
   testWidgets("inline group controls compare retained work", (tester) async {
     final fixture = AuthoredDraft.titled();
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-      heldSaves,
-    ]);
+    final panel = await tester.pumpPanel(fixture.servedHeld);
     final workspace = await panel.openEditing();
-    final binding = workspace.attach(
-      fixture.draft.resources.keys.first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
-    binding
-      ..edit(
-        label: "Rename message",
-        apply: (edit) => edit.set(
-          authoredFieldLocation(fixture.resource, ["title"]),
-          skir.DataValue.wrapStringValue("Local"),
-        ),
+    workspace.form(fixture.draft.resources.keys.first)
+      ..setText(
+        "Rename message",
+        authoredFieldLocation(fixture.resource, ["title"]),
+        "Local",
       )
       ..detach();
     await panel.showAbove(
@@ -485,28 +360,8 @@ void main() {
     tester,
   ) async {
     final fixture = AuthoredDraft.pageGraph();
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-      heldSaves,
-    ]);
-    final workspace = await panel.openEditing();
-    final binding = workspace.attach(
-      fixture.draft.resources.keys.first,
-      policy: EditorCommitPolicy.autosaveChanges,
-    );
-    addTearDown(binding.detach);
-    final seeded = panel.world.requireRealm;
-    await panel.showAbove(
-      Scaffold(
-        body: AuthoredResourceInspection(
-          resource: fixture.resource,
-          workspace: workspace,
-          commands: seeded.commands,
-          role: skir.PresentationRole.workspace,
-        ),
-      ),
-    );
+    final panel = await tester.pumpPanel(fixture.servedHeld);
+    await panel.inspectDraft(fixture, role: skir.PresentationRole.workspace);
     expect(tester.takeException(), isNull);
     expect(find.byType(Graph), findsOneWidget);
     final size = tester.getSize(find.byType(Graph));
@@ -533,23 +388,10 @@ void main() {
       );
 
       final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(document),
+        ...adaServing(document),
         heldSaves,
       ]);
-      await panel.showAbove(
-        Scaffold(
-          body: AuthoredResourceEditor(
-            resource: page.resource,
-            document: document,
-            role: skir.PresentationRole.workspace,
-            budget: skir.EvaluationBudget(
-              maxSteps: 1000,
-              maxCollectionItems: 100,
-            ),
-          ),
-        ),
-      );
+      await panel.showDocumentEditor(page.resource, document);
       await tester.pumpAndSettle();
 
       expect(find.bySemanticsLabel("Tag"), findsOneWidget);
@@ -564,8 +406,7 @@ void main() {
       final document = page.holding(child);
 
       final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(document),
+        ...adaServing(document),
         heldSaves,
       ]);
       await panel.showAbove(
@@ -658,21 +499,11 @@ void main() {
         child,
         childMaterials: embeddedMaterials,
         types: [
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            definition: skir.TypeDefinition(
-              id: skir.resourceIdType.definition,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createScalar(
-                kind: skir.ScalarKind.text,
-              ),
-              parents: const [],
+          publishedType(
+            skir.resourceIdType.definition,
+            representation: skir.RepresentationTemplate.createScalar(
+              kind: skir.ScalarKind.text,
             ),
-            status: skir.DeclarationStatus.ready,
-            display: defaultTypeDisplay(""),
-            effectiveFields: const [],
-            ancestorTemplates: const [],
           ),
         ],
       );
@@ -693,23 +524,10 @@ void main() {
         ),
       );
       final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(document),
+        ...adaServing(document),
         heldSaves,
       ]);
-      await panel.showAbove(
-        Scaffold(
-          body: AuthoredResourceEditor(
-            resource: page.resource,
-            document: document,
-            role: skir.PresentationRole.workspace,
-            budget: skir.EvaluationBudget(
-              maxSteps: 1000,
-              maxCollectionItems: 100,
-            ),
-          ),
-        ),
-      );
+      await panel.showDocumentEditor(page.resource, document);
       await tester.pumpAndSettle();
       expect(find.byType(Graph), findsOneWidget);
       expect(find.text("No caller supplied"), findsOneWidget);
@@ -723,31 +541,9 @@ void main() {
       snapshot: "realm:1",
       minimum: 1,
     );
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-      heldSaves,
-    ]);
-    final workspace = await panel.openEditing();
-    final binding = workspace.attach(
-      fixture.draft.resources.keys.first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
-    await panel.showAbove(
-      Scaffold(
-        body: AuthoredResourceEditor(
-          resource: fixture.resource,
-          document: binding.document,
-          edit: binding,
-          role: skir.PresentationRole.inspector,
-          budget: skir.EvaluationBudget(
-            maxSteps: 10000,
-            maxCollectionItems: 10000,
-          ),
-        ),
-      ),
-    );
+    final panel = await tester.pumpPanel(fixture.servedHeld);
+    final binding = await panel.editDraft(fixture);
+    final workspace = binding.workspace;
     await FieldDriver.at(tester, 0).type("");
     await tester.pump();
     expect(
@@ -776,17 +572,9 @@ void main() {
       snapshot: "realm:1",
       minimum: 1,
     );
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(first.draft.toDocument()),
-      heldSaves,
-    ]);
+    final panel = await tester.pumpPanel(first.servedHeld);
     final workspace = await panel.openEditing();
-    final binding = workspace.attach(
-      first.draft.resources.keys.first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
+    final binding = workspace.form(first.draft.resources.keys.first);
     final seeded = panel.world.requireRealm;
     final commands = seeded.commands;
     await panel.showAbove(
@@ -872,11 +660,7 @@ void main() {
                 ))
               .toFrozen(),
     );
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-      heldSaves,
-    ]);
+    final panel = await tester.pumpPanel(fixture.servedHeld);
     await panel.showAbove(
       Scaffold(
         body: AuthoredResourceEditor(
@@ -902,11 +686,7 @@ void main() {
           requireTitle: true,
           inspectorLayout: bookSectionsLayout(showTitleEditor: showTitleEditor),
         );
-        final panel = await tester.pumpPanel([
-          signedIn(ada, organization: acme),
-          realmServing(fixture.draft.toDocument()),
-          heldSaves,
-        ]);
+        final panel = await tester.pumpPanel(fixture.servedHeld);
         await panel.showAbove(
           Scaffold(
             body: SingleChildScrollView(

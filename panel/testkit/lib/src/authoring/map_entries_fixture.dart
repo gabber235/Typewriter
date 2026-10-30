@@ -27,29 +27,20 @@ final class MapEntriesFixture {
       skir.TypeTemplate fieldType,
     ) {
       final owner = skir.FieldOwner(definition: id(name), name: fieldName);
-      return skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        definition: skir.TypeDefinition(
-          id: id(name),
-          parameters: const [],
-          parents: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              skir.FieldDeclaration(
-                owner: owner,
-                type: fieldType,
-                overrides: const [],
-                hasConstructorDefault: true,
-              ),
-            ],
-            abstract_: false,
-          ),
+      return publishedType(
+        id(name),
+        representation: skir.RepresentationTemplate.createRecord(
+          fields: [
+            skir.FieldDeclaration(
+              owner: owner,
+              type: fieldType,
+              overrides: const [],
+              hasConstructorDefault: true,
+            ),
+          ],
+          abstract_: false,
         ),
-        status: skir.DeclarationStatus.ready,
-        display: defaultTypeDisplay(""),
-        ancestorTemplates: const [],
-        effectiveFields: [
+        fields: [
           skir.EffectiveFieldTemplate(
             key: fieldName,
             owner: owner,
@@ -69,22 +60,12 @@ final class MapEntriesFixture {
           "name",
           skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
         ),
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          definition: skir.TypeDefinition(
-            id: id("Entries"),
-            parameters: const [],
-            parents: const [],
-            representation: skir.RepresentationTemplate.createMapping(
-              key: named("Entry"),
-              value: named("Entry"),
-            ),
+        publishedType(
+          id("Entries"),
+          representation: skir.RepresentationTemplate.createMapping(
+            key: named("Entry"),
+            value: named("Entry"),
           ),
-          status: skir.DeclarationStatus.ready,
-          display: defaultTypeDisplay(""),
-          effectiveFields: const [],
-          ancestorTemplates: const [],
         ),
       ];
     final resource = skir.ResourceId(value: "map:owner");

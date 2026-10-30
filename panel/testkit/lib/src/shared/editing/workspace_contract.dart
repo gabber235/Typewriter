@@ -49,6 +49,16 @@ void editingWorkspaceContract<S, E>(
     });
     void stage(String value) =>
         owner.stage(id, change(owner.document, value)).requireAccepted();
+    // A new operation group "Move" holding the accepted edit to "Move".
+    EditGroupId stagedMove() {
+      final operation = owner.createGroup(
+        label: "Move",
+        lifetime: EditGroupLifetime.operation,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      owner.stage(operation, change(owner.document, "Move")).requireAccepted();
+      return operation;
+    }
 
     test(
       "settled operation groups retire while reusable controls survive",
@@ -94,12 +104,7 @@ void editingWorkspaceContract<S, E>(
     );
 
     test("a rollback hold retains discarded operation identity and restores intent", () {
-      final operation = owner.createGroup(
-        label: "Move",
-        lifetime: EditGroupLifetime.operation,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      owner.stage(operation, change(owner.document, "Move")).requireAccepted();
+      final operation = stagedMove();
       final hold = owner.holdStage();
       expect(owner.discard(operation), isTrue);
       owner.retireIdleGroups();
@@ -115,14 +120,7 @@ void editingWorkspaceContract<S, E>(
     test(
       "uncertain operations retain their delivery and recovery identity",
       () async {
-        final operation = owner.createGroup(
-          label: "Move",
-          lifetime: EditGroupLifetime.operation,
-          policy: EditorCommitPolicy.applyResource,
-        );
-        owner
-            .stage(operation, change(owner.document, "Move"))
-            .requireAccepted();
+        final operation = stagedMove();
         final reply = boundary.reply = Completer();
         final saving = owner.save(operation);
         await boundary.started.future;
@@ -171,14 +169,7 @@ void editingWorkspaceContract<S, E>(
     test(
       "acknowledged operation remains until refresh succeeds then retires",
       () async {
-        final operation = owner.createGroup(
-          label: "Move",
-          lifetime: EditGroupLifetime.operation,
-          policy: EditorCommitPolicy.applyResource,
-        );
-        owner
-            .stage(operation, change(owner.document, "Move"))
-            .requireAccepted();
+        final operation = stagedMove();
         final reply = boundary.reply = Completer();
         final refresh = boundary.refreshReply = Completer();
         final saving = owner.save(operation);

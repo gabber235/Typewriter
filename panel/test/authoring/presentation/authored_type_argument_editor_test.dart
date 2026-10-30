@@ -7,27 +7,10 @@ import "package:typewriter_testkit/testing.dart";
 void main() {
   testWidgets("chooses only concrete resource descendants", (tester) async {
     final fixture = PageKindsFixture();
-    skir.TypeSelection? selected;
-
-    await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        Builder(
-          builder: (context) => FilledButton(
-            onPressed: () async {
-              selected = await showCreationConcreteTypePicker(
-                context,
-                expected: skir.TypeSelection.createComplete(
-                  definition: fixture.page,
-                  arguments: const [],
-                ),
-                catalog: fixture.catalog,
-              );
-            },
-            child: const Text("Create page"),
-          ),
-        ),
-      ),
+    final picked = await tester.showConcreteTypePicker(
+      "Create page",
+      expected: fixture.page,
+      catalog: fixture.catalog,
     );
 
     await tester.tap(find.text("Create page"));
@@ -42,12 +25,7 @@ void main() {
     expect(find.text("Manifest"), findsOneWidget);
     expect(find.text("Sequence page"), findsOneWidget);
 
-    final query = find.descendant(
-      of: find.byType(QueryBar),
-      matching: find.byType(EditableText),
-    );
-    await tester.enterText(query, "manifest");
-    await tester.pumpAndSettle();
+    await tester.searchTypes("manifest");
     expect(find.text("Sequence"), findsNothing);
     expect(find.text("Manifest"), findsOneWidget);
     expect(find.text("Continue"), findsNothing);
@@ -55,7 +33,7 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    final complete = switch (selected) {
+    final complete = switch (picked.selection) {
       skir.TypeSelection_completeWrapper(:final value) => value,
       _ => throw TestFailure("Expected a complete resource selection"),
     };
@@ -66,51 +44,29 @@ void main() {
     tester,
   ) async {
     final fixture = PageKindsFixture();
-    skir.TypeSelection? selected;
-
-    await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        Builder(
-          builder: (context) => FilledButton(
-            onPressed: () async {
-              selected = await showCreationConcreteTypePicker(
-                context,
-                expected: skir.TypeSelection.createComplete(
-                  definition: fixture.page,
-                  arguments: const [],
-                ),
-                catalog: fixture.catalog,
-              );
-            },
-            child: const Text("Create page"),
-          ),
-        ),
-      ),
+    final picked = await tester.showConcreteTypePicker(
+      "Create page",
+      expected: fixture.page,
+      catalog: fixture.catalog,
     );
 
     await tester.tap(find.text("Create page"));
     await tester.pumpAndSettle();
-    final query = find.descendant(
-      of: find.byType(QueryBar),
-      matching: find.byType(EditableText),
-    );
-    await tester.enterText(query, "missing page kind");
-    await tester.pumpAndSettle();
+    await tester.searchTypes("missing page kind");
     expect(find.text("No results found"), findsOneWidget);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.byType(QueryBar), findsOneWidget);
     expect(
-      tester.widget<EditableText>(query).focusNode.hasPrimaryFocus,
+      tester.widget<EditableText>(typeSearchField).focusNode.hasPrimaryFocus,
       isFalse,
     );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.byType(QueryBar), findsNothing);
-    expect(selected, isNull);
+    expect(picked.selection, isNull);
   });
 
   testWidgets("searches scalar arguments and composes a nullable generic", (
@@ -223,16 +179,10 @@ void main() {
             catalog: fixture.catalog,
             preview: (next) async {
               requested = next;
-              return skir.PreviewTypeArgumentChangeResponse.createReady(
-                resource: skir.ResourceId(value: "variable:1"),
-                next: next,
-                edit: skir.PreparedEdit(
-                  catalog: fixture.catalog.snapshot.generation,
-                  expectations: const [],
-                  intents: const [],
-                ),
-                linkRepairs: const [],
-                clearedLocations: [
+              return readyTypeArgumentPreview(
+                fixture.catalog,
+                next,
+                cleared: [
                   skir.ValueLocation(
                     resource: skir.ResourceId(value: "variable:1"),
                     path: skir.ValuePath(
@@ -256,21 +206,7 @@ void main() {
     await tester.tap(find.text("Choose a type"));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(QueryBar),
-        matching: find.byType(EditableText),
-      ),
-      "CoinReward",
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(SearchResultCard),
-        matching: find.text("CoinReward"),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await tester.chooseType("CoinReward");
 
     expect(find.text("Review type change"), findsOne);
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
@@ -317,17 +253,7 @@ void main() {
             catalog: fixture.catalog,
             preview: (next) async {
               requested = next;
-              return skir.PreviewTypeArgumentChangeResponse.createReady(
-                resource: skir.ResourceId(value: "variable:1"),
-                next: next,
-                edit: skir.PreparedEdit(
-                  catalog: fixture.catalog.snapshot.generation,
-                  expectations: const [],
-                  intents: const [],
-                ),
-                linkRepairs: const [],
-                clearedLocations: const [],
-              );
+              return readyTypeArgumentPreview(fixture.catalog, next);
             },
             commit: (_) async => const EditStageResult.staged(EditGroupId(1)),
           ),
@@ -337,21 +263,7 @@ void main() {
 
     await tester.tap(find.text("Choose a type").first);
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(QueryBar),
-        matching: find.byType(EditableText),
-      ),
-      "CoinReward",
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.descendant(
-        of: find.byType(SearchResultCard),
-        matching: find.text("CoinReward"),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await tester.chooseType("CoinReward");
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
     await tester.pumpAndSettle();
 

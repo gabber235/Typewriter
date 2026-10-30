@@ -134,24 +134,9 @@ void main() {
   test(
     "paired capture sends every working difference against its saved token",
     () async {
-      final world = await signedInWorld([
-        signedIn(ada, organization: acme),
-        realm(books: _books),
-        heldSaves,
-      ]);
+      final world = await signedInWorld(_heldLibrary);
       final workspace = await world.openRealmEditing();
-      final draft = workspace.attach(
-        _first,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      addTearDown(draft.detach);
-      draft.edit(
-        label: "Rename",
-        apply: (edit) => edit.set(
-          authoredFieldLocation(_first, ["title"]),
-          skir.DataValue.wrapStringValue("Visible draft"),
-        ),
-      );
+      workspace.form(_first).setText("Rename", _firstTitle, "Visible draft");
       final capture = workspace.captureOperationContext();
       expect(
         capture.context.confirmedObservation,
@@ -172,11 +157,8 @@ void main() {
   test(
     "paired capture includes removed resources and newly created resources",
     () async {
-      final workspace = await (await signedInWorld([
-        signedIn(ada, organization: acme),
-        realm(books: _books),
-        heldSaves,
-      ])).openRealmEditing();
+      final workspace = await (await signedInWorld(_heldLibrary))
+          .openRealmEditing();
       final group = workspace.workspace.createGroup(
         label: "Draft",
         policy: EditorCommitPolicy.applyResource,
@@ -207,44 +189,18 @@ void main() {
 
   test("a remote edit over a draft saves against the saved title and is "
       "refused once that title changed", () async {
-    final world = await signedInWorld([
-      signedIn(ada, organization: acme),
-      realm(books: _books),
-      heldSaves,
-    ]);
+    final world = await signedInWorld(_heldLibrary);
     final seeded = world.requireRealm;
     final workspace = await world.openRealmEditing();
-    final form = workspace.attach(
-      _first,
-      policy: EditorCommitPolicy.applyResource,
+    workspace.form(_first).setText("Rename", _firstTitle, "Draft");
+    final remote = AuthoringEdit.fromDocument(
+      workspace.captureOperationContext().document,
+    )..set(_firstTitle, skir.DataValue.wrapStringValue("Prefix Draft"));
+    final (group: operation, :staged) = workspace.stageRequired(
+      "Prefix",
+      remote,
     );
-    addTearDown(form.detach);
-    form.edit(
-      label: "Rename",
-      apply: (edit) => edit.set(
-        authoredFieldLocation(_first, ["title"]),
-        skir.DataValue.wrapStringValue("Draft"),
-      ),
-    );
-    final remote =
-        AuthoringEdit.fromDocument(workspace.captureOperationContext().document)
-          ..set(
-            authoredFieldLocation(_first, ["title"]),
-            skir.DataValue.wrapStringValue("Prefix Draft"),
-          );
-    final operation = workspace.workspace.createGroup(
-      label: "Prefix",
-      policy: EditorCommitPolicy.applyResource,
-      commits: EditCommitAdmission.requiredDependencies,
-    );
-    expect(
-      workspace.stagePrepared(
-        group: operation,
-        label: "Prefix",
-        edit: remote.prepare(),
-      ),
-      isA<EditStaged>(),
-    );
+    expect(staged, isA<EditStaged>());
     final saving = workspace.save(operation);
     await Future<void>.delayed(Duration.zero);
     expect(seeded.saves, hasLength(1));
@@ -254,7 +210,7 @@ void main() {
       seeded.document
           .changedRemotely(
             (edit) => edit.set(
-              authoredFieldLocation(_first, ["title"]),
+              _firstTitle,
               skir.DataValue.wrapStringValue("Renamed elsewhere"),
             ),
           )
@@ -271,38 +227,18 @@ void main() {
   });
 
   test("atomic dependency composition preserves unrelated work and later form edits", () async {
-    final world = await signedInWorld([
-      signedIn(ada, organization: acme),
-      realm(books: _books),
-      heldSaves,
-    ]);
+    final world = await signedInWorld(_heldLibrary);
     final seeded = world.requireRealm;
     final workspace = await world.openRealmEditing();
-    final form = workspace.attach(
-      _first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(form.detach);
-    form
-      ..edit(
-        label: "Required rename",
-        apply: (edit) => edit.set(
-          authoredFieldLocation(_first, ["title"]),
-          skir.DataValue.wrapStringValue("Draft"),
-        ),
-      )
-      ..edit(
-        label: "Unrelated rename",
-        apply: (edit) => edit.set(
-          authoredFieldLocation(_second, ["title"]),
-          skir.DataValue.wrapStringValue("Unrelated"),
-        ),
+    final form = workspace.form(_first)
+      ..setText("Required rename", _firstTitle, "Draft")
+      ..setText(
+        "Unrelated rename",
+        authoredFieldLocation(_second, ["title"]),
+        "Unrelated",
       );
     final remote = AuthoringEdit.fromDocument(workspace.document)
-      ..set(
-        authoredFieldLocation(_first, ["title"]),
-        skir.DataValue.wrapStringValue("Prefix Draft"),
-      );
+      ..set(_firstTitle, skir.DataValue.wrapStringValue("Prefix Draft"));
     final operation = workspace.workspace.createGroup(
       label: "Prefix",
       policy: EditorCommitPolicy.applyResource,
@@ -319,15 +255,7 @@ void main() {
     final saving = workspace.save(operation);
     await Future<void>.delayed(Duration.zero);
     expect(seeded.saves, hasLength(1));
-    form
-        .edit(
-          label: "Later name",
-          apply: (edit) => edit.set(
-            authoredFieldLocation(_first, ["title"]),
-            skir.DataValue.wrapStringValue("Later"),
-          ),
-        )
-        .requireAccepted();
+    form.setText("Later name", _firstTitle, "Later").requireAccepted();
     seeded.saves.single.confirm();
     await saving;
     expect(
@@ -355,50 +283,22 @@ void main() {
   });
 
   test("a conflicted required draft rejects atomic admission without taking its work", () async {
-    final world = await signedInWorld([
-      signedIn(ada, organization: acme),
-      realm(books: _books),
-      heldSaves,
-    ]);
+    final world = await signedInWorld(_heldLibrary);
     final seeded = world.requireRealm;
     final workspace = await world.openRealmEditing();
-    final form = workspace.attach(
-      _first,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(form.detach);
-    form.edit(
-      label: "Draft",
-      apply: (edit) => edit.set(
-        authoredFieldLocation(_first, ["title"]),
-        skir.DataValue.wrapStringValue("Draft"),
-      ),
-    );
+    workspace.form(_first).setText("Draft", _firstTitle, "Draft");
     seeded.remoteChange(
-      (edit) => edit.set(
-        authoredFieldLocation(_first, ["title"]),
-        skir.DataValue.wrapStringValue("External"),
-      ),
+      (edit) =>
+          edit.set(_firstTitle, skir.DataValue.wrapStringValue("External")),
     );
     await world.container.pump();
     final remote = AuthoringEdit.fromDocument(workspace.document)
-      ..set(
-        authoredFieldLocation(_first, ["title"]),
-        skir.DataValue.wrapStringValue("Prefix Draft"),
-      );
-    final operation = workspace.workspace.createGroup(
-      label: "Prefix",
-      policy: EditorCommitPolicy.applyResource,
-      commits: EditCommitAdmission.requiredDependencies,
+      ..set(_firstTitle, skir.DataValue.wrapStringValue("Prefix Draft"));
+    final (group: operation, :staged) = workspace.stageRequired(
+      "Prefix",
+      remote,
     );
-    expect(
-      workspace.stagePrepared(
-        group: operation,
-        label: "Prefix",
-        edit: remote.prepare(),
-      ),
-      isA<EditStageRejected>(),
-    );
+    expect(staged, isA<EditStageRejected>());
     expect(
       workspace.document.resource(_first)!.authoredField("title"),
       skir.DataValue.wrapStringValue("Draft"),
@@ -409,45 +309,20 @@ void main() {
   test(
     "submitted required drafts cannot be absorbed into a second submission",
     () async {
-      final world = await signedInWorld([
-        signedIn(ada, organization: acme),
-        realm(books: _books),
-        heldSaves,
-      ]);
+      final world = await signedInWorld(_heldLibrary);
       final seeded = world.requireRealm;
       final workspace = await world.openRealmEditing();
-      final form = workspace.attach(
-        _first,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      addTearDown(form.detach);
-      form.edit(
-        label: "Draft",
-        apply: (edit) => edit.set(
-          authoredFieldLocation(_first, ["title"]),
-          skir.DataValue.wrapStringValue("Draft"),
-        ),
-      );
+      final form = workspace.form(_first)
+        ..setText("Draft", _firstTitle, "Draft");
       final saving = form.save();
       await Future<void>.delayed(Duration.zero);
       final remote = AuthoringEdit.fromDocument(workspace.document)
-        ..set(
-          authoredFieldLocation(_first, ["title"]),
-          skir.DataValue.wrapStringValue("Prefix Draft"),
-        );
-      final operation = workspace.workspace.createGroup(
-        label: "Prefix",
-        policy: EditorCommitPolicy.applyResource,
-        commits: EditCommitAdmission.requiredDependencies,
+        ..set(_firstTitle, skir.DataValue.wrapStringValue("Prefix Draft"));
+      final (group: operation, :staged) = workspace.stageRequired(
+        "Prefix",
+        remote,
       );
-      expect(
-        workspace.stagePrepared(
-          group: operation,
-          label: "Prefix",
-          edit: remote.prepare(),
-        ),
-        isA<EditStageRejected>(),
-      );
+      expect(staged, isA<EditStageRejected>());
       expect(seeded.saves, hasLength(1));
       seeded.saves.single.loseReply(StateError("Unknown delivery"));
       await saving;
@@ -461,11 +336,7 @@ void main() {
   );
 
   test("changed facts reject an entire prepared deletion without selection effects", () async {
-    final world = await signedInWorld([
-      signedIn(ada, organization: acme),
-      realm(books: _books),
-      heldSaves,
-    ]);
+    final world = await signedInWorld(_heldLibrary);
     final workspace = await world.openRealmEditing();
     final scope = world.requireRealm.scope;
     final selected = [AuthoringResourceIdentifier.inScope(scope, _first)];
@@ -473,18 +344,13 @@ void main() {
     final remote = AuthoringEdit.fromDocument(workspace.document)
       ..delete(_first)
       ..delete(_second);
-    final form = workspace.attach(
-      _second,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(form.detach);
-    form.edit(
-      label: "Concurrent draft",
-      apply: (edit) => edit.set(
-        authoredFieldLocation(_second, ["title"]),
-        skir.DataValue.wrapStringValue("Changed"),
-      ),
-    );
+    workspace
+        .form(_second)
+        .setText(
+          "Concurrent draft",
+          authoredFieldLocation(_second, ["title"]),
+          "Changed",
+        );
     final group = workspace.workspace.createGroup(
       label: "Delete",
       policy: EditorCommitPolicy.applyResource,
@@ -506,11 +372,7 @@ void main() {
   test(
     "resource action targets remain those captured before selection changed",
     () async {
-      final world = await signedInWorld([
-        signedIn(ada, organization: acme),
-        realm(books: _books),
-        heldSaves,
-      ]);
+      final world = await signedInWorld(_heldLibrary);
       final scope = world.requireRealm.scope;
       final selection = world.container.read(selectionProvider.notifier)
         ..selectAll([AuthoringResourceIdentifier.inScope(scope, _first)]);
@@ -576,3 +438,14 @@ final _books = [
 
 /// The saved document of the Realm holding both Books.
 final _document = realmDocument(books: _books);
+
+/// The title of the [_first] Book.
+final _firstTitle = authoredFieldLocation(_first, ["title"]);
+
+/// Ada in Acme, whose Realm holds [_books] and holds every save until the
+/// test answers it.
+final _heldLibrary = [
+  signedIn(ada, organization: acme),
+  realm(books: _books),
+  heldSaves,
+];

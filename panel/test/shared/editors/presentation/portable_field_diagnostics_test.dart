@@ -153,10 +153,7 @@ void main() {
           PortablePresentationWriteResult.rejected([diagnostic]),
         ),
       );
-      addTearDown(host.dispose);
-      final panel = await tester.showComponent(
-        Material(child: PortablePresentationRenderer(host: host)),
-      );
+      final panel = await tester.showRenderer(host);
       expect(find.text(diagnostic.message), findsNothing);
       await panel.fieldAt(0).type("rejected draft");
       expect(host.requests, 1);
@@ -232,10 +229,7 @@ void main() {
         ],
         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       );
-      addTearDown(host.dispose);
-      final panel = await tester.showComponent(
-        Material(child: PortablePresentationRenderer(host: host)),
-      );
+      final panel = await tester.showRenderer(host);
       await panel.fieldAt(0).type("-");
       // The feedback shows once, between the edited field and its duplicate.
       final feedback = find.text("Enter a valid number");
@@ -350,10 +344,7 @@ void main() {
     (tester) async {
       const message = "The value is invalid";
       final host = DiagnosedTextHost();
-      addTearDown(host.dispose);
-      final panel = await tester.showComponent(
-        Material(child: PortablePresentationRenderer(host: host)),
-      );
+      final panel = await tester.showRenderer(host);
       await panel.fieldAt(0).type("rejected draft");
       expect(host.requests, 1);
       expect(find.text(message), findsOneWidget);

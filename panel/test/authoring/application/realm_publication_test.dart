@@ -174,11 +174,11 @@ void main() {
     };
     seeded.publication.emit(readyPublicationStatus());
     final editing = await world.openRealmEditing();
-    editing.edit(
-      label: "Pending rename",
+    editing.setText(
+      "Pending rename",
+      title,
+      "Draft name",
       policy: EditorCommitPolicy.applyResource,
-      apply: (edit) =>
-          edit.set(title, skir.DataValue.wrapStringValue("Draft name")),
     );
 
     expect(
@@ -237,8 +237,7 @@ void main() {
         "service.to.realm1.organization.acme.realm.editor.authoring.publish",
         (_) => skir.PublishAuthoringResponse.serializer.toBytes(result),
       );
-      final work = ScopedWorkSession();
-      addTearDown(work.dispose);
+      final work = testWorkSession();
       final commit = repository.preparePublish(
         skir.PublicationCandidateId(value: "reviewed"),
       );

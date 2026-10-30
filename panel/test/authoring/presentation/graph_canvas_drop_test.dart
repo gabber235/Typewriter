@@ -43,10 +43,7 @@ void main() {
         ),
       ),
     );
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      realmServing(seeded),
-    ]);
+    final panel = await tester.pumpPanel(adaServing(seeded));
     await panel.openSurface(taxonomyId);
     final source = await panel.showDraggable(_detached, "Drag tag");
     final canvas = tester.getRect(find.byType(GraphSurface));

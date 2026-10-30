@@ -162,20 +162,10 @@ void main() {
       );
     final resourcesBefore = staged.resources;
     final linksBefore = staged.links;
-    final plan = (staged.linkPlans(
-      catalog: staged.catalog!,
-      source: skir.ValueLocation(
-        resource: fixture.page,
-        path: editorRootPath.field("book"),
-      ),
-    ) as PortableLinkPlanReady).plans.single;
-    final target = plan.targets.singleWhere(
-      (choice) => choice.resource == fixture.book,
-    );
-    final reference = staged.resolveReference(
-      catalog: staged.catalog!,
-      plan: plan,
-      target: target,
+    final reference = staged.resolveSingleLink(
+      fixture.page,
+      "book",
+      fixture.book,
     );
     expect(reference.connection.target, fixture.book);
     expect(staged.resources, resourcesBefore);
@@ -299,20 +289,10 @@ void main() {
           findings: const [],
         ),
       );
-    final plan = (staged.linkPlans(
-      catalog: staged.catalog!,
-      source: skir.ValueLocation(
-        resource: fixture.page,
-        path: editorRootPath.field("book"),
-      ),
-    ) as PortableLinkPlanReady).plans.single;
-    final target = plan.targets.singleWhere(
-      (choice) => choice.resource == fixture.book,
-    );
-    final reference = staged.resolveReference(
-      catalog: staged.catalog!,
-      plan: plan,
-      target: target,
+    final reference = staged.resolveSingleLink(
+      fixture.page,
+      "book",
+      fixture.book,
     );
     final item = (reference.materializations.single as ReferenceValueInsertion)
         .intent
@@ -875,34 +855,26 @@ void main() {
       skir.DataValue.wrapInteger("3"),
       (request) async {
         requests.add(request);
-        return skir.PreparedValue(
-          content: skir.PreparedContent.wrapRecord(
-            skir.AuthoringRecord(
-              configuration: request.recordSelection,
-              fields: [
-                skir.FieldValue(
-                  name: "style",
-                  value: skir.DataValue.createNamed(
-                    actualType: styleUse,
-                    payload: skir.DataValue.createRecord(
-                      fields: [
-                        skir.FieldValue(
-                          name: "bold",
-                          value: skir.DataValue.wrapBoolean(true),
-                        ),
-                        skir.FieldValue(
-                          name: "repetitions",
-                          value: skir.DataValue.unfilled,
-                        ),
-                      ],
-                    ),
+        return preparedRecord(request, [
+          skir.FieldValue(
+            name: "style",
+            value: skir.DataValue.createNamed(
+              actualType: styleUse,
+              payload: skir.DataValue.createRecord(
+                fields: [
+                  skir.FieldValue(
+                    name: "bold",
+                    value: skir.DataValue.wrapBoolean(true),
                   ),
-                ),
-              ],
+                  skir.FieldValue(
+                    name: "repetitions",
+                    value: skir.DataValue.unfilled,
+                  ),
+                ],
+              ),
             ),
           ),
-          findings: const [],
-        );
+        ]);
       },
     );
 

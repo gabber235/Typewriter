@@ -9,10 +9,10 @@ void main() {
   testWidgets("generating a join code in the story adds it to the page", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       joinCodesPageUseCase,
       knobs: {"Join codes": "None"},
-    ))!;
+    );
     expect(panel.shows("No active join codes"), isTrue);
 
     await tester.tap(find.text("Generate Join Code"));
@@ -26,10 +26,10 @@ void main() {
   testWidgets("a failing membership service shows the join codes failure", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       joinCodesPageUseCase,
       knobs: {"Join codes": "Failing"},
-    ))!;
+    );
 
     expect(panel.shows("No active join codes"), isFalse);
     expect(
@@ -44,10 +44,10 @@ void main() {
     tester,
   ) async {
     const name = "Bartholomew Montgomery Fitzgerald Worthington the Third";
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       joinRequestsPageUseCase,
       knobs: {"Join requests": "Few"},
-    ))!;
+    );
     expect(panel.shows(name), isTrue);
 
     final requests = find.text("Decline").evaluate().length;

@@ -12,21 +12,10 @@ void main() {
         "${key.keyLabel}", (tester) async {
       final focus = FocusNode(debugLabel: "a");
       addTearDown(focus.dispose);
-      final moves = <List<GraphMoveCommitPayload>>[];
-      final panel = await tester.pumpGraph(
-        Graph(
-          data: GraphData(
-            cellSize: 50,
-            elements: [
-              graphNode("a", focusNode: focus),
-              graphNode("b", x: 3, y: 4, cells: 1),
-            ],
-            edges: const [],
-          ),
-          onElementsMoved: moves.add,
-          onElementsResized: (_) {},
-        ),
-      );
+      final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+        graphNode("a", focusNode: focus),
+        graphNode("b", x: 3, y: 4, cells: 1),
+      ], resizable: true);
       panel.container.read(selectionProvider.notifier).selectAll([
         for (final id in selected) TestSelectableIdentifier(id: id),
       ]);
@@ -51,21 +40,10 @@ void main() {
         "with ${key.keyLabel}, never below one cell", (tester) async {
       final focus = FocusNode(debugLabel: "a");
       addTearDown(focus.dispose);
-      final resizes = <List<GraphResizeCommitPayload>>[];
-      final panel = await tester.pumpGraph(
-        Graph(
-          data: GraphData(
-            cellSize: 50,
-            elements: [
-              graphNode("a", focusNode: focus),
-              graphNode("b", x: 3, y: 4, cells: 1),
-            ],
-            edges: const [],
-          ),
-          onElementsMoved: (_) {},
-          onElementsResized: resizes.add,
-        ),
-      );
+      final (:panel, :resizes, moves: _) = await tester.pumpCommittingGraph([
+        graphNode("a", focusNode: focus),
+        graphNode("b", x: 3, y: 4, cells: 1),
+      ], resizable: true);
       panel.container.read(selectionProvider.notifier).selectAll([
         for (final id in selected) TestSelectableIdentifier(id: id),
       ]);

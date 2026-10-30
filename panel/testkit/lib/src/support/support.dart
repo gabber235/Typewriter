@@ -20,6 +20,7 @@ export "value_editing_fixtures.dart";
 export "timeline_cues.dart";
 export "ui/animated_items.dart";
 export "ui/probes.dart";
+export "ui/stagger.dart";
 export "unicode_data.dart";
 export "ui/reduced_motion.dart";
 export "ui/resizable_pane.dart";

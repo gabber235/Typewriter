@@ -13,10 +13,10 @@ void main() {
   for (final MapEntry(key: layout, value: shown) in layouts.entries) {
     testWidgets("the $layout inspector keeps its order and trims a written "
         "greeting", (tester) async {
-      final panel = (await tester.pumpStory(
+      final panel = await tester.pumpStory(
         inheritedInspectorLayoutUseCase,
         knobs: {"Inspector layout": layout},
-      ))!;
+      );
 
       expect(visibleFieldValues(), [
         "Welcome",
@@ -43,10 +43,10 @@ void main() {
   for (final MapEntry(key: presentation, value: name) in names.entries) {
     testWidgets("the $presentation name writes ${name.written.trim()} under "
         "${name.label}", (tester) async {
-      final panel = (await tester.pumpStory(
+      final panel = await tester.pumpStory(
         inheritedFieldPresentationUseCase,
         knobs: {"Name presentation": presentation},
-      ))!;
+      );
 
       await panel.field(name.label).enter("  Next quest  ");
 
@@ -55,10 +55,10 @@ void main() {
   }
 
   testWidgets("a disabled name cannot be edited", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       inheritedFieldPresentationUseCase,
       knobs: {"Name presentation": "Disabled"},
-    ))!;
+    );
 
     expect(panel.field("Name").isReadOnly, isTrue);
   });

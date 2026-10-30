@@ -619,13 +619,10 @@ void main() {
       ),
     );
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
+      testCatalogSnapshot(
         generation: original.generation,
         types: original.types,
         relations: original.relations,
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: original.presentations,
         presentationMaterials: [
           ...original.presentationMaterials,
@@ -633,7 +630,6 @@ void main() {
         ],
         configuration: original.configuration,
         diagnostics: original.diagnostics,
-
         endpointBindings: original.endpointBindings,
         capabilities: original.capabilities,
         recommendations: original.recommendations,

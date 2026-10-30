@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The NATS server side of a test world: every connection the panel opens.
@@ -61,6 +63,26 @@ final class FakeNats {
   }
 
   /// Answers every request on [subject] with [handler], on every connection.
+  /// The commands this double answers, each after [latency] and failing
+  /// with what [failure] reads when it reads anything.
+  FakeNatsCommands commands({
+    required Duration latency,
+    required Object? Function() failure,
+  }) => FakeNatsCommands._(this, latency, failure);
+
+  /// What the handler registered for [operation]'s subject answers its
+  /// request, decoded, the way a backend client would read it.
+  Future<TResponse> answer<TResponse>(
+    SkirRouteOperation<TResponse> operation,
+  ) async {
+    final handler =
+        _handlers[operation.subject] ??
+        (throw StateError("Nothing answers ${operation.subject}"));
+    return operation.responseSerializer.fromBytes(
+      await handler(operation.requestBytes),
+    );
+  }
+
   void registerHandler(
     String subject,
     FutureOr<Uint8List> Function(Uint8List requestData) handler,
@@ -495,4 +517,28 @@ final class CountingNatsSubscription implements NatsSubscription {
     unsubscribeCount++;
     await _messages.close();
   }
+}
+
+/// Registers command handlers on a [FakeNats] that answer each decoded
+/// request after a latency, unless a failure is set.
+final class FakeNatsCommands {
+  FakeNatsCommands._(this._nats, this._latency, this._failure);
+
+  final FakeNats _nats;
+  final Duration _latency;
+  final Object? Function() _failure;
+
+  /// Answers [operation] with what [reply] makes of each request decoded by
+  /// [requests].
+  void call<TRequest, TResponse>(
+    SkirRouteOperation<TResponse> operation,
+    skir.Serializer<TRequest> requests,
+    TResponse Function(TRequest request) reply,
+  ) => _nats.registerHandler(operation.subject, (bytes) async {
+    await Future<void>.delayed(_latency);
+    if (_failure() case final error?) throw error;
+    return operation.responseSerializer.toBytes(
+      reply(requests.fromBytes(bytes)),
+    );
+  });
 }

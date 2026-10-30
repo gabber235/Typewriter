@@ -12,21 +12,11 @@ import "package:widgetbook_workspace/support/story.dart";
   name: "Configured actions",
   type: PortablePresentationRenderer,
 )
-Widget configuredActionsUseCase(BuildContext context) => Story(
-  const [],
-  at: PanelLocation.component(
-    SizedBox(
-      width: context.knobs.double.slider(
-        label: "Width",
-        initialValue: 640,
-        min: 320,
-        max: 900,
-      ),
-      child: _QuestPresentation(
-        root: _questActions,
-        readOnly: context.knobs.boolean(label: "Read only"),
-      ),
-    ),
+Widget configuredActionsUseCase(BuildContext context) => _questStory(
+  context,
+  _QuestPresentation(
+    root: _questActions,
+    readOnly: context.knobs.boolean(label: "Read only"),
   ),
 );
 
@@ -41,25 +31,31 @@ Widget configuredDisplaysUseCase(BuildContext context) {
     label: "Configured appearance",
     initialValue: true,
   );
-  return Story(
-    const [],
-    at: PanelLocation.component(
-      SizedBox(
-        width: context.knobs.double.slider(
-          label: "Width",
-          initialValue: 640,
-          min: 320,
-          max: 900,
-        ),
-        child: _QuestPresentation(
-          key: ValueKey(configured),
-          root: () => _questSummary(configured: configured),
-          readOnly: false,
-        ),
-      ),
+  return _questStory(
+    context,
+    _QuestPresentation(
+      key: ValueKey(configured),
+      root: () => _questSummary(configured: configured),
+      readOnly: false,
     ),
   );
 }
+
+/// [quest] as a story, as wide as the Width knob chooses.
+Widget _questStory(BuildContext context, Widget quest) => Story(
+  const [],
+  at: PanelLocation.component(
+    SizedBox(
+      width: context.knobs.double.slider(
+        label: "Width",
+        initialValue: 640,
+        min: 320,
+        max: 900,
+      ),
+      child: quest,
+    ),
+  ),
+);
 
 class _QuestPresentation extends HookWidget {
   const _QuestPresentation({
@@ -236,7 +232,10 @@ skir.PresentationNode _questActions() {
             .toFrozen(),
       ),
     ),
-    presentationNode("more", skir.PresentationElement.wrapMenu(more.toFrozen())),
+    presentationNode(
+      "more",
+      skir.PresentationElement.wrapMenu(more.toFrozen()),
+    ),
     _text(
       "status",
       skir.ExpressionNode.createInput(binding: _status, path: editorRootPath),
@@ -348,7 +347,10 @@ skir.PresentationNode _questSummary({required bool configured}) {
       "divider",
       skir.PresentationElement.wrapDivider(divider.toFrozen()),
     ),
-    presentationNode("tabs", skir.PresentationElement.wrapTabs(tabs.toFrozen())),
+    presentationNode(
+      "tabs",
+      skir.PresentationElement.wrapTabs(tabs.toFrozen()),
+    ),
     presentationNode(
       "rewards",
       skir.PresentationElement.wrapTooltip(

@@ -25,18 +25,8 @@ Widget dateTimePickerFieldUseCase(BuildContext context) => Story(
         label: "Limit to the event window",
         initialValue: false,
       ),
-      mixed: context.knobs.boolean(
-        label: "Mixed selection",
-        initialValue: false,
-      ),
-      enabled: context.knobs.boolean(label: "Enabled", initialValue: true),
-      readOnly: context.knobs.boolean(label: "Read only", initialValue: false),
-      width: context.knobs.double.slider(
-        label: "Field width",
-        initialValue: 420,
-        min: 260,
-        max: 640,
-      ),
+      mixed: context.knobs.boolean(label: "Mixed selection"),
+      field: context.knobs.field(),
     ),
   ),
 );
@@ -50,9 +40,7 @@ class DateTimePickerFieldStory extends HookWidget {
     this.showPicker = true,
     this.bounded = false,
     this.mixed = false,
-    this.enabled = true,
-    this.readOnly = false,
-    this.width = 420,
+    this.field = const FieldKnobs(),
     super.key,
   });
 
@@ -61,9 +49,7 @@ class DateTimePickerFieldStory extends HookWidget {
   final bool showPicker;
   final bool bounded;
   final bool mixed;
-  final bool enabled;
-  final bool readOnly;
-  final double width;
+  final FieldKnobs field;
 
   @override
   Widget build(BuildContext context) {
@@ -84,22 +70,21 @@ class DateTimePickerFieldStory extends HookWidget {
     }
 
     return SizedBox(
-      width: width,
+      width: field.width,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
           const Text("Harvest festival start"),
+          // A mixed selection shows no value until the user edits it; the
+          // display knobs shape the field once it holds a value.
           if (showsMixed)
             DateTimePickerField.mixed(
               includeDate: showsDate,
               includeTime: includeTime,
-              showPicker: showPicker,
-              minimum: minimum,
-              maximum: maximum,
-              enabled: enabled,
-              readOnly: readOnly,
+              enabled: field.enabled,
+              readOnly: field.readOnly,
               onChanged: changed,
               onCleared: cleared,
             )
@@ -111,8 +96,8 @@ class DateTimePickerFieldStory extends HookWidget {
               showPicker: showPicker,
               minimum: minimum,
               maximum: maximum,
-              enabled: enabled,
-              readOnly: readOnly,
+              enabled: field.enabled,
+              readOnly: field.readOnly,
               onChanged: changed,
               onCleared: cleared,
             ),

@@ -20,11 +20,7 @@ void main() {
             lastSeen: clock.now(),
           ),
         ],
-        topology: skir.OrganizationTopologySnapshot(
-          hosts: [_host],
-          realms: [],
-          engines: [],
-        ),
+        topology: topologySnapshot(hosts: [_host]),
       ),
     ]);
     final states = <bool>[];
@@ -66,11 +62,7 @@ void main() {
               lastSeen: lastSeen,
             ),
           ],
-          topology: skir.OrganizationTopologySnapshot(
-            hosts: [_host],
-            realms: [],
-            engines: [],
-          ),
+          topology: topologySnapshot(hosts: [_host]),
         ),
       ]);
       expect(panel.services.statusOf("Paper host", "Paper"), "Active");

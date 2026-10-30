@@ -163,15 +163,11 @@ void main() {
   ) async {
     skir.DataValue? written;
     await tester.showBoundElement(
-      skir.PresentationElement.wrapToggleInput(
-        (skir.ToggleControl.mutable()
-              ..control = presentationControl(
-                skir.BindingRef(
-                  bindingId: _rootBinding,
-                  path: editorRootPath.field("enabled"),
-                ),
-              ))
-            .toFrozen(),
+      toggleInputElement(
+        skir.BindingRef(
+          bindingId: _rootBinding,
+          path: editorRootPath.field("enabled"),
+        ),
       ),
       skir.DataValue.createRecord(
         fields: [
@@ -212,15 +208,11 @@ void main() {
   ) async {
     skir.DataValue? written;
     await tester.showBoundElement(
-      skir.PresentationElement.wrapToggleInput(
-        (skir.ToggleControl.mutable()
-              ..control = presentationControl(
-                skir.BindingRef(
-                  bindingId: _rootBinding,
-                  path: editorRootPath.field("enabled"),
-                ),
-              ))
-            .toFrozen(),
+      toggleInputElement(
+        skir.BindingRef(
+          bindingId: _rootBinding,
+          path: editorRootPath.field("enabled"),
+        ),
       ),
       skir.DataValue.createRecord(
         fields: [
@@ -250,78 +242,24 @@ void main() {
       );
       final generation = skir.CatalogGeneration(value: "catalog:named");
       final checked = CheckedEditorCatalog(
-        skir.EditorCatalog(
-          resourceDisplays: const [],
-          resourceOperations: const [],
+        testCatalogSnapshot(
           generation: generation,
           types: [
-            skir.PublishedType(
-              searchKey: null,
-              placementField: null,
-              display: defaultTypeDisplay(""),
-              definition: skir.TypeDefinition(
-                id: alias,
-                parameters: const [],
-                representation: skir.RepresentationTemplate.createScalar(
-                  kind: skir.ScalarKind.createInteger(
-                    width: skir.IntegerWidth.unsignedEight,
-                  ),
+            publishedType(
+              alias,
+              representation: skir.RepresentationTemplate.createScalar(
+                kind: skir.ScalarKind.createInteger(
+                  width: skir.IntegerWidth.unsignedEight,
                 ),
-                parents: const [],
               ),
-              status: skir.DeclarationStatus.ready,
-              effectiveFields: const [],
-              ancestorTemplates: const [],
             ),
-            skir.PublishedType(
-              searchKey: null,
-              placementField: null,
-              display: defaultTypeDisplay(""),
-              definition: skir.TypeDefinition(
-                id: root,
-                parameters: const [],
-                representation: skir.RepresentationTemplate.createRecord(
-                  fields: [
-                    skir.FieldDeclaration(
-                      owner: skir.FieldOwner(definition: root, name: "count"),
-                      type: skir.TypeTemplate.createNamed(
-                        definition: alias,
-                        arguments: const [],
-                      ),
-                      overrides: const [],
-                      hasConstructorDefault: false,
-                    ),
-                  ],
-                  abstract_: false,
-                ),
-                parents: const [],
+            recordType(root, {
+              "count": skir.TypeTemplate.createNamed(
+                definition: alias,
+                arguments: const [],
               ),
-              status: skir.DeclarationStatus.ready,
-              effectiveFields: [
-                skir.EffectiveFieldTemplate(
-                  key: "count",
-                  owner: skir.FieldOwner(definition: root, name: "count"),
-                  type: skir.TypeTemplate.createNamed(
-                    definition: alias,
-                    arguments: const [],
-                  ),
-                  rules: const [],
-                ),
-              ],
-              ancestorTemplates: const [],
-            ),
+            }),
           ],
-          relations: const [],
-          realmRoot: skir.TypeDefinitionId.defaultInstance,
-          presentations: const [],
-          presentationMaterials: const [],
-          configuration: const [],
-          diagnostics: const [],
-
-          endpointBindings: const [],
-          capabilities: const [],
-          recommendations: const [],
-          roleFallbacks: const [],
         ),
       );
       final snapshot = skir.AuthoringState(
@@ -492,18 +430,7 @@ void main() {
   ) async {
     final written = <skir.DataValue>[];
     final panel = await tester.showBoundElement(
-      skir.PresentationElement.wrapColorInput(
-        skir.ColorControl(
-          control: presentationControl(_rootReference),
-          includeAlpha: false,
-          appearance: null,
-          content: null,
-          entry: null,
-          mappings: null,
-          popup: null,
-          options: null,
-        ),
-      ),
+      colorInputElement(_rootReference),
       skir.DataValue.unfilled,
       binding: _rootBinding,
       onWrite: written.add,
@@ -610,18 +537,7 @@ void main() {
   ) async {
     final fields = [
       (
-        skir.PresentationElement.wrapColorInput(
-          skir.ColorControl(
-            control: presentationControl(_rootReference),
-            includeAlpha: false,
-            appearance: null,
-            content: null,
-            entry: null,
-            mappings: null,
-            popup: null,
-            options: null,
-          ),
-        ),
+        colorInputElement(_rootReference),
         skir.DataValue.wrapInteger(0xFFAABBCC.toString()),
       ),
       (

@@ -70,7 +70,6 @@ abstract class AppBarMeasurements with _$AppBarMeasurements {
     required double compactExtent,
     required double spacing,
     double minimumNavigationExtent = 48,
-    double debugReservation = 0,
   }) {
     final items = [primary, ...actions];
     final collapsed = <int>{};
@@ -90,23 +89,19 @@ abstract class AppBarMeasurements with _$AppBarMeasurements {
     }
 
     for (final order in orders) {
-      if (widthWithGaps(resolve()) + navigationMinimum + debugReservation <=
-          availableWidth) {
+      if (widthWithGaps(resolve()) + navigationMinimum <= availableWidth) {
         break;
       }
       collapsed.add(order);
     }
     final allocation = resolve();
     final controlsWidth = widthWithGaps(allocation);
-    final contentWidth = max(
-      availableWidth,
-      controlsWidth + navigationMinimum + debugReservation,
-    );
+    final contentWidth = max(availableWidth, controlsWidth + navigationMinimum);
     return AppBarFit(
       contentWidth: contentWidth,
       navigationWidth: min(
         navigationWidth,
-        max(navigationMinimum, contentWidth - controlsWidth - debugReservation),
+        max(navigationMinimum, contentWidth - controlsWidth),
       ),
       primary: allocation.first,
       actions: allocation.skip(1).toList(),
@@ -126,7 +121,6 @@ class CustomAppBarLayout extends StatelessWidget {
     required this.actions,
     required this.spacing,
     this.minimumNavigationExtent = 48,
-    this.debugReservation = 0,
     super.key,
   }) {
     final keys = <Key>{};
@@ -138,7 +132,7 @@ class CustomAppBarLayout extends StatelessWidget {
         throw ArgumentError("Collapse order cannot be negative");
       }
     }
-    for (final extent in [spacing, minimumNavigationExtent, debugReservation]) {
+    for (final extent in [spacing, minimumNavigationExtent]) {
       if (!extent.isFinite || extent < 0) {
         throw ArgumentError("App bar extents must be finite and nonnegative");
       }
@@ -149,7 +143,6 @@ class CustomAppBarLayout extends StatelessWidget {
   final List<AppBarItem> actions;
   final double spacing;
   final double minimumNavigationExtent;
-  final double debugReservation;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -160,7 +153,6 @@ class CustomAppBarLayout extends StatelessWidget {
         height: constraints.maxHeight,
         spacing: spacing,
         minimumNavigationExtent: minimumNavigationExtent,
-        debugReservation: debugReservation,
         children: [
           _AppBarPlaced(
             key: const ValueKey("navigation"),
@@ -206,14 +198,12 @@ class _AppBarRenderLayout extends MultiChildRenderObjectWidget {
     required this.height,
     required this.spacing,
     required this.minimumNavigationExtent,
-    required this.debugReservation,
     required super.children,
   });
   final double availableWidth;
   final double height;
   final double spacing;
   final double minimumNavigationExtent;
-  final double debugReservation;
   @override
   RenderCustomAppBarLayout createRenderObject(BuildContext context) =>
       RenderCustomAppBarLayout(
@@ -221,7 +211,6 @@ class _AppBarRenderLayout extends MultiChildRenderObjectWidget {
         height: height,
         spacing: spacing,
         minimumNavigationExtent: minimumNavigationExtent,
-        debugReservation: debugReservation,
       );
   @override
   void updateRenderObject(
@@ -233,7 +222,6 @@ class _AppBarRenderLayout extends MultiChildRenderObjectWidget {
       height: height,
       spacing: spacing,
       minimumNavigationExtent: minimumNavigationExtent,
-      debugReservation: debugReservation,
     );
   }
 }
@@ -248,27 +236,23 @@ class RenderCustomAppBarLayout extends RenderBox
     required double height,
     required double spacing,
     required double minimumNavigationExtent,
-    required double debugReservation,
   }) {
     configure(
       availableWidth: availableWidth,
       height: height,
       spacing: spacing,
       minimumNavigationExtent: minimumNavigationExtent,
-      debugReservation: debugReservation,
     );
   }
   late double _availableWidth;
   late double _height;
   late double _spacing;
   late double _minimumNavigationExtent;
-  late double _debugReservation;
   void configure({
     required double availableWidth,
     required double height,
     required double spacing,
     required double minimumNavigationExtent,
-    required double debugReservation,
   }) {
     if (!availableWidth.isFinite || !height.isFinite || height <= 0) {
       throw ArgumentError(
@@ -279,7 +263,6 @@ class RenderCustomAppBarLayout extends RenderBox
     _height = height;
     _spacing = spacing;
     _minimumNavigationExtent = minimumNavigationExtent;
-    _debugReservation = debugReservation;
     markNeedsLayout();
   }
 
@@ -325,7 +308,6 @@ class RenderCustomAppBarLayout extends RenderBox
           compactExtent: _height,
           spacing: _spacing,
           minimumNavigationExtent: _minimumNavigationExtent,
-          debugReservation: _debugReservation,
         );
     size = constraints.constrain(Size(fit.contentWidth, _height));
     final allocations = [
@@ -368,7 +350,7 @@ class RenderCustomAppBarLayout extends RenderBox
     }
 
     position(children.first, 0);
-    var right = size.width - _debugReservation;
+    var right = size.width;
     var hasAction = false;
     for (var index = children.length - 1; index >= 2; index--) {
       if (allocations[index].width == 0) continue;

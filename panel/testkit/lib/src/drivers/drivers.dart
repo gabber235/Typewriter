@@ -14,6 +14,7 @@ export "graph/pump_graph.dart";
 export "inspector_driver.dart";
 export "members/members_pages.dart";
 export "members/membership_commands.dart";
+export "members/row_shortcuts.dart";
 export "mutations/save_activity_driver.dart";
 export "navigation/navigation_driver.dart";
 export "page/heading_driver.dart";

@@ -9,8 +9,7 @@ void main() {
   test(
     "every authoritative read completes before any request starts",
     () async {
-      final session = ScopedWorkSession();
-      addTearDown(session.dispose);
+      final session = testWorkSession();
       final events = <String>[];
       ScriptedValuePersistence boundary(String id) => ScriptedValuePersistence(
         key: EditorResourceKey(scope: null, identity: id),
@@ -51,8 +50,7 @@ void main() {
   test(
     "one failed preparation prevents every send and preserves proposals",
     () async {
-      final session = ScopedWorkSession();
-      addTearDown(session.dispose);
+      final session = testWorkSession();
       var sends = 0;
       ScriptedValuePersistence boundary(String id, bool fail) =>
           ScriptedValuePersistence(
@@ -93,8 +91,7 @@ void main() {
   );
 
   test("a conflicting observation blocks the complete cohort", () async {
-    final session = ScopedWorkSession();
-    addTearDown(session.dispose);
+    final session = testWorkSession();
     var sends = 0;
     final boundary = ScriptedValuePersistence(
       key: const EditorResourceKey(scope: null, identity: "second"),
@@ -122,24 +119,12 @@ void main() {
   test(
     "manual interactions stage together and release without sending",
     () async {
-      final session = ScopedWorkSession();
-      addTearDown(session.dispose);
-      final first = identifiedOwner(
+      final session = testWorkSession();
+      final (:first, :second) = identifiedPair(
         session,
-        "first",
         policy: EditorCommitPolicy.applyResource,
       );
-      final second = identifiedOwner(
-        session,
-        "second",
-        policy: EditorCommitPolicy.applyResource,
-      );
-      final combined = MultiEditOwner(
-        owners: [first, second],
-        rootType: first.rootType,
-        catalog: first.catalog,
-      );
-      addTearDown(combined.dispose);
+      final combined = combinedOwners([first, second]);
       final interaction = combined.beginInteraction(editorRootPath);
       expect(
         combined.update(
@@ -163,25 +148,13 @@ void main() {
   test(
     "cancelling selection interactions preserves earlier local work",
     () async {
-      final session = ScopedWorkSession();
-      addTearDown(session.dispose);
-      final first = identifiedOwner(
+      final session = testWorkSession();
+      final (:first, :second) = identifiedPair(
         session,
-        "first",
-        policy: EditorCommitPolicy.applyResource,
-      );
-      final second = identifiedOwner(
-        session,
-        "second",
         policy: EditorCommitPolicy.applyResource,
       );
       first.update(editorRootPath, skir.DataValue.wrapStringValue("Earlier"));
-      final combined = MultiEditOwner(
-        owners: [first, second],
-        rootType: first.rootType,
-        catalog: first.catalog,
-      );
-      addTearDown(combined.dispose);
+      final combined = combinedOwners([first, second]);
       final interaction = combined.beginInteraction(editorRootPath);
       combined.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
       interaction.cancel();
@@ -198,16 +171,9 @@ void main() {
   );
 
   test("concurrent selection Apply claims the shared lanes once", () async {
-    final session = ScopedWorkSession();
-    addTearDown(session.dispose);
-    final first = identifiedOwner(
+    final session = testWorkSession();
+    final (:first, :second) = identifiedPair(
       session,
-      "first",
-      policy: EditorCommitPolicy.applyResource,
-    );
-    final second = identifiedOwner(
-      session,
-      "second",
       policy: EditorCommitPolicy.applyResource,
     );
     first.update(editorRootPath, skir.DataValue.wrapStringValue("First"));
@@ -221,8 +187,7 @@ void main() {
   });
 
   test("duplicate request identities produce one server request", () async {
-    final session = ScopedWorkSession();
-    addTearDown(session.dispose);
+    final session = testWorkSession();
     final source = identifiedOwner(
       session,
       "first",
@@ -234,8 +199,7 @@ void main() {
   });
 
   test("independent server boundaries preserve partial outcomes", () async {
-    final session = ScopedWorkSession();
-    addTearDown(session.dispose);
+    final session = testWorkSession();
     final boundary = ScriptedValuePersistence(
       key: const EditorResourceKey(scope: null, identity: "second"),
       current: textSnapshot(),
@@ -272,8 +236,7 @@ void main() {
   test(
     "queued preparation captures edits only after owning reservations",
     () async {
-      final session = ScopedWorkSession();
-      addTearDown(session.dispose);
+      final session = testWorkSession();
       var reads = 0;
       final boundary = ScriptedValuePersistence(
         key: const EditorResourceKey(scope: null, identity: "first"),
@@ -304,8 +267,7 @@ void main() {
   test(
     "widening a request releases its partial reservation before waiting",
     () async {
-      final session = ScopedWorkSession();
-      addTearDown(session.dispose);
+      final session = testWorkSession();
       final boundary = GatedReadPersistence();
       final source = identifiedOwner(session, "first", persistence: boundary)
         ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));

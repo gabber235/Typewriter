@@ -126,6 +126,85 @@ skir.PresentationNode presentationText(
   );
 }
 
+/// A text element showing [value], unstyled and laid out as the default
+/// paragraph unless given.
+skir.PresentationElement textElement(
+  skir.ExpressionNode value, {
+  skir.PresentationColor? color,
+  skir.TextSizing? sizing,
+  skir.ExpressionNode? fontWeight,
+  skir.ExpressionNode? fontItalic,
+  skir.ExpressionNode? fontOpticalSize,
+  skir.ExpressionNode? fontSlant,
+  skir.ExpressionNode? fontWidth,
+  skir.ExpressionNode? textAlignment,
+  skir.ExpressionNode? lineHeight,
+  skir.ExpressionNode? letterSpacing,
+  skir.ExpressionNode? decoration,
+  skir.ExpressionNode? semanticLabel,
+  skir.TextParagraph? paragraph,
+}) {
+  final content = skir.TextContent.mutable()
+    ..value = value
+    ..color = color
+    ..sizing = sizing
+    ..fontWeight = fontWeight
+    ..fontItalic = fontItalic
+    ..fontOpticalSize = fontOpticalSize
+    ..fontSlant = fontSlant
+    ..fontWidth = fontWidth
+    ..textAlignment = textAlignment
+    ..lineHeight = lineHeight
+    ..letterSpacing = letterSpacing
+    ..decoration = decoration
+    ..semanticLabel = semanticLabel;
+  if (paragraph != null) content.paragraph = paragraph;
+  return skir.PresentationElement.wrapText(content.toFrozen());
+}
+
+/// The node `[id].color`: [icon] padded by 6 on every side as the node
+/// `[id].padding`, on the grey tile color an entry icon sits on.
+skir.PresentationNode coloredIconTile(String id, skir.PresentationNode icon) =>
+    presentationNode(
+      "$id.color",
+      skir.PresentationElement.createContainer(
+        foregroundColor: null,
+        transition: null,
+        shadows: const [],
+        child: presentationNode(
+          "$id.padding",
+          skir.PresentationElement.createPadding(
+            child: icon,
+            top: 6,
+            start: 6,
+            end: 6,
+            bottom: 6,
+          ),
+        ),
+        border: null,
+        backgroundColor: skir.PresentationColor.wrapValue(
+          skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("4288585374"),
+          ),
+        ),
+        radius: skir.PresentationRadius.none,
+      ),
+    );
+
+/// A plain number input over [binding], labeled [label] when given.
+skir.PresentationElement numericInputElement(
+  skir.BindingRef binding, {
+  String? label,
+}) => skir.PresentationElement.wrapNumericInput(
+  (skir.NumericControl.mutable()
+        ..control =
+            (skir.BoundControl.mutable()
+                  ..binding = binding
+                  ..label = label == null ? null : textLiteral(label))
+                .toFrozen())
+      .toFrozen(),
+);
+
 /// A plain text input over [binding], labeled [label] when given.
 skir.PresentationElement textInputElement(
   skir.BindingRef binding, {
@@ -287,3 +366,84 @@ extension SuppliedValues on PortablePresentationScope {
     },
   );
 }
+
+/// A toggle input over [binding] with nothing configured.
+skir.PresentationElement toggleInputElement(skir.BindingRef binding) =>
+    skir.PresentationElement.wrapToggleInput(
+      (skir.ToggleControl.mutable()..control = presentationControl(binding))
+          .toFrozen(),
+    );
+
+/// A color input over [binding] without alpha and with nothing configured.
+skir.PresentationElement colorInputElement(skir.BindingRef binding) =>
+    skir.PresentationElement.wrapColorInput(
+      skir.ColorControl(
+        control: presentationControl(binding),
+        includeAlpha: false,
+        appearance: null,
+        content: null,
+        entry: null,
+        mappings: null,
+        popup: null,
+        options: null,
+      ),
+    );
+
+/// Node [id] laying out the resources of the configured value's `elements`
+/// field as a left to right graph whose items are [item].
+skir.PresentationNode elementsGraphNode(String id, skir.TypeTemplate item) =>
+    skir.PresentationNode(
+      nodeId: id,
+      properties: skir.PresentationProperties.defaultInstance,
+      header: null,
+      element: skir.PresentationElement.createResources(
+        control: presentationControl(
+          skir.BindingRef(
+            bindingId: configuredValueBindingId,
+            path: editorRootPath.field("elements"),
+          ),
+        ),
+        layout: skir.ResourcesLayout.createGraph(
+          direction: skir.GraphDirection.leftToRight,
+          appearance: null,
+        ),
+        order: null,
+        itemBinding: declareNamedBinding("resources.item", item),
+      ),
+    );
+
+/// A search over [control] through [provider] that picks one value, or
+/// several when [multiple], reading its query from [queryBinding] and its
+/// summary from [summaryBinding] in a popup at most [maximumExtent] pixels
+/// tall; nothing else is configured.
+skir.SearchControl searchControl({
+  required skir.BoundControl control,
+  required skir.SearchProvider provider,
+  required skir.BindingDeclaration queryBinding,
+  required skir.BindingDeclaration summaryBinding,
+  required int maximumExtent,
+  bool multiple = false,
+}) => skir.SearchControl(
+  control: control,
+  selectionMode: multiple
+      ? skir.SearchSelectionMode.multiple
+      : skir.SearchSelectionMode.single,
+  queryBinding: queryBinding,
+  summaryBinding: summaryBinding,
+  maximumExtent: skir.ExpressionNode.wrapLiteral(
+    skir.DataValue.wrapInteger("$maximumExtent"),
+  ),
+  provider: provider,
+  summary: null,
+  placeholder: null,
+  customValue: null,
+  initialQuery: null,
+  appearance: null,
+  content: null,
+  popup: null,
+  popupSide: null,
+  emptyText: null,
+  loadingText: null,
+  empty: null,
+  loading: null,
+);

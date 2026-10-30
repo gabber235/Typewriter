@@ -292,10 +292,9 @@ void main() {
     ]) {
       testWidgets("a $kind issue opens its nearest surface with the $kind "
           "selected, every time", (tester) async {
-        final panel = await tester.pumpPanel([
-          signedIn(ada, organization: acme),
-          realmServing(ownerChainDocument(_book, id: "inbox")),
-        ]);
+        final panel = await tester.pumpPanel(
+          adaServing(ownerChainDocument(_book, id: "inbox")),
+        );
         final scope = panel.world.requireRealm.scope;
         final resource = skir.ResourceId(value: "$kind:inbox");
         final location = skir.ValueLocation(
@@ -320,10 +319,9 @@ void main() {
     testWidgets("a missing resource opens nothing and keeps the selection", (
       tester,
     ) async {
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(realmDocument(books: [_book])),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(realmDocument(books: [_book])),
+      );
       final scope = panel.world.requireRealm.scope;
       final missing = skir.ResourceId(value: "book:missing");
 
@@ -350,22 +348,13 @@ void main() {
 
     testWidgets("inspecting another resource from a surface without a side "
         "inspector opens that resource's own surface", (tester) async {
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(ownerChainDocument(_book, id: "inbox")),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(ownerChainDocument(_book, id: "inbox")),
+      );
       await panel.openSurface(_book.bookId);
       final element = skir.ResourceId(value: "element:inbox");
 
-      await panel.container
-          .read(realmSurfaceNavigationProvider)
-          .navigate(
-            panel.world.requireRealm.scope,
-            element,
-            skir.ResourceNavigationMode.edit,
-            isCurrent: () => true,
-          );
-      await panel.settle();
+      await panel.inspectForEditing(element);
       expect(panel.routedResource, element.value);
       expect(panel.resources.selected, [element]);
     });
@@ -374,22 +363,13 @@ void main() {
       tester,
     ) async {
       final page = skir.ResourceId(value: "page:inbox");
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(ownerChainDocument(_book, id: "inbox")),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(ownerChainDocument(_book, id: "inbox")),
+      );
       await panel.openSurface(page);
       final element = skir.ResourceId(value: "element:inbox");
 
-      await panel.container
-          .read(realmSurfaceNavigationProvider)
-          .navigate(
-            panel.world.requireRealm.scope,
-            element,
-            skir.ResourceNavigationMode.edit,
-            isCurrent: () => true,
-          );
-      await panel.settle();
+      await panel.inspectForEditing(element);
 
       expect(panel.routedResource, page.value);
       expect(panel.resources.selected, [element]);
@@ -397,12 +377,9 @@ void main() {
 
     testWidgets("an element without owners opens the Realm home with it "
         "selected", (tester) async {
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(
-          ownerChainDocument(_book, id: "inbox").copyWith(links: []),
-        ),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(ownerChainDocument(_book, id: "inbox").copyWith(links: [])),
+      );
       await panel.openSurface(_book.bookId);
       final element = skir.ResourceId(value: "element:inbox");
 
@@ -421,10 +398,7 @@ void main() {
     testWidgets("a Book whose type no longer has a surface opens at the Realm "
         "home with it selected", (tester) async {
       final document = realmDocument(books: [_book]);
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(document),
-      ]);
+      final panel = await tester.pumpPanel(adaServing(document));
       await panel.openSurface(_book.bookId);
       final catalog = document.catalog.snapshot.toMutable()
         ..presentations = []
@@ -448,10 +422,9 @@ void main() {
 
     testWidgets("a reveal requested before leaving the Realm does nothing "
         "once the user returns", (tester) async {
-      final panel = await tester.pumpPanel([
-        signedIn(ada, organization: acme),
-        realmServing(realmDocument(books: [_book])),
-      ]);
+      final panel = await tester.pumpPanel(
+        adaServing(realmDocument(books: [_book])),
+      );
       final scope = panel.world.requireRealm.scope;
       panel.container.read(realmLocationRevealProvider(scope)).request(_title);
       await tester.pump(const Duration(milliseconds: 100));
@@ -468,10 +441,9 @@ void main() {
     for (final from in ["its surface", "the Realm home"]) {
       testWidgets("revealing a Book's field from $from focuses the field in "
           "view, again after focus moved away", (tester) async {
-        final panel = await tester.pumpPanel([
-          signedIn(ada, organization: acme),
-          realmServing(realmDocument(books: [_book])),
-        ]);
+        final panel = await tester.pumpPanel(
+          adaServing(realmDocument(books: [_book])),
+        );
         final at = from == "its surface" ? _book.bookId : null;
         if (at != null) await panel.openSurface(at);
         final scope = panel.world.requireRealm.scope;

@@ -237,59 +237,12 @@ final _testSelectableUse = skir.NamedTypeUse(
   arguments: const [],
 );
 final _testSelectableCatalog = CheckedEditorCatalog(
-  skir.EditorCatalog(
-    resourceDisplays: const [],
-    resourceOperations: const [],
+  testCatalogSnapshot(
     generation: skir.CatalogGeneration(value: "testkit:selectable"),
     types: [
-      skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        display: defaultTypeDisplay(""),
-        definition: skir.TypeDefinition(
-          id: _testSelectableDefinition,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              skir.FieldDeclaration(
-                owner: skir.FieldOwner(
-                  definition: _testSelectableDefinition,
-                  name: "name",
-                ),
-                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-            ],
-            abstract_: false,
-          ),
-          parents: const [],
-        ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: [
-          skir.EffectiveFieldTemplate(
-            key: "name",
-            owner: skir.FieldOwner(
-              definition: _testSelectableDefinition,
-              name: "name",
-            ),
-            type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-            rules: const [],
-          ),
-        ],
-        ancestorTemplates: const [],
-      ),
+      recordType(_testSelectableDefinition, {
+        "name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+      }),
     ],
-    relations: const [],
-    realmRoot: skir.TypeDefinitionId.defaultInstance,
-    presentations: const [],
-    presentationMaterials: const [],
-    configuration: const [],
-    diagnostics: const [],
-
-    endpointBindings: const [],
-    capabilities: const [],
-    recommendations: const [],
-    roleFallbacks: const [],
   ),
 );

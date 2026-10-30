@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/support/shown_component.dart";
 
 /// One item an animated collection shows: its identity and visible label.
 final class AnimatedItem {
@@ -98,9 +99,13 @@ final class AnimatedItems extends HookWidget {
     final visible = useValueListenable(source.visible);
     final collection = switch (layout) {
       AnimatedItemsLayout.list => _list(),
-      AnimatedItemsLayout.sliverList => _sliverList(),
+      AnimatedItemsLayout.sliverList => CustomScrollView(
+        slivers: [_sliverList()],
+      ),
       AnimatedItemsLayout.grid => _grid(),
-      AnimatedItemsLayout.sliverGrid => _sliverGrid(),
+      AnimatedItemsLayout.sliverGrid => CustomScrollView(
+        slivers: [_sliverGrid()],
+      ),
       AnimatedItemsLayout.table => _table(),
     };
     if (!visible) return const SizedBox.shrink();
@@ -142,15 +147,11 @@ final class AnimatedItems extends HookWidget {
       removedItemBuilder: _removed,
     );
     source.renderedItems = result.items;
-    return CustomScrollView(
-      slivers: [
-        SliverAnimatedList(
-          key: result.key,
-          initialItemCount: result.items.length,
-          itemBuilder: (context, index, animation) =>
-              _item(result.items[index], animation),
-        ),
-      ],
+    return SliverAnimatedList(
+      key: result.key,
+      initialItemCount: result.items.length,
+      itemBuilder: (context, index, animation) =>
+          _item(result.items[index], animation),
     );
   }
 
@@ -181,16 +182,12 @@ final class AnimatedItems extends HookWidget {
       removedItemBuilder: _removed,
     );
     source.renderedItems = result.items;
-    return CustomScrollView(
-      slivers: [
-        SliverAnimatedGrid(
-          key: result.key,
-          initialItemCount: result.items.length,
-          gridDelegate: _gridDelegate,
-          itemBuilder: (context, index, animation) =>
-              _item(result.items[index], animation),
-        ),
-      ],
+    return SliverAnimatedGrid(
+      key: result.key,
+      initialItemCount: result.items.length,
+      gridDelegate: _gridDelegate,
+      itemBuilder: (context, index, animation) =>
+          _item(result.items[index], animation),
     );
   }
 
@@ -242,3 +239,47 @@ Widget fadeIn(
   Animation<double> animation,
   Widget child,
 ) => FadeTransition(opacity: animation, child: child);
+
+/// Showing an animated collection in the panel.
+extension ShowAnimatedItems on WidgetTester {
+  /// Shows [items] as [layout] through [ShowComponent.showComponent],
+  /// animating insertions over [insertDuration] and removals over
+  /// [removeDuration], and returns the source that changes them.
+  Future<AnimatedItemSource> showAnimatedItems(
+    List<AnimatedItem> items, {
+    AnimatedItemsLayout layout = AnimatedItemsLayout.sliverList,
+    Duration insertDuration = const Duration(milliseconds: 300),
+    Duration removeDuration = const Duration(milliseconds: 300),
+  }) async {
+    final source = AnimatedItemSource(items);
+    await showComponent(
+      AnimatedItems(
+        source: source,
+        layout: layout,
+        insertDuration: insertDuration,
+        removeDuration: removeDuration,
+      ),
+    );
+    return source;
+  }
+}
+
+/// Showing a bare animated table in the panel.
+extension ShowActiveRowTable on WidgetTester {
+  /// Shows an [AnimatedTable] of one row reading "Active" that reads
+  /// "Empty" once it has no rows, and returns its state.
+  Future<AnimatedTableState> showActiveRowTable() async {
+    final key = GlobalKey<AnimatedTableState>();
+    await showComponent(
+      AnimatedTable(
+        key: key,
+        initialItemCount: 1,
+        emptyBuilder: (context) => const Text("Empty"),
+        rowBuilder: (context, index, animation) =>
+            const TableRow(children: [Text("Active")]),
+        transitionBuilder: fadeIn,
+      ),
+    );
+    return key.currentState!;
+  }
+}

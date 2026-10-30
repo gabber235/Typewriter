@@ -15,6 +15,9 @@ const _catalogWatchSubject =
 const _catalogInvalidationEventSubject =
     "service.from.realm1.organization.acme.realm.editor.catalog.invalidate";
 
+/// The subjects the Realm answers catalog fetches and state queries on.
+const _subjects = (catalog: _catalogSubject, state: _snapshotSubject);
+
 void main() {
   late World world;
   setUp(() {
@@ -57,44 +60,20 @@ void main() {
     "hints fetch current state and missed hints recover after reconnect",
     () async {
       var title = "Initial";
-      world.nats
-        ..registerHandler(
-          _catalogSubject,
-          (_) => libraryCatalog(generation: _generation).fetchReply,
-        )
-        ..registerHandler(
-          _snapshotSubject,
-          (_) => realmDocument(
-            books: [_book.copyWith(title: title)],
-            catalog: libraryCatalog(generation: _generation),
-          ).stateReply,
-        );
-      await world.whenSignedIn();
-      world.keepOpen(session);
-      await world.container.eventually(
+      await world.openBookSession(
         session,
-        (state) =>
-            state.resources[_book.bookId]?.content
-                .authoredField("title")
-                ?.authoredString ==
-            "Initial",
-        description: "initial state",
+        _book,
+        () => title,
+        generation: _generation,
+        subjects: _subjects,
       );
 
       title = "Changed";
-      world.nats.connection.emitMessageOnSubject(
-        _eventSubject,
-        skir.AuthoringChanged.serializer.toBytes(
-          skir.AuthoringChanged(generation: _generation),
-        ),
-      );
-      await world.container.eventually(
+      world.announceAuthoringChanged(_eventSubject, _generation);
+      await world.untilBookTitled(
         session,
-        (state) =>
-            state.resources[_book.bookId]?.content
-                .authoredField("title")
-                ?.authoredString ==
-            "Changed",
+        _book.bookId,
+        "Changed",
         description: "state after hint",
       );
 
@@ -103,13 +82,10 @@ void main() {
       await pumpEventQueue();
       world.nats.reconnect();
 
-      await world.container.eventually(
+      await world.untilBookTitled(
         session,
-        (state) =>
-            state.resources[_book.bookId]?.content
-                .authoredField("title")
-                ?.authoredString ==
-            "Missed hint",
+        _book.bookId,
+        "Missed hint",
         description: "reconnected current state",
       );
     },
@@ -136,28 +112,15 @@ void main() {
       });
     await world.whenSignedIn();
     world.keepOpen(session);
-    await world.container.eventually(
+    await world.untilBookTitled(
       session,
-      (state) =>
-          state.resources[_book.bookId]?.content
-              .authoredField("title")
-              ?.authoredString ==
-          "Initial",
+      _book.bookId,
+      "Initial",
       description: "initial state",
     );
-    world.nats.connection.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChanged.serializer.toBytes(
-        skir.AuthoringChanged(generation: _generation),
-      ),
-    );
+    world.announceAuthoringChanged(_eventSubject, _generation);
     await eventually(() => expect(requests, 2));
-    world.nats.connection.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChanged.serializer.toBytes(
-        skir.AuthoringChanged(generation: _generation),
-      ),
-    );
+    world.announceAuthoringChanged(_eventSubject, _generation);
     delayed.complete(
       realmDocument(
         books: [_book.copyWith(title: "Intermediate")],
@@ -165,13 +128,10 @@ void main() {
       ).stateReply,
     );
 
-    await world.container.eventually(
+    await world.untilBookTitled(
       session,
-      (state) =>
-          state.resources[_book.bookId]?.content
-              .authoredField("title")
-              ?.authoredString ==
-          "Newest",
+      _book.bookId,
+      "Newest",
       description: "query queued by hint",
     );
     expect(requests, 3);
@@ -180,28 +140,12 @@ void main() {
   test("after the connection is replaced, a change announced on the new "
       "connection shows its state", () async {
     var title = "Initial";
-    world.nats
-      ..registerHandler(
-        _catalogSubject,
-        (_) => libraryCatalog(generation: _generation).fetchReply,
-      )
-      ..registerHandler(
-        _snapshotSubject,
-        (_) => realmDocument(
-          books: [_book.copyWith(title: title)],
-          catalog: libraryCatalog(generation: _generation),
-        ).stateReply,
-      );
-    await world.whenSignedIn();
-    world.keepOpen(session);
-    await world.container.eventually(
+    await world.openBookSession(
       session,
-      (state) =>
-          state.resources[_book.bookId]?.content
-              .authoredField("title")
-              ?.authoredString ==
-          "Initial",
-      description: "initial state",
+      _book,
+      () => title,
+      generation: _generation,
+      subjects: _subjects,
     );
     final before = world.nats.connection;
 
@@ -209,20 +153,12 @@ void main() {
     expect(world.nats.connection, isNot(same(before)));
     await pumpEventQueue();
     title = "After replacement";
-    world.nats.connection.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChanged.serializer.toBytes(
-        skir.AuthoringChanged(generation: _generation),
-      ),
-    );
+    world.announceAuthoringChanged(_eventSubject, _generation);
 
-    await world.container.eventually(
+    await world.untilBookTitled(
       session,
-      (state) =>
-          state.resources[_book.bookId]?.content
-              .authoredField("title")
-              ?.authoredString ==
-          "After replacement",
+      _book.bookId,
+      "After replacement",
       description: "state announced on the replaced connection",
     );
   });
@@ -257,13 +193,10 @@ void main() {
       });
     await world.whenSignedIn();
     world.keepOpen(session);
-    await world.container.eventually(
+    await world.untilBookTitled(
       session,
-      (state) =>
-          state.resources[_book.bookId]?.content
-              .authoredField("title")
-              ?.authoredString ==
-          "Current",
+      _book.bookId,
+      "Current",
       description: "initial state",
     );
     final fetchesBefore = catalogFetches;
@@ -272,12 +205,7 @@ void main() {
     // The Realm moved to a new catalog without announcing it, so the panel
     // learns of it only from the state query.
     generation = replacement;
-    world.nats.connection.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChanged.serializer.toBytes(
-        skir.AuthoringChanged(generation: _generation),
-      ),
-    );
+    world.announceAuthoringChanged(_eventSubject, _generation);
 
     final state = await world.container.eventually(
       session,
@@ -322,11 +250,11 @@ void main() {
       (_, _) {},
     );
     world.addCleanup(subscription.close);
-    final staged = editing.edit(
-      label: "Rename",
+    final staged = editing.setText(
+      "Rename",
+      _titleLocation,
+      "Local",
       policy: EditorCommitPolicy.applyResource,
-      apply: (edit) =>
-          edit.set(_titleLocation, skir.DataValue.wrapStringValue("Local")),
     );
     expect(staged, isA<EditStaged>());
 

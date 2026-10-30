@@ -18,14 +18,7 @@ void main() {
             "until the conflict is resolved",
         path: editorRootPath,
       );
-      final work = testWorkSession();
-      final source = editedResource(
-        work,
-        "Paper Host configuration",
-        draft: "unsupported",
-        commit: (_) async => MutationInvalid([diagnostic]),
-      );
-      expect(await source.flush(), isA<MutationInvalid>());
+      final work = await rejectedWork("Paper Host configuration", [diagnostic]);
       final panel = await tester.pumpPanel([
         if (mobile) window(phone),
       ], at: saveActivityOf(work));
@@ -56,20 +49,13 @@ void main() {
 
     testWidgets("failure actions stay on screen on "
         "${mobile ? "mobile" : "desktop"}", (tester) async {
-      final work = testWorkSession();
-      final source = editedResource(
-        work,
-        "Paper Host configuration",
-        draft: "unsupported",
-        commit: (_) async => MutationInvalid([
-          EditorDiagnostic(
-            code: EditorDiagnosticCode.invalidValue,
-            message: "Choose a supported engine target",
-            path: target,
-          ),
-        ]),
-      );
-      expect(await source.flush(), isA<MutationInvalid>());
+      final work = await rejectedWork("Paper Host configuration", [
+        EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidValue,
+          message: "Choose a supported engine target",
+          path: target,
+        ),
+      ]);
       final panel = await tester.pumpPanel([
         if (mobile) window(phone),
       ], at: saveActivityOf(work));
@@ -91,20 +77,13 @@ void main() {
   testWidgets("copying a failure puts a shareable report on the clipboard", (
     tester,
   ) async {
-    final work = testWorkSession();
-    final source = editedResource(
-      work,
-      "Paper Host configuration",
-      draft: "unsupported",
-      commit: (_) async => MutationInvalid([
-        EditorDiagnostic(
-          code: EditorDiagnosticCode.invalidValue,
-          message: "Choose a supported engine target",
-          path: target,
-        ),
-      ]),
-    );
-    expect(await source.flush(), isA<MutationInvalid>());
+    final work = await rejectedWork("Paper Host configuration", [
+      EditorDiagnostic(
+        code: EditorDiagnosticCode.invalidValue,
+        message: "Choose a supported engine target",
+        path: target,
+      ),
+    ]);
     String? clipboard;
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,

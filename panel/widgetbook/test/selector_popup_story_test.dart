@@ -12,13 +12,13 @@ void main() {
   for (final MapEntry(key: name, value: story) in stories.entries) {
     testWidgets("$name searches by section and the button shows the chosen "
         "book", (tester) async {
-      final panel = (await tester.pumpStory(story))!;
+      final panel = await tester.pumpStory(story);
 
       await panel.tapOn(find.text("The lost lantern"));
       expect(panel.shows("MAIN STORY"), isTrue);
       expect(panel.shows("SIDE QUESTS"), isTrue);
 
-      await search(tester, "merchant");
+      await tester.typeInStory("Search books", "merchant");
       expect(panel.shows("MAIN STORY"), isFalse);
       expect(panel.shows("Fishing contest"), isFalse);
 
@@ -30,7 +30,7 @@ void main() {
   }
 
   testWidgets("the selector opens from the keyboard", (tester) async {
-    final panel = (await tester.pumpStory(selectorPopupUseCase))!;
+    final panel = await tester.pumpStory(selectorPopupUseCase);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -40,34 +40,28 @@ void main() {
   });
 
   testWidgets("a search without matches says so", (tester) async {
-    final panel = (await tester.pumpStory(selectorPopupUseCase))!;
+    final panel = await tester.pumpStory(selectorPopupUseCase);
 
     await panel.tapOn(find.text("The lost lantern"));
-    await search(tester, "dragon");
+    await tester.typeInStory("Search books", "dragon");
 
     expect(panel.shows("No books match"), isTrue);
   });
 
   testWidgets("loading and failing choices offer no books, and only a "
       "failure says why", (tester) async {
-    final failed = (await tester.pumpStory(
+    final failed = await tester.pumpStory(
       selectorPopupUseCase,
       knobs: {"Choices": "failed"},
-    ))!;
+    );
     expect(find.textContaining("did not return its books"), findsOneWidget);
     expect(failed.shows("The lost lantern"), isFalse);
 
-    final loading = (await tester.pumpStory(
+    final loading = await tester.pumpStory(
       selectorPopupUseCase,
       knobs: {"Choices": "loading"},
-    ))!;
+    );
     expect(loading.shows("The lost lantern"), isFalse);
     expect(find.textContaining("did not return its books"), findsNothing);
   });
-}
-
-/// Types [query] into the popup's search field.
-Future<void> search(WidgetTester tester, String query) async {
-  await tester.enterText(find.bySemanticsLabel("Search books"), query);
-  await tester.runStory();
 }

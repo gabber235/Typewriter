@@ -58,11 +58,7 @@ class IndexPage extends ConsumerWidget {
     return Stack(
       children: [
         content,
-        Positioned(
-          top: 8,
-          right: 8 + (context.debugShowCheckedModeBanner ? 40 : 0),
-          child: MutationActivityButton(),
-        ),
+        Positioned(top: 8, right: 8, child: MutationActivityButton()),
         const Positioned(
           left: 8,
           bottom: 8,

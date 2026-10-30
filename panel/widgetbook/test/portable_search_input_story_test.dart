@@ -7,7 +7,7 @@ void main() {
   testWidgets("choosing a reward from the search binds it as the value", (
     tester,
   ) async {
-    final panel = (await tester.pumpStory(authoredSearchInputUseCase))!;
+    final panel = await tester.pumpStory(authoredSearchInputUseCase);
     expect(panel.shows("Coin reward"), isTrue);
 
     // The summary shows the bound reward; tapping it opens the search.
@@ -21,10 +21,10 @@ void main() {
   });
 
   testWidgets("a search without choices says nothing matches", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       authoredSearchInputUseCase,
       knobs: {"Choices": "None"},
-    ))!;
+    );
 
     // The summary shows the bound reward; tapping it opens the search.
     await tester.tapAt(tester.getCenter(find.text("Coin reward")));

@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/core/trait.dart";
 import "package:typewriter_testkit/src/core/world.dart";
 import "package:typewriter_testkit/src/doubles/nats.dart";
+import "package:typewriter_testkit/src/traits/services/services_data.dart";
 
 /// The open organization runs [services] and the runtime [topology], as the
 /// backend reports them over NATS.
@@ -85,6 +86,28 @@ extension ServicesBackendEvents on FakeNats {
     ".topology.watch",
     skir.OrganizationTopologyChanged.serializer.toBytes(change),
   );
+
+  /// Confirms every host configuration requested on [subject] with [change]
+  /// and returns the requests, in the order they arrive.
+  List<skir.ConfigureServiceHostRequest> confirmHostConfigurations(
+    String subject,
+    skir.HostConfigurationChange change,
+  ) {
+    final sent = <skir.ConfigureServiceHostRequest>[];
+    registerHandler(subject, (data) {
+      sent.add(skir.ConfigureServiceHostRequest.serializer.fromBytes(data));
+      return configuredReply(change);
+    });
+    return sent;
+  }
+
+  /// The names every service rename requested on [subject] sent, in order.
+  List<String> sentServiceNames(String subject) => [
+    for (final request in requestsTo(subject))
+      skir.UpdateOrganizationServiceRequest.serializer
+          .fromBytes(request.payload)
+          .name,
+  ];
 
   /// Announces [change] to the services of [organization].
   void announceServices(

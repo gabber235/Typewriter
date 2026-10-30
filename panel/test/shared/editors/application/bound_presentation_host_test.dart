@@ -56,24 +56,19 @@ void main() {
   test("validates scalar writes before the backend decoder", () async {
     var value = skir.DataValue.wrapInteger("1");
     var writes = 0;
-    final host = BoundPresentationHost(
-      catalog: testCheckedCatalog(),
-      root: () => skir.PresentationNode.defaultInstance,
-      bindings: [
-        BoundPresentationBinding(
-          id: _bindingId,
-          use: skir.TypeUse.wrapScalar(
-            skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedEight),
-          ),
-          read: (_) => value,
-          write: (_, next) {
-            writes++;
-            value = next;
-            return const PortablePresentationWriteResult.applied();
-          },
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: skir.TypeUse.wrapScalar(
+          skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedEight),
         ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+        read: (_) => value,
+        write: (_, next) {
+          writes++;
+          value = next;
+          return const PortablePresentationWriteResult.applied();
+        },
+      ),
     );
     addTearDown(host.dispose);
 
@@ -106,22 +101,17 @@ void main() {
     () async {
       var value = skir.DataValue.wrapStringValue("first");
       var writes = 0;
-      final host = BoundPresentationHost(
-        catalog: testCheckedCatalog(),
-        root: () => skir.PresentationNode.defaultInstance,
-        bindings: [
-          BoundPresentationBinding(
-            id: _bindingId,
-            use: _textType,
-            read: (_) => value,
-            write: (_, next) {
-              writes++;
-              value = next;
-              return const PortablePresentationWriteApplied();
-            },
-          ),
-        ],
-        budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+      final host = singleBindingHost(
+        BoundPresentationBinding(
+          id: _bindingId,
+          use: _textType,
+          read: (_) => value,
+          write: (_, next) {
+            writes++;
+            value = next;
+            return const PortablePresentationWriteApplied();
+          },
+        ),
       );
       addTearDown(host.dispose);
       final uppercase = skir.EditorAction.wrapLocal(
@@ -161,17 +151,12 @@ void main() {
   );
 
   test("local value actions cannot mutate observational bindings", () async {
-    final host = BoundPresentationHost(
-      catalog: testCheckedCatalog(),
-      root: () => skir.PresentationNode.defaultInstance,
-      bindings: [
-        BoundPresentationBinding(
-          id: _bindingId,
-          use: _textType,
-          read: (_) => skir.DataValue.wrapStringValue("original"),
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("original"),
+      ),
     );
     addTearDown(host.dispose);
     final result = await host.execute(
@@ -197,21 +182,16 @@ void main() {
 
   test("accepts nullable scalar roots without a named wrapper", () async {
     var value = skir.DataValue.wrapStringValue("value");
-    final host = BoundPresentationHost(
-      catalog: testCheckedCatalog(),
-      root: () => skir.PresentationNode.defaultInstance,
-      bindings: [
-        BoundPresentationBinding(
-          id: _bindingId,
-          use: skir.TypeUse.createNullable(value: _textType),
-          read: (_) => value,
-          write: (_, next) {
-            value = next;
-            return const PortablePresentationWriteResult.applied();
-          },
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: skir.TypeUse.createNullable(value: _textType),
+        read: (_) => value,
+        write: (_, next) {
+          value = next;
+          return const PortablePresentationWriteResult.applied();
+        },
+      ),
     );
     addTearDown(host.dispose);
 
@@ -231,18 +211,13 @@ void main() {
 
   test("refreshes from its owner and detaches when disposed", () {
     final owner = ValueNotifier(skir.DataValue.wrapStringValue("first"));
-    final host = BoundPresentationHost(
-      catalog: testCheckedCatalog(),
-      root: () => skir.PresentationNode.defaultInstance,
-      bindings: [
-        BoundPresentationBinding(
-          id: _bindingId,
-          use: _textType,
-          read: (_) => owner.value,
-          owner: owner,
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => owner.value,
+        owner: owner,
+      ),
     );
 
     expect(
@@ -265,17 +240,12 @@ void main() {
   });
 
   test("rejects writes to a read only backend binding", () async {
-    final host = BoundPresentationHost(
-      catalog: testCheckedCatalog(),
-      root: () => skir.PresentationNode.defaultInstance,
-      bindings: [
-        BoundPresentationBinding(
-          id: _bindingId,
-          use: _textType,
-          read: (_) => skir.DataValue.wrapStringValue("value"),
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("value"),
+      ),
     );
     addTearDown(host.dispose);
 
@@ -483,18 +453,13 @@ void main() {
 
   test("a delayed write may finish after the host is disposed", () async {
     final completion = Completer<PortablePresentationWriteResult>();
-    final host = BoundPresentationHost(
-      catalog: testCheckedCatalog(),
-      root: () => skir.PresentationNode.defaultInstance,
-      bindings: [
-        BoundPresentationBinding(
-          id: _bindingId,
-          use: _textType,
-          read: (_) => skir.DataValue.wrapStringValue("value"),
-          write: (_, _) => completion.future,
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("value"),
+        write: (_, _) => completion.future,
+      ),
     );
 
     final pending = host.write(
@@ -510,21 +475,16 @@ void main() {
 
   test("disposed hosts reject fresh writes and actions", () async {
     var writes = 0;
-    final host = BoundPresentationHost(
-      catalog: testCheckedCatalog(),
-      root: () => skir.PresentationNode.defaultInstance,
-      bindings: [
-        BoundPresentationBinding(
-          id: _bindingId,
-          use: _textType,
-          read: (_) => skir.DataValue.wrapStringValue("value"),
-          write: (_, _) {
-            writes++;
-            return const PortablePresentationWriteResult.applied();
-          },
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("value"),
+        write: (_, _) {
+          writes++;
+          return const PortablePresentationWriteResult.applied();
+        },
+      ),
     );
     final disposedHost = host..dispose();
 

@@ -7,7 +7,7 @@ import "support/stories.dart";
 void main() {
   testWidgets("the dropdown opens, filters and selects from the keyboard, "
       "then gives editing back", (tester) async {
-    final panel = (await tester.pumpStory(dropdownUseCase))!;
+    final panel = await tester.pumpStory(dropdownUseCase);
     InteractionMode mode() =>
         panel.container.read(currentInteractionModeProvider);
 

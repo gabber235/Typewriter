@@ -61,33 +61,23 @@ void main() {
   testWidgets("a node that is its own drop region still moves on the graph", (
     tester,
   ) async {
-    final moves = <List<GraphMoveCommitPayload>>[];
-    final panel = await tester.pumpGraph(
-      Graph(
-        data: GraphData(
-          cellSize: 50,
-          elements: [
-            graphNode(
-              "Source",
-              x: 0,
-              body: DraggableGraphNode(
-                "Source",
-                child: GraphDragTargetRegion(
-                  targetId: const GraphIdentifier("Source"),
-                  // Refuses every drop, so the node is only its own region.
-                  child: DragTarget<GraphDragPayload<GraphDragData>>(
-                    onWillAcceptWithDetails: (_) => false,
-                    builder: (_, _, _) => const GraphNode("Source"),
-                  ),
-                ),
-              ),
+    final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+      graphNode(
+        "Source",
+        x: 0,
+        body: DraggableGraphNode(
+          "Source",
+          child: GraphDragTargetRegion(
+            targetId: const GraphIdentifier("Source"),
+            // Refuses every drop, so the node is only its own region.
+            child: DragTarget<GraphDragPayload<GraphDragData>>(
+              onWillAcceptWithDetails: (_) => false,
+              builder: (_, _, _) => const GraphNode("Source"),
             ),
-          ],
-          edges: const [],
+          ),
         ),
-        onElementsMoved: moves.add,
       ),
-    );
+    ]);
 
     await panel.graph.drag("Source", const Offset(30, 0));
 

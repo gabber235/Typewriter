@@ -69,6 +69,7 @@ void main() {
     );
 
     await panel.tapOn(panel.labeled(handle));
+    await panel.press(LogicalKeyboardKey.enter);
     await panel.press(LogicalKeyboardKey.arrowRight);
     expect(panel.boundsOf("Pane").width, 308);
     await panel.press(LogicalKeyboardKey.arrowRight);
@@ -80,6 +81,39 @@ void main() {
     await panel.settle();
     expect(panel.boundsOf("Pane").width, 288);
   });
+
+  testWidgets(
+    "arrows resize only between Enter and Escape, as the user hears",
+    (tester) async {
+      final panel = await tester.showComponent(
+        ResizablePane(initialSize: 300, minSize: 150, maxSize: 700),
+      );
+      await panel.tapOn(panel.labeled(handle));
+
+      await panel.press(LogicalKeyboardKey.arrowRight);
+      expect(panel.boundsOf("Pane").width, 300);
+      expect(
+        tester.getSemantics(panel.labeled(handle)).getSemanticsData().hint,
+        "Press Enter to resize",
+      );
+
+      await panel.press(LogicalKeyboardKey.enter);
+      expect(
+        tester.getSemantics(panel.labeled(handle)).getSemanticsData().hint,
+        startsWith("Resizing"),
+      );
+      await panel.press(LogicalKeyboardKey.arrowRight);
+      expect(panel.boundsOf("Pane").width, 308);
+
+      await panel.press(LogicalKeyboardKey.escape);
+      await panel.press(LogicalKeyboardKey.arrowRight);
+      expect(panel.boundsOf("Pane").width, 308);
+      expect(
+        tester.getSemantics(panel.labeled(handle)).getSemanticsData().hint,
+        "Press Enter to resize",
+      );
+    },
+  );
 
   testWidgets("a disabled handle does not resize the pane", (tester) async {
     final panel = await tester.showComponent(

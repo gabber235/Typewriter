@@ -56,7 +56,6 @@ Widget referencePickerUseCase(BuildContext context) {
   );
 }
 
-
 /// Creating an Entry whose required Page and Book the user picks or creates
 /// on the way, in a Realm that already holds a compatible Page or none.
 @widgetbook.UseCase(

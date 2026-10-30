@@ -21,19 +21,11 @@ void main() {
     final snapshot = original.toMutable()
       ..types = [
         ...original.types,
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: child,
-            parameters: const [],
-            representation: node.definition.representation,
-            parents: [ancestor],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: node.effectiveFields,
-          ancestorTemplates: [ancestor],
+        publishedType(
+          child,
+          representation: node.definition.representation,
+          parents: [ancestor],
+          fields: node.effectiveFields,
         ),
       ]
       ..endpointBindings = [
@@ -201,10 +193,7 @@ void main() {
       resource: fixture.existingTarget,
       path: fixture.nestedLinkPath,
     );
-    final world = testWorld([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-    ]);
+    final world = testWorld(adaServing(fixture.draft.toDocument()));
     final binding = await world.mountEditing(tester, source.resource);
     await tester.pumpWidget(
       fixture.linkControl(world: world, binding: binding, source: source),
@@ -235,10 +224,7 @@ void main() {
       abstractWrapper: true,
       nestedCollection: true,
     );
-    final world = testWorld([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-    ]);
+    final world = testWorld(adaServing(fixture.draft.toDocument()));
     final binding = await world.mountEditing(tester, fixture.source.resource);
     await tester.pumpWidget(
       fixture.linkControl(world: world, binding: binding),
@@ -464,23 +450,10 @@ void main() {
     tester,
   ) async {
     final fixture = LinkChoicesFixture();
-    final world = testWorld([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-    ]);
-    final binding = await world.mountEditing(tester, fixture.source.resource);
-    final wrapped = <skir.ValueLocation>[];
-    await tester.pumpWidget(
-      fixture.linkControl(
-        world: world,
-        binding: binding,
-        linkFieldBuilder: (context, location, control) {
-          wrapped.add(location);
-          return Semantics(label: "Wrapped link field", child: control);
-        },
-      ),
+    final wrapped = await fixture.showWrappedLinkControl(
+      tester,
+      wrap: (control) => Semantics(label: "Wrapped link field", child: control),
     );
-    await tester.pumpAndSettle();
     expect(wrapped, everyElement(fixture.source));
     expect(wrapped, isNotEmpty);
     expect(
@@ -496,24 +469,10 @@ void main() {
     "read only link input is never offered to the link field builder",
     (tester) async {
       final fixture = LinkChoicesFixture();
-      final world = testWorld([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.draft.toDocument()),
-      ]);
-      final binding = await world.mountEditing(tester, fixture.source.resource);
-      final wrapped = <skir.ValueLocation>[];
-      await tester.pumpWidget(
-        fixture.linkControl(
-          world: world,
-          binding: binding,
-          readOnly: true,
-          linkFieldBuilder: (context, location, control) {
-            wrapped.add(location);
-            return control;
-          },
-        ),
+      final wrapped = await fixture.showWrappedLinkControl(
+        tester,
+        readOnly: true,
       );
-      await tester.pumpAndSettle();
       expect(wrapped, isEmpty);
       expect(find.tooltip("Choose linked resource"), findsOneWidget);
     },
@@ -523,10 +482,7 @@ void main() {
     "link input preserves cancellation and chooses an exact location",
     (tester) async {
       final fixture = LinkChoicesFixture();
-      final world = testWorld([
-        signedIn(ada, organization: acme),
-        realmServing(fixture.draft.toDocument()),
-      ]);
+      final world = testWorld(adaServing(fixture.draft.toDocument()));
       final binding = await world.mountEditing(tester, fixture.source.resource);
       await tester.pumpWidget(
         fixture.linkControl(world: world, binding: binding),
@@ -573,10 +529,7 @@ void main() {
     tester,
   ) async {
     final fixture = LinkChoicesFixture();
-    final world = testWorld([
-      signedIn(ada, organization: acme),
-      realmServing(fixture.draft.toDocument()),
-    ]);
+    final world = testWorld(adaServing(fixture.draft.toDocument()));
     final binding = await world.mountEditing(tester, fixture.source.resource);
     final prepared = skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(

@@ -276,23 +276,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets("cancelling authored removal leaves the actual draft untouched", (
-    tester,
-  ) async {
-    final scenario = CollectionEditorScenario(
-      example: CollectionEditorExample.authoredSteps,
-      confirmRemoval: true,
-    );
-    addTearDown(scenario.dispose);
-    final panel = await scenario.show(tester);
-    final before = scenario.value;
-    await panel.tapOn(find.tooltip("Remove step").first);
-    expect(panel.dialog.showing("Remove this step?"), isTrue);
-    await panel.dialog.choose("Cancel", message: "Remove this step?");
-    expect(scenario.value, before);
-    expect(scenario.workspace.hasPendingWork, isFalse);
-    expect(tester.takeException(), isNull);
-  });
+  for (final (name, example) in [
+    (
+      "cancelling authored removal leaves the actual draft untouched",
+      CollectionEditorExample.authoredSteps,
+    ),
+    (
+      "cancelling a nested collection header removal preserves both owners",
+      CollectionEditorExample.nestedLists,
+    ),
+  ]) {
+    testWidgets(name, (tester) async {
+      final scenario = CollectionEditorScenario(
+        example: example,
+        confirmRemoval: true,
+      );
+      addTearDown(scenario.dispose);
+      final panel = await scenario.show(tester);
+      final before = scenario.value;
+      await panel.tapOn(find.tooltip("Remove step").first);
+      expect(panel.dialog.showing("Remove this step?"), isTrue);
+      await panel.dialog.choose("Cancel", message: "Remove this step?");
+      expect(scenario.value, before);
+      expect(scenario.workspace.hasPendingWork, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets("accepted delayed removal focuses the surviving row control", (
     tester,
@@ -302,13 +311,7 @@ void main() {
     );
 
     addTearDown(scenario.dispose);
-    final gate = Completer<bool>();
-    final host = GatedRemovalHost(scenario.host, gate);
-    addTearDown(host.dispose);
-    final panel = await scenario.show(
-      tester,
-      stage: CollectionEditorStage(host: host),
-    );
+    final (:panel, :gate, host: _, stage: _) = await scenario.showGated(tester);
     final remove = find.tooltip("Remove item").first;
     await panel.activateWithKeyboard(remove);
     await tester.pump();
@@ -367,13 +370,7 @@ void main() {
     );
 
     addTearDown(scenario.dispose);
-    final gate = Completer<bool>();
-    final host = GatedRemovalHost(scenario.host, gate);
-    addTearDown(host.dispose);
-    final panel = await scenario.show(
-      tester,
-      stage: CollectionEditorStage(host: host),
-    );
+    final (:panel, :gate, host: _, stage: _) = await scenario.showGated(tester);
     final remove = find.tooltip("Remove item").first;
     await panel.activateWithKeyboard(remove);
     gate.complete(false);
@@ -392,11 +389,7 @@ void main() {
       );
 
       addTearDown(scenario.dispose);
-      final gate = Completer<bool>();
-      final delayed = GatedRemovalHost(scenario.host, gate);
-      addTearDown(delayed.dispose);
-      final stage = CollectionEditorStage(host: delayed);
-      final panel = await scenario.show(tester, stage: stage);
+      final (:panel, :gate, :stage, host: _) = await scenario.showGated(tester);
       await panel.activateWithKeyboard(find.tooltip("Remove item").first);
       // A new host retires the removal still waiting on the old one.
       stage.change(() => stage.host = null);
@@ -428,25 +421,6 @@ void main() {
   );
 
   testWidgets(
-    "cancelling a nested collection header removal preserves both owners",
-    (tester) async {
-      final scenario = CollectionEditorScenario(
-        example: CollectionEditorExample.nestedLists,
-        confirmRemoval: true,
-      );
-      addTearDown(scenario.dispose);
-      final panel = await scenario.show(tester);
-      final before = scenario.value;
-      await panel.tapOn(find.tooltip("Remove step").first);
-      expect(panel.dialog.showing("Remove this step?"), isTrue);
-      await panel.dialog.choose("Cancel", message: "Remove this step?");
-      expect(scenario.value, before);
-      expect(scenario.workspace.hasPendingWork, isFalse);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
     "a disposed collection cannot recover focus after delayed removal",
     (tester) async {
       final scenario = CollectionEditorScenario(
@@ -454,13 +428,9 @@ void main() {
       );
 
       addTearDown(scenario.dispose);
-      final gate = Completer<bool>();
-      final host = GatedRemovalHost(scenario.host, gate);
-      addTearDown(host.dispose);
+      final (:panel, :gate, :stage, host: _) = await scenario.showGated(tester);
       final nextPageFocus = FocusNode();
       addTearDown(nextPageFocus.dispose);
-      final stage = CollectionEditorStage(host: host);
-      final panel = await scenario.show(tester, stage: stage);
       await panel.activateWithKeyboard(find.tooltip("Remove item").first);
       // The user moves on to a page without the collection.
       stage.change(() => stage.next = TextField(focusNode: nextPageFocus));
@@ -483,13 +453,10 @@ void main() {
     );
 
     addTearDown(scenario.dispose);
-    final gate = Completer<bool>();
     final settlement = Completer<void>();
-    final host = GatedRemovalHost(scenario.host, gate, settlement: settlement);
-    addTearDown(host.dispose);
-    final panel = await scenario.show(
+    final (:panel, :gate, :host, stage: _) = await scenario.showGated(
       tester,
-      stage: CollectionEditorStage(host: host),
+      settlement: settlement,
     );
     await panel.tapOn(find.text("Arrival"));
     await panel.activateWithKeyboard(find.tooltip("Remove item").first);

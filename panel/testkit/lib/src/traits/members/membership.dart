@@ -14,7 +14,7 @@ Trait membership({
   List<skir.OrganizationJoinRequest>? joinRequests = const [],
   Object? failure,
 }) => _Membership(
-  FakeMembership(
+  () => FakeMembership(
     roles: roles,
     members: members,
     joinCodes: joinCodes,
@@ -23,10 +23,12 @@ Trait membership({
   ),
 );
 
+/// Builds the membership double when a world is built, so a trait list
+/// shared between tests never shares one double.
 final class _Membership extends Trait {
-  const _Membership(this.membership);
+  const _Membership(this.create);
 
-  final FakeMembership membership;
+  final FakeMembership Function() create;
 
   @override
   Slot get slot => const Slot("membership");
@@ -36,5 +38,5 @@ final class _Membership extends Trait {
 
   @override
   void applyTo(WorldBuilder world) =>
-      world.overrides.addAll(membership.overrides);
+      world.overrides.addAll(create().overrides);
 }

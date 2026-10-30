@@ -9,7 +9,7 @@ import "support/stories.dart";
 void main() {
   testWidgets("color field binds valid text only and its picker opens and "
       "closes by keyboard", (tester) async {
-    final panel = (await tester.pumpStory(colorPickerFieldUseCase))!;
+    final panel = await tester.pumpStory(colorPickerFieldUseCase);
     expect(panel.shows("Bound color: #CC7C4DFF"), isTrue);
 
     await panel.fieldAt(0).type("123");
@@ -28,10 +28,10 @@ void main() {
 
   testWidgets("a read only color field opens its picker without changing "
       "the color, and a disabled one never opens it", (tester) async {
-    final panel = (await tester.pumpStory(
+    final panel = await tester.pumpStory(
       colorPickerFieldUseCase,
       knobs: {"Read only": "true"},
-    ))!;
+    );
     await panel.tapOn(find.tooltip("Open color picker"));
     await panel.tapOn(find.bySemanticsLabel(RegExp("^Color #")).first);
     expect(panel.shows("Bound color: #CC7C4DFF"), isTrue);
@@ -47,7 +47,7 @@ void main() {
 
   testWidgets("date field binds complete drafts only and its picker opens and "
       "closes by keyboard", (tester) async {
-    final panel = (await tester.pumpStory(dateTimePickerFieldUseCase))!;
+    final panel = await tester.pumpStory(dateTimePickerFieldUseCase);
     expect(panel.shows("Bound start: 2026-10-31T18:30:00.000Z"), isTrue);
 
     await panel.fieldAt(0).type("2026-11");

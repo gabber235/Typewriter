@@ -21,26 +21,29 @@ Trait servicesService({
   Object? failure,
   Object? commandFailure,
 }) => _ServicesService(
-  FakeServicesService(
+  () => FakeServicesService(
     services: services,
     topology: topology,
     topologyArrives: topologyArrives,
     failure: failure,
     commandFailure: commandFailure,
   ),
+  services?.length ?? 0,
 );
 
+/// Builds a fresh backend for each world, so a trait list shared between
+/// tests never carries one test's commands into the next.
 final class _ServicesService extends Trait {
-  const _ServicesService(this.service);
+  const _ServicesService(this.create, this.serviceCount);
 
-  final FakeServicesService service;
+  final FakeServicesService Function() create;
+  final int serviceCount;
 
   @override
   Slot get slot => const Slot("backend");
 
   @override
-  String get description =>
-      "servicesService(${service.services.length} services)";
+  String get description => "servicesService($serviceCount services)";
 
   @override
   void applyTo(WorldBuilder world) {
@@ -49,7 +52,7 @@ final class _ServicesService extends Trait {
       ..onStart((started) {
         final user = world.user;
         if (user == null || world.organizations.isEmpty) return;
-        service
+        create()
           ..latency = world.latency
           ..serve(
             started.nats,

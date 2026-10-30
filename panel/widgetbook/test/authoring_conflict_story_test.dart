@@ -9,29 +9,16 @@ import "package:widgetbook_workspace/stories/authoring/presentation/retained_ren
 import "support/stories.dart";
 
 void main() {
-  /// The story once every save elsewhere arrived.
-  Future<PanelDriver> pump(
-    WidgetTester tester,
-    WidgetBuilder story,
-    Map<String, String> knobs,
-  ) async {
-    final panel = await tester.pumpStory(story, knobs: knobs);
-    await tester.runStory();
-    return panel!;
-  }
-
-  Future<PanelDriver> comparison(WidgetTester tester, String saved) =>
-      pump(tester, authoringConflictComparisonUseCase, {"Saved Realm": saved});
-
-  skir.DataValue? workingName(PanelDriver panel) =>
-      panel.working.resource(questTag.tagId)?.authoredField("name");
-
   final choices = {"Keep mine": "Main quest", "Use saved": "Side quest"};
   for (final MapEntry(key: choice, value: name) in choices.entries) {
     testWidgets("$choice from the keyboard leaves the quest named $name", (
       tester,
     ) async {
-      final panel = await comparison(tester, "Renamed elsewhere");
+      final panel = await tester.pumpStory(
+        authoringConflictComparisonUseCase,
+        knobs: {"Saved Realm": "Renamed elsewhere"},
+        run: const Duration(seconds: 2),
+      );
       expect(panel.shows("Main quest"), isTrue);
       expect(panel.shows("Side quest"), isTrue);
 
@@ -40,14 +27,21 @@ void main() {
       await panel.press(LogicalKeyboardKey.enter);
 
       expect(panel.shows(choice), isFalse);
-      expect(workingName(panel), skir.DataValue.wrapStringValue(name));
+      expect(
+        panel.working.resource(questTag.tagId)?.authoredField("name"),
+        skir.DataValue.wrapStringValue(name),
+      );
     });
   }
 
   testWidgets("a second save elsewhere refuses a stale Keep mine", (
     tester,
   ) async {
-    final panel = await comparison(tester, "Renamed twice elsewhere");
+    final panel = await tester.pumpStory(
+      authoringConflictComparisonUseCase,
+      knobs: {"Saved Realm": "Renamed twice elsewhere"},
+      run: const Duration(seconds: 2),
+    );
 
     await panel.tapOn(find.text("Keep mine"));
 
@@ -55,14 +49,21 @@ void main() {
       panel.shows("These changes changed again. Review the current values"),
       isTrue,
     );
-    expect(workingName(panel), skir.DataValue.wrapStringValue("Main quest"));
+    expect(
+      panel.working.resource(questTag.tagId)?.authoredField("name"),
+      skir.DataValue.wrapStringValue("Main quest"),
+    );
     expect(panel.world.requireRealm.saves, isEmpty);
   });
 
   testWidgets("a quest removed elsewhere can only take the saved state", (
     tester,
   ) async {
-    final panel = await comparison(tester, "Removed elsewhere");
+    final panel = await tester.pumpStory(
+      authoringConflictComparisonUseCase,
+      knobs: {"Saved Realm": "Removed elsewhere"},
+      run: const Duration(seconds: 2),
+    );
     expect(
       find.semantics.byLabel("Keep mine").evaluate().single.isEnabled,
       isFalse,
@@ -75,7 +76,11 @@ void main() {
   });
 
   testWidgets("a name cleared elsewhere compares as Unfilled", (tester) async {
-    final panel = await comparison(tester, "Name cleared elsewhere");
+    final panel = await tester.pumpStory(
+      authoringConflictComparisonUseCase,
+      knobs: {"Saved Realm": "Name cleared elsewhere"},
+      run: const Duration(seconds: 2),
+    );
 
     expect(panel.shows("Unfilled"), isTrue);
     expect(panel.shows("Main quest"), isTrue);
@@ -84,10 +89,11 @@ void main() {
   testWidgets("unreadable saved values keep the retained edits", (
     tester,
   ) async {
-    final panel = await pump(tester, authoringConflictNoticeUseCase, {
-      "Saved Realm": "Renamed elsewhere",
-      "Saved values": "Unreadable",
-    });
+    final panel = await tester.pumpStory(
+      authoringConflictNoticeUseCase,
+      run: const Duration(seconds: 2),
+      knobs: {"Saved Realm": "Renamed elsewhere", "Saved values": "Unreadable"},
+    );
 
     await panel.tapOn(find.text("Review changes"));
 

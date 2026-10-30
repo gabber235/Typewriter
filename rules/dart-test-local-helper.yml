@@ -4,10 +4,17 @@ severity: error
 # Requirement: a panel test file holds only `main()` and its test cases, so every test reads as
 # its requirement and shared setup grows in one place.
 message: A test file declares a helper outside its test cases.
-note: Move the pump, setup, fake, driver action, finder, assertion or builder into panel/testkit/lib/src/ (core, doubles, traits, drivers, generators, support), or inline test data as a value.
+note: Move the pump, setup, fake, driver action, finder, assertion or builder into panel/testkit/lib/src/ (core, doubles, traits, drivers, generators, support) or, for story tests only, panel/widgetbook/test/support/, for scenarios only, the Panel driver in panel/integration_test/support/, or inline test data as a value.
 files:
   - panel/test/**
   - panel/testkit/test/**
+  - panel/widgetbook/test/**
+  - panel/integration_test/**
+ignores:
+  # Widgetbook's story test support is its test kit.
+  - panel/widgetbook/test/support/**
+  # The scenario runner and the Panel driver every scenario shares.
+  - panel/integration_test/support/**
 rule:
   any:
     # Named types: fakes, fixtures, widgets, extensions.
@@ -56,7 +63,7 @@ rule:
               kind: call_expression
               has:
                 field: function
-                regex: ^(test|testWidgets)$
+                regex: ^(test|testWidgets|scenario|faultScenario)$
 ---
 id: dart-test-helper-file
 language: dart
@@ -68,8 +75,16 @@ note: Move it into panel/testkit/lib/src/ and import it through package:typewrit
 files:
   - panel/test/**
   - panel/testkit/test/**
+  - panel/widgetbook/test/**
+  - panel/integration_test/**
 ignores:
   - panel/test/**/*_test.dart
   - panel/testkit/test/**/*_test.dart
+  - panel/widgetbook/test/**/*_test.dart
+  - panel/integration_test/**/*_test.dart
+  # Widgetbook's story test support is its test kit.
+  - panel/widgetbook/test/support/**
+  # The scenario runner and the Panel driver every scenario shares.
+  - panel/integration_test/support/**
 rule:
   kind: source_file

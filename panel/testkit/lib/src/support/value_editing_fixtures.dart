@@ -445,3 +445,46 @@ final class GatedReadPersistence extends ScriptedValuePersistence {
     return current;
   }
 }
+
+/// Owners of the identified values "first" and "second" in [session], both
+/// committing under [policy].
+({ValueEditing first, ValueEditing second}) identifiedPair(
+  ScopedWorkSession session, {
+  EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
+}) => (
+  first: identifiedOwner(session, "first", policy: policy),
+  second: identifiedOwner(session, "second", policy: policy),
+);
+
+/// One owner editing [owners] together, typed and cataloged as the first;
+/// it lives until the test ends.
+MultiEditOwner combinedOwners(List<ValueEditing> owners) {
+  final combined = MultiEditOwner(
+    owners: owners,
+    rootType: owners.first.rootType,
+    catalog: owners.first.catalog,
+  );
+  addTearDown(combined.dispose);
+  return combined;
+}
+
+/// A [titleAndColorSource] on a controlled scheduler whose title was just
+/// edited to "New": [task] is the debounced commit it waits on, and every
+/// commit records in [commits] and saves "New" in red.
+({ValueEditing source, ControlledScheduledTask task}) debouncedTitleEdit(
+  List<EditorCommit> commits,
+) {
+  final scheduler = ControlledScheduler();
+  final source = titleAndColorSource(
+    scheduler: scheduler,
+    commit: recordingCommit(
+      commits,
+      titleAndColorValue(title: "New", color: "Red"),
+    ),
+  );
+  source.update(
+    editorRootPath.field("title"),
+    skir.DataValue.wrapStringValue("New"),
+  );
+  return (source: source, task: scheduler.tasks.single);
+}

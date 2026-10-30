@@ -146,46 +146,7 @@ void main() {
     final pending = Completer<void>();
     var value = skir.DataValue.wrapFloat(1);
     final id = skir.ExpressionBindingId(value: "number");
-    final candidate = skir.ExpressionBindingId(value: "candidate");
-    final read = skir.ExpressionNode.createInput(
-      binding: candidate,
-      path: editorRootPath,
-    );
-    final float = skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour);
-    final control =
-        (skir.NumericControl.mutable()
-              ..control = (skir.BoundControl.mutable()
-                ..binding = skir.BindingRef(
-                  bindingId: id,
-                  path: editorRootPath,
-                ))
-              ..mappings = skir.ValueMappings(
-                completion: skir.ExpressionMapping(
-                  inputBinding: declareBinding(
-                    candidate,
-                    scalarTemplate(float),
-                  ),
-                  body: portableCall("number.round", [
-                    read,
-                    literalExpression(skir.DataValue.wrapFloat(0.5)),
-                    skir.ExpressionNode.wrapLiteral(
-                      skir.RoundingMode.nearestTiesToEven.toDataValue(),
-                    ),
-                  ]),
-                ),
-                display: skir.ExpressionMapping(
-                  inputBinding: declareBinding(
-                    candidate,
-                    scalarTemplate(float),
-                  ),
-                  body: portableCall("number.format", [
-                    read,
-                    literalExpression(skir.DataValue.wrapInteger("2")),
-                    textLiteral("en-US"),
-                  ]),
-                ),
-              ))
-            .toFrozen();
+    final control = formattedNumberControl(id, rounded: true);
     var writes = 0;
     final panel = await tester.showPresentation(
       () => presentationNode(
@@ -195,7 +156,7 @@ void main() {
       bindings: [
         BoundPresentationBinding(
           id: id,
-          use: skir.TypeUse.wrapScalar(float),
+          use: skir.TypeUse.wrapScalar(float64),
           read: (_) => value,
           write: (_, next) async {
             writes++;
@@ -220,50 +181,13 @@ void main() {
     "display formatting shows outside editing and the exact value while editing",
     (tester) async {
       var value = skir.DataValue.wrapFloat(1.5);
-      final id = skir.ExpressionBindingId(value: "number");
-      final candidate = skir.ExpressionBindingId(value: "candidate");
-      final read = skir.ExpressionNode.createInput(
-        binding: candidate,
-        path: editorRootPath,
+      final control = formattedNumberControl(
+        skir.ExpressionBindingId(value: "number"),
       );
-      final float = skir.ScalarKind.createFloat(
-        width: skir.FloatWidth.sixtyFour,
-      );
-      final control =
-          (skir.NumericControl.mutable()
-                ..control = (skir.BoundControl.mutable()
-                  ..binding = skir.BindingRef(
-                    bindingId: id,
-                    path: editorRootPath,
-                  ))
-                ..mappings = skir.ValueMappings(
-                  completion: null,
-                  display: skir.ExpressionMapping(
-                    inputBinding: declareBinding(
-                      candidate,
-                      scalarTemplate(float),
-                    ),
-                    body: portableCall("number.format", [
-                      read,
-                      literalExpression(skir.DataValue.wrapInteger("2")),
-                      textLiteral("en-US"),
-                    ]),
-                  ),
-                ))
-              .toFrozen();
-      final panel = await tester.showPresentation(
-        () => presentationNode(
-          "numeric",
-          skir.PresentationElement.wrapNumericInput(control),
-        ),
-        bindings: [
-          wholeValueBinding(
-            id,
-            skir.TypeUse.wrapScalar(float),
-            read: () => value,
-            write: (next) => value = next,
-          ),
-        ],
+      final panel = await tester.showNumberInput(
+        control,
+        read: () => value,
+        write: (next) => value = next,
       );
       final field = panel.fieldAt(0);
       expect(field.value, "1.50");
@@ -275,48 +199,13 @@ void main() {
 
   testWidgets("clearing a mapped number writes unfilled", (tester) async {
     var value = skir.DataValue.wrapFloat(1.5);
-    final id = skir.ExpressionBindingId(value: "number");
-    final candidate = skir.ExpressionBindingId(value: "candidate");
-    final read = skir.ExpressionNode.createInput(
-      binding: candidate,
-      path: editorRootPath,
+    final control = formattedNumberControl(
+      skir.ExpressionBindingId(value: "number"),
     );
-    final float = skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour);
-    final control =
-        (skir.NumericControl.mutable()
-              ..control = (skir.BoundControl.mutable()
-                ..binding = skir.BindingRef(
-                  bindingId: id,
-                  path: editorRootPath,
-                ))
-              ..mappings = skir.ValueMappings(
-                completion: null,
-                display: skir.ExpressionMapping(
-                  inputBinding: declareBinding(
-                    candidate,
-                    scalarTemplate(float),
-                  ),
-                  body: portableCall("number.format", [
-                    read,
-                    literalExpression(skir.DataValue.wrapInteger("2")),
-                    textLiteral("en-US"),
-                  ]),
-                ),
-              ))
-            .toFrozen();
-    final panel = await tester.showPresentation(
-      () => presentationNode(
-        "numeric",
-        skir.PresentationElement.wrapNumericInput(control),
-      ),
-      bindings: [
-        wholeValueBinding(
-          id,
-          skir.TypeUse.wrapScalar(float),
-          read: () => value,
-          write: (next) => value = next,
-        ),
-      ],
+    final panel = await tester.showNumberInput(
+      control,
+      read: () => value,
+      write: (next) => value = next,
     );
     await panel.fieldAt(0).type("");
     await panel.press(LogicalKeyboardKey.escape);

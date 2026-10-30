@@ -1,28 +1,13 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 
 final realmFixtureGeneration = skir.CatalogGeneration(value: "fixture");
 
 skir.EditorCatalog receivedEditorCatalog({
   skir.CatalogGeneration? generation,
-}) => skir.EditorCatalog(
-  resourceDisplays: const [],
-  resourceOperations: const [],
-  generation: generation ?? realmFixtureGeneration,
-  types: const [],
-  relations: const [],
-  realmRoot: skir.TypeDefinitionId.defaultInstance,
-  presentations: const [],
-  presentationMaterials: const [],
-  configuration: const [],
-  diagnostics: const [],
-
-  endpointBindings: const [],
-  capabilities: const [],
-  recommendations: const [],
-  roleFallbacks: const [],
-);
+}) => testCatalogSnapshot(generation: generation ?? realmFixtureGeneration);
 
 CheckedEditorCatalog receivedCheckedEditorCatalog({
   skir.CatalogGeneration? generation,

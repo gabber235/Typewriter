@@ -73,8 +73,7 @@ void main() {
   test(
     "session workspace retains drafts and isolates resource scope",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       ValueEditingRegistration target(String scope) => fakeEditorTarget(
         scope: scope,
         targetId: "resource",

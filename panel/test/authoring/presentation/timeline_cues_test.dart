@@ -14,6 +14,27 @@ void main() {
     ],
   );
 
+  testWidgets("arrows alone reach a cue from the scene's surface", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(scenes: [opening]),
+    ]);
+    await panel.openSurface(opening.sceneId);
+
+    // Switch Focus moves by direction: down into the surface and on to the
+    // timeline's header width handle, which lets arrows pass while it is not
+    // resizing; right onto the Sound track's cue, then up to the Camera
+    // track's first cue.
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.arrowRight);
+    await panel.press(LogicalKeyboardKey.arrowUp);
+
+    expect(panel.focused, "Intro");
+  });
+
   testWidgets("a cue moved with Shift M and arrows saves its new frames "
       "when Escape commits", (tester) async {
     final panel = await tester.pumpPanel([
@@ -21,16 +42,7 @@ void main() {
       realm(scenes: [opening]),
     ]);
     await panel.openSurface(opening.sceneId);
-    // Switch Focus moves by direction: down into the timeline, then left
-    // along the Camera track to its first cue.
-    const cues = {"Intro", "Outro", "Music"};
-    for (var step = 0; step < 6 && !cues.contains(panel.focused); step++) {
-      await panel.press(LogicalKeyboardKey.arrowDown);
-    }
-    for (var step = 0; step < 4 && panel.focused != "Intro"; step++) {
-      await panel.press(LogicalKeyboardKey.arrowLeft);
-    }
-    expect(panel.focused, "Intro", reason: "the cue is reachable by keyboard");
+    await panel.tabTo("Intro", limit: 40);
     await panel.press(LogicalKeyboardKey.space);
     expect(panel.resources.selected, [intro.cueId]);
 

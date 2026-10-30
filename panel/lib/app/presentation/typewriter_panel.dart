@@ -50,6 +50,7 @@ class TypewriterPanel extends HookConsumerWidget {
             access: router.access,
             builder: (context) => MaterialApp.router(
               title: "Typewriter",
+              debugShowCheckedModeBanner: false,
               theme: buildTheme(Brightness.light),
               darkTheme: buildTheme(Brightness.dark),
               themeMode: themeMode,

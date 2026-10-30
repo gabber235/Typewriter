@@ -13,24 +13,7 @@ void main() {
   ]) {
     testWidgets("${keyName(key, shifted: shifted)} on a selected "
         "member row invokes $invoked", (tester) async {
-      final row = await tester.pumpFocusedRow(
-        [
-          signedIn(ada, organization: acme),
-          membership(members: [_member]),
-        ],
-        (content, record) => MemberTableRowShortcuts(
-          member: _member,
-          onToggleSelection: record("toggle"),
-          onSelectAll: record("select all"),
-          onClearSelection: record("clear"),
-          isSelected: true,
-          hasSelection: true,
-          onRemoveSelection: () async => record("remove selection")(),
-          onRemoveFromSelection: record("remove from selection"),
-          onFocusChange: (_) {},
-          child: content,
-        ),
-      );
+      final row = await tester.pumpMemberRow(_member, selected: true);
 
       await row.press(key, shifted: shifted);
 
@@ -42,24 +25,7 @@ void main() {
   testWidgets("Delete on an unselected member row asks before removing it", (
     tester,
   ) async {
-    final row = await tester.pumpFocusedRow(
-      [
-        signedIn(ada, organization: acme),
-        membership(members: [_member]),
-      ],
-      (content, record) => MemberTableRowShortcuts(
-        member: _member,
-        onToggleSelection: record("toggle"),
-        onSelectAll: record("select all"),
-        onClearSelection: record("clear"),
-        isSelected: false,
-        hasSelection: false,
-        onRemoveSelection: () async => record("remove selection")(),
-        onRemoveFromSelection: record("remove from selection"),
-        onFocusChange: (_) {},
-        child: content,
-      ),
-    );
+    final row = await tester.pumpMemberRow(_member, selected: false);
 
     await row.press(LogicalKeyboardKey.delete);
 

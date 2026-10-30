@@ -5,6 +5,7 @@ import "package:typewriter_testkit/src/authoring/application/application.dart";
 import "package:typewriter_testkit/src/core/trait.dart";
 import "package:typewriter_testkit/src/core/world.dart";
 import "package:typewriter_testkit/src/doubles/realm.dart";
+import "package:typewriter_testkit/src/traits/session.dart";
 
 /// A Book titled [title], identified by its snake cased title.
 Book book(String title, {List<skir.ResourceId> tags = const []}) => Book(
@@ -86,6 +87,21 @@ Trait realm({
 /// library catalog cannot describe, such as resources of an extension.
 Trait realmServing(AuthoringDocument document, {String name = "Main"}) =>
     _Realm(RealmSeed(name: name, saved: document));
+
+/// Ada signed in to Acme, whose Realm named [name] holds [document].
+List<Trait> adaServing(AuthoringDocument document, {String name = "Main"}) => [
+  signedIn(ada, organization: acme),
+  realmServing(document, name: name),
+];
+
+/// The worlds an [AuthoredDraft] is edited in.
+extension AuthoredDraftWorlds on AuthoredDraft {
+  /// Ada in Acme, whose Realm holds this draft.
+  List<Trait> get served => adaServing(draft.toDocument());
+
+  /// [served], with every save held until the test answers it.
+  List<Trait> get servedHeld => [...served, heldSaves];
+}
 
 final class _Realm extends Trait {
   const _Realm(this.seed);

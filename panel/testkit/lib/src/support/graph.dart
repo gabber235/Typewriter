@@ -184,3 +184,31 @@ class _GraphIdentityProbeState extends State<GraphIdentityProbe> {
     super.dispose();
   }
 }
+
+/// Hands out [GraphIdentityProbe] nodes with ever rising tokens, starting at
+/// one, and records which probes were disposed.
+class GraphIdentityProbes {
+  var _nextToken = 0;
+
+  /// The ids of disposed probes, in the order they left the graph.
+  final disposed = <String>[];
+
+  /// A graph of 50 pixel cells and no edges whose probed nodes are [ids],
+  /// ranked by their place in the list.
+  GraphData graph(List<String> ids) => GraphData(
+    cellSize: 50,
+    elements: [
+      for (final (priority, id) in ids.indexed)
+        graphNode(
+          id,
+          priority: priority,
+          body: GraphIdentityProbe(
+            id: id,
+            token: ++_nextToken,
+            onDispose: disposed.add,
+          ),
+        ),
+    ],
+    edges: const [],
+  );
+}
