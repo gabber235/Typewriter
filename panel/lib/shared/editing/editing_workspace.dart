@@ -606,6 +606,11 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     retireIdleGroups();
   }
 
+  /// Offers an undelivered save again soon, then less often while nothing
+  /// receives it, at most every ten seconds.
+  Duration _redeliveryDelay(int undelivered) =>
+      Duration(milliseconds: min(250 << min(undelivered - 1, 6), 10000));
+
   void _schedule(EditGroupId id, {Duration? delay}) {
     _tasks.remove(id)?.cancel();
     if (!_hasAdmissibleOperations(id)) return;
@@ -735,7 +740,19 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _ => null,
     };
     if (settlement == null) {
-      if (result case SubmissionNotSubmitted(:final message)) {
+      if (result case SubmissionNotSubmitted()
+          when group.policy == EditorCommitPolicy.autosaveChanges) {
+        // Nothing received the save, as while its Realm is away. The edit
+        // stays pending and is offered again until the Realm takes it.
+        group
+          ..frozen = {}
+          ..phase = const EditGroupPhase.dirty()
+          ..undelivered += 1
+          ..submission = null;
+        _rebuild();
+        _schedule(group.id, delay: _redeliveryDelay(group.undelivered));
+        return;
+      } else if (result case SubmissionNotSubmitted(:final message)) {
         group
           ..frozen = {}
           ..phase = EditGroupPhase.rejected(message, result);
@@ -856,6 +873,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       ..frozen = {}
       ..phase = const EditGroupPhase.dirty()
       ..attempts = 0
+      ..undelivered = 0
       ..submission = null;
     _install(admission.observation);
     _rebuild();
@@ -1346,6 +1364,9 @@ final class _LiveEditGroup<S> {
   final EditObservationAdmission observations;
   final EditCommitAdmission commits;
   int attempts = 0;
+
+  /// Consecutive saves nothing received; paces offering the edit again.
+  int undelivered = 0;
   String label;
   EditGroupPhase<S> phase = const EditGroupPhase.dirty();
   Set<int> frozen = {};

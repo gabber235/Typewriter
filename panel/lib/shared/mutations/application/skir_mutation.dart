@@ -165,18 +165,29 @@ final class SkirMutationClient {
             cause: error,
           );
         }
-        final response = await telemetry.traceNats(
-          subject: destination,
-          payloadSize: bytes.length,
-          operationName: "request",
-          operation: (headers) => client.request(
-            destination,
-            bytes,
-            limits: operation.limits,
-            headers: headers,
-            timeout: const Duration(seconds: 10),
-          ),
-        );
+        final NatsMessage response;
+        try {
+          response = await telemetry.traceNats(
+            subject: destination,
+            payloadSize: bytes.length,
+            operationName: "request",
+            operation: (headers) => client.request(
+              destination,
+              bytes,
+              limits: operation.limits,
+              headers: headers,
+              timeout: const Duration(seconds: 10),
+            ),
+          );
+        } on NatsClientException catch (error) {
+          if (error.kind != NatsFailureKind.noResponders) rethrow;
+          // The broker found nobody listening, so nothing received the
+          // request, as while the service that owns it is away.
+          return SubmissionResult.notSubmitted(
+            message: "Nothing answered; the service may be away",
+            cause: error,
+          );
+        }
 
         final value = operation.responseSerializer.fromBytes(response.payload);
 

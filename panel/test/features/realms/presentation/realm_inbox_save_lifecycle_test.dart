@@ -109,6 +109,35 @@ void main() {
     expect(find.textContaining("later edits remain local"), findsNothing);
   });
 
+  testWidgets("an edit made while the Realm is away is saved once it "
+      "returns, while the panel stays connected", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+    ]);
+    final saved = panel.world.requireRealm;
+    await panel.openSurface(original.bookId);
+
+    saved.goAway();
+    await panel.field("title").enter("After the outage");
+    await tester.pump(_autosave);
+    await panel.settle();
+    expect(saved.saves, isEmpty);
+
+    saved.returns();
+    await tester.pump(const Duration(seconds: 10));
+    await panel.settle();
+
+    expect(
+      saved.document
+          .resource(original.bookId)
+          ?.authoredField("title")
+          ?.authoredString,
+      "After the outage",
+    );
+    expect(panel.shows("Needs attention"), isFalse);
+  });
+
   testWidgets("a failed refresh stays an inbox issue until a retry reads the "
       "saved values, without saving again", (tester) async {
     final panel = await tester.pumpPanel([

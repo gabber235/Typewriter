@@ -259,6 +259,16 @@ final class FakeRealm {
   /// Every save the Realm received, in the order it received them.
   List<RealmSave> get saves => List.unmodifiable(_saves);
 
+  /// Whether the Realm is away, as when its own link is cut while the panel
+  /// stays connected: nothing receives a save until it [returns].
+  bool away = false;
+
+  /// Takes the Realm away; see [away].
+  void goAway() => away = true;
+
+  /// Brings the Realm back; later saves reach it.
+  void returns() => away = false;
+
   /// Applies an edit someone else saved, the way a second author's save
   /// reaches this panel.
   void remoteChange(void Function(AuthoringEdit edit) change) {
@@ -323,6 +333,11 @@ final class FakeRealm {
       label: "Save to $name",
       resources: edit.editedResources.toSet(),
       send: () async {
+        if (away) {
+          return const SubmissionResult.notSubmitted(
+            message: "Nothing answered; the service may be away",
+          );
+        }
         final response = await _receive(edit);
         return switch (response) {
           skir.CommitPreparedEditResponse_internalErrorWrapper() ||
