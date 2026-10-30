@@ -149,44 +149,6 @@ val PresentationBuilderRejectionTest by testSuite {
                     }
                 } to "Date or time must be included."
             ),
-        "a search ranking with a weight of zero" to
-            (
-                { buildTextSearch(subject) { staticValues(values).rank { field(row, weight = 0) } } } to
-                    "Search ranking weight must be positive."
-            ),
-        "a search ranking without fields" to
-            ({ buildTextSearch(subject) { staticValues(values).rank {} } } to "Search ranking must declare at least one field."),
-        "merging no search providers" to
-            ({ buildTextSearch(subject) { merge() } } to "Merged search providers must contain at least one child."),
-        "merging search providers of different row types" to
-            (
-                {
-                    @Suppress("UNCHECKED_CAST")
-                    buildTextSearch(subject) {
-                        merge(
-                            staticValues(values),
-                            httpJson<Int> {
-                                uri(literal("https://example.com"))
-                                result("items", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)
-                            } as SearchProviderSpec<String>,
-                        )
-                    }
-                } to "Merged search providers must yield rows of one type."
-            ),
-        "an HTTP search without a URI" to
-            ({ buildTextSearch(subject) { httpJson { result("items", ScalarKind.TEXT.template) } } } to "HTTP search must declare a URI."),
-        "an HTTP search without a result" to
-            (
-                {
-                    buildTextSearch(
-                        subject,
-                    ) { httpJson { uri(literal("https://example.com")) } }
-                } to "HTTP search must declare a result path."
-            ),
-        "an HTTP search with a zero timeout" to
-            ({ buildTextSearch(subject) { httpJson { timeout(kotlin.time.Duration.ZERO) } } } to "HTTP search timeout must be positive."),
-        "an HTTP search parameter with a blank name" to
-            ({ buildTextSearch(subject) { httpJson { parameter(" ", query) } } } to "HTTP search parameter name must not be blank."),
         "two menu items with one id" to
             (
                 {
@@ -285,6 +247,52 @@ val PresentationBuilderRejectionTest by testSuite {
     ).forEach { (case, rejection) ->
         test("$case is refused") {
             shouldThrow<IllegalArgumentException> { rejection.first() }.message shouldBe rejection.second
+        }
+    }
+
+    buildMap<Pair<String, String>, SearchSources.() -> SearchProviderSpec<String>> {
+        put("a search ranking with a weight of zero" to "Search ranking weight must be positive.") {
+            staticValues(values).rank { field(row, weight = 0) }
+        }
+        put("a search ranking without fields" to "Search ranking must declare at least one field.") { staticValues(values).rank {} }
+        put("merging no search providers" to "Merged search providers must contain at least one child.") { merge() }
+        put("merging search providers of different row types" to "Merged search providers must yield rows of one type.") {
+            @Suppress("UNCHECKED_CAST")
+            merge(
+                staticValues(values),
+                httpJson<Int> {
+                    uri(literal("https://example.com"))
+                    result("items", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)
+                } as SearchProviderSpec<String>,
+            )
+        }
+        put("an HTTP search without a URI" to "HTTP search must declare a URI.") { httpJson { result("items", ScalarKind.TEXT.template) } }
+        put("an HTTP search without a result" to "HTTP search must declare a result path.") {
+            httpJson { uri(literal("https://example.com")) }
+        }
+        put("an HTTP search with a zero timeout" to "HTTP search timeout must be positive.") {
+            httpJson { timeout(kotlin.time.Duration.ZERO) }
+        }
+        put("an HTTP search parameter with a blank name" to "HTTP search parameter name must not be blank.") {
+            httpJson { parameter(" ", query) }
+        }
+    }.forEach { (case, search) ->
+        test("${case.first} is refused") {
+            shouldThrow<IllegalArgumentException> {
+                buildPresentation(subject, PresentationRole.INSPECTOR) {
+                    val title: PresentedField<String, TextControl> = field("title", TextControl::class)
+                    title {
+                        searchInput<String> {
+                            provider(search(sources))
+                            result {
+                                key(row)
+                                selectedValue(row)
+                                presentation { text(row) }
+                            }
+                        }
+                    }
+                }
+            }.message shouldBe case.second
         }
     }
 }

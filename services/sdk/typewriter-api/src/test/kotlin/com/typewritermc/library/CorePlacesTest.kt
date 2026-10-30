@@ -172,16 +172,14 @@ val CorePlacesTest by testSuite {
     }
 
     test("a resources order reads each member's link and only layouts that list members accept one") {
-        val build = assembly.bookPresentation()
-
-        build {
+        assembly.buildBook {
             pages {
                 order { resource.fields.name.orElse(literal("")) }
                 list()
             }
         }
         shouldThrow<IllegalArgumentException> {
-            build {
+            assembly.buildBook {
                 pages {
                     order { inputExpression<String, Handled>(ExpressionBindingId(value = "unbound")) }
                     list()
@@ -189,7 +187,7 @@ val CorePlacesTest by testSuite {
             }
         }.message shouldContain "Invalid resources order"
         shouldThrow<IllegalArgumentException> {
-            build {
+            assembly.buildBook {
                 pages {
                     order { listExpr(resource.fields.name.orElse(literal(""))) }
                     list()
@@ -197,7 +195,7 @@ val CorePlacesTest by testSuite {
             }
         }.message shouldContain "not of an ordered type"
         shouldThrow<IllegalArgumentException> {
-            build {
+            assembly.buildBook {
                 pages {
                     order { resource.fields.name.orElse(literal("")) }
                     graph(GraphDirection.TOP_TO_BOTTOM)
@@ -207,32 +205,44 @@ val CorePlacesTest by testSuite {
     }
 
     test("a create action must join an owning link field of the subject that accepts the created type") {
-        val build = assembly.bookBuild()
-
-        build { createResource(type = PageDefinition.id, owner = BookFields.pages) { PageFields.name(literal("Intro")) } }
-        shouldThrow<IllegalArgumentException> { build { createResource(type = TagDefinition.id, owner = BookFields.tags) } }
-            .message shouldContain "ownership relation"
-        shouldThrow<IllegalArgumentException> { build { createResource(type = TagDefinition.id, owner = BookFields.pages) } }
-            .message shouldContain "does not accept"
-        shouldThrow<IllegalArgumentException> { build { createResource(type = PageDefinition.id, owner = PageFields.elements) } }
-            .message shouldContain "link field of the presentation subject"
+        assembly.buildBook {
+            button(
+                literal("Create"),
+                createResource(type = PageDefinition.id, owner = BookFields.pages) { PageFields.name(literal("Intro")) },
+            )
+        }
+        shouldThrow<IllegalArgumentException> {
+            assembly.buildBook { button(literal("Create"), createResource(type = TagDefinition.id, owner = BookFields.tags)) }
+        }.message shouldContain "ownership relation"
+        shouldThrow<IllegalArgumentException> {
+            assembly.buildBook { button(literal("Create"), createResource(type = TagDefinition.id, owner = BookFields.pages)) }
+        }.message shouldContain "does not accept"
+        shouldThrow<IllegalArgumentException> {
+            assembly.buildBook { button(literal("Create"), createResource(type = PageDefinition.id, owner = PageFields.elements)) }
+        }.message shouldContain "link field of the presentation subject"
     }
 
     test("create action presets must be fields of the created type with matching values") {
-        val build = assembly.bookBuild()
-
         shouldThrow<IllegalArgumentException> {
-            build { createResource(type = TagDefinition.id, owner = null) { PageFields.priority(literal(1)) } }
+            assembly.buildBook {
+                button(
+                    literal("Create"),
+                    createResource(type = TagDefinition.id, owner = null) { PageFields.priority(literal(1)) },
+                )
+            }
         }.message shouldContain "is not a field of"
     }
 
     test("a create action preset whose value does not match its field is refused") {
-        val build = assembly.bookBuild()
-
         @Suppress("UNCHECKED_CAST")
         val wrongPriority = literal("high") as com.typewritermc.expression.Expr<Int, Handled>
         shouldThrow<IllegalArgumentException> {
-            build { createResource(type = PageDefinition.id, owner = BookFields.pages) { PageFields.priority(wrongPriority) } }
+            assembly.buildBook {
+                button(
+                    literal("Create"),
+                    createResource(type = PageDefinition.id, owner = BookFields.pages) { PageFields.priority(wrongPriority) },
+                )
+            }
         }.message shouldBe "Invalid [4,[5,[3]]] expression: incompatible_expression_result_type."
     }
 }

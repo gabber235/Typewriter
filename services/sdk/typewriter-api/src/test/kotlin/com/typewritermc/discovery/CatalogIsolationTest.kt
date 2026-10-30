@@ -2,6 +2,7 @@ package com.typewritermc.discovery
 
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.presentation.of
+import com.typewritermc.testkit.configurationProvider
 import com.typewritermc.testkit.origin
 import com.typewritermc.testkit.recordType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -104,7 +105,7 @@ val CatalogIsolationTest by testSuite {
         val assembly =
             CatalogContributions(
                 declarations = listOf(broken, healthy).map { OwnedTypeDeclaration(origin, it) },
-                configurations = listOf(OwnedConfiguration(origin, broken.id, failingProvider(cause))),
+                configurations = listOf(OwnedConfiguration(origin, broken.id, configurationProvider { throw cause })),
             ).assemble(CatalogAssemblyContext(generation))
         val failure = assembly.callbackFailures.single()
         (failure.cause === cause) shouldBe true
@@ -150,7 +151,7 @@ val CatalogIsolationTest by testSuite {
             shouldThrow<CancellationException> {
                 CatalogContributions(
                     declarations = listOf(OwnedTypeDeclaration(origin, definition)),
-                    configurations = listOf(OwnedConfiguration(origin, definition.id, failingProvider(cancellation))),
+                    configurations = listOf(OwnedConfiguration(origin, definition.id, configurationProvider { throw cancellation })),
                 ).assemble(CatalogAssemblyContext(generation))
             }
         (caught === cancellation) shouldBe true

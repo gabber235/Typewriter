@@ -38,6 +38,7 @@ import com.typewritermc.testkit.fixedChildren
 import com.typewritermc.testkit.iconName
 import com.typewritermc.testkit.literalText
 import com.typewritermc.testkit.literalValue
+import com.typewritermc.testkit.origin
 import com.typewritermc.testkit.ready
 import com.typewritermc.testkit.singleFixed
 import com.typewritermc.types.Resource
@@ -167,10 +168,6 @@ internal object ProjectionFixtureExpressionsFactory : com.typewritermc.expressio
 
 internal interface ProjectionFixtureExpressions
 
-/** The value of this expression when each named input binding holds the given value. */
-internal fun ExpressionNode.evaluateWith(vararg inputs: Pair<String, DataValue>): DataValue? =
-    (com.typewritermc.expression.evaluate(this, *inputs) as? com.typewritermc.authoring.Availability.Available)?.value
-
 /** Declares [definition] a resource type, which collection projections may read. */
 internal fun ownedResource(
     origin: ProviderOrigin,
@@ -185,39 +182,6 @@ internal fun ownedResource(
                 .filter(Char::isLetter)
                 .lowercase(),
     )
-
-/** Lets the realm root own [members], as every concrete resource type must be owned. */
-internal fun rootOwnership(vararg members: TypeDefinitionId): List<skirout.editor.v1.catalog.RelationContract> =
-    members.mapIndexed { index, member ->
-        skirout.editor.v1.catalog.RelationContract.of(
-            id =
-                skirout.editor.v1.type_catalog
-                    .RelationId(value = "test.root.owns.$index"),
-            first =
-                skirout.editor.v1.catalog.EndpointDefinition(
-                    id = EndpointId(value = "test.root.owns.$index:first"),
-                    slot = skirout.editor.v1.catalog.EndpointSlot.FIRST,
-                    resource =
-                        com.typewritermc.authoring.RealmRootDefinition.id
-                            .namedTemplate(),
-                    cardinality = skirout.editor.v1.catalog.EndpointCardinality.ONE,
-                    onDelete = skirout.editor.v1.catalog.RelationDeletePolicy.CASCADE,
-                ),
-            second =
-                skirout.editor.v1.catalog.EndpointDefinition(
-                    id = EndpointId(value = "test.root.owns.$index:second"),
-                    slot = skirout.editor.v1.catalog.EndpointSlot.SECOND,
-                    resource = member.namedTemplate(),
-                    cardinality = skirout.editor.v1.catalog.EndpointCardinality.MANY,
-                    onDelete = skirout.editor.v1.catalog.RelationDeletePolicy.CLEAR,
-                ),
-            families =
-                setOf(
-                    skirout.editor.v1.type_catalog
-                        .RelationFamilyId(value = com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID),
-                ),
-        )
-    }
 
 /** One of each display element with its options configured, in declaration order. */
 internal fun displayElements(): List<PresentationElement> {
@@ -651,14 +615,14 @@ internal fun com.typewritermc.expression.Expr<Boolean, Handled>.uncheckedText():
 
 internal fun weightedAssembly(present: (PresentationBuildScope) -> Unit) =
     CatalogContributions(
-        declarations = listOf(OwnedTypeDeclaration(ORIGIN, weightedDefinition())),
+        declarations = listOf(OwnedTypeDeclaration(origin("lowering"), weightedDefinition())),
         presentations =
             listOf(
                 OwnedPresentation(
-                    ORIGIN,
+                    origin("lowering"),
                     PresentationDescriptor.of(
                         id = PresentationId(namespace = "test", name = "weighted"),
-                        owner = ORIGIN.owner,
+                        owner = origin("lowering").owner,
                         target = PresentationTarget.NamedWrapper(WEIGHTED.namedTemplate(listOf(WEIGHTED_VALUE.template))),
                         roles = setOf(PresentationRole.INSPECTOR),
                         priority = 0,
@@ -713,35 +677,4 @@ internal fun build(content: (PresentationBuildScope) -> Unit): PresentationBuild
     val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "lowering"), StandardTypes.definitions + subject)
     val checked = catalog.ready(SUBJECT.use())
     return DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE), content)
-}
-
-internal val ORIGIN: ProviderOrigin =
-    ProviderOrigin(
-        DeclarationOwner(
-            source = contributionKey(ContributionSourceId("test"), "main", ProducerId("sdk"), ContributionName("lowering")),
-            localIdentity = "lowering",
-        ),
-        ArtifactId("test:sdk"),
-        "main",
-    )
-
-/**
- * Builds a text search input on the `title` field of [subject] whose provider [provider] declares; each result keys,
- * selects and shows its row.
- */
-fun buildTextSearch(
-    subject: CheckedType,
-    provider: SearchSources.() -> SearchProviderSpec<String>,
-) = buildPresentation(subject, PresentationRole.INSPECTOR) {
-    val title: PresentedField<String, TextControl> = field("title", TextControl::class)
-    title {
-        searchInput<String> {
-            provider(sources.provider())
-            result {
-                key(row)
-                selectedValue(row)
-                presentation { text(row) }
-            }
-        }
-    }
 }

@@ -13,9 +13,9 @@ val RealmCatalogStoreTest by testSuite {
         store.close()
 
         retained.generation.value shouldBe "first"
-        incarnation.shouldBeOpen()
+        incarnation.deployment.retain().close()
         retained.close()
-        incarnation.shouldBeClosed()
+        shouldThrow<IllegalStateException> { incarnation.deployment.retain() }.message shouldBe "Generated provider deployment is closed."
     }
 
     test("a retired catalog stays open until its last lease is released") {
@@ -27,9 +27,9 @@ val RealmCatalogStoreTest by testSuite {
         store.close()
 
         first.close()
-        incarnation.shouldBeOpen()
+        incarnation.deployment.retain().close()
         second.close()
-        incarnation.shouldBeClosed()
+        shouldThrow<IllegalStateException> { incarnation.deployment.retain() }.message shouldBe "Generated provider deployment is closed."
     }
 
     test("replacing the catalog of an active store is refused and keeps the installed catalog") {

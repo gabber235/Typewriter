@@ -24,9 +24,11 @@ import com.typewritermc.types.field
 import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.nullable
+import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import com.typewritermc.types.timestamp
 import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
@@ -48,6 +50,20 @@ fun checkInputs(
         .checks
         .single()
         .inputs
+
+/** The predicate of the single rule [declare] collects for [owner]. */
+fun rulePredicate(
+    declare: DefaultConfigurationCollectionScope.() -> Unit,
+    owner: TypeDefinitionId = TypeDefinitionId.qualified("test", "Configured"),
+): ExpressionNode =
+    DefaultConfigurationCollectionScope(owner)
+        .apply(declare)
+        .collected()
+        .recipes
+        .single()
+        .rules
+        .single()
+        .descriptor.predicate
 
 /** A configuration provider that runs [configure] against the collection scope it is given. */
 fun configurationProvider(configure: (ConfigurationCollectionScope) -> Unit): ConfigurationProvider =

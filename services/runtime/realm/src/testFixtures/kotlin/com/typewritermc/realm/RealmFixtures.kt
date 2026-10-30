@@ -696,59 +696,6 @@ internal fun DataValue.links(): List<LinkTarget> =
         else -> emptyList()
     }
 
-internal fun lifecycleIsolationCatalog(
-    valid: TypeDefinitionId,
-    unavailable: TypeDefinitionId,
-): RealmCatalogIncarnation {
-    fun origin(name: String): ProviderOrigin {
-        val key = contributionKey(ContributionSourceId("lifecycle"), "main", ProducerId("test"), ContributionName(name))
-        return ProviderOrigin(DeclarationOwner(source = key, localIdentity = name), ArtifactId("test:lifecycle"), "main")
-    }
-
-    val validDefinition =
-        TypeDefinition.partial(
-            id = valid,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = valid, name = "name"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        )
-    val unavailableDefinition =
-        TypeDefinition.partial(
-            id = unavailable,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = unavailable, name = "legacy"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        )
-    val contributions =
-        CatalogContributions(
-            declarations =
-                listOf(
-                    OwnedTypeDeclaration(origin("valid"), validDefinition),
-                    OwnedTypeDeclaration(origin("unavailable_first"), unavailableDefinition),
-                    OwnedTypeDeclaration(origin("unavailable_second"), unavailableDefinition),
-                ),
-        )
-    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(), DiscoveryDomains.Realm)
-    val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "lifecycle_isolation")))
-    return RealmCatalogIncarnation(assembly, deployment)
-}
-
 /** Realm request subjects with a subscription that is still open. */
 internal fun FakeMessageTransport.activeRealmRoutes(): Set<String> {
     val open = mutableMapOf<String, Int>()
@@ -1189,11 +1136,5 @@ internal fun shippedProfiles(): List<Path> =
         .use { files ->
             files.filter { it.extension == "properties" }.sorted().toList()
         }.also { check(it.isNotEmpty()) { "No shipped Realm profiles found" } }
-
-internal fun profileValues(profile: Path): Map<String, String> {
-    val properties = Properties()
-    Files.newBufferedReader(profile).use(properties::load)
-    return properties.stringPropertyNames().associateWith(properties::getProperty)
-}
 
 internal const val ROOT = "(root)"

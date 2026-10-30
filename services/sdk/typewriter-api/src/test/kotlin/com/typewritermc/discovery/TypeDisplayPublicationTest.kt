@@ -1,8 +1,11 @@
 package com.typewritermc.discovery
 
+import com.typewritermc.discovery.GeneratedProviderKind
+import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.TagDefinition
+import com.typewritermc.testkit.generatedProviders
 import com.typewritermc.testkit.origin
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
@@ -25,7 +28,7 @@ val TypeDisplayPublicationTest by testSuite {
                 color = Color(0xFF3F51B5u),
             )
         val providers =
-            generatedTypeProviders()
+            generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type)
                 .distinctBy { provider -> provider.definition.id }
         val origin = origin("type_display", "test:type_display")
         val assembly =
@@ -44,7 +47,7 @@ val TypeDisplayPublicationTest by testSuite {
         val assembly =
             CatalogContributions(
                 declarations =
-                    generatedTypeProviders()
+                    generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type)
                         .distinctBy { provider -> provider.definition.id }
                         .map { provider ->
                             OwnedTypeDeclaration(origin("type_display", "test:type_display"), provider.definition, provider.display)
@@ -58,7 +61,10 @@ val TypeDisplayPublicationTest by testSuite {
     }
 
     test("every resource type publishes its search key and other types publish none") {
-        val providers = generatedTypeProviders().distinctBy { provider -> provider.definition.id }
+        val providers =
+            generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type).distinctBy { provider ->
+                provider.definition.id
+            }
         val origin = origin("type_display", "test:type_display")
         val published =
             CatalogContributions(

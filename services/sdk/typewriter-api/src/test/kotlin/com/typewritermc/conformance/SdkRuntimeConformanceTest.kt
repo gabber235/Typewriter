@@ -33,8 +33,10 @@ import com.typewritermc.discovery.contributionKey
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
+import com.typewritermc.expression.FixtureReads
 import com.typewritermc.expression.PortableExpressionLimits
 import com.typewritermc.expression.eq
+import com.typewritermc.expression.evaluate
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.operations.EvaluatorFailure
 import com.typewritermc.expression.operations.PortableOperationCatalog
@@ -56,8 +58,10 @@ import com.typewritermc.testkit.fieldDeclaration
 import com.typewritermc.testkit.fieldPattern
 import com.typewritermc.testkit.integerField
 import com.typewritermc.testkit.nullableTextField
+import com.typewritermc.testkit.origin
 import com.typewritermc.testkit.ready
 import com.typewritermc.testkit.recordType
+import com.typewritermc.testkit.rulePredicate
 import com.typewritermc.testkit.textField
 import com.typewritermc.testkit.unsignedIntegerField
 import com.typewritermc.types.GeneratedNativeField
@@ -276,23 +280,10 @@ val SdkRuntimeConformanceTest by testSuite {
                     .predicate,
             )
 
-        fun matches(title: String): Availability<DataValue> {
-            val evaluator =
-                DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper(title).available() }, testPortableTypes())
-            return with(EmptyReads) {
-                evaluator.evaluate(
-                    predicate,
-                    ExpressionBindings(
-                        mapOf(
-                            ExpressionBindingId(
-                                value = "configured_value",
-                            ) to ValueLocation.of(ResourceId("book:requested"), ValuePath.root),
-                        ),
-                    ),
-                    EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-                )
+        fun matches(title: String): Availability<DataValue> =
+            evaluate(predicate, mapOf("configured_value" to ValueLocation.of(ResourceId("book:requested"), ValuePath.root))) {
+                DataValue.StringValueWrapper(title).available()
             }
-        }
 
         matches("Requested") shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         matches("Other") shouldBe Availability.Available(DataValue.BooleanWrapper(false))
@@ -300,25 +291,22 @@ val SdkRuntimeConformanceTest by testSuite {
 
     val readLocation = ValueLocation.of(ResourceId("expression:test"))
     val read = testInput(ExpressionBindingId(value = "value"), ValuePath.root)
+    val readBinding = mapOf("value" to readLocation)
 
     test("portable and short circuits on a false left operand without reading the right") {
         val reads = mutableListOf<ValueLocation>()
 
-        evaluateReading(
-            ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = read),
-            readLocation,
-            DataValue.BooleanWrapper(true).available(),
-            reads,
-        ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
+        evaluate(ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = read), readBinding) {
+            reads += it
+            DataValue.BooleanWrapper(true).available()
+        } shouldBe Availability.Available(DataValue.BooleanWrapper(false))
         reads shouldBe emptyList()
     }
 
     test("portable or else falls back when its value is unavailable") {
-        evaluateReading(
-            ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))),
-            readLocation,
-            Availability.Unavailable(listOf(readLocation)),
-        ) shouldBe Availability.Available(DataValue.StringValueWrapper("fallback"))
+        evaluate(ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))), readBinding) {
+            Availability.Unavailable(listOf(readLocation))
+        } shouldBe Availability.Available(DataValue.StringValueWrapper("fallback"))
     }
 
     test("portable or else keeps a failed read instead of falling back") {
@@ -327,23 +315,20 @@ val SdkRuntimeConformanceTest by testSuite {
                 EvaluationDiagnostic(failure = FailureId(value = "read_failed"), message = "broken", locations = listOf(readLocation)),
             )
 
-        evaluateReading(
-            ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))),
-            readLocation,
-            failed,
-        ) shouldBe failed
+        evaluate(ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))), readBinding) {
+            failed
+        } shouldBe failed
     }
 
     test("portable operations read a named scalar through its representation") {
-        evaluateReading(
+        evaluate(
             ExpressionNode.createCall(
                 operation = PortableOperationCatalog.TEXT_LENGTH.id,
                 typeArguments = emptyList(),
                 arguments = listOf(read),
             ),
-            readLocation,
-            DataValue.named(testCodeUse, DataValue.StringValueWrapper("chapter")).available(),
-        ) shouldBe
+            readBinding,
+        ) { DataValue.named(testCodeUse, DataValue.StringValueWrapper("chapter")).available() } shouldBe
             Availability.Available(DataValue.integer(7.toBigInteger()))
     }
 
@@ -353,7 +338,7 @@ val SdkRuntimeConformanceTest by testSuite {
             nested = ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(true)), right = nested)
         }
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") }, testPortableTypes())
-        with(EmptyReads) {
+        with(FixtureReads) {
             val failed =
                 evaluator.evaluate(
                     nested,
@@ -371,7 +356,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
     val typedChecks =
         run {
-            val origin = providerOrigin("typed_checks")
+            val origin = origin("typed_checks")
             val counter = recordType(definitionId("Counter"), fieldDeclaration(definitionId("Counter"), "count", int))
             val counterProvider =
                 object : ConfigurationProvider {
@@ -450,8 +435,10 @@ val SdkRuntimeConformanceTest by testSuite {
             integerField(this, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count")))).minimum(3)
         }
 
-        ruleOutcome(minimumThree, DataValue.integer(3.toBigInteger())) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-        ruleOutcome(minimumThree, DataValue.integer(2.toBigInteger())) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
+        evaluate(rulePredicate(minimumThree), "configured_value" to DataValue.integer(3.toBigInteger())) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(true))
+        evaluate(rulePredicate(minimumThree), "configured_value" to DataValue.integer(2.toBigInteger())) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(false))
     }
 
     test("an unsigned minimum compares values beyond the signed range exactly") {
@@ -460,9 +447,9 @@ val SdkRuntimeConformanceTest by testSuite {
             unsignedIntegerField(this, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count")))).minimum(bound)
         }
 
-        ruleOutcome(nearMaximum, DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger())) shouldBe
+        evaluate(rulePredicate(nearMaximum), "configured_value" to DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger())) shouldBe
             Availability.Available(DataValue.BooleanWrapper(true))
-        ruleOutcome(nearMaximum, DataValue.integer((bound - 1uL).toString().toBigInteger())) shouldBe
+        evaluate(rulePredicate(nearMaximum), "configured_value" to DataValue.integer((bound - 1uL).toString().toBigInteger())) shouldBe
             Availability.Available(DataValue.BooleanWrapper(false))
     }
 
@@ -482,9 +469,17 @@ val SdkRuntimeConformanceTest by testSuite {
             ).maximumLines(2)
         }
 
-        listOf("one", "one\ntwo").map { ruleOutcome(atLeastTwoLines, DataValue.StringValueWrapper(it)) } shouldBe
+        listOf(
+            "one",
+            "one\ntwo",
+        ).map { evaluate(rulePredicate(atLeastTwoLines), "configured_value" to DataValue.StringValueWrapper(it)) } shouldBe
             listOf(Availability.Available(DataValue.BooleanWrapper(false)), Availability.Available(DataValue.BooleanWrapper(true)))
-        listOf("one\ntwo", "one\ntwo\nthree").map { ruleOutcome(atMostTwoLines, DataValue.StringValueWrapper(it)) } shouldBe
+        listOf("one\ntwo", "one\ntwo\nthree").map {
+            evaluate(
+                rulePredicate(atMostTwoLines),
+                "configured_value" to DataValue.StringValueWrapper(it),
+            )
+        } shouldBe
             listOf(Availability.Available(DataValue.BooleanWrapper(true)), Availability.Available(DataValue.BooleanWrapper(false)))
     }
 
@@ -493,9 +488,11 @@ val SdkRuntimeConformanceTest by testSuite {
             nullableTextField(this, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("text")))).whenPresent { nonBlank() }
         }
 
-        ruleOutcome(nonBlankWhenPresent, DataValue.NULL) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-        ruleOutcome(nonBlankWhenPresent, DataValue.StringValueWrapper("")) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
-        ruleOutcome(nonBlankWhenPresent, DataValue.StringValueWrapper("text")) shouldBe
+        evaluate(rulePredicate(nonBlankWhenPresent), "configured_value" to DataValue.NULL) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(true))
+        evaluate(rulePredicate(nonBlankWhenPresent), "configured_value" to DataValue.StringValueWrapper("")) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(false))
+        evaluate(rulePredicate(nonBlankWhenPresent), "configured_value" to DataValue.StringValueWrapper("text")) shouldBe
             Availability.Available(DataValue.BooleanWrapper(true))
     }
 
@@ -517,7 +514,7 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("abstract native fields collections and nullable values dispatch by concrete type tag") {
-        val origin = providerOrigin("polymorphic_native")
+        val origin = origin("polymorphic_native")
         val assembly =
             CatalogContributions(
                 declarations =
@@ -569,7 +566,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     testTranslationMessageDefinition,
                     testMessageActionDefinition,
                     testTreeDefinition,
-                ).map { OwnedTypeDeclaration(providerOrigin("binding_misuse"), it) },
+                ).map { OwnedTypeDeclaration(origin("binding_misuse"), it) },
             nativeBindings =
                 listOf(
                     TestCodeNativeBindingFactory,
@@ -577,7 +574,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     TestTranslationMessageNativeBindingFactory,
                     TestMessageActionNativeBindingFactory,
                     TestTreeNativeBindingFactory,
-                ).map { OwnedNativeBinding(providerOrigin("binding_misuse"), it) },
+                ).map { OwnedNativeBinding(origin("binding_misuse"), it) },
         ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "binding misuse")))
 
     mapOf(
@@ -678,7 +675,7 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("native binding registry rejects checked handles from another catalog generation") {
-        val origin = providerOrigin("catalog_generation")
+        val origin = origin("catalog_generation")
         val contributions =
             CatalogContributions(
                 declarations =
@@ -697,7 +694,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
     val portableBindings =
         CatalogContributions(
-            declarations = listOf(OwnedTypeDeclaration(providerOrigin("portable_bindings"), testPortableRecordDefinition)),
+            declarations = listOf(OwnedTypeDeclaration(origin("portable_bindings"), testPortableRecordDefinition)),
         ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "portable bindings")))
     val opaquePayload = DataValue.record(mapOf("label" to DataValue.StringValueWrapper("opaque")))
     val opaqueRecord = DataValue.named(testPortableRecordUse, opaquePayload)
@@ -767,7 +764,7 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("native set and map reject canonical duplicate non data record values") {
-        val origin = providerOrigin("canonical_native_duplicates")
+        val origin = origin("canonical_native_duplicates")
         val assembly =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, testIdentityKeyDefinition)),
@@ -871,7 +868,7 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("catalog assembly marks a child unavailable when two parents declare the same field with different types") {
-        val origin = providerOrigin("catalog_conflicts")
+        val origin = origin("catalog_conflicts")
         val left = recordType(definitionId("Left"), fieldDeclaration(definitionId("Left"), "value", ScalarKind.TEXT.template))
         val right = recordType(definitionId("Right"), fieldDeclaration(definitionId("Right"), "value", int))
         val childId = definitionId("Child")
@@ -907,8 +904,8 @@ val SdkRuntimeConformanceTest by testSuite {
             CatalogContributions(
                 declarations =
                     listOf(
-                        OwnedTypeDeclaration(providerOrigin("catalog_conflicts"), duplicate),
-                        OwnedTypeDeclaration(providerOrigin("duplicate_owner"), duplicate),
+                        OwnedTypeDeclaration(origin("catalog_conflicts"), duplicate),
+                        OwnedTypeDeclaration(origin("duplicate_owner"), duplicate),
                     ),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "catalog conflicts")))
 
@@ -926,9 +923,9 @@ val SdkRuntimeConformanceTest by testSuite {
                     "duplicate_definition",
                     listOf(
                         skirout.editor.v1.diagnostic
-                            .DeclarationOrigin(owner = providerOrigin("catalog_conflicts").owner),
+                            .DeclarationOrigin(owner = origin("catalog_conflicts").owner),
                         skirout.editor.v1.diagnostic
-                            .DeclarationOrigin(owner = providerOrigin("duplicate_owner").owner),
+                            .DeclarationOrigin(owner = origin("duplicate_owner").owner),
                     ),
                 ),
             )
@@ -942,7 +939,7 @@ val SdkRuntimeConformanceTest by testSuite {
             )
         val assembly =
             CatalogContributions(
-                declarations = listOf(OwnedTypeDeclaration(providerOrigin("reserved"), reserved)),
+                declarations = listOf(OwnedTypeDeclaration(origin("reserved"), reserved)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "reserved")))
 
         assembly.editorCatalog.types
@@ -964,11 +961,11 @@ val SdkRuntimeConformanceTest by testSuite {
         val target = PresentationTarget.NamedWrapper(subject.id.namedTemplate(listOf(int)))
         val assembly =
             CatalogContributions(
-                declarations = listOf(OwnedTypeDeclaration(providerOrigin("orphan"), subject)),
+                declarations = listOf(OwnedTypeDeclaration(origin("orphan"), subject)),
                 presentations =
                     listOf(
                         ownedPresentation(
-                            providerOrigin("orphan"),
+                            origin("orphan"),
                             provider,
                             target,
                             fieldPresentationMaterial(
@@ -995,12 +992,12 @@ val SdkRuntimeConformanceTest by testSuite {
                 declarations = emptyList(),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "no providers")))
 
-        shouldThrow<IllegalArgumentException> { assembly.providers.retain(providerOrigin("nobody")) }.message shouldBe
-            "Unknown provider origin ${providerOrigin("nobody")}."
+        shouldThrow<IllegalArgumentException> { assembly.providers.retain(origin("nobody")) }.message shouldBe
+            "Unknown provider origin ${origin("nobody")}."
     }
 
     test("competing inherited field presentations keep every child type ready and raise no conflict") {
-        val origin = providerOrigin("field_presentation_conflicts")
+        val origin = origin("field_presentation_conflicts")
         val root =
             recordType(
                 definitionId("PresentationRoot"),
@@ -1086,7 +1083,7 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("catalog assembly drops a material with an inferred control outside its owning record and keeps its type") {
-        val origin = providerOrigin("invalid_field_presentation")
+        val origin = origin("invalid_field_presentation")
         val definition =
             recordType(
                 definitionId("InvalidPresentationField"),
@@ -1117,7 +1114,7 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("catalog assembly admits bounded atomic parts and rejects foreign owners or owner remainders") {
-        val origin = providerOrigin("atomic_parts")
+        val origin = origin("atomic_parts")
         val definition =
             recordType(definitionId("PartOwner"), fieldDeclaration(definitionId("PartOwner"), "value", ScalarKind.TEXT.template))
         val foreign =
@@ -1207,7 +1204,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                 parents = listOf(parent.id.namedTemplate()),
             )
-        val origin = providerOrigin("inherited_rules")
+        val origin = origin("inherited_rules")
         val minimum =
             configurationProvider { scope ->
                 integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value")))).minimum(10)
@@ -1222,7 +1219,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 configurations =
                     listOf(
                         OwnedConfiguration(origin, parent.id, minimum),
-                        OwnedConfiguration(providerOrigin("child_rules"), child.id, maximum),
+                        OwnedConfiguration(origin("child_rules"), child.id, maximum),
                     ),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "inherited rules")))
 
@@ -1255,7 +1252,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         abstract_ = false,
                     ),
             )
-        val origin = providerOrigin("generic_rules")
+        val origin = origin("generic_rules")
         val rules =
             configurationProvider { scope ->
                 textField(

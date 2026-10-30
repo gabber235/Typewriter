@@ -29,6 +29,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
 import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
@@ -118,7 +119,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     test("partial supplied record fields merge with captured constructor defaults") {
         val generation = CatalogGeneration(value = "partial supplied record")
         val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
-        val plan = CapturingPlan()
+        val plan = SamplingPlan(DEFAULTED_OWNER, DataValue.integer(java.math.BigInteger.valueOf(3)))
         val runtime =
             DefaultInitializationRuntime(
                 catalog,
@@ -143,31 +144,88 @@ val InitializationRuntimeConformanceTest by testSuite {
         prepared.findings shouldBe emptyList()
     }
 
+    val pendingId = TypeDefinitionId.qualified("test", "PendingConfiguration")
+    val pendingParameter = ParameterKey(owner = pendingId, index = 0)
+    val pendingDefaulted = FieldOwner(definition = pendingId, name = "defaulted")
+    val pendingGeneration = CatalogGeneration(value = "pending initialization catalog")
+    val pendingCatalog =
+        DefaultCheckedCatalog(
+            pendingGeneration,
+            listOf(
+                TypeDefinition.partial(
+                    id = pendingId,
+                    parameters = listOf(TypeParameter.partial(key = pendingParameter, name = "T")),
+                    representation =
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                listOf(
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = pendingId, name = "independent"),
+                                        type = ScalarKind.TEXT.template,
+                                    ),
+                                    FieldDeclaration.partial(
+                                        owner = pendingDefaulted,
+                                        type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+                                        hasConstructorDefault = true,
+                                    ),
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = pendingId, name = "dependent"),
+                                        type = pendingParameter.template,
+                                    ),
+                                ),
+                            abstract_ = false,
+                        ),
+                ),
+            ),
+        )
+    val pendingSelection = TypeSelection.createPending(definition = pendingId, arguments = listOf(ArgumentSelection.UNFILLED))
+    val pendingPlan = SamplingPlan(pendingDefaulted)
+    val pendingRuntime =
+        DefaultInitializationRuntime(
+            pendingCatalog,
+            FactoryNativeBindingRegistry(pendingCatalog, listOf(PlanFactory(pendingPlan, pendingId))),
+        )
+
     test("pending generic creation fills every field it knows without its type argument and leaves the rest unfilled") {
-        val prepared = PendingInitialization.prepare(emptyMap())
+        val prepared = pendingRuntime.prepareNow(recordRequest(pendingGeneration, pendingSelection, emptyMap()))
 
         prepared.record shouldBe
             AuthoringRecord.of(
-                PendingInitialization.selection,
+                pendingSelection,
                 mapOf(
                     "independent" to DataValue.StringValueWrapper(""),
                     "defaulted" to DataValue.UNFILLED,
                     "dependent" to DataValue.UNFILLED,
                 ),
             )
-        prepared.record.validateStructure(PendingInitialization.catalog) shouldBe StructuralResult.VALID
+        prepared.record.validateStructure(pendingCatalog) shouldBe StructuralResult.VALID
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("incomplete_type_selection")
+        pendingPlan.calls shouldBe 0
     }
 
     test("pending generic creation keeps a supplied field whose type depends on the missing argument and reports it") {
-        val prepared = PendingInitialization.prepare(mapOf("dependent" to DataValue.StringValueWrapper("unchecked")))
+        val prepared =
+            pendingRuntime.prepareNow(
+                recordRequest(
+                    pendingGeneration,
+                    pendingSelection,
+                    mapOf("dependent" to DataValue.StringValueWrapper("unchecked")),
+                ),
+            )
 
         prepared.record.fieldMap shouldBe mapOf("dependent" to DataValue.StringValueWrapper("unchecked"))
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("dependent_field_type_unavailable")
     }
 
     test("creation keeps a supplied field the type does not declare and reports it as unknown") {
-        val prepared = PendingInitialization.prepare(mapOf("unknown" to DataValue.BooleanWrapper(true)))
+        val prepared =
+            pendingRuntime.prepareNow(
+                recordRequest(
+                    pendingGeneration,
+                    pendingSelection,
+                    mapOf("unknown" to DataValue.BooleanWrapper(true)),
+                ),
+            )
 
         prepared.record.fieldMap shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("unknown_field")
@@ -176,9 +234,9 @@ val InitializationRuntimeConformanceTest by testSuite {
     test("a preparation request for another catalog generation is unavailable") {
         val prepared =
             DefaultInitializationRuntime(
-                PendingInitialization.catalog,
-                FactoryNativeBindingRegistry(PendingInitialization.catalog, emptyList()),
-            ).prepareNow(recordRequest(CatalogGeneration(value = "other"), PendingInitialization.selection, emptyMap()))
+                pendingCatalog,
+                FactoryNativeBindingRegistry(pendingCatalog, emptyList()),
+            ).prepareNow(recordRequest(CatalogGeneration(value = "other"), pendingSelection, emptyMap()))
 
         prepared.findings.map { it.code to it.message } shouldBe
             listOf("catalog_generation_mismatch" to "The initialization request uses a different catalog generation.")
@@ -187,12 +245,12 @@ val InitializationRuntimeConformanceTest by testSuite {
     test("record preparation refuses a supplied value that is not a record") {
         val prepared =
             DefaultInitializationRuntime(
-                PendingInitialization.catalog,
-                FactoryNativeBindingRegistry(PendingInitialization.catalog, emptyList()),
+                pendingCatalog,
+                FactoryNativeBindingRegistry(pendingCatalog, emptyList()),
             ).prepareNow(
                 recordRequest(
-                    PendingInitialization.generation,
-                    PendingInitialization.selection,
+                    pendingGeneration,
+                    pendingSelection,
                     emptyMap(),
                 ).copy(suppliedValue = DataValue.StringValueWrapper("text")),
             )
@@ -204,11 +262,11 @@ val InitializationRuntimeConformanceTest by testSuite {
     test("record preparation refuses a selection of an undeclared type") {
         val prepared =
             DefaultInitializationRuntime(
-                PendingInitialization.catalog,
-                FactoryNativeBindingRegistry(PendingInitialization.catalog, emptyList()),
+                pendingCatalog,
+                FactoryNativeBindingRegistry(pendingCatalog, emptyList()),
             ).prepareNow(
                 recordRequest(
-                    PendingInitialization.generation,
+                    pendingGeneration,
                     TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("test", "Undeclared").namedUse()),
                     emptyMap(),
                 ),
@@ -220,7 +278,7 @@ val InitializationRuntimeConformanceTest by testSuite {
     test("an invalid supplied constructor input blocks sampling and is reported at its field") {
         val generation = CatalogGeneration(value = "mismatched input catalog")
         val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
-        val plan = CapturingPlan()
+        val plan = SamplingPlan(DEFAULTED_OWNER, DataValue.integer(java.math.BigInteger.valueOf(3)))
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan))))
                 .prepareNow(
@@ -267,12 +325,12 @@ val InitializationRuntimeConformanceTest by testSuite {
     test("complete creation samples the constructor with authored defaults and keeps only the defaults it captured") {
         val generation = CatalogGeneration(value = "initialization catalog")
         val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
-        val plan = CapturingPlan()
+        val plan = SamplingPlan(DEFAULTED_OWNER, DataValue.integer(java.math.BigInteger.valueOf(3)))
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan)))
         val runtime = DefaultInitializationRuntime(catalog, bindings)
 
         val prepared =
-            runSuspend {
+            runBlocking {
                 runtime.prepare(
                     recordRequest(
                         generation,
@@ -301,10 +359,10 @@ val InitializationRuntimeConformanceTest by testSuite {
                 message = "The constructor failed.",
                 relativePath = null,
             )
-        val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(FailingPlan(diagnostic))))
+        val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(SamplingPlan(DEFAULTED_OWNER, failure = diagnostic))))
 
         val prepared =
-            runSuspend {
+            runBlocking {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
@@ -360,11 +418,11 @@ val InitializationRuntimeConformanceTest by testSuite {
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(abstractDefinition, concreteDefinition, ownerDefinition))
-        val plan = AbstractInputPlan()
+        val plan = SamplingPlan(ABSTRACT_DEFAULT_OWNER, DataValue.integer(java.math.BigInteger.valueOf(11)))
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, abstractOwnerId)))
 
         val prepared =
-            runSuspend {
+            runBlocking {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
@@ -416,11 +474,11 @@ val InitializationRuntimeConformanceTest by testSuite {
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(childDefinition, parentDefinition))
-        val plan = ChildPlan()
+        val plan = SamplingPlan(CHILD_DEFAULT_OWNER, DataValue.integer(java.math.BigInteger.valueOf(7)))
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, childId)))
 
         val prepared =
-            runSuspend {
+            runBlocking {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
@@ -490,7 +548,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 message = "Seed capture failed.",
                 relativePath = null,
             )
-        val plan = FieldFailingPlan(seed, diagnostic)
+        val plan = SamplingPlan(seed, failure = diagnostic)
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, styleId)))
 
         val prepared =

@@ -30,7 +30,7 @@ val RealmSettingsTest by testSuite {
                 val settings =
                     RealmSettings(
                         environment = databaseSecrets.associateWith { "supplied" },
-                        configuration = profileValues(profile),
+                        configuration = readConfiguration(profile),
                     )
                 runCatching { settings.databaseConfiguration() }
                     .exceptionOrNull()

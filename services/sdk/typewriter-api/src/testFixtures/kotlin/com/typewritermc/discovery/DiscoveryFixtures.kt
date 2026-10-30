@@ -55,6 +55,7 @@ import com.typewritermc.presentation.of
 import com.typewritermc.presentation.resource
 import com.typewritermc.testkit.elementsOf
 import com.typewritermc.testkit.fieldDeclaration
+import com.typewritermc.testkit.generatedProviders
 import com.typewritermc.testkit.origin
 import com.typewritermc.testkit.recordType
 import com.typewritermc.types.Color
@@ -131,13 +132,6 @@ import java.util.Collections
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import kotlin.reflect.KClass
-
-internal fun failingProvider(cause: Exception) =
-    object : ConfigurationProvider {
-        override fun collect(
-            scope: com.typewritermc.configuration.ConfigurationCollectionScope,
-        ): com.typewritermc.configuration.CollectedConfiguration = throw cause
-    }
 
 internal fun NamedTypeTemplate.toUse() =
     definition.namedUse(
@@ -262,22 +256,7 @@ internal fun providerArtifact(
 internal interface AbstractQueryResource : Resource
 
 internal fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
-    val origin =
-        ProviderOrigin(
-            owner =
-                DeclarationOwner(
-                    source =
-                        contributionKey(
-                            ContributionSourceId("test"),
-                            "main",
-                            ProducerId("query"),
-                            ContributionName("native_identity"),
-                        ),
-                    localIdentity = "native identity",
-                ),
-            artifact = ArtifactId("test:native_identity"),
-            sourcePart = "main",
-        )
+    val origin = origin("native identity", "test:native_identity")
     val id = TypeDefinitionId.qualified("query.test", "Abstract")
     val definition =
         TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true))
@@ -322,7 +301,7 @@ internal fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
 
 internal fun assemble(vararg extra: TypeDefinition): CatalogAssembly {
     val origin = origin("type_display", "test:type_display")
-    val generated = generatedTypeProviders().distinctBy { it.definition.id }
+    val generated = generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type).distinctBy { it.definition.id }
     return CatalogContributions(
         declarations =
             generated.map { OwnedTypeDeclaration(origin, it.definition, it.display) } +
@@ -401,22 +380,7 @@ internal fun DeclarationStatus.codes(): Set<String> =
         it.code
     }
 
-internal val origin =
-    ProviderOrigin(
-        owner =
-            DeclarationOwner(
-                source =
-                    contributionKey(
-                        ContributionSourceId("test"),
-                        "main",
-                        ProducerId("sdk"),
-                        ContributionName("realm_structure"),
-                    ),
-                localIdentity = "realm structure",
-            ),
-        artifact = ArtifactId("test:realm_structure"),
-        sourcePart = "main",
-    )
+internal val origin = origin("realm structure", "test:realm_structure")
 
 /** A page type `id<T>` with a text title and contents of the free parameter T. */
 internal fun genericType(id: TypeDefinitionId): Pair<TypeDefinitionId, Pair<TypeDefinition, TypeDisplay?>> {
@@ -512,7 +476,7 @@ internal fun assemble(
     includeGenerated: Boolean = true,
 ): CatalogAssembly {
     val origin = origin("type_display", "test:type_display")
-    val generated = generatedTypeProviders().distinctBy { it.definition.id }
+    val generated = generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type).distinctBy { it.definition.id }
     val generatedDisplays =
         generatedProviders<GeneratedResourceDisplayProvider>(GeneratedProviderKind.ResourceDisplay)
             .filter { includeGenerated || it.target == ResourceTarget.ANY_RESOURCE }
@@ -531,29 +495,10 @@ internal fun assemble(
 internal fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
     editorCatalog.diagnostics.filter { it.affected == type }.map { it.code }
 
-internal fun CatalogAssembly.label(record: AuthoringRecord): String? = with(DisplayReads) { displays.label(record, checked) }
-
-internal object DisplayReads : AuthoredReads {
-    override val catalog = CatalogGeneration(value = "resource displays")
-    override val readContext = ReadContext(catalog)
-
-    override fun <T> read(path: BoundPath<T>): Availability<T> = error("Display formulas read portable values")
-
-    override fun <T> readRepresentation(
-        path: BoundPath<*>,
-        representation: TypeUse,
-    ): Availability<T> = error("Display formulas read portable values")
-
-    override fun presence(path: BoundPath<*>): Availability<Boolean> = error("Display formulas read portable values")
-
-    override fun binding(path: BoundPath<*>): Availability<DraftBinding> = error("Display formulas read portable values")
-
-    override fun canonicalValueKey(path: BoundPath<*>): Availability<String> = error("Display formulas read portable values")
-
-    override fun members(path: BoundCollectionPath): List<ItemId> = emptyList()
-
-    override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Display formulas read portable values")
-}
+internal fun CatalogAssembly.label(record: AuthoringRecord): String? =
+    with(com.typewritermc.expression.FixtureReads) {
+        displays.label(record, checked)
+    }
 
 internal fun artifact(
     id: String,
@@ -561,29 +506,3 @@ internal fun artifact(
 ) = ResolvedArtifact(ArtifactId(id), ArtifactVersion("1.0.0"), kind)
 
 internal fun requirement(artifact: ResolvedArtifact) = ArtifactRequirement(artifact.id, VersionConstraint("^1"))
-
-internal fun generatedTypeProviders(): List<GeneratedTypeProvider> = generatedProviders(GeneratedProviderKind.Type)
-
-/** Instances of every generated provider of [kind] indexed on the test classpath. */
-internal fun <T> generatedProviders(kind: GeneratedProviderKind): List<T> {
-    val resources =
-        Collections.list(
-            requireNotNull(Thread.currentThread().contextClassLoader)
-                .getResources(GENERATED_PROVIDER_INDEX_PATH),
-        )
-    return resources
-        .flatMap { resource ->
-            resource.openStream().bufferedReader().use { GeneratedProviderIndex.parse(it.readText()) }
-        }.filter { entry -> entry.kind == kind }
-        .map { entry ->
-            @Suppress("UNCHECKED_CAST")
-            instantiateGeneratedProvider(Class.forName(entry.providerClass)) as T
-        }
-}
-
-internal fun instantiateGeneratedProvider(type: Class<*>): Any =
-    type.fields
-        .singleOrNull { field ->
-            field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type === type
-        }?.get(null)
-        ?: type.getConstructor().newInstance()

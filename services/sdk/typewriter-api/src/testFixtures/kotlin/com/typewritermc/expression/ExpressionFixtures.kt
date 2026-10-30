@@ -111,8 +111,6 @@ internal fun renderCanonicalReadSchema(): String =
 internal fun readId(record: String) =
     TypeDefinitionId(typeId = TypeId.QualifiedWrapper(QualifiedTypeId(namespace = CANONICAL_READ_NAMESPACE, name = record)), revision = 1)
 
-internal fun declaredUse(id: TypeDefinitionId) = NamedTypeUse(definition = id, arguments = emptyList())
-
 internal fun checkInput(
     binding: ExpressionBindingId,
     path: ValuePath = ValuePath.root,

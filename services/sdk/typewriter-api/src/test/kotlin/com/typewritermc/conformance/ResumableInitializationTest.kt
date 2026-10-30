@@ -354,7 +354,7 @@ val ResumableInitializationTest by testSuite {
     test("a valid default reference is retained without an input prompt") {
         val referenceId = id("DefaultReference")
         val field = FieldOwner(definition = referenceId, name = "target")
-        val plan = CountingPlan(field, value = reference())
+        val plan = SamplingPlan(field, value = reference())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
@@ -375,7 +375,7 @@ val ResumableInitializationTest by testSuite {
                 ),
             )
         val runtime =
-            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(ResumePlanFactory(referenceId, plan))))
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, referenceId))))
         val ready = runtime.stepNow(PreparationOperation.StartWrapper(request(referenceId))) as PrepareValueResult.ReadyWrapper
         ((ready.value.content as PreparedContent.RecordWrapper).value.fieldMap.getValue("target")) shouldBe reference()
     }

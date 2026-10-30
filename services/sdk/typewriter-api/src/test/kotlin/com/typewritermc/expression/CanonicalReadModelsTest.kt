@@ -5,6 +5,7 @@ import com.typewritermc.testkit.repositoryFixture
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.actualType
 import com.typewritermc.types.fields
+import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -52,7 +53,7 @@ val CanonicalReadModelsTest by testSuite {
             )
         val payload = ((appearance as DataValue.NamedWrapper).value.payload as DataValue.RecordWrapper).value.fields
         payload.single { it.name == "accent" }.value shouldBe
-            DataValue.createNamed(actualType = declaredUse(ColorDefinition.id), payload = DataValue.IntegerWrapper("4281558681"))
+            DataValue.createNamed(actualType = ColorDefinition.id.namedUse(), payload = DataValue.IntegerWrapper("4281558681"))
     }
 
     test("read values round trip through every root") {

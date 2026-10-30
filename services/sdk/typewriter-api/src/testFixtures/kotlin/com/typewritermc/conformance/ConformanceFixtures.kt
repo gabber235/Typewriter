@@ -265,67 +265,28 @@ internal fun <T> failed(
         ),
     )
 
-internal class CapturingPlan : NativeConstructionPlan {
-    override val defaultedFields = setOf(DEFAULTED_OWNER)
-    var sampled: Map<FieldOwner, CompleteValue> = emptyMap()
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult {
-        sampled = supplied
-        return CaptureResult.Captured(mapOf(DEFAULTED_OWNER to DataValue.integer(java.math.BigInteger.valueOf(3))))
-    }
-}
-
-internal class FailingPlan(
-    private val diagnostic: InitializationDiagnostic,
-) : NativeConstructionPlan {
-    override val defaultedFields = setOf(DEFAULTED_OWNER)
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult = CaptureResult.Unavailable(listOf(diagnostic))
-}
-
-internal class FieldFailingPlan(
-    field: FieldOwner,
-    private val diagnostic: InitializationDiagnostic,
+/**
+ * A construction plan that defaults [field]. Each sample counts the call, records what was supplied, and gives
+ * [failure] when one is set, otherwise captures [value] (or a text naming the call when [value] is null).
+ */
+internal class SamplingPlan(
+    val field: FieldOwner,
+    private val value: DataValue? = null,
+    private val failure: InitializationDiagnostic? = null,
 ) : NativeConstructionPlan {
     override val defaultedFields = setOf(field)
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult = CaptureResult.Unavailable(listOf(diagnostic))
-}
-
-internal class AbstractInputPlan : NativeConstructionPlan {
-    override val defaultedFields = setOf(ABSTRACT_DEFAULT_OWNER)
+    var calls = 0
     var sampled: Map<FieldOwner, CompleteValue> = emptyMap()
 
     override fun sample(
         arguments: AppliedNativeArguments,
         supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult {
+        calls++
         sampled = supplied
-        return CaptureResult.Captured(
-            mapOf(ABSTRACT_DEFAULT_OWNER to DataValue.integer(java.math.BigInteger.valueOf(11))),
-        )
+        return failure?.let { CaptureResult.Unavailable(listOf(it)) }
+            ?: CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
     }
-}
-
-internal class ChildPlan : NativeConstructionPlan {
-    override val defaultedFields = setOf(CHILD_DEFAULT_OWNER)
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult =
-        CaptureResult.Captured(
-            mapOf(CHILD_DEFAULT_OWNER to DataValue.integer(java.math.BigInteger.valueOf(7))),
-        )
 }
 
 internal class PlanFactory(
@@ -338,20 +299,6 @@ internal class PlanFactory(
         actual: com.typewritermc.types.catalog.CheckedType,
         arguments: AppliedNativeArguments,
     ): NativeBinding<*> = error("Initialization sampling does not bind a complete native record.")
-}
-
-internal fun <T> runSuspend(block: suspend () -> T): T {
-    var result: Result<T>? = null
-    block.startCoroutine(
-        object : Continuation<T> {
-            override val context = EmptyCoroutineContext
-
-            override fun resumeWith(value: Result<T>) {
-                result = value
-            }
-        },
-    )
-    return result!!.getOrThrow()
 }
 
 internal val INITIALIZED_ID = TypeDefinitionId.qualified("test", "Initialized")
@@ -375,8 +322,8 @@ internal fun recordRequest(
 internal data class ResumeFixture(
     val runtime: DefaultInitializationRuntime,
     val request: ValuePreparationRequest,
-    val marker: CountingPlan,
-    val settings: CountingPlan,
+    val marker: SamplingPlan,
+    val settings: SamplingPlan,
 )
 
 internal fun resumeFixture(
@@ -386,8 +333,16 @@ internal fun resumeFixture(
     val root = id("Root")
     val settings = id("Settings")
     val marker = id("Marker")
-    val markerPlan = CountingPlan(FieldOwner(definition = marker, name = "id"), fail = failMarker)
-    val settingsPlan = CountingPlan(FieldOwner(definition = settings, name = "label"))
+    val markerPlan =
+        FieldOwner(definition = marker, name = "id").let { field ->
+            SamplingPlan(
+                field,
+                failure =
+                    InitializationDiagnostic(field = field, code = "test_capture_failed", message = "Capture failed.", relativePath = null)
+                        .takeIf { failMarker },
+            )
+        }
+    val settingsPlan = SamplingPlan(FieldOwner(definition = settings, name = "label"))
     val settingsFields =
         buildList {
             add(
@@ -450,8 +405,8 @@ internal fun resumeFixture(
         )
     val factories =
         buildList {
-            add(ResumePlanFactory(marker, markerPlan))
-            if (defaultedSettings) add(ResumePlanFactory(settings, settingsPlan))
+            add(PlanFactory(markerPlan, marker))
+            if (defaultedSettings) add(PlanFactory(settingsPlan, settings))
         }
     return ResumeFixture(
         DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, factories)),
@@ -459,43 +414,6 @@ internal fun resumeFixture(
         markerPlan,
         settingsPlan,
     )
-}
-
-internal class CountingPlan(
-    val field: FieldOwner,
-    val fail: Boolean = false,
-    val value: DataValue? = null,
-) : NativeConstructionPlan {
-    override val defaultedFields = setOf(field)
-    var calls = 0
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult {
-        calls++
-        return if (fail) {
-            CaptureResult.Unavailable(
-                listOf(
-                    InitializationDiagnostic(field = field, code = "test_capture_failed", message = "Capture failed.", relativePath = null),
-                ),
-            )
-        } else {
-            CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
-        }
-    }
-}
-
-internal class ResumePlanFactory(
-    override val definition: TypeDefinitionId,
-    override val constructionPlan: NativeConstructionPlan,
-) : NativeBindingFactory {
-    override val provider = NativeBindingId(value = "test.resume")
-
-    override fun bind(
-        actual: CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> = error("Preparation does not decode complete records.")
 }
 
 internal val GENERATION = CatalogGeneration(value = "resume")
@@ -621,38 +539,9 @@ internal fun ownedPresentation(
     )
 }
 
-internal fun providerOrigin(name: String): ProviderOrigin {
-    val key = contributionKey(ContributionSourceId("test"), "main", ProducerId("sdk"), ContributionName(name))
-    return ProviderOrigin(DeclarationOwner(source = key, localIdentity = name), ArtifactId("test:sdk"), "main")
-}
-
 internal fun definitionId(name: String): TypeDefinitionId = TypeDefinitionId.qualified("test", name)
 
 internal fun DataValue.available(): Availability<DataValue> = Availability.Available(this)
-
-internal object EmptyReads : AuthoredReads {
-    override val catalog: CatalogGeneration = CatalogGeneration(value = "expression catalog")
-    override val readContext = com.typewritermc.authoring.ReadContext(catalog)
-
-    override fun <T> read(path: BoundPath<T>): Availability<T> = error("Portable reads use the expression reader in this fixture.")
-
-    override fun <T> readRepresentation(
-        path: BoundPath<*>,
-        representation: TypeUse,
-    ): Availability<T> = error("Portable reads use the expression reader in this fixture.")
-
-    override fun presence(path: BoundPath<*>): Availability<Boolean> = error("Portable reads use the expression reader in this fixture.")
-
-    override fun binding(path: BoundPath<*>): Availability<com.typewritermc.authoring.DraftBinding> =
-        error("Portable reads use the expression reader in this fixture.")
-
-    override fun canonicalValueKey(path: BoundPath<*>): Availability<String> =
-        error("Portable reads use the expression reader in this fixture.")
-
-    override fun members(path: BoundCollectionPath): List<skirout.editor.v1.type_catalog.ItemId> = emptyList()
-
-    override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Selections are not used in this fixture.")
-}
 
 @JvmInline
 internal value class TestCode(
@@ -838,107 +727,3 @@ internal val TEST_MESSAGE_USE = definitionId("TestMessage").use()
 internal val TEST_MESSAGE_LIST_USE = StandardTypes.list.use(listOf(TEST_MESSAGE_USE))
 
 internal val TEST_OPTIONAL_MESSAGE_USE = TEST_MESSAGE_USE.nullable()
-
-/** A pending generic configuration whose type argument is still unfilled, and the initialization that prepares it. */
-internal object PendingInitialization {
-    val generation = CatalogGeneration(value = "pending initialization catalog")
-    val definitionId = TypeDefinitionId.qualified("test", "PendingConfiguration")
-    val parameter = ParameterKey(owner = definitionId, index = 0)
-    val defaulted = FieldOwner(definition = definitionId, name = "defaulted")
-    val catalog =
-        DefaultCheckedCatalog(
-            generation,
-            listOf(
-                TypeDefinition.partial(
-                    id = definitionId,
-                    parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-                    representation =
-                        RepresentationTemplate.createRecord(
-                            fields =
-                                listOf(
-                                    FieldDeclaration.partial(
-                                        owner = FieldOwner(definition = definitionId, name = "independent"),
-                                        type = ScalarKind.TEXT.template,
-                                    ),
-                                    FieldDeclaration.partial(
-                                        owner = defaulted,
-                                        type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
-                                        hasConstructorDefault = true,
-                                    ),
-                                    FieldDeclaration.partial(
-                                        owner = FieldOwner(definition = definitionId, name = "dependent"),
-                                        type = parameter.template,
-                                    ),
-                                ),
-                            abstract_ = false,
-                        ),
-                ),
-            ),
-        )
-    val construction =
-        object : NativeConstructionPlan {
-            override val defaultedFields = setOf(defaulted)
-
-            override fun sample(
-                arguments: AppliedNativeArguments,
-                supplied: Map<FieldOwner, CompleteValue>,
-            ): CaptureResult = error("Pending creation must not sample a native constructor.")
-        }
-    val selection = TypeSelection.createPending(definition = definitionId, arguments = listOf(ArgumentSelection.UNFILLED))
-
-    /** Prepares a pending record with the [supplied] field values. */
-    fun prepare(supplied: Map<String, DataValue>) =
-        DefaultInitializationRuntime(
-            catalog,
-            FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(construction, definitionId))),
-        ).prepareNow(recordRequest(generation, selection, supplied))
-}
-
-/** What [expression] evaluates to when its one input, read at [at], gives [result]; every read is recorded in [reads]. */
-internal fun evaluateReading(
-    expression: ExpressionNode,
-    at: ValueLocation,
-    result: Availability<DataValue>,
-    reads: MutableList<ValueLocation> = mutableListOf(),
-): Availability<DataValue> {
-    val evaluator =
-        DefaultExpressionEvaluator(
-            ExpressionValueReader { location ->
-                reads += location
-                result
-            },
-            testPortableTypes(),
-        )
-    return with(EmptyReads) {
-        evaluator.evaluate(
-            expression,
-            ExpressionBindings(mapOf(ExpressionBindingId(value = "value") to at)),
-            EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-        )
-    }
-}
-
-/** What the one portable rule [helper] declares gives when its field holds [value]. */
-internal fun ruleOutcome(
-    helper: DefaultConfigurationCollectionScope.() -> Unit,
-    value: DataValue,
-): Availability<DataValue> {
-    val scope = DefaultConfigurationCollectionScope(definitionId("Counter"))
-    scope.helper()
-    val rule =
-        scope
-            .collected()
-            .recipes
-            .single()
-            .rules
-            .single()
-            .descriptor.predicate
-    val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() }, testPortableTypes())
-    return with(EmptyReads) {
-        evaluator.evaluate(
-            rule,
-            ExpressionBindings(mapOf(ExpressionBindingId(value = "configured_value") to ValueLocation.of(ResourceId("counter:1")))),
-            EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-        )
-    }
-}

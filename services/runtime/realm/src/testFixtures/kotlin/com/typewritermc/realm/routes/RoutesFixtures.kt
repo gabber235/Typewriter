@@ -255,12 +255,9 @@ internal class BlockingPublishTransport(
 }
 
 internal fun FakeMessageTransport.hints(): List<AuthoringChanged> =
-    actions
-        .filterIsInstance<FakeMessageTransport.Action.Publish>()
-        .filter {
-            it.message.address.value
-                .endsWith(".editor.authoring.changed")
-        }.map { AuthoringChanged.serializer.fromBytes(it.message.payload.toByteArray()) }
+    publications
+        .filter { it.address.value.endsWith(".editor.authoring.changed") }
+        .map { AuthoringChanged.serializer.fromBytes(it.payload.toByteArray()) }
 
 internal suspend fun FakeMessageTransport.awaitCount(count: Int) =
     withTimeout(2.seconds) {
@@ -367,12 +364,11 @@ internal class InvalidationContext(
 
 /** The generations announced on [this] transport, failed attempts included, in order. */
 internal fun FakeMessageTransport.announcements(): List<String> =
-    actions
-        .filterIsInstance<FakeMessageTransport.Action.Publish>()
-        .filter { it.message.address == CATALOG_INVALIDATE }
+    publications
+        .filter { it.address == CATALOG_INVALIDATE }
         .map {
             CatalogInvalidated.serializer
-                .fromBytes(it.message.payload.toByteArray())
+                .fromBytes(it.payload.toByteArray())
                 .generation.value
         }
 

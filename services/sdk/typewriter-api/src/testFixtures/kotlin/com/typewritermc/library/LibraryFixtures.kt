@@ -49,6 +49,9 @@ import com.typewritermc.testkit.actions
 import com.typewritermc.testkit.appearanceReads
 import com.typewritermc.testkit.bytes
 import com.typewritermc.testkit.elementsOf
+import com.typewritermc.testkit.generatedProvider
+import com.typewritermc.testkit.generatedProviderEntries
+import com.typewritermc.testkit.generatedProviders
 import com.typewritermc.testkit.origin
 import com.typewritermc.testkit.ready
 import com.typewritermc.testkit.record
@@ -126,22 +129,19 @@ import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
 import skirout.editor.v1.expression.ExpressionNode as WireExpressionNode
 import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
 
-/** Builds a Book workspace whose only content is a button running the action [action] creates. */
-internal fun CatalogAssembly.bookBuild(): (() -> com.typewritermc.presentation.PresentationAction) -> Unit {
-    val checked = checked.ready(BookDefinition.use.use)
+/** Builds a Book workspace, with the ownership links of this assembly, whose content [content] declares. */
+internal fun CatalogAssembly.buildBook(content: BookPresentationScope.() -> Unit) {
     val ownership =
         relations
             .filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
             .mapTo(hashSetOf()) { it.first.id }
-    val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE, ownershipEndpoints = ownership)
-    return { action -> DefaultPresentationRuntime().build(binding) { scope -> scope.button(literal("Create"), action()) } }
-}
-
-/** Builds a Book workspace whose content [content] declares through the generated Book presentation scope. */
-internal fun CatalogAssembly.bookPresentation(): (BookPresentationScope.() -> Unit) -> Unit {
-    val checked = checked.ready(BookDefinition.use.use)
-    val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)
-    return { content -> DefaultPresentationRuntime().build(binding) { scope -> BookPresentationScopeImpl(scope).content() } }
+    val binding =
+        PresentationBuildBinding(
+            checked.ready(BookDefinition.use.use).presentationTemplate(),
+            PresentationRole.WORKSPACE,
+            ownershipEndpoints = ownership,
+        )
+    DefaultPresentationRuntime().build(binding) { scope -> BookPresentationScopeImpl(scope).content() }
 }
 
 internal fun CatalogAssembly.material(
@@ -162,18 +162,11 @@ internal fun CatalogAssembly.resources(
 /** The framework catalog of the generated providers on the test classpath, with their native bindings. */
 internal class FrameworkFixture {
     val generation = CatalogGeneration(value = "framework creation")
-    private val entries = generatedProviderEntries()
     val definitions =
-        entries
-            .filter { it.kind == GeneratedProviderKind.Type }
-            .map { (instantiateGeneratedProvider(Class.forName(it.providerClass)) as GeneratedTypeProvider).definition }
-            .distinctBy(TypeDefinition::id)
+        generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type).map { it.definition }.distinctBy(TypeDefinition::id)
     val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + definitions)
     private val factories =
-        entries
-            .filter { it.kind == GeneratedProviderKind.NativeBinding }
-            .map { instantiateGeneratedProvider(Class.forName(it.providerClass)) as NativeBindingFactory }
-            .distinctBy(NativeBindingFactory::provider)
+        generatedProviders<NativeBindingFactory>(GeneratedProviderKind.NativeBinding).distinctBy(NativeBindingFactory::provider)
     private val bindings = FactoryNativeBindingRegistry(catalog, factories)
     private val initializer = DefaultInitializationRuntime(catalog, bindings)
     val runtime = DefaultPresentationRuntime()
@@ -303,29 +296,11 @@ internal fun SearchProvider.wrappedChild(): SearchProvider? =
         else -> null
     }
 
-internal fun instantiateGeneratedProvider(type: Class<*>): Any =
-    type.fields
-        .singleOrNull { field ->
-            field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type === type
-        }?.get(null)
-        ?: type.getConstructor().newInstance()
-
 /** The field of the presented resource's appearance this expression reads directly, or null for any other expression. */
 internal fun WireExpressionNode.appearanceField(): String? {
     val input = (this as? WireExpressionNode.InputWrapper)?.value ?: return null
     if (input.binding.value != "presentation.subject.appearance") return null
     return (input.path.segments.single() as WirePathSegment.FieldWrapper).value.name
-}
-
-internal fun generatedProviderEntries(): List<com.typewritermc.discovery.GeneratedProviderIndexEntry> {
-    val resources =
-        Collections.list(
-            requireNotNull(Thread.currentThread().contextClassLoader).getResources("META-INF/typewriter/generated-providers"),
-        )
-    return resources
-        .flatMap { resource ->
-            resource.openStream().bufferedReader().use { GeneratedProviderIndex.parse(it.readText()) }
-        }.distinct()
 }
 
 /**
@@ -572,16 +547,12 @@ internal fun frameworkContributions(
 ): com.typewritermc.discovery.CatalogContributions {
     val entries = generatedProviderEntries()
 
-    fun instance(entry: com.typewritermc.discovery.GeneratedProviderIndexEntry): Any {
-        val type = Class.forName(entry.providerClass)
-        return if (entry.kind ==
-            GeneratedProviderKind.Presentation
-        ) {
-            type.getConstructor(PresentationRuntime::class.java).newInstance(runtime)
+    fun instance(entry: com.typewritermc.discovery.GeneratedProviderIndexEntry): Any =
+        if (entry.kind == GeneratedProviderKind.Presentation) {
+            Class.forName(entry.providerClass).getConstructor(PresentationRuntime::class.java).newInstance(runtime)
         } else {
-            instantiateGeneratedProvider(type)
+            generatedProvider(entry)
         }
-    }
     val exportedKinds =
         setOf(
             GeneratedProviderKind.Type,

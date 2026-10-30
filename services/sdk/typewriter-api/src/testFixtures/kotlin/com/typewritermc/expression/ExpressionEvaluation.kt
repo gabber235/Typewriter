@@ -27,25 +27,31 @@ fun evaluate(
     reads: MutableList<ValueLocation>? = null,
 ): Availability<DataValue> {
     val values = inputs.toMap()
-    val reader =
-        ExpressionValueReader { location ->
-            reads?.add(location)
-            val root = values[location.resource.value] ?: return@ExpressionValueReader Availability.Unavailable(listOf(location))
-            when (val selected = root.locate(location.path)) {
-                is LocatedPortableValue.Value -> Availability.Available(selected.value)
-                is LocatedPortableValue.Row -> Availability.Available(entryValue(selected.row.key, selected.row.value))
-                else -> Availability.Unavailable(listOf(location))
-            }
+    val bindings = values.keys.associateWith { ValueLocation(resource = ResourceId(value = it), path = ValuePath.root) }
+    return evaluate(expression, bindings) { location ->
+        reads?.add(location)
+        val root = values[location.resource.value] ?: return@evaluate Availability.Unavailable(listOf(location))
+        when (val selected = root.locate(location.path)) {
+            is LocatedPortableValue.Value -> Availability.Available(selected.value)
+            is LocatedPortableValue.Row -> Availability.Available(entryValue(selected.row.key, selected.row.value))
+            else -> Availability.Unavailable(listOf(location))
         }
-    val bindings =
-        values.keys.associate {
-            ExpressionBindingId(value = it) to
-                ValueLocation(resource = ResourceId(value = it), path = ValuePath.root)
-        }
-    return with(FixtureReads) {
-        DefaultExpressionEvaluator(reader, testPortableTypes()).evaluate(expression, ExpressionBindings(bindings), EVALUATION_BUDGET)
     }
 }
+
+/** What the portable evaluator gives for [expression] when each named binding points at its location and [reader] answers every read. */
+fun evaluate(
+    expression: ExpressionNode,
+    bindings: Map<String, ValueLocation>,
+    reader: ExpressionValueReader,
+): Availability<DataValue> =
+    with(FixtureReads) {
+        DefaultExpressionEvaluator(reader, testPortableTypes()).evaluate(
+            expression,
+            ExpressionBindings(bindings.mapKeys { ExpressionBindingId(value = it.key) }),
+            EVALUATION_BUDGET,
+        )
+    }
 
 /** What the portable evaluator gives for this expression with the given inputs bound. */
 fun Expr<*, *>.evaluate(vararg inputs: Pair<String, DataValue?>): Availability<DataValue> = evaluate(toNode(), *inputs)

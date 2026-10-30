@@ -34,6 +34,7 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
+import com.typewritermc.realm.catalog.testCatalogIncarnation
 import com.typewritermc.realm.edit.AuthoringMutationPlan
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.operation.PreparationEvaluator
@@ -57,6 +58,9 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.utils.FakeDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.testkit.fieldDeclaration
+import com.typewritermc.testkit.origin
+import com.typewritermc.testkit.recordType
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
@@ -401,7 +405,22 @@ val RealmLifecycleTest by testSuite {
                     mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(availableResource to availableRecord, unavailableResource to unavailableRecord)
-            val incarnation = lifecycleIsolationCatalog(valid, unavailable)
+            val unavailableDefinition = recordType(unavailable, fieldDeclaration(unavailable, "legacy", ScalarKind.TEXT.template))
+            val incarnation =
+                testCatalogIncarnation(
+                    "lifecycle_isolation",
+                    CatalogContributions(
+                        declarations =
+                            listOf(
+                                OwnedTypeDeclaration(
+                                    origin("valid"),
+                                    recordType(valid, fieldDeclaration(valid, "name", ScalarKind.TEXT.template)),
+                                ),
+                                OwnedTypeDeclaration(origin("unavailable_first"), unavailableDefinition),
+                                OwnedTypeDeclaration(origin("unavailable_second"), unavailableDefinition),
+                            ),
+                    ),
+                )
             val fixture =
                 RealmLifecycleFixture(
                     this,

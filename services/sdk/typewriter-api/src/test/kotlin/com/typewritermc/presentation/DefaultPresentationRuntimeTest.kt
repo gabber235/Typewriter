@@ -2,7 +2,9 @@
 
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
@@ -16,7 +18,9 @@ import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
 import com.typewritermc.discovery.contributionKey
+import com.typewritermc.discovery.ownership
 import com.typewritermc.expression.eq
+import com.typewritermc.expression.evaluate
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.imprint.ArtifactId
@@ -600,10 +604,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                     skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
                 ),
             )
-        conditional.value.condition.evaluateWith(selectionCount to DataValue.integer(java.math.BigInteger.ONE)) shouldBe
-            DataValue.BooleanWrapper(true)
-        conditional.value.condition.evaluateWith(selectionCount to DataValue.integer(java.math.BigInteger.TWO)) shouldBe
-            DataValue.BooleanWrapper(false)
+        evaluate(conditional.value.condition, selectionCount to DataValue.integer(java.math.BigInteger.ONE)) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(true))
+        evaluate(conditional.value.condition, selectionCount to DataValue.integer(java.math.BigInteger.TWO)) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(false))
         val paragraphs =
             conditional.value.whenTrue
                 .singleFixed()
@@ -611,10 +615,11 @@ val DefaultPresentationRuntimeTest by testSuite {
         paragraphs.first().literalText() shouldBe "A title"
         val identity = (paragraphs.last().element as PresentationElement.ConditionalWrapper).value.whenTrue.singleFixed()
         val identifier = DataValue.named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValueWrapper("quest-1"))
-        (identity.element as PresentationElement.TextWrapper).value.value.evaluateWith(
+        evaluate(
+            (identity.element as PresentationElement.TextWrapper).value.value,
             "presentation.subject.identifier" to identifier,
         ) shouldBe
-            DataValue.StringValueWrapper("quest-1")
+            Availability.Available(DataValue.StringValueWrapper("quest-1"))
     }
 
     test("rich text keeps its sizing, paragraph behavior, shared style and run weights") {
@@ -811,7 +816,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             ).assemble(
                 CatalogAssemblyContext(
                     CatalogGeneration(value = "invalid presentation collection"),
-                    relations = rootOwnership(subjectId),
+                    relations = listOf(ownership("test.root.owns.0", RealmRootDefinition.id, subjectId)),
                 ),
             )
 
@@ -896,7 +901,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             ).assemble(
                 CatalogAssemblyContext(
                     CatalogGeneration(value = "valid presentation collection"),
-                    relations = rootOwnership(resourceId),
+                    relations = listOf(ownership("test.root.owns.0", RealmRootDefinition.id, resourceId)),
                 ),
             )
 
@@ -1052,7 +1057,13 @@ val DefaultPresentationRuntimeTest by testSuite {
             ).assemble(
                 CatalogAssemblyContext(
                     CatalogGeneration(value = "invalid collection admission"),
-                    relations = rootOwnership(literalId, boundedId),
+                    relations =
+                        listOf(literalId, boundedId).mapIndexed {
+                            index,
+                            member,
+                            ->
+                            ownership("test.root.owns.$index", RealmRootDefinition.id, member)
+                        },
                 ),
             )
 
