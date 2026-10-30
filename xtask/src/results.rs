@@ -192,11 +192,13 @@ pub fn runner_name(runner: &Runner) -> &'static str {
     }
 }
 
+/// Builders for runs in the tests of every runner that judges one.
 #[cfg(test)]
-mod tests {
+pub mod fixtures {
     use super::*;
 
-    fn run(cases: &[(&str, Outcome)]) -> TestRun {
+    /// A components run with `cases`.
+    pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
         TestRun {
             runner: Runner::Components,
             cases: cases
@@ -211,12 +213,19 @@ mod tests {
         }
     }
 
-    fn failed(message: &str) -> Outcome {
+    /// A failure with `message`.
+    pub fn failed(message: &str) -> Outcome {
         Outcome::Failed(Box::new(Failure {
             message: message.to_owned(),
             ..Failure::default()
         }))
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::fixtures::{failed, run};
+    use super::*;
 
     fn quarantining(id: &str) -> Quarantine {
         toml::from_str(&format!(

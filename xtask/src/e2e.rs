@@ -8,8 +8,10 @@
 //! (`panel/test_driver/integration_test.dart`) can write files on desktop and on web, and it is
 //! what receives the scenarios' results and screenshots.
 
+use std::io::Write;
 use std::net::{Ipv4Addr, TcpListener};
 use std::path::Path;
+use std::process::ExitStatus;
 use std::time::Duration;
 
 use anyhow::{Context as _, Result, bail};
@@ -136,14 +138,7 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
     results::write(&run, &file)?;
-    // Every suite drives the same registered scenarios, so a drive reporting none is broken.
-    if run.cases.is_empty() {
-        bail!(
-            "{name}: the drive reported no scenarios ({})",
-            file.display()
-        );
-    }
-    results::report(&run, &quarantine, &mut std::io::stderr())?;
+    verdict(&name, &file, &run, &quarantine, &mut std::io::stderr())?;
     println!(
         "{name}: {} scenarios passed ({})",
         run.cases.len(),
@@ -241,6 +236,13 @@ fn drive(
     // Without a results file the scenarios never ran (the build or the launch failed), and
     // recording fails.
     let (run, exit) = evidence::record_with(ctx, out, recorded, supervisor)?;
+    driven(exit, run)
+}
+
+/// The results of one drive that exited with `exit`. A drive that exits non zero without a
+/// failing scenario crashed (the build, the launch or the driver failed), so its results prove
+/// nothing; a failing scenario explains the exit and is a result.
+fn driven(exit: ExitStatus, run: TestRun) -> Result<TestRun> {
     let failed = run
         .cases
         .iter()
@@ -251,6 +253,25 @@ fn drive(
         );
     }
     Ok(run)
+}
+
+/// The suite's verdict on its settled `run`, written to `file`: every case that did not plainly
+/// pass goes to `out`, and the run fails when a scenario failed or none was reported.
+fn verdict(
+    name: &str,
+    file: &Path,
+    run: &TestRun,
+    quarantine: &Quarantine,
+    out: &mut dyn Write,
+) -> Result<()> {
+    // Every suite drives the same registered scenarios, so a drive reporting none is broken.
+    if run.cases.is_empty() {
+        bail!(
+            "{name}: the drive reported no scenarios ({})",
+            file.display()
+        );
+    }
+    results::report(run, quarantine, out)
 }
 
 fn defines(file: &Path) -> String {
@@ -265,5 +286,61 @@ fn desktop_device() -> Result<&'static str> {
         Ok("linux")
     } else {
         bail!("the panel suite runs on macOS and Linux")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::os::unix::process::ExitStatusExt as _;
+
+    use super::*;
+    use crate::results::fixtures::{failed, run};
+
+    /// The exit status of a process that exited with `code`.
+    fn exited(code: i32) -> ExitStatus {
+        ExitStatus::from_raw(code << 8)
+    }
+
+    fn judged(run: &TestRun) -> Result<()> {
+        let file = Path::new("test_run.json");
+        verdict("panel", file, run, &Quarantine::default(), &mut Vec::new())
+    }
+
+    #[test]
+    fn a_drive_that_crashes_without_results_fails_the_run_and_says_so() {
+        let error = driven(exited(1), run(&[])).unwrap_err().to_string();
+        assert!(error.contains("without a failing scenario"), "{error}");
+    }
+
+    #[test]
+    fn a_drive_that_crashes_after_passing_scenarios_fails_the_run() {
+        assert!(driven(exited(1), run(&[("a", Outcome::Passed)])).is_err());
+    }
+
+    #[test]
+    fn a_drive_that_exits_non_zero_for_a_failing_scenario_reports_it() {
+        let reported = driven(exited(1), run(&[("a", failed("boom"))])).unwrap();
+        assert!(matches!(reported.cases[0].outcome, Outcome::Failed(_)));
+    }
+
+    #[test]
+    fn a_run_that_reports_no_scenarios_fails() {
+        let error = judged(&run(&[])).unwrap_err().to_string();
+        assert!(error.contains("no scenarios"), "{error}");
+    }
+
+    #[test]
+    fn a_run_whose_scenarios_pass_passes() {
+        let passing = run(&[("a", Outcome::Passed), ("b", Outcome::Passed)]);
+        assert!(driven(exited(0), passing.clone()).is_ok());
+        assert!(judged(&passing).is_ok());
+    }
+
+    #[test]
+    fn a_run_with_one_failing_scenario_fails_and_names_it() {
+        let error = judged(&run(&[("a", Outcome::Passed), ("b", failed("boom"))]))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("1 of 2 cases failed: b"), "{error}");
     }
 }
