@@ -2,102 +2,75 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+const _small = Size(40, 24);
+const _large = Size(140, 48);
+
+/// A _small box saying "First" and a _large one saying "Second".
+final _first = SizedBox.fromSize(
+  key: const ValueKey("first"),
+  size: _small,
+  child: const Text("First"),
+);
+final _second = SizedBox.fromSize(
+  key: const ValueKey("second"),
+  size: _large,
+  child: const Text("Second"),
+);
+
 void main() {
-  group("ElasticSwitcher", () {
-    testWidgets("switches children with animation", (tester) async {
-      const firstKey = ValueKey("first");
-      const secondKey = ValueKey("second");
+  testWidgets("switches children with a transition", (tester) async {
+    final second = ValueNotifier(false);
+    addTearDown(second.dispose);
+    await tester.showComponent(
+      ValueListenableBuilder(
+        valueListenable: second,
+        builder: (context, value, _) =>
+            ElasticSwitcher(child: value ? _second : _first),
+      ),
+    );
+    expect(find.text("First"), findsOneWidget);
+    expect(find.text("Second"), findsNothing);
 
-      final mode = ValueNotifier<bool>(false);
+    second.value = true;
+    await tester.pump();
+    expect(find.text("First"), findsOneWidget);
+    expect(find.text("Second"), findsOneWidget);
 
-      final first = SizedBox(
-        key: firstKey,
-        width: 40,
-        height: 24,
-        child: const ColoredBox(color: Colors.red),
-      );
-      final second = SizedBox(
-        key: secondKey,
-        width: 140,
-        height: 48,
-        child: const ColoredBox(color: Colors.green),
-      );
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(find.text("First"), findsNothing);
+    expect(find.text("Second"), findsOneWidget);
+  });
 
-      await tester.pumpTestApp(
-        child: AnimatedBuilder(
-          animation: mode,
-          builder: (_, _) =>
-              ElasticSwitcher(child: mode.value ? second : first),
-        ),
-      );
+  testWidgets("grows from the old child's size to the new one", (tester) async {
+    final second = ValueNotifier(false);
+    addTearDown(second.dispose);
+    await tester.showComponent(
+      ValueListenableBuilder(
+        valueListenable: second,
+        builder: (context, value, _) =>
+            ElasticSwitcher(child: value ? _second : _first),
+      ),
+    );
+    expect(tester.getSize(find.byType(ElasticSwitcher)), _small);
 
-      expect(find.byKey(firstKey), findsOneWidget);
-      expect(find.byKey(secondKey), findsNothing);
+    second.value = true;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final mid = tester.getSize(find.byType(ElasticSwitcher));
+    expect(mid.width, allOf(greaterThan(_small.width), lessThan(_large.width)));
+    expect(
+      mid.height,
+      allOf(greaterThan(_small.height), lessThan(_large.height)),
+    );
 
-      mode.value = true;
-      await tester.pump();
-
-      expect(find.byKey(firstKey), findsOneWidget);
-      expect(find.byKey(secondKey), findsOneWidget);
-
-      await tester.pump(const Duration(milliseconds: 1200));
-
-      expect(find.byKey(firstKey), findsNothing);
-      expect(find.byKey(secondKey), findsOneWidget);
-    });
-
-    testWidgets("animates size between children", (tester) async {
-      const firstKey = ValueKey("first");
-      const secondKey = ValueKey("second");
-
-      const smallWidth = 40.0;
-      const smallHeight = 24.0;
-      const largeWidth = 140.0;
-      const largeHeight = 48.0;
-
-      final mode = ValueNotifier<bool>(false);
-
-      final first = SizedBox(
-        key: firstKey,
-        width: smallWidth,
-        height: smallHeight,
-        child: const ColoredBox(color: Colors.red),
-      );
-      final second = SizedBox(
-        key: secondKey,
-        width: largeWidth,
-        height: largeHeight,
-        child: const ColoredBox(color: Colors.green),
-      );
-
-      await tester.pumpTestApp(
-        child: AnimatedBuilder(
-          animation: mode,
-          builder: (_, _) =>
-              ElasticSwitcher(child: mode.value ? second : first),
-        ),
-      );
-
-      final switcherFinder = find.byType(AnimatedSize);
-
-      final initialSize = tester.getSize(switcherFinder);
-      expect(initialSize.width, smallWidth);
-      expect(initialSize.height, smallHeight);
-
-      mode.value = true;
-      await tester.pump();
-
-      await tester.pump(const Duration(milliseconds: 100));
-      final midSize = tester.getSize(switcherFinder);
-      expect(midSize.width, greaterThan(smallWidth));
-      expect(midSize.width, lessThan(largeWidth));
-      expect(midSize.height, greaterThan(smallHeight));
-      expect(midSize.height, lessThan(largeHeight));
-
-      await tester.pump(const Duration(milliseconds: 1000));
-      final finalSize = tester.getSize(switcherFinder);
-      expect(finalSize.width, closeTo(largeWidth, 0.01));
-      expect(finalSize.height, closeTo(largeHeight, 0.01));
-    });
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(
+      tester.getSize(find.byType(ElasticSwitcher)).width,
+      closeTo(_large.width, 0.01),
+    );
+    expect(
+      tester.getSize(find.byType(ElasticSwitcher)).height,
+      closeTo(_large.height, 0.01),
+    );
   });
 }

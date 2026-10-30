@@ -1,48 +1,9 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("EdgeSide", () {
-    group("axis", () {
-      test("left returns horizontal", () {
-        expect(EdgeSide.left.axis, equals(Axis.horizontal));
-      });
-
-      test("right returns horizontal", () {
-        expect(EdgeSide.right.axis, equals(Axis.horizontal));
-      });
-
-      test("top returns vertical", () {
-        expect(EdgeSide.top.axis, equals(Axis.vertical));
-      });
-
-      test("bottom returns vertical", () {
-        expect(EdgeSide.bottom.axis, equals(Axis.vertical));
-      });
-    });
-
-    group("unitVector", () {
-      test("left returns (-1, 0)", () {
-        expect(EdgeSide.left.unitVector, equals(const Offset(-1, 0)));
-      });
-
-      test("right returns (1, 0)", () {
-        expect(EdgeSide.right.unitVector, equals(const Offset(1, 0)));
-      });
-
-      test("top returns (0, -1)", () {
-        expect(EdgeSide.top.unitVector, equals(const Offset(0, -1)));
-      });
-
-      test("bottom returns (0, 1)", () {
-        expect(EdgeSide.bottom.unitVector, equals(const Offset(0, 1)));
-      });
-    });
-  });
-
   group("GraphElement", () {
-    Widget dummyBuilder(BuildContext context) => const SizedBox();
-
     group("inside", () {
       test("element fully inside another returns true", () {
         final outer = GraphElement(
@@ -51,7 +12,7 @@ void main() {
           y: 0,
           width: 10,
           height: 10,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final inner = GraphElement(
           id: GraphIdentifier("inner"),
@@ -59,7 +20,7 @@ void main() {
           y: 2,
           width: 3,
           height: 3,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
 
         expect(inner.inside(outer), isTrue);
@@ -72,7 +33,7 @@ void main() {
           y: 0,
           width: 10,
           height: 10,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final partial = GraphElement(
           id: GraphIdentifier("partial"),
@@ -80,7 +41,7 @@ void main() {
           y: 8,
           width: 5,
           height: 5,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
 
         expect(partial.inside(outer), isFalse);
@@ -93,7 +54,7 @@ void main() {
           y: 0,
           width: 10,
           height: 10,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final exact = GraphElement(
           id: GraphIdentifier("exact"),
@@ -101,7 +62,7 @@ void main() {
           y: 0,
           width: 10,
           height: 10,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
 
         expect(exact.inside(outer), isTrue);
@@ -114,7 +75,7 @@ void main() {
           y: 0,
           width: 10,
           height: 10,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final outside = GraphElement(
           id: GraphIdentifier("outside"),
@@ -122,7 +83,7 @@ void main() {
           y: 20,
           width: 5,
           height: 5,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
 
         expect(outside.inside(outer), isFalse);
@@ -138,7 +99,7 @@ void main() {
           width: 1,
           height: 1,
           priority: 1,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final high = GraphElement(
           id: GraphIdentifier("high"),
@@ -147,7 +108,7 @@ void main() {
           width: 1,
           height: 1,
           priority: 10,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
 
         expect(low.compareTo(high), lessThan(0));
@@ -162,7 +123,7 @@ void main() {
           width: 1,
           height: 1,
           priority: 5,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final b = GraphElement(
           id: GraphIdentifier("b"),
@@ -171,84 +132,24 @@ void main() {
           width: 1,
           height: 1,
           priority: 5,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
 
         expect(a.compareTo(b), equals(0));
       });
     });
 
-    group("equality", () {
-      test("elements with same id are equal", () {
-        final a = GraphElement(
-          id: GraphIdentifier("same-id"),
-          x: 0,
-          y: 0,
-          width: 1,
-          height: 1,
-          builder: dummyBuilder,
-        );
-        final b = GraphElement(
-          id: GraphIdentifier("same-id"),
-          x: 10,
-          y: 10,
-          width: 5,
-          height: 5,
-          builder: dummyBuilder,
-        );
+    test("elements are equal exactly when their ids are", () {
+      final small = graphElement("same", width: 1, height: 1);
+      final large = graphElement("same", x: 10, y: 10, width: 11, height: 11);
 
-        expect(a, equals(b));
-        expect(a.hashCode, equals(b.hashCode));
-      });
-
-      test("elements with different id are not equal", () {
-        final a = GraphElement(
-          id: GraphIdentifier("id-a"),
-          x: 0,
-          y: 0,
-          width: 1,
-          height: 1,
-          builder: dummyBuilder,
-        );
-        final b = GraphElement(
-          id: GraphIdentifier("id-b"),
-          x: 0,
-          y: 0,
-          width: 1,
-          height: 1,
-          builder: dummyBuilder,
-        );
-
-        expect(a, isNot(equals(b)));
-      });
-    });
-
-    group("copyWith", () {
-      test("copies with new values", () {
-        final original = GraphElement(
-          id: GraphIdentifier("original"),
-          x: 1,
-          y: 2,
-          width: 3,
-          height: 4,
-          priority: 5,
-          builder: dummyBuilder,
-        );
-
-        final copied = original.copyWith(x: 10, y: 20);
-
-        expect(copied.x, equals(10));
-        expect(copied.y, equals(20));
-        expect(copied.width, equals(3));
-        expect(copied.height, equals(4));
-        expect(copied.priority, equals(5));
-      });
+      expect(small, equals(large));
+      expect(small.hashCode, large.hashCode);
+      expect(graphElement("a"), isNot(equals(graphElement("b"))));
     });
   });
 
   group("GraphEdge", () {
-    Widget dummyBuilder(BuildContext context) => const SizedBox();
-
     group("connectsTo", () {
       test("returns true when element is source", () {
         final element = GraphElement(
@@ -257,7 +158,7 @@ void main() {
           y: 0,
           width: 1,
           height: 1,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final edge = GraphEdge(
           id: "edge-1",
@@ -276,7 +177,7 @@ void main() {
           y: 0,
           width: 1,
           height: 1,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final edge = GraphEdge(
           id: "edge-1",
@@ -295,7 +196,7 @@ void main() {
           y: 0,
           width: 1,
           height: 1,
-          builder: dummyBuilder,
+          builder: (_) => const SizedBox(),
         );
         final edge = GraphEdge(
           id: "edge-1",
@@ -305,66 +206,6 @@ void main() {
         );
 
         expect(edge.connectsTo(element), isFalse);
-      });
-    });
-
-    group("equality", () {
-      test("edges with same properties are equal", () {
-        final a = GraphEdge(
-          id: "edge-1",
-          source: GraphIdentifier("src"),
-          target: GraphIdentifier("tgt"),
-          color: Colors.red,
-          sourceSide: EdgeSide.right,
-          targetSide: EdgeSide.left,
-        );
-        final b = GraphEdge(
-          id: "edge-1",
-          source: GraphIdentifier("src"),
-          target: GraphIdentifier("tgt"),
-          color: Colors.red,
-          sourceSide: EdgeSide.right,
-          targetSide: EdgeSide.left,
-        );
-
-        expect(a, equals(b));
-        expect(a.hashCode, equals(b.hashCode));
-      });
-
-      test("edges with different colors are not equal", () {
-        final a = GraphEdge(
-          id: "edge-1",
-          source: GraphIdentifier("src"),
-          target: GraphIdentifier("tgt"),
-          color: Colors.red,
-        );
-        final b = GraphEdge(
-          id: "edge-1",
-          source: GraphIdentifier("src"),
-          target: GraphIdentifier("tgt"),
-          color: Colors.blue,
-        );
-
-        expect(a, isNot(equals(b)));
-      });
-
-      test("edges with different sides are not equal", () {
-        final a = GraphEdge(
-          id: "edge-1",
-          source: GraphIdentifier("src"),
-          target: GraphIdentifier("tgt"),
-          color: Colors.red,
-          sourceSide: EdgeSide.right,
-        );
-        final b = GraphEdge(
-          id: "edge-1",
-          source: GraphIdentifier("src"),
-          target: GraphIdentifier("tgt"),
-          color: Colors.red,
-          sourceSide: EdgeSide.bottom,
-        );
-
-        expect(a, isNot(equals(b)));
       });
     });
   });

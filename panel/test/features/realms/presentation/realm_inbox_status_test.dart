@@ -4,122 +4,77 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-final _scope = AuthoringScope(
-  organizationId: skir.recordId("organization:inbox"),
-  realmId: skir.recordId("service:inbox"),
-);
-
-RealmInboxState _state([int issues = 0]) => RealmInboxState(
-  publication: const RealmPublicationView.checking(),
-  issues: [
-    for (var i = 0; i < issues; i++)
-      RealmInboxIssue.finding(
-        ResourceIssue(
-          current: true,
-          diagnostic: PortablePresentationDiagnostic(
-            code: "issue$i",
-            message: "Problem $i",
-            severity: skir.DiagnosticSeverity.error,
-          ),
-        ),
-      ),
-  ],
-);
+/// How long the inbox button collects changes before it shows them.
+final _deadline = const CoalesceUpdates<RealmInboxStatus>().duration;
 
 void main() {
-  for (final delayed in [false, true]) {
-    testWidgets("inbox is visible when Realm selection is delayed: $delayed", (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(1400, 800));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      final selected = ValueNotifier<AuthoringScope?>(delayed ? null : _scope);
-      final state = ValueNotifier(_state(1));
-      final work = ScopedWorkSession();
-      addTearDown(selected.dispose);
-      addTearDown(state.dispose);
-      addTearDown(work.dispose);
-      await tester.pumpTestApp(
-        overrides: [
-          selectedAuthoringScopeProvider.overrideWith((ref) {
-            selected.addListener(ref.invalidateSelf);
-            ref.onDispose(() => selected.removeListener(ref.invalidateSelf));
-            return selected.value;
-          }),
-          realmInboxProvider(_scope).overrideWith((ref) {
-            state.addListener(ref.invalidateSelf);
-            ref.onDispose(() => state.removeListener(ref.invalidateSelf));
-            return state.value;
-          }),
-          workingAuthoringDocumentProvider(_scope)
-              .overrideWith((ref) => const AsyncLoading()),
-          localWorkControllerProvider.overrideWithValue(work),
-          realmInteractionProvider.overrideWithValue(
-            const RealmInteractionState(
-              connectionState: RealmConnectionState.online,
-            ),
-          ),
-        ],
-        child: RealmInboxShortcut(
-          child: Focus(
-            autofocus: true,
-            child: Scaffold(
-              body: Align(
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: 1400,
-                  height: 48,
-                  child: CustomAppBarLayout(
-                    navigation: const SizedBox(width: 300, height: 40),
-                    primary: AppBarItem.fixed(
-                      key: const ValueKey("search"),
-                      child: const SizedBox(width: 350, height: 40),
-                    ),
-                    actions: [
-                      AppBarItem.adaptive(
-                        key: const ValueKey("activity"),
-                        collapseOrder: 1,
-                        child: const WorkspaceActivityButton(),
-                      ),
-                    ],
-                    spacing: 8,
-                  ),
-                ),
+  final first = book("First");
+
+  testWidgets("a Realm's inbox shows its issues as soon as the Realm opens", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      [
+        signedIn(ada, organization: acme),
+        realm(books: [first]),
+      ],
+      at: PanelLocation.route(
+        OrganizationRoute(organizationId: acme.organizationId.id),
+      ),
+    );
+    panel.world.requireRealm.publication.emit(
+      publicationBlockedBy([
+        "Missing title",
+        "Missing icon",
+        "Missing color",
+      ], resource: "book:first"),
+    );
+
+    await panel.container
+        .read(appRouterProvider)
+        .navigate(const RealmRouteTree().realm(panel.world.requireRealm.scope));
+    await panel.settle();
+
+    expect(panel.shows("3 issues"), isTrue);
+  });
+
+  testWidgets("the inbox button opens the Realm's issues and Escape closes "
+      "them", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+    ]);
+    await panel.reportPublication(
+      publicationBlockedBy(["Missing title"], resource: "book:first"),
+    );
+    expect(panel.shows("1 issue"), isTrue);
+
+    await tester.tap(find.text("1 issue"));
+    await panel.settle();
+    expect(panel.shows("Missing title"), isTrue);
+
+    await panel.press(LogicalKeyboardKey.escape);
+    expect(panel.shows("Missing title"), isFalse);
+  });
+
+  test("projection preserves attention priority across publication states", () {
+    RealmInboxState withIssues(int issues) => RealmInboxState(
+      publication: const RealmPublicationView.checking(),
+      issues: [
+        for (var i = 0; i < issues; i++)
+          RealmInboxIssue.finding(
+            ResourceIssue(
+              current: true,
+              diagnostic: PortablePresentationDiagnostic(
+                code: "issue$i",
+                message: "Problem $i",
+                severity: skir.DiagnosticSeverity.error,
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.binding.transientCallbackCount, 0);
-      selected.value = _scope;
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      final workspace = tester.element(find.byType(WorkspaceActivityButton));
-      expect(
-        ProviderScope.containerOf(workspace)
-            .read(selectedAuthoringScopeProvider),
-        _scope,
-      );
-      expect(find.text("1 issue"), findsOneWidget);
-      final button = find.byType(FilledButton);
-      expect(tester.getSize(button).width, greaterThan(0));
-      expect(AppBarItemVisibility.of(tester.element(button)), isTrue);
-      await tester.tap(button);
-      await tester.pumpAndSettle();
-      expect(find.byType(RealmInboxView), findsOneWidget);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(find.byType(RealmInboxView), findsNothing);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.pumpAndSettle();
-      expect(find.byType(RealmInboxView), findsOneWidget);
-    });
-  }
+      ],
+    );
 
-  test("projection preserves attention priority across publication states", () {
     final ready =
         (readyPublicationStatus() as skir.PublicationStatus_readyWrapper).value;
     final variants = <RealmPublicationView, RealmInboxStatus>{
@@ -165,11 +120,11 @@ void main() {
       final state = RealmInboxState(publication: entry.key);
       expect(state.buttonStatus, entry.value);
       expect(
-        state.copyWith(issues: _state(2).issues).buttonStatus,
+        state.copyWith(issues: withIssues(2).issues).buttonStatus,
         const RealmInboxStatus.attention(2),
       );
     }
-    final first = _state(2);
+    final first = withIssues(2);
     final changedDetails = first.copyWith(
       issues: first.issues.reversed.toList(),
     );
@@ -177,149 +132,82 @@ void main() {
   });
 
   for (final reduced in [false, true]) {
-    testWidgets(
-      "status commits together and keeps focus, reduced motion $reduced",
-      (tester) async {
-        final state = ValueNotifier(_state());
-        addTearDown(state.dispose);
-        await _mount(tester, state, reduced: reduced);
-        final button = find.descendant(
-          of: find.byType(RealmInboxButton),
-          matching: find.byType(FilledButton),
+    testWidgets("a burst of changes shows at once at the deadline and keeps "
+        "the button usable${reduced ? ", with reduced motion" : ""}", (
+      tester,
+    ) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          FakeAccessibilityFeatures(disableAnimations: reduced);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: [first]),
+      ]);
+      await panel.reportPublication(
+        publicationBlockedBy(["Missing title"], resource: "book:first"),
+      );
+      final publication = panel.world.requireRealm.publication
+        ..emit(
+          publicationBlockedBy([
+            "Missing title",
+            "Missing icon",
+          ], resource: "book:first"),
         );
-        final originalButton = tester.element(button);
-        final control = find.byType(AppBarControl);
-        Focus.of(tester.element(find.byType(AnimatedStatusContent)))
-            .requestFocus();
-        await tester.pump();
-        final focus = FocusManager.instance.primaryFocus;
-        final oldStyle = tester.widget<AppBarControl>(control).style;
-        state.value = _state(1);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 30));
-        state.value = _state(2);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 69));
-        expect(
-          tester.widget<AppBarControl>(control).semanticLabel,
-          "Realm inbox. Checking",
-        );
-        expect(tester.widget<AppBarControl>(control).style, oldStyle);
-        expect(find.byIcon(Icons.error_outline), findsNothing);
-        await tester.pump(const Duration(milliseconds: 1));
-        final displayed = tester.widget<AppBarControl>(control);
-        expect(displayed.semanticLabel, "Realm inbox. 2 issues");
-        expect(displayed.style, isNot(oldStyle));
-        expect(find.text("2 issues"), findsOneWidget);
-        expect(find.text("1 issue"), findsNothing);
-        expect(find.byIcon(Icons.error_outline), findsOneWidget);
-        if (reduced) {
-          expect(find.text("Checking"), findsNothing);
-          expect(find.byIcon(Icons.sync), findsNothing);
-        }
-        expect(tester.element(button), same(originalButton));
-        expect(FocusManager.instance.primaryFocus, same(focus));
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pumpAndSettle();
-        expect(find.byType(RealmInboxView), findsOneWidget);
-      },
-    );
+      await tester.pump(_deadline ~/ 3);
+      publication.emit(
+        publicationBlockedBy([
+          "Missing title",
+          "Missing icon",
+          "Missing color",
+        ], resource: "book:first"),
+      );
+      await tester.pump(_deadline ~/ 3);
+      expect(panel.shows("1 issue"), isTrue);
+      expect(panel.shows("2 issues"), isFalse);
+
+      await tester.pump(_deadline);
+      await panel.settle();
+      expect(panel.shows("3 issues"), isTrue);
+      expect(panel.shows("1 issue"), isFalse);
+      expect(panel.shows("2 issues"), isFalse);
+
+      await tester.tap(find.text("3 issues"));
+      await panel.settle();
+      expect(panel.shows("Missing color"), isTrue);
+    });
   }
 
-  testWidgets("popup reads current issues before the display deadline", (
+  testWidgets("the open inbox shows new issues before its button does", (
     tester,
   ) async {
-    final state = ValueNotifier(_state(1));
-    addTearDown(state.dispose);
-    await _mount(tester, state, reduced: true);
-    await tester.tap(find.byType(FilledButton));
-    await tester.pumpAndSettle();
-    final popup = tester.element(find.byType(RealmInboxView));
-    state.value = _state(2);
-    await tester.pump();
-    await tester.pump();
-    expect(
-      tester.widget<RealmInboxView>(find.byType(RealmInboxView)).state.issues,
-      hasLength(2),
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+    ]);
+    await panel.reportPublication(
+      publicationBlockedBy(["Missing title"], resource: "book:first"),
     );
-    expect(
-      tester.widget<AppBarControl>(find.byType(AppBarControl)).semanticLabel,
-      "Realm inbox. 1 issue",
-    );
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(
-      tester.widget<AppBarControl>(find.byType(AppBarControl)).semanticLabel,
-      "Realm inbox. 2 issues",
-    );
-    expect(tester.element(find.byType(RealmInboxView)), same(popup));
-    await tester.pumpAndSettle();
-  });
+    await tester.tap(find.text("1 issue"));
+    await panel.settle();
 
-  testWidgets("changing realm resets pending presentation immediately", (
-    tester,
-  ) async {
-    final state = ValueNotifier(_state(1));
-    final selected = ValueNotifier(_scope);
-    final nextScope = _scope.copyWith(realmId: skir.recordId("service:next"));
-    addTearDown(state.dispose);
-    addTearDown(selected.dispose);
-    await _mount(
-      tester,
-      state,
-      selected: selected,
-      extra: [realmInboxProvider(nextScope).overrideWithValue(_state(3))],
+    panel.world.requireRealm.publication.emit(
+      publicationBlockedBy([
+        "Missing title",
+        "Missing icon",
+      ], resource: "book:first"),
     );
-    state.value = _state(2);
-    await tester.pump();
-    selected.value = nextScope;
     await tester.pump();
     await tester.pump();
-    expect(find.text("3 issues"), findsOneWidget);
-    expect(find.text("1 issue"), findsNothing);
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text("2 issues"), findsNothing);
-    expect(find.text("3 issues"), findsOneWidget);
-  });
-}
 
-Future<void> _mount(
-  WidgetTester tester,
-  ValueNotifier<RealmInboxState> state, {
-  bool reduced = false,
-  ValueNotifier<AuthoringScope>? selected,
-  List<Override> extra = const [],
-}) async {
-  await tester.binding.setSurfaceSize(const Size(1100, 800));
-  addTearDown(() => tester.binding.setSurfaceSize(null));
-  final work = ScopedWorkSession();
-  addTearDown(work.dispose);
-  await tester.pumpTestApp(
-    child: Builder(
-      builder: (context) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(disableAnimations: reduced),
-        child: const Scaffold(
-          body: Align(
-            alignment: Alignment.topRight,
-            child: WorkspaceActivityButton(),
-          ),
-        ),
-      ),
-    ),
-    overrides: [
-      selectedAuthoringScopeProvider.overrideWith((ref) {
-        selected?.addListener(ref.invalidateSelf);
-        ref.onDispose(() => selected?.removeListener(ref.invalidateSelf));
-        return selected?.value ?? _scope;
-      }),
-      realmInboxProvider(_scope).overrideWith((ref) {
-        state.addListener(ref.invalidateSelf);
-        ref.onDispose(() => state.removeListener(ref.invalidateSelf));
-        return state.value;
-      }),
-      workingAuthoringDocumentProvider(_scope)
-          .overrideWith((ref) => const AsyncLoading()),
-      localWorkControllerProvider.overrideWithValue(work),
-      ...extra,
-    ],
-  );
+    expect(panel.shows("Missing title"), isTrue);
+    expect(panel.shows("Missing icon"), isTrue);
+    expect(panel.shows("1 issue"), isTrue);
+
+    await tester.pump(_deadline);
+    await panel.settle();
+    expect(panel.shows("2 issues"), isTrue);
+    expect(panel.shows("Missing icon"), isTrue);
+  });
 }

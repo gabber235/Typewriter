@@ -164,17 +164,22 @@ extension MembershipSubmission on WidgetRef {
   ///
   /// Any failure, including one thrown by [accept], invalidates all membership
   /// projections before escaping so the next read can restore server state.
+  /// The invalidation goes through the container, not this widget: a command
+  /// such as a decline hides its own row while it sends, so the widget that
+  /// started it may be gone when the reply arrives.
   Future<TResult> executeMembership<TResponse, TResult>(
     PreparedCommit<TResponse> command,
     TResult Function(TResponse) accept,
   ) async {
+    final container = ProviderScope.containerOf(context, listen: false);
     try {
       final response = await read(localWorkControllerProvider).execute(command);
       return accept(response);
     } on Object {
-      invalidate(organizationMembersProvider);
-      invalidate(organizationJoinRequestsProvider);
-      invalidate(organizationJoinCodesProvider);
+      container
+        ..invalidate(organizationMembersProvider)
+        ..invalidate(organizationJoinRequestsProvider)
+        ..invalidate(organizationJoinCodesProvider);
       rethrow;
     }
   }

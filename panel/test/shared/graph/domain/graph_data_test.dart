@@ -1,22 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-GraphElement _element(
-  String id, {
-  int x = 0,
-  int y = 0,
-  int width = 1,
-  int height = 1,
-}) {
-  return GraphElement(
-    id: GraphIdentifier(id),
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    builder: (_) => const SizedBox(),
-  );
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("GraphData validation", () {
@@ -33,7 +17,7 @@ void main() {
       expect(
         () => GraphData(
           cellSize: 10,
-          elements: [_element("a", width: 0)],
+          elements: [graphElement("a", width: 0)],
           edges: [],
         ),
         throwsArgumentError,
@@ -41,7 +25,7 @@ void main() {
       expect(
         () => GraphData(
           cellSize: 10,
-          elements: [_element("a", height: -1)],
+          elements: [graphElement("a", height: -1)],
           edges: [],
         ),
         throwsArgumentError,
@@ -50,13 +34,13 @@ void main() {
 
     test("rejects blank and duplicate identifiers", () {
       expect(
-        () => GraphData(cellSize: 10, elements: [_element(" ")], edges: []),
+        () => GraphData(cellSize: 10, elements: [graphElement(" ")], edges: []),
         throwsArgumentError,
       );
       expect(
         () => GraphData(
           cellSize: 10,
-          elements: [_element("a"), _element("a")],
+          elements: [graphElement("a"), graphElement("a")],
           edges: [],
         ),
         throwsArgumentError,
@@ -64,7 +48,7 @@ void main() {
       expect(
         () => GraphData(
           cellSize: 10,
-          elements: [_element("a")],
+          elements: [graphElement("a")],
           edges: const [
             GraphEdge(
               id: "edge",
@@ -85,7 +69,7 @@ void main() {
     });
 
     test("owns immutable snapshots", () {
-      final elements = [_element("a")];
+      final elements = [graphElement("a")];
       final edges = [
         const GraphEdge(
           id: "edge",
@@ -101,7 +85,10 @@ void main() {
 
       expect(data.elements, hasLength(1));
       expect(data.edges, hasLength(1));
-      expect(() => data.elements.add(_element("b")), throwsUnsupportedError);
+      expect(
+        () => data.elements.add(graphElement("b")),
+        throwsUnsupportedError,
+      );
       expect(data.keyedElements.clear, throwsUnsupportedError);
       expect(
         () => data.elementsConnectedEdges[const GraphIdentifier("a")]!.clear(),
@@ -112,7 +99,7 @@ void main() {
     test("allows negative coordinates and missing edge endpoints", () {
       final data = GraphData(
         cellSize: 10,
-        elements: [_element("a", x: -2, y: -3)],
+        elements: [graphElement("a", x: -2, y: -3)],
         edges: const [
           GraphEdge(
             id: "edge",

@@ -4,113 +4,95 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-final _refProvider = Provider<Ref>((ref) => ref);
-
 void main() {
   test("an empty query issues one Realm search and becomes ready", () async {
-    final fixture = _fixture();
-    addTearDown(fixture.container.dispose);
-    addTearDown(fixture.subscription.close);
-    addTearDown(fixture.controller.dispose);
+    // A Realm that records every search and finds nothing, with its
+    // search started.
+    final world = testWorld([signedIn(ada, organization: acme), realm()]);
+    final requests = <skir.SearchAuthoringRequest>[];
+    world.requireRealm.answerSearch = (request) async {
+      requests.add(request);
+      return skir.SearchAuthoringResponse.createSuccess(
+        generation: world.requireRealm.document.generation,
+        hits: const [],
+        diagnostics: const [],
+      );
+    };
+    await world.openRealmEditing();
+    final controller = world.realmSearch();
     await pumpEventQueue();
 
-    expect(fixture.controller.snapshot.status, SearchSourceStatus.ready);
-    expect(fixture.requests, hasLength(1));
-    expect(fixture.requests.single.query, isEmpty);
+    expect(controller.snapshot.status, SearchSourceStatus.ready);
+    expect(requests.map((request) => request.query), [""]);
   });
 
   test(
-    "query updates reuse the source and issue a fresh Realm search",
+    "a changed query issues exactly one fresh Realm search for it",
     () async {
-      final fixture = _fixture();
-      addTearDown(fixture.container.dispose);
-      addTearDown(fixture.subscription.close);
-      addTearDown(fixture.controller.dispose);
+      // A Realm that records every search and finds nothing, with its
+      // search started.
+      final world = testWorld([signedIn(ada, organization: acme), realm()]);
+      final requests = <skir.SearchAuthoringRequest>[];
+      world.requireRealm.answerSearch = (request) async {
+        requests.add(request);
+        return skir.SearchAuthoringResponse.createSuccess(
+          generation: world.requireRealm.document.generation,
+          hits: const [],
+          diagnostics: const [],
+        );
+      };
+      await world.openRealmEditing();
+      final controller = world.realmSearch();
       await pumpEventQueue();
 
-      fixture.controller.updateQuery("example");
-      fixture.controller.triggerQuery();
+      controller.updateQuery("example");
       await pumpEventQueue();
 
-      expect(fixture.requests.length, greaterThanOrEqualTo(2));
-      expect(fixture.requests.last.query, "example");
-      expect(fixture.controller.snapshot.status, SearchSourceStatus.ready);
+      expect(requests.map((request) => request.query), ["", "example"]);
+      expect(controller.snapshot.status, SearchSourceStatus.ready);
     },
   );
+
   test(
     "remote membership keeps working labels and hides local deletions",
     () async {
-      final id = skir.ResourceId(value: "tag:hit");
+      final hit = tag("Saved name");
+      final id = hit.tagId;
       final created = skir.ResourceId(value: "tag:new");
       final context = skir.PortableValue(
         actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
         payload: skir.DataValue.wrapStringValue("confirmed command context"),
       );
-      final document = fixtureAuthoringDocument(
-        tags: [
-          Tag(
-            tagId: id,
-            name: "Saved name",
-            color: Colors.blue,
-            parentIds: const [],
-            placement: const GraphPlacement(x: 0, y: 0, width: 2, height: 1),
-          ),
-        ],
-      );
-      final transport = ScriptedAuthoringTransport(AsyncData(document));
-      addTearDown(transport.dispose);
-      final base = fixtureAuthoringCommands(transport);
-      final commands = AuthoredResourceCommands(
-        prepareStep: (_) async => throw UnimplementedError(),
-        previewTypeArguments: base.previewTypeArguments,
-        prepareTypeArguments: base.prepareTypeArguments,
-        prepareValue: base.prepareValue,
-        invokeCommand: base.invokeCommand,
-        watchSearch: base.watchSearch,
-        reload: base.reload,
-        search: (_) async => skir.SearchAuthoringResponse.createSuccess(
-          generation: document.generation,
-          hits: [
-            skir.AuthoringSearchHit(
-              resource: id,
-              subject: skir.PresentationSubject(
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realm(tags: [hit]),
+      ]);
+      final seeded = world.requireRealm;
+      final document = seeded.document;
+      seeded.answerSearch = (_) async =>
+          skir.SearchAuthoringResponse.createSuccess(
+            generation: document.generation,
+            hits: [
+              skir.AuthoringSearchHit(
                 resource: id,
-                content: document.resource(id)!,
+                subject: skir.PresentationSubject(
+                  resource: id,
+                  content: document.resource(id)!,
+                ),
+                context: context,
               ),
-              context: context,
-            ),
-          ],
-          diagnostics: const [],
-        ),
-      );
-      final container = ProviderContainer.test(
-        overrides: [
-          ...appOverrides(),
-          ...authoringFixtureOverrides(
-            document: document,
-            transport: transport,
-            commands: commands,
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      final scope = container.read(selectedAuthoringScopeProvider)!;
-      final controller = SourceController(
-        source: RealmAuthoringSearchSource(
-          ref: container.read(_refProvider),
-          organizationId: scope.organizationId,
-          realmId: scope.realmId,
-        ),
-        baseSelectors: const [],
-      )..triggerQuery();
-      addTearDown(controller.dispose);
+            ],
+            diagnostics: const [],
+          );
+      final workspace = await world.openRealmEditing();
+      final controller = world.realmSearch();
       await pumpEventQueue();
-      final workspace = container.read(realmEditingProvider(scope));
       final binding = workspace.attach(
         id,
         policy: EditorCommitPolicy.applyResource,
       );
       addTearDown(binding.detach);
+
       binding.edit(
         label: "Rename hit",
         apply: (edit) => edit.set(
@@ -123,6 +105,7 @@ void main() {
           (controller.snapshot.nodes.single as SearchResultNode).result;
       expect(result.title, "Working name");
       expect((result.payload as AuthoringSearchResultPayload).context, context);
+
       workspace.edit(
         label: "Create unrelated tag",
         policy: EditorCommitPolicy.applyResource,
@@ -130,6 +113,8 @@ void main() {
       );
       await pumpEventQueue();
       expect(controller.snapshot.nodes, hasLength(1));
+
+      seeded.holdSaves = true;
       workspace.edit(
         label: "Delete hit",
         policy: EditorCommitPolicy.applyResource,
@@ -137,84 +122,8 @@ void main() {
       );
       await pumpEventQueue();
       expect(controller.snapshot.nodes, isEmpty);
-      expect(transport.observation.requireValue.entry(id), isNotNull);
-      expect(transport.requests, isEmpty);
+      // The deletion is still local work; the Realm still holds the hit.
+      expect(seeded.document.entry(id), isNotNull);
     },
-  );
-}
-
-({
-  ProviderContainer container,
-  ProviderSubscription<RealmEditing> subscription,
-  List<skir.SearchAuthoringRequest> requests,
-  SourceController controller,
-})
-_fixture() {
-  final organization = skir.recordId("organization:test");
-  final realm = skir.recordId("realm:test");
-  final initial = _state().confirmedDocument!;
-  final requests = <skir.SearchAuthoringRequest>[];
-  final transport = ScriptedAuthoringTransport(AsyncData(initial));
-  final commands = AuthoredResourceCommands(
-    prepareStep: (_) async => throw UnimplementedError(),
-    previewTypeArguments: ({required resource, required requested}) async =>
-        throw UnimplementedError(),
-    prepareTypeArguments: (_) async => throw UnimplementedError(),
-    prepareValue: (_) async => throw UnimplementedError(),
-    invokeCommand: ({required capabilityId, required payload}) async =>
-        throw UnimplementedError(),
-    watchSearch: (_) => const Stream.empty(),
-    reload: () async {},
-    search: (request) async {
-      requests.add(request);
-      return skir.SearchAuthoringResponse.createSuccess(
-        generation: initial.generation,
-        hits: const [],
-        diagnostics: const [],
-      );
-    },
-  );
-  final container = ProviderContainer.test(
-    overrides: [
-      ...appOverrides(),
-      organizationIdProvider.overrideWithValue(organization),
-      realmIdProvider.overrideWithValue(realm),
-      ...authoringFixtureOverrides(
-        document: initial,
-        transport: transport,
-        commands: commands,
-      ),
-    ],
-  );
-  final source = RealmAuthoringSearchSource(
-    ref: container.read(_refProvider),
-    organizationId: organization,
-    realmId: realm,
-  );
-  final subscription = container.listen(
-    realmEditingProvider(
-      AuthoringScope(organizationId: organization, realmId: realm),
-    ),
-    (_, _) {},
-  );
-  return (
-    container: container,
-    subscription: subscription,
-    requests: requests,
-    controller: SourceController(source: source, baseSelectors: const []),
-  );
-}
-
-AuthoringSessionState _state() {
-  final generation = skir.CatalogGeneration(value: "catalog:test");
-  return AuthoringSessionState(
-    catalog: receivedCheckedEditorCatalog(generation: generation),
-    snapshot: skir.AuthoringState(
-      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-      generation: generation,
-      resources: const [],
-      links: const [],
-      findings: const [],
-    ),
   );
 }

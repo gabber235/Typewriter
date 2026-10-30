@@ -10,6 +10,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final class NatsCoreClient implements NatsClient {
   /// Starts a client whose connection and subscriptions are owned by this instance.
   factory NatsCoreClient.connect(NatsClientConfiguration configuration) {
+    debugPrint("nats: connecting to ${configuration.url}");
     try {
       return NatsCoreClient._(
         NatsConnection.connect(
@@ -227,7 +228,7 @@ final class NatsCoreClient implements NatsClient {
     return _sendFramed(
       connection,
       subject,
-      _FramedPayload(payload, limits.chunkBytes, headers),
+      FramedPayload(payload, limits.chunkBytes, headers),
       limits: limits,
       timeout: timeout,
       cancelled: cancelled,
@@ -248,7 +249,7 @@ final class NatsCoreClient implements NatsClient {
   Future<NatsMessage> _sendFramed(
     NatsConnection connection,
     String subject,
-    _FramedPayload framed, {
+    FramedPayload framed, {
     required TransportLimits limits,
     required Duration timeout,
     required Future<void>? cancelled,
@@ -653,49 +654,6 @@ Future<T> _untilCancelled<T>(Future<T> operation, Future<void>? cancelled) =>
         operation,
         cancelled.then<T>((_) => throw const TransferCancelled()),
       ]);
-
-/// One request payload split into frames of at most one chunk, which share a
-/// fresh payload id, the complete size and the digest.
-///
-/// The caller's headers travel on every frame, so each frame carries the same
-/// transport metadata as a plain request would.
-final class _FramedPayload {
-  _FramedPayload(Uint8List payload, this._chunkBytes, Map<String, String> base)
-    : _payload = Uint8List.fromList(payload),
-      payloadId = uuid.v4().replaceAll("-", ""),
-      count = (payload.length + _chunkBytes - 1) ~/ _chunkBytes,
-      _digest = sha256.convert(payload).toString(),
-      _base = base;
-
-  final Uint8List _payload;
-  final int _chunkBytes;
-  final String _digest;
-  final Map<String, String> _base;
-
-  /// Identifies this payload's frames at the receiver.
-  final String payloadId;
-
-  /// The number of frames.
-  final int count;
-
-  /// The bytes of frame [index], a view of the payload.
-  Uint8List bytes(int index) => Uint8List.sublistView(
-    _payload,
-    index * _chunkBytes,
-    min((index + 1) * _chunkBytes, _payload.length),
-  );
-
-  /// The caller's headers with the framing headers of frame [index].
-  NatsHeaders headers(int index) => NatsHeaders(
-    entries: {
-      ..._base,
-      PayloadHeaders.payload: payloadId,
-      PayloadHeaders.chunk: "$index/$count",
-      PayloadHeaders.size: "${_payload.length}",
-      PayloadHeaders.sha256: _digest,
-    }.entries,
-  );
-}
 
 String _diagnostic(Object error) => switch (error) {
   NatsException(:final message, :final cause) =>

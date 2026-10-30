@@ -28,10 +28,7 @@ final class ServiceEditorSnapshot extends EditorSnapshot {
       return text.isValidIdentifier
           ? EditorMutationResult.applied(value)
           : EditorMutationResult.invalid([
-              _serviceIdentityDiagnostic(
-                "Use at least three lowercase letters or digits separated by underscores",
-                path,
-              ),
+              _serviceIdentityDiagnostic(_serviceNameRule, path),
             ]);
     }
     if (path == editorRootPath) {
@@ -47,6 +44,10 @@ final class ServiceEditorSnapshot extends EditorSnapshot {
     ]);
   }
 }
+
+/// The rule a service name follows, as the author reads it.
+const _serviceNameRule =
+    "Use at least three lowercase letters or digits separated by underscores";
 
 EditorDiagnostic _serviceIdentityDiagnostic(
   String message,
@@ -117,6 +118,15 @@ final class ServiceEditPersistence extends ValueEditPersistence {
                 "The service was deleted",
                 targetDeleted: true,
               ),
+            skir.UpdateOrganizationServiceResponse_validationErrorWrapper(
+              value: skir.ServiceUpdateValidationError.nameInvalid,
+            ) =>
+              MutationInvalid([
+                _serviceIdentityDiagnostic(
+                  _serviceNameRule,
+                  editorRootPath.field("name"),
+                ),
+              ]),
             skir.UpdateOrganizationServiceResponse_validationErrorWrapper() ||
             skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper() =>
               invalidMutation("The service contains invalid values"),

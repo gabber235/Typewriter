@@ -1,111 +1,72 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+final _code = joinCode("code", createdAt: DateTime.utc(2024));
+
 void main() {
-  testWidgets("join code row shortcuts manage selection and actions", (
+  for (final (selected, key, shifted, invoked) in [
+    (false, LogicalKeyboardKey.space, false, ["toggle"]),
+    (false, LogicalKeyboardKey.space, true, ["select all"]),
+    (false, LogicalKeyboardKey.keyC, false, ["copy"]),
+    (true, LogicalKeyboardKey.escape, false, ["clear"]),
+    (true, LogicalKeyboardKey.keyC, false, <String>[]),
+    (true, LogicalKeyboardKey.delete, false, ["revoke selection"]),
+  ]) {
+    testWidgets("${keyName(key, shifted: shifted)} on "
+        "${selected ? "a selected" : "an unselected"} join code row invokes "
+        "${invoked.isEmpty ? "nothing" : invoked.single}", (tester) async {
+      final row = await tester.pumpFocusedRow(
+        [
+          signedIn(ada, organization: acme),
+          membership(joinCodes: [_code]),
+        ],
+        (content, record) => JoinCodeTableRowShortcuts(
+          code: _code,
+          onToggleSelection: record("toggle"),
+          onSelectAll: record("select all"),
+          onClearSelection: record("clear"),
+          onCopy: record("copy"),
+          isSelected: selected,
+          hasSelection: selected,
+          onRevokeSelection: () async => record("revoke selection")(),
+          onFocusChange: (_) {},
+          child: content,
+        ),
+      );
+
+      await row.press(key, shifted: shifted);
+
+      expect(row.invoked, invoked);
+      expect(row.panel.dialog.showing("Revoke this join code?"), isFalse);
+    });
+  }
+
+  testWidgets("Delete on an unselected join code row asks before revoking", (
     tester,
   ) async {
-    final focusNode = FocusNode();
-    addTearDown(focusNode.dispose);
-    var toggles = 0;
-    var selectAll = 0;
-    var clears = 0;
-    var copies = 0;
-
-    final code = skir.JoinCode(
-      code: skir.recordId("join_code:code"),
-      createdAt: DateTime.utc(2024),
-      expiresAt: null,
-      singleUse: true,
-      autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
-    );
-
-    await tester.pumpWidget(
-      FakeApp(
-        child: JoinCodeTableRowShortcuts(
-          code: code,
-          onToggleSelection: () => toggles++,
-          onSelectAll: () => selectAll++,
-          onClearSelection: () => clears++,
-          onCopy: () => copies++,
-          isSelected: false,
-          hasSelection: false,
-          onRevokeSelection: () async {},
-          onFocusChange: (_) {},
-          child: Focus(
-            focusNode: focusNode,
-            child: const SizedBox(width: 20, height: 20),
-          ),
-        ),
+    final row = await tester.pumpFocusedRow(
+      [
+        signedIn(ada, organization: acme),
+        membership(joinCodes: [_code]),
+      ],
+      (content, record) => JoinCodeTableRowShortcuts(
+        code: _code,
+        onToggleSelection: record("toggle"),
+        onSelectAll: record("select all"),
+        onClearSelection: record("clear"),
+        onCopy: record("copy"),
+        isSelected: false,
+        hasSelection: false,
+        onRevokeSelection: () async => record("revoke selection")(),
+        onFocusChange: (_) {},
+        child: content,
       ),
     );
-    focusNode.requestFocus();
-    await tester.pump();
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.space);
-    expect(toggles, 1);
+    await row.press(LogicalKeyboardKey.delete);
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.space);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-    expect(selectAll, 1);
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    expect(clears, 1);
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    expect(copies, 1);
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.delete);
-    await tester.pumpAndSettle();
-    expect(find.text("Revoke this join code?"), findsOneWidget);
-  });
-
-  testWidgets("selected join code row routes keys to bulk callbacks", (
-    tester,
-  ) async {
-    final focusNode = FocusNode();
-    addTearDown(focusNode.dispose);
-    var clears = 0;
-    var copies = 0;
-    var revokes = 0;
-    final code = skir.JoinCode(
-      code: skir.recordId("join_code:selected"),
-      createdAt: DateTime.utc(2024),
-      expiresAt: null,
-      singleUse: true,
-      autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
-    );
-
-    await tester.pumpWidget(
-      FakeApp(
-        child: JoinCodeTableRowShortcuts(
-          code: code,
-          onToggleSelection: () {},
-          onSelectAll: () {},
-          onClearSelection: () => clears++,
-          onCopy: () => copies++,
-          isSelected: true,
-          hasSelection: true,
-          onRevokeSelection: () async => revokes++,
-          onFocusChange: (_) {},
-          child: Focus(focusNode: focusNode, child: const SizedBox()),
-        ),
-      ),
-    );
-    focusNode.requestFocus();
-    await tester.pump();
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyEvent(LogicalKeyboardKey.delete);
-
-    expect(clears, 1);
-    expect(copies, 0);
-    expect(revokes, 1);
-    expect(find.text("Revoke this join code?"), findsNothing);
+    expect(row.panel.dialog.showing("Revoke this join code?"), isTrue);
+    expect(row.invoked, isEmpty);
   });
 }

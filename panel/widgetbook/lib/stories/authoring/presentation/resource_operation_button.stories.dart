@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(
   name: "Availability and labels",
@@ -32,9 +33,10 @@ Widget resourceOperationButtonStory(BuildContext context) {
     },
   );
   final destructive = context.knobs.boolean(label: "Destructive tone");
-  return FakeApp(
-    child: Center(
-      child: SizedBox(
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
         width: 260,
         child: ResourceOperationButton(
           presentation: skir.OperationPresentation(

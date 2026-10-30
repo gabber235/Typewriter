@@ -1,5 +1,6 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/core/world.dart";
 import "package:typewriter_testkit/src/drivers/component_driver.dart";
@@ -16,6 +17,20 @@ final class ResourcesDriver extends ComponentDriver {
 
   /// Whether the surface shows a resource as [label].
   bool showing(String label) => labeled(label).evaluate().isNotEmpty;
+
+  /// Drags the first resource or header reading [source] and drops it on
+  /// the first one reading [onto], the way a pointer does.
+  Future<void> drag(String source, {required String onto}) async {
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.text(source).first),
+    );
+    await gesture.moveBy(const Offset(30, 0));
+    await tester.pump();
+    await gesture.moveTo(tester.getCenter(find.text(onto).first));
+    await tester.pumpAndSettle();
+    await gesture.up();
+    await settle();
+  }
 
   /// The resources selected for the inspector and for operations.
   ///

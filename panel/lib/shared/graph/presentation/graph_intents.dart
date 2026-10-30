@@ -13,8 +13,3 @@ class GraphResizeIntent extends Intent {
 
   final TraversalDirection direction;
 }
-
-/// Requests that the focused graph child be brought to the viewport center.
-class GraphCenterFocusedIntent extends Intent {
-  const GraphCenterFocusedIntent();
-}

@@ -1,33 +1,49 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("the reusable organization shell owns the inspector", () {
-    final organization = File(
-      "lib/features/organizations/presentation/organization_route.dart",
-    ).readAsStringSync();
+  final first = book("First");
 
-    expect(organization, contains("InspectorScaffold("));
-    expect("InspectorScaffold(".allMatches(organization), hasLength(1));
-    expect(organization, contains("OrganizationScaffold(child: AutoRouter())"));
-    expect(
-      organization,
-      matches(RegExp(r"Expanded\(\s*child: InspectorScaffold\(")),
+  // A book has no workspace, so its page shows the inspection, with its
+  // title field, in the main area instead of a side inspector; it must
+  // still show only once.
+  testWidgets("an opened resource page shows its inspection once", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+    ]);
+    await panel.resources.row("First").open();
+    await panel.eventually(
+      () => expect(panel.path, endsWith("resource/${first.bookId.value}")),
     );
-    expect(organization, contains("child: child,"));
+
+    await panel.resources.selectOnly([first.bookId]);
+
+    expect(find.text("title"), findsOneWidget);
   });
 
-  test("selectable route pages do not own inspectors", () {
-    final paths = [
-      "lib/features/services/presentation/route.dart",
-      "lib/features/realms/presentation/resource_route.dart",
-    ];
+  testWidgets("the services page shows one inspector for a selection", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      [
+        signedIn(ada, organization: acme),
+        realm(books: [first]),
+      ],
+      at: PanelLocation.route(
+        OrganizationRoute(
+          organizationId: acme.organizationId.id,
+          children: [const ServicesRoute()],
+        ),
+      ),
+    );
 
-    for (final path in paths) {
-      expect(
-        File(path).readAsStringSync(),
-        isNot(contains("InspectorScaffold")),
-      );
-    }
+    await panel.resources.selectOnly([first.bookId]);
+
+    expect(panel.inspector.panes, hasLength(1));
+    expect(find.text("title"), findsOneWidget);
   });
 }

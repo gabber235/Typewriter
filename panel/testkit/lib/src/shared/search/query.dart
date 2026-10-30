@@ -50,3 +50,10 @@ final List<QuerySelectorDefinition> mockQuerySelectors = [
     color: safeColors[4],
   ),
 ];
+
+/// The color [mockQuerySelectors] give the selector [id], null when it has
+/// none and takes the theme's.
+Color? mockQuerySelectorColor(String id) => mockQuerySelectors
+    .whereType<KeyValueSelectorDefinition>()
+    .firstWhere((selector) => selector.id == id)
+    .color;

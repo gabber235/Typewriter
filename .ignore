@@ -12,3 +12,4 @@
 !services/protocol/src/main/kotlin/skirout/
 !services/protocol/transport-adapters/kotlin/skirout/
 !services/sdk/typewriter-api/src/main/skirout/
+!skir-src/transport/v1/fixtures/frames.json

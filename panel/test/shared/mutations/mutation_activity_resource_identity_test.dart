@@ -5,149 +5,50 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("resource details omit non UUID submission identities", (
+  testWidgets("an uncertain save never shows its request identity", (
     tester,
   ) async {
     const key = EditorResourceKey(scope: "test", identity: "uncertain");
-    final document = EditorDocument(
-      rootType: skir.TypeUse.wrapNamed(
-        skir.NamedTypeUse(definition: _recordType, arguments: const []),
-      ),
-      catalog: _recordCatalog,
-      confirmedValue: skir.DataValue.createRecord(
-        fields: [
-          skir.FieldValue(
-            name: "name",
-            value: skir.DataValue.wrapStringValue("canonical"),
-          ),
-        ],
-      ),
-      revision: 1,
-    );
     final snapshot = FakeEditorSnapshot(
-      document,
+      recordEditorDocument(
+        {"name": skir.DataValue.wrapStringValue("canonical")},
+        {"name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
+        1,
+      ),
       validation: acceptTestEditorMutation,
     );
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final work = ScopedWorkSession();
+    addTearDown(work.dispose);
     final source = ValueEditingRegistration(
       targetId: key.identity,
       label: "Uncertain configuration",
-      persistence: _UncertainResource(key, snapshot),
+      persistence: UncertainConfigurationResource(key, snapshot),
       snapshot: snapshot,
       commitPolicy: EditorCommitPolicy.applyResource,
-    ).acquire(workspace);
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
-    );
+    ).acquire(work);
+    addTearDown(work.lease(WorkDriverId(domain: "value", scope: key)).release);
     source.update(
       editorRootPath.field("name"),
       skir.DataValue.wrapStringValue("local draft"),
     );
     expect(await source.flush(), isA<MutationUncertain>());
 
-    await tester.pumpTestApp(
-      child: Scaffold(
-        appBar: AppBar(
-          actions: [ScopedWorkSessionActivityView(controller: workspace)],
-        ),
-      ),
-    );
-    await tester.tap(find.text("Needs attention"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.text(
-        "The outcome is unknown. Local work is retained and will not be resubmitted",
-      ),
-    );
-    await tester.pumpAndSettle();
+    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
+    await panel.activity.open("Needs attention");
 
-    expect(find.text("Submission"), findsNothing);
-    expect(find.text("Show details"), findsNothing);
-    expect(find.text("Hide details"), findsNothing);
+    expect(
+      panel.shows(
+        "The outcome is unknown. Local work is retained and will not be "
+        "resubmitted",
+      ),
+      isTrue,
+    );
+    expect(
+      panel.activity.entry("Uncertain configuration").hasDetails,
+      isFalse,
+      reason: "an uncertain outcome has no diagnostics to disclose",
+    );
+    expect(find.textContaining("not-a-uuid"), findsNothing);
+    expect(find.bySemanticsLabel(RegExp("not-a-uuid")), findsNothing);
   });
-}
-
-final _recordType = skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: "Resource"),
-  revision: 1,
-);
-final _recordField = skir.EffectiveFieldTemplate(
-  key: "name",
-  owner: skir.FieldOwner(definition: _recordType, name: "name"),
-  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-  rules: const [],
-);
-final _recordCatalog = CheckedEditorCatalog(
-  skir.EditorCatalog(
-    resourceDisplays: const [],
-    resourceOperations: const [],
-    generation: skir.CatalogGeneration(value: "test"),
-    types: [
-      skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        display: defaultTypeDisplay(""),
-        definition: skir.TypeDefinition(
-          id: _recordType,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              skir.FieldDeclaration(
-                owner: _recordField.owner,
-                type: _recordField.type,
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-            ],
-            abstract_: false,
-          ),
-          parents: const [],
-        ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: [_recordField],
-        ancestorTemplates: const [],
-      ),
-    ],
-    relations: const [],
-    realmRoot: skir.TypeDefinitionId.defaultInstance,
-    presentations: const [],
-    presentationMaterials: const [],
-    configuration: const [],
-    diagnostics: const [],
-
-    endpointBindings: const [],
-    capabilities: const [],
-    recommendations: const [],
-    roleFallbacks: const [],
-  ),
-);
-
-final class _UncertainResource extends ValueEditPersistence {
-  _UncertainResource(this.key, this.snapshot);
-
-  @override
-  final EditorResourceKey key;
-  final EditorSnapshot snapshot;
-
-  @override
-  Set<Object> get reservations => {key};
-
-  @override
-  Future<EditorSnapshot?> refreshSnapshot() async => snapshot;
-
-  @override
-  PreparedCommit<TypedMutationResult> prepareValue(
-    EditorSnapshot snapshot,
-    EditorCommit changes,
-  ) => PreparedCommit(
-    id: "not-a-uuid",
-    label: "Uncertain configuration",
-    resources: reservations,
-    send: () async => SubmissionResult.uncertain(
-      message: "The response could not be confirmed",
-      cause: StateError("response lost"),
-      stackTrace: StackTrace.current,
-    ),
-  );
 }

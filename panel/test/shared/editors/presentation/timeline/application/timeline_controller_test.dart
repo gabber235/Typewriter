@@ -1,12 +1,11 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/timeline_test_dsl.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("TimelineController", () {
     test("keeps the zoom anchor stable under the pointer", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..panBy(dx: 120, animate: false)
         ..zoomAt(
           localDx: 80,
@@ -21,7 +20,7 @@ void main() {
     });
 
     test("preserves viewport state while plane geometry is not ready", () {
-      final controller = _controller()..panBy(dx: 120, animate: false);
+      final controller = timelineController()..panBy(dx: 120, animate: false);
       final layout = timeline()
           .track(elements: [TimelineElementDsl.segment("segment", 0, 100)])
           .build()
@@ -41,7 +40,7 @@ void main() {
     });
 
     test("preserves viewport state while timeline content is not ready", () {
-      final controller = _controller()..panBy(dx: 120, animate: false);
+      final controller = timelineController()..panBy(dx: 120, animate: false);
 
       final applied = controller.resetZoom(
         defaultTimelineViewport,
@@ -57,7 +56,7 @@ void main() {
     });
 
     test("fits one keyframe as one display frame", () {
-      final controller = _controller();
+      final controller = timelineController();
       final layout = timeline()
           .track(elements: [TimelineElementDsl.keyframe("keyframe", 42)])
           .build()
@@ -77,7 +76,7 @@ void main() {
     });
 
     test("fits ordinary content into the viewport", () {
-      final controller = _controller();
+      final controller = timelineController();
       final layout = timeline()
           .track(elements: [TimelineElementDsl.segment("segment", 10, 110)])
           .build()
@@ -97,7 +96,7 @@ void main() {
     });
 
     test("respects the minimum zoom while fitting long content", () {
-      final controller = _controller();
+      final controller = timelineController();
       final layout = timeline()
           .track(
             elements: [TimelineElementDsl.segment("segment", 0, 1_000_000)],
@@ -119,18 +118,18 @@ void main() {
     });
 
     test("clamps move previews while preserving duration", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [previewCue("cue").move(startFrame: 5, endFrame: 15)],
         )
         ..updateInteraction(-120);
 
-      expect(_preview(controller)?.startFrame, 0);
-      expect(_preview(controller)?.endFrame, 10);
+      expect(firstTimelinePreview(controller)?.startFrame, 0);
+      expect(firstTimelinePreview(controller)?.endFrame, 10);
     });
 
     test("updates all move previews in one interaction session", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [
             previewCue("cue_a").move(startFrame: 10, endFrame: 20),
@@ -146,19 +145,19 @@ void main() {
       expect(byId["cue_a"]?.endFrame, 22);
       expect(byId["cue_b"]?.startFrame, 4);
       expect(byId["cue_b"]?.endFrame, 8);
-      expect(_preview(controller), isNull);
+      expect(firstTimelinePreview(controller), isNull);
       expect(controller.previews, isEmpty);
     });
 
     test("rounds interaction deltas near half frame thresholds", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [previewCue("cue").move(startFrame: 10, endFrame: 20)],
         )
         ..updateInteraction(5.9);
 
-      expect(_preview(controller)?.startFrame, 10);
-      expect(_preview(controller)?.endFrame, 20);
+      expect(firstTimelinePreview(controller)?.startFrame, 10);
+      expect(firstTimelinePreview(controller)?.endFrame, 20);
 
       controller
         ..updateInteraction(6.1)
@@ -166,12 +165,12 @@ void main() {
         ..updateInteraction(-5.9)
         ..updateInteraction(-6.1);
 
-      expect(_preview(controller)?.startFrame, 9);
-      expect(_preview(controller)?.endFrame, 19);
+      expect(firstTimelinePreview(controller)?.startFrame, 9);
+      expect(firstTimelinePreview(controller)?.endFrame, 19);
     });
 
     test("clamps resize previews and clears preview on finish", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [
             previewCue("cue").resizeStart(startFrame: 8, endFrame: 18),
@@ -179,8 +178,8 @@ void main() {
         )
         ..updateInteraction(180);
 
-      expect(_preview(controller)?.startFrame, 18);
-      expect(_preview(controller)?.endFrame, 18);
+      expect(firstTimelinePreview(controller)?.startFrame, 18);
+      expect(firstTimelinePreview(controller)?.endFrame, 18);
 
       controller
         ..startInteractionSession(
@@ -188,19 +187,19 @@ void main() {
         )
         ..updateInteraction(-180);
 
-      expect(_preview(controller)?.startFrame, 8);
-      expect(_preview(controller)?.endFrame, 8);
+      expect(firstTimelinePreview(controller)?.startFrame, 8);
+      expect(firstTimelinePreview(controller)?.endFrame, 8);
 
       final finished = controller.finishInteractionSession();
       expect(finished, hasLength(1));
       expect(finished.first.mode, TimelineInteractionMode.resizeEnd);
       expect(finished.first.startFrame, 8);
       expect(finished.first.endFrame, 8);
-      expect(_preview(controller), isNull);
+      expect(firstTimelinePreview(controller), isNull);
     });
 
     test("keeps resize start unchanged when clamped at boundaries", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [
             previewCue("cue").resizeStart(startFrame: 0, endFrame: 12),
@@ -208,8 +207,8 @@ void main() {
         )
         ..updateInteraction(-240);
 
-      expect(_preview(controller)?.startFrame, 0);
-      expect(_preview(controller)?.endFrame, 12);
+      expect(firstTimelinePreview(controller)?.startFrame, 0);
+      expect(firstTimelinePreview(controller)?.endFrame, 12);
 
       controller
         ..startInteractionSession(
@@ -217,23 +216,23 @@ void main() {
         )
         ..updateInteraction(240);
 
-      expect(_preview(controller)?.startFrame, 7);
-      expect(_preview(controller)?.endFrame, 7);
+      expect(firstTimelinePreview(controller)?.startFrame, 7);
+      expect(firstTimelinePreview(controller)?.endFrame, 7);
     });
 
     test("keeps resize end unchanged when clamped at start", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [previewCue("cue").resizeEnd(startFrame: 9, endFrame: 9)],
         )
         ..updateInteraction(-240);
 
-      expect(_preview(controller)?.startFrame, 9);
-      expect(_preview(controller)?.endFrame, 9);
+      expect(firstTimelinePreview(controller)?.startFrame, 9);
+      expect(firstTimelinePreview(controller)?.endFrame, 9);
     });
 
     test("updates paired resize previews in one session", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [
             previewCue("root_left").resizeEnd(startFrame: 10, endFrame: 30),
@@ -252,7 +251,7 @@ void main() {
     });
 
     test("clamps each mode independently in paired resize session", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [
             previewCue("root_left").resizeEnd(startFrame: 10, endFrame: 10),
@@ -273,12 +272,12 @@ void main() {
     test(
       "returns final previews from finishInteractionSession and clears state",
       () {
-        final controller = _controller()
+        final controller = timelineController()
           ..startInteractionSession(
             previews: [previewCue("cue").move(startFrame: 3, endFrame: 9)],
           )
           ..updateInteraction(26);
-        final finalPreview = _preview(controller);
+        final finalPreview = firstTimelinePreview(controller);
 
         final finished = controller.finishInteractionSession();
 
@@ -287,12 +286,12 @@ void main() {
         expect(finished.first.mode, TimelineInteractionMode.move);
         expect(finished.first.startFrame, 5);
         expect(finished.first.endFrame, 11);
-        expect(_preview(controller), isNull);
+        expect(firstTimelinePreview(controller), isNull);
       },
     );
 
     test("keeps pan and zoom viewport offsets nonnegative", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..panBy(dx: 180, dy: 40, animate: false)
         ..panBy(dx: -500, dy: -200, animate: false)
         ..zoomAt(
@@ -318,26 +317,14 @@ void main() {
     });
 
     test("cancelInteraction clears previews without returning values", () {
-      final controller = _controller()
+      final controller = timelineController()
         ..startInteractionSession(
           previews: [previewCue("cue").move(startFrame: 4, endFrame: 9)],
         )
         ..cancelInteraction();
 
-      expect(_preview(controller), isNull);
+      expect(firstTimelinePreview(controller), isNull);
       expect(controller.finishInteractionSession(), isEmpty);
     });
   });
-}
-
-TimelineController _controller({double pixelsPerFrame = 12}) {
-  return TimelineController(
-    tickerProvider: const TestVSync(),
-    pixelsPerFrame: pixelsPerFrame,
-  );
-}
-
-TimelinePreview? _preview(TimelineController controller) {
-  if (controller.previews.isEmpty) return null;
-  return controller.previews.first;
 }

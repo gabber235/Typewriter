@@ -106,28 +106,6 @@ void main() {
         expect("hello".join(""), "hello.");
       });
     });
-
-    group("singular", () {
-      test("returns empty string unchanged", () {
-        expect("".singular, "");
-      });
-
-      test("removes trailing s from plural words", () {
-        expect("items".singular, "item");
-      });
-
-      test("returns word unchanged if not ending in s", () {
-        expect("item".singular, "item");
-      });
-
-      test("returns single s unchanged", () {
-        expect("s".singular, "s");
-      });
-
-      test("handles words ending in es", () {
-        expect("boxes".singular, "boxe");
-      });
-    });
   });
 
   group("generateCode", () {

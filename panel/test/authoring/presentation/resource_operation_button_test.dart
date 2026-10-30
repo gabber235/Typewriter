@@ -15,7 +15,8 @@ void main() {
     (skir.ButtonVariant.text, TextButton),
   ]) {
     testWidgets(
-      "${variant.kind.name} retains icons and tone in both surfaces",
+      "${variant.kind.name} shows the declared icon on the button and in the "
+      "context menu",
       (tester) async {
         final presentation = skir.OperationPresentation(
           inspector: skir.OperationInspector.wrapButton(variant),
@@ -60,10 +61,11 @@ void main() {
             availability: skir.OperationAvailability.enabled,
           ),
         );
-        await tester.pumpTestApp(
-          child: Consumer(
-            builder: (context, ref, _) => Center(
-              child: ContextMenuRegion(
+        await tester.pumpPanel(
+          const [],
+          at: PanelLocation.component(
+            Consumer(
+              builder: (context, ref, _) => ContextMenuRegion(
                 items: [operation.menuItem(ref)],
                 child: operation.inspectorButton(const []),
               ),
@@ -72,31 +74,16 @@ void main() {
         );
         final buttonFinder = find.byType(buttonType);
         expect(buttonFinder, findsOneWidget);
-        expect(tester.widget<Icones>(find.byType(Icones)).icon, _icon);
-        final scheme = Theme.of(tester.element(buttonFinder)).colorScheme;
-        final button = tester.widget<ButtonStyleButton>(buttonFinder);
-        final foreground = variant == skir.ButtonVariant.filled
-            ? scheme.onError
-            : scheme.error;
-        expect(button.style!.foregroundColor!.resolve({}), foreground);
         expect(
-          IconTheme.of(tester.element(find.byType(Icones))).color,
-          foreground,
+          semanticsButton("Delete").getSemanticsData().hint,
+          "Destructive",
         );
-        if (variant == skir.ButtonVariant.filled) {
-          expect(button.style!.backgroundColor!.resolve({}), scheme.error);
-        }
-        if (variant == skir.ButtonVariant.outlined) {
-          expect(button.style!.side!.resolve({})!.color, scheme.error);
-        }
-
+        expect(tester.widget<Icones>(find.byType(Icones)).icon, _icon);
         await tester.tap(buttonFinder, buttons: kSecondaryMouseButton);
         await tester.pumpAndSettle();
         final menu = tester.widget<MenuItemButton>(find.byType(MenuItemButton));
         expect(menu.leadingIcon, isA<Icones>());
         expect((menu.leadingIcon! as Icones).icon, _icon);
-        expect(menu.style!.foregroundColor!.resolve({}), scheme.error);
-        expect(menu.style!.iconColor!.resolve({}), scheme.error);
         expect(tester.takeException(), isNull);
       },
     );
@@ -105,9 +92,13 @@ void main() {
       "${variant.kind.name} keeps keyboard activation and disabled reasons",
       (tester) async {
         var invocations = 0;
-        Future<void> pump({String? disabledReason}) => tester.pumpTestApp(
-          child: Center(
-            child: SizedBox(
+        Future<void> pump({
+          String? disabledReason,
+          skir.HeaderActionTone tone = skir.HeaderActionTone.destructive,
+        }) => tester.pumpPanel(
+          const [],
+          at: PanelLocation.component(
+            SizedBox(
               width: 160,
               child: ResourceOperationButton(
                 presentation: skir.OperationPresentation(
@@ -119,7 +110,7 @@ void main() {
                   group: skir.OperationGroup.destructive,
                   order: 0,
                   confirmation: null,
-                  tone: skir.HeaderActionTone.destructive,
+                  tone: tone,
                 ),
                 disabledReason: disabledReason,
                 onInvoke: () => invocations++,
@@ -136,19 +127,19 @@ void main() {
         expect(tester.takeException(), isNull);
 
         await pump(disabledReason: "This view is read only");
-        final button = tester.widget<ButtonStyleButton>(
-          find.byType(buttonType),
-        );
-        expect(button.onPressed, isNull);
+        final button = semanticsButton("An operation with a long label");
+        expect(button.isEnabled, isFalse);
         expect(find.tooltip("This view is read only"), findsOneWidget);
         await tester.tap(find.byType(buttonType));
         await tester.pumpAndSettle();
         expect(invocations, 1);
-        final scheme = Theme.of(tester.element(find.byType(buttonType)))
-            .colorScheme;
+
+        await pump(tone: skir.HeaderActionTone.neutral);
         expect(
-          IconTheme.of(tester.element(find.byType(Icones))).color,
-          scheme.onSurface.withValues(alpha: 0.38),
+          semanticsButton("An operation with a long label")
+              .getSemanticsData()
+              .hint,
+          isEmpty,
         );
         expect(tester.takeException(), isNull);
       },

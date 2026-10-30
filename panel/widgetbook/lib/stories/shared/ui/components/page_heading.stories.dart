@@ -2,18 +2,30 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
+/// A [PageHeading] with a short or a long description, in a desktop or a
+/// compact window.
 @widgetbook.UseCase(name: "Default", type: PageHeading)
-Widget pageHeadingDefaultUseCase(BuildContext context) {
-  final title = context.knobs.string(label: "Title", initialValue: "Library");
-  final subtext = context.knobs.string(
-    label: "Subtext",
-    initialValue: "Browse books containing your quests, dialogues, and cinematics. Search by title or tag, organize related content, then open a book to continue editing its pages.",
-  );
-  return FakeApp(
-    child: Align(
-      alignment: Alignment.topLeft,
-      child: PageHeading(title: title, subtext: subtext),
+Widget pageHeadingUseCase(BuildContext context) {
+  final long = context.knobs.boolean(label: "Long description");
+  return Story(
+    context.knobs.traits("Window", {
+      "Desktop": const [],
+      "Compact": const [compact],
+    }),
+    at: PanelLocation.component(
+      Align(
+        alignment: Alignment.topLeft,
+        child: PageHeading(
+          title: "Library",
+          subtext: long
+              ? "Browse books containing your quests, dialogues, and "
+                    "cinematics. Search by title or tag, organize related "
+                    "content, then open a book to continue editing its pages."
+              : "Books of this Realm",
+        ),
+      ),
     ),
   );
 }

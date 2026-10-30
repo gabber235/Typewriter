@@ -27,3 +27,30 @@ skir.EditorCatalog receivedEditorCatalog({
 CheckedEditorCatalog receivedCheckedEditorCatalog({
   skir.CatalogGeneration? generation,
 }) => CheckedEditorCatalog(receivedEditorCatalog(generation: generation));
+
+/// A saved document holding the one untyped record [resource], whose fields
+/// hold [texts], typed by a [receivedCheckedEditorCatalog] of [generation]
+/// that declares nothing, so only edits by location apply to it.
+AuthoringDocument textRecordDocument(
+  skir.ResourceId resource,
+  Map<String, String> texts, {
+  skir.CatalogGeneration? generation,
+}) => AuthoringDocument(
+  catalog: receivedCheckedEditorCatalog(generation: generation),
+  entries: {
+    resource: skir.AuthoringResource(
+      id: resource,
+      content: skir.AuthoringRecord(
+        configuration: skir.TypeSelection.unknown,
+        fields: [
+          for (final MapEntry(:key, :value) in texts.entries)
+            skir.FieldValue(
+              name: key,
+              value: skir.DataValue.wrapStringValue(value),
+            ),
+        ],
+      ),
+    ),
+  },
+  links: const [],
+);

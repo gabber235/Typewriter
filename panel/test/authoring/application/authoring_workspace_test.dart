@@ -8,14 +8,15 @@ void main() {
   test(
     "review observation failure preserves the journal and sends no request",
     () async {
-      final transport = _Transport(_document())
-        ..refreshFailure = StateError("Offline");
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(editing.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm..refreshFailure = StateError("Offline");
+      final editing = await world.openRealmEditing();
       final form = editing.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -23,32 +24,41 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Name",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
       await expectLater(
         editing.reviewConflict(form.editingGroup),
         throwsStateError,
       );
-      expect(_read(editing.document, _name), _text("Local"));
-      expect(transport.requests, isEmpty);
+      expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
+      expect(realm.saves, isEmpty);
       expect(editing.state.groups, hasLength(1));
     },
   );
 
   test("replacement cannot discard a submitted or uncertain prefix", () async {
-    final transport = _Transport(_document());
-    final editing = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(editing.dispose);
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final editing = await world.openRealmEditing();
     final form = editing.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
     );
     addTearDown(form.detach);
-    form.edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")));
+    form.edit(
+      label: "Name",
+      apply: (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+    );
     final review = editing.workspace.inspectUnsubmitted(form.editingGroup);
     final saving = form.save();
     await Future<void>.delayed(Duration.zero);
@@ -60,7 +70,7 @@ void main() {
       ),
       isA<EditStageRejected>(),
     );
-    transport.reply.completeError(StateError("Reply lost"));
+    realm.saves.last.loseReply(StateError("Reply lost"));
     await saving;
     expect(
       editing.workspace.replaceUnsubmitted(
@@ -71,7 +81,7 @@ void main() {
       isA<EditStageRejected>(),
     );
     expect(form.phase, isA<EditGroupUncertain>());
-    expect(transport.requests, hasLength(1));
+    expect(realm.saves, hasLength(1));
   });
 
   test(
@@ -80,23 +90,34 @@ void main() {
       final itemsAt = authoredFieldLocation(_resource, ["items"]);
       final stable = skir.ItemId(value: "stable");
       final other = skir.ItemId(value: "other");
-      final initial = AuthoringEdit.fromDocument(_document())
-        ..set(
-          itemsAt,
-          skir.DataValue.createListValue(
-            items: [
-              skir.ListItem(id: stable, value: _text("Initial")),
-              skir.ListItem(id: other, value: _text("Other")),
-            ],
-          ),
-        );
-      final transport = _Transport(initial.toDocument());
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(editing.dispose);
+      final initial =
+          AuthoringEdit.fromDocument(
+            textRecordDocument(_resource, {
+              "name": "Original",
+              "position": "0",
+            }),
+          )..set(
+            itemsAt,
+            skir.DataValue.createListValue(
+              items: [
+                skir.ListItem(
+                  id: stable,
+                  value: skir.DataValue.wrapStringValue("Initial"),
+                ),
+                skir.ListItem(
+                  id: other,
+                  value: skir.DataValue.wrapStringValue("Other"),
+                ),
+              ],
+            ),
+          );
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(initial.toDocument()),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final editing = await world.openRealmEditing();
       final form = editing.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -108,21 +129,26 @@ void main() {
             apply: (edit) => edit.move(itemsAt, stable, other),
           )
           .requireAccepted();
-      final removed = AuthoringEdit.fromDocument(transport.current)
+      final removed = AuthoringEdit.fromDocument(realm.document)
         ..set(
           itemsAt,
           skir.DataValue.createListValue(
-            items: [skir.ListItem(id: other, value: _text("Other"))],
+            items: [
+              skir.ListItem(
+                id: other,
+                value: skir.DataValue.wrapStringValue("Other"),
+              ),
+            ],
           ),
         );
-      transport.current = removed.toDocument();
+      realm.serve(removed.toDocument());
       final review = await editing.reviewConflict(form.editingGroup);
       expect(review.canKeepMine, isFalse);
       expect(
         editing.resolveConflict(review, AuthoringConflictChoice.keepMine),
         isA<EditStageRejected>(),
       );
-      expect(transport.requests, isEmpty);
+      expect(realm.saves, isEmpty);
       editing
           .resolveConflict(review, AuthoringConflictChoice.useSaved)
           .requireAccepted();
@@ -131,75 +157,88 @@ void main() {
   );
 
   test("removed resources retain the complete group proposal", () async {
-    final transport = _Transport(_document());
-    final editing = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(editing.dispose);
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final editing = await world.openRealmEditing();
     final form = editing.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
     );
     addTearDown(form.detach);
     form
-        .edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")))
+        .edit(
+          label: "Name",
+          apply: (edit) =>
+              edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+        )
         .requireAccepted();
     form
         .edit(
           label: "Position",
-          apply: (edit) => edit.set(_position, _text("Local position")),
+          apply: (edit) => edit.set(
+            _position,
+            skir.DataValue.wrapStringValue("Local position"),
+          ),
         )
         .requireAccepted();
-    transport.current = transport.current.copyWith(entries: {});
+    realm.serve(realm.document.copyWith(entries: {}));
     final review = await editing.reviewConflict(form.editingGroup);
     expect(review.canKeepMine, isFalse);
-    expect(_read(review.proposal, _name), _text("Local"));
-    expect(_read(review.proposal, _position), _text("Local position"));
     expect(
-      review.comparisonFacts.whereType<skir.EditExpectation_valueWrapper>(),
-      hasLength(2),
+      review.proposal.valueAt(_name),
+      skir.DataValue.wrapStringValue("Local"),
     );
     expect(
-      review.evidence.facts.where(
-        (fact) => fact.expected is skir.EditExpectation_valueWrapper,
-      ),
-      hasLength(2),
+      review.proposal.valueAt(_position),
+      skir.DataValue.wrapStringValue("Local position"),
     );
     editing
         .resolveConflict(review, AuthoringConflictChoice.useSaved)
         .requireAccepted();
     expect(editing.state.groups, isEmpty);
-    expect(transport.requests, isEmpty);
+    expect(realm.saves, isEmpty);
   });
 
   test(
     "invalid replacement publishes nothing and preserves peer proposals",
-    () {
-      final transport = _Transport(_document());
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(editing.dispose);
+    () async {
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final editing = await world.openRealmEditing();
       final form = editing.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
       );
       addTearDown(form.detach);
       form
-          .edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")))
+          .edit(
+            label: "Name",
+            apply: (edit) =>
+                edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+          )
           .requireAccepted();
       final peer = editing.edit(
         label: "Peer",
         policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_position, _text("Peer")),
+        apply: (edit) =>
+            edit.set(_position, skir.DataValue.wrapStringValue("Peer")),
       ) as EditStaged;
       final reviewed = editing.workspace.inspectUnsubmitted(form.editingGroup);
-      final stale = AuthoringEdit.fromDocument(_document(name: "Obsolete"))
-        ..set(_name, _text("Replacement"));
+      final stale = AuthoringEdit.fromDocument(
+        textRecordDocument(_resource, {"name": "Obsolete", "position": "0"}),
+      )..set(_name, skir.DataValue.wrapStringValue("Replacement"));
       var notifications = 0;
       editing.addListener(() => notifications++);
       expect(
@@ -216,8 +255,14 @@ void main() {
         editing.workspace.inspectUnsubmitted(form.editingGroup).edits,
         reviewed.edits,
       );
-      expect(_read(editing.document, _name), _text("Local"));
-      expect(_read(editing.document, _position), _text("Peer"));
+      expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
+      expect(
+        editing.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("Peer"),
+      );
       final deletion = AuthoringEdit.fromDocument(reviewed.beforeGroup)
         ..delete(_resource);
       editing.workspace
@@ -229,29 +274,36 @@ void main() {
           )
           .requireAccepted();
       final peerReview = editing.workspace.inspectUnsubmitted(peer.group);
-      expect(_read(peerReview.proposal, _position), _text("Peer"));
+      expect(
+        peerReview.proposal.valueAt(_position),
+        skir.DataValue.wrapStringValue("Peer"),
+      );
       expect(peerReview.diagnostics, isNotEmpty);
-      expect(transport.requests, isEmpty);
+      expect(realm.saves, isEmpty);
     },
   );
 
-  test("replacement rejects a new group dependency cycle atomically", () {
-    final transport = _Transport(_document());
-    final editing = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(editing.dispose);
+  test("replacement rejects a new group dependency cycle atomically", () async {
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final editing = await world.openRealmEditing();
     final peer = editing.edit(
       label: "Peer starts",
       policy: EditorCommitPolicy.applyResource,
-      apply: (edit) => edit.set(_name, _text("Peer first")),
+      apply: (edit) =>
+          edit.set(_name, skir.DataValue.wrapStringValue("Peer first")),
     ) as EditStaged;
     final selected = editing.edit(
       label: "Position",
       policy: EditorCommitPolicy.applyResource,
-      apply: (edit) => edit.set(_position, _text("Local")),
+      apply: (edit) =>
+          edit.set(_position, skir.DataValue.wrapStringValue("Local")),
     ) as EditStaged;
     editing
         .edit(
@@ -265,13 +317,13 @@ void main() {
                   expectations: [
                     skir.EditExpectation.createValue(
                       at: _position,
-                      expected: _text("Local"),
+                      expected: skir.DataValue.wrapStringValue("Local"),
                     ),
                   ],
                   intents: const [],
                 ),
               )
-              ..set(_name, _text("Peer final"));
+              ..set(_name, skir.DataValue.wrapStringValue("Peer final"));
           },
         )
         .requireAccepted();
@@ -283,13 +335,13 @@ void main() {
           expectations: [
             skir.EditExpectation.createValue(
               at: _name,
-              expected: _text("Peer first"),
+              expected: skir.DataValue.wrapStringValue("Peer first"),
             ),
           ],
           intents: const [],
         ),
       )
-      ..set(_position, _text("Replacement"));
+      ..set(_position, skir.DataValue.wrapStringValue("Replacement"));
     var notifications = 0;
     editing.addListener(() => notifications++);
     final result = editing.workspace.replaceUnsubmitted(
@@ -305,19 +357,32 @@ void main() {
       editing.workspace.inspectUnsubmitted(selected.group).edits,
       reviewed.edits,
     );
-    expect(_read(editing.document, _position), _text("Local"));
-    expect(_read(editing.document, _name), _text("Peer final"));
+    expect(
+      editing.document.valueAt(_position),
+      skir.DataValue.wrapStringValue("Local"),
+    );
+    expect(
+      editing.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Peer final"),
+    );
     expect(editing.state.groups, hasLength(2));
-    expect(transport.requests, isEmpty);
+    expect(realm.saves, isEmpty);
   });
 
-  test("checked import keeps all six witnesses at its original baseline", () {
-    final saved = _document();
+  test("an imported edit saves against the original saved content and is "
+      "refused once that content changed", () {
+    final saved = textRecordDocument(_resource, {
+      "name": "Original",
+      "position": "0",
+    });
     final nameChange = AuthoringEdit.fromDocument(saved)
-      ..set(_name, _text("First"));
+      ..set(_name, skir.DataValue.wrapStringValue("First"));
     final preceding = nameChange.toDocument();
     final facts = [
-      skir.EditExpectation.createValue(at: _name, expected: _text("First")),
+      skir.EditExpectation.createValue(
+        at: _name,
+        expected: skir.DataValue.wrapStringValue("First"),
+      ),
       skir.EditExpectation.createResource(
         id: _resource,
         expected: preceding.resource(_resource),
@@ -342,35 +407,32 @@ void main() {
           catalog: saved.generation,
           expectations: facts,
           intents: [
-            skir.EditIntent.createSetValue(at: _position, value: _text("2")),
+            skir.EditIntent.createSetValue(
+              at: _position,
+              value: skir.DataValue.wrapStringValue("2"),
+            ),
           ],
         ),
       );
-    expect(saved.facts.conflicts(combined.prepare().expectations), isEmpty);
-    expect(
-      combined
-          .prepare()
-          .expectations
-          .whereType<skir.EditExpectation_resourceWrapper>()
-          .single
-          .value
-          .expected,
-      saved.resource(_resource),
+    expectRefusedAfterRemoteChange(
+      combined,
+      saved: saved,
+      remoteChange: (remote) =>
+          remote.set(_name, skir.DataValue.wrapStringValue("Remote")),
     );
-    expect(
-      combined
-          .prepare()
-          .expectations
-          .whereType<skir.EditExpectation_valueWrapper>()
-          .firstWhere((fact) => fact.value.at == _name)
-          .value
-          .expected,
-      _text("Original"),
+    expectRefusedAfterRemoteChange(
+      combined,
+      saved: saved,
+      remoteChange: (remote) => remote.delete(_resource),
     );
   });
 
-  test("checked import rejects stale reads and rolls back invalid intent", () {
-    final saved = _document();
+  test("an import that read stale content is refused and leaves the draft "
+      "unchanged", () {
+    final saved = textRecordDocument(_resource, {
+      "name": "Original",
+      "position": "0",
+    });
     final branch = AuthoringEdit.fromDocument(saved);
     expect(
       () => branch.applyPrepared(
@@ -379,17 +441,29 @@ void main() {
           expectations: [
             skir.EditExpectation.createValue(
               at: _name,
-              expected: _text("Wrong"),
+              expected: skir.DataValue.wrapStringValue("Wrong"),
             ),
           ],
           intents: [
-            skir.EditIntent.createSetValue(at: _name, value: _text("Local")),
+            skir.EditIntent.createSetValue(
+              at: _name,
+              value: skir.DataValue.wrapStringValue("Local"),
+            ),
           ],
         ),
       ),
       throwsA(isA<AuthoringCompositionFailure>()),
     );
-    expect(branch.intents, isEmpty);
+    expect(branch.toDocument().hasSameAuthoredContent(saved), isTrue);
+  });
+
+  test("an import whose later intent is invalid rolls back its earlier "
+      "intents", () {
+    final saved = textRecordDocument(_resource, {
+      "name": "Original",
+      "position": "0",
+    });
+    final branch = AuthoringEdit.fromDocument(saved);
     expect(
       () => branch.applyPrepared(
         skir.PreparedEdit(
@@ -397,125 +471,142 @@ void main() {
           expectations: [
             skir.EditExpectation.createValue(
               at: _name,
-              expected: _text("Original"),
+              expected: skir.DataValue.wrapStringValue("Original"),
             ),
           ],
           intents: [
-            skir.EditIntent.createSetValue(at: _name, value: _text("Local")),
+            skir.EditIntent.createSetValue(
+              at: _name,
+              value: skir.DataValue.wrapStringValue("Local"),
+            ),
             skir.EditIntent.createSetValue(
               at: authoredFieldLocation(skir.ResourceId(value: "absent"), [
                 "name",
               ]),
-              value: _text("Bad"),
+              value: skir.DataValue.wrapStringValue("Bad"),
             ),
           ],
         ),
       ),
       throwsStateError,
     );
-    expect(branch.intents, isEmpty);
     expect(branch.toDocument().hasSameAuthoredContent(saved), isTrue);
   });
 
-  test(
-    "create then edit compiles absence rather than locally created values",
-    () async {
-      final transport = _Transport(_document());
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(editing.dispose);
-      final created = skir.ResourceId(value: "new-resource");
-      final at = authoredFieldLocation(created, ["name"]);
-      final first = editing.edit(
-        label: "Create",
-        policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.create(
-          created,
-          skir.AuthoringRecord(
-            configuration: skir.TypeSelection.unknown,
-            fields: [skir.FieldValue(name: "name", value: _text("Initial"))],
-          ),
+  test("a created then renamed resource saves as new and is refused once the "
+      "id exists", () async {
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final editing = await world.openRealmEditing();
+    final created = skir.ResourceId(value: "new-resource");
+    final at = authoredFieldLocation(created, ["name"]);
+    final first = editing.edit(
+      label: "Create",
+      policy: EditorCommitPolicy.applyResource,
+      apply: (edit) => edit.create(
+        created,
+        skir.AuthoringRecord(
+          configuration: skir.TypeSelection.unknown,
+          fields: [
+            skir.FieldValue(
+              name: "name",
+              value: skir.DataValue.wrapStringValue("Initial"),
+            ),
+          ],
         ),
-      ) as EditStaged;
-      editing.edit(
-        label: "Rename created",
-        group: first.group,
-        apply: (edit) => edit.set(at, _text("Final")),
-      );
-      final saving = editing.save(first.group);
-      await Future<void>.delayed(Duration.zero);
-      final request = transport.requests.single;
-      expect(
-        request.expectations
-            .whereType<skir.EditExpectation_resourceExistsWrapper>()
-            .firstWhere((fact) => fact.value.id == created)
-            .value
-            .expected,
-        isFalse,
-      );
-      expect(
-        request.expectations
-            .whereType<skir.EditExpectation_valueWrapper>()
-            .firstWhere((fact) => fact.value.at == at)
-            .value
-            .expected,
-        isNull,
-      );
-      expect(transport.current.facts.conflicts(request.expectations), isEmpty);
-      transport
-        ..current = editing.document
-        ..reply.complete(skir.CommitPreparedEditResponse.committed);
-      await saving;
-      expect(editing.state.groups, isEmpty);
-    },
-  );
+      ),
+    ) as EditStaged;
+    editing.edit(
+      label: "Rename created",
+      group: first.group,
+      apply: (edit) => edit.set(at, skir.DataValue.wrapStringValue("Final")),
+    );
+    final saving = editing.save(first.group);
+    await Future<void>.delayed(Duration.zero);
+    final request = realm.saves.single.edit;
+    expect(realm.document.facts.conflicts(request.expectations), isEmpty);
+    final taken = realm.document.changedRemotely(
+      (remote) => remote.create(
+        created,
+        skir.AuthoringRecord(
+          configuration: skir.TypeSelection.unknown,
+          fields: [
+            skir.FieldValue(
+              name: "name",
+              value: skir.DataValue.wrapStringValue("Taken"),
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(taken.facts.conflicts(request.expectations), isNotEmpty);
+    realm.saves.single.confirm();
+    await saving;
+    expect(editing.state.groups, isEmpty);
+    expect(realm.document.valueAt(at), skir.DataValue.wrapStringValue("Final"));
+  });
 
   test(
     "Keep mine rewrites the whole group against reviewed saved facts",
     () async {
-      final transport = _Transport(_document());
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(editing.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final editing = await world.openRealmEditing();
       final form = editing.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
       );
       addTearDown(form.detach);
       form
-        ..edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")))
+        ..edit(
+          label: "Name",
+          apply: (edit) =>
+              edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+        )
         ..edit(
           label: "Position",
-          apply: (edit) => edit.set(_position, _text("Local position")),
+          apply: (edit) => edit.set(
+            _position,
+            skir.DataValue.wrapStringValue("Local position"),
+          ),
         );
-      transport.current = _document(name: "Remote");
+      realm.serve(
+        textRecordDocument(_resource, {"name": "Remote", "position": "0"}),
+      );
       final review = await editing.reviewConflict(form.editingGroup);
-      expect(review.evidence.facts, hasLength(1));
       expect(
         editing.resolveConflict(review, AuthoringConflictChoice.keepMine),
         isA<EditStaged>(),
       );
       expect(form.blocked, isFalse);
-      expect(editing.state.groups[form.editingGroup]!.operationCount, 1);
-      expect(_read(editing.document, _position), _text("Local position"));
-      expect(transport.requests, isEmpty);
+      expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
+      expect(
+        editing.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("Local position"),
+      );
+      expect(realm.saves, isEmpty);
       final saving = form.save();
       await Future<void>.delayed(Duration.zero);
       expect(
-        transport.current.facts.conflicts(
-          transport.requests.single.expectations,
-        ),
+        realm.document.facts.conflicts(realm.saves.single.edit.expectations),
         isEmpty,
       );
-      transport
-        ..current = editing.document
-        ..reply.complete(skir.CommitPreparedEditResponse.committed);
+      realm.saves.last.confirm(saved: editing.document);
       await saving;
       expect(editing.state.groups, isEmpty);
     },
@@ -524,13 +615,15 @@ void main() {
   test(
     "Use saved removes the selected group and retains independent work",
     () async {
-      final transport = _Transport(_document());
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(editing.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final editing = await world.openRealmEditing();
       final form = editing.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -538,35 +631,47 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Name",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
       final peer = editing.edit(
         label: "Position",
         policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_position, _text("Peer")),
+        apply: (edit) =>
+            edit.set(_position, skir.DataValue.wrapStringValue("Peer")),
       ) as EditStaged;
-      transport.current = _document(name: "Remote");
+      realm.serve(
+        textRecordDocument(_resource, {"name": "Remote", "position": "0"}),
+      );
       final review = await editing.reviewConflict(form.editingGroup);
       editing
           .resolveConflict(review, AuthoringConflictChoice.useSaved)
           .requireAccepted();
-      expect(_read(editing.document, _name), _text("Remote"));
-      expect(_read(editing.document, _position), _text("Peer"));
+      expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Remote"),
+      );
+      expect(
+        editing.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("Peer"),
+      );
       expect(editing.state.groups.keys, [peer.group]);
-      expect(transport.requests, isEmpty);
+      expect(realm.saves, isEmpty);
     },
   );
 
   test(
     "changed saved facts and changed proposals invalidate a review",
     () async {
-      final transport = _Transport(_document());
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(editing.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final editing = await world.openRealmEditing();
       final form = editing.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -574,21 +679,32 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Name",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
-      transport.current = _document(name: "Remote");
+      realm.serve(
+        textRecordDocument(_resource, {"name": "Remote", "position": "0"}),
+      );
       final review = await editing.reviewConflict(form.editingGroup);
-      editing.acceptConfirmed(_document(name: "Changed again"));
+      editing.acceptConfirmed(
+        textRecordDocument(_resource, {
+          "name": "Changed again",
+          "position": "0",
+        }),
+      );
       for (final choice in AuthoringConflictChoice.values) {
         expect(
           editing.resolveConflict(review, choice),
           isA<EditStageRejected>(),
         );
       }
-      expect(_read(editing.document, _name), _text("Local"));
+      expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
       final snapshot = editing.workspace.inspectUnsubmitted(form.editingGroup);
       final updated = AuthoringEdit.fromDocument(snapshot.beforeGroup)
-        ..set(_name, _text("New local"));
+        ..set(_name, skir.DataValue.wrapStringValue("New local"));
       editing.workspace
           .replaceUnsubmitted(
             form.editingGroup,
@@ -601,275 +717,233 @@ void main() {
         editing.resolveConflict(review, AuthoringConflictChoice.useSaved),
         isA<EditStageRejected>(),
       );
-      expect(_read(editing.document, _name), _text("New local"));
+      expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("New local"),
+      );
     },
   );
 
-  test("server settlement retains every exact conflict pair", () {
-    final facts = [
-      for (final at in [_name, _position])
-        skir.ExpectationConflict(
-          expected: skir.EditExpectation.createValue(
-            at: at,
-            expected: _text("Before"),
-          ),
-          actual: skir.EditExpectation.createValue(
-            at: at,
-            expected: _text("Saved"),
-          ),
-        ),
-    ];
-    final settlement =
-        skir.CommitPreparedEditResponse.wrapConflictError(facts).editSettlement
-            as EditConflict<AuthoringDocument>;
-    expect((settlement.evidence as AuthoringConflictEvidence).facts, facts);
-  });
-
-  test("one save keeps the saved expectation across rapid renames", () async {
-    final transport = _Transport(_document(name: ""));
-    final editing = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(editing.dispose);
+  test("a save the Realm refuses for changed name and position offers both "
+      "for comparison", () async {
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final editing = await world.openRealmEditing();
     final form = editing.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
     );
     addTearDown(form.detach);
-    for (final name in ["Q", "Qu", "Quest"]) {
-      form.edit(label: "Rename", apply: (edit) => edit.set(_name, _text(name)));
-    }
+    form
+      ..edit(
+        label: "Name",
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+      )
+      ..edit(
+        label: "Position",
+        apply: (edit) => edit.set(
+          _position,
+          skir.DataValue.wrapStringValue("Local position"),
+        ),
+      );
     final saving = form.save();
     await Future<void>.delayed(Duration.zero);
-    final request = transport.requests.single;
-    final fact = request.expectations
-        .whereType<skir.EditExpectation_valueWrapper>()
-        .single;
-    expect(fact.value.expected, _text(""));
-    expect(_read(editing.document, _name), _text("Quest"));
-    transport
-      ..current = _document(name: "Quest")
-      ..reply.complete(skir.CommitPreparedEditResponse.committed);
+    realm.serve(
+      textRecordDocument(_resource, {"name": "Saved", "position": "Saved"}),
+    );
+    realm.saves.single.reject(
+      skir.CommitPreparedEditResponse.wrapConflictError([
+        for (final (at, before) in [(_name, "Original"), (_position, "0")])
+          skir.ExpectationConflict(
+            expected: skir.EditExpectation.createValue(
+              at: at,
+              expected: skir.DataValue.wrapStringValue(before),
+            ),
+            actual: skir.EditExpectation.createValue(
+              at: at,
+              expected: skir.DataValue.wrapStringValue("Saved"),
+            ),
+          ),
+      ]),
+    );
     await saving;
-    expect(editing.state.groups, isEmpty);
+
+    expect(form.phase, isA<EditGroupConflict>());
+    final review = await editing.reviewConflict(form.editingGroup);
+    expect(
+      {
+        for (final fact in review.comparisonFacts)
+          if (fact case skir.EditExpectation_valueWrapper(:final value))
+            value.at,
+      },
+      {_name, _position},
+    );
+    expect(
+      review.saved.valueAt(_name),
+      skir.DataValue.wrapStringValue("Saved"),
+    );
+    expect(
+      review.saved.valueAt(_position),
+      skir.DataValue.wrapStringValue("Saved"),
+    );
   });
 
   test(
-    "publication journal observation survives view release while sending",
+    "rapid renames save once and are refused only when the saved name changed",
     () async {
-      final work = ScopedWorkSession();
-      final repository = _WorkPublicationRepository(() => _text("Saved"));
-      addTearDown(repository.close);
-      addTearDown(work.dispose);
-      final gate = Completer<void>();
-      repository.sendGate = gate;
-      final driver = PublicationWorkDriver(_workScope, repository, work)
-        ..start();
-      work.register(driver);
-      final lease = work.lease(driver.id);
-      await eventually(
-        () => expect(driver.view is ReadyRealmPublication, isTrue),
-      );
-      final publishing = (driver.view as ReadyRealmPublication).command
-          .invoke();
-      await eventually(
-        () => expect(repository.publishedValues.isNotEmpty, isTrue),
-      );
-      expect(work.state.entries.values.single.saving, isTrue);
-      expect(work.state.entries.values.single.needsAttention, isFalse);
-      lease.release();
-      repository.emit(
-        skir.PublicationStatus.createPublishing(
-          publication: skir.PublicationId(value: "active"),
-          phase: skir.PublicationActivationPhase.activating,
-          releasing: skir.PublicationDelta(
-            first: skir.PublicationChange.wrapRootAdded(
-              publicationRoot("page"),
-            ),
-            additional: const [],
-          ),
-          next: skir.PublicationPendingReview(
-            findings: const [],
-            confirmedChanges: const [],
-            pendingRoots: const [],
-            blockers: const [],
-            notices: const [],
-          ),
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "", "position": "0"}),
         ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final editing = await world.openRealmEditing();
+      final form = editing.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
       );
-      gate.complete();
-      expect(await publishing, skir.PublishAuthoringResponse.publishing);
-      await eventually(
-        () => expect(driver.view is PublishingRealmPublication, isTrue),
+      addTearDown(form.detach);
+      for (final name in ["Q", "Qu", "Quest"]) {
+        form.edit(
+          label: "Rename",
+          apply: (edit) =>
+              edit.set(_name, skir.DataValue.wrapStringValue(name)),
+        );
+      }
+      final saving = form.save();
+      await Future<void>.delayed(Duration.zero);
+      final request = realm.saves.single.edit;
+      expect(realm.document.facts.conflicts(request.expectations), isEmpty);
+      expect(
+        textRecordDocument(_resource, {
+          "name": "Q",
+          "position": "0",
+        }).facts.conflicts(request.expectations),
+        isNotEmpty,
       );
       expect(
-        work.state.entries.values.single.phase,
-        "Publishing saved content",
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Quest"),
       );
-      expect(repository.publishedValues, hasLength(1));
-      expect(work.state.blocksNavigation, isFalse);
+      realm.saves.last.confirm(
+        saved: textRecordDocument(_resource, {
+          "name": "Quest",
+          "position": "0",
+        }),
+      );
+      await saving;
+      expect(editing.state.groups, isEmpty);
     },
   );
 
-  test("graph work survives route release and closes after discard", () async {
-    final workspace = RealmEditing(
-      persistence: _Transport(_document()).persistence,
-      submissions: _workSession(),
-      initial: _document(),
-    );
-    final work = ScopedWorkSession();
-    addTearDown(work.dispose);
-    final driver = EditingWorkDriver(
-      id: WorkDriverId(domain: "authoring", scope: _workScope),
-      workspace: workspace.workspace,
-    );
-    work.register(driver);
-    final lease = work.lease(driver.id);
-    final staged = workspace.edit(
-      label: "Rename",
-      policy: EditorCommitPolicy.applyResource,
-      apply: (edit) => edit.set(_name, _text("Retained")),
-    ) as EditStaged;
-    lease.release();
-    await Future<void>.delayed(Duration.zero);
-    expect(work.state.entries.values.single.label, "Rename");
-    expect(work.state.blocksNavigation, isTrue);
-    final entry = WorkEntryId(driver: driver.id, identity: staged.group);
-    expect(work.discard(entry), isTrue);
-    await Future<void>.delayed(Duration.zero);
-    expect(work.state.entries, isEmpty);
-    expect(() => work.lease(driver.id), throwsStateError);
-  });
+  test(
+    "graph work survives closing its surface and closes after discard",
+    () async {
+      final world = await signedInWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+      ]);
+      final surface = world.container.listen(
+        realmEditingProvider(world.requireRealm.scope),
+        (_, _) {},
+      );
+      surface.read().edit(
+        label: "Rename",
+        policy: EditorCommitPolicy.applyResource,
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Retained")),
+      );
 
+      surface.close();
+      await world.container.pump();
+
+      final work = world.container.read(localWorkProvider);
+      expect(work.entries.values.single.label, "Rename");
+      expect(work.blocksNavigation, isTrue);
+      expect(
+        world.container
+            .read(localWorkProvider.notifier)
+            .discard(work.entries.keys.single),
+        isTrue,
+      );
+      await world.container.pump();
+      expect(world.container.read(localWorkProvider).entries, isEmpty);
+      expect(
+        (await world.openRealmEditing()).document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Original"),
+      );
+    },
+  );
   test("preparation is visible before any graph operation exists", () async {
-    final workspace = RealmEditing(
-      persistence: _Transport(_document()).persistence,
-      submissions: _workSession(),
-      initial: _document(),
+    final world = await signedInWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+    ]);
+    final surface = world.container.listen(
+      realmEditingProvider(world.requireRealm.scope),
+      (_, _) {},
     );
-    final work = ScopedWorkSession();
-    addTearDown(work.dispose);
-    final driver = EditingWorkDriver(
-      id: WorkDriverId(domain: "authoring", scope: _workScope),
-      workspace: workspace.workspace,
-    );
-    work.register(driver);
-    final lease = work.lease(driver.id);
+    final workspace = surface.read();
     final gate = Completer<void>();
     final preparing = workspace.prepare(
       label: "Prepare rename",
       policy: EditorCommitPolicy.applyResource,
       apply: (edit) async {
         await gate.future;
-        edit.set(_name, _text("Prepared"));
+        edit.set(_name, skir.DataValue.wrapStringValue("Prepared"));
       },
     );
+    LocalWorkState work() => world.container.read(localWorkProvider);
     expect(workspace.state.groups, isEmpty);
-    expect(work.state.entries.values.single.phase, "Preparing changes");
-    expect(work.state.blocksNavigation, isTrue);
-    lease.release();
-    await Future<void>.delayed(Duration.zero);
+    await world.container.eventually(
+      localWorkProvider,
+      (work) => work.entries.values.any(
+        (entry) => entry.phase == "Preparing changes",
+      ),
+      description: "the preparation listed as local work",
+    );
+    expect(work().blocksNavigation, isTrue);
+
+    surface.close();
+    await world.container.pump();
     gate.complete();
+
     expect(await preparing, isA<EditStaged>());
-    expect(work.state.entries.values.single.label, "Prepare rename");
-    expect(_read(workspace.document, _name), _text("Prepared"));
-  });
-
-  test(
-    "publishing saved content leaves a pending rename and its work intact",
-    () async {
-      final workspace = RealmEditing(
-        persistence: _Transport(_document()).persistence,
-        submissions: _workSession(),
-        initial: _document(),
-      );
-      final work = ScopedWorkSession();
-      final graph = EditingWorkDriver(
-        id: WorkDriverId(domain: "authoring", scope: _workScope),
-        workspace: workspace.workspace,
-      );
-      work.register(graph);
-      final repository = _WorkPublicationRepository(
-        () => _read(workspace.state.confirmed!, _name),
-      );
-      final publication = PublicationWorkDriver(_workScope, repository, work)
-        ..start();
-      work.register(publication);
-      final publicationLease = work.lease(publication.id);
-      addTearDown(repository.close);
-      addTearDown(work.dispose);
-      addTearDown(publicationLease.release);
-      workspace.edit(
-        label: "Pending rename",
-        policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_name, _text("Draft name")),
-      );
-      final before = workspace.state;
-      await eventually(
-        () => expect(publication.view is ReadyRealmPublication, isTrue),
-      );
-      expect(
-        await (publication.view as ReadyRealmPublication).command.invoke(),
-        skir.PublishAuthoringResponse.publishing,
-      );
-      expect(repository.publishedValues, [_text("Original")]);
-      expect(workspace.state, same(before));
-      expect(_read(workspace.document, _name), _text("Draft name"));
-      expect(
-        work.state.entries.values.any(
-          (entry) => entry.label == "Pending rename",
-        ),
-        isTrue,
-      );
-      expect(work.state.blocksNavigation, isTrue);
-      expect(publication.snapshot.entries.single.blocksNavigation, isFalse);
-    },
-  );
-
-  test("uncertain publication retains activity without offering replay or draft commands", () async {
-    final work = ScopedWorkSession();
-    final repository = _WorkPublicationRepository(() => _text("Saved"))
-      ..uncertain = true;
-    addTearDown(repository.close);
-    addTearDown(work.dispose);
-    final driver = PublicationWorkDriver(_workScope, repository, work)..start();
-    work.register(driver);
-    final lease = work.lease(driver.id);
-    await eventually(
-      () => expect(driver.view is ReadyRealmPublication, isTrue),
+    await world.container.eventually(
+      localWorkProvider,
+      (work) => work.entries.values.map((entry) => entry.label).toList().equals(
+        ["Prepare rename"],
+      ),
+      description: "the prepared rename as the only local work",
     );
-    final command = (driver.view as ReadyRealmPublication).command;
-    await expectLater(
-      command.invoke(),
-      throwsA(isA<SubmissionException<skir.PublishAuthoringResponse>>()),
-    );
-    lease.release();
-    await Future<void>.delayed(Duration.zero);
-    final entry = work.state.entries.values.single;
-    expect(entry.needsAttention, isTrue);
-    expect(entry.saving, isFalse);
-    expect(entry.blocksNavigation, isFalse);
-    expect(entry.canRetry || entry.canSave || entry.canDiscard, isFalse);
-    expect(work.submissions.single.canReplay, isFalse);
-    expect(driver.view, isA<UncertainRealmPublication>());
     expect(
-      await command.invoke(),
-      isA<skir.PublishAuthoringResponse_candidateChangedErrorWrapper>(),
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Prepared"),
     );
-    expect(repository.publishedValues, hasLength(1));
-    expect(work.state.blocksNavigation, isFalse);
   });
-
-  test("two views share changes and detach retains their work", () {
-    final transport = _Transport(_document());
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(workspace.dispose);
+  test("two views share changes and detach retains their work", () async {
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final workspace = await world.openRealmEditing();
     final first = workspace.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
@@ -881,31 +955,38 @@ void main() {
     addTearDown(second.detach);
     first.edit(
       label: "Rename",
-      apply: (edit) => edit.set(_name, _text("Local")),
+      apply: (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Local")),
     );
     expect(
-      second.document.read(_name),
-      const TypeMatcher<PortablePathValue<skir.DataValue>>(),
+      second.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Local"),
     );
-    expect(_read(second.document, _name), _text("Local"));
     expect(second.dirty, isTrue);
     first.detach();
-    expect(_read(workspace.document, _name), _text("Local"));
+    expect(
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Local"),
+    );
     second.discard();
-    expect(_read(workspace.document, _name), _text("Original"));
-    expect(transport.requests, isEmpty);
+    expect(
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Original"),
+    );
+    expect(realm.saves, isEmpty);
   });
 
   test(
     "independent placement save excludes pending name and survives discard",
     () async {
-      final transport = _Transport(_document());
-      final workspace = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(workspace.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final workspace = await world.openRealmEditing();
       final form = workspace.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -913,46 +994,61 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Rename",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
       final moved = workspace.edit(
         label: "Move",
         policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_position, _text("50")),
+        apply: (edit) =>
+            edit.set(_position, skir.DataValue.wrapStringValue("50")),
       ) as EditStaged;
       final saving = workspace.save(moved.group);
       await Future<void>.delayed(Duration.zero);
-      expect(transport.requests, hasLength(1));
-      expect(transport.requests.single.intents, hasLength(1));
+      expect(realm.saves, hasLength(1));
+      realm.saves.single.confirm();
+      await world.container.pump();
       expect(
-        (transport.requests.single.intents.single
-                as skir.EditIntent_setValueWrapper)
-            .value
-            .at,
-        _position,
+        realm.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Original"),
       );
-      transport
-        ..current = _document(position: "50")
-        ..reply.complete(skir.CommitPreparedEditResponse.committed);
+      expect(
+        realm.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("50"),
+      );
       await saving;
-      expect(_read(workspace.document, _name), _text("Local"));
-      expect(_read(workspace.document, _position), _text("50"));
+      expect(
+        workspace.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
+      expect(
+        workspace.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("50"),
+      );
       form.discard();
-      expect(_read(workspace.document, _name), _text("Original"));
-      expect(_read(workspace.document, _position), _text("50"));
+      expect(
+        workspace.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Original"),
+      );
+      expect(
+        workspace.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("50"),
+      );
     },
   );
 
   test(
     "overlapping change waits without applying manual predecessor",
     () async {
-      final transport = _Transport(_document());
-      final workspace = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(workspace.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final workspace = await world.openRealmEditing();
       final form = workspace.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -960,63 +1056,74 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Rename",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
       final second = workspace.edit(
         label: "Rename again",
         policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_name, _text("Next")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Next")),
       ) as EditStaged;
       expect(
         workspace.state.groups[second.group]!.phase,
         isA<EditGroupAwaitingDependency>(),
       );
       await workspace.save(second.group);
-      expect(transport.requests, isEmpty);
+      expect(realm.saves, isEmpty);
       form.discard();
       expect(
         workspace.state.groups[second.group]!.phase,
         isA<EditGroupConflict>(),
       );
-      expect(_read(workspace.document, _name), _text("Next"));
+      expect(
+        workspace.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Next"),
+      );
     },
   );
 
-  test("failed primitive rejects the whole operation", () {
-    final transport = _Transport(_document());
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(workspace.dispose);
+  test("failed primitive rejects the whole operation", () async {
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final workspace = await world.openRealmEditing();
     final result = workspace.edit(
       label: "Invalid batch",
       apply: (edit) {
         edit
-          ..set(_name, _text("Local"))
+          ..set(_name, skir.DataValue.wrapStringValue("Local"))
           ..set(
             skir.ValueLocation(
               resource: skir.ResourceId(value: "absent"),
               path: _name.path,
             ),
-            _text("Bad"),
+            skir.DataValue.wrapStringValue("Bad"),
           );
       },
     );
     expect(result, isA<EditStageRejected>());
     expect(workspace.state.groups, isEmpty);
-    expect(_read(workspace.document, _name), _text("Original"));
+    expect(
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Original"),
+    );
   });
 
   test("editing while saving retains only the later operation", () async {
-    final transport = _Transport(_document());
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(workspace.dispose);
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final workspace = await world.openRealmEditing();
     final form = workspace.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
@@ -1024,31 +1131,42 @@ void main() {
     addTearDown(form.detach);
     form.edit(
       label: "Rename",
-      apply: (edit) => edit.set(_name, _text("First")),
+      apply: (edit) => edit.set(_name, skir.DataValue.wrapStringValue("First")),
     );
     final saving = form.save();
     await Future<void>.delayed(Duration.zero);
     form.edit(
       label: "Continue",
-      apply: (edit) => edit.set(_name, _text("Second")),
+      apply: (edit) =>
+          edit.set(_name, skir.DataValue.wrapStringValue("Second")),
     );
-    transport
-      ..current = _document(name: "First")
-      ..reply.complete(skir.CommitPreparedEditResponse.committed);
+    realm.saves.last.confirm(
+      saved: textRecordDocument(_resource, {"name": "First", "position": "0"}),
+    );
     await saving;
-    expect(_read(workspace.document, _name), _text("Second"));
-    expect(workspace.state.groups[form.editingGroup]!.operationCount, 1);
+    expect(
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Second"),
+    );
     expect(form.blocked, isFalse);
+    expect(form.dirty, isTrue);
+    expect(form.discard(), isTrue);
+    expect(
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("First"),
+    );
   });
 
   test("uncertain sends retain their frozen work and never replay", () async {
-    final transport = _Transport(_document());
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(workspace.dispose);
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+      heldSaves,
+    ]);
+    final realm = world.requireRealm;
+    final workspace = await world.openRealmEditing();
     final form = workspace.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
@@ -1056,29 +1174,34 @@ void main() {
     addTearDown(form.detach);
     form.edit(
       label: "Rename",
-      apply: (edit) => edit.set(_name, _text("Local")),
+      apply: (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Local")),
     );
     final saving = form.save();
     await Future<void>.delayed(Duration.zero);
-    transport.reply.completeError(StateError("Connection lost"));
+    realm.saves.last.loseReply(StateError("Connection lost"));
     await saving;
     expect(form.phase, isA<EditGroupUncertain>());
     expect(form.discard(), isFalse);
     await form.save();
-    expect(transport.requests, hasLength(1));
+    expect(realm.saves, hasLength(1));
   });
   for (final uncertain in [false, true]) {
     test(
       "discarding a later unsent edit preserves the ${uncertain ? 'uncertain' : 'committed'} prefix",
       () async {
-        final transport = _Transport(_document())
+        final world = testWorld([
+          signedIn(ada, organization: acme),
+          realmServing(
+            textRecordDocument(_resource, {
+              "name": "Original",
+              "position": "0",
+            }),
+          ),
+          heldSaves,
+        ]);
+        final realm = world.requireRealm
           ..refreshFailure = StateError("Refresh unavailable");
-        final workspace = RealmEditing(
-          persistence: transport.persistence,
-          submissions: _workSession(),
-          initial: transport.current,
-        );
-        addTearDown(workspace.dispose);
+        final workspace = await world.openRealmEditing();
         final binding = workspace.attach(
           _resource,
           policy: EditorCommitPolicy.applyResource,
@@ -1086,18 +1209,20 @@ void main() {
         addTearDown(binding.detach);
         binding.edit(
           label: "First",
-          apply: (edit) => edit.set(_name, _text("First")),
+          apply: (edit) =>
+              edit.set(_name, skir.DataValue.wrapStringValue("First")),
         );
         final saving = binding.save();
         await Future<void>.delayed(Duration.zero);
         binding.edit(
           label: "Later",
-          apply: (edit) => edit.set(_name, _text("Later")),
+          apply: (edit) =>
+              edit.set(_name, skir.DataValue.wrapStringValue("Later")),
         );
         if (uncertain) {
-          transport.reply.completeError(StateError("Reply lost"));
+          realm.saves.last.loseReply(StateError("Reply lost"));
         } else {
-          transport.reply.complete(skir.CommitPreparedEditResponse.committed);
+          realm.saves.last.confirm(observed: false);
         }
         await saving;
         final phase = binding.phase;
@@ -1105,77 +1230,77 @@ void main() {
         expect(binding.discard(), isTrue);
         expect(binding.phase, phase);
         expect(binding.hasSubmittedWork, isTrue);
-        expect(_read(binding.document, _name), _text("First"));
-        expect(workspace.state.groups[binding.editingGroup]!.operationCount, 1);
+        expect(
+          binding.document.valueAt(_name),
+          skir.DataValue.wrapStringValue("First"),
+        );
         expect(binding.control.state.canDiscard, isFalse);
         expect(binding.discard(), isFalse);
         await binding.save();
-        expect(transport.requests, hasLength(1));
+        expect(realm.saves, hasLength(1));
       },
     );
   }
 
-  test("display reads do not enroll facts or mutate an immutable revision", () {
-    final transport = _Transport(_document());
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: transport.current,
-    );
-    addTearDown(workspace.dispose);
-    final old = workspace.document
-      ..read(_name)
-      ..read(_position);
-    expect(workspace.state.groups, isEmpty);
-    final edit = AuthoringEdit.fromDocument(old)
-      ..read(_position)
-      ..set(_name, _text("Next"));
-    expect(
-      edit.expectations.whereType<skir.EditExpectation_valueWrapper>().map(
-        (fact) => fact.value.at,
-      ),
-      [_name],
-    );
-    workspace.edit(
-      label: "Rename",
-      policy: EditorCommitPolicy.applyResource,
-      apply: (edit) => edit.set(_name, _text("Next")),
-    );
-    expect(_read(old, _name), _text("Original"));
-    expect(
-      workspace.document.entry(_resource)!.content.configuration,
-      old.entry(_resource)!.content.configuration,
-    );
-  });
+  test(
+    "reading a value for display does not make a rename depend on it",
+    () async {
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+      ]);
+      final realm = world.requireRealm;
+      final workspace = await world.openRealmEditing();
+      final form = workspace.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      addTearDown(form.detach);
+      final displayed = workspace.document..read(_position);
+      form.edit(
+        label: "Rename",
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Next")),
+      );
 
-  test("a failed operation with no intents is rejected", () {
-    final workspace = RealmEditing(
-      persistence: _Transport(_document()).persistence,
-      submissions: _workSession(),
-      initial: _document(),
-    );
-    addTearDown(workspace.dispose);
-    final result = workspace.edit(
-      label: "Missing",
-      apply: (edit) => edit.set(
-        authoredFieldLocation(skir.ResourceId(value: "absent"), ["name"]),
-        _text("Next"),
-      ),
-    );
-    expect(result, isA<EditStageRejected>());
-    expect(workspace.state.groups, isEmpty);
-  });
+      realm.serve(
+        textRecordDocument(_resource, {
+          "name": "Original",
+          "position": "Remote",
+        }),
+      );
+      await world.container.pump();
+
+      expect(form.blocked, isFalse);
+      expect(
+        displayed.valueAt(_name),
+        skir.DataValue.wrapStringValue("Original"),
+      );
+      await form.save();
+      expect(
+        realm.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Next"),
+      );
+      expect(
+        realm.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("Remote"),
+      );
+    },
+  );
 
   test(
     "catalog changes retain pending values and block every preparation",
     () async {
-      final transport = _Transport(_document());
-      final workspace = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(workspace.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final workspace = await world.openRealmEditing();
       final form = workspace.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -1183,20 +1308,29 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Rename",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
-      final changed = _document().copyWith(
-        catalog: authoringFixtureCatalog(
-          generation: skir.CatalogGeneration(value: "next"),
-        ),
-      );
+      final changed =
+          textRecordDocument(_resource, {
+            "name": "Original",
+            "position": "0",
+          }).copyWith(
+            catalog: libraryCatalog(
+              generation: skir.CatalogGeneration(value: "next"),
+            ),
+          );
       workspace.acceptConfirmed(changed);
       expect(form.phase, isA<EditGroupContractChanged>());
-      expect(_read(form.document, _name), _text("Local"));
+      expect(
+        form.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
       expect(
         await workspace.prepare(
           label: "New",
-          apply: (edit) async => edit.set(_position, _text("50")),
+          apply: (edit) async =>
+              edit.set(_position, skir.DataValue.wrapStringValue("50")),
         ),
         isA<EditStageRejected>(),
       );
@@ -1207,13 +1341,13 @@ void main() {
 
   test(
     "unrelated remote changes merge while guarded changes retain a conflict",
-    () {
-      final workspace = RealmEditing(
-        persistence: _Transport(_document()).persistence,
-        submissions: _workSession(),
-        initial: _document(),
-      );
-      addTearDown(workspace.dispose);
+    () async {
+      final workspace = await testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+      ]).openRealmEditing();
       final form = workspace.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -1221,28 +1355,45 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Rename",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
-      workspace.acceptConfirmed(_document(position: "Remote"));
+      workspace.acceptConfirmed(
+        textRecordDocument(_resource, {
+          "name": "Original",
+          "position": "Remote",
+        }),
+      );
       expect(form.blocked, isFalse);
-      expect(_read(workspace.document, _position), _text("Remote"));
-      workspace.acceptConfirmed(_document(name: "Remote", position: "Remote"));
+      expect(
+        workspace.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("Remote"),
+      );
+      workspace.acceptConfirmed(
+        textRecordDocument(_resource, {"name": "Remote", "position": "Remote"}),
+      );
       expect(form.phase, isA<EditGroupConflict>());
-      expect(_read(workspace.document, _name), _text("Local"));
+      expect(
+        workspace.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
       form.discard();
-      expect(_read(workspace.document, _name), _text("Remote"));
+      expect(
+        workspace.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Remote"),
+      );
     },
   );
 
   test(
     "delayed preparation rejects changed facts but accepts unrelated changes",
     () async {
-      final workspace = RealmEditing(
-        persistence: _Transport(_document()).persistence,
-        submissions: _workSession(),
-        initial: _document(),
-      );
-      addTearDown(workspace.dispose);
+      final workspace = await testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+      ]).openRealmEditing();
       for (final changedName in [false, true]) {
         final gate = Completer<void>();
         final pending = workspace.prepare(
@@ -1251,14 +1402,14 @@ void main() {
           apply: (edit) async {
             edit.expect(_name);
             await gate.future;
-            edit.set(_name, _text("Prepared"));
+            edit.set(_name, skir.DataValue.wrapStringValue("Prepared"));
           },
         );
         workspace.acceptConfirmed(
-          _document(
-            name: changedName ? "Remote" : "Original",
-            position: "Remote",
-          ),
+          textRecordDocument(_resource, {
+            "name": changedName ? "Remote" : "Original",
+            "position": "Remote",
+          }),
         );
         gate.complete();
         final result = await pending;
@@ -1272,17 +1423,18 @@ void main() {
   );
 
   test("closing a binding cancels delayed publication without discarding prior work", () async {
-    final workspace = RealmEditing(
-      persistence: _Transport(_document()).persistence,
-      submissions: _workSession(),
-      initial: _document(),
-    );
-    addTearDown(workspace.dispose);
+    final workspace = await testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+    ]).openRealmEditing();
     final binding =
         workspace.attach(_resource, policy: EditorCommitPolicy.applyResource)
           ..edit(
             label: "Prior",
-            apply: (edit) => edit.set(_position, _text("Prior")),
+            apply: (edit) =>
+                edit.set(_position, skir.DataValue.wrapStringValue("Prior")),
           );
     final gate = Completer<void>();
     final pending = binding.prepare(
@@ -1290,27 +1442,35 @@ void main() {
       apply: (edit) async {
         edit.expect(_name);
         await gate.future;
-        edit.set(_name, _text("Delayed"));
+        edit.set(_name, skir.DataValue.wrapStringValue("Delayed"));
       },
     );
     binding.detach();
     gate.complete();
     expect(await pending, isA<EditStageRejected>());
-    expect(_read(workspace.document, _name), _text("Original"));
-    expect(_read(workspace.document, _position), _text("Prior"));
+    expect(
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Original"),
+    );
+    expect(
+      workspace.document.valueAt(_position),
+      skir.DataValue.wrapStringValue("Prior"),
+    );
   });
 
   test(
     "a known committed prefix refreshes without replaying and retains its tail",
     () async {
-      final transport = _Transport(_document())
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm
         ..refreshFailure = StateError("Refresh lost");
-      final workspace = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(workspace.dispose);
+      final workspace = await world.openRealmEditing();
       final form = workspace.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -1318,22 +1478,27 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "First",
-        apply: (edit) => edit.set(_name, _text("First")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("First")),
       );
       final saving = form.save();
       await Future<void>.delayed(Duration.zero);
-      form.edit(label: "Tail", apply: (edit) => edit.set(_name, _text("Tail")));
-      transport.reply.complete(skir.CommitPreparedEditResponse.committed);
+      form.edit(
+        label: "Tail",
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Tail")),
+      );
+      realm.saves.last.confirm(observed: false);
       await saving;
       expect(form.phase, isA<EditGroupCommittedAwaitingRefresh>());
       expect(form.control.state.canDiscard, isTrue);
-      transport
-        ..refreshFailure = null
-        ..current = _document(name: "First");
+      realm.refreshFailure = null;
       await workspace.refreshConfirmed();
-      expect(transport.requests, hasLength(1));
-      expect(workspace.state.groups[form.editingGroup]!.operationCount, 1);
-      expect(_read(workspace.document, _name), _text("Tail"));
+      expect(realm.saves, hasLength(1));
+      expect(
+        workspace.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Tail"),
+      );
       expect(form.blocked, isFalse);
     },
   );
@@ -1341,51 +1506,71 @@ void main() {
   test(
     "the lane orders independent groups and excludes unrelated form work",
     () async {
-      final transport = _Transport(_document());
-      final workspace = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(workspace.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final workspace = await world.openRealmEditing();
       final first = workspace.edit(
         label: "Name",
         policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_name, _text("First")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("First")),
       ) as EditStaged;
       final second = workspace.edit(
         label: "Position",
         policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_position, _text("Second")),
+        apply: (edit) =>
+            edit.set(_position, skir.DataValue.wrapStringValue("Second")),
       ) as EditStaged;
       final saving = workspace.save(first.group);
       await Future<void>.delayed(Duration.zero);
       unawaited(workspace.save(second.group));
-      expect(transport.requests, hasLength(1));
-      transport
-        ..current = _document(name: "First")
-        ..reply.complete(skir.CommitPreparedEditResponse.committed);
+      expect(realm.saves, hasLength(1));
+      realm.saves.last.confirm();
       await Future<void>.delayed(Duration.zero);
-      expect(transport.requests, hasLength(2));
-      expect(transport.requests.last.intents, hasLength(1));
-      transport
-        ..current = _document(name: "First", position: "Second")
-        ..reply.complete(skir.CommitPreparedEditResponse.committed);
+      expect(realm.saves, hasLength(2));
+      final positionOnly = AuthoringEdit.fromDocument(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      )..applyPrepared(realm.saves.last.edit);
+      expect(
+        positionOnly.toDocument().valueAt(_name),
+        skir.DataValue.wrapStringValue("Original"),
+      );
+      expect(
+        positionOnly.toDocument().valueAt(_position),
+        skir.DataValue.wrapStringValue("Second"),
+      );
+      realm.saves.last.confirm();
       await saving;
       expect(workspace.state.groups, isEmpty);
+      expect(
+        realm.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("First"),
+      );
+      expect(
+        realm.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("Second"),
+      );
     },
   );
 
   test(
     "rejected saves retain their proposal without an automatic retry",
     () async {
-      final transport = _Transport(_document());
-      final workspace = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: transport.current,
-      );
-      addTearDown(workspace.dispose);
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(
+          textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        ),
+        heldSaves,
+      ]);
+      final realm = world.requireRealm;
+      final workspace = await world.openRealmEditing();
       final form = workspace.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -1393,29 +1578,33 @@ void main() {
       addTearDown(form.detach);
       form.edit(
         label: "Rename",
-        apply: (edit) => edit.set(_name, _text("Local")),
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
       );
       final saving = form.save();
       await Future<void>.delayed(Duration.zero);
-      transport.reply.complete(
+      realm.saves.last.reject(
         skir.CommitPreparedEditResponse.wrapConflictError(const []),
       );
       await saving;
       await form.save();
       expect(form.phase, isA<EditGroupConflict>());
-      expect(_read(form.document, _name), _text("Local"));
-      expect(transport.requests, hasLength(1));
+      expect(
+        form.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("Local"),
+      );
+      expect(realm.saves, hasLength(1));
       expect(form.discard(), isTrue);
     },
   );
 
-  test("missing resources retain their proposal for comparison", () {
-    final workspace = RealmEditing(
-      persistence: _Transport(_document()).persistence,
-      submissions: _workSession(),
-      initial: _document(),
-    );
-    addTearDown(workspace.dispose);
+  test("missing resources retain their proposal for comparison", () async {
+    final workspace = await testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+    ]).openRealmEditing();
     final form = workspace.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
@@ -1423,25 +1612,35 @@ void main() {
     addTearDown(form.detach);
     form.edit(
       label: "Rename",
-      apply: (edit) => edit.set(_name, _text("Retained")),
+      apply: (edit) =>
+          edit.set(_name, skir.DataValue.wrapStringValue("Retained")),
     );
-    workspace.acceptConfirmed(_document().copyWith(entries: const {}));
+    workspace.acceptConfirmed(
+      textRecordDocument(_resource, {
+        "name": "Original",
+        "position": "0",
+      }).copyWith(entries: const {}),
+    );
     final phase = form.phase! as EditGroupResourceMissing;
-    expect(_read(phase.proposal, _name), _text("Retained"));
+    expect(
+      (phase.proposal as AuthoringDocument).valueAt(_name),
+      skir.DataValue.wrapStringValue("Retained"),
+    );
     expect(form.discard(), isTrue);
     expect(workspace.state.groups, isEmpty);
   });
 
   test(
     "record field order is irrelevant but collection item order is guarded",
-    () {
-      final document = _document();
-      final workspace = RealmEditing(
-        persistence: _Transport(document).persistence,
-        submissions: _workSession(),
-        initial: document,
-      );
-      addTearDown(workspace.dispose);
+    () async {
+      final document = textRecordDocument(_resource, {
+        "name": "Original",
+        "position": "0",
+      });
+      final workspace = await testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(document),
+      ]).openRealmEditing();
       final form = workspace.attach(
         _resource,
         policy: EditorCommitPolicy.applyResource,
@@ -1456,7 +1655,7 @@ void main() {
         apply: (edit) {
           edit
             ..expect(root)
-            ..set(_position, _text("Next"));
+            ..set(_position, skir.DataValue.wrapStringValue("Next"));
         },
       );
       final entry = document.entry(_resource)!;
@@ -1480,7 +1679,7 @@ void main() {
         items: ids.map(
           (id) => skir.ListItem(
             id: skir.ItemId(value: id),
-            value: _text(id),
+            value: skir.DataValue.wrapStringValue(id),
           ),
         ),
       );
@@ -1492,7 +1691,7 @@ void main() {
         apply: (edit) {
           edit
             ..expect(itemsAt)
-            ..set(_position, _text("Next"));
+            ..set(_position, skir.DataValue.wrapStringValue("Next"));
         },
       );
       final remote = AuthoringEdit.fromDocument(prepared.toDocument())
@@ -1502,59 +1701,36 @@ void main() {
     },
   );
 
-  test(
-    "real providers isolate realms and retain unsent work without a view",
-    () async {
-      final container = ProviderContainer.test(
-        overrides: [
-          ...appOverrides(),
-          localWorkScopeProvider.overrideWithValue(
-            LocalWorkScope(
-              userId: "fixture",
-              organizationId: skir.recordId("organization:test"),
-            ),
-          ),
-          confirmedAuthoringDocumentProvider.overrideWith(
-            (ref, scope) => AsyncData(_document()),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      final scope = AuthoringScope(
-        organizationId: skir.recordId("organization:test"),
-        realmId: skir.recordId("realm:first"),
-      );
-      final other = scope.copyWith(realmId: skir.recordId("realm:second"));
-      final view = container.listen(realmEditingProvider(scope), (_, _) {});
-      final workspace = view.read();
-      workspace.attach(_resource, policy: EditorCommitPolicy.applyResource)
-        ..edit(
-          label: "Rename",
-          apply: (edit) => edit.set(_name, _text("Local")),
-        )
-        ..detach();
-      view.close();
-      await container.pump();
-      expect(
-        container.read(realmEditingProvider(scope)).workspace,
-        same(workspace.workspace),
-      );
-      expect(
-        _read(
-          container.read(workingAuthoringDocumentProvider(other)).requireValue,
-          _name,
-        ),
-        _text("Original"),
-      );
-      expect(
-        _read(
-          container.read(workingAuthoringDocumentProvider(scope)).requireValue,
-          _name,
-        ),
-        _text("Local"),
-      );
-    },
-  );
+  test("unsent work outlives its view and returns when the Realm is "
+      "opened again", () async {
+    final world = await signedInWorld([
+      signedIn(ada, organization: acme),
+      realmServing(
+        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+      ),
+    ]);
+    final scope = world.requireRealm.scope;
+    final view = world.container.listen(realmEditingProvider(scope), (_, _) {});
+    view.read().attach(_resource, policy: EditorCommitPolicy.applyResource)
+      ..edit(
+        label: "Rename",
+        apply: (edit) =>
+            edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+      )
+      ..detach();
+
+    view.close();
+    await world.container.pump();
+
+    expect(
+      world.container
+          .read(workingAuthoringDocumentProvider(scope))
+          .requireValue
+          .valueAt(_name),
+      skir.DataValue.wrapStringValue("Local"),
+    );
+    expect(world.realm!.saves, isEmpty);
+  });
 }
 
 final _resource = skir.ResourceId(value: "resource");
@@ -1568,118 +1744,3 @@ final _position = skir.ValueLocation(
     segments: [skir.PathSegment.createField(name: "position")],
   ),
 );
-skir.DataValue _text(String value) => skir.DataValue.wrapStringValue(value);
-skir.DataValue _read(AuthoringDocument document, skir.ValueLocation at) =>
-    (document.read(at) as PortablePathValue<skir.DataValue>).value;
-AuthoringDocument _document({
-  String name = "Original",
-  String position = "0",
-}) => AuthoringDocument(
-  catalog: CheckedEditorCatalog(
-    skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
-      generation: skir.CatalogGeneration(value: "fixture"),
-      types: const [],
-      relations: const [],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    ),
-  ),
-  entries: {
-    _resource: skir.AuthoringResource(
-      id: _resource,
-      content: skir.AuthoringRecord(
-        configuration: skir.TypeSelection.unknown,
-        fields: [
-          skir.FieldValue(name: "name", value: _text(name)),
-          skir.FieldValue(name: "position", value: _text(position)),
-        ],
-      ),
-    ),
-  },
-  links: const [],
-);
-
-final class _Transport {
-  _Transport(this.current);
-  RealmEditPersistence get persistence =>
-      fixtureRealmPersistence(commit: commit, confirmed: fetchConfirmed);
-  AuthoringDocument current;
-  final requests = <skir.PreparedEdit>[];
-  final replies = <Completer<skir.CommitPreparedEditResponse>>[];
-  Completer<skir.CommitPreparedEditResponse> get reply => replies.last;
-  Error? refreshFailure;
-  Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) {
-    requests.add(edit);
-    final next = Completer<skir.CommitPreparedEditResponse>();
-    replies.add(next);
-    return next.future;
-  }
-
-  Future<AuthoringDocument> fetchConfirmed() async {
-    if (refreshFailure case final error?) throw error;
-    return current;
-  }
-}
-
-final _workScope = AuthoringScope(
-  organizationId: skir.recordId("organization:fixture"),
-  realmId: skir.recordId("service:fixture"),
-);
-
-final class _WorkPublicationRepository extends TestPublicationRepository {
-  _WorkPublicationRepository(this.saved)
-    : super(
-        _workScope,
-        initial: publicationObservation(readyPublicationStatus()),
-      );
-  final skir.DataValue Function() saved;
-  final publishedValues = <skir.DataValue>[];
-  final queriedSelections = <skir.CompilationStatusSelection>[];
-  List<skir.CompiledResourceStatus> statuses = [];
-  bool uncertain = false;
-  Completer<void>? sendGate;
-  @override
-  PreparedCommit<skir.PublishAuthoringResponse> preparePublish(
-    skir.PublicationCandidateId candidate,
-  ) => PreparedCommit(
-    id: Object(),
-    label: "Publish saved content",
-    resources: {WorkDriverId(domain: "publication", scope: _workScope)},
-    replay: SubmissionReplay.unsupported,
-    send: () async {
-      publishedValues.add(saved());
-      if (sendGate case final gate?) await gate.future;
-      if (uncertain) {
-        return SubmissionUncertain(
-          message: "Unknown delivery outcome",
-          cause: StateError("Missing reply"),
-          stackTrace: StackTrace.current,
-        );
-      }
-      return SubmissionConfirmed(skir.PublishAuthoringResponse.publishing);
-    },
-  );
-  @override
-  Future<List<skir.CompiledResourceStatus>> states(
-    skir.CompilationStatusSelection selection,
-  ) async {
-    queriedSelections.add(selection);
-    return statuses;
-  }
-}
-
-ScopedWorkSession _workSession() {
-  final session = ScopedWorkSession();
-  addTearDown(session.dispose);
-  return session;
-}

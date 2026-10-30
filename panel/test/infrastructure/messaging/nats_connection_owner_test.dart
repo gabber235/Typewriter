@@ -4,11 +4,22 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+final _settings = NatsConnectionSettings(
+  url: "nats://fixture:4222",
+  token: "fixture-token",
+  user: const UserInfo(sub: "fixture-user"),
+  sentinel: skir.GetSentinelCredentialsResponse_Success(
+    jwt: "fixture-jwt",
+    seed: "fixture-seed",
+  ),
+  organization: skir.recordId("organization:fixture"),
+);
+
 void main() {
   test(
     "retry publishes a fresh session before closing the previous client",
     () async {
-      final fixture = _ConnectionFixture();
+      final fixture = OwnedNatsConnections(_settings);
       addTearDown(fixture.close);
       final previous = fixture.owner.client;
       fixture.onReplacement = (client) {
@@ -29,7 +40,7 @@ void main() {
   );
 
   test("retries are serialized and publish in order", () async {
-    final fixture = _ConnectionFixture();
+    final fixture = OwnedNatsConnections(_settings);
     addTearDown(fixture.close);
 
     await Future.wait([fixture.owner.retry(), fixture.owner.retry()]);
@@ -44,7 +55,7 @@ void main() {
   });
 
   test("closing the owner blocks a later retry", () async {
-    final fixture = _ConnectionFixture();
+    final fixture = OwnedNatsConnections(_settings);
     addTearDown(fixture.close);
 
     await fixture.owner.close();
@@ -65,57 +76,9 @@ void main() {
   });
 
   test("settings do not print authentication credentials", () {
-    expect(
-      _ConnectionFixture.settings.toString(),
-      isNot(contains("fixture-token")),
-    );
-    expect(
-      _ConnectionFixture.settings.toString(),
-      isNot(contains("fixture-seed")),
-    );
+    final printed = _settings.toString();
+    expect(printed, isNot(contains("fixture-token")));
+    expect(printed, isNot(contains("fixture-jwt")));
+    expect(printed, isNot(contains("fixture-seed")));
   });
-}
-
-final class _ConnectionFixture {
-  _ConnectionFixture() {
-    owner = NatsConnectionOwner(
-      settings: settings,
-      clientFactory: _create,
-      sessionFactory: () => clients.length.toString().padLeft(32, "0"),
-      onReplacement: (client) {
-        published.add(client);
-        onReplacement?.call(client);
-      },
-    );
-  }
-
-  static final settings = NatsConnectionSettings(
-    url: "nats://fixture:4222",
-    token: "fixture-token",
-    user: const UserInfo(sub: "fixture-user"),
-    sentinel: skir.GetSentinelCredentialsResponse_Success(
-      jwt: "fixture-jwt",
-      seed: "fixture-seed",
-    ),
-    organization: skir.recordId("organization:fixture"),
-  );
-  final clients = <FakeNatsClient>[];
-  final published = <NatsClient>[];
-  late final NatsConnectionOwner owner;
-  void Function(NatsClient)? onReplacement;
-
-  FakeNatsClient _create(NatsClientConfiguration configuration) {
-    final client = FakeNatsClient(
-      actorId: configuration.actorId,
-      organizationId: configuration.organizationId,
-      connectionSession: configuration.connectionSession,
-    );
-    clients.add(client);
-    return client;
-  }
-
-  Future<void> close() async {
-    await owner.close();
-    await Future.wait(clients.map((client) => client.close()));
-  }
 }

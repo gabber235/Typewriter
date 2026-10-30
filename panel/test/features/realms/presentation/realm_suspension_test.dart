@@ -1,170 +1,134 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("blocks interaction and exposes retry while unavailable", (
+  testWidgets("an offline Realm pauses its changes, names itself and tells "
+      "when its host was last seen", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(name: "Story Realm", books: [book("First")]),
+      realmHostStopped,
+    ]);
+
+    await tester.pump(const Duration(minutes: 4));
+    await panel.settle();
+
+    expect(panel.shows("Realm connection lost"), isTrue);
+    expect(
+      find.textContaining("Changes to 'Story Realm' are paused"),
+      findsOneWidget,
+    );
+    expect(panel.shows("4m ago"), isTrue);
+    expect(panel.shows("Check again"), isTrue);
+  });
+
+  testWidgets("an unavailable Realm blocks its content and offers a retry", (
     tester,
   ) async {
-    var childTaps = 0;
+    var changes = 0;
     var retries = 0;
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 800,
-        height: 600,
-        child: RealmSuspensionBarrier(
-          interaction: const RealmInteractionState(
-            connectionState: RealmConnectionState.unavailable,
-          ),
-          onRetry: () => retries++,
-          child: FilledButton(
-            onPressed: () => childTaps++,
-            child: const Text("Change realm"),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        SizedBox.fromSize(
+          size: _workspace,
+          child: RealmSuspensionBarrier(
+            interaction: const RealmInteractionState(
+              connectionState: RealmConnectionState.unavailable,
+            ),
+            onRetry: () => retries++,
+            child: FilledButton(
+              onPressed: () => changes++,
+              child: const Text("Change realm"),
+            ),
           ),
         ),
       ),
     );
 
     await tester.tap(find.text("Change realm"), warnIfMissed: false);
-    expect(childTaps, 0);
-    expect(find.text("Realm unavailable"), findsOneWidget);
+    await panel.settle();
+    expect(changes, 0);
+    expect(panel.shows("Realm unavailable"), isTrue);
 
-    await tester.tap(find.text("Check again"));
+    await panel.tapOn(find.text("Check again"));
     expect(retries, 1);
   });
 
-  testWidgets("removes focus while suspended", (tester) async {
+  testWidgets("suspending a Realm takes focus away from its fields", (
+    tester,
+  ) async {
     final connection = ValueNotifier(RealmConnectionState.online);
     addTearDown(connection.dispose);
-    final focusNode = FocusNode();
-    addTearDown(focusNode.dispose);
-
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 800,
-        height: 600,
-        child: ValueListenableBuilder(
-          valueListenable: connection,
-          builder: (context, state, child) => RealmSuspensionBarrier(
-            interaction: RealmInteractionState(connectionState: state),
-            child: child!,
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        SizedBox.fromSize(
+          size: _workspace,
+          child: ValueListenableBuilder(
+            valueListenable: connection,
+            builder: (context, state, child) => RealmSuspensionBarrier(
+              interaction: RealmInteractionState(connectionState: state),
+              child: child!,
+            ),
+            child: const TextField(
+              decoration: InputDecoration(labelText: "Name"),
+            ),
           ),
-          child: TextField(focusNode: focusNode),
         ),
       ),
     );
 
-    await tester.tap(find.byType(TextField));
-    expect(focusNode.hasFocus, isTrue);
+    await panel.field("Name").focus();
+    expect(panel.field("Name").isFocused, isTrue);
 
     connection.value = RealmConnectionState.offline;
-    await tester.pumpAndSettle();
+    await panel.settle();
 
-    expect(focusNode.hasFocus, isFalse);
+    expect(panel.hasFocusOn("Name"), isFalse);
   });
 
-  testWidgets("preserves child state and resumes interaction", (tester) async {
+  testWidgets("a suspended Realm keeps its content and resumes where it was", (
+    tester,
+  ) async {
     final connection = ValueNotifier(RealmConnectionState.online);
     addTearDown(connection.dispose);
-
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 800,
-        height: 600,
-        child: ValueListenableBuilder(
-          valueListenable: connection,
-          builder: (context, state, child) => RealmSuspensionBarrier(
-            interaction: RealmInteractionState(connectionState: state),
-            child: child!,
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        SizedBox.fromSize(
+          size: _workspace,
+          child: ValueListenableBuilder(
+            valueListenable: connection,
+            builder: (context, state, child) => RealmSuspensionBarrier(
+              interaction: RealmInteractionState(connectionState: state),
+              child: child!,
+            ),
+            child: const CountingButton(),
           ),
-          child: const _Counter(),
         ),
       ),
     );
 
-    await tester.tap(find.text("Count 0"));
-    await tester.pump();
-    expect(find.text("Count 1"), findsOneWidget);
+    await panel.tapOn(find.text("Count 0"));
+    expect(panel.shows("Count 1"), isTrue);
 
     connection.value = RealmConnectionState.offline;
-    await tester.pumpAndSettle();
-    expect(find.text("Realm connection lost"), findsOneWidget);
+    await panel.settle();
+    expect(panel.shows("Realm connection lost"), isTrue);
 
     await tester.tap(find.text("Count 1"), warnIfMissed: false);
-    expect(find.text("Count 1"), findsOneWidget);
+    await panel.settle();
+    expect(panel.shows("Count 1"), isTrue);
 
     connection.value = RealmConnectionState.online;
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Count 1"));
-    await tester.pump();
+    await panel.settle();
+    await panel.tapOn(find.text("Count 1"));
 
-    expect(find.text("Count 2"), findsOneWidget);
-  });
-
-  testWidgets("shows offline realm details", (tester) async {
-    var retries = 0;
-    final realm = skir.RealmInstance(
-      realmId: skir.recordId("realm:test"),
-      ownerHost: skir.OwnerHost(
-        id: skir.recordId("service:test"),
-        name: "story_realm",
-      ),
-      revision: 1,
-      targetEngine: skir.EngineTarget(
-        engineId: "typewritermc:paper",
-        versionConstraint: "*",
-      ),
-      state: skir.ChildRuntimeState(
-        status: skir.ChildRuntimeStatus.absent,
-        activeArtifactVersion: null,
-        message: null,
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 4)),
-      ),
-    );
-
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 800,
-        height: 600,
-        child: RealmSuspensionBarrier(
-          interaction: const RealmInteractionState(
-            connectionState: RealmConnectionState.offline,
-          ),
-          realm: realm,
-          onRetry: () => retries++,
-          child: const ColoredBox(color: Colors.blue),
-        ),
-      ),
-    );
-
-    expect(find.text("Realm connection lost"), findsOneWidget);
-    expect(
-      find.textContaining("Changes to 'Story Realm' are paused"),
-      findsOneWidget,
-    );
-    expect(find.text("4m ago"), findsOneWidget);
-    await tester.tap(find.text("Check again"));
-    expect(retries, 1);
+    expect(panel.shows("Count 2"), isTrue);
   });
 }
 
-class _Counter extends StatefulWidget {
-  const _Counter();
-
-  @override
-  State<_Counter> createState() => _CounterState();
-}
-
-class _CounterState extends State<_Counter> {
-  int count = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: () => setState(() => count++),
-      child: Text("Count $count"),
-    );
-  }
-}
+/// The area a Realm workspace fills, so the veil has room to explain itself.
+const _workspace = Size(800, 600);

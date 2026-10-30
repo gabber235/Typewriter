@@ -56,14 +56,14 @@ void main() {
         budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
       );
       addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Scaffold(
+      final panel = await tester.showComponent(
+        Scaffold(
           body: SingleChildScrollView(
             child: PortablePresentationRenderer(host: host),
           ),
         ),
       );
-      expect(_values(tester), [
+      expect(visibleFieldValues(), [
         "Welcome",
         "Hello player",
         "Cooldown",
@@ -74,12 +74,7 @@ void main() {
         "10, 20",
       ]);
       expect(find.text("Entry heading"), findsNWidgets(2));
-      await tester.enterText(
-        find.byType(TextFormField).first,
-        "  First only  ",
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).submit("  First only  ");
       expect(records.first.authoredField("name")?.authoredString, "First only");
       expect(records.last.authoredField("name")?.authoredString, "Welcome");
       expect(tester.takeException(), isNull);
@@ -125,8 +120,8 @@ void main() {
               .toFrozen(),
     );
     addTearDown(fixture.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
+    await tester.showComponent(
+      Scaffold(
         body: PortablePresentationRenderer(
           host: fixture.host,
           contextBindings: {
@@ -139,7 +134,12 @@ void main() {
       ),
     );
     expect(find.text("Imported heading"), findsOneWidget);
-    expect(_values(tester), ["Welcome", "Hello player", "Cooldown", "10, 20"]);
+    expect(visibleFieldValues(), [
+      "Welcome",
+      "Hello player",
+      "Cooldown",
+      "10, 20",
+    ]);
     expect(tester.takeException(), isNull);
   });
 
@@ -148,8 +148,11 @@ void main() {
     (tester) async {
       final fixture = InheritedInspectorLayoutScenario();
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(_values(tester), [
+      final panel = await tester.showPresentationHost(
+        fixture.host,
+        scrolls: true,
+      );
+      expect(visibleFieldValues(), [
         "Welcome",
         "Hello player",
         "Cooldown",
@@ -158,20 +161,18 @@ void main() {
       expect(find.text("Entry heading"), findsOneWidget);
       expect(
         tester.getTopLeft(find.text("Entry heading")).dy,
-        greaterThan(tester.getTopLeft(find.byType(TextFormField).first).dy),
+        greaterThan(panel.fieldAt(0).rect.top),
       );
       expect(
         tester.getTopLeft(find.text("Entry heading")).dy,
-        lessThan(tester.getTopLeft(find.byType(TextFormField).at(1)).dy),
+        lessThan(panel.fieldAt(1).rect.top),
       );
-      await tester.enterText(find.byType(TextFormField).first, "  Renamed  ");
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).submit("  Renamed  ");
       expect(fixture.name, "Renamed");
       expect(fixture.writes.last.$1, editorRootPath.field("name"));
       await tester.pumpWidget(const SizedBox.shrink());
-      await _pump(tester, fixture);
-      expect(_values(tester).first, "Renamed");
+      await tester.showPresentationHost(fixture.host, scrolls: true);
+      expect(visibleFieldValues().first, "Renamed");
       expect(tester.takeException(), isNull);
     },
   );
@@ -181,13 +182,16 @@ void main() {
     (tester) async {
       final fixture = InheritedInspectorLayoutScenario(
         childLayout: inheritedFieldColumn([
-          _input("child.message", "message"),
+          inheritedFieldTextInput(
+            "child.message",
+            control: inheritedFieldControl(field: "message"),
+          ),
           inspectorLayoutRemainder("child.remaining"),
         ], id: "child"),
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(_values(tester), [
+      await tester.showPresentationHost(fixture.host, scrolls: true);
+      expect(visibleFieldValues(), [
         "Hello player",
         "Welcome",
         "Cooldown",
@@ -202,8 +206,13 @@ void main() {
       childLayout: inspectorLayoutRemainder("child.remaining"),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(_values(tester), ["Welcome", "Hello player", "Cooldown", "10, 20"]);
+    await tester.showPresentationHost(fixture.host, scrolls: true);
+    expect(visibleFieldValues(), [
+      "Welcome",
+      "Hello player",
+      "Cooldown",
+      "10, 20",
+    ]);
     expect(find.text("Entry heading"), findsOneWidget);
   });
 
@@ -213,17 +222,26 @@ void main() {
       final fixture = InheritedInspectorLayoutScenario(
         childLayout: inheritedFieldColumn([
           inspectorLayoutRemainder("child.remaining"),
-          _input("child.placement", "placement"),
+          inheritedFieldTextInput(
+            "child.placement",
+            control: inheritedFieldControl(
+              field: "placement",
+              label: "Child placement",
+            ),
+          ),
         ], id: "child"),
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(_values(tester), [
+      await tester.showPresentationHost(fixture.host, scrolls: true);
+      // The remainder leaves placement to the explicit editor after it: the
+      // placement shows once, last, under the explicit editor's label.
+      expect(visibleFieldValues(), [
         "Welcome",
         "Hello player",
         "Cooldown",
         "10, 20",
       ]);
+      expect(visibleTextFields().last.spoken, startsWith("Child placement"));
     },
   );
 
@@ -237,11 +255,15 @@ void main() {
               "child.remaining",
               excludedFields: ["placement"],
             ),
-            if (explicit) _input("child.placement", "placement"),
+            if (explicit)
+              inheritedFieldTextInput(
+                "child.placement",
+                control: inheritedFieldControl(field: "placement"),
+              ),
           ], id: "child"),
         );
-        await _pump(tester, fixture);
-        expect(_values(tester), [
+        await tester.showPresentationHost(fixture.host, scrolls: true);
+        expect(visibleFieldValues(), [
           "Welcome",
           "Hello player",
           "Cooldown",
@@ -256,8 +278,8 @@ void main() {
   testWidgets(
     "excluded parts reserve their fields but allow an explicit local name",
     (tester) async {
-      final fixture = _detailsFixture(
-        child: inheritedFieldColumn([
+      final fixture = InheritedInspectorLayoutScenario(
+        childLayout: inheritedFieldColumn([
           inheritedFieldRequest(
             control: inheritedFieldControl(field: "name"),
             id: "child.name",
@@ -267,10 +289,16 @@ void main() {
             excludedParts: [inspectorDetailsPart],
           ),
         ], id: "child"),
+        familyLayout: _detailsFamily,
+        familyInheritableNodes: const [
+          "family",
+          "family.details",
+          "family.remaining",
+        ],
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(_values(tester), ["Welcome", "Hello player", "Cooldown"]);
+      await tester.showPresentationHost(fixture.host, scrolls: true);
+      expect(visibleFieldValues(), ["Welcome", "Hello player", "Cooldown"]);
       expect(find.text("Details"), findsNothing);
     },
   );
@@ -282,8 +310,8 @@ void main() {
         variant: InheritedInspectorLayoutVariant.replacedDetails,
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(_values(tester), ["Welcome", "Hello player", "Cooldown"]);
+      await tester.showPresentationHost(fixture.host, scrolls: true);
+      expect(visibleFieldValues(), ["Welcome", "Hello player", "Cooldown"]);
       expect(find.text("Details replaced"), findsOneWidget);
     },
   );
@@ -291,47 +319,59 @@ void main() {
   testWidgets("a retained atomic part reports an overlapping child field", (
     tester,
   ) async {
-    final fixture = _detailsFixture(
-      child: inheritedFieldColumn([
+    final fixture = InheritedInspectorLayoutScenario(
+      childLayout: inheritedFieldColumn([
         inheritedFieldRequest(
           control: inheritedFieldControl(field: "name"),
           id: "child.name",
         ),
         inspectorLayoutRemainder("child.remaining"),
       ], id: "child"),
+      familyLayout: _detailsFamily,
+      familyInheritableNodes: const [
+        "family",
+        "family.details",
+        "family.remaining",
+      ],
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    await tester.showPresentationHost(fixture.host, scrolls: true);
     expect(
       find.textContaining("Replace or exclude the whole part"),
       findsWidgets,
     );
-    expect(_values(tester), ["Welcome"]);
+    expect(visibleFieldValues(), ["Welcome"]);
   });
 
   testWidgets("field exclusion cannot partially remove an atomic part", (
     tester,
   ) async {
-    final fixture = _detailsFixture(
-      child: inspectorLayoutRemainder(
+    final fixture = InheritedInspectorLayoutScenario(
+      childLayout: inspectorLayoutRemainder(
         "child.remaining",
         excludedFields: ["name"],
       ),
+      familyLayout: _detailsFamily,
+      familyInheritableNodes: const [
+        "family",
+        "family.details",
+        "family.remaining",
+      ],
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    await tester.showPresentationHost(fixture.host, scrolls: true);
     expect(
       find.textContaining("Replace or exclude the whole part"),
       findsWidgets,
     );
-    expect(_values(tester), isEmpty);
+    expect(visibleFieldValues(), isEmpty);
   });
 
   testWidgets("a hidden explicit part reserves its key and its fields", (
     tester,
   ) async {
-    final fixture = _detailsFixture(
-      child: inheritedFieldColumn([
+    final fixture = InheritedInspectorLayoutScenario(
+      childLayout: inheritedFieldColumn([
         presentationNode(
           "hidden",
           skir.PresentationElement.createConditional(
@@ -347,23 +387,40 @@ void main() {
         ),
         inspectorLayoutRemainder("child.remaining"),
       ], id: "child"),
+      familyLayout: _detailsFamily,
+      familyInheritableNodes: const [
+        "family",
+        "family.details",
+        "family.remaining",
+      ],
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(_values(tester), ["Hello player", "Cooldown"]);
+    await tester.showPresentationHost(fixture.host, scrolls: true);
+    expect(visibleFieldValues(), ["Hello player", "Cooldown"]);
     expect(find.text("Details"), findsNothing);
   });
 
   testWidgets("a part after the remainder is rendered once", (tester) async {
-    final fixture = _detailsFixture(
-      child: inheritedFieldColumn([
+    final fixture = InheritedInspectorLayoutScenario(
+      childLayout: inheritedFieldColumn([
         inspectorLayoutRemainder("child.remaining"),
         inspectorLayoutPart("child.details", inspectorDetailsPart),
       ], id: "child"),
+      familyLayout: _detailsFamily,
+      familyInheritableNodes: const [
+        "family",
+        "family.details",
+        "family.remaining",
+      ],
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(_values(tester), ["Hello player", "Cooldown", "Welcome", "10, 20"]);
+    await tester.showPresentationHost(fixture.host, scrolls: true);
+    expect(visibleFieldValues(), [
+      "Hello player",
+      "Cooldown",
+      "Welcome",
+      "10, 20",
+    ]);
     expect(find.text("Details"), findsOneWidget);
   });
 
@@ -387,8 +444,13 @@ void main() {
       ),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(_values(tester), ["Welcome", "Hello player", "Cooldown", "10, 20"]);
+    await tester.showPresentationHost(fixture.host, scrolls: true);
+    expect(visibleFieldValues(), [
+      "Welcome",
+      "Hello player",
+      "Cooldown",
+      "10, 20",
+    ]);
   });
 
   testWidgets("unmarked source headings stay local", (tester) async {
@@ -401,7 +463,10 @@ void main() {
           id: "family.name",
         ),
         inspectorLayoutRemainder("family.remaining"),
-        _input("family.placement", "placement"),
+        inheritedFieldTextInput(
+          "family.placement",
+          control: inheritedFieldControl(field: "placement"),
+        ),
       ], id: "family"),
       familyInheritableNodes: [
         "family",
@@ -411,53 +476,28 @@ void main() {
       ],
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    await tester.showPresentationHost(fixture.host, scrolls: true);
     expect(find.text("Local family title"), findsNothing);
     expect(find.text("Entry heading"), findsOneWidget);
-    expect(_values(tester).last, "10, 20");
+    expect(visibleFieldValues().last, "10, 20");
   });
 }
 
-InheritedInspectorLayoutScenario _detailsFixture({
-  required skir.PresentationNode child,
-}) => InheritedInspectorLayoutScenario(
-  childLayout: child,
-  familyLayout: inheritedFieldColumn([
-    inspectorLayoutPart(
-      "family.details",
-      inspectorDetailsPart,
-      body: inheritedFieldColumn([
-        presentationText("details.title", textLiteral("Details")),
-        inheritedFieldRequest(
-          control: inheritedFieldControl(field: "name"),
-          id: "details.name",
-        ),
-        inheritedFieldRequest(
-          control: inheritedFieldControl(field: "placement"),
-          id: "details.placement",
-        ),
-      ], id: "details"),
-    ),
-    inspectorLayoutRemainder("family.remaining"),
-  ], id: "family"),
-  familyInheritableNodes: ["family", "family.details", "family.remaining"],
-);
-
-Future<void> _pump(
-  WidgetTester tester,
-  InheritedInspectorLayoutScenario fixture,
-) => tester.pumpTestApp(
-  child: Scaffold(
-    body: SingleChildScrollView(
-      child: PortablePresentationRenderer(host: fixture.host),
-    ),
+final _detailsFamily = inheritedFieldColumn([
+  inspectorLayoutPart(
+    "family.details",
+    inspectorDetailsPart,
+    body: inheritedFieldColumn([
+      presentationText("details.title", textLiteral("Details")),
+      inheritedFieldRequest(
+        control: inheritedFieldControl(field: "name"),
+        id: "details.name",
+      ),
+      inheritedFieldRequest(
+        control: inheritedFieldControl(field: "placement"),
+        id: "details.placement",
+      ),
+    ], id: "details"),
   ),
-);
-
-List<String> _values(WidgetTester tester) => tester
-    .widgetList<EditableText>(find.byType(EditableText))
-    .map((entry) => entry.controller.text)
-    .toList();
-
-skir.PresentationNode _input(String id, String field) =>
-    inheritedFieldTextInput(id, control: inheritedFieldControl(field: field));
+  inspectorLayoutRemainder("family.remaining"),
+], id: "family");

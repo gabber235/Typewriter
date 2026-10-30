@@ -37,6 +37,20 @@ final class WorldBuilder {
   /// The theme mode the user chose.
   ThemeMode themeMode = ThemeMode.light;
 
+  /// Whether the organization projections the panel watches over NATS are
+  /// replaced by [FakeOrganizations]; false leaves the real projections
+  /// reading [World.nats], where the test registers replies.
+  bool organizationDoubles = true;
+
+  /// Whether Rive assets render through the real Rive runtime; false renders
+  /// them as [FakeRive] empty boxes, as a test runner without the native
+  /// Rive library needs.
+  bool liveAnimations = false;
+
+  /// Doubles traits install for sources the world does not model itself,
+  /// such as the membership of an organization.
+  final overrides = <Override>[];
+
   /// Effects that run once the world started, in order.
   final _startups = <void Function(World world)>[];
 
@@ -52,12 +66,37 @@ final class RealmSeed {
     this.books = const [],
     this.tags = const [],
     this.pages = const [],
+    this.scenes = const [],
+    this.catalog,
+    this.saved,
   });
 
   final String name;
   final List<Book> books;
   final List<Tag> tags;
   final List<Page> pages;
+
+  /// The scenes the realm root holds besides its Library and tags section.
+  final List<Scene> scenes;
+
+  /// The catalog the seeded resources are typed by; null keeps the
+  /// [libraryCatalog].
+  final CheckedEditorCatalog? catalog;
+
+  /// The whole saved document, for content the library catalog cannot
+  /// describe; replaces [books], [tags], [pages] and [catalog].
+  final AuthoringDocument? saved;
+
+  /// The document the Realm starts with.
+  AuthoringDocument get document =>
+      saved ??
+      realmDocument(
+        books: books,
+        tags: tags,
+        pages: pages,
+        scenes: scenes,
+        catalog: catalog,
+      );
 }
 
 /// Everything one test runs against: the doubles behind every seam, the
@@ -80,9 +119,11 @@ final class World {
         ...appOverrides(),
         ...session.overrides,
         nats.override,
-        ...organizations.overrides,
+        if (_builder.organizationDoubles) ...organizations.overrides,
         appearance.override,
+        if (!_builder.liveAnimations) const FakeRive().override,
         ...?realm?.overrides,
+        ..._builder.overrides,
       ],
       // Tests and stories never retry, so a failure shows at once.
       retry: (retryCount, error) => null,
@@ -138,12 +179,7 @@ final class World {
           realmId: instance.realmId,
         ),
         name: seed.name,
-        document: fixtureAuthoringDocument(
-          realm: true,
-          books: seed.books,
-          tags: seed.tags,
-          pages: seed.pages,
-        ),
+        document: seed.document,
         operations: builder.operations,
       )..latency = builder.latency;
     }

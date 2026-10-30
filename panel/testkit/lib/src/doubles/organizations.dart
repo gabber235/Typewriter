@@ -15,6 +15,7 @@ final class FakeOrganizations {
   final _members = <String, List<skir.Organization>>{};
   final _realms = <skir.RecordId, List<skir.RealmInstance>>{};
   final _changes = StreamController<void>.broadcast(sync: true);
+  final _stopped = <skir.RecordId>{};
 
   /// Makes [user] a member of [organization].
   void join(String user, skir.Organization organization) {
@@ -25,6 +26,15 @@ final class FakeOrganizations {
       return;
     }
     organizations.add(organization);
+    _changes.add(null);
+  }
+
+  /// Removes [user] from the organization [organization], the way an
+  /// administrator removing a member does.
+  void leave(String user, skir.RecordId organization) {
+    _members[user]?.removeWhere(
+      (existing) => existing.organizationId == organization,
+    );
     _changes.add(null);
   }
 
@@ -61,6 +71,20 @@ final class FakeOrganizations {
     return realm;
   }
 
+  /// The host of [realm] stops reporting, so the panel sees the Realm
+  /// offline.
+  void stopHost(skir.RecordId realm) {
+    _stopped.add(realm);
+    _changes.add(null);
+  }
+
+  /// The host of [realm] reports again after [stopHost], so the panel sees
+  /// the Realm back online.
+  void resumeHost(skir.RecordId realm) {
+    _stopped.remove(realm);
+    _changes.add(null);
+  }
+
   /// The topology of [organization]: its realms and the hosts running them.
   skir.OrganizationTopologySnapshot topology(skir.RecordId organization) {
     final realms = [...?_realms[organization]];
@@ -87,7 +111,7 @@ final class FakeOrganizations {
     );
   }
 
-  /// The services of [organization]; each one reported in just now.
+  /// The services of [organization]; each running one reported in just now.
   List<skir.Service> services(skir.RecordId organization) => [
     for (final realm in [...?_realms[organization]])
       skir.Service(
@@ -97,7 +121,9 @@ final class FakeOrganizations {
         role: skir.ServiceRole.createHost(version: "1.0.0"),
         createdAt: realm.state.updatedAt,
         state: skir.ServiceState(
-          status: skir.ServiceStatus.online,
+          status: _stopped.contains(realm.realmId)
+              ? skir.ServiceStatus.offline
+              : skir.ServiceStatus.online,
           lastSeen: clock.now(),
         ),
         organization: null,
@@ -108,9 +134,11 @@ final class FakeOrganizations {
   skir.RecordId _serviceOf(skir.RealmInstance realm) =>
       skir.recordId("service:${realm.realmId.id}");
 
-  /// Replaces the organization list, topology and services projections.
+  /// Replaces the organization list, topology and services projections, and
+  /// the user's own join requests, of which there are none.
   List<Override> get overrides => [
     organizationsProvider.overrideWith(() => _Organizations(this)),
+    userJoinRequestsProvider.overrideWith(_NoJoinRequests.new),
     organizationTopologyControllerProvider.overrideWith2(
       (_) => _Topology(this),
     ),
@@ -119,6 +147,11 @@ final class FakeOrganizations {
 
   /// Ends every open projection.
   Future<void> close() => _changes.close();
+}
+
+final class _NoJoinRequests extends UserJoinRequests {
+  @override
+  Stream<List<skir.UserJoinRequest>> build() => Stream.value(const []);
 }
 
 final class _Organizations extends Organizations {

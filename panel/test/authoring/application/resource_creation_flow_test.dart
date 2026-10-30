@@ -9,52 +9,24 @@ void main() {
     "a page with a new Book in the single Library is created in one edit",
     (tester) async {
       final fixture = ResourceCreationFixture.library();
-      final document = fixture.libraryDocument();
-      final harness = _Harness(
-        document,
-        fixture.request("Page"),
-        const CreationContext(),
-      );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Create Book"));
-      await tester.pumpAndSettle();
+      final page = fixture.request("Page");
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(fixture.libraryDocument()),
+      ]);
 
-      expect(harness.error, isNull);
+      final creation = await panel.create(page);
+      await panel.search.result("Create Book").tap();
+
+      expect(creation.error, isNull);
+      expect(creation.created?.resourceId, page.id);
       // The Book joins the only Library without a question.
-      expect(find.byType(SearchModal), findsNothing);
-      final created = harness.workspace!.document;
-      expect(created.entries, hasLength(3));
-      expect(created.links, hasLength(2));
-      final page = created.resource(harness.request.id)!;
-      final book = page.authoredField("book")!.authoredLink!.target.resource;
-      expect(
-        created
-            .resource(book)!
-            .authoredField("library")!
-            .authoredLink!
-            .target
-            .resource,
-        fixture.library,
-      );
-      expect(
-        created
-            .resource(fixture.library)!
-            .authoredField("books")!
-            .authoredItems,
-        hasLength(1),
-      );
-      final edit = harness.transport.requests.single.edit;
-      expect(
-        edit.intents.whereType<skir.EditIntent_createResourceWrapper>(),
-        hasLength(2),
-      );
-      _capture(
-        catalog: document.catalog.snapshot,
-        seed: fixture.librarySeed().prepare(),
-        edit: edit,
-      );
+      expect(panel.search.result("Library").isShown, isFalse);
+      final saved = await panel.savedAfter();
+      final book = saved.linkTarget(page.id, "book")!;
+      expect(saved.linkTarget(book, "library"), fixture.library);
+      expect(saved.relations.children[fixture.library], [book]);
+      expect(saved.relations.children[book], [page.id]);
     },
   );
 
@@ -63,54 +35,43 @@ void main() {
     "owner",
     (tester) async {
       final fixture = ResourceCreationFixture.library();
-      final document = fixture.libraryDocument();
+      final book = fixture.request("Book");
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(fixture.libraryDocument()),
+      ]);
+      final realm = panel.world.requireRealm;
       // A nullable back reference prepares as null instead of asking.
-      skir.PrepareValueResult prepare(skir.PreparationOperation operation) =>
-          switch (fixturePreparationStep(document, operation)) {
-            skir.PrepareValueResult_needsInputWrapper(:final value) =>
-              skir.PrepareValueResult.wrapReady(
-                skir.PreparedValue(
-                  content: skir.PreparedContent.wrapRecord(
-                    switch ((value.content
-                            as skir.PreparedContent_recordWrapper)
-                        .value
-                        .replaceAt(
-                          editorRootPath.field("library"),
-                          skir.DataValue.null_,
-                        )) {
-                      PortablePathValue(:final value) => value,
-                      PortablePathUnavailable(:final message) =>
-                        throw StateError(message),
-                    },
-                  ),
-                  findings: const [],
+      realm.answerPrepareStep = (step) async => switch (realm.document
+          .prepareStep(step)) {
+        skir.PrepareValueResult_needsInputWrapper(:final value) =>
+          skir.PrepareValueResult.wrapReady(
+            skir.PreparedValue(
+              content: skir.PreparedContent.wrapRecord(switch ((value.content
+                      as skir.PreparedContent_recordWrapper)
+                  .value
+                  .replaceAt(
+                    editorRootPath.field("library"),
+                    skir.DataValue.null_,
+                  )) {
+                PortablePathValue(:final value) => value,
+                PortablePathUnavailable(:final message) => throw StateError(
+                  message,
                 ),
-              ),
-            final step => step,
-          };
-      final harness = _Harness(
-        document,
-        fixture.request("Book"),
-        const CreationContext(),
-        prepare: prepare,
-      );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
+              }),
+              findings: const [],
+            ),
+          ),
+        final answer => answer,
+      };
 
-      expect(harness.error, isNull);
-      expect(find.byType(SearchModal), findsNothing);
-      final created = harness.workspace!.document;
-      expect(
-        created
-            .resource(harness.request.id)!
-            .authoredField("library")!
-            .authoredLink!
-            .target
-            .resource,
-        fixture.library,
-      );
-      expect(created.relations.parents[harness.request.id], [fixture.library]);
+      final creation = await panel.create(book);
+
+      expect(creation.error, isNull);
+      expect(creation.created?.resourceId, book.id);
+      final saved = await panel.savedAfter();
+      expect(saved.linkTarget(book.id, "library"), fixture.library);
+      expect(saved.relations.parents[book.id], [fixture.library]);
     },
   );
 
@@ -119,25 +80,19 @@ void main() {
     (tester) async {
       final fixture = ResourceCreationFixture();
       final other = skir.ResourceId(value: "store:other");
-      final harness = _Harness(
-        fixture.withStores(fixture.document(), [other]),
-        fixture.request("Book"),
-        const CreationContext(),
-      );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
+      final book = fixture.request("Book");
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(fixture.withStores(fixture.document(), [other])),
+      ]);
 
-      expect(harness.error, isNull);
-      expect(find.byType(AuthoredResourceSearchResult), findsNWidgets(2));
-      await tester.tap(find.byType(AuthoredResourceSearchResult).first);
-      await tester.pumpAndSettle();
+      final creation = await panel.create(book);
+      expect(panel.search.result(other.value).isShown, isTrue);
+      expect(panel.search.result(fixture.store.value).isShown, isTrue);
+      await panel.search.result(other.value).tap();
 
-      expect(harness.error, isNull);
-      final owners =
-          harness.workspace!.document.relations.parents[harness.request.id];
-      expect(owners, hasLength(1));
-      expect([fixture.store, other], contains(owners!.single));
+      expect(creation.error, isNull);
+      expect((await panel.savedAfter()).relations.parents[book.id], [other]);
     },
   );
 
@@ -146,11 +101,16 @@ void main() {
     (tester) async {
       final fixture = ResourceCreationFixture();
       final other = skir.ResourceId(value: "store:other");
+      final book = fixture.request("Book");
       final document = fixture.withStores(fixture.document(), [other]);
-      final harness = _Harness(
-        document,
-        fixture.request("Book"),
-        ownerCreationContext(
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(document),
+      ]);
+
+      final creation = await panel.create(
+        book,
+        context: ownerCreationContext(
           document,
           skir.ValueLocation(
             resource: other,
@@ -158,53 +118,43 @@ void main() {
           ),
         ),
       );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
 
-      expect(harness.error, isNull);
-      expect(find.byType(SearchModal), findsNothing);
-      expect(
-        harness.workspace!.document.relations.parents[harness.request.id],
-        [other],
-      );
+      expect(creation.error, isNull);
+      expect(creation.created?.resourceId, book.id);
+      expect((await panel.savedAfter()).relations.parents[book.id], [other]);
     },
   );
 
   testWidgets(
-    "a compatible current page satisfies the required reference without a picker",
+    "a compatible current page satisfies the required reference without a "
+    "picker",
     (tester) async {
       final fixture = ResourceCreationFixture();
-      final document = fixture.document(existing: true);
-      final harness = _Harness(
-        document,
-        fixture.request("Entry"),
-        CreationContext(preferredResources: [fixture.page]),
+      final entry = fixture.request("Entry");
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(fixture.document(existing: true)),
+      ]);
+
+      final creation = await panel.create(
+        entry,
+        context: CreationContext(preferredResources: [fixture.page]),
       );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
-      expect(harness.error, isNull);
-      expect(harness.created?.resourceId, harness.request.id);
-      expect(find.byType(SearchModal), findsNothing);
-      final entry = harness.workspace!.document.resource(harness.request.id)!;
+
+      expect(creation.error, isNull);
+      expect(creation.created?.resourceId, entry.id);
+      final saved = await panel.savedAfter();
+      expect(saved.linkTarget(entry.id, "page"), fixture.page);
       expect(
-        entry.authoredField("page")?.authoredLink?.target.resource,
-        fixture.page,
-      );
-      expect(
-        harness.workspace!.document
-            .resource(fixture.page)!
-            .authoredField("elements")!
-            .authoredItems,
+        saved.resource(fixture.page)!.authoredField("elements")!.authoredItems,
         hasLength(1),
       );
-      expect(harness.transport.requests, hasLength(1));
     },
   );
 
   testWidgets(
-    "a scope naming two Books asks between exactly those, ignoring ambient preference",
+    "a scope naming two Books asks between exactly those, ignoring ambient "
+    "preference",
     (tester) async {
       final fixture = ResourceCreationFixture.library();
       final first = skir.ResourceId(value: "book:first");
@@ -220,10 +170,14 @@ void main() {
           )
           .member
           .id;
-      final harness = _Harness(
-        document,
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(document),
+      ]);
+
+      final creation = await panel.create(
         page,
-        CreationContext(
+        context: CreationContext(
           constraints: [
             CreationReferenceConstraint(
               route: [pageBook],
@@ -233,16 +187,18 @@ void main() {
           preferredResources: [first],
         ),
       );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
 
-      expect(harness.error, isNull);
-      expect(find.byType(AuthoredResourceSearchResult), findsNWidgets(2));
-      expect(find.text("Create Book"), findsNothing);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(harness.created, isNull);
+      expect(creation.error, isNull);
+      expect(panel.search.result(first.value).isShown, isTrue);
+      expect(panel.search.result(other.value).isShown, isTrue);
+      expect(panel.search.result("Create Book").isShown, isFalse);
+      // The first Escape leaves typing in the search field, the second closes
+      // the choice.
+      await panel.press(LogicalKeyboardKey.escape);
+      await panel.press(LogicalKeyboardKey.escape);
+      expect(creation.done, isTrue);
+      expect(creation.created, isNull);
+      expect(panel.world.requireRealm.saves, isEmpty);
     },
   );
 
@@ -250,146 +206,109 @@ void main() {
     tester,
   ) async {
     final fixture = ResourceCreationFixture();
-    final harness = _Harness(
-      fixture.document(),
-      fixture.request("Entry"),
-      const CreationContext(),
-    );
-    await harness.mount(tester);
-    await tester.tap(find.text("Begin creation"));
-    await tester.pumpAndSettle();
-    expect(harness.workspace!.document.entries.keys, [fixture.store]);
-    await tester.tap(find.text("Create Page"));
-    await tester.pumpAndSettle();
-    expect(harness.workspace!.document.entries.keys, [fixture.store]);
-    await tester.tap(find.text("Create Book"));
-    await tester.pumpAndSettle();
-    expect(harness.error, isNull);
-    expect(harness.created?.resourceId, harness.request.id);
-    final document = harness.workspace!.document;
-    // Every created resource also joins the single store.
-    expect(document.entries, hasLength(4));
-    expect(_authoredLinks(document), hasLength(2));
-    expect(document.relations.children[fixture.store], hasLength(3));
-    expect(harness.transport.requests, hasLength(1));
+    final entry = fixture.request("Entry");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realmServing(fixture.document()),
+    ]);
+
+    final creation = await panel.create(entry);
+    await panel.search.result("Create Page").tap();
+    // Nothing is staged while the creation still asks.
+    expect(panel.workingDocument.entries.keys, [fixture.store]);
+    await panel.search.result("Create Book").tap();
+
+    expect(creation.error, isNull);
+    expect(creation.created?.resourceId, entry.id);
+    final saved = await panel.savedAfter();
+    final page = saved.linkTarget(entry.id, "page")!;
+    final book = saved.linkTarget(page, "book")!;
     expect(
-      harness.transport.requests.single.edit.intents
-          .whereType<skir.EditIntent_createResourceWrapper>(),
-      hasLength(3),
+      saved.resource(book)!.authoredField("pages")!.authoredItems,
+      hasLength(1),
     );
-    final entry = document.resource(harness.request.id)!;
-    final page = document.resource(
-      entry.authoredField("page")!.authoredLink!.target.resource,
-    )!;
-    final book = document.resource(
-      page.authoredField("book")!.authoredLink!.target.resource,
-    )!;
-    expect(book.authoredField("pages")!.authoredItems, hasLength(1));
-    expect(page.authoredField("elements")!.authoredItems, hasLength(1));
+    expect(
+      saved.resource(page)!.authoredField("elements")!.authoredItems,
+      hasLength(1),
+    );
+    // Every created resource also joins the single store.
+    expect(
+      saved.relations.children[fixture.store],
+      unorderedEquals([entry.id, page, book]),
+    );
   });
 
   testWidgets(
     "Escape during nested Book selection leaves no admitted resources",
     (tester) async {
       final fixture = ResourceCreationFixture();
-      final harness = _Harness(
-        fixture.document(),
-        fixture.request("Entry"),
-        const CreationContext(),
-      );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Create Page"));
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(harness.error, isNull);
-      expect(harness.created, isNull);
-      expect(harness.workspace!.document.entries.keys, [fixture.store]);
-      expect(harness.workspace!.hasPendingWork, isFalse);
-      expect(harness.transport.requests, isEmpty);
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(fixture.document()),
+      ]);
+
+      final creation = await panel.create(fixture.request("Entry"));
+      await panel.search.result("Create Page").tap();
+      // The first Escape leaves typing in the search field, the second closes
+      // the choice.
+      await panel.press(LogicalKeyboardKey.escape);
+      await panel.press(LogicalKeyboardKey.escape);
+
+      expect(creation.error, isNull);
+      expect(creation.done, isTrue);
+      expect(creation.created, isNull);
+      expect(panel.workingDocument.entries.keys, [fixture.store]);
+      expect(panel.world.requireRealm.saves, isEmpty);
     },
   );
 
+  testWidgets("the keyboard reaches Back from the query of a nested choice "
+      "and returns to the parent choice with its query", (tester) async {
+    final fixture = ResourceCreationFixture();
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realmServing(fixture.document(existing: true)),
+    ]);
+
+    await panel.create(fixture.request("Entry"));
+    await panel.queryBar.type("Page");
+    await panel.search.result("Create Page").tap();
+    expect(panel.queryBar.isFocused, isTrue);
+    // Back sits before the query in focus order: the first Shift+Tab leaves
+    // the text to the query bar, the second reaches Back.
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await panel.press(LogicalKeyboardKey.tab);
+    await panel.press(LogicalKeyboardKey.tab);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    expect(panel.hasFocusOn("Back"), isTrue);
+    await panel.press(LogicalKeyboardKey.enter);
+
+    expect(panel.search.result("Create Page").isShown, isTrue);
+    expect(panel.queryBar.text, "Page");
+  });
+
   testWidgets(
-    "keyboard Back changes the parent choice without pending resources",
+    "Back from a nested choice leaves nothing pending and another parent "
+    "can be chosen",
     (tester) async {
       final fixture = ResourceCreationFixture();
-      final harness = _Harness(
-        fixture.document(existing: true),
-        fixture.request("Entry"),
-        const CreationContext(),
-      );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), "Page");
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Create Page"));
-      await tester.pumpAndSettle();
-      expect(find.byType(BackButton), findsOneWidget);
-      for (var attempt = 0; attempt < 12; attempt++) {
-        if (FocusManager.instance.primaryFocus?.context
-                ?.findAncestorWidgetOfExactType<BackButton>() !=
-            null) {
-          break;
-        }
-        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-        await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
-        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-        await tester.pumpAndSettle();
-      }
-      expect(
-        FocusManager.instance.primaryFocus?.context
-            ?.findAncestorWidgetOfExactType<BackButton>(),
-        isNotNull,
-      );
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(find.byType(BackButton), findsNothing);
-      expect(
-        tester.widget<TextField>(find.byType(TextField)).controller!.text,
-        "Page",
-      );
-      await tester.tap(
-        find
-            .ancestor(
-              of: find.text("Page"),
-              matching: find.byType(SearchResultCard),
-            )
-            .first,
-      );
-      await tester.pumpAndSettle();
-      expect(harness.error, isNull);
-      expect(harness.created?.resourceId, harness.request.id);
-      expect(harness.workspace!.document.entries, hasLength(4));
-      expect(
-        harness.workspace!.document
-            .resource(harness.request.id)!
-            .authoredField("page")!
-            .authoredLink!
-            .target
-            .resource,
-        fixture.page,
-      );
-      expect(
-        harness.transport.requests.single.edit.intents
-            .whereType<skir.EditIntent_createResourceWrapper>(),
-        hasLength(1),
-      );
-      expect(
-        harness.preparations
-            .whereType<skir.PreparationOperation_startWrapper>()
-            .where(
-              (operation) =>
-                  operation.value.target ==
-                  skir.PreparationTarget.wrapRecord(
-                    harness.request.configuration,
-                  ),
-            ),
-        hasLength(1),
-      );
+      final entry = fixture.request("Entry");
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(fixture.document(existing: true)),
+      ]);
+
+      final creation = await panel.create(entry);
+      await panel.search.result("Create Page").tap();
+      await panel.tapOn(find.bySemanticsLabel("Back"));
+      await panel.search.result(fixture.page.value).tap();
+
+      expect(creation.error, isNull);
+      expect(creation.created?.resourceId, entry.id);
+      final saved = await panel.savedAfter();
+      expect(saved.linkTarget(entry.id, "page"), fixture.page);
+      // The page the abandoned choice started is gone with it.
+      expect(saved.entries, hasLength(4));
     },
   );
 
@@ -397,179 +316,67 @@ void main() {
     tester,
   ) async {
     final fixture = ResourceCreationFixture();
-    final harness = _Harness(
-      fixture.document(),
-      fixture.request("Report"),
-      const CreationContext(),
-    );
-    await harness.mount(tester);
-    await tester.tap(find.text("Begin creation"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Create Book"));
-    await tester.pumpAndSettle();
-    expect(harness.error, isNull);
-    expect(harness.workspace!.document.entries, hasLength(3));
-    expect(
-      _authoredLinks(harness.workspace!.document).single.contract.value,
-      "review",
-    );
-    expect(harness.transport.requests, hasLength(1));
+    final report = fixture.request("Report");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realmServing(fixture.document()),
+    ]);
+
+    final creation = await panel.create(report);
+    await panel.search.result("Create Book").tap();
+
+    expect(creation.error, isNull);
+    final saved = await panel.savedAfter();
+    final link = fixture.authoredLinks(saved).single;
+    expect(link.contract.value, "review");
+    expect(link.first, report.id);
+    expect(saved.resource(link.second), isNotNull);
   });
 
   testWidgets("a pending ancestor closes an ordinary reference cycle", (
     tester,
   ) async {
     final fixture = ResourceCreationFixture();
-    final harness = _Harness(
-      fixture.document(),
-      fixture.request("A"),
-      const CreationContext(),
-    );
-    await harness.mount(tester);
-    await tester.tap(find.text("Begin creation"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Create B"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("A"));
-    await tester.pumpAndSettle();
-    expect(harness.error, isNull);
-    final document = harness.workspace!.document;
-    expect(document.entries, hasLength(3));
-    expect(_authoredLinks(document), hasLength(1));
-    final a = document.resource(harness.request.id)!;
-    final b = document.resource(
-      a.authoredField("b")!.authoredLink!.target.resource,
-    )!;
-    expect(
-      b.authoredField("a")!.authoredLink!.target.resource,
-      harness.request.id,
-    );
-    expect(harness.transport.requests, hasLength(1));
-    expect(
-      harness.transport.requests.single.edit.intents
-          .whereType<skir.EditIntent_connectRelationWrapper>()
-          .where(
-            (intent) =>
-                !intent.value.source.id.endpoint.value.startsWith("owns"),
-          ),
-      hasLength(1),
-    );
+    final a = fixture.request("A");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realmServing(fixture.document()),
+    ]);
+
+    final creation = await panel.create(a);
+    await panel.search.result("Create B").tap();
+    await panel.search.result("A").tap();
+
+    expect(creation.error, isNull);
+    final saved = await panel.savedAfter();
+    final b = saved.linkTarget(a.id, "b")!;
+    expect(saved.linkTarget(b, "a"), a.id);
   });
 
   testWidgets(
     "a selected concrete form resolves its nested required reference",
     (tester) async {
       final fixture = ResourceCreationFixture(abstractReport: true);
-      final harness = _Harness(
-        fixture.document(),
-        fixture.request("Report"),
-        const CreationContext(),
-      );
-      await harness.mount(tester);
-      await tester.tap(find.text("Begin creation"));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("EmailDelivery"));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Create Book"));
-      await tester.pumpAndSettle();
-      expect(harness.error, isNull);
-      expect(harness.created?.resourceId, harness.request.id);
-      final document = harness.workspace!.document;
-      final payload = document
-          .resource(harness.request.id)!
-          .authoredField("payload")!;
-      final recipient = payload.authoredField("recipient")!.authoredLink!;
-      expect(document.resource(recipient.target.resource), isNotNull);
-      expect(document.entries, hasLength(3));
-      expect(_authoredLinks(document), hasLength(1));
-      expect(harness.transport.requests, hasLength(1));
+      final report = fixture.request("Report");
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realmServing(fixture.document()),
+      ]);
+
+      final creation = await panel.create(report);
+      await panel.search.result("EmailDelivery").tap();
+      await panel.search.result("Create Book").tap();
+
+      expect(creation.error, isNull);
+      expect(creation.created?.resourceId, report.id);
+      final saved = await panel.savedAfter();
+      final recipient = saved
+          .resource(report.id)!
+          .authoredField("payload")!
+          .authoredField("recipient")!
+          .authoredLink!;
+      expect(saved.resource(recipient.target.resource), isNotNull);
+      expect(fixture.authoredLinks(saved), hasLength(1));
     },
   );
-}
-
-/// The links of [document] besides the store ownership every creation adds.
-Iterable<skir.LinkProjection> _authoredLinks(AuthoringDocument document) =>
-    document.links.where((link) => !link.contract.value.startsWith("owns"));
-
-final class _Harness {
-  _Harness(this.document, this.request, this.context, {this.prepare})
-    : transport = ScriptedAuthoringTransport(AsyncData(document));
-
-  /// Replaces the fixture preparation, as a Realm with other value rules
-  /// would answer.
-  final skir.PrepareValueResult Function(skir.PreparationOperation)? prepare;
-  final AuthoringDocument document;
-  final ResourceCreationRequest request;
-  final CreationContext context;
-  final ScriptedAuthoringTransport transport;
-  final preparations = <skir.PreparationOperation>[];
-  RealmEditing? workspace;
-  AuthoringResourceIdentifier? created;
-  Object? error;
-
-  Future<void> mount(WidgetTester tester) async {
-    addTearDown(transport.dispose);
-    final scope = AuthoringScope(
-      organizationId: skir.recordId("organization:test"),
-      realmId: skir.recordId("realm:test"),
-    );
-    await tester.pumpTestApp(
-      overrides: [
-        organizationIdProvider.overrideWith((_) => scope.organizationId),
-        realmIdProvider.overrideWith((_) => scope.realmId),
-        ...authoringFixtureOverrides(
-          document: document,
-          transport: transport,
-          commands: fixtureAuthoringCommands(
-            transport,
-            prepareStep: (operation) async {
-              preparations.add(operation);
-              return prepare?.call(operation) ??
-                  fixturePreparationStep(document, operation);
-            },
-          ),
-        ),
-      ],
-      child: Consumer(
-        builder: (context, ref, _) => Scaffold(
-          body: FilledButton(
-            onPressed: () async {
-              workspace = ref.read(realmEditingProvider(scope));
-              try {
-                created = await ref
-                    .read(resourceCreationProvider(scope))
-                    .create(
-                      context: context,
-                      request: request,
-                      creationContext: this.context,
-                    );
-              } on Object catch (caught) {
-                error = caught;
-              }
-            },
-            child: const Text("Begin creation"),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Writes the captured creation for Realm's PanelCreationCommitTest when
-/// TYPEWRITER_CREATION_FIXTURE_DIR names a directory, such as
-/// services/runtime/realm/src/test/resources/creation.
-void _capture({
-  required skir.EditorCatalog catalog,
-  required skir.PreparedEdit seed,
-  required skir.PreparedEdit edit,
-}) {
-  final directory = Platform.environment["TYPEWRITER_CREATION_FIXTURE_DIR"];
-  if (directory == null || directory.isEmpty) return;
-  for (final (name, bytes) in [
-    ("catalog.skir", skir.EditorCatalog.serializer.toBytes(catalog)),
-    ("seed.skir", skir.PreparedEdit.serializer.toBytes(seed)),
-    ("edit.skir", skir.PreparedEdit.serializer.toBytes(edit)),
-  ]) {
-    File("$directory/$name").writeAsBytesSync(bytes);
-  }
 }

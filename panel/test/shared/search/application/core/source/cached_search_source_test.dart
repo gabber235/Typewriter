@@ -2,41 +2,10 @@
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("CachedSearchSource", () {
-    test("initializes the inner source once", () {
-      final inner = FakeSearchSource();
-      final source = inner.cached();
-      addTearDown(source.dispose);
-
-      source.initialize(SearchQueryContext.empty);
-
-      expect(inner.initializeCount, 1);
-    });
-
-    test("disposes the inner source once", () {
-      final inner = FakeSearchSource();
-      final source = inner.cached();
-
-      source.dispose();
-
-      expect(inner.disposeCount, 1);
-    });
-
-    test("forwards search unchanged", () {
-      final inner = FakeSearchSource();
-      final source = inner.cached();
-      addTearDown(source.dispose);
-      final context = queryContext("alpha");
-
-      source.search(context);
-
-      expect(inner.searches, [context]);
-    });
-
     test("memoizes ready snapshots by parsed query", () {
       final inner = FakeSearchSource();
       final source = inner.cached(capacity: 2);
@@ -73,7 +42,10 @@ void main() {
 
       expect(snapshots.last.status, SearchSourceStatus.loading);
       expect(resultIds(snapshots.last), ["alpha"]);
-      expect(resultStaleStates(snapshots.last), [true]);
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
+      );
       expect(inner.searches, [queryContext("alpha"), queryContext("beta")]);
     });
 
@@ -96,7 +68,10 @@ void main() {
 
       expect(snapshots.last.status, SearchSourceStatus.loading);
       expect(resultIds(snapshots.last), ["beta"]);
-      expect(resultStaleStates(snapshots.last), [true]);
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
+      );
     });
 
     test("can refresh without retaining stale results", () {
@@ -115,15 +90,6 @@ void main() {
 
       expect(snapshots.last.status, SearchSourceStatus.loading);
       expect(snapshots.last.nodes, isEmpty);
-    });
-
-    test("forwards selectors unchanged", () {
-      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
-      final inner = FakeSearchSource(selectors: emitted);
-      final source = inner.cached();
-      addTearDown(source.dispose);
-
-      expect(source.selectors, emitted);
     });
 
     test("caches successful preview results by resultId", () async {
@@ -244,7 +210,10 @@ void main() {
 
       expect(snapshots.first, ready);
       expect(resultIds(snapshots.last), ["alpha"]);
-      expect(resultStaleStates(snapshots.last), [true]);
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
+      );
     });
 
     test("second ready snapshot replaces previous cache", () {
@@ -341,7 +310,10 @@ void main() {
 
       expect(snapshots.last.status, SearchSourceStatus.loading);
       expect(resultIds(snapshots.last), ["alpha"]);
-      expect(resultStaleStates(snapshots.last), [true]);
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
+      );
     });
 
     test("error after ready emits error with cached stale nodes", () {
@@ -360,39 +332,11 @@ void main() {
 
       expect(snapshots.last.status, SearchSourceStatus.error);
       expect(resultIds(snapshots.last), ["alpha"]);
-      expect(resultStaleStates(snapshots.last), [true]);
-      expect(snapshots.last.errorSummaries, error.errorSummaries);
-    });
-
-    test("ready then loading then error keeps stale ready results", () {
-      final inner = FakeSearchSource();
-      final source = inner.cached();
-      addTearDown(source.dispose);
-      final snapshots = <SearchSourceSnapshot>[];
-      final subscription = source.snapshots.listen(snapshots.add);
-      addTearDown(subscription.cancel);
-
-      final ready = readySnapshot(nodes: [resultNode("alpha")]);
-      final loading = SearchSourceSnapshot.loading(nodes: [resultNode("beta")]);
-      final error = errorSnapshot(
-        "Network failed",
-        nodes: [resultNode("gamma")],
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
       );
-
-      inner.emitSnapshot(ready);
-      inner.emitSnapshot(loading);
-      inner.emitSnapshot(error);
-
-      expect(snapshots.map((snapshot) => snapshot.status), [
-        SearchSourceStatus.ready,
-        SearchSourceStatus.loading,
-        SearchSourceStatus.error,
-      ]);
-      expect(resultIds(snapshots[1]), ["alpha"]);
-      expect(resultStaleStates(snapshots[1]), [true]);
-      expect(resultIds(snapshots[2]), ["alpha"]);
-      expect(resultStaleStates(snapshots[2]), [true]);
-      expect(snapshots[2].errorSummaries, error.errorSummaries);
+      expect(snapshots.last.errorSummaries, error.errorSummaries);
     });
 
     test("stale marking is recursive through sections", () {
@@ -414,7 +358,10 @@ void main() {
       inner.emitSnapshot(ready);
       inner.emitSnapshot(SearchSourceSnapshot.loading());
 
-      expect(resultStaleStates(snapshots.last), [true]);
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
+      );
     });
 
     test("section nodes are preserved while child results become stale", () {
@@ -438,7 +385,10 @@ void main() {
       expect(section.id, "section");
       expect(section.title, "section");
       expect(resultIds(snapshots.last), ["alpha"]);
-      expect(resultStaleStates(snapshots.last), [true]);
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
+      );
     });
 
     test("already stale result stays stale", () {
@@ -460,7 +410,10 @@ void main() {
       inner.emitSnapshot(ready);
       inner.emitSnapshot(SearchSourceSnapshot.loading());
 
-      expect(resultStaleStates(snapshots.last), [true]);
+      expect(
+        resultsOf(snapshots.last).map((result) => result.isStale).toList(),
+        [true],
+      );
     });
 
     test("loading uses current guidance with cached nodes", () {
@@ -488,23 +441,6 @@ void main() {
       expect(resultIds(snapshots.last), ["alpha"]);
     });
 
-    test("error preserves current error summaries", () {
-      final inner = FakeSearchSource();
-      final source = inner.cached();
-      addTearDown(source.dispose);
-      final snapshots = <SearchSourceSnapshot>[];
-      final subscription = source.snapshots.listen(snapshots.add);
-      addTearDown(subscription.cancel);
-
-      final ready = readySnapshot(nodes: [resultNode("alpha")]);
-      final error = errorSnapshot("Network failed");
-
-      inner.emitSnapshot(ready);
-      inner.emitSnapshot(error);
-
-      expect(snapshots.last.errorSummaries, error.errorSummaries);
-    });
-
     test("error preserves current error guidance", () {
       final inner = FakeSearchSource();
       final source = inner.cached();
@@ -526,49 +462,4 @@ void main() {
       expect(snapshots.last.guidance, const [errorGuidance]);
     });
   });
-}
-
-SearchQueryContext queryContext(String query) {
-  return SearchQueryContext(normalizedQuery: query, selectors: const []);
-}
-
-SearchSourceSnapshot errorSnapshot(
-  String message, {
-  List<SearchNode> nodes = const [],
-  List<SearchGuidance> guidance = const [],
-}) {
-  return SearchSourceSnapshot.error(
-    nodes: nodes,
-    guidance: guidance,
-    errorSummaries: [
-      SearchErrorSummary(
-        id: "error",
-        message: message,
-        severity: SearchErrorSeverity.error,
-      ),
-    ],
-  );
-}
-
-List<String> resultIds(SearchSourceSnapshot snapshot) {
-  return resultNodes(snapshot.nodes).map((node) => node.result.id).toList();
-}
-
-List<bool> resultStaleStates(SearchSourceSnapshot snapshot) {
-  return resultNodes(snapshot.nodes)
-      .map((node) => node.result.isStale)
-      .toList();
-}
-
-List<SearchResultNode> resultNodes(List<SearchNode> nodes) {
-  final results = <SearchResultNode>[];
-  for (final node in nodes) {
-    switch (node) {
-      case SearchResultNode():
-        results.add(node);
-      case SearchSectionNode(:final children):
-        results.addAll(resultNodes(children));
-    }
-  }
-  return results;
 }

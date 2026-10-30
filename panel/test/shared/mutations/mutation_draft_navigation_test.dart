@@ -5,116 +5,93 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets(
-    "return action follows current selection without replacing review fallback",
-    (tester) async {
-      final container = ProviderContainer.test();
-      final workspace = ScopedWorkSession();
-
-      addTearDown(workspace.dispose);
-
-      final identity = ServiceIdentifier(
-        skir.RecordId(
-          table: "service",
-          key: skir.RecordIdKey.wrapString("host"),
-        ),
-      );
-      final router = container.read(appRouterProvider);
-      final key = EditorResourceKey(scope: null, identity: identity.resourceId);
-      final owner = fakeEditorTarget(
-        targetId: identity,
-        label: "Host configuration",
-        document: EditorDocument(
-          rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          catalog: _emptyCatalog,
-          confirmedValue: skir.DataValue.wrapStringValue("original"),
-          revision: 1,
-        ),
-        validation: acceptTestEditorMutation,
-        commitPolicy: EditorCommitPolicy.applyResource,
-        commit: (change) async =>
-            MutationSuccess(revision: 2, value: change.rootValue),
-      ).acquire(workspace);
-      addTearDown(
-        workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
-      );
-      owner.update(editorRootPath, skir.DataValue.wrapStringValue("draft"));
-
-      final destination = InspectorDestination(
-        container: container,
-        router: router,
-        path: router.currentPath,
-        identity: identity,
-      );
-      workspace.setDestination(
-        WorkDriverId(domain: "value", scope: key),
-        destination,
-      );
-      container.read(selectionProvider.notifier).selectAll([identity]);
-
-      await tester.pumpTestApp(
-        child: Scaffold(
-          appBar: AppBar(
-            actions: [ScopedWorkSessionActivityView(controller: workspace)],
-          ),
-        ),
-      );
-
-      await tester.tap(find.text("1 draft"));
-      await tester.pumpAndSettle();
-      expect(find.text("Open work"), findsNothing);
-      expect(find.text("Review draft"), findsNothing);
-
-      container.read(selectionProvider.notifier).clear();
-      await tester.pumpAndSettle();
-      expect(find.text("Open work"), findsOneWidget);
-
-      await tester.tap(find.text("Open work"));
-      await tester.pumpAndSettle();
-      expect(container.read(selectionProvider), [identity]);
-      expect(find.text("Save activity"), findsNothing);
-      expect(
-        owner.value(editorRootPath).valueOrNull,
-        skir.DataValue.wrapStringValue("draft"),
-      );
-
-      await tester.tap(find.text("1 draft"));
-      await tester.pumpAndSettle();
-      expect(find.text("Open work"), findsNothing);
-
-      await tester.tap(find.tooltip("Close"));
-      await tester.pumpAndSettle();
-      workspace.setDestination(WorkDriverId(domain: "value", scope: key), null);
-
-      await tester.tap(find.text("1 draft"));
-      await tester.pumpAndSettle();
-      expect(find.text("Review draft"), findsNothing);
-
-      await tester.tap(find.text("Discard"));
-      await tester.pumpAndSettle();
-      expect(find.text("No pending changes"), findsOneWidget);
-
-      await tester.tap(find.tooltip("Close"));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-    },
+  final host = ServiceIdentifier(
+    skir.RecordId(table: "service", key: skir.RecordIdKey.wrapString("host")),
+  );
+  final driver = WorkDriverId(
+    domain: "value",
+    scope: EditorResourceKey(scope: null, identity: host.resourceId),
   );
 
-  test("matching selection on another route is not the destination", () {
-    final container = ProviderContainer.test();
-    final identity = ServiceIdentifier(
-      skir.RecordId(table: "service", key: skir.RecordIdKey.wrapString("host")),
+  testWidgets("a draft already on screen offers no way to open it", (
+    tester,
+  ) async {
+    final work = testWorkSession();
+    textDraft(
+      work,
+      host,
+      label: "Host configuration",
+      saved: "original",
+      draft: "draft",
     );
-    container.read(selectionProvider.notifier).selectAll([identity]);
+    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
+    work.setDestination(driver, panel.inspectorDestination(host));
+    await panel.activity.open("1 draft");
+
+    panel.container.read(selectionProvider.notifier).selectAll([host]);
+    await panel.settle();
+
+    expect(panel.shows("Open work"), isFalse);
+    expect(panel.shows("Review draft"), isFalse);
+  });
+
+  testWidgets("opening a draft selects its resource and keeps the draft", (
+    tester,
+  ) async {
+    final work = testWorkSession();
+    final draft = textDraft(
+      work,
+      host,
+      label: "Host configuration",
+      saved: "original",
+      draft: "draft",
+    );
+    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
+    work.setDestination(driver, panel.inspectorDestination(host));
+    await panel.activity.open("1 draft");
+
+    await panel.tapOn(panel.labeled("Open work").first);
+
+    expect(panel.container.read(selectionProvider), [host]);
+    expect(panel.activity.isOpen, isFalse);
+    expect(
+      draft.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("draft"),
+    );
+  });
+
+  testWidgets("discarding a draft clears it from the activity", (tester) async {
+    final work = testWorkSession();
+    final draft = textDraft(
+      work,
+      host,
+      label: "Host configuration",
+      saved: "original",
+      draft: "draft",
+    );
+    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
+    work.setDestination(driver, panel.inspectorDestination(host));
+    await panel.activity.open("1 draft");
+
+    await panel.tapOn(panel.labeled("Discard").first);
+
+    expect(panel.shows("1 draft"), isFalse);
+    expect(
+      draft.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("original"),
+    );
+  });
+
+  test("matching selection on another route is not the destination", () {
+    final container = testWorld(const []).container;
+    container.read(selectionProvider.notifier).selectAll([host]);
     final destination = InspectorDestination(
       container: container,
       router: container.read(appRouterProvider),
       path: "/another-route",
-      identity: identity,
+      identity: host,
     );
     addTearDown(destination.dispose);
     expect(destination.isCurrent, isFalse);
   });
 }
-
-final _emptyCatalog = CheckedEditorCatalog(skir.EditorCatalog.defaultInstance);

@@ -1,14 +1,25 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Loads a named Rive state machine, with a deterministic test placeholder.
+part "rive.g.dart";
+
+/// Renders the panel's Rive assets.
 ///
-/// Production loading and rendering are delegated to Rive. Tests bypass the
-/// asset loader through [placeholder].
-class RiveAsset extends StatelessWidget {
+/// The app renders them with the Rive runtime. A test world replaces the
+/// renderer, because tests run without the native Rive library.
+abstract interface class RiveRenderer {
+  /// The widget that shows [asset].
+  Widget render(RiveAsset asset);
+}
+
+/// The renderer every [RiveAsset] uses; the Rive runtime unless replaced.
+@Riverpod(keepAlive: true)
+RiveRenderer riveRenderer(Ref ref) => const _RuntimeRiveRenderer();
+
+/// Loads a named Rive state machine through the [riveRendererProvider].
+class RiveAsset extends ConsumerWidget {
   const RiveAsset({
     required this.asset,
     required this.stateMachineName,
-    this.placeholder = const SizedBox.shrink(),
     this.builder,
     super.key,
   });
@@ -19,22 +30,23 @@ class RiveAsset extends StatelessWidget {
   /// State machine selected by name after the asset loads.
   final String stateMachineName;
 
-  /// Widget rendered instead of Rive while running in a Flutter test.
-  final Widget placeholder;
-
   /// Optional projection of each loaded Rive state.
   final Widget Function(BuildContext, RiveState)? builder;
 
   @override
-  Widget build(BuildContext context) {
-    if (isFlutterTest) return placeholder;
+  Widget build(BuildContext context, WidgetRef ref) =>
+      ref.watch(riveRendererProvider).render(this);
+}
 
-    return _LoadedRiveAsset(
-      asset: asset,
-      stateMachineName: stateMachineName,
-      builder: builder,
-    );
-  }
+final class _RuntimeRiveRenderer implements RiveRenderer {
+  const _RuntimeRiveRenderer();
+
+  @override
+  Widget render(RiveAsset asset) => _LoadedRiveAsset(
+    asset: asset.asset,
+    stateMachineName: asset.stateMachineName,
+    builder: asset.builder,
+  );
 }
 
 class _LoadedRiveAsset extends HookWidget {

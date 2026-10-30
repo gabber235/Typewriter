@@ -2,293 +2,99 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+const handle = "Resize dimension";
+
 void main() {
-  group("DragHandle", () {
-    testWidgets(
-      "horizontal increases size when dragging right (default resolver)",
-      (tester) async {
-        final harnessKey = GlobalKey<_DragHarnessState>();
-
-        await tester.pumpTestApp(
-          child: Center(
-            child: SizedBox(
-              width: 800,
-              height: 300,
-              child: DragHarness(
-                key: harnessKey,
-                axis: Axis.horizontal,
-                initialSize: 300,
-                minSize: 150,
-                maxSize: 700,
-                enabled: true,
-              ),
-            ),
-          ),
-        );
-
-        final start = harnessKey.currentState!.size;
-        expect(start, 300);
-
-        final handle = find.byKey(const Key("drag_handle"));
-        expect(handle, findsOneWidget);
-
-        await tester.drag(handle, const Offset(80, 0));
-        await tester.pumpAndSettle();
-
-        final end = harnessKey.currentState!.size;
-        expect(end, greaterThan(start));
-        expect(end, 380);
-      },
+  testWidgets("dragging right grows the pane by the default resolver", (
+    tester,
+  ) async {
+    final panel = await tester.showComponent(
+      ResizablePane(initialSize: 300, minSize: 150, maxSize: 700),
     );
+    expect(panel.boundsOf("Pane").width, 300);
 
-    testWidgets("horizontal custom resolver inverts delta", (tester) async {
-      final harnessKey = GlobalKey<_DragHarnessState>();
+    await panel.dragBy(panel.labeled(handle), const Offset(80, 0));
 
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 300,
-            child: DragHarness(
-              key: harnessKey,
-              axis: Axis.horizontal,
-              initialSize: 300,
-              minSize: 150,
-              maxSize: 700,
-              enabled: true,
-              resolver: (s, d) => s - d,
-            ),
-          ),
-        ),
-      );
-
-      final start = harnessKey.currentState!.size;
-      expect(start, 300);
-
-      final handle = find.byKey(const Key("drag_handle"));
-      await tester.drag(handle, const Offset(80, 0));
-      await tester.pumpAndSettle();
-
-      final end = harnessKey.currentState!.size;
-      expect(end, lessThan(start));
-      expect(end, 220);
-    });
-
-    testWidgets("horizontal clamps to min and max", (tester) async {
-      final harnessKey = GlobalKey<_DragHarnessState>();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 500,
-            height: 300,
-            child: DragHarness(
-              key: harnessKey,
-              axis: Axis.horizontal,
-              initialSize: 300,
-              minSize: 200,
-              maxSize: 400,
-              enabled: true,
-            ),
-          ),
-        ),
-      );
-
-      final handle = find.byKey(const Key("drag_handle"));
-
-      await tester.drag(handle, const Offset(500, 0));
-      await tester.pumpAndSettle();
-      expect(harnessKey.currentState!.size, 400);
-
-      await tester.drag(handle, const Offset(-1000, 0));
-      await tester.pumpAndSettle();
-      expect(harnessKey.currentState!.size, 200);
-    });
-
-    testWidgets(
-      "vertical increases size when dragging down (default resolver)",
-      (tester) async {
-        final harnessKey = GlobalKey<_DragHarnessState>();
-
-        await tester.pumpTestApp(
-          child: Center(
-            child: SizedBox(
-              width: 600,
-              height: 600,
-              child: DragHarness(
-                key: harnessKey,
-                axis: Axis.vertical,
-                initialSize: 200,
-                minSize: 100,
-                maxSize: 500,
-                enabled: true,
-              ),
-            ),
-          ),
-        );
-
-        final start = harnessKey.currentState!.size;
-        expect(start, 200);
-
-        final handle = find.byKey(const Key("drag_handle"));
-        await tester.drag(handle, const Offset(0, 60));
-        await tester.pumpAndSettle();
-
-        final end = harnessKey.currentState!.size;
-        expect(end, greaterThan(start));
-        expect(end, 260);
-      },
-    );
-
-    testWidgets("keyboard and semantic resizing share bounded operation", (
-      tester,
-    ) async {
-      final harnessKey = GlobalKey<_DragHarnessState>();
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 300,
-            child: DragHarness(
-              key: harnessKey,
-              axis: Axis.horizontal,
-              initialSize: 300,
-              minSize: 280,
-              maxSize: 312,
-              enabled: true,
-            ),
-          ),
-        ),
-      );
-
-      await tester.tap(find.byKey(const Key("drag_handle")));
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      expect(harnessKey.currentState!.size, 308);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      expect(harnessKey.currentState!.size, 312);
-      await tester.sendKeyEvent(LogicalKeyboardKey.home);
-      expect(harnessKey.currentState!.size, 280);
-
-      final semantics = tester.widget<Semantics>(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is Semantics &&
-              widget.properties.label == "Resize dimension",
-        ),
-      );
-      semantics.properties.onIncrease!();
-      await tester.pump();
-      expect(harnessKey.currentState!.size, 288);
-      expect(semantics.properties.label, "Resize dimension");
-    });
-
-    testWidgets("disabled handle does not change size on drag", (tester) async {
-      final harnessKey = GlobalKey<_DragHarnessState>();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 300,
-            child: DragHarness(
-              key: harnessKey,
-              axis: Axis.horizontal,
-              initialSize: 320,
-              minSize: 200,
-              maxSize: 600,
-              enabled: false,
-            ),
-          ),
-        ),
-      );
-
-      final start = harnessKey.currentState!.size;
-      expect(start, 320);
-
-      final handle = find.byKey(const Key("drag_handle"));
-      expect(handle, findsOneWidget);
-
-      expect(tester.renderObject<RenderBox>(handle).size.width, equals(0));
-    });
-  });
-}
-
-class DragHarness extends StatefulWidget {
-  const DragHarness({
-    required this.axis,
-    required this.initialSize,
-    required this.minSize,
-    required this.maxSize,
-    required this.enabled,
-    super.key,
-    this.resolver,
+    expect(panel.boundsOf("Pane").width, 380);
   });
 
-  final Axis axis;
-  final double initialSize;
-  final double minSize;
-  final double maxSize;
-  final bool enabled;
-  final SizeResolver? resolver;
-
-  @override
-  State<DragHarness> createState() => _DragHarnessState();
-}
-
-class _DragHarnessState extends State<DragHarness> {
-  late double size;
-
-  @override
-  void initState() {
-    super.initState();
-    size = widget.initialSize;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final handle = DragHandle(
-      key: const Key("drag_handle"),
-      axis: widget.axis,
-      enabled: widget.enabled,
-      minSize: widget.minSize,
-      maxSize: widget.maxSize,
-      getSize: () => size,
-      onSizeChange: (v) => setState(() => size = v),
-      sizeResolver: widget.resolver,
-      // Use small animation to keep tests snappy.
-      animationDuration: const Duration(milliseconds: 100),
+  testWidgets("a custom resolver inverts the drag", (tester) async {
+    final panel = await tester.showComponent(
+      ResizablePane(
+        initialSize: 300,
+        minSize: 150,
+        maxSize: 700,
+        resolver: (size, delta) => size - delta,
+      ),
     );
 
-    if (widget.axis == Axis.horizontal) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: Container(color: Colors.blueGrey.shade100)),
-          handle,
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 50),
-            curve: Curves.linear,
-            width: size,
-            color: Colors.blueGrey.shade200,
-            child: const SizedBox.expand(),
-          ),
-        ],
-      );
-    }
+    await panel.dragBy(panel.labeled(handle), const Offset(80, 0));
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(child: Container(color: Colors.blueGrey.shade100)),
-        handle,
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 50),
-          curve: Curves.linear,
-          height: size,
-          color: Colors.blueGrey.shade200,
-          child: const SizedBox.expand(),
-        ),
-      ],
+    expect(panel.boundsOf("Pane").width, 220);
+  });
+
+  testWidgets("dragging stops at the minimum and maximum size", (tester) async {
+    final panel = await tester.showComponent(
+      ResizablePane(initialSize: 300, minSize: 200, maxSize: 400),
     );
-  }
+
+    await panel.dragBy(panel.labeled(handle), const Offset(500, 0));
+    expect(panel.boundsOf("Pane").width, 400);
+
+    await panel.dragBy(panel.labeled(handle), const Offset(-1000, 0));
+    expect(panel.boundsOf("Pane").width, 200);
+  });
+
+  testWidgets("dragging down grows a vertical pane", (tester) async {
+    final panel = await tester.showComponent(
+      ResizablePane(
+        axis: Axis.vertical,
+        initialSize: 200,
+        minSize: 100,
+        maxSize: 500,
+      ),
+    );
+    expect(panel.boundsOf("Pane").height, 200);
+
+    await panel.dragBy(panel.labeled(handle), const Offset(0, 60));
+
+    expect(panel.boundsOf("Pane").height, 260);
+  });
+
+  testWidgets("keyboard and semantic resizing share the bounded operation", (
+    tester,
+  ) async {
+    final panel = await tester.showComponent(
+      ResizablePane(initialSize: 300, minSize: 280, maxSize: 312),
+    );
+
+    await panel.tapOn(panel.labeled(handle));
+    await panel.press(LogicalKeyboardKey.arrowRight);
+    expect(panel.boundsOf("Pane").width, 308);
+    await panel.press(LogicalKeyboardKey.arrowRight);
+    expect(panel.boundsOf("Pane").width, 312);
+    await panel.press(LogicalKeyboardKey.home);
+    expect(panel.boundsOf("Pane").width, 280);
+
+    tester.semantics.increase(find.semantics.byLabel(handle));
+    await panel.settle();
+    expect(panel.boundsOf("Pane").width, 288);
+  });
+
+  testWidgets("a disabled handle does not resize the pane", (tester) async {
+    final panel = await tester.showComponent(
+      ResizablePane(
+        initialSize: 320,
+        minSize: 200,
+        maxSize: 600,
+        enabled: false,
+      ),
+    );
+    final edge = panel.boundsOf("Pane").centerLeft;
+
+    await tester.dragFrom(edge - const Offset(2, 0), const Offset(80, 0));
+    await panel.settle();
+
+    expect(panel.boundsOf("Pane").width, 320);
+  });
 }

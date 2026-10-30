@@ -15,7 +15,6 @@ dependencies:
     path: ../
   typewriter_testkit:
     path: ../testkit
-  faker:
 
 dependency_overrides:
   # widgetbook_generator 3.24.0 caps analyzer below 14, which Dart 3.14 needs for build_runner to

@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("sanitizes stored colors and remembered format", () {
@@ -70,7 +71,9 @@ void main() {
   test("persistence failures remain nonfatal", () {
     final container = ProviderContainer(
       overrides: [
-        colorLibraryStorageProvider.overrideWithValue(_ThrowingStorage()),
+        colorLibraryStorageProvider.overrideWithValue(
+          const UnavailableColorLibraryStorage(),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -84,12 +87,4 @@ void main() {
     );
     expect(container.read(colorLibraryProvider).format, ColorFieldFormat.rgb);
   });
-}
-
-final class _ThrowingStorage implements ColorLibraryStorage {
-  @override
-  String? read() => throw StateError("Unavailable");
-
-  @override
-  void write(String value) => throw StateError("Unavailable");
 }

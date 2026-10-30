@@ -1,285 +1,184 @@
-// ignore_for_file: cascade_invocations
-
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-import "../application/core/support/search_core_test_harness.dart";
-
 void main() {
-  group("SearchRoot", () {
-    testWidgets("child consumer reads the provided controller", (tester) async {
-      final source = FakeSearchSource();
-      await tester.pumpTestApp(
-        child: SearchRoot(
-          create: (ref) {
-            return SearchController(
-              session: testSearchSession(source),
-              baseSelectors: const [],
-            );
-          },
-          child: Consumer(
-            builder: (context, ref, child) {
-              final controller = ref.watch(searchProvider);
-              return Text("Has controller: ${controller != null}");
-            },
-          ),
-        ),
-      );
-
-      expect(find.text("Has controller: true"), findsOneWidget);
-    });
-
-    testWidgets("child consumer rebuilds when selection changes", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-      late SearchController controller;
-
-      await tester.pumpTestApp(
-        child: SearchRoot(
+  testWidgets("a child shows the selection as it changes", (tester) async {
+    late SearchController controller;
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        SearchRoot(
           create: (ref) => controller = SearchController(
-            session: testSearchSession(source),
+            session: searchSession(FakeSearchSource()),
             baseSelectors: const [],
           ),
-          child: Consumer(
-            builder: (context, ref, child) {
-              final controller = ref.watch(searchProvider)!;
-              return Text("Selected: ${controller.selectedCount}");
-            },
-          ),
+          child: const SearchProbe(),
         ),
-      );
+      ),
+    );
+    expect(panel.shows("Results selected: 0"), isTrue);
 
-      expect(find.text("Selected: 0"), findsOneWidget);
+    controller.toggleSelected("alpha");
+    await panel.settle();
 
-      controller.toggleSelected("alpha");
-      await tester.pump();
+    expect(panel.shows("Results selected: 1"), isTrue);
+  });
 
-      expect(find.text("Selected: 1"), findsOneWidget);
-    });
-
-    testWidgets("child consumer rebuilds when source snapshot changes", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        child: SearchRoot(
+  testWidgets("a child shows the results the source sends", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        SearchRoot(
           create: (ref) => SearchController(
-            session: testSearchSession(source),
+            session: searchSession(source),
             baseSelectors: const [],
           ),
-          child: Consumer(
-            builder: (context, ref, child) {
-              final controller = ref.watch(searchProvider)!;
-              return Text(
-                "Status: ${controller.snapshot.status.name}, nodes: ${controller.snapshot.nodes.length}",
-              );
-            },
+          child: const SearchProbe(),
+        ),
+      ),
+    );
+    expect(panel.shows("Status: idle, nodes: 0"), isTrue);
+
+    source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
+    await panel.settle();
+
+    expect(panel.shows("Status: ready, nodes: 1"), isTrue);
+  });
+
+  testWidgets("a replaced child receives later changes", (tester) async {
+    late SearchController controller;
+    final second = ValueNotifier(false);
+    addTearDown(second.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: second,
+          builder: (context, isSecond, _) => SearchRoot(
+            create: (ref) => controller = SearchController(
+              session: searchSession(FakeSearchSource()),
+              baseSelectors: const [],
+            ),
+            child: SearchProbe(label: isSecond ? "Second" : "First"),
           ),
         ),
-      );
+      ),
+    );
+    expect(panel.shows("First selected: 0"), isTrue);
 
-      expect(find.text("Status: idle, nodes: 0"), findsOneWidget);
+    second.value = true;
+    await panel.settle();
+    controller.toggleSelected("alpha");
+    await panel.settle();
 
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
-      await tester.pump();
+    expect(panel.shows("First selected: 0"), isFalse);
+    expect(panel.shows("Second selected: 1"), isTrue);
+  });
 
-      expect(find.text("Status: ready, nodes: 1"), findsOneWidget);
-    });
-
-    testWidgets("nested child consumer rebuilds when controller changes", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-      late SearchController controller;
-
-      await tester.pumpTestApp(
-        child: SearchRoot(
-          create: (ref) => controller = SearchController(
-            session: testSearchSession(source),
-            baseSelectors: const [],
-          ),
-          child: const _NestedSearchStatus(),
+  testWidgets("a root that creates its controller disposes its source", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final shown = ValueNotifier(true);
+    addTearDown(shown.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: shown,
+          builder: (context, isShown, _) => isShown
+              ? SearchRoot(
+                  create: (_) => SearchController(
+                    session: searchSession(source),
+                    baseSelectors: const [],
+                  ),
+                  child: const SearchProbe(label: "Owned"),
+                )
+              : const SizedBox(),
         ),
-      );
+      ),
+    );
 
-      expect(find.text("Nested selected: 0"), findsOneWidget);
+    shown.value = false;
+    await panel.settle();
 
-      controller.toggleSelected("alpha");
-      await tester.pump();
+    expect(source.disposeCount, 1);
+  });
 
-      expect(find.text("Nested selected: 1"), findsOneWidget);
-    });
-
-    testWidgets("replacement child consumer receives later updates", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-      late SearchController controller;
-      late VoidCallback replaceChild;
-
-      await tester.pumpTestApp(
-        child: _SearchRootChildSwapHost(
-          createController: () => controller = SearchController(
-            session: testSearchSession(source),
-            baseSelectors: const [],
-          ),
-          onReady: (replace) => replaceChild = replace,
+  testWidgets("a borrowed root leaves disposal to the controller's owner", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final controller = SearchController(
+      session: searchSession(source),
+      baseSelectors: const [],
+    );
+    final shown = ValueNotifier(true);
+    addTearDown(shown.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: shown,
+          builder: (context, isShown, _) => isShown
+              ? SearchRoot.borrowed(
+                  controller: controller,
+                  child: const SearchProbe(label: "Borrowed"),
+                )
+              : const SizedBox(),
         ),
-      );
+      ),
+    );
 
-      expect(find.text("First selected: 0"), findsOneWidget);
+    shown.value = false;
+    await panel.settle();
+    expect(source.disposeCount, 0);
 
-      replaceChild();
-      await tester.pump();
+    controller.dispose();
+    expect(source.disposeCount, 1);
+  });
 
-      expect(find.text("First selected: 0"), findsNothing);
-      expect(find.text("Second selected: 0"), findsOneWidget);
-
-      controller.toggleSelected("alpha");
-      await tester.pump();
-
-      expect(find.text("Second selected: 1"), findsOneWidget);
-    });
-
-    testWidgets("default root disposes its owned controller source", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-      await tester.pumpTestApp(
-        child: SearchRoot(
-          create: (_) => SearchController(
-            session: testSearchSession(source),
-            baseSelectors: const [],
-          ),
-          child: const _SearchSelectionText(label: "Owned"),
-        ),
-      );
-
-      await tester.pumpWidget(const SizedBox());
-
-      expect(source.disposeCount, 1);
-    });
-
-    testWidgets("borrowed root leaves controller disposal to its caller", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-      final controller = SearchController(
-        session: testSearchSession(source),
-        baseSelectors: const [],
-      );
-      await tester.pumpTestApp(
-        child: SearchRoot.borrowed(
-          controller: controller,
-          child: const _SearchSelectionText(label: "Borrowed"),
-        ),
-      );
-
-      await tester.pumpWidget(const SizedBox());
-
-      expect(source.disposeCount, 0);
-      controller.dispose();
-      expect(source.disposeCount, 1);
-    });
-
-    testWidgets("borrowed controller replacement preserves the child", (
-      tester,
-    ) async {
+  testWidgets(
+    "a borrowed root follows a replaced controller and keeps its child state",
+    (tester) async {
       final first = SearchController(
-        session: testSearchSession(FakeSearchSource()),
+        session: searchSession(FakeSearchSource()),
         baseSelectors: const [],
       );
       final second = SearchController(
-        session: testSearchSession(FakeSearchSource()),
+        session: searchSession(FakeSearchSource()),
         baseSelectors: const [],
       );
       final current = ValueNotifier(first);
       addTearDown(first.dispose);
       addTearDown(second.dispose);
       addTearDown(current.dispose);
-      await tester.pumpTestApp(
-        child: ValueListenableBuilder(
-          valueListenable: current,
-          builder: (context, controller, _) => SearchRoot.borrowed(
-            controller: controller,
-            child: const _SearchSelectionText(label: "Current"),
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          ValueListenableBuilder(
+            valueListenable: current,
+            builder: (context, controller, _) => SearchRoot.borrowed(
+              controller: controller,
+              child: const SearchProbe(),
+            ),
           ),
         ),
       );
-      final element = tester.element(find.byType(_SearchSelectionText));
+      await tester.tap(find.text("Taps: 0"));
+      await panel.settle();
+
       current.value = second;
-      await tester.pump();
+      await panel.settle();
       second.toggleSelected("alpha");
-      await tester.pump();
-      expect(find.text("Current selected: 1"), findsOneWidget);
-      expect(tester.element(find.byType(_SearchSelectionText)), same(element));
-      first.toggleSelected("alpha");
-      first.toggleSelected("alpha");
-      await tester.pump();
-      expect(find.text("Current selected: 1"), findsOneWidget);
-    });
-  });
-}
+      first
+        ..toggleSelected("beta")
+        ..toggleSelected("gamma");
+      await panel.settle();
 
-class _SearchRootChildSwapHost extends StatefulWidget {
-  const _SearchRootChildSwapHost({
-    required this.createController,
-    required this.onReady,
-  });
-
-  final SearchController Function() createController;
-  final void Function(VoidCallback replace) onReady;
-
-  @override
-  State<_SearchRootChildSwapHost> createState() =>
-      _SearchRootChildSwapHostState();
-}
-
-class _SearchRootChildSwapHostState extends State<_SearchRootChildSwapHost> {
-  var _secondChild = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.onReady(() {
-      setState(() {
-        _secondChild = true;
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SearchRoot(
-      create: (ref) => widget.createController(),
-      child: _SearchSelectionText(label: _secondChild ? "Second" : "First"),
-    );
-  }
-}
-
-class _NestedSearchStatus extends StatelessWidget {
-  const _NestedSearchStatus();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(8),
-      child: _SearchSelectionText(label: "Nested"),
-    );
-  }
-}
-
-class _SearchSelectionText extends ConsumerWidget {
-  const _SearchSelectionText({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.watch(searchProvider)!;
-    return Text("$label selected: ${controller.selectedCount}");
-  }
+      expect(panel.shows("Taps: 1, selected: 1"), isTrue);
+    },
+  );
 }

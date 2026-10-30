@@ -47,13 +47,14 @@ void main() {
   });
 
   test(
-    "caller inputs preserve canonical identity and reject malformed payloads",
+    "caller inputs keep their supplied value and reject malformed payloads",
     () {
       final supplied = skir.ResourceId(value: "book:current")
           .toExpressionBinding();
       final normalized = {origin: supplied}
           .withContextImports(catalog: catalog, imports: imports);
-      expect(normalized[origin], same(supplied));
+      expect(normalized[origin]?.value, supplied.value);
+      expect(normalized[origin]?.schema, supplied.schema);
       expect(
         () => {
           origin: PortableExpressionBinding(
@@ -90,7 +91,7 @@ void main() {
       final supplied = skir.ResourceId(value: "book:current")
           .toExpressionBinding();
       final inherited = {origin: supplied}.withCallerInputs({origin: supplied});
-      expect(inherited[origin], same(supplied));
+      expect(inherited[origin]?.value, supplied.value);
       expect(
         () => inherited.withCallerInputs({
           origin: skir.ResourceId(value: "book:other").toExpressionBinding(),

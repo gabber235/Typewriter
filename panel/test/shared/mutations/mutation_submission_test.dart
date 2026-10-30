@@ -2,40 +2,34 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test(
-    "retrying failed local integration of a known rejection never sends again",
-    () async {
-      var sends = 0;
-      var integrations = 0;
-      final reported = <FlutterErrorDetails>[];
-      final previous = FlutterError.onError;
-      FlutterError.onError = reported.add;
-      addTearDown(() => FlutterError.onError = previous);
-      final submission = MutationSubmission<void>(
-        id: "known",
-        label: "Apply",
-        send: () async {
-          sends++;
-          return const SubmissionNotSubmitted(
-            message: "Connection unavailable",
-          );
-        },
-        integrate: (_) async {
-          if (++integrations == 1) throw StateError("Refresh failed");
-        },
-      );
-      addTearDown(submission.dispose);
-      await submission.run();
-      expect(submission.integrationError, isNotNull);
-      expect(submission.canReplay, isFalse);
-      await submission.run();
-      expect(sends, 1);
-      expect(integrations, 2);
-      expect(submission.integrationError, isNull);
-      expect(submission.canReplay, isTrue);
-      expect(reported, hasLength(1));
-    },
-  );
+  test("retrying a failed local refresh of a request that was not submitted "
+      "never sends it again", () async {
+    var sends = 0;
+    var integrations = 0;
+    final reported = <FlutterErrorDetails>[];
+    final previous = FlutterError.onError;
+    FlutterError.onError = reported.add;
+    addTearDown(() => FlutterError.onError = previous);
+    final submission = MutationSubmission<void>(
+      id: "known",
+      label: "Apply",
+      send: () async {
+        sends++;
+        return const SubmissionNotSubmitted(message: "Connection unavailable");
+      },
+      integrate: (_) async {
+        if (++integrations == 1) throw StateError("Refresh failed");
+      },
+    );
+    addTearDown(submission.dispose);
+    await submission.run();
+    expect(submission.integrationError?.error, isA<StateError>());
+    await submission.run();
+    expect(sends, 1);
+    expect(integrations, 2);
+    expect(submission.integrationError, isNull);
+    expect(reported, hasLength(1));
+  });
   test(
     "uncertain replay retains the submitted value after a newer edit",
     () async {

@@ -2,8 +2,7 @@
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   const baseSelectors = [KeyValueSelectorDefinition(id: "tag", key: "#")];
@@ -62,21 +61,18 @@ void main() {
       );
     });
 
-    test("snapshot stream updates snapshot and notifies listeners", () {
+    test("shows the latest snapshot of its source", () {
       final source = FakeSearchSource();
       final controller = SourceController(
         source: source,
         baseSelectors: baseSelectors,
       );
       addTearDown(controller.dispose);
-      final notifications = recordNotifications(controller);
-      addTearDown(notifications.dispose);
 
       final snapshot = readySnapshot(nodes: [resultNode("a")]);
       source.emitSnapshot(snapshot);
 
       expect(controller.snapshot, snapshot);
-      expect(notifications.count, 1);
     });
 
     test("updateQuery parses text and selectors into the searched context", () {

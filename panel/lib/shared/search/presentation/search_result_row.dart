@@ -77,7 +77,10 @@ final class SearchResultRow extends StatelessWidget {
         leading: row.loading
             ? const SizedBox.square(
                 dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  semanticsLabel: searchResultWorkingSemanticLabel,
+                  strokeWidth: 2,
+                ),
               )
             : leading == null
             ? null

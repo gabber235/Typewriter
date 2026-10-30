@@ -19,18 +19,21 @@ void main() {
       DropOffer.regroup(field: editorRootPath.field("group"), value: "b"),
     ];
     final chosen = <DropOffer?>[];
-    await tester.pumpTestApp(
-      // Web platform defaults bind arrow keys to scrolling, never to focus
-      // traversal.
-      child: Shortcuts(
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.arrowDown):
-              DoNothingAndStopPropagationIntent(),
-          SingleActivator(LogicalKeyboardKey.arrowUp):
-              DoNothingAndStopPropagationIntent(),
-        },
-        child: Center(
-          child: DropChooser(offers: offers, onChoose: chosen.add),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        // Web platform defaults bind arrow keys to scrolling, never to focus
+        // traversal.
+        Shortcuts(
+          shortcuts: const {
+            SingleActivator(LogicalKeyboardKey.arrowDown):
+                DoNothingAndStopPropagationIntent(),
+            SingleActivator(LogicalKeyboardKey.arrowUp):
+                DoNothingAndStopPropagationIntent(),
+          },
+          child: Center(
+            child: DropChooser(offers: offers, onChoose: chosen.add),
+          ),
         ),
       ),
     );

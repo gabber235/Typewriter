@@ -39,72 +39,6 @@ void main() {
       });
     });
 
-    group("randomSubset", () {
-      test("returns empty list when count is 0", () {
-        final list = [1, 2, 3];
-        expect(list.randomSubset(0), isEmpty);
-      });
-
-      test("returns empty list when count exceeds length", () {
-        final list = [1, 2, 3];
-        expect(list.randomSubset(5), isEmpty);
-      });
-
-      test("returns empty list when count is negative", () {
-        final list = [1, 2, 3];
-        expect(list.randomSubset(-1), isEmpty);
-      });
-
-      test("returns correct number of unique elements", () {
-        final list = [1, 2, 3, 4, 5];
-        final subset = list.randomSubset(3);
-        expect(subset.length, 3);
-        expect(subset.toSet().length, 3);
-        for (final item in subset) {
-          expect(list, contains(item));
-        }
-      });
-
-      test("returns all elements when count equals length", () {
-        final list = [1, 2, 3];
-        final subset = list.randomSubset(3);
-        expect(subset.length, 3);
-        expect(subset.toSet(), list.toSet());
-      });
-    });
-
-    group("indices", () {
-      test("returns empty list for empty list", () {
-        final list = <int>[];
-        expect(list.indices, isEmpty);
-      });
-
-      test("returns indices for non-empty list", () {
-        final list = ["a", "b", "c"];
-        expect(list.indices, [0, 1, 2]);
-      });
-    });
-
-    group("joinWith", () {
-      test("inserts separator between elements", () {
-        final list = [1, 2, 3];
-        final result = list.joinWith(() => 0);
-        expect(result, [1, 0, 2, 0, 3]);
-      });
-
-      test("returns single element list unchanged", () {
-        final list = [1];
-        final result = list.joinWith(() => 0);
-        expect(result, [1]);
-      });
-
-      test("returns empty list unchanged", () {
-        final list = <int>[];
-        final result = list.joinWith(() => 0);
-        expect(result, isEmpty);
-      });
-    });
-
     group("intersection", () {
       test("returns common elements", () {
         final list1 = [1, 2, 3, 4];
@@ -179,23 +113,6 @@ void main() {
         final list = [1, 2, 3];
         final result = list.excluding([int]).toList();
         expect(result, isEmpty);
-      });
-    });
-
-    group("allAre", () {
-      test("returns true when all elements match type", () {
-        final list = <num>[1, 2, 3];
-        expect(list.allAre<int>(), isTrue);
-      });
-
-      test("returns false when elements have mixed types", () {
-        final list = <num>[1, 2.0, 3];
-        expect(list.allAre<int>(), isFalse);
-      });
-
-      test("returns false for empty iterable", () {
-        final list = <num>[];
-        expect(list.allAre<int>(), isFalse);
       });
     });
   });

@@ -799,18 +799,24 @@ TimelineElement? _timelineElement(
 ) {
   final id = TimelineIdentifier(cue.resource.value);
   final color = Theme.of(context).colorScheme.primary;
+  final openResource = scope.openResource;
+  final open = openResource == null ? null : () => openResource(cue.resource);
+  final selectable = PortableResourcesInteractionScope.maybeOf(context)
+      ?.selectableFor
+      ?.call(cue.resource);
+  Widget build(BuildContext _, TimelineElementBuildData data) => TimelineCue(
+    data: data,
+    label: cue.label,
+    selectableId: selectable,
+    onOpen: open,
+  );
   return switch (cue.placement) {
     PortableTimelineKeyframe(:final frame) => TimelineKeyframe(
       id: id,
       frame: frame,
       parentId: parent,
       color: color,
-      builder: (_, _) => GestureDetector(
-        onTap: scope.openResource == null
-            ? null
-            : () => scope.openResource!(cue.resource),
-        child: Semantics(label: cue.label, child: const Icon(Icons.circle)),
-      ),
+      builder: build,
     ),
     PortableTimelineSegment(:final startFrame, :final endFrame) =>
       TimelineSegment(
@@ -825,12 +831,7 @@ TimelineElement? _timelineElement(
                 when value.endFrame <= endFrame - startFrame)
               value,
         ],
-        builder: (_, _) => GestureDetector(
-          onTap: scope.openResource == null
-              ? null
-              : () => scope.openResource!(cue.resource),
-          child: Text(cue.label, overflow: TextOverflow.ellipsis),
-        ),
+        builder: build,
       ),
   };
 }

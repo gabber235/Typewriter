@@ -15,7 +15,7 @@ extension JoinCodeExpiry on skir.JoinCode {
   /// Time remaining at read time, clamped to zero after expiration.
   Duration? get remainingDuration {
     if (expiresAt == null) return null;
-    final remaining = expiresAt!.difference(DateTime.now());
+    final remaining = expiresAt!.difference(clock.now());
     return remaining.isNegative ? Duration.zero : remaining;
   }
 

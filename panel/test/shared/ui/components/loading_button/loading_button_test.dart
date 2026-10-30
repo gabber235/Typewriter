@@ -4,306 +4,184 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final variant in LoadingVariant.values) {
-    group("LoadingButton.${variant.name}", () {
-      testWidgets("invokes async and shows spinner while running", (
-        tester,
-      ) async {
-        final completer = Completer<void>();
-        var invoked = 0;
-
-        await tester.pumpTestApp(
-          child: Center(
-            child: LoadingButton(
-              variant: variant,
-              child: const Text("Go"),
-              onPressed: () async {
-                invoked++;
-                await completer.future;
-                invoked++;
-              },
-            ),
-          ),
-        );
-
-        expect(invoked, 0);
-        expect(find.text("Go"), findsOneWidget);
-        expect(find.byType(CircularProgressIndicator), findsNothing);
-
-        await tester.tap(find.byType(InkWell));
-        await _showsLoading(tester, () => invoked, 1, loading: true);
-
-        completer.complete();
-
-        await _showsLoading(tester, () => invoked, 2, loading: false);
-      });
-
-      testWidgets("shows snackbar and tooltip on failure", (tester) async {
-        await tester.pumpTestApp(
-          child: Center(
-            child: LoadingButton(
-              variant: variant,
-              child: const Text("Fail"),
-              onPressed: () {
-                throw Exception("Boom");
-              },
-            ),
-          ),
-        );
-
-        await tester.tap(find.byType(InkWell));
-
-        await tester.pumpAndSettle();
-
-        expect(find.byType(SnackBar), findsOneWidget);
-      });
-
-      testWidgets(
-        "with icon invokes async and changes icon to spinner while running",
-        (tester) async {
+    for (final shape in LoadingButtonShape.values) {
+      group("LoadingButton.${variant.name} with a ${shape.name}", () {
+        testWidgets("runs the action once and shows a spinner while it runs", (
+          tester,
+        ) async {
           final completer = Completer<void>();
-          var invoked = 0;
-          await tester.pumpTestApp(
-            child: Center(
-              child: LoadingButton.icon(
-                variant: variant,
-                icon: Icon(Icons.add),
-                label: const Text("Go"),
-                onPressed: () async {
-                  invoked++;
-                  await completer.future;
-                  invoked++;
-                },
-              ),
+          final steps = <int>[];
+          final panel = await tester.showComponent(
+            shape.button(
+              variant: variant,
+              label: "Go",
+              onPressed: () async {
+                steps.add(1);
+                await completer.future;
+                steps.add(2);
+              },
+            ),
+          );
+          expect(panel.says("Loading"), isFalse);
+
+          await tester.tap(find.text("Go"));
+          await panel.eventually(() {
+            expect(steps, [1]);
+            expect(panel.says("Loading"), isTrue);
+            // The plain button swaps its label for the spinner; the icon
+            // button keeps its label and swaps its icon.
+            expect(panel.says("Go"), shape == LoadingButtonShape.icon);
+            expect(panel.says("Add"), isFalse);
+          });
+
+          await tester.tap(find.bySemanticsLabel(RegExp("Loading")));
+          expect(steps, [1]);
+
+          completer.complete();
+          await panel.eventually(() {
+            expect(steps, [1, 2]);
+            expect(panel.says("Loading"), isFalse);
+            expect(panel.says("Go"), isTrue);
+            expect(panel.says("Add"), shape == LoadingButtonShape.icon);
+          });
+        });
+
+        testWidgets("shows a failure in a snackbar and a tooltip", (
+          tester,
+        ) async {
+          final panel = await tester.showComponent(
+            shape.button(
+              variant: variant,
+              label: "Fail",
+              onPressed: () => throw Exception("Boom"),
             ),
           );
 
-          expect(invoked, 0);
-          expect(find.text("Go"), findsOneWidget);
-          expect(find.byType(Icon), findsOneWidget);
-          expect(find.byType(CircularProgressIndicator), findsNothing);
-          await tester.tap(find.byType(InkWell));
+          await panel.tapOn(find.text("Fail"));
 
-          await tester.eventually(() {
-            expect(invoked, 1);
-            expect(find.text("Go"), findsOneWidget);
-            expect(find.byType(Icon), findsNothing);
-            expect(find.byType(CircularProgressIndicator), findsOneWidget);
-          });
-
-          completer.complete();
-
-          await tester.eventually(() {
-            expect(invoked, 2);
-            expect(find.text("Go"), findsOneWidget);
-            expect(find.byType(Icon), findsOneWidget);
-            expect(find.byType(CircularProgressIndicator), findsNothing);
-          });
-        },
-      );
-
-      testWidgets("with icon shows snackbar and tooltip on failure", (
-        tester,
-      ) async {
-        await tester.pumpTestApp(
-          child: Center(
-            child: LoadingButton(
-              variant: variant,
-              child: const Text("Fail"),
-              onPressed: () {
-                throw Exception("Boom");
-              },
-            ),
-          ),
-        );
-
-        await tester.tap(find.byType(InkWell));
-
-        await tester.pumpAndSettle();
-
-        expect(find.byType(SnackBar), findsOneWidget);
+          expect(find.text("Exception: Boom"), findsOneWidget);
+          expect(find.tooltip("Exception: Boom"), findsOneWidget);
+        });
       });
-    });
+    }
   }
 
   group("LoadingButtonController", () {
-    testWidgets("can programmatically trigger button press", (tester) async {
-      final completer = Completer<void>();
-      var invoked = 0;
-      final controller = LoadingButtonController();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: LoadingButton(
+    for (final shape in LoadingButtonShape.values) {
+      testWidgets("triggers a button with a ${shape.name} like a press", (
+        tester,
+      ) async {
+        final completer = Completer<void>();
+        final steps = <int>[];
+        final controller = LoadingButtonController();
+        final panel = await tester.showComponent(
+          shape.button(
             controller: controller,
-            child: const Text("Go"),
+            label: "Go",
             onPressed: () async {
-              invoked++;
+              steps.add(1);
               await completer.future;
-              invoked++;
+              steps.add(2);
             },
           ),
-        ),
-      );
+        );
 
-      expect(invoked, 0);
-      expect(find.text("Go"), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(controller.trigger(), isTrue);
+        await panel.eventually(() {
+          expect(steps, [1]);
+          expect(panel.says("Loading"), isTrue);
+        });
 
-      final triggered = controller.trigger();
-      expect(triggered, true);
-
-      await _showsLoading(tester, () => invoked, 1, loading: true);
-
-      completer.complete();
-
-      await _showsLoading(tester, () => invoked, 2, loading: false);
-    });
-
-    testWidgets("returns false when button is disabled", (tester) async {
-      final controller = LoadingButtonController();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: LoadingButton(
-            controller: controller,
-            onPressed: null,
-            child: const Text("Disabled"),
-          ),
-        ),
-      );
-
-      await tester.pump();
-      final triggered = controller.trigger();
-      expect(triggered, false);
-    });
-
-    testWidgets("returns false when button is loading", (tester) async {
-      final completer = Completer<void>();
-      var invoked = 0;
-      final controller = LoadingButtonController();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: LoadingButton(
-            controller: controller,
-            child: const Text("Loading"),
-            onPressed: () async {
-              invoked++;
-              await completer.future;
-            },
-          ),
-        ),
-      );
-
-      controller.trigger();
-
-      await tester.eventually(() {
-        expect(invoked, 1);
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        completer.complete();
+        await panel.eventually(() {
+          expect(steps, [1, 2]);
+          expect(panel.says("Loading"), isFalse);
+        });
       });
+    }
 
-      final triggeredWhileLoading = controller.trigger();
-      expect(triggeredWhileLoading, false);
-
-      completer.complete();
-      await tester.pumpAndSettle();
-    });
-
-    testWidgets("works with icon variant", (tester) async {
-      var invoked = false;
+    testWidgets("refuses to trigger a disabled button", (tester) async {
       final controller = LoadingButtonController();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: LoadingButton.icon(
-            controller: controller,
-            icon: Icon(Icons.add),
-            onPressed: () async {
-              invoked = true;
-            },
-            label: const Text("Add"),
-          ),
+      await tester.showComponent(
+        LoadingButtonShape.label.button(
+          controller: controller,
+          label: "Disabled",
+          onPressed: null,
         ),
       );
 
-      final triggered = controller.trigger();
-      expect(triggered, true);
-
-      await tester.pumpAndSettle();
-      expect(invoked, true);
+      expect(controller.trigger(), isFalse);
     });
 
-    testWidgets("handles errors when triggered programmatically", (
+    testWidgets("refuses to trigger a button that is still running", (
       tester,
     ) async {
+      final completer = Completer<void>();
+      final steps = <int>[];
       final controller = LoadingButtonController();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: LoadingButton(
-            controller: controller,
-            child: const Text("Fail"),
-            onPressed: () {
-              throw Exception("Boom");
-            },
-          ),
+      final panel = await tester.showComponent(
+        LoadingButtonShape.label.button(
+          controller: controller,
+          label: "Go",
+          onPressed: () async {
+            steps.add(1);
+            await completer.future;
+            steps.add(2);
+          },
         ),
       );
 
       controller.trigger();
+      await panel.eventually(() => expect(panel.says("Loading"), isTrue));
 
-      await tester.pumpAndSettle();
+      expect(controller.trigger(), isFalse);
+      expect(steps, [1]);
 
-      expect(find.byType(SnackBar), findsOneWidget);
+      completer.complete();
+      await panel.settle();
     });
 
-    testWidgets("exposes state properties", (tester) async {
-      final completer = Completer<void>();
+    testWidgets("shows a failure of a triggered action", (tester) async {
       final controller = LoadingButtonController();
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: LoadingButton(
-            controller: controller,
-            child: const Text("Test"),
-            onPressed: () async {
-              await completer.future;
-            },
-          ),
+      final panel = await tester.showComponent(
+        LoadingButtonShape.label.button(
+          controller: controller,
+          label: "Fail",
+          onPressed: () => throw Exception("Boom"),
         ),
       );
 
-      expect(controller.isLoading, false);
-      expect(controller.lastError, null);
-      expect(controller.canTrigger, true);
+      controller.trigger();
+      await panel.settle();
+
+      expect(find.text("Exception: Boom"), findsOneWidget);
+      expect(controller.lastError, "Exception: Boom");
+    });
+
+    testWidgets("reports whether the button is running", (tester) async {
+      final completer = Completer<void>();
+      final controller = LoadingButtonController();
+      final panel = await tester.showComponent(
+        LoadingButtonShape.label.button(
+          controller: controller,
+          label: "Test",
+          onPressed: () => completer.future,
+        ),
+      );
+      expect(controller.isLoading, isFalse);
+      expect(controller.canTrigger, isTrue);
 
       controller.trigger();
       await tester.pump();
 
-      expect(controller.isLoading, true);
-      expect(controller.canTrigger, false);
+      expect(controller.isLoading, isTrue);
+      expect(controller.canTrigger, isFalse);
 
       completer.complete();
-      await tester.pumpAndSettle();
+      await panel.settle();
 
-      expect(controller.isLoading, false);
-      expect(controller.canTrigger, true);
+      expect(controller.isLoading, isFalse);
+      expect(controller.canTrigger, isTrue);
     });
   });
 }
-
-/// Waits until the button ran [expected] times and shows its spinner when
-/// [loading], or its label otherwise.
-Future<void> _showsLoading(
-  WidgetTester tester,
-  int Function() invoked,
-  int expected, {
-  required bool loading,
-}) => tester.eventually(() {
-  expect(invoked(), expected);
-  expect(
-    find.byType(CircularProgressIndicator),
-    loading ? findsOneWidget : findsNothing,
-  );
-  expect(find.text("Go"), loading ? findsNothing : findsOneWidget);
-});

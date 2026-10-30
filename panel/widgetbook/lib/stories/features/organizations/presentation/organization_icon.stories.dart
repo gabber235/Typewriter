@@ -2,52 +2,34 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
+/// An organization logo generated from a seed, or the placeholder an
+/// organization without a logo shows.
 @widgetbook.UseCase(name: "Default", type: OrganizationLogo)
 Widget organizationLogoUseCase(BuildContext context) {
-  final size = context.knobs.double.slider(
-    label: "Size",
-    initialValue: 40,
-    min: 20,
-    max: 100,
-  );
-  final borderRadius = context.knobs.double.slider(
-    label: "Border Radius",
-    initialValue: 8,
-    min: 0,
-    max: 20,
-  );
-  final seed = context.knobs.string(label: "Seed", initialValue: "test");
-
-  return FakeApp(
-    child: Center(
-      child: OrganizationLogo(
-        logoUrl: generateOrganizationIconUrl(seed),
-        size: size,
-        borderRadius: borderRadius,
+  final placeholder = context.knobs.boolean(label: "No logo");
+  final seed = context.knobs.seed();
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      Center(
+        child: OrganizationLogo(
+          logoUrl: placeholder ? null : generateOrganizationIconUrl("$seed"),
+          size: context.knobs.double.slider(
+            label: "Size",
+            initialValue: 40,
+            min: 20,
+            max: 100,
+          ),
+          borderRadius: context.knobs.double.slider(
+            label: "Border radius",
+            initialValue: 8,
+            min: 0,
+            max: 20,
+          ),
+        ),
       ),
-    ),
-  );
-}
-
-@widgetbook.UseCase(name: "Placeholder", type: OrganizationLogo)
-Widget organizationLogoPlaceholderUseCase(BuildContext context) {
-  final size = context.knobs.double.slider(
-    label: "Size",
-    initialValue: 40,
-    min: 20,
-    max: 100,
-  );
-  final borderRadius = context.knobs.double.slider(
-    label: "Border Radius",
-    initialValue: 8,
-    min: 0,
-    max: 20,
-  );
-
-  return FakeApp(
-    child: Center(
-      child: OrganizationLogo(size: size, borderRadius: borderRadius),
     ),
   );
 }

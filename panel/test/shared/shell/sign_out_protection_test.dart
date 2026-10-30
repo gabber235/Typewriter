@@ -2,58 +2,23 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-final class _RecordingAuth extends Auth {
-  _RecordingAuth(this._onSignOut);
-
-  final void Function() _onSignOut;
-
-  @override
-  Future<OidcUserManager?> build() async => null;
-
-  @override
-  Future<void> signOut() async {
-    _onSignOut();
-  }
-}
-
 void main() {
   testWidgets("voluntary sign out waits for protected work confirmation", (
     tester,
   ) async {
-    const scope = LocalWorkScope(userId: "user", organizationId: null);
-    final controller = WorkSessionLossController(() => scope, () => true);
-    var signOutCalls = 0;
-    final auth = _RecordingAuth(() => signOutCalls++);
-    var routerReads = 0;
-    addTearDown(controller.dispose);
+    final panel = await tester.pumpPanel([
+      signedIn(ada),
+    ], at: const PanelLocation.component(SignOutButton()));
+    panel.container.read(localWorkProvider.notifier).register(UnsavedWork());
+    await panel.settle();
 
-    await tester.pumpTestApp(
-      overrides: [
-        workSessionLossProvider.overrideWithValue(controller),
-        appRouterProvider.overrideWith((ref) {
-          routerReads++;
-          throw StateError("Account policy must not construct routing");
-        }),
-        authProvider.overrideWith(() => auth),
-        // The shared shell resolves its scope from these route parameters.
-        organizationIdProvider.overrideWithValue(null),
-        realmIdProvider.overrideWithValue(null),
-      ],
-      child: const SignOutButton(),
-    );
+    await panel.tapOn(find.text("Sign out"));
+    expect(panel.dialog.showing("Leave this work session?"), isTrue);
+    await panel.dialog.choose("Stay", message: "Leave this work session?");
+    expect(panel.world.session.user, ada);
 
-    await tester.tap(find.text("Sign out"));
-    await tester.pumpAndSettle();
-    expect(find.text("Leave this work session?"), findsOneWidget);
-    await tester.tap(find.text("Stay"));
-    await tester.pumpAndSettle();
-    expect(signOutCalls, 0);
-
-    await tester.tap(find.text("Sign out"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Leave"));
-    await tester.pumpAndSettle();
-    expect(signOutCalls, 1);
-    expect(routerReads, 0);
+    await panel.tapOn(find.text("Sign out"));
+    await panel.dialog.choose("Leave", message: "Leave this work session?");
+    expect(panel.world.session.user, isNull);
   });
 }

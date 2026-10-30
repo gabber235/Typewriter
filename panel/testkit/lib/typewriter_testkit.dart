@@ -10,7 +10,6 @@
 /// needs a test runner; `package:typewriter_testkit/testing.dart` adds that.
 library;
 
-export "app.dart";
 export "authoring.dart";
 export "core.dart";
 export "doubles.dart";

@@ -72,9 +72,9 @@ class TypewriterWidgetbook extends StatelessWidget {
         // ignore: experimental_member_use
         TimeDilationAddon(),
       ],
+      // Every story brings the real panel app through its `Story`, which
+      // follows the theme chosen here.
       appBuilder: (context, child) {
-        // Don't have the MaterialApp here.
-        // We have it in the `FakeApp` so that it rerenders when we make changes to the theme.
         return child;
       },
       directories: directories,

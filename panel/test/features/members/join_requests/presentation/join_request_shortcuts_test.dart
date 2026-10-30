@@ -5,53 +5,51 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("join request bulk shortcuts clear and decline selection", (
-    tester,
-  ) async {
-    var clears = 0;
-    var declines = 0;
-
-    await tester.pumpWidget(
-      FakeApp(
-        overrides: FakeMembership().overrides,
-        child: BulkJoinRequestActions(
-          selectedCount: 1,
-          selectedIds: {skir.recordId("request_to_join:request")},
-          onClearSelection: () => clears++,
-          onDecline: () async => declines++,
+  for (final (key, invoked) in [
+    (LogicalKeyboardKey.escape, "clear"),
+    (LogicalKeyboardKey.delete, "decline"),
+  ]) {
+    testWidgets("${key.keyLabel} in the bulk join request actions invokes "
+        "$invoked", (tester) async {
+      final calls = <String>[];
+      final panel = await tester.pumpPanel(
+        [signedIn(ada, organization: acme), membership()],
+        at: PanelLocation.component(
+          BulkJoinRequestActions(
+            selectedCount: 1,
+            selectedIds: {skir.recordId("request_to_join:request")},
+            onClearSelection: () => calls.add("clear"),
+            onDecline: () async => calls.add("decline"),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await panel.press(LogicalKeyboardKey.tab);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pump();
-    expect(FocusManager.instance.primaryFocus, isNotNull);
+      await panel.press(key);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    expect(clears, 1);
+      expect(calls, [invoked]);
+    });
+  }
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.delete);
-    expect(declines, 1);
-  });
-
-  testWidgets("selected request card routes decline to bulk callback", (
-    tester,
-  ) async {
+  testWidgets("Delete on a selected join request declines the whole "
+      "selection without asking", (tester) async {
     var bulkDeclines = 0;
     final request = skir.OrganizationJoinRequest(
       requestId: skir.recordId("request_to_join:selected"),
       userId: skir.recordId("user:selected"),
       userName: "Selected",
       userEmail: "selected@example.com",
-      requestedAt: DateTime.now(),
-      expiresAt: DateTime.now().add(const Duration(hours: 1)),
+      requestedAt: DateTime.utc(2026),
+      expiresAt: DateTime.utc(2100),
       userAvatarUrl: null,
     );
-
-    await tester.pumpWidget(
-      FakeApp(
-        child: JoinRequestCard(
+    final panel = await tester.pumpPanel(
+      [
+        signedIn(ada, organization: acme),
+        membership(joinRequests: [request]),
+      ],
+      at: PanelLocation.component(
+        JoinRequestCard(
           request: request,
           isSelected: true,
           onSelectionChanged: (_) {},
@@ -62,14 +60,11 @@ void main() {
         ),
       ),
     );
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.delete);
+    await panel.press(LogicalKeyboardKey.tab);
+
+    await panel.press(LogicalKeyboardKey.delete);
 
     expect(bulkDeclines, 1);
-    expect(find.text("Decline join request?"), findsNothing);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
+    expect(panel.dialog.showing("Decline Selected's request?"), isFalse);
   });
 }

@@ -95,3 +95,45 @@ final class Page {
     priority: priority ?? this.priority,
   );
 }
+
+/// A scene a fixture document starts with: a section of the realm whose
+/// workspace lays its [tracks] out on a timeline.
+final class Scene {
+  const Scene({
+    required this.sceneId,
+    required this.name,
+    this.tracks = const [],
+  });
+
+  final skir.ResourceId sceneId;
+  final String name;
+  final List<Track> tracks;
+}
+
+/// One track of a [Scene], owning the [cues] the timeline shows on its row.
+final class Track {
+  const Track({
+    required this.trackId,
+    required this.name,
+    this.cues = const [],
+  });
+
+  final skir.ResourceId trackId;
+  final String name;
+  final List<Cue> cues;
+}
+
+/// A cue placed on a [Track] from [startFrame] to [endFrame].
+final class Cue {
+  const Cue({
+    required this.cueId,
+    required this.name,
+    required this.startFrame,
+    required this.endFrame,
+  });
+
+  final skir.ResourceId cueId;
+  final String name;
+  final int startFrame;
+  final int endFrame;
+}

@@ -8,19 +8,17 @@ void main() {
   ) async {
     final controller = InputFieldController();
     addTearDown(controller.dispose);
-    await _pumpDropdown(tester, controller);
-    await tester.tap(find.byIcon(Icons.arrow_drop_down));
-    await tester.pumpAndSettle();
+    final panel = await tester.showComponent(ChoiceDropdown(controller));
+    await panel.tapOn(find.byIcon(Icons.arrow_drop_down));
 
-    expect(_menu(tester).isOpen, isTrue);
+    expect(panel.shows("Unavailable"), isTrue);
     expect(controller.inputFocusNode.hasPrimaryFocus, isTrue);
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<InsertMode>(),
     );
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    expect(_menu(tester).isOpen, isFalse);
+    await panel.press(LogicalKeyboardKey.escape);
+    expect(panel.shows("Unavailable"), isFalse);
     expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
   });
 
@@ -29,29 +27,23 @@ void main() {
   ) async {
     final controller = InputFieldController();
     addTearDown(controller.dispose);
-    await _pumpDropdown(tester, controller);
+    final panel = await tester.showComponent(ChoiceDropdown(controller));
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.tab);
     expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.enter);
 
     expect(controller.inputFocusNode.hasPrimaryFocus, isTrue);
-    expect(_menu(tester).isOpen, isTrue);
+    expect(panel.shows("Unavailable"), isTrue);
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<InsertMode>(),
     );
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).controller!.text,
-      "Beta",
-    );
+    await panel.press(LogicalKeyboardKey.arrowDown);
     await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
-    expect(_menu(tester).isOpen, isFalse);
+    await panel.settle();
+    expect(panel.shows("Unavailable"), isFalse);
+    expect(panel.shows("Beta"), isTrue);
     expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
   });
 
@@ -60,26 +52,22 @@ void main() {
   ) async {
     final controller = InputFieldController();
     addTearDown(controller.dispose);
-    await _pumpDropdown(tester, controller);
-    await tester.tap(find.byType(TextField));
-    await tester.pumpAndSettle();
-    expect(_menu(tester).isOpen, isTrue);
-    await tester.enterText(find.byType(TextField), "Be");
-    await tester.pumpAndSettle();
+    final panel = await tester.showComponent(ChoiceDropdown(controller));
+    await panel.tapOn(find.text("Alpha"));
+    expect(panel.shows("Unavailable"), isTrue);
+    await tester.enterText(find.text("Alpha"), "Be");
+    await panel.settle();
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.escape);
 
-    expect(_menu(tester).isOpen, isFalse);
+    expect(panel.shows("Unavailable"), isFalse);
     expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<NormalMode>(),
     );
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).controller!.text,
-      "Alpha",
-    );
+    expect(panel.shows("Alpha"), isTrue);
+    expect(panel.shows("Be"), isFalse);
   });
 
   testWidgets("leaving the input closes choices without trapping focus", (
@@ -87,19 +75,15 @@ void main() {
   ) async {
     final controller = InputFieldController();
     addTearDown(controller.dispose);
-    await _pumpDropdown(tester, controller);
-    await tester.tap(find.byType(TextField));
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pumpAndSettle();
+    final panel = await tester.showComponent(ChoiceDropdown(controller));
+    await panel.tapOn(find.text("Alpha"));
 
-    expect(_menu(tester).isOpen, isFalse);
+    await panel.press(LogicalKeyboardKey.tab);
+
+    expect(panel.shows("Unavailable"), isFalse);
+    expect(panel.focused, "Next control");
     expect(
-      Focus.of(tester.element(find.text("Next control"))).hasPrimaryFocus,
-      isTrue,
-    );
-    expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<NormalMode>(),
     );
   });
@@ -109,11 +93,10 @@ void main() {
   ) async {
     final controller = InputFieldController();
     addTearDown(controller.dispose);
-    await _pumpDropdown(tester, controller);
-    await tester.tap(find.byType(TextField));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Beta").last);
-    await tester.pumpAndSettle();
+    final panel = await tester.showComponent(ChoiceDropdown(controller));
+    await panel.tapOn(find.text("Alpha"));
+
+    await panel.tapOn(find.text("Beta").last);
 
     expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
     final highlight = tester.widget<FocusHighlight>(
@@ -125,48 +108,7 @@ void main() {
           .first,
     );
     expect(highlight.type, FocusType.focus);
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).controller!.text,
-      "Beta",
-    );
+    expect(panel.shows("Unavailable"), isFalse);
+    expect(panel.shows("Beta"), isTrue);
   });
 }
-
-MenuController _menu(WidgetTester tester) =>
-    tester.widget<MenuAnchor>(find.byType(MenuAnchor)).controller!;
-
-Future<void> _pumpDropdown(
-  WidgetTester tester,
-  InputFieldController controller,
-) => tester.pumpTestApp(
-  child: SizedBox(
-    width: 360,
-    child: HookBuilder(
-      builder: (context) {
-        final selected = useState("alpha");
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Dropdown<String>(
-              inputFieldController: controller,
-              selected: selected.value,
-              dropdownMenuEntries: const [
-                DropdownMenuEntry(value: "alpha", label: "Alpha"),
-                DropdownMenuEntry(
-                  value: "unavailable",
-                  label: "Unavailable",
-                  enabled: false,
-                ),
-                DropdownMenuEntry(value: "beta", label: "Beta"),
-              ],
-              onSelected: (value) {
-                if (value != null) selected.value = value;
-              },
-            ),
-            TextButton(onPressed: () {}, child: const Text("Next control")),
-          ],
-        );
-      },
-    ),
-  ),
-);

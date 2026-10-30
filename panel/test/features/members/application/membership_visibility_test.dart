@@ -1,154 +1,91 @@
 import "package:fake_async/fake_async.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../join_codes/application/support/join_codes_test_support.dart"
-    as codes;
-import "../join_requests/application/support/join_requests_test_support.dart"
-    as requests;
+final _now = DateTime.utc(2026, 10, 27, 12);
+
+final _yesterday = _now.subtract(const Duration(days: 1));
 
 void main() {
-  test("expiry timer removes a request without manual invalidation", () {
+  test("a join request leaves the visible list the moment it expires", () {
     fakeAsync((async) {
-      final clock = async.getClock(DateTime.utc(2026));
-      final request = skir.OrganizationJoinRequest(
-        requestId: skir.recordId("request_to_join:soon_expired"),
-        userId: skir.recordId("user:soon_expired"),
-        requestedAt: clock.now(),
-        expiresAt: clock.now().add(const Duration(milliseconds: 200)),
-        userName: null,
-        userEmail: null,
-        userAvatarUrl: null,
-      );
-      final container = ProviderContainer.test(
-        overrides: [
-          membershipDisplayTimeProvider.overrideWith((ref) => clock.now()),
-          pendingMembershipRemovalsProvider.overrideWithValue(const {}),
-          organizationJoinRequestsProvider.overrideWith(
-            () => requests.MockJoinRequestsNotifier([request]),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      final observations = <List<skir.OrganizationJoinRequest>>[];
-      final subscription = container.listen(
-        visibleOrganizationJoinRequestsProvider,
-        (_, next) {
-          if (next case AsyncData(:final value)) {
-            observations.add(value);
-          }
-        },
-        fireImmediately: true,
-      );
-      addTearDown(subscription.close);
+      withClock(async.getClock(_now), () {
+        final request = joinRequest(
+          "soon",
+          requestedAt: _yesterday,
+          expiresAt: _now.add(const Duration(milliseconds: 200)),
+        );
+        final world = testWorld([
+          signedIn(ada, organization: acme),
+          membership(joinRequests: [request]),
+        ]);
+        final visible = world.container.listen(
+          visibleOrganizationJoinRequestsProvider,
+          (_, _) {},
+        );
 
-      async
-        ..flushMicrotasks()
-        ..elapse(Duration.zero);
-      expect(observations.last, [request]);
-      async.elapse(const Duration(milliseconds: 199));
-      expect(observations.last, [request]);
-      async
-        ..elapse(const Duration(milliseconds: 1))
-        ..flushMicrotasks();
-      expect(observations.last, isEmpty);
-      expect(container.read(organizationJoinRequestsProvider).requireValue, [
-        request,
-      ]);
-      subscription.close();
-      container.dispose();
+        async.flushMicrotasks();
+        expect(visible.read().value, [request]);
+        async.elapse(const Duration(milliseconds: 199));
+        expect(visible.read().value, [request]);
+        async.elapse(const Duration(milliseconds: 1));
+        expect(visible.read().value, isEmpty);
+        expect(world.container.read(organizationJoinRequestsProvider).value, [
+          request,
+        ]);
+        visible.close();
+      });
     });
   });
 
-  test(
-    "derived visibility filters expiry without changing confirmed snapshots",
-    () async {
-      final activeRequest = skir.OrganizationJoinRequest(
-        requestId: skir.recordId("request_to_join:active"),
-        userId: skir.recordId("user:active"),
-        requestedAt: DateTime.utc(2025),
+  test("expired requests and codes are hidden while the confirmed lists "
+      "keep them", () async {
+    await withClock(Clock.fixed(_now), () async {
+      final activeRequest = joinRequest(
+        "active",
+        requestedAt: _yesterday,
         expiresAt: DateTime.utc(2100),
-        userName: null,
-        userEmail: null,
-        userAvatarUrl: null,
       );
-      final expiredRequest = skir.OrganizationJoinRequest(
-        requestId: skir.recordId("request_to_join:expired"),
-        userId: skir.recordId("user:expired"),
-        requestedAt: DateTime.utc(2020),
+      final expiredRequest = joinRequest(
+        "expired",
+        requestedAt: _yesterday,
         expiresAt: DateTime.utc(2021),
-        userName: null,
-        userEmail: null,
-        userAvatarUrl: null,
       );
-      final activeCode = skir.JoinCode(
-        code: skir.recordId("join_code:active"),
-        createdAt: DateTime.utc(2025),
-        expiresAt: null,
-        singleUse: true,
-        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
-      );
-      final expiredCode = skir.JoinCode(
-        code: skir.recordId("join_code:expired"),
-        createdAt: DateTime.utc(2020),
+      final activeCode = joinCode("active", createdAt: _yesterday);
+      final expiredCode = joinCode(
+        "expired",
+        createdAt: _yesterday,
         expiresAt: DateTime.utc(2021),
-        singleUse: true,
-        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
-      final container = ProviderContainer.test(
-        overrides: [
-          pendingMembershipRemovalsProvider.overrideWithValue(const {}),
-          organizationJoinRequestsProvider.overrideWith(
-            () => requests.MockJoinRequestsNotifier([
-              activeRequest,
-              expiredRequest,
-            ]),
-          ),
-          organizationJoinCodesProvider.overrideWith(
-            () => codes.MockJoinCodesNotifier([activeCode, expiredCode]),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      final requestsReady = Completer<List<skir.OrganizationJoinRequest>>();
-      final codesReady = Completer<List<skir.JoinCode>>();
-      final requestsSubscription = container.listen(
-        visibleOrganizationJoinRequestsProvider,
-        (_, next) {
-          if (next case AsyncData(:final value)
-              when !requestsReady.isCompleted) {
-            requestsReady.complete(value);
-          }
-        },
-        fireImmediately: true,
-      );
-      final codesSubscription = container.listen(
-        visibleOrganizationJoinCodesProvider,
-        (_, next) {
-          if (next case AsyncData(:final value) when !codesReady.isCompleted) {
-            codesReady.complete(value);
-          }
-        },
-        fireImmediately: true,
-      );
-      addTearDown(requestsSubscription.close);
-      addTearDown(codesSubscription.close);
-      final visibleRequests = await requestsReady.future;
-      final visibleCodes = await codesReady.future;
-
-      expect(visibleRequests, [activeRequest]);
-      expect(visibleCodes, [activeCode]);
-      expect(container.read(organizationJoinRequestsProvider).requireValue, [
-        activeRequest,
-        expiredRequest,
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        membership(
+          joinRequests: [activeRequest, expiredRequest],
+          joinCodes: [activeCode, expiredCode],
+        ),
       ]);
-      expect(container.read(organizationJoinCodesProvider).requireValue, [
+      final requests = world.container.listen(
+        visibleOrganizationJoinRequestsProvider,
+        (_, _) {},
+      );
+      final codes = world.container.listen(
+        visibleOrganizationJoinCodesProvider,
+        (_, _) {},
+      );
+      addTearDown(requests.close);
+      addTearDown(codes.close);
+
+      expect(
+        await world.container.read(organizationJoinRequestsProvider.future),
+        [activeRequest, expiredRequest],
+      );
+      expect(await world.container.read(organizationJoinCodesProvider.future), [
         activeCode,
         expiredCode,
       ]);
-    },
-  );
+      expect(requests.read().value, [activeRequest]);
+      expect(codes.read().value, [activeCode]);
+    });
+  });
 }

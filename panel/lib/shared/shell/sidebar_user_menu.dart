@@ -106,6 +106,8 @@ class UserMenu extends HookConsumerWidget {
 
     return userInfoAsync(
       name: "user info",
+      // The menu sits in the sidebar column, where only the small error fits.
+      shrink: true,
       builder: (user) {
         final name = user.name ?? user.username ?? user.sub;
         final avatarUrl = user.avatarUrl ?? "$userIconUrl&seed=${user.sub}";

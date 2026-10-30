@@ -294,3 +294,58 @@ skir.PresentationNode compiledEntryGraphLayout(skir.TypeTemplate element) =>
         ),
       ),
     );
+
+/// Compiled entry documents with other item presentations.
+extension CompiledEntryItems on AuthoringDocument {
+  /// This document, whose catalog gives its entries a concrete item presentation
+  /// reading "Concrete surface".
+  AuthoringDocument withConcreteEntryItems() {
+    final document = this;
+    final selected = document.catalog.selectPresentation(
+      document.resource(compiledEntryFirstId)!.configuration,
+      skir.PresentationRole.item,
+    ) as SelectedEditorPresentation;
+    final target = skir.PresentationTarget.createNamed(
+      definition: compiledSdkElementValue.authoredActualType!.definition,
+      arguments: const [],
+    );
+    final id = skir.PresentationId(namespace: "test", name: "concrete.graph");
+    final material =
+        (selected.material.toMutable()
+              ..provider = id
+              ..target = target
+              ..layout = skir.PresentationNode(
+                nodeId: "concrete.surface",
+                properties: skir.PresentationProperties.defaultInstance,
+                header: null,
+                element: skir.PresentationElement.wrapText(
+                  (skir.TextContent.mutable()
+                        ..value = skir.ExpressionNode.wrapLiteral(
+                          skir.DataValue.wrapStringValue("Concrete surface"),
+                        ))
+                      .toFrozen(),
+                ),
+              ))
+            .toFrozen();
+    final catalog = CheckedEditorCatalog(
+      (document.catalog.snapshot.toMutable()
+            ..presentations = [
+              ...document.catalog.snapshot.presentations,
+              (selected.descriptor.toMutable()
+                    ..id = id
+                    ..target = target)
+                  .toFrozen(),
+            ]
+            ..presentationMaterials = [
+              ...document.catalog.snapshot.presentationMaterials,
+              material,
+            ])
+          .toFrozen(),
+    );
+    return AuthoringDocument(
+      catalog: catalog,
+      entries: document.entries,
+      links: document.links,
+    );
+  }
+}

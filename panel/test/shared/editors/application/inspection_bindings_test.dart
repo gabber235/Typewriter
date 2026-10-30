@@ -4,36 +4,12 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-ValueEditingRegistration _target(String id) => fakeEditorTarget(
-  targetId: id,
-  label: id,
-  scope: "realm",
-  document: EditorDocument(
-    rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-    catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-    confirmedValue: skir.DataValue.wrapStringValue("Original"),
-    revision: 1,
-  ),
-  validation: acceptTestEditorMutation,
-  commit: (commit) async =>
-      MutationSuccess(revision: 2, value: commit.rootValue),
+final _document = EditorDocument(
+  rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+  catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
+  confirmedValue: skir.DataValue.wrapStringValue("Original"),
+  revision: 1,
 );
-
-final class _Destination extends WorkDestination {
-  bool disposed = false;
-
-  @override
-  bool get isCurrent => false;
-
-  @override
-  Future<void> open() async {}
-
-  @override
-  void dispose() {
-    disposed = true;
-    super.dispose();
-  }
-}
 
 void main() {
   test("disposing a value view preserves its leased owner", () {
@@ -41,7 +17,16 @@ void main() {
     addTearDown(session.dispose);
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
-    final owner = bindings.editor(_target("first"))..dispose();
+    final owner = bindings.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    )..dispose();
     expect(owner.workspace.closed, isFalse);
     expect(
       owner.update(editorRootPath, skir.DataValue.wrapStringValue("Draft")),
@@ -51,38 +36,105 @@ void main() {
     bindings.dispose();
     expect(owner.workspace.closed, isTrue);
   });
-  test("duplicate view acquisition shares one workspace and releases once", () {
+  test("two views of the same target share one draft", () {
     final session = ScopedWorkSession();
     addTearDown(session.dispose);
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
     final first = bindings.beginRefresh();
-    final owner = first.editor(_target("first"));
-    expect(first.editor(_target("first")), same(owner));
+    final editing = first.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
+    final reading = first.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
+    editing.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
+    expect(
+      reading.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("Draft"),
+    );
     first.commit();
+
     final second = bindings.beginRefresh();
-    expect(second.editor(_target("first")).workspace, same(owner.workspace));
+    final refreshed = second.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
     second.commit();
-    expect(owner.workspace.closed, isFalse);
+    expect(
+      refreshed.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("Draft"),
+    );
+    expect(refreshed.workspace.closed, isFalse);
+
+    refreshed.discardDraft();
     bindings.dispose();
-    expect(owner.workspace.closed, isTrue);
+    expect(refreshed.workspace.closed, isTrue);
   });
   test("rollback preserves the installed view and disposes prospective destinations", () {
     final session = ScopedWorkSession();
     addTearDown(session.dispose);
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
-    final destinations = <String, List<_Destination>>{};
+    final destinations = <String, List<FakeWorkDestination>>{};
     bindings.destinationFor = (identity) {
-      final destination = _Destination();
+      final destination = FakeWorkDestination();
       destinations.putIfAbsent(identity as String, () => []).add(destination);
       return destination;
     };
     final installed = bindings.beginRefresh();
-    final first = installed.editor(_target("first"));
+    final first = installed.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
     installed.commit();
-    final next = bindings.beginRefresh()..editor(_target("first"));
-    final abandoned = next.editor(_target("second"));
+    final next = bindings.beginRefresh()
+      ..editor(
+        fakeEditorTarget(
+          targetId: "first",
+          label: "first",
+          scope: "realm",
+          document: _document,
+          commit: (commit) async =>
+              MutationSuccess(revision: 2, value: commit.rootValue),
+        ),
+      );
+    final abandoned = next.editor(
+      fakeEditorTarget(
+        targetId: "second",
+        label: "second",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
     next.rollback();
     expect(first.workspace.closed, isFalse);
     expect(abandoned.workspace.closed, isTrue);
@@ -98,12 +150,38 @@ void main() {
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
     final initial = bindings.beginRefresh();
-    final clean = initial.editor(_target("clean"));
-    final dirty = initial.editor(_target("dirty"))
-      ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
+    final clean = initial.editor(
+      fakeEditorTarget(
+        targetId: "clean",
+        label: "clean",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
+    final dirty = initial.editor(
+      fakeEditorTarget(
+        targetId: "dirty",
+        label: "dirty",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    )..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
     initial.commit();
     final next = bindings.beginRefresh();
-    final replacement = next.editor(_target("replacement"));
+    final replacement = next.editor(
+      fakeEditorTarget(
+        targetId: "replacement",
+        label: "replacement",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
     next.commit();
     expect(clean.workspace.closed, isTrue);
     expect(dirty.workspace.closed, isFalse);
@@ -119,30 +197,64 @@ void main() {
     addTearDown(session.dispose);
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
-    final destinations = <_Destination>[];
+    final destinations = <FakeWorkDestination>[];
     bindings.destinationFor = (_) {
-      final value = _Destination();
+      final value = FakeWorkDestination();
       destinations.add(value);
       return value;
     };
     bindings.beginRefresh()
-      ..editor(_target("first"))
+      ..editor(
+        fakeEditorTarget(
+          targetId: "first",
+          label: "first",
+          scope: "realm",
+          document: _document,
+          commit: (commit) async =>
+              MutationSuccess(revision: 2, value: commit.rootValue),
+        ),
+      )
       ..commit();
     bindings.beginRefresh()
-      ..editor(_target("first"))
+      ..editor(
+        fakeEditorTarget(
+          targetId: "first",
+          label: "first",
+          scope: "realm",
+          document: _document,
+          commit: (commit) async =>
+              MutationSuccess(revision: 2, value: commit.rootValue),
+        ),
+      )
       ..commit();
     expect(destinations.first.disposed, isTrue);
     expect(destinations.last.disposed, isFalse);
     bindings.dispose();
     expect(destinations.last.disposed, isTrue);
   });
-  test("dispose rolls back an active refresh and rejects nested refreshes", () {
+  test("dispose closes the work of an active refresh", () {
     final session = ScopedWorkSession();
     addTearDown(session.dispose);
     final bindings = InspectionBindings(workspace: session);
-    final owner = bindings.beginRefresh().editor(_target("prospective"));
-    expect(bindings.beginRefresh, throwsStateError);
+    final prospective = bindings.beginRefresh().editor(
+      fakeEditorTarget(
+        targetId: "prospective",
+        label: "prospective",
+        scope: "realm",
+        document: _document,
+        commit: (commit) async =>
+            MutationSuccess(revision: 2, value: commit.rootValue),
+      ),
+    );
     bindings.dispose();
-    expect(owner.workspace.closed, isTrue);
+    expect(prospective.workspace.closed, isTrue);
+  });
+  test("a refresh cannot begin while another is active", () {
+    final session = ScopedWorkSession();
+    addTearDown(session.dispose);
+    final bindings = InspectionBindings(workspace: session);
+    addTearDown(bindings.dispose);
+    bindings.beginRefresh();
+    expect(bindings.beginRefresh, throwsStateError);
   });
 }

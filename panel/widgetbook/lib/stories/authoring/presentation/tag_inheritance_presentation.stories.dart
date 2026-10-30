@@ -4,163 +4,110 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/stories/authoring/presentation/realm_story.dart";
+import "package:widgetbook_workspace/support/story.dart";
 
-@widgetbook.UseCase(name: "Inheritance leaf", type: AuthoredResourceInspection)
-Widget tagInheritanceLeafUseCase(BuildContext context) =>
-    _story(context, tags: [_tag("leaf")], roots: const ["leaf"]);
-
-@widgetbook.UseCase(
-  name: "Inheritance unary chain",
-  type: AuthoredResourceInspection,
-)
-Widget tagInheritanceUnaryUseCase(BuildContext context) => _story(
-  context,
-  tags: [
-    _tag("direct", parents: const ["middle"]),
-    _tag("middle", parents: const ["leaf"]),
-    _tag("leaf"),
-  ],
-  roots: const ["direct"],
-);
-
-@widgetbook.UseCase(
-  name: "Inheritance branching",
-  type: AuthoredResourceInspection,
-)
-Widget tagInheritanceBranchingUseCase(BuildContext context) => _story(
-  context,
-  tags: [
-    _tag("direct", parents: const ["first", "second"]),
-    _tag("first"),
-    _tag("second"),
-  ],
-  roots: const ["direct"],
-);
-
-@widgetbook.UseCase(
-  name: "Inheritance shared ancestor",
-  type: AuthoredResourceInspection,
-)
-Widget tagInheritanceSharedUseCase(BuildContext context) => _story(
-  context,
-  tags: [
-    _tag("first_root", parents: const ["shared"]),
-    _tag("second_root", parents: const ["shared"]),
-    _tag("shared", parents: const ["first_leaf", "second_leaf"]),
-    _tag("first_leaf"),
-    _tag("second_leaf"),
-  ],
-  roots: const ["first_root", "second_root"],
-);
-
-@widgetbook.UseCase(
-  name: "Inheritance keyboard interaction",
-  type: AuthoredResourceInspection,
-)
-Widget tagInheritanceKeyboardUseCase(BuildContext context) => _story(
-  context,
-  tags: [
-    _tag("focusable_branch", parents: const ["first", "second"]),
-    _tag("first"),
-    _tag("second"),
-  ],
-  roots: const ["focusable_branch"],
-);
-
-@widgetbook.UseCase(
-  name: "Inheritance narrow layout",
-  type: AuthoredResourceInspection,
-)
-Widget tagInheritanceNarrowUseCase(BuildContext context) => _story(
-  context,
-  width: 400,
-  tags: [
-    _tag(
-      "a_moderately_long_direct_tag",
-      parents: const [
-        "a_moderately_long_first_parent",
-        "a_moderately_long_second_parent",
-      ],
-    ),
-    _tag("a_moderately_long_first_parent"),
-    _tag("a_moderately_long_second_parent"),
-  ],
-  roots: const ["a_moderately_long_direct_tag"],
-);
-
-@widgetbook.UseCase(
-  name: "Inheritance right to left",
-  type: AuthoredResourceInspection,
-)
-Widget tagInheritanceRightToLeftUseCase(BuildContext context) => _story(
-  context,
-  textDirection: TextDirection.rtl,
-  tags: [
-    _tag("direct", parents: const ["first", "second"]),
-    _tag("first"),
-    _tag("second"),
-  ],
-  roots: const ["direct"],
-);
-
-Widget _story(
-  BuildContext context, {
-  required List<Tag> tags,
-  required List<String> roots,
-  double width = 520,
-  TextDirection textDirection = TextDirection.ltr,
-}) {
-  final book = context.knobs.boolean(label: "Inspect Book", initialValue: true);
-  final inspectorWidth = context.knobs.double.slider(
+@widgetbook.UseCase(name: "Tag inheritance", type: AuthoredResourceInspection)
+Widget tagInheritanceUseCase(BuildContext context) {
+  final topology = context.knobs.object.dropdown(
+    label: "Topology",
+    options: _topologies.keys.toList(),
+    initialOption: "Branching",
+  );
+  final long = context.knobs.boolean(label: "Long names", initialValue: false);
+  final subject = context.knobs.object.segmented(
+    label: "Inspecting",
+    options: const ["Book", "Tag"],
+    initialOption: "Book",
+  );
+  final direction = context.knobs.object.segmented(
+    label: "Text direction",
+    options: const ["Left to right", "Right to left"],
+    initialOption: "Left to right",
+  );
+  final width = context.knobs.double.slider(
     label: "Inspector width",
-    initialValue: width,
+    initialValue: 520,
     min: 280,
     max: 700,
   );
-  return tagInheritanceStory(
-    tags: tags,
-    roots: roots.map(_tagRecordId).toList(),
-    book: book,
-    width: inspectorWidth,
-    textDirection: textDirection,
-  );
-}
-
-Widget tagInheritanceStory({
-  required List<Tag> tags,
-  required List<skir.ResourceId> roots,
-  bool book = true,
-  double width = 400,
-  TextDirection textDirection = TextDirection.ltr,
-}) => FakeApp(
-  child: Directionality(
-    textDirection: textDirection,
-    child: Center(
-      child: SizedBox(
-        width: width,
-        height: 760,
-        child: CompiledTagInheritanceInspector(
-          key: ValueKey(
-            Object.hash(book, Object.hashAll(tags), Object.hashAll(roots)),
+  final (tags, roots) = _topologies[topology]!(long);
+  return Story(
+    [
+      signedIn(ada, organization: acme),
+      realmServing(
+        compiledTagInheritanceDocument(
+          tags: tags,
+          roots: [for (final root in roots) root.tagId],
+        ),
+      ),
+    ],
+    at: PanelLocation.component(
+      Directionality(
+        textDirection: direction == "Right to left"
+            ? TextDirection.rtl
+            : TextDirection.ltr,
+        child: SizedBox(
+          width: width,
+          height: 760,
+          child: RealmEditingScene(
+            builder: (context, workspace, commands) => SingleChildScrollView(
+              child: AuthoredResourceInspection(
+                resource: subject == "Book"
+                    ? compiledInheritanceBookId
+                    : compiledInheritanceTagId,
+                workspace: workspace,
+                commands: commands,
+                commitPolicy: EditorCommitPolicy.applyResource,
+              ),
+            ),
           ),
-          document: compiledTagInheritanceDocument(tags: tags, roots: roots),
-          resource: book ? compiledInheritanceBookId : compiledInheritanceTagId,
         ),
       ),
     ),
-  ),
-);
+  );
+}
 
-Tag _tag(String id, {List<String> parents = const []}) => Tag(
-  tagId: _tagRecordId(id),
-  name: id,
-  color: switch (id) {
-    "direct" || "first_root" => const Color(0xffff527d),
-    "second" || "second_leaf" => const Color(0xff67d9ae),
-    _ => const Color(0xff69a9ff),
+/// Tag hierarchies by name: the tags and the roots the subject carries,
+/// with long names when asked.
+final _topologies = <String, (List<Tag>, List<Tag>) Function(bool long)>{
+  "Leaf": (long) {
+    final quest = _tag("Quest", long);
+    return ([quest], [quest]);
   },
-  parentIds: parents.map(_tagRecordId).toList(),
-  placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
-);
+  "Chain": (long) {
+    final region = _tag("Region", long);
+    final village = _tag("Village", long, parents: [region]);
+    final quest = _tag("Quest", long, parents: [village]);
+    return ([quest, village, region], [quest]);
+  },
+  "Branching": (long) {
+    final story = _tag("Story", long);
+    final region = _tag("Region", long);
+    final quest = _tag("Quest", long, parents: [story, region]);
+    return ([quest, story, region], [quest]);
+  },
+  "Shared ancestor": (long) {
+    final story = _tag("Story", long);
+    final region = _tag("Region", long);
+    final village = _tag("Village", long, parents: [story, region]);
+    final quest = _tag("Quest", long, parents: [village]);
+    final errand = _tag("Errand", long, parents: [village]);
+    return ([quest, errand, village, story, region], [quest, errand]);
+  },
+};
 
-skir.ResourceId _tagRecordId(String id) => skir.ResourceId(value: "tag:$id");
+Tag _tag(String name, bool long, {List<Tag> parents = const []}) {
+  final shown = long ? "$name of the northern highlands" : name;
+  return Tag(
+    tagId: skir.ResourceId(value: "tag:${name.snakeCase()}"),
+    name: shown,
+    color: switch (name) {
+      "Quest" || "Errand" => const Color(0xffff527d),
+      "Region" => const Color(0xff67d9ae),
+      _ => const Color(0xff69a9ff),
+    },
+    parentIds: [for (final parent in parents) parent.tagId],
+    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
+  );
+}

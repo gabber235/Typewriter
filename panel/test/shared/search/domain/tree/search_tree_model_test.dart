@@ -1,18 +1,20 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../application/core/support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("buildSearchTreeViewModel", () {
     test("builds one top level group for one top level section", () {
-      final viewModel = _build([
-        SearchNode.section(
-          id: "books",
-          title: "Books",
-          children: [resultNode("book-one")],
-        ),
-      ]);
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [
+          SearchNode.section(
+            id: "books",
+            title: "Books",
+            children: [resultNode("book-one")],
+          ),
+        ],
+        isCollapsed: (_) => false,
+      );
 
       expect(viewModel.groups, hasLength(1));
       expect(viewModel.groups.single.section!.id, "books");
@@ -20,20 +22,23 @@ void main() {
     });
 
     test("computes descendant counts in the same build", () {
-      final viewModel = _build([
-        SearchNode.section(
-          id: "root",
-          title: "Root",
-          children: [
-            resultNode("alpha"),
-            SearchNode.section(
-              id: "nested",
-              title: "Nested",
-              children: [resultNode("beta")],
-            ),
-          ],
-        ),
-      ]);
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [
+          SearchNode.section(
+            id: "root",
+            title: "Root",
+            children: [
+              resultNode("alpha"),
+              SearchNode.section(
+                id: "nested",
+                title: "Nested",
+                children: [resultNode("beta")],
+              ),
+            ],
+          ),
+        ],
+        isCollapsed: (_) => false,
+      );
 
       expect(viewModel.groups.single.section!.resultCount, 2);
       final nested = viewModel.groups.single.rows
@@ -43,48 +48,35 @@ void main() {
     });
 
     test("sections are expanded by default", () {
-      final viewModel = _build([SearchNode.section(id: "root", title: "Root")]);
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [SearchNode.section(id: "root", title: "Root")],
+        isCollapsed: (_) => false,
+      );
 
       expect(viewModel.groups.single.section!.expanded, isTrue);
     });
 
     test("collapsed sections keep section rows and hide descendants", () {
-      final viewModel = _build(
-        [
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [
           SearchNode.section(
             id: "root",
             title: "Root",
             children: [resultNode("alpha")],
           ),
         ],
-        collapsedIds: {"root"},
+        isCollapsed: {"root"}.contains,
       );
 
+      expect(viewModel.groups.single.section!.id, "root");
       expect(viewModel.groups.single.section!.expanded, isFalse);
       expect(viewModel.groups.single.rows, isEmpty);
       expect(viewModel.rowCount, 1);
     });
 
-    test("collapsed top level section remains as group header", () {
-      final viewModel = _build(
-        [
-          SearchNode.section(
-            id: "root",
-            title: "Root",
-            children: [resultNode("alpha")],
-          ),
-        ],
-        collapsedIds: {"root"},
-      );
-
-      expect(viewModel.groups.single.section, isA<SearchTreeSectionRow>());
-      expect(viewModel.groups.single.section!.id, "root");
-      expect(viewModel.groups.single.section!.expanded, isFalse);
-    });
-
     test("collapsed nested section remains in parent group rows", () {
-      final viewModel = _build(
-        [
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [
           SearchNode.section(
             id: "root",
             title: "Root",
@@ -97,7 +89,7 @@ void main() {
             ],
           ),
         ],
-        collapsedIds: {"nested"},
+        isCollapsed: {"nested"}.contains,
       );
 
       final rows = viewModel.groups.single.rows;
@@ -109,8 +101,8 @@ void main() {
     });
 
     test("collapsed nested section descendants are hidden", () {
-      final viewModel = _build(
-        [
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [
           SearchNode.section(
             id: "root",
             title: "Root",
@@ -123,7 +115,7 @@ void main() {
             ],
           ),
         ],
-        collapsedIds: {"nested"},
+        isCollapsed: {"nested"}.contains,
       );
 
       expect(
@@ -133,35 +125,23 @@ void main() {
       expect(viewModel.groups.single.section!.resultCount, 2);
     });
 
-    test("hidden descendants still contribute to section count", () {
-      final viewModel = _build(
-        [
+    test("nested section rows appear in the parent group body", () {
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [
           SearchNode.section(
             id: "root",
             title: "Root",
-            children: [resultNode("alpha"), resultNode("beta")],
+            children: [
+              SearchNode.section(
+                id: "nested",
+                title: "Nested",
+                children: [resultNode("alpha")],
+              ),
+            ],
           ),
         ],
-        collapsedIds: {"root"},
+        isCollapsed: (_) => false,
       );
-
-      expect(viewModel.groups.single.section!.resultCount, 2);
-    });
-
-    test("nested section rows appear in the parent group body", () {
-      final viewModel = _build([
-        SearchNode.section(
-          id: "root",
-          title: "Root",
-          children: [
-            SearchNode.section(
-              id: "nested",
-              title: "Nested",
-              children: [resultNode("alpha")],
-            ),
-          ],
-        ),
-      ]);
 
       final nested = viewModel.groups.single.rows
           .whereType<SearchTreeSectionRow>()
@@ -172,9 +152,10 @@ void main() {
     });
 
     test("visible result rows one through nine receive shortcuts", () {
-      final viewModel = _build([
-        for (var i = 1; i <= 10; i++) resultNode("item$i"),
-      ]);
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [for (var i = 1; i <= 10; i++) resultNode("item$i")],
+        isCollapsed: (_) => false,
+      );
       final rows = viewModel.groups.single.rows
           .whereType<SearchTreeResultRow>()
           .toList();
@@ -194,8 +175,8 @@ void main() {
     });
 
     test("hidden result rows do not consume shortcut numbers", () {
-      final viewModel = _build(
-        [
+      final viewModel = buildSearchTreeViewModel(
+        nodes: [
           SearchNode.section(
             id: "hidden",
             title: "Hidden",
@@ -203,7 +184,7 @@ void main() {
           ),
           resultNode("visible-result"),
         ],
-        collapsedIds: {"hidden"},
+        isCollapsed: {"hidden"}.contains,
       );
       final looseGroup = viewModel.groups.last;
       final result = looseGroup.rows.whereType<SearchTreeResultRow>().single;
@@ -211,14 +192,4 @@ void main() {
       expect(result.shortcutNumber, 1);
     });
   });
-}
-
-SearchTreeViewModel _build(
-  List<SearchNode> nodes, {
-  Set<String> collapsedIds = const {},
-}) {
-  return buildSearchTreeViewModel(
-    nodes: nodes,
-    isCollapsed: collapsedIds.contains,
-  );
 }

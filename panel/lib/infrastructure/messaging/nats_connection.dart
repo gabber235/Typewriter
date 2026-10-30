@@ -90,9 +90,7 @@ final class NatsConnectionOwner {
   }
 
   NatsClient _connect() {
-    final configuration = _settings.configuration(_sessionFactory());
-    debugPrint("nats: connecting to ${configuration.url}");
-    return _clientFactory(configuration);
+    return _clientFactory(_settings.configuration(_sessionFactory()));
   }
 
   void _checkOpen() {

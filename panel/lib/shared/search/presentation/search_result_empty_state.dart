@@ -25,15 +25,19 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      itemCount: 10,
-      physics: const NeverScrollableScrollPhysics(),
-      separatorBuilder: (context, index) =>
-          SizedBox(height: context.spacing.space4),
-      itemBuilder: (context, index) {
-        final height = (random.nextInt(12) + 8) * 5.0;
-        return ShimmerBox.rectangle(height: height);
-      },
+    return Semantics(
+      label: searchLoadingSemanticLabel,
+      container: true,
+      child: ListView.separated(
+        itemCount: 10,
+        physics: const NeverScrollableScrollPhysics(),
+        separatorBuilder: (context, index) =>
+            SizedBox(height: context.spacing.space4),
+        itemBuilder: (context, index) {
+          final height = (random.nextInt(12) + 8) * 5.0;
+          return ShimmerBox.rectangle(height: height);
+        },
+      ),
     );
   }
 }

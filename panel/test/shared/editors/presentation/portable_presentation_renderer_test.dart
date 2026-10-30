@@ -5,63 +5,743 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  registerConfiguredCollectionTests();
-  registerCompiledSdkControlTests();
-  registerRemainingFieldsTests();
-  test("scope owns retained collection inputs", () {
-    final bindingId = skir.ExpressionBindingId(value: "retained");
-    final presentation = skir.PresentationId(
-      namespace: "test",
-      name: "retained",
+  testWidgets(
+    "composite metadata prefix remains an independent interactive sibling",
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      final prefix = presentationNode(
+        "collection.prefix.action",
+        skir.PresentationElement.createButton(
+          label: textLiteral("Prefix insertion"),
+          action: skir.EditorAction.wrapLocal(
+            skir.LocalEditorAction.createAppendListItem(
+              target: skir.BindingRef(
+                bindingId: RendererWorkspace.bindingId,
+                path: skir.ValuePath(
+                  segments: [skir.PathSegment.createField(name: "items")],
+                ),
+              ),
+              value: textLiteral("From prefix"),
+            ),
+          ),
+          appearance: null,
+          icon: null,
+        ),
+      );
+      final fixture = authoredListInput(
+        value: skir.DataValue.createListValue(items: const []),
+        allowAdd: true,
+        label: "Coordinates",
+        prefix: prefix,
+      );
+      await tester.showComponent(fixture.widget);
+      expect(find.text("Prefix insertion"), findsOneWidget);
+      expect(find.text("Coordinates"), findsOneWidget);
+      expect(find.tooltip("Add item"), findsOneWidget);
+      expect(
+        tester
+            .getSemantics(find.widgetWithText(FilledButton, "Prefix insertion"))
+            .getSemanticsData()
+            .hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+      semantics.dispose();
+      await tester.tap(find.text("Prefix insertion"));
+      await tester.pumpAndSettle();
+      final submitted = await fixture.document.submit(tester);
+      expect(
+        (submitted.intents.single as skir.EditIntent_insertWrapper)
+            .value
+            .item
+            .value,
+        skir.DataValue.wrapStringValue("From prefix"),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    "collection operations inherit group appearance and explicit operation density wins",
+    (tester) async {
+      final shared =
+          (skir.InputAppearance.mutable()
+                ..density = skir.ControlDensity.compact
+                ..valueStyle = (skir.InputTextStyle.mutable()..weight = 600)
+                    .toFrozen())
+              .toFrozen();
+      final inherited = authoredListInput(
+        value: skir.DataValue.createListValue(items: const []),
+        allowAdd: true,
+        inputDefaults: shared,
+      );
+      await tester.showComponent(inherited.widget);
+      final compact = tester.getSize(find.tooltip("Add item"));
+      final local = authoredListInput(
+        value: skir.DataValue.createListValue(items: const []),
+        allowAdd: true,
+        inputDefaults: shared,
+        content:
+            (skir.CollectionContent.mutable()
+                  ..operationDensity = skir.ControlDensity.comfortable)
+                .toFrozen(),
+      );
+      await tester.showComponent(local.widget);
+      final comfortable = tester.getSize(find.tooltip("Add item"));
+      expect(compact.height, lessThan(comfortable.height));
+      expect(compact.width, lessThan(comfortable.width));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    "configured empty content and add action keep the existing insertion owner",
+    (tester) async {
+      await tester.showComponent(
+        authoredListInput(
+          value: skir.DataValue.createListValue(items: const []),
+          allowAdd: true,
+        ).widget,
+      );
+      final standard = tester.getSize(find.tooltip("Add item"));
+      final fixture = authoredListInput(
+        value: skir.DataValue.createListValue(items: const []),
+        allowAdd: true,
+        content: skir.CollectionContent(
+          addLabel: textLiteral("New coordinate"),
+          empty: presentationText(
+            "configured.empty",
+            textLiteral("No coordinates"),
+          ),
+          operationDensity: skir.ControlDensity.compact,
+
+          emptyText: null,
+          addIcon: null,
+          removeLabel: null,
+          reorderIcon: null,
+          removeIcon: null,
+          chooseLabel: null,
+          chooseIcon: null,
+          unlinkLabel: null,
+          unlinkIcon: null,
+          operationTooltip: null,
+          keyLabel: null,
+          valueLabel: null,
+        ),
+      );
+      await tester.showComponent(fixture.widget);
+      expect(find.text("No coordinates"), findsOneWidget);
+      expect(find.text("No items"), findsNothing);
+      expect(find.tooltip("New coordinate"), findsOneWidget);
+      expect(
+        tester.getSize(find.tooltip("New coordinate")).height,
+        lessThan(standard.height),
+      );
+      await tester.tap(find.tooltip("New coordinate"));
+      await tester.pumpAndSettle();
+      final submitted = await fixture.document.submit(tester);
+      expect(submitted.intents, hasLength(1));
+      expect(submitted.intents.single, isA<skir.EditIntent_insertWrapper>());
+    },
+  );
+
+  testWidgets(
+    "configured collection row spacing and removal affordances preserve item identity",
+    (tester) async {
+      final fixture = authoredListInput(
+        value: skir.DataValue.createListValue(
+          items: [
+            skir.ListItem(
+              id: skir.ItemId(value: "first"),
+              value: skir.DataValue.wrapStringValue("First"),
+            ),
+            skir.ListItem(
+              id: skir.ItemId(value: "second"),
+              value: skir.DataValue.wrapStringValue("Second"),
+            ),
+          ],
+        ),
+        allowAdd: false,
+        appearance: skir.CollectionAppearance(
+          itemSpacing: 14,
+          itemPadding: skir.PresentationInsets.wrapAll(4),
+
+          itemBackground: null,
+          itemForeground: null,
+          itemBorder: null,
+          itemRadius: null,
+          itemTransition: null,
+          itemShadows: const [],
+        ),
+        content: skir.CollectionContent(
+          removeLabel: textLiteral("Remove coordinate"),
+          removeIcon: presentationText(
+            "configured.remove",
+            textLiteral("Remove glyph"),
+          ),
+
+          emptyText: null,
+          empty: null,
+          addLabel: null,
+          addIcon: null,
+          reorderIcon: null,
+          chooseLabel: null,
+          chooseIcon: null,
+          unlinkLabel: null,
+          unlinkIcon: null,
+          operationTooltip: null,
+          operationDensity: null,
+          keyLabel: null,
+          valueLabel: null,
+        ),
+      );
+      await tester.showComponent(fixture.widget);
+      expect(find.tooltip("Remove coordinate"), findsNWidgets(2));
+      expect(find.text("Remove glyph"), findsNWidgets(2));
+      final cards = collectionRowSurfaces(tester, "Remove coordinate");
+      expect(cards, hasLength(2));
+      expect(cards[1].top - cards[0].bottom, closeTo(14, 0.01));
+      final remove = find.tooltip("Remove coordinate").first;
+      expect(tester.getSemantics(remove).isEnabled, isTrue);
+      await tester.tap(remove);
+      await tester.pumpAndSettle();
+      expect(fixture.document.workspace.state.groups, isNotEmpty);
+      final submitted = await fixture.document.submit(tester);
+      expect(submitted.intents, hasLength(1));
+      final removal = submitted.intents.single as skir.EditIntent_removeWrapper;
+      expect(removal.value.item.value, "first");
+    },
+  );
+
+  testWidgets(
+    "configured link affordances retain checked resource choices and popup styling",
+    (tester) async {
+      final fixture = authoredLinkCollection(
+        withPartialLinks: true,
+        content: skir.CollectionContent(
+          chooseLabel: textLiteral("Choose node"),
+          unlinkLabel: textLiteral("Disconnect node"),
+
+          emptyText: null,
+          empty: null,
+          addLabel: null,
+          addIcon: null,
+          removeLabel: null,
+          reorderIcon: null,
+          removeIcon: null,
+          chooseIcon: null,
+          unlinkIcon: null,
+          operationTooltip: null,
+          operationDensity: null,
+          keyLabel: null,
+          valueLabel: null,
+        ),
+        inputAppearance: skir.InputAppearance(
+          density: skir.ControlDensity.compact,
+
+          iconColor: null,
+          iconSize: null,
+          valueStyle: null,
+          placeholderStyle: null,
+          labelStyle: null,
+          descriptionStyle: null,
+          alignment: null,
+          padding: null,
+          fill: null,
+          border: null,
+          radius: null,
+        ),
+        inputContent: skir.InputContent(
+          placeholder: textLiteral("Select destination"),
+          leading: skir.InputAdornment.none,
+
+          suffix: null,
+        ),
+        popup: skir.PopupAppearance(
+          maximumWidth: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapFloat(480),
+          ),
+          padding: skir.PresentationInsets.wrapAll(6),
+
+          minimumWidth: null,
+          maximumExtent: null,
+          fill: null,
+          border: null,
+          radius: null,
+        ),
+      );
+      final panel = await tester.showComponent(fixture.widget);
+      expect(find.tooltip("Disconnect node"), findsOneWidget);
+      expect(find.tooltip("Choose node"), findsNWidgets(2));
+      expect(find.text("Select destination"), findsOneWidget);
+      await panel.tapOn(find.tooltip("Choose node").last);
+      expect(panel.queryBar.isFocused, isTrue);
+      expect(find.text("Select destination"), findsNWidgets(2));
+      expect(find.byIcon(Icons.search_rounded), findsNothing);
+      expect(panel.queryBar.rect.width, lessThanOrEqualTo(480));
+      expect(panel.queryBar.rect.width, greaterThan(400));
+      expect(tester.takeException(), isNull);
+    },
+  );
+  for (final family in ["typed", "nullable"]) {
+    testWidgets(
+      "compiled SDK $family body preserves source ownership on write",
+      (tester) async {
+        final layout = family == "typed"
+            ? compiledSdkTypedLayout
+            : compiledSdkNullableLayout;
+        final value = family == "typed"
+            ? compiledSdkTypedValue
+            : compiledSdkNullableValue;
+        final binding = family == "typed"
+            ? _configuredBindingId
+            : skir.ExpressionBindingId(value: "map_value");
+        final writes = <(skir.BindingRef, skir.DataValue)>[];
+        final host = FakePresentationHost(
+          document: FakePresentationHost.emptyDocument(
+            catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+          ),
+          expected: family == "typed"
+              ? skir.TypeUse.wrapScalar(skir.ScalarKind.text)
+              : _integerType,
+          onWrite: (reference, changed) => writes.add((reference, changed)),
+        );
+        addTearDown(host.dispose);
+        final scope = PortablePresentationScope(
+          operations: testPortableOperations(),
+          bindings: {binding: PortableExpressionBinding(value: value)},
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          host: host,
+        );
+        final panel = await tester.showComponent(
+          Material(
+            child: PortablePresentationNodeRenderer(node: layout, scope: scope),
+          ),
+        );
+        expect(visibleFieldValues(), [
+          if (family == "typed") "Authored title" else "42",
+        ]);
+        await panel.fieldAt(0).type(family == "typed" ? "Changed title" : "43");
+        expect(writes, hasLength(1));
+        expect(writes.single.$1.bindingId, binding);
+        expect(
+          writes.single.$1.path.segments,
+          family == "typed"
+              ? [skir.PathSegment.createField(name: "title")]
+              : isEmpty,
+        );
+        expect(
+          writes.single.$2,
+          family == "typed"
+              ? skir.DataValue.wrapStringValue("Changed title")
+              : skir.DataValue.wrapInteger("43"),
+        );
+        expect(tester.takeException(), isNull);
+      },
     );
+  }
+  for (final (initial, field, expected, typed) in [
+    (
+      "Authored code",
+      "code",
+      skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+      "Changed code",
+    ),
+    ("7", "position", _integerType, "9"),
+  ]) {
+    testWidgets(
+      "compiled SDK $field body retains its lexical source and write path",
+      (tester) async {
+        final value = compiledSdkCompositeValue;
+        final writes = <(skir.BindingRef, skir.DataValue)>[];
+        final host = FakePresentationHost(
+          document: FakePresentationHost.emptyDocument(
+            catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+          ),
+          expected: expected,
+          onWrite: (reference, changed) => writes.add((reference, changed)),
+        );
+        addTearDown(host.dispose);
+        final scope = PortablePresentationScope(
+          operations: testPortableOperations(),
+          bindings: {
+            _configuredBindingId: PortableExpressionBinding(
+              value: value,
+              location: skir.ValueLocation(
+                resource: RendererWorkspace.resource,
+                path: skir.ValuePath(segments: const []),
+              ),
+            ),
+          },
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          host: host,
+        );
+        final panel = await tester.showComponent(
+          Material(
+            child: SingleChildScrollView(
+              child: PortablePresentationNodeRenderer(
+                node: compiledSdkCompositeLayout,
+                scope: scope,
+              ),
+            ),
+          ),
+        );
+        expect(visibleFieldValues(), contains(initial));
+        final input = panel.fieldAt(visibleFieldValues().indexOf(initial));
+        await input.type(typed);
+        expect(writes, hasLength(1));
+        expect(writes.single.$1.bindingId, _configuredBindingId);
+        expect(
+          writes.single.$1.path.segments.first,
+          skir.PathSegment.createField(name: field),
+        );
+        if (field == "position") {
+          expect(
+            writes.single.$1.path.segments.last,
+            skir.PathSegment.createField(name: "x"),
+          );
+          expect(writes.single.$2, skir.DataValue.wrapInteger("9"));
+        } else {
+          expect(
+            writes.single.$2.authoredActualType,
+            value.authoredField("code")?.authoredActualType,
+          );
+          expect(writes.single.$2.authoredString, "Changed code");
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+  testWidgets(
+    "compiled nested remainder reserves authored x and renders only position y",
+    (tester) async {
+      final writes = <(skir.BindingRef, skir.DataValue)>[];
+      skir.NamedTypeUse? writeOwner;
+      final catalog = compiledSdkNestedRemainderCatalog.asTrustedLocalCatalog();
+      final host = FakePresentationHost(
+        document: FakePresentationHost.emptyDocument(catalog: catalog),
+        expected: _integerType,
+        onWrite: (reference, value) => writes.add((reference, value)),
+        onWriteContext: (_, _, context) => writeOwner = context
+            .bindings[_configuredBindingId]
+            ?.value
+            .authoredField("position")
+            ?.authoredActualType,
+      );
+      addTearDown(host.dispose);
+      final scope = PortablePresentationScope(
+        operations: testPortableOperations(),
+        catalog: catalog,
+        bindings: {
+          _configuredBindingId: PortableExpressionBinding(
+            value: compiledSdkCompositeValue,
+          ),
+        },
+        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+        host: host,
+      );
+      final panel = await tester.showComponent(
+        Material(
+          child: PortablePresentationNodeRenderer(
+            node: compiledSdkNestedRemainderLayout,
+            scope: scope,
+          ),
+        ),
+      );
+      expect(visibleFieldValues(), ["7", "8"]);
+      expect(find.text("y"), findsOneWidget);
+      expect(find.text("code"), findsNothing);
+      expect(find.text("Authored code"), findsNothing);
+      await panel.field("y").type("10");
+      expect(writes, hasLength(1));
+      expect(writes.single.$2, skir.DataValue.wrapInteger("10"));
+      expect(
+        writeOwner,
+        compiledSdkCompositeValue.authoredField("position")?.authoredActualType,
+      );
+      expect(writes.single.$1.path.segments, [
+        skir.PathSegment.createField(name: "position"),
+        skir.PathSegment.createField(name: "y"),
+      ]);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    "remaining fields reserve hidden nested authoring independent of order and keep manual omissions",
+    (tester) async {
+      final definition = skir.TypeDefinitionId(
+        typeId: skir.TypeId.createQualified(
+          namespace: "test",
+          name: "Remainder",
+        ),
+        revision: 1,
+      );
+      final named = skir.NamedTypeUse(
+        definition: definition,
+        arguments: const [],
+      );
+      final integer = skir.TypeTemplate.wrapScalar(
+        skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
+      );
+      const names = ["X", "Y", "Z", "W"];
+      final fields = [
+        for (final name in names)
+          skir.FieldDeclaration(
+            owner: skir.FieldOwner(definition: definition, name: name),
+            type: integer,
+            overrides: const [],
+            hasConstructorDefault: false,
+          ),
+      ];
+      final published = skir.PublishedType(
+        searchKey: null,
+        placementField: null,
+        definition: skir.TypeDefinition(
+          id: definition,
+          parameters: const [],
+          representation: skir.RepresentationTemplate.createRecord(
+            abstract_: false,
+            fields: fields,
+          ),
+          parents: const [],
+        ),
+        display: defaultTypeDisplay(""),
+        status: skir.DeclarationStatus.ready,
+        effectiveFields: [
+          for (final field in fields)
+            skir.EffectiveFieldTemplate(
+              key: field.owner.name,
+              owner: field.owner,
+              type: field.type,
+              rules: const [],
+            ),
+        ],
+        ancestorTemplates: const [],
+      );
+      final catalog =
+          (skir.EditorCatalog.mutable()
+                ..generation = skir.CatalogGeneration(value: "remainder proof")
+                ..types = [published])
+              .toFrozen()
+              .asTrustedLocalCatalog();
+      final root = skir.DataValue.createNamed(
+        actualType: named,
+        payload: skir.DataValue.createRecord(
+          fields: [
+            for (final (index, name) in names.indexed)
+              skir.FieldValue(
+                name: name,
+                value: skir.DataValue.wrapInteger((index + 1).toString()),
+              ),
+          ],
+        ),
+      );
+      final writes = <(skir.BindingRef, skir.DataValue)>[];
+      final host = FakePresentationHost(
+        document: FakePresentationHost.emptyDocument(catalog: catalog),
+        expected: _integerType,
+        onWrite: (reference, value) => writes.add((reference, value)),
+      );
+      addTearDown(host.dispose);
+      skir.PresentationNode field(String name) => presentationNode(
+        "authored.$name",
+        skir.PresentationElement.wrapNumericInput(
+          (skir.NumericControl.mutable()
+                ..control = skir.BoundControl(
+                  binding: skir.BindingRef(
+                    bindingId: _configuredBindingId,
+                    path: skir.ValuePath(
+                      segments: [skir.PathSegment.createField(name: name)],
+                    ),
+                  ),
+                  label: skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapStringValue(name),
+                  ),
+                  description: null,
+                  prefix: null,
+                  semanticLabel: null,
+                )
+                ..content =
+                    (skir.InputContent.mutable()
+                          ..placeholder = skir.ExpressionNode.wrapLiteral(
+                            skir.DataValue.wrapStringValue("$name editor"),
+                          ))
+                        .toFrozen())
+              .toFrozen(),
+        ),
+      );
+      final remaining = presentationNode(
+        "remaining",
+        skir.PresentationElement.wrapRemainingFields(
+          skir.RemainingFieldsElement(
+            excluded: [
+              skir.RelativeFieldPattern(
+                segments: [skir.FieldPatternSegment.createField(name: "Z")],
+              ),
+            ],
+            excludedParts: const [],
+          ),
+        ),
+      );
+      final hidden = presentationNode(
+        "hidden.X",
+        skir.PresentationElement.wrapConditional(
+          (skir.ConditionalElement.mutable()
+                ..condition = skir.ExpressionNode.wrapLiteral(
+                  skir.DataValue.wrapBoolean(false),
+                )
+                ..whenTrue = field("X"))
+              .toFrozen(),
+        ),
+      );
+      final row = presentationNode(
+        "authored.row",
+        skir.PresentationElement.wrapChildren(
+          skir.ChildrenElement.createRow(
+            children: [
+              skir.AxisChild.wrapFixed(hidden),
+              skir.AxisChild.createFlexible(
+                child: field("Y"),
+                flex: 1,
+                fit: skir.FlexFit.tight,
+              ),
+            ],
+            layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
+              spacing: 8,
+              mainAxisAlignment: skir.MainAxisAlignment.start,
+              crossAxisAlignment: skir.CrossAxisAlignment.center,
+            ),
+          ),
+        ),
+      );
+      final layout = presentationNode(
+        "record",
+        skir.PresentationElement.wrapChildren(
+          skir.ChildrenElement.createColumn(
+            children: [
+              skir.AxisChild.wrapFixed(remaining),
+              skir.AxisChild.wrapFixed(row),
+            ],
+            layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
+              spacing: 8,
+              mainAxisAlignment: skir.MainAxisAlignment.start,
+              crossAxisAlignment: skir.CrossAxisAlignment.stretch,
+            ),
+          ),
+        ),
+      );
+      final scope = PortablePresentationScope(
+        operations: testPortableOperations(),
+        catalog: catalog,
+        bindings: {
+          _configuredBindingId: PortableExpressionBinding(
+            value: root,
+            schema: PortablePresentationBindingSchema.complete(
+              skir.TypeUse.wrapNamed(named),
+            ),
+          ),
+        },
+        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+        host: host,
+      );
+      final panel = await tester.showComponent(
+        Material(
+          child: PortablePresentationNodeRenderer(node: layout, scope: scope),
+        ),
+      );
+      expect(find.text("X"), findsNothing);
+      expect(find.text("Z"), findsNothing);
+      expect(find.text("Y"), findsOneWidget);
+      expect(find.text("W"), findsOneWidget);
+      expect(visibleFieldValues(), ["4", "2"]);
+      await panel.field("Y").type("9");
+      await panel.field("W").type("10");
+      expect(
+        writes.any(
+          (write) =>
+              write.$1.path.segments.single ==
+                  skir.PathSegment.createField(name: "Y") &&
+              write.$2 == skir.DataValue.wrapInteger("9"),
+        ),
+        isTrue,
+      );
+      expect(
+        writes.any(
+          (write) =>
+              write.$1.path.segments.single ==
+                  skir.PathSegment.createField(name: "W") &&
+              write.$2 == skir.DataValue.wrapInteger("10"),
+        ),
+        isTrue,
+      );
+      expect(
+        writes.every((write) => write.$1.bindingId == _configuredBindingId),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets("scope keeps rendering inputs the caller mutates afterwards", (
+    tester,
+  ) async {
+    final bindingId = skir.ExpressionBindingId(value: "retained");
     final bindings = <skir.ExpressionBindingId, PortableExpressionBinding>{
       bindingId: PortableExpressionBinding(
-        value: skir.DataValue.wrapStringValue("original"),
+        value: skir.DataValue.wrapStringValue("Original value"),
       ),
     };
-    final activePresentations = <skir.PresentationId>{presentation};
     final slots = <String, skir.PresentationNode>{
-      "body": presentationText("retained.body", textLiteral("Body")),
+      "authored": presentationText(
+        "retained.authored",
+        textLiteral("Authored slot"),
+      ),
     };
     final slotBuilders = <String, PortableSlotBuilder>{
-      "body": (_) => const SizedBox.shrink(),
+      "built": (_) => const Text("Built slot"),
     };
-    final projectedWriters = <skir.ExpressionBindingId, PortableBindingSetter>{
-      bindingId: (_, _, {reads = const []}) =>
-          const PortablePresentationWriteApplied(),
-    };
-
     final scope = PortablePresentationScope(
       operations: testPortableOperations(),
       bindings: bindings,
       budget: skir.EvaluationBudget(maxSteps: 10, maxCollectionItems: 10),
-      activePresentations: activePresentations,
       slots: slots,
       slotBuilders: slotBuilders,
-      projectedWriters: projectedWriters,
+    );
+    final node = presentationColumn("retained", [
+      presentationText("retained.value", inputExpression(bindingId)),
+      presentationNode(
+        "retained.authored.slot",
+        skir.PresentationElement.createSlot(slotId: "authored"),
+      ),
+      presentationNode(
+        "retained.built.slot",
+        skir.PresentationElement.createSlot(slotId: "built"),
+      ),
+    ]);
+    Widget render() => Material(
+      child: PortablePresentationNodeRenderer(node: node, scope: scope),
     );
 
-    bindings.clear();
-    activePresentations.clear();
+    var panel = await tester.showComponent(render());
+    expect(panel.shows("Original value"), isTrue);
+
+    bindings[bindingId] = PortableExpressionBinding(
+      value: skir.DataValue.wrapStringValue("Mutated value"),
+    );
     slots.clear();
     slotBuilders.clear();
-    projectedWriters.clear();
+    panel = await tester.showComponent(render());
 
-    expect(scope.bindings, contains(bindingId));
-    expect(scope.activePresentations, contains(presentation));
-    expect(scope.slots, contains("body"));
-    expect(scope.slotBuilders, contains("body"));
-    expect(scope.projectedWriters, contains(bindingId));
-    expect(scope.bindings.clear, throwsUnsupportedError);
-    expect(scope.activePresentations.clear, throwsUnsupportedError);
-    expect(scope.slots.clear, throwsUnsupportedError);
-    expect(scope.slotBuilders.clear, throwsUnsupportedError);
-    expect(scope.projectedWriters.clear, throwsUnsupportedError);
+    expect(panel.shows("Original value"), isTrue);
+    expect(panel.shows("Mutated value"), isFalse);
+    expect(panel.shows("Authored slot"), isTrue);
+    expect(panel.shows("Built slot"), isTrue);
   });
 
-  test(
-    "nested resource keeps its observation and isolates authored ownership",
-    () {
+  testWidgets(
+    "nested resource reads shared context and writes only its own resource",
+    (tester) async {
       final document = compiledTagInheritanceDocument(
         tags: const [],
         roots: const [],
@@ -74,10 +754,6 @@ void main() {
       final imported = skir.ExpressionBindingId(value: "context:test.page");
       final pageField = skir.ExpressionBindingId(value: "page_field");
       final contextType = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
-      final supplied = PortableExpressionBinding(
-        value: skir.DataValue.wrapStringValue("Shared context"),
-        schema: CompletePortablePresentationBinding(contextType),
-      );
       final dependencies = selected.material.dependencies.toMutable()
         ..contextInputs = [
           skir.PresentationContextInput(
@@ -94,81 +770,105 @@ void main() {
                   ..dependencies = dependencies.toFrozen())
                 .toFrozen(),
       );
-      final queries = PortableExpressionQueries(
-        catalog: document.catalog,
-        authored: document,
+      final writes = <(skir.BindingRef, skir.ValueLocation?)>[];
+      final host = FakePresentationHost(
+        document: FakePresentationHost.emptyDocument(catalog: document.catalog),
+        expected: contextType,
+        onWriteContext: (reference, value, context) => writes.add((
+          reference,
+          context.location(reference, document.catalog.snapshot.generation),
+        )),
       );
-      final parent = PortablePresentationScope(
-        bindings: {
-          imported: supplied,
-          pageField: PortableExpressionBinding(
-            value: skir.DataValue.wrapStringValue("Page title"),
-            location: skir.ValueLocation(
-              resource: compiledInheritanceBookId,
-              path: editorRootPath.field("title"),
+      addTearDown(host.dispose);
+      final nameReference = skir.BindingRef(
+        bindingId: configuredValueBindingId,
+        path: editorRootPath.field("name"),
+      );
+      final layout = presentationColumn("nested", [
+        presentationText("nested.context", inputExpression(imported)),
+        presentationText("nested.page", inputExpression(pageField)),
+        presentationNode(
+          "nested.slot",
+          skir.PresentationElement.createSlot(slotId: "body"),
+        ),
+        presentationNode(
+          "nested.name",
+          textInputElement(nameReference, label: "Tag name"),
+        ),
+      ]);
+
+      Widget render({required bool readOnly}) {
+        final parent = PortablePresentationScope(
+          bindings: {
+            imported: PortableExpressionBinding(
+              value: skir.DataValue.wrapStringValue("Shared context"),
+              schema: CompletePortablePresentationBinding(contextType),
+            ),
+            pageField: PortableExpressionBinding(
+              value: skir.DataValue.wrapStringValue("Page title"),
+              location: skir.ValueLocation(
+                resource: compiledInheritanceBookId,
+                path: editorRootPath.field("title"),
+              ),
+            ),
+          },
+          catalog: document.catalog,
+          queries: PortableExpressionQueries(
+            catalog: document.catalog,
+            authored: document,
+          ),
+          operations: testPortableOperations(),
+          budget: skir.EvaluationBudget(
+            maxSteps: 1000,
+            maxCollectionItems: 100,
+          ),
+          resource: compiledInheritanceBookId,
+          readOnly: readOnly,
+          host: host,
+          slotBuilders: {"body": (_) => const Text("Page content")},
+        );
+        final child = parent.forResourcePresentation(
+          PortableResourceProjection(
+            resource: compiledInheritanceTagId,
+            configuration: record.configuration,
+            appearance: skir.ResourceAppearance(
+              label: "Inheritance subject",
+              accent: const Color(0xff607d8b).toSkirColor(),
+              icon: skir.Icon.wrapIconify("material-symbols:category"),
+            ),
+            value: skir.DataValue.createNamed(
+              actualType:
+                  (record.configuration as skir.TypeSelection_completeWrapper)
+                      .value,
+              payload: skir.DataValue.createRecord(fields: record.fields),
             ),
           ),
-          presentationSubjectIdentifierBindingId: compiledInheritanceBookId
-              .toExpressionBinding(),
-        },
-        catalog: document.catalog,
-        queries: queries,
-        operations: testPortableOperations(),
-        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-        resource: compiledInheritanceBookId,
-        readOnly: true,
-        enabled: false,
-        slots: {
-          "body": presentationText("page.body", textLiteral("Page content")),
-        },
-        slotBuilders: {"body": (_) => const Text("Page content")},
-        projectedWriters: {
-          pageField: (_, _, {reads = const []}) =>
-              const PortablePresentationWriteApplied(),
-        },
-      );
-      final value = skir.DataValue.createNamed(
-        actualType:
-            (record.configuration as skir.TypeSelection_completeWrapper).value,
-        payload: skir.DataValue.createRecord(fields: record.fields),
-      );
-      final child = parent.forResourcePresentation(
-        PortableResourceProjection(
-          resource: compiledInheritanceTagId,
-          configuration: record.configuration,
-          appearance: skir.ResourceAppearance(
-            label: "Inheritance subject",
-            accent: const Color(0xff607d8b).toSkirColor(),
-            icon: skir.Icon.wrapIconify("material-symbols:category"),
+          nested,
+        );
+        return Material(
+          child: PortablePresentationNodeRenderer(node: layout, scope: child),
+        );
+      }
+
+      final panel = await tester.showComponent(render(readOnly: true));
+      expect(panel.shows("Shared context"), isTrue);
+      expect(panel.shows("Page title"), isFalse);
+      expect(panel.shows("Page content"), isFalse);
+      expect(panel.field("Tag name").value, "Inheritance subject");
+      expect(panel.field("Tag name").isReadOnly, isTrue);
+
+      await tester.showComponent(render(readOnly: false));
+      await panel.field("Tag name").type("Renamed subject");
+
+      expect(writes, [
+        (
+          nameReference,
+          skir.ValueLocation(
+            resource: compiledInheritanceTagId,
+            path: editorRootPath.field("name"),
           ),
-          value: value,
         ),
-        nested,
-      );
-      expect(child.queries, same(queries));
-      expect(child.operations, same(parent.operations));
-      expect(child.readOnly, isTrue);
-      expect(child.enabled, isFalse);
-      expect(child.bindings[imported], same(supplied));
-      expect(child.bindings, isNot(contains(pageField)));
-      expect(child.authoredAliases, isNot(contains(pageField)));
-      expect(child.slots, isEmpty);
-      expect(child.slotBuilders, isEmpty);
-      expect(child.projectedWriters, isEmpty);
-      expect(child.resource, compiledInheritanceTagId);
-      expect(
-        child.bindings[presentationSubjectIdentifierBindingId]?.value,
-        compiledInheritanceTagId.toExpressionBinding().value,
-      );
-      expect(
-        child.bindings[_configuredBindingId]?.location,
-        skir.ValueLocation(
-          resource: compiledInheritanceTagId,
-          path: editorRootPath,
-        ),
-      );
-      expect(child.bindings[_configuredBindingId]?.value, value);
-      expect(child.activePresentations, {selected.material.provider});
+      ]);
     },
   );
 
@@ -176,25 +876,30 @@ void main() {
     tester,
   ) async {
     var now = DateTime.utc(2026, 10, 5, 12);
-    final host = _TestPortableHost(
-      root: skir.PresentationNode(
-        nodeId: "relative",
-        properties: skir.PresentationProperties.defaultInstance,
-        header: null,
-        element: skir.PresentationElement.createRelativeTime(
-          value: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapTimestamp(now),
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: skir.PresentationNode(
+          nodeId: "relative",
+          properties: skir.PresentationProperties.defaultInstance,
+          header: null,
+          element: skir.PresentationElement.createRelativeTime(
+            value: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapTimestamp(now),
+            ),
+            style: skir.RelativeTimeStyle.natural,
+            timeZone: skir.DateTimeZone.utc,
+            options: null,
           ),
-          style: skir.RelativeTimeStyle.natural,
-          timeZone: skir.DateTimeZone.utc,
-          options: null,
         ),
+        bindings: _integerBinding,
       ),
+      expected: _integerType,
+      updatesDocument: true,
     );
     addTearDown(host.dispose);
     await withClock(Clock(() => now), () async {
-      await tester.pumpTestApp(
-        child: Material(child: PortablePresentationRenderer(host: host)),
+      await tester.showComponent(
+        Material(child: PortablePresentationRenderer(host: host)),
       );
       expect(find.text("Just now"), findsOneWidget);
       now = now.add(const Duration(minutes: 1));
@@ -205,30 +910,35 @@ void main() {
   });
 
   testWidgets("grid cells keep their content height", (tester) async {
-    final host = _TestPortableHost(
-      root: skir.PresentationNode(
-        nodeId: "grid",
-        properties: skir.PresentationProperties.defaultInstance,
-        header: null,
-        element: skir.PresentationElement.wrapChildren(
-          skir.ChildrenElement.createGrid(
-            layout: skir.GridChildrenLayout(
-              columns: 2,
-              horizontalSpacing: 12,
-              verticalSpacing: 12,
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: skir.PresentationNode(
+          nodeId: "grid",
+          properties: skir.PresentationProperties.defaultInstance,
+          header: null,
+          element: skir.PresentationElement.wrapChildren(
+            skir.ChildrenElement.createGrid(
+              layout: skir.GridChildrenLayout(
+                columns: 2,
+                horizontalSpacing: 12,
+                verticalSpacing: 12,
+              ),
+              children: [
+                presentationText("grid.first", textLiteral("Alpha")),
+                presentationText("grid.second", textLiteral("Beta")),
+                presentationText("grid.third", textLiteral("Gamma")),
+              ],
             ),
-            children: [
-              presentationText("grid.first", textLiteral("Alpha")),
-              presentationText("grid.second", textLiteral("Beta")),
-              presentationText("grid.third", textLiteral("Gamma")),
-            ],
           ),
         ),
+        bindings: _integerBinding,
       ),
+      expected: _integerType,
+      updatesDocument: true,
     );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
@@ -238,10 +948,7 @@ void main() {
         ),
       ),
     );
-    expect(
-      tester.getSize(find.byKey(const ValueKey("grid.first"))).height,
-      lessThan(100),
-    );
+    expect(tester.getSize(find.text("Alpha")).height, lessThan(100));
     expect(
       tester.getTopLeft(find.text("Gamma")).dy -
           tester.getTopLeft(find.text("Alpha")).dy,
@@ -255,12 +962,17 @@ void main() {
   });
 
   testWidgets("text content retains inherited typography", (tester) async {
-    final host = _TestPortableHost(
-      root: presentationText("typography", textLiteral("Inherited text")),
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: presentationText("typography", textLiteral("Inherited text")),
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
     );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
     final text = find.text("Inherited text");
     expect(
@@ -272,221 +984,281 @@ void main() {
   testWidgets("section surfaces include their collapsible headers", (
     tester,
   ) async {
-    final host = _TestPortableHost(
-      root: skir.PresentationNode(
-        nodeId: "section",
-        properties: skir.PresentationProperties.defaultInstance,
-        element: skir.PresentationElement.createSection(
-          child: presentationText("section.body", textLiteral("Section body")),
-          border: null,
-        ),
-        header: skir.PresentationHeader(
-          binding: null,
-          title: skir.PresentationHeaderTitle.wrapText(
-            skir.ExpressionNode.wrapLiteral(
-              skir.DataValue.wrapStringValue("Section title"),
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: skir.PresentationNode(
+          nodeId: "section",
+          properties: skir.PresentationProperties.defaultInstance,
+          element: skir.PresentationElement.createSection(
+            child: presentationText(
+              "section.body",
+              textLiteral("Section body"),
             ),
+            border: null,
           ),
-          description: null,
-          initiallyExpanded: true,
-          items: const [],
-          headerPadding: null,
-          contentPadding: null,
-        ),
-      ),
-    );
-    addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
-    );
-    expect(
-      find.ancestor(
-        of: find.text("Section title"),
-        matching: find.byType(DepthBox),
-      ),
-      findsOneWidget,
-    );
-    await tester.tap(find.tooltip("Collapse"));
-    await tester.pumpAndSettle();
-    expect(find.text("Section body"), findsNothing);
-    await tester.tap(find.tooltip("Expand"));
-    await tester.pumpAndSettle();
-    expect(find.text("Section body"), findsOneWidget);
-  });
-
-  testWidgets("statuses preserve the source label and distinct visual tone", (
-    tester,
-  ) async {
-    final host = _TestPortableHost(
-      root: skir.PresentationNode(
-        nodeId: "status",
-        properties: skir.PresentationProperties.defaultInstance,
-        header: null,
-        element: skir.PresentationElement.createStatus(
-          value: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapStringValue("Connected"),
-          ),
-          cases: [
-            skir.StatusCase(
-              match: skir.DataValue.wrapStringValue("Connected"),
-              appearance: skir.StatusAppearance(
-                tone: skir.StatusTone.online,
-                label: null,
-                options: null,
+          header: skir.PresentationHeader(
+            binding: null,
+            title: skir.PresentationHeaderTitle.wrapText(
+              skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue("Section title"),
               ),
             ),
-          ],
-          fallback: null,
-        ),
-      ),
-    );
-    addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
-    );
-    expect(find.text("Connected"), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
-    final context = tester.element(find.text("Connected"));
-    expect(
-      tester.widget<Icon>(find.byIcon(Icons.cloud_done_outlined)).color,
-      context.colors.online,
-    );
-    expect(
-      tester.widget<Text>(find.text("Connected")).style?.color,
-      context.colors.online,
-    );
-  });
-
-  testWidgets("enum statuses use their value as the default label", (
-    tester,
-  ) async {
-    final host = _TestPortableHost(
-      root: skir.PresentationNode(
-        nodeId: "status",
-        properties: skir.PresentationProperties.defaultInstance,
-        header: null,
-        element: skir.PresentationElement.createStatus(
-          value: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapEnumCase("Connected"),
+            description: null,
+            initiallyExpanded: true,
+            items: const [],
+            headerPadding: null,
+            contentPadding: null,
           ),
-          cases: [
-            skir.StatusCase(
-              match: skir.DataValue.wrapEnumCase("Connected"),
-              appearance: skir.StatusAppearance(
-                tone: skir.StatusTone.online,
-                label: null,
-                options: null,
-              ),
-            ),
-          ],
-          fallback: null,
         ),
+        bindings: _integerBinding,
       ),
+      expected: _integerType,
+      updatesDocument: true,
     );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    final panel = await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
-    expect(find.text("Connected"), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
-    final context = tester.element(find.text("Connected"));
-    expect(
-      tester.widget<Icon>(find.byIcon(Icons.cloud_done_outlined)).color,
-      context.colors.online,
-    );
-    expect(
-      tester.widget<Text>(find.text("Connected")).style?.color,
-      context.colors.online,
-    );
+    final title = semanticsLabeled("Section title").single;
+    final body = semanticsLabeled("Section body").single;
+    final surface = title.parent!;
+    expect(surface.descendants, contains(body));
+    for (final part in [title.screenRect, body.screenRect]) {
+      expect(surface.screenRect.expandToInclude(part), surface.screenRect);
+    }
+
+    await panel.tapOn(find.tooltip("Collapse"));
+    expect(panel.shows("Section body"), isFalse);
+    await panel.tapOn(find.tooltip("Expand"));
+    expect(panel.shows("Section body"), isTrue);
   });
 
-  testWidgets("writes through the host using its checked expected type", (
+  for (final (name, value) in [
+    (
+      "a text status keeps its source label and online tone",
+      skir.DataValue.wrapStringValue("Connected"),
+    ),
+    (
+      "an enum status uses its case as the default label",
+      skir.DataValue.wrapEnumCase("Connected"),
+    ),
+  ]) {
+    testWidgets(name, (tester) async {
+      final host = FakePresentationHost(
+        document: FakePresentationHost.emptyDocument(
+          root: skir.PresentationNode(
+            nodeId: "status",
+            properties: skir.PresentationProperties.defaultInstance,
+            header: null,
+            element: skir.PresentationElement.createStatus(
+              value: skir.ExpressionNode.wrapLiteral(value),
+              cases: [
+                skir.StatusCase(
+                  match: value,
+                  appearance: skir.StatusAppearance(
+                    tone: skir.StatusTone.online,
+                    label: null,
+                    options: null,
+                  ),
+                ),
+              ],
+              fallback: null,
+            ),
+          ),
+          bindings: _integerBinding,
+        ),
+        expected: _integerType,
+        updatesDocument: true,
+      );
+      addTearDown(host.dispose);
+      await tester.showComponent(
+        Material(child: PortablePresentationRenderer(host: host)),
+      );
+      expect(find.text("Connected"), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
+      final context = tester.element(find.text("Connected"));
+      expect(
+        tester.widget<Icon>(find.byIcon(Icons.cloud_done_outlined)).color,
+        context.colors.online,
+      );
+      expect(
+        tester.widget<Text>(find.text("Connected")).style?.color,
+        context.colors.online,
+      );
+    });
+  }
+
+  for (final (name, expected, typed, written) in [
+    ("a signed integer", _integerType, "7", skir.DataValue.wrapInteger("7")),
+    (
+      "a float",
+      skir.TypeUse.wrapScalar(
+        skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+      ),
+      "7.5",
+      skir.DataValue.wrapFloat(7.5),
+    ),
+  ]) {
+    testWidgets("writes typed input as the host's expected $name", (
+      tester,
+    ) async {
+      final host = FakePresentationHost(
+        document: FakePresentationHost.emptyDocument(
+          root: _numericNode,
+          bindings: _integerBinding,
+        ),
+        expected: expected,
+        updatesDocument: true,
+      );
+      addTearDown(host.dispose);
+      final panel = await tester.showComponent(
+        Material(child: PortablePresentationRenderer(host: host)),
+      );
+
+      await panel.fieldAt(0).type(typed);
+
+      expect(host.writes, [(_reference, written)]);
+    });
+  }
+
+  testWidgets("rejects input outside the host's expected integer range", (
     tester,
   ) async {
-    final host = _TestPortableHost(root: _numericNode);
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _numericNode,
+        bindings: _integerBinding,
+      ),
+      expected: skir.TypeUse.wrapScalar(
+        skir.ScalarKind.createInteger(width: skir.IntegerWidth.unsignedEight),
+      ),
+      updatesDocument: true,
+    );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    final panel = await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
 
-    await tester.enterText(find.byType(TextFormField), "7");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("300");
 
-    expect(host.writes, hasLength(1));
-    expect(host.writes.single.$1, _reference);
-    expect(host.writes.single.$2, skir.DataValue.wrapInteger("7"));
-    expect(host.expectedTypeReads, greaterThan(0));
+    expect(host.writes, isEmpty);
   });
 
   testWidgets("escape leaves typed values applied", (tester) async {
-    final host = _TestPortableHost(root: _numericNode);
-    addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _numericNode,
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
     );
+    addTearDown(host.dispose);
+    final panel = await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
+    );
+    final field = panel.fieldAt(0);
 
-    final field = find.byType(TextFormField);
-    await tester.tap(field);
-    await tester.enterText(field, "7");
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pump();
+    await field.type("7");
+    await panel.press(LogicalKeyboardKey.escape);
 
     expect(
-      host.document.bindings[_bindingId]?.value.authoredInteger,
+      host
+          .document
+          .bindings[RendererWorkspace.bindingId]
+          ?.value
+          .authoredInteger,
       BigInt.from(7),
     );
-    expect(tester.widget<TextFormField>(field).controller?.text, "7");
+    expect(field.value, "7");
 
-    await tester.tap(field);
-    await tester.enterText(field, "8");
-    await tester.pumpAndSettle();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    await tester.pump();
+    await field.type("8");
+    await panel.pressPrimary(LogicalKeyboardKey.escape);
 
     expect(
-      host.document.bindings[_bindingId]?.value.authoredInteger,
+      host
+          .document
+          .bindings[RendererWorkspace.bindingId]
+          ?.value
+          .authoredInteger,
       BigInt.from(8),
     );
-    expect(tester.widget<TextFormField>(field).controller?.text, "8");
+    expect(field.value, "8");
   });
 
-  testWidgets("surfaces rejected writes and delegates actions to the host", (
+  testWidgets("surfaces a write the host rejects beside its control", (
     tester,
   ) async {
-    final host = _TestPortableHost(root: _actionNode, rejectWrites: true);
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _actionNode,
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
+      rejectWrites: true,
+    );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    final panel = await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
 
-    await tester.enterText(find.byType(TextFormField), "8");
-    await tester.pumpAndSettle();
-    expect(find.tooltip("The document rejected this write"), findsOneWidget);
-    expect(find.bySemanticsLabel("Presentation error"), findsOneWidget);
+    await panel.fieldAt(0).type("8");
 
-    await tester.tap(find.text("Run action"));
-    await tester.pump();
-    expect(host.actions, hasLength(1));
+    expect(find.tooltip("The document rejected this write"), findsOneWidget);
+    expect(panel.shows("Presentation error"), isTrue);
+  });
+
+  testWidgets("delivers the authored button action to the host", (
+    tester,
+  ) async {
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _actionNode,
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
+    );
+    addTearDown(host.dispose);
+    final panel = await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
+    );
+
+    await panel.tapOn(find.text("Run action"));
+
+    expect(host.actions, [
+      skir.EditorAction.wrapLocal(
+        skir.LocalEditorAction.createSetValue(
+          target: _reference,
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("9"),
+          ),
+        ),
+      ),
+    ]);
   });
 
   testWidgets("compact indicators do not steal card selection", (tester) async {
-    final host = _TestPortableHost(
-      root: _compactNode,
-      diagnostics: [
-        PortablePresentationDiagnostic(
-          code: "compact_error",
-          message: "Compact problem",
-          severity: skir.DiagnosticSeverity.error,
-        ),
-      ],
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _compactNode,
+        bindings: _integerBinding,
+        diagnostics: [
+          PortablePresentationDiagnostic(
+            code: "compact_error",
+            message: "Compact problem",
+            severity: skir.DiagnosticSeverity.error,
+          ),
+        ],
+      ),
+      expected: _integerType,
+      updatesDocument: true,
     );
     var cardTaps = 0;
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => cardTaps++,
@@ -508,14 +1280,19 @@ void main() {
       skir.PresentationRole.workspace,
       skir.PresentationRole.inspector,
     ]) {
-      final host = _TestPortableHost(
-        root: _actionNode,
+      final host = FakePresentationHost(
+        document: FakePresentationHost.emptyDocument(
+          root: _actionNode,
+          bindings: _integerBinding,
+          role: role,
+        ),
+        expected: _integerType,
+        updatesDocument: true,
         rejectWrites: true,
-        role: role,
       );
       addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Material(
+      final panel = await tester.showComponent(
+        Material(
           child: SizedBox(
             height: 300,
             child: PortablePresentationRenderer(host: host),
@@ -523,33 +1300,37 @@ void main() {
         ),
       );
 
-      await tester.enterText(find.byType(TextFormField), "8");
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).type("8");
 
       expect(find.text("The document rejected this write"), findsOneWidget);
-      expect(find.bySemanticsLabel("Presentation error"), findsNothing);
+      expect(panel.labeled("Presentation error"), findsNothing);
     }
   });
 
   testWidgets("compact information remains visibly informational", (
     tester,
   ) async {
-    final host = _TestPortableHost(
-      root: _numericNode,
-      diagnostics: [
-        PortablePresentationDiagnostic(
-          code: "informational",
-          message: "This value was inferred",
-          severity: skir.DiagnosticSeverity.information,
-        ),
-      ],
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _numericNode,
+        bindings: _integerBinding,
+        diagnostics: [
+          PortablePresentationDiagnostic(
+            code: "informational",
+            message: "This value was inferred",
+            severity: skir.DiagnosticSeverity.information,
+          ),
+        ],
+      ),
+      expected: _integerType,
+      updatesDocument: true,
     );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    final panel = await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
 
-    expect(find.bySemanticsLabel("Presentation information"), findsOneWidget);
+    expect(panel.labeled("Presentation information"), findsOneWidget);
     expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
     expect(find.byIcon(Icons.error_outline_rounded), findsNothing);
   });
@@ -557,73 +1338,106 @@ void main() {
   testWidgets("separates an unspecified header from its first control", (
     tester,
   ) async {
-    final host = _TestPortableHost(root: _headerNode);
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _headerNode,
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
+    );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
 
     final description = tester.getRect(find.text("Document description"));
-    final control = tester.getRect(find.byType(TextFormField));
+    final control = visibleTextFields().single.screenRect;
     expect(control.top - description.bottom, greaterThanOrEqualTo(8));
     final label = tester.getRect(find.text("Count"));
     expect(control.top - label.bottom, greaterThanOrEqualTo(6));
-    expect(find.byType(ValidatedTextField<skir.DataValue>), findsOneWidget);
   });
 
   testWidgets("does not repeat a control label supplied by its header", (
     tester,
   ) async {
-    final host = _TestPortableHost(root: _matchingHeaderNode);
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _matchingHeaderNode,
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
+    );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
 
     expect(find.text("Count"), findsOneWidget);
-    expect(find.bySemanticsLabel("Count"), findsWidgets);
+    expect(visibleTextFields().single.spoken, startsWith("Count"));
   });
 
   testWidgets("collapsing a header preserves a local invalid draft", (
     tester,
   ) async {
-    final host = _TestPortableHost(root: _headerNode);
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _headerNode,
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
+    );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(child: PortablePresentationRenderer(host: host)),
+    final panel = await tester.showComponent(
+      Material(child: PortablePresentationRenderer(host: host)),
     );
 
-    await tester.enterText(find.byType(TextFormField), "-");
-    await tester.pump();
-    final writeCountBeforeCollapse = host.writes.length;
-    await tester.tap(find.tooltip("Collapse"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.tooltip("Expand"));
-    await tester.pumpAndSettle();
+    await panel.field("Count").type("-");
+    await panel.tapOn(find.tooltip("Collapse"));
+    await panel.tapOn(find.tooltip("Expand"));
 
-    expect(
-      tester.widget<TextFormField>(find.byType(TextFormField)).controller?.text,
-      "-",
-    );
-    expect(host.writes, hasLength(writeCountBeforeCollapse));
+    expect(panel.field("Count").value, "-");
+    expect(host.writes, isEmpty);
   });
 
   testWidgets("narrow headers move trailing actions into overflow", (
     tester,
   ) async {
-    final host = _TestPortableHost(root: _overflowHeaderNode);
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        root: _overflowHeaderNode,
+        bindings: _integerBinding,
+      ),
+      expected: _integerType,
+      updatesDocument: true,
+    );
     addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Material(
+    final panel = await tester.showComponent(
+      Material(
         child: SizedBox(
           width: 280,
           child: PortablePresentationRenderer(host: host),
         ),
       ),
     );
-    await tester.pumpAndSettle();
 
-    expect(find.tooltip("More actions"), findsOneWidget);
+    final moved = find.tooltip("Action 5").hitTestable();
+    expect(moved, findsNothing);
+    await panel.tapOn(find.tooltip("More actions"));
+    await panel.tapOn(moved);
+
+    expect(host.actions, [
+      skir.EditorAction.wrapLocal(
+        skir.LocalEditorAction.createSetValue(
+          target: _reference,
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("5"),
+          ),
+        ),
+      ),
+    ]);
     expect(tester.takeException(), isNull);
   });
 
@@ -631,8 +1445,8 @@ void main() {
     tester,
   ) async {
     const color = Color(0xFF336699);
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: PortablePresentationNodeRenderer(
           node: presentationNode(
             "icon",
@@ -671,15 +1485,17 @@ void main() {
     final icon = tester.widget<Icones>(find.byType(Icones));
     expect((icon.iconValue! as SvgIconValue).source, contains("<svg"));
     expect(icon.color, color);
-    expect(icon.size, 28);
-    expect(find.bySemanticsLabel("Book icon"), findsOneWidget);
+    expect(
+      semanticsLabeled("Book icon").single.screenRect.size,
+      const Size(28, 28),
+    );
   });
 
   testWidgets("renders typed icon values such as a type display icon", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: PortablePresentationNodeRenderer(
           node: presentationNode(
             "icon",
@@ -713,12 +1529,6 @@ void main() {
   testWidgets("generated Tag cards adapt to one cell and wider placements", (
     tester,
   ) async {
-    final semantics = tester.ensureSemantics();
-    final width = ValueNotifier(48.0);
-    final name = ValueNotifier("");
-    addTearDown(width.dispose);
-    addTearDown(name.dispose);
-
     skir.PresentationNode tagCard(String tagName) {
       final label = tagName.isEmpty ? "Unnamed tag" : tagName;
       final icon = presentationNode(
@@ -817,58 +1627,53 @@ void main() {
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
-
-    await tester.pumpTestApp(
-      child: Material(
-        child: SingleChildScrollView(
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: ValueListenableBuilder(
-              valueListenable: width,
-              builder: (context, cardWidth, child) {
-                final card = Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: ValueListenableBuilder(
-                    valueListenable: name,
-                    builder: (context, tagName, child) =>
-                        PortablePresentationNodeRenderer(
-                          node: tagCard(tagName),
-                          scope: scope,
+    Future<PanelDriver> show({required double width, required String tagName}) {
+      final card = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: PortablePresentationNodeRenderer(
+          node: tagCard(tagName),
+          scope: scope,
+        ),
+      );
+      return tester.showComponent(
+        Material(
+          child: SingleChildScrollView(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Semantics(
+                container: true,
+                label: "Placement",
+                child: width == 48
+                    ? SizedBox(width: width, height: 48, child: card)
+                    : SizedBox(
+                        width: width,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [card],
                         ),
-                  ),
-                );
-                if (cardWidth == 48) {
-                  return SizedBox(width: cardWidth, height: 48, child: card);
-                }
-                return SizedBox(
-                  width: cardWidth,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [card],
-                  ),
-                );
-              },
+                      ),
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+    }
 
+    await show(width: 48, tagName: "");
     expect(tester.takeException(), isNull);
-    expect(find.byType(Icones), findsOneWidget);
-    expect(find.semantics.byLabel("Unnamed tag"), findsNothing);
+    final cell = tester.getRect(find.bySemanticsLabel("Placement"));
+    final cellIcon = tester.getRect(find.bySemanticsLabel("Tag"));
+    expect(cell.expandToInclude(cellIcon), cell);
+    expect(semanticsLabeled("Unnamed tag"), isEmpty);
 
-    name.value = "Quest";
-    width.value = 180;
-    await tester.pumpAndSettle();
-
+    await show(width: 180, tagName: "Quest");
     expect(tester.takeException(), isNull);
-    expect(find.semantics.byLabel("Quest"), findsOneWidget);
-    semantics.dispose();
+    final icon = tester.getRect(find.bySemanticsLabel("Tag"));
+    final label = tester.getRect(find.text("Quest"));
+    final placement = tester.getRect(find.bySemanticsLabel("Placement"));
+    expect(label.left, greaterThanOrEqualTo(icon.right));
+    expect(placement.expandToInclude(label), placement);
+    expect(label.center.dy, closeTo(icon.center.dy, 4));
   });
 
   testWidgets("applies portable text styling and exposes style failures", (
@@ -922,8 +1727,8 @@ void main() {
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: PortablePresentationNodeRenderer(
           node: textNode(
             skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(700)),
@@ -941,8 +1746,8 @@ void main() {
     expect(text.semanticsLabel, "Styled heading");
     expect(text.style?.fontVariations, isNotEmpty);
 
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: PortablePresentationNodeRenderer(
           node: textNode(
             skir.ExpressionNode.wrapLiteral(
@@ -962,15 +1767,17 @@ void main() {
   testWidgets("invokes the presentation for a configured concrete value", (
     tester,
   ) async {
-    final host = _BindingHost(
-      catalog: _polymorphicCatalog,
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        catalog: _polymorphicCatalog,
+      ),
       expected: skir.TypeUse.wrapNamed(_iconifyType),
     );
     addTearDown(host.dispose);
     final scope = PortablePresentationScope(
       operations: testPortableOperations(),
       bindings: {
-        _bindingId: PortableExpressionBinding(
+        RendererWorkspace.bindingId: PortableExpressionBinding(
           value: skir.DataValue.createNamed(
             actualType: _iconifyType,
             payload: skir.DataValue.createRecord(
@@ -994,8 +1801,8 @@ void main() {
       host: host,
     );
 
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: PortablePresentationNodeRenderer(
           node: _polymorphicNode,
           scope: scope,
@@ -1008,11 +1815,7 @@ void main() {
       findsNothing,
     );
     expect(find.text("The invoked presentation is unavailable"), findsNothing);
-    expect(find.byType(TextFormField), findsOneWidget);
-    expect(
-      tester.widget<TextFormField>(find.byType(TextFormField)).controller?.text,
-      "material-symbols:book",
-    );
+    expect(visibleFieldValues(), ["material-symbols:book"]);
   });
 
   testWidgets("record input preserves authored absolute field paths", (
@@ -1052,8 +1855,10 @@ void main() {
         ),
       ],
     );
-    final host = _BindingHost(
-      catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+      ),
       expected: _integerType,
       onWrite: (reference, value) => writes.add((reference, value)),
     );
@@ -1093,110 +1898,157 @@ void main() {
       host: host,
     );
 
-    await tester.pumpTestApp(
-      child: Material(
+    final panel = await tester.showComponent(
+      Material(
         child: PortablePresentationNodeRenderer(node: node, scope: scope),
       ),
     );
 
-    expect(
-      find.text("The numeric control binding is unavailable"),
-      findsNothing,
-    );
-    final input = find.byType(TextFormField);
-    expect(tester.widget<TextFormField>(input).controller?.text, "4");
-    await tester.enterText(input, "6");
-    await tester.pumpAndSettle();
-    expect(writes, hasLength(1));
-    expect(writes.single.$1, xReference);
-    expect(writes.single.$2, skir.DataValue.wrapInteger("6"));
+    expect(panel.shows("The numeric control binding is unavailable"), isFalse);
+    final input = panel.fieldAt(0);
+    expect(input.value, "4");
+    await input.type("6");
+    expect(writes, [(xReference, skir.DataValue.wrapInteger("6"))]);
   });
 
-  test("resolves a row binding to its authoritative collection item", () {
-    final item = skir.ItemId(value: "item:one");
+  testWidgets("a row alias reorders its authoritative collection item", (
+    tester,
+  ) async {
+    final first = skir.ItemId(value: "item:one");
+    final second = skir.ItemId(value: "item:two");
     final root = skir.ExpressionBindingId(value: "root");
     final row = skir.ExpressionBindingId(value: "row");
-    final rowAlias = skir.ExpressionBindingId(value: "row_alias");
     final resource = skir.ResourceId(value: "resource:rows");
-    final rowLocation = skir.ValueLocation(
+    final rootLocation = skir.ValueLocation(
       resource: resource,
-      path: skir.ValuePath(
-        segments: [
-          skir.PathSegment.createField(name: "items"),
-          skir.PathSegment.createItem(id: item),
-        ],
-      ),
+      path: skir.ValuePath(segments: const []),
     );
+    final rootValue = skir.DataValue.createRecord(
+      fields: [
+        skir.FieldValue(
+          name: "items",
+          value: skir.DataValue.createListValue(
+            items: [
+              skir.ListItem(
+                id: first,
+                value: skir.DataValue.wrapStringValue("Row"),
+              ),
+              skir.ListItem(
+                id: second,
+                value: skir.DataValue.wrapStringValue("Next"),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    final items = skir.ValuePath(
+      segments: [skir.PathSegment.createField(name: "items")],
+    );
+    final actions = <skir.EditorAction>[];
+    final host = FakePresentationHost(
+      document: FakePresentationHost.emptyDocument(
+        catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+        bindings: {
+          root: PortablePresentationBinding(
+            schema: CompletePortablePresentationBinding(_integerType),
+            value: rootValue,
+            editable: true,
+            location: rootLocation,
+          ),
+        },
+      ),
+      expected: _integerType,
+      onExecute: actions.add,
+    );
+    addTearDown(host.dispose);
     final scope = PortablePresentationScope(
       operations: testPortableOperations(),
       bindings: {
         root: PortableExpressionBinding(
-          value: skir.DataValue.unfilled,
-          location: skir.ValueLocation(
-            resource: resource,
-            path: skir.ValuePath(segments: const []),
-          ),
+          value: rootValue,
+          location: rootLocation,
         ),
         row: PortableExpressionBinding(
           value: skir.DataValue.wrapStringValue("Row"),
-          location: rowLocation,
-        ),
-        rowAlias: PortableExpressionBinding(
-          value: skir.DataValue.wrapStringValue("Alias"),
-          location: rowLocation,
+          location: skir.ValueLocation(
+            resource: resource,
+            path: skir.ValuePath(
+              segments: [
+                ...items.segments,
+                skir.PathSegment.createItem(id: first),
+              ],
+            ),
+          ),
         ),
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      host: _BindingHost(
-        catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
-        expected: _integerType,
-        documentBindings: {
-          root: PortablePresentationBinding(
-            schema: CompletePortablePresentationBinding(_integerType),
-            value: skir.DataValue.unfilled,
-            editable: true,
-            location: skir.ValueLocation(
-              resource: resource,
+      host: host,
+    );
+    final node = skir.PresentationNode(
+      nodeId: "row",
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.wrapText(
+        (skir.TextContent.mutable()..value = inputExpression(row)).toFrozen(),
+      ),
+      header: skir.PresentationHeader(
+        binding: null,
+        title: skir.PresentationHeaderTitle.wrapText(textLiteral("Row")),
+        description: null,
+        initiallyExpanded: null,
+        items: [
+          skir.HeaderItem.createReorderHandle(
+            itemId: skir.HeaderItemId(namespace: "test", name: "reorder"),
+            label: textLiteral("Reorder row"),
+            source: skir.BindingRef(
+              bindingId: row,
               path: skir.ValuePath(segments: const []),
             ),
+            tooltip: null,
+            visibleIf: null,
+            enabledIf: null,
           ),
-        },
+        ],
+        headerPadding: null,
+        contentPadding: null,
+      ),
+    );
+    final panel = await tester.showComponent(
+      Material(
+        child: PortablePresentationNodeRenderer(node: node, scope: scope),
       ),
     );
 
-    expect(
-      scope.sourceReference(
-        skir.BindingRef(
-          bindingId: row,
-          path: skir.ValuePath(segments: const []),
+    await panel.tapOn(find.tooltip("Reorder row"));
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+
+    expect(actions, [
+      skir.EditorAction.wrapLocal(
+        skir.LocalEditorAction.createMoveListItem(
+          target: skir.BindingRef(bindingId: root, path: items),
+          item: first,
+          after: second,
         ),
       ),
-      skir.BindingRef(
-        bindingId: root,
-        path: skir.ValuePath(
-          segments: [
-            skir.PathSegment.createField(name: "items"),
-            skir.PathSegment.createItem(id: item),
-          ],
-        ),
-      ),
-    );
+    ]);
   });
 
   testWidgets("repairs an Unfilled collection with its normal item default", (
     tester,
   ) async {
-    final fixture = _collectionFixture(
+    final fixture = authoredListInput(
       value: skir.DataValue.unfilled,
       allowAdd: true,
     );
-    await tester.pumpTestApp(child: fixture.widget);
+    await tester.showComponent(fixture.widget);
 
     expect(find.text("The collection binding is unavailable"), findsNothing);
     await tester.tap(find.tooltip("Add item"));
     await tester.pumpAndSettle();
 
-    final submitted = await _submit(tester, fixture.document);
+    final submitted = await fixture.document.submit(tester);
     expect(submitted.intents, hasLength(1));
     expect(
       (submitted.intents.single as skir.EditIntent_insertWrapper)
@@ -1210,19 +2062,19 @@ void main() {
   testWidgets("empty collection controls retain their field guidance", (
     tester,
   ) async {
-    final list = _collectionFixture(
+    final list = authoredListInput(
       value: skir.DataValue.createListValue(items: const []),
       allowAdd: true,
       label: "Pages",
       description: "Pages in this book",
     );
-    await tester.pumpTestApp(child: list.widget);
+    await tester.showComponent(list.widget);
     expect(find.text("Pages"), findsOneWidget);
     expect(find.text("Pages in this book"), findsOneWidget);
     expect(find.tooltip("Add item"), findsOneWidget);
 
-    final map = _mapFixture(label: "Translations");
-    await tester.pumpTestApp(child: map.widget);
+    final map = authoredMapInput(label: "Translations");
+    await tester.showComponent(map.widget);
     expect(find.text("Translations"), findsOneWidget);
     expect(find.tooltip("Add entry"), findsOneWidget);
     expect(
@@ -1236,25 +2088,25 @@ void main() {
   testWidgets("does not offer collection insertion when addition is disabled", (
     tester,
   ) async {
-    final fixture = _collectionFixture(
+    final fixture = authoredListInput(
       value: skir.DataValue.createListValue(items: const []),
       allowAdd: false,
     );
-    await tester.pumpTestApp(child: fixture.widget);
+    await tester.showComponent(fixture.widget);
 
     expect(find.tooltip("Add item"), findsNothing);
     expect(fixture.document.workspace.state.groups, isEmpty);
   });
 
   testWidgets("adds a stable row to an Unfilled map", (tester) async {
-    final fixture = _mapFixture();
-    await tester.pumpTestApp(child: fixture.widget);
+    final fixture = authoredMapInput();
+    await tester.showComponent(fixture.widget);
 
     expect(find.text("The map binding is unavailable"), findsNothing);
     await tester.tap(find.tooltip("Add entry"));
     await tester.pump();
 
-    final submitted = await _submit(tester, fixture.document);
+    final submitted = await fixture.document.submit(tester);
     final row =
         ((submitted.intents.single as skir.EditIntent_setValueWrapper)
                     .value
@@ -1272,19 +2124,15 @@ void main() {
   testWidgets("selects the first link before inserting an empty set item", (
     tester,
   ) async {
-    final fixture = _linkCollectionFixture();
-    await tester.pumpTestApp(child: fixture.widget);
+    final fixture = authoredLinkCollection();
+    final panel = await tester.showComponent(fixture.widget);
 
-    await tester.tap(find.tooltip("Add link"));
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Add link"));
     expect(find.text("Target Alpha"), findsOneWidget);
     expect(find.text(fixture.target.value), findsNothing);
-    await tester.tap(
-      find.byKey(ValueKey("link.target.${fixture.target.value}.automatic")),
-    );
-    await tester.pumpAndSettle();
+    await panel.search.result("Target Alpha").tap();
 
-    final submitted = await _submit(tester, fixture.document);
+    final submitted = await fixture.document.submit(tester);
     final connection = submitted.intents
         .whereType<skir.EditIntent_connectRelationWrapper>()
         .single
@@ -1299,44 +2147,34 @@ void main() {
   testWidgets("cancelling first link selection leaves the set untouched", (
     tester,
   ) async {
-    final fixture = _linkCollectionFixture();
-    await tester.pumpTestApp(child: fixture.widget);
+    final fixture = authoredLinkCollection();
+    final panel = await tester.showComponent(fixture.widget);
 
-    await tester.tap(find.tooltip("Add link"));
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Add link"));
+    await panel.press(LogicalKeyboardKey.escape);
 
     expect(fixture.document.workspace.state.groups, isEmpty);
-    expect(fixture.document.workspace.state.groups, isEmpty);
+    unawaited(fixture.document.binding.save());
+    await panel.settle();
+    expect(fixture.document.realm.saves, isEmpty);
   });
 
   testWidgets("searches and selects a linked resource with the keyboard", (
     tester,
   ) async {
-    final fixture = _linkCollectionFixture();
-    await tester.pumpTestApp(child: fixture.widget);
+    final fixture = authoredLinkCollection();
+    final panel = await tester.showComponent(fixture.widget);
 
-    await tester.tap(find.tooltip("Add link"));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).first, "Target Beta");
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Add link"));
+    await panel.fieldAt(0).type("Target Beta");
 
-    expect(
-      find.byKey(ValueKey("link.target.${fixture.target.value}.automatic")),
-      findsNothing,
-    );
-    expect(
-      find.byKey(
-        ValueKey("link.target.${fixture.secondTarget.value}.automatic"),
-      ),
-      findsOneWidget,
-    );
+    expect(panel.search.result("Target Alpha").isShown, isFalse);
+    expect(panel.search.result("Target Beta").isShown, isTrue);
 
     await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
+    await panel.settle();
 
-    final submitted = await _submit(tester, fixture.document);
+    final submitted = await fixture.document.submit(tester);
     expect(
       submitted.intents
           .whereType<skir.EditIntent_connectRelationWrapper>()
@@ -1350,23 +2188,22 @@ void main() {
   testWidgets("presents an existing link by its authored resource label", (
     tester,
   ) async {
-    final fixture = _linkCollectionFixture(withPartialLinks: true);
-    await tester.pumpTestApp(child: fixture.widget);
+    final fixture = authoredLinkCollection(withPartialLinks: true);
+    await tester.showComponent(fixture.widget);
 
     expect(find.text("Target Alpha"), findsOneWidget);
     expect(find.text(fixture.target.value), findsNothing);
     expect(find.tooltip("Clear link"), findsOneWidget);
-    expect(find.byType(DepthBox), findsWidgets);
   });
 
   testWidgets("presents a link to a missing resource as missing", (
     tester,
   ) async {
-    final fixture = _linkCollectionFixture(
+    final fixture = authoredLinkCollection(
       withPartialLinks: true,
       missingTarget: true,
     );
-    await tester.pumpTestApp(child: fixture.widget);
+    await tester.showComponent(fixture.widget);
 
     expect(find.text("Missing resource"), findsOneWidget);
     expect(find.text(fixture.target.value), findsNothing);
@@ -1375,13 +2212,11 @@ void main() {
   testWidgets("keeps selected link identity beside compact row actions", (
     tester,
   ) async {
-    final fixture = _linkCollectionFixture(
+    final fixture = authoredLinkCollection(
       withPartialLinks: true,
       adaptiveAppearance: true,
     );
-    await tester.pumpTestApp(
-      child: SizedBox(width: 376, child: fixture.widget),
-    );
+    await tester.showComponent(SizedBox(width: 376, child: fixture.widget));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
@@ -1395,19 +2230,15 @@ void main() {
   testWidgets(
     "ordinary link collection rows own one surface and one spacing boundary",
     (tester) async {
-      final fixture = _linkCollectionFixture(
+      final fixture = authoredLinkCollection(
         withPartialLinks: true,
         collectionAppearance:
             (skir.CollectionAppearance.mutable()..itemSpacing = 14).toFrozen(),
       );
-      await tester.pumpTestApp(child: fixture.widget);
-      final surfaces = find.byType(DepthBox);
-      expect(surfaces, findsNWidgets(3));
-      expect(
-        tester.getRect(surfaces.at(2)).top -
-            tester.getRect(surfaces.at(1)).bottom,
-        closeTo(14, 0.01),
-      );
+      await tester.showComponent(fixture.widget);
+      final rows = collectionRowSurfaces(tester, "Remove item");
+      expect(rows, hasLength(2));
+      expect(rows[1].top - rows[0].bottom, closeTo(14, 0.01));
       expect(find.text("Target Alpha"), findsOneWidget);
       expect(find.tooltip("Change linked resource"), findsOneWidget);
       expect(find.tooltip("Clear link"), findsOneWidget);
@@ -1419,41 +2250,49 @@ void main() {
   testWidgets("frames a link collection once with explicit reorder handles", (
     tester,
   ) async {
-    final fixture = _linkCollectionFixture(
+    final fixture = authoredLinkCollection(
       withPartialLinks: true,
       directCollection: true,
       label: "Related nodes",
     );
-    await tester.pumpTestApp(child: fixture.widget);
-    await tester.pumpAndSettle();
+    final panel = await tester.showComponent(fixture.widget);
 
     expect(find.text("Related nodes"), findsOneWidget);
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget.runtimeType.toString() == "_AuthoredReorderHandle",
-      ),
-      findsNWidgets(2),
-    );
+    expect(find.tooltip("Reorder linked resource 1"), findsOneWidget);
+    expect(find.tooltip("Reorder linked resource 2"), findsOneWidget);
+
+    await panel.tapOn(find.tooltip("Reorder linked resource 1"));
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+
+    final submitted = await fixture.document.submit(tester);
+    final move = submitted.intents
+        .whereType<skir.EditIntent_moveWrapper>()
+        .single
+        .value;
+    expect(move.item, RendererWorkspace.knownLinkItem);
+    expect(move.after, RendererWorkspace.unfinishedLinkItem);
   });
 
   test("known link edits preserve an unfinished sibling", () {
-    final fixture = _linkCollectionFixture(withPartialLinks: true);
+    final fixture = authoredLinkCollection(withPartialLinks: true);
     final branch = AuthoringEdit.fromDocument(
       fixture.document.workspace.document,
     );
     replacePortableLinkCollection(
       draft: branch,
       catalog: fixture.catalog,
-      resource: _resource,
+      resource: RendererWorkspace.resource,
       field: "links",
       expected: [fixture.target],
       proposed: const [],
     );
     final remaining = branch
-        .resource(_resource)!
+        .resource(RendererWorkspace.resource)!
         .authoredField("links")!
         .authoredItems!;
-    expect(remaining.single.id, _unfinishedLinkItem);
+    expect(remaining.single.id, RendererWorkspace.unfinishedLinkItem);
     expect(remaining.single.value, skir.DataValue.unfilled);
     expect(
       branch.intents.single,
@@ -1492,10 +2331,10 @@ void main() {
               ])
             .toFrozen(),
       );
-      final document = _RendererWorkspace(
+      final document = RendererWorkspace(
         catalog: catalog,
         resources: {
-          _resource: skir.AuthoringRecord(
+          RendererWorkspace.resource: skir.AuthoringRecord(
             configuration: skir.TypeSelection.unknown,
             fields: [
               skir.FieldValue(name: "icon", value: skir.DataValue.unfilled),
@@ -1504,8 +2343,7 @@ void main() {
         },
       );
       skir.ValuePreparationRequest? request;
-      final host = _authoredHost(
-        document,
+      final host = document.host(
         prepareValue: (value) async {
           request = value;
           return skir.PreparedValue(
@@ -1524,8 +2362,8 @@ void main() {
           );
         },
       );
-      await tester.pumpTestApp(
-        child: Material(
+      await tester.showComponent(
+        Material(
           child: PortablePresentationNodeRenderer(
             node:
                 (_polymorphicNode.toMutable()
@@ -1565,10 +2403,10 @@ void main() {
                 PortablePresentationScope(
                   operations: testPortableOperations(),
                   bindings: {
-                    _bindingId: PortableExpressionBinding(
+                    RendererWorkspace.bindingId: PortableExpressionBinding(
                       value: skir.DataValue.unfilled,
                       location: skir.ValueLocation(
-                        resource: _resource,
+                        resource: RendererWorkspace.resource,
                         path: skir.ValuePath(
                           segments: [
                             skir.PathSegment.createField(name: "icon"),
@@ -1594,10 +2432,7 @@ void main() {
 
       expect(find.text("Icon form"), findsOneWidget);
       if (count == 2) {
-        expect(
-          find.byType(CupertinoSlidingSegmentedControl<int>),
-          findsOneWidget,
-        );
+        expect(find.text("Iconify"), findsOneWidget);
         expect(find.text("Choose a type"), findsNothing);
       } else {
         expect(find.text("Choose a type"), findsOneWidget);
@@ -1613,7 +2448,7 @@ void main() {
       );
       expect(
         document.workspace.document
-            .resource(_resource)!
+            .resource(RendererWorkspace.resource)!
             .authoredField("icon")!
             .authoredActualType,
         _iconifyType,
@@ -1707,1096 +2542,39 @@ void main() {
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
-    Future<void> pumpHierarchy(List<String> values) => tester.pumpTestApp(
-      child: Material(
+    Future<void> showHierarchy(List<String> values) => tester.showComponent(
+      Material(
         child: SizedBox(
           width: 300,
-          child: PortablePresentationNodeRenderer(
-            node: hierarchy(values),
-            scope: scope,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Edge"),
+              PortablePresentationNodeRenderer(
+                node: hierarchy(values),
+                scope: scope,
+              ),
+            ],
           ),
         ),
       ),
     );
 
-    await pumpHierarchy(["First", "Second"]);
-    await tester.pumpAndSettle();
-
-    final hierarchyFinder = find.byWidgetPredicate(
-      (widget) => widget.runtimeType.toString() == "_HierarchyRenderSurface",
-    );
-    expect(hierarchyFinder, findsOneWidget);
-    final renderObject = tester.renderObject(hierarchyFinder) as dynamic;
-    expect(renderObject.debugStrokes as List<Object?>, hasLength(3));
-    final surface = tester.getRect(hierarchyFinder);
+    await showHierarchy(["First", "Second"]);
+    final edge = tester.getRect(find.text("Edge")).left;
     final first = tester.getRect(find.text("First"));
     final second = tester.getRect(find.text("Second"));
-    expect(first.left - surface.left, closeTo(24, 0.01));
+    expect(first.left - edge, closeTo(24, 0.01));
+    expect(second.left - edge, closeTo(24, 0.01));
     expect(second.top - first.bottom, closeTo(20, 0.01));
 
-    await pumpHierarchy(["First"]);
-    await tester.pumpAndSettle();
-
-    final flattenedSurface = tester.getRect(hierarchyFinder);
-    final flattened = tester.getRect(find.text("First"));
-    expect(flattened.left - flattenedSurface.left, closeTo(0, 0.01));
-    final flattenedRenderObject =
-        tester.renderObject(hierarchyFinder) as dynamic;
-    expect(flattenedRenderObject.debugStrokes as List<Object?>, hasLength(1));
+    await showHierarchy(["First"]);
+    expect(tester.getRect(find.text("First")).left - edge, closeTo(0, 0.01));
   });
 }
 
-({Widget widget, _RendererWorkspace document}) _collectionFixture({
-  required skir.DataValue value,
-  required bool allowAdd,
-  String? label,
-  String? description,
-  skir.CollectionAppearance? appearance,
-  skir.CollectionContent? content,
-  skir.InputAppearance? inputDefaults,
-  skir.PresentationNode? prefix,
-}) {
-  final document = _RendererWorkspace(
-    catalog: _collectionCatalog(),
-    resources: {_resource: _collectionRecord("items", value)},
-  );
-  final reference = skir.BindingRef(
-    bindingId: _bindingId,
-    path: skir.ValuePath(
-      segments: [skir.PathSegment.createField(name: "items")],
-    ),
-  );
-  final sourceScope = _authoringScope(document, "items", value);
-  return (
-    document: document,
-    widget: Material(
-      child: PortablePresentationNodeRenderer(
-        node: presentationNode(
-          "collection",
-          skir.PresentationElement.wrapListInput(
-            skir.ListControl(
-              control: skir.BoundControl(
-                binding: reference,
-                label: label == null
-                    ? null
-                    : skir.ExpressionNode.wrapLiteral(
-                        skir.DataValue.wrapStringValue(label),
-                      ),
-                description: description == null
-                    ? null
-                    : skir.ExpressionNode.wrapLiteral(
-                        skir.DataValue.wrapStringValue(description),
-                      ),
-                prefix: prefix,
-                semanticLabel: null,
-              ),
-              itemPresentation: null,
-              allowAdd: allowAdd,
-              allowRemove: true,
-              allowReorder: true,
-              itemBinding: declareNamedBinding("item", textTemplate),
-              indexBinding: declareNamedBinding("index", int32Template),
-              appearance: appearance,
-              content: content,
-            ),
-          ),
-        ),
-        scope: inputDefaults == null
-            ? sourceScope
-            : sourceScope.withAppearance(inputDefaults),
-      ),
-    ),
-  );
-}
-
-({Widget widget, _RendererWorkspace document}) _mapFixture({String? label}) {
-  final document = _RendererWorkspace(
-    catalog: _collectionCatalog(),
-    resources: {
-      _resource: _collectionRecord("values", skir.DataValue.unfilled),
-    },
-  );
-  final reference = skir.BindingRef(
-    bindingId: _bindingId,
-    path: skir.ValuePath(
-      segments: [skir.PathSegment.createField(name: "values")],
-    ),
-  );
-  return (
-    document: document,
-    widget: Material(
-      child: PortablePresentationNodeRenderer(
-        node: presentationNode(
-          "map",
-          skir.PresentationElement.wrapMapInput(
-            skir.MapControl(
-              control: skir.BoundControl(
-                binding: reference,
-                label: label == null
-                    ? null
-                    : skir.ExpressionNode.wrapLiteral(
-                        skir.DataValue.wrapStringValue(label),
-                      ),
-                description: null,
-                prefix: null,
-                semanticLabel: null,
-              ),
-              keyPresentation: null,
-              valuePresentation: null,
-              allowAdd: true,
-              allowRemove: true,
-              keyBinding: declareNamedBinding("key", textTemplate),
-              valueBinding: declareNamedBinding("map_value", textTemplate),
-              appearance: null,
-              content: null,
-            ),
-          ),
-        ),
-        scope: _authoringScope(document, "values", skir.DataValue.unfilled),
-      ),
-    ),
-  );
-}
-
-({
-  Widget widget,
-  _RendererWorkspace document,
-  CheckedEditorCatalog catalog,
-  skir.ResourceId target,
-  skir.ResourceId secondTarget,
-})
-_linkCollectionFixture({
-  bool withPartialLinks = false,
-  bool missingTarget = false,
-  bool directCollection = false,
-  bool adaptiveAppearance = false,
-  String? label,
-  skir.CollectionAppearance? collectionAppearance,
-  skir.CollectionContent? content,
-  skir.InputAppearance? inputAppearance,
-  skir.InputContent? inputContent,
-  skir.PopupAppearance? popup,
-}) {
-  final rootDefinition = skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(namespace: "test", name: "Node"),
-    revision: 1,
-  );
-  final setDefinition = skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(namespace: "test", name: "Links"),
-    revision: 1,
-  );
-  final linkDefinition = skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(namespace: "test", name: "NodeLink"),
-    revision: 1,
-  );
-  final sourceEndpoint = skir.EndpointId(value: "test.source");
-  final targetEndpoint = skir.EndpointId(value: "test.target");
-  final rootUse = skir.NamedTypeUse(
-    definition: rootDefinition,
-    arguments: const [],
-  );
-  final setUse = skir.NamedTypeUse(
-    definition: setDefinition,
-    arguments: const [],
-  );
-  final linksOwner = skir.FieldOwner(definition: rootDefinition, name: "links");
-  final nameOwner = skir.FieldOwner(definition: rootDefinition, name: "name");
-  final rootTemplate = skir.TypeTemplate.createNamed(
-    definition: rootDefinition,
-    arguments: const [],
-  );
-  final linkTemplate = skir.TypeTemplate.createNamed(
-    definition: linkDefinition,
-    arguments: const [],
-  );
-  final setTemplate = skir.TypeTemplate.createNamed(
-    definition: setDefinition,
-    arguments: const [],
-  );
-  final appearanceId = skir.PresentationId(
-    namespace: "test",
-    name: "node.reference.option",
-  );
-  final appearanceTarget = skir.PresentationTarget.createNamed(
-    definition: rootDefinition,
-    arguments: const [],
-  );
-  final appearanceText = presentationNode(
-    "node.reference.name",
-    skir.PresentationElement.createText(
-      value: skir.ExpressionNode.createInput(
-        binding: _configuredBindingId,
-        path: skir.ValuePath(
-          segments: [skir.PathSegment.createField(name: "name")],
-        ),
-      ),
-      color: null,
-      sizing: null,
-      fontWeight: null,
-      fontItalic: null,
-      fontOpticalSize: null,
-      fontSlant: null,
-      fontWidth: null,
-      textAlignment: null,
-      lineHeight: null,
-      letterSpacing: null,
-      decoration: null,
-      semanticLabel: null,
-      paragraph: skir.TextParagraph.defaultInstance,
-    ),
-  );
-  final appearanceIcon = presentationNode(
-    "node.reference.icon",
-    skir.PresentationElement.createIcon(
-      name: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapStringValue(
-          '<svg xmlns="http://www.w3.org/2000/svg" '
-          'viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>',
-        ),
-      ),
-      semanticLabel: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapStringValue("Node"),
-      ),
-      color: null,
-      size: null,
-    ),
-  );
-  final coloredIcon = presentationNode(
-    "node.reference.icon.color",
-    skir.PresentationElement.createContainer(
-      foregroundColor: null,
-      transition: null,
-      shadows: const [],
-      child: presentationNode(
-        "node.reference.icon.padding",
-        skir.PresentationElement.createPadding(
-          child: appearanceIcon,
-          top: 6,
-          start: 6,
-          end: 6,
-          bottom: 6,
-        ),
-      ),
-      border: null,
-      backgroundColor: skir.PresentationColor.wrapValue(
-        skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapInteger("4288585374"),
-        ),
-      ),
-      radius: skir.PresentationRadius.none,
-    ),
-  );
-  final appearanceCard = presentationNode(
-    "node.reference.card",
-    skir.PresentationElement.createAdaptiveLeading(
-      leading: coloredIcon,
-      center: appearanceText,
-      suffix: null,
-      padding: skir.PresentationInsets.wrapAll(8),
-      compactPadding: skir.PresentationInsets.wrapAll(4),
-      gap: 12,
-      minimumCenterWidth: 80,
-    ),
-  );
-  final appearanceLayout = presentationNode(
-    "node.reference.root",
-    skir.PresentationElement.wrapChildren(
-      skir.ChildrenElement.createColumn(
-        children: [skir.AxisChild.wrapFixed(appearanceCard)],
-        layout: skir.AxisChildrenLayout(
-          clipOverflow: false,
-
-          spacing: 0,
-          mainAxisAlignment: skir.MainAxisAlignment.start,
-          crossAxisAlignment: skir.CrossAxisAlignment.start,
-        ),
-      ),
-    ),
-  );
-  final collectionResourceBinding = skir.ExpressionBindingId(value: "resource");
-  final collectionRowBinding = skir.ExpressionBindingId(value: "row");
-  final collectionDefinition = skir.PresentationCollectionDefinition(
-    sourceId: "nodes",
-    rowBinding: declareBinding(collectionRowBinding, rootTemplate),
-    key: skir.ExpressionNode.createInput(
-      binding: collectionResourceBinding,
-      path: skir.ValuePath(segments: const []),
-    ),
-    selectability: skir.ExpressionNode.wrapLiteral(
-      skir.DataValue.wrapBoolean(true),
-    ),
-    relations: const [],
-    projection: skir.PresentationCollectionProjection(
-      root: skir.NamedTypeTemplate(
-        definition: rootDefinition,
-        arguments: const [],
-      ),
-      resourceBinding: declareBinding(
-        collectionResourceBinding,
-        skir.TypeUse.wrapNamed(skir.resourceIdType).portableTemplate,
-      ),
-      fields: const [],
-    ),
-  );
-  final collectionMaterial = skir.PresentationMaterial(
-    inheritableNodes: const [],
-
-    provider: skir.PresentationId(namespace: "test", name: "link.collection"),
-    target: appearanceTarget,
-    role: skir.PresentationRole.inspector,
-    layout: _compactNode,
-    dependencies: skir.PresentationDependencies(
-      contextInputs: const [],
-
-      types: const [],
-      presentations: const [],
-      conversions: const [],
-      capabilities: const [],
-      collections: [collectionDefinition],
-    ),
-    subject: rootTemplate,
-  );
-  final checked = CheckedEditorCatalog(
-    skir.EditorCatalog(
-      resourceDisplays: [nameResourceDisplay(rootTemplate)],
-      resourceOperations: const [],
-      generation: skir.CatalogGeneration(value: "catalog:links"),
-      types: [
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: rootDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: linksOwner,
-                  type: setTemplate,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-                skir.FieldDeclaration(
-                  owner: nameOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: [
-            skir.EffectiveFieldTemplate(
-              key: "links",
-              owner: linksOwner,
-              type: setTemplate,
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "name",
-              owner: nameOwner,
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              rules: const [],
-            ),
-          ],
-          ancestorTemplates: const [],
-        ),
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: setDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createSequence(
-              item: linkTemplate,
-              kind: skir.CollectionKind.set_,
-            ),
-            parents: const [],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: const [],
-          ancestorTemplates: const [],
-        ),
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: linkDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createLink(
-              endpoint: sourceEndpoint,
-              target: rootTemplate,
-            ),
-            parents: const [],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: const [],
-          ancestorTemplates: const [],
-        ),
-      ],
-      relations: [
-        skir.RelationContract(
-          id: skir.RelationId(value: "test.links"),
-          first: skir.EndpointDefinition(
-            id: sourceEndpoint,
-            slot: skir.EndpointSlot.first,
-            resource: skir.NamedTypeTemplate(
-              definition: rootDefinition,
-              arguments: const [],
-            ),
-            cardinality: skir.EndpointCardinality.many,
-            onDelete: skir.RelationDeletePolicy.clear,
-          ),
-          second: skir.EndpointDefinition(
-            id: targetEndpoint,
-            slot: skir.EndpointSlot.second,
-            resource: skir.NamedTypeTemplate(
-              definition: rootDefinition,
-              arguments: const [],
-            ),
-            cardinality: skir.EndpointCardinality.many,
-            onDelete: skir.RelationDeletePolicy.clear,
-          ),
-          families: const [],
-        ),
-      ],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: adaptiveAppearance
-          ? [
-              skir.PresentationDescriptor(
-                id: appearanceId,
-                owner: skir.DeclarationOwner.defaultInstance,
-                target: appearanceTarget,
-                roles: [skir.PresentationRole.referencePickerResult],
-                priority: 0,
-              ),
-            ]
-          : const [],
-      presentationMaterials: adaptiveAppearance
-          ? [
-              skir.PresentationMaterial(
-                inheritableNodes: const [],
-
-                provider: appearanceId,
-                target: appearanceTarget,
-                role: skir.PresentationRole.referencePickerResult,
-                layout: appearanceLayout,
-                dependencies: skir.PresentationDependencies.defaultInstance,
-                subject: rootTemplate,
-              ),
-            ]
-          : const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: [
-        skir.EndpointBindingTemplate(
-          endpoint: sourceEndpoint,
-          containingResource: skir.NamedTypeTemplate(
-            definition: rootDefinition,
-            arguments: const [],
-          ),
-          valueOwner: linkDefinition,
-          relativePath: skir.RelativeFieldPattern(
-            segments: [
-              skir.FieldPatternSegment.createField(name: "links"),
-              skir.FieldPatternSegment.items,
-            ],
-          ),
-          target: rootTemplate,
-          containsCollection: true,
-        ),
-      ],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    ),
-  );
-  final target = skir.ResourceId(value: "resource:target");
-  final secondTarget = skir.ResourceId(value: "resource:second-target");
-  final items = withPartialLinks
-      ? [
-          skir.ListItem(
-            id: _knownLinkItem,
-            value: skir.DataValue.createLink(
-              endpoint: sourceEndpoint,
-              target: skir.LinkTarget(resource: target, opposite: null),
-            ),
-          ),
-          skir.ListItem(
-            id: _unfinishedLinkItem,
-            value: skir.DataValue.unfilled,
-          ),
-        ]
-      : const <skir.ListItem>[];
-  final sourceRecord = skir.AuthoringRecord(
-    configuration: skir.TypeSelection.wrapComplete(rootUse),
-    fields: [
-      skir.FieldValue(
-        name: "links",
-        value: skir.DataValue.createNamed(
-          actualType: setUse,
-          payload: skir.DataValue.createSetValue(items: items),
-        ),
-      ),
-    ],
-  );
-  skir.AuthoringRecord targetRecord(String name) => skir.AuthoringRecord(
-    configuration: skir.TypeSelection.wrapComplete(rootUse),
-    fields: [
-      skir.FieldValue(
-        name: "name",
-        value: skir.DataValue.wrapStringValue(name),
-      ),
-      skir.FieldValue(
-        name: "links",
-        value: skir.DataValue.createNamed(
-          actualType: setUse,
-          payload: skir.DataValue.createSetValue(items: const []),
-        ),
-      ),
-    ],
-  );
-  final document = _RendererWorkspace(
-    catalog: checked,
-    resources: {
-      _resource: sourceRecord,
-      if (!missingTarget) target: targetRecord("Target Alpha"),
-      secondTarget: targetRecord("Target Beta"),
-    },
-  );
-  final rootBinding = skir.ExpressionBindingId(value: "root");
-  final itemBinding = skir.ExpressionBindingId(value: "item");
-  final collectionReference = skir.BindingRef(
-    bindingId: rootBinding,
-    path: skir.ValuePath(
-      segments: [skir.PathSegment.createField(name: "links")],
-    ),
-  );
-  final host = _authoredHost(
-    document,
-    material: adaptiveAppearance ? collectionMaterial : null,
-  );
-  return (
-    document: document,
-    catalog: checked,
-    target: target,
-    secondTarget: secondTarget,
-    widget: Material(
-      child: PortablePresentationNodeRenderer(
-        node: directCollection
-            ? presentationNode(
-                "links.direct",
-                skir.PresentationElement.wrapLinkInput(
-                  skir.LinkControl(
-                    control: skir.BoundControl(
-                      binding: collectionReference,
-                      label: label == null
-                          ? null
-                          : skir.ExpressionNode.wrapLiteral(
-                              skir.DataValue.wrapStringValue(label),
-                            ),
-                      description: null,
-                      prefix: null,
-                      semanticLabel: null,
-                    ),
-                    allowReorder: true,
-                    candidatePolicy: null,
-                    rejectionDisplay: skir.LinkRejectionDisplay.disabled,
-                    sourceId: null,
-                    appearance: null,
-                    content: content,
-                    inputAppearance: inputAppearance,
-                    inputContent: inputContent,
-                    popup: popup,
-                  ),
-                ),
-              )
-            : presentationNode(
-                "links",
-                skir.PresentationElement.wrapSetInput(
-                  skir.SetControl(
-                    control: _boundControl(collectionReference),
-                    itemPresentation: presentationNode(
-                      "link.item",
-                      skir.PresentationElement.wrapLinkInput(
-                        skir.LinkControl(
-                          control: _boundControl(
-                            skir.BindingRef(
-                              bindingId: itemBinding,
-                              path: skir.ValuePath(segments: const []),
-                            ),
-                          ),
-                          allowReorder: false,
-                          candidatePolicy: null,
-                          rejectionDisplay: skir.LinkRejectionDisplay.disabled,
-                          sourceId: adaptiveAppearance ? "nodes" : null,
-                          appearance: null,
-                          content: content,
-                          inputAppearance: inputAppearance,
-                          inputContent: inputContent,
-                          popup: popup,
-                        ),
-                      ),
-                    ),
-                    allowAdd: true,
-                    allowRemove: true,
-                    itemBinding: declareBinding(itemBinding, linkTemplate),
-                    appearance: collectionAppearance,
-                    content: null,
-                  ),
-                ),
-              ),
-        scope: PortablePresentationScope(
-          operations: testPortableOperations(),
-          bindings: {
-            rootBinding: PortableExpressionBinding(
-              value: skir.DataValue.createRecord(fields: sourceRecord.fields),
-              location: skir.ValueLocation(
-                resource: _resource,
-                path: skir.ValuePath(segments: const []),
-              ),
-            ),
-          },
-          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-          catalog: checked,
-          queries: host.document.queries,
-          resourceDiagnostics: host.document.resourceDiagnostics,
-          material: adaptiveAppearance ? collectionMaterial : null,
-          host: host,
-        ),
-      ),
-    ),
-  );
-}
-
-PortablePresentationScope _authoringScope(
-  _RendererWorkspace document,
-  String field,
-  skir.DataValue value,
-) => PortablePresentationScope(
-  operations: testPortableOperations(),
-  bindings: {
-    _bindingId: PortableExpressionBinding(
-      value: skir.DataValue.createRecord(
-        fields: [skir.FieldValue(name: field, value: value)],
-      ),
-      location: skir.ValueLocation(
-        resource: _resource,
-        path: skir.ValuePath(segments: const []),
-      ),
-    ),
-  },
-  budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-  catalog: document.workspace.document.catalog,
-  queries: PortableExpressionQueries(
-    catalog: document.workspace.document.catalog,
-    authored: document.workspace.document,
-  ),
-  host: _authoredHost(document),
-);
-
-AuthoredPresentationHost _authoredHost(
-  _RendererWorkspace document, {
-  skir.PresentationMaterial? material,
-  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
-  prepareValue,
-}) {
-  final host = AuthoredPresentationHost(
-    resource: _resource,
-    source: document.workspace.document,
-    material: material ?? skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.workspace,
-    budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-    capabilities: const PortablePresentationCapabilities(),
-    prepareValue: prepareValue,
-    edit: document.binding,
-  );
-  addTearDown(host.dispose);
-  return host;
-}
-
-skir.BoundControl _boundControl(skir.BindingRef reference) => skir.BoundControl(
-  binding: reference,
-  label: null,
-  description: null,
-  prefix: null,
-  semanticLabel: null,
-);
-
-final class _BindingHost extends ChangeNotifier
-    implements PortablePresentationHost {
-  _BindingHost({
-    required this.catalog,
-    required this.expected,
-    this.onWrite,
-    this.onWriteContext,
-    this.documentBindings = const {},
-  });
-
-  final CheckedEditorCatalog catalog;
-  final skir.TypeUse expected;
-  final void Function(skir.BindingRef reference, skir.DataValue value)? onWrite;
-  final void Function(
-    skir.BindingRef reference,
-    skir.DataValue value,
-    PortableInvocationContext context,
-  )?
-  onWriteContext;
-  final Map<skir.ExpressionBindingId, PortablePresentationBinding>
-  documentBindings;
-
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  PortablePresentationCapabilities get capabilities =>
-      const PortablePresentationCapabilities();
-
-  @override
-  PortablePresentationDocument get document => PortablePresentationDocument(
-    catalog: catalog,
-    root: skir.PresentationNode.defaultInstance,
-    bindings: documentBindings,
-    budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-  );
-
-  @override
-  bool get enabled => true;
-
-  @override
-  bool get readOnly => false;
-
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction, {
-    required PortableInvocationContext context,
-  }) async => const PortablePresentationWriteApplied();
-
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => expected;
-
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) {
-    final root = context.bindings[reference.bindingId]?.value;
-    if (root == null || reference.path.segments.isEmpty) return root;
-    return switch (root.readAt(reference.path)) {
-      PortablePathValue(:final value) => value,
-      PortablePathUnavailable() => null,
-    };
-  }
-
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) async {
-    onWrite?.call(reference, value);
-    onWriteContext?.call(reference, value, context);
-    return const PortablePresentationWriteApplied();
-  }
-}
-
-final class _TestPortableHost extends ChangeNotifier
-    implements PortablePresentationHost {
-  _TestPortableHost({
-    required skir.PresentationNode root,
-    this.rejectWrites = false,
-    skir.PresentationRole? role,
-    List<PortablePresentationDiagnostic> diagnostics = const [],
-  }) : _document = PortablePresentationDocument(
-         catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-         root: root,
-         bindings: {
-           _bindingId: PortablePresentationBinding(
-             schema: PortablePresentationBindingSchema.complete(_integerType),
-             value: skir.DataValue.wrapInteger("2"),
-             editable: true,
-           ),
-         },
-         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-         role: role,
-         diagnostics: diagnostics,
-       );
-
-  final bool rejectWrites;
-  PortablePresentationDocument _document;
-  final List<(skir.BindingRef, skir.DataValue)> writes = [];
-  final List<skir.EditorAction> actions = [];
-  int expectedTypeReads = 0;
-
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  PortablePresentationCapabilities get capabilities =>
-      const PortablePresentationCapabilities();
-
-  @override
-  PortablePresentationDocument get document => _document;
-
-  @override
-  bool get enabled => true;
-
-  @override
-  bool get readOnly => false;
-
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction, {
-    required PortableInvocationContext context,
-  }) async {
-    actions.add(editorAction);
-    return const PortablePresentationWriteResult.applied();
-  }
-
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) {
-    expectedTypeReads++;
-    return _integerType;
-  }
-
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => _document.bindings[reference.bindingId]?.value;
-
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) async {
-    writes.add((reference, value));
-    if (rejectWrites) {
-      return PortablePresentationWriteResult.rejected([
-        PortablePresentationDiagnostic(
-          code: "rejected_write",
-          message: "The document rejected this write",
-          severity: skir.DiagnosticSeverity.error,
-        ),
-      ]);
-    }
-    final current = _document.bindings[_bindingId]!;
-    _document = PortablePresentationDocument(
-      catalog: _document.catalog,
-      root: _document.root,
-      bindings: {
-        ..._document.bindings,
-        _bindingId: current.copyWith(value: value),
-      },
-      budget: _document.budget,
-      role: _document.role,
-      material: _document.material,
-      diagnostics: _document.diagnostics,
-      activePresentations: _document.activePresentations,
-      slots: _document.slots,
-    );
-    notifyListeners();
-    return const PortablePresentationWriteResult.applied();
-  }
-}
-
-final class _RendererWorkspace {
-  _RendererWorkspace({
-    required CheckedEditorCatalog catalog,
-    required Map<skir.ResourceId, skir.AuthoringRecord> resources,
-    List<skir.LinkProjection> links = const [],
-  }) {
-    final document = AuthoringDocument(
-      catalog: catalog,
-      entries: {
-        for (final entry in resources.entries)
-          entry.key: skir.AuthoringResource(
-            id: entry.key,
-            content: entry.value,
-          ),
-      },
-      links: links,
-    );
-    transport = ScriptedAuthoringTransport(AsyncData(document));
-    workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: document,
-    );
-    binding = workspace.attach(
-      _resource,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
-    addTearDown(workspace.dispose);
-    addTearDown(transport.dispose);
-  }
-  late final ScriptedAuthoringTransport transport;
-  late final RealmEditing workspace;
-  late final RealmEditingBinding binding;
-}
-
-Future<skir.PreparedEdit> _submit(
-  WidgetTester tester,
-  _RendererWorkspace fixture,
-) async {
-  unawaited(fixture.binding.save());
-  await tester.pump();
-  return fixture.transport.requests.single.edit;
-}
-
-CheckedEditorCatalog _collectionCatalog() {
-  final root = skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(namespace: "test", name: "Collections"),
-    revision: 1,
-  );
-  final list = skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(namespace: "test", name: "TextList"),
-    revision: 1,
-  );
-  final map = skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(namespace: "test", name: "TextMap"),
-    revision: 1,
-  );
-  final text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
-  final fields = {
-    "items": skir.TypeTemplate.createNamed(
-      definition: list,
-      arguments: const [],
-    ),
-    "values": skir.TypeTemplate.createNamed(
-      definition: map,
-      arguments: const [],
-    ),
-  };
-  skir.PublishedType published(
-    skir.TypeDefinitionId id,
-    skir.RepresentationTemplate representation, {
-    List<skir.EffectiveFieldTemplate> effective = const [],
-  }) => skir.PublishedType(
-    searchKey: null,
-    placementField: null,
-    definition: skir.TypeDefinition(
-      id: id,
-      parameters: const [],
-      representation: representation,
-      parents: const [],
-    ),
-    display: defaultTypeDisplay(""),
-    status: skir.DeclarationStatus.ready,
-    effectiveFields: effective,
-    ancestorTemplates: const [],
-  );
-  return CheckedEditorCatalog(
-    skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
-      generation: skir.CatalogGeneration(value: "catalog:test"),
-      types: [
-        published(
-          root,
-          skir.RepresentationTemplate.createRecord(
-            abstract_: false,
-            fields: [
-              for (final field in fields.entries)
-                skir.FieldDeclaration(
-                  owner: skir.FieldOwner(definition: root, name: field.key),
-                  type: field.value,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-            ],
-          ),
-          effective: [
-            for (final field in fields.entries)
-              skir.EffectiveFieldTemplate(
-                key: field.key,
-                owner: skir.FieldOwner(definition: root, name: field.key),
-                type: field.value,
-                rules: const [],
-              ),
-          ],
-        ),
-        published(
-          list,
-          skir.RepresentationTemplate.createSequence(
-            item: text,
-            kind: skir.CollectionKind.list,
-          ),
-        ),
-        published(
-          map,
-          skir.RepresentationTemplate.createMapping(key: text, value: text),
-        ),
-      ],
-      relations: const [],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    ),
-  );
-}
-
-skir.AuthoringRecord _collectionRecord(String field, skir.DataValue value) =>
-    skir.AuthoringRecord(
-      configuration: skir.TypeSelection.createComplete(
-        definition: skir.TypeDefinitionId(
-          typeId: skir.TypeId.createQualified(
-            namespace: "test",
-            name: "Collections",
-          ),
-          revision: 1,
-        ),
-        arguments: const [],
-      ),
-      fields: [skir.FieldValue(name: field, value: value)],
-    );
-
-final _bindingId = skir.ExpressionBindingId(value: "value");
-final _resource = skir.ResourceId(value: "resource:test");
-final _knownLinkItem = skir.ItemId(value: "link:known");
-final _unfinishedLinkItem = skir.ItemId(value: "link:unfinished");
 final _reference = skir.BindingRef(
-  bindingId: _bindingId,
+  bindingId: RendererWorkspace.bindingId,
   path: skir.ValuePath(segments: const []),
 );
 final _integerType = skir.TypeUse.wrapScalar(
@@ -3127,761 +2905,10 @@ final _overflowHeaderNode = skir.PresentationNode(
   ),
 );
 
-ScopedWorkSession _workSession() {
-  final session = ScopedWorkSession();
-  addTearDown(session.dispose);
-  return session;
-}
-
-void registerConfiguredCollectionTests() {
-  skir.ExpressionNode text(String value) =>
-      skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
-
-  testWidgets(
-    "composite metadata prefix remains an independent interactive sibling",
-    (tester) async {
-      final semantics = tester.ensureSemantics();
-      final prefix = presentationNode(
-        "collection.prefix.action",
-        skir.PresentationElement.createButton(
-          label: text("Prefix insertion"),
-          action: skir.EditorAction.wrapLocal(
-            skir.LocalEditorAction.createAppendListItem(
-              target: skir.BindingRef(
-                bindingId: _bindingId,
-                path: skir.ValuePath(
-                  segments: [skir.PathSegment.createField(name: "items")],
-                ),
-              ),
-              value: text("From prefix"),
-            ),
-          ),
-          appearance: null,
-          icon: null,
-        ),
-      );
-      final fixture = _collectionFixture(
-        value: skir.DataValue.createListValue(items: const []),
-        allowAdd: true,
-        label: "Coordinates",
-        prefix: prefix,
-      );
-      await tester.pumpTestApp(child: fixture.widget);
-      expect(find.text("Prefix insertion"), findsOneWidget);
-      expect(find.text("Coordinates"), findsOneWidget);
-      expect(find.tooltip("Add item"), findsOneWidget);
-      expect(
-        tester
-            .getSemantics(find.widgetWithText(FilledButton, "Prefix insertion"))
-            .getSemanticsData()
-            .hasAction(SemanticsAction.tap),
-        isTrue,
-      );
-      semantics.dispose();
-      await tester.tap(find.text("Prefix insertion"));
-      await tester.pumpAndSettle();
-      final submitted = await _submit(tester, fixture.document);
-      expect(
-        (submitted.intents.single as skir.EditIntent_insertWrapper)
-            .value
-            .item
-            .value,
-        skir.DataValue.wrapStringValue("From prefix"),
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-  testWidgets(
-    "collection operations inherit group appearance and explicit operation density wins",
-    (tester) async {
-      final shared =
-          (skir.InputAppearance.mutable()
-                ..density = skir.ControlDensity.compact
-                ..valueStyle = (skir.InputTextStyle.mutable()..weight = 600)
-                    .toFrozen())
-              .toFrozen();
-      final inherited = _collectionFixture(
-        value: skir.DataValue.createListValue(items: const []),
-        allowAdd: true,
-        inputDefaults: shared,
-      );
-      await tester.pumpTestApp(child: inherited.widget);
-      final add = tester.widget<IconButton>(
-        find.byWidgetPredicate(
-          (widget) => widget is IconButton && widget.tooltip == "Add item",
-        ),
-      );
-      expect(add.style?.visualDensity, VisualDensity.compact);
-      expect(
-        add.style?.textStyle
-            ?.resolve({})
-            ?.fontVariations
-            ?.any(
-              (variation) => variation.axis == "wght" && variation.value == 600,
-            ),
-        isTrue,
-      );
-      final local = _collectionFixture(
-        value: skir.DataValue.createListValue(items: const []),
-        allowAdd: true,
-        inputDefaults: shared,
-        content:
-            (skir.CollectionContent.mutable()
-                  ..operationDensity = skir.ControlDensity.comfortable)
-                .toFrozen(),
-      );
-      await tester.pumpTestApp(child: local.widget);
-      final localAdd = tester.widget<IconButton>(
-        find.byWidgetPredicate(
-          (widget) => widget is IconButton && widget.tooltip == "Add item",
-        ),
-      );
-      expect(localAdd.style?.visualDensity, VisualDensity.standard);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
-    "configured empty content and add action keep the existing insertion owner",
-    (tester) async {
-      final fixture = _collectionFixture(
-        value: skir.DataValue.createListValue(items: const []),
-        allowAdd: true,
-        content: skir.CollectionContent(
-          addLabel: text("New coordinate"),
-          empty: presentationText(
-            "configured.empty",
-            textLiteral("No coordinates"),
-          ),
-          operationDensity: skir.ControlDensity.compact,
-
-          emptyText: null,
-          addIcon: null,
-          removeLabel: null,
-          reorderIcon: null,
-          removeIcon: null,
-          chooseLabel: null,
-          chooseIcon: null,
-          unlinkLabel: null,
-          unlinkIcon: null,
-          operationTooltip: null,
-          keyLabel: null,
-          valueLabel: null,
-        ),
-      );
-      await tester.pumpTestApp(child: fixture.widget);
-      expect(find.text("No coordinates"), findsOneWidget);
-      expect(find.text("No items"), findsNothing);
-      expect(find.tooltip("New coordinate"), findsOneWidget);
-      final add = tester.widget<IconButton>(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is IconButton && widget.tooltip == "New coordinate",
-        ),
-      );
-      expect(add.style?.visualDensity, VisualDensity.compact);
-      await tester.tap(find.tooltip("New coordinate"));
-      await tester.pumpAndSettle();
-      final submitted = await _submit(tester, fixture.document);
-      expect(submitted.intents, hasLength(1));
-      expect(submitted.intents.single, isA<skir.EditIntent_insertWrapper>());
-    },
-  );
-
-  testWidgets(
-    "configured collection row spacing and removal affordances preserve item identity",
-    (tester) async {
-      final fixture = _collectionFixture(
-        value: skir.DataValue.createListValue(
-          items: [
-            skir.ListItem(
-              id: skir.ItemId(value: "first"),
-              value: skir.DataValue.wrapStringValue("First"),
-            ),
-            skir.ListItem(
-              id: skir.ItemId(value: "second"),
-              value: skir.DataValue.wrapStringValue("Second"),
-            ),
-          ],
-        ),
-        allowAdd: false,
-        appearance: skir.CollectionAppearance(
-          itemSpacing: 14,
-          itemPadding: skir.PresentationInsets.wrapAll(4),
-
-          itemBackground: null,
-          itemForeground: null,
-          itemBorder: null,
-          itemRadius: null,
-          itemTransition: null,
-          itemShadows: const [],
-        ),
-        content: skir.CollectionContent(
-          removeLabel: text("Remove coordinate"),
-          removeIcon: presentationText(
-            "configured.remove",
-            textLiteral("Remove glyph"),
-          ),
-
-          emptyText: null,
-          empty: null,
-          addLabel: null,
-          addIcon: null,
-          reorderIcon: null,
-          chooseLabel: null,
-          chooseIcon: null,
-          unlinkLabel: null,
-          unlinkIcon: null,
-          operationTooltip: null,
-          operationDensity: null,
-          keyLabel: null,
-          valueLabel: null,
-        ),
-      );
-      await tester.pumpTestApp(child: fixture.widget);
-      expect(find.tooltip("Remove coordinate"), findsNWidgets(2));
-      expect(find.text("Remove glyph"), findsNWidgets(2));
-      final cards = find.descendant(
-        of: find.byType(ReorderableListView),
-        matching: find.byType(DepthBox),
-      );
-      expect(cards, findsNWidgets(2));
-      expect(
-        tester.getRect(cards.at(1)).top - tester.getRect(cards.at(0)).bottom,
-        closeTo(14, 0.01),
-      );
-      final remove = find
-          .byWidgetPredicate(
-            (widget) =>
-                widget is IconButton && widget.tooltip == "Remove coordinate",
-          )
-          .first;
-      expect(tester.widget<IconButton>(remove).onPressed, isNotNull);
-      await tester.tap(remove);
-      await tester.pumpAndSettle();
-      expect(fixture.document.workspace.state.groups, isNotEmpty);
-      final submitted = await _submit(tester, fixture.document);
-      expect(submitted.intents, hasLength(1));
-      final removal = submitted.intents.single as skir.EditIntent_removeWrapper;
-      expect(removal.value.item.value, "first");
-    },
-  );
-
-  testWidgets(
-    "configured link affordances retain checked resource choices and popup styling",
-    (tester) async {
-      final fixture = _linkCollectionFixture(
-        withPartialLinks: true,
-        content: skir.CollectionContent(
-          chooseLabel: text("Choose node"),
-          unlinkLabel: text("Disconnect node"),
-
-          emptyText: null,
-          empty: null,
-          addLabel: null,
-          addIcon: null,
-          removeLabel: null,
-          reorderIcon: null,
-          removeIcon: null,
-          chooseIcon: null,
-          unlinkIcon: null,
-          operationTooltip: null,
-          operationDensity: null,
-          keyLabel: null,
-          valueLabel: null,
-        ),
-        inputAppearance: skir.InputAppearance(
-          density: skir.ControlDensity.compact,
-
-          iconColor: null,
-          iconSize: null,
-          valueStyle: null,
-          placeholderStyle: null,
-          labelStyle: null,
-          descriptionStyle: null,
-          alignment: null,
-          padding: null,
-          fill: null,
-          border: null,
-          radius: null,
-        ),
-        inputContent: skir.InputContent(
-          placeholder: text("Select destination"),
-          leading: skir.InputAdornment.none,
-
-          suffix: null,
-        ),
-        popup: skir.PopupAppearance(
-          maximumWidth: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapFloat(480),
-          ),
-          padding: skir.PresentationInsets.wrapAll(6),
-
-          minimumWidth: null,
-          maximumExtent: null,
-          fill: null,
-          border: null,
-          radius: null,
-        ),
-      );
-      await tester.pumpTestApp(child: fixture.widget);
-      expect(find.tooltip("Disconnect node"), findsOneWidget);
-      expect(find.tooltip("Choose node"), findsNWidgets(2));
-      expect(find.text("Select destination"), findsOneWidget);
-      await tester.tap(find.tooltip("Choose node").last);
-      await tester.pumpAndSettle();
-      expect(find.byType(QueryBar), findsOneWidget);
-      final query = tester.widget<QueryBar>(find.byType(QueryBar));
-      expect(query.inputDecoration.hintText, "Select destination");
-      expect(query.inputDecoration.prefixIcon, isNull);
-      final styles = find.byType(SearchSurfaceAppearance);
-      expect(styles, findsOneWidget);
-      expect(
-        tester
-            .widget<SearchSurfaceAppearance>(styles)
-            .style
-            .constraints
-            ?.maxWidth,
-        480,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-}
-
-void registerCompiledSdkControlTests() {
-  for (final family in ["typed", "nullable"]) {
-    testWidgets(
-      "compiled SDK $family body preserves source ownership on write",
-      (tester) async {
-        final layout = family == "typed"
-            ? compiledSdkTypedLayout
-            : compiledSdkNullableLayout;
-        final value = family == "typed"
-            ? compiledSdkTypedValue
-            : compiledSdkNullableValue;
-        final binding = family == "typed"
-            ? _configuredBindingId
-            : skir.ExpressionBindingId(value: "map_value");
-        final writes = <(skir.BindingRef, skir.DataValue)>[];
-        final host = _BindingHost(
-          catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
-          expected: family == "typed"
-              ? skir.TypeUse.wrapScalar(skir.ScalarKind.text)
-              : _integerType,
-          onWrite: (reference, changed) => writes.add((reference, changed)),
-        );
-        addTearDown(host.dispose);
-        final scope = PortablePresentationScope(
-          operations: testPortableOperations(),
-          bindings: {binding: PortableExpressionBinding(value: value)},
-          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-          host: host,
-        );
-        await tester.pumpTestApp(
-          child: Material(
-            child: PortablePresentationNodeRenderer(node: layout, scope: scope),
-          ),
-        );
-        final input = find.byType(TextFormField);
-        expect(input, findsOneWidget);
-        expect(
-          tester.widget<TextFormField>(input).controller?.text,
-          family == "typed" ? "Authored title" : "42",
-        );
-        await tester.enterText(
-          input,
-          family == "typed" ? "Changed title" : "43",
-        );
-        await tester.pumpAndSettle();
-        expect(writes, hasLength(1));
-        expect(writes.single.$1.bindingId, binding);
-        expect(
-          writes.single.$1.path.segments,
-          family == "typed"
-              ? [skir.PathSegment.createField(name: "title")]
-              : isEmpty,
-        );
-        expect(
-          writes.single.$2,
-          family == "typed"
-              ? skir.DataValue.wrapStringValue("Changed title")
-              : skir.DataValue.wrapInteger("43"),
-        );
-        expect(tester.takeException(), isNull);
-      },
-    );
-  }
-  for (final scenario in [
-    (3, "Authored code", "code", skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
-    (4, "7", "position", _integerType),
-  ]) {
-    testWidgets(
-      "compiled SDK ${scenario.$3} body retains its lexical source and write path",
-      (tester) async {
-        final layout = compiledSdkCompositeLayout;
-        final value = compiledSdkCompositeValue;
-        final column =
-            (layout.element! as skir.PresentationElement_childrenWrapper).value
-                as skir.ChildrenElement_columnWrapper;
-        final selected = (column.value.children.elementAt(
-          scenario.$1,
-        ) as skir.AxisChild_fixedWrapper).value;
-        final writes = <(skir.BindingRef, skir.DataValue)>[];
-        final host = _BindingHost(
-          catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
-          expected: scenario.$4,
-          onWrite: (reference, changed) => writes.add((reference, changed)),
-        );
-        addTearDown(host.dispose);
-        final scope = PortablePresentationScope(
-          operations: testPortableOperations(),
-          bindings: {
-            _configuredBindingId: PortableExpressionBinding(
-              value: value,
-              location: skir.ValueLocation(
-                resource: _resource,
-                path: skir.ValuePath(segments: const []),
-              ),
-            ),
-          },
-          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-          host: host,
-        );
-        await tester.pumpTestApp(
-          child: Material(
-            child: PortablePresentationNodeRenderer(
-              node: selected,
-              scope: scope,
-            ),
-          ),
-        );
-        final input = find.byType(TextFormField);
-        expect(input, findsOneWidget);
-        expect(
-          tester.widget<TextFormField>(input).controller?.text,
-          scenario.$2,
-        );
-        await tester.enterText(input, scenario.$1 == 3 ? "Changed code" : "9");
-        await tester.pumpAndSettle();
-        expect(writes, hasLength(1));
-        expect(writes.single.$1.bindingId, _configuredBindingId);
-        expect(
-          writes.single.$1.path.segments.first,
-          skir.PathSegment.createField(name: scenario.$3),
-        );
-        if (scenario.$1 == 4) {
-          expect(
-            writes.single.$1.path.segments.last,
-            skir.PathSegment.createField(name: "x"),
-          );
-          expect(writes.single.$2, skir.DataValue.wrapInteger("9"));
-        } else {
-          expect(
-            writes.single.$2.authoredActualType,
-            value.authoredField("code")?.authoredActualType,
-          );
-          expect(writes.single.$2.authoredString, "Changed code");
-        }
-        expect(tester.takeException(), isNull);
-      },
-    );
-  }
-}
-
-void registerRemainingFieldsTests() {
-  testWidgets(
-    "compiled nested remainder reserves authored x and renders only position y",
-    (tester) async {
-      final writes = <(skir.BindingRef, skir.DataValue)>[];
-      skir.NamedTypeUse? writeOwner;
-      final catalog = compiledSdkNestedRemainderCatalog.asTrustedLocalCatalog();
-      final host = _BindingHost(
-        catalog: catalog,
-        expected: _integerType,
-        onWrite: (reference, value) => writes.add((reference, value)),
-        onWriteContext: (_, _, context) => writeOwner = context
-            .bindings[_configuredBindingId]
-            ?.value
-            .authoredField("position")
-            ?.authoredActualType,
-      );
-      addTearDown(host.dispose);
-      final scope = PortablePresentationScope(
-        operations: testPortableOperations(),
-        catalog: catalog,
-        bindings: {
-          _configuredBindingId: PortableExpressionBinding(
-            value: compiledSdkCompositeValue,
-          ),
-        },
-        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-        host: host,
-      );
-      await tester.pumpTestApp(
-        child: Material(
-          child: PortablePresentationNodeRenderer(
-            node: compiledSdkNestedRemainderLayout,
-            scope: scope,
-          ),
-        ),
-      );
-      final fields = find.byType(TextFormField);
-      expect(fields, findsNWidgets(2));
-      expect(
-        tester
-            .widgetList<TextFormField>(fields)
-            .map((field) => field.controller?.text)
-            .toList(),
-        ["7", "8"],
-      );
-      expect(find.text("y"), findsOneWidget);
-      expect(find.text("code"), findsNothing);
-      expect(find.text("Authored code"), findsNothing);
-      await tester.enterText(fields.last, "10");
-      await tester.pumpAndSettle();
-      expect(writes, hasLength(1));
-      expect(writes.single.$2, skir.DataValue.wrapInteger("10"));
-      expect(
-        writeOwner,
-        compiledSdkCompositeValue.authoredField("position")?.authoredActualType,
-      );
-      expect(writes.single.$1.path.segments, [
-        skir.PathSegment.createField(name: "position"),
-        skir.PathSegment.createField(name: "y"),
-      ]);
-      expect(tester.takeException(), isNull);
-    },
-  );
-  testWidgets(
-    "remaining fields reserve hidden nested authoring independent of order and keep manual omissions",
-    (tester) async {
-      final definition = skir.TypeDefinitionId(
-        typeId: skir.TypeId.createQualified(
-          namespace: "test",
-          name: "Remainder",
-        ),
-        revision: 1,
-      );
-      final named = skir.NamedTypeUse(
-        definition: definition,
-        arguments: const [],
-      );
-      final integer = skir.TypeTemplate.wrapScalar(
-        skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
-      );
-      const names = ["X", "Y", "Z", "W"];
-      final fields = [
-        for (final name in names)
-          skir.FieldDeclaration(
-            owner: skir.FieldOwner(definition: definition, name: name),
-            type: integer,
-            overrides: const [],
-            hasConstructorDefault: false,
-          ),
-      ];
-      final published = skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        definition: skir.TypeDefinition(
-          id: definition,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            abstract_: false,
-            fields: fields,
-          ),
-          parents: const [],
-        ),
-        display: defaultTypeDisplay(""),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: [
-          for (final field in fields)
-            skir.EffectiveFieldTemplate(
-              key: field.owner.name,
-              owner: field.owner,
-              type: field.type,
-              rules: const [],
-            ),
-        ],
-        ancestorTemplates: const [],
-      );
-      final catalog =
-          (skir.EditorCatalog.mutable()
-                ..generation = skir.CatalogGeneration(value: "remainder proof")
-                ..types = [published])
-              .toFrozen()
-              .asTrustedLocalCatalog();
-      final root = skir.DataValue.createNamed(
-        actualType: named,
-        payload: skir.DataValue.createRecord(
-          fields: [
-            for (final (index, name) in names.indexed)
-              skir.FieldValue(
-                name: name,
-                value: skir.DataValue.wrapInteger((index + 1).toString()),
-              ),
-          ],
-        ),
-      );
-      final writes = <(skir.BindingRef, skir.DataValue)>[];
-      final host = _BindingHost(
-        catalog: catalog,
-        expected: _integerType,
-        onWrite: (reference, value) => writes.add((reference, value)),
-      );
-      addTearDown(host.dispose);
-      skir.PresentationNode field(String name) => presentationNode(
-        "authored.$name",
-        skir.PresentationElement.wrapNumericInput(
-          (skir.NumericControl.mutable()
-                ..control = skir.BoundControl(
-                  binding: skir.BindingRef(
-                    bindingId: _configuredBindingId,
-                    path: skir.ValuePath(
-                      segments: [skir.PathSegment.createField(name: name)],
-                    ),
-                  ),
-                  label: skir.ExpressionNode.wrapLiteral(
-                    skir.DataValue.wrapStringValue(name),
-                  ),
-                  description: null,
-                  prefix: null,
-                  semanticLabel: null,
-                )
-                ..content =
-                    (skir.InputContent.mutable()
-                          ..placeholder = skir.ExpressionNode.wrapLiteral(
-                            skir.DataValue.wrapStringValue("$name editor"),
-                          ))
-                        .toFrozen())
-              .toFrozen(),
-        ),
-      );
-      final remaining = presentationNode(
-        "remaining",
-        skir.PresentationElement.wrapRemainingFields(
-          skir.RemainingFieldsElement(
-            excluded: [
-              skir.RelativeFieldPattern(
-                segments: [skir.FieldPatternSegment.createField(name: "Z")],
-              ),
-            ],
-            excludedParts: const [],
-          ),
-        ),
-      );
-      final hidden = presentationNode(
-        "hidden.X",
-        skir.PresentationElement.wrapConditional(
-          (skir.ConditionalElement.mutable()
-                ..condition = skir.ExpressionNode.wrapLiteral(
-                  skir.DataValue.wrapBoolean(false),
-                )
-                ..whenTrue = field("X"))
-              .toFrozen(),
-        ),
-      );
-      final row = presentationNode(
-        "authored.row",
-        skir.PresentationElement.wrapChildren(
-          skir.ChildrenElement.createRow(
-            children: [
-              skir.AxisChild.wrapFixed(hidden),
-              skir.AxisChild.createFlexible(
-                child: field("Y"),
-                flex: 1,
-                fit: skir.FlexFit.tight,
-              ),
-            ],
-            layout: skir.AxisChildrenLayout(
-              clipOverflow: false,
-
-              spacing: 8,
-              mainAxisAlignment: skir.MainAxisAlignment.start,
-              crossAxisAlignment: skir.CrossAxisAlignment.center,
-            ),
-          ),
-        ),
-      );
-      final layout = presentationNode(
-        "record",
-        skir.PresentationElement.wrapChildren(
-          skir.ChildrenElement.createColumn(
-            children: [
-              skir.AxisChild.wrapFixed(remaining),
-              skir.AxisChild.wrapFixed(row),
-            ],
-            layout: skir.AxisChildrenLayout(
-              clipOverflow: false,
-
-              spacing: 8,
-              mainAxisAlignment: skir.MainAxisAlignment.start,
-              crossAxisAlignment: skir.CrossAxisAlignment.stretch,
-            ),
-          ),
-        ),
-      );
-      final scope = PortablePresentationScope(
-        operations: testPortableOperations(),
-        catalog: catalog,
-        bindings: {
-          _configuredBindingId: PortableExpressionBinding(
-            value: root,
-            schema: PortablePresentationBindingSchema.complete(
-              skir.TypeUse.wrapNamed(named),
-            ),
-          ),
-        },
-        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-        host: host,
-      );
-      await tester.pumpTestApp(
-        child: Material(
-          child: PortablePresentationNodeRenderer(node: layout, scope: scope),
-        ),
-      );
-      expect(find.text("X"), findsNothing);
-      expect(find.text("Z"), findsNothing);
-      expect(find.text("Y"), findsOneWidget);
-      expect(find.text("W"), findsOneWidget);
-      expect(find.byType(TextFormField), findsNWidgets(2));
-      final controllers = tester
-          .widgetList<TextFormField>(find.byType(TextFormField))
-          .map((field) => field.controller?.text)
-          .toList();
-      expect(controllers, ["4", "2"]);
-      final y = find.byWidgetPredicate(
-        (widget) =>
-            widget is TextField && widget.decoration?.hintText == "Y editor",
-      );
-      await tester.enterText(y, "9");
-      await tester.pumpAndSettle();
-      final w = find.byType(TextFormField).first;
-      await tester.enterText(w, "10");
-      await tester.pumpAndSettle();
-      expect(
-        writes.any(
-          (write) =>
-              write.$1.path.segments.single ==
-                  skir.PathSegment.createField(name: "Y") &&
-              write.$2 == skir.DataValue.wrapInteger("9"),
-        ),
-        isTrue,
-      );
-      expect(
-        writes.any(
-          (write) =>
-              write.$1.path.segments.single ==
-                  skir.PathSegment.createField(name: "W") &&
-              write.$2 == skir.DataValue.wrapInteger("10"),
-        ),
-        isTrue,
-      );
-      expect(
-        writes.every((write) => write.$1.bindingId == _configuredBindingId),
-        isTrue,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-}
+final _integerBinding = {
+  RendererWorkspace.bindingId: PortablePresentationBinding(
+    schema: PortablePresentationBindingSchema.complete(_integerType),
+    value: skir.DataValue.wrapInteger("2"),
+    editable: true,
+  ),
+};

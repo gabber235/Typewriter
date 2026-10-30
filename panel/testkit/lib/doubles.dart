@@ -1,8 +1,26 @@
 library;
 
 export "src/doubles/appearance.dart";
+export "src/doubles/local_storage.dart";
 export "src/doubles/members.dart";
+export "src/doubles/membership_service.dart";
 export "src/doubles/nats.dart";
 export "src/doubles/organizations.dart";
+export "src/doubles/projecting_host.dart";
+export "src/doubles/projection_watch.dart";
 export "src/doubles/realm.dart";
+export "src/doubles/realm_library.dart";
+export "src/doubles/rive.dart";
+export "src/doubles/route_reevaluation.dart";
+export "src/doubles/services_service.dart";
 export "src/doubles/session.dart";
+export "src/doubles/telemetry.dart";
+export "src/doubles/unsaved_work.dart";
+export "src/doubles/work_destination.dart";
+export "src/doubles/presentation_host.dart";
+export "src/doubles/http_client.dart";
+export "src/doubles/search_history.dart";
+export "src/doubles/color_library.dart";
+export "src/doubles/unload_protection.dart";
+export "src/doubles/work_driver.dart";
+export "src/doubles/value_update.dart";

@@ -8,16 +8,23 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// rejects malformed values and named types absent from the active checked
 /// catalog before history enters the result tree.
 final class PortableLocalSearchHistoryStorage implements SearchHistoryStorage {
-  const PortableLocalSearchHistoryStorage({required this.catalog});
+  /// Persists history in `storage`, the browser's local storage unless given.
+  const PortableLocalSearchHistoryStorage({
+    required this.catalog,
+    this._storage,
+  });
 
   final CheckedEditorCatalog catalog;
+  final LocalStorage? _storage;
+
+  LocalStorage get _store => _storage ?? localStorage;
 
   @override
   Future<List<SearchResult>> loadValidResults({
     required String key,
     required int capacity,
   }) async {
-    final encoded = localStorage.getItem(_storageKey(key));
+    final encoded = _store.getItem(_storageKey(key));
     if (encoded == null) return const [];
     try {
       final document = jsonDecode(encoded);
@@ -38,7 +45,7 @@ final class PortableLocalSearchHistoryStorage implements SearchHistoryStorage {
     required List<SearchResult> results,
   }) async {
     final encoded = results.map(_encode).nonNulls.toList(growable: false);
-    localStorage.setItem(_storageKey(key), jsonEncode(encoded));
+    _store.setItem(_storageKey(key), jsonEncode(encoded));
   }
 
   String _storageKey(String key) => "portable_search_history:$key";

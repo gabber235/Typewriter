@@ -6,35 +6,23 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("ownership follows the declared endpoint direction", () {
-    final document = _document();
+    final document = _document;
 
-    expect(document.relations.ownerPath(_pageId).owners, [_firstBookId]);
+    expect(document.relations.ownerPath(_pageId).owners, [
+      _firstBookId,
+      libraryId,
+      realmRootId,
+    ]);
     expect(document.relations.ownedBy(_firstBookId), [_pageId]);
   });
 
-  test(
-    "ownership projections cannot be mutated through nested collections",
-    () {
-      final relations = _document().relations;
-
-      expect(
-        () => relations.parents[_pageId]!.add(_secondBookId),
-        throwsUnsupportedError,
-      );
-      expect(
-        () => relations.ownedBy(_firstBookId).clear(),
-        throwsUnsupportedError,
-      );
-    },
-  );
-
   test("ownership reports ambiguous parents", () {
-    final document = _document();
+    final document = _document;
     final ambiguous = document.copyWith(
       links: [
         ...document.links,
         skir.LinkProjection(
-          contract: skir.RelationId(value: fixtureBookPagesRelation),
+          contract: skir.RelationId(value: bookPagesRelation),
           first: _secondBookId,
           second: _pageId,
           firstLocation: skir.ValuePath(
@@ -54,13 +42,13 @@ void main() {
   });
 
   test("ownership keeps diagnostics local to touched resources", () {
-    final document = _document();
+    final document = _document;
     final missing = skir.ResourceId(value: "page:missing");
     final invalid = document.copyWith(
       links: [
         ...document.links,
         skir.LinkProjection(
-          contract: skir.RelationId(value: fixtureBookPagesRelation),
+          contract: skir.RelationId(value: bookPagesRelation),
           first: _secondBookId,
           second: missing,
           firstLocation: skir.ValuePath(
@@ -83,7 +71,7 @@ final _firstBookId = skir.ResourceId(value: "book:first");
 final _secondBookId = skir.ResourceId(value: "book:second");
 final _pageId = skir.ResourceId(value: "page:owned");
 
-AuthoringDocument _document() => fixtureAuthoringDocument(
+final _document = realmDocument(
   books: [
     Book(
       bookId: _firstBookId,

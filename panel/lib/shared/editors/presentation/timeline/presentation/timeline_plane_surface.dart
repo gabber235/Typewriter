@@ -122,15 +122,21 @@ class TimelinePlaneSurface extends HookWidget {
                       rect: placed.rect,
                       childRect: placed.childrenRect,
                       color: placed.element.color,
-                      child: placed.element.builder(
-                        context,
-                        TimelineElementBuildData(
-                          placed: placed,
-                          style: style,
-                          controller: controller,
-                          onCommitPreview: onCommitPreviews,
-                          resolveMovePreviews: resolveMovePreviews,
-                          resolveResizePreviews: resolveResizePreviews,
+                      // Each element is its own semantics node, so
+                      // assistive technology reaches cues one by one instead
+                      // of reading the plane as one merged label.
+                      child: Semantics(
+                        container: true,
+                        child: placed.element.builder(
+                          context,
+                          TimelineElementBuildData(
+                            placed: placed,
+                            style: style,
+                            controller: controller,
+                            onCommitPreview: onCommitPreviews,
+                            resolveMovePreviews: resolveMovePreviews,
+                            resolveResizePreviews: resolveResizePreviews,
+                          ),
                         ),
                       ),
                     ),

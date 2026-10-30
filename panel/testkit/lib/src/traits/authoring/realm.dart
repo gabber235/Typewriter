@@ -15,11 +15,15 @@ Book book(String title, {List<skir.ResourceId> tags = const []}) => Book(
   tagIds: tags,
 );
 
-/// A Tag named [name], identified by its snake cased name.
-Tag tag(String name, {List<skir.ResourceId> parents = const []}) => Tag(
+/// A Tag named [name] in [color], identified by its snake cased name.
+Tag tag(
+  String name, {
+  Color color = Colors.teal,
+  List<skir.ResourceId> parents = const [],
+}) => Tag(
   tagId: skir.ResourceId(value: "tag:${name.snakeCase()}"),
   name: name,
-  color: Colors.teal,
+  color: color,
   parentIds: parents,
 );
 
@@ -30,15 +34,58 @@ Page page(String name, {Book? book}) => Page(
   bookId: book?.bookId,
 );
 
+/// A scene named [name] whose timeline shows [tracks], identified by its
+/// snake cased name.
+Scene scene(String name, {List<Track> tracks = const []}) => Scene(
+  sceneId: skir.ResourceId(value: "scene:${name.snakeCase()}"),
+  name: name,
+  tracks: tracks,
+);
+
+/// A track named [name] holding [cues], identified by its snake cased name.
+Track track(String name, {List<Cue> cues = const []}) => Track(
+  trackId: skir.ResourceId(value: "track:${name.snakeCase()}"),
+  name: name,
+  cues: cues,
+);
+
+/// A cue named [name] spanning the frames [from] to [to], identified by its
+/// snake cased name.
+Cue cue(String name, {required int from, required int to}) => Cue(
+  cueId: skir.ResourceId(value: "cue:${name.snakeCase()}"),
+  name: name,
+  startFrame: from,
+  endFrame: to,
+);
+
 /// A Realm named [name] in the signed in user's organization, holding
-/// [books], [tags] and [pages] in its Library and tags sections. Without a
+/// [books], [tags] and [pages] in its Library and tags sections, and each of
+/// [scenes] as a section of its own. Without a
 /// location, the panel opens at its home.
+///
+/// [catalog] replaces the [libraryCatalog] the resources are typed by.
 Trait realm({
   String name = "Main",
   List<Book> books = const [],
   List<Tag> tags = const [],
   List<Page> pages = const [],
-}) => _Realm(RealmSeed(name: name, books: books, tags: tags, pages: pages));
+  List<Scene> scenes = const [],
+  CheckedEditorCatalog? catalog,
+}) => _Realm(
+  RealmSeed(
+    name: name,
+    books: books,
+    tags: tags,
+    pages: pages,
+    scenes: scenes,
+    catalog: catalog,
+  ),
+);
+
+/// A Realm named [name] whose saved content is [document], for content the
+/// library catalog cannot describe, such as resources of an extension.
+Trait realmServing(AuthoringDocument document, {String name = "Main"}) =>
+    _Realm(RealmSeed(name: name, saved: document));
 
 final class _Realm extends Trait {
   const _Realm(this.seed);
@@ -98,4 +145,22 @@ final class _RemoteChange extends Trait {
       () => started.requireRealm.remoteChange(change),
     ),
   );
+}
+
+/// The Realm answers saves only when the test does, through
+/// [FakeRealm.saves]: a slow, refused or lost reply.
+const Trait heldSaves = _HeldSaves();
+
+final class _HeldSaves extends Trait {
+  const _HeldSaves();
+
+  @override
+  Slot get slot => const Slot("saves");
+
+  @override
+  String get description => "heldSaves";
+
+  @override
+  void applyTo(WorldBuilder world) =>
+      world.onStart((started) => started.requireRealm.holdSaves = true);
 }

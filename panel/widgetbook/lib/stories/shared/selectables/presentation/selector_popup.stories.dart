@@ -2,75 +2,38 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 /// Asynchronous states a selector can be opened from.
 enum SelectorStoryState { loaded, loading, failed }
 
 @widgetbook.UseCase(name: "Searchable sections", type: SelectorPopup)
-Widget selectorPopupUseCase(BuildContext context) => SelectorPopupStory(
-  state: context.knobs.object.dropdown(
+Widget selectorPopupUseCase(BuildContext context) =>
+    _selectorStory(context, withSelection: false);
+
+@widgetbook.UseCase(name: "Current selection", type: SelectorPopupWithSelection)
+Widget selectorPopupWithSelectionUseCase(BuildContext context) =>
+    _selectorStory(context, withSelection: true);
+
+Widget _selectorStory(BuildContext context, {required bool withSelection}) {
+  final state = context.knobs.object.dropdown(
     label: "Choices",
     options: SelectorStoryState.values,
     initialOption: SelectorStoryState.loaded,
     labelBuilder: (state) => state.name,
-  ),
-  longNames: context.knobs.boolean(label: "Long names", initialValue: false),
-);
-
-@widgetbook.UseCase(name: "Current selection", type: SelectorPopupWithSelection)
-Widget selectorPopupWithSelectionUseCase(BuildContext context) =>
-    SelectorPopupStory(
-      withSelection: true,
-      state: context.knobs.object.dropdown(
-        label: "Choices",
-        options: SelectorStoryState.values,
-        initialOption: SelectorStoryState.loaded,
-        labelBuilder: (state) => state.name,
-      ),
-      longNames: context.knobs.boolean(
-        label: "Long names",
-        initialValue: false,
-      ),
-    );
-
-@widgetbook.UseCase(name: "Query input", type: SelectorSearchField)
-Widget selectorSearchFieldUseCase(BuildContext context) {
-  final width = context.knobs.double.slider(
-    label: "Field width",
-    initialValue: 320,
-    min: 200,
-    max: 480,
   );
-  final hint = context.knobs.string(
-    label: "Hint",
-    initialValue: "Search books",
-  );
-  return FakeApp(
-    child: SizedBox(
-      width: width,
-      child: HookBuilder(
-        builder: (context) {
-          final query = useState("");
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SelectorSearchField(searchQuery: query, hintText: hint),
-              Text("Query: ${query.value}"),
-            ],
-          );
-        },
+  final longNames = context.knobs.boolean(label: "Long names");
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SelectorPopupStory(
+        state: state,
+        longNames: longNames,
+        withSelection: withSelection,
       ),
     ),
   );
 }
-
-@widgetbook.UseCase(name: "Section label", type: SelectorSectionHeader)
-Widget selectorSectionHeaderUseCase(BuildContext context) => FakeApp(
-  child: SelectorSectionHeader(
-    title: context.knobs.string(label: "Title", initialValue: "Side quests"),
-  ),
-);
 
 /// One book offered by the story selector.
 final class _StoryBook {
@@ -89,8 +52,7 @@ const _books = [
   _StoryBook("merchant", "The wandering merchant", "Side quests", Colors.red),
 ];
 
-/// Selects a book through the shared popup and shows the chosen value outside
-/// the popup so closing and selection can be checked separately.
+/// Selects a book through the shared popup; its button shows the chosen book.
 class SelectorPopupStory extends HookWidget {
   const SelectorPopupStory({
     this.state = SelectorStoryState.loaded,
@@ -147,32 +109,22 @@ class SelectorPopupStory extends HookWidget {
         onSelect(book);
       },
     );
-    return FakeApp(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 16,
-        children: [
-          if (withSelection)
-            SelectorPopupWithSelection<_StoryBook>(
-              itemsAsync: items,
-              selectedAsync: AsyncData(
-                books.firstWhereOrNull((book) => book.id == selected.value?.id),
-              ),
-              name: "books",
-              buttonBuilder: button,
-              contentBuilder: content,
-            )
-          else
-            SelectorPopup<_StoryBook>(
-              asyncValue: items,
-              name: "books",
-              buttonBuilder: (_) => button(selected.value),
-              contentBuilder: content,
+    return withSelection
+        ? SelectorPopupWithSelection<_StoryBook>(
+            itemsAsync: items,
+            selectedAsync: AsyncData(
+              books.firstWhereOrNull((book) => book.id == selected.value?.id),
             ),
-          Text("Selected book: ${selected.value?.title ?? "None"}"),
-        ],
-      ),
-    );
+            name: "books",
+            buttonBuilder: button,
+            contentBuilder: content,
+          )
+        : SelectorPopup<_StoryBook>(
+            asyncValue: items,
+            name: "books",
+            buttonBuilder: (_) => button(selected.value),
+            contentBuilder: content,
+          );
   }
 }
 

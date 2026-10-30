@@ -18,6 +18,11 @@ final class FakeNats {
       ? throw StateError("The panel has not connected to NATS")
       : _connections.last;
 
+  /// The requests the panel sent to [subject] over its last connection,
+  /// oldest first; none before it connected.
+  Iterable<FakeNatsRequest> requestsTo(String subject) =>
+      connected ? connection.requestsTo(subject) : const [];
+
   /// Whether the panel opened a connection yet.
   bool get connected => _connections.isNotEmpty;
 
@@ -25,12 +30,29 @@ final class FakeNats {
   Override get override =>
       natsClientFactoryProvider.overrideWithValue(_connect);
 
+  /// Opens each later connection instead of a plain [FakeNatsClient], for a
+  /// test whose server behaves in a way the plain one cannot, such as a
+  /// subscription that stays pending. The connection still answers with the
+  /// registered handlers and follows [disconnect] and [reconnect].
+  FakeNatsClient Function(NatsClientConfiguration configuration)? connectWith;
+
+  /// Every connection the panel opened, oldest first.
+  List<FakeNatsClient> get connections => List.unmodifiable(_connections);
+
+  /// Opens a connection to this server, the way the client factory the
+  /// [override] installs does; for code that takes the factory directly.
+  FakeNatsClient connect(NatsClientConfiguration configuration) =>
+      _connect(configuration);
+
   FakeNatsClient _connect(NatsClientConfiguration configuration) {
-    final client = FakeNatsClient(
-      actorId: configuration.actorId,
-      organizationId: configuration.organizationId,
-      connectionSession: configuration.connectionSession,
-    )..setConnectionState(_state);
+    final client =
+        (connectWith?.call(configuration) ??
+              FakeNatsClient(
+                actorId: configuration.actorId,
+                organizationId: configuration.organizationId,
+                connectionSession: configuration.connectionSession,
+              ))
+          ..setConnectionState(_state);
     for (final MapEntry(:key, :value) in _handlers.entries) {
       client.registerHandler(key, value);
     }
@@ -77,26 +99,6 @@ final class FakeNats {
   }
 }
 
-/// A NATS notifier already connected to one client.
-///
-/// Application tests that drive a projection through raw NATS replies use it
-/// to skip the signed in session. Widget tests use [FakeNats] through the
-/// world instead, so the real connection owner runs.
-class ConnectedNats extends Nats {
-  ConnectedNats(this._initialClient);
-
-  final NatsClient _initialClient;
-
-  @override
-  NatsClient build() => _initialClient;
-
-  /// Replaces the connection the way a reconnect does.
-  void replace(NatsClient client) => state = client;
-
-  @override
-  Future<void> retry() async {}
-}
-
 final class FakeNatsRequest {
   FakeNatsRequest({
     required this.subject,
@@ -120,7 +122,11 @@ final class FakeNatsPublication {
   final Uint8List payload;
 }
 
-final class FakeNatsClient implements NatsClient {
+/// One panel connection to [FakeNats].
+///
+/// A test extends it, through [FakeNats.connectWith], to give the server a
+/// behaviour it lacks, such as a subscription that stays pending.
+base class FakeNatsClient implements NatsClient {
   FakeNatsClient({
     this.actorId = "fixture-user",
     this.organizationId = "fixture-organization",
@@ -147,6 +153,14 @@ final class FakeNatsClient implements NatsClient {
 
   final List<FakeNatsRequest> requests = [];
   final List<FakeNatsPublication> publications = [];
+
+  /// What unsubscribing fails with once the subscription closed, the way a
+  /// broker that cannot confirm the cleanup does; null lets it succeed.
+  Object? unsubscribeFailure;
+
+  /// The requests sent to [subject] over this connection, oldest first.
+  Iterable<FakeNatsRequest> requestsTo(String subject) =>
+      requests.where((request) => request.subject == subject);
 
   Iterable<String> get subscriptionSubjects =>
       _subscriptions.values.map((subscription) => subscription.subject);
@@ -239,6 +253,7 @@ final class FakeNatsClient implements NatsClient {
       id: ++_subscriptionCounter,
       subject: subject,
       onUnsubscribe: _removeSubscription,
+      unsubscribeFailure: () => unsubscribeFailure,
     );
     _subscriptions[subscription.id] = subscription;
     return subscription;
@@ -259,6 +274,16 @@ final class FakeNatsClient implements NatsClient {
     for (final subscription in _subscriptions.values.toList()) {
       if (_subjectMatches(subscription.subject, subject)) {
         subscription.add(payload, subject: subject);
+      }
+    }
+  }
+
+  /// Ends every subscription matching [subject] with [error], the way a lost
+  /// reader or a broken stream does.
+  void failOnSubject(String subject, Object error) {
+    for (final subscription in _subscriptions.values.toList()) {
+      if (_subjectMatches(subscription.subject, subject)) {
+        subscription.fail(error);
       }
     }
   }
@@ -290,7 +315,11 @@ final class FakeNatsClient implements NatsClient {
     _connectionStateController.add(const NatsClosed());
     final subscriptions = _subscriptions.values.toList();
     for (final subscription in subscriptions) {
-      await subscription.unsubscribe();
+      try {
+        await subscription.unsubscribe();
+      } on Object {
+        // A failing cleanup the test chose still ends the subscription.
+      }
     }
     await _connectionStateController.close();
   }
@@ -303,13 +332,20 @@ final class FakeNatsSubscription implements NatsSubscription {
     required this.id,
     required this.subject,
     required this._onUnsubscribe,
+    this._unsubscribeFailure,
   });
 
   final int id;
   final String subject;
   final void Function(int id) _onUnsubscribe;
-  final StreamController<NatsMessage> _controller =
-      StreamController<NatsMessage>.broadcast();
+  final Object? Function()? _unsubscribeFailure;
+  // One reader, as on a real subscription. Cancelling it answers with a
+  // future of the test's own zone: the already completed future Dart returns
+  // otherwise resumes its awaiter only on the real event loop, which a widget
+  // test's fake clock never reaches, so a watch closing its subscription
+  // would never finish.
+  late final StreamController<NatsMessage> _controller =
+      StreamController<NatsMessage>(onCancel: () => Future<void>.value());
   bool _closed = false;
 
   @override
@@ -324,11 +360,139 @@ final class FakeNatsSubscription implements NatsSubscription {
     }
   }
 
+  /// Ends delivery with [error]; the subscription stays registered until
+  /// its owner unsubscribes, as a lost server side reader does.
+  void fail(Object error) {
+    if (_closed || _controller.isClosed) return;
+    _controller.addError(error);
+    unawaited(_controller.close());
+  }
+
   @override
   Future<void> unsubscribe() async {
     if (_closed) return;
     _closed = true;
     _onUnsubscribe(id);
-    await _controller.close();
+    // A server forgets the interest at once; it does not wait for the
+    // subscriber's listeners to see the end, so neither does the double.
+    unawaited(_controller.close());
+    if (_unsubscribeFailure?.call() case final failure?) throw failure;
+  }
+}
+
+/// The connections a real [NatsConnectionOwner] for [settings] opens on a
+/// [FakeNats] [server], each with a session numbered by how many came
+/// before it.
+final class OwnedNatsConnections {
+  OwnedNatsConnections(NatsConnectionSettings settings) {
+    owner = NatsConnectionOwner(
+      settings: settings,
+      clientFactory: server.connect,
+      sessionFactory: () =>
+          server.connections.length.toString().padLeft(32, "0"),
+      onReplacement: (client) {
+        published.add(client);
+        onReplacement?.call(client);
+      },
+    );
+  }
+
+  /// The server every connection reaches.
+  final server = FakeNats();
+
+  /// The owner under test.
+  late final NatsConnectionOwner owner;
+
+  /// The connections the owner published as replacements, oldest first.
+  final published = <NatsClient>[];
+
+  /// Runs as the owner publishes each replacement, after it is recorded.
+  void Function(NatsClient client)? onReplacement;
+
+  /// Every connection the owner opened, oldest first.
+  List<FakeNatsClient> get clients => server.connections;
+
+  /// Closes the owner and every connection it opened.
+  Future<void> close() async {
+    await owner.close();
+    await server.close();
+  }
+}
+
+/// A connection whose core subscriptions wait until the test completes
+/// [admission]; open it through [FakeNats.connectWith].
+final class HeldSubscriptionsNatsClient extends FakeNatsClient {
+  HeldSubscriptionsNatsClient(NatsClientConfiguration configuration)
+    : super(
+        actorId: configuration.actorId,
+        organizationId: configuration.organizationId,
+        connectionSession: configuration.connectionSession,
+      );
+
+  /// Admits every core subscription, held or later.
+  final admission = Completer<void>();
+
+  @override
+  Future<FakeNatsSubscription> subscribe(String subject) async {
+    await admission.future;
+    return super.subscribe(subject);
+  }
+}
+
+/// A connection whose persistent subscriptions each wait until the test
+/// completes their admission, and that remembers how many were acquiring at
+/// once; open it through [FakeNats.connectWith].
+final class HeldAcquisitionsNatsClient extends FakeNatsClient {
+  HeldAcquisitionsNatsClient(NatsClientConfiguration configuration)
+    : super(
+        actorId: configuration.actorId,
+        organizationId: configuration.organizationId,
+        connectionSession: configuration.connectionSession,
+      );
+
+  /// The admission of each persistent subscription asked for, oldest first.
+  final admissions = <Completer<void>>[];
+  var _acquiring = 0;
+
+  /// The most persistent subscriptions acquiring at once.
+  int mostAcquiringAtOnce = 0;
+
+  @override
+  Future<FakeNatsSubscription> subscribePersistent(
+    String stream,
+    String consumer,
+    String filterSubject,
+  ) async {
+    final admission = Completer<void>();
+    admissions.add(admission);
+    mostAcquiringAtOnce = max(mostAcquiringAtOnce, ++_acquiring);
+    try {
+      await admission.future;
+      return await super.subscribePersistent(stream, consumer, filterSubject);
+    } finally {
+      _acquiring--;
+    }
+  }
+}
+
+/// A subscription that counts how often it was asked to unsubscribe and
+/// ends its messages on each ask.
+final class CountingNatsSubscription implements NatsSubscription {
+  final StreamController<NatsMessage> _messages =
+      StreamController<NatsMessage>.broadcast();
+
+  /// How often the subscription was asked to unsubscribe.
+  int unsubscribeCount = 0;
+
+  @override
+  Stream<NatsMessage> get messages => _messages.stream;
+
+  @override
+  Future<void> get done => _messages.done;
+
+  @override
+  Future<void> unsubscribe() async {
+    unsubscribeCount++;
+    await _messages.close();
   }
 }

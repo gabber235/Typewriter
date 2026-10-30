@@ -61,26 +61,29 @@ class AppBarControl extends StatelessWidget {
 
       return Tooltip(
         message: tooltip,
-        child: Semantics(
-          label: semanticLabel,
-          child: SizedBox(
-            width: preferredWidth,
-            child: switch (_family) {
-              _AppBarControlFamily.text => TextButton(
-                focusNode: focusNode,
-                onFocusChange: reveal,
-                style: geometry,
-                onPressed: onPressed,
-                child: content,
-              ),
-              _AppBarControlFamily.filled => FilledButton(
-                focusNode: focusNode,
-                onFocusChange: reveal,
-                style: geometry,
-                onPressed: onPressed,
-                child: content,
-              ),
-            },
+        // Merged so the focusable button itself carries the name.
+        child: MergeSemantics(
+          child: Semantics(
+            label: semanticLabel,
+            child: SizedBox(
+              width: preferredWidth,
+              child: switch (_family) {
+                _AppBarControlFamily.text => TextButton(
+                  focusNode: focusNode,
+                  onFocusChange: reveal,
+                  style: geometry,
+                  onPressed: onPressed,
+                  child: content,
+                ),
+                _AppBarControlFamily.filled => FilledButton(
+                  focusNode: focusNode,
+                  onFocusChange: reveal,
+                  style: geometry,
+                  onPressed: onPressed,
+                  child: content,
+                ),
+              },
+            ),
           ),
         ),
       );

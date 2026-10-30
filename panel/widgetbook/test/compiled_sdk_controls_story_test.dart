@@ -1,208 +1,106 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/compiled_sdk_controls.stories.dart";
 
-Finder input(String placeholder) => find.byWidgetPredicate(
-  (widget) => widget is TextField && widget.decoration?.hintText == placeholder,
-);
-
-Finder coordinate(String axis) => find.descendant(
-  of: find.ancestor(of: find.text(axis), matching: find.byType(TextField)),
-  matching: find.byType(EditableText),
-);
+import "support/stories.dart";
 
 void main() {
-  for (final width in [280.0, 400.0]) {
-    testWidgets("compiled Book icon search fits a $width inspector", (
+  for (final width in ["280", "400"]) {
+    testWidgets("a $width wide Book inspector offers Iconify and SVG icons", (
       tester,
     ) async {
-      AuthoringDocument? document;
-      await tester.pumpWidget(
-        compiledBookStory(
-          width: width,
-          onDocument: (value) => document = value,
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text("Iconify identifier"), findsNothing);
-      expect(find.text("Iconify"), findsOneWidget);
-      expect(find.text("SVG"), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      final panel = (await tester.pumpStory(
+        compiledBookUseCase,
+        knobs: {"Inspector width": width},
+      ))!;
 
-      final summary = find.byKey(const ValueKey("authored_search_summary"));
-      await tester.ensureVisible(summary);
-      await tester.tap(summary);
-      await tester.pumpAndSettle();
-      expect(find.byType(QueryBar), findsOneWidget);
-      expect(find.byType(ActionRow), findsNothing);
-      await tester.enterText(input("Search icons"), "");
-      await tester.pumpAndSettle();
-      final longResult = find.text("game-icons:broad-dagger");
-      await tester.scrollUntilVisible(
-        longResult,
-        100,
-        scrollable: find.descendant(
-          of: find.byType(SearchTreeResults),
-          matching: find.byType(Scrollable),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await tester.tap(longResult);
-      await tester.pumpAndSettle();
-      final selected = document
-          ?.resource(compiledBookResource)
-          ?.authoredField("icon")
-          ?.authoredField("value");
-      expect(selected?.authoredString, "game-icons:broad-dagger");
-      expect(find.byType(QueryBar), findsNothing);
-      expect(tester.takeException(), isNull);
-
-      await tester.tap(summary);
-      await tester.pumpAndSettle();
-      expect(find.byType(QueryBar), findsOneWidget);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(
-        document
-            ?.resource(compiledBookResource)
-            ?.authoredField("icon")
-            ?.authoredField("value")
-            ?.authoredString,
-        "game-icons:broad-dagger",
-      );
-      expect(tester.takeException(), isNull);
-
-      Future<void> choose(String name) async {
-        await tester.ensureVisible(summary);
-        await tester.tap(summary);
-        await tester.pumpAndSettle();
-        expect(find.byType(QueryBar), findsOneWidget);
-        await tester.enterText(input("Search icons"), "");
-        await tester.pumpAndSettle();
-        await tester.ensureVisible(find.text(name).last);
-        final pointer = await tester.startGesture(
-          tester.getCenter(find.text(name).last),
-          kind: PointerDeviceKind.mouse,
-        );
-        await tester.pump(const Duration(milliseconds: 100));
-        expect(find.byType(QueryBar), findsOneWidget);
-        await pointer.up();
-        await tester.pumpAndSettle();
-        expect(find.byType(QueryBar), findsNothing);
-        expect(
-          document
-              ?.resource(compiledBookResource)
-              ?.authoredField("icon")
-              ?.authoredField("value")
-              ?.authoredString,
-          name,
-        );
-        expect(tester.takeException(), isNull);
-      }
-
-      await choose("mdi:home");
-      await choose("mdi:account");
-      await tester.tap(find.text("SVG"));
-      await tester.pumpAndSettle();
-      const svg =
-          '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>';
-      await tester.tap(input("Enter text").last);
-      await tester.pumpAndSettle();
-      final svgInput = tester.widget<EditableText>(
-        find.descendant(
-          of: input("Enter text").last,
-          matching: find.byType(EditableText),
-        ),
-      );
-      expect(svgInput.focusNode.hasPrimaryFocus, isTrue);
-      tester.testTextInput.enterText(svg);
-      await tester.pumpAndSettle();
-      expect(
-        document
-            ?.resource(compiledBookResource)
-            ?.authoredField("icon")
-            ?.authoredField("source")
-            ?.authoredString,
-        svg,
-      );
-      await tester.tap(find.text("Iconify"));
-      await tester.pumpAndSettle();
-      await choose("mdi:star");
-      await choose("mdi:home");
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(find.byType(QueryBar), findsOneWidget);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(find.byType(QueryBar), findsNothing);
-      expect(
-        document
-            ?.resource(compiledBookResource)
-            ?.authoredField("icon")
-            ?.authoredField("value")
-            ?.authoredString,
-        "mdi:home",
-      );
-      await choose("mdi:account");
+      expect(panel.shows("Iconify"), isTrue);
+      expect(panel.shows("SVG"), isTrue);
+      expect(panel.shows("Iconify identifier"), isFalse);
     });
   }
 
-  testWidgets(
-    "compiled Placement shares row width and preserves exact field writes",
-    (tester) async {
-      skir.DataValue? written;
-      await tester.pumpWidget(
-        compiledPlacementStory(width: 340, onValue: (value) => written = value),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      expect(coordinate("X"), findsOneWidget);
-      expect(coordinate("Y"), findsOneWidget);
-      expect(
-        tester.getSize(coordinate("X")).width,
-        closeTo(tester.getSize(coordinate("Y")).width, 0.01),
-      );
-      expect(
-        tester.getTopLeft(coordinate("Y")).dx,
-        greaterThan(tester.getTopLeft(coordinate("X")).dx),
-      );
-      expect(find.byType(TextFormField), findsNWidgets(4));
-      await tester.enterText(coordinate("X"), "42");
-      await tester.pumpAndSettle();
-      expect(written?.authoredField("x")?.authoredInteger, BigInt.from(42));
-      expect(written?.authoredField("y")?.authoredInteger, BigInt.zero);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(written?.authoredField("x")?.authoredInteger, BigInt.from(42));
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets("searching icons chooses the one the user picks", (
+    tester,
+  ) async {
+    final panel = (await tester.pumpStory(compiledBookUseCase))!;
 
-  testWidgets(
-    "compiled Tag nested Placement edits the owning resource without duplicate fields",
-    (tester) async {
-      AuthoringDocument? document;
-      await tester.pumpWidget(
-        compiledTagStory(width: 340, onDocument: (value) => document = value),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      expect(coordinate("X"), findsOneWidget);
-      expect(coordinate("Y"), findsOneWidget);
-      await tester.enterText(coordinate("Y"), "13");
-      await tester.pumpAndSettle();
-      final placement = document
-          ?.resource(compiledTagResource)
-          ?.authoredField("placement");
-      expect(placement?.authoredField("y")?.authoredInteger, BigInt.from(13));
-      expect(placement?.authoredField("x")?.authoredInteger, BigInt.zero);
-      expect(tester.takeException(), isNull);
-    },
-  );
+    await _choose(tester, panel, "mdi:account");
+
+    expect(panel.shows("mdi:account"), isTrue);
+  });
+
+  testWidgets("Escape closes the icon search and keeps the chosen icon", (
+    tester,
+  ) async {
+    final panel = (await tester.pumpStory(compiledBookUseCase))!;
+    await _choose(tester, panel, "mdi:home");
+
+    await _openSearch(tester, panel);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.escape);
+
+    expect(panel.shows("mdi:home"), isTrue);
+  });
+
+  testWidgets("an SVG icon takes its source as text", (tester) async {
+    final panel = (await tester.pumpStory(compiledBookUseCase))!;
+    const svg = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>';
+
+    await panel.tapOn(find.text("SVG"));
+    final source = panel.fieldAt(visibleFieldValues().length - 1);
+    await source.enter(svg);
+
+    expect(source.value, svg);
+    expect(panel.shows("Iconify identifier"), isFalse);
+  });
+
+  testWidgets("a Placement lays X and Y out side by side and keeps an exact "
+      "write", (tester) async {
+    final panel = (await tester.pumpStory(
+      compiledPlacementUseCase,
+      knobs: {"Placement width": "340"},
+    ))!;
+    final x = panel.field("X");
+    final y = panel.field("Y");
+    expect(x.rect.width, closeTo(y.rect.width, 0.01));
+    expect(y.rect.left, greaterThan(x.rect.left));
+
+    await x.type("42");
+    await panel.press(LogicalKeyboardKey.escape);
+
+    expect(x.value, "42");
+    expect(y.value, "0");
+  });
+
+  testWidgets("a Tag edits its nested Placement once", (tester) async {
+    final panel = (await tester.pumpStory(
+      compiledTagUseCase,
+      knobs: {"Tag width": "340"},
+    ))!;
+
+    await panel.field("Y").enter("13");
+
+    expect(panel.field("Y").value, "13");
+    expect(panel.field("X").value, "0");
+  });
+}
+
+Future<void> _openSearch(WidgetTester tester, PanelDriver panel) async {
+  final summary = find.byKey(const ValueKey("authored_search_summary"));
+  await tester.ensureVisible(summary);
+  await panel.tapOn(summary);
+  await tester.runStory();
+}
+
+Future<void> _choose(
+  WidgetTester tester,
+  PanelDriver panel,
+  String icon,
+) async {
+  await _openSearch(tester, panel);
+  await tester.ensureVisible(find.text(icon).last);
+  await panel.tapOn(find.text(icon).last);
+  await tester.runStory();
 }

@@ -281,3 +281,54 @@ void _expectContainedElement(
     );
   }
 }
+
+/// A controller that previews drags at [pixelsPerFrame] pixels per frame, on
+/// a ticker that never fires.
+TimelineController timelineController({double pixelsPerFrame = 12}) {
+  return TimelineController(
+    tickerProvider: const TestVSync(),
+    pixelsPerFrame: pixelsPerFrame,
+  );
+}
+
+/// The first preview the [controller] shows, or null when it shows none.
+TimelinePreview? firstTimelinePreview(TimelineController controller) {
+  if (controller.previews.isEmpty) return null;
+  return controller.previews.first;
+}
+
+/// Two root segments with a child each, placed before and while `root_a`
+/// moves onto `root_b`'s start at frame 24.
+(TimelinePlacementResult, TimelinePlacementResult) twoRootsWithRootAMoved() {
+  final data = timeline()
+      .track(
+        elements: [
+          .segment("root_a", 0, 20, [.segment("root_a_child", 5, 10)]),
+          .segment("root_b", 24, 30, [.segment("root_b_child", 2, 5)]),
+        ],
+      )
+      .build();
+  return (
+    data.layout().placement(),
+    data.layout(previews: [data.move("root_a", 24)]).placement(),
+  );
+}
+
+/// A root segment with a child beside a root keyframe at frame 24, placed
+/// before and while the segment moves [to] a new start frame.
+(TimelinePlacementResult, TimelinePlacementResult) rootAMovedBesideKeyframe({
+  required int to,
+}) {
+  final data = timeline()
+      .track(
+        elements: [
+          .segment("root_a", 0, 20, [.segment("root_a_child", 5, 10)]),
+          .keyframe("root_keyframe", 24),
+        ],
+      )
+      .build();
+  return (
+    data.layout().placement(),
+    data.layout(previews: [data.move("root_a", to)]).placement(),
+  );
+}

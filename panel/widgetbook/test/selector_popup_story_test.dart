@@ -2,85 +2,72 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_workspace/stories/shared/selectables/presentation/selector_popup.stories.dart";
 
+import "support/stories.dart";
+
 void main() {
-  for (final withSelection in [false, true]) {
-    testWidgets(
-      "selector searches sections and selects (tracked $withSelection)",
-      (tester) async {
-        await tester.pumpWidget(
-          SelectorPopupStory(withSelection: withSelection),
-        );
-        await tester.pumpAndSettle();
-        expect(find.text("Selected book: The lost lantern"), findsOneWidget);
+  final stories = {
+    "Searchable sections": selectorPopupUseCase,
+    "Current selection": selectorPopupWithSelectionUseCase,
+  };
+  for (final MapEntry(key: name, value: story) in stories.entries) {
+    testWidgets("$name searches by section and the button shows the chosen "
+        "book", (tester) async {
+      final panel = (await tester.pumpStory(story))!;
 
-        await tester.tap(find.text("The lost lantern"));
-        await tester.pumpAndSettle();
-        expect(find.text("MAIN STORY"), findsOneWidget);
-        expect(find.text("SIDE QUESTS"), findsOneWidget);
+      await panel.tapOn(find.text("The lost lantern"));
+      expect(panel.shows("MAIN STORY"), isTrue);
+      expect(panel.shows("SIDE QUESTS"), isTrue);
 
-        final query = find.descendant(
-          of: find.byType(SelectorSearchField),
-          matching: find.byType(TextField),
-        );
-        await tester.enterText(query, "merchant");
-        await tester.pumpAndSettle();
-        expect(find.text("MAIN STORY"), findsNothing);
-        expect(find.text("Fishing contest"), findsNothing);
+      await search(tester, "merchant");
+      expect(panel.shows("MAIN STORY"), isFalse);
+      expect(panel.shows("Fishing contest"), isFalse);
 
-        await tester.tap(find.text("The wandering merchant"));
-        await tester.pumpAndSettle();
-        expect(find.byType(SelectorSearchField), findsNothing);
-        expect(
-          find.text("Selected book: The wandering merchant"),
-          findsOneWidget,
-        );
-        expect(tester.takeException(), isNull);
-      },
-    );
+      await panel.tapOn(find.text("The wandering merchant"));
+      expect(panel.shows("SIDE QUESTS"), isFalse);
+      expect(panel.shows("The wandering merchant"), isTrue);
+      expect(panel.shows("The lost lantern"), isFalse);
+    });
   }
 
-  testWidgets("selector opens from the keyboard", (tester) async {
-    await tester.pumpWidget(const SelectorPopupStory());
-    await tester.pumpAndSettle();
+  testWidgets("the selector opens from the keyboard", (tester) async {
+    final panel = (await tester.pumpStory(selectorPopupUseCase))!;
+
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    expect(find.byType(SelectorSearchField), findsOneWidget);
-    expect(find.text("MAIN STORY"), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    await panel.settle();
+
+    expect(panel.shows("MAIN STORY"), isTrue);
   });
 
-  testWidgets("selector search reports no matches", (tester) async {
-    await tester.pumpWidget(const SelectorPopupStory());
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("The lost lantern"));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(SelectorSearchField),
-        matching: find.byType(TextField),
-      ),
-      "dragon",
-    );
-    await tester.pumpAndSettle();
-    expect(find.text("No books match"), findsOneWidget);
+  testWidgets("a search without matches says so", (tester) async {
+    final panel = (await tester.pumpStory(selectorPopupUseCase))!;
+
+    await panel.tapOn(find.text("The lost lantern"));
+    await search(tester, "dragon");
+
+    expect(panel.shows("No books match"), isTrue);
   });
 
-  testWidgets("selector keeps loading and failure at its boundary", (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      const SelectorPopupStory(state: SelectorStoryState.failed),
-    );
-    await tester.pumpAndSettle();
+  testWidgets("loading and failing choices offer no books, and only a "
+      "failure says why", (tester) async {
+    final failed = (await tester.pumpStory(
+      selectorPopupUseCase,
+      knobs: {"Choices": "failed"},
+    ))!;
     expect(find.textContaining("did not return its books"), findsOneWidget);
-    expect(find.text("The lost lantern"), findsNothing);
+    expect(failed.shows("The lost lantern"), isFalse);
 
-    await tester.pumpWidget(
-      const SelectorPopupStory(state: SelectorStoryState.loading),
-    );
-    await tester.pump();
-    expect(find.text("The lost lantern"), findsNothing);
+    final loading = (await tester.pumpStory(
+      selectorPopupUseCase,
+      knobs: {"Choices": "loading"},
+    ))!;
+    expect(loading.shows("The lost lantern"), isFalse);
+    expect(find.textContaining("did not return its books"), findsNothing);
   });
+}
+
+/// Types [query] into the popup's search field.
+Future<void> search(WidgetTester tester, String query) async {
+  await tester.enterText(find.bySemanticsLabel("Search books"), query);
+  await tester.runStory();
 }

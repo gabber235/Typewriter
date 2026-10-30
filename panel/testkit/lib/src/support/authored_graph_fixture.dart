@@ -2,6 +2,10 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/core/pump_panel.dart";
+import "package:typewriter_testkit/src/drivers/authoring/surface_driver.dart";
+import "package:typewriter_testkit/src/drivers/panel_driver.dart";
+import "package:typewriter_testkit/src/support/portable_operations.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 final class AuthoredGraphFixture {
@@ -357,16 +361,7 @@ final class AuthoredGraphFixture {
           ),
       ],
     );
-    transport = ScriptedAuthoringTransport(AsyncData(document));
-    final work = ScopedWorkSession();
-    workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: work,
-      initial: document,
-    );
-    addTearDown(workspace.dispose);
-    addTearDown(transport.dispose);
-    addTearDown(work.dispose);
+    this.document = document;
     drag = ResourceDrag(
       scope: scope,
       primary: AuthoringResourceIdentifier.inScope(scope, source),
@@ -424,18 +419,55 @@ final class AuthoredGraphFixture {
   final destination = skir.ResourceId(value: "page:destination");
   final ownership = skir.RelationId(value: "membership");
   final triggerRelation = skir.RelationId(value: "triggers");
+
+  /// The scope of the Realm [realm] seeds in [acme].
   final scope = AuthoringScope(
-    organizationId: skir.RecordId(
-      table: "organization",
-      key: skir.RecordIdKey.wrapString("organization"),
-    ),
-    realmId: skir.RecordId(
-      table: "realm",
-      key: skir.RecordIdKey.wrapString("realm"),
-    ),
+    organizationId: acme.organizationId,
+    realmId: skir.recordId("realm_instance:graph"),
   );
-  late final RealmEditing workspace;
-  late final ScriptedAuthoringTransport transport;
+
+  /// The saved document of the graph Realm.
+  late final AuthoringDocument document;
+
+  World? _world;
+
+  World get _started =>
+      _world ?? (throw StateError("Pump the panel with fixture.realm first"));
+
+  /// The graph Realm, signed in as [ada] of [acme]: its saved [document],
+  /// the drop candidates and operation previews this fixture answers.
+  List<Trait> get realm => [
+    signedIn(ada, organization: acme),
+    _GraphRealm(this),
+  ];
+
+  /// The Realm double serving [document].
+  FakeRealm get realmDouble => _started.requireRealm;
+
+  /// The panel's editing of the graph Realm.
+  RealmEditing get workspace =>
+      _started.container.read(realmEditingProvider(scope));
+
+  void _start(World world) {
+    _world = world;
+    world.requireRealm
+      ..answerDropCandidates = dropCandidates
+      ..answerPrepareAction = _prepare
+      ..answerResourceOperations = (request) async =>
+          skir.ResolveResourceOperationsResult.wrapResolved(
+            skir.ResolvedResourceOperations(
+              operations: [
+                for (final operation
+                    in document.catalog.snapshot.resourceOperations)
+                  skir.ResolvedResourceOperation(
+                    definition: operation,
+                    availability: skir.OperationAvailability.enabled,
+                  ),
+              ],
+            ),
+          );
+  }
+
   late final ResourceDrag drag;
 
   /// The page's membership occurrence of every source entry.
@@ -447,65 +479,13 @@ final class AuthoredGraphFixture {
   /// Every drop candidate request, one per drag.
   final dropResolutions = <skir.ResolveDropCandidatesRequest>[];
 
-  AuthoredResourceCommands get commands {
-    final base = fixtureAuthoringCommands(transport);
-    return AuthoredResourceCommands(
-      previewTypeArguments: base.previewTypeArguments,
-      prepareTypeArguments: base.prepareTypeArguments,
-      prepareStep: base.prepareStep,
-      prepareValue: (request) async {
-        if (request.target case skir.PreparationTarget_valueWrapper(
-          :final value,
-        )) {
-          final named = workspace.document.catalog.namedUse(value)!;
-          return skir.PreparedValue(
-            findings: const [],
-            content: skir.PreparedContent.wrapValue(
-              request.suppliedValue ??
-                  skir.DataValue.createNamed(
-                    actualType: named,
-                    payload: skir.DataValue.createRecord(
-                      fields: [
-                        for (final field in workspace.document.catalog.fields(
-                          skir.TypeSelection.wrapComplete(named),
-                        ))
-                          skir.FieldValue(
-                            name: field.template.key,
-                            value: workspace.document.defaultValue(field.type),
-                          ),
-                      ],
-                    ),
-                  ),
-            ),
-          );
-        }
-        return base.prepareValue(request);
-      },
-      invokeCommand: base.invokeCommand,
-      search: base.search,
-      watchSearch: base.watchSearch,
-      reload: base.reload,
-      resolveResourceOperations: (request) async =>
-          skir.ResolveResourceOperationsResult.wrapResolved(
-            skir.ResolvedResourceOperations(
-              operations: [
-                for (final operation
-                    in workspace.document.catalog.snapshot.resourceOperations)
-                  skir.ResolvedResourceOperation(
-                    definition: operation,
-                    availability: skir.OperationAvailability.enabled,
-                  ),
-              ],
-            ),
-          ),
-      resolveDropCandidates: _dropCandidates,
-      prepareAuthoringAction: _prepare,
-    );
-  }
+  /// The authoring commands the graph Realm answers with.
+  AuthoredResourceCommands get commands => realmDouble.commands;
 
-  /// Pages accept a move of entries they do not own; entries accept a link
-  /// from other entries.
-  Future<skir.ResolveDropCandidatesResult> _dropCandidates(
+  /// The fixture's answer to where dragged resources may land: pages accept
+  /// a move of entries they do not own; entries accept a link from other
+  /// entries. Records each request in [dropResolutions].
+  Future<skir.ResolveDropCandidatesResult> dropCandidates(
     skir.ResolveDropCandidatesRequest request,
   ) async {
     dropResolutions.add(request);
@@ -621,3 +601,385 @@ skir.TypeDefinitionId _type(String name) => skir.TypeDefinitionId(
   revision: 1,
 );
 skir.EndpointId _endpoint(String value) => skir.EndpointId(value: value);
+
+final class _GraphRealm extends Trait {
+  const _GraphRealm(this.fixture);
+
+  final AuthoredGraphFixture fixture;
+
+  @override
+  Slot get slot => Slot.realm;
+
+  @override
+  String get description => "AuthoredGraphFixture.realm";
+
+  @override
+  void applyTo(WorldBuilder world) {
+    world
+      ..realm = RealmSeed(name: "Graph", saved: fixture.document)
+      ..onStart(fixture._start);
+  }
+}
+
+/// Showing the graph Realm's page as an authored resources graph.
+extension AuthoredGraphViews on AuthoredGraphFixture {
+  /// Opens the graph Realm and shows its page's entries on a graph above it,
+  /// bound to [bound] or the page. [sidebar] adds a drop target for the
+  /// destination beside the graph, and each of [linkFields] a link field
+  /// target labeled by its key.
+  Future<PanelDriver> showGraph(
+    WidgetTester tester, {
+    bool readOnly = false,
+    bool sidebar = false,
+    skir.ResourceId? bound,
+    Map<String, skir.ResourceId> linkFields = const {},
+    GraphMoveCommit? onMove,
+    GraphResizeCommit? onResize,
+    ValueNotifier<bool>? readOnlySource,
+    Map<Type, Action<Intent>>? actions,
+  }) async {
+    final panel = await tester.pumpPanel(this.realm);
+    final binding = workspace.attach(
+      bound ?? this.page,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(binding.detach);
+    final presentation = PortablePresentationScope(
+      bindings: const {},
+      operations: testPortableOperations(),
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+      readOnly: readOnly,
+      resource: this.page,
+    );
+    final entries = graphEntries;
+    await panel.showAbove(
+      Actions(
+        actions: actions ?? const {},
+        child: SizedBox(
+          width: 900,
+          height: 600,
+          child: Row(
+            children: [
+              if (sidebar)
+                SizedBox(
+                  width: 150,
+                  child: ResourceDropTarget.at(
+                    scope: scope,
+                    destination: DropDestination.resource(destination),
+                    builder: (context, hover) => const SizedBox(
+                      key: ValueKey("destination"),
+                      height: 80,
+                      child: Text("Destination"),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: AuthoredResourcesInteractions(
+                  authoringScope: scope,
+                  binding: binding,
+                  child: HookBuilder(
+                    builder: (context) {
+                      useListenable(readOnlySource);
+                      final currentScope = presentation.copyWith(
+                        readOnly: readOnlySource?.value ?? readOnly,
+                      );
+                      final interactions =
+                          PortableResourcesInteractionScope.maybeOf(context)!;
+                      final view = PortableResourcesView(
+                        members: entries,
+                        scope: currentScope,
+                        layout: PortableResourcesLayoutKind.graph,
+                      );
+                      final graph = interactions.layoutBuilder(
+                        context,
+                        view,
+                        Graph(
+                          data: GraphData(
+                            cellSize: 50,
+                            edges: const [],
+                            elements: [
+                              for (final (index, entry) in entries.indexed)
+                                GraphElement(
+                                  id: GraphIdentifier(entry.resource.value),
+                                  x: index * 6,
+                                  y: 0,
+                                  width: 4,
+                                  height: 1,
+                                  builder: (context) =>
+                                      interactions.itemBuilder(
+                                        context,
+                                        view,
+                                        entry,
+                                        Builder(
+                                          builder: (context) => ColoredBox(
+                                            key: ValueKey(entry.resource),
+                                            color: Colors.red,
+                                            child: Text(entry.resource.value),
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                            ],
+                          ),
+                          onElementsMoved: currentScope.readOnly
+                              ? null
+                              : onMove ?? (_) {},
+                          onElementsResized: currentScope.readOnly
+                              ? null
+                              : onResize,
+                        ),
+                      );
+                      if (linkFields.isEmpty) return graph;
+                      return Column(
+                        children: [
+                          Expanded(child: graph),
+                          for (final MapEntry(key: label, value: resource)
+                              in linkFields.entries)
+                            PortableResourcesInteractionScope.wrapLinkField(
+                              context,
+                              currentScope,
+                              skir.ValueLocation(
+                                resource: resource,
+                                path: editorRootPath.field("triggers"),
+                              ),
+                              Semantics(
+                                label: label,
+                                container: true,
+                                child: const SizedBox(height: 60, width: 300),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return panel;
+  }
+
+  /// The page's entries as a graph lists them, each labeled by its id.
+  List<PortableResourceMember> get graphEntries => [
+    for (final member in memberships.entries)
+      PortableResourceMember(
+        resource: member.key,
+        occurrence: member.value,
+        link: skir.DataValue.unfilled,
+        resourceProjection: PortableResourceProjection(
+          resource: member.key,
+          configuration: workspace.document.resource(member.key)!.configuration,
+          appearance: skir.ResourceAppearance(
+            label: member.key.value,
+            accent: const Color(0xff607d8b).toSkirColor(),
+            icon: skir.Icon.wrapIconify("material-symbols:category"),
+          ),
+          value: skir.DataValue.wrapStringValue("fixture"),
+        ),
+        graph: const PortableGraphPlacement(x: 0, y: 0, width: 4, height: 1),
+      ),
+  ];
+
+  /// Opens the graph Realm and shows the page's source entry, labeled
+  /// "Source", on a graph beside a drop target labeled "Operation target" for
+  /// [destination] or the fixture's destination, inside a drop target for
+  /// [enclosing] when given. [resolve] answers the Realm's drop candidates;
+  /// [visible] and [generation] hide the graph or rebuild it from scratch.
+  Future<PanelDriver> showDropTarget(
+    WidgetTester tester, {
+    Future<skir.ResolveDropCandidatesResult> Function(
+      skir.ResolveDropCandidatesRequest,
+    )?
+    resolve,
+    ValueNotifier<bool>? visible,
+    ValueNotifier<int>? generation,
+    skir.ResourceId? destination,
+    skir.ResourceId? enclosing,
+  }) async {
+    final panel = await tester.pumpPanel(this.realm);
+    if (resolve != null) realmDouble.answerDropCandidates = resolve;
+    final binding = workspace.attach(
+      this.page,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(binding.detach);
+    final pageScope = PortablePresentationScope(
+      bindings: const {},
+      operations: testPortableOperations(),
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+      resource: this.page,
+    );
+    final entries = [
+      for (final member in memberships.entries)
+        PortableResourceMember(
+          resource: member.key,
+          occurrence: member.value,
+          link: skir.DataValue.unfilled,
+          resourceProjection: PortableResourceProjection(
+            resource: member.key,
+            configuration: workspace.document
+                .resource(member.key)!
+                .configuration,
+            appearance: skir.ResourceAppearance(
+              label: "Source",
+              accent: const Color(0xff607d8b).toSkirColor(),
+              icon: skir.Icon.wrapIconify("material-symbols:category"),
+            ),
+            value: skir.DataValue.wrapStringValue("fixture"),
+          ),
+          graph: const PortableGraphPlacement(x: 0, y: 0, width: 4, height: 1),
+        ),
+    ];
+    await panel.showAbove(
+      SizedBox(
+        width: 900,
+        child: Row(
+          children: [
+            Expanded(
+              child: HookBuilder(
+                builder: (context) {
+                  useListenable(visible);
+                  useListenable(generation);
+                  if (!(visible?.value ?? true)) return const SizedBox.shrink();
+                  return ProviderScope(
+                    key: ValueKey(generation?.value ?? 0),
+                    child: AuthoredResourcesInteractions(
+                      authoringScope: scope,
+                      binding: binding,
+                      child: Builder(
+                        builder: (context) {
+                          final interactions =
+                              PortableResourcesInteractionScope.maybeOf(
+                                context,
+                              )!;
+                          final view = PortableResourcesView(
+                            members: entries,
+                            scope: pageScope,
+                            layout: PortableResourcesLayoutKind.graph,
+                          );
+                          return interactions.layoutBuilder(
+                            context,
+                            view,
+                            SizedBox(
+                              height: 300,
+                              child: Graph(
+                                data: GraphData(
+                                  cellSize: 50,
+                                  edges: const [],
+                                  elements: [
+                                    GraphElement(
+                                      id: GraphIdentifier(source.value),
+                                      x: 0,
+                                      y: 0,
+                                      width: 4,
+                                      height: 1,
+                                      builder: (context) =>
+                                          interactions.itemBuilder(
+                                            context,
+                                            view,
+                                            entries.first,
+                                            const ColoredBox(
+                                              color: Colors.blue,
+                                              child: Text("Source"),
+                                            ),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                onElementsMoved: (_) {},
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(
+              width: 180,
+              height: 100,
+              child: _enclosedBy(
+                enclosing,
+                ResourceDropTarget.at(
+                  scope: scope,
+                  destination: DropDestination.resource(
+                    destination ?? this.destination,
+                  ),
+                  canMutate: () => mutable,
+                  builder: (_, hover) => Semantics(
+                    label: "Operation target",
+                    child: ColoredBox(
+                      color: Colors.green,
+                      child: Text(_hoverText(hover)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return panel;
+  }
+
+  /// Places [target] inside a padded drop target for [enclosing], when given.
+  Widget _enclosedBy(skir.ResourceId? enclosing, Widget target) =>
+      enclosing == null
+      ? target
+      : ResourceDropTarget.at(
+          scope: scope,
+          destination: DropDestination.resource(enclosing),
+          canMutate: () => mutable,
+          builder: (_, hover) => Column(
+            children: [
+              Text("enclosing ${_hoverText(hover)}"),
+              Expanded(child: target),
+            ],
+          ),
+        );
+
+  String _hoverText(ResourceDropHover hover) => hover.accepted
+      ? "accepted: ${hover.hint}"
+      : hover.rejected
+      ? "rejected"
+      : "neutral";
+
+  /// Answers drop candidates with [resolve], recording each request the
+  /// way [dropCandidates] does.
+  Future<skir.ResolveDropCandidatesResult> Function(
+    skir.ResolveDropCandidatesRequest,
+  )
+  recording({
+    required Future<skir.ResolveDropCandidatesResult> Function(
+      skir.ResolveDropCandidatesRequest,
+    )
+    resolve,
+  }) => (request) {
+    dropResolutions.add(request);
+    return resolve(request);
+  };
+
+  /// Starts dragging the "Source" entry of [showDropTarget] with [pointer].
+  Future<TestGesture> startSourceDrag(
+    WidgetTester tester, {
+    int pointer = 1,
+  }) async {
+    final source = find.descendant(
+      of: find.byType(Graph),
+      matching: find.text("Source"),
+    );
+    final gesture = await tester.startGesture(
+      tester.getCenter(source),
+      pointer: pointer,
+    );
+    await gesture.moveBy(const Offset(25, 0));
+    await tester.pump();
+    return gesture;
+  }
+}

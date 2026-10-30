@@ -6,23 +6,26 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("chooses only concrete resource descendants", (tester) async {
-    final fixture = _concreteResourceFixture();
+    final fixture = PageKindsFixture();
     skir.TypeSelection? selected;
 
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (context) => FilledButton(
-          onPressed: () async {
-            selected = await showCreationConcreteTypePicker(
-              context,
-              expected: skir.TypeSelection.createComplete(
-                definition: fixture.page,
-                arguments: const [],
-              ),
-              catalog: fixture.catalog,
-            );
-          },
-          child: const Text("Create page"),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Builder(
+          builder: (context) => FilledButton(
+            onPressed: () async {
+              selected = await showCreationConcreteTypePicker(
+                context,
+                expected: skir.TypeSelection.createComplete(
+                  definition: fixture.page,
+                  arguments: const [],
+                ),
+                catalog: fixture.catalog,
+              );
+            },
+            child: const Text("Create page"),
+          ),
         ),
       ),
     );
@@ -62,23 +65,26 @@ void main() {
   testWidgets("shows no matches and Escape cancels type search", (
     tester,
   ) async {
-    final fixture = _concreteResourceFixture();
+    final fixture = PageKindsFixture();
     skir.TypeSelection? selected;
 
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (context) => FilledButton(
-          onPressed: () async {
-            selected = await showCreationConcreteTypePicker(
-              context,
-              expected: skir.TypeSelection.createComplete(
-                definition: fixture.page,
-                arguments: const [],
-              ),
-              catalog: fixture.catalog,
-            );
-          },
-          child: const Text("Create page"),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Builder(
+          builder: (context) => FilledButton(
+            onPressed: () async {
+              selected = await showCreationConcreteTypePicker(
+                context,
+                expected: skir.TypeSelection.createComplete(
+                  definition: fixture.page,
+                  arguments: const [],
+                ),
+                catalog: fixture.catalog,
+              );
+            },
+            child: const Text("Create page"),
+          ),
         ),
       ),
     );
@@ -110,20 +116,26 @@ void main() {
   testWidgets("searches scalar arguments and composes a nullable generic", (
     tester,
   ) async {
-    final fixture = _fixture(unbounded: true, containerName: "List");
+    final fixture = RewardContainerFixture(
+      unbounded: true,
+      containerName: "List",
+    );
     skir.TypeUse? selected;
 
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (context) => FilledButton(
-          onPressed: () async {
-            selected = await showAuthoredTypeUsePicker(
-              context,
-              title: "Choose payload type",
-              catalog: fixture.catalog,
-            );
-          },
-          child: const Text("Choose payload"),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Builder(
+          builder: (context) => FilledButton(
+            onPressed: () async {
+              selected = await showAuthoredTypeUsePicker(
+                context,
+                title: "Choose payload type",
+                catalog: fixture.catalog,
+              );
+            },
+            child: const Text("Choose payload"),
+          ),
         ),
       ),
     );
@@ -152,9 +164,26 @@ void main() {
       "Text",
     );
     await tester.pumpAndSettle();
-    expect(_searchResult("Text"), findsOneWidget);
-    expect(_searchResult("Text?"), findsOneWidget);
-    await tester.tap(_searchResult("Text"));
+    expect(
+      find.descendant(
+        of: find.byType(SearchResultCard),
+        matching: find.text("Text"),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(SearchResultCard),
+        matching: find.text("Text?"),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SearchResultCard),
+        matching: find.text("Text"),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text("Allow no value"));
@@ -177,45 +206,48 @@ void main() {
   testWidgets("composes arguments and confirms the Realm repair preview", (
     tester,
   ) async {
-    final fixture = _fixture();
+    final fixture = RewardContainerFixture();
     skir.TypeSelection? requested;
     skir.TypeArgumentChangePreview? committed;
     String? status;
 
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: AuthoredTypeArgumentEditor(
-          selection: skir.TypeSelection.createPending(
-            definition: fixture.container,
-            arguments: [skir.ArgumentSelection.unfilled],
-          ),
-          catalog: fixture.catalog,
-          preview: (next) async {
-            requested = next;
-            return skir.PreviewTypeArgumentChangeResponse.createReady(
-              resource: skir.ResourceId(value: "variable:1"),
-              next: next,
-              edit: skir.PreparedEdit(
-                catalog: fixture.catalog.snapshot.generation,
-                expectations: const [],
-                intents: const [],
-              ),
-              linkRepairs: const [],
-              clearedLocations: [
-                skir.ValueLocation(
-                  resource: skir.ResourceId(value: "variable:1"),
-                  path: skir.ValuePath(
-                    segments: [skir.PathSegment.createField(name: "value")],
-                  ),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: AuthoredTypeArgumentEditor(
+            selection: skir.TypeSelection.createPending(
+              definition: fixture.container,
+              arguments: [skir.ArgumentSelection.unfilled],
+            ),
+            catalog: fixture.catalog,
+            preview: (next) async {
+              requested = next;
+              return skir.PreviewTypeArgumentChangeResponse.createReady(
+                resource: skir.ResourceId(value: "variable:1"),
+                next: next,
+                edit: skir.PreparedEdit(
+                  catalog: fixture.catalog.snapshot.generation,
+                  expectations: const [],
+                  intents: const [],
                 ),
-              ],
-            );
-          },
-          commit: (preview) async {
-            committed = preview;
-            return const EditStageResult.staged(EditGroupId(1));
-          },
-          onStatus: (value) => status = value,
+                linkRepairs: const [],
+                clearedLocations: [
+                  skir.ValueLocation(
+                    resource: skir.ResourceId(value: "variable:1"),
+                    path: skir.ValuePath(
+                      segments: [skir.PathSegment.createField(name: "value")],
+                    ),
+                  ),
+                ],
+              );
+            },
+            commit: (preview) async {
+              committed = preview;
+              return const EditStageResult.staged(EditGroupId(1));
+            },
+            onStatus: (value) => status = value,
+          ),
         ),
       ),
     );
@@ -224,7 +256,21 @@ void main() {
     await tester.tap(find.text("Choose a type"));
     await tester.pumpAndSettle();
 
-    await _searchAndChoose(tester, "CoinReward");
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(QueryBar),
+        matching: find.byType(EditableText),
+      ),
+      "CoinReward",
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SearchResultCard),
+        matching: find.text("CoinReward"),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     expect(find.text("Review type change"), findsOne);
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
@@ -254,41 +300,58 @@ void main() {
   testWidgets("persists one chosen argument while another stays Unfilled", (
     tester,
   ) async {
-    final fixture = _fixture(parameterCount: 2);
+    final fixture = RewardContainerFixture(parameterCount: 2);
     skir.TypeSelection? requested;
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: AuthoredTypeArgumentEditor(
-          selection: skir.TypeSelection.createPending(
-            definition: fixture.container,
-            arguments: [
-              skir.ArgumentSelection.unfilled,
-              skir.ArgumentSelection.unfilled,
-            ],
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: AuthoredTypeArgumentEditor(
+            selection: skir.TypeSelection.createPending(
+              definition: fixture.container,
+              arguments: [
+                skir.ArgumentSelection.unfilled,
+                skir.ArgumentSelection.unfilled,
+              ],
+            ),
+            catalog: fixture.catalog,
+            preview: (next) async {
+              requested = next;
+              return skir.PreviewTypeArgumentChangeResponse.createReady(
+                resource: skir.ResourceId(value: "variable:1"),
+                next: next,
+                edit: skir.PreparedEdit(
+                  catalog: fixture.catalog.snapshot.generation,
+                  expectations: const [],
+                  intents: const [],
+                ),
+                linkRepairs: const [],
+                clearedLocations: const [],
+              );
+            },
+            commit: (_) async => const EditStageResult.staged(EditGroupId(1)),
           ),
-          catalog: fixture.catalog,
-          preview: (next) async {
-            requested = next;
-            return skir.PreviewTypeArgumentChangeResponse.createReady(
-              resource: skir.ResourceId(value: "variable:1"),
-              next: next,
-              edit: skir.PreparedEdit(
-                catalog: fixture.catalog.snapshot.generation,
-                expectations: const [],
-                intents: const [],
-              ),
-              linkRepairs: const [],
-              clearedLocations: const [],
-            );
-          },
-          commit: (_) async => const EditStageResult.staged(EditGroupId(1)),
         ),
       ),
     );
 
     await tester.tap(find.text("Choose a type").first);
     await tester.pumpAndSettle();
-    await _searchAndChoose(tester, "CoinReward");
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(QueryBar),
+        matching: find.byType(EditableText),
+      ),
+      "CoinReward",
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SearchResultCard),
+        matching: find.text("CoinReward"),
+      ),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
     await tester.pumpAndSettle();
 
@@ -304,224 +367,4 @@ void main() {
     expect(pending.value.arguments.last, skir.ArgumentSelection.unfilled);
     expect(find.textContaining("Unfilled"), findsOneWidget);
   });
-}
-
-({
-  CheckedEditorCatalog catalog,
-  skir.TypeDefinitionId page,
-  skir.TypeDefinitionId sequence,
-  skir.TypeDefinitionId manifest,
-})
-_concreteResourceFixture() {
-  final page = _definition("Page");
-  final sequence = _definition("SequencePage");
-  final staticPage = _definition("StaticPage");
-  final scene = _definition("ScenePage");
-  final manifest = _definition("ManifestPage");
-  final unrelated = _definition("Unrelated");
-  skir.PublishedType published(
-    skir.TypeDefinitionId id, {
-    required bool abstract,
-    List<skir.NamedTypeTemplate> parents = const [],
-    skir.TypeDisplay? display,
-  }) => skir.PublishedType(
-    searchKey: null,
-    placementField: null,
-    definition: skir.TypeDefinition(
-      id: id,
-      parameters: const [],
-      representation: skir.RepresentationTemplate.createRecord(
-        fields: const [],
-        abstract_: abstract,
-      ),
-      parents: parents,
-    ),
-    status: skir.DeclarationStatus.ready,
-    effectiveFields: const [],
-    ancestorTemplates: parents,
-    display: display ?? defaultTypeDisplay(""),
-  );
-  final pageParent = skir.NamedTypeTemplate(
-    definition: page,
-    arguments: const [],
-  );
-  return (
-    catalog: CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
-        generation: skir.CatalogGeneration(value: "catalog:resources"),
-        types: [
-          published(page, abstract: true),
-          published(
-            sequence,
-            abstract: false,
-            parents: [pageParent],
-            display: _display(
-              "Sequence",
-              "material-symbols:account-tree",
-              0xff2196f3,
-            ),
-          ),
-          published(
-            staticPage,
-            abstract: false,
-            parents: [pageParent],
-            display: _display(
-              "Static",
-              "material-symbols:push-pin",
-              0xff673ab7,
-            ),
-          ),
-          published(
-            scene,
-            abstract: false,
-            parents: [pageParent],
-            display: _display("Scene", "material-symbols:movie", 0xffff9800),
-          ),
-          published(
-            manifest,
-            abstract: false,
-            parents: [pageParent],
-            display: _display(
-              "Manifest",
-              "material-symbols:schema",
-              0xff4caf50,
-            ),
-          ),
-          published(unrelated, abstract: false),
-        ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
-      ),
-    ),
-    page: page,
-    sequence: sequence,
-    manifest: manifest,
-  );
-}
-
-({
-  CheckedEditorCatalog catalog,
-  skir.TypeDefinitionId container,
-  skir.TypeDefinitionId coin,
-})
-_fixture({
-  int parameterCount = 1,
-  bool unbounded = false,
-  String containerName = "Variable",
-}) {
-  final container = _definition(containerName);
-  final reward = _definition("Reward");
-  final coin = _definition("CoinReward");
-  skir.PublishedType published(
-    skir.TypeDefinitionId id, {
-    List<skir.TypeParameter> parameters = const [],
-    List<skir.NamedTypeTemplate> parents = const [],
-  }) => skir.PublishedType(
-    searchKey: null,
-    placementField: null,
-    definition: skir.TypeDefinition(
-      id: id,
-      parameters: parameters,
-      representation: skir.RepresentationTemplate.createRecord(
-        fields: const [],
-        abstract_: false,
-      ),
-      parents: parents,
-    ),
-    status: skir.DeclarationStatus.ready,
-    effectiveFields: const [],
-    ancestorTemplates: parents,
-    display: defaultTypeDisplay(""),
-  );
-  return (
-    catalog: CheckedEditorCatalog(
-      skir.EditorCatalog(
-        resourceDisplays: const [],
-        resourceOperations: const [],
-        generation: skir.CatalogGeneration(value: "catalog:1"),
-        types: [
-          published(
-            container,
-            parameters: [
-              for (var index = 0; index < parameterCount; index++)
-                skir.TypeParameter(
-                  key: skir.ParameterKey(owner: container, index: index),
-                  name: index == 0 ? "T" : "U",
-                  bounds: unbounded
-                      ? const []
-                      : [
-                          skir.TypeTemplate.createNamed(
-                            definition: reward,
-                            arguments: const [],
-                          ),
-                        ],
-                ),
-            ],
-          ),
-          published(reward),
-          published(
-            coin,
-            parents: [
-              skir.NamedTypeTemplate(definition: reward, arguments: const []),
-            ],
-          ),
-        ],
-        relations: const [],
-        realmRoot: skir.TypeDefinitionId.defaultInstance,
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
-      ),
-    ),
-    container: container,
-    coin: coin,
-  );
-}
-
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
-  revision: 1,
-);
-
-skir.TypeDisplay _display(String name, String icon, int argb) =>
-    skir.TypeDisplay(
-      name: name,
-      description: "$name page",
-      icon: skir.Icon.wrapIconify(icon),
-      color: skir.Color(argb: argb.toSigned(32)),
-    );
-
-Finder _searchResult(String label) => find.descendant(
-  of: find.byType(SearchResultCard),
-  matching: find.text(label),
-);
-
-Future<void> _searchAndChoose(WidgetTester tester, String label) async {
-  await tester.enterText(
-    find.descendant(
-      of: find.byType(QueryBar),
-      matching: find.byType(EditableText),
-    ),
-    label,
-  );
-  await tester.pumpAndSettle();
-  await tester.tap(_searchResult(label));
-  await tester.pumpAndSettle();
 }

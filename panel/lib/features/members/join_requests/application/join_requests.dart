@@ -11,7 +11,7 @@ part "join_requests.g.dart";
 extension OrganizationJoinRequestExpiry on skir.OrganizationJoinRequest {
   /// Returns locally calculated time remaining, clamped at zero.
   Duration get remainingDuration {
-    final remaining = expiresAt.difference(DateTime.now());
+    final remaining = expiresAt.difference(clock.now());
     return remaining.isNegative ? Duration.zero : remaining;
   }
 

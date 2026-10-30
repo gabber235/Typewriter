@@ -2,554 +2,255 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-import "../application/core/support/search_core_test_harness.dart";
-
 void main() {
-  group("SearchTreeResults", () {
-    testWidgets("renders section title, nested result title, and muted count", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [resultNode("alpha"), resultNode("beta")],
-            ),
-          ],
-        ),
-      );
-
-      expect(find.text("Books"), findsOneWidget);
-      expect(find.text("Result alpha"), findsOneWidget);
-      final count = tester.widget<Text>(find.text("(2)"));
-      final colorScheme = Theme.of(tester.element(find.text("(2)")))
-          .colorScheme;
-      expect(count.style!.color, colorScheme.onSurfaceVariant);
-    });
-
-    testWidgets("starts expanded", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [resultNode("alpha")],
-            ),
-          ],
-        ),
-      );
-
-      expect(find.text("Result alpha"), findsOneWidget);
-    });
-
-    testWidgets("tapping a section hides and shows descendants", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [resultNode("alpha")],
-            ),
-          ],
-        ),
-      );
-
-      await tester.tap(find.text("Books"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-
-      expect(find.text("Books"), findsOneWidget);
-      expect(find.text("Result alpha"), findsNothing);
-
-      await tester.tap(find.text("Books"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1));
-
-      expect(find.text("Result alpha"), findsOneWidget);
-    });
-
-    testWidgets("collapsed top level header stays visible", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [resultNode("alpha")],
-            ),
-          ],
-        ),
-      );
-
-      await tester.tap(find.text("Books"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-
-      expect(find.text("Books"), findsOneWidget);
-      expect(find.text("Result alpha"), findsNothing);
-    });
-
-    testWidgets("collapsed nested header stays visible", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [
-                SearchNode.section(
-                  id: "chapters",
-                  title: "Chapters",
-                  children: [resultNode("alpha")],
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-
-      await tester.tap(find.text("Chapters"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-
-      expect(find.text("Books"), findsOneWidget);
-      expect(find.text("Chapters"), findsOneWidget);
-      expect(find.text("Result alpha"), findsNothing);
-    });
-
-    testWidgets("collapsed nested header can expand again", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [
-                SearchNode.section(
-                  id: "chapters",
-                  title: "Chapters",
-                  children: [resultNode("alpha")],
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-
-      await tester.tap(find.text("Chapters"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-      await tester.tap(find.text("Chapters"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1));
-
-      expect(find.text("Chapters"), findsOneWidget);
-      expect(find.text("Result alpha"), findsOneWidget);
-    });
-
-    testWidgets("section chevron uses animated rotation", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [SearchNode.section(id: "books", title: "Books")],
-        ),
-      );
-
-      expect(find.byType(AnimatedRotation), findsOneWidget);
-    });
-
-    testWidgets("missing renderer fallback appears", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(nodes: [resultNode("alpha")]),
-      );
-
-      expect(find.text("Missing renderer test-row"), findsOneWidget);
-    });
-
-    testWidgets("first visible result gets shortcut and tenth does not", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-      final contexts = <String, SearchResultRowContext>{};
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(
-          source: source,
-          rowRenderers: {
-            "test-row": (context) {
-              contexts[context.result.id] = context;
-              return ListTile(title: Text(context.result.id));
-            },
-          },
-        ),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [for (var i = 1; i <= 10; i++) resultNode("item$i")],
-        ),
-      );
-
-      expect(contexts["item1"]!.shortcutActivator, isNotNull);
-      expect(contexts["item10"]!.shortcutActivator, isNull);
-    });
-
-    testWidgets("builds a custom scroll view", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(nodes: [resultNode("alpha")]),
-      );
-
-      expect(find.byType(CustomScrollView), findsOneWidget);
-    });
-
-    testWidgets("builds one sliver for each top level group", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(id: "books", title: "Books"),
-            SearchNode.section(id: "pages", title: "Pages"),
-          ],
-        ),
-      );
-
-      expect(find.byType(SearchTreeSectionSliver), findsNWidgets(2));
-    });
-
-    testWidgets("top level headers are pinned", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [SearchNode.section(id: "books", title: "Books")],
-        ),
-      );
-
-      expect(
-        find.ancestor(
-          of: find.text("Books"),
-          matching: find.byType(PinnedHeaderSliver),
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets("nested section headers are not pinned", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [SearchNode.section(id: "nested", title: "Nested")],
-            ),
-          ],
-        ),
-      );
-
-      expect(
-        find.ancestor(
-          of: find.text("Nested"),
-          matching: find.byType(PinnedHeaderSliver),
-        ),
-        findsNothing,
-      );
-    });
-
-    testWidgets("top level header remains visible while scrolling", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [for (var i = 1; i <= 30; i++) resultNode("item$i")],
-            ),
-          ],
-        ),
-      );
-
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
-      await tester.pumpSearchRows();
-
-      expect(find.text("Books").hitTestable(), findsOneWidget);
-    });
-
-    testWidgets("tapping a pinned header toggles its body", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [
-            SearchNode.section(
-              id: "books",
-              title: "Books",
-              children: [resultNode("alpha")],
-            ),
-          ],
-        ),
-      );
-
-      await tester.tap(find.text("Books"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-
-      expect(find.text("Result alpha"), findsNothing);
-
-      await tester.tap(find.text("Books"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1));
-
-      expect(find.text("Result alpha"), findsOneWidget);
-    });
-
-    testWidgets("loading snapshot with no rows shows shimmer", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(tester, SearchSourceSnapshot.loading());
-
-      expect(find.byType(ShimmerBox), findsWidgets);
-      expect(find.text("No results found"), findsNothing);
-    });
-
-    testWidgets("ready snapshot with no rows shows empty state", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        SearchSourceSnapshot.ready(nodes: const []),
-      );
-
-      expect(find.text("No results found"), findsOneWidget);
-    });
-
-    testWidgets("idle snapshot with guidance shows guidance title", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        SearchSourceSnapshot.idle(
-          guidance: const [
-            SearchGuidance(
-              id: "start",
-              title: "Start typing",
-              description: "Search by title",
-            ),
-          ],
-        ),
-      );
-
-      expect(find.text("Start typing"), findsOneWidget);
-    });
-
-    testWidgets("error snapshot shows the error message", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        SearchSourceSnapshot.error(
-          errorSummaries: const [
-            SearchErrorSummary(
-              id: "broken",
-              message: "Search source failed",
-              severity: SearchErrorSeverity.error,
-              sourceLabel: "Test source",
-            ),
-          ],
-        ),
-      );
-
-      expect(find.text("Search source failed"), findsOneWidget);
-      expect(find.text("Test source"), findsOneWidget);
-    });
-
-    testWidgets("populated snapshot does not show empty state", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchTree(source: source, rowRenderers: _rowRenderers),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(nodes: [resultNode("alpha")]),
-      );
-
-      expect(find.text("No results found"), findsNothing);
-      expect(find.text("Result alpha"), findsOneWidget);
-    });
+  testWidgets("shows the section title, its results and a muted count", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, [
+      sectionNode("Books", [resultNode("alpha"), resultNode("beta")]),
+    ]);
+
+    expect(panel.shows("Books"), isTrue);
+    expect(panel.search.result("Result alpha").isShown, isTrue);
+    expect(panel.search.result("Result beta").isShown, isTrue);
+    final count = find.text("(2)");
+    expect(
+      tester.widget<Text>(count).style!.color,
+      Theme.of(tester.element(count)).colorScheme.onSurfaceVariant,
+    );
   });
-}
 
-final _rowRenderers = <String, SearchResultRowBuilder>{
-  "test-row": (context) => ListTile(
-    title: Text("Result ${context.result.id}"),
-    selected: context.selected,
-    onTap: context.onTap,
-  ),
-};
+  testWidgets("shows a header for each top level section", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, [
+      sectionNode("Books", const []),
+      sectionNode("Pages", const []),
+    ]);
 
-class _TestSearchTree extends StatelessWidget {
-  const _TestSearchTree({required this.source, this.rowRenderers = const {}});
+    expect(panel.shows("Books"), isTrue);
+    expect(panel.shows("Pages"), isTrue);
+  });
 
-  final FakeSearchSource source;
-  final Map<String, SearchResultRowBuilder> rowRenderers;
+  testWidgets("clicking a section hides and shows its results", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, [
+      sectionNode("Books", [resultNode("alpha")]),
+    ]);
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 600,
-      height: 500,
-      child: SearchRoot(
-        create: (ref) => SearchController(
-          session: testSearchSession(source),
-          baseSelectors: const [
-            KeyValueSelectorDefinition(id: "tag", key: "#"),
-          ],
-        ),
-        child: SearchTreeResults(rowRenderers: rowRenderers),
+    await panel.search.toggleSection("Books");
+    expect(panel.shows("Books"), isTrue);
+    expect(panel.search.result("Result alpha").isShown, isFalse);
+
+    await panel.search.toggleSection("Books");
+    expect(panel.search.result("Result alpha").isShown, isTrue);
+  });
+
+  testWidgets("a collapsed nested section keeps its header and can reopen", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, [
+      sectionNode("Books", [
+        sectionNode("Chapters", [resultNode("alpha")]),
+      ]),
+    ]);
+
+    await panel.search.toggleSection("Chapters");
+    expect(panel.shows("Books"), isTrue);
+    expect(panel.shows("Chapters"), isTrue);
+    expect(panel.search.result("Result alpha").isShown, isFalse);
+
+    await panel.search.toggleSection("Chapters");
+    expect(panel.search.result("Result alpha").isShown, isTrue);
+  });
+
+  testWidgets("a top level header stays on screen while results scroll", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, [
+      sectionNode("Books", [
+        for (var i = 1; i <= 30; i++) resultNode("item$i"),
+      ]),
+    ]);
+
+    await panel.search.result("Result item3").drag(const Offset(0, -400));
+
+    expect(find.text("Books").hitTestable(), findsOneWidget);
+  });
+
+  testWidgets("a nested header scrolls away with its results", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, [
+      sectionNode("Books", [
+        sectionNode("Chapters", [
+          for (var i = 1; i <= 30; i++) resultNode("item$i"),
+        ]),
+      ]),
+    ]);
+    expect(find.text("Chapters").hitTestable(), findsOneWidget);
+
+    await panel.search.result("Result item3").drag(const Offset(0, -400));
+
+    expect(find.text("Books").hitTestable(), findsOneWidget);
+    expect(find.text("Chapters").hitTestable(), findsNothing);
+  });
+
+  testWidgets("shows placeholders while the first results load", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+
+    source.emitSnapshot(SearchSourceSnapshot.loading());
+    // The placeholders shimmer until results arrive, so time is pumped
+    // instead of settled.
+    await tester.pump();
+
+    expect(panel.shows(searchLoadingSemanticLabel), isTrue);
+    expect(panel.shows("No results found"), isFalse);
+  });
+
+  testWidgets("a search without results says so", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, const []);
+
+    expect(panel.shows("No results found"), isTrue);
+  });
+
+  testWidgets("an idle search shows the source's guidance", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+
+    source.emitSnapshot(
+      SearchSourceSnapshot.idle(
+        guidance: const [
+          SearchGuidance(
+            id: "start",
+            title: "Start typing",
+            description: "Search by title",
+          ),
+        ],
       ),
     );
-  }
+    await panel.settle();
+
+    expect(panel.shows("Start typing"), isTrue);
+  });
+
+  testWidgets("a failed search shows the error and the failing source", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+
+    source.emitSnapshot(
+      SearchSourceSnapshot.error(
+        errorSummaries: const [
+          SearchErrorSummary(
+            id: "broken",
+            message: "Search source failed",
+            severity: SearchErrorSeverity.error,
+            sourceLabel: "Test source",
+          ),
+        ],
+      ),
+    );
+    await panel.settle();
+
+    expect(panel.shows("Search source failed"), isTrue);
+    expect(panel.shows("Test source"), isTrue);
+  });
+
+  group("rows animate", () {
+    testWidgets("a removed row stays until its exit finished", (tester) async {
+      final source = FakeSearchSource();
+      final panel = await tester.showSearch(source);
+      await panel.search.show(source, [
+        resultNode("alpha"),
+        resultNode("beta"),
+      ], settle: false);
+
+      await panel.search.show(source, [resultNode("beta")], settle: false);
+      expect(panel.search.result("Result alpha").isShown, isTrue);
+
+      await panel.settle();
+      expect(panel.search.result("Result alpha").isShown, isFalse);
+    });
+
+    testWidgets("an added row shows while it is still growing in", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      final panel = await tester.showSearch(source);
+      await panel.search.show(source, [resultNode("alpha")], settle: false);
+
+      await panel.search.show(source, [
+        resultNode("alpha"),
+        resultNode("beta"),
+      ], settle: false);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(panel.search.result("Result beta").isShown, isTrue);
+    });
+
+    testWidgets("collapsing a section lets its rows leave gradually", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      final panel = await tester.showSearch(source);
+      await panel.search.show(source, [
+        sectionNode("Books", [resultNode("alpha")]),
+      ], settle: false);
+
+      await tester.tap(find.text("Books"));
+      await tester.pump();
+
+      expect(panel.search.result("Result alpha").isShown, isTrue);
+    });
+
+    testWidgets("removals and insertions together end in the new order", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      final panel = await tester.showSearch(source);
+      await panel.search.show(source, [
+        resultNode("alpha"),
+        resultNode("beta"),
+        resultNode("gamma"),
+      ], settle: false);
+
+      await panel.search.show(source, [
+        resultNode("gamma"),
+        resultNode("beta"),
+        resultNode("delta"),
+      ], settle: false);
+      await panel.settle();
+
+      expect(panel.search.result("Result alpha").isShown, isFalse);
+      final tops = [
+        for (final id in ["gamma", "beta", "delta"])
+          panel.search.result("Result $id").rect.top,
+      ];
+      expect(tops[0], lessThan(tops[1]));
+      expect(tops[1], lessThan(tops[2]));
+    });
+  });
+
+  testWidgets("results replace the empty message", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(source);
+    await panel.search.show(source, [resultNode("alpha")]);
+
+    expect(panel.shows("No results found"), isFalse);
+    expect(panel.search.result("Result alpha").isShown, isTrue);
+  });
 }

@@ -1,498 +1,272 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-final _refProvider = Provider<Ref>((ref) => ref);
-
-Stream<T> _forward<T>(Stream<T> source) async* {
-  yield* source;
-}
-
 void main() {
   for (final forwarded in [false, true]) {
-    test(
-      "paused watches reduce against listener state with forwarding $forwarded",
-      () async {
-        final payload = skir.GetSentinelCredentialsResponse.serializer.toBytes(
-          skir.GetSentinelCredentialsResponse.createSuccess(
-            jwt: "jwt",
-            seed: "seed",
-          ),
-        );
-        final nats = FakeNatsClient()..registerHandler("watch", (_) => payload);
-        final container = ProviderContainer.test(
-          overrides: [
-            natsProvider.overrideWithValue(nats),
-            panelTelemetryProvider.overrideWithValue(
-              const AsyncData(NoopPanelTelemetry()),
-            ),
-          ],
-        );
-        addTearDown(nats.dispose);
-        addTearDown(container.dispose);
-        var current = 0;
+    test("events received while paused apply in order after resume "
+        "(forwarded: $forwarded)", () async {
+      final world = testWorld([signedIn(ada)]);
+      await world.initialized();
+      world.nats.registerHandler("watch", (_) => counterBytes(1));
+      final source = world.watchCounter(
+        reduce: (current, event) => current * 10 + event,
+      );
+      Stream<int> forward(Stream<int> events) async* {
+        yield* events;
+      }
 
-        final values = <int>[];
-        final initial = Completer<void>();
-        final completed = Completer<void>();
-        final source = container
-            .read(_refProvider)
-            .watchProjection<
-              int,
-              skir.GetSentinelCredentialsResponse,
-              skir.GetSentinelCredentialsResponse
-            >(
-              subject: "watch",
-              eventSubject: "events",
-              requestBytes: Uint8List(0),
-              responseSerializer:
-                  skir.GetSentinelCredentialsResponse.serializer,
-              eventSerializer: skir.GetSentinelCredentialsResponse.serializer,
-              snapshot: (_) => current + 1,
-              reduce: (_, _) => current + 1,
-              delivery: const ProjectionDelivery.ephemeral(),
-              reconciliation: const ProjectionReconciliation.latest(),
-            );
-        final stream = forwarded ? _forward(source) : source;
-        final listener = stream.listen((value) {
-          current = value;
-          values.add(value);
-          if (values.length == 1) initial.complete();
-          if (values.length == 3) completed.complete();
-        });
-        addTearDown(listener.cancel);
+      final stream = forwarded ? forward(source) : source;
+      final values = <int>[];
+      final listener = stream.listen(values.add);
+      addTearDown(listener.cancel);
+      await eventually(() => expect(values, [1]));
 
-        await initial.future.timeout(const Duration(seconds: 2));
-        listener.pause();
-        nats
-          ..emitMessageOnSubject("events", payload)
-          ..emitMessageOnSubject("events", payload);
-        await pumpEventQueue();
-        expect(values, [1]);
-        listener.resume();
+      listener.pause();
+      world.nats.connection
+        ..emitMessageOnSubject("events", counterBytes(2))
+        ..emitMessageOnSubject("events", counterBytes(3));
+      await pumpEventQueue();
+      expect(values, [1]);
 
-        await completed.future.timeout(const Duration(seconds: 2));
-        expect(values, [1, 2, 3]);
-        await listener.cancel();
-        expect(nats.subscriptionSubjects, isEmpty);
-      },
-    );
+      listener.resume();
+      await eventually(() => expect(values, [1, 12, 123]));
+      await listener.cancel();
+      expect(world.nats.connection.subscriptionSubjects, isEmpty);
+    });
   }
 
   test(
     "transformer errors preserve the last delivered reduction state",
     () async {
-      final nats = FakeNatsClient()
-        ..registerHandler(
-          "watch",
-          (_) =>
-              skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
-        );
-      final container = ProviderContainer.test(
-        overrides: [
-          natsProvider.overrideWithValue(nats),
-          panelTelemetryProvider.overrideWithValue(
-            const AsyncData(NoopPanelTelemetry()),
-          ),
-        ],
-      );
-      addTearDown(nats.dispose);
-      addTearDown(container.dispose);
+      final world = testWorld([signedIn(ada)]);
+      await world.initialized();
+      world.nats.registerHandler("watch", (_) => counterBytes(1));
       final values = <int>[];
       final errors = <Object>[];
-      final initial = Completer<void>();
-      final completed = Completer<void>();
-      final listener = container
-          .read(_refProvider)
-          .watchProjection<int, skir.Duration, skir.Duration>(
-            subject: "watch",
-            eventSubject: "events",
-            requestBytes: Uint8List(0),
-            responseSerializer: skir.Duration.serializer,
-            eventSerializer: skir.Duration.serializer,
-            snapshot: (response) => response.milliseconds,
+      final listener = world
+          .watchCounter(
             reduce: (previous, event) {
-              if (event.milliseconds < 0) throw StateError("invalid update");
-              return previous + event.milliseconds;
+              if (event < 0) throw StateError("invalid update");
+              return previous + event;
             },
-            delivery: const ProjectionDelivery.ephemeral(),
-            reconciliation: const ProjectionReconciliation.latest(),
           )
-          .listen((value) {
-            values.add(value);
-            if (values.length == 1) initial.complete();
-            if (values.length == 2) completed.complete();
-          }, onError: errors.add);
+          .listen(values.add, onError: errors.add);
       addTearDown(listener.cancel);
-      await initial.future.timeout(const Duration(seconds: 2));
+      await eventually(() => expect(values, [1]));
+
       listener.pause();
-      nats
-        ..emitMessageOnSubject(
-          "events",
-          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: -1)),
-        )
-        ..emitMessageOnSubject(
-          "events",
-          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
-        );
+      world.nats.connection
+        ..emitMessageOnSubject("events", counterBytes(-1))
+        ..emitMessageOnSubject("events", counterBytes(2));
       await pumpEventQueue();
       expect(errors, isEmpty);
       listener.resume();
-      await completed.future.timeout(const Duration(seconds: 2));
-      expect(values, [1, 3]);
+
+      await eventually(() => expect(values, [1, 3]));
       expect(errors, [isA<StateError>()]);
       await listener.cancel();
-      expect(nats.subscriptionSubjects, isEmpty);
+      expect(world.nats.connection.subscriptionSubjects, isEmpty);
     },
   );
 
-  test("confirmed facts snapshots and broker events share one paused queue and borrowed lifetime", () async {
+  test("confirmed facts and broker events apply in arrival order", () async {
+    final world = testWorld([signedIn(ada)]);
+    await world.initialized();
     final reply = Completer<Uint8List>();
-    final confirmations = StreamController<skir.Duration>.broadcast(sync: true);
-    final nats = FakeNatsClient()
-      ..registerHandler("watch", (_) => reply.future);
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
-    );
-    addTearDown(nats.dispose);
-    addTearDown(container.dispose);
+    world.nats.registerHandler("watch", (_) => reply.future);
+    final confirmations = StreamController<int>.broadcast(sync: true);
     addTearDown(confirmations.close);
     final values = <int>[];
-    final listener = container
-        .read(_refProvider)
-        .watchProjection<int, skir.Duration, skir.Duration>(
-          subject: "watch",
-          eventSubject: "events",
-          requestBytes: Uint8List(0),
-          responseSerializer: skir.Duration.serializer,
-          eventSerializer: skir.Duration.serializer,
-          snapshot: (response) => response.milliseconds,
-          reduce: (current, event) => current + event.milliseconds,
-          reduceConfirmed: (_, event) => event.milliseconds,
-          confirmedEvents: confirmations.stream,
+    final listener = world
+        .watchCounter(
+          reduce: (current, event) => current + event,
+          reduceConfirmed: (_, fact) => fact,
+          confirmed: confirmations.stream,
           reconcileSnapshot: max,
           initialValue: 0,
-          delivery: const ProjectionDelivery.ephemeral(),
-          reconciliation: const ProjectionReconciliation.latest(),
         )
         .listen(values.add);
     addTearDown(listener.cancel);
-    await pumpEventQueue();
-    expect(nats.requests, hasLength(1));
+    await eventually(
+      () => expect(world.nats.connection.requests, hasLength(1)),
+    );
+
     listener.pause();
-    confirmations.add(skir.Duration(milliseconds: 4));
-    reply.complete(
-      skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
-    );
-    nats.emitMessageOnSubject(
-      "events",
-      skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
-    );
+    confirmations.add(4);
+    reply.complete(counterBytes(1));
+    world.nats.connection.emitMessageOnSubject("events", counterBytes(2));
     await pumpEventQueue();
     expect(values, isEmpty);
     listener.resume();
-    await pumpEventQueue();
-    expect(values, [4, 4, 6]);
+
+    await eventually(() => expect(values, [4, 4, 6]));
+  });
+
+  test("canceling a watch leaves the confirmed stream open", () async {
+    final world = testWorld([signedIn(ada)]);
+    await world.initialized();
+    world.nats.registerHandler("watch", (_) => counterBytes(1));
+    final confirmations = StreamController<int>.broadcast(sync: true);
+    addTearDown(confirmations.close);
+    final values = <int>[];
+    final listener = world
+        .watchCounter(confirmed: confirmations.stream, initialValue: 0)
+        .listen(values.add);
+    await eventually(() => expect(values, [1]));
+
     await listener.cancel();
+
     expect(confirmations.hasListener, isFalse);
     expect(confirmations.isClosed, isFalse);
-    final borrowed = <skir.Duration>[];
+    final borrowed = <int>[];
     final other = confirmations.stream.listen(borrowed.add);
-    confirmations.add(skir.Duration(milliseconds: 9));
-    expect(borrowed.single.milliseconds, 9);
-    expect(values, [4, 4, 6]);
-    await other.cancel();
+    addTearDown(other.cancel);
+    confirmations.add(9);
+    expect(borrowed, [9]);
+    expect(values, [1]);
   });
 
   test("canceling a paused watch discards queued reductions", () async {
-    final payload = skir.Duration.serializer.toBytes(
-      skir.Duration(milliseconds: 1),
-    );
-    final nats = FakeNatsClient()..registerHandler("watch", (_) => payload);
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
-    );
-    addTearDown(nats.dispose);
-    addTearDown(container.dispose);
+    final world = testWorld([signedIn(ada)]);
+    await world.initialized();
+    world.nats.registerHandler("watch", (_) => counterBytes(1));
     var reductions = 0;
     final initial = Completer<void>();
-    final listener = container
-        .read(_refProvider)
-        .watchProjection<int, skir.Duration, skir.Duration>(
-          subject: "watch",
-          eventSubject: "events",
-          requestBytes: Uint8List(0),
-          responseSerializer: skir.Duration.serializer,
-          eventSerializer: skir.Duration.serializer,
+    final listener = world
+        .watchCounter(
           snapshot: (_) => ++reductions,
           reduce: (_, _) => ++reductions,
-          delivery: const ProjectionDelivery.ephemeral(),
-          reconciliation: const ProjectionReconciliation.latest(),
         )
         .listen((_) => initial.complete());
     addTearDown(listener.cancel);
-    await initial.future.timeout(const Duration(seconds: 2));
+    await initial.future;
+
     listener.pause();
-    nats.emitMessageOnSubject("events", payload);
+    world.nats.connection.emitMessageOnSubject("events", counterBytes(1));
     await pumpEventQueue();
     expect(reductions, 1);
     await listener.cancel();
     await pumpEventQueue();
+
     expect(reductions, 1);
-    expect(nats.subscriptionSubjects, isEmpty);
+    expect(world.nats.connection.subscriptionSubjects, isEmpty);
   });
 
   test("paused sequenced watches preserve every accepted transition", () async {
-    final nats = FakeNatsClient()
-      ..registerHandler(
-        "watch",
-        (_) => skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
-      );
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
-    );
-    addTearDown(nats.dispose);
-    addTearDown(container.dispose);
-    final sequenceState = SequencedCollection<int>();
+    final world = testWorld([signedIn(ada)]);
+    await world.initialized();
+    world.nats.registerHandler("watch", (_) => counterBytes(1));
+    final sequence = SequencedCollection<int>();
     final values = <int>[];
-    final initial = Completer<void>();
-    final completed = Completer<void>();
-    final listener = container
-        .read(_refProvider)
-        .watchProjection<int, skir.Duration, skir.Duration>(
-          subject: "watch",
-          eventSubject: "events",
-          requestBytes: Uint8List(0),
-          responseSerializer: skir.Duration.serializer,
-          eventSerializer: skir.Duration.serializer,
-          snapshot: (response) => response.milliseconds,
-          reduce: (_, event) => event.milliseconds,
-          delivery: const ProjectionDelivery.persistent(
-            stream: "TYPEWRITER_MEMBERSHIP",
-            consumer: "TW_watch_request_delivery",
-          ),
-          reconciliation: ProjectionReconciliation.sequenced(
-            snapshotSequence: (response) => response.milliseconds,
-            eventSequence: (event) => event.milliseconds,
-            sequenceState: sequenceState,
-          ),
-        )
-        .listen((value) {
-          values.add(value);
-          if (values.length == 1) initial.complete();
-          if (values.length == 3) completed.complete();
-        });
+    final listener = world
+        .watchCounter(persistent: true, sequence: sequence)
+        .listen(values.add);
     addTearDown(listener.cancel);
+    await eventually(() => expect(values, [1]));
 
-    await initial.future.timeout(const Duration(seconds: 2));
     listener.pause();
-    nats
-      ..emitMessageOnSubject(
-        "events",
-        skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
-      )
-      ..emitMessageOnSubject(
-        "events",
-        skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 3)),
-      );
+    world.nats.connection
+      ..emitMessageOnSubject("events", counterBytes(2))
+      ..emitMessageOnSubject("events", counterBytes(3));
     await pumpEventQueue();
-    expect(sequenceState.snapshot?.sequence, 3);
+    expect(sequence.snapshot?.sequence, 3);
     expect(values, [1]);
 
     listener.resume();
-    await completed.future.timeout(const Duration(seconds: 2));
-    expect(values, [1, 2, 3]);
+    await eventually(() => expect(values, [1, 2, 3]));
   });
 
   test(
     "sequenced confirmations wait for snapshot and deduplicate broker delivery",
     () async {
+      final world = testWorld([signedIn(ada)]);
+      await world.initialized();
       final reply = Completer<Uint8List>();
-      final confirmations = StreamController<skir.Duration>.broadcast(
-        sync: true,
-      );
-      final nats = FakeNatsClient()
-        ..registerHandler("watch", (_) => reply.future);
-      final container = ProviderContainer.test(
-        overrides: [
-          natsProvider.overrideWithValue(nats),
-          panelTelemetryProvider.overrideWithValue(
-            const AsyncData(NoopPanelTelemetry()),
-          ),
-        ],
-      );
-      addTearDown(nats.dispose);
-      addTearDown(container.dispose);
+      world.nats.registerHandler("watch", (_) => reply.future);
+      final confirmations = StreamController<int>.broadcast(sync: true);
       addTearDown(confirmations.close);
-      final sequenceState = SequencedCollection<int>();
+      final sequence = SequencedCollection<int>();
       final values = <int>[];
-      final listener = container
-          .read(_refProvider)
-          .watchProjection<int, skir.Duration, skir.Duration>(
-            subject: "watch",
-            eventSubject: "events",
-            requestBytes: Uint8List(0),
-            responseSerializer: skir.Duration.serializer,
-            eventSerializer: skir.Duration.serializer,
-            snapshot: (response) => response.milliseconds,
-            reduce: (_, event) => event.milliseconds,
-            reduceConfirmed: (_, event) => event.milliseconds,
-            confirmedEvents: confirmations.stream,
-            delivery: const ProjectionDelivery.persistent(
-              stream: "TYPEWRITER_MEMBERSHIP",
-              consumer: "TW_sequenced_confirmations",
-            ),
-            reconciliation: ProjectionReconciliation.sequenced(
-              snapshotSequence: (response) => response.milliseconds,
-              eventSequence: (event) => event.milliseconds,
-              sequenceState: sequenceState,
-            ),
+      final listener = world
+          .watchCounter(
+            persistent: true,
+            sequence: sequence,
+            reduceConfirmed: (_, fact) => fact,
+            confirmed: confirmations.stream,
           )
           .listen(values.add);
       addTearDown(listener.cancel);
-      await pumpEventQueue();
+      await eventually(
+        () => expect(world.nats.connection.requests, hasLength(1)),
+      );
 
-      confirmations.add(skir.Duration(milliseconds: 2));
-      nats
-        ..emitMessageOnSubject(
-          "events",
-          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
-        )
-        ..emitMessageOnSubject(
-          "events",
-          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 3)),
-        );
+      confirmations.add(2);
+      world.nats.connection
+        ..emitMessageOnSubject("events", counterBytes(2))
+        ..emitMessageOnSubject("events", counterBytes(3));
       await pumpEventQueue();
       expect(values, isEmpty);
 
-      reply.complete(
-        skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
-      );
-      await pumpEventQueue();
-      expect(values, [1, 2, 3]);
-      expect(sequenceState.snapshot?.sequence, 3);
+      reply.complete(counterBytes(1));
+      await eventually(() => expect(values, [1, 2, 3]));
+      expect(sequence.snapshot?.sequence, 3);
     },
   );
 
   test("failed snapshot rejects queued sequenced confirmations", () async {
+    final world = testWorld([signedIn(ada)]);
+    await world.initialized();
     final reply = Completer<Uint8List>();
-    final confirmations = StreamController<skir.Duration>.broadcast(sync: true);
-    final nats = FakeNatsClient()
-      ..registerHandler("watch", (_) => reply.future);
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
-    );
-    addTearDown(nats.dispose);
-    addTearDown(container.dispose);
+    world.nats.registerHandler("watch", (_) => reply.future);
+    final confirmations = StreamController<int>.broadcast(sync: true);
     addTearDown(confirmations.close);
-    var reductions = 0;
+    final failure = StateError("snapshot rejected");
+    final values = <int>[];
     final errors = <Object>[];
-    final listener = container
-        .read(_refProvider)
-        .watchProjection<int, skir.Duration, skir.Duration>(
-          subject: "watch",
-          eventSubject: "events",
-          requestBytes: Uint8List(0),
-          responseSerializer: skir.Duration.serializer,
-          eventSerializer: skir.Duration.serializer,
-          snapshot: (response) => response.milliseconds,
-          reduce: (_, event) {
-            reductions++;
-            return event.milliseconds;
-          },
-          confirmedEvents: confirmations.stream,
-          delivery: const ProjectionDelivery.persistent(
-            stream: "TYPEWRITER_MEMBERSHIP",
-            consumer: "TW_failed_sequenced_snapshot",
-          ),
-          reconciliation: ProjectionReconciliation.sequenced(
-            snapshotSequence: (response) => response.milliseconds,
-            eventSequence: (event) => event.milliseconds,
-            sequenceState: SequencedCollection<int>(),
-          ),
+    final done = Completer<void>();
+    final listener = world
+        .watchCounter(
+          persistent: true,
+          sequence: SequencedCollection<int>(),
+          confirmed: confirmations.stream,
         )
-        .listen((_) {}, onError: errors.add);
+        .listen(values.add, onError: errors.add, onDone: done.complete);
     addTearDown(listener.cancel);
-    await pumpEventQueue();
-    confirmations.add(skir.Duration(milliseconds: 2));
-    reply.completeError(StateError("snapshot rejected"));
-    await pumpEventQueue();
-    expect(errors, isNotEmpty);
-    expect(reductions, 0);
+    await eventually(
+      () => expect(world.nats.connection.requests, hasLength(1)),
+    );
+
+    confirmations.add(2);
+    reply.completeError(failure);
+    await done.future;
+
+    expect(errors, [same(failure)]);
+    expect(values, isEmpty);
   });
 
   test(
     "sequenced projection ignores a confirmed fact older than its snapshot",
     () async {
-      final confirmations = StreamController<skir.Duration>.broadcast(
-        sync: true,
-      );
-      final nats = FakeNatsClient()
-        ..registerHandler(
-          "watch",
-          (_) =>
-              skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
-        );
-      final container = ProviderContainer.test(
-        overrides: [
-          natsProvider.overrideWithValue(nats),
-          panelTelemetryProvider.overrideWithValue(
-            const AsyncData(NoopPanelTelemetry()),
-          ),
-        ],
-      );
-      addTearDown(nats.dispose);
-      addTearDown(container.dispose);
+      final world = testWorld([signedIn(ada)]);
+      await world.initialized();
+      world.nats.registerHandler("watch", (_) => counterBytes(2));
+      final confirmations = StreamController<int>.broadcast(sync: true);
       addTearDown(confirmations.close);
       final values = <int>[];
-      final listener = container
-          .read(_refProvider)
-          .watchProjection<int, skir.Duration, skir.Duration>(
-            subject: "watch",
-            eventSubject: "events",
-            requestBytes: Uint8List(0),
-            responseSerializer: skir.Duration.serializer,
-            eventSerializer: skir.Duration.serializer,
-            snapshot: (response) => response.milliseconds,
-            reduce: (_, event) => event.milliseconds,
-            confirmedEvents: confirmations.stream,
-            delivery: const ProjectionDelivery.persistent(
-              stream: "TYPEWRITER_MEMBERSHIP",
-              consumer: "TW_historical_confirmation",
-            ),
-            reconciliation: ProjectionReconciliation.sequenced(
-              snapshotSequence: (response) => response.milliseconds,
-              eventSequence: (event) => event.milliseconds,
-              sequenceState: SequencedCollection<int>(),
-            ),
+      final listener = world
+          .watchCounter(
+            persistent: true,
+            sequence: SequencedCollection<int>(),
+            confirmed: confirmations.stream,
           )
           .listen(values.add);
       addTearDown(listener.cancel);
+      await eventually(() => expect(values, [2]));
+
+      confirmations.add(1);
       await pumpEventQueue();
-      confirmations.add(skir.Duration(milliseconds: 1));
-      await pumpEventQueue();
+
       expect(values, [2]);
     },
   );

@@ -11,8 +11,9 @@ void main() {
     final name = skir.ExpressionBindingId(value: "title");
     var title = "Before";
     final owner = ChangeNotifier();
-    final host = _host(
-      name.readExpression().resourceHeading(
+    final host = BoundPresentationHost(
+      catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+      root: () => name.readExpression().resourceHeading(
         id: "resource",
         color: Colors.blue.portableExpression,
         identifier: "resource:1".portableExpression,
@@ -25,11 +26,13 @@ void main() {
           owner: owner,
         ),
       ],
+      contextInputs: [panelSelectionCountInput],
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
     );
     addTearDown(host.dispose);
     addTearDown(owner.dispose);
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: SizedBox(
           width: 220,
           child: PortablePresentationRenderer(host: host),
@@ -50,24 +53,32 @@ void main() {
   testWidgets("pane context hides all stacked headings and restores them", (
     tester,
   ) async {
-    final first = _host(
-      "Book".portableExpression.resourceHeading(
+    final first = BoundPresentationHost(
+      catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+      root: () => "Book".portableExpression.resourceHeading(
         id: "book",
         color: Colors.blue.portableExpression,
         identifier: "book:1".portableExpression,
       ),
+      bindings: const [],
+      contextInputs: [panelSelectionCountInput],
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
     );
-    final second = _host(
-      "Tag".portableExpression.resourceHeading(
+    final second = BoundPresentationHost(
+      catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+      root: () => "Tag".portableExpression.resourceHeading(
         id: "tag",
         color: Colors.red.portableExpression,
         identifier: "tag:1".portableExpression,
       ),
+      bindings: const [],
+      contextInputs: [panelSelectionCountInput],
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
     );
     addTearDown(first.dispose);
     addTearDown(second.dispose);
-    Future<void> pump(int count) => tester.pumpTestApp(
-      child: Material(
+    Future<void> pump(int count) => tester.showComponent(
+      Material(
         child: PresentationEnvironment(
           host: HostContext(selectionCount: count),
           child: Column(
@@ -93,16 +104,20 @@ void main() {
   });
 
   testWidgets("environment reaches a custom scope builder", (tester) async {
-    final host = _host(
-      "Resource".portableExpression.resourceHeading(
+    final host = BoundPresentationHost(
+      catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
+      root: () => "Resource".portableExpression.resourceHeading(
         id: "resource",
         color: Colors.blue.portableExpression,
       ),
+      bindings: const [],
+      contextInputs: [panelSelectionCountInput],
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
     );
     addTearDown(host.dispose);
     var observed = false;
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: PresentationEnvironment(
           host: const HostContext(selectionCount: 2),
           child: PortablePresentationRenderer(
@@ -213,30 +228,45 @@ void main() {
   testWidgets("fit starts at maximum and shrinks to minimum with overflow", (
     tester,
   ) async {
-    final node = _text("A medium title", sizing: _fit(18, 40));
-    Future<void> pump(double width) => tester.pumpTestApp(
-      child: Material(
+    final node = presentationText(
+      "text",
+      "A medium title".portableExpression,
+      sizing: skir.TextSizing.createFit(
+        minimum: numberLiteral(18),
+        maximum: numberLiteral(40),
+      ),
+      paragraph: _singleLine,
+    );
+    Future<void> pump(double width) => tester.showComponent(
+      Material(
         child: Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
             width: width,
             child: PortablePresentationNodeRenderer(
               node: node,
-              scope: _scope(),
+              scope: PortablePresentationScope(
+                operations: testPortableOperations(),
+                bindings: const {},
+                budget: skir.EvaluationBudget(
+                  maxSteps: 1000,
+                  maxCollectionItems: 100,
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
     await pump(1200);
-    expect(_fontSize(_paragraph(tester, "A medium title")), 40);
+    expect(tester.paragraphOf("A medium title").scaledFontSize, 40);
     await pump(180);
-    final smaller = _paragraph(tester, "A medium title");
-    expect(_fontSize(smaller), inInclusiveRange(18, 39));
+    final smaller = tester.paragraphOf("A medium title");
+    expect(smaller.scaledFontSize, inInclusiveRange(18, 39));
     await pump(30);
-    expect(_fontSize(_paragraph(tester, "A medium title")), 18);
+    expect(tester.paragraphOf("A medium title").scaledFontSize, 18);
     expect(
-      _paragraph(tester, "A medium title").overflow,
+      tester.paragraphOf("A medium title").overflow,
       TextOverflow.ellipsis,
     );
     expect(find.byType(SelectionArea), findsOneWidget);
@@ -250,17 +280,29 @@ void main() {
       null,
       skir.TextSizing.wrapExact(numberLiteral(22.5)),
     ]) {
-      await tester.pumpTestApp(
-        child: Material(
+      await tester.showComponent(
+        Material(
           child: PortablePresentationNodeRenderer(
-            node: _text("Ordinary", sizing: sizing),
-            scope: _scope(),
+            node: presentationText(
+              "text",
+              "Ordinary".portableExpression,
+              sizing: sizing,
+              paragraph: _singleLine,
+            ),
+            scope: PortablePresentationScope(
+              operations: testPortableOperations(),
+              bindings: const {},
+              budget: skir.EvaluationBudget(
+                maxSteps: 1000,
+                maxCollectionItems: 100,
+              ),
+            ),
           ),
         ),
       );
       expect(find.byType(AutoSizeText), findsNothing);
       if (sizing != null) {
-        expect(_paragraph(tester, "Ordinary").text.style?.fontSize, 22.5);
+        expect(tester.paragraphOf("Ordinary").text.style?.fontSize, 22.5);
       }
     }
   });
@@ -269,19 +311,40 @@ void main() {
     tester,
   ) async {
     for (final sizing in [
-      _fit(0, 40),
-      _fit(40, 18),
-      _fit(18.5, 40),
+      skir.TextSizing.createFit(
+        minimum: numberLiteral(0),
+        maximum: numberLiteral(40),
+      ),
+      skir.TextSizing.createFit(
+        minimum: numberLiteral(40),
+        maximum: numberLiteral(18),
+      ),
+      skir.TextSizing.createFit(
+        minimum: numberLiteral(18.5),
+        maximum: numberLiteral(40),
+      ),
       skir.TextSizing.createFit(
         minimum: skir.ExpressionBindingId(value: "missing").readExpression(),
         maximum: numberLiteral(40),
       ),
     ]) {
-      await tester.pumpTestApp(
-        child: Material(
+      await tester.showComponent(
+        Material(
           child: PortablePresentationNodeRenderer(
-            node: _text("Invalid", sizing: sizing),
-            scope: _scope(),
+            node: presentationText(
+              "text",
+              "Invalid".portableExpression,
+              sizing: sizing,
+              paragraph: _singleLine,
+            ),
+            scope: PortablePresentationScope(
+              operations: testPortableOperations(),
+              bindings: const {},
+              budget: skir.EvaluationBudget(
+                maxSteps: 1000,
+                maxCollectionItems: 100,
+              ),
+            ),
           ),
         ),
       );
@@ -326,7 +389,10 @@ void main() {
                   ),
                 ),
               ]
-              ..sizing = _fit(18, 40)
+              ..sizing = skir.TextSizing.createFit(
+                minimum: numberLiteral(18),
+                maximum: numberLiteral(40),
+              )
               ..paragraph = skir.TextParagraph(
                 maxLines: 2,
                 overflow: skir.PresentationTextOverflow.clip,
@@ -341,21 +407,28 @@ void main() {
       header: null,
       element: skir.PresentationElement.wrapRichText(rich),
     );
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: SizedBox(
             width: 150,
             child: PortablePresentationNodeRenderer(
               node: node,
-              scope: _scope(),
+              scope: PortablePresentationScope(
+                operations: testPortableOperations(),
+                bindings: const {},
+                budget: skir.EvaluationBudget(
+                  maxSteps: 1000,
+                  maxCollectionItems: 100,
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
-    final paragraph = _paragraph(tester, "مرحبا العالم");
+    final paragraph = tester.paragraphOf("مرحبا العالم");
     expect(paragraph.textDirection, TextDirection.rtl);
     expect(paragraph.maxLines, 2);
     final span = paragraph.text as TextSpan;
@@ -375,9 +448,17 @@ void main() {
   testWidgets(
     "finite height and zero width retain the full text at the fit floor",
     (tester) async {
-      final node = _text("Bounded", sizing: _fit(18, 40));
-      await tester.pumpTestApp(
-        child: Material(
+      final node = presentationText(
+        "text",
+        "Bounded".portableExpression,
+        sizing: skir.TextSizing.createFit(
+          minimum: numberLiteral(18),
+          maximum: numberLiteral(40),
+        ),
+        paragraph: _singleLine,
+      );
+      await tester.showComponent(
+        Material(
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
@@ -385,32 +466,46 @@ void main() {
               height: 30,
               child: PortablePresentationNodeRenderer(
                 node: node,
-                scope: _scope(),
+                scope: PortablePresentationScope(
+                  operations: testPortableOperations(),
+                  bindings: const {},
+                  budget: skir.EvaluationBudget(
+                    maxSteps: 1000,
+                    maxCollectionItems: 100,
+                  ),
+                ),
               ),
             ),
           ),
         ),
       );
       expect(
-        _fontSize(_paragraph(tester, "Bounded")),
+        tester.paragraphOf("Bounded").scaledFontSize,
         inInclusiveRange(18, 39),
       );
-      await tester.pumpTestApp(
-        child: Material(
+      await tester.showComponent(
+        Material(
           child: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
               width: 0,
               child: PortablePresentationNodeRenderer(
                 node: node,
-                scope: _scope(),
+                scope: PortablePresentationScope(
+                  operations: testPortableOperations(),
+                  bindings: const {},
+                  budget: skir.EvaluationBudget(
+                    maxSteps: 1000,
+                    maxCollectionItems: 100,
+                  ),
+                ),
               ),
             ),
           ),
         ),
       );
-      expect(_paragraph(tester, "Bounded").text.toPlainText(), "Bounded");
-      expect(_fontSize(_paragraph(tester, "Bounded")), 18);
+      expect(tester.paragraphOf("Bounded").text.toPlainText(), "Bounded");
+      expect(tester.paragraphOf("Bounded").scaledFontSize, 18);
       expect(tester.takeException(), isNull);
     },
   );
@@ -418,76 +513,45 @@ void main() {
   testWidgets("existing fitter keeps its linear accessibility approximation", (
     tester,
   ) async {
-    Future<void> pump(skir.TextSizing sizing) => tester.pumpTestApp(
-      child: Material(
+    Future<void> pump(skir.TextSizing sizing) => tester.showComponent(
+      Material(
         child: MediaQuery(
-          data: const MediaQueryData(textScaler: _NonlinearScaler()),
+          data: const MediaQueryData(textScaler: NonlinearTextScaler()),
           child: PortablePresentationNodeRenderer(
-            node: _text("Scaled", sizing: sizing),
-            scope: _scope(),
+            node: presentationText(
+              "text",
+              "Scaled".portableExpression,
+              sizing: sizing,
+              paragraph: _singleLine,
+            ),
+            scope: PortablePresentationScope(
+              operations: testPortableOperations(),
+              bindings: const {},
+              budget: skir.EvaluationBudget(
+                maxSteps: 1000,
+                maxCollectionItems: 100,
+              ),
+            ),
           ),
         ),
       ),
     );
     await pump(skir.TextSizing.wrapExact(numberLiteral(40)));
-    expect(_fontSize(_paragraph(tester, "Scaled")), 72);
-    await pump(_fit(18, 40));
-    expect(_fontSize(_paragraph(tester, "Scaled")), closeTo(56, 0.001));
+    expect(tester.paragraphOf("Scaled").scaledFontSize, 72);
+    await pump(
+      skir.TextSizing.createFit(
+        minimum: numberLiteral(18),
+        maximum: numberLiteral(40),
+      ),
+    );
+    expect(tester.paragraphOf("Scaled").scaledFontSize, closeTo(56, 0.001));
   });
 }
 
-BoundPresentationHost _host(
-  skir.PresentationNode root, {
-  List<BoundPresentationBinding> bindings = const [],
-}) => BoundPresentationHost(
-  catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
-  root: () => root,
-  bindings: bindings,
-  contextInputs: [panelSelectionCountInput],
-  budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+final _singleLine = skir.TextParagraph(
+  maxLines: 1,
+  overflow: skir.PresentationTextOverflow.ellipsis,
+  softWrap: false,
+  selectable: true,
+  tone: skir.PresentationTextTone.primary,
 );
-PortablePresentationScope _scope() => PortablePresentationScope(
-  operations: testPortableOperations(),
-  bindings: const {},
-  budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-);
-skir.TextSizing _fit(double min, double max) => skir.TextSizing.createFit(
-  minimum: numberLiteral(min),
-  maximum: numberLiteral(max),
-);
-skir.PresentationNode _text(String text, {skir.TextSizing? sizing}) =>
-    skir.PresentationNode(
-      nodeId: "text",
-      properties: skir.PresentationProperties.defaultInstance,
-      header: null,
-      element: skir.PresentationElement.wrapText(
-        (skir.TextContent.mutable()
-              ..value = text.portableExpression
-              ..sizing = sizing
-              ..paragraph = skir.TextParagraph(
-                maxLines: 1,
-                overflow: skir.PresentationTextOverflow.ellipsis,
-                softWrap: false,
-                selectable: true,
-                tone: skir.PresentationTextTone.primary,
-              ))
-            .toFrozen(),
-      ),
-    );
-RenderParagraph _paragraph(WidgetTester tester, String text) =>
-    tester.renderObject<RenderParagraph>(
-      find.byWidgetPredicate(
-        (widget) => widget is RichText && widget.text.toPlainText() == text,
-      ),
-    );
-
-double _fontSize(RenderParagraph paragraph) =>
-    paragraph.textScaler.scale(paragraph.text.style!.fontSize!);
-
-class _NonlinearScaler extends TextScaler {
-  const _NonlinearScaler();
-  @override
-  double scale(double fontSize) => fontSize * (fontSize > 30 ? 1.8 : 1.4);
-  @override
-  double get textScaleFactor => 1.4;
-}

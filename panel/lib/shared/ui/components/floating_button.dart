@@ -89,6 +89,7 @@ class _Spinner extends StatelessWidget {
     return SizedBox.square(
       dimension: size,
       child: CircularProgressIndicator(
+        semanticsLabel: "In progress",
         strokeWidth: 3,
         valueColor: AlwaysStoppedAnimation(color),
       ),

@@ -11,7 +11,7 @@ part "user_join_requests.g.dart";
 extension UserJoinRequestExpiry on skir.UserJoinRequest {
   /// Time remaining according to the local clock, clamped at zero.
   Duration get remainingDuration {
-    final remaining = expiresAt.difference(DateTime.now());
+    final remaining = expiresAt.difference(clock.now());
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
@@ -81,7 +81,10 @@ class UserJoinRequests extends _$UserJoinRequests {
       case skir.SubmitUserJoinRequestResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.SubmitUserJoinRequestResponse_codeNotFoundErrorWrapper():
-        throw ApiException.notFound("Join code not found or expired");
+        throw const ApiException(
+          code: 404,
+          message: "Join code not found or expired",
+        );
       case skir.SubmitUserJoinRequestResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
       case skir.SubmitUserJoinRequestResponse_invalidRecordIdErrorWrapper(
@@ -144,7 +147,7 @@ class UserJoinRequests extends _$UserJoinRequests {
         ):
           throw ApiException.invalidRecordId(value);
         case skir.CancelUserJoinRequestResponse_requestNotFoundErrorWrapper():
-          throw ApiException.notFound("Join request not found");
+          throw ApiException.notFound("Join request");
         case skir.CancelUserJoinRequestResponse_successWrapper(:final value):
           _applyEvent(value.event);
           debugPrint("Join request $requestId cancelled successfully");

@@ -2,168 +2,142 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-import "../application/core/support/search_core_test_harness.dart";
-
 void main() {
-  group("SearchBody", () {
-    testWidgets("renderer map renders a result row", (tester) async {
-      final source = FakeSearchSource();
+  final body = SearchBody(
+    searchHint: "Search",
+    rowRenderers: searchRows(
+      density: SearchResultDensity.card,
+      kindLabel: "Test",
+    ),
+  );
 
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchBody(
-          source: source,
-          rowRenderers: {
-            "test-row": (context) => ListTile(
-              title: Text("Rendered ${context.result.id}"),
-              onTap: context.onTap,
-            ),
-          },
-        ),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(nodes: [resultNode("alpha")]),
-      );
-
-      expect(find.text("Rendered alpha"), findsOneWidget);
-    });
-
-    testWidgets("missing renderer shows fallback text", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchBody(source: source),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(nodes: [resultNode("alpha")]),
-      );
-
-      expect(find.text("Missing renderer test-row"), findsOneWidget);
-    });
-
-    testWidgets("tapping result toggles selected state", (tester) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchBody(
-          source: source,
-          rowRenderers: {
-            "test-row": (context) => ListTile(
-              title: Text("Selected ${context.selected}"),
-              onTap: context.onTap,
-            ),
-          },
-        ),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(nodes: [resultNode("alpha")]),
-      );
-
-      expect(find.text("Selected false"), findsOneWidget);
-
-      await tester.tap(find.text("Selected false"));
-      await tester.pump();
-
-      expect(find.text("Selected true"), findsOneWidget);
-    });
-
-    testWidgets("only the first nine results receive shortcuts", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-      final contexts = <String, SearchResultRowContext>{};
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchBody(
-          source: source,
-          rowRenderers: {
-            "test-row": (context) {
-              contexts[context.result.id] = context;
-              return ListTile(
-                title: Text(context.result.id),
-                onTap: context.onTap,
-              );
-            },
-          },
-        ),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        readySnapshot(
-          nodes: [for (var i = 1; i <= 10; i++) resultNode("item$i")],
-        ),
-      );
-
-      expect(contexts["item1"]!.shortcutActivator, isNotNull);
-      expect(contexts["item10"]!.shortcutActivator, isNull);
-    });
-
-    testWidgets("shows progress while the initial result set loads", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchBody(source: source),
-      );
-
-      await source.emitSnapshotAndPump(tester, SearchSourceSnapshot.loading());
-
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-    });
-
-    testWidgets("keeps stale results without showing initial load progress", (
-      tester,
-    ) async {
-      final source = FakeSearchSource();
-
-      await tester.pumpTestApp(
-        settle: false,
-        child: _TestSearchBody(source: source),
-      );
-
-      await source.emitSnapshotAndPump(
-        tester,
-        SearchSourceSnapshot.loading(
-          nodes: [
-            SearchNode.result(
-              result: searchResult("alpha").copyWith(isStale: true),
-            ),
-          ],
-        ),
-      );
-
-      expect(find.byType(LinearProgressIndicator), findsNothing);
-      expect(find.text("Missing renderer test-row"), findsOneWidget);
-    });
-  });
-}
-
-class _TestSearchBody extends StatelessWidget {
-  const _TestSearchBody({required this.source, this.rowRenderers = const {}});
-
-  final FakeSearchSource source;
-  final Map<String, SearchResultRowBuilder> rowRenderers;
-
-  @override
-  Widget build(BuildContext context) {
-    return SearchRoot(
-      create: (ref) => SearchController(
-        session: testSearchSession(source),
-        baseSelectors: const [KeyValueSelectorDefinition(id: "tag", key: "#")],
-      ),
-      child: SearchBody(searchHint: "Search", rowRenderers: rowRenderers),
+  testWidgets("a result shows through the renderer of its type", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      size: const Size(800, 700),
     );
+
+    await panel.search.show(source, [resultNode("alpha")]);
+
+    expect(panel.search.result("Result alpha").isShown, isTrue);
+  });
+
+  testWidgets("a result without a renderer names the missing renderer", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(
+      source,
+      results: const SearchBody(searchHint: "Search", rowRenderers: {}),
+      size: const Size(800, 700),
+    );
+
+    await panel.search.show(source, [resultNode("alpha")]);
+
+    expect(panel.shows("alpha"), isTrue);
+    expect(panel.shows("Missing renderer test-row"), isTrue);
+  });
+
+  testWidgets("clicking a result selects it", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      size: const Size(800, 700),
+    );
+    await panel.search.show(source, [resultNode("alpha")]);
+    final alpha = panel.search.result("Result alpha");
+    expect(alpha.isSelected, isFalse);
+
+    await alpha.tap();
+
+    expect(alpha.isSelected, isTrue);
+  });
+
+  testWidgets("Space toggles the selection of the focused result", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      size: const Size(800, 700),
+    );
+    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    final beta = panel.search.result("Result beta");
+    await beta.focus();
+
+    await panel.press(LogicalKeyboardKey.space);
+    expect(beta.isSelected, isTrue);
+    expect(panel.search.result("Result alpha").isSelected, isFalse);
+
+    await panel.press(LogicalKeyboardKey.space);
+    expect(beta.isSelected, isFalse);
+  });
+
+  for (final number in [1, 3, 9]) {
+    testWidgets("the shortcut with digit $number opens result $number", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      final activated = <String>[];
+      final panel = await tester.showSearch(
+        source,
+        results: body,
+        activated: activated,
+        size: const Size(800, 700),
+      );
+      await panel.search.show(source, [
+        for (var i = 1; i <= 10; i++) resultNode("item$i"),
+      ]);
+
+      await panel.search.activateByShortcut(number);
+
+      expect(activated, ["item$number"]);
+    });
   }
+
+  testWidgets("shows progress while the first results load", (tester) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      size: const Size(800, 700),
+    );
+
+    source.emitSnapshot(SearchSourceSnapshot.loading());
+    await tester.pump();
+
+    expect(panel.shows(searchLoadingSemanticLabel), isTrue);
+  });
+
+  testWidgets("keeps stale results without showing first load progress", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      size: const Size(800, 700),
+    );
+
+    source.emitSnapshot(
+      SearchSourceSnapshot.loading(
+        nodes: [
+          SearchNode.result(
+            result: searchResult("alpha").copyWith(isStale: true),
+          ),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump(Duration.zero);
+
+    expect(panel.shows(searchLoadingSemanticLabel), isFalse);
+    expect(panel.search.result("Result alpha").isShown, isTrue);
+  });
 }

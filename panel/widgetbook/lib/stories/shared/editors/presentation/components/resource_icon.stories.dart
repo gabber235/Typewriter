@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 const _svgSource =
     "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"> "
@@ -27,9 +28,10 @@ Widget resourceIconVariantsUseCase(BuildContext context) {
     "SVG" => skir.Icon.wrapSvg(_svgSource),
     _ => null,
   };
-  return FakeApp(
-    child: Center(
-      child: DecoratedBox(
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      DecoratedBox(
         decoration: BoxDecoration(
           border: Border.all(color: context.colors.borderSubtle),
         ),

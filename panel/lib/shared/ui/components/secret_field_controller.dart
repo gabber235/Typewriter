@@ -24,7 +24,7 @@ _SecretFieldController _useSecretFieldController(
       return;
     }
 
-    if (currentState.remainingDurationAt(DateTime.now()) == Duration.zero) {
+    if (currentState.remainingDurationAt(clock.now()) == Duration.zero) {
       state.value = SecretFieldExpired(value: currentState.value);
       field.onExpired?.call();
     }
@@ -49,7 +49,7 @@ _SecretFieldController _useSecretFieldController(
     state.value = const SecretFieldLoading();
     try {
       final result = await field.onGenerate();
-      state.value = result.isExpiredAt(DateTime.now())
+      state.value = result.isExpiredAt(clock.now())
           ? SecretFieldExpired(value: result.value)
           : result;
       if (field.copyOnGenerate) {

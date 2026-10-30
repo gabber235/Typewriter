@@ -20,10 +20,7 @@ void main() {
     }
   });
 
-  test("query rendering is separate from raw string identity", () {
-    final id = skir.recordId("page:old-id");
-    expect(id.id, "old-id");
-    expect(id.toSurrealQl(), "page:`old-id`");
+  test("a numeric record key has no route id", () {
     expect(
       () => skir.RecordId(
         table: "page",
@@ -31,5 +28,24 @@ void main() {
       ).id,
       throwsStateError,
     );
+  });
+
+  test("route ids without a table or key are refused", () {
+    for (final malformed in [":x", "x:", "x", ""]) {
+      expect(
+        () => skir.recordId(malformed),
+        throwsArgumentError,
+        reason: malformed,
+      );
+    }
+  });
+
+  test("new resource ids are 20 lowercase alphanumeric characters", () {
+    final ids = {
+      for (var index = 0; index < 100; index++) skir.newResourceId().value,
+    };
+
+    expect(ids, hasLength(100));
+    expect(ids, everyElement(matches(RegExp(r"^[a-z0-9]{20}$"))));
   });
 }

@@ -5,95 +5,49 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test(
-    "AppRouter collection keeps current members as the initial /members leaf",
-    () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final organization = container
-          .read(appRouterProvider)
-          .routes
-          .firstWhere((route) => route.path == "/organization/:organizationId");
-      final members = organization.children!.firstWhere(
-        (route) => route.path == "members",
-      );
-      final currentMembers = members.children!.firstWhere(
-        (route) => route.path == "",
-      );
-
-      expect(currentMembers.page.name, MemberListRoute.name);
-      expect(currentMembers.initial, isTrue);
-    },
+  final member = skir.OrganizationMember(
+    userId: skir.recordId("user:grace"),
+    name: "Grace",
+    email: "grace@typewriter.test",
+    avatarUrl: null,
+    roles: const [],
+    joinedAt: DateTime.utc(2025),
   );
 
-  testWidgets("MemberListPage shows its focused heading without tabs", (
+  testWidgets("the members section opens on the current members", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: const MemberListPage(),
-      overrides: FakeMembership().overrides,
-    );
-    await tester.pump();
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membership(members: [member]),
+    ], at: membersPage());
 
-    final heading = tester.widget<PageHeading>(find.byType(PageHeading));
-    expect(heading.title, "Members");
-    expect(heading.subtext, isNotEmpty);
-    expect(find.byType(TabBar), findsNothing);
+    expect(panel.path, "/organization/acme/members");
+    expect(panel.headings, contains("Members"));
+    expect(find.text("Grace"), findsOneWidget);
   });
 
-  testWidgets("MemberListPage shows mobile member shimmers while loading", (
-    tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(400, 900);
-    addTearDown(tester.view.reset);
+  for (final (name, size) in [
+    ("narrow", const Size(400, 900)),
+    ("wide", desktopWindow),
+  ]) {
+    testWidgets("a $name window shows members loading while none arrived", (
+      tester,
+    ) async {
+      // Reduced motion keeps the placeholders still, so the panel settles.
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        membership(members: null),
+        window(size),
+      ], at: membersPage());
 
-    await tester.pumpTestApp(
-      child: const MemberListPage(),
-      overrides: [
-        organizationMembersProvider.overrideWith(
-          _LoadingOrganizationMembers.new,
-        ),
-      ],
-      settle: false,
-    );
-    await tester.pump();
-
-    expect(find.byKey(const ValueKey("membersLoadingMobile")), findsOneWidget);
-    expect(find.byKey(const ValueKey("membersLoadingDesktop")), findsNothing);
-    expect(find.byType(ShimmerBox), findsWidgets);
-  });
-
-  testWidgets("MemberListPage shows desktop member shimmers while loading", (
-    tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(1200, 900);
-    addTearDown(tester.view.reset);
-
-    await tester.pumpTestApp(
-      child: const MemberListPage(),
-      overrides: [
-        organizationMembersProvider.overrideWith(
-          _LoadingOrganizationMembers.new,
-        ),
-      ],
-      settle: false,
-    );
-    await tester.pump();
-
-    expect(find.byKey(const ValueKey("membersLoadingDesktop")), findsOneWidget);
-    expect(find.byKey(const ValueKey("membersLoadingMobile")), findsNothing);
-    expect(find.byType(ShimmerBox), findsWidgets);
-  });
-}
-
-class _LoadingOrganizationMembers extends OrganizationMembers {
-  @override
-  Stream<List<skir.OrganizationMember>> build() {
-    final controller = StreamController<List<skir.OrganizationMember>>();
-    ref.onDispose(controller.close);
-    return controller.stream;
+      expect(panel.shows("Loading members"), isTrue);
+      expect(find.text("Grace"), findsNothing);
+    });
   }
 }

@@ -23,11 +23,11 @@ class CountdownBadge extends HookWidget {
       return const _NeverExpiresBadge();
     }
     final colorScheme = Theme.of(context).colorScheme;
-    final remaining = useState(endDate!.difference(DateTime.now()));
+    final remaining = useState(endDate!.difference(clock.now()));
     final isUrgent = remaining.value <= urgentThreshold;
 
     useTimer(1.seconds, (timer) {
-      final duration = endDate!.difference(DateTime.now());
+      final duration = endDate!.difference(clock.now());
       if (duration.isNegative) {
         remaining.value = Duration.zero;
         timer.cancel();

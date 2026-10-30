@@ -18,11 +18,26 @@ Group variants by the component they demonstrate. Do not use feature terminology
 
 ## Story construction
 
-Wrap panel components with `FakeApp` unless the story uses a more specific existing application harness.
+Every story returns a `Story` (`lib/support/story.dart`): the real panel over a test kit world, the
+same `PanelStage` widget tests pump. Screens open at their real route
+(`at: PanelLocation.route(...)`); components that no route shows alone use
+`PanelLocation.component(...)`. Never build a separate app, scaffold or provider override list.
 
-Build stories from realistic domain values and public component interfaces. Reuse focused scenario support when multiple variants represent the same component contract.
+State is chosen with the test kit's traits, never with provider overrides: `signedIn`, `realm`,
+`membership`, `offline`, `compact`, `dark` and the rest. A knob that changes state is a trait knob,
+`context.knobs.traits("Join codes", {"None": [...], "Few": [...]})`, so every edge case a widget
+test can set up is a knob. Story data is seeded: build it with the test kit's `Generator` from the
+`context.knobs.seed()` knob, so it looks the same on every reload. Stateful doubles keep stories
+clickable: saving, creating and failing go through them.
 
-Add knobs for design relevant configuration such as width, read only state, enabled state, and content length. Keep knob labels unique within each use case.
+Show states a user meets (loading, empty, failing, offline, compact), not helper demos, debug text
+or instructions inside the preview. One story per component; variants are knobs unless they need a
+different world. Keep knob labels unique within each use case.
+
+`test/every_story_test.dart` renders every story in every combination of its choice knobs and
+fails when one throws or overflows; it writes each variant as an image below
+`.xtask/results/stories/` for the pull request evidence. Behaviour tests of a story pump it with
+`pumpStory` from `test/support/stories.dart` and act through the test kit's drivers.
 
 ## Generated files and verification
 

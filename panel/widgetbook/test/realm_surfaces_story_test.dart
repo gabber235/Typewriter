@@ -1,80 +1,75 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
-import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
-import "package:widgetbook_workspace/data/data.dart";
-import "package:widgetbook_workspace/stories/features/realms/presentation/realm_showcase_story.dart";
-import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources_layouts.stories.dart";
+import "package:widgetbook_workspace/stories/features/realms/presentation/resource_breadcrumbs.stories.dart";
+import "package:widgetbook_workspace/stories/features/realms/presentation/resource_navigator.stories.dart";
+import "package:widgetbook_workspace/stories/features/realms/presentation/resource_route.stories.dart";
+
+import "support/stories.dart";
 
 void main() {
-  for (final (name, routed) in [
-    ("page", fixtureShowcasePage),
-    ("Book", fixtureShowcaseBook),
-    ("Library", fixtureLibraryId),
-    ("tags", fixtureTaxonomyId),
+  for (final (routed, resource, title) in [
+    ("Page", "page:arrival", "Arrival"),
+    ("Book", "book:the_lost_village", "The Lost Village"),
+    ("Library", "library:library", "library"),
+    ("Tags", "library:taxonomy", "taxonomy"),
   ]) {
-    testWidgetsWithNetworkImages("the $name route story renders its surface", (
+    testWidgets("the routed $routed opens at its own route under its title", (
       tester,
     ) async {
-      await tester.binding.setSurfaceSize(const Size(1600, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      await tester.pumpWidget(
-        RealmShowcaseStory(
-          routed: routed,
-          child: Scaffold(
-            body: ResourceSurface(scope: realmShowcaseScope, resource: routed),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+      final panel = (await tester.pumpStory(
+        resourceSurfaceUseCase,
+        knobs: {"Routed resource": routed},
+      ))!;
 
-      expect(find.byType(ResourceHeading), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      expect(panel.path, endsWith("/resource/$resource"));
+      expect(panel.shows(title), isTrue);
+      await tester.runStory();
     });
   }
 
-  testWidgetsWithNetworkImages("the sidebar and breadcrumb stories render", (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      RealmShowcaseStory(
-        routed: fixtureShowcasePage,
-        child: Scaffold(
-          body: Column(
-            children: [
-              const ResourceBreadcrumbs(),
-              SizedBox(
-                width: 260,
-                child: RealmSectionsNavigator(scope: realmShowcaseScope),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets("a resource removed elsewhere says it is gone", (tester) async {
+    final panel = (await tester.pumpStory(
+      resourceSurfaceUseCase,
+      knobs: {"Routed resource": "Removed elsewhere"},
+    ))!;
 
-    expect(find.byType(ResourceCrumbSelector), findsNWidgets(3));
-    expect(find.byType(ResourceItemChrome), findsNWidgets(2));
-    expect(tester.takeException(), isNull);
+    expect(panel.shows("This resource is no longer available"), isTrue);
+    await tester.runStory();
   });
 
-  for (final (layout, resource, role) in [
-    ("grid", fixtureLibraryId, skir.PresentationRole.workspace),
-    ("list", fixtureRealmRootId, skir.PresentationRole.navigator),
-    ("tree", fixtureShowcaseBook, skir.PresentationRole.navigator),
-  ]) {
-    testWidgetsWithNetworkImages("the $layout layout story renders members", (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        ResourcesLayoutStory(resource: resource, role: role),
-      );
-      await tester.pumpAndSettle();
+  testWidgets("the breadcrumbs follow the owner chain of the page", (
+    tester,
+  ) async {
+    await tester.pumpStory(resourceBreadcrumbsUseCase);
 
-      expect(find.byType(ResourceItemChrome), findsWidgets);
-      expect(tester.takeException(), isNull);
-    });
-  }
+    final crumbs = [
+      "library",
+      "The Lost Village",
+      "Arrival",
+    ].map((crumb) => tester.getTopLeft(find.text(crumb).first).dx).toList();
+    expect(crumbs, orderedEquals([...crumbs]..sort()));
+    await tester.runStory();
+  });
+
+  testWidgets("choosing a section in the navigator opens it", (tester) async {
+    final panel = (await tester.pumpStory(realmSectionsNavigatorUseCase))!;
+
+    await tester.tap(find.text("taxonomy"));
+
+    await tester.eventually(
+      () => expect(panel.path, endsWith("/resource/library:taxonomy")),
+    );
+    await tester.runStory();
+  });
+
+  testWidgets("choosing a page of the book opens it", (tester) async {
+    final panel = (await tester.pumpStory(resourceSurfaceUseCase))!;
+
+    await tester.tap(find.text("Market"));
+
+    await tester.eventually(
+      () => expect(panel.path, endsWith("/resource/page:market")),
+    );
+    await tester.runStory();
+  });
 }

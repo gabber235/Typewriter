@@ -3,34 +3,38 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("opens both picker variants and closes with escape", (
+  const area = "Saturation and brightness";
+
+  const initial = Color(0x807C4DFF);
+
+  testWidgets("an opaque picker opens without opacity and closes with Escape", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: false),
+    final (panel, _) = await tester.showColorField(
+      initial,
+      includeAlpha: false,
     );
 
-    await tester.tap(find.tooltip("Open color picker"));
-    await tester.pumpAndSettle();
-    expect(find.byType(ColorArea), findsOneWidget);
-    expect(find.bySemanticsLabel("Opacity"), findsNothing);
+    await panel.tapOn(find.tooltip("Open color picker"));
+    expect(panel.shows(area), isTrue);
+    expect(panel.shows("Opacity"), isFalse);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    expect(find.byType(ColorArea), findsNothing);
+    await panel.press(LogicalKeyboardKey.escape);
+    expect(panel.shows(area), isFalse);
+  });
 
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true),
-    );
-    await tester.tap(find.tooltip("Open color picker"));
-    await tester.pumpAndSettle();
-    expect(find.bySemanticsLabel("Opacity"), findsOneWidget);
+  testWidgets("a picker with alpha offers opacity", (tester) async {
+    final (panel, _) = await tester.showColorField(initial, includeAlpha: true);
+
+    await panel.tapOn(find.tooltip("Open color picker"));
+
+    expect(panel.shows("Opacity"), isTrue);
   });
 
   testWidgets("opaque editing warns without mutating on mount", (tester) async {
     var changes = 0;
-    await tester.pumpTestApp(
-      child: ColorPickerField(
+    final panel = await tester.showComponent(
+      ColorPickerField(
         color: const Color(0x807C4DFF),
         includeAlpha: false,
         onChanged: (_) => changes++,
@@ -38,8 +42,7 @@ void main() {
     );
 
     expect(changes, 0);
-    await tester.tap(find.tooltip("Open color picker"));
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Open color picker"));
     expect(find.textContaining("set alpha to FF"), findsOneWidget);
     expect(changes, 0);
   });
@@ -47,43 +50,30 @@ void main() {
   testWidgets("invalid text remains visible without changing the binding", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true),
+    final (panel, color) = await tester.showColorField(
+      initial,
+      includeAlpha: true,
     );
 
-    await tester.enterText(find.byType(TextFormField), "123");
-    await tester.pump();
+    await panel.field("").type("123");
+
     expect(find.textContaining("six RGB or eight ARGB"), findsOneWidget);
-    expect(
-      tester.widget<_ColorFieldHarness>(find.byType(_ColorFieldHarness)),
-      isNotNull,
-    );
-    expect(
-      tester
-          .widget<ValidatedTextField<Color>>(
-            find.byType(ValidatedTextField<Color>),
-          )
-          .value,
-      const Color(0x807C4DFF),
-    );
+    expect(panel.field("").value, "123");
+    expect(color(), initial);
   });
 
   testWidgets("primary shortcuts switch field formats", (tester) async {
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true),
-    );
-    await tester.tap(find.tooltip("Open color picker"));
-    await tester.pumpAndSettle();
+    final (panel, _) = await tester.showColorField(initial, includeAlpha: true);
+    await panel.tapOn(find.tooltip("Open color picker"));
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    await tester.pumpAndSettle();
+    await panel.settle();
 
-    expect(find.text("R"), findsOneWidget);
-    expect(find.text("G"), findsOneWidget);
-    expect(find.text("B"), findsOneWidget);
-    expect(find.text("A%"), findsOneWidget);
+    for (final channel in ["R", "G", "B", "A%"]) {
+      expect(find.text(channel), findsOneWidget, reason: channel);
+    }
   });
 
   testWidgets("closed field exposes normal mode color shortcuts", (
@@ -106,50 +96,33 @@ void main() {
         null,
       ),
     );
+    final (panel, _) = await tester.showColorField(initial, includeAlpha: true);
 
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true),
-      overrides: [
-        colorLibraryStorageProvider.overrideWithValue(
-          MemoryColorLibraryStorage(),
-        ),
-      ],
-    );
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pumpAndSettle();
-
-    final modifier = isApple
-        ? LogicalKeyboardKey.metaLeft
-        : LogicalKeyboardKey.controlLeft;
-    await tester.sendKeyDownEvent(modifier);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
-    await tester.sendKeyUpEvent(modifier);
-    await tester.pump();
+    await panel.press(LogicalKeyboardKey.tab);
+    await panel.pressPrimary(LogicalKeyboardKey.keyC);
     expect(clipboardText, "#807C4DFF");
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-    await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.keyF);
     expect(find.tooltip("Remove from favorites"), findsOneWidget);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
-    await tester.pumpAndSettle();
-    expect(find.byType(ColorArea), findsOneWidget);
+    await panel.press(LogicalKeyboardKey.keyP);
+    expect(panel.shows(area), isTrue);
   });
 
   testWidgets("HSV surface keeps the top right hue fully bright", (
     tester,
   ) async {
+    // The test's own capture point around the surface it paints.
     const boundaryKey = ValueKey("color_area_boundary");
-    await tester.pumpTestApp(
-      child: RepaintBoundary(
+    await tester.showComponent(
+      RepaintBoundary(
         key: boundaryKey,
         child: SizedBox(
           width: 200,
           height: 100,
           child: ColorArea(
             color: HSVColor.fromAHSV(1, 0, 0.5, 0.5),
-            onChanged: _ignoreHsv,
+            onChanged: (_) {},
           ),
         ),
       ),
@@ -175,8 +148,8 @@ void main() {
     tester,
   ) async {
     var color = const HSVColor.fromAHSV(1, 180, 0.5, 0.5);
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
+    final panel = await tester.showComponent(
+      StatefulBuilder(
         builder: (context, setState) => SizedBox(
           width: 200,
           height: 100,
@@ -189,26 +162,24 @@ void main() {
     );
 
     await tester.tapAt(
-      tester.getBottomRight(find.byType(ColorArea)) - const Offset(1, 1),
+      tester.getBottomRight(panel.labeled(area)) - const Offset(1, 1),
     );
     await tester.pump();
     expect(color.saturation, closeTo(1, 0.01));
     expect(color.value, closeTo(0, 0.011));
 
-    await tester.tap(find.byType(ColorArea));
-    await tester.sendKeyEvent(LogicalKeyboardKey.home);
-    await tester.pump();
+    await tester.tap(panel.labeled(area));
+    await panel.press(LogicalKeyboardKey.home);
     expect(color.saturation, 0);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-    await tester.pump();
+    await panel.press(LogicalKeyboardKey.arrowRight);
 
     expect(color.saturation, closeTo(0.01, 0.001));
   });
 
   testWidgets("channel slider implements keyboard bounds", (tester) async {
     var value = 0.5;
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
+    final panel = await tester.showComponent(
+      StatefulBuilder(
         builder: (context, setState) => SizedBox(
           width: 200,
           child: ColorChannelSlider(
@@ -222,42 +193,52 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byType(ColorChannelSlider));
-    await tester.sendKeyEvent(LogicalKeyboardKey.end);
-    await tester.pump();
+    await tester.tap(panel.labeled("Hue"));
+    await panel.press(LogicalKeyboardKey.end);
     expect(value, 1);
-    await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
-    await tester.pump();
-
+    await panel.press(LogicalKeyboardKey.pageDown);
     expect(value, closeTo(0.9, 0.001));
-    await tester.sendKeyEvent(LogicalKeyboardKey.home);
-    await tester.pump();
+    await panel.press(LogicalKeyboardKey.home);
     expect(value, 0);
   });
 
-  testWidgets("read only allows inspection while disabled does not open", (
+  testWidgets("a read only field opens a picker that cannot change the color", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true, readOnly: true),
+    final (panel, _) = await tester.showColorField(
+      initial,
+      includeAlpha: true,
+      readOnly: true,
     );
-    await tester.tap(find.tooltip("Open color picker"));
-    await tester.pumpAndSettle();
-    expect(find.byType(ColorArea), findsOneWidget);
-    expect(tester.widget<ColorArea>(find.byType(ColorArea)).enabled, isFalse);
 
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true, enabled: false),
+    await panel.tapOn(find.tooltip("Open color picker"));
+
+    expect(semanticsLabeled(area).single.isEnabled, isFalse);
+  });
+
+  testWidgets("a disabled field does not open its picker", (tester) async {
+    final (panel, _) = await tester.showColorField(
+      initial,
+      includeAlpha: true,
+      enabled: false,
     );
-    expect(find.tooltip("Open color picker"), findsNothing);
+
+    // A disabled field takes no pointer input, so the click lands on the
+    // field around the button.
+    await tester.tapAt(
+      tester.getCenter(find.tooltip("Open color picker"), warnIfMissed: false),
+    );
+    await panel.settle();
+
+    expect(panel.shows(area), isFalse);
   });
 
   testWidgets("favorite grid supports keyboard reordering and removal", (
     tester,
   ) async {
     var colors = [0xFFFF0000, 0xFF00FF00, 0xFF0000FF];
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
+    final panel = await tester.showComponent(
+      StatefulBuilder(
         builder: (context, setState) => SizedBox(
           width: 200,
           child: ColorSwatchGrid(
@@ -271,48 +252,14 @@ void main() {
       ),
     );
 
-    await tester.tap(find.bySemanticsLabel("Color #FFFF0000"));
+    await tester.tap(panel.labeled("Color #FFFF0000"));
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pump();
     expect(colors, [0xFF00FF00, 0xFFFF0000, 0xFF0000FF]);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.delete);
-    await tester.pump();
+    await panel.press(LogicalKeyboardKey.delete);
     expect(colors, [0xFF00FF00, 0xFF0000FF]);
   });
-}
-
-void _ignoreHsv(HSVColor value) {}
-
-class _ColorFieldHarness extends StatefulWidget {
-  const _ColorFieldHarness({
-    required this.includeAlpha,
-    this.enabled = true,
-    this.readOnly = false,
-  });
-
-  final bool includeAlpha;
-  final bool enabled;
-  final bool readOnly;
-
-  @override
-  State<_ColorFieldHarness> createState() => _ColorFieldHarnessState();
-}
-
-class _ColorFieldHarnessState extends State<_ColorFieldHarness> {
-  Color color = const Color(0x807C4DFF);
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 420,
-    child: ColorPickerField(
-      color: color,
-      includeAlpha: widget.includeAlpha,
-      enabled: widget.enabled,
-      readOnly: widget.readOnly,
-      onChanged: (next) => setState(() => color = next),
-    ),
-  );
 }

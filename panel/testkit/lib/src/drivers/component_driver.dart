@@ -99,6 +99,18 @@ final class ContextMenuDriver extends ComponentDriver {
     await settle();
   }
 
+  /// Chooses the entry [label] with the keyboard alone: the arrow keys move
+  /// focus down from the first entry, Enter activates it.
+  Future<void> chooseWithKeyboard(String label) async {
+    _entry(label);
+    for (var step = 0; step < entries.indexOf(label); step++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+    }
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await settle();
+  }
+
   /// Closes the menu without choosing, the way Escape does.
   Future<void> dismiss() async {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);

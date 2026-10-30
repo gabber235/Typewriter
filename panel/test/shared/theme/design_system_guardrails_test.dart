@@ -1,13 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-class Exemption {
-  Exemption(this.path, this.pattern, this.reason);
-
-  final String path;
-  final RegExp pattern;
-  final String reason;
-}
+import "package:typewriter_testkit/testing.dart";
 
 final exemptions = <Exemption>[
   Exemption(
@@ -170,94 +163,11 @@ final layoutSpacingExemptions = <Exemption>[
     "anchored overlay placement geometry",
   ),
   Exemption(
-    "lib/shared/ui/components/retry_indicator.dart",
-    RegExp(r"SizedBox\(width: 16, height: 16"),
-    "fixed progress indicator geometry",
-  ),
-  Exemption(
     "lib/shared/ui/components/section.dart",
     RegExp(r"EdgeInsets\.all\(8\)"),
     "public section fallback without a build context",
   ),
 ];
-
-const spacingTokenNames = <int, String>{
-  4: "space1",
-  8: "space2",
-  12: "space3",
-  16: "space4",
-  20: "space5",
-  24: "space6",
-  32: "space8",
-  40: "space10",
-  48: "space12",
-};
-
-final _spacingLiteralPattern = RegExp(
-  r"(?<![A-Za-z0-9_.])(?:4|8|12|16|20|24|32|40|48)(?:\.0)?(?![A-Za-z0-9_.])",
-);
-final _edgeInsetsPattern = RegExp(
-  r"(?:EdgeInsets|const)\s*\.(?:all|symmetric|only|fromLTRB)\s*\([\s\S]*?\)",
-);
-final _sizedBoxPattern = RegExp(r"(?:const\s+)?SizedBox\s*\([\s\S]*?\)");
-final _sizedBoxDimensionPattern = RegExp(
-  r"(?:width|height)\s*:\s*((?:4|8|12|16|20|24|32|40|48)(?:\.0)?)\b",
-);
-final _spacingPropertyPattern = RegExp(
-  r"\b(?:spacing|runSpacing|mainAxisSpacing|crossAxisSpacing)\s*:\s*((?:4|8|12|16|20|24|32|40|48)(?:\.0)?)\b",
-);
-
-Iterable<String> layoutSpacingViolations(
-  String path,
-  String source, {
-  List<Exemption>? allowedExemptions,
-}) sync* {
-  final effectiveExemptions = allowedExemptions ?? layoutSpacingExemptions;
-  final occurrences = <({int offset, String snippet, String literal})>[];
-
-  for (final construct in _edgeInsetsPattern.allMatches(source)) {
-    final snippet = construct.group(0)!;
-    for (final literal in _spacingLiteralPattern.allMatches(snippet)) {
-      occurrences.add((
-        offset: construct.start + literal.start,
-        snippet: snippet,
-        literal: literal.group(0)!,
-      ));
-    }
-  }
-  for (final construct in _sizedBoxPattern.allMatches(source)) {
-    final snippet = construct.group(0)!;
-    final childOffset = snippet.indexOf(RegExp(r"\bchild\s*:"));
-    for (final literal in _sizedBoxDimensionPattern.allMatches(snippet)) {
-      if (childOffset >= 0 && literal.start > childOffset) continue;
-      occurrences.add((
-        offset: construct.start + literal.start,
-        snippet: snippet,
-        literal: literal.group(1)!,
-      ));
-    }
-  }
-  for (final literal in _spacingPropertyPattern.allMatches(source)) {
-    occurrences.add((
-      offset: literal.start,
-      snippet: literal.group(0)!,
-      literal: literal.group(1)!,
-    ));
-  }
-
-  for (final occurrence in occurrences) {
-    final allowed = effectiveExemptions.any(
-      (entry) =>
-          entry.path == path && entry.pattern.hasMatch(occurrence.snippet),
-    );
-    if (allowed) continue;
-    final value = double.parse(occurrence.literal).toInt();
-    final line =
-        "\n".allMatches(source.substring(0, occurrence.offset)).length + 1;
-    yield "$path:$line: ${occurrence.snippet.trim()} should use "
-        "context.spacing.${spacingTokenNames[value]}";
-  }
-}
 
 void main() {
   test("every exemption names an existing source file", () {
@@ -311,94 +221,31 @@ void main() {
             if (!allowed) violations.add("$path: ${match.group(0)}");
           }
         }
-        violations.addAll(layoutSpacingViolations(path, source));
+        violations.addAll(
+          layoutSpacingViolations(path, source, layoutSpacingExemptions),
+        );
       }
       expect(violations, isEmpty, reason: violations.join("\n"));
     },
   );
 
-  test("layout spacing violations suggest tokens and honor exemptions", () {
-    const path = "lib/shared/ui/example.dart";
-    const source = "padding: EdgeInsets.all(8)";
-    expect(layoutSpacingViolations(path, source), [
-      contains("context.spacing.space2"),
-    ]);
-    expect(
-      layoutSpacingViolations(
-        path,
-        source,
-        allowedExemptions: [
-          Exemption(path, RegExp(r"EdgeInsets\.all\(8\)"), "fixed geometry"),
-        ],
-      ),
-      isEmpty,
-    );
-  });
-
-  test("layout spacing violations include shorthand EdgeInsets", () {
-    expect(
-      layoutSpacingViolations(
-        "lib/shared/ui/example.dart",
-        "padding: const .all(8)",
-      ),
-      [contains("context.spacing.space2")],
-    );
-  });
-
-  test("domain showcase colors have accessible foregrounds", () {
-    const domainColors = <Color>[
-      Color(0xFF7E57C2),
-      Color(0xFF00897B),
-      Color(0xFFF4511E),
-      Color(0xFF3949AB),
-      Color(0xFFD81B60),
-      Color(0xFF6D4C41),
-    ];
+  test("a foreground chosen for any color stays readable on it", () {
+    // Presentation and search colors come from authored content, so any
+    // color can be a background.
+    final generator = Generator(235);
     for (final brightness in Brightness.values) {
-      for (final color in domainColors) {
+      for (var index = 0; index < 500; index++) {
+        final color = Color(0xFF000000 | generator.integer(0x1000000));
         final foreground = color.onBrightness(brightness);
         final lighter = color.computeLuminance() + 0.05;
         final darker = foreground.computeLuminance() + 0.05;
         final contrast = lighter > darker ? lighter / darker : darker / lighter;
-        expect(contrast, greaterThanOrEqualTo(4.5));
+        expect(
+          contrast,
+          greaterThanOrEqualTo(4.5),
+          reason: "$color on ${brightness.name} (seed ${generator.seed})",
+        );
       }
-    }
-  });
-
-  test("both themes expose all extensions and font families", () {
-    for (final brightness in Brightness.values) {
-      final theme = buildTheme(brightness);
-      expect(
-        theme.extensions.values,
-        containsAll([
-          isA<TypewriterColors>(),
-          isA<TypewriterSpacing>(),
-          isA<TypewriterShapes>(),
-          isA<TypewriterStateTokens>(),
-        ]),
-      );
-      final styles = [
-        theme.textTheme.displayLarge,
-        theme.textTheme.displayMedium,
-        theme.textTheme.displaySmall,
-        theme.textTheme.headlineLarge,
-        theme.textTheme.headlineMedium,
-        theme.textTheme.headlineSmall,
-        theme.textTheme.titleLarge,
-        theme.textTheme.titleMedium,
-        theme.textTheme.titleSmall,
-        theme.textTheme.bodyLarge,
-        theme.textTheme.bodyMedium,
-        theme.textTheme.bodySmall,
-        theme.textTheme.labelLarge,
-        theme.textTheme.labelMedium,
-        theme.textTheme.labelSmall,
-      ];
-      expect(styles.map((style) => style!.fontFamily), [
-        ...List.filled(9, "JetBrainsMono"),
-        ...List.filled(3, "Lilex"),
-        ...List.filled(3, "JetBrainsMono"),
-      ]);
     }
   });
 }

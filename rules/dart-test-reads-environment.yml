@@ -9,8 +9,6 @@ files:
   - panel/testkit/test/**
   - panel/widgetbook/test/**
 ignores:
-  # FLUTTER_ROOT locates the SDK the architecture test parses; every run has it.
-  - panel/test/architecture/module_graph_test.dart
   # Rewrites the shared creation fixture only when asked; every run reads the committed one.
   - panel/test/authoring/application/resource_creation_flow_test.dart
 rule:

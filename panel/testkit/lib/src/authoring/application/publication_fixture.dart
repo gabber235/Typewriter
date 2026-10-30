@@ -86,34 +86,53 @@ skir.PublicationStatus readyPublicationStatus({
   ),
 );
 
+/// A publication problem [id] of kind [code] at [primary], or at the root of
+/// [resource] when no location is given, raised by the rule [origin] and
+/// backed by [evidence] when given.
 skir.PublicationDiagnosticDetails publicationProblem({
   String id = "problem",
+  String code = "required",
   String message = "A required Page value is missing",
   String resource = "page",
+  skir.ValueLocation? primary,
+  skir.RuleOrigin? origin,
+  skir.DiagnosticEvidence? evidence,
 }) => skir.PublicationDiagnosticDetails(
-  evidence: null,
+  evidence: evidence,
   id: skir.DiagnosticId(value: id),
-  origin: skir.RuleOrigin.defaultInstance,
-  code: "required",
+  origin: origin ?? skir.RuleOrigin.defaultInstance,
+  code: code,
   message: message,
   related: const [],
-  primary: skir.ValueLocation(
-    resource: skir.ResourceId(value: resource),
-    path: skir.ValuePath(segments: const []),
-  ),
+  primary:
+      primary ??
+      skir.ValueLocation(
+        resource: skir.ResourceId(value: resource),
+        path: skir.ValuePath(segments: const []),
+      ),
 );
 
-skir.PublicationStatus blockedPublicationStatus() =>
-    skir.PublicationStatus.createBlocked(
-      notices: const [],
-      baseline: skir.PublicationBaseline.initial,
-      blockers: skir.PublicationBlockers(
-        first: skir.PublicationBlocker(details: publicationProblem()),
-        additional: const [],
-      ),
-      confirmedChanges: const [],
-      pendingRoots: const [],
-    );
+/// A review that blocks publishing on [problem], or on the default
+/// [publicationProblem].
+skir.PublicationStatus_Blocked blockedPublicationReview({
+  skir.PublicationDiagnosticDetails? problem,
+}) => skir.PublicationStatus_Blocked(
+  notices: const [],
+  baseline: skir.PublicationBaseline.initial,
+  blockers: skir.PublicationBlockers(
+    first: skir.PublicationBlocker(details: problem ?? publicationProblem()),
+    additional: const [],
+  ),
+  confirmedChanges: const [],
+  pendingRoots: const [],
+);
+
+/// The publication status of a [blockedPublicationReview] on [problem].
+skir.PublicationStatus blockedPublicationStatus({
+  skir.PublicationDiagnosticDetails? problem,
+}) => skir.PublicationStatus.wrapBlocked(
+  blockedPublicationReview(problem: problem),
+);
 
 PublicationObservation publicationObservation(
   skir.PublicationStatus status, {
@@ -122,5 +141,26 @@ PublicationObservation publicationObservation(
   skir.PublicationView(
     id: skir.PublicationViewId(value: id),
     status: status,
+  ),
+);
+
+/// A publication of [resource] that is activating, with nothing left to
+/// review after it.
+skir.PublicationStatus publishingPublicationStatus({
+  String publication = "active",
+  String resource = "page",
+}) => skir.PublicationStatus.createPublishing(
+  publication: skir.PublicationId(value: publication),
+  phase: skir.PublicationActivationPhase.activating,
+  releasing: skir.PublicationDelta(
+    first: skir.PublicationChange.wrapRootAdded(publicationRoot(resource)),
+    additional: const [],
+  ),
+  next: skir.PublicationPendingReview(
+    findings: const [],
+    confirmedChanges: const [],
+    pendingRoots: const [],
+    blockers: const [],
+    notices: const [],
   ),
 );

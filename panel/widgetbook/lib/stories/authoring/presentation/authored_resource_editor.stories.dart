@@ -2,154 +2,53 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/stories/authoring/presentation/realm_story.dart";
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "Inspector", type: AuthoredResourceEditor)
 Widget authoredResourceEditorUseCase(BuildContext context) {
-  final fixture = _fixture();
-  return FakeApp(
-    child: _ResourceEditorStory(
-      document: fixture.draft.toDocument(),
-      resource: fixture.resource,
-    ),
+  final title = context.knobs.object.segmented(
+    label: "Title",
+    options: const ["Filled", "Unfinished"],
+    initialOption: "Filled",
   );
-}
-
-final class _ResourceEditorStory extends StatefulWidget {
-  const _ResourceEditorStory({required this.document, required this.resource});
-  final AuthoringDocument document;
-  final skir.ResourceId resource;
-  @override
-  State<_ResourceEditorStory> createState() => _ResourceEditorStoryState();
-}
-
-final class _ResourceEditorStoryState extends State<_ResourceEditorStory> {
-  late final _transport = ScriptedAuthoringTransport(
-    AsyncData(widget.document),
-  );
-  final _submissions = ScopedWorkSession();
-  late final _workspace = RealmEditing(
-    persistence: _transport.persistence,
-    submissions: _submissions,
-    initial: widget.document,
-  );
-  @override
-  void dispose() {
-    _workspace.dispose();
-    _transport.dispose();
-    _submissions.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Padding(
-      padding: const EdgeInsets.all(24),
-      child: AuthoredResourceInspection(
-        resource: widget.resource,
-        workspace: _workspace,
-        commands: fixtureAuthoringCommands(_transport),
-        commitPolicy: EditorCommitPolicy.applyResource,
+  final message = messageFixture(unfilled: title == "Unfinished");
+  return Story(
+    [
+      signedIn(ada, organization: acme),
+      realmServing(message.draft.toDocument()),
+      ...context.knobs.traits("Saves", {
+        "Confirmed": const [],
+        "Held by the Realm": const [heldSaves],
+      }),
+    ],
+    at: PanelLocation.component(
+      SizedBox(
+        width: 520,
+        child: RealmEditingScene(
+          builder: (context, workspace, commands) => AuthoredResourceInspection(
+            resource: message.resource,
+            workspace: workspace,
+            commands: commands,
+            commitPolicy: EditorCommitPolicy.applyResource,
+          ),
+        ),
       ),
     ),
   );
 }
 
-@widgetbook.UseCase(name: "New draft", type: AuthoredResourceEditor)
-Widget authoredNewDraftUseCase(BuildContext context) =>
-    const FakeApp(child: AuthoredNewDraftStory());
-
-final class AuthoredNewDraftStory extends StatefulWidget {
-  const AuthoredNewDraftStory({super.key});
-
-  @override
-  State<AuthoredNewDraftStory> createState() => _AuthoredNewDraftStoryState();
-}
-
-final class _AuthoredNewDraftStoryState extends State<AuthoredNewDraftStory> {
-  late final fixture = _fixture(unfilled: true);
-  late final _transport = ScriptedAuthoringTransport(
-    AsyncData(fixture.draft.toDocument()),
-  );
-  final _submissions = ScopedWorkSession();
-  late final _workspace = RealmEditing(
-    persistence: _transport.persistence,
-    submissions: _submissions,
-    initial: fixture.draft.toDocument(),
-  );
-  late final _binding = _workspace.attach(
-    fixture.resource,
-    policy: EditorCommitPolicy.applyResource,
-  );
-  @override
-  void dispose() {
-    _binding.detach();
-    _workspace.dispose();
-    _transport.dispose();
-    _submissions.dispose();
-    super.dispose();
-  }
-
-  String? outcome;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: FilledButton.tonalIcon(
-              onPressed: () async {
-                final selected = await showCreationConcreteTypePicker(
-                  context,
-                  expected: skir.TypeSelection.createComplete(
-                    definition: fixture.page,
-                    arguments: const [],
-                  ),
-                  catalog: fixture.catalog,
-                );
-                if (selected == null || !mounted) return;
-                setState(
-                  () => outcome =
-                      "Selected ${fixture.catalog.typeSelectionName(selected)}",
-                );
-              },
-              icon: const Icon(Icons.search),
-              label: const Text("Search page types"),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: AuthoredResourceEditor(
-              resource: fixture.resource,
-              document: _workspace.document,
-              edit: _binding,
-              role: skir.PresentationRole.inspector,
-              budget: skir.EvaluationBudget(
-                maxSteps: 1000,
-                maxCollectionItems: 1000,
-              ),
-            ),
-          ),
-        ),
-        if (outcome case final value?)
-          Semantics(liveRegion: true, child: Text(value)),
-      ],
-    ),
-  );
-}
-
+/// A Realm of one quest message with a text title, typed by a catalog that
+/// also declares four concrete page types below an abstract Page.
 ({
   skir.ResourceId resource,
   AuthoringEdit draft,
   CheckedEditorCatalog catalog,
   skir.TypeDefinitionId page,
 })
-_fixture({bool unfilled = false}) {
+messageFixture({bool unfilled = false}) {
   final generation = skir.CatalogGeneration(value: "catalog:widgetbook");
   final definition = skir.TypeDefinitionId(
     typeId: skir.TypeId.wrapQualified(

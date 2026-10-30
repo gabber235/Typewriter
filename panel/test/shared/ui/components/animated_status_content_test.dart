@@ -4,97 +4,104 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("label removal also removes its spacing", (tester) async {
-    String? label;
-    Future<void> build() => tester.pumpTestApp(
-      child: Center(
-        child: AnimatedStatusContent(
-          icon: const Icon(
-            Icons.inbox_outlined,
-            key: ValueKey("inbox"),
-            size: 18,
+    final label = ValueNotifier<String?>(null);
+    addTearDown(label.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: label,
+          builder: (context, value, _) => AnimatedStatusContent(
+            icon: const Icon(Icons.inbox_outlined, size: 18),
+            label: value,
+            compact: false,
           ),
-          label: label,
-          compact: false,
         ),
       ),
     );
-    await build();
-    final emptyWidth = tester.getSize(find.byType(AnimatedStatusContent)).width;
+    double width() => tester.getSize(find.byType(AnimatedStatusContent)).width;
+    final emptyWidth = width();
     expect(emptyWidth, 18);
-    label = "2 issues";
-    await build();
-    expect(
-      tester.getSize(find.byType(AnimatedStatusContent)).width,
-      greaterThan(emptyWidth),
-    );
-    label = null;
-    await build();
-    expect(find.text("2 issues"), findsNothing);
-    expect(
-      tester.getSize(find.byType(AnimatedStatusContent)).width,
-      emptyWidth,
-    );
+
+    label.value = "2 issues";
+    await panel.settle();
+    expect(width(), greaterThan(emptyWidth));
+
+    label.value = null;
+    await panel.settle();
+    expect(panel.shows("2 issues"), isFalse);
+    expect(width(), emptyWidth);
   });
 
   testWidgets("compact layout drops outgoing labels during animation", (
     tester,
   ) async {
-    var label = "Checking";
-    var compact = false;
-    Future<void> build() => tester.pumpTestApp(
-      settle: false,
-      child: Center(
-        child: SizedBox(
-          width: compact ? 24 : 200,
-          child: AnimatedStatusContent(
-            icon: const Icon(Icons.sync, key: ValueKey("sync"), size: 18),
-            label: label,
-            compact: compact,
-          ),
-        ),
-      ),
-    );
-    await build();
-    label = "2 issues";
-    await build();
-    expect(find.text("Checking"), findsOneWidget);
-    expect(find.text("2 issues"), findsOneWidget);
-    compact = true;
-    await build();
-    expect(find.byType(Text), findsNothing);
-    expect(tester.takeException(), isNull);
-    await tester.pumpAndSettle();
-  });
-
-  testWidgets("reduced motion replaces decorations immediately", (
-    tester,
-  ) async {
-    var issue = false;
-    Future<void> build() => tester.pumpTestApp(
-      settle: false,
-      child: Builder(
-        builder: (context) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: Center(
+    final state = ValueNotifier((label: "Checking", compact: false));
+    addTearDown(state.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: state,
+          builder: (context, value, _) => SizedBox(
+            width: value.compact ? 24 : 200,
             child: AnimatedStatusContent(
-              compact: false,
-              icon: Icon(
-                issue ? Icons.error_outline : Icons.sync,
-                key: ValueKey(issue),
-                size: 18,
-              ),
-              label: issue ? "2 issues" : "Checking",
+              icon: const Icon(Icons.sync, size: 18),
+              label: value.label,
+              compact: value.compact,
             ),
           ),
         ),
       ),
     );
-    await build();
-    issue = true;
-    await build();
-    expect(find.text("Checking"), findsNothing);
+
+    state.value = (label: "2 issues", compact: false);
+    await tester.pump();
+    expect(panel.shows("Checking"), isTrue);
+    expect(panel.shows("2 issues"), isTrue);
+
+    state.value = (label: "2 issues", compact: true);
+    await tester.pump();
+    expect(panel.shows("Checking"), isFalse);
+    expect(panel.shows("2 issues"), isFalse);
+    expect(tester.takeException(), isNull);
+    await panel.settle();
+  });
+
+  testWidgets("reduced motion replaces decorations immediately", (
+    tester,
+  ) async {
+    final issue = ValueNotifier(false);
+    addTearDown(issue.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: ValueListenableBuilder(
+              valueListenable: issue,
+              builder: (context, value, _) => AnimatedStatusContent(
+                compact: false,
+                icon: Icon(
+                  value ? Icons.error_outline : Icons.sync,
+                  key: ValueKey(value),
+                  size: 18,
+                ),
+                label: value ? "2 issues" : "Checking",
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    issue.value = true;
+    await tester.pump();
+
+    expect(panel.shows("Checking"), isFalse);
     expect(find.byIcon(Icons.sync), findsNothing);
-    expect(find.text("2 issues"), findsOneWidget);
+    expect(panel.shows("2 issues"), isTrue);
     expect(find.byIcon(Icons.error_outline), findsOneWidget);
   });
 }

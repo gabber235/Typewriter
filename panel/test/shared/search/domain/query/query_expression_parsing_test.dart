@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/query_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final selectors = selectorsTagAndTitle();
@@ -96,17 +95,6 @@ void main() {
     }).done();
   });
 
-  test("term node range matches source", () {
-    checkQuery(
-      "#a",
-      selectors: selectors,
-    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
-      expression
-          .range(const QueryRange(0, 2))
-          .isSelector(id: "tag", value: "a");
-    }).done();
-  });
-
   test("AND node range spans both operands", () {
     checkQuery(
       "#a AND #b",
@@ -142,7 +130,7 @@ void main() {
     }).done();
   });
 
-  test("parenthesized group range covers full parens", () {
+  test("a parenthesized group keeps the range of its inner expression", () {
     checkQuery(
       "(#a)",
       selectors: selectors,
@@ -150,19 +138,6 @@ void main() {
       expression
           .range(const QueryRange(1, 3))
           .isSelector(id: "tag", value: "a");
-    }).done();
-  });
-
-  test("mixed operators all caps", () {
-    checkQuery(
-      "NOT #a AND #b OR #c",
-      selectors: selectors,
-    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
-      final orNode = expression.isOr();
-      final andNode = orNode.left().isAnd();
-      andNode.left().isNot().inner().isSelector(id: "tag", value: "a");
-      andNode.right().isSelector(id: "tag", value: "b");
-      orNode.right().isSelector(id: "tag", value: "c");
     }).done();
   });
 

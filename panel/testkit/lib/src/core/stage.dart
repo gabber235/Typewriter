@@ -110,6 +110,7 @@ class _ComponentShell extends ConsumerWidget {
       child: EagerInitialization(
         child: MaterialApp(
           title: "Typewriter",
+          debugShowCheckedModeBanner: false,
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: ref.watch(appearanceProvider),

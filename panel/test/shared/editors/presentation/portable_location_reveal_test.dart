@@ -5,108 +5,99 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
+  final root = skir.ValueLocation(
+    resource: skir.ResourceId(value: "page"),
+    path: skir.ValuePath(segments: const []),
+  );
+
   testWidgets(
-    "a pending destination selects the nearest authored field after mounting",
+    "a pending destination focuses and reveals the nearest authored field once it mounts",
     (tester) async {
       final controller = PortableLocationRevealController();
       addTearDown(controller.dispose);
-      final target = skir.ValueLocation(
+      final title = skir.ValueLocation(
         resource: skir.ResourceId(value: "page"),
         path: skir.ValuePath(
           segments: [skir.PathSegment.createField(name: "title")],
         ),
       );
-      final field = FocusNode();
-      addTearDown(field.dispose);
-      controller.request(target);
-      await tester.pumpTestApp(
-        child: Scaffold(
-          body: PortableLocationRevealScope(
-            controller: controller,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 900),
-                  PortableLocationTarget(
-                    location: target,
-                    child: EditorTextField(focusNode: field),
+      controller.request(title);
+
+      final panel = await tester.showComponent(
+        PortableLocationRevealScope(
+          controller: controller,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 1200),
+                PortableLocationTarget(
+                  location: title,
+                  child: EditorTextField(
+                    decoration: InputDecoration(labelText: "Title"),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       );
+
+      expect(panel.hasFocusOn("Title"), isTrue);
       expect(
-        field.hasFocus || field.ancestors.any((node) => node.hasPrimaryFocus),
-        isTrue,
+        tester.getRect(panel.labeled("Title")).top,
+        lessThan(panel.world.window.height),
       );
-      expect(tester.getRect(find.byType(EditorTextField)).top, lessThan(600));
     },
   );
-  testWidgets("root reveal chooses the requested inspector presentation", (
+
+  testWidgets("a root reveal focuses the requested inspector presentation", (
     tester,
   ) async {
     final controller = PortableLocationRevealController();
     addTearDown(controller.dispose);
-    final root = skir.ValueLocation(
-      resource: skir.ResourceId(value: "page"),
-      path: skir.ValuePath(segments: const []),
-    );
-    final editor = FocusNode();
-    final inspector = FocusNode();
-    addTearDown(editor.dispose);
-    addTearDown(inspector.dispose);
     controller.request(root, presentation: skir.PresentationRole.inspector);
-    Widget target(skir.PresentationRole role, FocusNode focus) =>
+    Widget target(skir.PresentationRole role, String label) =>
         PortableLocationRevealScope(
           controller: controller,
           presentation: role,
           child: PortableLocationTarget(
             location: root,
-            child: TextField(focusNode: focus),
+            child: TextField(decoration: InputDecoration(labelText: label)),
           ),
         );
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: Column(
-          children: [
-            target(skir.PresentationRole.workspace, editor),
-            target(skir.PresentationRole.inspector, inspector),
-          ],
-        ),
+
+    final panel = await tester.showComponent(
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          target(skir.PresentationRole.workspace, "Workspace"),
+          target(skir.PresentationRole.inspector, "Inspector"),
+        ],
       ),
     );
-    await tester.pump();
-    expect(inspector.hasFocus, isTrue);
-    expect(editor.hasFocus, isFalse);
+
+    expect(panel.focused, "Inspector");
   });
 
-  testWidgets("superseded queued reveal does not take keyboard focus", (
+  testWidgets("a superseded queued reveal does not take keyboard focus", (
     tester,
   ) async {
     final controller = PortableLocationRevealController();
     addTearDown(controller.dispose);
-    final location = skir.ValueLocation(
-      resource: skir.ResourceId(value: "page"),
-      path: skir.ValuePath(segments: const []),
-    );
-    final focus = FocusNode();
-    addTearDown(focus.dispose);
     var current = true;
-    controller.request(location, isCurrent: () => current);
+    controller.request(root, isCurrent: () => current);
     current = false;
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: PortableLocationRevealScope(
-          controller: controller,
-          child: PortableLocationTarget(
-            location: location,
-            child: TextField(focusNode: focus),
-          ),
+
+    final panel = await tester.showComponent(
+      PortableLocationRevealScope(
+        controller: controller,
+        child: PortableLocationTarget(
+          location: root,
+          child: TextField(decoration: InputDecoration(labelText: "Title")),
         ),
       ),
     );
-    expect(focus.hasFocus, isFalse);
+
+    expect(panel.focused, isNull);
   });
 }

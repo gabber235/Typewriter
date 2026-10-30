@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   const selectors = [KeyValueSelectorDefinition(id: "tag", key: "#")];
@@ -10,14 +9,17 @@ void main() {
     test("projects scope changes without rerunning the source", () {
       final source = FakeSearchSource();
       final visible = ValueNotifier(false);
-      final controller = _controller(
-        source,
-        scope: PredicateSearchScope(
-          dependencies: [visible],
-          evaluate: (result, query) => visible.value
-              ? const SearchResultVisibility.visible()
-              : const SearchResultVisibility.hidden(),
+      final controller = SearchController(
+        session: searchSession(
+          source,
+          scope: PredicateSearchScope(
+            dependencies: [visible],
+            evaluate: (result, query) => visible.value
+                ? const SearchResultVisibility.visible()
+                : const SearchResultVisibility.hidden(),
+          ),
         ),
+        baseSelectors: const [],
       );
       addTearDown(controller.dispose);
       addTearDown(visible.dispose);
@@ -44,7 +46,10 @@ void main() {
         execute: (context, value, target) async =>
             const SearchCommandResult.completed(),
       );
-      final controller = _controller(source, commands: [command]);
+      final controller = SearchController(
+        session: searchSession(source, commands: [command]),
+        baseSelectors: const [],
+      );
       addTearDown(controller.dispose);
       addTearDown(enabled.dispose);
       source.emitSnapshot(readySnapshot(nodes: [resultNode("a")]));
@@ -60,12 +65,13 @@ void main() {
     test("queues query updates while a command runs", () async {
       final source = FakeSearchSource();
       final completer = Completer<SearchCommandResult>();
-      final command = _command(
+      final command = searchCommand(
+        id: "test.command",
+        label: "Command",
         execute: (context, value, target) => completer.future,
       );
-      final controller = _controller(
-        source,
-        commands: [command],
+      final controller = SearchController(
+        session: searchSession(source, commands: [command]),
         baseSelectors: selectors,
       );
       addTearDown(controller.dispose);
@@ -123,7 +129,10 @@ void main() {
 
     test("selection cleanup follows projected snapshots", () {
       final source = FakeSearchSource();
-      final controller = _controller(source);
+      final controller = SearchController(
+        session: searchSession(source),
+        baseSelectors: const [],
+      );
       addTearDown(controller.dispose);
       source.emitSnapshot(
         readySnapshot(nodes: [resultNode("a"), resultNode("b")]),
@@ -138,32 +147,3 @@ void main() {
     });
   });
 }
-
-SearchController<void> _controller(
-  FakeSearchSource source, {
-  SearchScope scope = const AllSearchScope(),
-  List<SearchCommand> commands = const [],
-  List<QuerySelectorDefinition> baseSelectors = const [],
-}) => SearchController(
-  session: SearchSession(
-    source: source,
-    scope: scope,
-    interaction: SearchInteraction(
-      activation: SearchActivation.command(
-        resolve: (_) => commands.firstOrNull?.id,
-        dependencies: const [],
-      ),
-      selectionMode: SearchSelectionMode.multiple,
-      commands: commands,
-    ),
-  ),
-  baseSelectors: baseSelectors,
-);
-
-SearchCommand _command({required SearchCommandExecutor<String> execute}) =>
-    SearchCommand.single<String>(
-      id: const SearchCommandId("test.command"),
-      presentation: const SearchCommandPresentation(label: "Command"),
-      matcher: const SearchResultMatcher(testResultType),
-      execute: execute,
-    );

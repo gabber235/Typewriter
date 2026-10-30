@@ -7,17 +7,20 @@ void main() {
     "sliding choices support keyboard selection and skip disabled values",
     (tester) async {
       String? selected = "one";
-      await tester.pumpTestApp(
-        child: StatefulBuilder(
-          builder: (context, setState) => SlidingChoiceControl<String>(
-            children: const {
-              "one": Text("One"),
-              "two": Text("Two"),
-              "three": Text("Three"),
-            },
-            selected: selected,
-            disabled: const {"two"},
-            onSelected: (value) => setState(() => selected = value),
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          StatefulBuilder(
+            builder: (context, setState) => SlidingChoiceControl<String>(
+              children: const {
+                "one": Text("One"),
+                "two": Text("Two"),
+                "three": Text("Three"),
+              },
+              selected: selected,
+              disabled: const {"two"},
+              onSelected: (value) => setState(() => selected = value),
+            ),
           ),
         ),
       );
@@ -38,16 +41,19 @@ void main() {
       var choices = <String, String>{"one": "One"};
       var changes = 0;
       late StateSetter rebuild;
-      await tester.pumpTestApp(
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            rebuild = setState;
-            return AdaptiveChoiceControl<String>(
-              choices: choices,
-              selected: "one",
-              onSelected: (_) => changes++,
-            );
-          },
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              return AdaptiveChoiceControl<String>(
+                choices: choices,
+                selected: "one",
+                onSelected: (_) => changes++,
+              );
+            },
+          ),
         ),
       );
       rebuild(() => choices = {});
@@ -71,76 +77,77 @@ void main() {
     },
   );
 
-  testWidgets("uses segmented controls for three choices", (tester) async {
-    String? selected;
+  testWidgets("three choices show every option to pick directly", (
+    tester,
+  ) async {
+    final selections = <String?>[];
+    await tester.showComponent(
+      SizedBox(
+        width: 360,
+        child: AdaptiveChoiceControl<String>(
+          choices: const {"one": "One", "two": "Two", "three": "Three"},
+          selected: "one",
 
-    await tester.pumpTestApp(
-      child: AdaptiveChoiceControl<String>(
-        choices: const {"one": "One", "two": "Two", "three": "Three"},
-        selected: "one",
-        onSelected: (value) => selected = value,
+          onSelected: selections.add,
+        ),
       ),
     );
-
-    expect(
-      find.byType(CupertinoSlidingSegmentedControl<String>),
-      findsOneWidget,
-    );
-    expect(find.byType(Dropdown<String>), findsNothing);
+    expect(find.text("Three"), findsOneWidget);
 
     await tester.tap(find.text("Two"));
     await tester.pump();
 
-    expect(selected, "two");
+    expect(selections, ["two"]);
   });
 
-  testWidgets("uses searchable dropdowns for four choices", (tester) async {
-    await tester.pumpTestApp(
-      child: AdaptiveChoiceControl<String>(
-        choices: const {
-          "one": "One",
-          "two": "Two",
-          "three": "Three",
-          "four": "Four",
-        },
-        selected: "one",
-        onSelected: (_) {},
-      ),
-    );
+  for (final choices in const [
+    {"one": "One"},
+    {"one": "One", "two": "Two", "three": "Three", "four": "Four"},
+  ]) {
+    testWidgets("${choices.length} choices are offered in a dropdown", (
+      tester,
+    ) async {
+      await tester.showComponent(
+        SizedBox(
+          width: 360,
+          child: AdaptiveChoiceControl<String>(
+            choices: choices,
+            selected: "one",
 
-    expect(find.byType(CupertinoSlidingSegmentedControl<String>), findsNothing);
-    expect(find.byType(Dropdown<String>), findsOneWidget);
-  });
+            onSelected: (_) {},
+          ),
+        ),
+      );
+      final last = choices.values.last;
+      final shownBefore = find.text(last).evaluate().length;
+      expect(shownBefore, choices.length > 1 ? 0 : 1);
 
-  testWidgets("uses a dropdown for a single choice", (tester) async {
-    await tester.pumpTestApp(
-      child: AdaptiveChoiceControl<String>(
-        choices: const {"one": "One"},
-        selected: "one",
-        onSelected: (_) {},
-      ),
-    );
+      await tester.tap(find.byIcon(Icons.arrow_drop_down));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(CupertinoSlidingSegmentedControl<String>), findsNothing);
-    expect(find.byType(Dropdown<String>), findsOneWidget);
-  });
+      expect(find.text(last).evaluate().length, greaterThan(shownBefore));
+    });
+  }
 
-  testWidgets("disables every segment when interaction is disabled", (
+  testWidgets("a disabled control ignores taps on its segments", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: AdaptiveChoiceControl<String>(
-        choices: const {"one": "One", "two": "Two"},
-        selected: "one",
-        enabled: false,
-        onSelected: (_) {},
+    final selections = <String?>[];
+    await tester.showComponent(
+      SizedBox(
+        width: 360,
+        child: AdaptiveChoiceControl<String>(
+          choices: const {"one": "One", "two": "Two"},
+          selected: "one",
+          enabled: false,
+          onSelected: selections.add,
+        ),
       ),
     );
 
-    final control = tester.widget<CupertinoSlidingSegmentedControl<String>>(
-      find.byType(CupertinoSlidingSegmentedControl<String>),
-    );
+    await tester.tap(find.text("Two"));
+    await tester.pumpAndSettle();
 
-    expect(control.disabledChildren, {"one", "two"});
+    expect(selections, isEmpty);
   });
 }

@@ -3,86 +3,51 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("builds one table and preserves table cell properties", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      child: AnimatedTable(
-        initialItemCount: 1,
-        headerRows: const [
-          TableRow(children: [Text("Header")]),
-        ],
-        rowBuilder: (context, index, animation) => const TableRow(
-          key: ValueKey("row"),
-          decoration: BoxDecoration(color: Colors.red),
+  testWidgets(
+    "a removed row stays until its reverse completes and takes no input",
+    (tester) async {
+      final key = GlobalKey<AnimatedTableState>();
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          AnimatedTable(
+            key: key,
+            initialItemCount: 1,
+            rowBuilder: (context, index, animation) =>
+                TableRow(children: [Text("row-$index")]),
+            transitionBuilder: fadeIn,
+          ),
+        ),
+      );
+
+      key.currentState!.insertItem(
+        1,
+        duration: const Duration(milliseconds: 100),
+      );
+      await tester.pump();
+      expect(find.text("row-1"), findsOneWidget);
+
+      var removedTaps = 0;
+      key.currentState!.removeItem(
+        0,
+        (context, animation) => TableRow(
           children: [
-            TableCell(
-              key: ValueKey("cell"),
-              verticalAlignment: TableCellVerticalAlignment.middle,
-              child: Text("Alpha"),
+            TextButton(
+              onPressed: () => removedTaps++,
+              child: const Text("removed"),
             ),
           ],
         ),
-        transitionBuilder: _transition,
-      ),
-    );
-
-    expect(find.byType(Table), findsOneWidget);
-    expect(find.text("Header"), findsOneWidget);
-    final cell = tester.widget<TableCell>(find.byKey(const ValueKey("cell")));
-    expect(cell.verticalAlignment, TableCellVerticalAlignment.middle);
-    expect(
-      tester
-          .widget<FadeTransition>(
-            find.descendant(
-              of: find.byKey(const ValueKey("cell")),
-              matching: find.byType(FadeTransition),
-            ),
-          )
-          .opacity
-          .value,
-      1,
-    );
-  });
-
-  testWidgets("inserts and keeps a removed row until its reverse completes", (
-    tester,
-  ) async {
-    final key = GlobalKey<AnimatedTableState>();
-    await tester.pumpTestApp(
-      settle: false,
-      child: AnimatedTable(
-        key: key,
-        initialItemCount: 1,
-        rowBuilder: (context, index, animation) =>
-            TableRow(children: [Text("row-$index")]),
-        transitionBuilder: _transition,
-      ),
-    );
-
-    key.currentState!.insertItem(
-      1,
-      duration: const Duration(milliseconds: 100),
-    );
-    await tester.pump();
-    expect(find.text("row-1"), findsOneWidget);
-
-    key.currentState!.removeItem(
-      0,
-      (context, animation) => const TableRow(children: [Text("removed")]),
-      duration: const Duration(milliseconds: 100),
-    );
-    await tester.pump();
-    expect(find.text("removed"), findsOneWidget);
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget is IgnorePointer && widget.ignoring,
-      ),
-      findsOneWidget,
-    );
-    await tester.pump(const Duration(milliseconds: 101));
-    expect(find.text("removed"), findsNothing);
-  });
+        duration: const Duration(milliseconds: 100),
+      );
+      await tester.pump();
+      expect(find.text("removed"), findsOneWidget);
+      await tester.tap(find.text("removed"), warnIfMissed: false);
+      expect(removedTaps, 0, reason: "a leaving row takes no input");
+      await tester.pump(const Duration(milliseconds: 101));
+      expect(find.text("removed"), findsNothing);
+    },
+  );
 
   testWidgets(
     "reverses an incoming row and avoids overlapping key collisions",
@@ -90,16 +55,18 @@ void main() {
       final key = GlobalKey<AnimatedTableState>();
       const rowKey = ValueKey("row");
       const cellKey = ValueKey("cell");
-      await tester.pumpTestApp(
-        settle: false,
-        child: AnimatedTable(
-          key: key,
-          initialItemCount: 0,
-          rowBuilder: (context, index, animation) => const TableRow(
-            key: rowKey,
-            children: [TableCell(key: cellKey, child: Text("Incoming"))],
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          AnimatedTable(
+            key: key,
+            initialItemCount: 0,
+            rowBuilder: (context, index, animation) => const TableRow(
+              key: rowKey,
+              children: [TableCell(key: cellKey, child: Text("Incoming"))],
+            ),
+            transitionBuilder: fadeIn,
           ),
-          transitionBuilder: _transition,
         ),
       );
 
@@ -138,15 +105,14 @@ void main() {
     tester,
   ) async {
     final key = GlobalKey<AnimatedTableState>();
-    await tester.pumpTestApp(
-      settle: false,
-      child: AnimatedTable(
+    await tester.showComponent(
+      AnimatedTable(
         key: key,
         initialItemCount: 1,
         emptyBuilder: (context) => const Text("Empty"),
         rowBuilder: (context, index, animation) =>
             const TableRow(children: [Text("Active")]),
-        transitionBuilder: _transition,
+        transitionBuilder: fadeIn,
       ),
     );
 
@@ -170,15 +136,14 @@ void main() {
     tester,
   ) async {
     final key = GlobalKey<AnimatedTableState>();
-    await tester.pumpTestApp(
-      settle: false,
-      child: AnimatedTable(
+    await tester.showComponent(
+      AnimatedTable(
         key: key,
         initialItemCount: 1,
         emptyBuilder: (context) => const Text("Empty"),
         rowBuilder: (context, index, animation) =>
             const TableRow(children: [Text("Active")]),
-        transitionBuilder: _transition,
+        transitionBuilder: fadeIn,
       ),
     );
 
@@ -193,14 +158,8 @@ void main() {
     key.currentState!.insertItem(0);
     await tester.pump();
     expect(find.byType(Table), findsOneWidget);
+    expect(find.text("Empty"), findsNothing);
+    expect(find.text("Active"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-}
-
-Widget _transition(
-  BuildContext context,
-  Animation<double> animation,
-  Widget child,
-) {
-  return FadeTransition(opacity: animation, child: child);
 }

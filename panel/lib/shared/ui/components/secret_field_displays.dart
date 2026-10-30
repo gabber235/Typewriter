@@ -46,16 +46,20 @@ class _ConcealedDisplay extends HookWidget {
             TextSpan(text: prefix, style: _secretTextStyle(context)),
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: ImageFiltered(
-              imageFilter: ImageFilter.compose(
-                inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
-                outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-              ),
-              child: Text(
-                randomText.value,
-                style: _secretTextStyle(context).copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant
-                      .withValues(alpha: 0.6),
+            // The blurred text only hints at a value; assistive technology
+            // must not read a concealed or expired secret aloud.
+            child: ExcludeSemantics(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.compose(
+                  inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
+                  outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                ),
+                child: Text(
+                  randomText.value,
+                  style: _secretTextStyle(context).copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.6),
+                  ),
                 ),
               ),
             ),
@@ -112,18 +116,22 @@ class _TypewriterLoadingDisplay extends HookWidget {
             TextSpan(text: prefix, style: _secretTextStyle(context)),
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: ImageFiltered(
-              imageFilter: ImageFilter.compose(
-                inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
-                outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-              ),
-              child: Text(
-                displayText,
-                style: _secretTextStyle(context).copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant
-                      .withValues(alpha: 0.6),
+            // The blurred text only hints at a value; assistive technology
+            // must not read a concealed or expired secret aloud.
+            child: ExcludeSemantics(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.compose(
+                  inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
+                  outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                 ),
-                maxLines: 1,
+                child: Text(
+                  displayText,
+                  style: _secretTextStyle(context).copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.6),
+                  ),
+                  maxLines: 1,
+                ),
               ),
             ),
           ),
@@ -209,16 +217,20 @@ class _ExpiredDisplay extends StatelessWidget {
             TextSpan(text: prefix, style: _secretTextStyle(context)),
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: ImageFiltered(
-              imageFilter: ImageFilter.compose(
-                inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
-                outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-              ),
-              child: Text(
-                value,
-                style: _secretTextStyle(context).copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant
-                      .withValues(alpha: 0.6),
+            // The blurred text only hints at a value; assistive technology
+            // must not read a concealed or expired secret aloud.
+            child: ExcludeSemantics(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.compose(
+                  inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
+                  outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                ),
+                child: Text(
+                  value,
+                  style: _secretTextStyle(context).copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.6),
+                  ),
                 ),
               ),
             ),

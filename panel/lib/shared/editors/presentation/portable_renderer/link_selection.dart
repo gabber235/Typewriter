@@ -112,7 +112,6 @@ enum _AuthoredLinkChoiceKind {
 abstract class _AuthoredLinkChoice with _$AuthoredLinkChoice {
   const factory _AuthoredLinkChoice({
     required String id,
-    required String widgetKey,
     required PortableLinkPlan plan,
     required PortableLinkTargetChoice target,
     required _AuthoredLinkChoiceKind kind,
@@ -172,7 +171,6 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
         choices.add(
           _AuthoredLinkChoice(
             id: "$planId:${target.resource.value}:automatic",
-            widgetKey: "link.target.${target.resource.value}.automatic",
             plan: plan,
             target: target,
             kind: _AuthoredLinkChoiceKind.automatic,
@@ -190,7 +188,6 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
         choices.add(
           _AuthoredLinkChoice(
             id: "$planId:${target.resource.value}:existing:$path",
-            widgetKey: "link.target.${target.resource.value}.existing.$path",
             plan: plan,
             target: target,
             kind: _AuthoredLinkChoiceKind.existing,
@@ -209,7 +206,6 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
         choices.add(
           _AuthoredLinkChoice(
             id: "$planId:${target.resource.value}:append:$path",
-            widgetKey: "link.target.${target.resource.value}.append.$path",
             plan: plan,
             target: target,
             kind: _AuthoredLinkChoiceKind.append,
@@ -228,7 +224,6 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
         choices.add(
           _AuthoredLinkChoice(
             id: "$planId:${target.resource.value}:new:$path",
-            widgetKey: "link.target.${target.resource.value}.new.$path",
             plan: plan,
             target: target,
             kind: _AuthoredLinkChoiceKind.create,
@@ -254,7 +249,6 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
         choices.add(
           _AuthoredLinkChoice(
             id: "$planId:${target.resource.value}:unavailable",
-            widgetKey: "link.target.${target.resource.value}.unavailable",
             plan: plan,
             target: target,
             kind: _AuthoredLinkChoiceKind.unavailable,
@@ -340,8 +334,12 @@ Widget _buildAuthoredLinkChoiceResult(
         kindLabel: kind,
         footer: footer,
       );
-      return KeyedSubtree(
-        key: ValueKey(choice.widgetKey),
+      // Rows of one target differ only by where the counterpart goes, so
+      // each row is announced by its target and that choice.
+      return Semantics(
+        container: true,
+        label: "${choice.label}: ${choice.subtitle}",
+        enabled: choice.disabledReason == null,
         child: _ResourceReferenceAppearance(
           resource: choice.target.resource,
           scope: choice.row?.scope ?? scope,

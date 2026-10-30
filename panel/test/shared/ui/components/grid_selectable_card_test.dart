@@ -6,24 +6,25 @@ void main() {
   testWidgets("dense card content fits a constrained grid cell", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: Center(
-        child: SizedBox(
+    final panel = await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(
+        SizedBox(
           width: 180,
           height: 160,
           child: GridSelectableCard(
             title: "A service name that needs three lines",
             baseColor: Colors.blue,
             badgeLabel: "Custom",
-            header: const Icon(Icons.dns, size: 32),
-            footer: const StatusIndicator(isOnline: false),
+            header: Icon(Icons.dns, size: 32),
+            footer: StatusIndicator(isOnline: false),
           ),
         ),
       ),
     );
 
     expect(tester.takeException(), isNull);
-    expect(find.text("A service name that needs three lines"), findsOneWidget);
-    expect(find.text("Never"), findsOneWidget);
+    expect(panel.shows("A service name that needs three lines"), isTrue);
+    expect(panel.shows("Never"), isTrue);
   });
 }

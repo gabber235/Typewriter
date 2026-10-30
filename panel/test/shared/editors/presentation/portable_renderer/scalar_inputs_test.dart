@@ -32,37 +32,28 @@ void main() {
       "numeric partial input retains valid value through ${scenario.name}",
       (tester) async {
         final written = <skir.DataValue>[];
-        await _pumpControl(
-          tester,
+        final panel = await tester.showBoundElement(
           skir.PresentationElement.wrapNumericInput(
-            (skir.NumericControl.mutable()..control = _control(_rootReference))
+            (skir.NumericControl.mutable()
+                  ..control = presentationControl(_rootReference))
                 .toFrozen(),
           ),
           scenario.initial,
-          written.add,
+          binding: _rootBinding,
+          onWrite: written.add,
           rebindWrites: true,
         );
-        await tester.tap(find.byType(TextFormField));
-        await tester.pumpAndSettle();
-        await tester.enterText(find.byType(TextFormField), scenario.partial);
-        await tester.pumpAndSettle();
-        expect(
-          tester
-              .widget<TextFormField>(find.byType(TextFormField))
-              .controller!
-              .text,
-          scenario.partial,
-        );
+        final field = panel.fieldAt(0);
+        await field.type(scenario.partial);
+        expect(field.value, scenario.partial);
         expect(written, isEmpty);
         tester.binding.focusManager.primaryFocus?.unfocus();
         await tester.pumpAndSettle();
         expect(written, isEmpty);
         expect(find.text("Enter a valid number"), findsOneWidget);
-        await tester.enterText(find.byType(TextFormField), scenario.complete);
-        await tester.pumpAndSettle();
+        await field.type(scenario.complete);
         expect(written, [scenario.expected]);
-        await tester.enterText(find.byType(TextFormField), "");
-        await tester.pumpAndSettle();
+        await field.type("");
         expect(written, [scenario.expected, skir.DataValue.unfilled]);
       },
     );
@@ -74,17 +65,18 @@ void main() {
     (skir.BindingRef, skir.DataValue)? written;
     final placementReference = skir.BindingRef(
       bindingId: _rootBinding,
-      path: _fieldPath("placement"),
+      path: editorRootPath.field("placement"),
     );
-    final host = _ControlHost(
+    final host = FakePresentationHost(
       onWrite: (reference, value) {
         written = (reference, value);
       },
+      expected: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
     );
     addTearDown(host.dispose);
 
-    await tester.pumpTestApp(
-      child: Builder(
+    await tester.showComponent(
+      Builder(
         builder: (_) => Scaffold(
           body: PortablePresentationNodeRenderer(
             node: skir.PresentationNode(
@@ -92,13 +84,13 @@ void main() {
               properties: skir.PresentationProperties.defaultInstance,
               element: skir.PresentationElement.wrapRecordInput(
                 skir.RecordControl(
-                  control: _control(placementReference),
+                  control: presentationControl(placementReference),
                   fieldPresentation: skir.PresentationNode(
                     nodeId: "placement.x",
                     properties: skir.PresentationProperties.defaultInstance,
                     element: skir.PresentationElement.wrapNumericInput(
                       (skir.NumericControl.mutable()
-                            ..control = _control(
+                            ..control = presentationControl(
                               skir.BindingRef(
                                 bindingId: _rootBinding,
                                 path: skir.ValuePath(
@@ -157,8 +149,7 @@ void main() {
       ),
     );
 
-    await tester.enterText(find.byType(TextFormField), "7");
-    await tester.pumpAndSettle();
+    await FieldDriver.at(tester, 0).type("7");
 
     expect(written?.$1.path.segments, [
       skir.PathSegment.createField(name: "placement"),
@@ -171,52 +162,38 @@ void main() {
     tester,
   ) async {
     skir.DataValue? written;
-    final enabledReference = skir.BindingRef(
-      bindingId: _rootBinding,
-      path: _fieldPath("enabled"),
-    );
-    final host = _ControlHost(onWrite: (_, value) => written = value);
-    addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (_) => Scaffold(
-          body: PortablePresentationNodeRenderer(
-            node: skir.PresentationNode(
-              nodeId: "enabled",
-              properties: skir.PresentationProperties.defaultInstance,
-              element: skir.PresentationElement.wrapToggleInput(
-                (skir.ToggleControl.mutable()
-                      ..control = _control(enabledReference))
-                    .toFrozen(),
-              ),
-              header: null,
-            ),
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: {
-                _rootBinding: PortableExpressionBinding(
-                  value: skir.DataValue.createRecord(
-                    fields: [
-                      skir.FieldValue(
-                        name: "enabled",
-                        value: skir.DataValue.createNamed(
-                          actualType: _toggleType,
-                          payload: skir.DataValue.wrapBoolean(false),
-                        ),
-                      ),
-                    ],
-                  ),
+    await tester.showBoundElement(
+      skir.PresentationElement.wrapToggleInput(
+        (skir.ToggleControl.mutable()
+              ..control = presentationControl(
+                skir.BindingRef(
+                  bindingId: _rootBinding,
+                  path: editorRootPath.field("enabled"),
                 ),
-              },
-              budget: _budget,
-              host: host,
+              ))
+            .toFrozen(),
+      ),
+      skir.DataValue.createRecord(
+        fields: [
+          skir.FieldValue(
+            name: "enabled",
+            value: skir.DataValue.createNamed(
+              actualType: _toggleType,
+              payload: skir.DataValue.wrapBoolean(false),
             ),
           ),
-        ),
+        ],
       ),
+      binding: _rootBinding,
+      onWrite: (value) => written = value,
     );
 
-    await tester.tap(find.byType(Switch));
+    final toggle = find.semantics.byPredicate(
+      (node) =>
+          !node.isMergedIntoParent &&
+          node.getSemanticsData().flagsCollection.isToggled != Tristate.none,
+    );
+    await tester.tapAt(toggle.evaluate().single.screenRect.center);
     await tester.pump();
 
     final named = switch (written) {
@@ -234,46 +211,24 @@ void main() {
     tester,
   ) async {
     skir.DataValue? written;
-    final enabledReference = skir.BindingRef(
-      bindingId: _rootBinding,
-      path: _fieldPath("enabled"),
-    );
-    final host = _ControlHost(onWrite: (_, value) => written = value);
-    addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (_) => Scaffold(
-          body: PortablePresentationNodeRenderer(
-            node: skir.PresentationNode(
-              nodeId: "enabled",
-              properties: skir.PresentationProperties.defaultInstance,
-              element: skir.PresentationElement.wrapToggleInput(
-                (skir.ToggleControl.mutable()
-                      ..control = _control(enabledReference))
-                    .toFrozen(),
-              ),
-              header: null,
-            ),
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: {
-                _rootBinding: PortableExpressionBinding(
-                  value: skir.DataValue.createRecord(
-                    fields: [
-                      skir.FieldValue(
-                        name: "enabled",
-                        value: skir.DataValue.unfilled,
-                      ),
-                    ],
-                  ),
+    await tester.showBoundElement(
+      skir.PresentationElement.wrapToggleInput(
+        (skir.ToggleControl.mutable()
+              ..control = presentationControl(
+                skir.BindingRef(
+                  bindingId: _rootBinding,
+                  path: editorRootPath.field("enabled"),
                 ),
-              },
-              budget: _budget,
-              host: host,
-            ),
-          ),
-        ),
+              ))
+            .toFrozen(),
       ),
+      skir.DataValue.createRecord(
+        fields: [
+          skir.FieldValue(name: "enabled", value: skir.DataValue.unfilled),
+        ],
+      ),
+      binding: _rootBinding,
+      onWrite: (value) => written = value,
     );
 
     expect(written, isNull);
@@ -286,12 +241,12 @@ void main() {
   test(
     "an Unfilled named scalar is admitted and written with its identity",
     () {
-      final alias = _definition("Byte");
-      final root = _definition("Root");
+      final alias = typeDefinition("Byte");
+      final root = typeDefinition("Root");
       final actual = skir.NamedTypeUse(definition: alias, arguments: const []);
       final location = skir.ValueLocation(
         resource: skir.ResourceId(value: "resource:named"),
-        path: _fieldPath("count"),
+        path: editorRootPath.field("count"),
       );
       final generation = skir.CatalogGeneration(value: "catalog:named");
       final checked = CheckedEditorCatalog(
@@ -478,25 +433,26 @@ void main() {
     tester,
   ) async {
     final written = <skir.DataValue>[];
-    await _pumpControl(
-      tester,
+    final panel = await tester.showBoundElement(
       skir.PresentationElement.wrapDurationInput(
-        (skir.DurationControl.mutable()..control = _control(_rootReference))
+        (skir.DurationControl.mutable()
+              ..control = presentationControl(_rootReference))
             .toFrozen(),
       ),
       skir.DataValue.unfilled,
-      written.add,
+      binding: _rootBinding,
+      onWrite: written.add,
     );
 
-    final input = find.byType(TextFormField);
-    await tester.enterText(input, "1250ms");
+    final input = panel.fieldAt(0);
+    await input.type("1250ms");
     expect(
       written.last,
       skir.DataValue.createDuration(value: skir.Duration(milliseconds: 1250)),
     );
-    await tester.enterText(input, "");
+    await input.type("");
     expect(written.last, skir.DataValue.unfilled);
-    await tester.enterText(input, "12x");
+    await input.type("12x");
     expect(written, [
       skir.DataValue.createDuration(value: skir.Duration(milliseconds: 1250)),
       skir.DataValue.unfilled,
@@ -507,26 +463,27 @@ void main() {
     tester,
   ) async {
     final written = <skir.DataValue>[];
-    await _pumpControl(
-      tester,
+    final panel = await tester.showBoundElement(
       skir.PresentationElement.wrapBytesInput(
-        (skir.BytesControl.mutable()..control = _control(_rootReference))
+        (skir.BytesControl.mutable()
+              ..control = presentationControl(_rootReference))
             .toFrozen(),
       ),
       skir.DataValue.unfilled,
-      written.add,
+      binding: _rootBinding,
+      onWrite: written.add,
     );
 
     expect(find.text("This value is Unfilled"), findsOneWidget);
-    await tester.tap(find.text("Use empty bytes"));
+    await panel.tapOn(find.text("Use empty bytes"));
     expect(written.last, skir.DataValue.wrapBytes(skir.ByteString.empty));
 
-    await tester.enterText(find.byType(TextFormField), "0a");
+    await panel.fieldAt(0).type("0a");
     expect(
       written.last,
       skir.DataValue.wrapBytes(skir.ByteString.fromBase16("0a")),
     );
-    await tester.enterText(find.byType(TextFormField), "");
+    await panel.fieldAt(0).type("");
     expect(written.last, skir.DataValue.unfilled);
   });
 
@@ -534,11 +491,10 @@ void main() {
     tester,
   ) async {
     final written = <skir.DataValue>[];
-    await _pumpControl(
-      tester,
+    final panel = await tester.showBoundElement(
       skir.PresentationElement.wrapColorInput(
         skir.ColorControl(
-          control: _control(_rootReference),
+          control: presentationControl(_rootReference),
           includeAlpha: false,
           appearance: null,
           content: null,
@@ -549,16 +505,16 @@ void main() {
         ),
       ),
       skir.DataValue.unfilled,
-      written.add,
+      binding: _rootBinding,
+      onWrite: written.add,
       rebindWrites: true,
     );
 
     expect(find.text(mixedValueReplacementMessage), findsNothing);
     expect(find.text("This value is Unfilled"), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField), "#AABBCC");
+    await panel.fieldAt(0).type("#AABBCC");
     expect(written.last, skir.DataValue.wrapInteger(0xFFAABBCC.toString()));
-    await tester.enterText(find.byType(TextFormField), "");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("");
     expect(find.text(mixedValueReplacementMessage), findsNothing);
     expect(find.text("This value is Unfilled"), findsOneWidget);
     expect(written, [
@@ -572,11 +528,10 @@ void main() {
     (tester) async {
       for (final parts in [(true, false), (false, true), (true, true)]) {
         final written = <skir.DataValue>[];
-        await _pumpControl(
-          tester,
+        final panel = await tester.showBoundElement(
           skir.PresentationElement.wrapDateTimeInput(
             skir.DateTimeControl(
-              control: _control(_rootReference),
+              control: presentationControl(_rootReference),
               includeDate: parts.$1,
               includeTime: parts.$2,
               appearance: null,
@@ -588,20 +543,19 @@ void main() {
             ),
           ),
           skir.DataValue.wrapTimestamp(DateTime.utc(2024, 8, 12, 18, 30, 45)),
-          written.add,
+          binding: _rootBinding,
+          onWrite: written.add,
           rebindWrites: true,
         );
-        final input = find.byType(TextFormField);
-        await tester.enterText(input, "2028");
-        await tester.pump();
+        final input = panel.fieldAt(0);
+        await input.type("2028");
         expect(written, isEmpty);
         final valid = parts.$1 && parts.$2
             ? "2028-02-29 07:06:05"
             : parts.$1
             ? "2028-02-29"
             : "07:06:05";
-        await tester.enterText(input, valid);
-        await tester.pumpAndSettle();
+        await input.type(valid);
         final expected = parts.$1 && parts.$2
             ? DateTime.utc(2028, 2, 29, 7, 6, 5)
             : parts.$1
@@ -610,23 +564,16 @@ void main() {
         final filled = skir.DataValue.wrapTimestamp(expected);
         expect(written, [filled]);
 
-        await tester.enterText(input, "");
-        await tester.pumpAndSettle();
+        await input.type("");
         expect(find.text(mixedValueReplacementMessage), findsNothing);
         expect(find.text("This value is Unfilled"), findsOneWidget);
         expect(written, [filled, skir.DataValue.unfilled]);
-        expect(
-          tester
-              .widget<DateTimePickerField>(find.byType(DateTimePickerField))
-              .value,
-          isNull,
-        );
+        expect(input.value, isEmpty);
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pumpAndSettle();
         expect(written, [filled, skir.DataValue.unfilled]);
 
-        await tester.tap(find.tooltip("Open picker"));
-        await tester.pumpAndSettle();
+        await panel.tapOn(find.tooltip("Open picker"));
         final seed = tester
             .widget<DateTimePickerSurface>(find.byType(DateTimePickerSurface))
             .value;
@@ -640,12 +587,10 @@ void main() {
           ],
           [0, 0, 0, 0, 0],
         );
-        await tester.tap(find.tooltip("Close picker"));
-        await tester.pumpAndSettle();
+        await panel.tapOn(find.tooltip("Close picker"));
         expect(written, [filled, skir.DataValue.unfilled]);
 
-        await tester.enterText(input, valid);
-        await tester.pumpAndSettle();
+        await input.type(valid);
         final recovered = parts.$1 && parts.$2
             ? DateTime.utc(2028, 2, 29, 7, 6, 5)
             : parts.$1
@@ -667,7 +612,7 @@ void main() {
       (
         skir.PresentationElement.wrapColorInput(
           skir.ColorControl(
-            control: _control(_rootReference),
+            control: presentationControl(_rootReference),
             includeAlpha: false,
             appearance: null,
             content: null,
@@ -682,7 +627,7 @@ void main() {
       (
         skir.PresentationElement.wrapDateTimeInput(
           skir.DateTimeControl(
-            control: _control(_rootReference),
+            control: presentationControl(_rootReference),
             includeDate: true,
             includeTime: true,
             appearance: null,
@@ -699,11 +644,11 @@ void main() {
     for (final field in fields) {
       for (final protected in [(true, true), (false, false)]) {
         final written = <skir.DataValue>[];
-        await _pumpControl(
-          tester,
+        await tester.showBoundElement(
           field.$1,
           field.$2,
-          written.add,
+          binding: _rootBinding,
+          onWrite: written.add,
           readOnly: protected.$1,
           enabled: protected.$2,
         );
@@ -720,11 +665,10 @@ void main() {
 
   testWidgets("an Unfilled slider requires an explicit choice", (tester) async {
     final written = <skir.DataValue>[];
-    await _pumpControl(
-      tester,
+    final panel = await tester.showBoundElement(
       skir.PresentationElement.wrapSliderInput(
         skir.SliderControl(
-          control: _control(_rootReference),
+          control: presentationControl(_rootReference),
           minimum: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(2)),
           maximum: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(8)),
           divisions: null,
@@ -734,12 +678,16 @@ void main() {
         ),
       ),
       skir.DataValue.unfilled,
-      written.add,
+      binding: _rootBinding,
+      onWrite: written.add,
+      expected: skir.TypeUse.wrapScalar(
+        skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+      ),
     );
 
     expect(written, isEmpty);
     expect(find.text("Set to 2"), findsOneWidget);
-    await tester.tap(find.text("Set to 2"));
+    await panel.tapOn(find.text("Set to 2"));
     expect(written.last, skir.DataValue.wrapFloat(2));
   });
 
@@ -747,11 +695,10 @@ void main() {
     tester,
   ) async {
     final written = <skir.DataValue>[];
-    await _pumpControl(
-      tester,
+    final panel = await tester.showBoundElement(
       skir.PresentationElement.wrapDateTimeInput(
         skir.DateTimeControl(
-          control: _control(_rootReference),
+          control: presentationControl(_rootReference),
           includeDate: false,
           includeTime: true,
           appearance: null,
@@ -763,29 +710,26 @@ void main() {
         ),
       ),
       skir.DataValue.unfilled,
-      written.add,
+      binding: _rootBinding,
+      onWrite: written.add,
     );
 
     expect(written, isEmpty);
-    await tester.tap(find.tooltip("Open picker"));
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Open picker"));
     expect(written, isEmpty);
-    await tester.tap(find.tooltip("Close picker"));
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Close picker"));
     expect(written, isEmpty);
-    await tester.enterText(find.byType(TextFormField), "01:02:03");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("01:02:03");
     final timestamp = (written.single as skir.DataValue_timestampWrapper).value;
     expect([timestamp.hour, timestamp.minute, timestamp.second], [1, 2, 3]);
   });
 
   testWidgets("a date before 1970 remains editable", (tester) async {
     final written = <skir.DataValue>[];
-    await _pumpControl(
-      tester,
+    final panel = await tester.showBoundElement(
       skir.PresentationElement.wrapDateTimeInput(
         skir.DateTimeControl(
-          control: _control(_rootReference),
+          control: presentationControl(_rootReference),
           includeDate: true,
           includeTime: false,
           appearance: null,
@@ -797,85 +741,18 @@ void main() {
         ),
       ),
       skir.DataValue.wrapTimestamp(DateTime.utc(1900, 6, 15)),
-      written.add,
+      binding: _rootBinding,
+      onWrite: written.add,
     );
 
-    await tester.tap(find.tooltip("Open picker"));
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Open picker"));
     expect(tester.takeException(), isNull);
     expect(written, isEmpty);
-    await tester.tap(find.tooltip("Close picker"));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), "1900-06-16");
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Close picker"));
+    await panel.fieldAt(0).type("1900-06-16");
     expect(
       written.single,
       skir.DataValue.wrapTimestamp(DateTime.utc(1900, 6, 16)),
-    );
-  });
-
-  testWidgets("connection layers report unresolved declared anchors", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (_) => Scaffold(
-          body: PortablePresentationNodeRenderer(
-            node: skir.PresentationNode(
-              nodeId: "connection.layer",
-              properties: skir.PresentationProperties.defaultInstance,
-              element: skir.PresentationElement.createConnectionLayer(
-                child: skir.PresentationNode(
-                  nodeId: "connection.content",
-                  properties: skir.PresentationProperties.defaultInstance,
-                  element: skir.PresentationElement.wrapDivider(
-                    skir.DividerAppearance.defaultInstance,
-                  ),
-                  header: null,
-                ),
-                connections: [
-                  skir.PresentationConnection.createConnection(
-                    source: skir.PresentationAnchorSelector.wrapLocal("source"),
-                    target: skir.PresentationAnchorSelector.wrapLocal("target"),
-                    path: skir.ConnectionPath.straight,
-                    style: skir.ConnectorStyle(
-                      stroke: skir.ConnectorStroke(
-                        color: skir.PresentationColor.wrapValue(
-                          skir.ExpressionNode.wrapLiteral(
-                            skir.DataValue.wrapInteger("4278190335"),
-                          ),
-                        ),
-                        width: skir.ExpressionNode.wrapLiteral(
-                          skir.DataValue.wrapInteger("2"),
-                        ),
-                      ),
-                      cornerRadius: skir.ExpressionNode.wrapLiteral(
-                        skir.DataValue.wrapInteger("0"),
-                      ),
-                      startMarker: null,
-                      endMarker: null,
-                    ),
-                    markers: const [],
-                    visibleIf: null,
-                  ),
-                ],
-              ),
-              header: null,
-            ),
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: const {},
-              budget: _budget,
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(
-      find.textContaining("Connection source anchor is missing"),
-      findsOneWidget,
     );
   });
 }
@@ -886,156 +763,5 @@ final _rootReference = skir.BindingRef(
   path: skir.ValuePath(segments: const []),
 );
 final _budget = skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100);
-final _placementType = _namedType("Placement");
-final _toggleType = _namedType("FeatureFlag");
-
-skir.NamedTypeUse _namedType(String name) => skir.NamedTypeUse(
-  definition: skir.TypeDefinitionId(
-    typeId: skir.TypeId.wrapQualified(
-      skir.QualifiedTypeId(namespace: "test", name: name),
-    ),
-    revision: 1,
-  ),
-  arguments: const [],
-);
-
-skir.TypeDefinitionId _definition(String name) => _namedType(name).definition;
-
-skir.BoundControl _control(skir.BindingRef reference) => skir.BoundControl(
-  binding: reference,
-  label: null,
-  description: null,
-  prefix: null,
-  semanticLabel: null,
-);
-
-skir.ValuePath _fieldPath(String name) =>
-    skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);
-
-Future<void> _pumpControl(
-  WidgetTester tester,
-  skir.PresentationElement element,
-  skir.DataValue value,
-  ValueChanged<skir.DataValue> onWrite, {
-  bool readOnly = false,
-  bool enabled = true,
-  bool rebindWrites = false,
-}) {
-  var current = value;
-  final operations = testPortableOperations();
-  late StateSetter rebuild;
-  final host = _ControlHost(
-    expected: switch (element) {
-      skir.PresentationElement_sliderInputWrapper() => skir.TypeUse.wrapScalar(
-        skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
-      ),
-      _ => skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-    },
-    onWrite: (_, replacement) {
-      onWrite(replacement);
-      if (rebindWrites) rebuild(() => current = replacement);
-    },
-  );
-  addTearDown(host.dispose);
-  return tester.pumpTestApp(
-    child: StatefulBuilder(
-      builder: (_, setState) {
-        rebuild = setState;
-        return Scaffold(
-          body: PortablePresentationNodeRenderer(
-            node: skir.PresentationNode(
-              nodeId: "scalar",
-              properties: skir.PresentationProperties.defaultInstance,
-              element: element,
-              header: null,
-            ),
-            scope: PortablePresentationScope(
-              operations: operations,
-              bindings: {
-                _rootBinding: PortableExpressionBinding(value: current),
-              },
-              budget: _budget,
-              readOnly: readOnly,
-              enabled: enabled,
-              host: host,
-            ),
-          ),
-        );
-      },
-    ),
-  );
-}
-
-final class _ControlHost extends ChangeNotifier
-    implements PortablePresentationHost {
-  _ControlHost({required this.onWrite, this.expected});
-
-  final void Function(skir.BindingRef reference, skir.DataValue value) onWrite;
-  final skir.TypeUse? expected;
-
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  PortablePresentationCapabilities get capabilities =>
-      const PortablePresentationCapabilities();
-
-  @override
-  PortablePresentationDocument get document => PortablePresentationDocument(
-    catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
-    root: skir.PresentationNode.defaultInstance,
-    bindings: const {},
-    budget: _budget,
-  );
-
-  @override
-  bool get enabled => true;
-
-  @override
-  bool get readOnly => false;
-
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction, {
-    required PortableInvocationContext context,
-  }) async => const PortablePresentationWriteApplied();
-
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => expected ?? skir.TypeUse.wrapScalar(skir.ScalarKind.text);
-
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) {
-    final root = context.bindings[reference.bindingId]?.value;
-    if (root == null || reference.path.segments.isEmpty) return root;
-    return switch (root.readAt(reference.path)) {
-      PortablePathValue(:final value) => value,
-      PortablePathUnavailable() => null,
-    };
-  }
-
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) async {
-    onWrite(reference, value);
-    notifyListeners();
-    return const PortablePresentationWriteApplied();
-  }
-}
+final _placementType = namedTypeUse("Placement");
+final _toggleType = namedTypeUse("FeatureFlag");

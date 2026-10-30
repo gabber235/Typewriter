@@ -78,20 +78,6 @@ class ApiException implements Exception {
 
   final String message;
 
-  bool get isClientError {
-    return code >= 400 && code < 500;
-  }
-
-  bool get isServerError {
-    return code >= 500 && code < 600;
-  }
-
-  bool get isAuthError => code == 401;
-
-  bool get isForbidden => code == 403;
-
-  bool get isNotFound => code == 404;
-
   @override
   String toString() {
     return "$code: $message";

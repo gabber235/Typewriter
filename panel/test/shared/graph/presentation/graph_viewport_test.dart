@@ -7,43 +7,50 @@ void main() {
     tester,
   ) async {
     final centers = <Offset?>[];
+    final shown = ValueNotifier(true);
+    addTearDown(shown.dispose);
     final data = GraphData(
       cellSize: 50,
       elements: [
         GraphElement(
-          id: const GraphIdentifier("node"),
+          id: const GraphIdentifier("Node"),
           x: 0,
           y: 0,
           width: 2,
           height: 2,
-          builder: (_) => const SizedBox.expand(),
+          builder: (_) => const GraphNode("Node"),
         ),
       ],
       edges: const [],
     );
 
-    await tester.pumpTestApp(
-      child: Center(
-        child: SizedBox(
-          width: 600,
-          height: 400,
-          child: Graph(data: data, onViewportCenterChanged: centers.add),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: shown,
+          builder: (_, shown, _) => SizedBox(
+            width: 600,
+            height: 400,
+            child: shown
+                ? Graph(data: data, onViewportCenterChanged: centers.add)
+                : null,
+          ),
         ),
       ),
     );
-    await tester.pump();
 
     final initial = centers.whereType<Offset>().last;
     expect(initial, const Offset(1, 1));
 
-    await tester.drag(find.byType(InteractiveViewer), const Offset(100, 0));
-    await tester.pumpAndSettle();
+    await panel.graph.pan(const Offset(100, 0), from: const Offset(150, 0));
 
     final panned = centers.whereType<Offset>().last;
     expect(panned.dx, closeTo(initial.dx - 2, 0.001));
     expect(panned.dy, closeTo(initial.dy, 0.001));
 
-    await tester.pumpTestApp(child: const SizedBox.shrink());
+    shown.value = false;
+    await panel.settle();
 
     expect(centers.last, isNull);
   });

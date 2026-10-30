@@ -2,6 +2,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "Single", type: ShortcutDisplay)
 Widget singleShortcutDisplayUseCase(BuildContext context) {
@@ -50,9 +51,10 @@ Widget singleShortcutDisplayUseCase(BuildContext context) {
           : null,
     ),
   };
-  return FakeApp(
-    child: Center(
-      child: ShortcutDisplay(
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      ShortcutDisplay(
         style: style,
         shortcut: SingleActivator(
           LogicalKeyboardKey.keyD,
@@ -82,9 +84,10 @@ Widget rotatingShortcutsUseCase(BuildContext context) {
     },
   );
 
-  return FakeApp(
-    child: Center(
-      child: RotatingShortcuts(
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      RotatingShortcuts(
         style: style,
         shortcuts: [
           SingleActivator(LogicalKeyboardKey.keyD),

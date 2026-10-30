@@ -10,31 +10,41 @@ void main() {
     final left = ValueNotifier(0.0);
     addTearDown(width.dispose);
     addTearDown(left.dispose);
-    await tester.pumpTestApp(
-      child: HookBuilder(
-        builder: (context) {
-          useListenable(width);
-          useListenable(left);
-          return Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.only(left: left.value),
-              child: SizedBox(
-                width: width.value,
-                height: 300,
-                child: Graph(
-                  data: _graphData(const _Source()),
-                  onElementsMoved: (_) {},
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        HookBuilder(
+          builder: (context) {
+            useListenable(width);
+            useListenable(left);
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.only(left: left.value),
+                child: SizedBox(
+                  width: width.value,
+                  height: 300,
+                  child: Graph(
+                    data: GraphData(
+                      cellSize: 50,
+                      elements: [
+                        graphNode(
+                          "same",
+                          body: const DraggableGraphNode("Source", id: "same"),
+                        ),
+                      ],
+                      edges: const [],
+                    ),
+                    onElementsMoved: (_) {},
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
-    final gesture = await tester.startGesture(
-      tester.getCenter(find.byKey(const ValueKey("source"))),
-    );
+    final gesture = await panel.graph.grab("Source");
     await gesture.moveBy(const Offset(25, 0));
     await tester.pump();
     final controller = tester
@@ -42,14 +52,14 @@ void main() {
         .controller;
     final position = controller.value!.globalPosition;
     expect(controller.value?.inside, isTrue);
-    expect(find.byKey(const ValueKey("feedback")), findsNothing);
+    expect(panel.labeled("Dragging Source"), findsNothing);
 
     width.value = 100;
     await tester.pump();
     await tester.pump();
     expect(controller.value?.globalPosition, position);
     expect(controller.value?.inside, isFalse);
-    expect(find.byKey(const ValueKey("feedback")), findsOneWidget);
+    expect(panel.labeled("Dragging Source"), findsOneWidget);
 
     width.value = 500;
     await tester.pump();
@@ -71,26 +81,36 @@ void main() {
         final generation = ValueNotifier(0);
         addTearDown(generation.dispose);
         final moves = <List<GraphMoveCommitPayload>>[];
-        await tester.pumpTestApp(
-          child: SizedBox(
-            width: 600,
-            height: 400,
-            child: Graph(
-              data: _graphData(
-                ValueListenableBuilder<int>(
-                  valueListenable: generation,
-                  builder: (_, value, _) => _Source(key: ValueKey(value)),
+        final panel = await tester.pumpPanel(
+          const [],
+          at: PanelLocation.component(
+            SizedBox(
+              width: 600,
+              height: 400,
+              child: Graph(
+                data: GraphData(
+                  cellSize: 50,
+                  elements: [
+                    graphNode(
+                      "same",
+                      body: ValueListenableBuilder<int>(
+                        valueListenable: generation,
+                        builder: (_, value, _) => DraggableGraphNode(
+                          "Source",
+                          id: "same",
+                          key: ValueKey(value),
+                        ),
+                      ),
+                    ),
+                  ],
+                  edges: const [],
                 ),
+                onElementsMoved: moves.add,
               ),
-              onElementsMoved: moves.add,
             ),
           ),
         );
-        final source = find.byKey(const ValueKey("source"));
-        final oldGesture = await tester.startGesture(
-          tester.getCenter(source),
-          pointer: 1,
-        );
+        final oldGesture = await panel.graph.grab("Source", pointer: 1);
         await oldGesture.moveBy(const Offset(25, 0));
         await tester.pump();
         final controller = tester
@@ -102,10 +122,7 @@ void main() {
         await tester.pump();
         expect(old.phase, GraphDragPhase.retired);
 
-        final newGesture = await tester.startGesture(
-          tester.getCenter(source),
-          pointer: 2,
-        );
+        final newGesture = await panel.graph.grab("Source", pointer: 2);
         await newGesture.moveBy(const Offset(25, 0));
         await tester.pump();
         await newGesture.moveBy(const Offset(50, 0));
@@ -145,22 +162,26 @@ void main() {
     (tester) async {
       final revision = ValueNotifier(0);
       addTearDown(revision.dispose);
-      final payloads = <GraphDragPayload<_Data>>[];
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
+      final payloads = <GraphDragPayload<TestGraphDragData>>[];
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          SizedBox(
             width: 150,
             height: 100,
             child: ValueListenableBuilder<int>(
               valueListenable: revision,
-              builder: (_, value, _) =>
-                  _Source(revision: value, observe: payloads.add),
+              builder: (_, value, _) => DraggableGraphNode(
+                "Source",
+                id: "same",
+                revision: value,
+                onOffered: payloads.add,
+              ),
             ),
           ),
         ),
       );
-      final source = find.byKey(const ValueKey("source"));
-      final first = await tester.startGesture(tester.getCenter(source));
+      final first = await panel.graph.grab("Source");
       await first.moveBy(const Offset(25, 0));
       await tester.pump();
       final active = payloads.last;
@@ -175,60 +196,4 @@ void main() {
       expect(active.phase, GraphDragPhase.retired);
     },
   );
-}
-
-GraphData _graphData(Widget child) => GraphData(
-  cellSize: 50,
-  elements: [
-    GraphElement(
-      id: const GraphIdentifier("same"),
-      x: 0,
-      y: 0,
-      width: 2,
-      height: 2,
-      builder: (_) => child,
-    ),
-  ],
-  edges: const [],
-);
-
-class _Data extends GraphDragData {
-  const _Data(this.revision);
-  final int revision;
-  @override
-  GraphIdentifier get graphId => const GraphIdentifier("same");
-}
-
-class _Source extends HookWidget {
-  const _Source({this.revision = 0, this.observe, super.key});
-  final int revision;
-  final void Function(GraphDragPayload<_Data>)? observe;
-
-  @override
-  Widget build(BuildContext context) {
-    final source = useGraphDragSource(context, _Data(revision));
-    final offered = source.payload;
-    observe?.call(offered);
-    return Draggable<GraphDragPayload<_Data>>(
-      key: ObjectKey(offered),
-      data: offered,
-      rootOverlay: true,
-      maxSimultaneousDrags: 1,
-      dragAnchorStrategy: (widget, context, position) =>
-          source.anchor(offered, widget, context, position),
-      onDragStarted: () => source.begin(offered),
-      onDragUpdate: (details) => source.update(offered, details),
-      onDragEnd: (_) => source.end(offered),
-      feedback: HookBuilder(
-        builder: (context) {
-          useListenable(source.state);
-          useListenable(offered);
-          return source.showFeedback(offered)
-              ? const SizedBox(key: ValueKey("feedback"), width: 40, height: 40)
-              : const SizedBox.shrink();
-        },
-      ),
-      child: const ColoredBox(key: ValueKey("source"), color: Colors.blue),
-    );
-  }
 }

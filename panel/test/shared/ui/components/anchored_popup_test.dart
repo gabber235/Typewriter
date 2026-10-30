@@ -9,29 +9,32 @@ void main() {
     ) async {
       final trigger = FocusNode();
       addTearDown(trigger.dispose);
-      await tester.pumpTestApp(
-        child: Scaffold(
-          body: Align(
-            alignment: Alignment.topRight,
-            child: AnchoredPopup(
-              targetAnchor: Alignment.bottomRight,
-              popupAnchor: Alignment.topRight,
-              builder: (context, show) => TextButton(
-                focusNode: trigger,
-                onPressed: show,
-                child: const Text("Open"),
-              ),
-              popupBuilder: (context, close) => SizedBox(
-                width: 300,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const TextField(autofocus: true),
-                    TextButton(
-                      onPressed: close,
-                      child: const Text("Close popup"),
-                    ),
-                  ],
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Scaffold(
+            body: Align(
+              alignment: Alignment.topRight,
+              child: AnchoredPopup(
+                targetAnchor: Alignment.bottomRight,
+                popupAnchor: Alignment.topRight,
+                builder: (context, show) => TextButton(
+                  focusNode: trigger,
+                  onPressed: show,
+                  child: const Text("Open"),
+                ),
+                popupBuilder: (context, close) => SizedBox(
+                  width: 300,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const TextField(autofocus: true),
+                      TextButton(
+                        onPressed: close,
+                        child: const Text("Close popup"),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -76,19 +79,24 @@ void main() {
     addTearDown(popup.dispose);
     addTearDown(editor.dispose);
     addTearDown(controller.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: Column(
-          children: [
-            TextField(focusNode: editor, controller: controller),
-            AnchoredPopup(
-              controller: popup,
-              builder: (context, show) =>
-                  TextButton(onPressed: show, child: const Text("Inbox")),
-              popupBuilder: (context, close) =>
-                  const SizedBox(width: 300, child: TextField(autofocus: true)),
-            ),
-          ],
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: Column(
+            children: [
+              TextField(focusNode: editor, controller: controller),
+              AnchoredPopup(
+                controller: popup,
+                builder: (context, show) =>
+                    TextButton(onPressed: show, child: const Text("Inbox")),
+                popupBuilder: (context, close) => const SizedBox(
+                  width: 300,
+                  child: TextField(autofocus: true),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -100,7 +108,7 @@ void main() {
     await mouse.moveTo(tester.getCenter(find.text("Inbox")));
     await tester.pumpAndSettle();
     expect(editor.hasFocus, isTrue);
-    expect(find.byKey(const ValueKey("popup barrier")), findsNothing);
+    expect(find.bySemanticsLabel("Dismiss popup"), findsNothing);
     final field = find.byType(TextField).last;
     final element = tester.element(field);
     await tester.enterText(find.byType(TextField).first, "still editing");
@@ -108,7 +116,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.element(field), same(element));
     expect(editor.hasFocus, isFalse);
-    expect(find.byKey(const ValueKey("popup barrier")), findsOneWidget);
+    expect(find.bySemanticsLabel("Dismiss popup"), findsOneWidget);
     await tester.enterText(field, "persistent filter");
     expect(controller.text, "still editing");
     popup.close();
@@ -122,17 +130,23 @@ void main() {
   ) async {
     final popup = AnchoredPopupController();
     addTearDown(popup.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: Align(
-          alignment: Alignment.topLeft,
-          child: AnchoredPopup(
-            controller: popup,
-            offset: const Offset(0, 16),
-            builder: (context, show) =>
-                TextButton(onPressed: show, child: const Text("Open")),
-            popupBuilder: (context, close) =>
-                const SizedBox(width: 300, height: 200, child: Text("Preview")),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: Align(
+            alignment: Alignment.topLeft,
+            child: AnchoredPopup(
+              controller: popup,
+              offset: const Offset(0, 16),
+              builder: (context, show) =>
+                  TextButton(onPressed: show, child: const Text("Open")),
+              popupBuilder: (context, close) => const SizedBox(
+                width: 300,
+                height: 200,
+                child: Text("Preview"),
+              ),
+            ),
           ),
         ),
       ),
@@ -173,8 +187,8 @@ void main() {
       },
     );
     addTearDown(editor.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
+    await tester.showComponent(
+      Scaffold(
         body: Column(
           children: [
             TextField(focusNode: editor),
@@ -216,15 +230,18 @@ void main() {
     final popup = AnchoredPopupController();
     addTearDown(popup.dispose);
     PopupPresentation? invoked;
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: AnchoredPopup(
-          controller: popup,
-          builder: (context, show) =>
-              TextButton(onPressed: show, child: const Text("Inbox")),
-          popupBuilder: (context, close) => TextButton(
-            onPressed: () => invoked = popup.presentation,
-            child: const Text("Navigate to issue"),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: AnchoredPopup(
+            controller: popup,
+            builder: (context, show) =>
+                TextButton(onPressed: show, child: const Text("Inbox")),
+            popupBuilder: (context, close) => TextButton(
+              onPressed: () => invoked = popup.presentation,
+              child: const Text("Navigate to issue"),
+            ),
           ),
         ),
       ),
@@ -244,8 +261,8 @@ void main() {
     final editor = FocusNode();
     addTearDown(popup.dispose);
     addTearDown(editor.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
+    await tester.showComponent(
+      Scaffold(
         body: Column(
           children: [
             TextField(focusNode: editor),
@@ -275,17 +292,20 @@ void main() {
   ) async {
     final visible = ValueNotifier(true);
     addTearDown(visible.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: ValueListenableBuilder(
-          valueListenable: visible,
-          builder: (context, value, _) => value
-              ? AnchoredPopup(
-                  builder: (context, show) =>
-                      TextButton(onPressed: show, child: const Text("Open")),
-                  popupBuilder: (context, close) => const Text("Popup"),
-                )
-              : const Text("Removed"),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: ValueListenableBuilder(
+            valueListenable: visible,
+            builder: (context, value, _) => value
+                ? AnchoredPopup(
+                    builder: (context, show) =>
+                        TextButton(onPressed: show, child: const Text("Open")),
+                    popupBuilder: (context, close) => const Text("Popup"),
+                  )
+                : const Text("Removed"),
+          ),
         ),
       ),
     );
@@ -302,14 +322,17 @@ void main() {
   testWidgets("selector selection closes the popup without popping the page", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: SelectorPopup<String>(
-          asyncValue: const AsyncData(["Organization"]),
-          buttonBuilder: (_) => const Text("Choose organization"),
-          contentBuilder: (items, selected, onSelect) => TextButton(
-            onPressed: () => onSelect(items.single),
-            child: Text(items.single),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: SelectorPopup<String>(
+            asyncValue: const AsyncData(["Organization"]),
+            buttonBuilder: (_) => const Text("Choose organization"),
+            contentBuilder: (items, selected, onSelect) => TextButton(
+              onPressed: () => onSelect(items.single),
+              child: Text(items.single),
+            ),
           ),
         ),
       ),
@@ -319,7 +342,7 @@ void main() {
     await mouse.addPointer(location: const Offset(700, 500));
     await mouse.moveTo(tester.getCenter(find.text("Choose organization")));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey("popup barrier")), findsNothing);
+    expect(find.bySemanticsLabel("Dismiss popup"), findsNothing);
     await tester.tap(find.text("Organization"));
     await tester.pumpAndSettle();
     expect(find.text("Organization"), findsNothing);
@@ -331,18 +354,18 @@ void main() {
   testWidgets("mobile selector opens a sheet only after activation", (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: SelectorPopupWithSelection<String>(
-          itemsAsync: const AsyncData(["Book"]),
-          selectedAsync: const AsyncData("Book"),
-          buttonBuilder: (_) => const Text("Choose book"),
-          contentBuilder: (items, selected, onSelect) => TextButton(
-            onPressed: () => onSelect(items.single),
-            child: Text(items.single),
+    await tester.pumpPanel(
+      [window(const Size(390, 844))],
+      at: PanelLocation.component(
+        Scaffold(
+          body: SelectorPopupWithSelection<String>(
+            itemsAsync: const AsyncData(["Book"]),
+            selectedAsync: const AsyncData("Book"),
+            buttonBuilder: (_) => const Text("Choose book"),
+            contentBuilder: (items, selected, onSelect) => TextButton(
+              onPressed: () => onSelect(items.single),
+              child: Text(items.single),
+            ),
           ),
         ),
       ),
@@ -355,10 +378,10 @@ void main() {
     expect(find.text("Book"), findsNothing);
     await tester.tap(find.text("Choose book"));
     await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.text("Book"), findsOneWidget);
     await tester.tap(find.text("Book"));
     await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text("Book"), findsNothing);
     expect(find.text("Choose book"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

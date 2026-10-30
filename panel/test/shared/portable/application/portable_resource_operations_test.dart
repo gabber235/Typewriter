@@ -8,109 +8,119 @@ void main() {
   test(
     "canonical resource fields remain pinned across same generation documents",
     () {
-      final catalog = _catalog();
-      final first = _document(catalog, "First");
-      final second = _document(catalog, "Second");
-      final expression = fieldExpression(_resourceValue(), "name");
+      final catalog = boundPage.catalog();
+      final first = boundPage.document(catalog, "First");
+      final second = boundPage.document(catalog, "Second");
+      final expression = fieldExpression(boundPage.valueOf(), "name");
       expect(
-        _evaluate(catalog, first, expression).value.authoredString,
+        boundPage.evaluate(catalog, first, expression).value.authoredString,
         "First",
       );
       expect(
-        _evaluate(catalog, second, expression).value.authoredString,
+        boundPage.evaluate(catalog, second, expression).value.authoredString,
         "Second",
       );
       expect(
-        _evaluate(catalog, first, expression).value.authoredString,
+        boundPage.evaluate(catalog, first, expression).value.authoredString,
         "First",
       );
     },
   );
 
   test("declaration color is read canonically without sibling projection", () {
-    final catalog = _catalog();
-    final declaration = _declaration();
+    final catalog = boundPage.catalog();
+    final declaration = boundPage.declaration;
     final color = fieldExpression(
       fieldExpression(declaration, "display"),
       "color",
     );
-    final result = _evaluate(catalog, _document(catalog, "Page"), color);
+    final result = boundPage.evaluate(
+      catalog,
+      boundPage.document(catalog, "Page"),
+      color,
+    );
     expect(result.value, colorValue(0xff336699));
-    expect(result.reads, [_resourceRoot]);
+    expect(result.reads, [boundPage.root]);
   });
 
   test(
     "typed resource mismatch is missing and does not read another resource",
     () {
-      final catalog = _catalog();
-      final document = _document(
+      final catalog = boundPage.catalog();
+      final document = boundPage.document(
         catalog,
         "Different",
         configuration: skir.TypeSelection.createComplete(
-          definition: _other,
+          definition: boundPage.otherType,
           arguments: const [],
         ),
       );
       final result = PortableExpressionEvaluator.located(
-        _bindings,
-        budget: _budget,
+        boundPage.bindings,
+        budget: boundPage.budget,
         queries: PortableExpressionQueries(
           catalog: catalog,
           authored: document,
         ),
-      ).evaluate(_resourceValue());
+      ).evaluate(boundPage.valueOf());
       expect(result, isA<PortableExpressionUnavailable>());
       expect((result as PortableExpressionUnavailable).locations, [
-        _resourceRoot,
+        boundPage.root,
       ]);
-      expect(result.reads, [_resourceRoot]);
+      expect(result.reads, [boundPage.root]);
     },
   );
 
   test("pending selections keep declaration metadata and known fields", () {
-    final catalog = _catalog(generic: true);
-    final document = _document(
+    final catalog = boundPage.catalog(generic: true);
+    final document = boundPage.document(
       catalog,
       "Pending",
       configuration: skir.TypeSelection.createPending(
-        definition: _page,
+        definition: boundPage.type,
         arguments: const [skir.ArgumentSelection.unfilled],
       ),
     );
-    final name = fieldExpression(_resourceValue(generic: true), "name");
-    expect(_evaluate(catalog, document, name).value.authoredString, "Pending");
-    final declaration = _declaration();
+    final name = fieldExpression(boundPage.valueOf(generic: true), "name");
     expect(
-      _evaluate(
-        catalog,
-        document,
-        fieldExpression(fieldExpression(declaration, "display"), "name"),
-      ).value.authoredString,
+      boundPage.evaluate(catalog, document, name).value.authoredString,
+      "Pending",
+    );
+    final declaration = boundPage.declaration;
+    expect(
+      boundPage
+          .evaluate(
+            catalog,
+            document,
+            fieldExpression(fieldExpression(declaration, "display"), "name"),
+          )
+          .value
+          .authoredString,
       "Page",
     );
   });
 
   test("absent resources remain missing while an evaluation without an authoring observation fails", () {
-    final catalog = _catalog();
-    final expression = _resourceValue();
+    final catalog = boundPage.catalog();
+    final expression = boundPage.valueOf();
     final empty = AuthoringDocument(
       catalog: catalog,
       entries: const {},
       links: const [],
     );
     final result = PortableExpressionEvaluator.located(
-      _bindings,
-      budget: _budget,
+      boundPage.bindings,
+      budget: boundPage.budget,
       queries: PortableExpressionQueries(catalog: catalog, authored: empty),
     ).evaluate(expression);
     expect(result, isA<PortableExpressionUnavailable>());
     expect((result as PortableExpressionUnavailable).locations, [
-      _resourceRoot,
+      boundPage.root,
     ]);
-    expect(result.reads, [_resourceRoot]);
+    expect(result.reads, [boundPage.root]);
     final unsupported = PortableExpressionEvaluator.located(
-      _bindings,
-      budget: _budget,
+      boundPage.bindings,
+      budget: boundPage.budget,
       catalog: catalog,
     ).evaluate(expression);
     expect(unsupported, isA<PortableExpressionFailed>());
@@ -123,9 +133,9 @@ void main() {
   test(
     "unknown fields are missing and an undeclared display reads the defaults",
     () {
-      final catalog = _catalog(display: false);
-      final document = _document(catalog, "Page");
-      final declaration = _declaration();
+      final catalog = boundPage.catalog(display: false);
+      final document = boundPage.document(catalog, "Page");
+      final declaration = boundPage.declaration;
       final expression = skir.ExpressionNode.createOrElse(
         value: fieldExpression(
           fieldExpression(declaration, "display"),
@@ -134,12 +144,12 @@ void main() {
         fallback: literalExpression(colorValue(0xff123456)),
       );
       expect(
-        _evaluate(catalog, document, expression).value,
+        boundPage.evaluate(catalog, document, expression).value,
         colorValue(0xff607d8b),
       );
       final unknown = PortableExpressionEvaluator.located(
-        _bindings,
-        budget: _budget,
+        boundPage.bindings,
+        budget: boundPage.budget,
         queries: PortableExpressionQueries(
           catalog: catalog,
           authored: document,
@@ -170,7 +180,8 @@ void main() {
       );
       expect(
         () => CheckedEditorCatalog(
-          (skir.EditorCatalog.mutable()..types = [_published(definition)])
+          (skir.EditorCatalog.mutable()
+                ..types = [testPublishedDefinition(definition)])
               .toFrozen(),
         ),
         throwsFormatException,
@@ -178,11 +189,11 @@ void main() {
     },
   );
   test("lambda locals read the resources of links of different types", () {
-    final base = _catalog();
-    final pageRef = _definition("PageRef");
-    final otherRef = _definition("OtherRef");
+    final base = boundPage.catalog();
+    final pageRef = typeDefinition("PageRef");
+    final otherRef = typeDefinition("OtherRef");
     final otherName = skir.FieldDeclaration(
-      owner: skir.FieldOwner(definition: _other, name: "name"),
+      owner: skir.FieldOwner(definition: boundPage.otherType, name: "name"),
       type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
       overrides: const [],
       hasConstructorDefault: false,
@@ -191,10 +202,10 @@ void main() {
       (base.snapshot.toMutable()
             ..types = [
               for (final type in base.snapshot.types)
-                if (type.definition.id != _other) type,
-              _published(
+                if (type.definition.id != boundPage.otherType) type,
+              testPublishedDefinition(
                 skir.TypeDefinition(
-                  id: _other,
+                  id: boundPage.otherType,
                   parameters: const [],
                   parents: const [],
                   representation: skir.RepresentationTemplate.createRecord(
@@ -203,13 +214,13 @@ void main() {
                   ),
                 ),
               ),
-              _referencePublished(pageRef, _page),
-              _referencePublished(otherRef, _other),
+              linkType(pageRef, boundPage.type),
+              linkType(otherRef, boundPage.otherType),
             ])
           .toFrozen(),
     );
     final other = skir.ResourceId(value: "other");
-    final original = _document(catalog, "First");
+    final original = boundPage.document(catalog, "First");
     final document = original.copyWith(
       entries: {
         ...original.entries,
@@ -217,7 +228,7 @@ void main() {
           id: other,
           content: skir.AuthoringRecord(
             configuration: skir.TypeSelection.createComplete(
-              definition: _other,
+              definition: boundPage.otherType,
               arguments: const [],
             ),
             fields: [
@@ -261,10 +272,10 @@ void main() {
     final result =
         PortableExpressionEvaluator.located(
           {
-            left: _referenceBinding(pageRef, _resource),
-            right: _referenceBinding(otherRef, other),
+            left: linkListBinding(pageRef, boundPage.resource),
+            right: linkListBinding(otherRef, other),
           },
-          budget: _budget,
+          budget: boundPage.budget,
           queries: PortableExpressionQueries(
             catalog: catalog,
             authored: document,
@@ -287,14 +298,11 @@ void main() {
   test(
     "unlocated reference item aliases retain their lexical target schema",
     () {
-      final base = _catalog();
-      final ref = _definition("PageRef");
+      final base = boundPage.catalog();
+      final ref = typeDefinition("PageRef");
       final catalog = CheckedEditorCatalog(
         (base.snapshot.toMutable()
-              ..types = [
-                ...base.snapshot.types,
-                _referencePublished(ref, _page),
-              ])
+              ..types = [...base.snapshot.types, linkType(ref, boundPage.type)])
             .toFrozen(),
       );
       final source = skir.ExpressionBindingId(value: "source");
@@ -307,13 +315,13 @@ void main() {
       final operations = PortableOperationResults();
       addTearDown(operations.dispose);
       final scope = PortablePresentationScope(
-        bindings: {source: _referenceBinding(ref, _resource)},
-        budget: _budget,
+        bindings: {source: linkListBinding(ref, boundPage.resource)},
+        budget: boundPage.budget,
         operations: operations,
         catalog: catalog,
         queries: PortableExpressionQueries(
           catalog: catalog,
-          authored: _document(catalog, "Aliased page"),
+          authored: boundPage.document(catalog, "Aliased page"),
         ),
       );
       final itemScope = scope.withBinding(
@@ -361,8 +369,8 @@ void main() {
       test(
         "${directWrite ? 'write' : 'action'} observes the captured query dependency, changed=$changedDependency",
         () async {
-          final catalog = _catalog();
-          final source = _document(catalog, "Original");
+          final catalog = boundPage.catalog();
+          final source = boundPage.document(catalog, "Original");
           final dependency = skir.ResourceId(value: "dependency");
           final unrelated = skir.ResourceId(value: "unrelated");
           skir.AuthoringResource entry(skir.ResourceId id, String name) =>
@@ -370,7 +378,7 @@ void main() {
                 id: id,
                 content: skir.AuthoringRecord(
                   configuration: skir.TypeSelection.createComplete(
-                    definition: _page,
+                    definition: boundPage.type,
                     arguments: const [],
                   ),
                   fields: [
@@ -388,21 +396,28 @@ void main() {
               unrelated: entry(unrelated, "Unrelated"),
             },
           );
-          final transport = ScriptedAuthoringTransport(AsyncData(original));
+          final realm = FakeRealm(
+            scope: AuthoringScope(
+              organizationId: skir.recordId("organization:operations"),
+              realmId: skir.recordId("realm_instance:operations"),
+            ),
+            name: "Operations",
+            document: original,
+          );
           final submissions = ScopedWorkSession();
           final workspace = RealmEditing(
-            persistence: transport.persistence,
+            persistence: realm.persistence,
             submissions: submissions,
             initial: original,
           );
           final binding = workspace.attach(
-            _resource,
+            boundPage.resource,
             policy: EditorCommitPolicy.applyResource,
           );
           addTearDown(binding.detach);
           addTearDown(workspace.dispose);
           addTearDown(submissions.dispose);
-          addTearDown(transport.dispose);
+          addTearDown(realm.close);
           final material =
               (skir.PresentationMaterial.mutable()
                     ..provider = skir.PresentationId(
@@ -411,20 +426,20 @@ void main() {
                     )
                     ..role = skir.PresentationRole.inspector
                     ..target = skir.PresentationTarget.createNamed(
-                      definition: _page,
+                      definition: boundPage.type,
                       arguments: const [],
                     )
                     ..subject = skir.TypeTemplate.createNamed(
-                      definition: _page,
+                      definition: boundPage.type,
                       arguments: const [],
                     ))
                   .toFrozen();
           final host = AuthoredPresentationHost(
-            resource: _resource,
+            resource: boundPage.resource,
             source: original,
             material: material,
             role: skir.PresentationRole.inspector,
-            budget: _budget,
+            budget: boundPage.budget,
             capabilities: const PortablePresentationCapabilities(),
             edit: binding,
           );
@@ -434,11 +449,11 @@ void main() {
           );
           final value = skir.DataValue.createNamed(
             actualType: skir.NamedTypeUse(
-              definition: _page,
+              definition: boundPage.type,
               arguments: const [],
             ),
             payload: skir.DataValue.createRecord(
-              fields: original.resource(_resource)!.fields,
+              fields: original.resource(boundPage.resource)!.fields,
             ),
           );
           final context = PortableInvocationContext(
@@ -446,17 +461,17 @@ void main() {
               configured: PortableExpressionBinding(
                 value: value,
                 location: skir.ValueLocation(
-                  resource: _resource,
+                  resource: boundPage.resource,
                   path: editorRootPath,
                 ),
                 schema: CompletePortablePresentationBinding(
                   skir.TypeUse.createNamed(
-                    definition: _page,
+                    definition: boundPage.type,
                     arguments: const [],
                   ),
                 ),
               ),
-              _id: dependency.toExpressionBinding(),
+              boundPage.binding: dependency.toExpressionBinding(),
             },
             catalogGeneration: original.generation,
             queries: PortableExpressionQueries(
@@ -474,7 +489,7 @@ void main() {
             from: original,
           );
           expect(concurrent, isA<EditStaged>());
-          final expression = fieldExpression(_resourceValue(), "name");
+          final expression = fieldExpression(boundPage.valueOf(), "name");
           final target = skir.BindingRef(
             bindingId: configured,
             path: _namePath,
@@ -483,7 +498,7 @@ void main() {
           if (directWrite) {
             final evaluated = PortableExpressionEvaluator.located(
               context.bindings,
-              budget: _budget,
+              budget: boundPage.budget,
               queries: context.queries,
             ).evaluate(expression) as PortableExpressionAvailable;
             result = await host.write(
@@ -506,7 +521,7 @@ void main() {
             expect(result, isA<PortablePresentationWriteRejected>());
             expect(
               workspace.document
-                  .resource(_resource)!
+                  .resource(boundPage.resource)!
                   .authoredField("name")!
                   .authoredString,
               "Original",
@@ -515,7 +530,7 @@ void main() {
             expect(result, isA<PortablePresentationWriteApplied>());
             expect(
               workspace.document
-                  .resource(_resource)!
+                  .resource(boundPage.resource)!
                   .authoredField("name")!
                   .authoredString,
               "Dependency",
@@ -543,7 +558,10 @@ void main() {
         skir.ScalarKind.createFloat(width: skir.FloatWidth.thirtyTwo),
       ),
       skir.TypeUse.createNullable(
-        value: skir.TypeUse.createNamed(definition: _page, arguments: [_text]),
+        value: skir.TypeUse.createNamed(
+          definition: boundPage.type,
+          arguments: [_text],
+        ),
       ),
     ];
     for (final value in values) {
@@ -557,7 +575,7 @@ void main() {
       expect(canonicalReadModels.decodeTypeUse(encoded), value);
     }
     final selection = skir.TypeSelection.createPending(
-      definition: _page,
+      definition: boundPage.type,
       arguments: [
         skir.ArgumentSelection.wrapChosen(_text),
         skir.ArgumentSelection.unfilled,
@@ -576,12 +594,12 @@ void main() {
   test(
     "a present unavailable declaration remains readable as canonical metadata",
     () {
-      final original = _catalog();
+      final original = boundPage.catalog();
       final catalog = CheckedEditorCatalog(
         (original.snapshot.toMutable()
               ..types = [
                 for (final type in original.snapshot.types)
-                  if (type.definition.id == _page)
+                  if (type.definition.id == boundPage.type)
                     (type.toMutable()
                           ..status = skir.DeclarationStatus.wrapUnavailable(
                             const [],
@@ -593,7 +611,7 @@ void main() {
             .toFrozen(),
       );
       final selection = skir.TypeSelection.createComplete(
-        definition: _page,
+        definition: boundPage.type,
         arguments: const [],
       );
       final encoded = canonicalReadModels.project(
@@ -612,7 +630,7 @@ void main() {
       );
       final result = PortableExpressionEvaluator.located(
         const {},
-        budget: _budget,
+        budget: boundPage.budget,
         queries: PortableExpressionQueries(catalog: catalog),
       ).evaluate(expression);
       expect(
@@ -630,12 +648,12 @@ void main() {
   test(
     "trusted resource content is read as stored, not replaced by the fallback",
     () {
-      final catalog = _catalog();
-      final original = _document(catalog, "Page");
-      final record = original.entry(_resource)!;
+      final catalog = boundPage.catalog();
+      final original = boundPage.document(catalog, "Page");
+      final record = original.entry(boundPage.resource)!;
       final document = original.copyWith(
         entries: {
-          _resource:
+          boundPage.resource:
               (record.toMutable()
                     ..content =
                         (record.content.toMutable()
@@ -650,12 +668,12 @@ void main() {
         },
       );
       final expression = skir.ExpressionNode.createOrElse(
-        value: fieldExpression(_resourceValue(), "name"),
+        value: fieldExpression(boundPage.valueOf(), "name"),
         fallback: literalExpression(skir.DataValue.wrapStringValue("fallback")),
       );
       final result = PortableExpressionEvaluator.located(
-        _bindings,
-        budget: _budget,
+        boundPage.bindings,
+        budget: boundPage.budget,
         queries: PortableExpressionQueries(
           catalog: catalog,
           authored: document,
@@ -669,14 +687,14 @@ void main() {
     },
   );
   test("named payload configuration and projected writes preserve one identity and reads", () async {
-    final original = _catalog();
-    final alias = _definition("Label");
+    final original = boundPage.catalog();
+    final alias = typeDefinition("Label");
     final use = skir.NamedTypeUse(definition: alias, arguments: const []);
     final catalog = CheckedEditorCatalog(
       (original.snapshot.toMutable()
             ..types = [
               ...original.snapshot.types,
-              _published(
+              testPublishedDefinition(
                 skir.TypeDefinition(
                   id: alias,
                   parameters: const [],
@@ -698,7 +716,7 @@ void main() {
         literalExpression(skir.DataValue.wrapStringValue("Label")),
       ),
       bindings: const [],
-      budget: _budget,
+      budget: boundPage.budget,
     );
     addTearDown(host.dispose);
     final configured = skir.ExpressionBindingId(value: "configured_value");
@@ -709,7 +727,10 @@ void main() {
       reference: root,
       actualType: use,
       value: skir.DataValue.wrapStringValue("Old"),
-      location: skir.ValueLocation(resource: _resource, path: _namePath),
+      location: skir.ValueLocation(
+        resource: boundPage.resource,
+        path: _namePath,
+      ),
       setBinding: (reference, value, {reads = const <skir.ValueLocation>[]}) {
         written = value;
         observed = reads.toList();
@@ -718,7 +739,7 @@ void main() {
     );
     final scope = PortablePresentationScope(
       bindings: const {},
-      budget: _budget,
+      budget: boundPage.budget,
       operations: operations,
       host: host,
       catalog: catalog,
@@ -739,7 +760,9 @@ void main() {
       ),
       skir.TypeSelection.wrapComplete(use),
     );
-    final reads = [skir.ValueLocation(resource: _resource, path: _namePath)];
+    final reads = [
+      skir.ValueLocation(resource: boundPage.resource, path: _namePath),
+    ];
     final applied = await scope.apply(
       root,
       skir.DataValue.createNamed(
@@ -757,7 +780,10 @@ void main() {
       ),
     );
     expect(observed, reads);
-    final rejected = await scope.apply(root, _resource.toExpressionValue());
+    final rejected = await scope.apply(
+      root,
+      boundPage.resource.toExpressionValue(),
+    );
     expect(rejected, isA<PortablePresentationWriteRejected>());
     expect(
       written,
@@ -769,240 +795,7 @@ void main() {
   });
 }
 
-final _resource = skir.ResourceId(value: "page");
-final _id = skir.ExpressionBindingId(value: "resource");
-final _page = skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: "Page"),
-  revision: 1,
-);
-final _other = skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: "Other"),
-  revision: 1,
-);
 final _text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
-final _budget = skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000);
-Map<skir.ExpressionBindingId, PortableExpressionBinding> get _bindings => {
-  _id: _resource.toExpressionBinding(),
-};
-
-final _resourceRoot = skir.ValueLocation(
-  resource: _resource,
-  path: editorRootPath,
-);
-
-PortableExpressionAvailable _evaluate(
-  CheckedEditorCatalog catalog,
-  AuthoringDocument document,
-  skir.ExpressionNode expression,
-) {
-  final result = PortableExpressionEvaluator.located(
-    _bindings,
-    budget: _budget,
-    queries: PortableExpressionQueries(catalog: catalog, authored: document),
-  ).evaluate(expression);
-  expect(
-    result,
-    isA<PortableExpressionAvailable>(),
-    reason: result is PortableExpressionFailed
-        ? "${result.failure.value}: ${result.message}"
-        : "$result",
-  );
-  return result as PortableExpressionAvailable;
-}
-
-skir.ExpressionNode get _identity =>
-    skir.ExpressionNode.createInput(binding: _id, path: editorRootPath);
-
-/// The configured value of the bound resource as a Page.
-skir.ExpressionNode _resourceValue({bool generic = false}) => portableCall(
-  "resource.value_of",
-  [_identity],
-  typeArguments: [
-    skir.TypeTemplate.createNamed(
-      definition: _page,
-      arguments: generic
-          ? [skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)]
-          : const [],
-    ),
-  ],
-);
-
-/// The published declaration of the bound resource's configured type.
-skir.ExpressionNode _declaration() => portableCall("catalog.declaration", [
-  portableCall("resource.configuration", [_identity]),
-]);
-
-CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
-  final name = skir.FieldDeclaration(
-    owner: skir.FieldOwner(definition: _page, name: "name"),
-    type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-    overrides: const [],
-    hasConstructorDefault: false,
-  );
-  final page = skir.TypeDefinition(
-    id: _page,
-    parameters: generic
-        ? [
-            skir.TypeParameter(
-              key: skir.ParameterKey(owner: _page, index: 0),
-              name: "T",
-              bounds: const [],
-            ),
-          ]
-        : const [],
-    representation: skir.RepresentationTemplate.createRecord(
-      fields: [name],
-      abstract_: false,
-    ),
-    parents: const [],
-  );
-  final other = skir.TypeDefinition(
-    id: _other,
-    parameters: const [],
-    representation: skir.RepresentationTemplate.createRecord(
-      fields: const [],
-      abstract_: false,
-    ),
-    parents: const [],
-  );
-  final resourceId = skir.TypeDefinition(
-    id: skir.resourceIdType.definition,
-    parameters: const [],
-    representation: skir.RepresentationTemplate.createScalar(
-      kind: skir.ScalarKind.text,
-    ),
-    parents: const [],
-  );
-  return testCheckedCatalog(
-    types: [
-      _published(
-        page,
-        display: display
-            ? skir.TypeDisplay(
-                name: "Page",
-                description: "Page type",
-                icon: skir.Icon.wrapIconify("page"),
-                color: skir.Color(argb: 0xff336699.toSigned(32)),
-              )
-            : null,
-      ),
-      _published(other),
-      _published(resourceId),
-    ],
-  );
-}
-
-skir.PublishedType _published(
-  skir.TypeDefinition definition, {
-  skir.TypeDisplay? display,
-}) => skir.PublishedType(
-  searchKey: null,
-  placementField: null,
-  definition: definition,
-  status: skir.DeclarationStatus.ready,
-  effectiveFields: [
-    if (definition.representation
-        case skir.RepresentationTemplate_recordWrapper(:final value))
-      for (final field in value.fields)
-        skir.EffectiveFieldTemplate(
-          key: field.owner.name,
-          owner: field.owner,
-          type: field.type,
-          rules: const [],
-        ),
-  ],
-  ancestorTemplates: definition.parents,
-  display: display ?? defaultTypeDisplay(""),
-);
-AuthoringDocument _document(
-  CheckedEditorCatalog catalog,
-  String name, {
-  skir.TypeSelection? configuration,
-}) => AuthoringDocument(
-  catalog: catalog,
-  entries: {
-    _resource: skir.AuthoringResource(
-      id: _resource,
-      content: skir.AuthoringRecord(
-        configuration:
-            configuration ??
-            skir.TypeSelection.createComplete(
-              definition: _page,
-              arguments: const [],
-            ),
-        fields: [
-          skir.FieldValue(
-            name: "name",
-            value: skir.DataValue.wrapStringValue(name),
-          ),
-        ],
-      ),
-    ),
-  },
-  links: const [],
-);
-
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
-  revision: 1,
-);
-skir.PublishedType _referencePublished(
-  skir.TypeDefinitionId id,
-  skir.TypeDefinitionId target,
-) => _published(
-  skir.TypeDefinition(
-    id: id,
-    parameters: const [],
-    parents: const [],
-    representation: skir.RepresentationTemplate.createLink(
-      endpoint: skir.EndpointId(value: "target"),
-      target: skir.TypeTemplate.createNamed(
-        definition: target,
-        arguments: const [],
-      ),
-    ),
-  ),
-);
-PortableExpressionBinding _referenceBinding(
-  skir.TypeDefinitionId ref,
-  skir.ResourceId target,
-) {
-  final use = skir.NamedTypeUse(definition: ref, arguments: const []);
-  return PortableExpressionBinding(
-    schema: CompletePortablePresentationBinding(
-      skir.TypeUse.createNamed(
-        definition: skir.TypeDefinitionId(
-          typeId: skir.TypeId.createQualified(
-            namespace: "typewriter",
-            name: "List",
-          ),
-          revision: 1,
-        ),
-        arguments: [skir.TypeUse.wrapNamed(use)],
-      ),
-    ),
-    value: skir.DataValue.createListValue(
-      items: [
-        skir.ListItem(
-          id: skir.ItemId(value: "one"),
-          value: skir.DataValue.createNamed(
-            actualType: use,
-            payload: skir.DataValue.createLink(
-              endpoint: skir.EndpointId(value: "target"),
-              target: skir.LinkTarget(
-                resource: target,
-                opposite: skir.ValuePath(
-                  segments: [skir.PathSegment.createField(name: "reciprocal")],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 final _namePath = skir.ValuePath(
   segments: [skir.PathSegment.createField(name: "name")],
 );

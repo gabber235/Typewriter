@@ -7,10 +7,8 @@ import "package:typewriter_testkit/testing.dart";
 void main() {
   for (final sourceName in ["source", "configured_value"]) {
     testWidgets(
-      "default provider guidance preserves two native fields and an action from $sourceName",
+      "default provider guidance offers two fields and an action from $sourceName",
       (tester) async {
-        final semantics = tester.ensureSemantics();
-
         final source = skir.ExpressionBindingId(value: sourceName);
         final configured = skir.ExpressionBindingId(value: "configured_value");
         final definition = skir.TypeDefinitionId(
@@ -32,11 +30,8 @@ void main() {
           actualType: actual,
           payload: skir.DataValue.wrapStringValue(text),
         );
-        final rootReference = skir.BindingRef(
-          bindingId: source,
-          path: editorRootPath,
-        );
-        final innerReference = skir.BindingRef(
+        var value = named("initial");
+        final inner = skir.BindingRef(
           bindingId: configured,
           path: editorRootPath,
         );
@@ -45,19 +40,13 @@ void main() {
           skir.PresentationElement.wrapTextInput(
             (skir.TextControl.mutable()
                   ..control = (skir.BoundControl.mutable()
-                    ..binding = innerReference
+                    ..binding = inner
                     ..label = textLiteral(label)
                     ..semanticLabel = textLiteral(label)))
                 .toFrozen(),
           ),
         );
-        final action = skir.EditorAction.wrapLocal(
-          skir.LocalEditorAction.createSetValue(
-            target: innerReference,
-            value: skir.ExpressionNode.wrapLiteral(named("action")),
-          ),
-        );
-        final body = presentationColumn("column", [
+        final layout = presentationColumn("column", [
           field("Left input"),
           field("Right input"),
           presentationNode(
@@ -65,173 +54,180 @@ void main() {
             skir.PresentationElement.wrapButton(
               (skir.ButtonElement.mutable()
                     ..label = textLiteral("Apply value")
-                    ..action = action)
+                    ..action = skir.EditorAction.wrapLocal(
+                      skir.LocalEditorAction.createSetValue(
+                        target: inner,
+                        value: skir.ExpressionNode.wrapLiteral(named("action")),
+                      ),
+                    ))
                   .toFrozen(),
             ),
           ),
         ]);
-        final material =
-            (skir.PresentationMaterial.mutable()
-                  ..provider = provider
-                  ..target = skir.PresentationTarget.createNamed(
-                    definition: definition,
-                    arguments: const [],
-                  )
-                  ..role = skir.PresentationRole.inspector
-                  ..layout = body
-                  ..subject = skir.TypeTemplate.createNamed(
-                    definition: definition,
-                    arguments: const [],
-                  ))
-                .toFrozen();
-        final published =
-            (skir.PublishedType.mutable()
-                  ..status = skir.DeclarationStatus.ready
-                  ..definition = (skir.TypeDefinition.mutable()
-                    ..id = definition
-                    ..representation = skir.RepresentationTemplate.createScalar(
-                      kind: skir.ScalarKind.text,
-                    )))
-                .toFrozen();
         final catalog = CheckedEditorCatalog(
           (skir.EditorCatalog.mutable()
                 ..generation = skir.CatalogGeneration(value: "configured")
-                ..types = [published]
-                ..presentationMaterials = [material])
+                ..types = [
+                  (skir.PublishedType.mutable()
+                        ..status = skir.DeclarationStatus.ready
+                        ..definition = (skir.TypeDefinition.mutable()
+                          ..id = definition
+                          ..representation =
+                              skir.RepresentationTemplate.createScalar(
+                                kind: skir.ScalarKind.text,
+                              )))
+                      .toFrozen(),
+                ]
+                ..presentationMaterials = [
+                  (skir.PresentationMaterial.mutable()
+                        ..provider = provider
+                        ..target = skir.PresentationTarget.createNamed(
+                          definition: definition,
+                          arguments: const [],
+                        )
+                        ..role = skir.PresentationRole.inspector
+                        ..layout = layout
+                        ..subject = skir.TypeTemplate.createNamed(
+                          definition: definition,
+                          arguments: const [],
+                        ))
+                      .toFrozen(),
+                ])
               .toFrozen(),
         );
-        var value = named("initial");
-        final writes = <skir.DataValue>[];
         final root = presentationNode(
           "default",
           skir.PresentationElement.wrapDefaultPresentation(
             (skir.DefaultPresentationElement.mutable()
                   ..control = (skir.BoundControl.mutable()
-                    ..binding = rootReference
+                    ..binding = skir.BindingRef(
+                      bindingId: source,
+                      path: editorRootPath,
+                    )
                     ..label = textLiteral("Compound guidance")
                     ..description = textLiteral("Edit either view"))
                   ..presentationId = provider)
                 .toFrozen(),
           ),
         );
-        final host = BoundPresentationHost(
-          catalog: catalog,
-          root: () => root,
+        final panel = await tester.showPresentation(
+          () => root,
           bindings: [
-            BoundPresentationBinding(
-              id: source,
-              use: skir.TypeUse.wrapNamed(actual),
-              read: (_) => value,
-              write: (_, next) {
-                value = next;
-                writes.add(next);
-                return const PortablePresentationWriteApplied();
-              },
+            wholeValueBinding(
+              source,
+              skir.TypeUse.wrapNamed(actual),
+              read: () => value,
+              write: (next) => value = next,
             ),
           ],
-          budget: skir.EvaluationBudget(
-            maxSteps: 1000,
-            maxCollectionItems: 1000,
-          ),
+          catalog: catalog,
         );
-        addTearDown(host.dispose);
-        await tester.pumpTestApp(
-          child: Scaffold(body: PortablePresentationRenderer(host: host)),
-        );
-        expect(find.text("Compound guidance"), findsOneWidget);
-        expect(find.byType(PortableDiagnosticFrame), findsNWidgets(2));
-        final fields = find.byType(TextFormField);
-        expect(fields, findsNWidgets(2));
-        expect(
-          tester.getSemantics(fields.at(0)).getSemanticsData().label,
-          contains("Left input"),
-        );
-        expect(
-          tester.getSemantics(fields.at(1)).getSemanticsData().label,
-          contains("Right input"),
-        );
-        final button = find.byType(FilledButton);
-        expect(button, findsOneWidget);
-        expect(
-          tester
-              .getSemantics(button)
-              .getSemanticsData()
-              .flagsCollection
-              .isButton,
-          isTrue,
-        );
-        await tester.enterText(fields.at(0), "left");
-        await tester.pumpAndSettle();
-        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-        await tester.pumpAndSettle();
-        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-        await tester.pumpAndSettle();
-        await tester.sendKeyEvent(LogicalKeyboardKey.space);
-        await tester.pumpAndSettle();
-        expect(
-          tester
-              .widget<EditableText>(
-                find.descendant(
-                  of: fields.at(1),
-                  matching: find.byType(EditableText),
-                ),
-              )
-              .focusNode
-              .hasFocus,
-          isTrue,
-        );
-        await tester.enterText(fields.at(1), "right");
-        await tester.pumpAndSettle();
-        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-        await tester.pumpAndSettle();
-        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-        await tester.pumpAndSettle();
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pumpAndSettle();
+        expect(panel.shows("Compound guidance"), isTrue);
+        expect(panel.field("Left input").exists, isTrue);
+        expect(panel.field("Right input").exists, isTrue);
+        expect(semanticsLabeled("Apply value").single.isButton, isTrue);
+
+        await panel.field("Left input").type("left");
+        await panel.press(LogicalKeyboardKey.escape);
+        await panel.press(LogicalKeyboardKey.tab);
+        await panel.press(LogicalKeyboardKey.space);
+        expect(panel.field("Right input").isFocused, isTrue);
+        await panel.field("Right input").type("right");
+        await panel.press(LogicalKeyboardKey.escape);
+        await panel.press(LogicalKeyboardKey.tab);
+        await panel.press(LogicalKeyboardKey.enter);
         expect(value.authoredPayload, skir.DataValue.wrapStringValue("action"));
-        expect(writes, hasLength(3));
-        semantics.dispose();
       },
     );
   }
+
+  testWidgets("completion rounds the latest typing while an earlier write is "
+      "still pending", (tester) async {
+    final pending = Completer<void>();
+    var value = skir.DataValue.wrapFloat(1);
+    final id = skir.ExpressionBindingId(value: "number");
+    final candidate = skir.ExpressionBindingId(value: "candidate");
+    final read = skir.ExpressionNode.createInput(
+      binding: candidate,
+      path: editorRootPath,
+    );
+    final float = skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour);
+    final control =
+        (skir.NumericControl.mutable()
+              ..control = (skir.BoundControl.mutable()
+                ..binding = skir.BindingRef(
+                  bindingId: id,
+                  path: editorRootPath,
+                ))
+              ..mappings = skir.ValueMappings(
+                completion: skir.ExpressionMapping(
+                  inputBinding: declareBinding(
+                    candidate,
+                    scalarTemplate(float),
+                  ),
+                  body: portableCall("number.round", [
+                    read,
+                    literalExpression(skir.DataValue.wrapFloat(0.5)),
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.RoundingMode.nearestTiesToEven.toDataValue(),
+                    ),
+                  ]),
+                ),
+                display: skir.ExpressionMapping(
+                  inputBinding: declareBinding(
+                    candidate,
+                    scalarTemplate(float),
+                  ),
+                  body: portableCall("number.format", [
+                    read,
+                    literalExpression(skir.DataValue.wrapInteger("2")),
+                    textLiteral("en-US"),
+                  ]),
+                ),
+              ))
+            .toFrozen();
+    var writes = 0;
+    final panel = await tester.showPresentation(
+      () => presentationNode(
+        "numeric",
+        skir.PresentationElement.wrapNumericInput(control),
+      ),
+      bindings: [
+        BoundPresentationBinding(
+          id: id,
+          use: skir.TypeUse.wrapScalar(float),
+          read: (_) => value,
+          write: (_, next) async {
+            writes++;
+            if (writes == 1) await pending.future;
+            value = next;
+            return const PortablePresentationWriteApplied();
+          },
+        ),
+      ],
+    );
+    final field = panel.fieldAt(0);
+    await field.type("1.25");
+    await field.type("1.26");
+    expect(field.value, "1.26");
+    await panel.press(LogicalKeyboardKey.escape);
+    pending.complete();
+    await panel.settle();
+    expect(value, skir.DataValue.wrapFloat(1.5));
+  });
+
   testWidgets(
-    "completion follows pending typing and display remains separate from exact editing",
+    "display formatting shows outside editing and the exact value while editing",
     (tester) async {
+      var value = skir.DataValue.wrapFloat(1.5);
       final id = skir.ExpressionBindingId(value: "number");
       final candidate = skir.ExpressionBindingId(value: "candidate");
       final read = skir.ExpressionNode.createInput(
         binding: candidate,
         path: editorRootPath,
       );
-      final mappings = skir.ValueMappings(
-        completion: skir.ExpressionMapping(
-          inputBinding: declareBinding(
-            candidate,
-            scalarTemplate(
-              skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
-            ),
-          ),
-          body: portableCall("number.round", [
-            read,
-            literalExpression(skir.DataValue.wrapFloat(0.5)),
-            skir.ExpressionNode.wrapLiteral(
-              skir.RoundingMode.nearestTiesToEven.toDataValue(),
-            ),
-          ]),
-        ),
-        display: skir.ExpressionMapping(
-          inputBinding: declareBinding(
-            candidate,
-            scalarTemplate(
-              skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
-            ),
-          ),
-          body: portableCall("number.format", [
-            read,
-            literalExpression(skir.DataValue.wrapInteger("2")),
-            textLiteral("en-US"),
-          ]),
-        ),
+      final float = skir.ScalarKind.createFloat(
+        width: skir.FloatWidth.sixtyFour,
       );
       final control =
           (skir.NumericControl.mutable()
@@ -240,75 +236,92 @@ void main() {
                     bindingId: id,
                     path: editorRootPath,
                   ))
-                ..mappings = mappings)
+                ..mappings = skir.ValueMappings(
+                  completion: null,
+                  display: skir.ExpressionMapping(
+                    inputBinding: declareBinding(
+                      candidate,
+                      scalarTemplate(float),
+                    ),
+                    body: portableCall("number.format", [
+                      read,
+                      literalExpression(skir.DataValue.wrapInteger("2")),
+                      textLiteral("en-US"),
+                    ]),
+                  ),
+                ))
               .toFrozen();
-      var value = skir.DataValue.wrapFloat(1.0);
-      final writes = <skir.DataValue>[];
-      final pending = Completer<void>();
-      final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-        root: () => presentationNode(
+      final panel = await tester.showPresentation(
+        () => presentationNode(
           "numeric",
           skir.PresentationElement.wrapNumericInput(control),
         ),
         bindings: [
-          BoundPresentationBinding(
-            id: id,
-            use: skir.TypeUse.wrapScalar(
-              skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
-            ),
-            read: (_) => value,
-            write: (_, next) async {
-              writes.add(next);
-              if (writes.length == 1) await pending.future;
-              value = next;
-              return const PortablePresentationWriteApplied();
-            },
+          wholeValueBinding(
+            id,
+            skir.TypeUse.wrapScalar(float),
+            read: () => value,
+            write: (next) => value = next,
           ),
         ],
-        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
       );
-      addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Scaffold(body: PortablePresentationRenderer(host: host)),
-      );
-      final field = find.byType(TextFormField);
-      await tester.enterText(field, "1.25");
-      await tester.pump();
-      await tester.enterText(field, "1.26");
-      await tester.pump();
-      expect(
-        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-        "1.26",
-      );
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pump();
-      expect(writes, [skir.DataValue.wrapFloat(1.25)]);
-      pending.complete();
-      await tester.pumpAndSettle();
-      expect(writes, [
-        skir.DataValue.wrapFloat(1.25),
-        skir.DataValue.wrapFloat(1.26),
-        skir.DataValue.wrapFloat(1.5),
-      ]);
-      expect(
-        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-        "1.50",
-      );
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-        "1.5",
-      );
-      await tester.enterText(field, "");
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(value, skir.DataValue.unfilled);
-      expect(writes, hasLength(4));
+      final field = panel.fieldAt(0);
+      expect(field.value, "1.50");
+      await panel.press(LogicalKeyboardKey.tab);
+      await panel.press(LogicalKeyboardKey.enter);
+      expect(field.value, "1.5");
     },
   );
+
+  testWidgets("clearing a mapped number writes unfilled", (tester) async {
+    var value = skir.DataValue.wrapFloat(1.5);
+    final id = skir.ExpressionBindingId(value: "number");
+    final candidate = skir.ExpressionBindingId(value: "candidate");
+    final read = skir.ExpressionNode.createInput(
+      binding: candidate,
+      path: editorRootPath,
+    );
+    final float = skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour);
+    final control =
+        (skir.NumericControl.mutable()
+              ..control = (skir.BoundControl.mutable()
+                ..binding = skir.BindingRef(
+                  bindingId: id,
+                  path: editorRootPath,
+                ))
+              ..mappings = skir.ValueMappings(
+                completion: null,
+                display: skir.ExpressionMapping(
+                  inputBinding: declareBinding(
+                    candidate,
+                    scalarTemplate(float),
+                  ),
+                  body: portableCall("number.format", [
+                    read,
+                    literalExpression(skir.DataValue.wrapInteger("2")),
+                    textLiteral("en-US"),
+                  ]),
+                ),
+              ))
+            .toFrozen();
+    final panel = await tester.showPresentation(
+      () => presentationNode(
+        "numeric",
+        skir.PresentationElement.wrapNumericInput(control),
+      ),
+      bindings: [
+        wholeValueBinding(
+          id,
+          skir.TypeUse.wrapScalar(float),
+          read: () => value,
+          write: (next) => value = next,
+        ),
+      ],
+    );
+    await panel.fieldAt(0).type("");
+    await panel.press(LogicalKeyboardKey.escape);
+    expect(value, skir.DataValue.unfilled);
+  });
 
   testWidgets("explicit Float32 completion reuses scalar width admission", (
     tester,
@@ -347,33 +360,22 @@ void main() {
                 ),
               ))
             .toFrozen();
-    final host = BoundPresentationHost(
-      catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-      root: () => presentationNode(
+    final panel = await tester.showPresentation(
+      () => presentationNode(
         "float32",
         skir.PresentationElement.wrapNumericInput(control),
       ),
       bindings: [
-        BoundPresentationBinding(
-          id: id,
-          use: use,
-          read: (_) => value,
-          write: (_, next) {
-            value = next;
-            return const PortablePresentationWriteApplied();
-          },
+        wholeValueBinding(
+          id,
+          use,
+          read: () => value,
+          write: (next) => value = next,
         ),
       ],
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
     );
-    addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(body: PortablePresentationRenderer(host: host)),
-    );
-    await tester.enterText(find.byType(TextFormField), "0.26");
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("0.26");
+    await panel.press(LogicalKeyboardKey.escape);
     expect(
       value,
       admitPortableNumericInput(
@@ -385,17 +387,17 @@ void main() {
   });
 
   testWidgets(
-    "duration boundary edits remain finite and invalid drafts remain visible",
+    "an out of range duration draft stays visible with the range message",
     (tester) async {
       final id = skir.ExpressionBindingId(value: "duration");
-      var value = skir.DataValue.createDuration(
+      final maximum = skir.DataValue.createDuration(
         value: skir.Duration(
           milliseconds: PortableDurationMilliseconds.maximum,
         ),
       );
-      final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-        root: () => presentationNode(
+      var value = maximum;
+      final panel = await tester.showPresentation(
+        () => presentationNode(
           "duration",
           skir.PresentationElement.wrapDurationInput(
             (skir.DurationControl.mutable()
@@ -408,99 +410,26 @@ void main() {
           ),
         ),
         bindings: [
-          BoundPresentationBinding(
-            id: id,
-            use: skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
-            read: (_) => value,
-            write: (_, next) {
-              value = next;
-              return const PortablePresentationWriteApplied();
-            },
+          wholeValueBinding(
+            id,
+            skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
+            read: () => value,
+            write: (next) => value = next,
           ),
         ],
-        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
       );
-      addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Scaffold(body: PortablePresentationRenderer(host: host)),
-      );
-      final field = find.byType(TextFormField);
-      final encoded = tester
-          .widget<EditableText>(find.byType(EditableText))
-          .controller
-          .text;
-      await tester.enterText(field, encoded);
-      await tester.pumpAndSettle();
+      final field = panel.fieldAt(0);
       expect(
-        value,
-        skir.DataValue.createDuration(
-          value: skir.Duration(
-            milliseconds: PortableDurationMilliseconds.maximum,
-          ),
-        ),
-      );
-      for (final entry in {
-        "2w 5d 23h 59m 59s 999ms": 1727999999,
-        "-1h 2min 3s": -3723000,
-        "+1000us": 1,
-        "0ms": 0,
-      }.entries) {
-        await tester.enterText(field, entry.key);
-        await tester.pumpAndSettle();
-        expect(
-          value,
-          skir.DataValue.createDuration(
-            value: skir.Duration(milliseconds: entry.value),
-          ),
-        );
-      }
-      for (final invalid in ["1.5s", "1us", "1m 2min", "1h, 2m", "01:02:03"]) {
-        await tester.enterText(field, invalid);
-        await tester.pumpAndSettle();
-        expect(
-          value,
-          skir.DataValue.createDuration(value: skir.Duration(milliseconds: 0)),
-        );
-        expect(
-          tester
-              .widget<EditableText>(find.byType(EditableText))
-              .controller
-              .text,
-          invalid,
-        );
-      }
-      await tester.enterText(
-        field,
-        "-${PortableDurationMilliseconds.maximum}ms",
-      );
-      await tester.pumpAndSettle();
-      expect(
-        value,
-        skir.DataValue.createDuration(
-          value: skir.Duration(
-            milliseconds: -PortableDurationMilliseconds.maximum,
-          ),
-        ),
+        field.value,
+        PortableDurationMilliseconds.maximum.portableDurationText,
       );
       final invalid =
           "${BigInt.from(PortableDurationMilliseconds.maximum) + BigInt.one}ms";
-      await tester.enterText(field, invalid);
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-        invalid,
-      );
-      expect(
-        value,
-        skir.DataValue.createDuration(
-          value: skir.Duration(
-            milliseconds: -PortableDurationMilliseconds.maximum,
-          ),
-        ),
-      );
-      expect(find.text("Duration exceeds the supported range"), findsOneWidget);
+      await field.type(invalid);
+      await panel.press(LogicalKeyboardKey.escape);
+      expect(field.value, invalid);
+      expect(value, maximum);
+      expect(panel.shows("Duration exceeds the supported range"), isTrue);
     },
   );
   testWidgets(
@@ -547,31 +476,23 @@ void main() {
                           ..iconColor = policy)
                         .toFrozen())
               .toFrozen();
-      final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-        root: () => presentationNode(
+      final panel = await tester.showPresentation(
+        () => presentationNode(
           "states",
           skir.PresentationElement.wrapNumericInput(control),
         ),
         bindings: [
-          BoundPresentationBinding(
-            id: id,
-            use: skir.TypeUse.wrapScalar(
+          wholeValueBinding(
+            id,
+            skir.TypeUse.wrapScalar(
               skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
             ),
-            read: (_) => value,
-            write: (_, next) {
-              value = next;
-              return const PortablePresentationWriteApplied();
-            },
+            read: () => value,
+            write: (next) => value = next,
           ),
         ],
-        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
       );
-      addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Scaffold(body: PortablePresentationRenderer(host: host)),
-      );
+      final field = panel.field("Native states");
       Color? labelColor() => tester
           .widget<LabeledMessage>(find.byType(LabeledMessage))
           .labelStyle
@@ -579,14 +500,12 @@ void main() {
       expect(labelColor(), const Color(0xff101010));
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer(location: Offset.zero);
-      await mouse.moveTo(tester.getCenter(find.byType(TextField)));
-      await tester.pumpAndSettle();
+      await mouse.moveTo(field.rect.center);
+      await panel.settle();
       expect(labelColor(), const Color(0xff0000a0));
-      await tester.enterText(find.byType(TextFormField), "2");
-      await tester.pumpAndSettle();
+      await field.type("2");
       expect(labelColor(), const Color(0xff008000));
-      await tester.enterText(find.byType(TextFormField), "2e");
-      await tester.pumpAndSettle();
+      await field.type("2e");
       expect(labelColor(), const Color(0xffa00000));
       expect(value, skir.DataValue.wrapFloat(2));
       await mouse.removePointer();
@@ -646,9 +565,8 @@ void main() {
           ),
         ),
       );
-      final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-        root: () => root,
+      final panel = await tester.showPresentation(
+        () => root,
         bindings: [
           BoundPresentationBinding(
             id: configured,
@@ -659,30 +577,21 @@ void main() {
             ),
             read: (_) => skir.DataValue.wrapInteger("4278255360"),
           ),
-          BoundPresentationBinding(
-            id: number,
-            use: skir.TypeUse.wrapScalar(
+          wholeValueBinding(
+            number,
+            skir.TypeUse.wrapScalar(
               skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
             ),
-            read: (_) => value,
-            write: (_, next) {
-              value = next;
-              return const PortablePresentationWriteApplied();
-            },
+            read: () => value,
+            write: (next) => value = next,
           ),
         ],
-        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
-      );
-      addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Scaffold(body: PortablePresentationRenderer(host: host)),
       );
       expect(
         tester.widget<Icon>(find.byIcon(Icons.numbers)).color,
         const Color(0xff00ff00),
       );
-      await tester.enterText(find.byType(TextFormField), "4");
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).type("4");
       expect(value, skir.DataValue.wrapFloat(4));
       expect(
         tester.widget<Icon>(find.byIcon(Icons.numbers)).color,

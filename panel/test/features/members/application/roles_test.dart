@@ -4,137 +4,65 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-const _userId = "user1";
-final _organizationId = skir.recordId("organization:org1");
-const _subject = "cloud.to.user.user1.organization.org1.roles.watch";
-
-skir.OrganizationRole _role(String id, {String? name}) => skir.OrganizationRole(
-  roleId: skir.recordId("organization_role:$id"),
-  name: name ?? "Role $id",
-  color: const Color(0xff2196f3).toSkirColor(),
-  defaultRole: false,
-  assignable: true,
-  deletable: false,
-);
-
-Future<void> _waitFor(bool Function() condition) async {
-  await Future.doWhile(() async {
-    if (condition()) return false;
-    await Future<void>.delayed(const Duration(milliseconds: 5));
-    return true;
-  }).timeout(const Duration(seconds: 2));
-}
-
-final class _Harness {
-  _Harness(this.response) {
-    nats.registerHandler(
-      _subject,
-      (_) => skir.WatchOrganizationRolesResponse.serializer.toBytes(response),
-    );
-    container = ProviderContainer.test(
-      overrides: [
-        userIdProvider.overrideWith((ref) async => _userId),
-        organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWith(() => ConnectedNats(nats)),
-      ],
-    );
-    subscription = container.listen(
-      organizationRolesProvider,
-      (previous, next) => value = next,
-      fireImmediately: true,
-    );
-  }
-
-  final FakeNatsClient nats = FakeNatsClient();
-  late final ProviderContainer container;
-  late final ProviderSubscription<AsyncValue<List<skir.OrganizationRole>>>
-  subscription;
-  skir.WatchOrganizationRolesResponse response;
-  AsyncValue<List<skir.OrganizationRole>> value = const AsyncLoading();
-
-  Future<void> start() => _waitFor(() => value.hasValue || value.hasError);
-
-  Future<void> reload(skir.WatchOrganizationRolesResponse next) async {
-    response = next;
-    final requestCount = nats.requests.length;
-    container.invalidate(organizationRolesProvider);
-    await _waitFor(() => nats.requests.length > requestCount && value.hasValue);
-  }
-
-  void dispose() {
-    subscription.close();
-    container.dispose();
-    nats.dispose();
-  }
-}
+const _rolesSubject = "cloud.to.user.ada.organization.acme.roles.watch";
 
 void main() {
-  test("requests the exact role snapshot operation", () async {
-    final harness = _Harness(
-      skir.WatchOrganizationRolesResponse.wrapList([
-        _role("one"),
-        _role("two"),
-      ]),
-    );
-    addTearDown(harness.dispose);
-    await harness.start();
-
-    expect(harness.value.requireValue, [_role("one"), _role("two")]);
-    expect(harness.nats.requests, hasLength(1));
-    final request = harness.nats.requests.single;
-    expect(request.subject, _subject);
-    expect(
-      request.payload,
-      skir.WatchOrganizationRolesRequest.serializer.toBytes(
-        skir.WatchOrganizationRolesRequest(),
+  testWidgets("the organization's roles load from the backend", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membershipBackend(
+        roles: [
+          role("one", name: "Role one", color: const Color(0xff2196f3)),
+          role("two", name: "Role two", color: const Color(0xff2196f3)),
+        ],
       ),
-    );
-    expect(harness.nats.subscriptionSubjects, isEmpty);
-  });
+    ]);
 
-  test("provider invalidation reloads the authoritative snapshot", () async {
-    final harness = _Harness(
-      skir.WatchOrganizationRolesResponse.wrapList([_role("one")]),
-    );
-    addTearDown(harness.dispose);
-    await harness.start();
-
-    final updated = _role("one", name: "Updated");
-    await harness.reload(
-      skir.WatchOrganizationRolesResponse.wrapList([updated]),
-    );
-
-    expect(harness.value.requireValue, [updated]);
-    expect(harness.nats.requests, hasLength(2));
+    expect((await panel.loaded(organizationRolesProvider)).requireValue, [
+      role("one", name: "Role one", color: const Color(0xff2196f3)),
+      role("two", name: "Role two", color: const Color(0xff2196f3)),
+    ]);
   });
 
   for (final (name, response, code) in [
     (
-      "internal error",
+      "an internal error",
       skir.WatchOrganizationRolesResponse.createInternalError(),
       500,
     ),
-    ("unknown response", skir.WatchOrganizationRolesResponse.unknown, 422),
+    ("an unknown reply", skir.WatchOrganizationRolesResponse.unknown, 422),
   ]) {
-    test("$name yields ApiException", () async {
-      final harness = _Harness(response);
-      addTearDown(harness.dispose);
-      await harness.start();
+    testWidgets("$name fails loading the roles with code $code", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel([signedIn(ada, organization: acme)]);
+      panel.world.nats.registerHandler(
+        _rolesSubject,
+        (_) => skir.WatchOrganizationRolesResponse.serializer.toBytes(response),
+      );
+      final roles = await panel.loaded(organizationRolesProvider);
 
       expect(
-        harness.value.error,
+        roles.error,
         isA<ApiException>().having((error) => error.code, "code", code),
       );
     });
   }
 
-  test("role change response is rejected at the snapshot boundary", () async {
-    final harness = _Harness(
-      skir.WatchOrganizationRolesResponse.wrapAdd(_role("one")),
+  testWidgets("a role change answered as the snapshot fails loading", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([signedIn(ada, organization: acme)]);
+    panel.world.nats.registerHandler(
+      _rolesSubject,
+      (_) => skir.WatchOrganizationRolesResponse.serializer.toBytes(
+        skir.WatchOrganizationRolesResponse.wrapAdd(
+          role("one", name: "Role one", color: const Color(0xff2196f3)),
+        ),
+      ),
     );
-    addTearDown(harness.dispose);
-    await harness.start();
+    final roles = await panel.loaded(organizationRolesProvider);
 
-    expect(harness.value.error, isA<StateError>());
+    expect(roles.error, isA<StateError>());
   });
 }

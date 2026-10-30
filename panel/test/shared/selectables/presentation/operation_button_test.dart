@@ -3,23 +3,22 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  const foregroundColor = Color(0xFF123456);
+  const confirmation = "Delete 1 item(s)?";
 
   testWidgets("delete operation denies invocation when mutation is disabled", (
     tester,
   ) async {
     var deletions = 0;
-    final identifier = _DeleteIdentifier(() => deletions++);
+    final identifier = DeletableSelectableIdentifier(() => deletions++);
     final operation = DeleteOperation(canMutate: () => false);
-    final container = await _pumpDeleteOperation(tester, operation, identifier);
+    final panel = await tester.pumpDeletion(operation, identifier);
 
-    expect(operation.canExecuteOn([_DeleteSelectable(identifier)]), isFalse);
-    await tester.tap(find.text("Invoke deletion"));
-    await tester.pumpAndSettle();
+    expect(operation.canExecuteOn([DeletableSelectable(identifier)]), isFalse);
+    await panel.tapOn(find.text("Invoke deletion"));
 
-    expect(find.byType(ConfirmationDialogue), findsNothing);
+    expect(panel.dialog.showing(confirmation), isFalse);
     expect(deletions, 0);
-    expect(container.read(selectionProvider), [identifier]);
+    expect(panel.container.read(selectionProvider), [identifier]);
   });
 
   testWidgets("delete operation rechecks access after confirmation", (
@@ -27,202 +26,93 @@ void main() {
   ) async {
     var allowed = true;
     var deletions = 0;
-    final identifier = _DeleteIdentifier(() => deletions++);
+    final identifier = DeletableSelectableIdentifier(() => deletions++);
     final operation = DeleteOperation(canMutate: () => allowed);
-    final container = await _pumpDeleteOperation(tester, operation, identifier);
+    final panel = await tester.pumpDeletion(operation, identifier);
 
-    await tester.tap(find.text("Invoke deletion"));
-    await tester.pumpAndSettle();
-    expect(find.byType(ConfirmationDialogue), findsOneWidget);
+    await panel.tapOn(find.text("Invoke deletion"));
+    expect(panel.dialog.showing(confirmation), isTrue);
     allowed = false;
-    await tester.tap(find.widgetWithText(FilledButton, "Delete"));
-    await tester.pumpAndSettle();
+    await panel.dialog.choose("Delete", message: confirmation);
 
     expect(deletions, 0);
-    expect(container.read(selectionProvider), [identifier]);
-    expect(find.byType(ConfirmationDialogue), findsNothing);
+    expect(panel.container.read(selectionProvider), [identifier]);
+    expect(panel.dialog.showing(confirmation), isFalse);
   });
 
   testWidgets("ordinary delete operation deletes and clears its selection", (
     tester,
   ) async {
     var deletions = 0;
-    final identifier = _DeleteIdentifier(() => deletions++);
+    final identifier = DeletableSelectableIdentifier(() => deletions++);
     const operation = DeleteOperation();
-    final container = await _pumpDeleteOperation(tester, operation, identifier);
+    final panel = await tester.pumpDeletion(operation, identifier);
 
-    expect(operation.canExecuteOn([_DeleteSelectable(identifier)]), isTrue);
-    await tester.tap(find.text("Invoke deletion"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, "Delete"));
-    await tester.pumpAndSettle();
+    expect(operation.canExecuteOn([DeletableSelectable(identifier)]), isTrue);
+    await panel.tapOn(find.text("Invoke deletion"));
+    await panel.dialog.choose("Delete", message: confirmation);
 
     expect(deletions, 1);
-    expect(container.read(selectionProvider), isEmpty);
+    expect(panel.container.read(selectionProvider), isEmpty);
   });
 
-  testWidgets("filled button shows the operation shortcut", (tester) async {
-    await tester.pumpTestApp(
-      child: Center(
-        child: OperationButton.filledIcon(
-          operation: const _TestOperation(),
-          icon: const Icon(Icons.bolt),
-          label: const Text("Run"),
-          onPressed: () {},
-          style: const ButtonStyle(
-            foregroundColor: WidgetStatePropertyAll(foregroundColor),
-          ),
-        ),
-      ),
-    );
+  final variants = {
+    "filled": OperationButton.filledIcon,
+    "outlined": OperationButton.outlinedIcon,
+  };
+  for (final MapEntry(key: variant, value: button) in variants.entries) {
+    for (final available in [true, false]) {
+      testWidgets(
+        "$variant button ${available ? "shows" : "omits"} the operation "
+        "shortcut when it is ${available ? "" : "un"}available",
+        (tester) async {
+          final panel = await tester.pumpPanel(
+            const [],
+            at: PanelLocation.component(
+              button(
+                operation: ShortcutTestOperation(
+                  activators: [
+                    if (available)
+                      const SingleActivator(LogicalKeyboardKey.keyR),
+                  ],
+                ),
+                icon: const Icon(Icons.bolt),
+                label: const Text("Run"),
+                onPressed: () {},
+              ),
+            ),
+          );
 
-    expect(find.byType(FilledButton), findsOneWidget);
-    expect(find.byType(OutlinedButton), findsNothing);
-    expect(_shortcutForegroundColor(tester), foregroundColor);
-  });
-
-  testWidgets("outlined button shows the operation shortcut", (tester) async {
-    await tester.pumpTestApp(
-      child: Center(
-        child: OperationButton.outlinedIcon(
-          operation: const _TestOperation(),
-          icon: const Icon(Icons.bolt),
-          label: const Text("Run"),
-          onPressed: () {},
-          style: const ButtonStyle(
-            foregroundColor: WidgetStatePropertyAll(foregroundColor),
-          ),
-        ),
-      ),
-    );
-
-    expect(find.byType(OutlinedButton), findsOneWidget);
-    expect(find.byType(FilledButton), findsNothing);
-    expect(_shortcutForegroundColor(tester), foregroundColor);
-  });
-
-  testWidgets("button omits unavailable shortcuts", (tester) async {
-    await tester.pumpTestApp(
-      child: Center(
-        child: OperationButton.filledIcon(
-          operation: const _TestOperation(activators: []),
-          icon: const Icon(Icons.bolt),
-          label: const Text("Run"),
-          onPressed: () {},
-        ),
-      ),
-    );
-
-    expect(find.byType(ShortcutDisplay), findsNothing);
-  });
+          expect(panel.shows("Run"), isTrue);
+          expect(panel.shows("R"), available);
+        },
+      );
+    }
+  }
 
   testWidgets("narrow button keeps its shortcut without overflowing", (
     tester,
   ) async {
-    final semantics = tester.ensureSemantics();
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 150,
-        child: OperationButton.filledIcon(
-          operation: const _TestOperation(),
-          icon: const Icon(Icons.bolt),
-          label: const Text("Run this operation with a long label"),
-          onPressed: () {},
+    const label = "Run this operation with a long label";
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        SizedBox(
+          width: 150,
+          child: OperationButton.filledIcon(
+            operation: const ShortcutTestOperation(
+              activators: [SingleActivator(LogicalKeyboardKey.keyR)],
+            ),
+            icon: const Icon(Icons.bolt),
+            label: const Text(label),
+            onPressed: () {},
+          ),
         ),
       ),
     );
 
     expect(tester.takeException(), isNull);
-    expect(find.byType(ShortcutDisplay), findsOneWidget);
-    expect(find.text("Run this operation with a long label"), findsOneWidget);
-    expect(
-      find.bySemanticsLabel(RegExp("^Run this operation with a long label")),
-      findsOneWidget,
-    );
-    semantics.dispose();
+    expect(panel.shows("R"), isTrue);
+    expect(find.bySemanticsLabel(RegExp("^$label")), findsOneWidget);
   });
-}
-
-Future<ProviderContainer> _pumpDeleteOperation(
-  WidgetTester tester,
-  DeleteOperation operation,
-  _DeleteIdentifier identifier,
-) async {
-  await tester.pumpTestApp(
-    child: Consumer(
-      builder: (context, ref, _) => Center(
-        child: TextButton(
-          onPressed: () => operation.executeOn(ref),
-          child: const Text("Invoke deletion"),
-        ),
-      ),
-    ),
-  );
-  final container = tester.container(of: find.text("Invoke deletion"));
-  container.read(selectionProvider.notifier).selectAll([identifier]);
-  await tester.pumpAndSettle();
-  return container;
-}
-
-class _DeleteIdentifier extends SelectableIdentifier {
-  const _DeleteIdentifier(this.onDelete);
-
-  final VoidCallback onDelete;
-
-  @override
-  String get id => "deletable";
-
-  @override
-  AsyncValue<Selectable> create(Ref ref) => AsyncData(_DeleteSelectable(this));
-}
-
-class _DeleteSelectable extends Selectable<_DeleteIdentifier> {
-  const _DeleteSelectable(this.id);
-
-  @override
-  final _DeleteIdentifier id;
-
-  @override
-  String get name => id.id;
-
-  @override
-  List<SelectionCapability> get capabilities => [
-    DeleteSelectionCapability(onDelete: id.onDelete),
-  ];
-}
-
-Color? _shortcutForegroundColor(WidgetTester tester) {
-  final display = tester.widget<ShortcutDisplay>(find.byType(ShortcutDisplay));
-  return switch (display.style) {
-    OutlineKeyStyle(:final foregroundColor) => foregroundColor,
-    SolidKeyStyle() => null,
-  };
-}
-
-class _TestOperation extends ActivatorShortcutOperation {
-  const _TestOperation({
-    this.activators = const [SingleActivator(LogicalKeyboardKey.keyR)],
-  });
-
-  @override
-  final List<ShortcutActivator> activators;
-
-  @override
-  String get name => "Run";
-
-  @override
-  String get description => "Run the test operation";
-
-  @override
-  bool canExecuteOn(List<Selectable> selection) => true;
-
-  @override
-  FutureOr<void> executeOn(WidgetRef ref) {}
-
-  @override
-  Widget inspectorButton(List<Selectable> selection) =>
-      throw UnimplementedError();
-
-  @override
-  MenuItem menuItem(WidgetRef ref) => throw UnimplementedError();
 }

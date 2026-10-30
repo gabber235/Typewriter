@@ -108,11 +108,182 @@ skir.PresentationNode presentationColumn(
   ),
 );
 
-/// A text element showing [value] with default styling.
-skir.PresentationNode presentationText(String id, skir.ExpressionNode value) =>
-    presentationNode(
-      id,
-      skir.PresentationElement.wrapText(
-        (skir.TextContent.mutable()..value = value).toFrozen(),
+/// A text element showing [value], sized by [sizing] and laid out as
+/// [paragraph] when given, with default styling otherwise.
+skir.PresentationNode presentationText(
+  String id,
+  skir.ExpressionNode value, {
+  skir.TextSizing? sizing,
+  skir.TextParagraph? paragraph,
+}) {
+  final content = skir.TextContent.mutable()
+    ..value = value
+    ..sizing = sizing;
+  if (paragraph != null) content.paragraph = paragraph;
+  return presentationNode(
+    id,
+    skir.PresentationElement.wrapText(content.toFrozen()),
+  );
+}
+
+/// A plain text input over [binding], labeled [label] when given.
+skir.PresentationElement textInputElement(
+  skir.BindingRef binding, {
+  String? label,
+}) => skir.PresentationElement.createTextInput(
+  control:
+      (skir.BoundControl.mutable()
+            ..binding = binding
+            ..label = label == null ? null : textLiteral(label))
+          .toFrozen(),
+  appearance: null,
+  content: null,
+  entry: null,
+  mappings: null,
+  options: skir.TextEditingOptions.defaultInstance,
+);
+
+/// [list], a list input node, with the header of its item presentation
+/// replaced by what [transform] makes of it.
+skir.PresentationNode withListItemHeader(
+  skir.PresentationNode list,
+  skir.PresentationHeader Function(skir.PresentationHeader header) transform,
+) {
+  final control =
+      (list.element! as skir.PresentationElement_listInputWrapper).value;
+  final item = control.itemPresentation!;
+  return (list.toMutable()
+        ..element = skir.PresentationElement.wrapListInput(
+          (control.toMutable()
+                ..itemPresentation =
+                    (item.toMutable()..header = transform(item.header!))
+                        .toFrozen())
+              .toFrozen(),
+        ))
+      .toFrozen();
+}
+
+/// A neutral header button [label] with a square icon at the end of the
+/// header, which runs [action].
+skir.HeaderItem headerButton(
+  String id,
+  String label,
+  skir.EditorAction action,
+) => skir.HeaderItem.createButton(
+  itemId: skir.HeaderItemId(namespace: "fixture", name: id),
+  icon: textLiteral(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> '
+    '<path d="M4 4h16v16H4z"/></svg>',
+  ),
+  label: textLiteral(label),
+  tooltip: null,
+  action: action,
+  priority: null,
+  visibleIf: null,
+  enabledIf: null,
+  tone: skir.HeaderActionTone.neutral,
+  confirmation: null,
+  placement: skir.HeaderActionPlacement.end,
+);
+
+/// A presentation number fixed at [value].
+skir.PresentationNumber presentationNumber(double value) =>
+    skir.PresentationNumber.wrapValue(numberLiteral(value));
+
+/// A presentation number that is [value] while [match] holds and [fallback]
+/// otherwise.
+skir.PresentationNumber stateNumber(
+  double fallback, {
+  required skir.PresentationStateMatch match,
+  required double value,
+}) => skir.PresentationNumber.createStates(
+  rules: [
+    skir.PresentationStateNumberRule(match: match, value: numberLiteral(value)),
+  ],
+  fallback: numberLiteral(fallback),
+);
+
+/// A presentation color fixed at [color].
+skir.PresentationColor presentationColor(Color color) =>
+    skir.PresentationColor.wrapValue(color.portableExpression);
+
+/// A state rule that paints [color] while every [required] interaction state
+/// holds and no [excluded] one does.
+skir.PresentationStateColorRule stateColorRule(
+  List<skir.PresentationInteractionState> required,
+  Color color, {
+  List<skir.PresentationInteractionState> excluded = const [],
+}) => skir.PresentationStateColorRule(
+  match: skir.PresentationStateMatch(required_: required, excluded: excluded),
+  color: presentationColor(color),
+);
+
+/// The definition of the type [name], revision [revision], in [namespace].
+skir.TypeDefinitionId typeDefinition(
+  String name, {
+  String namespace = "test",
+  int revision = 1,
+}) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: namespace, name: name),
+  revision: revision,
+);
+
+/// A use of the type [name] in [namespace] without type arguments.
+skir.NamedTypeUse namedTypeUse(String name, {String namespace = "test"}) =>
+    skir.NamedTypeUse(
+      definition: typeDefinition(name, namespace: namespace),
+      arguments: const [],
+    );
+
+/// A template naming the type [name] in [namespace] without type arguments.
+skir.TypeTemplate namedTypeTemplate(String name, {String namespace = "test"}) =>
+    skir.TypeTemplate.createNamed(
+      definition: typeDefinition(name, namespace: namespace),
+      arguments: const [],
+    );
+
+/// A control over [reference], labeled [label] when given.
+skir.BoundControl presentationControl(
+  skir.BindingRef reference, {
+  String? label,
+}) => skir.BoundControl(
+  binding: reference,
+  label: label == null ? null : textLiteral(label),
+  description: null,
+  prefix: null,
+  semanticLabel: null,
+);
+
+/// A slot [slot] a caller fills, as node [id].
+skir.PresentationNode presentationSlot(String id, String slot) =>
+    presentationNode(id, skir.PresentationElement.createSlot(slotId: slot));
+
+/// A sequence of [item] laid out as an unspaced column aligned to the start.
+skir.SequencePresentation columnSequence(skir.PresentationNode item) =>
+    skir.SequencePresentation(
+      item: item,
+      empty: null,
+      separator: null,
+      layout: skir.SequenceLayout.wrapChildren(
+        skir.ChildrenLayout.createColumn(
+          clipOverflow: false,
+          spacing: 0,
+          mainAxisAlignment: skir.MainAxisAlignment.start,
+          crossAxisAlignment: skir.CrossAxisAlignment.start,
+        ),
       ),
     );
+
+/// Supplying binding values to a presentation scope.
+extension SuppliedValues on PortablePresentationScope {
+  /// This scope with [values] bound as a caller supplies them.
+  PortablePresentationScope withValues(
+    Map<skir.ExpressionBindingId, skir.DataValue> values,
+  ) => copyWith(
+    bindings: {
+      ...bindings,
+      for (final MapEntry(:key, :value) in values.entries)
+        key: PortableExpressionBinding(value: value),
+    },
+  );
+}

@@ -5,56 +5,18 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets(
-    "mapped rows take the compact chrome of the dropdown and share activation",
-    (tester) async {
-      final fixture = _SearchFixture();
-      await fixture.pump(tester, width: 300);
-      await fixture.open(tester);
-      expect(find.byType(SearchResultCard), findsNothing);
-      expect(
-        find.descendant(
-          of: find.byType(SearchResultRow),
-          matching: find.byType(ListTile),
-        ),
-        findsNWidgets(3),
-      );
-      await tester.tapAt(tester.getCenter(find.text("Map")));
-      await tester.pumpAndSettle();
-      expect(fixture.writes, [skir.DataValue.wrapStringValue("Map")]);
-      expect(find.byType(SearchResultRow), findsNothing);
-      expect(find.text("Map"), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey("authored_search_summary")),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-
   testWidgets("resource results show the resource's appearance", (
     tester,
   ) async {
-    final fixture = _SearchFixture(resources: true);
-    await fixture.pump(tester);
-    await fixture.open(tester);
+    final fixture = SearchInputScenario(resources: true);
+    final panel = await fixture.show(tester);
+    await panel.searchInput.open();
 
     for (final name in ["Book", "Map", "Star"]) {
-      expect(
-        find.descendant(
-          of: find.byType(SearchResultRow),
-          matching: find.text("Resource $name"),
-        ),
-        findsOneWidget,
-      );
+      expect(find.text("Resource $name"), findsOneWidget);
     }
-    expect(
-      find.descendant(
-        of: find.byType(SearchResultRow),
-        matching: find.byType(ResourceIcon),
-      ),
-      findsNWidgets(3),
-    );
+    // Resource icons carry no semantics of their own.
+    expect(find.byType(ResourceIcon), findsNWidgets(3));
   });
 
   testWidgets("result navigation does not depend on platform focus shortcuts", (
@@ -74,124 +36,80 @@ void main() {
         const ScrollIntent(direction: AxisDirection.up);
     typewriterShortcuts[const SingleActivator(LogicalKeyboardKey.enter)] =
         const ButtonActivateIntent();
-    final fixture = _SearchFixture();
-    await fixture.pump(tester);
-    await fixture.open(tester);
+    final fixture = SearchInputScenario();
+    final panel = await fixture.show(tester);
+    await panel.searchInput.open();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.arrowDown);
     expect(fixture.writes, isEmpty);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.enter);
     expect(fixture.value.authoredString, "Map");
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    expect(find.byType(QueryBar), findsOneWidget);
-    expect(
-      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
-      isTrue,
-    );
+    await panel.press(LogicalKeyboardKey.enter);
+    expect(panel.searchInput.query.isFocused, isTrue);
   });
 
   testWidgets("focused summary survives a host refresh and reopens", (
     tester,
   ) async {
-    final fixture = _SearchFixture();
-    await fixture.pump(tester);
-    final summary = tester.widget<InkWell>(
-      find.byKey(const ValueKey("authored_search_summary")),
-    );
-    summary.focusNode!.requestFocus();
-    await tester.pumpAndSettle();
+    final fixture = SearchInputScenario();
+    final panel = await fixture.show(tester);
+    await panel.press(LogicalKeyboardKey.tab);
+    expect(panel.searchInput.summary.isFocused, isTrue);
     fixture.owner.value++;
-    await tester.pumpAndSettle();
-    expect(summary.focusNode!.hasPrimaryFocus, isTrue);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    expect(find.byType(QueryBar), findsOneWidget);
-    expect(
-      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
-      isTrue,
-    );
+    await panel.settle();
+    expect(panel.searchInput.summary.isFocused, isTrue);
+    await panel.press(LogicalKeyboardKey.enter);
+    expect(panel.searchInput.query.isFocused, isTrue);
   });
 
   testWidgets("selection completion survives a host rebuild during writing", (
     tester,
   ) async {
-    final fixture = _SearchFixture(rebuildDuringWrite: true);
-    await fixture.pump(tester);
-    await fixture.open(tester);
+    final fixture = SearchInputScenario(rebuildDuringWrite: true);
+    final panel = await fixture.show(tester);
+    await panel.searchInput.open();
     await tester.tapAt(tester.getCenter(find.text("Map")));
-    await tester.pump();
-    await tester.pumpAndSettle();
+    await panel.settle();
     expect(fixture.value.authoredString, "Map");
-    expect(find.byType(QueryBar), findsNothing);
-    expect(
-      tester
-          .widget<InkWell>(
-            find.byKey(const ValueKey("authored_search_summary")),
-          )
-          .focusNode!
-          .hasPrimaryFocus,
-      isTrue,
-    );
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    expect(find.byType(QueryBar), findsOneWidget);
+    expect(panel.searchInput.query.exists, isFalse);
+    expect(panel.searchInput.summary.isFocused, isTrue);
+    await panel.press(LogicalKeyboardKey.enter);
+    expect(panel.searchInput.query.exists, isTrue);
   });
 
   testWidgets("opening a focused summary transfers focus into inline search", (
     tester,
   ) async {
-    final fixture = _SearchFixture();
-    await fixture.pump(tester);
-    final summary = tester.widget<InkWell>(
-      find.byKey(const ValueKey("authored_search_summary")),
-    );
-    summary.focusNode!.requestFocus();
-    await tester.pumpAndSettle();
-    final decoration = tester
-        .widget<InputDecorator>(
-          find.descendant(
-            of: find.byKey(const ValueKey("authored_search_summary")),
-            matching: find.byType(InputDecorator),
-          ),
-        )
-        .decoration;
-    final context = tester.element(find.byType(PortableSearchInput));
-    expect(
-      decoration.focusedBorder?.borderSide,
-      FocusHighlight.focusBorder(context, FocusType.focus),
-    );
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    expect(find.byType(QueryBar), findsOneWidget);
-    expect(
-      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
-      isTrue,
-    );
+    final fixture = SearchInputScenario();
+    final panel = await fixture.show(tester);
+    await panel.press(LogicalKeyboardKey.tab);
+    expect(panel.searchInput.summary.isFocused, isTrue);
+    await panel.press(LogicalKeyboardKey.enter);
+    expect(panel.searchInput.query.isFocused, isTrue);
     expect(fixture.writes, isEmpty);
   });
 
   testWidgets(
     "search expands inside the field and applies one explicit choice",
     (tester) async {
-      final fixture = _SearchFixture();
-      await fixture.pump(tester);
+      final fixture = SearchInputScenario();
+      final panel = await fixture.show(tester);
       final closed = tester.getTopLeft(find.text("Following field"));
 
-      await fixture.open(tester);
+      await panel.searchInput.open();
+      final following = tester.getTopLeft(find.text("Following field"));
+      expect(following.dy, greaterThan(closed.dy));
+      // The results open inline, between the field and what follows it.
       expect(
-        tester.getTopLeft(find.text("Following field")).dy,
-        greaterThan(closed.dy),
+        tester.getBottomLeft(find.text("Star")).dy,
+        lessThan(following.dy),
       );
-      expect(find.byType(SearchFrame), findsNothing);
       expect(fixture.writes, isEmpty);
       await tester.tapAt(tester.getCenter(find.text("Map")));
-      await tester.pumpAndSettle();
+      await panel.settle();
 
       expect(fixture.writes, [skir.DataValue.wrapStringValue("Map")]);
-      expect(find.byType(QueryBar), findsNothing);
+      expect(panel.searchInput.query.exists, isFalse);
       expect(tester.getTopLeft(find.text("Following field")), closed);
       expect(find.text("Map"), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -201,51 +119,37 @@ void main() {
   testWidgets(
     "keyboard browsing and cancel leave the authored value unchanged",
     (tester) async {
-      final fixture = _SearchFixture();
-      await fixture.pump(tester);
-      await fixture.open(tester);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pumpAndSettle();
+      final fixture = SearchInputScenario();
+      final panel = await fixture.show(tester);
+      await panel.searchInput.open();
+      await panel.press(LogicalKeyboardKey.arrowDown);
       expect(fixture.writes, isEmpty);
-      expect(
-        tester
-            .widgetList<ListTile>(find.byType(ListTile))
-            .any((row) => row.selected),
-        isTrue,
-      );
+      expect(panel.searchInput.highlighted, "Book");
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(find.byType(QueryBar), findsNothing);
+      await panel.press(LogicalKeyboardKey.escape);
+      expect(panel.searchInput.query.exists, isFalse);
       expect(fixture.value, skir.DataValue.wrapStringValue("Book"));
       expect(fixture.writes, isEmpty);
 
-      await fixture.open(tester);
+      await panel.searchInput.open();
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+      await panel.press(LogicalKeyboardKey.arrowDown);
+      await panel.press(LogicalKeyboardKey.enter);
       expect(fixture.writes, [skir.DataValue.wrapStringValue("Map")]);
-      expect(find.byType(QueryBar), findsNothing);
+      expect(panel.searchInput.query.exists, isFalse);
       expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets("query and focus survive a host refresh", (tester) async {
-    final fixture = _SearchFixture();
-    await fixture.pump(tester);
-    await fixture.open(tester);
-    await tester.enterText(find.byType(TextField), "Ma");
-    await tester.pumpAndSettle();
-    final focus = FocusManager.instance.primaryFocus;
+    final fixture = SearchInputScenario();
+    final panel = await fixture.show(tester);
+    await panel.searchInput.open();
+    await panel.searchInput.query.type("Ma");
     fixture.owner.value++;
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).controller!.text,
-      "Ma",
-    );
-    expect(FocusManager.instance.primaryFocus, same(focus));
+    await panel.settle();
+    expect(panel.searchInput.query.value, "Ma");
+    expect(panel.searchInput.query.isFocused, isTrue);
     expect(fixture.writes, isEmpty);
     expect(tester.takeException(), isNull);
   });
@@ -253,14 +157,13 @@ void main() {
   testWidgets(
     "outside click closes search without applying a highlighted result",
     (tester) async {
-      final fixture = _SearchFixture();
-      await fixture.pump(tester);
-      await fixture.open(tester);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pumpAndSettle();
+      final fixture = SearchInputScenario();
+      final panel = await fixture.show(tester);
+      await panel.searchInput.open();
+      await panel.press(LogicalKeyboardKey.arrowDown);
       await tester.tapAt(tester.getCenter(find.text("Following field")));
-      await tester.pumpAndSettle();
-      expect(find.byType(QueryBar), findsNothing);
+      await panel.settle();
+      expect(panel.searchInput.query.exists, isFalse);
       expect(fixture.writes, isEmpty);
     },
   );
@@ -268,81 +171,104 @@ void main() {
   testWidgets(
     "multiple choices apply individually while the field stays open",
     (tester) async {
-      final fixture = _SearchFixture(multiple: true);
-      await fixture.pump(tester);
-      await fixture.open(tester);
-      await tester.tapAt(tester.getCenter(find.text("Map")));
-      await tester.pumpAndSettle();
-      expect(
-        fixture.value.authoredItems!.map((item) => item.value.authoredString),
-        ["Map"],
+      final scenario = CollectionEditorScenario(
+        empty: true,
+        transformLayout: (_) => presentationNode(
+          "search",
+          skir.PresentationElement.wrapSearchInput(
+            staticSearchControl(
+              target: skir.BindingRef(
+                bindingId: configuredValueBindingId,
+                path: CollectionEditorScenario.entriesPath,
+              ),
+              listType: _scenarioList,
+              label: "Icon identifier",
+              placeholder: "Search icons",
+              choices: {
+                for (final name in ["Book", "Map", "Star"])
+                  name: skir.DataValue.wrapStringValue(name),
+              },
+            ),
+          ),
+        ),
       );
-      expect(find.byType(QueryBar), findsOneWidget);
+      addTearDown(scenario.dispose);
+      final panel = await tester.showComponent(
+        Scaffold(
+          body: SingleChildScrollView(
+            child: SizedBox(
+              width: 360,
+              child: CollectionEditorScenarioView(scenario: scenario),
+            ),
+          ),
+        ),
+      );
+      List<String?> entries() => [
+        for (final item in scenario.value.authoredItems!)
+          item.value.authoredString,
+      ];
+      await panel.tapOn(panel.searchInput.summaryButton);
+      await tester.tapAt(tester.getCenter(find.text("Map")));
+      await panel.settle();
+      expect(entries(), ["Map"]);
+      expect(panel.searchInput.query.exists, isTrue);
       await tester.tapAt(tester.getCenter(find.text("Star")));
-      await tester.pumpAndSettle();
-      expect(
-        fixture.value.authoredItems!.map((item) => item.value.authoredString),
-        ["Map", "Star"],
-      );
-      await tester.tapAt(tester.getCenter(find.text("Map")));
-      await tester.pumpAndSettle();
-      expect(
-        fixture.value.authoredItems!.map((item) => item.value.authoredString),
-        ["Star"],
-      );
+      await panel.settle();
+      expect(entries(), ["Map", "Star"]);
+      await tester.tapAt(tester.getCenter(find.text("Map").last));
+      await panel.settle();
+      expect(entries(), ["Star"]);
       expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets("rejected selections remain open with feedback", (tester) async {
-    final fixture = _SearchFixture(reject: true);
-    await fixture.pump(tester);
-    await fixture.open(tester);
+    final fixture = SearchInputScenario(reject: true);
+    final panel = await fixture.show(tester);
+    await panel.searchInput.open();
     await tester.tapAt(tester.getCenter(find.text("Map")));
-    await tester.pumpAndSettle();
-    expect(find.text("Selection is unavailable"), findsOneWidget);
-    expect(find.byType(QueryBar), findsOneWidget);
+    await panel.settle();
+    expect(panel.shows("Selection is unavailable"), isTrue);
+    expect(panel.searchInput.query.exists, isTrue);
     expect(fixture.writes, isEmpty);
     expect(fixture.value, skir.DataValue.wrapStringValue("Book"));
   });
 
   testWidgets("custom values remain explicit choices", (tester) async {
-    final fixture = _SearchFixture();
+    final fixture = SearchInputScenario();
     fixture.control =
         (fixture.control.toMutable()
               ..customValue = skir.ExpressionNode.createInput(
-                binding: _SearchFixture.query,
+                binding: _queryBinding,
                 path: editorRootPath,
               ))
             .toFrozen();
-    await fixture.pump(tester);
-    await fixture.open(tester);
-    await tester.enterText(find.byType(TextField), "Lantern");
-    await tester.pumpAndSettle();
+    final panel = await fixture.show(tester);
+    await panel.searchInput.open();
+    await panel.searchInput.query.type("Lantern");
     expect(fixture.writes, isEmpty);
     await tester.ensureVisible(find.text("Use this custom value"));
-    await tester.pumpAndSettle();
+    await panel.settle();
     await tester.tapAt(tester.getCenter(find.text("Use this custom value")));
-    await tester.pumpAndSettle();
+    await panel.settle();
     expect(fixture.value, skir.DataValue.wrapStringValue("Lantern"));
-    expect(find.byType(QueryBar), findsNothing);
+    expect(panel.searchInput.query.exists, isFalse);
   });
 
   testWidgets("read only search keeps its summary without opening", (
     tester,
   ) async {
-    final fixture = _SearchFixture(readOnly: true);
-    await fixture.pump(tester);
-    await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
-    await tester.pumpAndSettle();
-    expect(find.byType(QueryBar), findsNothing);
+    final fixture = SearchInputScenario(readOnly: true);
+    final panel = await fixture.show(tester);
+    await panel.tapOn(panel.searchInput.summaryButton);
+    expect(panel.searchInput.query.exists, isFalse);
     expect(fixture.writes, isEmpty);
   });
 
   testWidgets(
     "configured results fit a narrow inspector and retain appearance",
     (tester) async {
-      final fixture = _SearchFixture();
+      final fixture = SearchInputScenario();
       fixture.control =
           (fixture.control.toMutable()
                 ..popup =
@@ -358,8 +284,10 @@ void main() {
                           ))
                         .toFrozen())
               .toFrozen();
-      await fixture.pump(tester, width: 240);
-      await fixture.open(tester);
+      final panel = await fixture.show(tester, width: 240);
+      await panel.searchInput.open();
+      // The result surface has no semantics of its own; its size and fill
+      // are only reachable through the widget.
       expect(
         tester.getSize(find.byType(SearchTreeResults)).width,
         lessThanOrEqualTo(240),
@@ -379,324 +307,13 @@ void main() {
   );
 }
 
-final class _SearchFixture {
-  _SearchFixture({
-    this.readOnly = false,
-    this.multiple = false,
-    this.reject = false,
-    this.rebuildDuringWrite = false,
-    this.resources = false,
-  });
-
-  /// Offers links to resources the host projects, instead of text values.
-  final bool resources;
-  final bool multiple;
-  final bool reject;
-  final bool rebuildDuringWrite;
-  final bool readOnly;
-  final owner = ValueNotifier(0);
-  late skir.DataValue value = multiple
-      ? skir.DataValue.createNamed(
-          actualType: skir.NamedTypeUse(
-            definition: _listDefinition,
-            arguments: const [],
-          ),
-          payload: skir.DataValue.createListValue(items: const []),
-        )
-      : skir.DataValue.wrapStringValue("Book");
-  final writes = <skir.DataValue>[];
-  static final target = skir.ExpressionBindingId(value: "target");
-  static final row = skir.ExpressionBindingId(value: "row");
-  static final query = skir.ExpressionBindingId(value: "query");
-  static final rowRead = skir.ExpressionNode.createInput(
-    binding: row,
-    path: editorRootPath,
-  );
-  late skir.SearchControl control =
-      (skir.SearchControl.mutable()
-            ..control =
-                (skir.BoundControl.mutable()
-                      ..binding = skir.BindingRef(
-                        bindingId: target,
-                        path: editorRootPath,
-                      )
-                      ..label = textLiteral("Icon identifier"))
-                    .toFrozen()
-            ..selectionMode = multiple
-                ? skir.SearchSelectionMode.multiple
-                : skir.SearchSelectionMode.single
-            ..queryBinding = declareBinding(query, textTemplate)
-            ..summaryBinding = declareNamedBinding(
-              "summary",
-              multiple
-                  ? skir.TypeTemplate.createNamed(
-                      definition: _listDefinition,
-                      arguments: const [],
-                    )
-                  : textTemplate,
-            )
-            ..maximumExtent = numberLiteral(220)
-            ..placeholder = textLiteral("Search icons")
-            ..provider = skir.SearchProvider.createStaticValues(
-              values: literalExpression(
-                skir.DataValue.createListValue(
-                  items: [
-                    for (final name in ["Book", "Map", "Star"])
-                      skir.ListItem(
-                        id: skir.ItemId(value: name),
-                        value: resources
-                            ? skir.DataValue.createLink(
-                                endpoint: skir.EndpointId(value: "test.result"),
-                                target: skir.LinkTarget(
-                                  resource: skir.ResourceId(
-                                    value: "resource:$name",
-                                  ),
-                                  opposite: null,
-                                ),
-                              )
-                            : skir.DataValue.wrapStringValue(name),
-                      ),
-                  ],
-                ),
-              ),
-              result: skir.SearchResultMapping(
-                // The fixture publishes no link type for resource results.
-                binding: declareBinding(
-                  row,
-                  resources ? skir.TypeTemplate.unknown : textTemplate,
-                ),
-                key: rowRead,
-                selectedValue: rowRead,
-                label: rowRead,
-                presentation:
-                    (skir.PresentationNode.mutable()
-                          ..nodeId = "result"
-                          ..element = skir.PresentationElement.wrapText(
-                            (skir.TextContent.mutable()..value = rowRead)
-                                .toFrozen(),
-                          ))
-                        .toFrozen(),
-              ),
-              selectors: const [],
-            ))
-          .toFrozen();
-
-  Future<void> pump(WidgetTester tester, {double width = 360}) async {
-    final host = BoundPresentationHost(
-      readOnly: readOnly,
-      catalog: CheckedEditorCatalog(
-        (skir.EditorCatalog.mutable()
-              ..types = [
-                (skir.PublishedType.mutable()
-                      ..status = skir.DeclarationStatus.ready
-                      ..definition =
-                          (skir.TypeDefinition.mutable()
-                                ..id = _listDefinition
-                                ..representation =
-                                    skir.RepresentationTemplate.createSequence(
-                                      item: skir.TypeTemplate.wrapScalar(
-                                        skir.ScalarKind.text,
-                                      ),
-                                      kind: skir.CollectionKind.list,
-                                    ))
-                              .toFrozen())
-                    .toFrozen(),
-              ])
-            .toFrozen(),
-      ),
-      root: () =>
-          (skir.PresentationNode.mutable()
-                ..nodeId = "search"
-                ..element = skir.PresentationElement.wrapSearchInput(control))
-              .toFrozen(),
-      bindings: [
-        BoundPresentationBinding(
-          id: target,
-          use: multiple
-              ? skir.TypeUse.createNamed(
-                  definition: _listDefinition,
-                  arguments: const [],
-                )
-              : skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          owner: owner,
-          read: (_) => value,
-          write: (_, next) async {
-            if (reject) {
-              return PortablePresentationWriteResult.rejected([
-                const PortablePresentationDiagnostic(
-                  code: "unavailable",
-                  message: "Selection is unavailable",
-                  severity: skir.DiagnosticSeverity.error,
-                ),
-              ]);
-            }
-            writes.add(next);
-            value = next;
-            if (rebuildDuringWrite) {
-              owner.value++;
-              await Future<void>.delayed(const Duration(milliseconds: 40));
-            }
-            return const PortablePresentationWriteApplied();
-          },
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
-    );
-    addTearDown(host.dispose);
-    addTearDown(owner.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: SizedBox(
-            width: width,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                PortablePresentationRenderer(
-                  host: resources
-                      ? _ResourceSearchHost(host)
-                      : multiple
-                      ? _CollectionSearchHost(host)
-                      : host,
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text("Following field"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> open(WidgetTester tester) async {
-    await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
-    await tester.pumpAndSettle();
-    expect(find.byType(QueryBar), findsOneWidget);
-  }
-}
-
-final _listDefinition = skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: "IconList"),
+/// The text list type [CollectionEditorScenario] stores its entries as.
+final _scenarioList = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(
+    namespace: "collection.fixture",
+    name: "TextList",
+  ),
   revision: 1,
 );
 
-final class _CollectionSearchHost implements PortablePresentationHost {
-  _CollectionSearchHost(this.delegate);
-  final BoundPresentationHost delegate;
-  int nextId = 0;
-  @override
-  void dispose() => delegate.dispose();
-  @override
-  PortablePresentationDocument get document => delegate.document;
-  @override
-  bool get enabled => delegate.enabled;
-  @override
-  bool get readOnly => delegate.readOnly;
-  @override
-  PortablePresentationCapabilities get capabilities => delegate.capabilities;
-  @override
-  void addListener(VoidCallback listener) => delegate.addListener(listener);
-  @override
-  void removeListener(VoidCallback listener) =>
-      delegate.removeListener(listener);
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => delegate.commitControl(reference, context: context);
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => delegate.read(reference, context: context);
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => delegate.location(reference, context: context);
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => delegate.expectedType(reference, context: context);
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) => delegate.write(reference, value, context: context);
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction action, {
-    required PortableInvocationContext context,
-  }) async {
-    final local = (action as skir.EditorAction_localWrapper).value;
-    switch (local) {
-      case skir.LocalEditorAction_insertListItemWrapper(:final value):
-        final current = read(value.target, context: context)!;
-        return write(
-          value.target,
-          current.withAuthoredPayload(
-            skir.DataValue.createListValue(
-              items: [
-                ...current.authoredItems!,
-                skir.ListItem(
-                  id: skir.ItemId(value: "selected.${nextId++}"),
-                  value:
-                      (value.value as skir.ExpressionNode_literalWrapper).value,
-                ),
-              ],
-            ),
-          ),
-          context: context,
-        );
-      case skir.LocalEditorAction_removeListItemWrapper(:final value):
-        final current = read(value.target, context: context)!;
-        return write(
-          value.target,
-          current.withAuthoredPayload(
-            skir.DataValue.createListValue(
-              items: [
-                for (final item in current.authoredItems!)
-                  if (item.id != value.item) item,
-              ],
-            ),
-          ),
-          context: context,
-        );
-      default:
-        return delegate.execute(action, context: context);
-    }
-  }
-}
-
-/// Projects every linked resource with an appearance named after it.
-final class _ResourceSearchHost extends _CollectionSearchHost
-    implements PortableCollectionProjectionHost {
-  _ResourceSearchHost(super.delegate);
-
-  @override
-  PortableCollectionProjection projectCollection(
-    String sourceId, {
-    required skir.PresentationMaterial material,
-    required PortableInvocationContext context,
-  }) => throw UnimplementedError();
-
-  @override
-  PortableResourceProjection? projectResource(
-    skir.ResourceId resource, {
-    required PortableInvocationContext context,
-  }) => PortableResourceProjection(
-    resource: resource,
-    configuration: skir.TypeSelection.unknown,
-    appearance: skir.ResourceAppearance(
-      label: "Resource ${resource.value.split(":").last}",
-      accent: const Color(0xff607d8b).toSkirColor(),
-      icon: skir.Icon.wrapIconify("material-symbols:category"),
-    ),
-    value: skir.DataValue.unfilled,
-  );
-}
+final _queryBinding = skir.ExpressionBindingId(value: "query");

@@ -438,16 +438,6 @@ class Graph extends HookConsumerWidget {
                                     return null;
                                   },
                                 ),
-                            GraphCenterFocusedIntent:
-                                CallbackAction<GraphCenterFocusedIntent>(
-                                  onInvoke: (_) {
-                                    _centerFocusedChild(
-                                      controller: viewportController,
-                                      viewerKey: viewerKey,
-                                    );
-                                    return null;
-                                  },
-                                ),
                           },
                           child: GraphSurface(
                             key: graphKey,

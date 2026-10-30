@@ -7,6 +7,12 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 final compiledInheritanceBookId = skir.ResourceId(value: "book:inheritance");
 final compiledInheritanceTagId = skir.ResourceId(value: "tag:inheritance");
 
+/// The scope the inheritance inspector edits in when no panel provides one.
+final compiledInheritanceScope = AuthoringScope(
+  organizationId: skir.recordId("organization:inheritance"),
+  realmId: skir.recordId("realm_instance:inheritance"),
+);
+
 /// Builds real SDK records and relationships without reproducing their layout.
 /// Both inspectors use the same roots so stories can compare their composition.
 AuthoringDocument compiledTagInheritanceDocument({
@@ -113,12 +119,14 @@ class CompiledTagInheritanceInspector extends StatefulWidget {
 
 class _CompiledTagInheritanceInspectorState
     extends State<CompiledTagInheritanceInspector> {
-  late final _transport = ScriptedAuthoringTransport(
-    AsyncData(widget.document),
+  late final _realm = FakeRealm(
+    scope: compiledInheritanceScope,
+    name: "Inheritance",
+    document: widget.document,
   );
   final _submissions = ScopedWorkSession();
   late final _workspace = RealmEditing(
-    persistence: _transport.persistence,
+    persistence: _realm.persistence,
     submissions: _submissions,
     initial: widget.document,
   );
@@ -126,7 +134,7 @@ class _CompiledTagInheritanceInspectorState
   @override
   void dispose() {
     _workspace.dispose();
-    _transport.dispose();
+    unawaited(_realm.close());
     _submissions.dispose();
     super.dispose();
   }
@@ -137,7 +145,7 @@ class _CompiledTagInheritanceInspectorState
       child: AuthoredResourceInspection(
         resource: widget.resource,
         workspace: _workspace,
-        commands: fixtureAuthoringCommands(_transport),
+        commands: _realm.commands,
         commitPolicy: EditorCommitPolicy.applyResource,
       ),
     ),

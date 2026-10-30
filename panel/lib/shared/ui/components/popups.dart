@@ -241,33 +241,38 @@ Future<T?> showAdvancedDialog<T>({
   bool fullscreenDialog = false,
   bool? requestFocus,
   AnimationStyle? animationStyle,
-}) => showDialog<T>(
-  context: context,
-  builder: (ctx) => UncontrolledProviderScope(
-    container: ProviderScope.containerOf(context),
-    child: Consumer(
-      builder: (context, ref, child) {
-        return Shortcuts(
-          shortcuts: typewriterShortcuts,
-          child: GlobalModeShortcut(
-            child: ManagedActionSet(
-              shortcuts: ref.watch(dialogShortcutsProvider),
-              child: Responsive(child: builder(context)),
+}) {
+  // Read once: the dialog outlives [context] while it closes, such as when
+  // the dialog's action removed the resource it was opened from.
+  final container = ProviderScope.containerOf(context);
+  return showDialog<T>(
+    context: context,
+    builder: (ctx) => UncontrolledProviderScope(
+      container: container,
+      child: Consumer(
+        builder: (context, ref, child) {
+          return Shortcuts(
+            shortcuts: typewriterShortcuts,
+            child: GlobalModeShortcut(
+              child: ManagedActionSet(
+                shortcuts: ref.watch(dialogShortcutsProvider),
+                child: Responsive(child: builder(context)),
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     ),
-  ),
-  barrierDismissible: barrierDismissible,
-  barrierColor: barrierColor,
-  barrierLabel: barrierLabel,
-  useSafeArea: useSafeArea,
-  useRootNavigator: useRootNavigator,
-  routeSettings: routeSettings,
-  anchorPoint: anchorPoint,
-  traversalEdgeBehavior: traversalEdgeBehavior,
-  fullscreenDialog: fullscreenDialog,
-  requestFocus: requestFocus,
-  animationStyle: animationStyle,
-);
+    barrierDismissible: barrierDismissible,
+    barrierColor: barrierColor,
+    barrierLabel: barrierLabel,
+    useSafeArea: useSafeArea,
+    useRootNavigator: useRootNavigator,
+    routeSettings: routeSettings,
+    anchorPoint: anchorPoint,
+    traversalEdgeBehavior: traversalEdgeBehavior,
+    fullscreenDialog: fullscreenDialog,
+    requestFocus: requestFocus,
+    animationStyle: animationStyle,
+  );
+}

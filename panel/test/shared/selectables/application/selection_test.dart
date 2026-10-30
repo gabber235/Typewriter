@@ -2,14 +2,12 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-import "selection_test_support.dart";
-
 void main() {
   group("Selection state machine", () {
     test("single select on empty selection adds item", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
+      final idA = TestSelectableIdentifier(id: "A");
       container
           .read(selectionProvider.notifier)
           .select(idA, isMultiSelect: false);
@@ -20,8 +18,8 @@ void main() {
     test("single select replaces existing selection", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container
           .read(selectionProvider.notifier)
@@ -36,7 +34,7 @@ void main() {
     test("single select on already selected sole item clears selection", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
+      final idA = TestSelectableIdentifier(id: "A");
 
       container
           .read(selectionProvider.notifier)
@@ -51,8 +49,8 @@ void main() {
     test("single select on already selected item with multiple keeps only that item", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container.read(selectionProvider.notifier).selectAll([idA, idB]);
       container
@@ -65,8 +63,8 @@ void main() {
     test("multi-select adds to existing selection", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container
           .read(selectionProvider.notifier)
@@ -81,8 +79,8 @@ void main() {
     test("multi-select on already selected item removes it", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container.read(selectionProvider.notifier).selectAll([idA, idB]);
       container
@@ -95,9 +93,9 @@ void main() {
     test("selectAll replaces selection by default", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
-      final idC = MockSelectableIdentifier("C");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
+      final idC = TestSelectableIdentifier(id: "C");
 
       container
           .read(selectionProvider.notifier)
@@ -110,8 +108,8 @@ void main() {
     test("selectAll appends when replaceCurrentSelection is false", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container
           .read(selectionProvider.notifier)
@@ -126,8 +124,8 @@ void main() {
     test("unselect removes specific item", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container.read(selectionProvider.notifier).selectAll([idA, idB]);
       container.read(selectionProvider.notifier).unselect(idA);
@@ -138,8 +136,8 @@ void main() {
     test("unselect on non-existent item is no-op", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container
           .read(selectionProvider.notifier)
@@ -152,9 +150,9 @@ void main() {
     test("unselectAll removes multiple items", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
-      final idC = MockSelectableIdentifier("C");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
+      final idC = TestSelectableIdentifier(id: "C");
 
       container.read(selectionProvider.notifier).selectAll([idA, idB, idC]);
       container.read(selectionProvider.notifier).unselectAll([idA, idC]);
@@ -165,8 +163,8 @@ void main() {
     test("clear empties selection", () {
       final container = ProviderContainer.test();
 
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container.read(selectionProvider.notifier).selectAll([idA, idB]);
       container.read(selectionProvider.notifier).clear();
@@ -179,19 +177,12 @@ void main() {
     testWidgets("select defaults to single-select when shift not pressed", (
       tester,
     ) async {
-      late ProviderContainer container;
-
-      await tester.pumpTestApp(
-        child: Builder(
-          builder: (context) {
-            container = ProviderScope.containerOf(context);
-            return const SizedBox();
-          },
-        ),
-      );
-
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final container = (await tester.pumpPanel(
+        const [],
+        at: const PanelLocation.component(SizedBox()),
+      )).container;
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container.read(selectionProvider.notifier).select(idA);
       container.read(selectionProvider.notifier).select(idB);
@@ -202,22 +193,14 @@ void main() {
     testWidgets("select defaults to multi-select when shift is pressed", (
       tester,
     ) async {
-      late ProviderContainer container;
-
-      await tester.pumpTestApp(
-        child: Builder(
-          builder: (context) {
-            container = ProviderScope.containerOf(context);
-            return const SizedBox();
-          },
-        ),
-      );
-
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
+      final container = (await tester.pumpPanel(
+        const [],
+        at: const PanelLocation.component(SizedBox()),
+      )).container;
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container.read(selectionProvider.notifier).select(idA);
-
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       container.read(selectionProvider.notifier).select(idB);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
@@ -228,27 +211,18 @@ void main() {
     testWidgets("shift released returns to single-select behavior", (
       tester,
     ) async {
-      late ProviderContainer container;
-
-      await tester.pumpTestApp(
-        child: Builder(
-          builder: (context) {
-            container = ProviderScope.containerOf(context);
-            return const SizedBox();
-          },
-        ),
-      );
-
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
-      final idC = MockSelectableIdentifier("C");
+      final container = (await tester.pumpPanel(
+        const [],
+        at: const PanelLocation.component(SizedBox()),
+      )).container;
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
+      final idC = TestSelectableIdentifier(id: "C");
 
       container.read(selectionProvider.notifier).select(idA);
-
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       container.read(selectionProvider.notifier).select(idB);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-
       container.read(selectionProvider.notifier).select(idC);
 
       expect(container.read(selectionProvider), [idC]);

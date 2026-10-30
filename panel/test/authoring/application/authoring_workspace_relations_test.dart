@@ -7,18 +7,11 @@ import "package:typewriter_testkit/testing.dart";
 void main() {
   test(
     "deleting an owner removes the complete cascade from working queries",
-    () {
-      final document = _document();
-      final container = ProviderContainer.test(
-        overrides: [
-          ...appOverrides(),
-          ...authoringFixtureOverrides(document: document),
-        ],
-      );
-      addTearDown(container.dispose);
-      final workspace = container.read(
-        realmEditingProvider(container.read(selectedAuthoringScopeProvider)!),
-      );
+    () async {
+      final workspace = await testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(_document),
+      ]).openRealmEditing();
       final result = workspace.edit(
         label: "Delete book",
         policy: EditorCommitPolicy.applyResource,
@@ -29,14 +22,18 @@ void main() {
       expect(workspace.document.entry(_page), isNull);
       expect(workspace.document.entry(_parent), isNotNull);
       expect(workspace.document.entry(_child), isNotNull);
-      expect(workspace.state.groups.values.single.resources, {_book, _page});
+      expect(workspace.state.groups.values.single.resources, {
+        libraryId,
+        _book,
+        _page,
+      });
       workspace.discard((result as EditStaged).group);
       expect(workspace.document.entry(_page), isNotNull);
     },
   );
 
   test("deleting a linked page clears the owner's exact collection item", () {
-    final document = _document();
+    final document = _document;
     final edit = AuthoringEdit.fromDocument(document)..delete(_page);
     expect(
       edit.resource(_book)!.authoredField("pages")!.authoredItems,
@@ -46,17 +43,15 @@ void main() {
       edit.links.any((link) => link.first == _page || link.second == _page),
       isFalse,
     );
-    expect(edit.intents.single, isA<skir.EditIntent_deleteResourceWrapper>());
-    expect(
-      edit.expectations.whereType<skir.EditExpectation_valueWrapper>().any(
-        (fact) => fact.value.at.resource == _book,
-      ),
-      isTrue,
+    expectRefusedAfterRemoteChange(
+      edit,
+      saved: document,
+      remoteChange: (remote) => remote.delete(_page),
     );
   });
 
   test("tag deletion clears surviving parents and book links together", () {
-    final edit = AuthoringEdit.fromDocument(_document())..delete(_parent);
+    final edit = AuthoringEdit.fromDocument(_document)..delete(_parent);
     expect(
       edit.resource(_child)!.authoredField("parents")!.authoredItems,
       isEmpty,
@@ -71,12 +66,12 @@ void main() {
 
   test(
     "restrict policy rejects deletion without publishing a partial batch",
-    () {
-      final original = _document();
+    () async {
+      final original = _document;
       final wire = original.catalog.snapshot;
       final relations = [
         for (final relation in wire.relations)
-          if (relation.id.value == "fixture.book.tags")
+          if (relation.id.value == "library.book.tags")
             skir.RelationContract(
               id: relation.id,
               first: relation.first,
@@ -96,14 +91,10 @@ void main() {
       final document = original.copyWith(
         catalog: CheckedEditorCatalog(changed.toFrozen()),
       );
-      final transport = ScriptedAuthoringTransport(AsyncData(document));
-      final workspace = RealmEditing(
-        persistence: transport.persistence,
-        submissions: _workSession(),
-        initial: document,
-      );
-      addTearDown(workspace.dispose);
-      addTearDown(transport.dispose);
+      final workspace = await testWorld([
+        signedIn(ada, organization: acme),
+        realmServing(document),
+      ]).openRealmEditing();
       final before = workspace.document;
       final result = workspace.edit(
         label: "Invalid batch",
@@ -122,16 +113,12 @@ void main() {
     },
   );
 
-  test("invalid relation locations reject their whole operation", () {
-    final document = _document();
-    final transport = ScriptedAuthoringTransport(AsyncData(document));
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: document,
-    );
-    addTearDown(workspace.dispose);
-    addTearDown(transport.dispose);
+  test("invalid relation locations reject their whole operation", () async {
+    final document = _document;
+    final workspace = await testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(document),
+    ]).openRealmEditing();
     final before = workspace.document;
     final result = workspace.edit(
       label: "Invalid connection",
@@ -144,7 +131,7 @@ void main() {
           ..connect(
             skir.LinkOccurrence(
               id: skir.LinkOccurrenceId(
-                endpoint: skir.EndpointId(value: "fixture.tag.parents:first"),
+                endpoint: skir.EndpointId(value: "library.tag.parents:first"),
                 location: authoredFieldLocation(_child, ["absent"]),
               ),
               source: _child,
@@ -157,16 +144,12 @@ void main() {
     expect(result, isA<EditStageRejected>());
     expect(workspace.document, before);
   });
-  test("missing relation targets reject a prepared batch", () {
-    final document = _document();
-    final transport = ScriptedAuthoringTransport(AsyncData(document));
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: document,
-    );
-    addTearDown(workspace.dispose);
-    addTearDown(transport.dispose);
+  test("missing relation targets reject a prepared batch", () async {
+    final document = _document;
+    final workspace = await testWorld([
+      signedIn(ada, organization: acme),
+      realmServing(document),
+    ]).openRealmEditing();
     final before = workspace.document;
     final missing = skir.ResourceId(value: "missing");
     final result = workspace.edit(
@@ -180,7 +163,7 @@ void main() {
           ..connect(
             skir.LinkOccurrence(
               id: skir.LinkOccurrenceId(
-                endpoint: skir.EndpointId(value: "fixture.tag.parents:first"),
+                endpoint: skir.EndpointId(value: "library.tag.parents:first"),
                 location: skir.ValueLocation(
                   resource: _child,
                   path: skir.ValuePath(
@@ -210,7 +193,7 @@ final _book = skir.ResourceId(value: "book");
 final _page = skir.ResourceId(value: "page");
 final _parent = skir.ResourceId(value: "parent");
 final _child = skir.ResourceId(value: "child");
-AuthoringDocument _document() => fixtureAuthoringDocument(
+final _document = realmDocument(
   books: [
     Book(
       bookId: _book,
@@ -240,9 +223,3 @@ AuthoringDocument _document() => fixtureAuthoringDocument(
     Page(pageId: _page, bookId: _book, name: "Page", chapter: "", priority: 0),
   ],
 );
-
-ScopedWorkSession _workSession() {
-  final session = ScopedWorkSession();
-  addTearDown(session.dispose);
-  return session;
-}

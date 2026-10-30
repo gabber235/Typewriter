@@ -24,6 +24,29 @@ class GlobalModeShortcut extends ConsumerWidget {
   /// The subtree whose focus and action context receive the mode shortcuts.
   final Widget child;
 
+  /// Dismisses what the focused widget can dismiss below its nearest
+  /// [GlobalModeShortcut], the way Escape does without a mode.
+  ///
+  /// Returns whether an enabled [DismissIntent] action took the key. A
+  /// disabled one, such as a page route's, leaves the key to the mode.
+  static bool dismissFocused() {
+    final context = primaryFocus?.context;
+    if (context == null) return false;
+    const intent = DismissIntent();
+    Action<Intent>? nearest;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is GlobalModeShortcut) return false;
+      if (widget is Actions) nearest = widget.actions[DismissIntent];
+      return nearest == null;
+    });
+    final action = nearest;
+    if (action == null) return false;
+    final (enabled, _) = Actions.of(context)
+        .invokeActionIfEnabled(action, intent, context);
+    return enabled;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(interactionSuspendedProvider)) {

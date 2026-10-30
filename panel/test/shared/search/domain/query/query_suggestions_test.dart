@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/query_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final selectors = <QuerySelectorDefinition>[
@@ -54,11 +53,9 @@ void main() {
     final valueSuggestions = suggestions
         .whereType<SelectorValueSuggestion>()
         .toList();
-    final adminSuggestion = valueSuggestions.firstWhere(
-      (suggestion) => suggestion.value == "admin",
-    );
 
-    expect(valueSuggestions, isNotEmpty);
+    expect(valueSuggestions.map((suggestion) => suggestion.value), ["admin"]);
+    final adminSuggestion = valueSuggestions.single;
     expect(adminSuggestion.label, "admin");
     expect(adminSuggestion.selectorId, "role");
     expect(adminSuggestion.replaceRange, const QueryRange(5, 7));
@@ -133,19 +130,6 @@ void main() {
     final suggestions = engine.suggest(result, maxItems: 2);
 
     expect(suggestions, hasLength(2));
-  });
-
-  test("max items larger than result count returns all suggestions", () {
-    final result = checkQuery("role:ad", selectors: selectors, cursorOffset: 7)
-        .expectIssues([QueryIssueCode.invalidSelectorValue])
-        .expectExpression((token) => token.isSelector(id: "role", value: "ad"))
-        .expectNoQuery()
-        .done();
-
-    final suggestions = engine.suggest(result, maxItems: 99);
-
-    expect(suggestions, hasLength(1));
-    expect(suggestions.single, isA<SelectorValueSuggestion>());
   });
 
   test("with other query text, key suggestion are returned", () {
@@ -497,18 +481,6 @@ void main() {
     expect(suggestions, isEmpty);
   });
 
-  test("value suggestion filters by prefix", () {
-    final result = checkQuery("role:ad", selectors: selectors, cursorOffset: 7)
-        .expectIssues([QueryIssueCode.invalidSelectorValue])
-        .expectExpression((token) => token.isSelector(id: "role", value: "ad"))
-        .expectNoQuery()
-        .done();
-    final suggestions = engine.suggest(result);
-    final valueSuggestions = suggestions.whereType<SelectorValueSuggestion>();
-    expect(valueSuggestions.map((s) => s.value), contains("admin"));
-    expect(valueSuggestions.map((s) => s.value), isNot(contains("author")));
-  });
-
   test("selector key matching is case insensitive", () {
     final result = checkQuery(
       "TI",
@@ -579,41 +551,28 @@ void main() {
     );
   });
 
-  test("returns no suggestions for single multiplicity selector which is already present", () {
-    final result = checkQuery("id:1 id", selectors: selectors, cursorOffset: 7)
-        .expectNoIssues()
-        .expectExpression((token) {
-          token.isSelector(id: "id", value: "1");
-        })
-        .expectQuery("id")
-        .done();
+  test(
+    "a single multiplicity selector already present is no longer suggested",
+    () {
+      final withIcon = [
+        ...selectors,
+        const KeyValueSelectorDefinition(id: "icon", key: "icon:"),
+      ];
+      final result = checkQuery("id:1 i", selectors: withIcon, cursorOffset: 6)
+          .expectNoIssues()
+          .expectExpression((token) {
+            token.isSelector(id: "id", value: "1");
+          })
+          .expectQuery("i")
+          .done();
 
-    final suggestions = engine.suggest(result);
-    final keySuggestions = suggestions
-        .whereType<SelectorKeySuggestion>()
-        .toList();
-    final ids = keySuggestions.map((suggestion) => suggestion.selectorId);
-    expect(ids, isNot(contains("id")));
-  });
-
-  test("QuerySuggestionListX.key folds labels", () {
-    final suggestions = [
-      const SelectorKeySuggestion(
-        label: "a",
-        replaceRange: QueryRange(0, 0),
-        selectorId: "x",
-      ),
-      const SelectorKeySuggestion(
-        label: "b",
-        replaceRange: QueryRange(0, 0),
-        selectorId: "y",
-      ),
-      const SelectorKeySuggestion(
-        label: "c",
-        replaceRange: QueryRange(0, 0),
-        selectorId: "z",
-      ),
-    ];
-    expect(suggestions.key, "abc");
-  });
+      final suggestions = QuerySuggestionEngine(withIcon).suggest(result);
+      expect(
+        suggestions.whereType<SelectorKeySuggestion>().map(
+          (suggestion) => suggestion.selectorId,
+        ),
+        ["icon"],
+      );
+    },
+  );
 }

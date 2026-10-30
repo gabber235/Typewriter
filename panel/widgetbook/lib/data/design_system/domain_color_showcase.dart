@@ -1,34 +1,12 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// A visual test fixture for colors that intentionally live outside the theme.
+/// The colors users pick for data such as tags and Books, which live
+/// outside the theme, on readable foregrounds from [ColorExtension.on].
 ///
-/// Typewriter uses data-driven colors for concepts such as tags, blueprints,
-/// page kinds, and service roles. Those colors must not be replaced by design
-/// system semantic colors, but their surrounding layout and foreground contrast
-/// must still work in both light and dark themes.
-///
-/// This showcase renders a representative set of arbitrary colors using
-/// [ColorExtension.on] to calculate a readable foreground. It is shared by
-/// Widgetbook and the deterministic design system contract tests, helping catch
-/// changes that would make data-colored UI inconsistent or illegible.
-///
-/// This is test infrastructure only; production features continue to render
-/// their real domain colors and models.
+/// Shows every color of [safeColors] as a tile, so a change that makes data
+/// colored content illegible in either theme is visible at a glance.
 class DomainColorShowcase extends StatelessWidget {
   const DomainColorShowcase({super.key});
-
-  /// Representative colors used to exercise a range of hues and luminance.
-  ///
-  /// They are deliberately not references to production domain constants. That
-  /// keeps this fixture independent while testing the same contrast behavior.
-  static const domainColors = <Color>[
-    Color(0xFF7E57C2),
-    Color(0xFF00897B),
-    Color(0xFFF4511E),
-    Color(0xFF3949AB),
-    Color(0xFFD81B60),
-    Color(0xFF6D4C41),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +27,8 @@ class DomainColorShowcase extends StatelessWidget {
               spacing: context.spacing.space4,
               runSpacing: context.spacing.space4,
               children: [
-                for (final (index, color) in domainColors.indexed)
-                  _DomainTile(label: "Category ${index + 1}", color: color),
+                for (final (index, color) in safeColors.indexed)
+                  _DomainTile(label: "Color ${index + 1}", color: color),
               ],
             ),
           ],
@@ -70,8 +48,8 @@ class _DomainTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final foreground = color.on(context);
     return Container(
-      width: 240,
-      height: 120,
+      width: 160,
+      height: 72,
       padding: EdgeInsets.all(context.spacing.space4),
       decoration: BoxDecoration(
         color: color,

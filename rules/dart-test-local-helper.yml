@@ -1,0 +1,75 @@
+id: dart-test-local-helper
+language: dart
+severity: error
+# Requirement: a panel test file holds only `main()` and its test cases, so every test reads as
+# its requirement and shared setup grows in one place.
+message: A test file declares a helper outside its test cases.
+note: Move the pump, setup, fake, driver action, finder, assertion or builder into panel/testkit/lib/src/ (core, doubles, traits, drivers, generators, support), or inline test data as a value.
+files:
+  - panel/test/**
+  - panel/testkit/test/**
+rule:
+  any:
+    # Named types: fakes, fixtures, widgets, extensions.
+    - kind: class_declaration
+    - kind: mixin_declaration
+    - kind: enum_declaration
+    - kind: extension_declaration
+    - kind: extension_type_declaration
+    - kind: type_alias
+    # Top level getters and setters compute values the way a function does.
+    - kind: getter_declaration
+    - kind: setter_declaration
+    # Top level functions other than the entry point.
+    - all:
+        - kind: function_declaration
+        - not:
+            has:
+              field: signature
+              has:
+                field: name
+                regex: ^main$
+    # A top level value holding a function is a helper under another name.
+    - all:
+        - kind: top_level_variable_declaration
+        - has:
+            stopBy: end
+            kind: static_final_declaration
+            has:
+              field: value
+              kind: function_expression
+    # Named local functions and function values in `main` or a group, outside every test case.
+    - all:
+        - any:
+            - kind: local_function_declaration
+            - all:
+                - kind: local_variable_declaration
+                - has:
+                    stopBy: end
+                    kind: initialized_variable_definition
+                    has:
+                      field: value
+                      kind: function_expression
+        - not:
+            inside:
+              stopBy: end
+              kind: call_expression
+              has:
+                field: function
+                regex: ^(test|testWidgets)$
+---
+id: dart-test-helper-file
+language: dart
+severity: error
+# Requirement: shared test code lives in the panel test kit, where every test can find and reuse
+# it; a test folder holds only test files.
+message: A file in a test folder is not a test file.
+note: Move it into panel/testkit/lib/src/ and import it through package:typewriter_testkit/testing.dart.
+files:
+  - panel/test/**
+  - panel/testkit/test/**
+ignores:
+  - panel/test/**/*_test.dart
+  - panel/testkit/test/**/*_test.dart
+rule:
+  kind: source_file

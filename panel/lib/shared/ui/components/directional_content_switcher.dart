@@ -33,13 +33,12 @@ class _DirectionalContentSwitcherState
   @override
   Widget build(BuildContext context) {
     assert(widget.child.key != null);
-    final disableAnimations = MediaQuery.disableAnimationsOf(context);
-    final transitionDuration = disableAnimations
-        ? Duration.zero
-        : const Duration(milliseconds: 240);
-    final sizeDuration = disableAnimations
-        ? Duration.zero
-        : const Duration(milliseconds: 300);
+    // Without motion the new content replaces the old at once. A zero
+    // duration AnimatedSize would restart its animation during layout and
+    // fail as soon as the content changes size.
+    if (MediaQuery.disableAnimationsOf(context)) return widget.child;
+    const transitionDuration = Duration(milliseconds: 240);
+    const sizeDuration = Duration(milliseconds: 300);
     final currentKey = widget.child.key;
     final direction = _direction.toDouble();
 

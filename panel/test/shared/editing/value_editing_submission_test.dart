@@ -5,25 +5,13 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 final _title = editorRootPath.field("title");
-skir.DataValue _value(String title) =>
-    recordEditorValue({"title": skir.DataValue.wrapStringValue(title)});
-
-final _fieldTypes = {
-  "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-};
-EditorDocument _document(String title, int revision) => recordEditorDocument(
-  {"title": skir.DataValue.wrapStringValue(title)},
-  _fieldTypes,
-  revision,
-);
-
 void main() {
   test(
     "uncertain delivery blocks fresh requests and cannot discard evidence",
     () async {
       var sends = 0;
       final source = fakeValueEditing(
-        document: _document("Original", 1),
+        document: titleDocument("Original", 1),
         validation: acceptTestEditorMutation,
         debounce: const Duration(days: 1),
         commit: (_) async {
@@ -52,10 +40,10 @@ void main() {
     () async {
       var sends = 0;
       final source = fakeValueEditing(
-        document: _document("Original", 1),
+        document: titleDocument("Original", 1),
         validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
-        validateDraft: (value) => value == _value("")
+        validateDraft: (value) => value == titleValue("")
             ? [
                 const EditorDiagnostic(
                   code: EditorDiagnosticCode.invalidValue,
@@ -91,7 +79,7 @@ void main() {
         scope: scope,
         targetId: "resource",
         label: "Resource",
-        document: _document("Original", 1),
+        document: titleDocument("Original", 1),
         commitPolicy: EditorCommitPolicy.applyResource,
         validation: acceptTestEditorMutation,
         commit: (commit) async =>
@@ -110,10 +98,8 @@ void main() {
         other.editor(target("org2")).value(_title).valueOrNull,
         skir.DataValue.wrapStringValue("Original"),
       );
-      expect(returned.editor(target("org1")).workspace, same(source.workspace));
-
       expect(
-        source.value(_title).valueOrNull,
+        returned.editor(target("org1")).value(_title).valueOrNull,
         skir.DataValue.wrapStringValue("Retained"),
       );
       await source.flush();

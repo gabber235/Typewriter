@@ -1,185 +1,104 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets(
-    "initial readiness and returning focus keep the realm workspace interactive",
-    (tester) async {
-      tester.view.physicalSize = const Size(1400, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final organization = skir.recordId("organization:focus");
-      final backend = FakeOrganizations();
-      addTearDown(backend.close);
-      final realm = backend.addRealm(
-        organization,
-        id: skir.recordId("realm_instance:focus"),
-        name: "focus",
-      );
-      final service = backend.services(organization).single;
-      final services = _Services(service);
-      addTearDown(services.updates.close);
-      var snapshots = 0;
-      final source = _Topology(
-        backend.topology(organization),
-        onSnapshot: () => snapshots++,
-      );
-      var taps = 0;
-      await tester.pumpTestApp(
-        child: OrganizationScaffold(
-          child: FilledButton(
-            onPressed: () => taps++,
-            child: const Text("Edit value"),
-          ),
-        ),
-        overrides: [
-          organizationIdProvider.overrideWithValue(organization),
-          realmIdProvider.overrideWithValue(realm.realmId),
-          organizationTopologyControllerProvider(organization)
-              .overrideWith(() => source),
-          canonicalOrganizationServicesProvider(organization)
-              .overrideWith(() => services),
-          organizationsProvider.overrideWith(_NoOrganizations.new),
-          selectedAuthoringScopeProvider.overrideWithValue(null),
-          authUserInfoProvider.overrideWithValue(const AsyncLoading()),
-          FakeAppearance().override,
-        ],
-        settle: false,
-      );
-      final container = tester.container(of: find.byType(OrganizationScaffold));
-      await tester.eventually(() {
-        expect(container.read(realmInteractionProvider).suspended, isFalse);
-        expect(find.text("Checking realm connection"), findsNothing);
-      });
-      final states = <RealmConnectionState>[];
-      final observation = container.listen(
-        realmInteractionProvider,
-        (_, next) => states.add(next.connectionState),
-      );
-      addTearDown(observation.close);
-      expect(snapshots, 1);
+  final first = book("First");
+  final firstPath =
+      "/organization/acme/realm/main/resource/${first.bookId.value}";
 
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      await tester.pump();
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-      await tester.pump();
+  testWidgets("returning to the panel window keeps the open Realm "
+      "interactive without checking its connection again", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+    ]);
+    expect(panel.shows("Checking realm connection"), isFalse);
 
-      expect(snapshots, 1);
-      expect(states, isNot(contains(RealmConnectionState.checking)));
-      expect(find.text("Checking realm connection"), findsNothing);
-      await tester.tap(find.text("Edit value"));
-      expect(taps, 1);
-      expect(tester.takeException(), isNull);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
 
-      services.updates.add([
-        (service.toMutable()
-              ..state =
-                  (service.state!.toMutable()
-                        ..status = skir.ServiceStatus.offline)
-                      .toFrozen())
-            .toFrozen(),
-      ]);
-      await tester.pump();
-      expect(
-        container.read(realmInteractionProvider).connectionState,
-        RealmConnectionState.offline,
-      );
-      services.updates.add([service]);
-      await tester.eventually(() {
-        expect(snapshots, 2);
-        expect(container.read(realmInteractionProvider).suspended, isFalse);
-      });
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-    },
-  );
+    expect(panel.shows("Checking realm connection"), isFalse);
+    expect(panel.shows("Realm connection lost"), isFalse);
+    await panel.resources.row("First").open();
+    await panel.eventually(() => expect(panel.path, firstPath));
+  });
 
-  testWidgets(
-    "organization sidebar builds distinct member routes and positive badge",
-    (tester) async {
-      final links = OrganizationSidebarContent.organizationLinks(
-        skir.recordId("organization:org1"),
-        3,
-      );
-      final sidebarLinks = links.whereType<SidebarLink>().toList();
-
-      expect(sidebarLinks.map((link) => link.text), [
-        "Services",
-        "Members",
-        "Join Requests",
-        "Join Codes",
-      ]);
-      expect(_leafName(sidebarLinks[1]), MemberListRoute.name);
-      expect(_leafName(sidebarLinks[2]), JoinRequestsRoute.name);
-      expect(_leafName(sidebarLinks[3]), JoinCodesRoute.name);
-
-      await tester.pumpTestApp(child: Column(children: links));
-      final trailing = sidebarLinks[2].trailing! as Semantics;
-      expect(trailing.properties.label, "3 pending join requests");
-      expect(find.text("3"), findsOneWidget);
-    },
-  );
-
-  testWidgets("organization sidebar hides pending badge when count is zero", (
+  testWidgets("a Realm whose host comes back is interactive again", (
     tester,
   ) async {
-    final links = OrganizationSidebarContent.organizationLinks(
-      skir.recordId("organization:org1"),
-      0,
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+      realmHostStopped,
+    ]);
+    await panel.eventually(
+      () => expect(panel.shows("Realm connection lost"), isTrue),
     );
 
-    await tester.pumpTestApp(child: Column(children: links));
+    panel.world.organizations.resumeHost(
+      panel.world.requireRealm.scope.realmId,
+    );
 
-    expect(
-      find.bySemanticsLabel(RegExp("pending join requests")),
-      findsNothing,
+    await panel.eventually(
+      () => expect(panel.shows("Realm connection lost"), isFalse),
     );
-    expect(
-      links
-          .whereType<SidebarLink>()
-          .singleWhere((link) => link.text == "Join Requests")
-          .trailing,
-      isNull,
-    );
+    expect(panel.shows("Checking realm connection"), isFalse);
+    expect(panel.shows("Realm connection lost"), isFalse);
+    await panel.resources.row("First").open();
+    await panel.eventually(() => expect(panel.path, firstPath));
   });
-}
 
-String _leafName(SidebarLink link) => link.route.flattened.last.routeName;
+  final destinations = {
+    "Services": "/organization/acme/services",
+    "Members": "/organization/acme/members",
+    "Join Requests": "/organization/acme/members/join-requests",
+    "Join Codes": "/organization/acme/members/join-codes",
+  };
+  for (final MapEntry(key: link, value: path) in destinations.entries) {
+    testWidgets("the organization sidebar link $link opens its page", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        membership(),
+      ]);
 
-class _Topology extends OrganizationTopologyController {
-  _Topology(this.topology, {required this._onSnapshot});
-  final skir.OrganizationTopologySnapshot topology;
-  final void Function() _onSnapshot;
+      await panel.tapOn(find.text(link).first);
 
-  @override
-  Stream<skir.OrganizationTopologySnapshot> build(
-    skir.RecordId organizationId,
-  ) async* {
-    _onSnapshot();
-    yield topology;
+      await panel.eventually(() => expect(panel.path, path));
+    });
   }
-}
 
-class _Services extends CanonicalOrganizationServices {
-  _Services(this.initial);
-  final skir.Service initial;
-  final StreamController<List<skir.Service>> updates =
-      StreamController.broadcast(sync: true);
+  testWidgets("the organization sidebar counts pending join requests", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membership(
+        joinRequests: [
+          joinRequest("ken", name: "ken"),
+          joinRequest("linus", name: "linus"),
+          joinRequest("lea", name: "lea"),
+        ],
+      ),
+    ]);
 
-  @override
-  Stream<List<skir.Service>> build(skir.RecordId organizationId) async* {
-    yield [initial];
-    yield* updates.stream;
-  }
-}
+    // The sidebar reads no semantics yet (its nodes drop out of the tree),
+    // so the badge is found by the count it shows beside the link.
+    await panel.eventually(() => expect(panel.shows("3"), isTrue));
+  });
 
-/// A user who belongs to no organization yet.
-class _NoOrganizations extends Organizations {
-  @override
-  Stream<List<skir.Organization>> build() => Stream.value(const []);
+  testWidgets("the organization sidebar shows no badge without pending join "
+      "requests", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membership(),
+    ]);
+
+    expect(panel.shows("Join Requests"), isTrue);
+    expect(panel.shows("0"), isFalse);
+  });
 }

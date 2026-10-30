@@ -1,6 +1,12 @@
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/shared/search/search_source.dart";
 
 export "query.dart";
+export "query_check.dart";
+export "query_generators.dart";
+export "search_probe.dart";
+export "search_source.dart";
+export "search_tree.dart";
 
 const mockPageSearchResultType = SearchResultType(
   id: "page",
@@ -300,18 +306,9 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
   yield result.payload.toString();
 }
 
-SearchSession<void> mockSearchSession(SearchSource source) => SearchSession(
-  source: source,
-  interaction: SearchInteraction(
-    activation: SearchActivation.custom(
-      dependencies: const [],
-      evaluate: (context, result) => const SearchActivationState.hidden(),
-      activate: (context, result) async =>
-          const SearchActivationResult.keepOpen(),
-    ),
-    selectionMode: SearchSelectionMode.single,
-  ),
-);
+/// A single selection [searchSession] over [source], as the stories show it.
+SearchSession<void> mockSearchSession(SearchSource source) =>
+    searchSession(source, selectionMode: SearchSelectionMode.single);
 
 SearchSource mockMixedGlobalSearchSource({
   MockSearchDisplayState state = MockSearchDisplayState.ready,

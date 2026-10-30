@@ -63,6 +63,7 @@ class TypewriterPanel extends HookConsumerWidget {
                       ..invalidate(currentRouteProvider);
                   }),
                   LoggerNavigatorObserver(),
+                  RouteSettlingObserver(ref.read(routeSettlingProvider)),
                 ],
               ),
               shortcuts: typewriterShortcuts,

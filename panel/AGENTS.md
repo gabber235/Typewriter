@@ -24,10 +24,11 @@ consumer files.
 ## Module boundaries
 
 The panel's modules and their allowed dependencies are declared in
-`test/architecture/module_graph.dart`. A module may use the modules below it, never above it
-or beside it. When code needs something from above, move the concept down to its true owner
-or let the upper module pass it in (a parameter, an inherited widget, or a provider override
-in the composition root). `module_graph_test.dart` names every violating file, line and symbol.
+`testkit/lib/src/support/architecture/module_graph.dart`. A module may use the modules below
+it, never above it or beside it. When code needs something from above, move the concept down
+to its true owner or let the upper module pass it in (a parameter, an inherited widget, or a
+provider override in the composition root). `test/architecture/module_graph_test.dart` names
+every violating file, line and symbol.
 
 ## Riverpod providers
 

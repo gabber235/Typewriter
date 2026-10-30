@@ -76,3 +76,19 @@ extension SemanticsReading on SemanticsNode {
 /// The visible nodes labeled exactly [label].
 List<SemanticsNode> semanticsLabeled(String label) =>
     find.semantics.byLabel(label).evaluate().toList();
+
+/// The visible buttons the user hears as [label].
+List<SemanticsNode> semanticsButtons(String label) => find.semantics
+    .byPredicate((node) => node.isButton && node.spoken == label)
+    .evaluate()
+    .toList();
+
+/// The one visible button the user hears as [label]; fails the test when
+/// there is none or more than one.
+SemanticsNode semanticsButton(String label) =>
+    switch (semanticsButtons(label)) {
+      [final button] => button,
+      final buttons => throw TestFailure(
+        "Expected one button $label on screen, found ${buttons.length}",
+      ),
+    };

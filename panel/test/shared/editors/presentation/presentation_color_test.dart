@@ -40,24 +40,24 @@ void main() {
               excluded: const [],
             ),
             color: skir.PresentationColor.createAlpha(
-              source: _color(accent),
+              source: presentationColor(accent),
               alpha: 0.7,
             ),
           ),
-          _rule([skir.PresentationInteractionState.selected], accent),
+          stateColorRule([skir.PresentationInteractionState.selected], accent),
           skir.PresentationStateColorRule(
             match: skir.PresentationStateMatch(
               required_: [skir.PresentationInteractionState.hovered],
               excluded: const [],
             ),
             color: skir.PresentationColor.createAlpha(
-              source: _color(accent),
+              source: presentationColor(accent),
               alpha: 0.5,
             ),
           ),
         ],
         fallback: skir.PresentationColor.createAlpha(
-          source: _color(accent),
+          source: presentationColor(accent),
           alpha: 0.2,
         ),
       );
@@ -84,7 +84,7 @@ void main() {
             ),
           ),
         ],
-        fallback: _color(accent),
+        fallback: presentationColor(accent),
       );
       final label = presentationNode(
         "label",
@@ -121,8 +121,7 @@ void main() {
           ),
         ),
       );
-      final root = _column(
-        "root",
+      final root = presentationColumn("root", [
         presentationNode(
           "surface",
           skir.PresentationElement.createContainer(
@@ -138,8 +137,7 @@ void main() {
             shadows: const [],
             border: null,
             radius: skir.PresentationRadius.large,
-            child: _column(
-              "body",
+            child: presentationColumn("body", [
               presentationNode(
                 "alignment",
                 skir.PresentationElement.createAlign(
@@ -147,12 +145,12 @@ void main() {
                   child: row,
                 ),
               ),
-            ),
+            ], layout: _stretch),
           ),
         ),
-      );
-      await tester.pumpTestApp(
-        child: Surface(
+      ], layout: _stretch);
+      await tester.showComponent(
+        Surface(
           color: canvas,
           child: Center(
             child: SizedBox(
@@ -236,15 +234,15 @@ void main() {
           ),
         ),
         backgroundColor: null,
-        foregroundColor: _color(Colors.orange),
+        foregroundColor: presentationColor(Colors.orange),
         transition: null,
         shadows: const [],
         border: null,
         radius: skir.PresentationRadius.none,
       ),
     );
-    await tester.pumpTestApp(
-      child: Surface(
+    await tester.showComponent(
+      Surface(
         color: canvas,
         child: PortablePresentationNodeRenderer(node: root, scope: scope),
       ),
@@ -253,23 +251,20 @@ void main() {
     expect(Surface.colorOf(element), canvas);
     expect(Surface.foregroundOf(element).toARGB32(), Colors.orange.toARGB32());
   });
-  PresentationValueEnvironment environment({
-    PresentationInteraction interaction = const PresentationInteraction(),
-  }) => PresentationValueEnvironment(
+  final colors = PresentationValueEnvironment(
     theme: ThemeData.dark(),
     appearance: appearance,
-    interaction: interaction,
+    interaction: const PresentationInteraction(),
   );
 
   test("color operations preserve authored transparency and use the actual surface", () {
-    final colors = environment();
     final transparent = skir.PresentationColor.createAlpha(
-      source: _color(const Color(0x00000000)),
+      source: presentationColor(const Color(0x00000000)),
       alpha: 0.7,
     );
     expect(colors.resolve(transparent, scope), const Color(0x00000000));
     final alpha = skir.PresentationColor.createAlpha(
-      source: _color(const Color(0x803366ff)),
+      source: presentationColor(const Color(0x803366ff)),
       alpha: 0.5,
     );
     expect(colors.resolve(alpha, scope).a, closeTo(0.25, 0.003));
@@ -285,7 +280,7 @@ void main() {
     );
     final overlay = const Color(0x803366ff);
     final onOverlay = skir.PresentationColor.createContrast(
-      source: _color(overlay),
+      source: presentationColor(overlay),
       mode: skir.PresentationContrastMode.tonal,
     );
     expect(
@@ -299,20 +294,26 @@ void main() {
     () {
       final color = skir.PresentationColor.createStates(
         rules: [
-          _rule([
+          stateColorRule([
             skir.PresentationInteractionState.selected,
             skir.PresentationInteractionState.hovered,
           ], Colors.yellow),
-          _rule(
+          stateColorRule(
             [skir.PresentationInteractionState.selected],
             Colors.red,
             excluded: [skir.PresentationInteractionState.disabled],
           ),
-          _rule([skir.PresentationInteractionState.hovered], Colors.blue),
-          _rule([skir.PresentationInteractionState.focused], Colors.green),
-          _rule([skir.PresentationInteractionState.pressed], Colors.orange),
+          stateColorRule([
+            skir.PresentationInteractionState.hovered,
+          ], Colors.blue),
+          stateColorRule([
+            skir.PresentationInteractionState.focused,
+          ], Colors.green),
+          stateColorRule([
+            skir.PresentationInteractionState.pressed,
+          ], Colors.orange),
         ],
-        fallback: _color(Colors.grey),
+        fallback: presentationColor(Colors.grey),
       );
       for (final (interaction, expected) in [
         (
@@ -330,9 +331,11 @@ void main() {
         (const PresentationInteraction(), Colors.grey),
       ]) {
         expect(
-          environment(interaction: interaction)
-              .resolve(color, scope)
-              .toARGB32(),
+          PresentationValueEnvironment(
+            theme: ThemeData.dark(),
+            appearance: appearance,
+            interaction: interaction,
+          ).resolve(color, scope).toARGB32(),
           expected.toARGB32(),
         );
       }
@@ -340,12 +343,11 @@ void main() {
   );
 
   test("malformed and excessive policies fail visibly", () {
-    final colors = environment();
     for (final alpha in [double.nan, double.infinity, -0.1, 1.1]) {
       expect(
         () => colors.resolve(
           skir.PresentationColor.createAlpha(
-            source: _color(Colors.red),
+            source: presentationColor(Colors.red),
             alpha: alpha,
           ),
           scope,
@@ -361,19 +363,19 @@ void main() {
       () => colors.resolve(
         skir.PresentationColor.createStates(
           rules: [
-            _rule(
+            stateColorRule(
               [skir.PresentationInteractionState.selected],
               Colors.red,
               excluded: [skir.PresentationInteractionState.selected],
             ),
           ],
-          fallback: _color(Colors.black),
+          fallback: presentationColor(Colors.black),
         ),
         scope,
       ),
       throwsA(isA<PresentationValueFailure>()),
     );
-    var recursive = _color(Colors.red);
+    var recursive = presentationColor(Colors.red);
     for (var i = 0; i < 65; i++) {
       recursive = skir.PresentationColor.createAlpha(
         source: recursive,
@@ -392,7 +394,7 @@ void main() {
     expect(
       () => colors.resolve(
         skir.PresentationColor.createAlpha(
-          source: _color(Colors.red),
+          source: presentationColor(Colors.red),
           alpha: 1,
         ),
         limited,
@@ -404,12 +406,14 @@ void main() {
   test("disabled rules include presentation enablement", () {
     final policy = skir.PresentationColor.createStates(
       rules: [
-        _rule([skir.PresentationInteractionState.disabled], Colors.grey),
+        stateColorRule([
+          skir.PresentationInteractionState.disabled,
+        ], Colors.grey),
       ],
-      fallback: _color(Colors.red),
+      fallback: presentationColor(Colors.red),
     );
     expect(
-      environment().resolve(policy, scope.withEnabled(false)).toARGB32(),
+      colors.resolve(policy, scope.withEnabled(false)).toARGB32(),
       Colors.grey.toARGB32(),
     );
   });
@@ -417,10 +421,13 @@ void main() {
     tester,
   ) async {
     late PresentationInteraction observed;
-    await tester.pumpTestApp(
-      child: const PresentationInteractionScope(
+    await tester.showComponent(
+      const PresentationInteractionScope(
         value: PresentationInteraction(selected: true, hovered: true),
-        child: _InteractionOwnerProbe(),
+        child: PresentationInteractionScope(
+          value: PresentationInteraction(),
+          child: Text("Independent"),
+        ),
       ),
     );
     final element = tester.element(find.text("Independent"));
@@ -430,36 +437,9 @@ void main() {
   });
 }
 
-skir.PresentationNode _column(String id, skir.PresentationNode child) =>
-    presentationColumn(
-      id,
-      [child],
-      layout: skir.AxisChildrenLayout(
-        clipOverflow: false,
-        spacing: 0,
-        mainAxisAlignment: skir.MainAxisAlignment.start,
-        crossAxisAlignment: skir.CrossAxisAlignment.stretch,
-      ),
-    );
-
-skir.PresentationColor _color(Color color) =>
-    skir.PresentationColor.wrapValue(color.portableExpression);
-skir.PresentationStateColorRule _rule(
-  List<skir.PresentationInteractionState> required,
-  Color color, {
-  List<skir.PresentationInteractionState> excluded = const [],
-}) => skir.PresentationStateColorRule(
-  match: skir.PresentationStateMatch(required_: required, excluded: excluded),
-  color: _color(color),
+final _stretch = skir.AxisChildrenLayout(
+  clipOverflow: false,
+  spacing: 0,
+  mainAxisAlignment: skir.MainAxisAlignment.start,
+  crossAxisAlignment: skir.CrossAxisAlignment.stretch,
 );
-
-class _InteractionOwnerProbe extends StatelessWidget {
-  const _InteractionOwnerProbe();
-  @override
-  Widget build(BuildContext context) {
-    return const PresentationInteractionScope(
-      value: PresentationInteraction(),
-      child: Text("Independent"),
-    );
-  }
-}

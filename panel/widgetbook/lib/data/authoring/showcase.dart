@@ -3,74 +3,70 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-/// The Book of [fixtureRealmShowcase].
-final fixtureShowcaseBook = skir.ResourceId(value: "book:showcase");
+/// The chaptered Book of the [showcaseRealm].
+final showcaseBook = Book(
+  bookId: skir.ResourceId(value: "book:the_lost_village"),
+  title: "The Lost Village",
+  icon: "material-symbols:book",
+  color: const Color(0xff3f51b5),
+  tagIds: [_quest.tagId],
+);
 
-/// A page of [fixtureRealmShowcase] inside the chapter `act1.arrival`.
-final fixtureShowcasePage = skir.ResourceId(value: "page:showcase:arrival");
+/// A page of [showcaseBook] inside the chapter `act1.arrival`.
+final showcasePage = Page(
+  pageId: skir.ResourceId(value: "page:arrival"),
+  bookId: showcaseBook.bookId,
+  name: "Arrival",
+  chapter: "act1.arrival",
+);
 
-/// A provisioned realm with a few Books, a chaptered Book, and placed tags:
+final _quest = Tag(
+  tagId: skir.ResourceId(value: "tag:quest"),
+  name: "Quest",
+  color: const Color(0xff3f51b5),
+  placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
+);
+
+final _mainStory = Tag(
+  tagId: skir.ResourceId(value: "tag:main_story"),
+  name: "Main story",
+  color: const Color(0xff009688),
+  parentIds: [_quest.tagId],
+  placement: const GraphPlacement(x: 0, y: 3, width: 4, height: 1),
+);
+
+/// A Realm named [name] with a few Books, a chaptered Book and placed tags:
 /// enough to show every place of the realm shell.
-AuthoringDocument fixtureRealmShowcase() {
-  final tags = [
-    Tag(
-      tagId: _questTag,
-      name: "Quest",
-      color: Color(0xff3f51b5),
-      placement: GraphPlacement(x: 0, y: 0, width: 4, height: 1),
+Trait showcaseRealm({String name = "Main"}) => realm(
+  name: name,
+  tags: [_quest, _mainStory],
+  books: [
+    showcaseBook,
+    Book(
+      bookId: skir.ResourceId(value: "book:atlas_of_echoes"),
+      title: "Atlas of Echoes",
+      icon: "material-symbols:map",
+      color: const Color(0xff795548),
     ),
-    Tag(
-      tagId: skir.ResourceId(value: "tag:showcase:main"),
-      name: "Main story",
-      color: const Color(0xff009688),
-      parentIds: [_questTag],
-      placement: const GraphPlacement(x: 0, y: 3, width: 4, height: 1),
+  ],
+  pages: [
+    Page(
+      pageId: skir.ResourceId(value: "page:prologue"),
+      bookId: showcaseBook.bookId,
+      name: "Prologue",
     ),
-  ];
-  return fixtureAuthoringDocument(
-    realm: true,
-    tags: tags,
-    books: [
-      Book(
-        bookId: fixtureShowcaseBook,
-        title: "The Lost Village",
-        icon: "material-symbols:book",
-        color: const Color(0xff3f51b5),
-        tagIds: [tags.first.tagId],
-      ),
-      Book(
-        bookId: skir.ResourceId(value: "book:showcase:atlas"),
-        title: "Atlas of Echoes",
-        icon: "material-symbols:map",
-        color: const Color(0xff795548),
-      ),
-    ],
-    pages: [
-      Page(
-        pageId: skir.ResourceId(value: "page:showcase:prologue"),
-        bookId: fixtureShowcaseBook,
-        name: "Prologue",
-      ),
-      Page(
-        pageId: fixtureShowcasePage,
-        bookId: fixtureShowcaseBook,
-        name: "Arrival",
-        chapter: "act1.arrival",
-      ),
-      Page(
-        pageId: skir.ResourceId(value: "page:showcase:market"),
-        bookId: fixtureShowcaseBook,
-        name: "Market",
-        chapter: "act1",
-      ),
-      Page(
-        pageId: skir.ResourceId(value: "page:showcase:finale"),
-        bookId: fixtureShowcaseBook,
-        name: "Finale",
-        chapter: "act2",
-      ),
-    ],
-  );
-}
-
-final _questTag = skir.ResourceId(value: "tag:showcase:quest");
+    showcasePage,
+    Page(
+      pageId: skir.ResourceId(value: "page:market"),
+      bookId: showcaseBook.bookId,
+      name: "Market",
+      chapter: "act1",
+    ),
+    Page(
+      pageId: skir.ResourceId(value: "page:finale"),
+      bookId: showcaseBook.bookId,
+      name: "Finale",
+      chapter: "act2",
+    ),
+  ],
+);

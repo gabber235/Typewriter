@@ -5,148 +5,131 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
+  final coordinates = [
+    for (final field in ["x", "y", "width", "height"])
+      compiledSdkPlacementValue
+          .authoredField(field)!
+          .authoredInteger!
+          .toString(),
+  ];
+
   testWidgets(
-    "compiled inherited fields, parts and placement survive edits and reload",
+    "compiled inherited fields render with their parts and placement in order",
     (tester) async {
-      var value = compiledSdkInheritedInspectorValue;
-      var catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
-      final writes = <skir.ValuePath>[];
-
-      BoundPresentationHost createHost() {
-        final actual = value.authoredActualType!;
-        final selected = catalog.selectPresentation(
-          skir.TypeSelection.wrapComplete(actual),
-          skir.PresentationRole.inspector,
-        ) as SelectedEditorPresentation;
-        expect(
-          selected.descriptor.id,
-          skir.PresentationId(
-            namespace: "fixture",
-            name: "inherited child inspector",
-          ),
-        );
-        final host = BoundPresentationHost(
-          catalog: catalog,
-          root: () => selected.material.layout,
-          role: selected.resolvedRole,
-          material: selected.material,
-          bindings: [
-            BoundPresentationBinding(
-              id: skir.ExpressionBindingId(value: "configured_value"),
-              use: skir.TypeUse.wrapNamed(actual),
-              read: (path) => value.editorValueAt(path),
-              write: (path, replacement) {
-                final result = value.replaceAt(
-                  path,
-                  replacement,
-                ) as PortablePathValue<skir.DataValue>;
-                value = result.value;
-                writes.add(path);
-                return const PortablePresentationWriteResult.applied();
-              },
-            ),
-          ],
-          budget: skir.EvaluationBudget(
-            maxSteps: 1000,
-            maxCollectionItems: 1000,
-          ),
-        );
-        addTearDown(host.dispose);
-        return host;
-      }
-
-      Future<void> pumpHost(BoundPresentationHost host) => tester.pumpTestApp(
-        child: Scaffold(
-          body: SingleChildScrollView(
-            child: PortablePresentationRenderer(host: host),
-          ),
-        ),
+      final inspector = ValueInspector(
+        compiledSdkInheritedInspectorValue,
+        catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
       );
 
-      List<String> values() => tester
-          .widgetList<TextFormField>(find.byType(TextFormField))
-          .map((field) => field.controller!.text)
-          .toList();
+      final panel = await inspector.show(tester);
 
-      void expectOrder(List<String> expected) {
-        expect(values(), expected);
-        expect(find.text("Entry heading"), findsOneWidget);
-        expect(find.text("Shared details"), findsOneWidget);
-        final fields = find.byType(TextFormField);
-        expect(
-          tester.getTopLeft(find.text("Entry heading")).dy,
-          greaterThan(tester.getTopLeft(fields.at(0)).dy),
-        );
-        expect(
-          tester.getTopLeft(find.text("Entry heading")).dy,
-          lessThan(tester.getTopLeft(fields.at(1)).dy),
-        );
-        expect(
-          tester.getTopLeft(find.text("Shared details")).dy,
-          greaterThan(tester.getTopLeft(fields.at(1)).dy),
-        );
-        expect(
-          tester.getTopLeft(find.text("Shared details")).dy,
-          lessThan(tester.getTopLeft(fields.at(2)).dy),
-        );
-        expect(tester.takeException(), isNull);
-      }
-
-      final placement = compiledSdkPlacementValue;
-      final coordinates = [
-        for (final field in ["x", "y", "width", "height"])
-          placement.authoredField(field)!.authoredInteger!.toString(),
-      ];
-      await pumpHost(createHost());
-      await tester.pumpAndSettle();
-      expectOrder([
+      expect(visibleFieldValues(), [
         "Welcome",
         "Hello player",
         "Shared note",
         "Cooldown",
         ...coordinates,
       ]);
+      final fields = visibleTextFields();
+      final heading = tester.getRect(panel.labeled("Entry heading"));
+      final details = tester.getRect(panel.labeled("Shared details"));
+      expect(heading.top, greaterThan(fields[0].screenRect.top));
+      expect(heading.top, lessThan(fields[1].screenRect.top));
+      expect(details.top, greaterThan(fields[1].screenRect.top));
+      expect(details.top, lessThan(fields[2].screenRect.top));
+    },
+  );
 
-      await tester.enterText(find.byType(TextFormField).first, "  Renamed  ");
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.pumpAndSettle();
-      expect(value.authoredField("name")?.authoredString, "Renamed");
-      expect(writes.last, editorRootPath.field("name"));
+  testWidgets("an edit to an inherited field writes its trimmed value", (
+    tester,
+  ) async {
+    final inspector = ValueInspector(
+      compiledSdkInheritedInspectorValue,
+      catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
+    );
+    final panel = await inspector.show(tester);
 
-      await tester.enterText(find.byType(TextFormField).at(2), "Changed note");
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-      expect(value.authoredField("notes")?.authoredString, "Changed note");
-      expect(writes.last, editorRootPath.field("notes"));
+    await panel.field("name").enter("  Renamed  ");
 
-      await tester.enterText(find.byType(TextFormField).at(4), "37");
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.pumpAndSettle();
-      expect(
-        value.authoredField("placement")?.authoredField("x")?.authoredInteger,
-        BigInt.from(37),
-      );
-      expect(writes.last, editorRootPath.field("placement").field("x"));
+    expect(inspector.value.authoredField("name")?.authoredString, "Renamed");
+  });
 
-      await tester.pumpWidget(const SizedBox.shrink());
-      value = skir.DataValue.serializer.fromBytes(
-        skir.DataValue.serializer.toBytes(value),
-      );
-      catalog = CheckedEditorCatalog(
+  testWidgets("an edit to a shared part writes the part's field", (
+    tester,
+  ) async {
+    final inspector = ValueInspector(
+      compiledSdkInheritedInspectorValue,
+      catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
+    );
+    final panel = await inspector.show(tester);
+
+    await panel.field("Notes").submit("Changed note");
+
+    expect(
+      inspector.value.authoredField("notes")?.authoredString,
+      "Changed note",
+    );
+  });
+
+  testWidgets("an edit to a placement coordinate writes the coordinate", (
+    tester,
+  ) async {
+    final inspector = ValueInspector(
+      compiledSdkInheritedInspectorValue,
+      catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
+    );
+    final panel = await inspector.show(tester);
+
+    await panel.field("X coordinate").enter("37");
+
+    expect(
+      inspector.value
+          .authoredField("placement")
+          ?.authoredField("x")
+          ?.authoredInteger,
+      BigInt.from(37),
+    );
+  });
+
+  testWidgets("edited values and layout survive a serialized reload", (
+    tester,
+  ) async {
+    final edited = ValueInspector(
+      compiledSdkInheritedInspectorValue,
+      catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
+    );
+    final panel = await edited.show(tester);
+    await panel.field("name").enter("Renamed");
+    await panel.field("Notes").submit("Changed note");
+    await panel.field("X coordinate").enter("37");
+    await tester.pumpWidget(const SizedBox.shrink());
+
+    final reloaded = ValueInspector(
+      skir.DataValue.serializer.fromBytes(
+        skir.DataValue.serializer.toBytes(edited.value),
+      ),
+      catalog: CheckedEditorCatalog(
         skir.EditorCatalog.serializer.fromBytes(
           skir.EditorCatalog.serializer.toBytes(compiledSdkControlCatalog),
         ),
-      );
-      await pumpHost(createHost());
-      await tester.pumpAndSettle();
-      expectOrder([
-        "Renamed",
-        "Hello player",
-        "Changed note",
-        "Cooldown",
-        "37",
-        ...coordinates.skip(1),
-      ]);
-    },
-  );
+      ),
+    );
+    final reopened = await reloaded.show(tester);
+
+    expect(visibleFieldValues(), [
+      "Renamed",
+      "Hello player",
+      "Changed note",
+      "Cooldown",
+      "37",
+      ...coordinates.skip(1),
+    ]);
+    final fields = visibleTextFields();
+    final heading = tester.getRect(reopened.labeled("Entry heading"));
+    final details = tester.getRect(reopened.labeled("Shared details"));
+    expect(heading.top, greaterThan(fields[0].screenRect.top));
+    expect(heading.top, lessThan(fields[1].screenRect.top));
+    expect(details.top, greaterThan(fields[1].screenRect.top));
+    expect(details.top, lessThan(fields[2].screenRect.top));
+  });
 }

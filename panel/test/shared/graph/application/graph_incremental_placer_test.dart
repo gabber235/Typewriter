@@ -7,41 +7,51 @@ void main() {
   test("uses the preferred centered translation when it is free", () {
     final placed = placer.placeGroup(
       obstacles: const [],
-      group: [_rect(0, 0, 4, 2)],
+      group: [GraphGridRect(x: 0, y: 0, width: 4, height: 2)],
       anchor: const Offset(10, 8),
     );
 
-    expect(placed, [_rect(8, 7, 4, 2)]);
+    expect(placed, [GraphGridRect(x: 8, y: 7, width: 4, height: 2)]);
   });
 
   test("searches clockwise through Manhattan rings", () {
     final placed = placer.placeGroup(
-      obstacles: [_rect(0, 0, 1, 1)],
-      group: [_rect(0, 0, 1, 1)],
+      obstacles: [GraphGridRect(x: 0, y: 0, width: 1, height: 1)],
+      group: [GraphGridRect(x: 0, y: 0, width: 1, height: 1)],
       anchor: const Offset(0.5, 0.5),
     );
 
-    expect(placed, [_rect(2, 0, 1, 1)]);
+    expect(placed, [GraphGridRect(x: 2, y: 0, width: 1, height: 1)]);
   });
 
   test("preserves relative coordinates for a group", () {
-    final group = [_rect(0, 0, 3, 1), _rect(4, 2, 2, 1)];
+    final group = [
+      GraphGridRect(x: 0, y: 0, width: 3, height: 1),
+      GraphGridRect(x: 4, y: 2, width: 2, height: 1),
+    ];
     final placed = placer.placeGroup(
-      obstacles: [_rect(0, 0, 3, 1), _rect(4, 2, 2, 1), _rect(7, 0, 4, 1)],
+      obstacles: [
+        GraphGridRect(x: 0, y: 0, width: 3, height: 1),
+        GraphGridRect(x: 4, y: 2, width: 2, height: 1),
+        GraphGridRect(x: 7, y: 0, width: 4, height: 1),
+      ],
       group: group,
       anchor: const Offset(10, 1.5),
     );
 
-    expect(placed, [_rect(7, 2, 3, 1), _rect(11, 4, 2, 1)]);
+    expect(placed, [
+      GraphGridRect(x: 7, y: 2, width: 3, height: 1),
+      GraphGridRect(x: 11, y: 4, width: 2, height: 1),
+    ]);
     expect(placed[1].x - placed[0].x, group[1].x - group[0].x);
     expect(placed[1].y - placed[0].y, group[1].y - group[0].y);
   });
 
   test("supports negative coordinates and variable dimensions", () {
-    final obstacle = _rect(-4, -3, 5, 2);
+    final obstacle = GraphGridRect(x: -4, y: -3, width: 5, height: 2);
     final placed = placer.placeGroup(
       obstacles: [obstacle],
-      group: [_rect(0, 0, 2, 3)],
+      group: [GraphGridRect(x: 0, y: 0, width: 2, height: 3)],
       anchor: const Offset(-1.5, -2),
     );
 
@@ -70,21 +80,30 @@ void main() {
 
     for (final (region, isAllowed) in cases) {
       final placed = placer.placeGroup(
-        obstacles: [_rect(-8, -8, 16, 14)],
-        group: [_rect(0, 0, 4, 2)],
+        obstacles: [GraphGridRect(x: -8, y: -8, width: 16, height: 14)],
+        group: [GraphGridRect(x: 0, y: 0, width: 4, height: 2)],
         anchor: Offset.zero,
         allowedRegion: region,
       );
 
       expect(isAllowed(placed.single), isTrue);
-      expect(placed.single.overlaps(_rect(-8, -8, 16, 14), gap: 1), isFalse);
+      expect(
+        placed.single.overlaps(
+          GraphGridRect(x: -8, y: -8, width: 16, height: 14),
+          gap: 1,
+        ),
+        isFalse,
+      );
     }
   });
 
   test("uses a valid directional escape bound through dense obstacles", () {
     final placed = placer.placeGroup(
-      obstacles: [for (var y = -10; y <= 10; y += 2) _rect(4, y, 4, 1)],
-      group: [_rect(0, 0, 4, 1)],
+      obstacles: [
+        for (var y = -10; y <= 10; y += 2)
+          GraphGridRect(x: 4, y: y, width: 4, height: 1),
+      ],
+      group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
       anchor: const Offset(6, 0),
       allowedRegion: const GraphPlacementRegion.rightOf(4),
     );
@@ -95,7 +114,7 @@ void main() {
   test("empty group has no placement", () {
     expect(
       placer.placeGroup(
-        obstacles: [_rect(0, 0, 1, 1)],
+        obstacles: [GraphGridRect(x: 0, y: 0, width: 1, height: 1)],
         group: const [],
         anchor: Offset.zero,
       ),
@@ -105,8 +124,8 @@ void main() {
 
   test("center of mass preserves pixel area weighting", () {
     final center = graphCenterOfMass([
-      _rect(0, 0, 4, 4),
-      _rect(10, 0, 1, 1),
+      GraphGridRect(x: 0, y: 0, width: 4, height: 4),
+      GraphGridRect(x: 10, y: 0, width: 1, height: 1),
     ], cellSize: 10)!;
 
     expect(center.dx, lessThan(5));
@@ -117,6 +136,3 @@ void main() {
     expect(graphCenterOfMass(const [], cellSize: 10), isNull);
   });
 }
-
-GraphGridRect _rect(int x, int y, int width, int height) =>
-    GraphGridRect(x: x, y: y, width: width, height: height);

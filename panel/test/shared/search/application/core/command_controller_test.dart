@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("CommandController", () {
@@ -11,12 +10,12 @@ void main() {
         prompts: const UnsupportedSearchPromptHost(),
       );
       addTearDown(controller.dispose);
-      final command = _singleCommand(
+      final command = searchCommand(
         evaluate: (_, _) => const SearchCommandState.disabled("Unavailable"),
       );
 
       expect(
-        controller.execute(command, _target([searchResult("a")])),
+        controller.execute(command, commandTarget([searchResult("a")])),
         SearchCommandSubmitResult.notApplicable,
       );
       expect(controller.state, isA<SearchCommandIdle>());
@@ -43,7 +42,7 @@ void main() {
       expect(
         controller.execute(
           command,
-          _target([searchResult("a"), searchResult("b")]),
+          commandTarget([searchResult("a"), searchResult("b")]),
         ),
         SearchCommandSubmitResult.submitted,
       );
@@ -56,9 +55,69 @@ void main() {
       expect(effects, [const SearchSurfaceEffect.close()]);
     });
 
+    final outcomes = {
+      "every result succeeds": (
+        locked: <String>{},
+        state: isA<SearchCommandCompleted>(),
+      ),
+      "one result fails": (
+        locked: {"b"},
+        state: isA<SearchCommandFailed>().having(
+          (state) => state.message,
+          "message",
+          "b is locked",
+        ),
+      ),
+      "several results fail": (
+        locked: {"b", "c"},
+        state: isA<SearchCommandFailed>().having(
+          (state) => state.message,
+          "message",
+          "Search failed: b is locked, c is locked",
+        ),
+      ),
+    };
+    for (final MapEntry(key: name, value: (:locked, :state))
+        in outcomes.entries) {
+      test(
+        "a repeated command runs once per selected result when $name",
+        () async {
+          final executed = <String>[];
+          final controller = CommandController(
+            effectCallback: (_) {},
+            prompts: const UnsupportedSearchPromptHost(),
+          );
+          addTearDown(controller.dispose);
+
+          controller.execute(
+            SearchCommand.repeated<String>(
+              id: const SearchCommandId("test.repeated"),
+              presentation: const SearchCommandPresentation(label: "Repeated"),
+              matcher: const SearchResultMatcher(testResultType),
+              execute: (context, value, target) async {
+                executed.add(value);
+                return locked.contains(value)
+                    ? SearchCommandResult.failed(message: "$value is locked")
+                    : const SearchCommandResult.completed();
+              },
+            ),
+            commandTarget([
+              searchResult("a"),
+              searchResult("b"),
+              searchResult("c"),
+            ]),
+          );
+          await Future<void>.delayed(Duration.zero);
+
+          expect(executed, ["a", "b", "c"]);
+          expect(controller.state, state);
+        },
+      );
+    }
+
     test("running command blocks another execution", () {
       final completer = Completer<SearchCommandResult>();
-      final command = _singleCommand(
+      final command = searchCommand(
         execute: (context, value, target) => completer.future,
       );
       final controller = CommandController(
@@ -66,7 +125,7 @@ void main() {
         prompts: const UnsupportedSearchPromptHost(),
       );
       addTearDown(controller.dispose);
-      final target = _target([searchResult("a")]);
+      final target = commandTarget([searchResult("a")]);
 
       expect(
         controller.execute(command, target),
@@ -89,11 +148,11 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.execute(
-        _singleCommand(
+        searchCommand(
           execute: (context, value, target) async =>
               const SearchCommandResult.cancelled(),
         ),
-        _target([searchResult("a")]),
+        commandTarget([searchResult("a")]),
       );
       await Future<void>.delayed(Duration.zero);
 
@@ -107,21 +166,21 @@ void main() {
         effectCallback: (_) => events.add("surface"),
         prompts: const UnsupportedSearchPromptHost(),
         hostEffectExecutors: [
-          SearchHostEffectExecutor<_TestHostEffect>(
-            (effect) => events.add("host:${effect.value}"),
+          SearchHostEffectExecutor<NamedHostEffect>(
+            (effect) => events.add("host:${effect.name}"),
           ),
         ],
       );
       addTearDown(controller.dispose);
 
       controller.execute(
-        _singleCommand(
+        searchCommand(
           execute: (context, value, target) async =>
               const SearchCommandResult.completed(
-                hostEffects: [_TestHostEffect("organization")],
+                hostEffects: [NamedHostEffect("organization")],
               ),
         ),
-        _target([searchResult("a")]),
+        commandTarget([searchResult("a")]),
       );
       await Future<void>.delayed(Duration.zero);
 
@@ -139,10 +198,10 @@ void main() {
       addTearDown(controller.dispose);
 
       controller.execute(
-        _singleCommand(
+        searchCommand(
           execute: (context, value, target) => Future.error(StateError("boom")),
         ),
-        _target([searchResult("a")]),
+        commandTarget([searchResult("a")]),
       );
       await Future<void>.delayed(Duration.zero);
 
@@ -153,29 +212,4 @@ void main() {
       );
     });
   });
-}
-
-SearchCommand _singleCommand({
-  SearchCommandEvaluator<String>? evaluate,
-  SearchCommandExecutor<String>? execute,
-}) => SearchCommand.single<String>(
-  id: const SearchCommandId("test.single"),
-  presentation: const SearchCommandPresentation(label: "Single"),
-  matcher: const SearchResultMatcher(testResultType),
-  evaluate: evaluate,
-  execute:
-      execute ??
-      (context, value, target) async => const SearchCommandResult.completed(),
-);
-
-SearchCommandTarget _target(List<SearchResult> results) => SearchCommandTarget(
-  primary: results.first,
-  selection: results,
-  query: SearchQueryContext.empty,
-);
-
-final class _TestHostEffect implements SearchHostEffect {
-  const _TestHostEffect(this.value);
-
-  final String value;
 }

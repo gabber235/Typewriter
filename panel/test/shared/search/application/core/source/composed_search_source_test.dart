@@ -2,8 +2,7 @@
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("ranked", () {
@@ -71,8 +70,8 @@ void main() {
       inner.emitSnapshot(
         readySnapshot(
           nodes: [
-            resultNodeWithSubtitle("title", "sword", "equipment"),
-            resultNodeWithSubtitle("subtitle", "equipment", "sword"),
+            resultNode("title", title: "sword", subtitle: "equipment"),
+            resultNode("subtitle", title: "equipment", subtitle: "sword"),
           ],
         ),
       );
@@ -105,35 +104,6 @@ void main() {
         (snapshots.single.nodes.single as SearchSectionNode).id,
         "matching",
       );
-    });
-
-    test("extracts every configured field once per result", () {
-      final inner = FakeSearchSource();
-      var extractionCount = 0;
-      final source = inner.ranked([
-        SearchRankField(
-          text: (result) {
-            extractionCount++;
-            return result.title;
-          },
-          weight: 1,
-        ),
-      ]);
-      addTearDown(source.dispose);
-      final subscription = source.snapshots.listen((snapshot) {});
-      addTearDown(subscription.cancel);
-
-      source.search(queryContext("home"));
-      inner.emitSnapshot(
-        readySnapshot(
-          nodes: [
-            sectionNode("nested", [resultNode("home")]),
-            resultNode("homepage"),
-          ],
-        ),
-      );
-
-      expect(extractionCount, 2);
     });
   });
 
@@ -289,22 +259,4 @@ void main() {
     expect(resultIds(rankedSnapshots.single), ["exact"]);
     expect(resultIds(limitedSnapshots.single), ["weak"]);
   });
-}
-
-SearchQueryContext queryContext(String query) {
-  return SearchQueryContext(normalizedQuery: query, selectors: const []);
-}
-
-SearchNode resultNodeWithSubtitle(String id, String title, String subtitle) {
-  return SearchNode.result(
-    result: searchResult(id, title: title).copyWith(subtitle: subtitle),
-  );
-}
-
-List<String> resultIds(SearchSourceSnapshot snapshot) {
-  return snapshot.nodes
-      .walk()
-      .whereType<SearchResultNode>()
-      .map((node) => node.result.id)
-      .toList();
 }

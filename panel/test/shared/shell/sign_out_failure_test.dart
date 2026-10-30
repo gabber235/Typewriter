@@ -3,62 +3,33 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 const _failureMessage = "Could not sign out. Please try again.";
-
-class _FailingAuth extends Auth {
-  @override
-  Future<OidcUserManager?> build() async => null;
-
-  @override
-  Future<void> signOut() async => throw StateError("sign out failed");
-}
-
-class _TestAppearance extends Appearance {
-  @override
-  ThemeMode build() => ThemeMode.light;
-}
+final _failure = StateError("sign out failed");
 
 void main() {
   testWidgets("SignOutButton surfaces one sign out failure", (tester) async {
-    await tester.pumpTestApp(
-      child: const Scaffold(body: SignOutButton()),
-      overrides: [authProvider.overrideWith(_FailingAuth.new)],
-    );
+    final panel = await tester.pumpPanel([
+      signedIn(ada),
+    ], at: PanelLocation.component(const SignOutButton()));
+    panel.world.session.signOutFailure = _failure;
 
-    await tester.tap(find.text("Sign out"));
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.text("Sign out"));
 
     expect(find.text(_failureMessage), findsOneWidget);
+    expect(tester.takeException(), same(_failure));
+    expect(panel.world.session.user, ada);
   });
 
   testWidgets("UserMenu surfaces one sign out failure", (tester) async {
-    final previousErrorHandler = FlutterError.onError;
-    FlutterError.onError = (details) {
-      if (details.exception is NetworkImageLoadException) return;
-      previousErrorHandler?.call(details);
-    };
-    addTearDown(() => FlutterError.onError = previousErrorHandler);
-    await tester.pumpTestApp(
-      child: const Scaffold(body: UserMenu()),
-      overrides: [
-        authProvider.overrideWith(_FailingAuth.new),
-        appearanceProvider.overrideWith(_TestAppearance.new),
-        authUserInfoProvider.overrideWithValue(
-          const AsyncData(
-            UserInfo(
-              sub: "user1",
-              name: "Test User",
-              avatarUrl: "https://example.com/avatar.png",
-            ),
-          ),
-        ),
-      ],
-    );
+    final panel = await tester.pumpPanel([
+      signedIn(ada),
+    ], at: PanelLocation.component(const UserMenu()));
+    panel.world.session.signOutFailure = _failure;
 
-    await tester.tap(find.text("Test User"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Logout"));
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.text(ada.name));
+    await panel.tapOn(find.text("Logout"));
 
     expect(find.text(_failureMessage), findsOneWidget);
+    expect(tester.takeException(), same(_failure));
+    expect(panel.world.session.user, ada);
   });
 }

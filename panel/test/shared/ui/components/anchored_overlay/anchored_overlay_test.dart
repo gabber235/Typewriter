@@ -3,72 +3,64 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("AnchoredOverlayPortal", () {
-    testWidgets("hidden when visible is false", (tester) async {
-      await tester.pumpTestApp(
-        child: AnchoredOverlayPortal(
+  testWidgets("a hidden portal shows no overlay", (tester) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        AnchoredOverlayPortal(
           visible: false,
-          child: const SizedBox(width: 120, height: 40),
-          overlayBuilder: (context, _) {
-            return Container(
-              key: const ValueKey("overlay_content"),
-              height: 60,
-              color: Theme.of(context).colorScheme.surface,
-            );
-          },
+
+          child: const SizedBox(width: 180, height: 40, child: Text("Anchor")),
+          overlayBuilder: (context, _) =>
+              const SizedBox(height: 60, child: Text("Overlay")),
         ),
-      );
+      ),
+    );
 
-      await tester.pump();
-      expect(find.byKey(const ValueKey("overlay_content")), findsNothing);
-    });
+    expect(panel.shows("Anchor"), isTrue);
+    expect(panel.shows("Overlay"), isFalse);
+  });
 
-    testWidgets("shows and hides when visible changes", (tester) async {
-      var visible = false;
-      late StateSetter setState;
+  testWidgets("the overlay follows the portal's visibility", (tester) async {
+    final visible = ValueNotifier(false);
+    addTearDown(visible.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: visible,
+          builder: (context, value, _) => AnchoredOverlayPortal(
+            visible: value,
 
-      await tester.pumpTestApp(
-        child: StatefulBuilder(
-          builder: (context, stateSetter) {
-            setState = stateSetter;
-            return AnchoredOverlayPortal(
-              visible: visible,
-              child: const SizedBox(width: 120, height: 40),
-              overlayBuilder: (context, _) {
-                return Container(
-                  key: const ValueKey("overlay_content"),
-                  height: 60,
-                  color: Theme.of(context).colorScheme.surface,
-                );
-              },
-            );
-          },
+            child: const SizedBox(
+              width: 180,
+              height: 40,
+              child: Text("Anchor"),
+            ),
+            overlayBuilder: (context, _) =>
+                const SizedBox(height: 60, child: Text("Overlay")),
+          ),
         ),
-      );
+      ),
+    );
+    expect(panel.shows("Overlay"), isFalse);
 
-      await tester.pump();
-      expect(find.byKey(const ValueKey("overlay_content")), findsNothing);
+    visible.value = true;
+    await panel.settle();
+    expect(panel.shows("Overlay"), isTrue);
 
-      setState(() {
-        visible = true;
-      });
-      await tester.pump();
-      await tester.pump();
-      expect(find.byKey(const ValueKey("overlay_content")), findsOneWidget);
+    visible.value = false;
+    await panel.settle();
+    expect(panel.shows("Overlay"), isFalse);
+  });
 
-      setState(() {
-        visible = false;
-      });
-      await tester.pump();
-      await tester.pump();
-      expect(find.byKey(const ValueKey("overlay_content")), findsNothing);
-    });
-
-    testWidgets("match anchor constrains width for bottom side", (
-      tester,
-    ) async {
-      await tester.pumpTestApp(
-        child: Align(
+  testWidgets("an overlay below its anchor matches the anchor's width", (
+    tester,
+  ) async {
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Align(
           alignment: Alignment.topLeft,
           child: AnchoredOverlayPortal(
             visible: true,
@@ -76,25 +68,21 @@ void main() {
               preferredSide: AnchoredOverlaySide.bottom,
               sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
             ),
-            child: const SizedBox(width: 180, height: 40),
-            overlayBuilder: (context, _) {
-              return Container(
-                key: const ValueKey("overlay_content"),
-                height: 60,
-                color: Theme.of(context).colorScheme.surface,
-              );
-            },
+            child: const SizedBox(
+              width: 180,
+              height: 40,
+              child: Text("Anchor"),
+            ),
+            overlayBuilder: (context, _) =>
+                const SizedBox(height: 60, child: Text("Overlay")),
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.pump();
-
-      final anchorRect = tester.getRect(find.byType(SizedBox).first);
-      final overlayRect = tester.getRect(
-        find.byKey(const ValueKey("overlay_content")),
-      );
-      expect(overlayRect.width, anchorRect.width);
-    });
+    final anchor = tester.getRect(find.text("Anchor"));
+    final overlay = tester.getRect(find.text("Overlay"));
+    expect(overlay.width, anchor.width);
+    expect(overlay.top, greaterThanOrEqualTo(anchor.bottom));
   });
 }

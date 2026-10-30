@@ -4,65 +4,40 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(
   name: "Configured scalar controls",
   type: PortablePresentationRenderer,
 )
-Widget configuredScalarControlsUseCase(BuildContext context) =>
-    configuredScalarControlsStory(
-      readOnly: context.knobs.boolean(
-        label: "Scalar read only",
-        initialValue: false,
-      ),
-      compact: context.knobs.boolean(
-        label: "Scalar compact",
-        initialValue: false,
-      ),
-      noIcon: context.knobs.boolean(
-        label: "Scalar remove icons",
-        initialValue: false,
-      ),
+Widget configuredScalarControlsUseCase(BuildContext context) => Story(
+  const [],
+  at: PanelLocation.component(
+    SizedBox(
       width: context.knobs.double.slider(
         label: "Scalar gallery width",
         initialValue: 580,
         min: 340,
         max: 900,
       ),
-    );
-
-Widget configuredScalarControlsStory({
-  bool readOnly = false,
-  bool compact = false,
-  bool noIcon = false,
-  double width = 580,
-}) => FakeApp(
-  child: Material(
-    child: Center(
-      child: SizedBox(
-        width: width,
-        height: 700,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: ConfiguredScalarGallery(
-              readOnly: readOnly,
-              compact: compact,
-              noIcon: noIcon,
-            ),
-          ),
+      height: 700,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: _ConfiguredScalars(
+          readOnly: context.knobs.boolean(label: "Scalar read only"),
+          compact: context.knobs.boolean(label: "Scalar compact"),
+          noIcon: context.knobs.boolean(label: "Scalar remove icons"),
         ),
       ),
     ),
   ),
 );
 
-class ConfiguredScalarGallery extends HookWidget {
-  const ConfiguredScalarGallery({
+class _ConfiguredScalars extends HookWidget {
+  const _ConfiguredScalars({
     required this.readOnly,
     required this.compact,
     required this.noIcon,
-    super.key,
   });
   final bool readOnly;
   final bool compact;

@@ -28,6 +28,17 @@ class SelectableDriver extends ComponentDriver {
   /// Where the item is on screen.
   Rect get rect => tester.getRect(_item);
 
+  /// Whether assistive technology reads the item as selected, such as the
+  /// current page of a navigator.
+  bool get isMarkedSelected => find.semantics
+      .byLabel(label)
+      .evaluate()
+      .any(
+        (node) =>
+            node.getSemanticsData().flagsCollection.isSelected ==
+            Tristate.isTrue,
+      );
+
   /// Toggles the item's selection with a click.
   Future<void> select() => tapOn(_item);
 

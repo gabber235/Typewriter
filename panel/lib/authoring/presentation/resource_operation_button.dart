@@ -24,10 +24,14 @@ class ResourceOperationButton extends StatelessWidget {
     final icon = presentation.icon.isEmpty
         ? null
         : Icones(presentation.icon, size: 16);
-    final label = Text(
-      presentation.label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+    // The destructive tone is more than a colour: the hint announces it.
+    final label = Semantics(
+      hint: destructive ? "Destructive" : null,
+      child: Text(
+        presentation.label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
     final variant = switch (presentation.inspector) {
       skir.OperationInspector_buttonWrapper(:final value) => value,

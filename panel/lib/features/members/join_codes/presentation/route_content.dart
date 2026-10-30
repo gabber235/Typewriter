@@ -173,13 +173,17 @@ class _JoinCodesLoadingShimmer extends StatelessWidget {
   const _JoinCodesLoadingShimmer();
 
   @override
-  Widget build(BuildContext context) => context.isDesktop
-      ? const _JoinCodesTableShimmer(key: ValueKey("joinCodesLoadingDesktop"))
-      : const _JoinCodesListShimmer(key: ValueKey("joinCodesLoadingMobile"));
+  Widget build(BuildContext context) => SliverSemantics(
+    label: "Loading join codes",
+    container: true,
+    sliver: context.isDesktop
+        ? const _JoinCodesTableShimmer()
+        : const _JoinCodesListShimmer(),
+  );
 }
 
 class _JoinCodesTableShimmer extends StatelessWidget {
-  const _JoinCodesTableShimmer({super.key});
+  const _JoinCodesTableShimmer();
 
   @override
   Widget build(BuildContext context) => SliverFillRemaining(
@@ -237,7 +241,7 @@ class _ShimmerCell extends StatelessWidget {
 }
 
 class _JoinCodesListShimmer extends StatelessWidget {
-  const _JoinCodesListShimmer({super.key});
+  const _JoinCodesListShimmer();
 
   @override
   Widget build(BuildContext context) => SliverMainAxisGroup(

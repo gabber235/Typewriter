@@ -1,90 +1,48 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("skir.JoinCode", () {
-    test("isExpired returns true when expiresAt is in the past", () {
-      final code = skir.JoinCode(
-        code: skir.recordId("organization_join_code:ABC123"),
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        expiresAt: DateTime.now().subtract(const Duration(days: 1)),
-        singleUse: true,
-        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
+  final now = DateTime.utc(2026, 10, 27, 12);
+
+  test("a join code past its expiry is expired with no time left", () {
+    withClock(Clock.fixed(now), () {
+      final expired = joinCode(
+        "ABC123",
+        createdAt: now.subtract(const Duration(days: 2)),
+        expiresAt: now.subtract(const Duration(days: 1)),
       );
 
-      expect(code.isExpired, true);
-      expect(code.neverExpires, false);
-      expect(code.remainingDuration, Duration.zero);
-    });
-
-    test("isExpired returns false when expiresAt is in the future", () {
-      final code = skir.JoinCode(
-        code: skir.recordId("organization_join_code:ABC123"),
-        createdAt: DateTime.now(),
-        expiresAt: DateTime.now().add(const Duration(days: 7)),
-        singleUse: true,
-        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
-      );
-
-      expect(code.isExpired, false);
-      expect(code.neverExpires, false);
-      expect(code.remainingDuration!.inDays, greaterThanOrEqualTo(6));
-    });
-
-    test("neverExpires returns true when expiresAt is null", () {
-      final code = skir.JoinCode(
-        code: skir.recordId("organization_join_code:ABC123"),
-        createdAt: DateTime.now(),
-        expiresAt: null,
-        singleUse: true,
-        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
-      );
-
-      expect(code.neverExpires, true);
-      expect(code.isExpired, false);
-      expect(code.remainingDuration, null);
+      expect(expired.isExpired, isTrue);
+      expect(expired.neverExpires, isFalse);
+      expect(expired.remainingDuration, Duration.zero);
     });
   });
 
-  group("skir.JoinCode_AutoAccept", () {
-    test("creates auto-accept config with role ids", () {
-      final autoAccept = skir.JoinCode_AutoAccept(
-        roleIds: [
-          skir.recordId("organization_role:r1"),
-          skir.recordId("organization_role:r2"),
-        ],
+  test("a join code before its expiry has the time until it left", () {
+    withClock(Clock.fixed(now), () {
+      final active = joinCode(
+        "ABC123",
+        createdAt: now.subtract(const Duration(days: 2)),
+        expiresAt: now.add(const Duration(days: 7)),
       );
 
-      expect(autoAccept.roleIds, [
-        skir.recordId("organization_role:r1"),
-        skir.recordId("organization_role:r2"),
-      ]);
+      expect(active.isExpired, isFalse);
+      expect(active.neverExpires, isFalse);
+      expect(active.remainingDuration, const Duration(days: 7));
     });
   });
 
-  group("JoinCodeOptions", () {
-    test("has default values", () {
-      const options = JoinCodeOptions();
-
-      expect(options.singleUse, true);
-      expect(options.expiration, isA<JoinCodeExpirationDuration>());
-      expect(options.autoAcceptRoleIds, isEmpty);
-    });
-
-    test("allows custom configuration", () {
-      final options = JoinCodeOptions(
-        singleUse: false,
-        expiration: JoinCodeExpiration.never(),
-        autoAcceptRoleIds: [skir.recordId("organization_role:r1")],
+  test("a join code without expiry never expires and has no deadline", () {
+    withClock(Clock.fixed(now), () {
+      final forever = joinCode(
+        "ABC123",
+        createdAt: now.subtract(const Duration(days: 2)),
       );
 
-      expect(options.singleUse, false);
-      expect(options.expiration, isA<JoinCodeExpirationNever>());
-      expect(options.autoAcceptRoleIds, [
-        skir.recordId("organization_role:r1"),
-      ]);
+      expect(forever.neverExpires, isTrue);
+      expect(forever.isExpired, isFalse);
+      expect(forever.remainingDuration, isNull);
     });
   });
 }

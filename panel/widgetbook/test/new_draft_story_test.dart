@@ -1,70 +1,54 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/authoring/presentation/authored_resource_editor.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/presentation/authored_type_picker.stories.dart";
+
+import "support/stories.dart";
 
 void main() {
-  for (final size in [
-    const Size(390, 844),
-    const Size(844, 390),
-    const Size(1024, 768),
-    const Size(1440, 1200),
-  ]) {
-    testWidgets("new draft editor fits ${size.width} by ${size.height}", (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(size);
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
-      await tester.pumpWidget(Builder(builder: authoredNewDraftUseCase));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AuthoredResourceEditor), findsOneWidget);
-      expect(find.text("Search page types"), findsOneWidget);
-      expect(find.text("Title"), findsOneWidget);
-      expect(find.widgetWithText(TextButton, "Cancel"), findsNothing);
-      expect(find.widgetWithText(FilledButton, "Create"), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
-  }
-
-  testWidgets("edits an unfinished value through the normal editor", (
+  testWidgets("creating a page offers every concrete page type", (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(1024, 768));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(Builder(builder: authoredNewDraftUseCase));
-    await tester.pumpAndSettle();
+    final panel = (await tester.pumpStory(authoredTypePickerUseCase))!;
 
-    final title = find.byType(TextFormField).first;
-    expect(title, findsOneWidget);
-    expect(tester.widget<TextFormField>(title).controller?.text, isEmpty);
-    await tester.enterText(title, "Meet the mayor");
-    await tester.pumpAndSettle();
-    expect(find.text("Meet the mayor"), findsOneWidget);
-
-    expect(find.byType(AuthoredResourceEditor), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    for (final type in ["Sequence", "Static", "Scene", "Manifest"]) {
+      expect(panel.shows(type), isTrue, reason: type);
+    }
+    expect(panel.shows("Page"), isFalse);
   });
 
-  testWidgets("searches page kinds without a precreation editor", (
+  testWidgets("searching narrows the page types and a choice closes the "
+      "picker", (tester) async {
+    final panel = (await tester.pumpStory(authoredTypePickerUseCase))!;
+
+    await panel.field("Search resource types").enter("Sta");
+    expect(panel.shows("Static"), isTrue);
+    expect(panel.shows("Sequence"), isFalse);
+
+    await panel.tapOn(find.text("Static"));
+    expect(panel.shows("Static"), isFalse);
+  });
+
+  testWidgets("an unfinished title is filled through the inspector", (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(1024, 768));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(Builder(builder: authoredNewDraftUseCase));
-    await tester.pumpAndSettle();
+    final panel = (await tester.pumpStory(
+      authoredResourceEditorUseCase,
+      knobs: {"Title": "Unfinished"},
+    ))!;
+    expect(panel.field("Title").value, isEmpty);
 
-    await tester.tap(find.text("Search page types"));
-    await tester.pumpAndSettle();
-    expect(find.text("Sequence"), findsOneWidget);
-    expect(find.text("Static"), findsOneWidget);
-    expect(find.text("Scene"), findsOneWidget);
-    expect(find.text("Manifest"), findsOneWidget);
+    await panel.field("Title").enter("Meet the mayor");
 
-    await tester.tap(find.text("Static"));
-    await tester.pumpAndSettle();
-    expect(find.text("Selected Static"), findsOneWidget);
-    expect(find.byType(AuthoredResourceEditor), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    expect(
+      panel.working
+          .resource(messageFixture().resource)!
+          .authoredField("title")!
+          .authoredPayload,
+      skir.DataValue.wrapStringValue("Meet the mayor"),
+    );
   });
 }

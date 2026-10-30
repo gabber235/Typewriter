@@ -55,76 +55,82 @@ class SearchResultCard extends HookWidget {
       child: Material(
         color: Colors.transparent,
         borderRadius: context.shapes.mediumBorderRadius,
-        child: InkWell(
-          statesController: states,
-          borderRadius: context.shapes.mediumBorderRadius,
-          onTap: onTap,
-          onLongPress: onLongPress,
-          hoverColor: switch ((focused, surfaceBrightness)) {
-            (true, Brightness.dark) => backgroundColor.lighter(0.1),
-            (true, Brightness.light) => backgroundColor.darker(0.1),
-            (false, _) => Color.alphaBlend(
-              color.withValues(alpha: alpha + 0.1),
-              surfaceColor,
-            ),
-          },
-          splashColor: switch ((focused, surfaceBrightness)) {
-            (true, Brightness.dark) => backgroundColor.lighter(0.2),
-            (true, Brightness.light) => backgroundColor.darker(0.2),
-            (false, _) => Color.alphaBlend(
-              color.withValues(alpha: alpha + 0.3),
-              surfaceColor,
-            ),
-          },
-          highlightColor: Colors.transparent,
-          child: ValueListenableBuilder<Set<WidgetState>>(
-            valueListenable: states,
-            builder: (context, value, _) => PresentationInteractionScope(
-              value: PresentationInteraction.fromWidgetStates(value).copyWith(
-                selected: selected,
-                focused: focused || value.contains(WidgetState.focused),
+        // The selection shows as a border; assistive technology and
+        // keyboard users read it as the row's selected state.
+        child: Semantics(
+          container: true,
+          selected: selected,
+          child: InkWell(
+            statesController: states,
+            borderRadius: context.shapes.mediumBorderRadius,
+            onTap: onTap,
+            onLongPress: onLongPress,
+            hoverColor: switch ((focused, surfaceBrightness)) {
+              (true, Brightness.dark) => backgroundColor.lighter(0.1),
+              (true, Brightness.light) => backgroundColor.darker(0.1),
+              (false, _) => Color.alphaBlend(
+                color.withValues(alpha: alpha + 0.1),
+                surfaceColor,
               ),
-              child: ClipRRect(
-                borderRadius: context.shapes.mediumBorderRadius,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 64),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (prefix != null)
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: context.spacing.space1,
+            },
+            splashColor: switch ((focused, surfaceBrightness)) {
+              (true, Brightness.dark) => backgroundColor.lighter(0.2),
+              (true, Brightness.light) => backgroundColor.darker(0.2),
+              (false, _) => Color.alphaBlend(
+                color.withValues(alpha: alpha + 0.3),
+                surfaceColor,
+              ),
+            },
+            highlightColor: Colors.transparent,
+            child: ValueListenableBuilder<Set<WidgetState>>(
+              valueListenable: states,
+              builder: (context, value, _) => PresentationInteractionScope(
+                value: PresentationInteraction.fromWidgetStates(value).copyWith(
+                  selected: selected,
+                  focused: focused || value.contains(WidgetState.focused),
+                ),
+                child: ClipRRect(
+                  borderRadius: context.shapes.mediumBorderRadius,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 64),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (prefix != null)
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: context.spacing.space1,
+                            ),
+                            child: prefix,
                           ),
-                          child: prefix,
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              top: context.spacing.space2,
+                              right: 10,
+                              bottom: context.spacing.space2,
+                              left: 10,
+                            ),
+                            child: content,
+                          ),
                         ),
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            top: context.spacing.space2,
-                            right: 10,
-                            bottom: context.spacing.space2,
-                            left: 10,
+                        if (suffix != null)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 10,
+                              right: 10,
+                              bottom: 10,
+                            ),
+                            // A long kind, such as a type name, gives way to
+                            // the content instead of overflowing the row.
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 140),
+                              child: suffix,
+                            ),
                           ),
-                          child: content,
-                        ),
-                      ),
-                      if (suffix != null)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 10,
-                            right: 10,
-                            bottom: 10,
-                          ),
-                          // A long kind, such as a type name, gives way to
-                          // the content instead of overflowing the row.
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 140),
-                            child: suffix,
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

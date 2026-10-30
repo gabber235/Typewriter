@@ -14,32 +14,6 @@ extension ListX<T> on List<T> {
     return elementAt(random.nextInt(length));
   }
 
-  /// Samples [count] distinct list positions in random order.
-  ///
-  /// Invalid counts return an empty list rather than partially sampling.
-  List<T> randomSubset(int count) {
-    if (count <= 0 || count > length) return [];
-    final indices = List.generate(length, (index) => index);
-    final result = <T>[];
-    for (var i = 0; i < count; i++) {
-      final index = indices.removeAt(random.nextInt(indices.length));
-      result.add(this[index]);
-    }
-    return result;
-  }
-
-  List<int> get indices => List.generate(length, (index) => index);
-
-  /// Inserts a newly created separator between every adjacent element.
-  List<T> joinWith(T Function() separator) {
-    final result = <T>[];
-    for (var i = 0; i < length; i++) {
-      result.add(this[i]);
-      if (i < length - 1) result.add(separator());
-    }
-    return result;
-  }
-
   /// Combines two lists positionally, recursively masking shared values.
   List<dynamic> mask(List<dynamic> other) {
     final result = <dynamic>[];
@@ -98,9 +72,6 @@ extension IterableX<T> on Iterable<T> {
   Iterable<T> excluding(List<Type> types) {
     return where((element) => !types.contains(element.runtimeType));
   }
-
-  /// Whether every element has type [S]. Returns false for an empty iterable.
-  bool allAre<S extends T>() => isNotEmpty && every((t) => t is S);
 }
 
 /// Converts an iterable of entries into a map.

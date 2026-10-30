@@ -8,22 +8,18 @@ void main() {
   test(
     "inspection locates unfinished fields without admitting missing fields",
     () {
-      final page = _definition("Page");
+      final page = typeDefinition("Page");
       final named = skir.NamedTypeUse(definition: page, arguments: const []);
       final checked = testCheckedCatalog(
         generation: _admissionGeneration,
         types: [
-          _published(
+          testPublishedType(
             page,
-            effectiveFields: [
+            _emptyRecordShape,
+            fields: {
               for (final name in ["name", "title"])
-                skir.EffectiveFieldTemplate(
-                  key: name,
-                  owner: skir.FieldOwner(definition: page, name: name),
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                  rules: const [],
-                ),
-            ],
+                name: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+            },
           ),
         ],
       );
@@ -66,8 +62,8 @@ void main() {
   );
 
   test("named scalar payload keeps its checked identity", () {
-    final chapter = _definition("ChapterPath");
-    final page = _definition("Page");
+    final chapter = typeDefinition("ChapterPath");
+    final page = typeDefinition("Page");
     final expected = skir.TypeUse.createNamed(
       definition: chapter,
       arguments: const [],
@@ -75,25 +71,19 @@ void main() {
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        _published(
+        testPublishedType(
           chapter,
-          representation: skir.RepresentationTemplate.createScalar(
-            kind: skir.ScalarKind.text,
-          ),
+          skir.RepresentationTemplate.createScalar(kind: skir.ScalarKind.text),
         ),
-        _published(
+        testPublishedType(
           page,
-          effectiveFields: [
-            skir.EffectiveFieldTemplate(
-              key: "chapter",
-              owner: skir.FieldOwner(definition: page, name: "chapter"),
-              type: skir.TypeTemplate.createNamed(
-                definition: chapter,
-                arguments: const [],
-              ),
-              rules: const [],
+          _emptyRecordShape,
+          fields: {
+            "chapter": skir.TypeTemplate.createNamed(
+              definition: chapter,
+              arguments: const [],
             ),
-          ],
+          },
         ),
       ],
     );
@@ -117,15 +107,16 @@ void main() {
   });
 
   test("rejects an application whose argument violates its bound", () {
-    final marker = _definition("Marker");
-    final box = _definition("Box");
+    final marker = typeDefinition("Marker");
+    final box = typeDefinition("Box");
     final parameter = skir.ParameterKey(owner: box, index: 0);
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        _published(marker),
-        _published(
+        testPublishedType(marker, _emptyRecordShape),
+        testPublishedType(
           box,
+          _emptyRecordShape,
           parameters: [
             skir.TypeParameter(
               key: parameter,
@@ -145,7 +136,7 @@ void main() {
       definition: box,
       arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
     );
-    final value = _emptyRecord(invalid);
+    final value = namedRecord(invalid);
 
     expect(
       checked.isReadableAs(
@@ -170,19 +161,20 @@ void main() {
     expect(
       checked.admitsPortableValue(
         skir.TypeUse.wrapNamed(valid),
-        _emptyRecord(valid),
+        namedRecord(valid),
       ),
       isTrue,
     );
   });
 
   test("rejects values whose declaration is unavailable", () {
-    final unavailable = _definition("Unavailable");
+    final unavailable = typeDefinition("Unavailable");
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        _published(
+        testPublishedType(
           unavailable,
+          _emptyRecordShape,
           status: skir.DeclarationStatus.wrapUnavailable(const []),
         ),
       ],
@@ -200,20 +192,21 @@ void main() {
     expect(
       checked.admitsPortableValue(
         skir.TypeUse.wrapNamed(use),
-        _emptyRecord(use),
+        namedRecord(use),
       ),
       isFalse,
     );
   });
 
   test("rejects unknown scalar kinds inside named applications", () {
-    final box = _definition("Box");
+    final box = typeDefinition("Box");
     final parameter = skir.ParameterKey(owner: box, index: 0);
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        _published(
+        testPublishedType(
           box,
+          _emptyRecordShape,
           parameters: [
             skir.TypeParameter(key: parameter, name: "T", bounds: const []),
           ],
@@ -248,7 +241,7 @@ void main() {
       expect(
         checked.admitsPortableValue(
           skir.TypeUse.wrapNamed(application),
-          _emptyRecord(application),
+          namedRecord(application),
         ),
         isFalse,
       );
@@ -256,41 +249,11 @@ void main() {
   });
 }
 
-skir.PublishedType _published(
-  skir.TypeDefinitionId definition, {
-  List<skir.TypeParameter> parameters = const [],
-  skir.DeclarationStatus status = skir.DeclarationStatus.ready,
-  skir.RepresentationTemplate? representation,
-  List<skir.EffectiveFieldTemplate> effectiveFields = const [],
-}) => skir.PublishedType(
-  searchKey: null,
-  placementField: null,
-  display: defaultTypeDisplay(""),
-  definition: skir.TypeDefinition(
-    id: definition,
-    parameters: parameters,
-    representation:
-        representation ??
-        skir.RepresentationTemplate.createRecord(
-          fields: const [],
-          abstract_: false,
-        ),
-    parents: const [],
-  ),
-  status: status,
-  effectiveFields: effectiveFields,
-  ancestorTemplates: const [],
-);
-
-skir.DataValue _emptyRecord(skir.NamedTypeUse type) =>
-    skir.DataValue.createNamed(
-      actualType: type,
-      payload: skir.DataValue.createRecord(fields: const []),
-    );
-
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
-  revision: 1,
+/// A record representation without declared fields; effective fields alone
+/// describe what a value holds.
+final _emptyRecordShape = skir.RepresentationTemplate.createRecord(
+  fields: const [],
+  abstract_: false,
 );
 
 final _admissionGeneration = skir.CatalogGeneration(value: "catalog:admission");

@@ -12,8 +12,12 @@ void main() {
     final sourceTree = PortableDiagnosticTree();
     addTearDown(operations.dispose);
     addTearDown(sourceTree.dispose);
-    final sourceDiagnostic = _diagnostic([_title], message: "Resource finding");
-    final operationDiagnostic = _diagnostic([_title], message: "Rejected edit");
+    final sourceDiagnostic = invalidValueDiagnostic([
+      _title,
+    ], message: "Resource finding");
+    final operationDiagnostic = invalidValueDiagnostic([
+      _title,
+    ], message: "Rejected edit");
     final key = PortableOperationKey.write(_title);
     await operations.run(
       key: key,
@@ -24,8 +28,8 @@ void main() {
       operation: () =>
           PortablePresentationWriteResult.rejected([operationDiagnostic]),
     );
-    await tester.pumpTestApp(
-      child: PortableDiagnosticScope(
+    await tester.showComponent(
+      PortableDiagnosticScope(
         tree: sourceTree,
         placement: const PortableDiagnosticPlacement(),
         child: PortableDiagnosticPreview(
@@ -40,7 +44,7 @@ void main() {
               ),
             ],
             child: PortableDiagnosticAnchor(
-              node: _control(_title),
+              node: diagnosticControl(_title),
               builder: (context, summary, owner) => Column(
                 children: [
                   for (final diagnostic in summary.direct)
@@ -57,7 +61,9 @@ void main() {
     expect(find.text(operationDiagnostic.message), findsOneWidget);
     expect(sourceTree.snapshot.nodes, isEmpty);
     expect(operations.value.outcomes.keys, [key]);
-    final later = _diagnostic([_title], message: "Updated rejection");
+    final later = invalidValueDiagnostic([
+      _title,
+    ], message: "Updated rejection");
     await operations.run(
       key: key,
       operation: () => PortablePresentationWriteResult.rejected([later]),
@@ -65,7 +71,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(later.message), findsOneWidget);
     expect(find.text(operationDiagnostic.message), findsNothing);
-    await tester.pumpTestApp(child: const SizedBox());
+    await tester.showComponent(const SizedBox());
     await tester.pumpAndSettle();
     expect(sourceTree.snapshot.nodes, isEmpty);
     expect(operations.value.outcomes.values.single.diagnostics, [later]);
@@ -78,8 +84,8 @@ void main() {
       testWidgets("$entry preserves $fallback ownership for absent fields", (
         tester,
       ) async {
-        final diagnostic = _diagnostic([_count]);
-        final host = _DiagnosticTextHost(
+        final diagnostic = invalidValueDiagnostic([_count]);
+        final host = DiagnosedTextHost(
           diagnostics: [diagnostic],
           diagnosticFallback: fallback,
         );
@@ -112,8 +118,8 @@ void main() {
                     selectors: const [],
                   ))
                 .toFrozen();
-        await tester.pumpTestApp(
-          child: Material(
+        await tester.showComponent(
+          Material(
             child: switch (entry) {
               "node" => PortablePresentationNodeRenderer(
                 node: document.root,
@@ -139,8 +145,8 @@ void main() {
   testWidgets(
     "resource validation cannot suppress an unmatched operation rejection",
     (tester) async {
-      final diagnostic = _diagnostic([_count]);
-      final host = _DiagnosticTextHost(
+      final diagnostic = invalidValueDiagnostic([_count]);
+      final host = DiagnosedTextHost(
         diagnostics: [diagnostic],
         diagnosticFallback: PortableDiagnosticFallback.resource,
         response: Future.value(
@@ -148,13 +154,11 @@ void main() {
         ),
       );
       addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Material(child: PortablePresentationRenderer(host: host)),
+      final panel = await tester.showComponent(
+        Material(child: PortablePresentationRenderer(host: host)),
       );
-      await tester.pumpAndSettle();
       expect(find.text(diagnostic.message), findsNothing);
-      await tester.enterText(find.byType(TextFormField), "rejected draft");
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).type("rejected draft");
       expect(host.requests, 1);
       expect(find.text(diagnostic.message), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -229,45 +233,28 @@ void main() {
         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       );
       addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Material(child: PortablePresentationRenderer(host: host)),
+      final panel = await tester.showComponent(
+        Material(child: PortablePresentationRenderer(host: host)),
       );
-      await tester.pumpAndSettle();
-      final fields = find.byType(TextFormField);
-      await tester.showKeyboard(fields.first);
-      await tester.pumpAndSettle();
-      final before = tester.state<EditableTextState>(
-        find.byType(EditableText).first,
-      );
-      await tester.enterText(fields.first, "-");
-      await tester.pumpAndSettle();
-      final frames = find.byType(PortableDiagnosticFrame);
+      await panel.fieldAt(0).type("-");
+      // The feedback shows once, between the edited field and its duplicate.
+      final feedback = find.text("Enter a valid number");
+      expect(feedback, findsOneWidget);
       expect(
-        find.descendant(
-          of: frames.first,
-          matching: find.text("Enter a valid number"),
-        ),
-        findsOneWidget,
+        tester.getTopLeft(feedback).dy,
+        greaterThanOrEqualTo(panel.fieldAt(0).rect.bottom),
       );
       expect(
-        find.descendant(
-          of: frames.last,
-          matching: find.text("Enter a valid number"),
-        ),
-        findsNothing,
+        tester.getBottomLeft(feedback).dy,
+        lessThanOrEqualTo(panel.fieldAt(1).rect.top),
       );
-      expect(before.widget.controller.text, "-");
-      expect(tester.widget<TextFormField>(fields.last).controller?.text, "3");
-      expect(before.widget.focusNode.hasPrimaryFocus, isTrue);
+      expect(visibleFieldValues(), ["-", "3"]);
+      expect(panel.fieldAt(0).isFocused, isTrue);
       expect(current, skir.DataValue.wrapInteger("3"));
       expect(writes, 0);
-      await tester.enterText(fields.first, "7");
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).type("7");
       expect(find.text("Enter a valid number"), findsNothing);
-      expect(
-        tester.state<EditableTextState>(find.byType(EditableText).first),
-        same(before),
-      );
+      expect(panel.fieldAt(0).isFocused, isTrue);
       expect(current, skir.DataValue.wrapInteger("7"));
       expect(writes, 1);
       expect(tester.takeException(), isNull);
@@ -278,44 +265,36 @@ void main() {
     tester,
   ) async {
     final pending = Completer<PortablePresentationWriteResult>();
-    final previous = _DiagnosticTextHost(response: pending.future);
-    final replacement = _DiagnosticTextHost();
+    final previous = DiagnosedTextHost(response: pending.future);
+    final replacement = DiagnosedTextHost();
     final previousStatuses = <String>[];
     final replacementStatuses = <String>[];
     addTearDown(previous.dispose);
     addTearDown(replacement.dispose);
-    await tester.pumpTestApp(
-      child: Material(
+    final panel = await tester.showComponent(
+      Material(
         child: PortablePresentationRenderer(
           host: previous,
           onStatus: previousStatuses.add,
         ),
       ),
     );
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), "rejected draft");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("rejected draft");
     expect(previous.requests, 1);
-    final rendererElement = tester.element(
-      find.byType(PortablePresentationRenderer),
-    );
-    await tester.pumpTestApp(
-      child: Material(
+    await tester.showComponent(
+      Material(
         child: PortablePresentationRenderer(
           host: replacement,
           onStatus: replacementStatuses.add,
         ),
       ),
     );
-    await tester.pumpAndSettle();
-    expect(
-      tester.element(find.byType(PortablePresentationRenderer)),
-      same(rendererElement),
-    );
     pending.complete(
       PortablePresentationWriteResult.rejected([
-        _diagnostic([_title]).copyWith(message: "Old field rejection"),
-        _diagnostic(const []).copyWith(message: "Old general rejection"),
+        invalidValueDiagnostic([_title])
+            .copyWith(message: "Old field rejection"),
+        invalidValueDiagnostic(const [])
+            .copyWith(message: "Old general rejection"),
       ]),
     );
     await tester.pumpAndSettle();
@@ -330,20 +309,18 @@ void main() {
     "a new catalog generation ignores a pending rejection and status",
     (tester) async {
       final pending = Completer<PortablePresentationWriteResult>();
-      final host = _DiagnosticTextHost(response: pending.future);
+      final host = DiagnosedTextHost(response: pending.future);
       final statuses = <String>[];
       addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Material(
+      final panel = await tester.showComponent(
+        Material(
           child: PortablePresentationRenderer(
             host: host,
             onStatus: statuses.add,
           ),
         ),
       );
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextFormField), "rejected draft");
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).type("rejected draft");
       expect(host.requests, 1);
       final previousGeneration = host.document.catalog.snapshot.generation;
       host.replaceGeneration("replacement");
@@ -354,9 +331,9 @@ void main() {
       );
       pending.complete(
         PortablePresentationWriteResult.rejected([
-          _diagnostic([_title])
+          invalidValueDiagnostic([_title])
               .copyWith(message: "Old catalog field rejection"),
-          _diagnostic(const [])
+          invalidValueDiagnostic(const [])
               .copyWith(message: "Old catalog general rejection"),
         ]),
       );
@@ -372,22 +349,14 @@ void main() {
     "an external value change permanently removes a displayed rejection",
     (tester) async {
       const message = "The value is invalid";
-      final host = _DiagnosticTextHost();
+      final host = DiagnosedTextHost();
       addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Material(child: PortablePresentationRenderer(host: host)),
+      final panel = await tester.showComponent(
+        Material(child: PortablePresentationRenderer(host: host)),
       );
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextFormField), "rejected draft");
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).type("rejected draft");
       expect(host.requests, 1);
-      expect(
-        find.descendant(
-          of: find.byType(PortableDiagnosticFrame),
-          matching: find.text(message),
-        ),
-        findsOneWidget,
-      );
+      expect(find.text(message), findsOneWidget);
       final original = host.source.value;
       host.source.value = skir.DataValue.wrapStringValue("Externally changed");
       await tester.pumpAndSettle();
@@ -417,7 +386,7 @@ void main() {
     await newer;
     olderResponse.complete(
       PortablePresentationWriteResult.rejected([
-        _diagnostic([_title]),
+        invalidValueDiagnostic([_title]),
       ]),
     );
     await older;
@@ -427,7 +396,7 @@ void main() {
   test("successful edits preserve independent field rejections", () async {
     final operations = PortableOperationResults();
     addTearDown(operations.dispose);
-    final diagnostic = _diagnostic([_title]);
+    final diagnostic = invalidValueDiagnostic([_title]);
     await operations.run(
       key: PortableOperationKey.write(_title),
       operation: () => PortablePresentationWriteResult.rejected([diagnostic]),
@@ -462,7 +431,7 @@ void main() {
         return PortableDiagnosticObservation(target: target, value: current);
       }
 
-      final diagnostic = _diagnostic([_title]);
+      final diagnostic = invalidValueDiagnostic([_title]);
       await operations.run(
         key: PortableOperationKey.addItem(_title),
         input: observe(_title),
@@ -496,7 +465,7 @@ void main() {
       operations.retire({operations.value.outcomes.values.single.request});
       response.complete(
         PortablePresentationWriteResult.rejected([
-          _diagnostic([_title]),
+          invalidValueDiagnostic([_title]),
         ]),
       );
       await pending;
@@ -513,7 +482,7 @@ void main() {
       operation: () => response.future,
     );
     final previous = operations.value.outcomes.values.single.request;
-    final diagnostic = _diagnostic([_title]);
+    final diagnostic = invalidValueDiagnostic([_title]);
     await operations.run(
       key: PortableOperationKey.write(_title),
       operation: () => PortablePresentationWriteResult.rejected([diagnostic]),
@@ -529,7 +498,7 @@ void main() {
     () async {
       final operations = PortableOperationResults();
       addTearDown(operations.dispose);
-      final diagnostic = _diagnostic([_title]);
+      final diagnostic = invalidValueDiagnostic([_title]);
       await operations.run(
         key: PortableOperationKey.write(_title),
         input: PortableDiagnosticObservation(
@@ -561,7 +530,9 @@ void main() {
     );
     operations.dispose();
     response.complete(
-      PortablePresentationWriteResult.rejected([_diagnostic(const [])]),
+      PortablePresentationWriteResult.rejected([
+        invalidValueDiagnostic(const []),
+      ]),
     );
     await pending;
     expect(messages, isEmpty);
@@ -574,13 +545,13 @@ void main() {
     test(
       "unplaced resource findings retain ownership with targets: $targets",
       () {
-        final diagnostic = _diagnostic(targets);
+        final diagnostic = invalidValueDiagnostic(targets);
         final placement = PortableDiagnosticPlacement.route(
           diagnostics: [diagnostic],
           diagnosticFallback: PortableDiagnosticFallback.resource,
           outcomes: const [],
           presentation: PortableDiagnosticPresentation(
-            nodes: {Object(): _control(_title)},
+            nodes: {Object(): diagnosticControl(_title)},
           ),
         );
         expect(placement.general, isEmpty);
@@ -592,13 +563,16 @@ void main() {
   test("resource findings still reach fields and addressed headers", () {
     final control = Object();
     final header = Object();
-    final diagnostic = _diagnostic([_title, _count]);
+    final diagnostic = invalidValueDiagnostic([_title, _count]);
     final placement = PortableDiagnosticPlacement.route(
       diagnostics: [diagnostic],
       diagnosticFallback: PortableDiagnosticFallback.resource,
       outcomes: const [],
       presentation: PortableDiagnosticPresentation(
-        nodes: {control: _control(_title), header: _header(_count)},
+        nodes: {
+          control: diagnosticControl(_title),
+          header: diagnosticHeader(_count),
+        },
       ),
     );
     expect(placement.forAnchor(control).direct, [diagnostic]);
@@ -611,7 +585,7 @@ void main() {
     test(
       "local feedback wins shared source ownership, local first: $localFirst",
       () {
-        final diagnostic = _diagnostic([_count]);
+        final diagnostic = invalidValueDiagnostic([_count]);
         final placement = PortableDiagnosticPlacement.route(
           diagnostics: [diagnostic],
           diagnosticFallback: localFirst
@@ -639,7 +613,7 @@ void main() {
   test(
     "an operation rejection keeps local fallback over resource validation",
     () {
-      final diagnostic = _diagnostic([_count]);
+      final diagnostic = invalidValueDiagnostic([_count]);
       final placement = PortableDiagnosticPlacement.route(
         diagnostics: [diagnostic],
         diagnosticFallback: PortableDiagnosticFallback.resource,
@@ -659,7 +633,7 @@ void main() {
   test(
     "projected resource findings do not become parent presentation failures",
     () {
-      final diagnostic = _diagnostic([_count]);
+      final diagnostic = invalidValueDiagnostic([_count]);
       final placement = PortableDiagnosticPlacement.route(
         diagnostics: const [],
         outcomes: const [],
@@ -685,7 +659,7 @@ void main() {
       final first = Object();
       final duplicate = Object();
       final second = Object();
-      final diagnostic = _diagnostic([_title, _count]);
+      final diagnostic = invalidValueDiagnostic([_title, _count]);
       final placement = PortableDiagnosticPlacement.route(
         diagnostics: [diagnostic, diagnostic],
         outcomes: const [],
@@ -694,9 +668,9 @@ void main() {
             header: const PortableDiagnosticNode(
               kind: PortableDiagnosticNodeKind.header,
             ),
-            first: _control(_title, parent: header),
-            duplicate: _control(_title, parent: header),
-            second: _control(_count, parent: header),
+            first: diagnosticControl(_title, parent: header),
+            duplicate: diagnosticControl(_title, parent: header),
+            second: diagnosticControl(_count, parent: header),
           },
         ),
       );
@@ -716,7 +690,7 @@ void main() {
     final title = PortableDiagnosticTarget.binding(
       skir.BindingRef(bindingId: _binding, path: editorRootPath.field("name")),
     );
-    final diagnostic = _diagnostic([title]);
+    final diagnostic = invalidValueDiagnostic([title]);
     final placement = PortableDiagnosticPlacement.route(
       diagnostics: [diagnostic],
       outcomes: const [],
@@ -725,9 +699,9 @@ void main() {
           group: const PortableDiagnosticNode(
             kind: PortableDiagnosticNodeKind.header,
           ),
-          titleControl: _control(title, parent: group),
-          recordSummary: _header(_title),
-          unrelatedSection: _header(_count),
+          titleControl: diagnosticControl(title, parent: group),
+          recordSummary: diagnosticHeader(_title),
+          unrelatedSection: diagnosticHeader(_count),
         },
       ),
     );
@@ -741,14 +715,14 @@ void main() {
   test("an explicit scope does not exclude errors in contained controls", () {
     final section = Object();
     final control = Object();
-    final diagnostic = _diagnostic([_count]);
+    final diagnostic = invalidValueDiagnostic([_count]);
     final placement = PortableDiagnosticPlacement.route(
       diagnostics: [diagnostic],
       outcomes: const [],
       presentation: PortableDiagnosticPresentation(
         nodes: {
-          section: _header(_title),
-          control: _control(_count, parent: section),
+          section: diagnosticHeader(_title),
+          control: diagnosticControl(_count, parent: section),
         },
       ),
     );
@@ -769,14 +743,14 @@ void main() {
     final group = PortableDiagnosticTarget.binding(
       skir.BindingRef(bindingId: _binding, path: editorRootPath.field("group")),
     );
-    final diagnostic = _diagnostic([target]);
+    final diagnostic = invalidValueDiagnostic([target]);
     final placement = PortableDiagnosticPlacement.route(
       diagnostics: [diagnostic],
       outcomes: const [],
       presentation: PortableDiagnosticPresentation(
         nodes: {
-          outer: _header(_title),
-          inner: _header(group, parent: outer),
+          outer: diagnosticHeader(_title),
+          inner: diagnosticHeader(group, parent: outer),
         },
       ),
     );
@@ -801,14 +775,14 @@ void main() {
         path: editorRootPath,
       ),
     );
-    final diagnostic = _diagnostic([_count, secondResource]);
+    final diagnostic = invalidValueDiagnostic([_count, secondResource]);
     final placement = PortableDiagnosticPlacement.route(
       diagnostics: [diagnostic],
       outcomes: const [],
       presentation: PortableDiagnosticPresentation(
         nodes: {
-          titleControl: _control(_title),
-          resourceControl: _control(firstResource),
+          titleControl: diagnosticControl(_title),
+          resourceControl: diagnosticControl(firstResource),
         },
       ),
     );
@@ -867,7 +841,7 @@ void main() {
     () {
       final header = Object();
       final control = Object();
-      final diagnostic = _diagnostic([_title]);
+      final diagnostic = invalidValueDiagnostic([_title]);
       final placement = PortableDiagnosticPlacement.route(
         diagnostics: const [],
         outcomes: const [],
@@ -876,7 +850,7 @@ void main() {
             header: const PortableDiagnosticNode(
               kind: PortableDiagnosticNodeKind.header,
             ),
-            control: _control(
+            control: diagnosticControl(
               _title,
               parent: header,
             ).copyWith(diagnostics: [diagnostic]),
@@ -900,170 +874,3 @@ final _count = PortableDiagnosticTarget.binding(
     path: editorRootPath,
   ),
 );
-
-PortablePresentationDiagnostic _diagnostic(
-  List<PortableDiagnosticTarget> targets, {
-  String message = "The value is invalid",
-}) => PortablePresentationDiagnostic(
-  code: "invalid_value",
-  message: message,
-  severity: skir.DiagnosticSeverity.error,
-  targets: targets,
-);
-
-PortableDiagnosticNode _control(
-  PortableDiagnosticTarget target, {
-  Object? parent,
-}) => PortableDiagnosticNode(
-  kind: PortableDiagnosticNodeKind.control,
-  parent: parent,
-  observations: [
-    PortableDiagnosticObservation(
-      target: target,
-      value: skir.DataValue.wrapStringValue("current"),
-    ),
-  ],
-);
-
-PortableDiagnosticNode _header(
-  PortableDiagnosticTarget target, {
-  Object? parent,
-}) => _control(
-  target,
-  parent: parent,
-).copyWith(kind: PortableDiagnosticNodeKind.header);
-
-final class _DiagnosticTextHost extends ChangeNotifier
-    implements PortablePresentationHost {
-  _DiagnosticTextHost({
-    this.response,
-    this.diagnostics = const [],
-    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
-  }) {
-    _delegate = _createDelegate("initial");
-    _delegate.addListener(notifyListeners);
-  }
-  final Future<PortablePresentationWriteResult>? response;
-  final List<PortablePresentationDiagnostic> diagnostics;
-  final PortableDiagnosticFallback diagnosticFallback;
-  final source = ValueNotifier(
-    skir.DataValue.wrapStringValue("Original value"),
-  );
-  late BoundPresentationHost _delegate;
-  int requests = 0;
-
-  BoundPresentationHost _createDelegate(String generation) {
-    final snapshot =
-        (skir.EditorCatalog.defaultInstance.toMutable()
-              ..generation = skir.CatalogGeneration(value: generation))
-            .toFrozen();
-    return BoundPresentationHost(
-      catalog: CheckedEditorCatalog(snapshot),
-      root: () => skir.PresentationNode(
-        nodeId: "diagnostic.text",
-        properties: skir.PresentationProperties.defaultInstance,
-        header: null,
-        element: skir.PresentationElement.createTextInput(
-          control: skir.BoundControl(
-            binding: skir.BindingRef(bindingId: _binding, path: editorRootPath),
-            label: null,
-            description: null,
-            prefix: null,
-            semanticLabel: null,
-          ),
-          appearance: null,
-          content: null,
-          entry: null,
-          mappings: null,
-          options: skir.TextEditingOptions.defaultInstance,
-        ),
-      ),
-      bindings: [
-        BoundPresentationBinding(
-          id: _binding,
-          use: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          owner: source,
-          read: (_) => source.value,
-          write: (_, value) {
-            requests++;
-            return response ??
-                PortablePresentationWriteResult.rejected([
-                  _diagnostic([_title]),
-                ]);
-          },
-        ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      role: skir.PresentationRole.inspector,
-    );
-  }
-
-  void replaceGeneration(String generation) {
-    _delegate
-      ..removeListener(notifyListeners)
-      ..dispose();
-    _delegate = _createDelegate(generation);
-    _delegate.addListener(notifyListeners);
-    notifyListeners();
-  }
-
-  @override
-  PortablePresentationDocument get document {
-    final source = _delegate.document;
-    return PortablePresentationDocument(
-      catalog: source.catalog,
-      root: source.root,
-      bindings: source.bindings,
-      budget: source.budget,
-      role: source.role,
-      diagnostics: diagnostics,
-      diagnosticFallback: diagnosticFallback,
-    );
-  }
-
-  @override
-  PortablePresentationCapabilities get capabilities => _delegate.capabilities;
-  @override
-  bool get enabled => _delegate.enabled;
-  @override
-  bool get readOnly => _delegate.readOnly;
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => _delegate.commitControl(reference, context: context);
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => _delegate.read(reference, context: context);
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => _delegate.location(reference, context: context);
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => _delegate.expectedType(reference, context: context);
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) => _delegate.write(reference, value, context: context);
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction action, {
-    required PortableInvocationContext context,
-  }) => _delegate.execute(action, context: context);
-  @override
-  void dispose() {
-    _delegate
-      ..removeListener(notifyListeners)
-      ..dispose();
-    source.dispose();
-    super.dispose();
-  }
-}

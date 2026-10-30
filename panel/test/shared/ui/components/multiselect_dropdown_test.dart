@@ -10,21 +10,24 @@ void main() {
       addTearDown(field.dispose);
       final selected = <String>[];
 
-      await tester.pumpTestApp(
-        child: MultiselectDropdown<String>(
-          inputFieldController: field,
-          dropdownMenuEntries: const [
-            DropdownMenuEntry(value: "alpha", label: "Alpha"),
-            DropdownMenuEntry(
-              value: "blocked",
-              label: "Blocked",
-              enabled: false,
-            ),
-            DropdownMenuEntry(value: "beta", label: "Beta"),
-          ],
-          onSelectionChanged: (items) => selected
-            ..clear()
-            ..addAll(items),
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          MultiselectDropdown<String>(
+            inputFieldController: field,
+            dropdownMenuEntries: const [
+              DropdownMenuEntry(value: "alpha", label: "Alpha"),
+              DropdownMenuEntry(
+                value: "blocked",
+                label: "Blocked",
+                enabled: false,
+              ),
+              DropdownMenuEntry(value: "beta", label: "Beta"),
+            ],
+            onSelectionChanged: (items) => selected
+              ..clear()
+              ..addAll(items),
+          ),
         ),
       );
 
@@ -47,8 +50,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(field.surroundingFocusNode.hasPrimaryFocus, isTrue);
 
-      await tester.pumpTestApp(
-        child: Focus(focusNode: field.inputFocusNode, child: const SizedBox()),
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Focus(focusNode: field.inputFocusNode, child: const SizedBox()),
+        ),
       );
       field.requestInputFocus();
       await tester.pump();
@@ -58,13 +64,16 @@ void main() {
 
   testWidgets("standalone dropdown owns its focus controller", (tester) async {
     List<String>? selected;
-    await tester.pumpTestApp(
-      child: MultiselectDropdown<String>(
-        dropdownMenuEntries: const [
-          DropdownMenuEntry(value: "alpha", label: "Alpha"),
-          DropdownMenuEntry(value: "beta", label: "Beta"),
-        ],
-        onSelectionChanged: (items) => selected = items,
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        MultiselectDropdown<String>(
+          dropdownMenuEntries: const [
+            DropdownMenuEntry(value: "alpha", label: "Alpha"),
+            DropdownMenuEntry(value: "beta", label: "Beta"),
+          ],
+          onSelectionChanged: (items) => selected = items,
+        ),
       ),
     );
 
@@ -85,14 +94,17 @@ void main() {
     addTearDown(field.dispose);
     final selected = <String>[];
 
-    await tester.pumpTestApp(
-      child: MultiselectDropdown<String>(
-        inputFieldController: field,
-        enabled: false,
-        dropdownMenuEntries: const [
-          DropdownMenuEntry(value: "alpha", label: "Alpha"),
-        ],
-        onSelectionChanged: selected.addAll,
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        MultiselectDropdown<String>(
+          inputFieldController: field,
+          enabled: false,
+          dropdownMenuEntries: const [
+            DropdownMenuEntry(value: "alpha", label: "Alpha"),
+          ],
+          onSelectionChanged: selected.addAll,
+        ),
       ),
     );
 

@@ -4,12 +4,25 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A person who signs in to the panel in a test world.
 final class PanelUser {
-  const PanelUser({required this.id, required this.name, this.email});
+  const PanelUser({
+    required this.id,
+    required this.name,
+    this.email,
+    this.claims = const {},
+  });
 
   /// The identity provider subject; backend subjects are scoped by it.
   final String id;
   final String name;
   final String? email;
+
+  /// Further identity token claims, such as an avatar or a Discord profile;
+  /// they replace the claims derived from [id], [name] and [email].
+  final Map<String, Object?> claims;
+
+  /// This person with an identity token carrying [claims] instead.
+  PanelUser withClaims(Map<String, Object?> claims) =>
+      PanelUser(id: id, name: name, email: email, claims: claims);
 
   @override
   String toString() => name;
@@ -28,6 +41,17 @@ final class FakeSession {
   /// The signed in user, or null when nobody is signed in.
   PanelUser? get user => _user;
 
+  /// What the identity provider fails a sign out with; null lets it succeed.
+  Object? signOutFailure;
+
+  /// How many more times the identity provider fails to start, the way an
+  /// unreachable provider does.
+  int identityProviderFailures = 0;
+
+  /// How many more times fetching the credentials fails, the way an
+  /// unreachable credential endpoint does.
+  int credentialFailures = 0;
+
   /// The credentials the panel fetches before it connects to NATS.
   final sentinel = skir.GetSentinelCredentialsResponse_Success(
     jwt: "test-jwt",
@@ -38,10 +62,20 @@ final class FakeSession {
   List<Override> get overrides => [
     authProvider.overrideWith(() => _FakeAuth(this)),
     oidcStoreProvider.overrideWithValue(OidcMemoryStore()),
-    sentinelCredentialsProvider.overrideWith((ref) async => sentinel),
+    sentinelCredentialsProvider.overrideWith((ref) async {
+      if (credentialFailures > 0) {
+        credentialFailures--;
+        throw StateError("The credential endpoint is unreachable");
+      }
+      return sentinel;
+    }),
   ];
 
   Future<OidcUserManager?> _manager() async {
+    if (identityProviderFailures > 0) {
+      identityProviderFailures--;
+      throw StateError("The identity provider is unreachable");
+    }
     final user = _user;
     if (user == null) return _SignedOutManager(this);
     return _SignedInManager(this, await _oidcUser(user));
@@ -76,6 +110,7 @@ Future<OidcUser> _oidcUser(PanelUser user) {
     "name": user.name,
     "preferred_username": user.name,
     "email": ?user.email,
+    ...user.claims,
     "iat": now.millisecondsSinceEpoch ~/ 1000,
     "exp": now.add(const Duration(days: 1)).millisecondsSinceEpoch ~/ 1000,
   };
@@ -123,7 +158,9 @@ final class _SignedOutManager extends OidcUserManager {
     dynamic extraStateData,
     List<String>? uiLocalesOverride,
     OidcProviderMetadata? discoveryDocumentOverride,
-  }) async {}
+  }) async {
+    if (session.signOutFailure case final failure?) throw failure;
+  }
 }
 
 /// A client holding one valid session until the user signs out.
@@ -136,5 +173,8 @@ final class _SignedInManager extends _SignedOutManager {
   OidcUser? get currentUser => session._user == null ? null : _user;
 
   @override
-  Future<void> forgetUser() async => session._user = null;
+  Future<void> forgetUser() async {
+    if (session.signOutFailure case final failure?) throw failure;
+    session._user = null;
+  }
 }

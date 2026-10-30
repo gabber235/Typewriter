@@ -9,21 +9,13 @@ void main() {
   const move = RealmOperation.moveTo();
   const delete = RealmOperation.delete();
 
-  Future<PanelDriver> pump(
-    WidgetTester tester, {
-    List<RealmOperation> offered = const [reveal, move, delete],
-  }) => tester.pumpPanel([
-    signedIn(ada, organization: acme),
-    realm(books: [first, second]),
-    operations(offered),
-  ]);
-
-  String resourcePath(Book book) =>
-      "/organization/acme/realm/main/resource/${book.bookId.value}";
-
   testWidgets("menus lead with Open and Inspect, then list the operations by "
       "group", (tester) async {
-    final panel = await pump(tester);
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
 
     final entries = await panel.resources.row("First").operations.open();
 
@@ -33,7 +25,11 @@ void main() {
   testWidgets("the inspector offers the operations declared as buttons", (
     tester,
   ) async {
-    final panel = await pump(tester);
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
 
     await panel.resources.row("First").select();
 
@@ -52,17 +48,28 @@ void main() {
   };
   for (final MapEntry(key: gesture, value: openWith) in openings.entries) {
     testWidgets("$gesture opens the resource's surface", (tester) async {
-      final panel = await pump(tester);
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: [first, second]),
+        operations(const [reveal, move, delete]),
+      ]);
 
       await openWith(panel);
 
-      expect(panel.path, resourcePath(first));
+      expect(
+        panel.path,
+        "/organization/acme/realm/main/resource/${first.bookId.value}",
+      );
     });
   }
 
   testWidgets("Inspect selects the resource and moves focus into the "
       "inspector without navigating", (tester) async {
-    final panel = await pump(tester);
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
     final home = panel.path;
 
     await panel.resources.row("First").operations.choose("Inspect");
@@ -74,7 +81,11 @@ void main() {
 
   testWidgets("the Delete key asks for the confirmation the Realm returns "
       "and deletes only once confirmed", (tester) async {
-    final panel = await pump(tester);
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
     const question = "Delete the selected resources?";
 
     await panel.resources.row("First").select();
@@ -99,25 +110,33 @@ void main() {
   testWidgets("an open menu keeps its resource when the selection changes", (
     tester,
   ) async {
-    final panel = await pump(tester);
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
 
     final menu = await panel.resources.row("First").contextMenu();
     await panel.resources.selectOnly([second.bookId]);
     await menu.choose("Open");
 
-    expect(panel.path, resourcePath(first));
+    expect(
+      panel.path,
+      "/organization/acme/realm/main/resource/${first.bookId.value}",
+    );
   });
 
   testWidgets("a disabled operation shows its reason and does nothing", (
     tester,
   ) async {
-    final panel = await pump(
-      tester,
-      offered: const [
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [
         RealmOperation.duplicate(disabledBecause: "The book is unavailable"),
         delete,
-      ],
-    );
+      ]),
+    ]);
     const entry = "Duplicate (The book is unavailable)";
 
     final menu = await panel.resources.row("First").contextMenu();
@@ -127,6 +146,9 @@ void main() {
     await menu.choose(entry);
 
     expect(panel.world.requireRealm.document, same(before));
-    expect(panel.path, isNot(resourcePath(first)));
+    expect(
+      panel.path,
+      isNot("/organization/acme/realm/main/resource/${first.bookId.value}"),
+    );
   });
 }

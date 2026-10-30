@@ -27,16 +27,6 @@ extension StringX on String {
     return "$this.$other";
   }
 
-  /// Returns a singular form of the string.
-  /// Basic implementation that removes 's' from the end if present.
-  String get singular {
-    if (isEmpty) return this;
-    if (endsWith("s") && length > 1) {
-      return substring(0, length - 1);
-    }
-    return this;
-  }
-
   /// Replaces [prefix] only when it occurs at the start of this string.
   String replacePrefix(
     String prefix,

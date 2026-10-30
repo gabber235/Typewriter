@@ -217,21 +217,49 @@ class ScriptedValuePersistence extends ValueEditPersistence {
   );
 }
 
+/// A content snapshot that only replaces in place a snapshot of the same
+/// [contract], the way a host keeps a draft across a compatible rebuild.
+final class FakeContractEditorSnapshot extends EditorSnapshot
+    implements EditorContractSnapshot {
+  const FakeContractEditorSnapshot(this.contract, this.document);
+
+  /// The contract a replacement must share.
+  final String contract;
+  @override
+  final EditorDocument document;
+
+  @override
+  bool contractCompatibleWith(EditorSnapshot candidate) =>
+      candidate is FakeContractEditorSnapshot && candidate.contract == contract;
+
+  @override
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
+      acceptTestEditorMutation(path, value);
+}
+
+/// A value editing registration for [document] whose saves go to [commit].
+///
+/// With a [contract], the snapshot is a [FakeContractEditorSnapshot] that
+/// accepts every change; otherwise [validation] and [validateDraft] judge
+/// changes.
 ValueEditingRegistration fakeEditorTarget({
   required Object targetId,
   required String label,
   required EditorDocument document,
   required EditorCommitter commit,
-  required EditorMutationValidator validation,
+  EditorMutationValidator validation = acceptTestEditorMutation,
   Object? scope,
   EditorCommitPolicy commitPolicy = EditorCommitPolicy.autosaveChanges,
   List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
+  String? contract,
 }) {
-  final snapshot = FakeEditorSnapshot(
-    document,
-    validation: validation,
-    draftValidation: validateDraft,
-  );
+  final EditorSnapshot snapshot = contract == null
+      ? FakeEditorSnapshot(
+          document,
+          validation: validation,
+          draftValidation: validateDraft,
+        )
+      : FakeContractEditorSnapshot(contract, document);
   return ValueEditingRegistration(
     targetId: targetId,
     label: label,

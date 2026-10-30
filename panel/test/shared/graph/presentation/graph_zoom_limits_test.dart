@@ -2,141 +2,34 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-Widget _focusBox(FocusNode focusNode) {
-  return Focus(focusNode: focusNode, child: const SizedBox.shrink());
-}
-
-GraphData _dataWithFocusableChild(FocusNode node) {
-  return GraphData(
-    cellSize: 50,
-    elements: [
-      GraphElement(
-        id: const GraphIdentifier("focusable"),
-        x: 0,
-        y: 0,
-        width: 2,
-        height: 2,
-        builder: (context) => _focusBox(node),
-      ),
-    ],
-    edges: const [],
-  );
-}
-
-double _currentScale(WidgetTester tester) {
-  final viewer = tester.widget<InteractiveViewer>(
-    find.byType(InteractiveViewer),
-  );
-  final ctrl = viewer.transformationController!;
-  return ctrl.value.getMaxScaleOnAxis();
-}
-
-Future<void> _pumpGraphWithFocus(WidgetTester tester, FocusNode node) async {
-  await tester.pumpTestApp(
-    child: Center(
-      child: SizedBox(
-        width: 800,
-        height: 600,
-        child: Graph(data: _dataWithFocusableChild(node)),
-      ),
-    ),
-    settle: true,
-  );
-  node.requestFocus();
-  await tester.pumpAndSettle();
-}
-
 void main() {
-  group("Graph zoom limits", () {
-    testWidgets("InteractiveViewer min/max scale are configured and leading", (
-      tester,
-    ) async {
-      final focusNode = FocusNode(debugLabel: "graph_focus");
-      await _pumpGraphWithFocus(tester, focusNode);
-
-      final viewer = tester.widget<InteractiveViewer>(
-        find.byType(InteractiveViewer),
+  for (final (direction, step, spread, limit) in [
+    ("in", 8.0, 160.0, Graph.kGraphMaxScale),
+    ("out", -8.0, 440.0, Graph.kGraphMinScale),
+  ]) {
+    testWidgets("pinching $direction stops at scale $limit", (tester) async {
+      // A node of two cells, 100 pixels wide at scale 1.
+      final panel = await tester.pumpGraph(
+        Graph(
+          data: GraphData(
+            cellSize: 50,
+            elements: [graphNode("Node")],
+            edges: const [],
+          ),
+        ),
       );
+      // The node's width as a share of its width at scale 1.
+      double scale() => panel.graph.rectOf("Node").width / 100;
+      expect(scale(), closeTo(1, 1e-6));
 
-      expect(viewer.minScale, equals(Graph.kGraphMinScale));
-      expect(viewer.maxScale, equals(Graph.kGraphMaxScale));
+      await panel.graph.pinch(
+        spread: spread,
+        step: step,
+        done: () => (scale() - limit).abs() < 1e-3,
+      );
+      await panel.graph.pinch(spread: spread, step: step, steps: 10);
 
-      final before = _currentScale(tester);
-      expect(before, closeTo(1.0, 1e-6));
+      expect(scale(), closeTo(limit, 1e-6));
     });
-
-    testWidgets("Zoom in clamps at max scale", (tester) async {
-      final focusNode = FocusNode(debugLabel: "graph_focus");
-      await _pumpGraphWithFocus(tester, focusNode);
-
-      // Pinch zoom in to approach max scale without overshooting or crossing.
-      final viewerFinder = find.byType(InteractiveViewer);
-      final center = tester.getCenter(viewerFinder);
-      final g1 = await tester.startGesture(center - const Offset(80, 0));
-      await tester.pump();
-      final g2 = await tester.startGesture(
-        center + const Offset(80, 0),
-        pointer: 11,
-      );
-
-      await tester.pump();
-      const step = 8.0;
-      for (var i = 0; i < 80; i++) {
-        await g1.moveBy(const Offset(-step, 0));
-        await g2.moveBy(const Offset(step, 0));
-        await tester.pump();
-        if (_currentScale(tester) >= Graph.kGraphMaxScale - 1e-3) {
-          break;
-        }
-      }
-      await g1.up();
-      await g2.up();
-      await tester.pumpAndSettle();
-
-      final scale = _currentScale(tester);
-      final viewer = tester.widget<InteractiveViewer>(
-        find.byType(InteractiveViewer),
-      );
-
-      expect(scale, closeTo(Graph.kGraphMaxScale, 1e-6));
-      expect(scale, closeTo(viewer.maxScale, 1e-6));
-    });
-
-    testWidgets("Zoom out clamps at min scale", (tester) async {
-      final focusNode = FocusNode(debugLabel: "graph_focus");
-      await _pumpGraphWithFocus(tester, focusNode);
-
-      // Pinch zoom out to approach min scale without crossing pointers.
-      final viewerFinder = find.byType(InteractiveViewer);
-      final center = tester.getCenter(viewerFinder);
-      final g1 = await tester.startGesture(center - const Offset(220, 0));
-      await tester.pump();
-      final g2 = await tester.startGesture(
-        center + const Offset(220, 0),
-        pointer: 21,
-      );
-
-      await tester.pump();
-      const step = 8.0;
-      for (var i = 0; i < 80; i++) {
-        await g1.moveBy(const Offset(step, 0));
-        await g2.moveBy(const Offset(-step, 0));
-        await tester.pump();
-        if (_currentScale(tester) <= Graph.kGraphMinScale + 1e-3) {
-          break;
-        }
-      }
-      await g1.up();
-      await g2.up();
-      await tester.pumpAndSettle();
-
-      final scale = _currentScale(tester);
-      final viewer = tester.widget<InteractiveViewer>(
-        find.byType(InteractiveViewer),
-      );
-
-      expect(scale, closeTo(Graph.kGraphMinScale, 1e-6));
-      expect(scale, closeTo(viewer.minScale, 1e-6));
-    });
-  });
+  }
 }

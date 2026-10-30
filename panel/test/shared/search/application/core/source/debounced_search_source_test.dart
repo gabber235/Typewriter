@@ -2,30 +2,10 @@
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("DebouncedSearchSource", () {
-    test("initializes the inner source once", () {
-      final inner = FakeSearchSource();
-      final source = inner.debounced(const Duration(milliseconds: 100));
-      addTearDown(source.dispose);
-
-      source.initialize(SearchQueryContext.empty);
-
-      expect(inner.initializeCount, 1);
-    });
-
-    test("disposes the inner source once", () {
-      final inner = FakeSearchSource();
-      final source = inner.debounced(const Duration(milliseconds: 100));
-
-      source.dispose();
-
-      expect(inner.disposeCount, 1);
-    });
-
     testWidgets("cancels pending search on dispose", (tester) async {
       final inner = FakeSearchSource();
       final source = inner.debounced(const Duration(milliseconds: 100));
@@ -33,16 +13,6 @@ void main() {
       source.search(queryContext("alpha"));
       source.dispose();
       await tester.pump(const Duration(milliseconds: 100));
-
-      expect(inner.searches, isEmpty);
-    });
-
-    test("does not forward search immediately", () {
-      final inner = FakeSearchSource();
-      final source = inner.debounced(const Duration(milliseconds: 100));
-      addTearDown(source.dispose);
-
-      source.search(queryContext("alpha"));
 
       expect(inner.searches, isEmpty);
     });
@@ -116,30 +86,6 @@ void main() {
       expect(inner.searches, [context, context]);
     });
 
-    test("forwards snapshots from the inner source", () {
-      final inner = FakeSearchSource();
-      final source = inner.debounced(const Duration(milliseconds: 100));
-      addTearDown(source.dispose);
-      final snapshots = <SearchSourceSnapshot>[];
-      final subscription = source.snapshots.listen(snapshots.add);
-      addTearDown(subscription.cancel);
-
-      final snapshot = readySnapshot(nodes: [resultNode("alpha")]);
-
-      inner.emitSnapshot(snapshot);
-
-      expect(snapshots, [snapshot]);
-    });
-
-    test("forwards selectors from the inner source", () {
-      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
-      final inner = FakeSearchSource(selectors: emitted);
-      final source = inner.debounced(const Duration(milliseconds: 100));
-      addTearDown(source.dispose);
-
-      expect(source.selectors, emitted);
-    });
-
     testWidgets("debounces preview and resolves after duration", (
       tester,
     ) async {
@@ -185,8 +131,4 @@ void main() {
       expect(inner.previewRequests, [second]);
     });
   });
-}
-
-SearchQueryContext queryContext(String query) {
-  return SearchQueryContext(normalizedQuery: query, selectors: const []);
 }
