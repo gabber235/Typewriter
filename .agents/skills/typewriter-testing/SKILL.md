@@ -76,6 +76,11 @@ expect(calls, 1);
 
 ## Watch the harness
 
+A test file holds only its entry point and its test cases. Pumps, setups, fakes, driver actions,
+assertions and data builders live in the stack's kit (panel testkit, the Kotlin test kit and
+`testFixtures`, the Rust component kit); test data stays inline. `cargo xtask check quality`
+fails on a local helper.
+
 While writing or reviewing tests, ask whether the harness should grow instead of the test:
 
 - The same private helper in several files (`_pump`, `_fixture`, `record()`), or a helper made
