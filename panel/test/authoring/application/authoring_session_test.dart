@@ -144,6 +144,46 @@ void main() {
     );
   });
 
+  test("saved values asked for again while the Realm is away fail without "
+      "an unhandled error, and are read once it returns", () async {
+    var title = "Initial";
+    await world.openBookSession(
+      session,
+      _book,
+      () => title,
+      generation: _generation,
+      subjects: _subjects,
+    );
+    final queries = world.holdRequests(_snapshotSubject);
+    final reading = world.container.read(session.notifier).refresh();
+    await eventually(() => expect(queries, hasLength(1)));
+    final again = world.container.read(session.notifier).refresh();
+
+    queries.single.completeError(realmAway);
+    await expectLater(reading, throwsA(realmAway));
+    await expectLater(again, throwsA(realmAway));
+    await eventually(() => expect(queries, hasLength(2)));
+    queries.last.completeError(realmAway);
+    await pumpEventQueue();
+
+    title = "After the outage";
+    world
+      ..serveTitledBook(
+        _catalogSubject,
+        _snapshotSubject,
+        generation: _generation,
+        book: _book,
+        title: () => title,
+      )
+      ..announceAuthoringChanged(_eventSubject, _generation);
+    await world.untilBookTitled(
+      session,
+      _book.bookId,
+      "After the outage",
+      description: "state read once the Realm returned",
+    );
+  });
+
   test("a hint during an active query schedules a fresh query", () async {
     final delayed = Completer<Uint8List>();
     var requests = 0;

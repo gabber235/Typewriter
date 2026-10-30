@@ -153,11 +153,10 @@ class AuthoringSession extends _$AuthoringSession {
         ).whenComplete(() {
           if (!_isActive(lifecycleRevision)) return;
           _refreshing = null;
-          if (_refreshRequested) {
-            unawaited(
-              _refresh(repository, lifecycleRevision, organizationId, realmId),
-            );
-          }
+          // A request that arrived while the failed drain ran is read now.
+          // Nobody awaits it; its failure stays visible in the state, as for
+          // any scheduled refresh.
+          if (_refreshRequested) _scheduleRefresh(lifecycleRevision);
         });
     _refreshing = operation;
     return operation;
