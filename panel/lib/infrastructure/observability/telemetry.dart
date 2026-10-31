@@ -141,12 +141,35 @@ Future<PanelTelemetry> panelTelemetry(Ref ref) async {
   // TODO: Define production sampling, authenticated ingestion, and limits.
   // TODO: Review concrete NATS subjects for cardinality and identifier privacy.
   // TODO: Add app lifecycle flush and shutdown if this pilot is retained.
-  await OTel.initialize(
-    endpoint: config.tracesEndpoint,
-    serviceName: "typewriter-panel",
-    enableMetrics: false,
-    enableLogs: false,
-    sampler: const AlwaysOnSampler(),
-  );
+  await _initializeOnce(config.tracesEndpoint);
   return OpenTelemetryPanelTelemetry();
+}
+
+/// The process wide OpenTelemetry setup, started by the first container that
+/// needs it.
+///
+/// OTel allows one initialization per process and throws on a second one,
+/// while every panel launch (each end to end scenario, for one) builds a new
+/// provider container. Every container therefore shares this one setup.
+Future<void>? _initialized;
+
+Future<void> _initializeOnce(String tracesEndpoint) =>
+    _initialized ??= OTel.initialize(
+      endpoint: tracesEndpoint,
+      serviceName: "typewriter-panel",
+      enableMetrics: false,
+      enableLogs: false,
+      sampler: const AlwaysOnSampler(),
+    );
+
+/// Exports the spans the panel still buffers.
+///
+/// Does nothing while telemetry was never initialized. The end to end harness
+/// calls it when each scenario ends, so a scenario's spans reach the collector
+/// before the stack stops.
+Future<void> flushTelemetry() async {
+  final initialized = _initialized;
+  if (initialized == null) return;
+  await initialized;
+  await OTel.tracerProvider().forceFlush();
 }

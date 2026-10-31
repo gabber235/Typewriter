@@ -6581,7 +6581,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
- "tracing-subscriber",
  "typewriter-component-test",
  "wash-runtime",
  "wasmcloud-plugin-surrealdb",

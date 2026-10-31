@@ -14,6 +14,7 @@ in
     pkgs.bun # Skir code generation and checks, and the documentation site's package manager
     pkgs.nodejs_24 # runs Astro, which builds the documentation site (`cargo xtask check docs`)
     pkgs.toxiproxy # the faults link of the worktree stack (`cargo xtask stack`)
+    pkgs.opentelemetry-collector-contrib # otelcol-contrib, the worktree stack's span collector
     pkgs.chromedriver # `cargo xtask e2e panel-web`
     pkgs.jdk25 # runs Gradle; project JDKs come from Gradle toolchains
     pkgs.kustomize

@@ -179,7 +179,7 @@ impl Registry {
 
 /// Ports one stack may use. Each name has a fixed offset, so a worktree keeps its addresses
 /// across runs.
-pub const PORTS: [&str; 8] = [
+pub const PORTS: [&str; 11] = [
     "nats",
     "websocket",
     "accounts",
@@ -188,6 +188,9 @@ pub const PORTS: [&str; 8] = [
     "nats-proxy",
     "realm-nats-proxy",
     "faults",
+    "collector-grpc",
+    "collector-http",
+    "collector-health",
 ];
 const BLOCK_SIZE: u16 = 20;
 const FIRST_PORT: u16 = 20000;

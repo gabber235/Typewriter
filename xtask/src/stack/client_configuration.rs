@@ -34,6 +34,17 @@ pub struct ClientConfiguration {
     pub auth_discovery_document_uri: String,
     /// Present only on a worktree stack; failure scenarios skip without it.
     pub stack: Option<StackControl>,
+    /// Where clients export spans; present only on a worktree stack. The CI cluster keeps its
+    /// own telemetry settings, so its clients trace nothing here.
+    pub telemetry: Option<TelemetryEndpoints>,
+}
+
+/// The worktree stack's collector, as each client reaches it.
+pub struct TelemetryEndpoints {
+    /// The OTLP over HTTP traces route the panel exports to.
+    pub panel_traces: String,
+    /// The OTLP over gRPC endpoint; the loader exports over gRPC only.
+    pub otlp_grpc: String,
 }
 
 pub struct StackControl {
@@ -70,6 +81,10 @@ impl ClientConfiguration {
                 accounts_url: ctx.url("http", "accounts"),
                 users,
             }),
+            telemetry: Some(TelemetryEndpoints {
+                panel_traces: format!("{}/v1/traces", ctx.url("http", "collector-http")),
+                otlp_grpc: ctx.url("http", "collector-grpc"),
+            }),
         })
     }
 
@@ -98,6 +113,7 @@ impl ClientConfiguration {
             auth_issuer: issuer,
             auth_discovery_document_uri: key("AUTH_DISCOVERY_DOCUMENT_URI")?,
             stack: None,
+            telemetry: None,
         })
     }
 
@@ -123,8 +139,14 @@ impl ClientConfiguration {
                 self.auth_discovery_document_uri.clone(),
             ),
             ("AUTH_CLIENT_ID", PANEL_CLIENT_ID.into()),
-            ("OTEL_ENABLED", "false".into()),
+            ("OTEL_ENABLED", self.telemetry.is_some().to_string()),
         ]);
+        if let Some(telemetry) = &self.telemetry {
+            defines.insert(
+                "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+                telemetry.panel_traces.clone(),
+            );
+        }
         if let Some(stack) = &self.stack {
             defines.extend([
                 ("STACK_IDENTITY_URL", stack.identity_url.clone()),
@@ -139,13 +161,12 @@ impl ClientConfiguration {
     /// The loader's settings (`services/runtime/loader/core/.../LoaderSettings.kt`), with the
     /// embedded Realm database `services/runtime/config/local.properties` uses.
     fn realm_properties(&self) -> String {
-        let settings = [
+        let mut settings = vec![
             ("API_BASE_URL", self.api_base_url.as_str()),
             ("AUTH_BASE_URL", self.auth_base_url.as_str()),
             ("JWT_CLIENT_ID", SERVICES_CLIENT_ID),
             ("JWT_SCOPES", "openid profile entitlements"),
             ("NATS_URL", self.nats_host_url.as_str()),
-            ("OTEL_TRACES_SAMPLER", "always_off"),
             ("REALM_DB_ENDPOINT_TYPE", "embedded"),
             ("REALM_DB_ENGINE", "surrealkv"),
             ("REALM_DB_PATH", "database/realm"),
@@ -153,6 +174,13 @@ impl ClientConfiguration {
             ("REALM_DB_DATABASE", "realm"),
             ("REALM_DB_AUTHENTICATION", "none"),
         ];
+        match &self.telemetry {
+            Some(telemetry) => settings.extend([
+                ("OTEL_TRACES_SAMPLER", "always_on"),
+                ("OTEL_EXPORTER_OTLP_ENDPOINT", telemetry.otlp_grpc.as_str()),
+            ]),
+            None => settings.push(("OTEL_TRACES_SAMPLER", "always_off")),
+        }
         settings
             .iter()
             .map(|(key, value)| format!("{key}={}\n", value.replace(':', "\\:")))

@@ -19,9 +19,10 @@ use crate::{CommandExt, deploy, generate};
 /// The component test workspace the `typewriter-stack` binary lives in.
 const STACK_WORKSPACE: &str = "backend/tests/component/Cargo.toml";
 
-/// The broker, the identity stand in and every backend component.
+/// The span collector, the broker, the identity stand in and every backend component.
 pub fn backend() -> StackSpec {
     StackSpec::default()
+        .with(Collector)
         .with(Faults)
         .with(Broker)
         .with(Identity)
@@ -53,6 +54,80 @@ impl Service for Faults {
     fn ready(&self, ctx: &StackContext) -> Probe {
         Probe::http(ctx.port("faults"), "/version")
     }
+}
+
+/// An OpenTelemetry collector that writes every span of this stack run to
+/// `<state>/telemetry/traces.jsonl` (OTLP JSON, one export request per line), so the panel's,
+/// the backend's and the Realm's spans of one run sit in one file, joined by the trace context
+/// the panel propagates.
+pub struct Collector;
+
+impl Service for Collector {
+    const ID: ServiceId = ServiceId("collector");
+    fn command(&self, ctx: &StackContext) -> Result<Command> {
+        let telemetry = ctx.state().join("telemetry");
+        fs::create_dir_all(&telemetry)
+            .with_context(|| format!("cannot create {}", telemetry.display()))?;
+        let config = ctx.state().join("collector.yaml");
+        fs::write(
+            &config,
+            collector_config(ctx, &telemetry.join("traces.jsonl")),
+        )
+        .with_context(|| format!("cannot write {}", config.display()))?;
+        let mut command = Command::new("otelcol-contrib");
+        command.arg("--config").arg(config);
+        Ok(command)
+    }
+    fn ready(&self, ctx: &StackContext) -> Probe {
+        Probe::http(ctx.port("collector-health"), "/")
+    }
+}
+
+/// The collector's configuration: OTLP over gRPC for the backend and the Realm, OTLP over HTTP
+/// for the panel (with CORS, so the web panel can export too), traces to `traces`, logs and
+/// metrics dropped. The collector's own metrics are off; their default port collides across
+/// worktree stacks.
+fn collector_config(ctx: &StackContext, traces: &Path) -> String {
+    let address = |port: &str| format!("127.0.0.1:{}", ctx.port(port));
+    // A JSON string is a YAML string, quoted however the path looks.
+    let traces = Value::String(traces.display().to_string());
+    format!(
+        r#"receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: {grpc}
+      http:
+        endpoint: {http}
+        cors:
+          allowed_origins: ["http://localhost:*", "http://127.0.0.1:*"]
+exporters:
+  file/traces:
+    path: {traces}
+  nop: {{}}
+extensions:
+  health_check:
+    endpoint: {health}
+service:
+  extensions: [health_check]
+  telemetry:
+    metrics:
+      level: none
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [file/traces]
+    logs:
+      receivers: [otlp]
+      exporters: [nop]
+    metrics:
+      receivers: [otlp]
+      exporters: [nop]
+"#,
+        grpc = address("collector-grpc"),
+        http = address("collector-http"),
+        health = address("collector-health"),
+    )
 }
 
 /// NATS with the TYPEWRITER account, auth callout and sentinel installed, plus the account
@@ -101,7 +176,7 @@ pub struct Backend;
 impl Service for Backend {
     const ID: ServiceId = ServiceId("backend");
     fn needs(&self) -> &'static [ServiceId] {
-        &[Broker::ID, Identity::ID, Faults::ID]
+        &[Collector::ID, Broker::ID, Identity::ID, Faults::ID]
     }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         let components = deployable_components(ctx)?;
@@ -121,6 +196,11 @@ impl Service for Backend {
                 .arg("--component")
                 .arg(format!("{package}={}", artifact.display()));
         }
+        // The wasmCloud host exports the components' spans over gRPC to the standard variable.
+        command.env(
+            "OTEL_EXPORTER_OTLP_ENDPOINT",
+            ctx.url("http", "collector-grpc"),
+        );
         Ok(command)
     }
     fn ready(&self, ctx: &StackContext) -> Probe {
@@ -194,7 +274,7 @@ const REALM_HOST_INSTALL: &str =
 impl Service for RealmHost {
     const ID: ServiceId = ServiceId("realm");
     fn needs(&self) -> &'static [ServiceId] {
-        &[Provision::ID]
+        &[Collector::ID, Provision::ID]
     }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         let work_dir = realm_host_dir(ctx);

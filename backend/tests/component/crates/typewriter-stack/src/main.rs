@@ -32,16 +32,23 @@ enum Command {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_writer(std::io::stderr)
-        .init();
-    match Command::parse() {
+    // The wash runtime's own setup, as the `wash` host has it: console logs, and with an
+    // `OTEL_EXPORTER_OTLP_ENDPOINT` the OpenTelemetry layer that joins the trace context arriving
+    // on NATS messages and exports the host's and the components' spans.
+    let flush = wash_runtime::observability::initialize_observability(
+        tracing::Level::INFO,
+        false,
+        false,
+    )?;
+    let result = match Command::parse() {
         Command::Broker(args) => broker::run(args).await,
         Command::Identity(args) => authentik::run(args).await,
         Command::Host(args) => host::run(args).await,
         Command::Provision(args) => provision::run(args).await,
         Command::Bind(args) => bind::run(args).await,
-    }
+    };
+    flush();
+    result
 }
 
 /// Resolves when the supervisor asks the process to stop.

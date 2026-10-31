@@ -97,6 +97,8 @@ void scenario(
       await panel.capture("failure");
       rethrow;
     } finally {
+      // The scenario's spans reach the stack's collector while it still runs.
+      await flushTelemetry();
       final end = DateTime.now().millisecondsSinceEpoch;
       _cases.add(
         results.TestCase(
