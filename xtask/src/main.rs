@@ -13,6 +13,7 @@ mod evidence;
 mod generate;
 mod gitops;
 mod graph;
+mod heavy;
 mod hooks;
 mod lock;
 mod process;
@@ -81,6 +82,12 @@ enum Cli {
     /// Publishes and removes documentation previews; `check docs` checks the site.
     #[command(subcommand)]
     Docs(docs::DocsCommand),
+    /// Runs a command xtask has no command for under the machine wide heavy build lock,
+    /// for example `cargo xtask heavy -- flutter test test/foo_test.dart`.
+    Heavy {
+        #[arg(last = true, required = true)]
+        command: Vec<String>,
+    },
     /// Runs a git hook's rules; devenv registers the hooks that call this.
     #[command(subcommand)]
     Hook(hooks::HookCommand),
@@ -128,15 +135,16 @@ fn main() -> ExitCode {
         Cli::Evidence(command) => evidence::run(&context, command),
         Cli::Docs(command) => docs::run(&context, command),
         Cli::Hook(command) => hooks::run(&context, command),
+        // The command's own exit code passes through.
+        Cli::Heavy { command } => return heavy::run(&command).map_or_else(failed, ExitCode::from),
         Cli::Step { name } => graph::run_native(&context, &name),
     };
-    match result {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(error) => {
-            eprintln!("xtask: {error:#}");
-            ExitCode::FAILURE
-        }
-    }
+    result.map_or_else(failed, |()| ExitCode::SUCCESS)
+}
+
+fn failed(error: anyhow::Error) -> ExitCode {
+    eprintln!("xtask: {error:#}");
+    ExitCode::FAILURE
 }
 
 /// Where the repository is. Every path a command touches is resolved against `root`.
