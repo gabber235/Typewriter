@@ -36,8 +36,9 @@ List<String> visibleFieldValues() => [
 /// by its place in reading order.
 ///
 /// A field whose label also names its hint or description still matches:
-/// the label only has to start with [label]. An empty [label] finds the
-/// first field, for a component that shows only one.
+/// the label only has to start with [label]. A field without such a label
+/// matches by its hint, which it reads while empty. An empty [label] finds
+/// the first field, for a component that shows only one.
 final class FieldDriver extends ComponentDriver {
   FieldDriver(super.tester, String this.label) : index = null;
 
@@ -56,6 +57,9 @@ final class FieldDriver extends ComponentDriver {
     }
     final label = this.label!;
     return fields.firstWhereOrNull((node) => node.spoken.startsWith(label)) ??
+        fields.firstWhereOrNull(
+          (node) => node.getSemanticsData().hint.startsWith(label),
+        ) ??
         (throw TestFailure(
           "No text field is labeled $label; the fields are "
           "${[for (final field in fields) field.spoken]}",
@@ -93,6 +97,39 @@ final class FieldDriver extends ComponentDriver {
 
   /// Whether the field hides its text, as a password field does.
   bool get isObscured => _node.getSemanticsData().flagsCollection.isObscured;
+
+  /// Whether assistive technology can set the field's text now, which a
+  /// field allows once it holds the focus.
+  bool get acceptsText =>
+      _node.getSemanticsData().hasAction(SemanticsAction.setText);
+
+  /// Clicks the field's input the way a screen reader does, without waiting
+  /// for the panel to react.
+  ///
+  /// An editor field wraps its text input in a focus boundary that reads as
+  /// the same field; the innermost text field is the input a click reaches.
+  /// A field rebuilt while its surface loads drops the focus a click gave
+  /// it, so a step waiting for [acceptsText] clicks again, as a user does.
+  void clickInput() {
+    final field = _node;
+    final input = [
+      field,
+      ...field.descendants,
+    ].where((node) => node.getSemanticsData().flagsCollection.isTextField).last;
+    tester.semantics.tap(
+      find.semantics.byPredicate((node) => identical(node, input)),
+    );
+  }
+
+  /// Replaces the field's text with [text] the way a screen reader does,
+  /// without waiting for the panel to react; the field must [acceptsText].
+  void setText(String text) {
+    final field = _node;
+    tester.semantics.setText(
+      find.semantics.byPredicate((node) => identical(node, field)),
+      text,
+    );
+  }
 
   /// Focuses the field with a tap.
   Future<void> focus() async {

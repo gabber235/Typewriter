@@ -61,7 +61,7 @@ void main() {
       // A name of its own per run: organization names are unique, and a rerun
       // shares the stack.
       final name = "studio_${DateTime.now().millisecondsSinceEpoch}";
-      await panel.field("Enter organization name").set(name);
+      await panel.type("Enter organization name", name);
       await panel.press("Create");
       await panel.open("Members");
       await panel.expectVisible("grace");

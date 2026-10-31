@@ -1,10 +1,6 @@
-import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/src/authoring/realm_world.dart";
-import "package:typewriter_testkit/src/core/test_world.dart";
-import "package:typewriter_testkit/src/support/portable_operations.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 /// A draft of a source resource whose wrapper record links to target
@@ -17,323 +13,109 @@ final class LinkChoicesFixture {
     bool abstractWrapper = false,
     bool nestedCollection = false,
   }) {
-    final generation = skir.CatalogGeneration(value: "catalog:links");
-    final node = testTypeId("Node");
-    final wrapper = testTypeId("Wrapper");
-    final abstractForm = testTypeId("AbstractWrapper");
-    final sourceLink = testTypeId("SourceLink");
-    final targetLink = testTypeId("TargetLink");
-    final links = testTypeId("Links");
-    final sourceEndpoint = skir.EndpointId(value: "test.source");
-    final targetEndpoint = skir.EndpointId(value: "test.target");
-    final nodeTemplate = skir.TypeTemplate.createNamed(
-      definition: node,
-      arguments: const [],
+    final wrapper = abstractWrapper ? "AbstractWrapper" : "Wrapper";
+    final linked = directCollection || nestedCollection;
+    final emptyLinks = typedValue(
+      "Links",
+      skir.DataValue.createListValue(items: const []),
     );
-    final nodeUse = skir.NamedTypeUse(definition: node, arguments: const []);
-    final wrapperUse = skir.NamedTypeUse(
-      definition: wrapper,
-      arguments: const [],
-    );
-    final wrapperSelection = skir.TypeSelection.wrapComplete(wrapperUse);
-    final sourceField = skir.FieldOwner(definition: node, name: "source");
-    final wrapperField = skir.FieldOwner(definition: node, name: "wrapper");
-    final backField = skir.FieldOwner(definition: wrapper, name: "back");
-    final labelField = skir.FieldOwner(definition: wrapper, name: "label");
-    skir.FieldDeclaration declaration(
-      skir.FieldOwner owner,
-      skir.TypeTemplate type,
-    ) => skir.FieldDeclaration(
-      owner: owner,
-      type: type,
-      overrides: const [],
-      hasConstructorDefault: false,
-    );
-    final sourceLinkTemplate = skir.TypeTemplate.createNamed(
-      definition: sourceLink,
-      arguments: const [],
-    );
-    final wrapperTemplate = skir.TypeTemplate.createNamed(
-      definition: abstractWrapper ? abstractForm : wrapper,
-      arguments: const [],
-    );
-    final targetLinkTemplate = skir.TypeTemplate.createNamed(
-      definition: targetLink,
-      arguments: const [],
-    );
-    final linksTemplate = skir.TypeTemplate.createNamed(
-      definition: links,
-      arguments: const [],
-    );
-    final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
-    final snapshot = testCatalogSnapshot(
-      generation: generation,
-      types: [
-        if (abstractWrapper)
-          publishedDefinition(
-            skir.TypeDefinition(
-              id: abstractForm,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createRecord(
-                fields: const [],
-                abstract_: true,
-              ),
-              parents: const [],
-            ),
-            const [],
+    skir.AuthoringResource node(String id, skir.DataValue wrapperValue) =>
+        authoredRecord(id, {
+          "source": skir.DataValue.unfilled,
+          "wrapper": directCollection ? emptyLinks : wrapperValue,
+        }, type: typeUse("Node"));
+    final saved = authoredDoc(
+      [
+        node("resource:source", skir.DataValue.unfilled),
+        node(
+          "resource:existing",
+          typedValue(
+            "Wrapper",
+            recordEditorValue({
+              "back": nestedCollection ? emptyLinks : skir.DataValue.unfilled,
+              "label": textValue("existing"),
+            }),
           ),
-        publishedDefinition(
-          skir.TypeDefinition(
-            id: links,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createSequence(
-              item: targetLinkTemplate,
-              kind: skir.CollectionKind.list,
-            ),
-            parents: const [],
-          ),
-          const [],
         ),
-        publishedDefinition(
-          skir.TypeDefinition(
-            id: node,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                declaration(sourceField, sourceLinkTemplate),
-                declaration(
-                  wrapperField,
-                  directCollection ? linksTemplate : wrapperTemplate,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
-          ),
-          [
-            skir.EffectiveFieldTemplate(
-              key: "source",
-              owner: sourceField,
-              type: sourceLinkTemplate,
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "wrapper",
-              owner: wrapperField,
-              type: directCollection ? linksTemplate : wrapperTemplate,
-              rules: const [],
-            ),
-          ],
-        ),
-        publishedDefinition(
-          skir.TypeDefinition(
-            id: wrapper,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                declaration(
-                  backField,
-                  nestedCollection ? linksTemplate : targetLinkTemplate,
-                ),
-                declaration(labelField, textTemplate),
-              ],
-              abstract_: false,
-            ),
-            parents: abstractWrapper
-                ? [
-                    skir.NamedTypeTemplate(
-                      definition: abstractForm,
-                      arguments: const [],
-                    ),
-                  ]
-                : const [],
-          ),
-          [
-            skir.EffectiveFieldTemplate(
-              key: "back",
-              owner: backField,
-              type: nestedCollection ? linksTemplate : targetLinkTemplate,
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "label",
-              owner: labelField,
-              type: textTemplate,
-              rules: const [],
-            ),
-          ],
-        ),
-        for (final link in [
-          (sourceLink, sourceEndpoint),
-          (targetLink, targetEndpoint),
-        ])
-          publishedDefinition(
-            skir.TypeDefinition(
-              id: link.$1,
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createLink(
-                endpoint: link.$2,
-                target: incompatibleInverse && link.$1 == targetLink
-                    ? wrapperTemplate
-                    : nodeTemplate,
-              ),
-              parents: const [],
-            ),
-            const [],
-          ),
+        node("resource:empty", skir.DataValue.unfilled),
       ],
-      relations: [
-        skir.RelationContract(
-          id: skir.RelationId(value: "test.links"),
-          first: skir.EndpointDefinition(
-            id: sourceEndpoint,
-            slot: skir.EndpointSlot.first,
-            resource: skir.NamedTypeTemplate(
-              definition: node,
-              arguments: const [],
-            ),
-            cardinality: (directCollection || nestedCollection)
-                ? skir.EndpointCardinality.many
-                : skir.EndpointCardinality.one,
-            onDelete: skir.RelationDeletePolicy.clear,
+      catalog: authoredCatalog(
+        [
+          if (abstractWrapper)
+            declaredRecord("AbstractWrapper", abstract: true),
+          declaredCollection("Links", "TargetLink"),
+          declaredRecord(
+            "Node",
+            fields: {
+              "source": "SourceLink",
+              "wrapper": directCollection ? "Links" : wrapper,
+            },
           ),
-          second: skir.EndpointDefinition(
-            id: targetEndpoint,
-            slot: skir.EndpointSlot.second,
-            resource: skir.NamedTypeTemplate(
-              definition: node,
-              arguments: const [],
-            ),
-            cardinality: (directCollection || nestedCollection)
-                ? skir.EndpointCardinality.one
-                : skir.EndpointCardinality.many,
-            onDelete: skir.RelationDeletePolicy.clear,
+          declaredRecord(
+            "Wrapper",
+            fields: {
+              "back": nestedCollection ? "Links" : "TargetLink",
+              "label": skir.ScalarKind.text,
+            },
+            parents: [if (abstractWrapper) "AbstractWrapper"],
           ),
-          families: const [],
-        ),
-      ],
-      endpointBindings: [
-        skir.EndpointBindingTemplate(
-          endpoint: sourceEndpoint,
-          containingResource: skir.NamedTypeTemplate(
-            definition: node,
-            arguments: const [],
+          declaredLink("SourceLink", endpoint: "test.source", target: "Node"),
+          declaredLink(
+            "TargetLink",
+            endpoint: "test.target",
+            target: incompatibleInverse ? wrapper : "Node",
           ),
-          valueOwner: node,
-          relativePath: skir.RelativeFieldPattern(
-            segments: [skir.FieldPatternSegment.createField(name: "source")],
-          ),
-          target: nodeTemplate,
-          containsCollection: false,
-        ),
-        if (!abstractWrapper)
-          skir.EndpointBindingTemplate(
-            endpoint: targetEndpoint,
-            containingResource: skir.NamedTypeTemplate(
-              definition: node,
-              arguments: const [],
-            ),
-            valueOwner: directCollection ? node : wrapper,
-            relativePath: skir.RelativeFieldPattern(
-              segments: [
-                skir.FieldPatternSegment.createField(name: "wrapper"),
-                if (directCollection)
-                  skir.FieldPatternSegment.items
-                else
-                  skir.FieldPatternSegment.createField(name: "back"),
-              ],
-            ),
-            target: incompatibleInverse ? wrapperTemplate : nodeTemplate,
-            containsCollection: directCollection,
-          ),
-      ],
-    );
-    final source = skir.ResourceId(value: "resource:source");
-    final existingTarget = skir.ResourceId(value: "resource:existing");
-    final emptyTarget = skir.ResourceId(value: "resource:empty");
-    skir.AuthoringRecord record(skir.DataValue wrapperValue) =>
-        skir.AuthoringRecord(
-          configuration: skir.TypeSelection.wrapComplete(nodeUse),
-          fields: [
-            skir.FieldValue(name: "source", value: skir.DataValue.unfilled),
-            skir.FieldValue(
-              name: "wrapper",
-              value: directCollection
-                  ? skir.DataValue.createNamed(
-                      actualType: skir.NamedTypeUse(
-                        definition: links,
-                        arguments: const [],
-                      ),
-                      payload: skir.DataValue.createListValue(items: const []),
-                    )
-                  : wrapperValue,
-            ),
-          ],
-        );
-    final authored = skir.AuthoringState(
-      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-      generation: generation,
-      resources: [
-        skir.AuthoringResource(
-          id: source,
-          content: record(skir.DataValue.unfilled),
-        ),
-        skir.AuthoringResource(
-          id: existingTarget,
-          content: record(
-            skir.DataValue.createNamed(
-              actualType: wrapperUse,
-              payload: skir.DataValue.createRecord(
-                fields: [
-                  skir.FieldValue(
-                    name: "back",
-                    value: nestedCollection
-                        ? skir.DataValue.createNamed(
-                            actualType: skir.NamedTypeUse(
-                              definition: links,
-                              arguments: const [],
-                            ),
-                            payload: skir.DataValue.createListValue(
-                              items: const [],
-                            ),
-                          )
-                        : skir.DataValue.unfilled,
-                  ),
-                  skir.FieldValue(
-                    name: "label",
-                    value: skir.DataValue.wrapStringValue("existing"),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        skir.AuthoringResource(
-          id: emptyTarget,
-          content: record(skir.DataValue.unfilled),
-        ),
-      ],
-      links: const [],
-      findings: const [],
-    );
-    final checked = CheckedEditorCatalog(snapshot);
-    return LinkChoicesFixture._(
-      draft: AuthoringEdit.fromState(authored, catalog: checked),
-      catalog: checked,
-      source: skir.ValueLocation(
-        resource: source,
-        path: editorRootPath.field("source"),
-      ),
-      existingTarget: existingTarget,
-      emptyTarget: emptyTarget,
-      nestedLinkPath: skir.ValuePath(
-        segments: [
-          skir.PathSegment.createField(name: "wrapper"),
-          skir.PathSegment.createField(name: "back"),
         ],
+        relations: [
+          declaredRelation(
+            "test.links",
+            endpointOf(
+              "test.source",
+              "Node",
+              cardinality: linked
+                  ? skir.EndpointCardinality.many
+                  : skir.EndpointCardinality.one,
+            ),
+            endpointOf(
+              "test.target",
+              "Node",
+              cardinality: linked
+                  ? skir.EndpointCardinality.one
+                  : skir.EndpointCardinality.many,
+            ),
+          ),
+        ],
+        endpoints: [
+          endpointBinding(
+            "test.source",
+            resource: "Node",
+            path: ["source"],
+            target: "Node",
+          ),
+          if (!abstractWrapper)
+            endpointBinding(
+              "test.target",
+              resource: "Node",
+              owner: directCollection ? "Node" : "Wrapper",
+              path: [
+                "wrapper",
+                directCollection ? skir.FieldPatternSegment.items : "back",
+              ],
+              target: incompatibleInverse ? wrapper : "Node",
+            ),
+        ],
+        generation: "catalog:links",
       ),
-      wrapperUse: wrapperUse,
-      wrapperSelection: wrapperSelection,
+    );
+    return LinkChoicesFixture._(
+      draft: saved.edit,
+      catalog: saved.catalog,
+      source: valueAt("resource:source", ["source"]),
+      existingTarget: skir.ResourceId(value: "resource:existing"),
+      emptyTarget: skir.ResourceId(value: "resource:empty"),
+      nestedLinkPath: valueAt("resource:source", ["wrapper", "back"]).path,
+      wrapperUse: typeUse("Wrapper"),
+      wrapperSelection: skir.TypeSelection.wrapComplete(typeUse("Wrapper")),
     );
   }
 
@@ -356,126 +138,6 @@ final class LinkChoicesFixture {
   final skir.ValuePath nestedLinkPath;
   final skir.NamedTypeUse wrapperUse;
   final skir.TypeSelection wrapperSelection;
-}
-
-/// Showing and reading the link choices of a [LinkChoicesFixture].
-extension LinkChoicesViews on LinkChoicesFixture {
-  /// Mounts editing of [source] in a world serving the draft, shows its
-  /// link control, [readOnly] or not, and returns every location the link
-  /// field builder received. The builder shows a control through [wrap], or
-  /// as it is without one.
-  Future<List<skir.ValueLocation>> showWrappedLinkControl(
-    WidgetTester tester, {
-    bool readOnly = false,
-    Widget Function(Widget control)? wrap,
-  }) async {
-    final world = testWorld(adaServing(draft.toDocument()));
-    final binding = await world.mountEditing(tester, source.resource);
-    final wrapped = <skir.ValueLocation>[];
-    await tester.pumpWidget(
-      linkControl(
-        world: world,
-        binding: binding,
-        readOnly: readOnly,
-        linkFieldBuilder: (context, location, control) {
-          wrapped.add(location);
-          return wrap == null ? control : wrap(control);
-        },
-      ),
-    );
-    await tester.pumpAndSettle();
-    return wrapped;
-  }
-
-  /// The source's link control over [binding], shown in a panel over
-  /// [world]: [source] or the fixture's source field, its presentation host
-  /// disposed with the test.
-  Widget linkControl({
-    required World world,
-    required RealmEditingBinding binding,
-    skir.ValueLocation? source,
-    Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
-    prepareValue,
-    Widget Function(BuildContext, skir.ValueLocation, Widget)? linkFieldBuilder,
-    bool readOnly = false,
-  }) {
-    source ??= this.source;
-    final root = skir.ExpressionBindingId(value: "configured_value");
-    final record = draft.resource(source.resource)!;
-    final budget = skir.EvaluationBudget(
-      maxSteps: 100,
-      maxCollectionItems: 100,
-    );
-    final host = AuthoredPresentationHost(
-      resource: source.resource,
-      source: binding.document,
-      material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.workspace,
-      budget: budget,
-      capabilities: const PortablePresentationCapabilities(),
-      prepareValue: prepareValue,
-      edit: binding,
-    );
-    addTearDown(host.dispose);
-    return PanelStage.world(
-      world,
-      at: PanelLocation.component(
-        Scaffold(
-          body: PortableResourcesInteractionScope(
-            itemBuilder: (context, view, member, child) => child,
-            layoutBuilder: (context, view, child) => child,
-            linkFieldBuilder: linkFieldBuilder,
-            child: PortablePresentationNodeRenderer(
-              node: skir.PresentationNode(
-                nodeId: "link",
-                properties: skir.PresentationProperties.defaultInstance,
-                element: skir.PresentationElement.wrapLinkInput(
-                  skir.LinkControl(
-                    control: skir.BoundControl(
-                      binding: skir.BindingRef(
-                        bindingId: root,
-                        path: source.path,
-                      ),
-                      label: null,
-                      description: null,
-                      prefix: null,
-                      semanticLabel: null,
-                    ),
-                    allowReorder: false,
-                    candidatePolicy: null,
-                    rejectionDisplay: skir.LinkRejectionDisplay.disabled,
-                    sourceId: null,
-                    appearance: null,
-                    content: null,
-                    inputAppearance: null,
-                    inputContent: null,
-                    popup: null,
-                  ),
-                ),
-                header: null,
-              ),
-              scope: PortablePresentationScope(
-                operations: testPortableOperations(),
-                bindings: {
-                  root: PortableExpressionBinding(
-                    value: skir.DataValue.createRecord(fields: record.fields),
-                    location: skir.ValueLocation(
-                      resource: source.resource,
-                      path: skir.ValuePath(segments: const []),
-                    ),
-                  ),
-                },
-                budget: budget,
-                catalog: catalog,
-                host: host,
-                readOnly: readOnly,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   /// The resources the links in [resource]'s `wrapper.back` lead to.
   List<skir.ResourceId?> backLinks(
@@ -492,12 +154,26 @@ extension LinkChoicesViews on LinkChoicesFixture {
   }
 }
 
-/// The picker row that links [target] with the counterpart [choice], found by
-/// what it announces.
-Finder linkChoice(skir.ResourceId target, String choice) =>
-    find.bySemanticsLabel(
-      RegExp(
-        "^${RegExp.escape(target.value)}: "
-        "${RegExp.escape(choice)}",
+/// Resolving links of an authoring edit the way choosing a link target does.
+extension SingleLinkResolution on AuthoringEdit {
+  /// Resolves the link from [field] of [source] to [target] through the one
+  /// plan that field offers, against the edit's own catalog.
+  ResolvedReference resolveSingleLink(
+    skir.ResourceId source,
+    String field,
+    skir.ResourceId target,
+  ) {
+    final plan = (linkPlans(
+      catalog: catalog!,
+      source: skir.ValueLocation(
+        resource: source,
+        path: editorRootPath.field(field),
       ),
+    ) as PortableLinkPlanReady).plans.single;
+    return resolveReference(
+      catalog: catalog!,
+      plan: plan,
+      target: plan.targets.singleWhere((choice) => choice.resource == target),
     );
+  }
+}

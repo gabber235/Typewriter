@@ -193,23 +193,17 @@ void main() {
       resource: fixture.existingTarget,
       path: fixture.nestedLinkPath,
     );
-    final world = testWorld(adaServing(fixture.draft.toDocument()));
-    final binding = await world.mountEditing(tester, source.resource);
-    await tester.pumpWidget(
-      fixture.linkControl(world: world, binding: binding, source: source),
+    final chooser = await LinkChooserDriver.show(
+      tester,
+      fixture.draft.toDocument(),
+      source: source,
     );
-    await tester.pumpAndSettle();
-    await tester.tap(find.tooltip("Add link"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      linkChoice(fixture.source.resource, "Use the declared counterpart"),
+    await chooser.open(tooltip: "Add link");
+    await chooser.choose(
+      fixture.source.resource,
+      "Use the declared counterpart",
     );
-    await tester.pumpAndSettle();
-    final saving = binding.save();
-    await tester.pumpAndSettle();
-    await saving;
-    await tester.pump();
-    final saved = world.requireRealm.document;
+    final saved = await chooser.save();
     expect(saved.links.single.first, fixture.source.resource);
     expect(saved.links.single.second, fixture.existingTarget);
     expect(fixture.backLinks(saved, fixture.existingTarget), [
@@ -224,23 +218,17 @@ void main() {
       abstractWrapper: true,
       nestedCollection: true,
     );
-    final world = testWorld(adaServing(fixture.draft.toDocument()));
-    final binding = await world.mountEditing(tester, fixture.source.resource);
-    await tester.pumpWidget(
-      fixture.linkControl(world: world, binding: binding),
+    final chooser = await LinkChooserDriver.show(
+      tester,
+      fixture.draft.toDocument(),
+      source: fixture.source,
     );
-    await tester.pumpAndSettle();
-    await tester.tap(find.tooltip("Choose linked resource"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      linkChoice(fixture.existingTarget, "Add counterpart to wrapper / back"),
+    await chooser.open();
+    await chooser.choose(
+      fixture.existingTarget,
+      "Add counterpart to wrapper / back",
     );
-    await tester.pumpAndSettle();
-    final saving = binding.save();
-    await tester.pumpAndSettle();
-    await saving;
-    await tester.pump();
-    final saved = world.requireRealm.document;
+    final saved = await chooser.save();
     expect(saved.links.single.second, fixture.existingTarget);
     expect(fixture.backLinks(saved, fixture.existingTarget), [
       fixture.source.resource,
@@ -450,9 +438,15 @@ void main() {
     tester,
   ) async {
     final fixture = LinkChoicesFixture();
-    final wrapped = await fixture.showWrappedLinkControl(
+    final wrapped = <skir.ValueLocation>[];
+    await LinkChooserDriver.show(
       tester,
-      wrap: (control) => Semantics(label: "Wrapped link field", child: control),
+      fixture.draft.toDocument(),
+      source: fixture.source,
+      linkFieldBuilder: (context, location, control) {
+        wrapped.add(location);
+        return Semantics(label: "Wrapped link field", child: control);
+      },
     );
     expect(wrapped, everyElement(fixture.source));
     expect(wrapped, isNotEmpty);
@@ -469,9 +463,16 @@ void main() {
     "read only link input is never offered to the link field builder",
     (tester) async {
       final fixture = LinkChoicesFixture();
-      final wrapped = await fixture.showWrappedLinkControl(
+      final wrapped = <skir.ValueLocation>[];
+      await LinkChooserDriver.show(
         tester,
+        fixture.draft.toDocument(),
+        source: fixture.source,
         readOnly: true,
+        linkFieldBuilder: (context, location, control) {
+          wrapped.add(location);
+          return control;
+        },
       );
       expect(wrapped, isEmpty);
       expect(find.tooltip("Choose linked resource"), findsOneWidget);
@@ -482,31 +483,20 @@ void main() {
     "link input preserves cancellation and chooses an exact location",
     (tester) async {
       final fixture = LinkChoicesFixture();
-      final world = testWorld(adaServing(fixture.draft.toDocument()));
-      final binding = await world.mountEditing(tester, fixture.source.resource);
-      await tester.pumpWidget(
-        fixture.linkControl(world: world, binding: binding),
+      final chooser = await LinkChooserDriver.show(
+        tester,
+        fixture.draft.toDocument(),
+        source: fixture.source,
       );
-      await tester.pumpAndSettle();
 
-      await tester.tap(find.tooltip("Choose linked resource"));
-      await tester.pumpAndSettle();
-      await tester.tap(find.tooltip("Close"));
-      await tester.pumpAndSettle();
-      expect(binding.dirty, isFalse);
+      await chooser.open();
+      await chooser.close();
+      expect(chooser.binding.dirty, isFalse);
 
-      await tester.tap(find.tooltip("Choose linked resource"));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        linkChoice(fixture.existingTarget, "Use wrapper / back"),
-      );
-      await tester.pumpAndSettle();
+      await chooser.open();
+      await chooser.choose(fixture.existingTarget, "Use wrapper / back");
 
-      final saving = binding.save();
-      await tester.pumpAndSettle();
-      await saving;
-      await tester.pump();
-      final saved = world.requireRealm.document;
+      final saved = await chooser.save();
       expect(saved.links.single.second, fixture.existingTarget);
       expect(saved.links.single.secondLocation, fixture.nestedLinkPath);
       expect(
@@ -529,8 +519,6 @@ void main() {
     tester,
   ) async {
     final fixture = LinkChoicesFixture();
-    final world = testWorld(adaServing(fixture.draft.toDocument()));
-    final binding = await world.mountEditing(tester, fixture.source.resource);
     final prepared = skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
@@ -547,31 +535,21 @@ void main() {
       findings: const [],
     );
     skir.ValuePreparationRequest? request;
-    await tester.pumpWidget(
-      fixture.linkControl(
-        world: world,
-        binding: binding,
-        prepareValue: (value) async {
-          request = value;
-          return prepared;
-        },
-      ),
+    final chooser = await LinkChooserDriver.show(
+      tester,
+      fixture.draft.toDocument(),
+      source: fixture.source,
+      prepareValue: (value) async {
+        request = value;
+        return prepared;
+      },
     );
-    await tester.pumpAndSettle();
 
-    await tester.tap(find.tooltip("Choose linked resource"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      linkChoice(fixture.emptyTarget, "Create counterpart in wrapper"),
-    );
-    await tester.pumpAndSettle();
+    await chooser.open();
+    await chooser.choose(fixture.emptyTarget, "Create counterpart in wrapper");
 
     expect(request?.recordSelection, fixture.wrapperSelection);
-    final saving = binding.save();
-    await tester.pumpAndSettle();
-    await saving;
-    await tester.pump();
-    final saved = world.requireRealm.document;
+    final saved = await chooser.save();
     expect(saved.links.single.second, fixture.emptyTarget);
     expect(
       saved

@@ -266,10 +266,12 @@ void main() {
     final catalog = testCheckedCatalog(
       generation: _hostCatalogGeneration,
       types: [
-        testPublishedRecord(message, const {}, abstract: true),
-        testPublishedRecord(
+        declaredRecord(message, abstract: true),
+        declaredRecord(
           textMessage,
-          {textOwner.name: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
+          fields: {
+            textOwner.name: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+          },
           parents: [
             skir.NamedTypeTemplate(definition: message, arguments: const []),
           ],
@@ -332,38 +334,25 @@ void main() {
     final catalog = testCheckedCatalog(
       generation: _hostCatalogGeneration,
       types: [
-        testPublishedRecord(reward, const {}, abstract: true),
-        testPublishedRecord(
+        declaredRecord(reward, abstract: true),
+        declaredRecord(
           coin,
-          const {},
           parents: [
             skir.NamedTypeTemplate(definition: reward, arguments: const []),
           ],
         ),
-        testPublishedRecord(
+        declaredRecord(
           item,
-          const {},
           parents: [
             skir.NamedTypeTemplate(definition: reward, arguments: const []),
           ],
         ),
-        testPublishedRecord(
+        declaredRecord(
           variable,
-          {valueOwner.name: skir.TypeTemplate.wrapParameter(parameter)},
-          parameters: [
-            skir.TypeParameter(
-              key: parameter,
-              name: "T",
-              bounds: [
-                skir.TypeTemplate.wrapNamed(
-                  skir.NamedTypeTemplate(
-                    definition: reward,
-                    arguments: const [],
-                  ),
-                ),
-              ],
-            ),
-          ],
+          fields: {valueOwner.name: skir.TypeTemplate.wrapParameter(parameter)},
+          parameters: {
+            "T": [reward],
+          },
         ),
       ],
     );

@@ -8,21 +8,41 @@ const _key = EditorResourceKey(scope: "org1", identity: "resource");
 final _title = editorRootPath.field("title");
 final _description = editorRootPath.field("description");
 
+/// The record's two text fields, title and description.
+final _textFields = {
+  "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+  "description": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+};
+
+/// The record as it was saved.
+final _saved = recordEditorDocument(
+  texts({"title": "Original", "description": "Original description"}),
+  _textFields,
+  1,
+);
+
 /// The record as the first contract read it.
-final _remoteOne = titledRecordDocument(description: "Remote one");
+final _remoteOne = recordEditorDocument(
+  texts({"title": "Original", "description": "Remote one"}),
+  _textFields,
+  1,
+);
 
 /// The record as the second contract read it, one revision later.
-final _remoteTwo = titledRecordDocument(description: "Remote two", revision: 2);
+final _remoteTwo = recordEditorDocument(
+  texts({"title": "Original", "description": "Remote two"}),
+  _textFields,
+  2,
+);
 
 void main() {
   test("incompatible replacement stays pending across a host rebuild", () {
     final workspace = testWorkSession();
-    final source = heldResource(
-      workspace,
+    final source = resourceTarget(
       _key,
       contract: "one",
       document: _remoteOne,
-    )..update(_title, skir.DataValue.wrapStringValue("Draft"));
+    ).hold(workspace)..update(_title, skir.DataValue.wrapStringValue("Draft"));
 
     final rebuilt = resourceTarget(
       _key,
@@ -57,12 +77,11 @@ void main() {
 
   test("discard accepts an incompatible replacement explicitly", () {
     final workspace = testWorkSession();
-    final source = heldResource(
-      workspace,
+    final source = resourceTarget(
       _key,
       contract: "one",
       document: _remoteOne,
-    )..update(_title, skir.DataValue.wrapStringValue("Draft"));
+    ).hold(workspace)..update(_title, skir.DataValue.wrapStringValue("Draft"));
     resourceTarget(
       _key,
       contract: "two",
@@ -118,20 +137,22 @@ void main() {
       var oldSends = 0;
       var newSends = 0;
       var reject = true;
-      final source = heldResource(
-        workspace,
-        _key,
-        document: titledRecordDocument(),
-        commit: (commit) async {
-          oldSends++;
-          return MutationSuccess(revision: 2, value: commit.rootValue);
-        },
-      )..update(_title, skir.DataValue.wrapStringValue("Draft"));
+      final source =
+          resourceTarget(
+              _key,
+              document: _saved,
+              commit: (commit) async {
+                oldSends++;
+                return MutationSuccess(revision: 2, value: commit.rootValue);
+              },
+            ).hold(workspace)
+            ..update(_title, skir.DataValue.wrapStringValue("Draft"));
       final replacement = resourceTarget(
         _key,
-        document: titledRecordDocument(
-          description: "Remote description",
-          revision: 2,
+        document: recordEditorDocument(
+          texts({"title": "Original", "description": "Remote description"}),
+          _textFields,
+          2,
         ),
         validateDraft: (_) => reject
             ? [
@@ -180,20 +201,19 @@ void main() {
     final response = Completer<TypedMutationResult>();
     final sent = Completer<EditorCommit>();
     var newSends = 0;
-    final source = heldResource(
-      workspace,
+    final source = resourceTarget(
       _key,
-      document: titledRecordDocument(),
+      document: _saved,
       commit: (commit) {
         sent.complete(commit);
         return response.future;
       },
-    )..update(_title, skir.DataValue.wrapStringValue("First"));
+    ).hold(workspace)..update(_title, skir.DataValue.wrapStringValue("First"));
     final pending = source.flush();
     final captured = await sent.future;
     resourceTarget(
       _key,
-      document: titledRecordDocument(),
+      document: _saved,
       commit: (commit) async {
         newSends++;
         return MutationSuccess(revision: 3, value: commit.rootValue);
@@ -212,15 +232,11 @@ void main() {
     final workspace = testWorkSession();
     Future<TypedMutationResult> commit(EditorCommit commit) async =>
         MutationSuccess(revision: 2, value: commit.rootValue);
-    resourceTarget(
-      _key,
-      document: titledRecordDocument(),
-      commit: commit,
-    ).acquire(workspace);
+    resourceTarget(_key, document: _saved, commit: commit).acquire(workspace);
     expect(
       () => resourceTarget(
         _key,
-        document: titledRecordDocument(),
+        document: _saved,
         commitPolicy: EditorCommitPolicy.autosaveChanges,
         commit: commit,
       ).acquire(workspace),
@@ -229,7 +245,7 @@ void main() {
     expect(
       resourceTarget(
         _key,
-        document: titledRecordDocument(),
+        document: _saved,
         commit: commit,
       ).acquire(workspace).commitPolicy,
       EditorCommitPolicy.applyResource,

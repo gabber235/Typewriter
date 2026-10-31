@@ -240,9 +240,10 @@ final _testSelectableCatalog = CheckedEditorCatalog(
   testCatalogSnapshot(
     generation: skir.CatalogGeneration(value: "testkit:selectable"),
     types: [
-      recordType(_testSelectableDefinition, {
-        "name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      }),
+      declaredRecord(
+        _testSelectableDefinition,
+        fields: {"name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
+      ),
     ],
   ),
 );

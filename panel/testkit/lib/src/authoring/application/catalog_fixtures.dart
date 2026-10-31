@@ -29,13 +29,6 @@ skir.PublishedType _publishedRecord({
   fields: effectiveFields,
 );
 
-/// A document over [shelfCatalog] that holds no resources yet.
-AuthoringDocument emptyShelfDocument() => AuthoringDocument(
-  catalog: shelfCatalog(),
-  entries: const {},
-  links: const [],
-);
-
 /// A catalog where Shelves own Quest Books and each Book owns Entries, an
 /// abstract record that SimpleMessage refines; [manyEntries] adds 26 more
 /// Entry kinds and [reversedOwnership] declares the Book's ownership with
@@ -67,9 +60,8 @@ CheckedEditorCatalog shelfCatalog({
   return testCheckedCatalog(
     generation: skir.CatalogGeneration(value: "catalog:test"),
     types: [
-      testPublishedRecord(
+      declaredRecord(
         book,
-        const {},
         searchKey: "book",
         display: skir.TypeDisplay(
           name: "Quest Book",
@@ -78,27 +70,24 @@ CheckedEditorCatalog shelfCatalog({
           color: skir.Color(argb: 0xff3f51b5.toSigned(32)),
         ),
       ),
-      testPublishedRecord(testTypeId("Shelf"), const {}, searchKey: "shelf"),
-      testPublishedRecord(entry, const {}, abstract: true),
-      testPublishedRecord(
+      declaredRecord(testTypeId("Shelf"), searchKey: "shelf"),
+      declaredRecord(entry, abstract: true),
+      declaredRecord(
         testTypeId("SimpleMessage"),
-        const {},
         parents: [
           skir.NamedTypeTemplate(definition: entry, arguments: const []),
         ],
       ),
       if (manyEntries) ...[
         for (var index = 0; index < 25; index++)
-          testPublishedRecord(
+          declaredRecord(
             testTypeId("Entry$index"),
-            const {},
             parents: [
               skir.NamedTypeTemplate(definition: entry, arguments: const []),
             ],
           ),
-        testPublishedRecord(
+        declaredRecord(
           testTypeId("ZMessage"),
-          const {},
           parents: [
             skir.NamedTypeTemplate(definition: entry, arguments: const []),
           ],
@@ -141,182 +130,6 @@ CheckedEditorCatalog shelfCatalog({
     realmRoot: skir.TypeDefinitionId.defaultInstance,
   );
 }
-
-/// A catalog of Page kinds: the abstract Page, which the concrete Sequence,
-/// Static and Scene pages and the Manifest page refine, and an unrelated
-/// type.
-final class PageKindsFixture {
-  factory PageKindsFixture() {
-    final page = testTypeId("Page");
-    final sequence = testTypeId("SequencePage");
-    final staticPage = testTypeId("StaticPage");
-    final scene = testTypeId("ScenePage");
-    final manifest = testTypeId("ManifestPage");
-    final unrelated = testTypeId("Unrelated");
-    skir.PublishedType published(
-      skir.TypeDefinitionId id, {
-      required bool abstract,
-      List<skir.NamedTypeTemplate> parents = const [],
-      skir.TypeDisplay? display,
-    }) => publishedType(
-      id,
-      representation: skir.RepresentationTemplate.createRecord(
-        fields: const [],
-        abstract_: abstract,
-      ),
-      parents: parents,
-      display: display ?? defaultTypeDisplay(""),
-    );
-    final pageParent = skir.NamedTypeTemplate(
-      definition: page,
-      arguments: const [],
-    );
-    return PageKindsFixture._(
-      catalog: CheckedEditorCatalog(
-        testCatalogSnapshot(
-          generation: skir.CatalogGeneration(value: "catalog:resources"),
-          types: [
-            published(page, abstract: true),
-            published(
-              sequence,
-              abstract: false,
-              parents: [pageParent],
-              display: _display(
-                "Sequence",
-                "material-symbols:account-tree",
-                0xff2196f3,
-              ),
-            ),
-            published(
-              staticPage,
-              abstract: false,
-              parents: [pageParent],
-              display: _display(
-                "Static",
-                "material-symbols:push-pin",
-                0xff673ab7,
-              ),
-            ),
-            published(
-              scene,
-              abstract: false,
-              parents: [pageParent],
-              display: _display("Scene", "material-symbols:movie", 0xffff9800),
-            ),
-            published(
-              manifest,
-              abstract: false,
-              parents: [pageParent],
-              display: _display(
-                "Manifest",
-                "material-symbols:schema",
-                0xff4caf50,
-              ),
-            ),
-            published(unrelated, abstract: false),
-          ],
-        ),
-      ),
-      page: page,
-      sequence: sequence,
-      manifest: manifest,
-    );
-  }
-
-  PageKindsFixture._({
-    required this.catalog,
-    required this.page,
-    required this.sequence,
-    required this.manifest,
-  });
-
-  final CheckedEditorCatalog catalog;
-  final skir.TypeDefinitionId page;
-  final skir.TypeDefinitionId sequence;
-  final skir.TypeDefinitionId manifest;
-}
-
-/// A catalog with a generic container named [containerName] of
-/// [parameterCount] type parameters, bounded by Reward unless [unbounded],
-/// and CoinReward, a concrete Reward.
-final class RewardContainerFixture {
-  factory RewardContainerFixture({
-    int parameterCount = 1,
-    bool unbounded = false,
-    String containerName = "Variable",
-  }) {
-    final container = testTypeId(containerName);
-    final reward = testTypeId("Reward");
-    final coin = testTypeId("CoinReward");
-    skir.PublishedType published(
-      skir.TypeDefinitionId id, {
-      List<skir.TypeParameter> parameters = const [],
-      List<skir.NamedTypeTemplate> parents = const [],
-    }) => publishedType(
-      id,
-      representation: skir.RepresentationTemplate.createRecord(
-        fields: const [],
-        abstract_: false,
-      ),
-      parameters: parameters,
-      parents: parents,
-    );
-    return RewardContainerFixture._(
-      catalog: CheckedEditorCatalog(
-        testCatalogSnapshot(
-          generation: skir.CatalogGeneration(value: "catalog:1"),
-          types: [
-            published(
-              container,
-              parameters: [
-                for (var index = 0; index < parameterCount; index++)
-                  skir.TypeParameter(
-                    key: skir.ParameterKey(owner: container, index: index),
-                    name: index == 0 ? "T" : "U",
-                    bounds: unbounded
-                        ? const []
-                        : [
-                            skir.TypeTemplate.createNamed(
-                              definition: reward,
-                              arguments: const [],
-                            ),
-                          ],
-                  ),
-              ],
-            ),
-            published(reward),
-            published(
-              coin,
-              parents: [
-                skir.NamedTypeTemplate(definition: reward, arguments: const []),
-              ],
-            ),
-          ],
-        ),
-      ),
-      container: container,
-      coin: coin,
-    );
-  }
-
-  RewardContainerFixture._({
-    required this.catalog,
-    required this.container,
-    required this.coin,
-  });
-
-  final CheckedEditorCatalog catalog;
-  final skir.TypeDefinitionId container;
-  final skir.TypeDefinitionId coin;
-}
-
-skir.TypeDisplay _display(String name, String icon, int argb) =>
-    skir.TypeDisplay(
-      name: name,
-      description: "$name page",
-      icon: skir.Icon.wrapIconify(icon),
-      color: skir.Color(argb: argb.toSigned(32)),
-    );
 
 /// A draft of one resource, with the catalog that types it: the shapes of
 /// authored record the editing and presentation tests start from.
@@ -468,9 +281,9 @@ final class AuthoredDraft {
                 kind: skir.ScalarKind.text,
               ),
             ),
-          recordType(
+          declaredRecord(
             definition,
-            {fieldName: fieldType},
+            fields: {fieldName: fieldType},
             rules: {
               fieldName: requireTitle ? [titleRule] : const [],
             },
@@ -619,9 +432,9 @@ final class AuthoredDraft {
       testCatalogSnapshot(
         generation: catalogGeneration,
         types: [
-          recordType(
+          declaredRecord(
             definition,
-            {
+            fields: {
               fieldName: skir.TypeTemplate.wrapScalar(
                 skir.ScalarKind.createInteger(
                   width: skir.IntegerWidth.signedThirtyTwo,
@@ -759,14 +572,8 @@ final class AuthoredDraft {
       testCatalogSnapshot(
         generation: generation,
         types: [
-          testPublishedRecord(definition, {"elements": elementsType}),
-          testPublishedType(
-            elementsDefinition,
-            skir.RepresentationTemplate.createSequence(
-              item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              kind: skir.CollectionKind.list,
-            ),
-          ),
+          declaredRecord(definition, fields: {"elements": elementsType}),
+          declaredCollection(elementsDefinition, skir.ScalarKind.text),
         ],
         presentations: [
           typePresentation(presentationId, definition, [

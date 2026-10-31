@@ -358,14 +358,16 @@ void main() {
 
     test("cancellation remains safe while subscribe is pending", () async {
       final world = testWorld([signedIn(ada)]);
-      world.nats.connectWith = HeldSubscriptionsNatsClient.new;
+      final admission = Completer<void>();
+      world.nats.admitSubscription = (subject, {required persistent}) =>
+          admission.future;
       await world.initialized();
       final listener = world.watchCounter().listen(null);
-      final server = world.nats.connection as HeldSubscriptionsNatsClient;
+      final server = world.nats.connection;
       await pumpEventQueue();
 
       final cancellation = listener.cancel();
-      server.admission.complete();
+      admission.complete();
       await cancellation;
       await pumpEventQueue();
 
@@ -375,29 +377,38 @@ void main() {
 
     test("reconnect serializes a pending persistent acquisition", () async {
       final world = testWorld([signedIn(ada)]);
-      world.nats.connectWith = HeldAcquisitionsNatsClient.new;
+      final admissions = <Completer<void>>[];
+      var acquiring = 0;
+      var mostAcquiringAtOnce = 0;
+      world.nats.admitSubscription = (subject, {required persistent}) {
+        if (!persistent) return null;
+        final admission = Completer<void>();
+        admissions.add(admission);
+        mostAcquiringAtOnce = max(mostAcquiringAtOnce, ++acquiring);
+        return admission.future.whenComplete(() => acquiring--);
+      };
       await world.initialized();
       var snapshots = 0;
       world.nats.registerHandler("watch", (_) => counterBytes(++snapshots));
       final values = <int>[];
       final listener = world.watchCounter(persistent: true).listen(values.add);
       addTearDown(listener.cancel);
-      final server = world.nats.connection as HeldAcquisitionsNatsClient;
-      await eventually(() => expect(server.admissions, hasLength(1)));
+      final server = world.nats.connection;
+      await eventually(() => expect(admissions, hasLength(1)));
 
       world.nats
         ..disconnect()
         ..reconnect();
       await pumpEventQueue();
-      expect(server.admissions, hasLength(1));
+      expect(admissions, hasLength(1));
 
-      server.admissions[0].complete();
-      await eventually(() => expect(server.admissions, hasLength(2)));
+      admissions[0].complete();
+      await eventually(() => expect(admissions, hasLength(2)));
       expect(server.subscriptionSubjects, isEmpty);
-      server.admissions[1].complete();
+      admissions[1].complete();
       await eventually(() => expect(values, [1]));
 
-      expect(server.mostAcquiringAtOnce, 1);
+      expect(mostAcquiringAtOnce, 1);
       expect(server.subscriptionSubjects, ["events"]);
     });
 

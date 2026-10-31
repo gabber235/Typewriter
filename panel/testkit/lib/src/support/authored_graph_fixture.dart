@@ -22,16 +22,12 @@ final class AuthoredGraphFixture {
     );
     skir.NamedTypeUse use(String name) =>
         skir.NamedTypeUse(definition: _type(name), arguments: const []);
-    skir.PublishedType published(
-      String name,
-      skir.RepresentationTemplate representation,
-    ) => testPublishedType(_type(name), representation);
     skir.PublishedType record(
       String name,
       Map<String, skir.TypeTemplate> fields,
-    ) => testPublishedRecord(
+    ) => declaredRecord(
       _type(name),
-      fields,
+      fields: fields,
       placementField: fields.containsKey("placement")
           ? editorRootPath.field("placement")
           : null,
@@ -105,25 +101,17 @@ final class AuthoredGraphFixture {
           ("TriggerRef", "trigger.source", "Entry"),
           ("IncomingRef", "trigger.target", "Entry"),
         ])
-          published(
-            definition.$1,
-            skir.RepresentationTemplate.createLink(
-              endpoint: _endpoint(definition.$2),
-              target: named(definition.$3),
-            ),
+          declaredLink(
+            _type(definition.$1),
+            endpoint: definition.$2,
+            target: named(definition.$3),
           ),
         for (final collection in [
           ("Elements", "ElementRef"),
           ("Triggers", "TriggerRef"),
           ("Incoming", "IncomingRef"),
         ])
-          published(
-            collection.$1,
-            skir.RepresentationTemplate.createSequence(
-              item: named(collection.$2),
-              kind: skir.CollectionKind.list,
-            ),
-          ),
+          declaredCollection(_type(collection.$1), named(collection.$2)),
       ]
       ..relations = [
         skir.RelationContract(

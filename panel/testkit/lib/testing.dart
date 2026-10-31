@@ -17,7 +17,6 @@ export "src/core/eventually.dart";
 export "src/core/offline_network.dart";
 export "src/core/pump_panel.dart";
 export "src/core/test_world.dart";
-export "src/doubles/browser.dart";
 export "src/doubles/clipboard.dart";
 export "src/doubles/counting_button.dart";
 export "src/doubles/images.dart";

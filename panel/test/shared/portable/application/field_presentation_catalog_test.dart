@@ -1243,17 +1243,10 @@ final _types = [
     (_right, [_base]),
     (_child, [_left, _right, _base]),
   ])
-    testPublishedType(
+    declaredRecord(
       definition,
-      skir.RepresentationTemplate.createRecord(
-        fields: const [],
-        abstract_: false,
-      ),
       fields: _fields,
-      fieldOwner: _base,
-      parents: [
-        for (final ancestor in ancestors)
-          skir.NamedTypeTemplate(definition: ancestor, arguments: const []),
-      ],
+      inheritedFrom: definition == _base ? null : _base,
+      parents: ancestors,
     ),
 ];

@@ -2,7 +2,9 @@ library;
 
 export "authoring/creation_driver.dart";
 export "authoring/editing_driver.dart";
+export "authoring/link_chooser_driver.dart";
 export "authoring/surface_driver.dart";
+export "authoring/type_chooser_driver.dart";
 export "authoring/resources_driver.dart";
 export "component_driver.dart";
 export "dialog_driver.dart";

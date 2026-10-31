@@ -124,7 +124,12 @@ void main() {
         session,
         policy: EditorCommitPolicy.applyResource,
       );
-      final combined = combinedOwners([first, second]);
+      final combined = MultiEditOwner(
+        owners: [first, second],
+        rootType: first.rootType,
+        catalog: first.catalog,
+      );
+      addTearDown(combined.dispose);
       final interaction = combined.beginInteraction(editorRootPath);
       expect(
         combined.update(
@@ -154,7 +159,12 @@ void main() {
         policy: EditorCommitPolicy.applyResource,
       );
       first.update(editorRootPath, skir.DataValue.wrapStringValue("Earlier"));
-      final combined = combinedOwners([first, second]);
+      final combined = MultiEditOwner(
+        owners: [first, second],
+        rootType: first.rootType,
+        catalog: first.catalog,
+      );
+      addTearDown(combined.dispose);
       final interaction = combined.beginInteraction(editorRootPath);
       combined.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
       interaction.cancel();

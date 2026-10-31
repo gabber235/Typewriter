@@ -5,10 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 /// The saved record [_resource] named "Original" at position 0.
-final _saved = textRecordDocument(_resource, {
-  "name": "Original",
-  "position": "0",
-});
+final _saved = authoredDoc([
+  authoredRecord(_resource, texts({"name": "Original", "position": "0"})),
+]).document;
 
 /// Ada in Acme, whose Realm holds [_saved].
 final _original = adaServing(_saved);
@@ -72,10 +71,12 @@ void main() {
       final other = skir.ItemId(value: "other");
       final initial =
           AuthoringEdit.fromDocument(
-            textRecordDocument(_resource, {
-              "name": "Original",
-              "position": "0",
-            }),
+            authoredDoc([
+              authoredRecord(
+                _resource,
+                texts({"name": "Original", "position": "0"}),
+              ),
+            ]).document,
           )..set(
             itemsAt,
             skir.DataValue.createListValue(
@@ -169,7 +170,12 @@ void main() {
       ) as EditStaged;
       final reviewed = editing.workspace.inspectUnsubmitted(form.editingGroup);
       final stale = AuthoringEdit.fromDocument(
-        textRecordDocument(_resource, {"name": "Obsolete", "position": "0"}),
+        authoredDoc([
+          authoredRecord(
+            _resource,
+            texts({"name": "Obsolete", "position": "0"}),
+          ),
+        ]).document,
       )..set(_name, skir.DataValue.wrapStringValue("Replacement"));
       var notifications = 0;
       editing.addListener(() => notifications++);
@@ -319,16 +325,16 @@ void main() {
           intents: [setTextIntent(_position, "2")],
         ),
       );
-    expectRefusedAfterRemoteChange(
+    expect(
       combined,
-      saved: saved,
-      remoteChange: (remote) =>
-          remote.set(_name, skir.DataValue.wrapStringValue("Remote")),
+      refusedAfter(
+        (remote) => remote.set(_name, skir.DataValue.wrapStringValue("Remote")),
+        saved: saved,
+      ),
     );
-    expectRefusedAfterRemoteChange(
+    expect(
       combined,
-      saved: saved,
-      remoteChange: (remote) => remote.delete(_resource),
+      refusedAfter((remote) => remote.delete(_resource), saved: saved),
     );
   });
 
@@ -435,7 +441,9 @@ void main() {
         ..setText("Name", _name, "Local")
         ..setText("Position", _position, "Local position");
       realm.serve(
-        textRecordDocument(_resource, {"name": "Remote", "position": "0"}),
+        authoredDoc([
+          authoredRecord(_resource, texts({"name": "Remote", "position": "0"})),
+        ]).document,
       );
       final review = await editing.reviewConflict(form.editingGroup);
       expect(
@@ -478,7 +486,9 @@ void main() {
         policy: EditorCommitPolicy.applyResource,
       ) as EditStaged;
       realm.serve(
-        textRecordDocument(_resource, {"name": "Remote", "position": "0"}),
+        authoredDoc([
+          authoredRecord(_resource, texts({"name": "Remote", "position": "0"})),
+        ]).document,
       );
       final review = await editing.reviewConflict(form.editingGroup);
       editing
@@ -505,14 +515,18 @@ void main() {
       final editing = await world.openRealmEditing();
       final form = editing.form(_resource)..setText("Name", _name, "Local");
       realm.serve(
-        textRecordDocument(_resource, {"name": "Remote", "position": "0"}),
+        authoredDoc([
+          authoredRecord(_resource, texts({"name": "Remote", "position": "0"})),
+        ]).document,
       );
       final review = await editing.reviewConflict(form.editingGroup);
       editing.acceptConfirmed(
-        textRecordDocument(_resource, {
-          "name": "Changed again",
-          "position": "0",
-        }),
+        authoredDoc([
+          authoredRecord(
+            _resource,
+            texts({"name": "Changed again", "position": "0"}),
+          ),
+        ]).document,
       );
       for (final choice in AuthoringConflictChoice.values) {
         expect(
@@ -557,7 +571,12 @@ void main() {
     final saving = form.save();
     await Future<void>.delayed(Duration.zero);
     realm.serve(
-      textRecordDocument(_resource, {"name": "Saved", "position": "Saved"}),
+      authoredDoc([
+        authoredRecord(
+          _resource,
+          texts({"name": "Saved", "position": "Saved"}),
+        ),
+      ]).document,
     );
     realm.saves.single.reject(
       skir.CommitPreparedEditResponse.wrapConflictError([
@@ -598,7 +617,9 @@ void main() {
     () async {
       final world = testWorld([
         ...adaServing(
-          textRecordDocument(_resource, {"name": "", "position": "0"}),
+          authoredDoc([
+            authoredRecord(_resource, texts({"name": "", "position": "0"})),
+          ]).document,
         ),
         heldSaves,
       ]);
@@ -613,10 +634,9 @@ void main() {
       final request = realm.saves.single.edit;
       expect(realm.document.facts.conflicts(request.expectations), isEmpty);
       expect(
-        textRecordDocument(_resource, {
-          "name": "Q",
-          "position": "0",
-        }).facts.conflicts(request.expectations),
+        authoredDoc([
+          authoredRecord(_resource, texts({"name": "Q", "position": "0"})),
+        ]).document.facts.conflicts(request.expectations),
         isNotEmpty,
       );
       expect(
@@ -624,10 +644,9 @@ void main() {
         skir.DataValue.wrapStringValue("Quest"),
       );
       realm.saves.last.confirm(
-        saved: textRecordDocument(_resource, {
-          "name": "Quest",
-          "position": "0",
-        }),
+        saved: authoredDoc([
+          authoredRecord(_resource, texts({"name": "Quest", "position": "0"})),
+        ]).document,
       );
       await saving;
       expect(editing.state.groups, isEmpty);
@@ -853,7 +872,9 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     form.setText("Continue", _name, "Second");
     realm.saves.last.confirm(
-      saved: textRecordDocument(_resource, {"name": "First", "position": "0"}),
+      saved: authoredDoc([
+        authoredRecord(_resource, texts({"name": "First", "position": "0"})),
+      ]).document,
     );
     await saving;
     expect(
@@ -930,10 +951,12 @@ void main() {
       form.setText("Rename", _name, "Next");
 
       realm.serve(
-        textRecordDocument(_resource, {
-          "name": "Original",
-          "position": "Remote",
-        }),
+        authoredDoc([
+          authoredRecord(
+            _resource,
+            texts({"name": "Original", "position": "Remote"}),
+          ),
+        ]).document,
       );
       await world.container.pump();
 
@@ -961,10 +984,12 @@ void main() {
       final workspace = await world.openRealmEditing();
       final form = workspace.form(_resource)..setText("Rename", _name, "Local");
       final changed =
-          textRecordDocument(_resource, {
-            "name": "Original",
-            "position": "0",
-          }).copyWith(
+          authoredDoc([
+            authoredRecord(
+              _resource,
+              texts({"name": "Original", "position": "0"}),
+            ),
+          ]).document.copyWith(
             catalog: libraryCatalog(
               generation: skir.CatalogGeneration(value: "next"),
             ),
@@ -994,10 +1019,12 @@ void main() {
       final workspace = await testWorld(_original).openRealmEditing();
       final form = workspace.form(_resource)..setText("Rename", _name, "Local");
       workspace.acceptConfirmed(
-        textRecordDocument(_resource, {
-          "name": "Original",
-          "position": "Remote",
-        }),
+        authoredDoc([
+          authoredRecord(
+            _resource,
+            texts({"name": "Original", "position": "Remote"}),
+          ),
+        ]).document,
       );
       expect(form.blocked, isFalse);
       expect(
@@ -1005,7 +1032,12 @@ void main() {
         skir.DataValue.wrapStringValue("Remote"),
       );
       workspace.acceptConfirmed(
-        textRecordDocument(_resource, {"name": "Remote", "position": "Remote"}),
+        authoredDoc([
+          authoredRecord(
+            _resource,
+            texts({"name": "Remote", "position": "Remote"}),
+          ),
+        ]).document,
       );
       expect(form.phase, isA<EditGroupConflict>());
       expect(
@@ -1036,10 +1068,15 @@ void main() {
           },
         );
         workspace.acceptConfirmed(
-          textRecordDocument(_resource, {
-            "name": changedName ? "Remote" : "Original",
-            "position": "Remote",
-          }),
+          authoredDoc([
+            authoredRecord(
+              _resource,
+              texts({
+                "name": changedName ? "Remote" : "Original",
+                "position": "Remote",
+              }),
+            ),
+          ]).document,
         );
         gate.complete();
         final result = await pending;
@@ -1132,7 +1169,12 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(realm.saves, hasLength(2));
       final positionOnly = AuthoringEdit.fromDocument(
-        textRecordDocument(_resource, {"name": "Original", "position": "0"}),
+        authoredDoc([
+          authoredRecord(
+            _resource,
+            texts({"name": "Original", "position": "0"}),
+          ),
+        ]).document,
       )..applyPrepared(realm.saves.last.edit);
       expect(
         positionOnly.toDocument().valueAt(_name),
@@ -1185,10 +1227,9 @@ void main() {
     final form = workspace.form(_resource)
       ..setText("Rename", _name, "Retained");
     workspace.acceptConfirmed(
-      textRecordDocument(_resource, {
-        "name": "Original",
-        "position": "0",
-      }).copyWith(entries: const {}),
+      authoredDoc([
+        authoredRecord(_resource, texts({"name": "Original", "position": "0"})),
+      ]).document.copyWith(entries: const {}),
     );
     final phase = form.phase! as EditGroupResourceMissing;
     expect(
@@ -1202,10 +1243,9 @@ void main() {
   test(
     "record field order is irrelevant but collection item order is guarded",
     () async {
-      final document = textRecordDocument(_resource, {
-        "name": "Original",
-        "position": "0",
-      });
+      final document = authoredDoc([
+        authoredRecord(_resource, texts({"name": "Original", "position": "0"})),
+      ]).document;
       final workspace = await testWorld(adaServing(document))
           .openRealmEditing();
       final form = workspace.form(_resource);

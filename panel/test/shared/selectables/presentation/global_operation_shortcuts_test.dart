@@ -8,7 +8,10 @@ void main() {
   testWidgets("in normal mode a selection shortcut runs its operation", (
     tester,
   ) async {
-    final (:panel, :operation) = await tester.pumpGatedShortcuts(target);
+    final operation = RecordingShortcutOperation();
+    final panel = await tester.showComponent(
+      GatedShortcutSurface(target: target, operation: operation),
+    );
     await panel.item("Target").select();
     expect(panel.container.read(selectionProvider), [target]);
 
@@ -18,7 +21,10 @@ void main() {
   });
 
   testWidgets("in normal mode escape clears the selection", (tester) async {
-    final (:panel, operation: _) = await tester.pumpGatedShortcuts(target);
+    final operation = RecordingShortcutOperation();
+    final panel = await tester.showComponent(
+      GatedShortcutSurface(target: target, operation: operation),
+    );
     await panel.item("Target").select();
     expect(panel.container.read(selectionProvider), [target]);
 
@@ -28,7 +34,10 @@ void main() {
   });
 
   testWidgets("while typing selection shortcuts stay off", (tester) async {
-    final (:panel, :operation) = await tester.pumpGatedShortcuts(target);
+    final operation = RecordingShortcutOperation();
+    final panel = await tester.showComponent(
+      GatedShortcutSurface(target: target, operation: operation),
+    );
     await panel.item("Target").select();
     expect(panel.container.read(selectionProvider), [target]);
 
@@ -43,7 +52,10 @@ void main() {
   testWidgets("outside normal mode selection shortcuts and clearing stay off", (
     tester,
   ) async {
-    final (:panel, :operation) = await tester.pumpGatedShortcuts(target);
+    final operation = RecordingShortcutOperation();
+    final panel = await tester.showComponent(
+      GatedShortcutSurface(target: target, operation: operation),
+    );
     await panel.item("Target").select();
     expect(panel.container.read(selectionProvider), [target]);
 

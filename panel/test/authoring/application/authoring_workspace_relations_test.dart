@@ -41,10 +41,9 @@ void main() {
       edit.links.any((link) => link.first == _page || link.second == _page),
       isFalse,
     );
-    expectRefusedAfterRemoteChange(
+    expect(
       edit,
-      saved: document,
-      remoteChange: (remote) => remote.delete(_page),
+      refusedAfter((remote) => remote.delete(_page), saved: document),
     );
   });
 

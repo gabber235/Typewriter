@@ -9,13 +9,6 @@ import "package:typewriter_testkit/src/core/world.dart";
 import "package:typewriter_testkit/src/doubles/realm_library.dart";
 
 /// Following an authoring session from a world without widgets.
-/// What the broker answers a request while the Realm that owns it is away
-/// and the panel stays connected: nothing received it.
-const realmAway = NatsClientException(
-  kind: NatsFailureKind.noResponders,
-  message: "No NATS responder is available",
-);
-
 extension AuthoringSessionWaits on World {
   /// Waits until [session] shows [book] titled [title]; a failure names
   /// [description].
@@ -80,19 +73,6 @@ extension AuthoringSessionWaits on World {
       first,
       description: "initial state",
     );
-  }
-
-  /// Holds every request on [subject] until the test answers it; returns
-  /// the held requests, oldest first. Failing one with [realmAway] answers
-  /// it the way the broker does while the Realm is away.
-  List<Completer<Uint8List>> holdRequests(String subject) {
-    final held = <Completer<Uint8List>>[];
-    nats.registerHandler(subject, (_) {
-      final request = Completer<Uint8List>();
-      held.add(request);
-      return request.future;
-    });
-    return held;
   }
 
   /// Announces on [subject] that the authoring content of catalog

@@ -8,14 +8,6 @@ import "package:typewriter_testkit/testing.dart";
 skir.DataValue titleValue(String title) =>
     recordEditorValue({"title": skir.DataValue.wrapStringValue(title)});
 
-/// A document of one text field holding [title], at [revision].
-EditorDocument titleDocument(String title, int revision) =>
-    recordEditorDocument(
-      {"title": skir.DataValue.wrapStringValue(title)},
-      {"title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
-      revision,
-    );
-
 /// A single-field title snapshot at [revision], accepting every edit.
 EditorSnapshot savedTitleSnapshot({
   String title = "Original",
@@ -181,21 +173,6 @@ EditControl boundControl(ValueEditing owner) {
   return control;
 }
 
-/// A successful reply that saves [value] at revision 2.
-TypedMutationResult savedTextResult(String value) =>
-    TypedMutationResult.success(
-      revision: 2,
-      value: skir.DataValue.wrapStringValue(value),
-    );
-
-/// Mounts editing [controls] on a scaffold in the panel.
-extension EditingControlsPump on WidgetTester {
-  Future<PanelDriver> pumpControls(Widget controls) => pumpPanel(
-    const [],
-    at: PanelLocation.component(Scaffold(body: controls)),
-  );
-}
-
 /// Owner of the identified value [id] in [session], persisted through
 /// [persistence] or a scripted resource that acknowledges every save.
 ValueEditing identifiedOwner(
@@ -271,27 +248,6 @@ Future<void> applyOwners(List<ValueEditing> owners) =>
     const EditApplyCoordinator().apply(
       owners.map((owner) => owner.workspace.applyRequest(owner.groupId)),
     );
-
-/// A title and position record at revision 1, with its position an integer.
-ValueEditing titleAndPositionSource() => fakeValueEditing(
-  document: recordEditorDocument(
-    {
-      "title": skir.DataValue.wrapStringValue("Original"),
-      "position": skir.DataValue.wrapInteger("0"),
-    },
-    {
-      "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      "position": skir.TypeTemplate.wrapScalar(
-        skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
-      ),
-    },
-    1,
-  ),
-  validation: (path, value) => EditorMutationResult.applied(value),
-  debounce: const Duration(days: 1),
-  commit: (commit) async =>
-      MutationSuccess(revision: 3, value: commit.rootValue),
-);
 
 /// A title and color record value.
 skir.DataValue titleAndColorValue({
@@ -455,18 +411,6 @@ final class GatedReadPersistence extends ScriptedValuePersistence {
   first: identifiedOwner(session, "first", policy: policy),
   second: identifiedOwner(session, "second", policy: policy),
 );
-
-/// One owner editing [owners] together, typed and cataloged as the first;
-/// it lives until the test ends.
-MultiEditOwner combinedOwners(List<ValueEditing> owners) {
-  final combined = MultiEditOwner(
-    owners: owners,
-    rootType: owners.first.rootType,
-    catalog: owners.first.catalog,
-  );
-  addTearDown(combined.dispose);
-  return combined;
-}
 
 /// A [titleAndColorSource] on a controlled scheduler whose title was just
 /// edited to "New": [task] is the debounced commit it waits on, and every

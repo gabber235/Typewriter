@@ -14,8 +14,8 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/src/drivers/semantics.dart";
-import "package:typewriter_testkit/src/drivers/shared/field_driver.dart";
+import "package:typewriter_testkit/testing.dart"
+    show FieldDriver, SemanticsReading, visibleTextFields;
 
 import "stack.dart" as stack;
 
@@ -225,7 +225,43 @@ final class Panel {
 
   /// The text field the user reads as [label]: its label, or its hint while
   /// it is empty.
-  PanelField field(String label) => PanelField._(this, label);
+  FieldDriver _field(String label) => FieldDriver(tester, label);
+
+  /// Waits for the text field the user reads as [label] and returns the
+  /// text it shows.
+  Future<String> fieldValue(String label) async {
+    final field = _field(label);
+    await until("a text field reads \"$label\"", () => field.exists);
+    return field.value;
+  }
+
+  /// Focuses the text field the user reads as [label] and replaces its text
+  /// with [text], as typing does, without committing it.
+  Future<void> type(String label, String text) async {
+    final field = _field(label);
+    // A field rebuilt while its surface loads drops the focus a click gave
+    // it, so the click repeats until the field takes text.
+    var clicked = DateTime(0);
+    await until("the text field \"$label\" accepts text", () {
+      if (!field.exists) return false;
+      if (field.acceptsText) return true;
+      if (DateTime.now().difference(clicked) > _refocus) {
+        clicked = DateTime.now();
+        field.clickInput();
+      }
+      return false;
+    });
+    field.setText(text);
+    await tester.pump(_frame);
+  }
+
+  /// Types [text] into the text field the user reads as [label] and commits
+  /// it with Enter, the way a user finishes a value.
+  Future<void> submit(String label, String text) async {
+    await type(label, text);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump(_frame);
+  }
 
   /// The row of the list on screen that shows [name], such as a member or a
   /// join request.
@@ -243,12 +279,12 @@ final class Panel {
     String field = "Title",
   }) async {
     await press("New $kind");
-    final named = this.field(field);
-    await named.submit(name);
-    await until("the new $kind is named \"$name\"", () {
-      final node = named._node;
-      return node != null && node.getSemanticsData().value == name;
-    });
+    await submit(field, name);
+    final named = _field(field);
+    await until(
+      "the new $kind is named \"$name\"",
+      () => named.exists && named.value == name,
+    );
   }
 
   /// Creates a book titled [title] holding a sequence page named [page], and
@@ -258,7 +294,7 @@ final class Panel {
     await create("Book", title);
     await press("New Page");
     await press("Sequence");
-    await field("Name").submit(page);
+    await submit("Name", page);
   }
 
   /// The resource open on screen, the way another user's session addresses
@@ -495,73 +531,6 @@ final class Panel {
       current = current.parent;
     }
     return rect.center / tester.view.devicePixelRatio;
-  }
-}
-
-/// One text field, found by what the user reads on it.
-final class PanelField {
-  PanelField._(this._panel, this.label);
-
-  final Panel _panel;
-  final String label;
-
-  WidgetTester get _tester => _panel.tester;
-
-  /// The field labeled or hinted [label].
-  SemanticsNode? get _node => visibleTextFields().firstWhereOrNull((node) {
-    final data = node.getSemanticsData();
-    return data.label.startsWith(label) || data.hint.startsWith(label);
-  });
-
-  Future<SemanticsNode> _found() async {
-    await _panel.until("a text field reads \"$label\"", () => _node != null);
-    return _node!;
-  }
-
-  /// The text the field shows.
-  Future<String> value() async => (await _found()).getSemanticsData().value;
-
-  /// Types [text] and commits it with Enter, the way a user finishes a
-  /// value.
-  Future<void> submit(String text) async {
-    await set(text);
-    await _tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await _tester.pump(_frame);
-  }
-
-  /// Focuses the field and replaces its text with [text], as typing does.
-  ///
-  /// An editor field wraps its text input in a focus boundary that reads as
-  /// the same field; the innermost text field is the input a click reaches.
-  Future<void> set(String text) async {
-    // A field rebuilt while its surface loads drops the focus a click gave
-    // it, so the click repeats until the field takes text, as a user clicks
-    // again.
-    var clicked = DateTime(0);
-    await _panel.until("the text field \"$label\" accepts text", () {
-      final field = _node;
-      if (field == null) return false;
-      if (field.getSemanticsData().hasAction(SemanticsAction.setText)) {
-        return true;
-      }
-      if (DateTime.now().difference(clicked) > _refocus) {
-        clicked = DateTime.now();
-        final input = [field, ...field.descendants]
-            .where(
-              (node) => node.getSemanticsData().flagsCollection.isTextField,
-            )
-            .last;
-        _tester.semantics.tap(
-          find.semantics.byPredicate((node) => identical(node, input)),
-        );
-      }
-      return false;
-    });
-    _tester.semantics.setText(
-      find.semantics.byPredicate((node) => identical(node, _node)),
-      text,
-    );
-    await _tester.pump(_frame);
   }
 }
 

@@ -1,7 +1,4 @@
-import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/src/core/stage.dart";
-import "package:typewriter_testkit/src/core/pump_panel.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
 
 import "test_selectable.dart";
@@ -189,30 +186,6 @@ final class ShortcutTestOperation extends ActivatorShortcutOperation {
 
   @override
   MenuItem menuItem(WidgetRef ref) => throw UnimplementedError();
-}
-
-/// Mounts a button that runs [operation] on a selection holding
-/// [identifier], the way an inspector or menu invokes it.
-extension DeletionButtonPump on WidgetTester {
-  Future<PanelDriver> pumpDeletion(
-    DeleteOperation operation,
-    SelectableIdentifier identifier,
-  ) async {
-    final panel = await pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        Consumer(
-          builder: (context, ref, _) => TextButton(
-            onPressed: () => operation.executeOn(ref),
-            child: const Text("Invoke deletion"),
-          ),
-        ),
-      ),
-    );
-    panel.container.read(selectionProvider.notifier).selectAll([identifier]);
-    await panel.settle();
-    return panel;
-  }
 }
 
 /// A selectable that never finishes loading, for targets that stay pending.

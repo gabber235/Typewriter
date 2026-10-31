@@ -4,9 +4,30 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("a scope bounds overlays to its own area", (tester) async {
-    final bounds = await tester.anchoredScopeBoundsAround(
-      (probe) => AnchoredOverlayScope(
-        child: SizedBox(width: 140, height: 70, child: probe),
+    Rect? bounds;
+    final overlay = GlobalKey();
+    await tester.showComponent(
+      KeyedSubtree(
+        key: overlay,
+        child: AnchoredOverlayScope(
+          child: SizedBox(
+            width: 140,
+            height: 70,
+            child: Builder(
+              builder: (context) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  bounds = AnchoredOverlayScope.maybeScopeBoundsInOverlay(
+                    context,
+                    overlayBox:
+                        overlay.currentContext!.findRenderObject()!
+                            as RenderBox,
+                  );
+                });
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
       ),
     );
 
@@ -14,8 +35,28 @@ void main() {
   });
 
   testWidgets("without a scope overlays are not bounded", (tester) async {
-    final bounds = await tester.anchoredScopeBoundsAround(
-      (probe) => SizedBox(width: 200, height: 120, child: probe),
+    Rect? bounds = Rect.zero;
+    final overlay = GlobalKey();
+    await tester.showComponent(
+      KeyedSubtree(
+        key: overlay,
+        child: SizedBox(
+          width: 200,
+          height: 120,
+          child: Builder(
+            builder: (context) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                bounds = AnchoredOverlayScope.maybeScopeBoundsInOverlay(
+                  context,
+                  overlayBox:
+                      overlay.currentContext!.findRenderObject()! as RenderBox,
+                );
+              });
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
     );
 
     expect(bounds, isNull);

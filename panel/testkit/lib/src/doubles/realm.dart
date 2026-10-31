@@ -263,6 +263,10 @@ final class FakeRealm {
   /// stays connected: nothing receives a save until it [returns].
   bool away = false;
 
+  /// Why the panel cannot prepare a save, such as missing credentials; null
+  /// lets saves be sent. Nothing reaches the Realm while it is set.
+  String? unpreparable;
+
   /// Takes the Realm away; see [away].
   void goAway() => away = true;
 
@@ -333,8 +337,11 @@ final class FakeRealm {
       label: "Save to $name",
       resources: edit.editedResources.toSet(),
       send: () async {
+        if (unpreparable case final message?) {
+          return SubmissionResult.notSubmitted(message: message);
+        }
         if (away) {
-          return const SubmissionResult.notSubmitted(
+          return const SubmissionResult.undelivered(
             message: "Nothing answered; the service may be away",
           );
         }

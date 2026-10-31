@@ -80,8 +80,8 @@ final class ConnectedPublicationRepository
   final Future<NatsClient> Function() _connection;
 
   @override
-  Stream<PublicationObservation> watch() =>
-      Stream.fromFuture(_connection()).asyncExpand(
+  Stream<PublicationObservation> watch() => Stream.fromFuture(_connection())
+      .asyncExpand(
         (connection) => _realm.watch().takeUntil(
           connection.connectionStateChanges.where(
             (state) => state is NatsClosed,
@@ -106,19 +106,19 @@ skir.CompilationRoot publicationRoot(String resource) => skir.CompilationRoot(
 );
 
 /// A review ready to release one removal: [resource], which the selected
-/// publication carries as [published].
+/// publication released from [published].
 skir.PublicationStatus removalPublicationStatus(
   skir.ResourceId resource, {
-  skir.AuthoringRecord? published,
+  required skir.AuthoringRecord published,
 }) => skir.PublicationStatus.createReady(
   candidate: skir.PublicationCandidateId(value: "candidate"),
   notices: const [],
   baseline: skir.PublicationBaseline.initial,
   changes: skir.PublicationDelta(
     first: skir.PublicationChange.wrapRootRemoved(
-      skir.RemovedRoot(
+      skir.PublishedRoot(
         root: publicationRoot(resource.value),
-        published: published,
+        record: published,
       ),
     ),
     additional: const [],

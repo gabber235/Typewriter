@@ -18,7 +18,7 @@ void main() {
 
       await panel.startElsewhere();
       await panel.signIn("alan");
-      await panel.field("Invite URL or code").set(code);
+      await panel.type("Invite URL or code", code);
       await panel.press("Join");
       await panel.expectVisible("Awaiting approval");
 
@@ -52,7 +52,7 @@ void main() {
 
       await panel.startElsewhere();
       await panel.signIn("grace");
-      await panel.field("Invite URL or code").set(code);
+      await panel.type("Invite URL or code", code);
       await panel.press("Join");
       await panel.expectVisible("Awaiting approval");
 
@@ -88,7 +88,7 @@ void main() {
 
       await panel.startElsewhere();
       await panel.signIn("grace");
-      await panel.field("Invite URL or code").set(code);
+      await panel.type("Invite URL or code", code);
       await panel.press("Join");
       await panel.expectVisible("Failed to submit join request");
       await panel.expectHidden("Awaiting approval");
@@ -109,7 +109,7 @@ void main() {
 
       await panel.startElsewhere();
       await panel.signIn("barbara");
-      await panel.field("Invite URL or code").set(code);
+      await panel.type("Invite URL or code", code);
       await panel.press("Join");
 
       await panel.startElsewhere();

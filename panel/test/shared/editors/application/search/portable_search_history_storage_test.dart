@@ -127,8 +127,7 @@ void main() {
       storage,
       catalog: testCheckedCatalog(
         types: [
-          for (final type in [kept, removed])
-            testPublishedRecord(type, const {}),
+          for (final type in [kept, removed]) declaredRecord(type),
         ],
       ),
     ).replaceResults(
@@ -188,7 +187,7 @@ void main() {
       storage,
       catalog: testCheckedCatalog(
         types: [
-          for (final type in [kept]) testPublishedRecord(type, const {}),
+          for (final type in [kept]) declaredRecord(type),
         ],
       ),
     ).loadValidResults(key: "recent", capacity: 5);

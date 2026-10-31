@@ -15,231 +15,53 @@ final class ParentFieldFixture {
     bool includeItems = false,
     String generation = "catalog:parents",
   }) {
-    final root = testTypeId("Action");
-    final style = testTypeId("Style");
-    final baseStyle = testTypeId("BaseStyle");
-    final rootUse = skir.NamedTypeUse(definition: root, arguments: const []);
-    final styleOwner = skir.FieldOwner(definition: root, name: "style");
-    final boldOwner = skir.FieldOwner(
-      definition: inheritedBold ? baseStyle : style,
-      name: "bold",
-    );
-    final repetitionsOwner = skir.FieldOwner(
-      definition: style,
-      name: "repetitions",
-    );
-    final bytesOwner = skir.FieldOwner(definition: style, name: "bytes");
-    final durationOwner = skir.FieldOwner(definition: style, name: "duration");
-    final timestampOwner = skir.FieldOwner(
-      definition: style,
-      name: "timestamp",
-    );
-    final itemsOwner = skir.FieldOwner(definition: style, name: "items");
-    final list = testTypeId("List");
-    final styleTemplate = skir.TypeTemplate.wrapNamed(
-      skir.NamedTypeTemplate(definition: style, arguments: const []),
-    );
-    final declaredStyleTemplate = nullableStyle
-        ? skir.TypeTemplate.createNullable(value: styleTemplate)
-        : styleTemplate;
-    final catalogSnapshot = testCatalogSnapshot(
-      generation: skir.CatalogGeneration(value: generation),
-      types: [
-        publishedType(
-          root,
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              skir.FieldDeclaration(
-                owner: styleOwner,
-                type: declaredStyleTemplate,
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-            ],
-            abstract_: false,
-          ),
-          fields: [
-            skir.EffectiveFieldTemplate(
-              key: "style",
-              owner: styleOwner,
-              type: declaredStyleTemplate,
-              rules: const [],
-            ),
-          ],
+    final style = declaredRecord(
+      "Style",
+      fields: {
+        if (!inheritedBold) "bold": skir.ScalarKind.boolean,
+        "repetitions": skir.ScalarKind.createInteger(
+          width: skir.IntegerWidth.signedThirtyTwo,
         ),
-        publishedType(
-          style,
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              if (!inheritedBold)
-                skir.FieldDeclaration(
-                  owner: boldOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              skir.FieldDeclaration(
-                owner: repetitionsOwner,
-                type: skir.TypeTemplate.wrapScalar(
-                  skir.ScalarKind.createInteger(
-                    width: skir.IntegerWidth.signedThirtyTwo,
-                  ),
-                ),
-                overrides: const [],
-                hasConstructorDefault: true,
-              ),
-              skir.FieldDeclaration(
-                owner: bytesOwner,
-                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.bytes),
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-              skir.FieldDeclaration(
-                owner: durationOwner,
-                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.duration),
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-              skir.FieldDeclaration(
-                owner: timestampOwner,
-                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.timestamp),
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-              if (includeItems)
-                skir.FieldDeclaration(
-                  owner: itemsOwner,
-                  type: skir.TypeTemplate.wrapNamed(
-                    skir.NamedTypeTemplate(
-                      definition: list,
-                      arguments: const [],
-                    ),
-                  ),
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-            ],
-            abstract_: false,
-          ),
-          parents: inheritedBold
-              ? [
-                  skir.NamedTypeTemplate(
-                    definition: baseStyle,
-                    arguments: const [],
-                  ),
-                ]
-              : const [],
-          ancestors: inheritedBold
-              ? [
-                  skir.NamedTypeTemplate(
-                    definition: baseStyle,
-                    arguments: const [],
-                  ),
-                ]
-              : const [],
-          fields: [
-            skir.EffectiveFieldTemplate(
-              key: "bold",
-              owner: boldOwner,
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "repetitions",
-              owner: repetitionsOwner,
-              type: skir.TypeTemplate.wrapScalar(
-                skir.ScalarKind.createInteger(
-                  width: skir.IntegerWidth.signedThirtyTwo,
-                ),
-              ),
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "bytes",
-              owner: bytesOwner,
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.bytes),
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "duration",
-              owner: durationOwner,
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.duration),
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "timestamp",
-              owner: timestampOwner,
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.timestamp),
-              rules: const [],
-            ),
-            if (includeItems)
-              skir.EffectiveFieldTemplate(
-                key: "items",
-                owner: itemsOwner,
-                type: skir.TypeTemplate.wrapNamed(
-                  skir.NamedTypeTemplate(definition: list, arguments: const []),
-                ),
-                rules: const [],
-              ),
-          ],
-        ),
-        if (inheritedBold)
-          publishedType(
-            baseStyle,
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: boldOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
-                  overrides: const [],
-                  hasConstructorDefault: true,
-                ),
-              ],
-              abstract_: false,
-            ),
-            fields: [
-              skir.EffectiveFieldTemplate(
-                key: "bold",
-                owner: boldOwner,
-                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
-                rules: const [],
-              ),
-            ],
-          ),
-        if (includeItems)
-          publishedType(
-            list,
-            representation: skir.RepresentationTemplate.createSequence(
-              item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              kind: skir.CollectionKind.list,
-            ),
-          ),
+        "bytes": skir.ScalarKind.bytes,
+        "duration": skir.ScalarKind.duration,
+        "timestamp": skir.ScalarKind.timestamp,
+        if (includeItems) "items": "List",
+      },
+      defaulted: {"repetitions"},
+      parents: [if (inheritedBold) "BaseStyle"],
+    );
+    final saved = authoredDoc(
+      [
+        authoredRecord("resource:parent", {
+          "style": skir.DataValue.unfilled,
+        }, type: typeUse("Action")),
       ],
-    );
-    final resource = skir.ResourceId(value: "resource:parent");
-    final snapshot = savedRecordState(
-      catalogSnapshot.generation,
-      resource,
-      rootUse,
-      [skir.FieldValue(name: "style", value: skir.DataValue.unfilled)],
-    );
-    skir.ValueLocation location(String field) => skir.ValueLocation(
-      resource: resource,
-      path: skir.ValuePath(
-        segments: [
-          skir.PathSegment.createField(name: "style"),
-          skir.PathSegment.createField(name: field),
-        ],
-      ),
+      catalog: authoredCatalog([
+        declaredRecord(
+          "Action",
+          fields: {
+            "style": nullableStyle
+                ? skir.TypeTemplate.createNullable(
+                    value: typeTemplateOf("Style"),
+                  )
+                : "Style",
+          },
+        ),
+        style,
+        if (inheritedBold)
+          declaredRecord(
+            "BaseStyle",
+            fields: {"bold": skir.ScalarKind.boolean},
+            defaulted: {"bold"},
+          ),
+        if (includeItems) declaredCollection("List", skir.ScalarKind.text),
+      ], generation: generation),
     );
     return ParentFieldFixture._(
-      draft: AuthoringEdit.fromState(
-        snapshot,
-        catalog: CheckedEditorCatalog(catalogSnapshot),
-      ),
-      bold: location("bold"),
-      repetitions: location("repetitions"),
-      snapshot: snapshot,
+      draft: saved.edit,
+      bold: valueAt("resource:parent", ["style", "bold"]),
+      repetitions: valueAt("resource:parent", ["style", "repetitions"]),
+      snapshot: saved.state,
     );
   }
 
@@ -304,241 +126,79 @@ final class ParentFieldFixture {
 /// Book endpoint is ambiguous when [ambiguous].
 final class PageCreationFixture {
   factory PageCreationFixture({bool ambiguous = false}) {
-    final book = testTypeId("Book");
-    final page = testTypeId("Page");
-    final sequence = testTypeId("SequencePage");
-    final pages = testTypeId("PageList");
-    final bookLink = testTypeId("BookPagesBook");
-    final pageLink = testTypeId("BookPagesPage");
-    final bookEndpoint = skir.EndpointId(value: "book.pages");
-    final pageEndpoint = skir.EndpointId(value: "page.book");
-    final bookUse = skir.NamedTypeUse(definition: book, arguments: const []);
-    final sequenceUse = skir.NamedTypeUse(
-      definition: sequence,
-      arguments: const [],
-    );
-    final pagesUse = skir.NamedTypeUse(definition: pages, arguments: const []);
-    skir.NamedTypeTemplate template(skir.TypeDefinitionId definition) =>
-        skir.NamedTypeTemplate(definition: definition, arguments: const []);
-    skir.TypeTemplate named(skir.TypeDefinitionId definition) =>
-        skir.TypeTemplate.wrapNamed(template(definition));
-    skir.FieldDeclaration field(
-      skir.TypeDefinitionId owner,
-      String name,
-      skir.TypeTemplate type,
-    ) => skir.FieldDeclaration(
-      owner: skir.FieldOwner(definition: owner, name: name),
-      type: type,
-      overrides: const [],
-      hasConstructorDefault: false,
-    );
-    skir.EffectiveFieldTemplate effective(
-      skir.TypeDefinitionId owner,
-      String name,
-      skir.TypeTemplate type,
-    ) => skir.EffectiveFieldTemplate(
-      key: name,
-      owner: skir.FieldOwner(definition: owner, name: name),
-      type: type,
-      rules: const [],
-    );
-    skir.PublishedType published(
-      skir.TypeDefinitionId id,
-      skir.RepresentationTemplate representation, {
-      List<skir.NamedTypeTemplate> parents = const [],
-      List<skir.EffectiveFieldTemplate> fields = const [],
-    }) => publishedType(
-      id,
-      representation: representation,
-      parents: parents,
-      fields: fields,
-    );
-    final bookPagesField = field(book, "pages", named(pages));
-    final pageBookField = field(page, "book", named(pageLink));
-    final pageNameField = field(
-      page,
-      "name",
-      skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-    );
-    final pageParent = template(page);
-    final generation = skir.CatalogGeneration(value: "catalog:page creation");
-    final snapshot = testCatalogSnapshot(
-      generation: generation,
-      types: [
-        published(
-          book,
-          skir.RepresentationTemplate.createRecord(
-            fields: [bookPagesField],
-            abstract_: false,
+    final saved = authoredDoc(
+      [
+        authoredRecord("book:original", {
+          "pages": typedValue(
+            "PageList",
+            skir.DataValue.createListValue(items: const []),
           ),
-          fields: [effective(book, "pages", named(pages))],
-        ),
-        published(
-          page,
-          skir.RepresentationTemplate.createRecord(
-            fields: [pageBookField, pageNameField],
-            abstract_: true,
+        }, type: typeUse("Book")),
+      ],
+      catalog: authoredCatalog(
+        [
+          declaredRecord("Book", fields: {"pages": "PageList"}),
+          declaredRecord(
+            "Page",
+            fields: {"book": "BookPagesPage", "name": skir.ScalarKind.text},
+            abstract: true,
           ),
-          fields: [
-            effective(page, "book", named(pageLink)),
-            effective(
-              page,
-              "name",
-              skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+          declaredRecord(
+            "SequencePage",
+            fields: {if (ambiguous) "otherBook": "BookPagesPage"},
+            parents: ["Page"],
+          ),
+          declaredCollection("PageList", "BookPagesBook"),
+          declaredLink("BookPagesBook", endpoint: "book.pages", target: "Page"),
+          declaredLink("BookPagesPage", endpoint: "page.book", target: "Book"),
+        ],
+        relations: [
+          declaredRelation(
+            "book.pages",
+            endpointOf(
+              "book.pages",
+              "Book",
+              onDelete: skir.RelationDeletePolicy.cascade,
             ),
-          ],
-        ),
-        published(
-          sequence,
-          skir.RepresentationTemplate.createRecord(
-            fields: [
-              if (ambiguous) field(sequence, "otherBook", named(pageLink)),
-            ],
-            abstract_: false,
-          ),
-          parents: [pageParent],
-          fields: [
-            if (ambiguous) effective(sequence, "otherBook", named(pageLink)),
-            effective(page, "book", named(pageLink)),
-            effective(
-              page,
-              "name",
-              skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+            endpointOf(
+              "page.book",
+              "Page",
+              cardinality: skir.EndpointCardinality.many,
             ),
-          ],
-        ),
-        published(
-          pages,
-          skir.RepresentationTemplate.createSequence(
-            item: named(bookLink),
-            kind: skir.CollectionKind.list,
           ),
-        ),
-        published(
-          bookLink,
-          skir.RepresentationTemplate.createLink(
-            endpoint: bookEndpoint,
-            target: named(page),
+        ],
+        endpoints: [
+          endpointBinding(
+            "book.pages",
+            resource: "Book",
+            path: ["pages", skir.FieldPatternSegment.items],
+            target: "Page",
           ),
-        ),
-        published(
-          pageLink,
-          skir.RepresentationTemplate.createLink(
-            endpoint: pageEndpoint,
-            target: named(book),
-          ),
-        ),
-      ],
-      relations: [
-        skir.RelationContract(
-          id: skir.RelationId(value: "book.pages"),
-          first: skir.EndpointDefinition(
-            id: bookEndpoint,
-            slot: skir.EndpointSlot.first,
-            resource: template(book),
-            cardinality: skir.EndpointCardinality.one,
-            onDelete: skir.RelationDeletePolicy.cascade,
-          ),
-          second: skir.EndpointDefinition(
-            id: pageEndpoint,
-            slot: skir.EndpointSlot.second,
-            resource: template(page),
-            cardinality: skir.EndpointCardinality.many,
-            onDelete: skir.RelationDeletePolicy.clear,
-          ),
-          families: const [],
-        ),
-      ],
-      endpointBindings: [
-        skir.EndpointBindingTemplate(
-          endpoint: bookEndpoint,
-          containingResource: template(book),
-          valueOwner: book,
-          relativePath: skir.RelativeFieldPattern(
-            segments: [
-              skir.FieldPatternSegment.createField(name: "pages"),
-              skir.FieldPatternSegment.items,
-            ],
-          ),
-          target: named(page),
-          containsCollection: true,
-        ),
-        skir.EndpointBindingTemplate(
-          endpoint: pageEndpoint,
-          containingResource: template(page),
-          valueOwner: page,
-          relativePath: skir.RelativeFieldPattern(
-            segments: [skir.FieldPatternSegment.createField(name: "book")],
-          ),
-          target: named(book),
-          containsCollection: false,
-        ),
-        skir.EndpointBindingTemplate(
-          endpoint: pageEndpoint,
-          containingResource: template(sequence),
-          valueOwner: sequence,
-          relativePath: skir.RelativeFieldPattern(
-            segments: [skir.FieldPatternSegment.createField(name: "book")],
-          ),
-          target: named(book),
-          containsCollection: false,
-        ),
-        if (ambiguous)
-          skir.EndpointBindingTemplate(
-            endpoint: pageEndpoint,
-            containingResource: template(sequence),
-            valueOwner: sequence,
-            relativePath: skir.RelativeFieldPattern(
-              segments: [
-                skir.FieldPatternSegment.createField(name: "otherBook"),
-              ],
+          for (final (resource, field) in [
+            ("Page", "book"),
+            ("SequencePage", "book"),
+            if (ambiguous) ("SequencePage", "otherBook"),
+          ])
+            endpointBinding(
+              "page.book",
+              resource: resource,
+              path: [field],
+              target: "Book",
             ),
-            target: named(book),
-            containsCollection: false,
-          ),
-      ],
-    );
-    final bookId = skir.ResourceId(value: "book:original");
-    final pageId = skir.ResourceId(value: "page:created");
-    final bookRecord = skir.AuthoringRecord(
-      configuration: skir.TypeSelection.wrapComplete(bookUse),
-      fields: [
-        skir.FieldValue(
-          name: "pages",
-          value: skir.DataValue.createNamed(
-            actualType: pagesUse,
-            payload: skir.DataValue.createListValue(items: const []),
-          ),
-        ),
-      ],
-    );
-    final pageRecord = skir.AuthoringRecord(
-      configuration: skir.TypeSelection.wrapComplete(sequenceUse),
-      fields: [
-        skir.FieldValue(name: "book", value: skir.DataValue.unfilled),
-        skir.FieldValue(
-          name: "name",
-          value: skir.DataValue.wrapStringValue("Verification page"),
-        ),
-      ],
-    );
-    final authored = skir.AuthoringState(
-      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-      generation: generation,
-      resources: [skir.AuthoringResource(id: bookId, content: bookRecord)],
-      links: const [],
-      findings: const [],
+        ],
+        generation: "catalog:page creation",
+      ),
     );
     return PageCreationFixture._(
-      draft: AuthoringEdit.fromState(
-        authored,
-        catalog: CheckedEditorCatalog(snapshot),
-      ),
-      book: bookId,
-      page: pageId,
-      bookEndpoint: bookEndpoint,
-      sequenceUse: sequenceUse,
-      pageRecord: pageRecord,
+      draft: saved.edit,
+      book: skir.ResourceId(value: "book:original"),
+      page: skir.ResourceId(value: "page:created"),
+      bookEndpoint: skir.EndpointId(value: "book.pages"),
+      sequenceUse: typeUse("SequencePage"),
+      pageRecord: authoredRecord("page:created", {
+        "book": skir.DataValue.unfilled,
+        "name": textValue("Verification page"),
+      }, type: typeUse("SequencePage")).content,
     );
   }
 
@@ -567,7 +227,16 @@ final class RelationEditFixture {
     skir.RelationDeletePolicy secondDelete = skir.RelationDeletePolicy.clear,
     bool includeOppositeLocation = true,
   }) {
-    final fixture = ListRecordFixture();
+    // One untyped record with a title and a list of items, as the Realm
+    // saved it.
+    final saved = authoredDoc([
+      authoredRecord("resource:1", {
+        "title": textValue("original"),
+        "items": typedTextList(["first"]),
+      }),
+    ], generation: skir.CatalogGeneration(value: "catalog:1")).state;
+    final source = saved.resources.single.id;
+    final title = valueAt(source, ["title"]);
     final endpoint = skir.EndpointId(value: "test.source");
     final opposite = skir.EndpointId(value: "test.target");
     final relation = skir.RelationId(value: "test.relation");
@@ -594,7 +263,7 @@ final class RelationEditFixture {
       definition: testTypeId("Reference"),
       arguments: const [],
     );
-    final originalResource = fixture.snapshot.resources.single;
+    final originalResource = saved.resources.single;
     final linkedRecord = skir.AuthoringRecord(
       configuration: originalResource.content.configuration,
       fields: [
@@ -618,7 +287,7 @@ final class RelationEditFixture {
     );
     final snapshot = skir.AuthoringState(
       confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-      generation: fixture.snapshot.generation,
+      generation: saved.generation,
       resources: [
         skir.AuthoringResource(id: originalResource.id, content: linkedRecord),
         for (final target in [originalTarget, newTarget])
@@ -636,8 +305,8 @@ final class RelationEditFixture {
                             payload: skir.DataValue.createLink(
                               endpoint: opposite,
                               target: skir.LinkTarget(
-                                resource: fixture.resource,
-                                opposite: fixture.title.path,
+                                resource: source,
+                                opposite: title.path,
                               ),
                             ),
                           )
@@ -650,21 +319,22 @@ final class RelationEditFixture {
       links: [
         skir.LinkProjection(
           contract: relation,
-          first: fixture.resource,
+          first: source,
           second: originalTarget,
-          firstLocation: fixture.title.path,
+          firstLocation: title.path,
           secondLocation: includeOppositeLocation ? oppositePath : null,
         ),
       ],
-      findings: fixture.snapshot.findings,
+      findings: saved.findings,
     );
     final selection = skir.NamedTypeTemplate(
-      definition: fixture.listType.definition,
+      definition: listTypeOf(skir.TypeUse.wrapScalar(skir.ScalarKind.text))
+          .definition,
       arguments: const [],
     );
     final checked = CheckedEditorCatalog(
       testCatalogSnapshot(
-        generation: fixture.snapshot.generation,
+        generation: saved.generation,
         relations: [
           skir.RelationContract(
             id: relation,
@@ -690,8 +360,8 @@ final class RelationEditFixture {
     return RelationEditFixture._(
       draft: AuthoringEdit.fromState(snapshot, catalog: checked),
       occurrence: skir.LinkOccurrence(
-        id: skir.LinkOccurrenceId(endpoint: endpoint, location: fixture.title),
-        source: fixture.resource,
+        id: skir.LinkOccurrenceId(endpoint: endpoint, location: title),
+        source: source,
         target: skir.LinkTarget(
           resource: originalTarget,
           opposite: includeOppositeLocation ? oppositePath : null,
@@ -700,10 +370,7 @@ final class RelationEditFixture {
       counterpart: skir.LinkOccurrence(
         id: skir.LinkOccurrenceId(endpoint: opposite, location: newOpposite),
         source: newTarget,
-        target: skir.LinkTarget(
-          resource: fixture.resource,
-          opposite: fixture.title.path,
-        ),
+        target: skir.LinkTarget(resource: source, opposite: title.path),
       ),
       alternateCounterpart: skir.LinkOccurrence(
         id: skir.LinkOccurrenceId(
@@ -711,10 +378,7 @@ final class RelationEditFixture {
           location: alternateOpposite,
         ),
         source: newTarget,
-        target: skir.LinkTarget(
-          resource: fixture.resource,
-          opposite: fixture.title.path,
-        ),
+        target: skir.LinkTarget(resource: source, opposite: title.path),
       ),
       newTarget: newTarget,
       originalOpposite: originalOpposite,
@@ -748,152 +412,41 @@ final class RelationEditFixture {
 /// change.
 final class CollectionRepairFixture {
   factory CollectionRepairFixture() {
-    final root = testTypeId("CollectionRoot");
-    final textSetDefinition = testTypeId("TextSet");
-    final recordSetDefinition = testTypeId("RecordSet");
-    final itemDefinition = testTypeId("CollectionItem");
-    final rootUse = skir.NamedTypeUse(definition: root, arguments: const []);
-    final textSet = skir.NamedTypeUse(
-      definition: textSetDefinition,
-      arguments: const [],
-    );
-    final itemType = skir.NamedTypeUse(
-      definition: itemDefinition,
-      arguments: const [],
-    );
-    final textsOwner = skir.FieldOwner(definition: root, name: "texts");
-    final recordsOwner = skir.FieldOwner(definition: root, name: "records");
-    final nameOwner = skir.FieldOwner(definition: itemDefinition, name: "name");
-    final textSetTemplate = skir.TypeTemplate.createNamed(
-      definition: textSetDefinition,
-      arguments: const [],
-    );
-    final recordSetTemplate = skir.TypeTemplate.createNamed(
-      definition: recordSetDefinition,
-      arguments: const [],
-    );
-    final itemTemplate = skir.TypeTemplate.createNamed(
-      definition: itemDefinition,
-      arguments: const [],
-    );
-    final catalogSnapshot = testCatalogSnapshot(
-      generation: skir.CatalogGeneration(value: "catalog:collection-repair"),
-      types: [
-        publishedDefinition(
-          skir.TypeDefinition(
-            id: root,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: textsOwner,
-                  type: textSetTemplate,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-                skir.FieldDeclaration(
-                  owner: recordsOwner,
-                  type: recordSetTemplate,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
-          ),
-          [
-            skir.EffectiveFieldTemplate(
-              key: "texts",
-              owner: textsOwner,
-              type: textSetTemplate,
-              rules: const [],
-            ),
-            skir.EffectiveFieldTemplate(
-              key: "records",
-              owner: recordsOwner,
-              type: recordSetTemplate,
-              rules: const [],
-            ),
-          ],
-        ),
-        publishedDefinition(
-          skir.TypeDefinition(
-            id: textSetDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createSequence(
-              item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              kind: skir.CollectionKind.set_,
-            ),
-            parents: const [],
-          ),
-          const [],
-        ),
-        publishedDefinition(
-          skir.TypeDefinition(
-            id: recordSetDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createSequence(
-              item: itemTemplate,
-              kind: skir.CollectionKind.set_,
-            ),
-            parents: const [],
-          ),
-          const [],
-        ),
-        publishedDefinition(
-          skir.TypeDefinition(
-            id: itemDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: nameOwner,
-                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-                  overrides: const [],
-                  hasConstructorDefault: true,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
-          ),
-          [
-            skir.EffectiveFieldTemplate(
-              key: "name",
-              owner: nameOwner,
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              rules: const [],
-            ),
-          ],
-        ),
-      ],
-    );
-    final resource = skir.ResourceId(value: "resource:collection-repair");
-    final snapshot = savedRecordState(
-      catalogSnapshot.generation,
-      resource,
-      rootUse,
+    final saved = authoredDoc(
       [
-        skir.FieldValue(name: "texts", value: skir.DataValue.unfilled),
-        skir.FieldValue(name: "records", value: skir.DataValue.unfilled),
+        authoredRecord("resource:collection-repair", {
+          "texts": skir.DataValue.unfilled,
+          "records": skir.DataValue.unfilled,
+        }, type: typeUse("CollectionRoot")),
       ],
-    );
-    skir.ValueLocation location(String field) => skir.ValueLocation(
-      resource: resource,
-      path: skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: field)],
-      ),
+      catalog: authoredCatalog([
+        declaredRecord(
+          "CollectionRoot",
+          fields: {"texts": "TextSet", "records": "RecordSet"},
+        ),
+        declaredCollection(
+          "TextSet",
+          skir.ScalarKind.text,
+          kind: skir.CollectionKind.set_,
+        ),
+        declaredCollection(
+          "RecordSet",
+          "CollectionItem",
+          kind: skir.CollectionKind.set_,
+        ),
+        declaredRecord(
+          "CollectionItem",
+          fields: {"name": skir.ScalarKind.text},
+          defaulted: {"name"},
+        ),
+      ], generation: "catalog:collection-repair"),
     );
     return CollectionRepairFixture._(
-      draft: AuthoringEdit.fromState(
-        snapshot,
-        catalog: CheckedEditorCatalog(catalogSnapshot),
-      ),
-      texts: location("texts"),
-      records: location("records"),
-      textSet: textSet,
-      itemType: itemType,
+      draft: saved.edit,
+      texts: valueAt("resource:collection-repair", ["texts"]),
+      records: valueAt("resource:collection-repair", ["records"]),
+      textSet: typeUse("TextSet"),
+      itemType: typeUse("CollectionItem"),
     );
   }
 
@@ -911,121 +464,6 @@ final class CollectionRepairFixture {
   final skir.NamedTypeUse textSet;
   final skir.NamedTypeUse itemType;
 }
-
-/// A draft of one untyped record with a title and a list of items, read
-/// from a saved state the Realm reported.
-final class ListRecordFixture {
-  factory ListRecordFixture() {
-    final resource = skir.ResourceId(value: "resource:1");
-    final title = skir.ValueLocation(
-      resource: resource,
-      path: skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: "title")],
-      ),
-    );
-    final items = skir.ValueLocation(
-      resource: resource,
-      path: skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: "items")],
-      ),
-    );
-    final firstItem = skir.ItemId(value: "first");
-    final listType = skir.NamedTypeUse(
-      definition: skir.TypeDefinitionId(
-        typeId: skir.TypeId.createQualified(
-          namespace: "typewriter",
-          name: "List",
-        ),
-        revision: 1,
-      ),
-      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
-    );
-    final record = skir.AuthoringRecord(
-      configuration: skir.TypeSelection.unknown,
-      fields: [
-        skir.FieldValue(
-          name: "title",
-          value: skir.DataValue.wrapStringValue("original"),
-        ),
-        skir.FieldValue(
-          name: "items",
-          value: skir.DataValue.createNamed(
-            actualType: listType,
-            payload: skir.DataValue.createListValue(
-              items: [
-                skir.ListItem(
-                  id: firstItem,
-                  value: skir.DataValue.wrapStringValue("first"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-    final absent = skir.InputToken(value: "absent");
-    final snapshot = skir.AuthoringState(
-      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-      generation: skir.CatalogGeneration(value: "catalog:1"),
-      resources: [skir.AuthoringResource(id: resource, content: record)],
-      links: const [],
-      findings: const [],
-    );
-    return ListRecordFixture._(
-      draft: AuthoringEdit.fromState(snapshot),
-      resource: resource,
-      title: title,
-      items: items,
-      firstItem: firstItem,
-      listType: listType,
-      absent: absent,
-      snapshot: snapshot,
-    );
-  }
-
-  ListRecordFixture._({
-    required this.draft,
-    required this.resource,
-    required this.title,
-    required this.items,
-    required this.firstItem,
-    required this.listType,
-    required this.absent,
-    required this.snapshot,
-  });
-
-  final AuthoringEdit draft;
-  final skir.ResourceId resource;
-  final skir.ValueLocation title;
-  final skir.ValueLocation items;
-  final skir.ItemId firstItem;
-  final skir.NamedTypeUse listType;
-  final skir.InputToken absent;
-  final skir.AuthoringState snapshot;
-}
-
-/// The saved authoring state of catalog [generation] holding only the record
-/// [resource] of [configuration] with [fields].
-skir.AuthoringState savedRecordState(
-  skir.CatalogGeneration generation,
-  skir.ResourceId resource,
-  skir.NamedTypeUse configuration,
-  List<skir.FieldValue> fields,
-) => skir.AuthoringState(
-  confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-  generation: generation,
-  resources: [
-    skir.AuthoringResource(
-      id: resource,
-      content: skir.AuthoringRecord(
-        configuration: skir.TypeSelection.wrapComplete(configuration),
-        fields: fields,
-      ),
-    ),
-  ],
-  links: const [],
-  findings: const [],
-);
 
 /// The value the Realm prepares for [request]: a record of the requested
 /// selection holding [fields], with no findings.

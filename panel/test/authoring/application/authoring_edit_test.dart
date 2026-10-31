@@ -4,130 +4,133 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+/// One untyped record with a title and a list of items, as the Realm saved
+/// it.
+final listRecord = authoredDoc([
+  authoredRecord("resource:1", {
+    "title": textValue("original"),
+    "items": typedTextList(["first"]),
+  }),
+], generation: skir.CatalogGeneration(value: "catalog:1"));
+final titleAt = valueAt("resource:1", ["title"]);
+final itemsAt = valueAt("resource:1", ["items"]);
+
 void main() {
   test("expression edits enroll reads only after the mutation succeeds", () {
-    final fixture = ListRecordFixture();
-    final read = fixture.title;
+    final draft = listRecord.edit;
+    final read = titleAt;
 
-    final rejected = fixture.draft.stageExpressionEdit([read], (_) => false);
+    final rejected = draft.stageExpressionEdit([read], (_) => false);
     expect(rejected, isFalse);
-    expect(fixture.draft.resources, ListRecordFixture().draft.resources);
+    expect(draft.resources, listRecord.edit.resources);
     // The saved content after another author changed its title.
-    final remote = ListRecordFixture();
-    remote.draft.set(remote.title, skir.DataValue.wrapStringValue("remote"));
+    final remote = listRecord.edit
+      ..set(titleAt, skir.DataValue.wrapStringValue("remote"));
     expect(
-      remote.draft.currentFacts.conflicts(fixture.draft.prepare().expectations),
+      remote.currentFacts.conflicts(draft.prepare().expectations),
       isEmpty,
       reason: "A rejected expression edit depends on nothing it read",
     );
 
-    final accepted = fixture.draft.stageExpressionEdit(
+    final accepted = draft.stageExpressionEdit(
       [read],
       (branch) =>
-          branch.set(fixture.title, skir.DataValue.wrapStringValue("changed"))
+          branch.set(titleAt, skir.DataValue.wrapStringValue("changed"))
               is PortablePathValue,
     );
     expect(accepted, isTrue);
+    expect(draft.valueAt(read), skir.DataValue.wrapStringValue("changed"));
     expect(
-      fixture.draft.valueAt(read),
-      skir.DataValue.wrapStringValue("changed"),
-    );
-    expectEditRefusedAfterRemoteChange(
-      fixture.draft,
-      saved: () => ListRecordFixture().draft,
-      remoteChange: (remote) =>
-          remote.set(read, skir.DataValue.wrapStringValue("remote")),
+      draft,
+      refusedAfter(
+        (remote) => remote.set(read, skir.DataValue.wrapStringValue("remote")),
+        saved: () => listRecord.edit,
+      ),
     );
   });
 
   test("staged reads retain the first original observation", () {
-    final fixture = ListRecordFixture();
-    final draft = fixture.draft;
+    final draft = listRecord.edit;
 
     final updated = draft.set(
-      fixture.title,
+      titleAt,
       skir.DataValue.wrapStringValue("changed"),
     );
     expect(updated, isA<PortablePathValue<skir.AuthoringRecord>>());
-    final read = draft.read(fixture.title);
+    final read = draft.read(titleAt);
 
     expect(
       (read as PortablePathValue<skir.DataValue>).value,
       skir.DataValue.wrapStringValue("changed"),
     );
-    expectEditRefusedAfterRemoteChange(
+    expect(
       draft,
-      saved: () => ListRecordFixture().draft,
-      remoteChange: (remote) =>
-          remote.set(fixture.title, skir.DataValue.wrapStringValue("remote")),
+      refusedAfter(
+        (remote) =>
+            remote.set(titleAt, skir.DataValue.wrapStringValue("remote")),
+        saved: () => listRecord.edit,
+      ),
     );
   });
 
   test("prepares one immutable server verified edit request", () {
-    final fixture = ListRecordFixture();
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("changed"));
+    final draft = listRecord.edit
+      ..set(titleAt, skir.DataValue.wrapStringValue("changed"));
 
-    final prepared = fixture.draft.prepare();
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("later"));
+    final prepared = draft.prepare();
+    draft.set(titleAt, skir.DataValue.wrapStringValue("later"));
 
-    expect(prepared.catalog, fixture.draft.generation);
-    final saved = ListRecordFixture().draft..applyPrepared(prepared);
-    expect(
-      saved.valueAt(fixture.title),
-      skir.DataValue.wrapStringValue("changed"),
-    );
+    expect(prepared.catalog, draft.generation);
+    final saved = listRecord.edit..applyPrepared(prepared);
+    expect(saved.valueAt(titleAt), skir.DataValue.wrapStringValue("changed"));
   });
 
   test("isolated edit forks never mutate the session baseline", () {
-    final fixture = ListRecordFixture();
-    final first = fixture.draft.fork();
-    final second = fixture.draft.fork();
+    final draft = listRecord.edit;
+    final first = draft.fork();
+    final second = draft.fork();
 
-    first.set(fixture.title, skir.DataValue.wrapStringValue("first"));
-    second.set(fixture.title, skir.DataValue.wrapStringValue("second"));
+    first.set(titleAt, skir.DataValue.wrapStringValue("first"));
+    second.set(titleAt, skir.DataValue.wrapStringValue("second"));
 
-    expect(fixture.draft.intents, isEmpty);
+    expect(draft.intents, isEmpty);
     expect(
-      (fixture.draft.read(
-        fixture.title,
-      ) as PortablePathValue<skir.DataValue>).value,
+      (draft.read(titleAt) as PortablePathValue<skir.DataValue>).value,
       skir.DataValue.wrapStringValue("original"),
     );
     expect(first.intents, hasLength(1));
     expect(second.intents, hasLength(1));
     expect(
-      (first.read(fixture.title) as PortablePathValue<skir.DataValue>).value,
+      (first.read(titleAt) as PortablePathValue<skir.DataValue>).value,
       skir.DataValue.wrapStringValue("first"),
     );
     expect(
-      (second.read(fixture.title) as PortablePathValue<skir.DataValue>).value,
+      (second.read(titleAt) as PortablePathValue<skir.DataValue>).value,
       skir.DataValue.wrapStringValue("second"),
     );
   });
 
   test("forks preserve staged history and isolate later changes", () {
-    final fixture = ListRecordFixture();
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("first"));
-    final branch = fixture.draft.fork()
-      ..set(fixture.title, skir.DataValue.wrapStringValue("second"));
+    final draft = listRecord.edit
+      ..set(titleAt, skir.DataValue.wrapStringValue("first"));
+    final branch = draft.fork()
+      ..set(titleAt, skir.DataValue.wrapStringValue("second"));
 
     expect(
-      (branch.read(fixture.title) as PortablePathValue<skir.DataValue>).value,
+      (branch.read(titleAt) as PortablePathValue<skir.DataValue>).value,
       skir.DataValue.wrapStringValue("second"),
     );
     expect(
-      (fixture.draft.read(
-        fixture.title,
-      ) as PortablePathValue<skir.DataValue>).value,
+      (draft.read(titleAt) as PortablePathValue<skir.DataValue>).value,
       skir.DataValue.wrapStringValue("first"),
     );
   });
 
   test("cancelled creation discards its isolated resource and intents", () {
-    final fixture = ListRecordFixture();
+    final draft = listRecord.edit;
     final created = skir.ResourceId(value: "resource:created");
-    final record = fixture.snapshot.resources.single.content;
-    final staged = fixture.draft.fork()
+    final record = listRecord.state.resources.single.content;
+    final staged = draft.fork()
       ..createPrepared(
         created,
         skir.PreparedValue(
@@ -138,8 +141,8 @@ void main() {
 
     expect(staged.resource(created), record);
     expect(staged.intents, hasLength(1));
-    expect(fixture.draft.resource(created), isNull);
-    expect(fixture.draft.intents, isEmpty);
+    expect(draft.resource(created), isNull);
+    expect(draft.intents, isEmpty);
   });
 
   test("planning a reference to a shared Book leaves the prepared page and "
@@ -325,16 +328,18 @@ void main() {
       _ => null,
     };
     expect(pageBook?.target.resource, fixture.book);
-    expectEditRefusedAfterRemoteChange(
+    expect(
       staged,
-      saved: () => PageCreationFixture().draft,
-      remoteChange: (remote) => remote.insert(
-        authoredFieldLocation(fixture.book, ["pages"]),
-        null,
-        skir.ListItem(
-          id: skir.ItemId(value: "remote"),
-          value: skir.DataValue.unfilled,
+      refusedAfter(
+        (remote) => remote.insert(
+          authoredFieldLocation(fixture.book, ["pages"]),
+          null,
+          skir.ListItem(
+            id: skir.ItemId(value: "remote"),
+            value: skir.DataValue.unfilled,
+          ),
         ),
+        saved: () => PageCreationFixture().draft,
       ),
     );
   });
@@ -362,36 +367,40 @@ void main() {
   });
 
   test("a write to a missing value is refused once someone else set it", () {
-    final fixture = ListRecordFixture();
+    final draft = listRecord.edit;
     final at = skir.ValueLocation(
-      resource: fixture.resource,
+      resource: skir.ResourceId(value: "resource:1"),
       path: editorRootPath.field("count"),
     );
-    fixture.draft.set(at, skir.DataValue.wrapInteger("3"));
-    expectEditRefusedAfterRemoteChange(
-      fixture.draft,
-      saved: () => ListRecordFixture().draft,
-      remoteChange: (remote) => remote.set(at, skir.DataValue.wrapInteger("5")),
+    draft.set(at, skir.DataValue.wrapInteger("3"));
+    expect(
+      draft,
+      refusedAfter(
+        (remote) => remote.set(at, skir.DataValue.wrapInteger("5")),
+        saved: () => listRecord.edit,
+      ),
     );
   });
 
   test("ordered collection edits keep their item ids and list type", () {
-    final fixture = ListRecordFixture();
-    final draft = fixture.draft;
+    final draft = listRecord.edit;
     final inserted = skir.ListItem(
       id: skir.ItemId(value: "inserted"),
       value: skir.DataValue.wrapStringValue("second"),
     );
 
     draft
-      ..insert(fixture.items, fixture.firstItem, inserted)
-      ..move(fixture.items, inserted.id, null)
-      ..remove(fixture.items, fixture.firstItem);
+      ..insert(itemsAt, skir.ItemId(value: "first"), inserted)
+      ..move(itemsAt, inserted.id, null)
+      ..remove(itemsAt, skir.ItemId(value: "first"));
 
     final value =
-        (draft.read(fixture.items) as PortablePathValue<skir.DataValue>).value
+        (draft.read(itemsAt) as PortablePathValue<skir.DataValue>).value
             as skir.DataValue_namedWrapper;
-    expect(value.value.actualType, fixture.listType);
+    expect(
+      value.value.actualType,
+      listTypeOf(skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
+    );
     final list = value.value.payload as skir.DataValue_listValueWrapper;
     expect(list.value.items.map((item) => item.id), [inserted.id]);
   });
@@ -490,9 +499,9 @@ void main() {
   });
 
   test("a missing nested parent records no write intent", () {
-    final fixture = ListRecordFixture();
+    final draft = listRecord.edit;
     final nested = skir.ValueLocation(
-      resource: fixture.resource,
+      resource: skir.ResourceId(value: "resource:1"),
       path: skir.ValuePath(
         segments: [
           skir.PathSegment.createField(name: "style"),
@@ -501,56 +510,57 @@ void main() {
       ),
     );
 
-    final result = fixture.draft.set(nested, skir.DataValue.wrapBoolean(true));
+    final result = draft.set(nested, skir.DataValue.wrapBoolean(true));
 
     expect(result, isA<PortablePathUnavailable<skir.AuthoringRecord>>());
-    expect(fixture.draft.intents, isEmpty);
+    expect(draft.intents, isEmpty);
   });
 
   test("a write is refused once its resource was deleted or retyped", () {
-    final fixture = ListRecordFixture();
+    final draft = listRecord.edit
+      ..set(titleAt, skir.DataValue.wrapStringValue("changed"));
 
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("changed"));
-
-    expectEditRefusedAfterRemoteChange(
-      fixture.draft,
-      saved: () => ListRecordFixture().draft,
-      remoteChange: (remote) => remote.delete(fixture.resource),
+    expect(
+      draft,
+      refusedAfter(
+        (remote) => remote.delete(skir.ResourceId(value: "resource:1")),
+        saved: () => listRecord.edit,
+      ),
     );
-    expectEditRefusedAfterRemoteChange(
-      fixture.draft,
-      saved: () => ListRecordFixture().draft,
-      remoteChange: (remote) {
-        final record = remote.resource(fixture.resource)!;
+    expect(
+      draft,
+      refusedAfter((remote) {
+        final record = remote.resource(skir.ResourceId(value: "resource:1"))!;
         remote
-          ..delete(fixture.resource)
+          ..delete(skir.ResourceId(value: "resource:1"))
           ..create(
-            fixture.resource,
+            skir.ResourceId(value: "resource:1"),
             skir.AuthoringRecord(
-              configuration: skir.TypeSelection.wrapComplete(fixture.listType),
+              configuration: skir.TypeSelection.wrapComplete(
+                listTypeOf(skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
+              ),
               fields: record.fields,
             ),
           );
-      },
+      }, saved: () => listRecord.edit),
     );
   });
 
   test("nullable clear writes null while required clear writes unfilled", () {
-    final fixture = ListRecordFixture();
+    final draft = listRecord.edit
+      ..clear(
+        titleAt,
+        expected: skir.TypeUse.createNullable(
+          value: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        ),
+      );
+    expect(draft.valueAt(titleAt), skir.DataValue.null_);
 
-    fixture.draft.clear(
-      fixture.title,
-      expected: skir.TypeUse.createNullable(
-        value: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-      ),
-    );
-    expect(fixture.draft.valueAt(fixture.title), skir.DataValue.null_);
-
-    fixture.draft.clear(
-      fixture.title,
+    draft.clear(
+      titleAt,
       expected: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
     );
-    expect(fixture.draft.valueAt(fixture.title), skir.DataValue.unfilled);
+    expect(draft.valueAt(titleAt), skir.DataValue.unfilled);
   });
 
   test("a connection is refused once its target was deleted or its source "
@@ -562,15 +572,19 @@ void main() {
       counterpart: skir.CounterpartChoice.wrapExisting(fixture.counterpart),
     );
     expect(fixture.draft.links.single.second, fixture.newTarget);
-    expectEditRefusedAfterRemoteChange(
+    expect(
       fixture.draft,
-      saved: () => RelationEditFixture().draft,
-      remoteChange: (remote) => remote.delete(fixture.newTarget),
+      refusedAfter(
+        (remote) => remote.delete(fixture.newTarget),
+        saved: () => RelationEditFixture().draft,
+      ),
     );
-    expectEditRefusedAfterRemoteChange(
+    expect(
       fixture.draft,
-      saved: () => RelationEditFixture().draft,
-      remoteChange: (remote) => remote.disconnect(fixture.occurrence),
+      refusedAfter(
+        (remote) => remote.disconnect(fixture.occurrence),
+        saved: () => RelationEditFixture().draft,
+      ),
     );
     fixture.draft.disconnect(fixture.occurrence);
     expect(fixture.draft.links, isEmpty);
@@ -621,16 +635,18 @@ void main() {
           reverse ? bookOccurrence : pageOccurrence,
         ),
       );
-      expectEditRefusedAfterRemoteChange(
+      expect(
         edit,
-        saved: () => PageCreationFixture().draft,
-        remoteChange: (remote) => remote.insert(
-          parent,
-          null,
-          skir.ListItem(
-            id: skir.ItemId(value: "remote"),
-            value: skir.DataValue.unfilled,
+        refusedAfter(
+          (remote) => remote.insert(
+            parent,
+            null,
+            skir.ListItem(
+              id: skir.ItemId(value: "remote"),
+              value: skir.DataValue.unfilled,
+            ),
           ),
+          saved: () => PageCreationFixture().draft,
         ),
       );
       expect(
@@ -649,13 +665,13 @@ void main() {
   }
 
   test("a collection disconnect is refused once the collection changed", () {
-    final fixture = ListRecordFixture();
+    final draft = listRecord.edit;
     final item = skir.ValueLocation(
-      resource: fixture.resource,
+      resource: skir.ResourceId(value: "resource:1"),
       path: skir.ValuePath(
         segments: [
-          ...fixture.items.path.segments,
-          skir.PathSegment.createItem(id: fixture.firstItem),
+          ...itemsAt.path.segments,
+          skir.PathSegment.createItem(id: skir.ItemId(value: "first")),
         ],
       ),
     );
@@ -664,25 +680,27 @@ void main() {
         endpoint: skir.EndpointId(value: "test.source"),
         location: item,
       ),
-      source: fixture.resource,
+      source: skir.ResourceId(value: "resource:1"),
       target: skir.LinkTarget(
         resource: skir.ResourceId(value: "resource:2"),
         opposite: null,
       ),
     );
 
-    fixture.draft.disconnect(occurrence);
+    draft.disconnect(occurrence);
 
-    expectEditRefusedAfterRemoteChange(
-      fixture.draft,
-      saved: () => ListRecordFixture().draft,
-      remoteChange: (remote) => remote.insert(
-        fixture.items,
-        null,
-        skir.ListItem(
-          id: skir.ItemId(value: "remote"),
-          value: skir.DataValue.wrapStringValue("remote"),
+    expect(
+      draft,
+      refusedAfter(
+        (remote) => remote.insert(
+          itemsAt,
+          null,
+          skir.ListItem(
+            id: skir.ItemId(value: "remote"),
+            value: skir.DataValue.wrapStringValue("remote"),
+          ),
         ),
+        saved: () => listRecord.edit,
       ),
     );
   });
@@ -699,11 +717,12 @@ void main() {
         );
 
       expect(fixture.draft.links.single.second.value, "resource:original");
-      expectEditRefusedAfterRemoteChange(
+      expect(
         branch,
-        saved: () => RelationEditFixture().draft,
-        remoteChange: (remote) =>
-            remote.delete(fixture.originalOpposite.resource),
+        refusedAfter(
+          (remote) => remote.delete(fixture.originalOpposite.resource),
+          saved: () => RelationEditFixture().draft,
+        ),
       );
       expect(branch.links, hasLength(1));
       expect(branch.links.single.first, fixture.occurrence.source);
@@ -761,10 +780,12 @@ void main() {
 
     expect(branch.resource(deleted), isNull);
     expect(branch.links, isEmpty);
-    expectEditRefusedAfterRemoteChange(
+    expect(
       branch,
-      saved: () => RelationEditFixture().draft,
-      remoteChange: (remote) => remote.disconnect(fixture.occurrence),
+      refusedAfter(
+        (remote) => remote.disconnect(fixture.occurrence),
+        saved: () => RelationEditFixture().draft,
+      ),
     );
   });
 
@@ -778,13 +799,15 @@ void main() {
     final branch = fixture.draft.fork()..delete(fixture.occurrence.source);
 
     expect(branch.resource(cascaded), isNull);
-    expectEditRefusedAfterRemoteChange(
+    expect(
       branch,
-      saved: () => RelationEditFixture(
-        firstDelete: skir.RelationDeletePolicy.cascade,
-        includeOppositeLocation: false,
-      ).draft,
-      remoteChange: (remote) => remote.delete(cascaded),
+      refusedAfter(
+        (remote) => remote.delete(cascaded),
+        saved: () => RelationEditFixture(
+          firstDelete: skir.RelationDeletePolicy.cascade,
+          includeOppositeLocation: false,
+        ).draft,
+      ),
     );
   });
 
@@ -902,12 +925,14 @@ void main() {
       fields.singleWhere((field) => field.name == "repetitions").value,
       skir.DataValue.wrapInteger("3"),
     );
-    expectEditRefusedAfterRemoteChange(
+    expect(
       fixture.draft,
-      saved: () => ParentFieldFixture(nullableStyle: true).draft,
-      remoteChange: (remote) => remote.set(
-        authoredFieldLocation(fixture.repetitions.resource, ["style"]),
-        skir.DataValue.null_,
+      refusedAfter(
+        (remote) => remote.set(
+          authoredFieldLocation(fixture.repetitions.resource, ["style"]),
+          skir.DataValue.null_,
+        ),
+        saved: () => ParentFieldFixture(nullableStyle: true).draft,
       ),
     );
   });

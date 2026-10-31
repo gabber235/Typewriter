@@ -25,7 +25,15 @@ void main() {
         .acquire(work)
         .update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
 
-    await eventually(() => expect(container.listedWork, ["Draft"]));
+    await eventually(
+      () => expect(
+        [
+          for (final entry in container.read(localWorkProvider).entries.values)
+            entry.label,
+        ],
+        ["Draft"],
+      ),
+    );
   });
 
   const leaveQuestion = "Leave this work session?";
@@ -53,7 +61,14 @@ void main() {
       await panel.follow(
         OrganizationRoute(organizationId: acme.organizationId.id),
       );
-      expect(panel.container.listedWork, ["Draft"]);
+      expect(
+        [
+          for (final entry
+              in panel.container.read(localWorkProvider).entries.values)
+            entry.label,
+        ],
+        ["Draft"],
+      );
       expect(
         source.value(editorRootPath).valueOrNull,
         skir.DataValue.wrapStringValue("Draft"),
@@ -64,7 +79,11 @@ void main() {
       );
       await panel.dialog.choose("Leave", message: leaveQuestion);
       expect(panel.path, contains("globex"));
-      expect(panel.container.listedWork, isEmpty);
+      expect([
+        for (final entry
+            in panel.container.read(localWorkProvider).entries.values)
+          entry.label,
+      ], isEmpty);
       expect(await source.flush(), isA<MutationUnavailable>());
     },
   );

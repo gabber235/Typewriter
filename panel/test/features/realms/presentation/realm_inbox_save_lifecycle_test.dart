@@ -138,6 +138,30 @@ void main() {
     expect(panel.shows("Needs attention"), isFalse);
   });
 
+  testWidgets("a save that could not be prepared shows why and is not sent "
+      "again on its own", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+    ]);
+    final saved = panel.world.requireRealm
+      ..unpreparable = "The request could not be prepared";
+    await panel.openSurface(original.bookId);
+
+    await panel.field("title").enter("Draft");
+    await tester.pump(_autosave);
+    await panel.settle();
+    saved.unpreparable = null;
+    await tester.pump(const Duration(seconds: 30));
+    await panel.settle();
+
+    expect(saved.saves, isEmpty);
+    expect(
+      find.textContaining("The request could not be prepared"),
+      findsWidgets,
+    );
+  });
+
   testWidgets("a failed refresh stays an inbox issue until a retry reads the "
       "saved values, without saving again", (tester) async {
     final panel = await tester.pumpPanel([

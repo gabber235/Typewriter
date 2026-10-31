@@ -11,7 +11,16 @@ void main() {
     var deletions = 0;
     final identifier = DeletableSelectableIdentifier(() => deletions++);
     final operation = DeleteOperation(canMutate: () => false);
-    final panel = await tester.pumpDeletion(operation, identifier);
+    final panel = await tester.showComponent(
+      Consumer(
+        builder: (context, ref, _) => TextButton(
+          onPressed: () => operation.executeOn(ref),
+          child: const Text("Invoke deletion"),
+        ),
+      ),
+    );
+    panel.container.read(selectionProvider.notifier).selectAll([identifier]);
+    await panel.settle();
 
     expect(operation.canExecuteOn([DeletableSelectable(identifier)]), isFalse);
     await panel.tapOn(find.text("Invoke deletion"));
@@ -28,7 +37,16 @@ void main() {
     var deletions = 0;
     final identifier = DeletableSelectableIdentifier(() => deletions++);
     final operation = DeleteOperation(canMutate: () => allowed);
-    final panel = await tester.pumpDeletion(operation, identifier);
+    final panel = await tester.showComponent(
+      Consumer(
+        builder: (context, ref, _) => TextButton(
+          onPressed: () => operation.executeOn(ref),
+          child: const Text("Invoke deletion"),
+        ),
+      ),
+    );
+    panel.container.read(selectionProvider.notifier).selectAll([identifier]);
+    await panel.settle();
 
     await panel.tapOn(find.text("Invoke deletion"));
     expect(panel.dialog.showing(confirmation), isTrue);
@@ -46,7 +64,16 @@ void main() {
     var deletions = 0;
     final identifier = DeletableSelectableIdentifier(() => deletions++);
     const operation = DeleteOperation();
-    final panel = await tester.pumpDeletion(operation, identifier);
+    final panel = await tester.showComponent(
+      Consumer(
+        builder: (context, ref, _) => TextButton(
+          onPressed: () => operation.executeOn(ref),
+          child: const Text("Invoke deletion"),
+        ),
+      ),
+    );
+    panel.container.read(selectionProvider.notifier).selectAll([identifier]);
+    await panel.settle();
 
     expect(operation.canExecuteOn([DeletableSelectable(identifier)]), isTrue);
     await panel.tapOn(find.text("Invoke deletion"));

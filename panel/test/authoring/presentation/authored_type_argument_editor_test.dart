@@ -4,17 +4,54 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+/// The abstract Page, the concrete Sequence, Static, Scene and Manifest
+/// pages refining it, and an unrelated type.
+final _pageKinds = authoredCatalog([
+  declaredRecord("Page", abstract: true),
+  for (final (kind, icon, argb) in [
+    ("Sequence", "account-tree", 0xff2196f3),
+    ("Static", "push-pin", 0xff673ab7),
+    ("Scene", "movie", 0xffff9800),
+    ("Manifest", "schema", 0xff4caf50),
+  ])
+    declaredRecord(
+      "${kind}Page",
+      parents: ["Page"],
+      display: typeDisplay(
+        kind,
+        description: "$kind page",
+        icon: "material-symbols:$icon",
+        argb: argb,
+      ),
+    ),
+  declaredRecord("Unrelated"),
+], generation: "catalog:resources");
+
+/// Rewards, and CoinReward, a concrete Reward.
+final _rewards = [
+  declaredRecord("Reward"),
+  declaredRecord("CoinReward", parents: ["Reward"]),
+];
+
+/// The generic Variable of one parameter T bounded by Reward.
+final _variableOfReward = authoredCatalog([
+  declaredRecord(
+    "Variable",
+    parameters: {
+      "T": ["Reward"],
+    },
+  ),
+  ..._rewards,
+]);
+
 void main() {
   testWidgets("chooses only concrete resource descendants", (tester) async {
-    final fixture = PageKindsFixture();
-    final picked = await tester.showConcreteTypePicker(
+    final (chooser, picked) = await TypeChooserDriver.openConcrete(
+      tester,
       "Create page",
-      expected: fixture.page,
-      catalog: fixture.catalog,
+      expected: testTypeId("Page"),
+      catalog: _pageKinds,
     );
-
-    await tester.tap(find.text("Create page"));
-    await tester.pumpAndSettle();
 
     expect(find.text("Search resource types"), findsOneWidget);
     expect(find.text("Page"), findsNothing);
@@ -25,7 +62,7 @@ void main() {
     expect(find.text("Manifest"), findsOneWidget);
     expect(find.text("Sequence page"), findsOneWidget);
 
-    await tester.searchTypes("manifest");
+    await chooser.search("manifest");
     expect(find.text("Sequence"), findsNothing);
     expect(find.text("Manifest"), findsOneWidget);
     expect(find.text("Continue"), findsNothing);
@@ -33,49 +70,43 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    final complete = switch (picked.selection) {
+    final complete = switch (picked.result) {
       skir.TypeSelection_completeWrapper(:final value) => value,
       _ => throw TestFailure("Expected a complete resource selection"),
     };
-    expect(complete.definition, fixture.manifest);
+    expect(complete.definition, testTypeId("ManifestPage"));
   });
 
   testWidgets("shows no matches and Escape cancels type search", (
     tester,
   ) async {
-    final fixture = PageKindsFixture();
-    final picked = await tester.showConcreteTypePicker(
+    final (chooser, picked) = await TypeChooserDriver.openConcrete(
+      tester,
       "Create page",
-      expected: fixture.page,
-      catalog: fixture.catalog,
+      expected: testTypeId("Page"),
+      catalog: _pageKinds,
     );
-
-    await tester.tap(find.text("Create page"));
-    await tester.pumpAndSettle();
-    await tester.searchTypes("missing page kind");
+    await chooser.search("missing page kind");
     expect(find.text("No results found"), findsOneWidget);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.byType(QueryBar), findsOneWidget);
-    expect(
-      tester.widget<EditableText>(typeSearchField).focusNode.hasPrimaryFocus,
-      isFalse,
-    );
+    expect(chooser.searchFocused, isFalse);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.byType(QueryBar), findsNothing);
-    expect(picked.selection, isNull);
+    expect(picked.result, isNull);
   });
 
   testWidgets("searches scalar arguments and composes a nullable generic", (
     tester,
   ) async {
-    final fixture = RewardContainerFixture(
-      unbounded: true,
-      containerName: "List",
-    );
+    final catalog = authoredCatalog([
+      declaredRecord("List", parameters: {"T": []}),
+      ..._rewards,
+    ]);
     skir.TypeUse? selected;
 
     await tester.pumpPanel(
@@ -87,7 +118,7 @@ void main() {
               selected = await showAuthoredTypeUsePicker(
                 context,
                 title: "Choose payload type",
-                catalog: fixture.catalog,
+                catalog: catalog,
               );
             },
             child: const Text("Choose payload"),
@@ -98,48 +129,18 @@ void main() {
 
     await tester.tap(find.text("Choose payload"));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(QueryBar),
-        matching: find.byType(EditableText),
-      ),
-      "List",
-    );
-    await tester.pumpAndSettle();
+    final chooser = TypeChooserDriver(tester);
+    await chooser.search("List");
     await tester.tap(find.text("List<Unfilled>"));
     await tester.pumpAndSettle();
 
     expect(find.text("Choose payload type"), findsOneWidget);
     await tester.tap(find.text("T: Choose a type"));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(QueryBar),
-        matching: find.byType(EditableText),
-      ),
-      "Text",
-    );
-    await tester.pumpAndSettle();
-    expect(
-      find.descendant(
-        of: find.byType(SearchResultCard),
-        matching: find.text("Text"),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: find.byType(SearchResultCard),
-        matching: find.text("Text?"),
-      ),
-      findsOneWidget,
-    );
-    await tester.tap(
-      find.descendant(
-        of: find.byType(SearchResultCard),
-        matching: find.text("Text"),
-      ),
-    );
+    await chooser.search("Text");
+    expect(chooser.result("Text"), findsOneWidget);
+    expect(chooser.result("Text?"), findsOneWidget);
+    await tester.tap(chooser.result("Text"));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text("Allow no value"));
@@ -155,14 +156,13 @@ void main() {
       skir.TypeUse_namedWrapper(:final value) => value,
       _ => throw TestFailure("Expected a named generic type"),
     };
-    expect(named.definition, fixture.container);
+    expect(named.definition, testTypeId("List"));
     expect(named.arguments, [skir.TypeUse.wrapScalar(skir.ScalarKind.text)]);
   });
 
   testWidgets("composes arguments and confirms the Realm repair preview", (
     tester,
   ) async {
-    final fixture = RewardContainerFixture();
     skir.TypeSelection? requested;
     skir.TypeArgumentChangePreview? committed;
     String? status;
@@ -173,14 +173,14 @@ void main() {
         Scaffold(
           body: AuthoredTypeArgumentEditor(
             selection: skir.TypeSelection.createPending(
-              definition: fixture.container,
+              definition: testTypeId("Variable"),
               arguments: [skir.ArgumentSelection.unfilled],
             ),
-            catalog: fixture.catalog,
+            catalog: _variableOfReward,
             preview: (next) async {
               requested = next;
               return readyTypeArgumentPreview(
-                fixture.catalog,
+                _variableOfReward,
                 next,
                 cleared: [
                   skir.ValueLocation(
@@ -206,7 +206,7 @@ void main() {
     await tester.tap(find.text("Choose a type"));
     await tester.pumpAndSettle();
 
-    await tester.chooseType("CoinReward");
+    await TypeChooserDriver(tester).choose("CoinReward");
 
     expect(find.text("Review type change"), findsOne);
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
@@ -216,12 +216,12 @@ void main() {
       final skir.TypeSelection_completeWrapper value => value,
       _ => throw TestFailure("Expected a complete selection"),
     };
-    expect(complete.value.definition, fixture.container);
+    expect(complete.value.definition, testTypeId("Variable"));
     expect(
       (complete.value.arguments.single as skir.TypeUse_namedWrapper)
           .value
           .definition,
-      fixture.coin,
+      testTypeId("CoinReward"),
     );
     expect(find.text("Values cleared: 1"), findsOne);
     expect(find.textContaining("variable:1 value"), findsOne);
@@ -236,7 +236,16 @@ void main() {
   testWidgets("persists one chosen argument while another stays Unfilled", (
     tester,
   ) async {
-    final fixture = RewardContainerFixture(parameterCount: 2);
+    final catalog = authoredCatalog([
+      declaredRecord(
+        "Variable",
+        parameters: {
+          "T": ["Reward"],
+          "U": ["Reward"],
+        },
+      ),
+      ..._rewards,
+    ]);
     skir.TypeSelection? requested;
     await tester.pumpPanel(
       const [],
@@ -244,16 +253,16 @@ void main() {
         Scaffold(
           body: AuthoredTypeArgumentEditor(
             selection: skir.TypeSelection.createPending(
-              definition: fixture.container,
+              definition: testTypeId("Variable"),
               arguments: [
                 skir.ArgumentSelection.unfilled,
                 skir.ArgumentSelection.unfilled,
               ],
             ),
-            catalog: fixture.catalog,
+            catalog: catalog,
             preview: (next) async {
               requested = next;
-              return readyTypeArgumentPreview(fixture.catalog, next);
+              return readyTypeArgumentPreview(catalog, next);
             },
             commit: (_) async => const EditStageResult.staged(EditGroupId(1)),
           ),
@@ -263,7 +272,7 @@ void main() {
 
     await tester.tap(find.text("Choose a type").first);
     await tester.pumpAndSettle();
-    await tester.chooseType("CoinReward");
+    await TypeChooserDriver(tester).choose("CoinReward");
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
     await tester.pumpAndSettle();
 
@@ -271,7 +280,7 @@ void main() {
       final skir.TypeSelection_pendingWrapper value => value,
       _ => throw TestFailure("Expected a pending selection"),
     };
-    expect(pending.value.definition, fixture.container);
+    expect(pending.value.definition, testTypeId("Variable"));
     expect(
       pending.value.arguments.first,
       isA<skir.ArgumentSelection_chosenWrapper>(),

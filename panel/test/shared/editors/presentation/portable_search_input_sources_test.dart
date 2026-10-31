@@ -204,9 +204,10 @@ void main() {
     final catalogSnapshot = testCatalogSnapshot(
       generation: skir.CatalogGeneration(value: "catalog:http"),
       types: [
-        recordType(resultType, {
-          "name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-        }),
+        declaredRecord(
+          resultType,
+          fields: {"name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
+        ),
       ],
     );
     final rowRead = skir.ExpressionNode.createInput(

@@ -20,18 +20,6 @@ final class FakeImageHosts extends HttpOverrides {
   }
 }
 
-/// A widget test whose network images load from [FakeImageHosts].
-@isTest
-void testWidgetsWithNetworkImages(
-  String description,
-  WidgetTesterCallback callback,
-) {
-  testWidgets(description, (tester) {
-    FakeImageHosts.install();
-    return callback(tester);
-  });
-}
-
 final class _TestImageHttpClient implements HttpClient {
   @override
   bool autoUncompress = false;

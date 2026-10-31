@@ -38,7 +38,9 @@ void main() {
   testWidgets(
     "creation search offers the concrete resources an owner can hold",
     (tester) async {
-      final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
+      final panel = await tester.pumpPanel(
+        adaServing(authoredDoc([], catalog: shelfCatalog()).document),
+      );
       final controller = await panel.creationSearch();
 
       expect(controller.snapshot.status, SearchSourceStatus.ready);
@@ -63,7 +65,9 @@ void main() {
 
   testWidgets("a creation option reads the label, description, icon and "
       "color its type declares", (tester) async {
-    final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
+    final panel = await tester.pumpPanel(
+      adaServing(authoredDoc([], catalog: shelfCatalog()).document),
+    );
     final controller = await panel.creationSearch();
 
     final book = controller.creationOption(testTypeId("Book"));
@@ -98,7 +102,9 @@ void main() {
   });
 
   testWidgets("creation search filters by the resource label", (tester) async {
-    final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
+    final panel = await tester.pumpPanel(
+      adaServing(authoredDoc([], catalog: shelfCatalog()).document),
+    );
     final controller = await panel.creationSearch();
 
     controller.updateQuery("Quest");
@@ -118,7 +124,9 @@ void main() {
   testWidgets(
     "scope keywords come from owner search keys and keep only types inside that scope",
     (tester) async {
-      final panel = await tester.pumpPanel(adaServing(emptyShelfDocument()));
+      final panel = await tester.pumpPanel(
+        adaServing(authoredDoc([], catalog: shelfCatalog()).document),
+      );
       final controller = await panel.creationSearch();
       final source = controller.source;
 

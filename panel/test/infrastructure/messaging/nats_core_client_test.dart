@@ -119,7 +119,9 @@ void main() {
   test("close waits for an acquiring persistent subscription", () async {
     final connection = Completer<NatsConnection>();
     final acquisition = Completer<NatsSubscription>();
-    final subscription = CountingNatsSubscription();
+    final subscription = await FakeNatsClient().subscribe(
+      "cloud.from.fixture.changed",
+    );
     final client = NatsCoreClient.fromConnectionFuture(
       connection.future,
       configuration: _configuration,
@@ -137,7 +139,7 @@ void main() {
     connection.completeError(StateError("fixture connection ended"));
     await closing;
 
-    expect(subscription.unsubscribeCount, 1);
+    expect(subscription.unsubscribes, 1);
     expect(client.connectionState, isA<NatsClosed>());
   });
 
@@ -217,7 +219,7 @@ void main() {
         configuration: _configuration,
         persistentOpener: (stream, consumer, filter) async {
           opened++;
-          return CountingNatsSubscription();
+          return FakeNatsClient().subscribe("cloud.from.fixture.changed");
         },
       );
       addTearDown(client.close);
@@ -244,7 +246,9 @@ void main() {
         message: "The stream is not reachable",
       );
       var attempts = 0;
-      final subscription = CountingNatsSubscription();
+      final subscription = await FakeNatsClient().subscribe(
+        "cloud.from.fixture.changed",
+      );
       final client = NatsCoreClient.fromConnectionFuture(
         Future<NatsConnection>.error(StateError("no server in this test")),
         configuration: _configuration,

@@ -13,9 +13,9 @@ void main() {
         FocusBox("e", 80, 76, 50, 40),
         FocusBox("f", 160, 82, 50, 40),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       await panel.requestFocus(nodes["a"]!);
@@ -42,9 +42,9 @@ void main() {
         FocusBox("e", 92, 80, 50, 40),
         FocusBox("f", 94, 160, 50, 40),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.vertical,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.vertical),
       );
 
       await panel.requestFocus(nodes["a"]!);
@@ -71,10 +71,14 @@ void main() {
           FocusBox("b", 0, 52, 40, 40),
           FocusBox("c", 200, 120, 40, 40),
         ];
-        final (panel, nodes) = await tester.showFocusBoxes(
-          boxes,
-          mainAxis: Axis.horizontal,
-          crossAxisBandTolerance: tolerance,
+        final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+        final panel = await tester.showComponent(
+          FocusBoxLayout(
+            boxes,
+            nodes,
+            mainAxis: Axis.horizontal,
+            crossAxisBandTolerance: tolerance,
+          ),
         );
 
         await panel.requestFocus(nodes["a"]!);
@@ -97,9 +101,9 @@ void main() {
       testWidgets("unfocused scope picks first node for ${direction.name}", (
         tester,
       ) async {
-        final (_, nodes) = await tester.showFocusBoxes(
-          grid,
-          mainAxis: Axis.horizontal,
+        final nodes = {for (final box in grid) box.id: testFocusNode(box.id)};
+        await tester.showComponent(
+          FocusBoxLayout(grid, nodes, mainAxis: Axis.horizontal),
         );
 
         final policy = TwoDFocusTraversalPolicy(mainAxis: Axis.horizontal);
@@ -119,9 +123,9 @@ void main() {
       testWidgets("unfocused scope picks first node for $direction", (
         tester,
       ) async {
-        final (panel, nodes) = await tester.showFocusBoxes(
-          grid,
-          mainAxis: Axis.horizontal,
+        final nodes = {for (final box in grid) box.id: testFocusNode(box.id)};
+        final panel = await tester.showComponent(
+          FocusBoxLayout(grid, nodes, mainAxis: Axis.horizontal),
         );
 
         await panel.press(key);
@@ -136,9 +140,9 @@ void main() {
         FocusBox("above", 120, 30, 50, 50),
         FocusBox("below", 260, 200, 50, 50),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       await panel.requestFocus(nodes["current"]!);
@@ -155,9 +159,9 @@ void main() {
         FocusBox("above_left", 10, 20, 50, 50),
         FocusBox("diag", 340, 170, 50, 50),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       await panel.requestFocus(nodes["current"]!);
@@ -174,9 +178,9 @@ void main() {
         FocusBox("aligned", 104, 175, 50, 50),
         FocusBox("diagonal", 340, 160, 50, 50),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       await panel.requestFocus(nodes["current"]!);
@@ -193,9 +197,9 @@ void main() {
         FocusBox("blocked", 104, 170, 50, 50),
         FocusBox("allowed", 110, 260, 50, 50),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       nodes["blocked"]!.canRequestFocus = false;
@@ -214,9 +218,9 @@ void main() {
         FocusBox("skipped", 104, 170, 50, 50),
         FocusBox("allowed", 110, 260, 50, 50),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       nodes["skipped"]!.skipTraversal = true;
@@ -236,9 +240,9 @@ void main() {
         FocusBox("up", 230, 20, 50, 50),
         FocusBox("upper_left", 40, 20, 50, 50),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       await panel.requestFocus(nodes["center"]!);
@@ -259,9 +263,9 @@ void main() {
         FocusBox("b", 90, 0, 50, 50),
         FocusBox("c", 180, 0, 50, 50),
       ];
-      final (panel, nodes) = await tester.showFocusBoxes(
-        boxes,
-        mainAxis: Axis.horizontal,
+      final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+      final panel = await tester.showComponent(
+        FocusBoxLayout(boxes, nodes, mainAxis: Axis.horizontal),
       );
 
       await panel.requestFocus(nodes["b"]!);
@@ -296,10 +300,14 @@ void main() {
           FocusBox("top", 100, 0, 50, 50),
           FocusBox("bottom", 100, 240, 50, 50),
         ];
-        final (panel, nodes) = await tester.showFocusBoxes(
-          boxes,
-          mainAxis: Axis.horizontal,
-          edgeBehavior: behavior,
+        final nodes = {for (final box in boxes) box.id: testFocusNode(box.id)};
+        final panel = await tester.showComponent(
+          FocusBoxLayout(
+            boxes,
+            nodes,
+            mainAxis: Axis.horizontal,
+            edgeBehavior: behavior,
+          ),
         );
 
         await panel.requestFocus(nodes["bottom"]!);
@@ -312,10 +320,9 @@ void main() {
     testWidgets("parentScope edge behavior can traverse into parent scope", (
       tester,
     ) async {
-      final nodes = focusNodesFor(const [
-        FocusBox("current", 100, 100, 40, 40),
-        FocusBox("parent", 200, 260, 40, 40),
-      ]);
+      final nodes = {
+        for (final id in ["current", "parent"]) id: testFocusNode(id),
+      };
       Widget box(String id) => Semantics(
         container: true,
         label: id,
@@ -326,9 +333,13 @@ void main() {
         at: PanelLocation.component(
           HookBuilder(
             builder: (context) {
-              final childScope = useEdgeScope(
-                TraversalEdgeBehavior.parentScope,
+              final childScope = useMemoized(
+                () => FocusScopeNode(
+                  directionalTraversalEdgeBehavior:
+                      TraversalEdgeBehavior.parentScope,
+                ),
               );
+              useEffect(() => childScope.dispose, [childScope]);
               return FocusTraversalGroup(
                 policy: TwoDFocusTraversalPolicy(mainAxis: Axis.horizontal),
                 child: FocusScope(

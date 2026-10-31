@@ -21,6 +21,11 @@ final class Generator {
   /// One of [values].
   T pick<T>(List<T> values) => values[_random.nextInt(values.length)];
 
+  /// [length] bytes; generators of different seeds give different bytes.
+  Uint8List bytes(int length) => Uint8List.fromList([
+    for (var index = 0; index < length; index++) _random.nextInt(256),
+  ]);
+
   /// [count] values made by [value].
   List<T> list<T>(int count, T Function(Generator generator) value) => [
     for (var index = 0; index < count; index++) value(this),

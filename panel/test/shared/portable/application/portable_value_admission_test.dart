@@ -13,9 +13,8 @@ void main() {
       final checked = testCheckedCatalog(
         generation: _admissionGeneration,
         types: [
-          testPublishedType(
+          declaredRecord(
             page,
-            _emptyRecordShape,
             fields: {
               for (final name in ["name", "title"])
                 name: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
@@ -71,13 +70,9 @@ void main() {
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        testPublishedType(
-          chapter,
-          skir.RepresentationTemplate.createScalar(kind: skir.ScalarKind.text),
-        ),
-        testPublishedType(
+        declaredScalar(chapter, skir.ScalarKind.text),
+        declaredRecord(
           page,
-          _emptyRecordShape,
           fields: {
             "chapter": skir.TypeTemplate.createNamed(
               definition: chapter,
@@ -109,26 +104,15 @@ void main() {
   test("rejects an application whose argument violates its bound", () {
     final marker = typeDefinition("Marker");
     final box = typeDefinition("Box");
-    final parameter = skir.ParameterKey(owner: box, index: 0);
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        testPublishedType(marker, _emptyRecordShape),
-        testPublishedType(
+        declaredRecord(marker),
+        declaredRecord(
           box,
-          _emptyRecordShape,
-          parameters: [
-            skir.TypeParameter(
-              key: parameter,
-              name: "T",
-              bounds: [
-                skir.TypeTemplate.createNamed(
-                  definition: marker,
-                  arguments: const [],
-                ),
-              ],
-            ),
-          ],
+          parameters: {
+            "T": [marker],
+          },
         ),
       ],
     );
@@ -172,9 +156,8 @@ void main() {
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        testPublishedType(
+        declaredRecord(
           unavailable,
-          _emptyRecordShape,
           status: skir.DeclarationStatus.wrapUnavailable(const []),
         ),
       ],
@@ -200,17 +183,10 @@ void main() {
 
   test("rejects unknown scalar kinds inside named applications", () {
     final box = typeDefinition("Box");
-    final parameter = skir.ParameterKey(owner: box, index: 0);
     final checked = testCheckedCatalog(
       generation: _admissionGeneration,
       types: [
-        testPublishedType(
-          box,
-          _emptyRecordShape,
-          parameters: [
-            skir.TypeParameter(key: parameter, name: "T", bounds: const []),
-          ],
-        ),
+        declaredRecord(box, parameters: {"T": []}),
       ],
     );
     final applications = [
@@ -251,9 +227,5 @@ void main() {
 
 /// A record representation without declared fields; effective fields alone
 /// describe what a value holds.
-final _emptyRecordShape = skir.RepresentationTemplate.createRecord(
-  fields: const [],
-  abstract_: false,
-);
 
 final _admissionGeneration = skir.CatalogGeneration(value: "catalog:admission");

@@ -1,9 +1,4 @@
-import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/src/core/pump_panel.dart";
-import "package:typewriter_testkit/src/core/stage.dart";
-import "package:typewriter_testkit/src/drivers/panel_driver.dart";
-import "package:typewriter_testkit/src/shared/selectables/selection_fixtures.dart";
 
 /// A surface with gated selection shortcuts, as the search modal and the
 /// selector popup mount them: the selectable item [target], read as
@@ -50,22 +45,5 @@ final class GatedShortcutSurface extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// Showing a [GatedShortcutSurface] in the panel.
-extension PumpGatedShortcuts on WidgetTester {
-  /// Pumps a [GatedShortcutSurface] of [target] whose shortcut operation
-  /// records every run.
-  Future<({PanelDriver panel, RecordingShortcutOperation operation})>
-  pumpGatedShortcuts(SelectableIdentifier target) async {
-    final operation = RecordingShortcutOperation();
-    final panel = await pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        GatedShortcutSurface(target: target, operation: operation),
-      ),
-    );
-    return (panel: panel, operation: operation);
   }
 }

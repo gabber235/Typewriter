@@ -155,11 +155,15 @@ void main() {
       final saving = binding.save();
       await tester.pump();
       final sent = seeded.saves.single;
-      expectSaveRefusedAfterRemoteChange(
+      expect(
         sent.edit,
-        saved: saved,
-        remoteChange: (remote) =>
-            remote.set(chapter, textValue("remote.chapter", type: chapterType)),
+        refusedAfter(
+          (remote) => remote.set(
+            chapter,
+            textValue("remote.chapter", type: chapterType),
+          ),
+          saved: saved,
+        ),
       );
       sent.confirm();
       await saving;
@@ -220,14 +224,16 @@ void main() {
           ? skir.DataValue.wrapInteger("3")
           : skir.DataValue.wrapStringValue("new");
       final sent = seeded.saves.single;
-      expectSaveRefusedAfterRemoteChange(
+      expect(
         sent.edit,
-        saved: fixture.draft.toDocument(),
-        remoteChange: (remote) => remote.set(
-          location,
-          field == "priority"
-              ? skir.DataValue.wrapInteger("7")
-              : skir.DataValue.wrapStringValue("remote"),
+        refusedAfter(
+          (remote) => remote.set(
+            location,
+            field == "priority"
+                ? skir.DataValue.wrapInteger("7")
+                : skir.DataValue.wrapStringValue("remote"),
+          ),
+          saved: fixture.draft.toDocument(),
         ),
       );
       sent.confirm();

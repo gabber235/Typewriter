@@ -25,7 +25,6 @@ export "unicode_data.dart";
 export "ui/reduced_motion.dart";
 export "ui/resizable_pane.dart";
 export "ui/loading_buttons.dart";
-export "ui/anchored_overlays.dart";
 export "work_sessions.dart";
 export "ui/choice_dropdown.dart";
 export "ui/panes.dart";

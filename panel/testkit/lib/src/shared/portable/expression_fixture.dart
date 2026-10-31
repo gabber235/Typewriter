@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/authoring/document_builder.dart";
 import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 import "package:typewriter_testkit/src/shared/portable/authored_records.dart";
 import "package:typewriter_testkit/src/support/portable_fixture.dart";
@@ -31,9 +32,7 @@ void runExpressionFixtureCase(Map<String, Object?> fixture) {
     types: [
       for (final encoded
           in fixture["typeDefinitions"] as List<Object?>? ?? const [])
-        testPublishedDefinition(
-          skir.TypeDefinition.serializer.fromJson(encoded),
-        ),
+        declaredDefinition(skir.TypeDefinition.serializer.fromJson(encoded)),
     ],
   );
   final resources = fixture["resources"] as Map<String, Object?>?;

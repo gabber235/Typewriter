@@ -212,32 +212,6 @@ class TimelinePreviewCueDsl {
   }
 }
 
-void expectLaneIndices(
-  TimelinePlacementResult layout,
-  Map<String, int> expected,
-) {
-  final actual = <String, int>{
-    for (final key in expected.keys) key: layout.element(key).laneIndex,
-  };
-  for (final entry in expected.entries) {
-    expect(
-      actual[entry.key],
-      entry.value,
-      reason: "${entry.key} actual: $actual",
-    );
-  }
-}
-
-void expectLaneIndicesMatch(
-  TimelinePlacementResult left,
-  TimelinePlacementResult right,
-  List<String> ids,
-) {
-  for (final id in ids) {
-    expect(left.element(id).laneIndex, right.element(id).laneIndex, reason: id);
-  }
-}
-
 void expectContainmentInLayout(
   TimelinePlacementResult layout,
   TimelineData data,

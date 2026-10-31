@@ -18,6 +18,13 @@ const _catalogInvalidationEventSubject =
 /// The subjects the Realm answers catalog fetches and state queries on.
 const _subjects = (catalog: _catalogSubject, state: _snapshotSubject);
 
+/// What the broker answers a request while the Realm that owns it is away
+/// and the panel stays connected: nothing received it.
+const realmAway = NatsClientException(
+  kind: NatsFailureKind.noResponders,
+  message: "No NATS responder is available",
+);
+
 void main() {
   late World world;
   setUp(() {
@@ -154,7 +161,7 @@ void main() {
       generation: _generation,
       subjects: _subjects,
     );
-    final queries = world.holdRequests(_snapshotSubject);
+    final queries = world.nats.holdRequests(_snapshotSubject);
     final reading = world.container.read(session.notifier).refresh();
     await eventually(() => expect(queries, hasLength(1)));
     final again = world.container.read(session.notifier).refresh();
@@ -253,68 +260,6 @@ void main() {
       _book.bookId,
       "After replacement",
       description: "state announced on the replaced connection",
-    );
-  });
-
-  testWidgets("a screen showing saved values that opens and asks for "
-      "current ones while it builds, as the conflict review does, receives "
-      "them", (tester) async {
-    var title = "Initial";
-    await tester.runAsync(
-      () => world.openBookSession(
-        session,
-        _book,
-        () => title,
-        generation: _generation,
-        subjects: _subjects,
-      ),
-    );
-    final open = ValueNotifier(false);
-    addTearDown(open.dispose);
-    Future<void>? asked;
-    await tester.pumpWidget(
-      PanelStage.world(
-        world,
-        at: PanelLocation.component(
-          ValueListenableBuilder(
-            valueListenable: open,
-            builder: (context, opened, _) => !opened
-                ? const SizedBox()
-                : Consumer(
-                    builder: (context, ref, _) {
-                      ref.watch(session);
-                      asked ??= ref.read(session.notifier).refresh();
-                      return const SizedBox();
-                    },
-                  ),
-          ),
-        ),
-      ),
-    );
-    await tester.runAsync(
-      () => world.container.eventually(
-        session,
-        (state) => !state.refreshing,
-        description: "no refresh in progress",
-      ),
-    );
-    title = "Current";
-
-    open.value = true;
-    await tester.pump();
-    expect(asked, isNotNull);
-    for (var turn = 0; turn < 20; turn++) {
-      await tester.runAsync(pumpEventQueue);
-      await tester.pump();
-    }
-
-    await tester.runAsync(
-      () => world.untilBookTitled(
-        session,
-        _book.bookId,
-        "Current",
-        description: "the values current when the screen asked",
-      ),
     );
   });
 

@@ -103,10 +103,7 @@ void main() {
     expect(semanticsButtons("Intro").isNotEmpty, isFalse);
   });
 
-  for (final (section, id) in [
-    ("Library", libraryId),
-    ("Tags", taxonomyId),
-  ]) {
+  for (final (section, id) in [("Library", libraryId), ("Tags", taxonomyId)]) {
     testWidgets("a screen reader opens $section from the realm sidebar", (
       tester,
     ) async {

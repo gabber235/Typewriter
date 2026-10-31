@@ -108,7 +108,13 @@ void main() {
           limits,
           maxBytes: limits.replyMaxBytes,
         );
-        expect(assembler.assemble(delivered), body);
+        expect(
+          delivered
+              .map((frame) => assembler.accept(frame.headers, frame.payload))
+              .nonNulls
+              .firstOrNull,
+          body,
+        );
       });
     }
 
@@ -138,12 +144,16 @@ void main() {
               ),
         ];
 
+        final assembler = PayloadAssembler(
+          _limits,
+          maxBytes: _limits.replyMaxBytes,
+        );
         Uint8List? assembled;
         try {
-          assembled = PayloadAssembler(
-            _limits,
-            maxBytes: _limits.replyMaxBytes,
-          ).assemble(damaged);
+          assembled = damaged
+              .map((frame) => assembler.accept(frame.headers, frame.payload))
+              .nonNulls
+              .firstOrNull;
         } on TransferFailure {
           return;
         }
@@ -154,7 +164,7 @@ void main() {
 
   group("payload assembly", () {
     test("a message without framing headers is a complete payload", () {
-      final payload = patternedBytes(3);
+      final payload = Generator(0).bytes(3);
       expect(
         PayloadAssembler(
           _limits,
@@ -172,37 +182,46 @@ void main() {
     });
 
     test("frames out of order and identical duplicates assemble", () {
-      final payload = patternedBytes(13);
+      final payload = Generator(0).bytes(13);
       final frames = payloadFrames(payload);
       final shuffled = [frames.last, ...frames.reversed];
+      final assembler = PayloadAssembler(
+        _limits,
+        maxBytes: _limits.replyMaxBytes,
+      );
 
       expect(
-        PayloadAssembler(
-          _limits,
-          maxBytes: _limits.replyMaxBytes,
-        ).assemble(shuffled),
+        shuffled
+            .map((frame) => assembler.accept(frame.headers, frame.payload))
+            .nonNulls
+            .firstOrNull,
         payload,
       );
     });
 
     test("a changed duplicate is rejected", () {
-      final frames = payloadFrames(patternedBytes(8));
+      final frames = payloadFrames(Generator(0).bytes(8));
       final changed = (
         headers: frames.first.headers,
         payload: Uint8List.fromList([9, 9, 9, 9]),
       );
 
+      final assembler = PayloadAssembler(
+        _limits,
+        maxBytes: _limits.replyMaxBytes,
+      );
+
       expect(
-        () => PayloadAssembler(
-          _limits,
-          maxBytes: _limits.replyMaxBytes,
-        ).assemble([frames.first, changed]),
+        () => [frames.first, changed]
+            .map((frame) => assembler.accept(frame.headers, frame.payload))
+            .nonNulls
+            .firstOrNull,
         throwsA(isA<TransferRejected>()),
       );
     });
 
     test("frames beyond the ceiling or chunk size are rejected", () {
-      final frame = payloadFrames(patternedBytes(8)).first;
+      final frame = payloadFrames(Generator(0).bytes(8)).first;
       final tooMany = (
         headers: frame.headers.set(PayloadHeaders.chunk, "0/17"),
         payload: frame.payload,
@@ -225,7 +244,7 @@ void main() {
     });
 
     test("size and digest are verified before the payload is returned", () {
-      final frames = payloadFrames(patternedBytes(8));
+      final frames = payloadFrames(Generator(0).bytes(8));
       final corrupted = [
         frames.first,
         (
@@ -234,11 +253,16 @@ void main() {
         ),
       ];
 
+      final assembler = PayloadAssembler(
+        _limits,
+        maxBytes: _limits.replyMaxBytes,
+      );
+
       expect(
-        () => PayloadAssembler(
-          _limits,
-          maxBytes: _limits.replyMaxBytes,
-        ).assemble(corrupted),
+        () => corrupted
+            .map((frame) => assembler.accept(frame.headers, frame.payload))
+            .nonNulls
+            .firstOrNull,
         throwsA(isA<TransferRejected>()),
       );
     });
@@ -246,7 +270,14 @@ void main() {
     test("a too large failure frame reports the size and limit first", () {
       expect(
         () => PayloadAssembler(_limits, maxBytes: _limits.replyMaxBytes).accept(
-          payloadFailure(PayloadHeaders.tooLarge, size: 40, limit: 16),
+          NatsHeaders(
+            entries: const [
+              MapEntry(PayloadHeaders.payload, "payload"),
+              MapEntry(PayloadHeaders.failure, PayloadHeaders.tooLarge),
+              MapEntry(PayloadHeaders.size, "40"),
+              MapEntry(PayloadHeaders.limit, "16"),
+            ],
+          ),
           Uint8List(0),
         ),
         throwsA(
@@ -262,7 +293,7 @@ void main() {
         _limits,
         maxBytes: _limits.replyMaxBytes,
       );
-      final frames = payloadFrames(patternedBytes(12));
+      final frames = payloadFrames(Generator(0).bytes(12));
       expect(
         assembler.accept(frames.first.headers, frames.first.payload),
         isNull,
@@ -270,7 +301,12 @@ void main() {
 
       expect(
         () => assembler.accept(
-          payloadFailure(PayloadHeaders.interrupted),
+          NatsHeaders(
+            entries: const [
+              MapEntry(PayloadHeaders.payload, "payload"),
+              MapEntry(PayloadHeaders.failure, PayloadHeaders.interrupted),
+            ],
+          ),
           Uint8List(0),
         ),
         throwsA(isA<TransferInterrupted>()),
@@ -278,8 +314,8 @@ void main() {
     });
 
     test("frames of several senders never mix", () {
-      final first = patternedBytes(9);
-      final second = patternedBytes(9, seed: 7);
+      final first = Generator(0).bytes(9);
+      final second = Generator(7).bytes(9);
       final frames = [...payloadFrames(first), ...payloadFrames(second)];
       final interleaved = [
         for (var index = 0; index < 3; index++) ...[
@@ -334,7 +370,7 @@ void main() {
     await expectLater(
       client.request(
         _subject,
-        patternedBytes(_limits.requestMaxBytes + 1),
+        Generator(0).bytes(_limits.requestMaxBytes + 1),
         limits: _limits,
       ),
       throwsA(

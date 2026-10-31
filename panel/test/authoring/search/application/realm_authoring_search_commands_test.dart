@@ -23,7 +23,7 @@ void main() {
     final document = AuthoringDocument(
       catalog: testCheckedCatalog(
         generation: skir.CatalogGeneration(value: "catalog:test"),
-        types: [testPublishedRecord(_book, const {})],
+        types: [declaredRecord(_book)],
       ),
       entries: {
         resource: skir.AuthoringResource(id: resource, content: content),

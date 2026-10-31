@@ -16,52 +16,70 @@ final _settings = NatsConnectionSettings(
 );
 
 void main() {
+  late FakeNats server;
+  late NatsConnectionOwner owner;
+  late List<NatsClient> published;
+  void Function(NatsClient client)? onReplacement;
+
+  setUp(() {
+    server = FakeNats();
+    published = [];
+    onReplacement = null;
+    owner = NatsConnectionOwner(
+      settings: _settings,
+      clientFactory: server.connect,
+      // Each session is numbered by how many connections came before it.
+      sessionFactory: () =>
+          server.connections.length.toString().padLeft(32, "0"),
+      onReplacement: (client) {
+        published.add(client);
+        onReplacement?.call(client);
+      },
+    );
+    addTearDown(() async {
+      await owner.close();
+      await server.close();
+    });
+  });
+
   test(
     "retry publishes a fresh session before closing the previous client",
     () async {
-      final fixture = OwnedNatsConnections(_settings);
-      addTearDown(fixture.close);
-      final previous = fixture.owner.client;
-      fixture.onReplacement = (client) {
-        expect(client, same(fixture.owner.client));
+      final previous = owner.client;
+      onReplacement = (client) {
+        expect(client, same(owner.client));
         expect(previous.connectionState, isA<NatsConnected>());
       };
 
-      await fixture.owner.retry();
+      await owner.retry();
 
-      expect(fixture.published, [fixture.clients.last]);
-      expect(fixture.clients, hasLength(2));
+      expect(published, [server.connections.last]);
+      expect(server.connections, hasLength(2));
       expect(
-        fixture.clients.last.connectionSession,
-        isNot(fixture.clients.first.connectionSession),
+        server.connections.last.connectionSession,
+        isNot(server.connections.first.connectionSession),
       );
       expect(previous.connectionState, isA<NatsClosed>());
     },
   );
 
   test("retries are serialized and publish in order", () async {
-    final fixture = OwnedNatsConnections(_settings);
-    addTearDown(fixture.close);
+    await Future.wait([owner.retry(), owner.retry()]);
 
-    await Future.wait([fixture.owner.retry(), fixture.owner.retry()]);
-
-    expect(fixture.clients, hasLength(3));
-    expect(fixture.published, fixture.clients.skip(1).toList());
-    expect(fixture.owner.client, same(fixture.clients.last));
+    expect(server.connections, hasLength(3));
+    expect(published, server.connections.skip(1).toList());
+    expect(owner.client, same(server.connections.last));
     expect(
-      fixture.clients.take(2).map((client) => client.connectionState),
+      server.connections.take(2).map((client) => client.connectionState),
       everyElement(isA<NatsClosed>()),
     );
   });
 
   test("closing the owner blocks a later retry", () async {
-    final fixture = OwnedNatsConnections(_settings);
-    addTearDown(fixture.close);
-
-    await fixture.owner.close();
+    await owner.close();
 
     await expectLater(
-      fixture.owner.retry(),
+      owner.retry(),
       throwsA(
         isA<NatsClientException>().having(
           (error) => error.kind,
@@ -70,9 +88,9 @@ void main() {
         ),
       ),
     );
-    expect(fixture.published, isEmpty);
-    expect(fixture.clients, hasLength(1));
-    expect(fixture.clients.single.connectionState, isA<NatsClosed>());
+    expect(published, isEmpty);
+    expect(server.connections, hasLength(1));
+    expect(server.connections.single.connectionState, isA<NatsClosed>());
   });
 
   test("settings do not print authentication credentials", () {

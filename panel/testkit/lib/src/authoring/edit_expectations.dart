@@ -3,70 +3,72 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Expects [edit] to save against the [saved] document it was read from and
-/// to be refused once [remoteChange] changed what it read.
+/// Matches an edit that saves against the content it was read from and is
+/// refused once [remoteChange] changed what it read: an [AuthoringEdit] the
+/// panel prepares, or a [skir.PreparedEdit] it sent to the Realm.
+///
+/// [saved] is that content: an [AuthoringDocument], or a function opening a
+/// fresh [AuthoringEdit] of it each time it is called, for model tests whose
+/// content has no catalog to form a document.
 ///
 /// States what an edit's expectations are for, instead of listing them: a
 /// save is refused when content it depends on changed since it was read.
-void expectRefusedAfterRemoteChange(
-  AuthoringEdit edit, {
-  required AuthoringDocument saved,
-  required void Function(AuthoringEdit remote) remoteChange,
-}) {
-  final expectations = edit.prepare().expectations;
-  expect(
-    saved.facts.conflicts(expectations),
-    isEmpty,
-    reason: "The edit saves against the document it was read from",
-  );
-  expect(
-    saved.changedRemotely(remoteChange).facts.conflicts(expectations),
-    isNotEmpty,
-    reason: "The edit is refused once the remote change saved first",
-  );
-}
+Matcher refusedAfter(
+  void Function(AuthoringEdit remote) remoteChange, {
+  required Object saved,
+}) => _RefusedAfter(remoteChange, switch (saved) {
+  final AuthoringDocument document => () => AuthoringEdit.fromDocument(
+    document,
+  ),
+  final AuthoringEdit Function() open => open,
+  _ => throw ArgumentError.value(saved, "saved", "is no saved content"),
+});
 
-/// Expects the save [sent] to the Realm to apply to the [saved] document it
-/// was read from and to be refused once [remoteChange] changed what it read;
-/// [expectRefusedAfterRemoteChange] for an edit the panel sent.
-void expectSaveRefusedAfterRemoteChange(
-  skir.PreparedEdit sent, {
-  required AuthoringDocument saved,
-  required void Function(AuthoringEdit remote) remoteChange,
-}) {
-  expect(
-    saved.facts.conflicts(sent.expectations),
-    isEmpty,
-    reason: "The save applies to the document it was read from",
-  );
-  expect(
-    saved.changedRemotely(remoteChange).facts.conflicts(sent.expectations),
-    isNotEmpty,
-    reason: "The save is refused once the remote change saved first",
-  );
-}
+final class _RefusedAfter extends Matcher {
+  const _RefusedAfter(this._remoteChange, this._saved);
 
-/// [expectRefusedAfterRemoteChange] for model tests whose saved content has
-/// no catalog to form a document: [saved] opens a fresh edit of the saved
-/// content each time it is called.
-void expectEditRefusedAfterRemoteChange(
-  AuthoringEdit edit, {
-  required AuthoringEdit Function() saved,
-  required void Function(AuthoringEdit remote) remoteChange,
-}) {
-  final expectations = edit.prepare().expectations;
-  expect(
-    saved().currentFacts.conflicts(expectations),
-    isEmpty,
-    reason: "The edit saves against the content it was read from",
+  final void Function(AuthoringEdit remote) _remoteChange;
+  final AuthoringEdit Function() _saved;
+
+  List<skir.EditExpectation> _expectations(Object? edit) => switch (edit) {
+    final AuthoringEdit edit => edit.prepare().expectations.toList(),
+    final skir.PreparedEdit edit => edit.expectations.toList(),
+    _ => throw ArgumentError.value(edit, "edit", "is no edit"),
+  };
+
+  @override
+  bool matches(Object? item, Map<Object?, Object?> matchState) {
+    final expectations = _expectations(item);
+    if (_saved().currentFacts.conflicts(expectations).isNotEmpty) {
+      matchState["reason"] =
+          "it does not save against the content it was "
+          "read from";
+      return false;
+    }
+    final remote = _saved();
+    _remoteChange(remote);
+    if (remote.currentFacts.conflicts(expectations).isEmpty) {
+      matchState["reason"] =
+          "it still saves once the remote change saved "
+          "first";
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  Description describe(Description description) => description.add(
+    "an edit that saves against the content it was read from and is "
+    "refused once the remote change saved first",
   );
-  final remote = saved();
-  remoteChange(remote);
-  expect(
-    remote.currentFacts.conflicts(expectations),
-    isNotEmpty,
-    reason: "The edit is refused once the remote change saved first",
-  );
+
+  @override
+  Description describeMismatch(
+    Object? item,
+    Description mismatchDescription,
+    Map<Object?, Object?> matchState,
+    bool verbose,
+  ) => mismatchDescription.add("${matchState["reason"]}");
 }
 
 /// Documents as another author's save leaves them.

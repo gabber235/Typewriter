@@ -36,7 +36,7 @@ void main() {
       // A broken book blocks every publication in the realm, so it goes away
       // even when this scenario fails partway.
       (await remoteSession("ada")).deleteAfterwards(panel.openResource);
-      await panel.field("Title").submit("");
+      await panel.submit("Title", "");
       await panel.press("Realm inbox");
       await panel.expectVisible("Publish blocked");
       await panel.expectVisible("Text must not be blank");

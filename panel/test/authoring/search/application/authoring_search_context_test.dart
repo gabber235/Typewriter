@@ -258,27 +258,23 @@ final _document =
       pages: [_mainIntro, _otherIntro],
     ).withCatalogEntries(
       types: [
-        testPublishedRecord(
+        declaredRecord(
           _element,
-          const {},
           searchKey: "element",
           display: defaultTypeDisplay("element"),
         ),
-        testPublishedRecord(
+        declaredRecord(
           _folder,
-          const {},
           searchKey: "folder",
           display: defaultTypeDisplay("folder"),
         ),
-        testPublishedRecord(
+        declaredRecord(
           _act,
-          const {},
           searchKey: "act",
           display: defaultTypeDisplay("act"),
         ),
-        testPublishedRecord(
+        declaredRecord(
           _scene,
-          const {},
           searchKey: "scene",
           display: defaultTypeDisplay("scene"),
         ),

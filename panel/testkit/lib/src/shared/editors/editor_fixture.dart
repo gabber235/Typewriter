@@ -2,6 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "package:typewriter_testkit/src/authoring/document_builder.dart";
 import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 
 EditorDocument recordEditorDocument(
@@ -15,7 +16,7 @@ EditorDocument recordEditorDocument(
   );
   final catalog = testCheckedCatalog(
     generation: skir.CatalogGeneration(value: "fixture"),
-    types: [testPublishedRecord(definition, fieldTypes)],
+    types: [declaredRecord(definition, fields: fieldTypes)],
   );
   return EditorDocument(
     rootType: skir.TypeUse.wrapNamed(

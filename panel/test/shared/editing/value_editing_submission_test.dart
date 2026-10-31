@@ -5,13 +5,21 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 final _title = editorRootPath.field("title");
+
+/// A record of one text field title holding "Original", at revision 1.
+final original = recordEditorDocument(
+  {"title": skir.DataValue.wrapStringValue("Original")},
+  {"title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
+  1,
+);
+
 void main() {
   test(
     "uncertain delivery blocks fresh requests and cannot discard evidence",
     () async {
       var sends = 0;
       final source = fakeValueEditing(
-        document: titleDocument("Original", 1),
+        document: original,
         validation: acceptTestEditorMutation,
         debounce: const Duration(days: 1),
         commit: (_) async {
@@ -40,7 +48,7 @@ void main() {
     () async {
       var sends = 0;
       final source = fakeValueEditing(
-        document: titleDocument("Original", 1),
+        document: original,
         validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         validateDraft: (value) => value == titleValue("")
@@ -78,7 +86,7 @@ void main() {
         scope: scope,
         targetId: "resource",
         label: "Resource",
-        document: titleDocument("Original", 1),
+        document: original,
         commitPolicy: EditorCommitPolicy.applyResource,
         validation: acceptTestEditorMutation,
         commit: (commit) async =>

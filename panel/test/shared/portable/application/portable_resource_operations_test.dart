@@ -181,7 +181,7 @@ void main() {
       expect(
         () => CheckedEditorCatalog(
           (skir.EditorCatalog.mutable()
-                ..types = [testPublishedDefinition(definition)])
+                ..types = [declaredDefinition(definition)])
               .toFrozen(),
         ),
         throwsFormatException,
@@ -203,7 +203,7 @@ void main() {
             ..types = [
               for (final type in base.snapshot.types)
                 if (type.definition.id != boundPage.otherType) type,
-              testPublishedDefinition(
+              declaredDefinition(
                 skir.TypeDefinition(
                   id: boundPage.otherType,
                   parameters: const [],
@@ -690,7 +690,7 @@ void main() {
       (original.snapshot.toMutable()
             ..types = [
               ...original.snapshot.types,
-              testPublishedDefinition(
+              declaredDefinition(
                 skir.TypeDefinition(
                   id: alias,
                   parameters: const [],

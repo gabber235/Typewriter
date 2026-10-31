@@ -1,6 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/src/shared/search/search.dart";
 
 /// The result type of every result [searchResult] builds.
 const testResultType = SearchResultType(
@@ -198,7 +197,7 @@ SearchQueryContext sourceQueryContext(
   List<QuerySelectorDefinition> selectors,
 ) {
   final controller = SourceController(
-    source: MockSearchSource(),
+    source: FakeSearchSource(),
     baseSelectors: selectors,
     initialQuery: input,
   );

@@ -126,7 +126,7 @@ void main() {
     await panel.reportPublication(
       removalPublicationStatus(
         removed.bookId,
-        published: realmDocument(books: [removed]).resource(removed.bookId),
+        published: realmDocument(books: [removed]).resource(removed.bookId)!,
       ),
     );
 

@@ -22,8 +22,8 @@ void main() {
 
       await stack.natsLink(enabled: true);
       await panel.expectHidden("Waiting for connection");
-      expect(await panel.field("Title").value(), "Before the drop $run");
-      await panel.field("Title").set("After the drop $run");
+      expect(await panel.fieldValue("Title"), "Before the drop $run");
+      await panel.type("Title", "After the drop $run");
       await panel.capture("edited-after-drop");
       // A session opened after the drop, so its own reconnect cannot hide or
       // fake the save.
@@ -53,8 +53,8 @@ void main() {
 
       await stack.realmLink(enabled: true);
       await panel.expectHidden("Realm connection lost", within: heartbeat);
-      expect(await panel.field("Title").value(), "Before the outage $run");
-      await panel.field("Title").set("After the outage $run");
+      expect(await panel.fieldValue("Title"), "Before the outage $run");
+      await panel.type("Title", "After the outage $run");
       await panel.capture("edited-after-outage");
       await (await remoteSession("ada"))
           .expectSaved(book, ["title"], "After the outage $run");

@@ -18,7 +18,7 @@ void main() {
       await panel.restart();
       await panel.open("Acme", "Realm");
       await panel.search(title, choose: title);
-      expect(await panel.field("Title").value(), title);
+      expect(await panel.fieldValue("Title"), title);
       await panel.capture("book-persisted");
     },
   );
@@ -62,13 +62,13 @@ void main() {
       await panel.createBookWithPage("Chronicle $run", page: "Opening $run");
       await panel.press("New Element");
       await panel.press("Simple Message Action Entry");
-      await panel.field("name").submit("Greeting $run");
-      await panel.field("message").submit("Welcome");
-      await panel.field("X coordinate").submit("2");
+      await panel.submit("name", "Greeting $run");
+      await panel.submit("message", "Welcome");
+      await panel.submit("X coordinate", "2");
       await panel.restart();
       await panel.open("Acme", "Realm");
       await panel.search("Greeting $run", choose: "Greeting $run");
-      expect(await panel.field("X coordinate").value(), "2");
+      expect(await panel.fieldValue("X coordinate"), "2");
       await panel.capture("entry-placed");
     },
   );
@@ -85,7 +85,7 @@ void main() {
       await panel.open("Acme", "Realm");
       await panel.open("Tags");
       await panel.press("New Tag");
-      await panel.field("Name").submit(tag);
+      await panel.submit("Name", tag);
       await panel.open("Library");
       await panel.create("Book", book);
       await panel.press("Add item");
@@ -110,7 +110,7 @@ void main() {
       await panel.create("Book", title);
       await panel.open("Library");
       await panel.search(title, choose: title);
-      expect(await panel.field("Title").value(), title);
+      expect(await panel.fieldValue("Title"), title);
       await panel.capture("search-opened");
     },
   );
@@ -127,13 +127,13 @@ void main() {
       // Edits save within a moment; a slow link keeps this one unsaved
       // while the user tries to leave.
       await stack.natsLatency(const Duration(seconds: 10));
-      await panel.field("Title").submit("$title, unsaved");
+      await panel.submit("Title", "$title, unsaved");
       await panel.press("ada");
       await panel.press("Logout");
       await panel.expectVisible("Leave this work session?");
       await panel.capture("leave-asked");
       await panel.press("Stay");
-      expect(await panel.field("Title").value(), "$title, unsaved");
+      expect(await panel.fieldValue("Title"), "$title, unsaved");
     },
   );
 
@@ -154,7 +154,7 @@ void main() {
       // user's own edit leaves it, the way two people typing at once race.
       await stack.natsLatency(const Duration(seconds: 3));
       final theirs = other.write(book, ["title"], "Theirs $run");
-      await panel.field("Title").set("Mine $run");
+      await panel.type("Title", "Mine $run");
       await theirs;
       await panel.expectVisible("Saved values changed");
       await panel.press("Review changes");
@@ -163,13 +163,13 @@ void main() {
       await panel.capture("comparison");
       await panel.press("Close");
       await panel.press("Discard");
-      expect(await panel.field("Title").value(), "Theirs $run");
+      expect(await panel.fieldValue("Title"), "Theirs $run");
       await stack.resetFaults();
       await other.expectSaved(book, ["title"], "Theirs $run");
       await panel.restart();
       await panel.open("Acme", "Realm");
       await panel.search("Theirs $run", choose: "Theirs $run");
-      expect(await panel.field("Title").value(), "Theirs $run");
+      expect(await panel.fieldValue("Title"), "Theirs $run");
       await panel.capture("their-value-kept");
     },
   );

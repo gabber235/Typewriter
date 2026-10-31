@@ -4,6 +4,89 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+final compiledSdkCompositeLayout = skir.PresentationNode.serializer.fromBytes(
+  base64Decode(
+    "c2tpcvnzDGdlbmVyYXRlZC4xOfb7+/j6Bfv58wtnZW5lcmF0ZWQuMvb4JfoJ9/j39/v38wRsaXN09/MQY29uZmlndXJlZF92YWx1"
+    "ZfnzC2dlbmVyYXRlZC4x9vv7+Pf7+fMLZ2VuZXJhdGVkLjD2+Bb6Bff49vfzCWxpc3RfaXRlbfb29vb5AAEBAQEB+PfzCWxpc3Rf"
+    "aXRlbf4D+PfzCmxpc3RfaW5kZXj++AX3A/b2+/nzC2dlbmVyYXRlZC419vg4+gf3+Pf3+/fzA3NldPfzEGNvbmZpZ3VyZWRfdmFs"
+    "dWX58wtnZW5lcmF0ZWQuNPb7+/j3+/nzC2dlbmVyYXRlZC4z9vgW+gX3+Pb38whzZXRfaXRlbfb29vb5AAEBAQH49/MIc2V0X2l0"
+    "ZW3+A/b2+/nzDGdlbmVyYXRlZC4xMvb4JvoJ9/j39/v38wNtYXD38xBjb25maWd1cmVkX3ZhbHVl+fMLZ2VuZXJhdGVkLjf2+/v4"
+    "9/v58wtnZW5lcmF0ZWQuNvb4FvoF9/j29/MHbWFwX2tlefb29vb5AAEB+fMMZ2VuZXJhdGVkLjEx9vv7+Pf7+fMMZ2VuZXJhdGVk"
+    "LjEw9vg3+Pf49vfzCW1hcF92YWx1ZfnzC2dlbmVyYXRlZC459vv7+Pf7+fMLZ2VuZXJhdGVkLjj2+Bf6Bff49vfzCW1hcF92YWx1"
+    "Zfb29vb5AAEB+QABAQEB+PfzB21hcF9rZXn+A/j38wltYXBfdmFsdWX99/74BfcD9vb7+fMMZ2VuZXJhdGVkLjE19vgf+gT3+Pf3"
+    "+/fzBGNvZGX38xBjb25maWd1cmVkX3ZhbHVl+fMMZ2VuZXJhdGVkLjE09vv7+Pf7+fMMZ2VuZXJhdGVkLjEz9vgW+gX3+Pf3+/fz"
+    "BGNvZGX38xBjb25maWd1cmVkX3ZhbHVl9vb29vkAAQH29vv58wxnZW5lcmF0ZWQuMTj2+Cf6BPf49/f79/MIcG9zaXRpb2738xBj"
+    "b25maWd1cmVkX3ZhbHVl+fMMZ2VuZXJhdGVkLjE39vv7+Pf7+fMMZ2VuZXJhdGVkLjE29vgX+gX3+Pf4+/fzCHBvc2l0aW9u+/fz"
+    "AXj38xBjb25maWd1cmVkX3ZhbHVl9vb29vkAAQH29vkAAQE=",
+  ),
+);
+
+final compiledSdkCompositeValue = skir.DataValue.serializer.fromBytes(
+  base64Decode(
+    "c2tpcvgN9/oF+PMEY29kZfgO+Pf4/PjzBHRlc3TzBENvZGUB+AjzDUF1dGhvcmVkIGNvZGX48wRsaXN0+A/2+PMDbWFw+BH2+PMI"
+    "cG9zaXRpb274Dvj3+Pz48wR0ZXN08whQb3NpdGlvbgH4Dff4+PMBePgF8wE3+PMBefgF8wE4+PMDc2V0+BD2",
+  ),
+);
+
+final compiledSdkTypedLayout = skir.PresentationNode.serializer.fromBytes(
+  base64Decode(
+    "c2tpcvnzDGdlbmVyYXRlZC4xMPb4Evn49/f79/MFdGl0bGX38xBjb25maWd1cmVkX3ZhbHVl/gP58wtnZW5lcmF0ZWQuOfb7+/j3"
+    "+/nzC2dlbmVyYXRlZC449vgW+gX3+Pf3+/fzBXRpdGxl9/MQY29uZmlndXJlZF92YWx1Zfb29vb5AAEB",
+  ),
+);
+
+final compiledSdkTypedValue = skir.DataValue.serializer.fromBytes(
+  base64Decode("c2tpcvgN9/f48wV0aXRsZfgI8w5BdXRob3JlZCB0aXRsZQ=="),
+);
+
+final compiledSdkNullableLayout = skir.PresentationNode.serializer.fromBytes(
+  base64Decode(
+    "c2tpcvnzDGdlbmVyYXRlZC4xMfb7+/j3+/nzDGdlbmVyYXRlZC4xMPb4N/j3+Pb38wltYXBfdmFsdWX58wtnZW5lcmF0ZWQuOfb7"
+    "+/j3+/nzC2dlbmVyYXRlZC449vgX+gX3+Pb38wltYXBfdmFsdWX29vb2+QABAfkAAQE=",
+  ),
+);
+
+final compiledSdkNullableValue = skir.DataValue.serializer.fromBytes(
+  base64Decode("c2tpcvgF8wI0Mg=="),
+);
+
+final compiledSdkNestedRemainderLayout = skir.PresentationNode.serializer
+    .fromBytes(
+      base64Decode(
+        "c2tpcvnzC2dlbmVyYXRlZC419vv7+Pf7+fMLZ2VuZXJhdGVkLjT2+Cf6BPf49/f79/MIcG9zaXRpb2738xBjb25maWd1cmVkX3Zh"
+        "bHVl+fMLZ2VuZXJhdGVkLjP2+/v4+Pv58wtnZW5lcmF0ZWQuMPb4F/oF9/j3+Pv38whwb3NpdGlvbvv38wF49/MQY29uZmlndXJl"
+        "ZF92YWx1Zfb3+/gI8wFY9vb7+fMLZ2VuZXJhdGVkLjL2+BX5+Pf3+/fzCHBvc2l0aW9u9/MQY29uZmlndXJlZF92YWx1Zfj38xBj"
+        "b25maWd1cmVkX3ZhbHVl/Pf4/PjzBHRlc3TzCFBvc2l0aW9uAfnzC2dlbmVyYXRlZC4x9vg29vkAAQH29vkAAQE=",
+      ),
+    );
+
+final compiledSdkNestedRemainderCatalog = skir.EditorCatalog.serializer
+    .fromBytes(
+      base64Decode(
+        "c2tpcvoO9/MYbmVzdGVkIHJlbWFpbmRlciBmaXh0dXJl+gb6Bfn4/PjzBHRlc3TzBENvZGUB9vv3AwH29voE8wRDb2Rl8vvzGW1h"
+        "dGVyaWFsLXN5bWJvbHM6Y2F0ZWdvcnn37Yt9YP/6Bfn4/PjzBHRlc3TzEENvbXBvc2l0ZVN1YmplY3QB9vz3+gX4+Pj8+PMEdGVz"
+        "dPMQQ29tcG9zaXRlU3ViamVjdAHzBGxpc3T8+Pj8+PMKdHlwZXdyaXRlcvMETGlzdAH3/gP4+Pj8+PMEdGVzdPMQQ29tcG9zaXRl"
+        "U3ViamVjdAHzA3NldPz4+Pz48wp0eXBld3JpdGVy8wNTZXQB9/4D+Pj4/PjzBHRlc3TzEENvbXBvc2l0ZVN1YmplY3QB8wNtYXD8"
+        "+Pj8+PMKdHlwZXdyaXRlcvMDTWFwAfj+A/33/vgF9wP4+Pj8+PMEdGVzdPMQQ29tcG9zaXRlU3ViamVjdAHzBGNvZGX89/j8+PME"
+        "dGVzdPMEQ29kZQH4+Pj8+PMEdGVzdPMQQ29tcG9zaXRlU3ViamVjdAHzCHBvc2l0aW9u/Pf4/PjzBHRlc3TzCFBvc2l0aW9uAQH6"
+        "BfnzBGxpc3T4+Pz48wR0ZXN08xBDb21wb3NpdGVTdWJqZWN0AfMEbGlzdPz4+Pz48wp0eXBld3JpdGVy8wRMaXN0Aff+A/nzA3Nl"
+        "dPj4/PjzBHRlc3TzEENvbXBvc2l0ZVN1YmplY3QB8wNzZXT8+Pj8+PMKdHlwZXdyaXRlcvMDU2V0Aff+A/nzA21hcPj4/PjzBHRl"
+        "c3TzEENvbXBvc2l0ZVN1YmplY3QB8wNtYXD8+Pj8+PMKdHlwZXdyaXRlcvMDTWFwAfj+A/33/vgF9wP58wRjb2Rl+Pj8+PMEdGVz"
+        "dPMQQ29tcG9zaXRlU3ViamVjdAHzBGNvZGX89/j8+PMEdGVzdPMEQ29kZQH58whwb3NpdGlvbvj4/PjzBHRlc3TzEENvbXBvc2l0"
+        "ZVN1YmplY3QB8whwb3NpdGlvbvz3+Pz48wR0ZXN08whQb3NpdGlvbgH2+gTzEENvbXBvc2l0ZVN1YmplY3Ty+/MZbWF0ZXJpYWwt"
+        "c3ltYm9sczpjYXRlZ29yeffti31g//oF+fj8+PMEdGVzdPMIUG9zaXRpb24B9vz3+Pj4+Pz48wR0ZXN08whQb3NpdGlvbgHzAXj+"
+        "+AX3A/j4+Pz48wR0ZXN08whQb3NpdGlvbgHzAXn++AX3AwH4+fMBePj4/PjzBHRlc3TzCFBvc2l0aW9uAfMBeP74BfcD+fMBefj4"
+        "/PjzBHRlc3TzCFBvc2l0aW9uAfMBef74BfcD9voE8whQb3NpdGlvbvL78xltYXRlcmlhbC1zeW1ib2xzOmNhdGVnb3J59+2LfWD/"
+        "+gX5+Pz48wp0eXBld3JpdGVy8wRMaXN0Aff49/j8+PMKdHlwZXdyaXRlcvMETGlzdAHzAVT9+Pv3+Pz48wp0eXBld3JpdGVy8wRM"
+        "aXN0AQEB9vb6BPMETGlzdPL78xltYXRlcmlhbC1zeW1ib2xzOmNhdGVnb3J59+2LfWD/+gX5+Pz48wp0eXBld3JpdGVy8wNNYXAB"
+        "+Pj3+Pz48wp0eXBld3JpdGVy8wNNYXAB8wFL+Pj4/PjzCnR5cGV3cml0ZXLzA01hcAEB8wFW/vj79/j8+PMKdHlwZXdyaXRlcvMD"
+        "TWFwAfv4+Pz48wp0eXBld3JpdGVy8wNNYXABAQH29voE8wNNYXDy+/MZbWF0ZXJpYWwtc3ltYm9sczpjYXRlZ29yeffti31g//oF"
+        "+fj8+PMKdHlwZXdyaXRlcvMDU2V0Aff49/j8+PMKdHlwZXdyaXRlcvMDU2V0AfMBVP34+/f4/PjzCnR5cGV3cml0ZXLzA1NldAEC"
+        "Afb2+gTzA1NldPL78xltYXRlcmlhbC1zeW1ib2xzOmNhdGVnb3J59+2LfWD/9vb29vb29vb4+Pf4/PjzBHRlc3TzBENvZGUBAfj3"
+        "+Pz48wR0ZXN08whQb3NpdGlvbgEB9/gG9wX2+Pv38yA3YTJjNGMwMDdhOGY0MGU0YTdiMmM1ZTQ1MmI5ZTAwYgE=",
+      ),
+    );
+
 void main() {
   testWidgets(
     "composite metadata prefix remains an independent interactive sibling",
@@ -2526,9 +2609,10 @@ final _polymorphicCatalog = CheckedEditorCatalog(
   testCatalogSnapshot(
     generation: skir.CatalogGeneration(value: "test"),
     types: [
-      recordType(_iconifyDefinition, {
-        "value": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      }),
+      declaredRecord(
+        _iconifyDefinition,
+        fields: {"value": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
+      ),
     ],
     presentationMaterials: [
       skir.PresentationMaterial(

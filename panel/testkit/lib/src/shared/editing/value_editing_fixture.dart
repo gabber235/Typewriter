@@ -1,3 +1,4 @@
+import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -247,7 +248,15 @@ final class FakeContractEditorSnapshot extends EditorSnapshot
       acceptTestEditorMutation(path, value);
 }
 
-/// A value editing registration for [document] whose saves go to [commit].
+/// Confirms every save at the revision after the one it expected.
+Future<TypedMutationResult> confirmNextRevision(EditorCommit commit) async =>
+    MutationSuccess(
+      revision: commit.expectedRevision + 1,
+      value: commit.rootValue,
+    );
+
+/// A value editing registration for [document] whose saves go to [commit],
+/// which confirms each at the next revision unless the test says otherwise.
 ///
 /// With a [contract], the snapshot is a [FakeContractEditorSnapshot] that
 /// accepts every change; otherwise [validation] and [validateDraft] judge
@@ -256,7 +265,7 @@ ValueEditingRegistration fakeEditorTarget({
   required Object targetId,
   required String label,
   required EditorDocument document,
-  required EditorCommitter commit,
+  EditorCommitter commit = confirmNextRevision,
   EditorMutationValidator validation = acceptTestEditorMutation,
   Object? scope,
   EditorCommitPolicy commitPolicy = EditorCommitPolicy.autosaveChanges,
@@ -286,4 +295,17 @@ ValueEditingRegistration fakeEditorTarget({
       commit: commit,
     ),
   );
+}
+
+/// Editing a resource the way an open editor holds it.
+extension HeldEditing on ValueEditingRegistration {
+  /// Acquires this resource in [work] and leases it there until the test
+  /// ends, the way an open editor keeps its resource.
+  ValueEditing hold(ScopedWorkSession work) {
+    final editing = acquire(work);
+    addTearDown(
+      work.lease(WorkDriverId(domain: "value", scope: persistence.key)).release,
+    );
+    return editing;
+  }
 }

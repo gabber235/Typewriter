@@ -64,23 +64,6 @@ extension PumpMovableGraph on WidgetTester {
   }
 }
 
-/// Moves a graph into move mode with the Shift+M keys.
-extension EnterGraphMoveMode on PanelDriver {
-  /// Presses Shift+M and sends the next key before any frame runs.
-  Future<void> pressMoveModeKeysWithoutPump() async {
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyM);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-  }
-
-  /// Presses Shift+M once the focus settled and lets the move mode start.
-  Future<void> enterMoveMode() async {
-    await settle();
-    await pressMoveModeKeysWithoutPump();
-    await settle();
-  }
-}
-
 class _MovableGraph extends StatefulWidget {
   const _MovableGraph({
     required this.focusedIds,

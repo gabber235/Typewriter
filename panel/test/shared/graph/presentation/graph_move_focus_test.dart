@@ -14,7 +14,7 @@ void main() {
       focusNodes["a"]!.requestFocus();
       await tester.pumpAndSettle();
 
-      await panel.pressMoveModeKeysWithoutPump();
+      await panel.pressShifted(LogicalKeyboardKey.keyM, settle: false);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pump();
 
@@ -32,7 +32,8 @@ void main() {
       );
       final focusNode = focusNodes["a"]!..requestFocus();
       await tester.pump();
-      await panel.enterMoveMode();
+      await panel.settle();
+      await panel.pressShifted(LogicalKeyboardKey.keyM);
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
       for (var index = 0; index < 20; index++) {
@@ -67,7 +68,8 @@ void main() {
           focusNodes[focused]!.requestFocus();
           await tester.pump();
 
-          await panel.enterMoveMode();
+          await panel.settle();
+          await panel.pressShifted(LogicalKeyboardKey.keyM);
           await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
           await tester.pump();
 
@@ -109,7 +111,8 @@ void main() {
         );
         final focusNode = focusNodes["a"]!..requestFocus();
         await tester.pump();
-        await panel.enterMoveMode();
+        await panel.settle();
+        await panel.pressShifted(LogicalKeyboardKey.keyM);
 
         for (var index = 0; index < moves; index++) {
           await tester.sendKeyEvent(key(index));

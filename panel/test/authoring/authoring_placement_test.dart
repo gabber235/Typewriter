@@ -15,18 +15,25 @@ void main() {
     );
     final catalog = testCheckedCatalog(
       types: [
-        testPublishedRecord(root, {
-          "placement": skir.TypeTemplate.createNamed(
-            definition: graphPlacementTypeRef,
-            arguments: const [],
-          ),
-        }, placementField: editorRootPath.field("placement")),
-        testPublishedRecord(graphPlacementTypeRef, {
-          for (final key in ["x", "y", "width", "height"]) key: integer,
-        }),
-        testPublishedRecord(
+        declaredRecord(
+          root,
+          fields: {
+            "placement": skir.TypeTemplate.createNamed(
+              definition: graphPlacementTypeRef,
+              arguments: const [],
+            ),
+          },
+          placementField: editorRootPath.field("placement"),
+        ),
+        declaredRecord(
+          graphPlacementTypeRef,
+          fields: {
+            for (final key in ["x", "y", "width", "height"]) key: integer,
+          },
+        ),
+        declaredRecord(
           refined,
-          {
+          fields: {
             for (final key in ["x", "y", "width", "height"]) key: integer,
             "tint": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
           },

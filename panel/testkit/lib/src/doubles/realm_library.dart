@@ -940,23 +940,10 @@ AuthoringDocument ownerChainDocument(Book book, {required String id}) {
     final item = skir.ResourceId(value: "$kind:$id");
     final relation = skir.RelationId(value: "fixture.page.$kind");
     relations.add(
-      skir.RelationContract(
-        id: relation,
-        first: skir.EndpointDefinition(
-          id: skir.EndpointId(value: "${relation.value}:first"),
-          slot: skir.EndpointSlot.first,
-          resource: owner.second.resource,
-          cardinality: skir.EndpointCardinality.one,
-          onDelete: skir.RelationDeletePolicy.cascade,
-        ),
-        second: skir.EndpointDefinition(
-          id: skir.EndpointId(value: "${relation.value}:second"),
-          slot: skir.EndpointSlot.second,
-          resource: owner.second.resource,
-          cardinality: skir.EndpointCardinality.many,
-          onDelete: skir.RelationDeletePolicy.clear,
-        ),
-        families: owner.families,
+      testOwnershipRelation(
+        relation.value,
+        owner: owner.second.resource.definition,
+        member: owner.second.resource.definition,
       ),
     );
     entries[item] = skir.AuthoringResource(

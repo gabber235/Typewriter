@@ -48,6 +48,7 @@ CheckedEditorCatalog testCheckedCatalog({
   List<skir.PresentationDescriptor> presentations = const [],
   List<skir.PresentationMaterial> presentationMaterials = const [],
   List<skir.ConfigurationRecipe> configuration = const [],
+  List<skir.EndpointBindingTemplate> endpointBindings = const [],
 }) => CheckedEditorCatalog(
   testCatalogSnapshot(
     generation: generation,
@@ -57,104 +58,8 @@ CheckedEditorCatalog testCheckedCatalog({
     presentations: presentations,
     presentationMaterials: presentationMaterials,
     configuration: configuration,
+    endpointBindings: endpointBindings,
   ),
-);
-
-/// A type [id] in [status], ready by default, shaped by [representation],
-/// whose effective fields are
-/// [fields], declared by [fieldOwner] when it inherits them and by itself
-/// otherwise, and which refines [parents]. Search finds it by [searchKey]
-/// when given; [display] replaces the default display.
-skir.PublishedType testPublishedType(
-  skir.TypeDefinitionId id,
-  skir.RepresentationTemplate representation, {
-  Map<String, skir.TypeTemplate> fields = const {},
-  List<skir.NamedTypeTemplate> parents = const [],
-  List<skir.TypeParameter> parameters = const [],
-  skir.ValuePath? placementField,
-  String? searchKey,
-  skir.TypeDisplay? display,
-  skir.TypeDefinitionId? fieldOwner,
-  skir.DeclarationStatus status = skir.DeclarationStatus.ready,
-}) => skir.PublishedType(
-  searchKey: searchKey,
-  placementField: placementField,
-  display: display ?? defaultTypeDisplay(""),
-  definition: skir.TypeDefinition(
-    id: id,
-    parameters: parameters,
-    representation: representation,
-    parents: parents,
-  ),
-  status: status,
-  effectiveFields: [
-    for (final field in fields.entries)
-      skir.EffectiveFieldTemplate(
-        key: field.key,
-        owner: skir.FieldOwner(definition: fieldOwner ?? id, name: field.key),
-        type: field.value,
-        rules: const [],
-      ),
-  ],
-  ancestorTemplates: parents,
-);
-
-/// [definition] published as ready, with the fields its record
-/// representation declares and [display] or the default display.
-skir.PublishedType testPublishedDefinition(
-  skir.TypeDefinition definition, {
-  skir.TypeDisplay? display,
-}) => skir.PublishedType(
-  searchKey: null,
-  placementField: null,
-  definition: definition,
-  status: skir.DeclarationStatus.ready,
-  effectiveFields: [
-    if (definition.representation
-        case skir.RepresentationTemplate_recordWrapper(:final value))
-      for (final field in value.fields)
-        skir.EffectiveFieldTemplate(
-          key: field.owner.name,
-          owner: field.owner,
-          type: field.type,
-          rules: const [],
-        ),
-  ],
-  ancestorTemplates: definition.parents,
-  display: display ?? defaultTypeDisplay(""),
-);
-
-/// A ready record type [id] with type [parameters] that declares [fields]
-/// and refines [parents]; concrete unless [abstract].
-skir.PublishedType testPublishedRecord(
-  skir.TypeDefinitionId id,
-  Map<String, skir.TypeTemplate> fields, {
-  List<skir.NamedTypeTemplate> parents = const [],
-  List<skir.TypeParameter> parameters = const [],
-  bool abstract = false,
-  skir.ValuePath? placementField,
-  String? searchKey,
-  skir.TypeDisplay? display,
-}) => testPublishedType(
-  id,
-  skir.RepresentationTemplate.createRecord(
-    abstract_: abstract,
-    fields: [
-      for (final field in fields.entries)
-        skir.FieldDeclaration(
-          owner: skir.FieldOwner(definition: id, name: field.key),
-          type: field.value,
-          overrides: const [],
-          hasConstructorDefault: false,
-        ),
-    ],
-  ),
-  fields: fields,
-  parents: parents,
-  parameters: parameters,
-  placementField: placementField,
-  searchKey: searchKey,
-  display: display,
 );
 
 /// The id of the type [name] in the [namespace] tests declare their types in.
@@ -221,52 +126,6 @@ skir.PublishedType publishedType(
   display: display ?? defaultTypeDisplay(""),
   searchKey: searchKey,
   placementField: placementField,
-);
-
-/// The ready record type [id] declaring [fields], keyed by name, with no
-/// overrides or constructor defaults; each field checks the [rules] listed
-/// under its name.
-skir.PublishedType recordType(
-  skir.TypeDefinitionId id,
-  Map<String, skir.TypeTemplate> fields, {
-  Map<String, List<skir.RuleId>> rules = const {},
-  bool abstract = false,
-}) => publishedType(
-  id,
-  representation: skir.RepresentationTemplate.createRecord(
-    fields: [
-      for (final MapEntry(key: name, value: type) in fields.entries)
-        skir.FieldDeclaration(
-          owner: skir.FieldOwner(definition: id, name: name),
-          type: type,
-          overrides: const [],
-          hasConstructorDefault: false,
-        ),
-    ],
-    abstract_: abstract,
-  ),
-  fields: [
-    for (final MapEntry(key: name, value: type) in fields.entries)
-      skir.EffectiveFieldTemplate(
-        key: name,
-        owner: skir.FieldOwner(definition: id, name: name),
-        type: type,
-        rules: rules[name] ?? const [],
-      ),
-  ],
-);
-
-/// The ready type [definition] published with its effective [fields]; its
-/// ancestors are its parents.
-skir.PublishedType publishedDefinition(
-  skir.TypeDefinition definition,
-  List<skir.EffectiveFieldTemplate> fields,
-) => publishedType(
-  definition.id,
-  representation: definition.representation,
-  parameters: definition.parameters,
-  parents: definition.parents,
-  fields: fields,
 );
 
 /// A host over the single [binding], with an empty root and catalog and a

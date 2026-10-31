@@ -150,12 +150,13 @@ void main() {
           .layout(previews: [data.move("root_a", 24), data.move("root_b", 20)])
           .placement();
 
-      expectLaneIndices(previewLayoutA, {
-        "root_a": previewLayoutB.element("root_a").laneIndex,
-        "root_a_child": previewLayoutB.element("root_a_child").laneIndex,
-        "root_b": previewLayoutB.element("root_b").laneIndex,
-        "root_b_child": previewLayoutB.element("root_b_child").laneIndex,
-      });
+      for (final id in ["root_a", "root_a_child", "root_b", "root_b_child"]) {
+        expect(
+          previewLayoutA.element(id).laneIndex,
+          previewLayoutB.element(id).laneIndex,
+          reason: id,
+        );
+      }
       expect(
         previewLayoutA.element("root_a").previewState,
         TimelinePreviewState.active,
@@ -497,7 +498,7 @@ void main() {
       final previewLayout = data.layout(previews: [preview]).placement();
       final replayLayout = data.layout(previews: [preview]).placement();
 
-      expectLaneIndicesMatch(previewLayout, replayLayout, [
+      for (final id in [
         "root_a",
         "root_a_child_one",
         "root_a_child_two",
@@ -507,7 +508,13 @@ void main() {
         "root_d",
         "root_e_keyframe",
         "root_f",
-      ]);
+      ]) {
+        expect(
+          previewLayout.element(id).laneIndex,
+          replayLayout.element(id).laneIndex,
+          reason: id,
+        );
+      }
     });
 
     test("shows inside and intersecting elements and hides fully out of bounds elements", () {

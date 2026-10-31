@@ -253,12 +253,15 @@ void main() {
                 ),
               ),
             ),
-            recordType(root, {
-              "count": skir.TypeTemplate.createNamed(
-                definition: alias,
-                arguments: const [],
-              ),
-            }),
+            declaredRecord(
+              root,
+              fields: {
+                "count": skir.TypeTemplate.createNamed(
+                  definition: alias,
+                  arguments: const [],
+                ),
+              },
+            ),
           ],
         ),
       );

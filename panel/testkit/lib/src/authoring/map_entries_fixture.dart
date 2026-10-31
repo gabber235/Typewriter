@@ -12,80 +12,29 @@ final class MapEntriesFixture {
   /// An Owner record whose map of entries starts empty, in a catalog where
   /// entries are Entry records keyed by Entry records.
   factory MapEntriesFixture() {
-    skir.TypeDefinitionId id(String name) => skir.TypeDefinitionId(
-      typeId: skir.TypeId.createQualified(namespace: "test", name: name),
-      revision: 1,
-    );
-    skir.NamedTypeUse use(String name) =>
-        skir.NamedTypeUse(definition: id(name), arguments: const []);
-    skir.TypeTemplate named(String name) => skir.TypeTemplate.wrapNamed(
-      skir.NamedTypeTemplate(definition: id(name), arguments: const []),
-    );
-    skir.PublishedType record(
-      String name,
-      String fieldName,
-      skir.TypeTemplate fieldType,
-    ) {
-      final owner = skir.FieldOwner(definition: id(name), name: fieldName);
-      return publishedType(
-        id(name),
-        representation: skir.RepresentationTemplate.createRecord(
-          fields: [
-            skir.FieldDeclaration(
-              owner: owner,
-              type: fieldType,
-              overrides: const [],
-              hasConstructorDefault: true,
-            ),
-          ],
-          abstract_: false,
-        ),
-        fields: [
-          skir.EffectiveFieldTemplate(
-            key: fieldName,
-            owner: owner,
-            type: fieldType,
-            rules: const [],
-          ),
-        ],
-      );
-    }
-
-    final snapshot = skir.EditorCatalog.defaultInstance.toMutable()
-      ..generation = skir.CatalogGeneration(value: "map:creation")
-      ..types = [
-        record("Owner", "entries", named("Entries")),
-        record(
-          "Entry",
-          "name",
-          skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-        ),
-        publishedType(
-          id("Entries"),
-          representation: skir.RepresentationTemplate.createMapping(
-            key: named("Entry"),
-            value: named("Entry"),
-          ),
-        ),
-      ];
     final resource = skir.ResourceId(value: "map:owner");
-    final map = skir.DataValue.createNamed(
-      actualType: use("Entries"),
-      payload: skir.DataValue.createMapValue(rows: const []),
+    final map = typedValue(
+      "Entries",
+      skir.DataValue.createMapValue(rows: const []),
     );
-    final document = AuthoringDocument(
-      catalog: CheckedEditorCatalog(snapshot.toFrozen()),
-      entries: {
-        resource: skir.AuthoringResource(
-          id: resource,
-          content: skir.AuthoringRecord(
-            configuration: skir.TypeSelection.wrapComplete(use("Owner")),
-            fields: [skir.FieldValue(name: "entries", value: map)],
-          ),
+    final document = authoredDoc(
+      [
+        authoredRecord(resource, {"entries": map}, type: typeUse("Owner")),
+      ],
+      catalog: authoredCatalog([
+        declaredRecord(
+          "Owner",
+          fields: {"entries": "Entries"},
+          defaulted: {"entries"},
         ),
-      },
-      links: const [],
-    );
+        declaredRecord(
+          "Entry",
+          fields: {"name": skir.ScalarKind.text},
+          defaulted: {"name"},
+        ),
+        declaredMap("Entries", key: "Entry", value: "Entry"),
+      ], generation: "map:creation"),
+    ).document;
     final binding = skir.ExpressionBindingId(value: "map");
     return MapEntriesFixture._(
       document,

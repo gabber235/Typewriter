@@ -523,15 +523,10 @@ CheckedEditorCatalog _catalog(CollectionEditorExample example) {
   final integer = skir.TypeTemplate.wrapScalar(
     skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
   );
-  skir.PublishedType published(
-    String name,
-    skir.RepresentationTemplate representation, {
-    Map<String, skir.TypeTemplate> fields = const {},
-  }) => testPublishedType(_id(name), representation, fields: fields);
   skir.PublishedType record(
     String name,
     Map<String, skir.TypeTemplate> fields,
-  ) => testPublishedRecord(_id(name), fields);
+  ) => declaredRecord(_id(name), fields: fields);
   final entryType = _entryType(example);
   return CheckedEditorCatalog(
     (skir.EditorCatalog.mutable()
@@ -539,45 +534,16 @@ CheckedEditorCatalog _catalog(CollectionEditorExample example) {
           ..types = [
             record("Owner", {"entries": _named(entryType)}),
             record("Step", {"name": text, "amount": integer}),
-            published(
-              "TextList",
-              skir.RepresentationTemplate.createSequence(
-                item: text,
-                kind: skir.CollectionKind.list,
-              ),
+            declaredCollection(_id("TextList"), text),
+            declaredCollection(
+              _id("TextSet"),
+              text,
+              kind: skir.CollectionKind.set_,
             ),
-            published(
-              "TextSet",
-              skir.RepresentationTemplate.createSequence(
-                item: text,
-                kind: skir.CollectionKind.set_,
-              ),
-            ),
-            published(
-              "TextMap",
-              skir.RepresentationTemplate.createMapping(key: text, value: text),
-            ),
-            published(
-              "StepList",
-              skir.RepresentationTemplate.createSequence(
-                item: _named("Step"),
-                kind: skir.CollectionKind.list,
-              ),
-            ),
-            published(
-              "StepMap",
-              skir.RepresentationTemplate.createMapping(
-                key: text,
-                value: _named("Step"),
-              ),
-            ),
-            published(
-              "NestedList",
-              skir.RepresentationTemplate.createSequence(
-                item: _named("TextList"),
-                kind: skir.CollectionKind.list,
-              ),
-            ),
+            declaredMap(_id("TextMap"), key: text, value: text),
+            declaredCollection(_id("StepList"), _named("Step")),
+            declaredMap(_id("StepMap"), key: text, value: _named("Step")),
+            declaredCollection(_id("NestedList"), _named("TextList")),
           ])
         .toFrozen(),
   );

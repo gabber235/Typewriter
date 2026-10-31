@@ -3,7 +3,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/core/eventually.dart";
-import "package:typewriter_testkit/src/core/stage.dart";
 import "package:typewriter_testkit/src/core/test_world.dart";
 import "package:typewriter_testkit/src/core/trait.dart";
 import "package:typewriter_testkit/src/core/world.dart";
@@ -68,21 +67,6 @@ extension RealmWorld on World {
       (_, _) {},
     );
     return subscription.read();
-  }
-
-  /// Mounts the panel over this world, so its session and connection
-  /// resolve, and opens [resource] in a form of its Realm editing, closed
-  /// when the test ends.
-  Future<RealmEditingBinding> mountEditing(
-    WidgetTester tester,
-    skir.ResourceId resource,
-  ) async {
-    await tester.pumpWidget(
-      PanelStage.world(this, at: const PanelLocation.component(SizedBox())),
-    );
-    final opening = openRealmEditing();
-    await tester.pumpAndSettle();
-    return (await opening).form(resource);
   }
 
   /// The panel's publication view of the seeded Realm.

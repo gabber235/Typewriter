@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/authoring/document_builder.dart";
 import "package:typewriter_testkit/src/doubles/realm.dart";
 import "package:typewriter_testkit/src/drivers/finders.dart";
 import "package:typewriter_testkit/src/drivers/semantics.dart";
@@ -762,7 +763,7 @@ CheckedEditorCatalog _collectionCatalog() {
     testCatalogSnapshot(
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
-        recordType(root, fields),
+        declaredRecord(root, fields: fields),
         publishedType(
           list,
           representation: skir.RepresentationTemplate.createSequence(

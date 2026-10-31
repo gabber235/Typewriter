@@ -14,7 +14,10 @@ MembershipResourceRepository membershipCommands(
   required String? user,
 }) {
   final session = ResourceSession(
-    SkirMutationClient(() async => nats, () async => const NoopPanelTelemetry()),
+    SkirMutationClient(
+      () async => nats,
+      () async => const NoopPanelTelemetry(),
+    ),
     user,
   );
   final repository = MembershipResourceRepository(session, organization);

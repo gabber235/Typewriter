@@ -72,31 +72,6 @@ ValueEditing editedResource(
 void holdValueLease(ScopedWorkSession work, EditorResourceKey key) =>
     addTearDown(work.lease(WorkDriverId(domain: "value", scope: key)).release);
 
-/// A record whose text fields title and description hold [title] and
-/// [description], at [revision].
-EditorDocument titledRecordDocument({
-  String title = "Original",
-  String description = "Original description",
-  int revision = 1,
-}) => recordEditorDocument(
-  {
-    "title": skir.DataValue.wrapStringValue(title),
-    "description": skir.DataValue.wrapStringValue(description),
-  },
-  {
-    "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-    "description": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-  },
-  revision,
-);
-
-/// Confirms every save at the revision after the one it expected.
-Future<TypedMutationResult> confirmNextRevision(EditorCommit commit) async =>
-    MutationSuccess(
-      revision: commit.expectedRevision + 1,
-      value: commit.rootValue,
-    );
-
 /// The resource [key], labeled "Resource", holding [document] and saved
 /// through [commit] under [commitPolicy].
 ValueEditingRegistration resourceTarget(
@@ -119,43 +94,6 @@ ValueEditingRegistration resourceTarget(
   contract: contract,
 );
 
-/// The target [id] in the scope "realm", labeled [id], over [document];
-/// its saves succeed at revision 2.
-ValueEditingRegistration realmTarget(String id, EditorDocument document) =>
-    fakeEditorTarget(
-      targetId: id,
-      label: id,
-      scope: "realm",
-      document: document,
-      commit: (commit) async =>
-          MutationSuccess(revision: 2, value: commit.rootValue),
-    );
-
-/// The [resourceTarget] for [key], acquired in [work] and leased there until
-/// the test ends, the way an open editor holds it.
-ValueEditing heldResource(
-  ScopedWorkSession work,
-  EditorResourceKey key, {
-  required EditorDocument document,
-  EditorCommitter commit = confirmNextRevision,
-  EditorCommitPolicy commitPolicy = EditorCommitPolicy.applyResource,
-  EditorMutationValidator validation = acceptTestEditorMutation,
-  List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
-  String? contract,
-}) {
-  final editing = resourceTarget(
-    key,
-    document: document,
-    commit: commit,
-    commitPolicy: commitPolicy,
-    validation: validation,
-    validateDraft: validateDraft,
-    contract: contract,
-  ).acquire(work);
-  holdValueLease(work, key);
-  return editing;
-}
-
 /// The local work scope of the user `user` in the organization
 /// `organization:[organization]`, or outside every organization when null.
 LocalWorkScope workScopeIn(String? organization) => LocalWorkScope(
@@ -164,14 +102,6 @@ LocalWorkScope workScopeIn(String? organization) => LocalWorkScope(
       ? null
       : skir.recordId("organization:$organization"),
 );
-
-/// The local work the panel lists.
-extension ListedWork on ProviderContainer {
-  /// The labels of the work the panel lists, in its order.
-  List<String> get listedWork => [
-    for (final entry in read(localWorkProvider).entries.values) entry.label,
-  ];
-}
 
 /// A draft in [work] of the text resource [targetId] read as [label], saved
 /// as [saved] and edited to [draft]; its saves succeed at revision 2. The

@@ -16,7 +16,14 @@ void main() {
     final session = testWorkSession();
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
-    final owner = bindings.editor(realmTarget("first", _document))..dispose();
+    final owner = bindings.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+      ),
+    )..dispose();
     expect(owner.workspace.closed, isFalse);
     expect(
       owner.update(editorRootPath, skir.DataValue.wrapStringValue("Draft")),
@@ -31,8 +38,22 @@ void main() {
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
     final first = bindings.beginRefresh();
-    final editing = first.editor(realmTarget("first", _document));
-    final reading = first.editor(realmTarget("first", _document));
+    final editing = first.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+      ),
+    );
+    final reading = first.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+      ),
+    );
     editing.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
     expect(
       reading.value(editorRootPath).valueOrNull,
@@ -41,7 +62,14 @@ void main() {
     first.commit();
 
     final second = bindings.beginRefresh();
-    final refreshed = second.editor(realmTarget("first", _document));
+    final refreshed = second.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+      ),
+    );
     second.commit();
     expect(
       refreshed.value(editorRootPath).valueOrNull,
@@ -64,11 +92,32 @@ void main() {
       return destination;
     };
     final installed = bindings.beginRefresh();
-    final first = installed.editor(realmTarget("first", _document));
+    final first = installed.editor(
+      fakeEditorTarget(
+        targetId: "first",
+        label: "first",
+        scope: "realm",
+        document: _document,
+      ),
+    );
     installed.commit();
     final next = bindings.beginRefresh()
-      ..editor(realmTarget("first", _document));
-    final abandoned = next.editor(realmTarget("second", _document));
+      ..editor(
+        fakeEditorTarget(
+          targetId: "first",
+          label: "first",
+          scope: "realm",
+          document: _document,
+        ),
+      );
+    final abandoned = next.editor(
+      fakeEditorTarget(
+        targetId: "second",
+        label: "second",
+        scope: "realm",
+        document: _document,
+      ),
+    );
     next.rollback();
     expect(first.workspace.closed, isFalse);
     expect(abandoned.workspace.closed, isTrue);
@@ -83,12 +132,32 @@ void main() {
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
     final initial = bindings.beginRefresh();
-    final clean = initial.editor(realmTarget("clean", _document));
-    final dirty = initial.editor(realmTarget("dirty", _document))
-      ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
+    final clean = initial.editor(
+      fakeEditorTarget(
+        targetId: "clean",
+        label: "clean",
+        scope: "realm",
+        document: _document,
+      ),
+    );
+    final dirty = initial.editor(
+      fakeEditorTarget(
+        targetId: "dirty",
+        label: "dirty",
+        scope: "realm",
+        document: _document,
+      ),
+    )..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
     initial.commit();
     final next = bindings.beginRefresh();
-    final replacement = next.editor(realmTarget("replacement", _document));
+    final replacement = next.editor(
+      fakeEditorTarget(
+        targetId: "replacement",
+        label: "replacement",
+        scope: "realm",
+        document: _document,
+      ),
+    );
     next.commit();
     expect(clean.workspace.closed, isTrue);
     expect(dirty.workspace.closed, isFalse);
@@ -110,10 +179,24 @@ void main() {
       return value;
     };
     bindings.beginRefresh()
-      ..editor(realmTarget("first", _document))
+      ..editor(
+        fakeEditorTarget(
+          targetId: "first",
+          label: "first",
+          scope: "realm",
+          document: _document,
+        ),
+      )
       ..commit();
     bindings.beginRefresh()
-      ..editor(realmTarget("first", _document))
+      ..editor(
+        fakeEditorTarget(
+          targetId: "first",
+          label: "first",
+          scope: "realm",
+          document: _document,
+        ),
+      )
       ..commit();
     expect(destinations.first.disposed, isTrue);
     expect(destinations.last.disposed, isFalse);
@@ -124,7 +207,12 @@ void main() {
     final session = testWorkSession();
     final bindings = InspectionBindings(workspace: session);
     final prospective = bindings.beginRefresh().editor(
-      realmTarget("prospective", _document),
+      fakeEditorTarget(
+        targetId: "prospective",
+        label: "prospective",
+        scope: "realm",
+        document: _document,
+      ),
     );
     bindings.dispose();
     expect(prospective.workspace.closed, isTrue);

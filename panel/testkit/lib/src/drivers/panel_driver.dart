@@ -134,11 +134,17 @@ final class PanelDriver extends ComponentDriver {
   }
 
   /// Presses [key] while Shift is held.
-  Future<void> pressShifted(LogicalKeyboardKey key) async {
+  ///
+  /// Without [settle] no frame runs before this returns, so the test can
+  /// send the next key in the same frame, as a fast user does.
+  Future<void> pressShifted(
+    LogicalKeyboardKey key, {
+    bool settle = true,
+  }) async {
     await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
     await tester.sendKeyEvent(key);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-    await settle();
+    if (settle) await this.settle();
   }
 
   /// Waits until [check] passes; see [Eventually.eventually].

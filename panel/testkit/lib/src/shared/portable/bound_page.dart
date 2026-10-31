@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/authoring/document_builder.dart";
 import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 
 /// One authored Page resource `page`, bound to portable expressions as the
@@ -117,7 +118,7 @@ final class BoundPage {
     );
     return testCheckedCatalog(
       types: [
-        testPublishedDefinition(
+        declaredDefinition(
           page,
           display: display
               ? skir.TypeDisplay(
@@ -128,8 +129,8 @@ final class BoundPage {
                 )
               : null,
         ),
-        testPublishedDefinition(other),
-        testPublishedDefinition(resourceId),
+        declaredDefinition(other),
+        declaredDefinition(resourceId),
       ],
     );
   }
@@ -192,7 +193,7 @@ final class BoundPage {
 skir.PublishedType linkType(
   skir.TypeDefinitionId id,
   skir.TypeDefinitionId target,
-) => testPublishedDefinition(
+) => declaredDefinition(
   skir.TypeDefinition(
     id: id,
     parameters: const [],

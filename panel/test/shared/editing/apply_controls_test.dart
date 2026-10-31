@@ -12,8 +12,11 @@ void main() {
     (tester) async {
       final saving = AutosavingOwner();
       final owner = saving.owner;
-      final panel = await tester.pumpControls(
-        ApplyControls(control: boundControl(owner)),
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Scaffold(body: ApplyControls(control: boundControl(owner))),
+        ),
       );
 
       owner.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
@@ -27,7 +30,12 @@ void main() {
       expect(saving.sends, 1);
       expect(panel.applyControls.actions, isEmpty);
 
-      saving.reply.complete(savedTextResult("Draft"));
+      saving.reply.complete(
+        TypedMutationResult.success(
+          revision: 2,
+          value: skir.DataValue.wrapStringValue("Draft"),
+        ),
+      );
       await panel.settle();
       expect(owner.hasWork, isFalse);
       expect(panel.applyControls.actions, isEmpty);
@@ -44,8 +52,11 @@ void main() {
         for (final owner in owners) boundControl(owner),
       ]);
       addTearDown(selection.dispose);
-      final panel = await tester.pumpControls(
-        ApplyControls(control: selection),
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Scaffold(body: ApplyControls(control: selection)),
+        ),
       );
 
       for (final owner in owners) {
@@ -61,7 +72,12 @@ void main() {
       expect(panel.applyControls.actions, isEmpty);
 
       for (final saving in savings) {
-        saving.reply.complete(savedTextResult("Draft"));
+        saving.reply.complete(
+          TypedMutationResult.success(
+            revision: 2,
+            value: skir.DataValue.wrapStringValue("Draft"),
+          ),
+        );
       }
       await panel.settle();
       expect(owners.map((owner) => owner.hasWork), everyElement(isFalse));
@@ -74,11 +90,16 @@ void main() {
   ) async {
     final saving = AutosavingOwner();
     final owner = saving.owner;
-    final panel = await tester.pumpControls(
-      EditingGroupPanel(
-        workspace: owner.workspace,
-        id: owner.groupId,
-        review: () => const Text("Review"),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: EditingGroupPanel(
+            workspace: owner.workspace,
+            id: owner.groupId,
+            review: () => const Text("Review"),
+          ),
+        ),
       ),
     );
 
@@ -98,7 +119,12 @@ void main() {
     expect(saving.sends, 1);
     expectHidden();
 
-    saving.reply.complete(savedTextResult("Draft"));
+    saving.reply.complete(
+      TypedMutationResult.success(
+        revision: 2,
+        value: skir.DataValue.wrapStringValue("Draft"),
+      ),
+    );
     await panel.settle();
     expect(owner.hasWork, isFalse);
     expectHidden();
@@ -126,8 +152,11 @@ void main() {
         boundControl(manual),
       ]);
       addTearDown(selection.dispose);
-      final panel = await tester.pumpControls(
-        ApplyControls(control: selection),
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Scaffold(body: ApplyControls(control: selection)),
+        ),
       );
 
       automatic.update(
@@ -142,7 +171,12 @@ void main() {
       expect(panel.applyControls.actions, contains("Apply"));
       expect(panel.applyControls.isEnabled("Apply"), isFalse);
 
-      saving.reply.complete(savedTextResult("Automatic"));
+      saving.reply.complete(
+        TypedMutationResult.success(
+          revision: 2,
+          value: skir.DataValue.wrapStringValue("Automatic"),
+        ),
+      );
       await panel.settle();
       expect(automatic.hasWork, isFalse);
       expect(manual.hasWork, isTrue);
@@ -163,8 +197,11 @@ void main() {
       policy: EditorCommitPolicy.autosaveChanges,
       commit: (_) async => invalidMutation("Name is unavailable"),
     );
-    final panel = await tester.pumpControls(
-      ApplyControls(control: boundControl(owner)),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(body: ApplyControls(control: boundControl(owner))),
+      ),
     );
 
     owner.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
@@ -186,8 +223,11 @@ void main() {
     "Apply is hidden when clean, appears for edits, and hides after revert or acceptance",
     (tester) async {
       final owner = savedTextOwner();
-      final panel = await tester.pumpControls(
-        ApplyControls(control: boundControl(owner)),
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Scaffold(body: ApplyControls(control: boundControl(owner))),
+        ),
       );
       expect(panel.applyControls.actions, isEmpty);
 
@@ -220,8 +260,11 @@ void main() {
           throw TimeoutException("Lost response");
         },
       );
-      final panel = await tester.pumpControls(
-        ApplyControls(control: boundControl(owner)),
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Scaffold(body: ApplyControls(control: boundControl(owner))),
+        ),
       );
 
       owner.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
@@ -240,7 +283,12 @@ void main() {
     final control = boundControl(first);
     first.update(editorRootPath, skir.DataValue.wrapStringValue("First"));
     other.update(editorRootPath, skir.DataValue.wrapStringValue("Other"));
-    final panel = await tester.pumpControls(ApplyControls(control: control));
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(body: ApplyControls(control: control)),
+      ),
+    );
 
     await panel.applyControls.press("Apply");
 

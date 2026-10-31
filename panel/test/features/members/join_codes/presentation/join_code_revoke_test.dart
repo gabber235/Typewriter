@@ -67,10 +67,7 @@ void main() {
     await panel.eventually(() => expect(panel.reads(link), isTrue));
 
     await panel.tapOn(find.tooltip("Revoke join code"));
-    await panel.dialog.choose(
-      "Revoke",
-      message: "Revoke this join code?",
-    );
+    await panel.dialog.choose("Revoke", message: "Revoke this join code?");
 
     await panel.eventually(
       () => expect(panel.shows("No active join codes"), isTrue),
