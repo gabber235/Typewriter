@@ -47,6 +47,7 @@ class FakeMessageTransport(
     private var subscriptionAttempts = 0
     private val subscriptionFailuresAt = mutableMapOf<Int, TransportError>()
     private val subscriptionCloseBehaviorsAt = mutableMapOf<Int, suspend () -> Unit>()
+    private val subscriptionOpenBehaviorsAt = mutableMapOf<Int, suspend () -> Unit>()
 
     /** Immutable ordered snapshot of recorded actions. */
     val actions: List<Action> get() = synchronized(lock) { recorded.toList() }
@@ -76,6 +77,18 @@ class FakeMessageTransport(
     ) = synchronized(lock) {
         require(attempt > 0) { "attempt must be positive" }
         subscriptionCloseBehaviorsAt[attempt] = behavior
+    }
+
+    /**
+     * Runs [behavior] before the subscription of the one-based [attempt] is made, so a test can act while that
+     * subscription is still pending; a failure configured for the attempt applies once [behavior] returns.
+     */
+    fun openSubscriptionWith(
+        attempt: Int,
+        behavior: suspend () -> Unit,
+    ) = synchronized(lock) {
+        require(attempt > 0) { "attempt must be positive" }
+        subscriptionOpenBehaviorsAt[attempt] = behavior
     }
 
     /** Adds a one-shot request responder. */
@@ -168,8 +181,9 @@ class FakeMessageTransport(
     override suspend fun subscribe(
         pattern: AddressPattern,
         options: SubscriptionOptions,
-    ): TransportResult<TransportSubscription> =
-        synchronized(lock) {
+    ): TransportResult<TransportSubscription> {
+        synchronized(lock) { subscriptionOpenBehaviorsAt.remove(subscriptionAttempts + 1) }?.invoke()
+        return synchronized(lock) {
             ensureOpen()
             recorded += Action.Subscribe(pattern, options)
             subscriptionAttempts++
@@ -182,6 +196,7 @@ class FakeMessageTransport(
                 ).also(subscriptions::add),
             )
         }
+    }
 
     override fun close() {
         val active =

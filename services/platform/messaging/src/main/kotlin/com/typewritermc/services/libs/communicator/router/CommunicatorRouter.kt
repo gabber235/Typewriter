@@ -374,9 +374,10 @@ private class Replying(
 /**
  * Owns route subscriptions and bounded handler workers beneath the supplied parent scope.
  *
- * Overlapping patterns are rejected. Start is allowed once and releases acquired subscriptions on failure. Stop
- * closes subscriptions and drains accepted work within its timeout, then cancels remaining workers. Recreate the
- * router for a replacement transport session.
+ * Overlapping patterns are rejected. Start is allowed once; each route answers from the moment it is subscribed, and
+ * a failed start releases its subscriptions after draining what they received. Stop closes subscriptions and drains
+ * accepted work within its timeout, then cancels remaining workers. Recreate the router for a replacement transport
+ * session.
  */
 class CommunicatorRouter internal constructor(
     private val transport: MessageTransport,
@@ -410,59 +411,82 @@ class CommunicatorRouter internal constructor(
     /** Current lifecycle state. */
     val state: RouterState get() = mutableState.value
 
-    /** Subscribes all routes and starts their workers. */
+    /**
+     * Subscribes the routes one at a time, starting each route's workers together with its subscription, so a subject
+     * is claimed only once its route can answer it. When startup fails or is cancelled, the subscriptions acquired so
+     * far close and the messages they already received are still handled within the shutdown timeout.
+     */
     suspend fun start(): RouterResult {
         lifecycle.withLock {
             check(state == RouterState.NEW) { "Router can only be started once" }
             mutableState.value = RouterState.STARTING
         }
-        val acquired = mutableListOf<Pair<Route, TransportSubscription>>()
         return try {
-            for (route in definitions) {
-                when (val result = transport.subscribe(route.pattern, SubscriptionOptions(route.group))) {
-                    is TransportResult.Success -> {
-                        acquired += route to result.value
-                        lifecycle.withLock { pendingSubscriptions[result.value] = route }
-                    }
-
-                    is TransportResult.Failure -> {
-                        throw StartupFailure(transportException(result.error))
-                    }
-                }
-            }
+            definitions.forEach { route -> startRoute(route) }
             lifecycle.withLock {
-                runtimes = acquired.map { (route, subscription) -> startRuntime(route, subscription) }
+                if (state != RouterState.STARTING) throw StartupFailure(RouterStoppedWhileStarting())
                 mutableState.value = RouterState.RUNNING
             }
             RouterResult.Success
         } catch (failure: Throwable) {
-            val startupFailure = if (failure is StartupFailure) requireNotNull(failure.cause) else failure
-            val closeFailures =
-                withContext(NonCancellable) {
-                    val failures =
-                        acquired.mapNotNull { (_, subscription) ->
-                            try {
-                                subscription.close()
-                                lifecycle.withLock { pendingSubscriptions.remove(subscription) }
-                                null
-                            } catch (cleanup: Throwable) {
-                                cleanup
-                            }
-                        }
-                    lifecycle.withLock { mutableState.value = RouterState.STOPPED }
-                    job.cancel()
-                    failures
-                }
-            val exceptional =
-                (listOf(failure) + closeFailures)
-                    .firstNotNullOfOrNull { it.findExceptional() }
-            if (exceptional != null) {
-                (listOf(startupFailure) + closeFailures).forEach { if (it !== exceptional) exceptional.addSuppressed(it) }
-                throw exceptional
-            }
-            closeFailures.forEach { if (it !== startupFailure) startupFailure.addSuppressed(it) }
-            RouterResult.Failure(RouterError.Startup(startupFailure))
+            startupFailed(failure)
         }
+    }
+
+    /** Subscribes [route] and starts its workers in the same step, so its subject is claimed only once it can answer. */
+    private suspend fun startRoute(route: Route) {
+        val subscription =
+            when (val result = transport.subscribe(route.pattern, SubscriptionOptions(route.group))) {
+                is TransportResult.Success -> result.value
+                is TransportResult.Failure -> throw StartupFailure(transportException(result.error))
+            }
+        try {
+            lifecycle.withLock {
+                if (state != RouterState.STARTING) throw StartupFailure(RouterStoppedWhileStarting())
+                pendingSubscriptions[subscription] = route
+                runtimes = runtimes + startRuntime(route, subscription)
+            }
+        } catch (failure: Throwable) {
+            withContext(NonCancellable) {
+                try {
+                    subscription.close()
+                } catch (cleanup: Throwable) {
+                    failure.addSuppressed(cleanup)
+                }
+            }
+            throw failure
+        }
+    }
+
+    /** Stops a start that did not complete, draining what its routes received, and reports why it failed. */
+    private suspend fun startupFailed(failure: Throwable): RouterResult {
+        val startupFailure = if (failure is StartupFailure) requireNotNull(failure.cause) else failure
+        val closeFailures =
+            withContext(NonCancellable) {
+                listOfNotNull(
+                    try {
+                        (shutdownStarted() as? RouterResult.Failure)?.error?.cause
+                    } catch (cleanup: Throwable) {
+                        cleanup
+                    },
+                )
+            }
+        val exceptional =
+            (listOf(failure) + closeFailures)
+                .firstNotNullOfOrNull { it.findExceptional() }
+        if (exceptional != null) {
+            (listOf(startupFailure) + closeFailures).forEach { if (it !== exceptional) exceptional.addSuppressed(it) }
+            throw exceptional
+        }
+        closeFailures.forEach { if (it !== startupFailure) startupFailure.addSuppressed(it) }
+        return RouterResult.Failure(RouterError.Startup(startupFailure))
+    }
+
+    /** Closes the subscriptions of a start that did not complete and drains the messages they already accepted. */
+    private suspend fun shutdownStarted(): RouterResult {
+        val (owned, result) = beginShutdown(starting = true)
+        if (owned) performShutdown(result, drain = true)
+        return result.await()
     }
 
     /**
@@ -475,10 +499,11 @@ class CommunicatorRouter internal constructor(
         return result.await()
     }
 
-    private suspend fun beginShutdown(): Pair<Boolean, CompletableDeferred<RouterResult>> =
+    /** Claims the shutdown, or joins the one in progress; only the router itself may stop a start in progress. */
+    private suspend fun beginShutdown(starting: Boolean = false): Pair<Boolean, CompletableDeferred<RouterResult>> =
         lifecycle.withLock {
             completion?.let { return@withLock false to it }
-            check(state != RouterState.STARTING) { "Router is starting" }
+            check(starting || state != RouterState.STARTING) { "Router is starting" }
             mutableState.value = RouterState.STOPPING
             val deferred = CompletableDeferred<RouterResult>()
             completion = deferred
@@ -631,7 +656,7 @@ class CommunicatorRouter internal constructor(
                             }
 
                             TransportDelivery.Completed -> {
-                                if (state == RouterState.RUNNING) {
+                                if (state == RouterState.STARTING || state == RouterState.RUNNING) {
                                     terminalRouteShutdown(route, RouteCompleted(route.pattern.value))
                                 }
                                 return@collect
@@ -734,7 +759,7 @@ class CommunicatorRouter internal constructor(
 
     private suspend fun shutdownRouter() =
         withContext(NonCancellable) {
-            val (owned, result) = beginShutdown()
+            val (owned, result) = beginShutdown(starting = true)
             if (owned) {
                 performShutdown(result, drain = false)
             } else {
@@ -1017,6 +1042,8 @@ class CommunicatorRouter internal constructor(
     private class StartupFailure(
         cause: Throwable,
     ) : RuntimeException(cause)
+
+    private class RouterStoppedWhileStarting : RuntimeException("Router stopped while its routes were starting")
 
     private class RouteCompleted(
         pattern: String,

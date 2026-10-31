@@ -77,18 +77,20 @@ val routerEvent =
         ErrorSlug.of("router-event-failed"),
     )
 
-/** Routes holding [routerEvent] and a second event on `router.other.{id}.get`. */
+/** Event contract on `other.{id}.get`, a second route beside the `router.{id}.get` ones. */
+val routerOtherEvent =
+    EventContract(
+        OperationName.of("router.other"),
+        "other.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { TestTarget(it.require("id")) }),
+        stringPayloadCodec,
+        ErrorSlug.of("router-other-failed"),
+    )
+
+/** Routes holding [routerEvent] and [routerOtherEvent]. */
 fun twoEventRoutes(): CommunicatorRoutes =
     communicatorRoutes {
         event(routerEvent) { }
-        event(
-            EventContract(
-                OperationName.of("router.other"),
-                "other.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { TestTarget(it.require("id")) }),
-                stringPayloadCodec,
-                ErrorSlug.of("router-other-failed"),
-            ),
-        ) { }
+        event(routerOtherEvent) { }
     }
 
 /** A delivery of [payload] to [address], with an optional reply address, as the transport would hand it over. */

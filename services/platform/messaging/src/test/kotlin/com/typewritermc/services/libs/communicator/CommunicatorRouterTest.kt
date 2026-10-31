@@ -27,6 +27,7 @@ import com.typewritermc.services.libs.communicator.testing.deliveryOf
 import com.typewritermc.services.libs.communicator.testing.routerAddress
 import com.typewritermc.services.libs.communicator.testing.routerEvent
 import com.typewritermc.services.libs.communicator.testing.routerFixture
+import com.typewritermc.services.libs.communicator.testing.routerOtherEvent
 import com.typewritermc.services.libs.communicator.testing.stringPayloadCodec
 import com.typewritermc.services.libs.communicator.testing.twoEventRoutes
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
@@ -42,6 +43,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
@@ -251,6 +253,71 @@ val CommunicatorRouterTest by testSuite {
             fixture.use { fixture ->
                 fixture.fake.failSubscribeAt(2, TransportError.Unavailable())
                 (fixture.router.start() is RouterResult.Failure) shouldBe true
+                fixture.router.state shouldBe RouterState.STOPPED
+                fixture.fake.activeSubscriptionCount shouldBe 0
+            }
+        }
+    }
+
+    test("a route answers a request as soon as it is subscribed, while later routes still subscribe") {
+        runTest {
+            val routes =
+                communicatorRoutes {
+                    unary(routerUnary) { call -> "answered ${call.request}" }
+                    event(routerOtherEvent) { }
+                }
+            routerFixture(routes, this).use { fixture ->
+                val laterRoute = CompletableDeferred<Unit>()
+                fixture.fake.openSubscriptionWith(2) { laterRoute.await() }
+                val started = async { fixture.router.start() }
+                runCurrent()
+
+                fixture.fake.deliver(deliveryOf("router.alpha.get", payload = "request", replyTo = "reply.alpha"))
+                runCurrent()
+
+                started.isCompleted shouldBe false
+                val reply = fixture.fake.publications.single()
+                reply.address shouldBe MessageAddress.of("reply.alpha")
+                routerUnary.responseCodec.decode(reply.payload) shouldBe "answered request"
+                laterRoute.complete(Unit)
+                started.await() shouldBe RouterResult.Success
+                fixture.router.stop() shouldBe RouterResult.Success
+            }
+        }
+    }
+
+    test("requests a route received before startup failed are still answered") {
+        runTest {
+            val handler = CompletableDeferred<Unit>()
+            val routes =
+                communicatorRoutes {
+                    unary(routerUnary, parallelism = 1) { call ->
+                        handler.await()
+                        "answered ${call.request}"
+                    }
+                    event(routerOtherEvent) { }
+                }
+            routerFixture(routes, this).use { fixture ->
+                val laterRoute = CompletableDeferred<Unit>()
+                fixture.fake.openSubscriptionWith(2) { laterRoute.await() }
+                fixture.fake.failSubscribeAt(2, TransportError.Unavailable())
+                val started = async { fixture.router.start() }
+                runCurrent()
+                fixture.fake.deliver(deliveryOf("router.alpha.get", payload = "first", replyTo = "reply.alpha"))
+                fixture.fake.deliver(deliveryOf("router.beta.get", payload = "second", replyTo = "reply.beta"))
+                runCurrent()
+
+                laterRoute.complete(Unit)
+                runCurrent()
+                handler.complete(Unit)
+
+                started
+                    .await()
+                    .shouldBeInstanceOf<RouterResult.Failure>()
+                    .error
+                    .shouldBeInstanceOf<RouterError.Startup>()
+                fixture.fake.publications.associate { it.address.value to routerUnary.responseCodec.decode(it.payload) } shouldBe
+                    mapOf("reply.alpha" to "answered first", "reply.beta" to "answered second")
                 fixture.router.state shouldBe RouterState.STOPPED
                 fixture.fake.activeSubscriptionCount shouldBe 0
             }
