@@ -88,46 +88,15 @@ mod tests {
     use otel_wasi::WasiError as _;
 
     use super::*;
-    use crate::skir_client::{Method, Serializer};
     use crate::skirout::base::access::v1::permission::{
         EntityPermissionGrant, GetEntityPermissionRequest, GetEntityPermissionResponse,
-        get_entity_permission_method,
     };
     use crate::skirout::base::service::v1::lifecycle::ServiceHeartbeatNotification;
-    use crate::transport::test_support::{block_on, nats_message};
+    use crate::transport::test_support::{
+        HeartbeatRoute, PermissionRoute, block_on, nats_message,
+        permission_request_body as request_body,
+    };
     use crate::transport::{ServiceScope, SubjectToken};
-
-    struct PermissionRoute;
-
-    impl RequestRoute for PermissionRoute {
-        const REPLY_CREDIT: bool = false;
-
-        type Scope = ServiceScope;
-        type Request = GetEntityPermissionRequest;
-        type Response = GetEntityPermissionResponse;
-
-        fn method() -> &'static Method<Self::Request, Self::Response> {
-            get_entity_permission_method()
-        }
-    }
-
-    struct HeartbeatRoute;
-
-    impl EventRoute for HeartbeatRoute {
-        type Scope = ServiceScope;
-        type Event = ServiceHeartbeatNotification;
-
-        fn serializer() -> Serializer<Self::Event> {
-            ServiceHeartbeatNotification::serializer()
-        }
-    }
-
-    fn request_body() -> Vec<u8> {
-        GetEntityPermissionRequest::serializer().to_bytes(&GetEntityPermissionRequest {
-            jwt_claims: b"claims".to_vec(),
-            ..Default::default()
-        })
-    }
 
     #[test]
     fn handle_passes_scope_and_request_to_the_handler() {

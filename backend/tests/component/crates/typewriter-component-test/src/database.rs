@@ -249,23 +249,6 @@ impl<F: FixtureDeclaration> TypewriterFixtureBuilderExt<F> for FixtureBuilder<F>
 mod tests {
     use super::*;
 
-    async fn database(preset: SchemaPreset) -> Result<DatabaseHandle> {
-        let unique = Uuid::new_v4().simple().to_string();
-        let key = ConnectionKey::from_config(&std::collections::HashMap::from([
-            ("url".into(), "memory".into()),
-            ("namespace".into(), format!("test_{unique}")),
-            ("database".into(), "test".into()),
-        ]))?;
-        let handle = DatabaseHandle {
-            plugin: Arc::new(WasmcloudSurrealdb::new()),
-            key,
-        };
-        for file in preset.files()? {
-            handle.execute(file.sql).await?;
-        }
-        Ok(handle)
-    }
-
     #[tokio::test]
     async fn every_preset_applies_to_a_fresh_database() -> Result<()> {
         for preset in [
@@ -274,7 +257,19 @@ mod tests {
             SchemaPreset::Registration,
             SchemaPreset::Full,
         ] {
-            database(preset).await?;
+            let unique = Uuid::new_v4().simple().to_string();
+            let key = ConnectionKey::from_config(&std::collections::HashMap::from([
+                ("url".into(), "memory".into()),
+                ("namespace".into(), format!("test_{unique}")),
+                ("database".into(), "test".into()),
+            ]))?;
+            let database = DatabaseHandle {
+                plugin: Arc::new(WasmcloudSurrealdb::new()),
+                key,
+            };
+            for file in preset.files()? {
+                database.execute(file.sql).await?;
+            }
         }
         Ok(())
     }

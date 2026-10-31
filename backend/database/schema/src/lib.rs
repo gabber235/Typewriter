@@ -6,6 +6,8 @@
 //! repository at run time.
 
 mod manifest;
+#[cfg(test)]
+mod test_support;
 
 use std::sync::OnceLock;
 

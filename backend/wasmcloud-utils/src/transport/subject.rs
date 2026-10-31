@@ -164,6 +164,7 @@ mod tests {
     use proptest::test_runner::{Config, RngSeed};
 
     use super::*;
+    use crate::transport::test_support::identifier;
     use crate::transport::{OutboundEventRoute, OutboundRequestRoute};
     use crate::transport_routes::{ServiceBindingQueryRoute, UserOrganizationsWatchRoute};
 
@@ -195,18 +196,6 @@ mod tests {
         assert!(UserScope::from_tokens("a.b").is_err());
         assert!(OrganizationActorScope::from_tokens("ada", "*").is_err());
         assert!(InternalComponentScope::from_tokens().is_ok());
-    }
-
-    /// Identifiers as the backend meets them: generated uuids, slugs, and arbitrary text from an
-    /// identity provider or a client.
-    fn identifier() -> impl Strategy<Value = String> {
-        prop_oneof![
-            any::<u128>().prop_map(|bits| uuid::Uuid::from_u128(bits).simple().to_string()),
-            any::<u128>().prop_map(|bits| uuid::Uuid::from_u128(bits).to_string()),
-            "[a-z0-9_:@|-]{1,40}",
-            any::<String>(),
-            "[a-z]{0,4}[.*> \t\n{}\u{a0}\u{2028}][a-z]{0,4}",
-        ]
     }
 
     proptest! {

@@ -51,6 +51,9 @@ pub mod config;
 /// JWT parsing, JWKS retrieval, signature verification, and claim validation.
 pub mod jwt;
 
+#[cfg(test)]
+mod test_support;
+
 struct AuthCallout;
 wasmcloud_utils::export!(AuthCallout);
 

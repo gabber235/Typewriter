@@ -4,36 +4,9 @@ use std::cell::Cell;
 
 use otel_wasi::{Error, WasiError as _};
 
-use crate::skirout::base::service::v1::lifecycle::ServiceHeartbeatNotification;
 use crate::transport::ServiceScope;
-use crate::transport::test_support::{block_on, nats_message};
-use crate::transport_routes::service_registration::{Handlers, SUBSCRIPTIONS, dispatch};
-
-/// Service registration handlers where only the heartbeat handler may run.
-macro_rules! heartbeat_only {
-    ($heartbeat:expr) => {
-        Handlers {
-            service_binding_query: async |_, _| unreachable!(),
-            registration_lease_ensure: async |_, _| unreachable!(),
-            service_messaging_scope: async |_, _| unreachable!(),
-            service_bind: async |_, _| unreachable!(),
-            organization_services_watch: async |_, _| unreachable!(),
-            organization_service_update: async |_, _| unreachable!(),
-            service_unbind: async |_, _| unreachable!(),
-            service_topology_configure: async |_, _| unreachable!(),
-            organization_topology_watch: async |_, _| unreachable!(),
-            service_host_register: async |_, _| unreachable!(),
-            host_execution_watch: async |_, _| unreachable!(),
-            host_execution_report: async |_, _| unreachable!(),
-            service_heartbeat: $heartbeat,
-            service_shutdown: async |_, _| unreachable!(),
-        }
-    };
-}
-
-fn heartbeat_body() -> Vec<u8> {
-    ServiceHeartbeatNotification::serializer().to_bytes(&ServiceHeartbeatNotification::default())
-}
+use crate::transport::test_support::{block_on, heartbeat_body, heartbeat_only, nats_message};
+use crate::transport_routes::service_registration::{SUBSCRIPTIONS, dispatch};
 
 #[test]
 fn unmatched_subject_reports_one_slug() {

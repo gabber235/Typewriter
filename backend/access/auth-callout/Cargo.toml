@@ -26,7 +26,7 @@ otel-wasi.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-bolero.workspace = true
+proptest.workspace = true
 
 [lints]
 workspace = true

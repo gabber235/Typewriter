@@ -56,7 +56,6 @@ quote = "1"
 syn = { version = "2", features = ["full"] }
 trybuild = "1"
 proptest = "1"
-bolero = "0.13"
 
 surrealdb-types = "3.2.4"
 

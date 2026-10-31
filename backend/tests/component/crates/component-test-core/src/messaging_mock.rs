@@ -435,14 +435,7 @@ impl fmt::Display for MessagingOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn message(subject: &str, body: &[u8]) -> HostMessage {
-        HostMessage {
-            subject: subject.into(),
-            reply_to: None,
-            body: body.into(),
-        }
-    }
+    use crate::test_support::host_message;
 
     #[test]
     fn nats_wildcards_match_tokens() {
@@ -456,7 +449,7 @@ mod tests {
     fn unexpected_unmet_counts_and_redaction_are_reported() {
         let mock = MessagingMock::new(vec![b"secret".to_vec()]);
         mock.expect_publish("ok").body(b"body".to_vec()).times(2);
-        mock.record_publish(&message("bad", b"secret"));
+        mock.record_publish(&host_message("bad", b"secret"));
         let error = mock.verify().unwrap_err().to_string();
         assert!(error.contains("unexpected"));
         assert!(error.contains("observed 0"));
@@ -469,8 +462,8 @@ mod tests {
         let mock = MessagingMock::new(Vec::new());
         mock.expect_publish("event");
         let arranging = mock.arranging();
-        mock.record_publish(&message("event", b"setup"));
-        mock.record_publish(&message("other", b"setup"));
+        mock.record_publish(&host_message("event", b"setup"));
+        mock.record_publish(&host_message("other", b"setup"));
         drop(arranging);
         assert!(
             mock.verify()
@@ -479,7 +472,7 @@ mod tests {
                 .contains("observed 0")
         );
 
-        mock.record_publish(&message("event", b"test"));
+        mock.record_publish(&host_message("event", b"test"));
         assert!(mock.verify().is_ok());
     }
 
@@ -488,7 +481,7 @@ mod tests {
         let mock = MessagingMock::new(Vec::new());
         mock.expect_publish(">").times(TRANSCRIPT_LIMIT + 1);
         for index in 0..=TRANSCRIPT_LIMIT {
-            mock.record_publish(&message(&format!("event.{index}"), b"body"));
+            mock.record_publish(&host_message(&format!("event.{index}"), b"body"));
         }
         assert_eq!(mock.transcript().len(), TRANSCRIPT_LIMIT);
     }

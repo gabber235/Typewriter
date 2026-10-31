@@ -220,88 +220,24 @@ fn render_key_values<'a>(
 
 #[cfg(test)]
 mod tests {
-    use std::{borrow::Cow, panic::AssertUnwindSafe, thread, time::SystemTime};
-
-    use opentelemetry::trace::{
-        Event, Link, SpanContext, SpanId, SpanKind, Status, TraceFlags, TraceId, TraceState,
-    };
-    use opentelemetry::{InstrumentationScope, KeyValue};
-    use opentelemetry_sdk::trace::{SpanEvents, SpanLinks};
+    use std::{panic::AssertUnwindSafe, thread};
 
     use super::*;
-
-    fn resource(component: &str) -> Resource {
-        Resource::builder_empty()
-            .with_attribute(KeyValue::new(
-                "wasmcloud.component.name",
-                component.to_string(),
-            ))
-            .build()
-    }
-
-    fn span(name: &'static str, start_offset: u64) -> SpanData {
-        let start_time = SystemTime::UNIX_EPOCH + Duration::from_secs(start_offset);
-        let event_context = SpanContext::new(
-            TraceId::from(0x2222),
-            SpanId::from(0x22),
-            TraceFlags::SAMPLED,
-            true,
-            TraceState::default(),
-        );
-        let mut events = SpanEvents::default();
-        events.events.push(Event::new(
-            "failure",
-            start_time + Duration::from_millis(10),
-            vec![KeyValue::new("exception.slug", "query-failed")],
-            2,
-        ));
-        events.dropped_count = 3;
-        let mut links = SpanLinks::default();
-        links.links.push(Link::new(
-            event_context,
-            vec![KeyValue::new("link.type", "retry")],
-            4,
-        ));
-        links.dropped_count = 5;
-        SpanData {
-            span_context: SpanContext::new(
-                TraceId::from(0x1111),
-                SpanId::from(start_offset + 1),
-                TraceFlags::SAMPLED,
-                false,
-                TraceState::default(),
-            ),
-            parent_span_id: SpanId::from(0x10),
-            parent_span_is_remote: true,
-            span_kind: SpanKind::Server,
-            name: Cow::Borrowed(name),
-            start_time,
-            end_time: start_time + Duration::from_millis(25),
-            attributes: vec![KeyValue::new("request.id", "secret-request")],
-            dropped_attributes_count: 1,
-            events,
-            links,
-            status: Status::error("database failed"),
-            instrumentation_scope: InstrumentationScope::builder("guest-sdk")
-                .with_version("1.2.3")
-                .with_schema_url("https://example.test/schema")
-                .with_attributes([KeyValue::new("scope.key", "scope-value")])
-                .build(),
-        }
-    }
-
-    fn submit(capture: &TelemetryCapture, resource: Resource, span: SpanData) {
-        let processor = capture.create(&resource);
-        processor.on_end(span);
-        processor.force_flush().unwrap();
-        processor.shutdown().unwrap();
-    }
+    use crate::test_support::{component_resource, failed_span, submit_span};
 
     #[test]
     fn renders_complete_spans_in_chronological_order() {
         let capture = TelemetryCapture::default();
-        submit(&capture, resource("billing"), span("later", 20));
-        submit(&capture, resource("orders"), span("earlier", 10));
+        submit_span(
+            &capture,
+            component_resource("billing"),
+            failed_span("later", 20),
+        );
+        submit_span(
+            &capture,
+            component_resource("orders"),
+            failed_span("earlier", 10),
+        );
 
         let rendered = capture.render().unwrap().join("\n");
 
@@ -335,10 +271,10 @@ mod tests {
     fn keeps_latest_spans_and_reports_omitted_count() {
         let capture = TelemetryCapture::default();
         for index in 0..SPAN_LIMIT + 2 {
-            submit(
+            submit_span(
                 &capture,
-                resource("component"),
-                span(
+                component_resource("component"),
+                failed_span(
                     Box::leak(format!("span-{index}").into_boxed_str()),
                     index as u64,
                 ),
@@ -359,11 +295,23 @@ mod tests {
         let second = TelemetryCapture::default();
         let first_task = {
             let capture = first.clone();
-            thread::spawn(move || submit(&capture, resource("first"), span("first", 1)))
+            thread::spawn(move || {
+                submit_span(
+                    &capture,
+                    component_resource("first"),
+                    failed_span("first", 1),
+                )
+            })
         };
         let second_task = {
             let capture = second.clone();
-            thread::spawn(move || submit(&capture, resource("second"), span("second", 2)))
+            thread::spawn(move || {
+                submit_span(
+                    &capture,
+                    component_resource("second"),
+                    failed_span("second", 2),
+                )
+            })
         };
         first_task.join().unwrap();
         second_task.join().unwrap();

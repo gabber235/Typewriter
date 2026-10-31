@@ -77,14 +77,7 @@ mod tests {
         service::{ServiceRole, ServiceRole_Custom, ServiceStatus},
         topology::{ChildRuntimeStatus, EngineTarget, HostRuntimeStatus},
     };
-
-    fn stored<T: super::SkirType>(value: T) -> serde_json::Value {
-        serde_json::to_value(SkirDb(value)).unwrap()
-    }
-
-    fn loaded<T: super::SkirType>(json: serde_json::Value) -> Result<T, serde_json::Error> {
-        serde_json::from_value::<SkirDb<T>>(json).map(|SkirDb(value)| value)
-    }
+    use crate::test_support::{loaded, stored};
 
     #[test]
     fn enum_constants_store_their_skir_names() {

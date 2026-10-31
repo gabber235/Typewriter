@@ -441,16 +441,8 @@ impl MockRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::mock_request;
     use serde_json::json;
-
-    fn request(body: impl Into<Bytes>) -> MockRequest {
-        MockRequest {
-            method: Method::POST,
-            uri: "http://mock.test/items?a=1".parse().unwrap(),
-            headers: HeaderMap::new(),
-            body: body.into(),
-        }
-    }
 
     #[tokio::test]
     async fn matches_json_headers_counts_and_response() {
@@ -470,7 +462,7 @@ mod tests {
             .unwrap()
             .register()
             .unwrap();
-        let mut value = request(br#"{"a":1}"#.as_slice());
+        let mut value = mock_request(br#"{"a":1}"#.as_slice());
         value.headers.insert(
             http::header::ACCEPT,
             http::HeaderValue::from_static("application/json"),
@@ -489,7 +481,7 @@ mod tests {
         mock.expect().get().register().unwrap();
         assert!(mock.verify().unwrap_err().to_string().contains("unmet"));
         assert!(
-            mock.dispatch(request(Bytes::new()))
+            mock.dispatch(mock_request(Bytes::new()))
                 .await
                 .unwrap_err()
                 .to_string()
@@ -504,7 +496,7 @@ mod tests {
         mock.expect().post().delay(delay).register().unwrap();
 
         // The outgoing handler waits this long before it answers the component.
-        let response = mock.dispatch(request("body")).await.unwrap();
+        let response = mock.dispatch(mock_request("body")).await.unwrap();
 
         assert_eq!(response.delay, delay);
     }
@@ -518,7 +510,7 @@ mod tests {
             .register()
             .unwrap();
 
-        let response = mock.dispatch(request("failure")).await.unwrap();
+        let response = mock.dispatch(mock_request("failure")).await.unwrap();
 
         assert_eq!(response.failure.as_deref(), Some("reset"));
     }
@@ -536,7 +528,7 @@ mod tests {
         let mock = HttpMock::new("mock.test".into());
         mock.redact("body-secret");
         mock.expect().post().register().unwrap();
-        let mut secret = request("body-secret");
+        let mut secret = mock_request("body-secret");
         secret.headers.insert(
             http::header::AUTHORIZATION,
             http::HeaderValue::from_static("token"),
@@ -564,7 +556,7 @@ mod tests {
             })
         });
         assert_eq!(
-            mock.dispatch(request("yes")).await.unwrap().status,
+            mock.dispatch(mock_request("yes")).await.unwrap().status,
             StatusCode::ACCEPTED
         );
     }

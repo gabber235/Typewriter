@@ -114,26 +114,7 @@ impl TryFrom<RawIssuerConfig> for IssuerConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn issuer(overrides: serde_json::Value) -> serde_json::Value {
-        let mut issuer = serde_json::json!({
-            "id": "panel",
-            "issuer_url": "https://issuer.example/application/panel/",
-            "jwks_url": "https://keys.example:8443/jwks/keys?tenant=panel",
-            "audiences": ["typewriter-panel"],
-            "require_expiration": true,
-            "clock_skew_seconds": 30,
-            "nats_account_key": "account"
-        });
-        for (key, value) in overrides.as_object().expect("overrides are an object") {
-            issuer[key] = value.clone();
-        }
-        issuer
-    }
-
-    fn parse(values: Vec<serde_json::Value>) -> Result<Vec<IssuerConfig>, String> {
-        parse_issuer_configs(&serde_json::to_string(&values).expect("config serializes"))
-    }
+    use crate::test_support::{issuer_json as issuer, parse_issuers as parse};
 
     #[test]
     fn parses_typed_urls_and_duration() {

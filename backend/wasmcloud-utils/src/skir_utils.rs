@@ -550,14 +550,7 @@ impl From<i32> for Color {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn record_id(table: &str) -> RecordId {
-        RecordId {
-            table: table.to_owned(),
-            key: RecordIdKey::String("id".to_owned()),
-            _unrecognized: None,
-        }
-    }
+    use crate::test_support::record_id;
 
     #[test]
     fn string_record_keys_preserve_raw_business_identity() {
@@ -581,17 +574,20 @@ mod tests {
 
     #[test]
     fn single_record_id_reports_only_a_wrong_table() {
-        assert!(record_id("user").invalid_tables("user").is_empty());
-        assert_eq!(record_id("service").invalid_tables("user"), ["service"]);
+        assert!(record_id("user", "id").invalid_tables("user").is_empty());
+        assert_eq!(
+            record_id("service", "id").invalid_tables("user"),
+            ["service"]
+        );
     }
 
     #[test]
     fn record_id_list_sorts_and_deduplicates_wrong_tables() {
         let ids = vec![
-            record_id("user"),
-            record_id("zebra"),
-            record_id("service"),
-            record_id("zebra"),
+            record_id("user", "id"),
+            record_id("zebra", "id"),
+            record_id("service", "id"),
+            record_id("zebra", "id"),
         ];
 
         assert_eq!(ids.invalid_tables("user"), ["service", "zebra"]);

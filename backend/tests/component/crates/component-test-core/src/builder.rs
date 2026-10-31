@@ -439,29 +439,7 @@ impl<E: FixtureExtension> ErasedExtension for ExtensionAdapter<E> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use component_test_model::{ComponentBuild, FixtureDescriptor};
-
-    struct Fixture;
-    impl FixtureDeclaration for Fixture {
-        const DESCRIPTOR: FixtureDescriptor = FixtureDescriptor {
-            id: "fixture",
-            primary: ComponentBuild::primary("component", "component"),
-            dependencies: &[],
-        };
-    }
-    struct Endpoint;
-
-    struct MessagingFixture;
-    impl FixtureDeclaration for MessagingFixture {
-        const DESCRIPTOR: FixtureDescriptor = FixtureDescriptor {
-            id: "messaging-fixture",
-            primary: ComponentBuild::primary("http-component", "http_component"),
-            dependencies: &[ComponentBuild::dependency(
-                "messaging-component",
-                "messaging_component",
-            )],
-        };
-    }
+    use crate::test_support::{Endpoint, Fixture, MessagingFixture};
 
     #[test]
     fn outgoing_http_preserves_https_policy() {

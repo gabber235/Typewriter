@@ -1,19 +1,7 @@
-use wasmcloud_utils::skir::base::{
-    kernel::v1::record_id::{RecordId, RecordIdKey},
-    organization::v1::member::*,
-};
-use wasmcloud_utils::skir_transaction_outcome;
+mod support;
 
-#[allow(
-    clippy::large_enum_variant,
-    reason = "The test mirrors transaction outcome shapes used by generated response types"
-)]
-enum MemberUpdateOutcome {
-    Updated { member: OrganizationMember },
-    UserNotFoundError,
-    RolesNotFoundError { role_ids: Vec<RecordId> },
-    FounderRoleRequiredError,
-}
+use support::{MemberUpdateOutcome, member_update_response as map_outcome, record_id};
+use wasmcloud_utils::skir::base::organization::v1::member::*;
 
 #[test]
 fn returns_success_value() {
@@ -78,39 +66,4 @@ fn maps_payloadless_error_variant() {
         response,
         UpdateOrganizationMemberRolesResponse::FounderRoleRequiredError(_)
     ));
-}
-
-fn map_outcome(
-    outcome: MemberUpdateOutcome,
-    user_id: RecordId,
-) -> Result<UpdateOrganizationMemberRolesResponse, otel_wasi::Error> {
-    let member = skir_transaction_outcome!(
-        UpdateOrganizationMemberRolesResponse,
-        outcome,
-        success MemberUpdateOutcome::Updated { member } => member,
-        errors {
-            MemberUpdateOutcome::UserNotFoundError => {
-                user_ids: vec![user_id]
-            },
-            MemberUpdateOutcome::RolesNotFoundError { role_ids } => {
-                role_ids
-            },
-            MemberUpdateOutcome::FounderRoleRequiredError => {},
-        }
-    );
-
-    Ok(UpdateOrganizationMemberRolesResponse::Success(Box::new(
-        UpdateOrganizationMemberRolesResponse_Success {
-            members: vec![member],
-            ..Default::default()
-        },
-    )))
-}
-
-fn record_id(table: &str, key: &str) -> RecordId {
-    RecordId {
-        table: table.to_owned(),
-        key: RecordIdKey::String(key.to_owned()),
-        _unrecognized: None,
-    }
 }

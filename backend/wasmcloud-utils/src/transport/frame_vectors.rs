@@ -177,44 +177,9 @@ fn case(name: &str, chunk_bytes: usize, frames: &[PayloadFrame], expect: &Value)
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use super::*;
     use crate::transport::reference_assembler::{Outcome, ReferenceAssembler};
-
-    const FRAMES_JSON: &str = "../../skir-src/transport/v1/fixtures/frames.json";
-
-    fn text(value: &Value) -> &str {
-        value.as_str().expect("a vector field is a string")
-    }
-
-    fn outcome(expect: &Value) -> Outcome {
-        if let Some(bytes) = expect.get("bytes") {
-            Outcome::Complete(
-                STANDARD
-                    .decode(text(bytes))
-                    .expect("expected bytes are base64"),
-            )
-        } else if expect.get("pending").is_some() {
-            Outcome::Waiting
-        } else if expect.get("rejected").is_some() {
-            Outcome::Rejected
-        } else {
-            Outcome::Failed(text(&expect["failure"]).to_owned())
-        }
-    }
-
-    /// The generated file, which every transport reads; `cargo xtask generate` writes it.
-    fn written_vectors() -> Value {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(FRAMES_JSON);
-        let json = std::fs::read_to_string(&path).unwrap_or_else(|error| {
-            panic!(
-                "cannot read {}; run cargo xtask generate: {error}",
-                path.display()
-            )
-        });
-        serde_json::from_str(&json).expect("the frame vectors are JSON")
-    }
+    use crate::transport::test_support::{vector_outcome, vector_text as text, written_vectors};
 
     #[test]
     fn the_written_vectors_are_what_this_framer_plans() {
@@ -253,7 +218,7 @@ mod tests {
                 earlier.iter().all(|outcome| *outcome == Outcome::Waiting),
                 "{name}: {outcomes:?}"
             );
-            assert_eq!(*last, outcome(&case["expect"]), "{name}");
+            assert_eq!(*last, vector_outcome(&case["expect"]), "{name}");
         }
     }
 }

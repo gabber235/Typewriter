@@ -51,6 +51,8 @@ pub use skir_response_trait::{
 };
 
 pub mod skir_utils;
+#[cfg(test)]
+pub(crate) mod test_support;
 
 #[path = "transport_routes/skirout/mod.rs"]
 #[allow(clippy::box_default, clippy::too_many_lines)]

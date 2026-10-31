@@ -9,70 +9,18 @@ use proptest::sample::Index;
 use proptest::test_runner::{Config, RngSeed};
 
 use super::frame::{PayloadFrame, PayloadPlan, plan_within};
-use super::reference_assembler::{Outcome, ReferenceAssembler};
+use super::reference_assembler::Outcome;
+use super::test_support::{
+    PROPERTY_MAX_BYTES as MAX_BYTES, completions, deliver, framed, framed_body,
+};
 
-/// The receiver's ceiling; bodies stay below it so every plan is framed or single.
-const MAX_BYTES: usize = 4096;
-
-fn config() -> Config {
-    Config {
+proptest! {
+    #![proptest_config(Config {
         cases: 256,
         rng_seed: RngSeed::Fixed(0x7970_6577_7269_7465),
         failure_persistence: None,
         ..Config::default()
-    }
-}
-
-/// A body, a chunk size it spans with at least two frames, and an order to deliver them in.
-fn framed_body() -> impl Strategy<Value = (Vec<u8>, usize, Vec<usize>)> {
-    (1usize..64)
-        .prop_flat_map(|chunk| {
-            (
-                proptest::collection::vec(any::<u8>(), chunk + 1..=(chunk * 40).min(MAX_BYTES)),
-                Just(chunk),
-            )
-        })
-        .prop_flat_map(|(body, chunk)| {
-            let order: Vec<usize> = (0..body.len().div_ceil(chunk)).collect();
-            (Just(body), Just(chunk), Just(order).prop_shuffle())
-        })
-}
-
-fn frames_of(body: Vec<u8>, chunk: usize) -> Vec<PayloadFrame> {
-    match plan_within(body, chunk, MAX_BYTES) {
-        PayloadPlan::Framed { frames, .. } => frames,
-        plan => panic!("a body above one chunk plans as frames, not {plan:?}"),
-    }
-}
-
-/// Every outcome of delivering `frames` in order to a fresh receiver.
-fn deliver<'a>(chunk: usize, frames: impl IntoIterator<Item = &'a PayloadFrame>) -> Vec<Outcome> {
-    let mut receiver = ReferenceAssembler::new(chunk, MAX_BYTES);
-    frames
-        .into_iter()
-        .map(|frame| {
-            let headers: Vec<(&str, &str)> = frame
-                .headers
-                .iter()
-                .map(|(name, value)| (*name, value.as_str()))
-                .collect();
-            receiver.accept(&headers, &frame.body)
-        })
-        .collect()
-}
-
-fn completions(outcomes: &[Outcome]) -> Vec<&[u8]> {
-    outcomes
-        .iter()
-        .filter_map(|outcome| match outcome {
-            Outcome::Complete(bytes) => Some(bytes.as_slice()),
-            _ => None,
-        })
-        .collect()
-}
-
-proptest! {
-    #![proptest_config(config())]
+    })]
 
     #[test]
     fn a_body_within_one_chunk_arrives_as_itself(
@@ -92,7 +40,7 @@ proptest! {
         (body, chunk, order) in framed_body(),
         duplicates in proptest::collection::vec((any::<Index>(), any::<Index>()), 0..6),
     ) {
-        let frames = frames_of(body.clone(), chunk);
+        let (_, frames) = framed(body.clone(), chunk);
         let mut delivered: Vec<&PayloadFrame> = order.iter().map(|&index| &frames[index]).collect();
         for (frame, position) in duplicates {
             let duplicate = &frames[frame.index(frames.len())];
@@ -112,7 +60,7 @@ proptest! {
         (body, chunk, order) in framed_body(),
         dropped in any::<Index>(),
     ) {
-        let frames = frames_of(body, chunk);
+        let (_, frames) = framed(body, chunk);
         let missing = order[dropped.index(order.len())];
         let delivered = order.iter().filter(|&&index| index != missing).map(|&index| &frames[index]);
         let outcomes = deliver(chunk, delivered);
@@ -126,7 +74,7 @@ proptest! {
         byte in any::<Index>(),
         flip in 1u8..=255,
     ) {
-        let mut frames = frames_of(body, chunk);
+        let (_, mut frames) = framed(body, chunk);
         let frame = altered.index(frames.len());
         let position = byte.index(frames[frame].body.len());
         frames[frame].body[position] ^= flip;

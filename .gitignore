@@ -191,3 +191,4 @@ services/sdk/typewriter-api/src/main/skirout/
 
 # SwiftPM build cache from macOS desktop builds.
 /.build/
+*.profraw

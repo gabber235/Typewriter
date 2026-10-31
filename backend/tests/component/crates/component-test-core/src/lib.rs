@@ -16,6 +16,8 @@ mod nats;
 mod outgoing;
 mod runtime;
 mod telemetry;
+#[cfg(test)]
+mod test_support;
 
 pub use http_mock::{ExpectationBuilder, HttpMock, MockRequest, MockResponse};
 pub use messaging_mock::{

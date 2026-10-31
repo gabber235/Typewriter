@@ -43,7 +43,7 @@ pub struct Jwks {
 type FlexibleJwt = JsonWebSignature<Compact, FlexibleClaims>;
 
 #[derive(Debug, Clone, Deserialize)]
-struct FlexibleClaims {
+pub(crate) struct FlexibleClaims {
     #[serde(rename = "iss")]
     issuer: Option<String>,
     #[serde(rename = "sub")]
@@ -155,7 +155,7 @@ pub fn validate_jwt<'c>(
 
 /// [`validate_jwt`] reading the selected issuer's JWKS from `keys`, which production fetches over
 /// HTTP from the configured URL.
-fn validate_jwt_with<'c>(
+pub(crate) fn validate_jwt_with<'c>(
     token: &str,
     configs: &'c [IssuerConfig],
     clock: &impl ValidationClock,
@@ -455,7 +455,7 @@ fn parse_jwks_response(
 /// a key's `alg` is checked as plain JSON before jose sees the key. `alg` is the only field of a
 /// key that reaches those types. Dropped keys could never match anyway, since a token's key must
 /// declare its exact algorithm. Remove this guard once a jose release with the fix is pinned.
-fn parse_jwks(body: &[u8]) -> Result<Jwks, otel_wasi::Error> {
+pub(crate) fn parse_jwks(body: &[u8]) -> Result<Jwks, otel_wasi::Error> {
     #[derive(Deserialize)]
     struct RawJwks {
         keys: Vec<serde_json::Value>,
@@ -638,43 +638,8 @@ mod fuzz;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::parse_issuer_configs;
+    use crate::test_support::{FixedClock, flexible_claims as claims, issuer};
     use jose::jwa::{Hmac, RsaSigning, RsassaPkcs1V1_5};
-    use std::time::Duration;
-
-    struct FixedClock(u64);
-
-    impl ValidationClock for FixedClock {
-        fn now(&self) -> SystemTime {
-            UNIX_EPOCH + Duration::from_secs(self.0)
-        }
-    }
-
-    fn issuer(require_expiration: bool, skew: u64) -> IssuerConfig {
-        let config = serde_json::json!([{
-            "id": "panel",
-            "issuer_url": "https://issuer.example/",
-            "jwks_url": "https://keys.example:8443/jwks?tenant=panel",
-            "audiences": ["panel", "shared"],
-            "require_expiration": require_expiration,
-            "clock_skew_seconds": skew,
-            "nats_account_key": "account"
-        }]);
-        parse_issuer_configs(&config.to_string())
-            .expect("issuer config is valid")
-            .remove(0)
-    }
-
-    fn claims() -> FlexibleClaims {
-        serde_json::from_value(serde_json::json!({
-            "iss": "https://issuer.example/",
-            "aud": "panel",
-            "exp": 1_100,
-            "nbf": 900,
-            "iat": 900
-        }))
-        .expect("claims are valid")
-    }
 
     #[test]
     fn accepts_claims_with_an_allowed_audience() {

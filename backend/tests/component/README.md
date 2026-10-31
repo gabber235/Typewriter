@@ -136,7 +136,7 @@ authorization requests and identity provider keys), `identity` (Authentik and se
 execution).
 
 A test file holds only its fixture declaration and its cases. The ast-grep rule
-`rules/rust-component-test-local-helper.yml` fails `cargo xtask check quality` on any other
+`rules/rust-test-local-helper.yml` fails `cargo xtask check quality` on any other
 function, type or impl in `suite/src`; a new helper grows this kit instead.
 
 ## Failure behavior

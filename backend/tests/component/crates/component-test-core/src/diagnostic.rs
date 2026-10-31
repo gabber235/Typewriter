@@ -28,7 +28,7 @@ pub(crate) struct DiagnosticReport {
     events: VecDeque<String>,
     failures: Vec<String>,
     redactions: Vec<String>,
-    live: bool,
+    pub(crate) live: bool,
     sink: LiveSink,
     artifacts: Vec<String>,
     otel: Vec<String>,
@@ -50,7 +50,7 @@ impl DiagnosticReport {
         )
     }
 
-    fn with_sink(
+    pub(crate) fn with_sink(
         fixture: &str,
         test: &str,
         case: Option<&str>,
@@ -186,27 +186,11 @@ impl DiagnosticReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    type Lines = Arc<Mutex<Vec<String>>>;
-
-    fn report(live: bool) -> (DiagnosticReport, Lines) {
-        let output = Lines::default();
-        let captured = output.clone();
-        let mut report = DiagnosticReport::with_sink(
-            "fixture",
-            "test",
-            Some("case"),
-            vec!["secret".into()],
-            Arc::new(move |line| captured.lock().unwrap().push(line.into())),
-        );
-        report.live = live;
-        (report, output)
-    }
+    use crate::test_support::diagnostic_report;
 
     #[test]
     fn phases_and_failures_render_in_the_order_they_happened() {
-        let (mut report, _) = report(false);
+        let (mut report, _) = diagnostic_report(false);
         report.phase("validated");
         report.fail("body failed");
         report.phase("cleaning extensions");
@@ -219,7 +203,7 @@ mod tests {
 
     #[test]
     fn only_the_newest_events_are_kept() {
-        let (mut report, _) = report(false);
+        let (mut report, _) = diagnostic_report(false);
         for index in 0..=EVENT_LIMIT {
             report.event(format!("event {index}"));
         }
@@ -232,7 +216,7 @@ mod tests {
 
     #[test]
     fn secrets_never_reach_the_report() {
-        let (mut report, _) = report(false);
+        let (mut report, _) = diagnostic_report(false);
         report.event("event secret");
         report.fail("body secret");
 
@@ -243,7 +227,7 @@ mod tests {
 
     #[test]
     fn live_output_names_the_case_and_hides_secrets() {
-        let (mut report, output) = report(true);
+        let (mut report, output) = diagnostic_report(true);
         report.event("event secret");
         report.fail("body secret");
         report.finish();
