@@ -69,6 +69,30 @@ extension RealmWorld on World {
     return subscription.read();
   }
 
+  /// Opens [resource] in an autosaving form, sets the text at [at] to
+  /// [value] and saves it; returns the form once the seeded Realm, which
+  /// holds saves, received the save and before it answers.
+  Future<RealmEditingBinding> autosaveReceived(
+    skir.ResourceId resource,
+    skir.ValueLocation at,
+    String value,
+  ) async {
+    final editing = await openRealmEditing();
+    final form = editing.form(
+      resource,
+      policy: EditorCommitPolicy.autosaveChanges,
+    )..setText("Autosave", at, value);
+    unawaited(form.save());
+    await eventually(() => expect(requireRealm.saves, isNotEmpty));
+    return form;
+  }
+
+  /// What the panel's save activity shows across all local work.
+  MutationActivityPhase get saveActivity {
+    final work = container.read(localWorkProvider);
+    return MutationActivityPhase.resolve(work.submissions, work.entries.values);
+  }
+
   /// The panel's publication view of the seeded Realm.
   RealmPublicationProvider get realmPublication => realmPublicationProvider(
     requireRealm.scope.organizationId,

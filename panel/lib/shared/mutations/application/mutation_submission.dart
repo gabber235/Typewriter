@@ -83,6 +83,30 @@ final class MutationSubmission<T> extends ChangeNotifier {
     return _active!;
   }
 
+  /// Settles an uncertain attempt with the outcome its owner learned from the
+  /// saved state, as when the saved values show whether a save landed.
+  /// Integration runs as for a received result; nothing is sent.
+  Future<SubmissionResult<T>> settle(SubmissionResult<T> known) {
+    if (_disposed) throw StateError("Submission is disposed");
+    if (sending ||
+        _result is! SubmissionUncertain<T> ||
+        known is SubmissionUncertain<T>) {
+      throw StateError(
+        "Only an uncertain attempt settles with a known outcome",
+      );
+    }
+    _active = _integrateResult(known).then((result) {
+      if (!_disposed) {
+        _result = result;
+        _active = null;
+        notifyListeners();
+      }
+      return result;
+    });
+    notifyListeners();
+    return _active!;
+  }
+
   /// Applies the captured known response again without sending the request.
   Future<SubmissionResult<T>> retryIntegration() {
     if (_disposed) throw StateError("Submission is disposed");

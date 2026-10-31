@@ -890,19 +890,65 @@ void main() {
     );
   });
 
-  test("uncertain sends retain their frozen work and never replay", () async {
+  test("an autosave whose outcome is unknown saves once the Realm answers "
+      "without it", () async {
     final world = testWorld([..._original, heldSaves]);
     final realm = world.requireRealm;
-    final workspace = await world.openRealmEditing();
-    final form = workspace.form(_resource)..setText("Rename", _name, "Local");
-    final saving = form.save();
-    await Future<void>.delayed(Duration.zero);
-    realm.saves.last.loseReply(StateError("Connection lost"));
-    await saving;
-    expect(form.phase, isA<EditGroupUncertain>());
-    expect(form.discard(), isFalse);
-    await form.save();
+    final form = await world.autosaveReceived(_resource, _name, "Local");
+    realm.saves.single.loseReply(TimeoutException("No answer in time"));
+
+    await eventually(() => expect(realm.saves, hasLength(2)));
+    realm.saves.last.confirm();
+    await eventually(() => expect(form.dirty, isFalse));
+
+    expect(
+      realm.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Local"),
+    );
+    expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
+  });
+
+  test("an autosave whose outcome is unknown is not sent again once the Realm "
+      "shows it was saved", () async {
+    final world = testWorld([..._original, heldSaves]);
+    final realm = world.requireRealm;
+    final form = await world.autosaveReceived(_resource, _name, "Local");
+    realm.saves.single.keepAndLoseReply(TimeoutException("No answer in time"));
+
+    await eventually(() => expect(form.dirty, isFalse));
+
     expect(realm.saves, hasLength(1));
+    expect(
+      form.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Local"),
+    );
+    expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
+  });
+
+  test("an autosave whose outcome is unknown asks for review when the Realm "
+      "holds other values", () async {
+    final world = testWorld([..._original, heldSaves]);
+    final realm = world.requireRealm;
+    final form = await world.autosaveReceived(_resource, _name, "Local");
+    realm.saves.single.loseReply(TimeoutException("No answer in time"));
+    realm.remoteChange(
+      (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Remote")),
+    );
+
+    await eventually(
+      () => expect(form.phase, isA<EditGroupConflict<AuthoringDocument>>()),
+    );
+
+    expect(realm.saves, hasLength(1));
+    final review = await form.workspace.reviewConflict(form.editingGroup);
+    expect(
+      review.saved.valueAt(_name),
+      skir.DataValue.wrapStringValue("Remote"),
+    );
+    expect(
+      review.proposal.valueAt(_name),
+      skir.DataValue.wrapStringValue("Local"),
+    );
   });
   for (final uncertain in [false, true]) {
     test(

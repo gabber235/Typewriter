@@ -251,7 +251,8 @@ void main() {
   );
 
   testWidgets(
-    "unknown delivery retains disabled Apply and never offers unsupported retry",
+    "an Apply whose outcome is unknown is offered again once the saved value "
+    "shows it was not applied",
     (tester) async {
       var sends = 0;
       final owner = savedTextOwner(
@@ -271,9 +272,10 @@ void main() {
       await panel.settle();
       await panel.applyControls.press("Apply");
 
-      expect(panel.applyControls.actions, ["Refresh", "Apply"]);
-      expect(panel.applyControls.isEnabled("Apply"), isFalse);
       expect(sends, 1);
+      expect(panel.applyControls.actions, ["Discard", "Apply"]);
+      expect(panel.applyControls.isEnabled("Apply"), isTrue);
+      expect(owner.value(editorRootPath).valueOrNull?.authoredString, "Draft");
     },
   );
 

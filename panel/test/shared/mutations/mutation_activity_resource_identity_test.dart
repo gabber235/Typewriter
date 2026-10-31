@@ -37,8 +37,8 @@ void main() {
 
     expect(
       panel.shows(
-        "The outcome is unknown. Local work is retained and will not be "
-        "resubmitted",
+        "The outcome is unknown. Local work is retained until the saved "
+        "values show whether it was applied",
       ),
       isTrue,
     );

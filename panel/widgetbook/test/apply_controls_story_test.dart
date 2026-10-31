@@ -29,9 +29,8 @@ void main() {
     expect(panel.applyControls.actions, isEmpty);
   });
 
-  testWidgets("a lost save reply keeps the edit and offers only Refresh", (
-    tester,
-  ) async {
+  testWidgets("a lost save reply keeps the edit and offers Apply again once "
+      "the saved value shows it was not applied", (tester) async {
     final panel = await tester.pumpStory(
       applyControlsUseCase,
       knobs: {"Save reply": "Lost"},
@@ -42,9 +41,7 @@ void main() {
     await panel.applyControls.press("Apply");
 
     expect(field.value, "Pending");
-    expect(panel.applyControls.isEnabled("Apply"), isFalse);
+    expect(panel.applyControls.isEnabled("Apply"), isTrue);
     expect(panel.applyControls.actions, isNot(contains("Retry")));
-    expect(panel.applyControls.actions, isNot(contains("Discard")));
-    expect(panel.applyControls.actions, contains("Refresh"));
   });
 }

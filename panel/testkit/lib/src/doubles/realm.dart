@@ -539,6 +539,18 @@ final class RealmSave {
   void loseReply([Object? error]) => _response.completeError(
     error ?? StateError("The Realm's reply was lost"),
   );
+
+  /// Keeps the edit but loses the reply with [error], as when the Realm saved
+  /// it and restarted before answering. The panel sees the saved document only
+  /// once it reads it again.
+  void keepAndLoseReply([Object? error]) {
+    _realm._observation = AsyncData(
+      _realm._observed(
+        AuthoringEdit.fromDocument(_realm.document)..applyPrepared(edit),
+      ),
+    );
+    loseReply(error);
+  }
 }
 
 /// [document] whose catalog declares a capability for each of [operations],

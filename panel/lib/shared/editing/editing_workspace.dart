@@ -408,11 +408,11 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   /// Admits a canonical observation and rebases pending local intent.
   /// Available observations received during a save are deferred until the
   /// active lane settles, preventing them from replacing its captured baseline.
-  /// Saved values observed again also recover a commit whose refresh failed;
-  /// an observation held back during the save predates that failure.
+  /// Saved values observed again also settle groups the last read left
+  /// unsettled; an observation held back during the save predates them.
   void acceptConfirmed(S observation) {
     _admitConfirmed(observation);
-    _recoverFailedRefresh(observation);
+    if (model.isAvailable(observation)) _recoverUnsettled();
   }
 
   void _admitConfirmed(S observation) {
@@ -429,19 +429,20 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   }
 
   /// Refreshes once more for commits whose refresh failed, as when the
-  /// connection dropped right after the save. Their later edits otherwise
-  /// stay local until the user retries, although saved values are back.
-  void _recoverFailedRefresh(S observation) {
-    if (_closed || _recovering != null || !model.isAvailable(observation)) {
-      return;
-    }
-    final failed = _groups.values.any(
+  /// connection dropped right after the save, and for saves whose outcome is
+  /// unknown, as when the Realm restarted before it answered. Their work
+  /// otherwise stays blocked until the user retries, although saved values
+  /// are back.
+  void _recoverUnsettled() {
+    if (_closed || _recovering != null) return;
+    final unsettled = _groups.values.any(
       (group) => switch (group.phase) {
         EditGroupCommittedAwaitingRefresh<S>(:final cause) => cause != null,
+        EditGroupUncertain<S>() => group.settlesByRead,
         _ => false,
       },
     );
-    if (!failed) return;
+    if (!unsettled) return;
     // The observation can arrive while its provider rebuilds; a refresh started
     // now would change that provider again in the same frame.
     _recovering = Future<void>.microtask(
@@ -650,8 +651,19 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       final deferred = _deferredConfirmed;
       _deferredConfirmed = null;
       if (deferred != null) _admitConfirmed(deferred);
+      _settleUncertain();
       retireIdleGroups();
     });
+  }
+
+  /// Reads the saved values once the lane is free when a save's outcome is
+  /// unknown; they show whether it landed.
+  void _settleUncertain() {
+    if (_groups.values.any(
+      (group) => group.phase is EditGroupUncertain<S> && group.settlesByRead,
+    )) {
+      _recoverUnsettled();
+    }
   }
 
   Future<void> _drain() async {
@@ -684,6 +696,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         final deferred = _deferredConfirmed;
         _deferredConfirmed = null;
         if (deferred != null) _admitConfirmed(deferred);
+        _settleUncertain();
         final ready = _requested.firstWhereOrNull(
           (id) => _groups[id]?.phase is EditGroupDirty<S>,
         );
@@ -898,6 +911,13 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   /// Refreshes acknowledged state without replaying a submitted request.
   /// Groups awaiting refresh release only their frozen operations after the
   /// refresh succeeds. Later edits remain in the journal.
+  ///
+  /// A save whose outcome is unknown settles against the saved values: its
+  /// operations leave the journal when the saved values already hold them.
+  /// Otherwise they replay like unsent work, applicable when the save never
+  /// landed and saved again, or a conflict for review when other values
+  /// replaced the ones it read. A delayed request that lands after this read
+  /// meets the next save or review the same way.
   Future<void>? _recovering;
 
   Future<void> refreshConfirmed() async {
@@ -905,18 +925,52 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     try {
       final observation = await persistence.refresh();
       if (_closed) return;
+      var settled = false;
       for (final group in _groups.values) {
-        if (group.phase is EditGroupCommittedAwaitingRefresh<S>) {
-          _operations.removeWhere(
-            (operation) => group.frozen.contains(operation.id),
-          );
-          group
-            ..frozen = {}
-            ..phase = const EditGroupPhase.dirty()
-            ..submission = null;
+        switch (group.phase) {
+          case EditGroupCommittedAwaitingRefresh<S>():
+            _operations.removeWhere(
+              (operation) => group.frozen.contains(operation.id),
+            );
+          case EditGroupUncertain<S>() when group.settlesByRead:
+            settled = true;
+            final submission = group.submission;
+            if (_landed(group, observation)) {
+              _operations.removeWhere(
+                (operation) => group.frozen.contains(operation.id),
+              );
+              unawaited(
+                submission?.settle(
+                  SubmissionResult.confirmed(
+                    EditSettlement.confirmed(observation),
+                  ),
+                ),
+              );
+            } else if (submission != null) {
+              // The group's own work now carries what remains; the record
+              // would only hold its resources and report it twice.
+              unawaited(
+                submission
+                    .settle(
+                      const SubmissionResult.notSubmitted(
+                        message: "The saved values show it was not applied",
+                      ),
+                    )
+                    .then((_) => submissions.dismiss(submission.id)),
+              );
+            }
+          default:
+            continue;
         }
+        group
+          ..frozen = {}
+          ..phase = const EditGroupPhase.dirty()
+          ..submission = null;
       }
       _install(observation);
+      // An unchanged observation installs nothing; released groups still
+      // replay against it.
+      if (settled) _rebuild();
       for (final group in _groups.values) {
         if (group.phase is EditGroupDirty<S> &&
             !_requested.contains(group.id) &&
@@ -928,6 +982,25 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     } on Object catch (error) {
       acceptFailure(error);
     }
+  }
+
+  /// Whether [saved] already holds what [group]'s captured save writes, so
+  /// replaying it there changes nothing. A conflict still counts: the facts
+  /// the save read are gone once it landed.
+  bool _landed(_LiveEditGroup<S> group, S saved) {
+    var working = saved;
+    for (final operation in _operations.where(
+      (operation) => group.frozen.contains(operation.id),
+    )) {
+      final replay = model.replay(working, operation.edit);
+      if (replay.kind != EditReplayKind.applicable &&
+          replay.kind != EditReplayKind.satisfied &&
+          replay.kind != EditReplayKind.conflict) {
+        return false;
+      }
+      working = replay.observation;
+    }
+    return model.resources(saved, working).isEmpty;
   }
 
   bool _gated(_EditOperation<S, E> operation) {
@@ -1471,6 +1544,11 @@ final class _LiveEditGroup<S> {
   EditGroupPhase<S> phase = const EditGroupPhase.dirty();
   Set<int> frozen = {};
   MutationSubmission<EditSettlement<S>>? submission;
+
+  /// Whether reading the saved values settles an unknown outcome: the send
+  /// finished and cannot replay its identical request instead.
+  bool get settlesByRead =>
+      !(submission?.sending ?? false) && !(submission?.canReplay ?? false);
 }
 
 final class _EditOperation<S, E> {

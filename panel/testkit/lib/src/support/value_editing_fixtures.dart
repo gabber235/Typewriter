@@ -94,7 +94,9 @@ final class UncertainSaveResource extends ScriptedValuePersistence {
   );
 }
 
-/// A configuration resource whose every send reports an uncertain outcome.
+/// A configuration resource whose every send reports an uncertain outcome and
+/// whose saved values can be read only before the first save, so the outcome
+/// stays unknown.
 final class UncertainConfigurationResource extends ValueEditPersistence {
   UncertainConfigurationResource(this.key, this.snapshot);
 
@@ -105,8 +107,14 @@ final class UncertainConfigurationResource extends ValueEditPersistence {
   @override
   Set<Object> get reservations => {key};
 
+  var _read = false;
+
   @override
-  Future<EditorSnapshot?> refreshSnapshot() async => snapshot;
+  Future<EditorSnapshot?> refreshSnapshot() async {
+    if (_read) throw StateError("The saved values cannot be read");
+    _read = true;
+    return snapshot;
+  }
 
   @override
   PreparedCommit<TypedMutationResult> prepareValue(

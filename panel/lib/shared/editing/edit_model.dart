@@ -169,7 +169,7 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
       "The editor contract changed. Review or discard pending work",
     EditGroupRepeatedContention() =>
       "The resource changed repeatedly. Retry when other edits stop",
-    EditGroupUncertain() => "The outcome is unknown. Local work is retained and will not be resubmitted",
+    EditGroupUncertain() => "The outcome is unknown. Local work is retained until the saved values show whether it was applied",
     EditGroupResourceMissing() =>
       "The resource was removed. Its proposal is retained for comparison",
   };
