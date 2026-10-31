@@ -18,7 +18,7 @@ pub(crate) mod failures;
 use std::io::Write;
 use std::net::{Ipv4Addr, TcpListener};
 use std::num::NonZeroU32;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
 use std::time::Duration;
 
@@ -28,7 +28,8 @@ use crate::deploy::{self, Cluster};
 use crate::evidence::{self, Recorded};
 use crate::lock::{self, HeavyLock};
 use crate::process::Supervisor;
-use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestRun};
+use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestCase, TestRun};
+use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::stack::{self, typewriter};
 use crate::{CommandExt, Context, cluster, generate, secrets};
 
@@ -175,20 +176,26 @@ fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Res
     };
     let budget = suite.budget() * args.repeat.get();
     let keep = ctx.root.join(STACK_EVIDENCE).join(&name);
+    let selection = Selection::of(&args.only, target);
     let (mut run, stack) = stack::run_keeping_evidence(ctx, &spec, budget, &keep, |stack| {
         let _lock = lock()?;
-        let mut run = results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
-            drive(ctx, stack, suite, target, &defines, &evidence, n, ids)
-        })?;
-        if matches!(target, Target::Cluster)
-            && (args.only.is_empty() || args.only.iter().any(|id| id == JOURNEY))
-        {
+        let mut run = match &selection.scenarios {
+            Some(ids) => results::attempts(args.policy(), ids, &quarantine, |n, ids| {
+                drive(ctx, stack, suite, target, &defines, &evidence, n, ids)
+            })?,
+            None => TestRun {
+                runner: Runner::PanelWeb,
+                attempt_policy: args.policy(),
+                ..TestRun::default()
+            },
+        };
+        if selection.journey {
             run.cases
                 .extend(sign_in_journey(ctx, stack, &defines, &evidence)?.cases);
         }
         Ok(run)
     })?;
-    failures::collect(&evidence, &mut run, Some(&stack))?;
+    failures::collect(&evidence, &mut run, &stack)?;
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
     results::write(&run, &file)?;
@@ -222,7 +229,7 @@ fn drive(
     n: u32,
     only: &[String],
 ) -> Result<TestRun> {
-    let folder = Path::new("attempts").join(n.to_string());
+    let folder = Path::new(ATTEMPTS).join(n.to_string());
     let mut run = drive_once(
         ctx,
         supervisor,
@@ -333,6 +340,54 @@ fn in_chrome(mut command: Vec<String>, target: Target) -> Result<Recorded> {
 /// The requirement the full suite's sign in journey proves.
 const JOURNEY: &str = "AUTH-2";
 
+/// The folder of a suite's evidence each scenario drive writes its attempt to, as
+/// `attempts/<n>/`; run evidence, never another run (`results::RUN_EVIDENCE`).
+pub(crate) const ATTEMPTS: &str = "attempts";
+
+/// The folder of the full suite's evidence the sign in journey writes its run, screenshots and
+/// drive log to; its case is folded into the suite's run, so the folder is run evidence, never
+/// another run (`results::RUN_EVIDENCE`).
+pub(crate) const JOURNEY_EVIDENCE: &str = "journey";
+
+/// Where attempt `n` of `case` keeps its evidence, relative to the suite's evidence folder: the
+/// sign in journey's one folder, or the scenario drive's `attempts/<n>/`.
+pub(crate) fn attempt_folder(case: &TestCase, n: u32) -> PathBuf {
+    if case.requirement.as_deref() == Some(JOURNEY) {
+        PathBuf::from(JOURNEY_EVIDENCE)
+    } else {
+        Path::new(ATTEMPTS).join(n.to_string())
+    }
+}
+
+/// What one run of a suite drives, from its `--only` ids.
+#[derive(Debug, PartialEq)]
+struct Selection {
+    /// The scenario ids to drive (every scenario when empty), or none when only the journey was
+    /// selected.
+    scenarios: Option<Vec<String>>,
+    /// Whether the sign in journey runs, which only the CI cluster target has.
+    journey: bool,
+}
+
+impl Selection {
+    /// Every scenario and, on the CI cluster, the journey when `only` is empty; otherwise the ids
+    /// `only` names, the journey's requirement or case id taken out for the journey.
+    fn of(only: &[String], target: Target) -> Self {
+        if let Target::Stack = target {
+            return Self {
+                scenarios: Some(only.to_vec()),
+                journey: false,
+            };
+        }
+        let is_journey = |id: &String| id == JOURNEY || id.starts_with(&format!("[{JOURNEY}] "));
+        let scenarios: Vec<String> = only.iter().filter(|id| !is_journey(id)).cloned().collect();
+        Self {
+            journey: only.is_empty() || only.iter().any(is_journey),
+            scenarios: (only.is_empty() || !scenarios.is_empty()).then_some(scenarios),
+        }
+    }
+}
+
 /// The fixture user the sign in journey signs in as.
 const JOURNEY_USER: &str = "ada";
 
@@ -351,7 +406,7 @@ fn sign_in_journey(
     defines_file: &Path,
     evidence: &Path,
 ) -> Result<TestRun> {
-    let folder = Path::new("journey");
+    let folder = Path::new(JOURNEY_EVIDENCE);
     let out = evidence.join(folder);
     let password = cluster::test_user_passwords(ctx)?
         .remove(&format!("{JOURNEY_USER}.password"))
@@ -485,6 +540,58 @@ mod tests {
             !evidence.exists(),
             "its turn starts by clearing the previous results"
         );
+    }
+
+    #[test]
+    fn the_journey_alone_runs_only_the_journey_on_the_ci_cluster() {
+        for only in [
+            vec!["AUTH-2".to_owned()],
+            vec![format!("[{JOURNEY}] Signs in")],
+        ] {
+            assert_eq!(
+                Selection::of(&only, Target::Cluster),
+                Selection {
+                    scenarios: None,
+                    journey: true
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn scenarios_with_the_journey_drive_those_scenarios_and_the_journey() {
+        let only = ["CONN-1".to_owned(), "AUTH-2".to_owned()];
+        assert_eq!(
+            Selection::of(&only, Target::Cluster),
+            Selection {
+                scenarios: Some(vec!["CONN-1".to_owned()]),
+                journey: true
+            }
+        );
+    }
+
+    #[test]
+    fn an_empty_selection_drives_every_scenario_and_on_the_ci_cluster_the_journey() {
+        assert_eq!(
+            Selection::of(&[], Target::Cluster),
+            Selection {
+                scenarios: Some(Vec::new()),
+                journey: true
+            }
+        );
+        assert_eq!(
+            Selection::of(&[], Target::Stack),
+            Selection {
+                scenarios: Some(Vec::new()),
+                journey: false
+            }
+        );
+    }
+
+    #[test]
+    fn scenarios_without_the_journey_leave_it_out() {
+        let only = ["CONN-1".to_owned()];
+        assert!(!Selection::of(&only, Target::Cluster).journey);
     }
 
     #[test]

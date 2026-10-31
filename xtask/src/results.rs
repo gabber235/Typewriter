@@ -216,8 +216,14 @@ pub fn read(path: &Path) -> Result<TestRun> {
 }
 
 /// Folders inside a run's folder that hold its evidence, never another run. The writers that
-/// create them (`attempts`' callers, the panel driver) name them here.
-pub const RUN_EVIDENCE: [&str; 4] = ["attempts", "failures", "screenshots", "logs"];
+/// create them (the end to end suites' drives and journey, the panel driver) name them here.
+pub const RUN_EVIDENCE: [&str; 5] = [
+    crate::e2e::ATTEMPTS,
+    crate::e2e::JOURNEY_EVIDENCE,
+    "failures",
+    "screenshots",
+    "logs",
+];
 
 /// Every `TestRun` under `dir`, at any depth, with the path it was read from, skipping run
 /// evidence folders.
@@ -612,8 +618,11 @@ mod tests {
             "inputs/results-check-xtask/steps/test-xtask.json",
             "inputs/results-e2e-panel/test_run.json",
             "panel/test_run.json",
+            "full-panel-web/test_run.json",
         ];
         let evidence = [
+            // The journey's own run, whose case the suite's run already holds.
+            "full-panel-web/journey/test_run.json",
             "inputs/results-e2e-panel/attempts/1/test_run.json",
             "inputs/results-e2e-panel/attempts/2/test_run.json",
             "inputs/results-e2e-panel/failures/1/test_run.json",

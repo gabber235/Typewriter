@@ -1,5 +1,6 @@
-//! The local folder a failed attempt leaves: `attempts/<n>/failures/<case>/` in the suite's
-//! evidence folder, holding what the screen showed (screenshots), what the panel, the drive and
+//! The local folder a failed attempt leaves: `failures/<case>/` inside the attempt's folder of
+//! the suite's evidence folder (`attempts/<n>/` for a scenario, `journey/` for the sign in
+//! journey), holding what the screen showed (screenshots), what the panel, the drive and
 //! every stack service logged during the attempt, and every span of the traces the panel started
 //! in it. None of it is published: [`ArtifactKind::published`] keeps logs and spans off the
 //! evidence branch, and CI leaves the failure folders out of its upload.
@@ -15,6 +16,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result};
 use serde_json::Value;
 
+use super::attempt_folder;
 use crate::evidence::file_name;
 use crate::results::{Artifact, ArtifactKind, Outcome, TestRun};
 
@@ -27,8 +29,8 @@ const SPANS: &str = "spans.otlp.jsonl";
 /// The drive's stamped output in an attempt's folder.
 pub const DRIVE_LOG: &str = "drive.log";
 
-/// What a local stack leaves for failure folders, copied out before the stack state is reset.
-/// The CI cluster target has none.
+/// What the run's stack leaves for failure folders, copied out before the stack state is reset.
+/// On the CI cluster target that stack is the organization and Realm host on top of the cluster.
 pub struct StackEvidence {
     /// Every service log.
     pub logs: Vec<PathBuf>,
@@ -37,21 +39,22 @@ pub struct StackEvidence {
 }
 
 /// For each failed attempt in `run`, whose evidence lies under `evidence` (the suite folder),
-/// fills `attempts/<n>/failures/<case>/`: copies of its screenshots and panel log and, with
-/// `stack`, the drive log and every service log cut to the attempt's span, and every span of the
-/// traces whose panel root started inside that span. Without a stack (the CI cluster target)
-/// only the screenshots and the panel log are kept. The cut logs and the spans join the attempt's
-/// artifacts, with paths relative to `evidence` like every other artifact. A passing attempt, or
-/// one without a span, gets no folder.
-pub fn collect(evidence: &Path, run: &mut TestRun, stack: Option<&StackEvidence>) -> Result<()> {
-    let traces = stack.map(|stack| Traces::read(&stack.traces)).transpose()?;
+/// fills `failures/<case>/` in the attempt's folder ([`attempt_folder`]): copies of its screenshots and panel log, the attempt
+/// folder's drive log and every service log of `stack` cut to the attempt's span, and every span
+/// of the traces whose panel root started inside that span. The cut logs and the spans join the
+/// attempt's artifacts, with paths relative to `evidence` like every other artifact. A passing
+/// attempt, or one without a span, gets no folder.
+pub fn collect(evidence: &Path, run: &mut TestRun, stack: &StackEvidence) -> Result<()> {
+    let traces = Traces::read(&stack.traces)?;
     for case in &mut run.cases {
-        for (index, attempt) in case.attempts.iter_mut().enumerate() {
+        let folders: Vec<PathBuf> = (1..=case.attempts.len())
+            .map(|n| attempt_folder(case, u32::try_from(n).unwrap_or(u32::MAX)))
+            .collect();
+        for (attempt, folder) in case.attempts.iter_mut().zip(&folders) {
             let (Outcome::Failed(_), Some(span)) = (&attempt.outcome, &attempt.span) else {
                 continue;
             };
             let window = (span.start_millis, span.end_millis);
-            let folder = Path::new("attempts").join((index + 1).to_string());
             let dir = folder.join("failures").join(file_name(&case.id));
             let absolute = evidence.join(&dir);
             fs::create_dir_all(&absolute)
@@ -65,16 +68,8 @@ pub fn collect(evidence: &Path, run: &mut TestRun, stack: Option<&StackEvidence>
                 }
             }
             let logs = (window.0 - LOG_SLACK_MILLIS, window.1 + LOG_SLACK_MILLIS);
-            let sources = stack.map_or_else(Vec::new, |stack| {
-                let drive = evidence.join(&folder).join(DRIVE_LOG);
-                stack
-                    .logs
-                    .iter()
-                    .cloned()
-                    .chain(drive.exists().then_some(drive))
-                    .collect()
-            });
-            for log in sources {
+            let drive = evidence.join(folder).join(DRIVE_LOG);
+            for log in stack.logs.iter().cloned().chain([drive]) {
                 let file = dir.join(log.file_name().context("a log without a file name")?);
                 let text = fs::read_to_string(&log)
                     .with_context(|| format!("cannot read {}", log.display()))?;
@@ -83,12 +78,10 @@ pub fn collect(evidence: &Path, run: &mut TestRun, stack: Option<&StackEvidence>
                     .artifacts
                     .push(artifact(ArtifactKind::LogExcerpt, &file));
             }
-            if let Some(traces) = &traces {
-                let file = dir.join(SPANS);
-                let spans = traces.rooted_in(PANEL_SERVICE, window).to_jsonl();
-                fs::write(evidence.join(&file), spans)?;
-                attempt.artifacts.push(artifact(ArtifactKind::Spans, &file));
-            }
+            let file = dir.join(SPANS);
+            let spans = traces.rooted_in(PANEL_SERVICE, window).to_jsonl();
+            fs::write(evidence.join(&file), spans)?;
+            attempt.artifacts.push(artifact(ArtifactKind::Spans, &file));
         }
     }
     Ok(())
@@ -496,7 +489,7 @@ WARNING: before any time
             )],
         );
 
-        collect(&evidence, &mut run, Some(&stack)).unwrap();
+        collect(&evidence, &mut run, &stack).unwrap();
 
         let folder = "attempts/1/failures/_CONN-1__Reconnects";
         let files = file_names(&evidence.join(folder));
@@ -535,47 +528,67 @@ WARNING: before any time
     }
 
     #[test]
-    fn without_a_stack_a_failure_folder_keeps_only_screenshots_and_the_panel_log() {
+    fn a_failed_journey_leaves_its_failure_folder_and_its_own_drive_log_in_the_journey_folder() {
         let root = TempRoot::new();
-        let evidence = root.dir("panel");
-        root.write("panel/attempts/1/screenshots/CONN-1/failure.png", "png");
-        root.write("panel/attempts/1/logs/CONN-1/panel.log", "panel");
+        let evidence = root.dir("full-panel-web");
         root.write(
-            "panel/attempts/1/drive.log",
-            "2026-10-31T07:26:45.000Z failed\n",
+            "full-panel-web/attempts/1/drive.log",
+            "2026-10-31T07:26:45.000Z a scenario's drive\n",
         );
+        root.write(
+            "full-panel-web/journey/drive.log",
+            "2026-10-31T07:26:45.000Z the journey's drive\n",
+        );
+        root.write(
+            "full-panel-web/journey/screenshots/AUTH-2/failure.png",
+            "png",
+        );
+        let stack = StackEvidence {
+            logs: Vec::new(),
+            traces: root.path("stack/traces.jsonl"),
+        };
         let mut run = run_of(
-            "[CONN-1] Reconnects",
+            "[AUTH-2] Signs in",
             vec![failed_attempt(
                 ATTEMPT,
-                &[
-                    (
-                        ArtifactKind::Screenshot,
-                        "attempts/1/screenshots/CONN-1/failure.png",
-                    ),
-                    (ArtifactKind::LogExcerpt, "attempts/1/logs/CONN-1/panel.log"),
-                ],
+                &[(
+                    ArtifactKind::Screenshot,
+                    "journey/screenshots/AUTH-2/failure.png",
+                )],
             )],
         );
+        run.cases[0].requirement = Some(super::super::JOURNEY.to_owned());
 
-        collect(&evidence, &mut run, None).unwrap();
+        collect(&evidence, &mut run, &stack).unwrap();
 
-        let files = file_names(&evidence.join("attempts/1/failures/_CONN-1__Reconnects"));
-        assert_eq!(files, ["failure.png", "panel.log"]);
-        assert_eq!(run.cases[0].attempts[0].artifacts.len(), 2);
+        let folder = evidence.join("journey/failures/_AUTH-2__Signs_in");
+        assert_eq!(
+            file_names(&folder),
+            ["drive.log", "failure.png", "spans.otlp.jsonl"]
+        );
+        assert_eq!(
+            fs::read_to_string(folder.join("drive.log")).unwrap(),
+            "2026-10-31T07:26:45.000Z the journey's drive\n"
+        );
+        assert!(!evidence.join("attempts/1/failures").exists());
     }
 
     #[test]
     fn a_passing_attempt_gets_no_failure_folder() {
         let root = TempRoot::new();
         let evidence = root.dir("panel");
+        root.write("panel/attempts/1/drive.log", "");
         root.write("panel/attempts/2/drive.log", "");
+        let stack = StackEvidence {
+            logs: Vec::new(),
+            traces: root.path("stack/traces.jsonl"),
+        };
         let mut run = run_of(
             "[CONN-1] Reconnects",
             vec![failed_attempt(ATTEMPT, &[]), passed_attempt(ATTEMPT)],
         );
 
-        collect(&evidence, &mut run, None).unwrap();
+        collect(&evidence, &mut run, &stack).unwrap();
 
         assert!(evidence.join("attempts/1/failures").exists());
         assert!(!evidence.join("attempts/2/failures").exists());
