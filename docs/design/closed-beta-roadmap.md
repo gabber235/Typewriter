@@ -1,15 +1,16 @@
 # Closed beta roadmap
 
-Source design: docs/design/event-system.md (Decided) and docs/vision/.
+Source design: docs/design/core-model.md (Decided) and docs/vision/.
 
 ## Decided
 
 - Shape: a stack of self contained PRs on top of the agent harness and test review stack. Each PR ends in a simple but realistic Paper demo, informed by the legacy BasicExtension (a showcase, not a full port), with tests. Lower PRs get built while higher ones are still being designed and planned.
 - Goal of the full stack: a few entries demo every primitive and the core functions (scenes, audiences, commands, dialogue, events, ...).
-- 2026-10-30 additions: interaction bounds; debug and inspect (late, but before migrations and multi server); a conversion track for legacy extensions starting around layer 20 (WorldGuard is not converted; the region extension from #522 replaces it).
+- 2026-10-30 additions: interaction bounds; debug and inspect (late, before migrations); a conversion track for legacy extensions starting around layer 20 (WorldGuard is not converted; the region extension from #522 replaces it).
 - Scope includes items not yet designed: configurations (root resource replacing configs and snippets), artifacts and assets, content capture (the functionality of legacy content mode, not its way of working), panel header actions that trigger engine actions (capture position, teleport), and core needs revealed by develop PRs (#521 visibility, #522 region, road network).
 
 - Layer order v4 adopted 2026-10-30 (see Draft for the list; it moves to Decided as the confirmed order).
+- No separate multi server layer (2026-10-31): the primitives are multi server by design, so every layer whose behavior crosses servers proves it with a two engine test in its own PR (two engines in one process, no second Paper server). Server move handoff lands with sessions (3) and holds (15). The harness gets two engine support in layer 3.
 
 ## Unreviewed input
 
@@ -24,7 +25,7 @@ Source design: docs/design/event-system.md (Decided) and docs/vision/.
   - M3 Film it: 18 scenes (8, 14, 15).
   - M4 Populate it: 20 assets (3); 21 NPCs and entities (9, 14, 20).
   - M5 World it: 22 regions and world rules (5, 9, 13); 23 quests (6, 9, 15); 24 extension platform (5, 9); 25 in game editor tools (13, 14); 26 road network (20, 21, 25); 27 visibility (21).
-  - M6 Ship it: 19 debug and inspect (9, 13), moved here 2026-10-31 because it is not strictly needed earlier; 28 migrations (2, 7); 29 multi server (8, 9); 30 importer 0.9; 31 production realm mode (28).
+  - M6 Ship it: 19 debug and inspect (9, 13), moved here 2026-10-31 because it is not strictly needed earlier; 28 migrations (2, 7); 29 importer 0.9; 30 production realm mode (28).
   - Conversion track: Vault and PlaceholderAPI, RPGRegions, SuperiorSkyblock (24); Citizens (16, 24); MythicMobs (18, 24); Entity rest (21, 25); Quest path objective (23, 26). WorldGuard dropped.
 - Legacy evidence for packet needs: `ChatHistoryHandler.kt` (12 PacketEvents refs), `SidebarEntry.kt`, `ActionBarBlocker.kt`, `CameraCinematicEntry.kt` (spectates an EntityLib fake entity), `LockInteractionBoundEntry.kt`, `SetFakeBlockCinematicEntry.kt`; `PlayerRadiusInteractionBoundEntry.kt` needs none.
 - Gaps found by the extension audit: packet interception, per viewer entity display, entity activities, path finding, skins, external plugin pattern, economy service hooks, in game editors, spatial index and world queries, PlaceholderAPI provider and consumer, item, sound and particle types, cancellable world rules, Bedrock detection, cross extension contracts.

@@ -1,4 +1,4 @@
-# Event system design (direction C)
+# Core model: primitives, formulas, and runtime
 
 Phase (2026-10-29): feasibility. The goal is to check that every legacy and vision feature CAN be represented with the primitives. Feature sketches (NPCs, commands, audiences, quest item) are not designs; their details are decided when that feature is built. Primitive level decisions below are the real output.
 

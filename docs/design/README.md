@@ -4,7 +4,7 @@ Living records of design decisions, one file per workstream. The vision (`docs/v
 
 | Record | Covers |
 | --- | --- |
-| [event-system.md](event-system.md) | Primitives, formulas, stored data, mirrors, sessions, migrations, and the type glossary |
+| [core-model.md](core-model.md) | Primitives, formulas, stored data, mirrors, sessions, migrations, and the type glossary |
 | [closed-beta-roadmap.md](closed-beta-roadmap.md) | The stacked PR order toward the closed beta, with what each layer needs |
 
 Each record has four sections:
