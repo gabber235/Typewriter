@@ -23,8 +23,9 @@ export "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v
 
 export "panel.dart";
 
-/// The scenario ids to run, as a JSON list; empty runs every scenario.
-/// `cargo xtask e2e` sets it to rerun failed scenarios once.
+/// The scenarios to run, as a JSON list of scenario or requirement ids; empty
+/// runs every scenario. `cargo xtask e2e` sets it for `--only` and to run
+/// failed scenarios again.
 const _selection = String.fromEnvironment("SCENARIOS");
 
 final _requirementFormat = RegExp(r"^[A-Z]+(-[A-Z]+)*-\d+(\.[EF]\d+)?$");
@@ -65,7 +66,7 @@ void scenario(
     );
   }
   final id = "[$requirement] $title";
-  testWidgets(id, skip: !_selected(id), (tester) async {
+  testWidgets(id, skip: !_selected(id, requirement), (tester) async {
     final artifacts = <results.Artifact>[];
     final panel = await Panel.launch(
       tester,
@@ -102,10 +103,14 @@ void scenario(
           id: id,
           requirement: requirement,
           demonstrates: demonstrates,
-          outcome: outcome,
-          span: results.Span(startMillis: start, endMillis: end),
-          durationMillis: end - start,
-          artifacts: artifacts,
+          attempts: [
+            results.Attempt(
+              outcome: outcome,
+              span: results.Span(startMillis: start, endMillis: end),
+              durationMillis: end - start,
+              artifacts: artifacts,
+            ),
+          ],
         ),
       );
       _publish();
@@ -132,8 +137,12 @@ void faultScenario(
   });
 }
 
-bool _selected(String id) =>
-    _selection.isEmpty || (jsonDecode(_selection) as List).contains(id);
+/// A scenario is selected by its full id or by its requirement id.
+bool _selected(String id, String requirement) {
+  if (_selection.isEmpty) return true;
+  final selection = jsonDecode(_selection) as List;
+  return selection.contains(id) || selection.contains(requirement);
+}
 
 /// Hands the driver the results so far; it writes them once the run ends.
 void _publish() {
@@ -142,6 +151,9 @@ void _publish() {
     // `cargo xtask e2e` knows the commit; the device does not.
     commit: "",
     startedAtMillis: _startedAt,
+    // One attempt of each scenario; `cargo xtask e2e` folds the attempts it
+    // made into one run under its own policy.
+    attemptPolicy: results.AttemptPolicy.wrapExactly(1),
     cases: _cases,
   );
   // The binding keeps its own screenshots under "screenshots" in the same map.

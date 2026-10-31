@@ -1,7 +1,9 @@
 //! `cargo xtask e2e`: the end to end suites. Each suite starts the worktree's panel stack, drives
 //! the panel's `integration_test` scenarios through `flutter drive` inside the evidence recorder
-//! and writes their settled `TestRun` with the clips and screenshots to `.xtask/results/<suite>`,
-//! where the change report and the evidence section read it. The full suite runs the panel web
+//! and writes their `TestRun`, every attempt included, to `.xtask/results/<suite>`, where the
+//! change report and the evidence section read it. Each attempt keeps its clips and screenshots
+//! under `attempts/<n>/` beside it. `--only` selects scenarios and `--repeat` runs each of them an
+//! exact number of times, to hunt a flaky scenario. The full suite runs the panel web
 //! scenarios against a fresh CI cluster instead (`cargo xtask cluster ci`, `cargo xtask deploy ci`).
 //!
 //! `flutter drive` rather than `flutter test integration_test`: only the host driver
@@ -10,6 +12,7 @@
 
 use std::io::Write;
 use std::net::{Ipv4Addr, TcpListener};
+use std::num::NonZeroU32;
 use std::path::Path;
 use std::process::ExitStatus;
 use std::time::Duration;
@@ -20,9 +23,9 @@ use crate::deploy::{self, Cluster};
 use crate::evidence::{self, Recorded};
 use crate::lock::HeavyLock;
 use crate::process::{Supervisor, Unsupervised};
-use crate::results::{self, Outcome, Quarantine, TestRun};
+use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestRun};
 use crate::stack::{self, typewriter};
-use crate::{CommandExt, Context, Scratch, cluster, generate, secrets};
+use crate::{CommandExt, Context, cluster, generate, secrets};
 
 /// Where the stack writes the panel's compile time defines (it publishes the same path as
 /// `STACK_PANEL_DEFINES`), relative to the repository root.
@@ -47,6 +50,28 @@ const UNSIGNED_ENTITLEMENTS: &str = "panel/macos/Runner/EndToEnd.entitlements";
 /// macOS app.
 const NIX_TOOLCHAIN: [&str; 3] = ["CC", "CXX", "LD"];
 
+/// What `cargo xtask e2e` runs.
+#[derive(clap::Args)]
+pub struct E2eArgs {
+    suite: Suite,
+    /// Requirement ids (CONN-1) or full scenario ids; empty runs every scenario.
+    #[arg(long, value_delimiter = ',')]
+    only: Vec<String>,
+    /// Attempts per selected scenario, instead of one attempt plus a rerun of failures.
+    #[arg(long, default_value_t = NonZeroU32::MIN)]
+    repeat: NonZeroU32,
+}
+
+impl E2eArgs {
+    /// One attempt and a rerun of failures, or exactly `--repeat` attempts.
+    fn policy(&self) -> AttemptPolicy {
+        match self.repeat.get() {
+            1 => AttemptPolicy::RerunFailures(2),
+            n => AttemptPolicy::Exactly(i32::try_from(n).unwrap_or(i32::MAX)),
+        }
+    }
+}
+
 /// An end to end suite.
 #[derive(Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
 pub enum Suite {
@@ -68,21 +93,22 @@ impl Suite {
         }
     }
 
-    /// The whole run once the stack is up: the app build, the scenarios and one rerun.
+    /// The whole run of one attempt once the stack is up: the app build, the scenarios and
+    /// one rerun.
     fn budget(self) -> Duration {
         Duration::from_secs(30 * 60)
     }
 }
 
-/// Runs `suite` and reports its scenarios.
-pub fn run(ctx: &Context, suite: Suite) -> Result<()> {
-    match suite {
+/// Runs the selected scenarios of the suite and reports them.
+pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
+    match args.suite {
         Suite::Full => {
             cluster::create_ci(ctx, &secrets::Ci::load()?)?;
             deploy::deploy(ctx, Cluster::Ci)?;
-            scenarios(ctx, Suite::PanelWeb, Target::Cluster)
+            scenarios(ctx, args, Suite::PanelWeb, Target::Cluster)
         }
-        suite => scenarios(ctx, suite, Target::Stack),
+        suite => scenarios(ctx, args, suite, Target::Stack),
     }
 }
 
@@ -95,15 +121,16 @@ enum Target {
     Cluster,
 }
 
-/// Runs `suite`'s scenarios against `target`.
-fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
+/// Runs `suite`'s selected scenarios against `target`.
+fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Result<()> {
     // The panel compiles against the generated Skir and build_runner sources.
     generate::generate(ctx, None)?;
     let name = match target {
         Target::Stack => suite.name().to_owned(),
         Target::Cluster => format!("{}-{}", Suite::Full.name(), suite.name()),
     };
-    let evidence = ctx.root.join(evidence::RESULTS).join(&name);
+    let shown = Path::new(evidence::RESULTS).join(&name);
+    let evidence = ctx.root.join(&shown);
     if evidence.exists() {
         std::fs::remove_dir_all(&evidence)
             .with_context(|| format!("cannot clear {}", evidence.display()))?;
@@ -116,21 +143,23 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
     let quarantine = Quarantine::load(ctx)?;
     // Flutter builds the app inside `flutter drive`, so the whole run is one heavy build.
     let lock = || HeavyLock::acquire(&format!("e2e {name}"));
+    let attempts = |defines: &Path, supervisor: &mut dyn Supervisor| {
+        results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
+            drive(ctx, supervisor, suite, defines, &evidence, n, ids)
+        })
+    };
     let run = match target {
-        Target::Stack => stack::run(ctx, &typewriter::panel(), suite.budget(), |stack| {
-            let _lock = lock()?;
-            let defines = ctx.root.join(PANEL_DEFINES);
-            settle(ctx, suite, &defines, &evidence, &quarantine, stack)
-        })?,
+        Target::Stack => {
+            let budget = suite.budget() * args.repeat.get();
+            stack::run(ctx, &typewriter::panel(), budget, |stack| {
+                let _lock = lock()?;
+                attempts(&ctx.root.join(PANEL_DEFINES), stack)
+            })?
+        }
         Target::Cluster => {
             let _lock = lock()?;
-            let defines = ctx.root.join(cluster::STATE).join("panel.json");
-            settle(
-                ctx,
-                suite,
-                &defines,
-                &evidence,
-                &quarantine,
+            attempts(
+                &ctx.root.join(cluster::STATE).join("panel.json"),
                 &mut Unsupervised::with_interrupts(),
             )?
         }
@@ -138,7 +167,14 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
     results::write(&run, &file)?;
-    verdict(&name, &file, &run, &quarantine, &mut std::io::stderr())?;
+    verdict(
+        &name,
+        &file,
+        &run,
+        &quarantine,
+        &shown,
+        &mut std::io::stderr(),
+    )?;
     println!(
         "{name}: {} scenarios passed ({})",
         run.cases.len(),
@@ -147,36 +183,48 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
     Ok(())
 }
 
-/// One drive of every scenario, then one rerun of the failed ones.
-fn settle(
-    ctx: &Context,
-    suite: Suite,
-    defines: &Path,
-    evidence: &Path,
-    quarantine: &Quarantine,
-    supervisor: &mut dyn Supervisor,
-) -> Result<TestRun> {
-    let first = drive(ctx, supervisor, suite, defines, evidence, None)?;
-    results::settle(
-        first,
-        |failed| {
-            let rerun = Scratch::new(&format!("e2e-{}-rerun", suite.name()))?;
-            drive(ctx, supervisor, suite, defines, &rerun.0, Some(failed))
-        },
-        quarantine,
-    )
-}
-
-/// One `flutter drive` run writing its `TestRun` to `out`; `only` limits it to those scenario
-/// ids. A failing scenario is a result, not an error; a drive that fails without reporting a
-/// failing scenario is one.
+/// Attempt `n` of the scenarios `only` selects (every scenario when empty): one `flutter drive`
+/// writing its evidence to `attempts/<n>/` of the suite's `evidence` folder. Its artifact paths
+/// are made relative to `evidence`, where the folded run is written.
 fn drive(
     ctx: &Context,
     supervisor: &mut dyn Supervisor,
     suite: Suite,
     defines_file: &Path,
+    evidence: &Path,
+    n: u32,
+    only: &[String],
+) -> Result<TestRun> {
+    let folder = Path::new("attempts").join(n.to_string());
+    let mut run = drive_once(
+        ctx,
+        supervisor,
+        suite,
+        defines_file,
+        &evidence.join(&folder),
+        only,
+    )?;
+    for artifact in run
+        .cases
+        .iter_mut()
+        .flat_map(|case| &mut case.attempts)
+        .flat_map(|attempt| &mut attempt.artifacts)
+    {
+        artifact.path = folder.join(&artifact.path).display().to_string();
+    }
+    Ok(run)
+}
+
+/// One `flutter drive` run writing its `TestRun` to `out`; a non empty `only` limits it to those
+/// scenario or requirement ids. A failing scenario is a result, not an error; a drive that fails
+/// without reporting a failing scenario is one.
+fn drive_once(
+    ctx: &Context,
+    supervisor: &mut dyn Supervisor,
+    suite: Suite,
+    defines_file: &Path,
     out: &Path,
-    only: Option<&[&str]>,
+    only: &[String],
 ) -> Result<TestRun> {
     let mut command: Vec<String> = [
         "flutter",
@@ -187,10 +235,10 @@ fn drive(
     .map(String::from)
     .into();
     command.push(defines(defines_file));
-    if let Some(ids) = only {
+    if !only.is_empty() {
         command.push(format!(
             "--dart-define=SCENARIOS={}",
-            serde_json::to_string(ids)?
+            serde_json::to_string(only)?
         ));
     }
     let recorded = match suite {
@@ -246,7 +294,8 @@ fn driven(exit: ExitStatus, run: TestRun) -> Result<TestRun> {
     let failed = run
         .cases
         .iter()
-        .any(|case| matches!(case.outcome, Outcome::Failed(_)));
+        .flat_map(|case| &case.attempts)
+        .any(|attempt| matches!(attempt.outcome, Outcome::Failed(_)));
     if !exit.success() && !failed {
         bail!(
             "flutter drive failed with {exit} without a failing scenario; its output above says why"
@@ -255,13 +304,15 @@ fn driven(exit: ExitStatus, run: TestRun) -> Result<TestRun> {
     Ok(run)
 }
 
-/// The suite's verdict on its settled `run`, written to `file`: every case that did not plainly
-/// pass goes to `out`, and the run fails when a scenario failed or none was reported.
+/// The suite's verdict on its `run`, written to `file` in the `evidence` folder: every case that
+/// did not plainly pass goes to `out`, pointing at its evidence, and the run fails when a
+/// scenario failed or none was reported.
 fn verdict(
     name: &str,
     file: &Path,
     run: &TestRun,
     quarantine: &Quarantine,
+    evidence: &Path,
     out: &mut dyn Write,
 ) -> Result<()> {
     // Every suite drives the same registered scenarios, so a drive reporting none is broken.
@@ -271,7 +322,7 @@ fn verdict(
             file.display()
         );
     }
-    results::report(run, quarantine, out)
+    results::report(run, quarantine, Some(evidence), out)
 }
 
 fn defines(file: &Path) -> String {
@@ -292,7 +343,33 @@ fn desktop_device() -> Result<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{exited, failed, refusal, run};
+    use crate::test_support::{e2e_args as parsed, exited, failed, refusal, run};
+
+    #[test]
+    fn a_plain_run_attempts_every_scenario_once_and_reruns_failures() {
+        let args = parsed(&["panel"]).unwrap();
+        assert!(args.only.is_empty());
+        assert_eq!(args.policy(), AttemptPolicy::RerunFailures(2));
+    }
+
+    #[test]
+    fn a_repeated_selection_attempts_each_selected_scenario_exactly_that_often() {
+        let args = parsed(&[
+            "panel",
+            "--only",
+            "CONN-1,[REALM-2] Opens",
+            "--repeat",
+            "20",
+        ])
+        .unwrap();
+        assert_eq!(args.only, ["CONN-1", "[REALM-2] Opens"]);
+        assert_eq!(args.policy(), AttemptPolicy::Exactly(20));
+    }
+
+    #[test]
+    fn a_repeat_of_zero_is_refused() {
+        assert!(parsed(&["panel", "--repeat", "0"]).is_err());
+    }
 
     #[test]
     fn a_drive_that_crashes_without_results_fails_the_run_and_says_so() {
@@ -308,7 +385,10 @@ mod tests {
     #[test]
     fn a_drive_that_exits_non_zero_for_a_failing_scenario_reports_it() {
         let reported = driven(exited(1), run(&[("a", failed("boom"))])).unwrap();
-        assert!(matches!(reported.cases[0].outcome, Outcome::Failed(_)));
+        assert!(matches!(
+            reported.cases[0].attempts[0].outcome,
+            Outcome::Failed(_)
+        ));
     }
 
     #[test]
@@ -318,6 +398,7 @@ mod tests {
             Path::new("test_run.json"),
             &run(&[]),
             &Quarantine::default(),
+            Path::new("results/panel"),
             &mut Vec::new(),
         ));
         assert!(error.contains("no scenarios"), "{error}");
@@ -333,6 +414,7 @@ mod tests {
                 Path::new("test_run.json"),
                 &passing,
                 &Quarantine::default(),
+                Path::new("results/panel"),
                 &mut Vec::new()
             )
             .is_ok()
@@ -347,6 +429,7 @@ mod tests {
             Path::new("test_run.json"),
             &failing,
             &Quarantine::default(),
+            Path::new("results/panel"),
             &mut Vec::new(),
         ));
         assert!(error.contains("1 of 2 cases failed: b"), "{error}");

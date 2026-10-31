@@ -5,24 +5,40 @@ struct TestRun(85010001) {
   runner: Runner;
   commit: string;
   started_at_millis: int64;
+  // How the cases' attempts were made; the verdict depends on it.
+  attempt_policy: AttemptPolicy;
   cases: [TestCase];
 }
 
-struct TestCase(85010002) {
+enum AttemptPolicy(85010002) {
+  // Failed cases run again until they pass, up to this many attempts in total.
+  rerun_failures: int32;
+  // Every case ran exactly this many times.
+  exactly: int32;
+}
+
+struct TestCase(85010003) {
   // The test path or step name, unique within its run.
   id: string;
   // The requirement the test declares it demonstrates, for example "QUEST-1.E1".
   requirement: string?;
   demonstrates: Demonstrates;
+  // In order; never empty.
+  attempts: [Attempt];
+}
+
+// One run of one case.
+struct Attempt(85010004) {
+  // What this attempt observed. Quarantine and flakiness are the attempt policy's verdict.
   outcome: Outcome;
-  // Where the case sits in the run's recording, when there is one.
+  // Where the attempt sits in the run's recording, when there is one.
   span: Span?;
   duration_millis: int64;
   // Clips, screenshots and log excerpts that show the outcome.
   artifacts: [Artifact];
 }
 
-enum Runner(85010003) {
+enum Runner(85010005) {
   components;
   schema;
   panel;
@@ -30,41 +46,35 @@ enum Runner(85010003) {
   step;
 }
 
-enum Demonstrates(85010004) {
+enum Demonstrates(85010006) {
   happy_path;
   failure;
   edge_case;
 }
 
-enum Outcome(85010005) {
+enum Outcome(85010007) {
   passed;
   failed: Failure;
-  // Failed once, then passed on the single rerun: reported, not gating.
-  flaky: Failure;
-  // Listed in harness/quarantine.toml: still run and reported, not gating.
-  quarantined: Failure;
-  // Passed, but exceeded its time budget by this many milliseconds.
-  over_budget: int64;
 }
 
-struct Failure(85010006) {
+struct Failure(85010008) {
   message: string;
   // The first failing step or frame, when the runner knows it.
   first_broken: string?;
 }
 
-struct Span(85010007) {
+struct Span(85010009) {
   start_millis: int64;
   end_millis: int64;
 }
 
-enum ArtifactKind(85010008) {
+enum ArtifactKind(85010010) {
   clip;
   screenshot;
   log_excerpt;
 }
 
-struct Artifact(85010009) {
+struct Artifact(85010011) {
   kind: ArtifactKind;
   path: string;
 }

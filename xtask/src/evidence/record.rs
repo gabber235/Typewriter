@@ -13,7 +13,7 @@ use anyhow::{Context as _, Result, bail};
 
 use crate::process::{Group, Supervisor, Unsupervised};
 use crate::results::{self, TestRun};
-use crate::skirout::base::harness::v1::test_run::{Artifact, ArtifactKind, TestCase};
+use crate::skirout::base::harness::v1::test_run::{Artifact, ArtifactKind, Attempt};
 use crate::{CommandExt, Context};
 
 /// The file the runner writes inside the evidence folder.
@@ -132,7 +132,9 @@ pub fn record_with(
     let mut test_run = read_run(out, &command, status)?;
     if recorded.video {
         for case in &mut test_run.cases {
-            cut(out, &video, started, case)?;
+            for attempt in &mut case.attempts {
+                cut(out, &video, started, &case.id, attempt)?;
+            }
         }
         results::write(&test_run, &out.join(RUN_FILE))?;
     }
@@ -155,13 +157,13 @@ fn read_run(out: &Path, command: &Command, status: ExitStatus) -> Result<TestRun
 /// One clip and one looping preview (640 px wide, 8 fps, under [`PREVIEW_LIMIT`]) for a case with
 /// a span. Spans are Unix milliseconds, so the offset into the recording is the span minus
 /// `started`. The preview sits next to the clip as `<name>.webp`.
-fn cut(out: &Path, video: &Path, started: i64, case: &mut TestCase) -> Result<()> {
-    let Some(span) = &case.span else {
+fn cut(out: &Path, video: &Path, started: i64, id: &str, attempt: &mut Attempt) -> Result<()> {
+    let Some(span) = &attempt.span else {
         return Ok(());
     };
     let from = seconds(span.start_millis - started);
     let to = seconds(span.end_millis - started);
-    let name = file_name(&case.id);
+    let name = file_name(id);
     let clip = PathBuf::from("clips").join(format!("{name}.mp4"));
     let preview = out.join("clips").join(format!("{name}.webp"));
     fs::create_dir_all(out.join("clips"))?;
@@ -191,10 +193,10 @@ fn cut(out: &Path, video: &Path, started: i64, case: &mut TestCase) -> Result<()
     if !preview.exists() {
         eprintln!(
             "{}: preview too large for GitHub; only the clip is kept",
-            case.id
+            id
         );
     }
-    case.artifacts.push(Artifact {
+    attempt.artifacts.push(Artifact {
         kind: ArtifactKind::Clip,
         path: clip.to_string_lossy().into_owned(),
         _unrecognized: None,

@@ -14,9 +14,10 @@ use std::time::Duration;
 use anyhow::Result;
 use clap::ValueEnum as _;
 
+use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
-use crate::results::{Failure, Outcome, Quarantine, TestCase, TestRun};
+use crate::results::{Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun};
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::stack::StackRecord;
 use crate::{CommandExt as _, Context};
@@ -92,20 +93,73 @@ pub fn refusal<T>(result: Result<T>) -> String {
     }
 }
 
-/// A components run with `cases`.
+/// A components run with one attempt of each of `cases`, as a runner reports one attempt.
 pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
     TestRun {
         runner: Runner::Components,
+        attempt_policy: AttemptPolicy::Exactly(1),
         cases: cases
             .iter()
-            .map(|(id, outcome)| TestCase {
-                id: (*id).to_owned(),
-                outcome: outcome.clone(),
-                ..TestCase::default()
-            })
+            .map(|(id, outcome)| case(id, std::slice::from_ref(outcome)))
             .collect(),
         ..TestRun::default()
     }
+}
+
+/// A components run under `policy` whose cases made `attempts`, in order.
+pub fn attempted(policy: AttemptPolicy, attempts: &[Outcome]) -> TestRun {
+    TestRun {
+        runner: Runner::Components,
+        attempt_policy: policy,
+        cases: vec![case("a", attempts)],
+        ..TestRun::default()
+    }
+}
+
+/// The case `id` with one attempt per outcome, in order.
+pub fn case(id: &str, outcomes: &[Outcome]) -> TestCase {
+    TestCase {
+        id: id.to_owned(),
+        attempts: outcomes
+            .iter()
+            .map(|outcome| Attempt {
+                outcome: outcome.clone(),
+                ..Attempt::default()
+            })
+            .collect(),
+        ..TestCase::default()
+    }
+}
+
+/// The outcomes of the attempts of `run`'s case `id`. Panics when the run has no such case.
+pub fn outcomes(run: &TestRun, id: &str) -> Vec<Outcome> {
+    let case = run.cases.iter().find(|case| case.id == id).unwrap();
+    case.attempts.iter().map(|a| a.outcome.clone()).collect()
+}
+
+/// An outcome a newer runner wrote that this build does not know.
+pub fn unknown() -> Outcome {
+    Outcome::Unknown(Default::default())
+}
+
+/// What [`report`](crate::results::report) writes for `run`, pointing at `results/panel`, and
+/// whether it passed.
+pub fn report_text(run: &TestRun, quarantine: &Quarantine) -> (Result<()>, String) {
+    let mut out = Vec::new();
+    let result =
+        crate::results::report(run, quarantine, Some(Path::new("results/panel")), &mut out);
+    (result, String::from_utf8(out).unwrap())
+}
+
+/// `cargo xtask e2e args` as the command line parses it.
+pub fn e2e_args(args: &[&str]) -> Result<E2eArgs, clap::Error> {
+    #[derive(clap::Parser)]
+    struct Command {
+        #[command(flatten)]
+        args: E2eArgs,
+    }
+    let line = std::iter::once("e2e").chain(args.iter().copied());
+    <Command as clap::Parser>::try_parse_from(line).map(|command| command.args)
 }
 
 /// A failure with `message`.
@@ -132,9 +186,12 @@ pub fn quarantining(id: &str) -> Quarantine {
     .unwrap()
 }
 
-/// A rerun that must never happen: it fails the test when called.
-pub fn never_rerun(_: &[&str]) -> Result<TestRun> {
-    panic!("nothing should be rerun")
+/// A runner whose first attempt reports `first` and that must never run a second attempt.
+pub fn once(first: TestRun) -> impl FnMut(u32, &[String]) -> Result<TestRun> {
+    move |n, _| {
+        assert_eq!(n, 1, "nothing should run again");
+        Ok(first.clone())
+    }
 }
 
 /// The exit status of a process that exited with `code`.

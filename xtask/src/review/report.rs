@@ -19,7 +19,7 @@ use super::tests::{self, TestChanges};
 use crate::Context;
 use crate::evidence::RESULTS;
 use crate::evidence::publish::listed;
-use crate::results::{self, Outcome};
+use crate::results::{self, Quarantine, Verdict};
 
 /// How many entities of the ranked change map the markdown lists.
 const CHANGE_MAP_LINES: usize = 20;
@@ -178,8 +178,6 @@ pub struct RunHealth {
     pub runs: usize,
     pub flaky: Vec<String>,
     pub quarantined: Vec<String>,
-    /// Case and milliseconds over its budget.
-    pub over_budget: Vec<(String, i64)>,
 }
 
 /// What the change did to one top level directory, counted in files of every type.
@@ -495,20 +493,12 @@ impl ChangeReport {
         } else {
             let _ = writeln!(
                 out,
-                "{} runs. Flaky {}{}. Quarantined {}{}. Over budget {}{}.",
+                "{} runs. Flaky {}{}. Quarantined {}{}.",
                 health.runs,
                 health.flaky.len(),
                 listed(&health.flaky),
                 health.quarantined.len(),
                 listed(&health.quarantined),
-                health.over_budget.len(),
-                listed(
-                    &health
-                        .over_budget
-                        .iter()
-                        .map(|(case, millis)| format!("{case} by {millis} ms"))
-                        .collect::<Vec<_>>()
-                ),
             );
         }
 
@@ -726,13 +716,13 @@ fn risk(change: &ChangeContext, findings: &[Finding], tests: &TestChanges) -> Ri
 /// Collects the cases of every `TestRun` under [`RESULTS`] that did not plainly pass or fail.
 fn health(ctx: &Context) -> Result<RunHealth> {
     let mut health = RunHealth::default();
+    let quarantine = Quarantine::load(ctx)?;
     for (_, run) in results::read_all(&ctx.root.join(RESULTS))? {
         health.runs += 1;
-        for case in run.cases {
-            match case.outcome {
-                Outcome::Flaky(_) => health.flaky.push(case.id),
-                Outcome::Quarantined(_) => health.quarantined.push(case.id),
-                Outcome::OverBudget(millis) => health.over_budget.push((case.id, millis)),
+        for case in &run.cases {
+            match results::verdict(&run, case, &quarantine) {
+                Ok(Verdict::Flaky) => health.flaky.push(case.id.clone()),
+                Ok(Verdict::Quarantined) => health.quarantined.push(case.id.clone()),
                 _ => {}
             }
         }

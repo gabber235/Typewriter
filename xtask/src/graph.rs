@@ -22,7 +22,7 @@ use clap::ValueEnum;
 
 use crate::lock::HeavyLock;
 use crate::process::{self, Group};
-use crate::results::{self, Failure, Outcome, TestCase, TestRun};
+use crate::results::{self, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun};
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt as _, Context, components, display, docs, generate, gitops, review};
 
@@ -596,16 +596,21 @@ fn run_step(ctx: &Context, step: &Step, logs: &Path, commit: &str) -> bool {
         runner: Runner::Step,
         commit: commit.to_owned(),
         started_at_millis: millis(started_at),
+        // A step runs once; a failed step is never run again.
+        attempt_policy: AttemptPolicy::Exactly(1),
         cases: vec![TestCase {
             id: step.name.to_owned(),
-            outcome: match &outcome {
-                Ok(()) => Outcome::Passed,
-                Err(error) => Outcome::Failed(Box::new(Failure {
-                    message: format!("{error:#}"),
-                    ..Failure::default()
-                })),
-            },
-            duration_millis: i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX),
+            attempts: vec![Attempt {
+                outcome: match &outcome {
+                    Ok(()) => Outcome::Passed,
+                    Err(error) => Outcome::Failed(Box::new(Failure {
+                        message: format!("{error:#}"),
+                        ..Failure::default()
+                    })),
+                },
+                duration_millis: i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX),
+                ..Attempt::default()
+            }],
             ..TestCase::default()
         }],
         _unrecognized: None,
@@ -778,7 +783,7 @@ mod tests {
         let run = results::read(&root.path(".xtask/results/steps/test-fails.json")).unwrap();
         assert!(!passed);
         assert_eq!(run.cases[0].id, "test:fails");
-        assert!(failure_message(&run.cases[0].outcome).contains("exit status: 3"));
+        assert!(failure_message(&run.cases[0].attempts[0].outcome).contains("exit status: 3"));
     }
 
     #[test]
@@ -792,7 +797,7 @@ mod tests {
         );
         let run = results::read(&root.path(".xtask/results/steps/test-slow.json")).unwrap();
         assert!(!passed);
-        assert!(failure_message(&run.cases[0].outcome).contains("budget"));
+        assert!(failure_message(&run.cases[0].attempts[0].outcome).contains("budget"));
     }
 
     #[test]
@@ -806,6 +811,6 @@ mod tests {
         );
         let run = results::read(&root.path(".xtask/results/steps/test-passes.json")).unwrap();
         assert!(passed);
-        assert_eq!(run.cases[0].outcome, Outcome::Passed);
+        assert_eq!(run.cases[0].attempts[0].outcome, Outcome::Passed);
     }
 }

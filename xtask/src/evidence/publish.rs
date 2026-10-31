@@ -14,7 +14,7 @@ use serde::Deserialize;
 use serde::de::IgnoredAny;
 
 use super::{ATTEMPTS, Inputs, REPOSITORY, clone_branch, media_url, pr_folder};
-use crate::results::{self, Outcome, TestRun, runner_name};
+use crate::results::{self, Quarantine, TestRun, Verdict as CaseVerdict, runner_name};
 use crate::review::verdict::{
     COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START,
 };
@@ -36,6 +36,7 @@ const CHANGE_MAP_LIMIT: usize = 50;
 pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()> {
     let runs = results::read_all(&ctx.root.join(&inputs.results))?;
     let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
+    let quarantine = Quarantine::load(ctx)?;
     let media = media(&runs);
     let prefix = pr_folder(pr, Some(sha));
     let secrets = known_secrets();
@@ -44,6 +45,7 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
             sha,
             pr: Some(pr),
             runs: &runs,
+            quarantine: &quarantine,
             report: &report,
             verdict,
             media_url: Some(&media_url(&prefix)),
@@ -78,10 +80,12 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
 pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
     let runs = results::read_all(&ctx.root.join(&inputs.results))?;
     let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
+    let quarantine = Quarantine::load(ctx)?;
     let section = render_section(&Section {
         sha,
         pr: None,
         runs: &runs,
+        quarantine: &quarantine,
         report: &report,
         verdict: None,
         media_url: None,
@@ -183,6 +187,7 @@ struct Section<'a> {
     sha: &'a str,
     pr: Option<u64>,
     runs: &'a [(PathBuf, TestRun)],
+    quarantine: &'a Quarantine,
     report: &'a ChangeReport,
     verdict: Option<&'a Verdict>,
     /// Where the media folder is served; `None` when the media was not uploaded.
@@ -195,7 +200,7 @@ fn render_section(section: &Section) -> String {
 
     let _ = writeln!(out, "### Recordings");
     let scenarios: Vec<(&TestRun, &TestCase)> = cases(section.runs)
-        .filter(|(_, case)| case.requirement.is_some() || !case.artifacts.is_empty())
+        .filter(|(_, case)| case.requirement.is_some() || results::artifacts(case).next().is_some())
         .collect();
     if scenarios.is_empty() {
         let _ = writeln!(out, "No requirement scenarios ran.");
@@ -213,8 +218,8 @@ fn render_section(section: &Section) -> String {
                     Some(requirement) => format!("{requirement} `{}`", case.id),
                     None => format!("`{}`", case.id),
                 },
-                result(&case.outcome),
-                recording(run, case, section.media_url),
+                result(verdict(section, run, case)),
+                recording(section, run, case),
             );
         }
     }
@@ -222,23 +227,31 @@ fn render_section(section: &Section) -> String {
     let _ = writeln!(out, "\n### Broken and unreliable");
     let mut troubled = 0;
     for (run, case) in cases(section.runs) {
-        let (word, failure) = match &case.outcome {
-            Outcome::Failed(failure) => ("**broken**", failure),
-            Outcome::Flaky(failure) => ("**unreliable**", failure),
+        let word = match verdict(section, run, case) {
+            CaseVerdict::Failed => "**broken**",
+            CaseVerdict::Flaky => "**unreliable**",
             _ => continue,
         };
         troubled += 1;
+        let explained = results::last_failure(case).map_or_else(
+            || "an outcome this harness does not know".to_owned(),
+            |failure| {
+                format!(
+                    "{}{}",
+                    cell(&failure.message),
+                    failure
+                        .first_broken
+                        .as_ref()
+                        .map(|step| format!(" (first broken: {})", cell(step)))
+                        .unwrap_or_default()
+                )
+            },
+        );
         let _ = writeln!(
             out,
-            "- {word} {}/{}: {}{}",
+            "- {word} {}/{}: {explained}",
             runner_name(&run.runner),
             case.id,
-            cell(&failure.message),
-            failure
-                .first_broken
-                .as_ref()
-                .map(|step| format!(" (first broken: {})", cell(step)))
-                .unwrap_or_default()
         );
     }
     if troubled == 0 {
@@ -291,31 +304,27 @@ fn render_section(section: &Section) -> String {
     let _ = writeln!(out, "\n### Run health");
     let mut flaky = Vec::new();
     let mut quarantined = Vec::new();
-    let mut over_budget = Vec::new();
     for (run, case) in cases(section.runs) {
         let id = format!("{}/{}", runner_name(&run.runner), case.id);
-        match &case.outcome {
-            Outcome::Flaky(_) => flaky.push(format!("{id} (passed on rerun)")),
-            Outcome::Quarantined(_) => quarantined.push(id),
-            Outcome::OverBudget(millis) => over_budget.push(format!("{id} by {millis} ms")),
+        match verdict(section, run, case) {
+            CaseVerdict::Flaky => flaky.push(format!("{id} (passed on rerun)")),
+            CaseVerdict::Quarantined => quarantined.push(id),
             _ => {}
         }
     }
     let _ = writeln!(
         out,
-        "Flaky {}{}. Quarantined {}{}. Over budget {}{}.",
+        "Flaky {}{}. Quarantined {}{}.",
         flaky.len(),
         listed(&flaky),
         quarantined.len(),
         listed(&quarantined),
-        over_budget.len(),
-        listed(&over_budget)
     );
     for (_, run) in section.runs {
         let passed = run
             .cases
             .iter()
-            .filter(|case| matches!(case.outcome, Outcome::Passed | Outcome::OverBudget(_)))
+            .filter(|case| verdict(section, run, case) == CaseVerdict::Passed)
             .count();
         let _ = writeln!(
             out,
@@ -414,22 +423,27 @@ fn kind(demonstrates: &Demonstrates) -> &'static str {
     }
 }
 
-fn result(outcome: &Outcome) -> String {
-    match outcome {
-        Outcome::Passed => "proven".to_string(),
-        Outcome::OverBudget(millis) => format!("proven, {millis} ms over budget"),
-        Outcome::Failed(_) => "**broken**".to_string(),
-        Outcome::Flaky(_) => "**unreliable**".to_string(),
-        Outcome::Quarantined(_) => "**quarantined**".to_string(),
-        Outcome::Unknown(_) => "unknown".to_string(),
+/// The case's verdict under its run's attempt policy; a case without attempts proves nothing.
+fn verdict(section: &Section, run: &TestRun, case: &TestCase) -> CaseVerdict {
+    results::verdict(run, case, section.quarantine).unwrap_or(CaseVerdict::Failed)
+}
+
+fn result(verdict: CaseVerdict) -> &'static str {
+    match verdict {
+        CaseVerdict::Passed => "proven",
+        CaseVerdict::Failed => "**broken**",
+        CaseVerdict::Flaky => "**unreliable**",
+        CaseVerdict::Quarantined => "**quarantined**",
     }
 }
 
-/// The previews and links of a case's artifacts, then what broke, as one table cell.
-fn recording(run: &TestRun, case: &TestCase, media_url: Option<&str>) -> String {
+/// The previews and links of a case's artifacts, every attempt's, then what broke, as one table
+/// cell.
+fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
+    let media_url = section.media_url;
     let mut parts = Vec::new();
-    for artifact in &case.artifacts {
+    for artifact in results::artifacts(case) {
         let Some(base) = media_url else {
             parts.push(format!("`{runner}/{}` in the run artifacts", artifact.path));
             continue;
@@ -447,8 +461,8 @@ fn recording(run: &TestRun, case: &TestCase, media_url: Option<&str>) -> String 
             ArtifactKind::LogExcerpt | ArtifactKind::Unknown(_) => format!("[log]({url})"),
         });
     }
-    if let Outcome::Failed(failure) | Outcome::Flaky(failure) | Outcome::Quarantined(failure) =
-        &case.outcome
+    if verdict(section, run, case) != CaseVerdict::Passed
+        && let Some(failure) = results::last_failure(case)
     {
         parts.push(cell(&failure.message));
     }
@@ -484,7 +498,7 @@ fn media(runs: &[(PathBuf, TestRun)]) -> Vec<(PathBuf, String)> {
     for (path, run) in runs {
         let folder = path.parent().unwrap_or(Path::new("."));
         let runner = runner_name(&run.runner);
-        for artifact in run.cases.iter().flat_map(|case| &case.artifacts) {
+        for artifact in run.cases.iter().flat_map(results::artifacts) {
             media.push((
                 folder.join(&artifact.path),
                 format!("{runner}/{}", artifact.path),

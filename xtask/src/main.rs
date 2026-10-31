@@ -65,7 +65,7 @@ enum Cli {
     /// Regenerates the generated sources (Git ignores them) whose inputs changed.
     Generate,
     /// Runs an end to end suite against this worktree's stack and writes its `TestRun`.
-    E2e { suite: e2e::Suite },
+    E2e(e2e::E2eArgs),
     /// Runs a command with this worktree's stack up, or removes stacks left behind.
     #[command(subcommand)]
     Stack(stack::StackCommand),
@@ -127,7 +127,7 @@ fn main() -> ExitCode {
         Cli::Deploy { cluster } => deploy::deploy(&context, cluster),
         Cli::Cluster(command) => cluster::command(&context, command),
         Cli::Generate => generate::generate(&context, None),
-        Cli::E2e { suite } => e2e::run(&context, suite),
+        Cli::E2e(args) => e2e::run(&context, &args),
         Cli::Stack(command) => stack::command(&context, command),
         Cli::Doctor => doctor::doctor(&context),
         Cli::Secrets(command) => secrets::command(&context, command),
