@@ -2,6 +2,10 @@
 
 Value types that Minecraft capabilities and Paper extensions use in entry fields, formulas, and stored data. They live under the Minecraft capability; core primitives never depend on them (see [overview.md](overview.md)). Build order: layer 4 in [closed-beta-roadmap.md](closed-beta-roadmap.md).
 
+## Type identity
+
+Every type uses a generated id like every other Typewriter type: a UUIDv7 as 32 hex digits in a constant (`const val WORLD_TYPE_ID = "019d..."`, the same pattern as `COLOR_TYPE_ID` in `VisualValues.kt`), plus `revision` (default 1). Namespaced strings such as `minecraft:world` are never type ids.
+
 ## Space: world, vector, rotation
 
 Spatial data has three parts: a **world**, a **vector** (x, y, z), and a **rotation** (yaw, pitch). Different uses need different combinations, so there is one exact type per real combination. An entry field always asks for exactly the type it needs; nothing in it is optional, and the panel shows exactly those parts (a particle field has no rotation to fill in).
@@ -23,7 +27,7 @@ A combination without a real use (world + rotation) gets no type until something
 ```kotlin
 @JvmInline
 @Serializable
-@TypewriterType(id = "minecraft:world")
+@TypewriterType(id = WORLD_TYPE_ID)
 value class World(val key: String) // "minecraft:overworld", "myserver:arena"
 ```
 
@@ -50,7 +54,7 @@ Exact types are flat data classes, so the generated `copy` works per field and r
 
 ```kotlin
 @Serializable
-@TypewriterType(id = "minecraft:location")
+@TypewriterType(id = LOCATION_TYPE_ID)
 data class Location(
     override val world: World,
     override val x: Double,
@@ -62,7 +66,7 @@ data class Location(
 }
 
 @Serializable
-@TypewriterType(id = "minecraft:position")
+@TypewriterType(id = POSITION_TYPE_ID)
 data class Position(
     override val world: World,
     override val x: Double,
@@ -125,6 +129,67 @@ spawn.copy(y = 64).add(z = 2)
 
 Each exact type has its own editor showing exactly its parts. Capture (layer 13) fills exactly those parts from the player; teleport to a `Location` keeps the player's current facing.
 
+## Items
+
+Building an item and recognizing an item are separate jobs with separate tools.
+
+### Item forms
+
+`Item` is an open interface; each item source is one form. The panel switches forms through the existing union editor.
+
+```kotlin
+interface Item { val amount: Int }
+
+@TypewriterType(id = MINECRAFT_ITEM_TYPE_ID)
+data class MinecraftItem(
+    val material: Material,
+    override val amount: Int = 1,
+    val components: Set<ItemComponent> = emptySet(),
+) : Item
+
+// Nexo extension: Nexo owns the item's look and behavior
+data class NexoItem(val id: NexoId, override val amount: Int = 1) : Item
+```
+
+A real stack read from the game comes back in its most specific form (see [engines.md](engines.md#bridges)), so `it is NexoItem && it.id == ruby` works in match formulas. Legacy `SerializedItem` (Bukkit bytes) does not exist: everything an item carries is a typed component, and anything that cannot be represented is dropped on capture with a panel notice.
+
+### Components
+
+`ItemComponent` is an open interface; any extension adds components through catalog `parents`. Each component is a small, complete record.
+
+```kotlin
+interface ItemComponent
+
+data class Name(val text: RichText) : ItemComponent
+data class Lore(val lines: List<RichText>) : ItemComponent
+data class Consumable(val duration: Duration, val animation: UseAnimation, val sound: Sound) : ItemComponent
+data class Food(val nutrition: Int, val saturation: Float, val alwaysEdible: Boolean = false) : ItemComponent
+data class UseCooldown(val duration: Duration, val group: String = "") : ItemComponent
+data class Durability(val max: Int, val remaining: Int = max) : ItemComponent
+data class Tag(@Key val key: String, val value: String) : ItemComponent
+```
+
+- A component without `@Key` appears at most once per item; with `@Key`, once per key. `with(x)` replaces the component with the same type and key; two equal-keyed components written by hand are a publication check error.
+- Reading falls back to the material default: `item[Food]?.nutrition` on an apple is 4. `without(Food)` stores a removal, so defaults can be removed.
+- Components follow Minecraft's composable split (an edible item is `Consumable` + `Food`) and merge only true duplicates: one `Name` (`item_name` and `custom_name`), one `Enchantments` (`enchantments` and `stored_enchantments`), hiding as a field on the component (`tooltip_display`), `Durability(max, remaining)` (`max_damage` and `damage`), and real `Duration`, `Color`, and `Sound` values.
+- The Minecraft capability owns the mapping from components to Minecraft data components (Java 26.3 has 122). Components Paper's typed API lacks are written through NMS by the Paper engine. Not stored: components the game never encodes (`creative_slot_lock`, `map_post_processing`, `additional_trade_cost`, `debug_stick_state`) and raw NBT components (`entity_data`, `bucket_entity_data`, `block_entity_data`, `bees`, `lock`).
+- Item behavior ("on use, do X") is not part of the item: it is an event with a match formula.
+
+### Recognizing items
+
+Matching is a formula over an item, through formula function types:
+
+```kotlin
+class RemoveItem(val matches: Var<(Item) -> Boolean, MemberContext>, val amount: Var<Int, MemberContext>)
+```
+
+```
+it is MinecraftItem and it.material == minecraft.item.diamond
+it[Tag("quest")]?.value == "lost_key"
+it.is_like(reward_item)        // same item, amount ignored
+protagonist.inventory.count { it.is_like(reward_item) } >= 5
+```
+
 ## Requirements on other layers
 
 - Formula type checker (layer 1): bounded generics (`S : HasVector<S>`) and `where` clauses with several bounds.
@@ -132,4 +197,5 @@ Each exact type has its own editor showing exactly its parts. Capture (layer 13)
 ## Open
 
 - Verify in layer 4 that Kotlin overload resolution picks the world aware `distance` for `Location` and `Position` over `Vector.distance`; if not, the worldless version gets its own name.
-- Items, registry ids (sound, particle, material, entity type, potion effect), and sounds are not designed yet.
+- The full component list (every settable Minecraft data component as a component type).
+- Registry ids (sound, particle, material, entity type, potion effect) and sounds are not designed yet.

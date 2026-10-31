@@ -13,7 +13,8 @@ Read `overview.md` first; it introduces the seven primitives and links to the re
 | [interactions.md](interactions.md) | Holds, Runtime, interactions and steps, groups, scenes, NPC scope, preview |
 | [formula-language.md](formula-language.md) | Formulas, `Var<T, C>`, `dynamic()`, contexts, definitions, books, type checking |
 | [migrations.md](migrations.md) | Migration hook, pending migrations, the developer migrator, the 0.9 importer |
-| [minecraft-types.md](minecraft-types.md) | Minecraft value types: world, vectors, rotation, locations, positions |
+| [minecraft-types.md](minecraft-types.md) | Minecraft value types: space (world, vectors, rotation, locations, positions) and items |
+| [engines.md](engines.md) | Bridges between Typewriter values and engine types; engine requests |
 | [glossary.md](glossary.md) | Every type and term, one line each |
 | [closed-beta-roadmap.md](closed-beta-roadmap.md) | The stacked PR order toward the closed beta, with what each layer needs |
 
