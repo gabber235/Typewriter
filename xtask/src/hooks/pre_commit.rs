@@ -197,28 +197,17 @@ fn piped(command: &mut Command, input: Vec<u8>) -> Result<std::process::Output> 
 mod tests {
     use super::*;
 
-    /// A fresh repository ignoring build_runner output, with `files` written and force staged.
-    fn staged(files: &[&str]) -> (tempfile::TempDir, Context) {
-        let dir = tempfile::tempdir().unwrap();
-        let ctx = Context {
-            root: dir.path().to_owned(),
-        };
-        ctx.tool(".", "git", &["init", "--quiet"])
-            .output_text()
-            .unwrap();
-        fs::write(dir.path().join(".gitignore"), "*.g.dart\n").unwrap();
-        for file in files {
-            fs::write(dir.path().join(file), "text\n").unwrap();
-        }
-        let mut add = ctx.tool(".", "git", &["add", "--force", ".gitignore"]);
-        add.args(files).output_text().unwrap();
-        (dir, ctx)
-    }
+    use crate::test_support::{TempRoot, refusal};
 
     #[test]
     fn a_staged_generated_file_is_refused_by_name() {
-        let (_dir, ctx) = staged(&["notes.txt", "model.g.dart"]);
-        let error = check(&ctx).unwrap_err().to_string();
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "*.g.dart\n");
+        root.write("notes.txt", "text\n");
+        root.write("model.g.dart", "text\n");
+        root.git(&["add", "--force", ".gitignore", "notes.txt", "model.g.dart"]);
+        let error = refusal(check(&root.ctx));
         assert!(error.contains("ignored files are staged"));
         assert!(error.contains("model.g.dart"));
         assert!(!error.contains("notes.txt"));
@@ -226,7 +215,11 @@ mod tests {
 
     #[test]
     fn staged_files_nothing_ignores_pass() {
-        let (_dir, ctx) = staged(&["notes.txt"]);
-        assert!(check(&ctx).is_ok());
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "*.g.dart\n");
+        root.write("notes.txt", "text\n");
+        root.git(&["add", "--force", ".gitignore", "notes.txt"]);
+        assert!(check(&root.ctx).is_ok());
     }
 }

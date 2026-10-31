@@ -234,16 +234,7 @@ pub fn check_range(ctx: &Context, range: &str) -> Result<()> {
 mod tests {
     use super::*;
 
-    fn scopes(scopes: &[&str]) -> Scopes {
-        Scopes {
-            scopes: scopes.iter().map(|scope| (*scope).to_owned()).collect(),
-            scope_required_for_types: BTreeSet::from(["feat".to_owned()]),
-        }
-    }
-
-    fn refusal(scopes: &Scopes, message: &str) -> String {
-        check(scopes, message).unwrap_err().to_string()
-    }
+    use crate::test_support::{refusal, scopes};
 
     #[test]
     fn a_conventional_header_with_known_scopes_passes() {
@@ -254,35 +245,37 @@ mod tests {
 
     #[test]
     fn an_unknown_scope_is_refused_by_name() {
-        let error = refusal(&scopes(&["panel"]), "fix(panel, nope): y");
+        let error = refusal(check(&scopes(&["panel"]), "fix(panel, nope): y"));
         assert!(error.contains("unknown scope: nope."));
     }
 
     #[test]
     fn an_unknown_type_is_refused_by_name() {
-        assert!(refusal(&scopes(&[]), "fixes: y").contains("unknown type: fixes."));
+        assert!(refusal(check(&scopes(&[]), "fixes: y")).contains("unknown type: fixes."));
     }
 
     #[test]
     fn a_type_that_requires_a_scope_is_refused_without_one() {
-        let error = refusal(&scopes(&["panel"]), "feat: y");
+        let error = refusal(check(&scopes(&["panel"]), "feat: y"));
         assert!(error.contains("scope is required for type feat"));
     }
 
     #[test]
     fn a_header_over_the_limit_is_refused() {
         let header = format!("fix: {}", "y".repeat(MAX_HEADER));
-        assert!(refusal(&scopes(&[]), &header).contains("at most 120"));
+        assert!(refusal(check(&scopes(&[]), &header)).contains("at most 120"));
     }
 
     #[test]
     fn a_free_form_header_is_refused() {
-        assert!(refusal(&scopes(&[]), "Fix the panel").contains("not `type(scope): subject`"));
+        assert!(
+            refusal(check(&scopes(&[]), "Fix the panel")).contains("not `type(scope): subject`")
+        );
     }
 
     #[test]
     fn an_empty_subject_is_refused() {
-        assert!(refusal(&scopes(&[]), "fix:  ").contains("subject is empty"));
+        assert!(refusal(check(&scopes(&[]), "fix:  ")).contains("subject is empty"));
     }
 
     #[test]
@@ -299,7 +292,7 @@ mod tests {
     #[test]
     fn comment_lines_before_the_header_are_skipped() {
         let message = "# Please enter the commit message\n\nnope\n";
-        assert!(refusal(&scopes(&[]), message).starts_with("nope\n"));
+        assert!(refusal(check(&scopes(&[]), message)).starts_with("nope\n"));
     }
 
     #[test]

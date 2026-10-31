@@ -21,6 +21,8 @@ mod review;
 mod secrets;
 mod skirout;
 mod stack;
+#[cfg(test)]
+mod test_support;
 
 use std::fs::File;
 use std::path::{Path, PathBuf};

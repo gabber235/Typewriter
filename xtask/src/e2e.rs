@@ -291,20 +291,8 @@ fn desktop_device() -> Result<&'static str> {
 
 #[cfg(test)]
 mod tests {
-    use std::os::unix::process::ExitStatusExt as _;
-
     use super::*;
-    use crate::results::fixtures::{failed, run};
-
-    /// The exit status of a process that exited with `code`.
-    fn exited(code: i32) -> ExitStatus {
-        ExitStatus::from_raw(code << 8)
-    }
-
-    fn judged(run: &TestRun) -> Result<()> {
-        let file = Path::new("test_run.json");
-        verdict("panel", file, run, &Quarantine::default(), &mut Vec::new())
-    }
+    use crate::test_support::{exited, failed, refusal, run};
 
     #[test]
     fn a_drive_that_crashes_without_results_fails_the_run_and_says_so() {
@@ -325,7 +313,13 @@ mod tests {
 
     #[test]
     fn a_run_that_reports_no_scenarios_fails() {
-        let error = judged(&run(&[])).unwrap_err().to_string();
+        let error = refusal(verdict(
+            "panel",
+            Path::new("test_run.json"),
+            &run(&[]),
+            &Quarantine::default(),
+            &mut Vec::new(),
+        ));
         assert!(error.contains("no scenarios"), "{error}");
     }
 
@@ -333,14 +327,28 @@ mod tests {
     fn a_run_whose_scenarios_pass_passes() {
         let passing = run(&[("a", Outcome::Passed), ("b", Outcome::Passed)]);
         assert!(driven(exited(0), passing.clone()).is_ok());
-        assert!(judged(&passing).is_ok());
+        assert!(
+            verdict(
+                "panel",
+                Path::new("test_run.json"),
+                &passing,
+                &Quarantine::default(),
+                &mut Vec::new()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
     fn a_run_with_one_failing_scenario_fails_and_names_it() {
-        let error = judged(&run(&[("a", Outcome::Passed), ("b", failed("boom"))]))
-            .unwrap_err()
-            .to_string();
+        let failing = run(&[("a", Outcome::Passed), ("b", failed("boom"))]);
+        let error = refusal(verdict(
+            "panel",
+            Path::new("test_run.json"),
+            &failing,
+            &Quarantine::default(),
+            &mut Vec::new(),
+        ));
         assert!(error.contains("1 of 2 cases failed: b"), "{error}");
     }
 }

@@ -698,117 +698,113 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
-
-    fn areas(paths: &[&str]) -> BTreeSet<&'static str> {
-        let paths: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
-        affected(select(None), &paths)
-            .iter()
-            .map(|step| step.area.name())
-            .collect()
-    }
-
-    fn every_area() -> BTreeSet<&'static str> {
-        select(None).iter().map(|step| step.area.name()).collect()
-    }
+    use crate::test_support::{TempRoot, area_names, failure_message, shell};
 
     #[test]
     fn a_panel_change_runs_the_panel_and_the_project_rules_only() {
         assert_eq!(
-            areas(&["panel/lib/a.dart"]),
-            BTreeSet::from(["panel", "quality"])
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("panel/lib/a.dart")]
+            )),
+            BTreeSet::from(["panel", "quality"].map(String::from))
         );
     }
 
     #[test]
     fn a_documentation_change_runs_nothing() {
-        assert!(areas(&["README.md", "panel/AGENTS.md"]).is_empty());
+        assert!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("README.md"), PathBuf::from("panel/AGENTS.md")]
+            ))
+            .is_empty()
+        );
     }
 
     #[test]
     fn markdown_of_the_documentation_site_runs_the_docs() {
         assert_eq!(
-            areas(&["documentation/src/content/docs/index.md"]),
-            BTreeSet::from(["docs"])
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("documentation/src/content/docs/index.md")]
+            )),
+            BTreeSet::from(["docs"].map(String::from))
         );
     }
 
     #[test]
     fn a_quarantine_change_runs_every_area() {
-        assert_eq!(areas(&["harness/quarantine.toml"]), every_area());
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("harness/quarantine.toml")]
+            )),
+            area_names(&select(None))
+        );
     }
 
     #[test]
     fn a_harness_change_runs_every_area() {
-        assert_eq!(areas(&["xtask/src/graph.rs"]), every_area());
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("xtask/src/graph.rs")]
+            )),
+            area_names(&select(None))
+        );
     }
 
     #[test]
     fn a_commit_scope_change_runs_the_harness_checks() {
-        assert_eq!(areas(&["commit-scopes.json"]), BTreeSet::from(["xtask"]));
-    }
-
-    /// A step running `sh -c script` within `budget`.
-    fn shell(name: &'static str, script: &'static str, budget: Duration) -> Step {
-        Step {
-            name,
-            area: Area::Xtask,
-            run: Run::Program {
-                cwd: ".",
-                program: "sh",
-                args: Box::leak(Box::new(["-c", script])),
-            },
-            heavy: false,
-            budget,
-            needs_generate: false,
-            coverage: None,
-        }
-    }
-
-    /// Runs `step` in a fresh repository root and returns whether it passed and its `TestRun`.
-    fn run_in_temp_root(step: &Step) -> (bool, TestRun) {
-        let root = tempfile::tempdir().unwrap();
-        let ctx = Context {
-            root: root.path().to_owned(),
-        };
-        let logs = root.path().join("logs");
-        fs::create_dir_all(&logs).unwrap();
-        let passed = run_step(&ctx, step, &logs, "commit");
-        let name = step.name.replace(':', "-");
-        let run = results::read(
-            &root
-                .path()
-                .join(format!(".xtask/results/steps/{name}.json")),
-        )
-        .unwrap();
-        (passed, run)
-    }
-
-    fn failure_message(run: &TestRun) -> &str {
-        match &run.cases[0].outcome {
-            Outcome::Failed(failure) => &failure.message,
-            _ => panic!("the step's case did not fail"),
-        }
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("commit-scopes.json")]
+            )),
+            BTreeSet::from(["xtask"].map(String::from))
+        );
     }
 
     #[test]
     fn a_failing_step_fails_and_records_its_failure() {
-        let (passed, run) = run_in_temp_root(&shell("test:fails", "exit 3", mins(1)));
+        let root = TempRoot::new();
+        let passed = run_step(
+            &root.ctx,
+            &shell("test:fails", "exit 3", mins(1)),
+            &root.dir("logs"),
+            "commit",
+        );
+        let run = results::read(&root.path(".xtask/results/steps/test-fails.json")).unwrap();
         assert!(!passed);
         assert_eq!(run.cases[0].id, "test:fails");
-        assert!(failure_message(&run).contains("exit status: 3"));
+        assert!(failure_message(&run.cases[0].outcome).contains("exit status: 3"));
     }
 
     #[test]
     fn a_step_over_its_budget_fails_and_records_its_failure() {
-        let (passed, run) =
-            run_in_temp_root(&shell("test:slow", "sleep 30", Duration::from_millis(300)));
+        let root = TempRoot::new();
+        let passed = run_step(
+            &root.ctx,
+            &shell("test:slow", "sleep 30", Duration::from_millis(300)),
+            &root.dir("logs"),
+            "commit",
+        );
+        let run = results::read(&root.path(".xtask/results/steps/test-slow.json")).unwrap();
         assert!(!passed);
-        assert!(failure_message(&run).contains("budget"));
+        assert!(failure_message(&run.cases[0].outcome).contains("budget"));
     }
 
     #[test]
     fn a_passing_step_records_its_pass() {
-        let (passed, run) = run_in_temp_root(&shell("test:passes", "true", mins(1)));
+        let root = TempRoot::new();
+        let passed = run_step(
+            &root.ctx,
+            &shell("test:passes", "true", mins(1)),
+            &root.dir("logs"),
+            "commit",
+        );
+        let run = results::read(&root.path(".xtask/results/steps/test-passes.json")).unwrap();
         assert!(passed);
         assert_eq!(run.cases[0].outcome, Outcome::Passed);
     }

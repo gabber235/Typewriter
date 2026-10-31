@@ -192,51 +192,10 @@ pub fn runner_name(runner: &Runner) -> &'static str {
     }
 }
 
-/// Builders for runs in the tests of every runner that judges one.
-#[cfg(test)]
-pub mod fixtures {
-    use super::*;
-
-    /// A components run with `cases`.
-    pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
-        TestRun {
-            runner: Runner::Components,
-            cases: cases
-                .iter()
-                .map(|(id, outcome)| TestCase {
-                    id: (*id).to_owned(),
-                    outcome: outcome.clone(),
-                    ..TestCase::default()
-                })
-                .collect(),
-            ..TestRun::default()
-        }
-    }
-
-    /// A failure with `message`.
-    pub fn failed(message: &str) -> Outcome {
-        Outcome::Failed(Box::new(Failure {
-            message: message.to_owned(),
-            ..Failure::default()
-        }))
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::fixtures::{failed, run};
     use super::*;
-
-    fn quarantining(id: &str) -> Quarantine {
-        toml::from_str(&format!(
-            "[[case]]\nid = \"{id}\"\nreason = \"times out on CI\"\nissue = 7\n"
-        ))
-        .unwrap()
-    }
-
-    fn never_rerun(_: &[&str]) -> Result<TestRun> {
-        panic!("nothing should be rerun")
-    }
+    use crate::test_support::{failed, never_rerun, quarantining, run};
 
     #[test]
     fn a_case_that_passes_on_rerun_is_flaky_and_does_not_gate() {

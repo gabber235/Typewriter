@@ -332,52 +332,26 @@ impl<'a> StackContext<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// A service that only declares its dependencies.
-    macro_rules! service {
-        ($name:ident, $($need:ident),*) => {
-            pub struct $name;
-            impl Service for $name {
-                const ID: ServiceId = ServiceId(stringify!($name));
-                fn needs(&self) -> &'static [ServiceId] {
-                    &[$(<$need as Service>::ID),*]
-                }
-                fn command(&self, _: &StackContext) -> Result<Command> {
-                    Ok(Command::new("true"))
-                }
-                fn ready(&self, _: &StackContext) -> Probe {
-                    Probe::ExitSuccess
-                }
-            }
-        };
-    }
+    use crate::test_support::{fake_service, refusal};
 
     mod chain {
         use super::*;
-        service!(Broker,);
-        service!(Accounts, Broker);
-        service!(Realm, Accounts, Broker);
+        fake_service!(Broker,);
+        fake_service!(Accounts, Broker);
+        fake_service!(Realm, Accounts, Broker);
     }
 
     mod cycle {
         use super::*;
-        service!(First, Second);
-        service!(Second, First);
-        service!(Free,);
+        fake_service!(First, Second);
+        fake_service!(Second, First);
+        fake_service!(Free,);
     }
 
     mod missing {
         use super::*;
-        service!(Broker,);
-        service!(Accounts, Broker);
-    }
-
-    fn order(spec: &StackSpec) -> Result<Vec<&'static str>> {
-        Ok(spec
-            .ordered()?
-            .iter()
-            .map(|service| service.id().0)
-            .collect())
+        fake_service!(Broker,);
+        fake_service!(Accounts, Broker);
     }
 
     #[test]
@@ -386,13 +360,20 @@ mod tests {
             .with(chain::Realm)
             .with(chain::Accounts)
             .with(chain::Broker);
-        assert_eq!(order(&spec).unwrap(), ["Broker", "Accounts", "Realm"]);
+        assert_eq!(
+            spec.ordered()
+                .unwrap()
+                .iter()
+                .map(|service| service.id().0)
+                .collect::<Vec<_>>(),
+            ["Broker", "Accounts", "Realm"]
+        );
     }
 
     #[test]
     fn a_missing_dependency_is_named() {
         let spec = StackSpec::default().with(missing::Accounts);
-        let error = order(&spec).unwrap_err().to_string();
+        let error = refusal(spec.ordered());
         assert_eq!(
             error,
             "service `Accounts` needs `Broker`, which the stack does not contain"
@@ -405,7 +386,7 @@ mod tests {
             .with(cycle::First)
             .with(cycle::Free)
             .with(cycle::Second);
-        let error = order(&spec).unwrap_err().to_string();
+        let error = refusal(spec.ordered());
         assert_eq!(error, "the services First, Second need each other");
     }
 

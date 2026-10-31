@@ -519,12 +519,7 @@ fn parse_range(range: &str) -> (u32, u32) {
 mod tests {
     use super::*;
 
-    fn lines(diff: &str) -> Vec<(String, Vec<u32>)> {
-        parse_diff(diff)
-            .into_iter()
-            .map(|file| (file.path.display().to_string(), file.added))
-            .collect()
-    }
+    use crate::test_support::{TempRoot, refusal};
 
     #[test]
     fn findings_land_on_the_lines_a_hunk_added() {
@@ -532,7 +527,11 @@ mod tests {
                     @@ -1 +5,3 @@ fn a()\n\
                     @@ -20,2 +30,0 @@\n\
                     @@ -40 +41 @@\n";
-        assert_eq!(lines(diff), [("src/a.rs".to_owned(), vec![5, 6, 7, 41])]);
+        let lines: Vec<(String, Vec<u32>)> = parse_diff(diff)
+            .into_iter()
+            .map(|file| (file.path.display().to_string(), file.added))
+            .collect();
+        assert_eq!(lines, [("src/a.rs".to_owned(), vec![5, 6, 7, 41])]);
     }
 
     #[test]
@@ -552,74 +551,42 @@ mod tests {
         assert!(files[1].status == Status::Deleted && files[1].added.is_empty());
     }
 
-    /// A repository whose remote has `develop` with one commit and `features/v1` one commit
-    /// further, and whose `HEAD` is the branch `features/x`, two commits beyond `features/v1`.
-    fn stacked_repository() -> (tempfile::TempDir, Context) {
-        let dir = tempfile::tempdir().unwrap();
-        let ctx = Context {
-            root: dir.path().to_owned(),
-        };
-        let git = |args: &[&str]| {
-            git(
-                &ctx,
-                &[
-                    "-c",
-                    "user.name=t",
-                    "-c",
-                    "user.email=t@t",
-                    "-c",
-                    "commit.gpgsign=false",
-                ],
-            )
-            .args(args)
-            .output_text()
-            .unwrap()
-        };
-        git(&["init", "--quiet", "--initial-branch=develop"]);
-        let commit = |message: &str| git(&["commit", "--quiet", "--allow-empty", "-m", message]);
-        commit("develop");
-        git(&["update-ref", "refs/remotes/origin/develop", "HEAD"]);
-        git(&[
+    #[test]
+    fn a_stacked_branch_compares_with_the_branch_it_grew_from() {
+        // The remote has `develop` with one commit and `features/v1` one commit further; `HEAD`
+        // is the branch `features/x`, two commits beyond `features/v1`.
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet", "--initial-branch=develop"]);
+        root.commit("develop");
+        root.git(&["update-ref", "refs/remotes/origin/develop", "HEAD"]);
+        root.git(&[
             "symbolic-ref",
             "refs/remotes/origin/HEAD",
             "refs/remotes/origin/develop",
         ]);
-        commit("features/v1");
-        git(&["update-ref", "refs/remotes/origin/features/v1", "HEAD"]);
-        git(&["checkout", "--quiet", "-b", "features/x"]);
-        commit("one");
+        root.commit("features/v1");
+        root.git(&["update-ref", "refs/remotes/origin/features/v1", "HEAD"]);
+        root.git(&["checkout", "--quiet", "-b", "features/x"]);
+        root.commit("one");
         // Pushed after its first commit; the second is not pushed yet.
-        git(&["update-ref", "refs/remotes/origin/features/x", "HEAD"]);
-        commit("two");
+        root.git(&["update-ref", "refs/remotes/origin/features/x", "HEAD"]);
+        root.commit("two");
         // A branch stacked on this one, which already contains HEAD.
-        git(&["update-ref", "refs/remotes/origin/features/y", "HEAD"]);
-        (dir, ctx)
-    }
-
-    #[test]
-    fn a_stacked_branch_compares_with_the_branch_it_grew_from() {
-        let (_dir, ctx) = stacked_repository();
-        assert_eq!(nearest_base(&ctx).unwrap(), "origin/features/v1");
+        root.git(&["update-ref", "refs/remotes/origin/features/y", "HEAD"]);
+        assert_eq!(nearest_base(&root.ctx).unwrap(), "origin/features/v1");
     }
 
     #[test]
     fn without_a_remote_branch_to_compare_with_the_base_must_be_passed() {
-        let (_dir, ctx) = stacked_repository();
-        git(
-            &ctx,
-            &["symbolic-ref", "--delete", "refs/remotes/origin/HEAD"],
-        )
-        .output_text()
-        .unwrap();
-        for branch in ["develop", "features/v1"] {
-            git(
-                &ctx,
-                &["update-ref", "-d", &format!("refs/remotes/origin/{branch}")],
-            )
-            .output_text()
-            .unwrap();
-        }
-        let error = nearest_base(&ctx).unwrap_err().to_string();
+        // The only remote branches are the checked out branch itself and one that already
+        // contains `HEAD`; neither is a base.
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet", "--initial-branch=features/x"]);
+        root.commit("one");
+        root.git(&["update-ref", "refs/remotes/origin/features/x", "HEAD"]);
+        root.commit("two");
+        root.git(&["update-ref", "refs/remotes/origin/features/y", "HEAD"]);
+        let error = refusal(nearest_base(&root.ctx));
         assert_eq!(error, "no remote branch to compare with; pass --base");
     }
 }

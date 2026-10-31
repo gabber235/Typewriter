@@ -466,57 +466,63 @@ impl Digest {
 mod tests {
     use super::*;
 
-    fn digest(text: &str) -> Digest {
-        let mut digest = Digest::new();
-        digest.update(text.as_bytes());
-        digest
-    }
-
-    /// A repository root with one generated output and a stamp recording it under `inputs`.
-    fn stamped(inputs: &Digest) -> (tempfile::TempDir, Context, PathBuf) {
-        let dir = tempfile::tempdir().unwrap();
-        let ctx = Context {
-            root: dir.path().to_owned(),
-        };
-        fs::create_dir_all(dir.path().join("panel/lib")).unwrap();
-        fs::write(dir.path().join("panel/lib/model.g.dart"), "").unwrap();
-        let stamp = dir.path().join("panel.stamp");
-        fs::write(
-            &stamp,
-            format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        )
-        .unwrap();
-        (dir, ctx, stamp)
-    }
+    use crate::test_support::TempRoot;
 
     #[test]
     fn unchanged_inputs_with_every_output_present_are_current() {
-        let inputs = digest("inputs");
-        let (_dir, ctx, stamp) = stamped(&inputs);
-        assert!(is_current(&ctx, &stamp, &inputs));
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
+        assert!(is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
     }
 
     #[test]
     fn changed_inputs_are_stale() {
-        let (_dir, ctx, stamp) = stamped(&digest("inputs"));
-        assert!(!is_current(&ctx, &stamp, &digest("edited inputs")));
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
+        let mut edited = Digest::new();
+        edited.update(b"edited inputs");
+        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &edited));
     }
 
     #[test]
     fn a_deleted_output_is_stale() {
-        let inputs = digest("inputs");
-        let (dir, ctx, stamp) = stamped(&inputs);
-        fs::remove_file(dir.path().join("panel/lib/model.g.dart")).unwrap();
-        assert!(!is_current(&ctx, &stamp, &inputs));
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
+        fs::remove_file(root.path("panel/lib/model.g.dart")).unwrap();
+        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
     }
 
     #[test]
     fn a_generator_that_never_ran_is_stale() {
-        let inputs = digest("inputs");
-        let (dir, ctx, _) = stamped(&inputs);
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
         assert!(!is_current(
-            &ctx,
-            &dir.path().join("protocol.stamp"),
+            &root.ctx,
+            &root.path("protocol.stamp"),
             &inputs
         ));
     }

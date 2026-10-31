@@ -436,29 +436,9 @@ pub fn command(ctx: &Context, command: StackCommand) -> Result<()> {
 mod tests {
     use std::net::TcpListener;
     use std::os::unix::process::ExitStatusExt as _;
-    use std::thread;
 
     use super::*;
-
-    fn record(registry: &Path, name: &str, owner: u32, groups: Vec<u32>) -> StackRecord {
-        let record = StackRecord {
-            path: registry.join(format!("{name}.json")),
-            worktree: PathBuf::from(format!("/worktrees/{name}")),
-            owner,
-            base: 20000,
-            groups,
-        };
-        record.write().unwrap();
-        record
-    }
-
-    /// The pid of a process that has exited and been reaped.
-    fn dead_pid() -> u32 {
-        let mut child = Command::new("true").spawn().unwrap();
-        let pid = child.id();
-        child.wait().unwrap();
-        pid
-    }
+    use crate::test_support::{answering, dead_pid, stack_record};
 
     #[test]
     fn gc_stops_what_a_killed_supervisor_left_and_keeps_live_stacks() {
@@ -469,8 +449,8 @@ mod tests {
             .process_group(0)
             .spawn()
             .unwrap();
-        let orphaned = record(dir.path(), "orphaned", dead_pid(), vec![orphan.id()]);
-        let live = record(dir.path(), "live", std::process::id(), Vec::new());
+        let orphaned = stack_record(dir.path(), "orphaned", dead_pid(), vec![orphan.id()]);
+        let live = stack_record(dir.path(), "live", std::process::id(), Vec::new());
 
         let removed = gc(&registry).unwrap();
 
@@ -479,25 +459,6 @@ mod tests {
         assert!(!orphaned.path.exists());
         assert!(live.path.exists());
         assert_eq!(orphan.wait().unwrap().signal(), Some(libc::SIGKILL));
-    }
-
-    /// A local server answering every request with `status`.
-    fn answering(status: &'static str) -> u16 {
-        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
-        let port = listener.local_addr().unwrap().port();
-        thread::spawn(move || {
-            for stream in listener.incoming() {
-                let mut stream = stream.unwrap();
-                // The whole request head, so closing never resets the connection under the reply.
-                let mut request = Vec::new();
-                let mut byte = [0];
-                while !request.ends_with(b"\r\n\r\n") && stream.read(&mut byte).unwrap_or(0) == 1 {
-                    request.push(byte[0]);
-                }
-                let _ = write!(stream, "HTTP/1.1 {status}\r\nContent-Length: 0\r\n\r\n");
-            }
-        });
-        port
     }
 
     #[test]
