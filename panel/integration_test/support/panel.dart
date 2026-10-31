@@ -242,10 +242,11 @@ final class Panel {
   Future<void> type(String label, String text) async {
     final field = _field(label);
     // A field rebuilt while its surface loads drops the focus a click gave
-    // it, so the click repeats until the field takes text.
+    // it, so the click repeats until the field takes text. A read only field,
+    // as editing that is still resuming shows, waits until it opens.
     var clicked = DateTime(0);
     await until("the text field \"$label\" accepts text", () {
-      if (!field.exists) return false;
+      if (!field.exists || field.isReadOnly) return false;
       if (field.acceptsText) return true;
       if (DateTime.now().difference(clicked) > _refocus) {
         clicked = DateTime.now();
