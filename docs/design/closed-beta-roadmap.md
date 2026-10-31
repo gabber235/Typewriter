@@ -35,3 +35,4 @@ Source design: docs/design/core-model.md (Decided) and docs/vision/.
 - Reopen: stdlib reuse target (no Kotlin `PortableKernel`), and query graph versus growing `ReverseDependencyIndex`.
 - Out of closed beta candidates: Bedrock (Floodgate) rendering, resource packs, localization.
 - Design needed: panel user to Minecraft player link (for capture and teleport), cancellable sync handlers (world rules), packet layer, path finding, extension platform, debug and inspect, commands, NPCs and entities, configurations, content capture and engine actions, assets and artifacts, items, importer.
+- Minecraft value types (layer 4): the Position and World proposal (namespaced world key, yaw and pitch in Position, no Coordinate) needs many changes; resume after the roadmap organization work is done.

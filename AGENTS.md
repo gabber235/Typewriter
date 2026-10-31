@@ -15,6 +15,7 @@ Skir declaration and method numbers are derived and written by `bun run generate
 
 - **Ask permission** before destructive operations, ugly hacks, or changing build system
 - **Use current code only**: Work in `services/`, `backend/`, `panel/`, and `skir-src/`. The `engine/`, `extensions/`, `module-plugin/`, and `app/` directories are legacy references and must not be modified.
+- **Design records**: when a design record is created or updated, keep it in `docs/design/` and commit it; worktrees read the matching record before building.
 
 ## DEFINITION OF DONE
 
