@@ -15,6 +15,23 @@ ignores:
   - panel/widgetbook/test/support/**
   # The scenario runner and the Panel driver every scenario shares.
   - panel/integration_test/support/**
+utils:
+  # A function value. tree-sitter-dart reads an arrow body that ends in a call or member access,
+  # `(tester) => tester.pumpPanel([])`, as `((tester) => tester).pumpPanel([])`, so the function
+  # expression sits at the start of the receiver chain instead of at the top.
+  function-value:
+    any:
+      - kind: function_expression
+      - all:
+          - kind: call_expression
+          - has:
+              field: function
+              matches: function-value
+      - all:
+          - kind: member_expression
+          - has:
+              field: object
+              matches: function-value
 rule:
   any:
     # Named types: fakes, fixtures, widgets, extensions.
@@ -44,7 +61,7 @@ rule:
             kind: static_final_declaration
             has:
               field: value
-              kind: function_expression
+              matches: function-value
     # Named local functions and function values in `main` or a group, outside every test case.
     - all:
         - any:
@@ -56,7 +73,7 @@ rule:
                     kind: initialized_variable_definition
                     has:
                       field: value
-                      kind: function_expression
+                      matches: function-value
         - not:
             inside:
               stopBy: end

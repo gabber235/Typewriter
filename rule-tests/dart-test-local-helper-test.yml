@@ -23,6 +23,18 @@ valid:
         await publish();
       });
     }
+  # A case pumping the panel directly, and test data built by calls on a value.
+  - |
+    final _data = [signedIn(ada), withPages(["intro"])];
+    final _names = _data.map((piece) => piece.name).toList();
+
+    void main() {
+      testWidgets("startup shows the panel", (tester) async {
+        final pump = tester.pumpPanel(_data, at: _ready);
+        final panel = await pump.then((panel) => panel);
+        expect(panel.shows("Startup ready"), isTrue);
+      });
+    }
 invalid:
   # A top level pump helper.
   - |
@@ -82,5 +94,26 @@ invalid:
         testWidgets("shows the panel", (tester) async {
           await pumpReady(tester);
         });
+      });
+    }
+  # A top level function value whose arrow body ends in a call.
+  - |
+    final _signIn = (WidgetTester tester) => tester.pumpPanel([signedIn(ada)]);
+
+    void main() {}
+  # A local function value in `main` whose arrow body ends in a call.
+  - |
+    void main() {
+      final signIn = (WidgetTester tester) => tester.pumpPanel([signedIn(ada)]);
+      testWidgets("startup shows the panel", (tester) async {
+        await signIn(tester);
+      });
+    }
+  # A function value in a group whose arrow body ends in a member access.
+  - |
+    void main() {
+      group("startup", () {
+        final ready = (Panel panel) => panel.labeled("Retry").first;
+        testWidgets("shows the panel", (tester) async {});
       });
     }
