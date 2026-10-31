@@ -243,6 +243,15 @@ final class FakeRealm {
     return refreshes;
   }
 
+  /// Makes every later refresh change the observed saved document as soon as
+  /// it starts and answer a fresh read of it, the way the panel's session
+  /// reports a refresh it begins and then reads the Realm again.
+  void announceRefreshes() => answerRefresh = () {
+    final read = document.copyWith();
+    serve(read);
+    return Future.value(read);
+  };
+
   /// Replaces how the Realm answers a resource search; by default it has no
   /// search.
   Future<skir.SearchAuthoringResponse> Function(

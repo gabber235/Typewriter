@@ -442,7 +442,11 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       },
     );
     if (!failed) return;
-    _recovering = refreshConfirmed().whenComplete(() => _recovering = null);
+    // The observation can arrive while its provider rebuilds; a refresh started
+    // now would change that provider again in the same frame.
+    _recovering = Future<void>.microtask(
+      refreshConfirmed,
+    ).whenComplete(() => _recovering = null);
   }
 
   void _install(S incoming) {

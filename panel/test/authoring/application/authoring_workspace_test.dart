@@ -1117,31 +1117,50 @@ void main() {
     );
   });
 
-  test(
-    "a known committed prefix refreshes without replaying and retains its tail",
-    () async {
-      final world = testWorld([..._original, heldSaves]);
-      final realm = world.requireRealm
-        ..refreshFailure = StateError("Refresh lost");
-      final workspace = await world.openRealmEditing();
-      final form = workspace.form(_resource)..setText("First", _name, "First");
-      final saving = form.save();
-      await Future<void>.delayed(Duration.zero);
-      form.setText("Tail", _name, "Tail");
-      realm.saves.last.confirm(observed: false);
-      await saving;
-      expect(form.phase, isA<EditGroupCommittedAwaitingRefresh>());
-      expect(form.control.state.canDiscard, isTrue);
-      realm.refreshFailure = null;
-      await workspace.refreshConfirmed();
-      expect(realm.saves, hasLength(1));
-      expect(
-        workspace.document.valueAt(_name),
-        skir.DataValue.wrapStringValue("Tail"),
-      );
-      expect(form.blocked, isFalse);
-    },
-  );
+  for (final observed in [false, true]) {
+    test(
+      observed
+          ? "a commit whose refresh failed recovers when its saved values are "
+                "observed again, even while that observation rebuilds"
+          : "a known committed prefix refreshes without replaying and retains "
+                "its tail",
+      () async {
+        final world = testWorld([..._original, heldSaves]);
+        final realm = world.requireRealm
+          ..refreshFailure = StateError("Refresh lost");
+        final workspace = await world.openRealmEditing();
+        final form = workspace.form(_resource)
+          ..setText("First", _name, "First");
+        final saving = form.save();
+        await Future<void>.delayed(Duration.zero);
+        form.setText("Tail", _name, "Tail");
+        realm.saves.last.confirm(observed: false);
+        await saving;
+        expect(form.phase, isA<EditGroupCommittedAwaitingRefresh>());
+        expect(form.control.state.canDiscard, isTrue);
+        realm.refreshFailure = null;
+        if (observed) {
+          realm
+            ..announceRefreshes()
+            ..remoteChange((_) {});
+        } else {
+          await workspace.refreshConfirmed();
+        }
+        await eventually(
+          () => expect(
+            form.phase,
+            isNot(isA<EditGroupCommittedAwaitingRefresh>()),
+          ),
+        );
+        expect(realm.saves, hasLength(1));
+        expect(
+          workspace.document.valueAt(_name),
+          skir.DataValue.wrapStringValue("Tail"),
+        );
+        expect(form.blocked, isFalse);
+      },
+    );
+  }
 
   test(
     "the lane orders independent groups and excludes unrelated form work",
