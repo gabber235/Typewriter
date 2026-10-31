@@ -5,7 +5,6 @@ message: A test reads the process environment, so it behaves differently per mac
 note: Ask the harness for what the test needs (the stack, a fixture, a compile time define), or delete the test.
 files:
   - panel/test/**
-  - panel/testing/**
   - panel/testkit/test/**
   - panel/widgetbook/test/**
 ignores:
