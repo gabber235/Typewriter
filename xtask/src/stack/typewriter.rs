@@ -37,7 +37,8 @@ pub fn panel() -> StackSpec {
         .with(BindRealmHost)
 }
 
-/// The toxiproxy server the panel's NATS link goes through, so scenarios can cut it.
+/// The toxiproxy server the panel's and the Realm host's NATS links go through, so scenarios
+/// can cut either.
 pub struct Faults;
 
 impl Service for Faults {
@@ -108,7 +109,13 @@ impl Service for Backend {
         command
             .arg("--state")
             .arg(ctx.state())
-            .args(ctx.port_args(&["http", "nats-proxy", "faults", "identity"]));
+            .args(ctx.port_args(&[
+                "http",
+                "nats-proxy",
+                "realm-nats-proxy",
+                "faults",
+                "identity",
+            ]));
         for (package, artifact) in components {
             command
                 .arg("--component")

@@ -61,6 +61,9 @@ final class Panel {
   /// The fixture user signed in now, or null.
   String? _user;
 
+  /// How often the panel asked the identity provider to end its session.
+  int _providerSessionEnds = 0;
+
   ProviderContainer get _app => _container!;
 
   Future<void> _start() async {
@@ -69,6 +72,11 @@ final class Panel {
       overrides: [
         ...appOverrides(),
         oidcStoreProvider.overrideWithValue(_store),
+        // The provider's end session flow opens a browser tab; the scenario
+        // records the request instead of leaving a tab per sign out.
+        providerSessionEndProvider.overrideWithValue((_) async {
+          _providerSessionEnds++;
+        }),
       ],
     );
     _container = container;
@@ -119,13 +127,20 @@ final class Panel {
     await expectVisible(username);
   }
 
-  /// Signs out through the user menu and waits for the sign in page.
+  /// Signs out through the user menu, waits for the sign in page, and checks
+  /// the panel asked the identity provider to end its session once.
   Future<void> signOut() async {
     final user = _user ?? (throw StateError("nobody is signed in"));
+    final ends = _providerSessionEnds;
     await _tap(await _control(user));
     await _tap(await _control("Logout"));
     _user = null;
     await expectVisible("Sign in");
+    expect(
+      _providerSessionEnds - ends,
+      1,
+      reason: "signing out asks the identity provider to end its session",
+    );
   }
 
   /// Opens [place] the way the user sees it on screen, then [inside] within
@@ -397,10 +412,18 @@ final class Panel {
   /// the same name; a services graph card of that kind, which reads
   /// `Kind, Name, Status`, opens with a double click once its host is
   /// connected.
+  ///
+  /// An entry a long list has not built yet comes into view the way a screen
+  /// reader user reaches it: by scrolling the content forward.
   Future<void> _activate(String place) async {
     SemanticsNode? entry;
     SemanticsNode? card;
+    var scrolled = DateTime.now();
     await until("\"$place\" can be opened", () {
+      if (DateTime.now().difference(scrolled) > _refocus) {
+        scrolled = DateTime.now();
+        _scrollContentForward();
+      }
       entry = find.semantics
           .byPredicate(
             (node) =>
@@ -426,6 +449,25 @@ final class Panel {
     await tester.pump(const Duration(milliseconds: 80));
     await tester.tapAt(target);
     await tester.pump(_frame);
+  }
+
+  /// Scrolls the largest scrollable on screen one page forward through its
+  /// scroll action, as a screen reader's scroll gesture does.
+  void _scrollContentForward() {
+    final content = find.semantics
+        .byPredicate(
+          (node) =>
+              !node.isInvisible &&
+              node.getSemanticsData().hasAction(SemanticsAction.scrollUp),
+        )
+        .evaluate()
+        .sortedBy<num>((node) => -node.screenRect.size.longestSide)
+        .firstOrNull;
+    if (content == null) return;
+    tester.semantics.performAction(
+      find.semantics.byPredicate((node) => identical(node, content)),
+      SemanticsAction.scrollUp,
+    );
   }
 
   /// Activates [node] the way assistive technology does, through its tap

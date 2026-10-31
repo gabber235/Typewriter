@@ -25,7 +25,8 @@ pub struct ClientConfiguration {
     /// Through the faults link on a stack, so scenarios can cut the panel's connection.
     pub nats_desktop_url: String,
     pub nats_web_url: String,
-    /// What hosts connect to; a host is not behind the faults link.
+    /// What hosts connect to; on a stack through the Realm host's own faults link, so scenarios
+    /// can take the Realm away.
     pub nats_host_url: String,
     pub api_base_url: String,
     pub auth_base_url: String,
@@ -56,7 +57,7 @@ impl ClientConfiguration {
         Ok(Self {
             nats_desktop_url: ctx.url("nats", "nats-proxy"),
             nats_web_url: ctx.url("ws", "websocket"),
-            nats_host_url: ctx.url("nats", "nats"),
+            nats_host_url: ctx.url("nats", "realm-nats-proxy"),
             api_base_url: ctx.url("http", "http"),
             auth_base_url: identity.clone(),
             auth_issuer: format!("{identity}/application/o/{PANEL_CLIENT_ID}/"),

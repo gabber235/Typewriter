@@ -25,7 +25,7 @@ void main() {
 
   scenario(
     "BOOK-3",
-    "a deleted book disappears and the inbox lists it as removed",
+    "a deleted book disappears and the inbox lists its page as removed",
     Demonstrates.happyPath,
     (panel) async {
       final run = DateTime.now().millisecondsSinceEpoch;
@@ -42,8 +42,10 @@ void main() {
       await panel.press("Delete");
       await panel.press("Delete");
       await panel.expectHidden(title);
+      // The realm publishes the book's page, so the inbox names the page
+      // the deletion takes out of the published content.
       await panel.press("Realm inbox");
-      await panel.expectVisible(title);
+      await panel.expectVisible("Old Chapter $run");
       await panel.expectVisible("Removed");
       await panel.capture("book-removed");
     },
