@@ -240,9 +240,7 @@ class Selector extends HookConsumerWidget {
                             return null;
                           },
                         ),
-                    ActivateIntent: CallbackAction(
-                      onInvoke: (_) => activate(),
-                    ),
+                    ActivateIntent: CallbackAction(onInvoke: (_) => activate()),
                     ActivateAllIntent: CallbackAction(
                       onInvoke: (_) => activate(isMultiSelect: true),
                     ),

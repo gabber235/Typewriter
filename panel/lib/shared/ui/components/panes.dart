@@ -42,8 +42,7 @@ class _PaneScopeNode extends FocusScopeNode {
   _PaneScopeNode({super.debugLabel});
 
   @override
-  bool get skipTraversal =>
-      super.skipTraversal || traversalDescendants.isEmpty;
+  bool get skipTraversal => super.skipTraversal || traversalDescendants.isEmpty;
 }
 
 class _PaneSnapshot {
