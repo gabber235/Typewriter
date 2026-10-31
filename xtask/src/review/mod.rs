@@ -23,7 +23,7 @@ use clap::{Args, Subcommand};
 use self::detectors::DETECTORS;
 use self::investigate::InvestigateCommand;
 use self::report::{ChangeContext, ChangeReport, Severity};
-use crate::Context;
+use crate::{CommandExt as _, Context};
 
 pub const DESCRIBE: &str = "cargo xtask review gate: project rules and new clones on changed lines";
 
@@ -111,10 +111,57 @@ fn report(ctx: &Context, base: Option<&str>, json: bool) -> Result<()> {
     Ok(())
 }
 
-/// The `quality` step: fails when a gating detector finds anything on a changed line.
+/// Where the project rules and their tests live, relative to the repository root (sgconfig.yml).
+const RULES: &str = "rules";
+const RULE_TESTS: &str = "rule-tests";
+
+/// The `quality` step: fails when a project rule fails its tests or has none, or when a gating
+/// detector finds anything on a changed line. The rule tests run first, since a rule that does not
+/// load finds nothing and would otherwise pass silently.
 pub fn gate(ctx: &Context, log: &File) -> Result<()> {
+    ctx.tool(".", "ast-grep", &["test", "--skip-snapshot-tests"])
+        .log_output(Some(log))?
+        .run()?;
+    every_rule_has_tests(ctx)?;
     let findings = gate_findings(ctx, None)?;
     write!(&*log, "{findings}")?;
+    Ok(())
+}
+
+/// Fails when a rule id in `rules/` has no `rule-tests/<id>-test.yml`. A rule file may hold several
+/// rules as YAML documents; each document's top level `id:` names one.
+fn every_rule_has_tests(ctx: &Context) -> Result<()> {
+    let rules = ctx.root.join(RULES);
+    let mut files: Vec<PathBuf> = fs::read_dir(&rules)
+        .with_context(|| format!("cannot list {}", rules.display()))?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<Result<_, _>>()?;
+    files.sort();
+    let mut untested = Vec::new();
+    for file in files
+        .iter()
+        .filter(|file| file.extension().is_some_and(|ext| ext == "yml"))
+    {
+        let text =
+            fs::read_to_string(file).with_context(|| format!("cannot read {}", file.display()))?;
+        for id in text.lines().filter_map(|line| line.strip_prefix("id:")) {
+            let id = id.trim();
+            if !ctx
+                .root
+                .join(RULE_TESTS)
+                .join(format!("{id}-test.yml"))
+                .is_file()
+            {
+                untested.push(id.to_owned());
+            }
+        }
+    }
+    if !untested.is_empty() {
+        bail!(
+            "rules without tests: {}. Add {RULE_TESTS}/<id>-test.yml with valid and invalid cases for each",
+            untested.join(", ")
+        );
+    }
     Ok(())
 }
 
@@ -146,4 +193,56 @@ fn gate_findings(ctx: &Context, base: Option<&str>) -> Result<String> {
         );
     }
     Ok(text)
+}
+
+#[cfg(test)]
+mod gate_tests {
+    use super::*;
+
+    use crate::test_support::{TempRoot, refusal};
+
+    #[test]
+    fn every_rule_in_a_file_needs_its_own_test_file() {
+        let root = TempRoot::new();
+        root.write(
+            "rules/test-local-helper.yml",
+            "id: test-local-helper\nlanguage: rust\nrule:\n  kind: function_item\n---\n\
+             id: test-file-local-helper\nlanguage: rust\nrule:\n  kind: struct_item\n",
+        );
+        root.write(
+            "rules/test-skip-added.yml",
+            "id: test-skip-added\nlanguage: rust\n",
+        );
+        root.write(
+            "rule-tests/test-local-helper-test.yml",
+            "id: test-local-helper\n",
+        );
+        root.write(
+            "rule-tests/test-skip-added-test.yml",
+            "id: test-skip-added\n",
+        );
+
+        let error = refusal(every_rule_has_tests(&root.ctx));
+
+        assert!(
+            error.contains("rules without tests: test-file-local-helper."),
+            "{error}"
+        );
+    }
+
+    #[test]
+    fn rules_that_all_have_tests_pass() {
+        let root = TempRoot::new();
+        root.write(
+            "rules/test-skip-added.yml",
+            "id: test-skip-added\nlanguage: rust\n",
+        );
+        root.write("rules/README.md", "id: not-a-rule\n");
+        root.write(
+            "rule-tests/test-skip-added-test.yml",
+            "id: test-skip-added\n",
+        );
+
+        every_rule_has_tests(&root.ctx).unwrap();
+    }
 }

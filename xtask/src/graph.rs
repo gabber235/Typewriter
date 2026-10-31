@@ -75,7 +75,14 @@ impl Area {
             Self::Panel => &["panel/"],
             Self::Docs => &[DOCS_SITE],
             // The project rules scan every source the other areas check.
-            Self::Quality => &["services/", "backend/", "panel/", "rules/", "sgconfig.yml"],
+            Self::Quality => &[
+                "services/",
+                "backend/",
+                "panel/",
+                "rules/",
+                "rule-tests/",
+                "sgconfig.yml",
+            ],
             Self::Xtask => &["commit-scopes.json"],
             // Its inputs are all in EVERY_AREA.
             Self::Protocol => &[],

@@ -1,0 +1,86 @@
+id: dart-test-local-helper
+valid:
+  # The entry point, test data as constants and values, and declarations inside a test case.
+  - |
+    const _ready = PanelLocation.component(Text("Startup ready"));
+
+    void main() {
+      final failures = ["The trace exporter is unreachable"];
+      for (final failure in failures) {
+        testWidgets("Retry recovers an unreachable dependency at startup", (tester) async {
+          Future<void> retry(Panel panel) => panel.tapOn(panel.labeled("Retry"));
+          final panel = await tester.pumpPanel([signedIn(ada)], at: _ready);
+          await retry(panel);
+          expect(panel.shows("Startup ready"), isTrue);
+        });
+      }
+    }
+  # A scenario keeps its own local function values.
+  - |
+    void main() {
+      scenario("a publish shows the new content", (panel) async {
+        final publish = () => panel.tapOn(panel.labeled("Publish"));
+        await publish();
+      });
+    }
+invalid:
+  # A top level pump helper.
+  - |
+    Future<Panel> _pumpReady(WidgetTester tester) => tester.pumpPanel([signedIn(ada)], at: _ready);
+
+    void main() {
+      testWidgets("startup shows the panel", (tester) async {
+        final panel = await _pumpReady(tester);
+        expect(panel.shows("Startup ready"), isTrue);
+      });
+    }
+  # A fake declared in the test file.
+  - |
+    class _FakeClock implements Clock {
+      @override
+      DateTime now() => DateTime(2026);
+    }
+
+    void main() {
+      test("expiry uses the clock", () {});
+    }
+  # An extension adding a driver action.
+  - |
+    extension on Panel {
+      Future<void> retry() => tapOn(labeled("Retry"));
+    }
+
+    void main() {}
+  # A top level getter computing a fixture.
+  - |
+    List<StartupDependency> get _dependencies => StartupDependency.values;
+
+    void main() {}
+  # A top level value holding a function.
+  - |
+    final _signIn = (WidgetTester tester) async {
+      return tester.pumpPanel([signedIn(ada)]);
+    };
+
+    void main() {}
+  # A local function in `main`, shared by several cases.
+  - |
+    void main() {
+      Future<Panel> pumpReady(WidgetTester tester) => tester.pumpPanel([signedIn(ada)], at: _ready);
+
+      testWidgets("startup shows the panel", (tester) async {
+        await pumpReady(tester);
+      });
+    }
+  # A function value in a group, outside every case.
+  - |
+    void main() {
+      group("startup", () {
+        final pumpReady = (WidgetTester tester) async {
+          return tester.pumpPanel([signedIn(ada)]);
+        };
+        testWidgets("shows the panel", (tester) async {
+          await pumpReady(tester);
+        });
+      });
+    }

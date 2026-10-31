@@ -1,0 +1,73 @@
+id: kotlin-catch-and-continue
+valid:
+  # Wraps and rethrows.
+  - |
+    fun read(path: Path): ImprintManifest =
+        try {
+            parse(path)
+        } catch (failure: Exception) {
+            throw IllegalArgumentException("Cannot read Imprint manifest from ${path.fileName}.", failure)
+        }
+  # Returns a failure.
+  - |
+    fun commit(request: CommitRequest): CommitPreparedEditResponse {
+        try {
+            return apply(request)
+        } catch (invalid: IllegalArgumentException) {
+            return CommitPreparedEditResponse.InvalidErrorWrapper(AuthoringInvalid(listOf()))
+        }
+    }
+  # Passes the error on.
+  - |
+    fun close(failure: Throwable) {
+        try {
+            catalog.close()
+        } catch (closing: Throwable) {
+            failure.addSuppressed(closing)
+        }
+    }
+  # Logs the error it caught.
+  - |
+    fun stop() {
+        try {
+            subscription.close()
+        } catch (failure: Throwable) {
+            logger.warn("Cannot close the subscription", failure)
+        }
+    }
+  # Takes a fallback action.
+  - |
+    fun search(request: SearchRequest) {
+        try {
+            publish(request)
+        } catch (failure: Exception) {
+            catalog.close()
+        }
+    }
+invalid:
+  # Only logs.
+  - |
+    fun stop() {
+        try {
+            subscription.close()
+        } catch (failure: Throwable) {
+            logger.warn("Cannot close the subscription")
+        }
+    }
+  # Swallows silently.
+  - |
+    fun stop() {
+        try {
+            subscription.close()
+        } catch (ignored: IOException) {
+        }
+    }
+  # Prints and continues.
+  - |
+    fun stop() {
+        try {
+            subscription.close()
+        } catch (failure: Exception) {
+            println("close failed")
+        }
+    }

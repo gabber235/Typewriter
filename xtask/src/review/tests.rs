@@ -22,6 +22,7 @@ const HARNESS: &[&str] = &[
     "xtask/",
     "harness/",
     "rules/",
+    "rule-tests/",
     "sgconfig.yml",
     "devenv.nix",
     "devenv.yaml",

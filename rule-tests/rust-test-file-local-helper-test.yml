@@ -1,0 +1,62 @@
+id: rust-test-file-local-helper
+valid:
+  # A component suite file: the fixture, its configuration and the test cases.
+  - |
+    use component_test_core::prelude::*;
+
+    const ORGANIZATION: &str = "acme";
+
+    #[component_fixture(
+        id = "service-registration",
+        primary(package = "service-registration", target = "service_registration")
+    )]
+    pub struct ServiceRegistration;
+
+    impl FixtureSpec for ServiceRegistration {
+        fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
+            builder
+        }
+    }
+
+    #[component_test(ServiceRegistration)]
+    async fn a_registered_service_is_listed(fixture: Fixture) {}
+  # An integration test file with cases and a property test macro.
+  - |
+    mod support;
+
+    #[test]
+    fn a_plan_runs_every_step() {}
+
+    proptest! {
+        #[test]
+        fn any_order_is_stable(steps in steps()) {}
+    }
+invalid:
+  # A seed helper next to the cases.
+  - |
+    #[component_test(ServiceRegistration)]
+    async fn a_registered_service_is_listed(fixture: Fixture) {
+        seed_organization(&fixture).await;
+    }
+
+    async fn seed_organization(fixture: &Fixture) {}
+  # A fake and its implementation.
+  - |
+    struct FakeClock;
+
+    impl Clock for FakeClock {
+        fn now(&self) -> Instant {
+            Instant::EPOCH
+        }
+    }
+
+    #[test]
+    fn expiry_uses_the_clock() {}
+  # An assertion macro.
+  - |
+    macro_rules! assert_listed {
+        ($fixture:expr) => {};
+    }
+
+    #[test]
+    fn a_registered_service_is_listed() {}

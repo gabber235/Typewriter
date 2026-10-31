@@ -1,3 +1,6 @@
 # Project rules for ast-grep: what the language linters do not catch. `cargo xtask review` runs
 # them on the lines a change added; errors gate, warnings flag. Run `ast-grep scan` for all code.
+# Every rule has a test in rule-tests/ (`ast-grep test`), which the quality step runs first.
 ruleDirs: [rules]
+testConfigs:
+  - testDir: rule-tests
