@@ -33,9 +33,7 @@ void main() {
       await panel.signIn("ada");
       await panel.open("Acme", "Realm");
       await panel.createBookWithPage(title, page: "Old Chapter $run");
-      await panel.press("Realm inbox");
-      await panel.press("Publish");
-      await panel.expectVisible("Everything is published");
+      await panel.publishRealm(ownPage: "Old Chapter $run");
       await panel.press("Close");
       await panel.open("Library");
       await panel.open(title);

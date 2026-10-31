@@ -1,3 +1,4 @@
+import "support/remote_session.dart";
 import "support/scenarios.dart";
 
 void main() {
@@ -34,6 +35,9 @@ void main() {
     "a user outside the organization sees none of its realms",
     Demonstrates.edgeCase,
     (panel) async {
+      // The membership scenarios have grace join Acme, so this one makes her
+      // a stranger again whatever ran before it.
+      await (await remoteSession("ada")).forget("Acme", "grace");
       await panel.signIn("ada");
       await panel.open("Acme", "Realm");
       await panel.expectVisible("Every book of the realm");

@@ -297,6 +297,23 @@ final class Panel {
     await submit("Name", page);
   }
 
+  /// Publishes the realm from its inbox once [ownPage] is listed there, so the
+  /// inbox has loaded before it is read. Publishing covers every scenario's
+  /// pending content in the shared realm, so a block another scenario left
+  /// fails here under its cause instead of as a broken publish.
+  Future<void> publishRealm({required String ownPage}) async {
+    await press("Realm inbox");
+    await expectVisible(ownPage);
+    if (sees("Publish blocked")) {
+      fail(
+        "Realm content from another scenario blocks publishing; "
+        "find the scenario that left a broken book in this drive",
+      );
+    }
+    await press("Publish");
+    await expectVisible("Everything is published");
+  }
+
   /// The resource open on screen, the way another user's session addresses
   /// the same thing through a shared link.
   OpenResource get openResource {

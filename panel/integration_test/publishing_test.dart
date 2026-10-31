@@ -14,8 +14,8 @@ void main() {
       await panel.press("Realm inbox");
       await panel.expectVisible("Ready Chapter $run");
       await panel.expectVisible("Added");
-      await panel.press("Publish");
-      await panel.expectVisible("Everything is published");
+      await panel.press("Close");
+      await panel.publishRealm(ownPage: "Ready Chapter $run");
       await panel.capture("published");
     },
   );
