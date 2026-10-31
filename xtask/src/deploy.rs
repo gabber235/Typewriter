@@ -1,6 +1,5 @@
 //! Publishes the backend to a cluster: every deployable component, the database image, then a
-//! restart so the runtime operator pulls the new images. The CI cluster also gets the client
-//! configuration the end to end suites read.
+//! restart so the runtime operator pulls the new images.
 
 use std::fs;
 use std::io::Write;
@@ -12,7 +11,6 @@ use clap::ValueEnum;
 use serde_json::Value;
 
 use crate::lock::HeavyLock;
-use crate::stack::client_configuration::ClientConfiguration;
 use crate::{CommandExt, Context, Scratch, cluster, secrets};
 
 /// Tools deploy runs, for the doctor.
@@ -143,11 +141,6 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
         .with_context(|| format!("cannot push {reference}"))?;
     }
     push_database_image(ctx, registry)?;
-    if let Cluster::Ci = cluster {
-        let state = ctx.root.join(cluster::STATE);
-        fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;
-        ClientConfiguration::ci_cluster(ctx)?.write(&state)?;
-    }
     ctx.tool(
         ".",
         "kubectl",

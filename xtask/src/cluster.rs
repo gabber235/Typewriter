@@ -7,6 +7,7 @@
 //! Every command here addresses [`CONTEXT`] explicitly, so it can never reach the local
 //! development cluster or production.
 
+use std::collections::BTreeMap;
 use std::fs::{self, OpenOptions};
 use std::io::Write as _;
 use std::os::unix::fs::OpenOptionsExt as _;
@@ -25,10 +26,6 @@ pub const TOOLS: &[&str] = &["devenv", "kubectl", "flux", "git"];
 
 /// The kubeconfig context k3d creates for the cluster `config/k3d/ci.yaml` names.
 pub const CONTEXT: &str = "k3d-seamlezz-ci";
-
-/// Where `cargo xtask deploy ci` writes the cluster's client configuration, relative to the
-/// repository root.
-pub const STATE: &str = ".xtask/state/cluster";
 
 /// The pinned Infrastructure revision, relative to the repository root.
 const PIN: &str = "harness/infrastructure.toml";
@@ -181,6 +178,48 @@ pub fn registry_password(ctx: &Context) -> Result<String> {
     )
     .output_text()
     .context("cannot read the CI registry's admin password")
+}
+
+/// The Secret the CI overlay generates the fixture users' passwords into: `<username>.password`
+/// for Authentik's sign in form and `<username>.app-password` for the password grant.
+const TEST_USERS: [&str; 3] = ["--namespace", "authentik", "secret/typewriter-test-users"];
+
+/// Waits until the CI cluster has generated its test users' passwords.
+pub fn test_users_generated(ctx: &Context) -> Command {
+    kubectl(
+        ctx,
+        &[
+            TEST_USERS[0],
+            TEST_USERS[1],
+            "wait",
+            "--for=create",
+            TEST_USERS[2],
+            "--timeout=10m",
+        ],
+    )
+}
+
+/// The CI cluster's test user passwords, by Secret key.
+pub fn test_user_passwords(ctx: &Context) -> Result<BTreeMap<String, String>> {
+    let listed = kubectl(
+        ctx,
+        &[
+            TEST_USERS[0],
+            TEST_USERS[1],
+            "get",
+            TEST_USERS[2],
+            "--output",
+            // One `key=value` line per password; the Secret's blueprint file is no password.
+            r#"go-template={{range $key, $value := .data}}{{if ne $key "blueprint.yaml"}}{{$key}}={{$value | base64decode}}{{"\n"}}{{end}}{{end}}"#,
+        ],
+    )
+    .output_text()
+    .context("cannot read the CI cluster's test users")?;
+    Ok(listed
+        .lines()
+        .filter_map(|line| line.split_once('='))
+        .map(|(key, value)| (key.to_owned(), value.to_owned()))
+        .collect())
 }
 
 /// Points the CI cluster's Typewriter tenant at `revision` and reconciles it, now that its images

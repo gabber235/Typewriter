@@ -1,8 +1,11 @@
 //! Creates the stack's organization as its owner through the real organization route, and records
 //! it for `bind` and for xtask, which publishes it as `STACK_ORGANIZATION`.
 
+use std::time::{Duration, Instant};
+
 use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
+use typewriter_component_test::StackUser;
 use wasmcloud_utils::skir::base::kernel::v1::record_id::{RecordId, RecordIdKey};
 use wasmcloud_utils::skir::base::organization::v1::organization::{
     CreateOrganizationRequest, CreateOrganizationResponse,
@@ -45,11 +48,14 @@ impl Provisioned {
     }
 }
 
+/// How long the owner's sign in may be refused before provisioning fails.
+const SIGN_IN_PATIENCE: Duration = Duration::from_secs(300);
+
 pub async fn run(args: ProvisionArgs) -> Result<()> {
     let endpoints = args.endpoints;
     let owner = endpoints.owner()?;
     let name = owner.organizations[0].clone();
-    let session = Session::sign_in(&endpoints, &owner, None).await?;
+    let session = sign_in_once_known(&endpoints, &owner).await?;
     let subject = format!("cloud.to.user.{}.organization.create", session.user());
     let response = session
         .request::<UserOrganizationCreateRoute>(
@@ -80,4 +86,24 @@ pub async fn run(args: ProvisionArgs) -> Result<()> {
         "provisioned"
     );
     Ok(())
+}
+
+/// Signs the owner in, trying again while the identity provider refuses: a fresh CI cluster's
+/// Authentik applies the blueprint that creates the test users a while after their passwords
+/// exist. The last refusal is the error once [`SIGN_IN_PATIENCE`] has passed.
+async fn sign_in_once_known(endpoints: &StackEndpoints, owner: &StackUser) -> Result<Session> {
+    let deadline = Instant::now() + SIGN_IN_PATIENCE;
+    loop {
+        match Session::sign_in(endpoints, owner, None).await {
+            Ok(session) => return Ok(session),
+            Err(error) if Instant::now() < deadline => {
+                tracing::info!(
+                    owner = owner.username,
+                    "sign in refused, trying again: {error:#}"
+                );
+                tokio::time::sleep(Duration::from_secs(5)).await;
+            }
+            Err(error) => return Err(error),
+        }
+    }
 }

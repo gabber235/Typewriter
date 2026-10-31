@@ -1,5 +1,6 @@
 /// The scenario runner: every scenario boots the real panel against the
-/// worktree stack, acts through the [Panel] driver and reports what it proves.
+/// target's backend (the worktree stack or the CI cluster), acts through the
+/// [Panel] driver and reports what it proves.
 ///
 /// Each [scenario] names the plan requirement it proves and what kind of
 /// behavior it demonstrates. The runner hands the host driver
@@ -146,19 +147,14 @@ void scenario(
   });
 }
 
-/// A scenario that switches the stack's faults through [stack].
-///
-/// Only the worktree stack can switch faults. A stack without them, such as
-/// the CI cluster, does not register the scenario at all, so the run never
-/// reports a case that did nothing as passed. Faults are reset after the
-/// scenario, so the next one starts from a healthy stack.
+/// A scenario that switches the stack's faults through [stack]. Faults are
+/// reset after the scenario, so the next one starts from a healthy stack.
 void faultScenario(
   String requirement,
   String title,
   results.Demonstrates demonstrates,
   Future<void> Function(Panel panel) body,
 ) {
-  if (!stack.controllable) return;
   scenario(requirement, title, demonstrates, (panel) async {
     addTearDown(stack.resetFaults);
     await body(panel);

@@ -107,11 +107,13 @@ final class Panel {
   }
 
   /// Signs in the fixture user [username] through the real session client
-  /// with the password grant, which the stack's identity stand in accepts,
+  /// with the password grant, which the target's identity provider accepts,
   /// and waits until the panel shows them signed in.
   ///
-  /// The sign in page itself hands over to the browser, which a scenario
-  /// cannot drive; the full suite covers it against the real provider.
+  /// The provider's sign in page is no part of a scenario: on the web it
+  /// leaves the page the scenario runs in. The full suite's host driven
+  /// journey (`test_driver/sign_in_journey_test.dart`) covers it against the
+  /// CI cluster's Authentik.
   Future<void> signIn(String username) async {
     final user = stack.user(username);
     final manager = await _app.read(authProvider.future);

@@ -5,7 +5,9 @@
 //! stamped drive output under `attempts/<n>/` beside it, and a failed attempt also leaves a local
 //! failure folder there ([`failures`]). `--only` selects scenarios and `--repeat` runs each of
 //! them an exact number of times, to hunt a flaky scenario. The full suite runs the panel web
-//! scenarios against a fresh CI cluster instead (`cargo xtask cluster ci`, `cargo xtask deploy ci`).
+//! scenarios against a fresh CI cluster instead (`cargo xtask cluster ci`, `cargo xtask deploy ci`),
+//! with the worktree's organization and Realm host on top of the cluster's backend, plus the sign
+//! in journey through the cluster's Authentik pages that no scenario can drive.
 //!
 //! `flutter drive` rather than `flutter test integration_test`: only the host driver
 //! (`panel/test_driver/integration_test.dart`) can write files on desktop and on web, and it is
@@ -25,7 +27,7 @@ use anyhow::{Context as _, Result, bail};
 use crate::deploy::{self, Cluster};
 use crate::evidence::{self, Recorded};
 use crate::lock::{self, HeavyLock};
-use crate::process::{Supervisor, Unsupervised};
+use crate::process::Supervisor;
 use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestRun};
 use crate::stack::{self, typewriter};
 use crate::{CommandExt, Context, cluster, generate, secrets};
@@ -124,7 +126,8 @@ pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
 enum Target {
     /// A fresh worktree stack, up for the run only.
     Stack,
-    /// The CI cluster `cargo xtask deploy ci` deployed to.
+    /// The CI cluster `cargo xtask deploy ci` deployed to, with this worktree's organization and
+    /// Realm host on top.
     Cluster,
 }
 
@@ -164,32 +167,28 @@ fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Res
             &evidence,
         )
     };
-    let attempts = |defines: &Path, supervisor: &mut dyn Supervisor| {
-        results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
-            drive(ctx, supervisor, suite, defines, &evidence, n, ids)
-        })
+    let defines = ctx.root.join(PANEL_DEFINES);
+    // Both targets bring up the same organization and Realm host; only the backend differs.
+    let spec = match target {
+        Target::Stack => typewriter::panel(),
+        Target::Cluster => typewriter::ci_cluster_panel(),
     };
-    let (mut run, stack) = match target {
-        Target::Stack => {
-            let budget = suite.budget() * args.repeat.get();
-            let keep = ctx.root.join(STACK_EVIDENCE).join(&name);
-            let (run, stack) =
-                stack::run_keeping_evidence(ctx, &typewriter::panel(), budget, &keep, |stack| {
-                    let _lock = lock()?;
-                    attempts(&ctx.root.join(PANEL_DEFINES), stack)
-                })?;
-            (run, Some(stack))
+    let budget = suite.budget() * args.repeat.get();
+    let keep = ctx.root.join(STACK_EVIDENCE).join(&name);
+    let (mut run, stack) = stack::run_keeping_evidence(ctx, &spec, budget, &keep, |stack| {
+        let _lock = lock()?;
+        let mut run = results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
+            drive(ctx, stack, suite, target, &defines, &evidence, n, ids)
+        })?;
+        if matches!(target, Target::Cluster)
+            && (args.only.is_empty() || args.only.iter().any(|id| id == JOURNEY))
+        {
+            run.cases
+                .extend(sign_in_journey(ctx, stack, &defines, &evidence)?.cases);
         }
-        Target::Cluster => {
-            let _lock = lock()?;
-            let run = attempts(
-                &ctx.root.join(cluster::STATE).join("panel.json"),
-                &mut Unsupervised::with_interrupts(),
-            )?;
-            (run, None)
-        }
-    };
-    failures::collect(&evidence, &mut run, stack.as_ref())?;
+        Ok(run)
+    })?;
+    failures::collect(&evidence, &mut run, Some(&stack))?;
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
     results::write(&run, &file)?;
@@ -212,10 +211,12 @@ fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Res
 /// Attempt `n` of the scenarios `only` selects (every scenario when empty): one `flutter drive`
 /// writing its evidence to `attempts/<n>/` of the suite's `evidence` folder. Its artifact paths
 /// are made relative to `evidence`, where the folded run is written.
+#[allow(clippy::too_many_arguments)]
 fn drive(
     ctx: &Context,
     supervisor: &mut dyn Supervisor,
     suite: Suite,
+    target: Target,
     defines_file: &Path,
     evidence: &Path,
     n: u32,
@@ -226,6 +227,7 @@ fn drive(
         ctx,
         supervisor,
         suite,
+        target,
         defines_file,
         &evidence.join(&folder),
         only,
@@ -248,6 +250,7 @@ fn drive_once(
     ctx: &Context,
     supervisor: &mut dyn Supervisor,
     suite: Suite,
+    target: Target,
     defines_file: &Path,
     out: &Path,
     only: &[String],
@@ -283,26 +286,7 @@ fn drive_once(
                 .iter()
                 .fold(recorded, |recorded, key| recorded.env_remove(key))
         }
-        Suite::PanelWeb => {
-            // A free port rather than chromedriver's 4444, so worktrees can run this at once.
-            let port = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))?
-                .local_addr()?
-                .port();
-            command.extend([
-                "-d".into(),
-                "web-server".into(),
-                "--browser-name=chrome".into(),
-                format!("--driver-port={port}"),
-                // Linux records Chrome's window on the virtual display; elsewhere nothing is
-                // recorded and no window should open.
-                if cfg!(target_os = "linux") {
-                    "--no-headless".into()
-                } else {
-                    "--headless".into()
-                },
-            ]);
-            Recorded::video(command).with(vec!["chromedriver".into(), format!("--port={port}")])
-        }
+        Suite::PanelWeb => in_chrome(command, target)?,
         Suite::Full => unreachable!("the full suite drives the panel web scenarios"),
     }
     .in_dir("panel")
@@ -312,6 +296,93 @@ fn drive_once(
     // recording fails.
     let (run, exit) = evidence::record_with(ctx, out, recorded, supervisor)?;
     driven(exit, run)
+}
+
+/// `flutter drive` `command` in Chrome through chromedriver, serving the panel where `target`'s
+/// identity provider accepts it.
+fn in_chrome(mut command: Vec<String>, target: Target) -> Result<Recorded> {
+    // A free port rather than chromedriver's 4444, so worktrees can run this at once.
+    let port = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))?
+        .local_addr()?
+        .port();
+    command.extend([
+        "-d".into(),
+        "web-server".into(),
+        "--browser-name=chrome".into(),
+        format!("--driver-port={port}"),
+        // Linux records Chrome's window on the virtual display; elsewhere nothing is
+        // recorded and no window should open.
+        if cfg!(target_os = "linux") {
+            "--no-headless".into()
+        } else {
+            "--headless".into()
+        },
+    ]);
+    // chromedriver drives only the Chrome release it was built for. Without a binary it starts
+    // whatever Chrome the machine has, such as a CI runner's preinstalled one, so the devenv
+    // Chrome it matches is named where devenv provides one.
+    if let Some(chrome) = std::env::var_os("CHROME_EXECUTABLE") {
+        command.push(format!("--chrome-binary={}", chrome.to_string_lossy()));
+    }
+    if let Target::Cluster = target {
+        command.push(format!("--web-port={CI_PANEL_PORT}"));
+    }
+    Ok(Recorded::video(command).with(vec!["chromedriver".into(), format!("--port={port}")]))
+}
+
+/// The requirement the full suite's sign in journey proves.
+const JOURNEY: &str = "AUTH-2";
+
+/// The fixture user the sign in journey signs in as.
+const JOURNEY_USER: &str = "ada";
+
+/// Where the full suite serves the panel: the CI cluster's Authentik accepts the panel's
+/// redirects and requests from `http://localhost:2350` (Infrastructure
+/// `platform/authentik/local/terraform-patch.yaml`).
+const CI_PANEL_PORT: u16 = 2350;
+
+/// The full suite's sign in journey through the CI cluster's Authentik pages, which no scenario
+/// can drive (`panel/test_driver/sign_in_journey_test.dart`), signing in as [`JOURNEY_USER`]
+/// with the password of its sign in form. Its one case and its evidence land in `journey/` of the
+/// suite's `evidence` folder.
+fn sign_in_journey(
+    ctx: &Context,
+    supervisor: &mut dyn Supervisor,
+    defines_file: &Path,
+    evidence: &Path,
+) -> Result<TestRun> {
+    let folder = Path::new("journey");
+    let out = evidence.join(folder);
+    let password = cluster::test_user_passwords(ctx)?
+        .remove(&format!("{JOURNEY_USER}.password"))
+        .with_context(|| format!("the CI cluster has no sign in password for {JOURNEY_USER}"))?;
+    let command = [
+        "flutter",
+        "drive",
+        "--driver=test_driver/sign_in_journey_test.dart",
+        "--target=test_driver/sign_in_journey.dart",
+    ]
+    .map(String::from)
+    .into_iter()
+    .chain([defines(defines_file)])
+    .collect();
+    let recorded = in_chrome(command, Target::Cluster)?
+        .in_dir("panel")
+        .env("EVIDENCE_DIR", out.display().to_string())
+        .env("STACK_SIGN_IN_USERNAME", JOURNEY_USER)
+        .env("STACK_SIGN_IN_PASSWORD", password)
+        .log_to(out.join(failures::DRIVE_LOG));
+    let (run, exit) = evidence::record_with(ctx, &out, recorded, supervisor)?;
+    let mut run = driven(exit, run)?;
+    for artifact in run
+        .cases
+        .iter_mut()
+        .flat_map(|case| &mut case.attempts)
+        .flat_map(|attempt| &mut attempt.artifacts)
+    {
+        artifact.path = folder.join(&artifact.path).display().to_string();
+    }
+    Ok(run)
 }
 
 /// The results of one drive that exited with `exit`. A drive that exits non zero without a

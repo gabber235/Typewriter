@@ -1,9 +1,9 @@
 //! A signed in person on the stack, connected the way the panel connects
 //! (`panel/lib/infrastructure/messaging/nats_connection.dart`): a password grant against the
-//! identity stand in, the sentinel credentials from the public HTTP route, and a NATS connection
-//! the auth callout authorizes from the access token and the entity permission qualifier. Requests
-//! are Skir payloads on the panel's `cloud.to` subjects, which the broker bridges to the
-//! components.
+//! identity provider (the stand in on a worktree stack, Authentik on the CI cluster), the sentinel
+//! credentials from the public HTTP route, and a NATS connection the auth callout authorizes from
+//! the access token and the entity permission qualifier. Requests are Skir payloads on the panel's
+//! `cloud.to` subjects, which the backend serves.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use anyhow::{Context as _, Result, anyhow, bail};
 use base64::Engine as _;
-use base64::engine::general_purpose::STANDARD;
+use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use futures_util::StreamExt as _;
 use nkeys::KeyPair;
 use serde::Deserialize;
@@ -38,15 +38,15 @@ pub struct StackEndpoints {
     /// The stack's state directory.
     #[arg(long)]
     pub state: PathBuf,
-    /// The identity stand in.
+    /// The identity provider's base URL, where `/application/o/token/` answers.
     #[arg(long)]
-    pub identity: u16,
-    /// The public HTTP routes.
+    pub identity: String,
+    /// The public HTTP routes' base URL (`API_BASE_URL`).
     #[arg(long)]
-    pub http: u16,
-    /// The broker's client port.
+    pub api: String,
+    /// The NATS URL clients connect to.
     #[arg(long)]
-    pub nats: u16,
+    pub nats: String,
 }
 
 impl StackEndpoints {
@@ -92,7 +92,8 @@ impl Session {
         }));
         let qualifier =
             STANDARD.encode(EntityPermissionQualifier::serializer().to_bytes(&qualifier));
-        let user_token = token_of(&user.subject)?;
+        // The panel names the user by the token's subject (`nats_connection.dart`).
+        let user_token = token_of(&subject_of(&token)?)?;
         let inbox = panel_reply_inbox_prefix(&user_token, &session);
         let key = Arc::new(KeyPair::from_seed(&sentinel.seed)?);
         let username = user.username.clone();
@@ -115,7 +116,7 @@ impl Session {
             }
         })
         .custom_inbox_prefix(inbox)
-        .connect(format!("nats://127.0.0.1:{}", endpoints.nats))
+        .connect(endpoints.nats.as_str())
         .await
         .with_context(|| {
             format!(
@@ -195,8 +196,8 @@ async fn access_token(
     }
     let response = http
         .post(format!(
-            "http://127.0.0.1:{}/application/o/token/",
-            endpoints.identity
+            "{}/application/o/token/",
+            endpoints.identity.trim_end_matches('/')
         ))
         .form(&[
             ("grant_type", "password"),
@@ -206,10 +207,10 @@ async fn access_token(
         ])
         .send()
         .await
-        .context("signing in with the identity stand in")?;
+        .context("signing in with the identity provider")?;
     if !response.status().is_success() {
         bail!(
-            "the identity stand in refused {}: {}",
+            "the identity provider refused {}: {}",
             user.username,
             response.text().await.unwrap_or_default()
         );
@@ -228,7 +229,10 @@ async fn sentinel_credentials(
     endpoints: &StackEndpoints,
 ) -> Result<Sentinel> {
     let response = http
-        .get(format!("http://127.0.0.1:{}/auth/sentinel", endpoints.http))
+        .get(format!(
+            "{}/auth/sentinel",
+            endpoints.api.trim_end_matches('/')
+        ))
         .send()
         .await
         .context("fetching the sentinel credentials")?;
@@ -245,6 +249,25 @@ async fn sentinel_credentials(
         }),
         other => bail!("/auth/sentinel failed: {other:?}"),
     }
+}
+
+/// The `sub` claim of a JWT access token, which the session does not verify: the backend does.
+fn subject_of(token: &str) -> Result<String> {
+    #[derive(Deserialize)]
+    struct Claims {
+        sub: String,
+    }
+    let payload = token
+        .split('.')
+        .nth(1)
+        .context("the access token is not a JWT")?;
+    let claims: Claims = serde_json::from_slice(
+        &URL_SAFE_NO_PAD
+            .decode(payload)
+            .context("the access token's payload is not base64url")?,
+    )
+    .context("the access token's payload names no subject")?;
+    Ok(claims.sub)
 }
 
 /// A fresh 32 character lowercase hexadecimal connection session, as the panel chooses one.

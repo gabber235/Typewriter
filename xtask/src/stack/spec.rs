@@ -144,6 +144,13 @@ pub struct Published {
 }
 
 impl Published {
+    /// Publishes how clients reach the backend: the client files and the values in `stack.env`
+    /// that point at them in `state`.
+    pub fn publish_clients(&mut self, clients: ClientConfiguration, state: &Path) {
+        self.values.extend(clients.published(state));
+        self.clients = Some(clients);
+    }
+
     /// Writes the client files and `stack.env`; the supervisor is their only writer.
     pub fn write(&self, dir: &Path) -> Result<()> {
         if let Some(clients) = &self.clients {
@@ -179,7 +186,7 @@ impl Registry {
 
 /// Ports one stack may use. Each name has a fixed offset, so a worktree keeps its addresses
 /// across runs.
-pub const PORTS: [&str; 11] = [
+pub const PORTS: [&str; 14] = [
     "nats",
     "websocket",
     "accounts",
@@ -188,6 +195,9 @@ pub const PORTS: [&str; 11] = [
     "nats-proxy",
     "realm-nats-proxy",
     "faults",
+    "toxiproxy",
+    "nats-web-proxy",
+    "backend-http",
     "collector-grpc",
     "collector-http",
     "collector-health",

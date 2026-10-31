@@ -18,6 +18,9 @@ pub struct StackUser {
     pub username: String,
     pub password: String,
     /// The identity provider's subject, which is also the user's record key and subject token.
+    /// The identity stand in issues it; a list for a real provider leaves it out, since the
+    /// provider assigns it, and a session reads it from the access token instead.
+    #[serde(default)]
     pub subject: String,
     /// Names of the organizations the person belongs to once the stack is provisioned.
     pub organizations: Vec<String>,

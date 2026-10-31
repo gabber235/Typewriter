@@ -1,8 +1,8 @@
 //! Every deployable backend component in one wash host, wired the way the cluster wires them:
 //! NATS through the stack broker's WASMCLOUD account, one in memory SurrealDB with the full
 //! schema, the two public HTTP routes on one address, and outgoing HTTP only to the identity
-//! stand in. The host also creates the faults links the panel's and the Realm host's NATS traffic
-//! go through.
+//! stand in. The host also creates the faults links the desktop panel's, the web panel's and the
+//! Realm host's NATS traffic go through.
 //!
 //! The broker and identity stand in are their own processes; the host only connects to them.
 //! xtask builds the components and passes each artifact as `--component <package>=<path>`.
@@ -51,12 +51,18 @@ pub struct HostArgs {
     /// Where the panel connects to NATS, through its faults link.
     #[arg(long = "nats-proxy")]
     nats_proxy: u16,
+    /// Where the web panel connects to the broker's websocket, through its faults link.
+    #[arg(long = "nats-web-proxy")]
+    nats_web_proxy: u16,
     /// Where the Realm host connects to NATS, through its own faults link.
     #[arg(long = "realm-nats-proxy")]
     realm_nats_proxy: u16,
+    /// The broker's websocket port, which the web panel's faults link leads to.
+    #[arg(long)]
+    websocket: u16,
     /// The toxiproxy server's API.
     #[arg(long)]
-    faults: u16,
+    toxiproxy: u16,
     /// The identity stand in.
     #[arg(long)]
     identity: u16,
@@ -151,9 +157,16 @@ pub async fn run(args: HostArgs) -> Result<()> {
     let ready_file = args.state.join("backend/ready");
     std::fs::create_dir_all(ready_file.parent().context("ready file has a parent")?)?;
 
-    // One link per client, so a scenario can cut the panel or the Realm host alone.
-    create_faults_link(&args, "nats", args.nats_proxy, &broker).await?;
-    create_faults_link(&args, "realm-nats", args.realm_nats_proxy, &broker).await?;
+    // One link per client, so a scenario can cut the panel or the Realm host alone. The desktop
+    // and the web panel each have their own, named as on the CI cluster.
+    let nats = broker
+        .endpoint
+        .strip_prefix("nats://")
+        .unwrap_or(&broker.endpoint);
+    let websocket = format!("127.0.0.1:{}", args.websocket);
+    create_faults_link(&args, "nats", args.nats_proxy, nats).await?;
+    create_faults_link(&args, "nats-web", args.nats_web_proxy, &websocket).await?;
+    create_faults_link(&args, "realm-nats", args.realm_nats_proxy, nats).await?;
 
     let database = Arc::new(WasmcloudSurrealdb::new());
     let database_key = ConnectionKey::from_config(&HashMap::from([
@@ -371,20 +384,16 @@ fn environment(
     }
 }
 
-/// The toxiproxy link [name] from `listen` to the broker, so scenarios can cut that client's
+/// The toxiproxy link [name] from `listen` to `upstream`, so scenarios can cut that client's
 /// connection.
 async fn create_faults_link(
     args: &HostArgs,
     name: &str,
     listen: u16,
-    broker: &BrokerConnection,
+    upstream: &str,
 ) -> Result<()> {
-    let upstream = broker
-        .endpoint
-        .strip_prefix("nats://")
-        .unwrap_or(&broker.endpoint);
     let response = reqwest::Client::new()
-        .post(format!("http://127.0.0.1:{}/proxies", args.faults))
+        .post(format!("http://127.0.0.1:{}/proxies", args.toxiproxy))
         .json(&json!({
             "name": name,
             "listen": format!("127.0.0.1:{listen}"),
