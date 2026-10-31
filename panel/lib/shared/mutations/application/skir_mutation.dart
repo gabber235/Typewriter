@@ -146,6 +146,7 @@ final class SkirMutationClient {
             await onResponse?.call(response);
           case SubmissionRejected() ||
               SubmissionNotSubmitted() ||
+              SubmissionUndelivered() ||
               SubmissionUncertain():
         }
       },
@@ -183,7 +184,7 @@ final class SkirMutationClient {
           if (error.kind != NatsFailureKind.noResponders) rethrow;
           // The broker found nobody listening, so nothing received the
           // request, as while the service that owns it is away.
-          return SubmissionResult.notSubmitted(
+          return SubmissionResult.undelivered(
             message: "Nothing answered; the service may be away",
             cause: error,
           );

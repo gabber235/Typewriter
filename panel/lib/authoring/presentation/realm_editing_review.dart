@@ -23,11 +23,22 @@ final class RealmEditingReview extends HookWidget {
         phase is EditGroupConflict ||
         phase is EditGroupResourceMissing ||
         phase is EditGroupRepeatedContention;
-    final pending = useMemoized(
-      () => needsReview ? workspace.reviewConflict(id) : null,
-      [workspace, id, needsReview, refresh.value],
-    );
-    final reviewed = useFuture(pending);
+    // Reviewing reads current saved values, which updates the saved values
+    // others watch; it starts after this frame, never while widgets build.
+    final pending = useState<Future<AuthoringConflictReview>?>(null);
+    useEffect(() {
+      var current = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!current) return;
+        final review = needsReview ? workspace.reviewConflict(id) : null;
+        // The review shows a failure through useFuture; a review a later
+        // frame replaced before anyone listened must not report it again.
+        review?.ignore();
+        pending.value = review;
+      });
+      return () => current = false;
+    }, [workspace, id, needsReview, refresh.value]);
+    final reviewed = useFuture(pending.value);
     if (needsReview) {
       final review = reviewed.data;
       return Column(

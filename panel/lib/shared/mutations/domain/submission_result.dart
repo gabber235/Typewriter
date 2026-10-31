@@ -18,6 +18,14 @@ sealed class SubmissionResult<T> with _$SubmissionResult<T> {
     required String message,
     Object? cause,
   }) = SubmissionNotSubmitted<T>;
+
+  /// Nothing received the request, as when the broker finds no service
+  /// listening while that service is away. Sending it again is safe, and the
+  /// caller decides whether to retry or show it.
+  const factory SubmissionResult.undelivered({
+    required String message,
+    Object? cause,
+  }) = SubmissionUndelivered<T>;
   const factory SubmissionResult.uncertain({
     required String message,
     required Object cause,

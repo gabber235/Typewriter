@@ -40,6 +40,7 @@ final class MutationSubmission<T> extends ChangeNotifier {
       !sending &&
       _integrationError == null &&
       (_result is SubmissionNotSubmitted<T> ||
+          _result is SubmissionUndelivered<T> ||
           (_result is SubmissionUncertain<T> &&
               replay == SubmissionReplay.identicalRequest));
 

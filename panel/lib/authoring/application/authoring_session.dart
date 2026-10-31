@@ -168,9 +168,6 @@ class AuthoringSession extends _$AuthoringSession {
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) async {
-    // A refresh may be requested while widgets build, as when a review
-    // opens; its state changes start once that build finished.
-    await Future<void>.value();
     while (_isActive(lifecycleRevision) && _refreshRequested) {
       _refreshRequested = false;
       final catalog = _catalogRefreshRequested;

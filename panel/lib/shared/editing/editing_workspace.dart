@@ -740,7 +740,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _ => null,
     };
     if (settlement == null) {
-      if (result case SubmissionNotSubmitted()
+      if (result case SubmissionUndelivered()
           when group.policy == EditorCommitPolicy.autosaveChanges) {
         // Nothing received the save, as while its Realm is away. The edit
         // stays pending and is offered again until the Realm takes it.
@@ -752,7 +752,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         _rebuild();
         _schedule(group.id, delay: _redeliveryDelay(group.undelivered));
         return;
-      } else if (result case SubmissionNotSubmitted(:final message)) {
+      } else if (result
+          case SubmissionNotSubmitted(:final message) ||
+              SubmissionUndelivered(:final message)) {
         group
           ..frozen = {}
           ..phase = EditGroupPhase.rejected(message, result);

@@ -33,6 +33,8 @@ extension SubmissionResponseMapping<T> on SubmissionResult<T> {
       ),
     SubmissionNotSubmitted(:final message, :final cause) =>
       SubmissionResult.notSubmitted(message: message, cause: cause),
+    SubmissionUndelivered(:final message, :final cause) =>
+      SubmissionResult.undelivered(message: message, cause: cause),
     SubmissionUncertain(:final message, :final cause, :final stackTrace) =>
       SubmissionResult.uncertain(
         message: message,

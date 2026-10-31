@@ -58,8 +58,10 @@ extension _LocalWorkSnapshot on ScopedWorkSession {
                   const LocalWorkKnownOutcome.confirmed(),
                 SubmissionRejected(:final message) =>
                   LocalWorkKnownOutcome.rejected(message),
-                SubmissionNotSubmitted(:final message) =>
-                  LocalWorkKnownOutcome.notSubmitted(message),
+                SubmissionNotSubmitted(:final message) ||
+                SubmissionUndelivered(
+                  :final message,
+                ) => LocalWorkKnownOutcome.notSubmitted(message),
                 _ => throw StateError(
                   "A settled submission requires a known delivery outcome",
                 ),
