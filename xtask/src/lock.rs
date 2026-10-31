@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::process;
 
-const HEAVY_LOCK: &str = "/tmp/typewriter-heavy.lock";
+pub(crate) const HEAVY_LOCK: &str = "/tmp/typewriter-heavy.lock";
 /// How often a waiter tries the lock again; polling instead of blocking lets it see an interrupt.
 const LOCK_POLL: Duration = Duration::from_millis(500);
 

@@ -24,7 +24,7 @@ use anyhow::{Context as _, Result, bail};
 
 use crate::deploy::{self, Cluster};
 use crate::evidence::{self, Recorded};
-use crate::lock::HeavyLock;
+use crate::lock::{self, HeavyLock};
 use crate::process::{Supervisor, Unsupervised};
 use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestRun};
 use crate::stack::{self, typewriter};
@@ -129,6 +129,18 @@ enum Target {
 }
 
 /// Runs `suite`'s selected scenarios against `target`.
+/// Takes the heavy lock at `lock`, then clears the previous run's results in `evidence`.
+/// Clearing only once the lock is held means a run that waits for its turn never removes
+/// the results of the run still writing them.
+fn take_turn(lock: &Path, holder: &str, evidence: &Path) -> Result<HeavyLock> {
+    let held = HeavyLock::acquire_at(lock, holder)?;
+    if evidence.exists() {
+        std::fs::remove_dir_all(evidence)
+            .with_context(|| format!("cannot clear {}", evidence.display()))?;
+    }
+    Ok(held)
+}
+
 fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Result<()> {
     // The panel compiles against the generated Skir and build_runner sources.
     generate::generate(ctx, None)?;
@@ -138,10 +150,6 @@ fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Res
     };
     let shown = Path::new(evidence::RESULTS).join(&name);
     let evidence = ctx.root.join(&shown);
-    if evidence.exists() {
-        std::fs::remove_dir_all(&evidence)
-            .with_context(|| format!("cannot clear {}", evidence.display()))?;
-    }
     let commit = ctx
         .tool(".", "git", &["rev-parse", "HEAD"])
         .output_text()?
@@ -149,7 +157,13 @@ fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Res
         .to_owned();
     let quarantine = Quarantine::load(ctx)?;
     // Flutter builds the app inside `flutter drive`, so the whole run is one heavy build.
-    let lock = || HeavyLock::acquire(&format!("e2e {name}"));
+    let lock = || {
+        take_turn(
+            Path::new(lock::HEAVY_LOCK),
+            &format!("e2e {name}"),
+            &evidence,
+        )
+    };
     let attempts = |defines: &Path, supervisor: &mut dyn Supervisor| {
         results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
             drive(ctx, supervisor, suite, defines, &evidence, n, ids)
@@ -377,6 +391,29 @@ mod tests {
         .unwrap();
         assert_eq!(args.only, ["CONN-1", "[REALM-2] Opens"]);
         assert_eq!(args.policy(), AttemptPolicy::Exactly(20));
+    }
+
+    #[test]
+    fn a_waiting_run_keeps_the_running_run_s_results_until_its_turn() {
+        let dir = tempfile::tempdir().unwrap();
+        let (lock, evidence) = (dir.path().join("heavy.lock"), dir.path().join("panel"));
+        std::fs::create_dir(&evidence).unwrap();
+        let running = HeavyLock::acquire_at(&lock, "first run").unwrap();
+        let waiting = std::thread::spawn({
+            let (lock, evidence) = (lock.clone(), evidence.clone());
+            move || take_turn(&lock, "second run", &evidence).map(drop)
+        });
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        assert!(
+            evidence.exists(),
+            "a waiting run must not clear the running run's results"
+        );
+        drop(running);
+        waiting.join().unwrap().unwrap();
+        assert!(
+            !evidence.exists(),
+            "its turn starts by clearing the previous results"
+        );
     }
 
     #[test]
