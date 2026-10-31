@@ -137,7 +137,7 @@ internal class PublicationFixture(
     suspend fun installElsewhere(content: PublishedContent) {
         attempts.start(content.publication, content.catalog, testEngineInputs())
         attempts.phase(content.publication, PublicationState.ACTIVATING)
-        attempts.install(content)
+        attempts.install(content, content.publishedPages())
     }
 
     /** The page's authored value as the stored resource graph of [content] carries it. */

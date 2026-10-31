@@ -6,8 +6,9 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.checking.dependencies
+import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.types.fields
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
@@ -32,7 +33,7 @@ internal val MISSING_VALUE = location(PROJECTION, "missingValue")
 internal val REPRESENTATION_VALUE = location(PROJECTION, "representation")
 
 /** Runs [block] on fresh reads of one resource of a pending type with an authored null, an unfilled value and a representation. */
-internal fun <T> projection(block: (CapturedAuthoringReads) -> T): T {
+internal suspend fun <T> projection(block: (CapturedAuthoringReads) -> T): T {
     val authored =
         AuthoringRecord.of(
             configuration = TypeSelection.createPending(definition = TEST_TYPE, arguments = emptyList()),
@@ -42,27 +43,23 @@ internal fun <T> projection(block: (CapturedAuthoringReads) -> T): T {
                     ("missingValue" to DataValue.UNFILLED) +
                     ("representation" to DataValue.named(REPRESENTATION_TYPE.namedUse(), DataValue.StringValueWrapper("value"))),
         )
-    return captured(TestCatalogLease(definitions = TEST_DEFINITIONS + REPRESENTATION_DEFINITION), mapOf(PROJECTION to authored)) { lease ->
+    return captured(mapOf(PROJECTION to authored), DefinitionCatalog(TEST_DEFINITIONS + REPRESENTATION_DEFINITION)) { lease ->
         block(CapturedAuthoringReads(lease.originalView()))
     }
 }
 
-/** Runs [block] on a capture of a store that holds [resources] under [catalog], then closes the capture and the store. */
-internal fun <T> captured(
-    catalog: AuthoringCatalogLease,
+/**
+ * Runs [block] on a capture of the saved view of a Realm on [catalog] that starts with [resources] saved, then closes
+ * the capture and the Realm.
+ */
+internal suspend fun <T> captured(
     resources: Map<ResourceId, AuthoringRecord>,
+    catalog: DefinitionCatalog = DefinitionCatalog(TEST_DEFINITIONS),
     block: (AuthoringLease) -> T,
-): T {
-    val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(resources))
-    return try {
-        store.capture().use(block)
-    } finally {
-        store.close()
-    }
-}
+): T = RealmFixture.of(catalog, resources).use { realm -> realm.views.capture().use(block) }
 
 /** The inputs the reads [read] makes on a projection depend on, as each read observed them. */
-internal fun dependenciesOf(read: (CapturedAuthoringReads) -> Unit): Set<InputIdentity> =
+internal suspend fun dependenciesOf(read: (CapturedAuthoringReads) -> Unit): Set<InputIdentity> =
     projection { reads ->
         read(reads)
         reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }

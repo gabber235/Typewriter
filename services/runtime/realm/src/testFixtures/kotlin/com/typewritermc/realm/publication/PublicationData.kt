@@ -22,6 +22,7 @@ import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationReport
+import skirout.editor.v1.publication.PublishedRoot
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
@@ -90,6 +91,13 @@ internal fun publishedContent(
             },
     )
 
+/** The record a publication page fixture published for [root], titled after its resource. */
+internal fun publishedPage(root: CompilationRoot): AuthoringRecord = publicationPageRecord(root.resource.value)
+
+/** Each output root of this content with the [publishedPage] record it was compiled from. */
+internal fun PublishedContent.publishedPages(): List<PublishedRoot> =
+    outputs.map { PublishedRoot(root = it.reference.root, record = publishedPage(it.reference.root)) }
+
 /** A publication source that always selects [content] and reports no attempt, as a repository holds it after a release. */
 internal fun selectedPublication(content: PublishedContent): PublicationResults =
     object : PublicationResults {
@@ -116,8 +124,6 @@ internal fun compiledArtifactProducer(
 
         context(inputs: CompilationInputs)
         override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> = compile.invoke(roots)
-
-        override fun publishedRecord(payload: ByteArray): AuthoringRecord? = null
     }
 
 /** Registers [producers] and compiles an empty saved view with them, so registration and output rules both apply. */

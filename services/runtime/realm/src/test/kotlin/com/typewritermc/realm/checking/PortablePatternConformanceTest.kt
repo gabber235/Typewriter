@@ -1,18 +1,17 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.of
-import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
-import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.captured
 import com.typewritermc.realm.authoring.location
+import com.typewritermc.realm.testing.DefinitionCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -44,16 +43,14 @@ val PortablePatternConformanceTest by testSuite {
         test("expansion $id") {
             case.keys shouldBe setOf("id", "value", "owner", "pattern", "expected")
             val owner = ResourceId(value = case.string("owner"))
-            val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(owner to case.ownerRecord())))
-            val lease = store.capture()
             val expanded =
-                CapturedAuthoringReads(lease.originalView()).expand(
-                    ValueLocation.of(owner),
-                    RelativeFieldPattern.serializer.fromJsonCode(case.getValue("pattern").toString()),
-                )
+                captured(mapOf(owner to case.ownerRecord())) { lease ->
+                    CapturedAuthoringReads(lease.originalView()).expand(
+                        ValueLocation.of(owner),
+                        RelativeFieldPattern.serializer.fromJsonCode(case.getValue("pattern").toString()),
+                    )
+                }
             expanded shouldBe case.locations("expected")
-            lease.close()
-            store.close()
         }
     }
 
@@ -94,31 +91,25 @@ val PortablePatternConformanceTest by testSuite {
                                 ),
                             ),
                     )
-                val store =
-                    InMemoryAuthoringViewStore(
-                        TestCatalogLease(configuration = listOf(recipe)),
-                        AuthoringSeed(
-                            mapOf(owner to case.ownerRecord()),
-                        ),
-                    )
-                val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
-                runtime.reloadCatalog()
-                advanceUntilIdle()
-                runtime.drain()
+                checking(
+                    DefinitionCatalog(TEST_DEFINITIONS, configuration = listOf(recipe)),
+                    mapOf(owner to case.ownerRecord()),
+                    StandardTestDispatcher(testScheduler),
+                ) { _, runtime ->
+                    runtime.settle()
 
-                val actual = runtime.findings().associateBy { it.ticket.instance.location }
-                val expected = case.getValue("expected").jsonArray.map { it.jsonObject }
-                actual.keys shouldBe expected.map { compactLocation(it.string("subject")) }.toSet()
-                expected.forEach { entry ->
-                    val subject = compactLocation(entry.string("subject"))
-                    val set = actual.getValue(subject)
-                    withClue("outcome of ${entry.string("subject")}") { set.outcome.compact() shouldBe entry.getValue("outcome") }
-                    withClue("findings of ${entry.string("subject")}") {
-                        set.findings.map { it.compact() } shouldBe entry.getValue("findings").jsonArray.toList()
+                    val actual = runtime.findings().associateBy { it.ticket.instance.location }
+                    val expected = case.getValue("expected").jsonArray.map { it.jsonObject }
+                    actual.keys shouldBe expected.map { compactLocation(it.string("subject")) }.toSet()
+                    expected.forEach { entry ->
+                        val subject = compactLocation(entry.string("subject"))
+                        val set = actual.getValue(subject)
+                        withClue("outcome of ${entry.string("subject")}") { set.outcome.compact() shouldBe entry.getValue("outcome") }
+                        withClue("findings of ${entry.string("subject")}") {
+                            set.findings.map { it.compact() } shouldBe entry.getValue("findings").jsonArray.toList()
+                        }
                     }
                 }
-                runtime.close()
-                store.close()
             }
         }
     }

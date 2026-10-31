@@ -94,15 +94,15 @@ struct PublicationBlocker(84150011) {
 enum PublicationChange(84150012) {
   root_added: CompilationRoot = 1;
   root_updated: CompilationRoot = 2;
-  root_removed: RemovedRoot = 3;
+  root_removed: PublishedRoot = 3;
   requirements_changed = 4;
 }
-/// A selected root that saved content no longer holds. published is the root record as the selected
-/// publication carries it, so editors can still name a resource saved content has deleted; it is
-/// absent when that publication's stored output cannot be read back.
-struct RemovedRoot(84150013) {
+/// A root as a publication released it: record is the authored record it was compiled from, which
+/// the Realm stores with the publication so editors can still name a root that saved content has
+/// since deleted.
+struct PublishedRoot(84150013) {
   root: CompilationRoot = 0;
-  published: AuthoringRecord? = 1;
+  record: AuthoringRecord = 1;
 }
 /// A releasable change set is nonempty by construction; additional entries extend its first change.
 struct PublicationDelta(84150014) {

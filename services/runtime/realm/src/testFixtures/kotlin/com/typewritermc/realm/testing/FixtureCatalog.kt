@@ -129,3 +129,12 @@ private fun endpoint(endpoint: EndpointDefinition): EndpointDefinition =
                 else -> error("Unknown captured deletion policy")
             },
     )
+
+/**
+ * Counts the leases still open on the catalog this Realm of a [DefinitionCatalog] runs now; the count stays readable
+ * after the Realm is closed, so a test can prove that closing released every lease.
+ */
+internal fun RealmFixture.openCatalogLeases(): () -> Int {
+    val lease = views.read { it.catalog } as TestCatalogLease
+    return { lease.openCount }
+}

@@ -26,7 +26,7 @@ import skirout.editor.v1.publication.PublicationFailure
 import skirout.editor.v1.publication.PublicationReport
 import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
-import skirout.editor.v1.publication.RemovedRoot
+import skirout.editor.v1.publication.PublishedRoot
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.InputToken
@@ -116,15 +116,23 @@ val RealmPublicationCoordinatorTest by testSuite {
         }
     }
 
-    test("a removed root is named by the record its selected publication carries") {
+    test("a removed root is named by the record stored with its publication, even once its compiled bytes are gone") {
         val fixture = PublicationFixture()
         try {
-            fixture.release()
+            val released = fixture.release()
+            fixture.blobs.remove(
+                ArtifactDigest(
+                    DigestAlgorithm.SHA_256,
+                    released.content.outputs
+                        .single()
+                        .blob.digest,
+                ),
+            )
             fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(PUBLICATION_PAGE_ID))))
             fixture.publisher.refresh()
 
             fixture.ready().changes.allChanges shouldBe
-                listOf(PublicationChange.RootRemovedWrapper(RemovedRoot(root = fixture.root, published = publicationPageRecord("Quest"))))
+                listOf(PublicationChange.RootRemovedWrapper(PublishedRoot(root = fixture.root, record = publicationPageRecord("Quest"))))
         } finally {
             fixture.close()
         }

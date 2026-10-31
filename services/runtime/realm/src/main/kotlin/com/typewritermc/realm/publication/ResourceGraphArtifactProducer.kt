@@ -5,16 +5,12 @@ import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
 import com.typewritermc.engine.ResourceGraphCompileResult
-import com.typewritermc.engine.decodeResourceGraphShard
 import com.typewritermc.engine.encodeShard
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.compilation_root.CompilationRoot
-import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.TypeSelection
 
 /** Compiles every complete compilation unit with its ownership closure into the resource graph format. */
 internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
@@ -53,12 +49,5 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
                 }
             }
         }
-    }
-
-    override fun publishedRecord(payload: ByteArray): AuthoringRecord? {
-        val facts = payload.decodeResourceGraphShard().facts
-        val root = facts.resources.firstOrNull { it.key == facts.root } ?: return null
-        val fields = (root.value.payload as? DataValue.RecordWrapper)?.value?.fields ?: return null
-        return AuthoringRecord(configuration = TypeSelection.CompleteWrapper(root.actualType), fields = fields)
     }
 }

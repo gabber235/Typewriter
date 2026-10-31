@@ -8,6 +8,7 @@ import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.conflicts
+import com.typewritermc.realm.storage.decodeSkir
 import com.typewritermc.realm.storage.encodeSkir
 import com.typewritermc.realm.storage.inTransaction
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -52,6 +53,7 @@ import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.publication.PublicationView
 import skirout.editor.v1.publication.PublicationViewId
+import skirout.editor.v1.publication.PublishedRoot
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
@@ -93,7 +95,14 @@ interface PublicationAttemptStore {
         findings: List<Diagnostic>,
     )
 
-    suspend fun install(result: PublishedContent)
+    /** Selects [result], storing the record each of its [roots] was compiled from. */
+    suspend fun install(
+        result: PublishedContent,
+        roots: List<PublishedRoot>,
+    )
+
+    /** The roots [publication] released, each with the record it was compiled from. */
+    suspend fun publishedRoots(publication: PublicationId): List<PublishedRoot>
 
     suspend fun interruptUnfinished()
 }
@@ -222,7 +231,7 @@ internal class RealmPublicationCoordinator(
                 val successful = compiled.filterIsInstance<CompilationResult.Success>().map { it.artifact }
                 val failed = compiled.filterIsInstance<CompilationResult.Blocked>()
                 val candidateRoots = compiled.mapTo(linkedSetOf()) { it.root }
-                val published = selected.removedRecords(candidateRoots)
+                val published = selected?.let { attempts.publishedRoots(it.publication) }.orEmpty().records()
                 val evidence = assessment.evidence.toMutableMap()
                 val projectionLocations =
                     captured.root.projection.problems
@@ -261,12 +270,12 @@ internal class RealmPublicationCoordinator(
                                     successful,
                                     candidateRoots,
                                     inputs,
-                                    published::get,
+                                    published,
                                 ),
                             pendingRoots = failed.map { it.root },
                         )
                     } else {
-                        when (val comparison = PublicationComparison.between(selected, successful, inputs, published::get)) {
+                        when (val comparison = PublicationComparison.between(selected, successful, inputs, published)) {
                             PublicationComparison.Unchanged -> {
                                 if (selected != null && !restoreIfStillSelected(selected, successful)) {
                                     invalidate()
@@ -376,7 +385,7 @@ internal class RealmPublicationCoordinator(
             announce(PublicationState.ACTIVATING)
             installed =
                 engine.activate(inputs) {
-                    attempts.install(content)
+                    attempts.install(content, frozen.candidate.publishedRoots())
                     true
                 }
             if (!installed) {
@@ -426,17 +435,6 @@ internal class RealmPublicationCoordinator(
         }
     }
 
-    /** The records this selection published for its roots outside [candidate], read back from stored payloads. */
-    private suspend fun PublishedContent?.removedRecords(candidate: Set<CompilationRoot>): Map<CompilationRoot, AuthoringRecord> =
-        this
-            ?.outputs
-            .orEmpty()
-            .filter { it.reference.root !in candidate }
-            .mapNotNull { output ->
-                val payload = artifacts.payload(output) ?: return@mapNotNull null
-                compilation.publishedRecord(output.reference.root, output.reference.mediaType, payload)?.let { output.reference.root to it }
-            }.toMap()
-
     private fun capturedFindings(root: AuthoringView) =
         findings().map { set ->
             val current =
@@ -469,11 +467,10 @@ internal class RealmPublicationCoordinator(
                             next.artifacts,
                             next.artifacts.mapTo(linkedSetOf()) { it.root } + pendingRoots,
                             next.engine,
-                        ) { root ->
-                            active.candidate.artifacts
-                                .firstOrNull { it.root == root }
-                                ?.let { compilation.publishedRecord(it.root, it.mediaType, it.payload) }
-                        },
+                            active.candidate
+                                .publishedRoots()
+                                .records(),
+                        ),
                     pendingRoots = pendingRoots,
                     blockers = pending?.blockers?.all.orEmpty(),
                     notices = next.status.notices,
@@ -512,7 +509,10 @@ internal class RealmPublicationCoordinator(
         val artifacts: List<CompiledArtifact>,
         val status: PublicationStatus,
         val revision: Long,
-    )
+    ) {
+        /** Each compiled root with the saved record it was compiled from. */
+        fun publishedRoots() = artifacts.map { PublishedRoot(root = it.root, record = lease.root.resources.getValue(it.root.resource)) }
+    }
 
     private data class Release(
         val candidate: Prepared,
@@ -523,6 +523,12 @@ internal class RealmPublicationCoordinator(
 
 private fun PublishedContent?.baseline(): PublicationBaseline =
     this?.let { PublicationBaseline.SelectedWrapper(it.publication) } ?: PublicationBaseline.INITIAL
+
+/** Names each root's record; a root without one is a broken publication record, not an unnamed removal. */
+private fun List<PublishedRoot>.records(): (CompilationRoot) -> AuthoringRecord {
+    val records = associate { it.root to it.record }
+    return { root -> checkNotNull(records[root]) { "The selected publication holds no record for ${root.resource.value}" } }
+}
 
 private fun nextViewId() = PublicationViewId(value = UUID.randomUUID().toString())
 
@@ -571,22 +577,36 @@ internal class SurrealPublicationAttemptStore(
             ).take(0)
     }
 
-    override suspend fun install(result: PublishedContent) {
+    override suspend fun install(
+        result: PublishedContent,
+        roots: List<PublishedRoot>,
+    ) {
+        require(roots.map { it.root } == result.outputs.map { it.reference.root }) { "Each published root needs its record." }
         database.inTransaction { transaction ->
             transaction.query("UPDATE publication_attempt SET selected = false WHERE selected = true;").take(0)
             val installed =
                 transaction
                     .query(
-                        "UPDATE ONLY \$attempt SET state = 'complete', selected = true, result = \$result, updated_at = time::now() " +
+                        "UPDATE ONLY \$attempt SET state = 'complete', selected = true, result = \$result, roots = \$roots, " +
+                            "updated_at = time::now() " +
                             "WHERE state = 'activating' RETURN VALUE id;",
                         mapOf(
                             "attempt" to RecordId("publication_attempt", result.publication.value),
                             "result" to encodeSkir(PublishedContent.serializer, result),
+                            "roots" to encodeSkir(Serializers.list(PublishedRoot.serializer), roots),
                         ),
                     ).take(0)
             check(!installed.isNone && !installed.isNull) { "Publication was not ready for installation" }
         }
     }
+
+    override suspend fun publishedRoots(publication: PublicationId): List<PublishedRoot> =
+        decodeSkir(
+            Serializers.list(PublishedRoot.serializer),
+            database
+                .query("SELECT VALUE roots FROM ONLY \$attempt;", mapOf("attempt" to RecordId("publication_attempt", publication.value)))
+                .take(0),
+        )
 
     override suspend fun interruptUnfinished() {
         database

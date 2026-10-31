@@ -4,7 +4,6 @@ import com.typewritermc.engine.CompilationResult
 import com.typewritermc.realm.authoring.AuthoringView
 import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
-import skirout.editor.v1.type_catalog.AuthoringRecord
 
 /** Preserves every root result and validates output ownership before storage. */
 internal class CompiledArtifactProducerRegistry(
@@ -25,16 +24,6 @@ internal class CompiledArtifactProducerRegistry(
                 }
             }
         }
-
-    /** The record [root] was compiled from, read from its [payload] in [mediaType] by the producer that wrote it. */
-    fun publishedRecord(
-        root: CompilationRoot,
-        mediaType: String,
-        payload: ByteArray,
-    ): AuthoringRecord? =
-        ordered
-            .firstOrNull { it.projection == root.projection && it.mediaType == mediaType }
-            ?.publishedRecord(payload)
 
     context(inputs: CompilationInputs)
     fun compile(): List<CompilationResult> {

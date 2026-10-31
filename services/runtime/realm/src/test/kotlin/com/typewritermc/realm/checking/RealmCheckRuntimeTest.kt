@@ -22,7 +22,6 @@ import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.TEXT_USE
-import com.typewritermc.realm.authoring.TestCatalogLease
 import com.typewritermc.realm.authoring.TestDraftType
 import com.typewritermc.realm.authoring.ViewReadLimits
 import com.typewritermc.realm.authoring.conflicts
@@ -31,8 +30,10 @@ import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.publication.ResourceReadiness
 import com.typewritermc.realm.testing.CHECK_PROVIDER_ORIGIN
 import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.TestCheckProviders
 import com.typewritermc.realm.testing.checksOf
+import com.typewritermc.realm.testing.openCatalogLeases
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.integerScalar
@@ -179,25 +180,19 @@ val RealmCheckRuntimeTest by testSuite {
         )
 
     test("a capture against another catalog generation is refused and releases its retained snapshot") {
-        val catalog = TestCatalogLease()
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(emptyMap()))
-        val runtime = RealmCheckRuntime(store)
-
-        shouldThrow<IllegalArgumentException> {
-            runBlocking {
-                runtime.evaluateCapture(
-                    CheckAdmissionTarget.CapturedAcceptance(
-                        store.capture().use {
-                            it.root.copy(catalog = TestCatalogLease(generation = CatalogGeneration(value = "wrong")))
-                        },
-                    ),
-                )
+        val realm = RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS))
+        val openLeases = realm.openCatalogLeases()
+        val wrong = DefinitionCatalog(TEST_DEFINITIONS).lease(CatalogGeneration(value = "wrong"))
+        realm.use {
+            RealmCheckRuntime(realm.views).use { runtime ->
+                shouldThrow<IllegalArgumentException> {
+                    runtime.evaluateCapture(
+                        CheckAdmissionTarget.CapturedAcceptance(realm.views.capture().use { it.root.copy(catalog = wrong) }),
+                    )
+                }
             }
         }
-
-        runtime.close()
-        store.close()
-        catalog.openCount shouldBe 0
+        openLeases() shouldBe 0
     }
 
     test("a catalog reload that fails to retain a provider releases every provider lease it took") {
@@ -213,36 +208,35 @@ val RealmCheckRuntimeTest by testSuite {
                 OwnedCheck(CHECK_PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 9), provider),
             )
         val providers = TestCheckProviders(owned, failOnRetain = 2)
-        val catalog = TestCatalogLease(providers = providers)
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(emptyMap()))
-        val runtime = RealmCheckRuntime(store)
+        val realm = RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS, providers = providers))
+        val openLeases = realm.openCatalogLeases()
+        realm.use {
+            RealmCheckRuntime(realm.views).use { runtime ->
+                shouldThrow<IllegalStateException> { runtime.reloadCatalog() }
 
-        shouldThrow<IllegalStateException> {
-            runBlocking { runtime.reloadCatalog() }
+                providers.openLeases.get() shouldBe 0
+            }
         }
-
-        providers.openLeases.get() shouldBe 0
-        runtime.close()
-        store.close()
-        catalog.openCount shouldBe 0
+        openLeases() shouldBe 0
     }
 
     test("a reload racing another reload publishes findings of the latest catalog and releases every provider lease on close") {
         val providers = checksOf(10, InvalidRealm)
         val latest = CatalogGeneration(value = "latest")
-        InMemoryAuthoringViewStore(TestCatalogLease(CatalogGeneration(value = "first"), providers), AuthoringSeed(emptyMap())).use { base ->
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = providers)
+        RealmFixture.of(catalog).use { realm ->
             // The first reload stops while it discovers subjects, after it retained its catalog.
-            val store = BlockingCaptureStore(base, blockedCall = 2)
+            val store = BlockingCaptureStore(realm.views, blockedCall = 2)
             val runtime = RealmCheckRuntime(store)
             val executor = Executors.newSingleThreadExecutor()
             val first = executor.submit { runBlocking { runtime.reloadCatalog() } }
             store.entered.await(5, TimeUnit.SECONDS) shouldBe true
 
-            base.install(base.prepare(AuthoringViewDelta(catalog = TestCatalogLease(latest, providers))))
-            runBlocking { runtime.reloadCatalog() }
+            realm.owner.activateCatalog(catalog.lease(latest), {}, {})
+            runtime.reloadCatalog()
             store.release.countDown()
             first.get(5, TimeUnit.SECONDS)
-            runBlocking { runtime.drain() }
+            runtime.drain()
 
             runtime.findings().map { it.ticket.catalog } shouldBe listOf(latest)
             runtime.reported() shouldBe setOf(REALM to "Realm is invalid.")

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.of
+import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.types.fields
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
@@ -15,9 +16,20 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 
-internal fun request(supplied: String = "seed") =
+/**
+ * The preparation coordinator a Realm runs, preparing with [evaluator] against the catalog this Realm runs at the time
+ * of each call.
+ */
+internal fun RealmFixture.preparations(evaluator: PreparationEvaluator) =
+    PreparationCoordinator(catalog = { views.read { it.catalog.retain() } }, evaluator = evaluator)
+
+/** A request to prepare a creation value on [catalog], whose supplied value carries [supplied] as its seed. */
+internal fun request(
+    catalog: CatalogGeneration,
+    supplied: String = "seed",
+): ValuePreparationRequest =
     ValuePreparationRequest(
-        catalog = CATALOG,
+        catalog = catalog,
         target =
             PreparationTarget.RecordWrapper(
                 TypeSelection.createPending(definition = CREATION_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
@@ -37,5 +49,4 @@ internal fun prepared(value: String) =
         findings = emptyList(),
     )
 
-internal val CATALOG = CatalogGeneration(value = "catalog")
 internal val CREATION_TYPE = TypeDefinitionId.qualified("creation", "value")

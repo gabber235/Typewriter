@@ -8,7 +8,7 @@ import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationChange
 import skirout.editor.v1.publication.PublicationDelta
-import skirout.editor.v1.publication.RemovedRoot
+import skirout.editor.v1.publication.PublishedRoot
 import skirout.editor.v1.type_catalog.AuthoringRecord
 
 /** Semantic release contents independent of storage pointers or publication IDs. */
@@ -65,22 +65,22 @@ sealed interface PublicationComparison {
             selected: PublishedContent?,
             artifacts: List<CompiledArtifact>,
             engine: EngineImplementationInputs,
-            published: (CompilationRoot) -> AuthoringRecord?,
+            published: (CompilationRoot) -> AuthoringRecord,
         ): PublicationComparison {
             val changes = confirmedChanges(selected, artifacts, artifacts.mapTo(linkedSetOf()) { it.root }, engine, published)
             return if (changes.isEmpty()) Unchanged else Changed(publicationDelta(changes))
         }
 
         /**
-         * Failed roots remain pending. Successful roots and definite removals can still be compared. A removal names
-         * the record [published] reports for its root in [selected].
+         * Failed roots remain pending. Successful roots and definite removals can still be compared. A removal carries
+         * the record [published] names for its root in [selected].
          */
         fun confirmedChanges(
             selected: PublishedContent?,
             artifacts: List<CompiledArtifact>,
             candidateRoots: Set<CompilationRoot>,
             engine: EngineImplementationInputs,
-            published: (CompilationRoot) -> AuthoringRecord?,
+            published: (CompilationRoot) -> AuthoringRecord,
         ): List<PublicationChange> {
             require(artifacts.map { it.root }.distinct().size == artifacts.size) { "Candidate roots must be unique." }
             require(artifacts.all { it.root in candidateRoots }) { "Successful output must belong to the candidate." }
@@ -92,7 +92,7 @@ sealed interface PublicationComparison {
             artifacts: List<CompiledArtifact>,
             candidateRoots: Set<CompilationRoot>,
             engine: EngineImplementationInputs,
-            published: (CompilationRoot) -> AuthoringRecord?,
+            published: (CompilationRoot) -> AuthoringRecord,
         ): List<PublicationChange> {
             require(artifacts.map { it.root }.distinct().size == artifacts.size)
             require(artifacts.all { it.root in candidateRoots })
@@ -130,5 +130,4 @@ sealed interface PublicationComparison {
     }
 }
 
-private fun CompilationRoot.removed(published: (CompilationRoot) -> AuthoringRecord?) =
-    RemovedRoot(root = this, published = published(this))
+private fun CompilationRoot.removed(published: (CompilationRoot) -> AuthoringRecord) = PublishedRoot(root = this, record = published(this))

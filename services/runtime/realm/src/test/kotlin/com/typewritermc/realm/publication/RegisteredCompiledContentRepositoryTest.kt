@@ -21,17 +21,17 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val first = publishedContent(listOf(compiledArtifact(compilationRoot("test", "a"))), publication = "first")
             attempts.start(first.publication, first.catalog, testEngineInputs())
             attempts.phase(first.publication, PublicationState.ACTIVATING)
-            attempts.install(first)
+            attempts.install(first, first.publishedPages())
             results.selected() shouldBe first
             val second = publishedContent(listOf(compiledArtifact(compilationRoot("test", "b"))), publication = "second")
             attempts.start(second.publication, second.catalog, testEngineInputs())
             attempts.phase(second.publication, PublicationState.ACTIVATING)
-            attempts.install(second)
+            attempts.install(second, second.publishedPages())
             results.selected() shouldBe second
             val empty = second.copy(publication = PublicationId(value = "empty"), outputs = emptyList())
             attempts.start(empty.publication, empty.catalog, testEngineInputs())
             attempts.phase(empty.publication, PublicationState.ACTIVATING)
-            attempts.install(empty)
+            attempts.install(empty, empty.publishedPages())
             results.selected() shouldBe empty
         }
     }
@@ -42,10 +42,11 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val first = publishedContent(listOf(compiledArtifact(compilationRoot("test", "a"))), publication = "first")
             attempts.start(first.publication, first.catalog, testEngineInputs())
             attempts.phase(first.publication, PublicationState.ACTIVATING)
-            attempts.install(first)
+            attempts.install(first, first.publishedPages())
             val next = publishedContent(listOf(compiledArtifact(compilationRoot("test", "b"))), publication = "next")
             attempts.start(next.publication, next.catalog, testEngineInputs())
-            shouldThrow<IllegalStateException> { attempts.install(next) }.message shouldBe "Publication was not ready for installation"
+            shouldThrow<IllegalStateException> { attempts.install(next, next.publishedPages()) }.message shouldBe
+                "Publication was not ready for installation"
             results.selected() shouldBe first
         }
     }
@@ -57,12 +58,12 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val selected = publishedContent(listOf(compiledArtifact(compilationRoot("test", "first"))), publication = "selected")
             original.start(selected.publication, selected.catalog, testEngineInputs())
             original.phase(selected.publication, PublicationState.ACTIVATING)
-            original.install(selected)
+            original.install(selected, selected.publishedPages())
             val unfinished = publishedContent(listOf(compiledArtifact(compilationRoot("test", "second"))), publication = "unfinished")
             original.start(unfinished.publication, unfinished.catalog, testEngineInputs())
             original.phase(unfinished.publication, PublicationState.ACTIVATING)
             recovery.interruptUnfinished()
-            shouldThrow<IllegalStateException> { original.install(unfinished) }.message shouldBe
+            shouldThrow<IllegalStateException> { original.install(unfinished, unfinished.publishedPages()) }.message shouldBe
                 "Publication was not ready for installation"
             results.selected() shouldBe selected
             results.latestReport()?.state shouldBe PublicationState.INTERRUPTED
@@ -97,7 +98,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val first = publishedContent(listOf(compiledArtifact(compilationRoot("test", "a"))), publication = "first")
             attempts.start(first.publication, first.catalog, testEngineInputs())
             attempts.phase(first.publication, PublicationState.ACTIVATING)
-            attempts.install(first)
+            attempts.install(first, first.publishedPages())
             attempts.start(PublicationId(value = "unfinished"), first.catalog, testEngineInputs())
             SurrealPublicationAttemptStore(database).interruptUnfinished()
             results.selected() shouldBe first
