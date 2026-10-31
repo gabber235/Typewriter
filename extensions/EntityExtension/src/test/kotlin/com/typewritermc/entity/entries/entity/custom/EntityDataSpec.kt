@@ -1,30 +1,18 @@
 package com.typewritermc.entity.entries.entity.custom
 
-import com.github.retrooper.packetevents.PacketEvents
-import com.github.retrooper.packetevents.PacketEventsAPI
-import com.github.retrooper.packetevents.settings.PacketEventsSettings
 import com.github.retrooper.packetevents.protocol.entity.pose.EntityPose
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import com.typewritermc.engine.paper.entry.entries.EntityProperty
 import com.typewritermc.entity.entries.data.minecraft.PoseProperty
 import com.typewritermc.entity.entries.data.minecraft.living.AgeableProperty
 import com.typewritermc.entity.entries.data.minecraft.living.SizeProperty
+import com.typewritermc.entity.entries.loadEntityTypes
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
 import kotlin.reflect.KClass
 
 private fun properties(vararg properties: EntityProperty): Map<KClass<*>, EntityProperty> =
     properties.associateBy<EntityProperty, KClass<*>> { it::class }
-
-/** Naming an [EntityTypes] constant loads the mappings, which are read through the settings and nothing else. */
-private fun loadEntityTypes() {
-    if (PacketEvents.getAPI() != null) return
-    val api = mockk<PacketEventsAPI<Any>>(relaxed = true)
-    every { api.settings } returns PacketEventsSettings()
-    PacketEvents.setAPI(api)
-}
 
 class EntityDataSpec : FunSpec({
     beforeSpec { loadEntityTypes() }
