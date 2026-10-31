@@ -1,6 +1,6 @@
 # Closed beta roadmap
 
-Source design: docs/design/core-model.md (Decided) and docs/vision/.
+Source design: the topic files in docs/design/ (start at overview.md) and docs/vision/.
 
 ## Decided
 
