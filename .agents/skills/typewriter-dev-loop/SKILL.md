@@ -7,7 +7,8 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
 
 ## Builds
 - One heavy build at a time (Gradle, Cargo, `build_runner`, `flutter run`); `cargo xtask` steps
-  queue on a machine wide lock.
+  queue on a machine wide lock. A heavy command without an xtask step (`flutter test`,
+  `./gradlew`, `cargo test`) joins that queue as `cargo xtask heavy -- <command>`.
 - `cargo xtask check --print` shows the plain command behind every step; run `cargo xtask doctor`
   first when the harness itself misbehaves.
 
