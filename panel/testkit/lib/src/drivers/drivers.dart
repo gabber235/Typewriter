@@ -1,5 +1,6 @@
 library;
 
+export "authoring/conflict_review_driver.dart";
 export "authoring/creation_driver.dart";
 export "authoring/editing_driver.dart";
 export "authoring/link_chooser_driver.dart";

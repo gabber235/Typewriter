@@ -81,10 +81,7 @@ final class _AuthoredResourceInspectionState
     final configuration = _binding.document
         .resource(widget.resource)
         ?.configuration;
-    final needsReview =
-        _binding.phase is EditGroupConflict<AuthoringDocument> ||
-        _binding.phase is EditGroupResourceMissing<AuthoringDocument> ||
-        _binding.phase is EditGroupRepeatedContention<AuthoringDocument>;
+    final needsReview = _binding.phase?.needsReview ?? false;
     final editor = _editor(
       widget.role,
       enabled:

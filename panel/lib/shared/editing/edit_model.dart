@@ -148,6 +148,13 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
   /// Submission locks protect delivery independently of user recovery needs.
   bool get needsAttention => blocked && !active;
 
+  /// The user decides between this group's work and the saved values, which
+  /// the workspace reads again for that decision.
+  bool get needsReview =>
+      this is EditGroupConflict<S> ||
+      this is EditGroupResourceMissing<S> ||
+      this is EditGroupRepeatedContention<S>;
+
   String get message => switch (this) {
     EditGroupDirty() => "Changes await applying",
     EditGroupAwaitingDependency() =>
@@ -260,4 +267,33 @@ abstract class EditGroupReview<S, E> with _$EditGroupReview<S, E> {
     @Default([]) List<EditConflictEvidence> conflicts,
     @Default([]) List<EditorDiagnostic> diagnostics,
   }) = _EditGroupReview<S, E>;
+}
+
+/// The review of one group in a phase that [EditGroupPhase.needsReview]:
+/// its unsent work against the saved values last read for it.
+///
+/// [reading] holds while saved values are read again; the previous [value]
+/// stays for comparison meanwhile. A failed read leaves no [value], only its
+/// [failure], so nothing is resolved against values that were not read.
+@immutable
+final class EditReview<R> {
+  const EditReview.reading([this.value]) : reading = true, failure = null;
+  const EditReview.ready(R this.value) : reading = false, failure = null;
+  const EditReview.failed(Object this.failure)
+    : reading = false,
+      value = null;
+
+  final R? value;
+  final bool reading;
+  final Object? failure;
+
+  /// This review with its value converted by [convert], such as into the
+  /// review of one domain.
+  EditReview<T> map<T>(T Function(R value) convert) => switch (this) {
+    EditReview(:final failure?) => EditReview.failed(failure),
+    EditReview(reading: true, :final value) => EditReview.reading(
+      value == null ? null : convert(value),
+    ),
+    EditReview(:final value) => EditReview.ready(convert(value as R)),
+  };
 }

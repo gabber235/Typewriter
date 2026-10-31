@@ -2,6 +2,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 enum EditGroupLifetime { reusable, operation }
 
+/// One review of a group: its unsent work against freshly read saved values,
+/// or why it could not be made.
+typedef _Reviewed<S, E> = ({
+  EditGroupReview<S, E>? value,
+  Object? failure,
+  StackTrace? stackTrace,
+});
+
 /// Owns the ordered local edit journal for one persistence boundary.
 ///
 /// [model] interprets observations and replays semantic edits. Confirmed state
@@ -53,6 +61,8 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   var _notificationPending = false;
   Future<void>? _saving;
   S? _deferredConfirmed;
+  final _reviews =
+      <EditGroupId, ({Object run, EditReview<EditGroupReview<S, E>> review})>{};
   bool get isPreparing => _preparations != 0;
   bool get hasPendingWork => isPreparing || _operations.isNotEmpty;
   int get revision => _revision;
@@ -987,6 +997,88 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     if (canSave(id)) await save(id);
   }
 
+  /// The review of [id] while its group [EditGroupPhase.needsReview]. The
+  /// workspace starts it when the group enters such a phase; null otherwise.
+  EditReview<EditGroupReview<S, E>>? reviewOf(EditGroupId id) =>
+      _reviews[id]?.review;
+
+  /// Reads the saved values again and reviews [id] against them; a group
+  /// that needs a review shows the result through [reviewOf]. Throws when
+  /// the saved values cannot be read or the group cannot be reviewed.
+  Future<EditGroupReview<S, E>> review(EditGroupId id) async {
+    final review = await _review(id);
+    if (review.failure case final error?) {
+      Error.throwWithStackTrace(error, review.stackTrace!);
+    }
+    return review.value!;
+  }
+
+  /// Reads the saved values again for the review of [id]; the result shows
+  /// through [reviewOf].
+  Future<void> refreshReview(EditGroupId id) => _review(id);
+
+  /// Reviews every group that newly needs one and forgets the reviews of
+  /// groups that no longer do.
+  void _startReviews() {
+    _reviews.removeWhere(
+      (id, _) => !(_state.groups[id]?.phase.needsReview ?? false),
+    );
+    for (final group in _state.groups.values) {
+      if (group.phase.needsReview && !_reviews.containsKey(group.id)) {
+        unawaited(_review(group.id, notify: false));
+      }
+    }
+  }
+
+  Future<_Reviewed<S, E>> _review(EditGroupId id, {bool notify = true}) async {
+    final run = Object();
+    if (_state.groups[id]?.phase.needsReview ?? false) {
+      _reviews[id] = (
+        run: run,
+        review: EditReview.reading(_reviews[id]?.review.value),
+      );
+      if (notify) _notify();
+    }
+    _Reviewed<S, E> result;
+    try {
+      inspectUnsubmitted(id);
+      // Reading saved values publishes them to the confirmed state, whose
+      // listeners may be running the change that started this review; the
+      // read starts once that change is done and no save is applying.
+      await Future<void>.value();
+      late S observation;
+      for (var current = false; !current;) {
+        if (_saving case final saving?) {
+          await saving.then((_) {}, onError: (Object _) {});
+          continue;
+        }
+        observation = await persistence.refresh();
+        if (_closed) {
+          throw const EditPreparationFailure("The editing workspace closed");
+        }
+        // A save that started meanwhile moves the saved values again.
+        current = _saving == null;
+      }
+      acceptConfirmed(observation);
+      result = (value: inspectUnsubmitted(id), failure: null, stackTrace: null);
+    } on Object catch (error, stackTrace) {
+      result = (value: null, failure: error, stackTrace: stackTrace);
+    }
+    if (!_closed && identical(_reviews[id]?.run, run)) {
+      _reviews[id] = (
+        run: run,
+        review: switch (result) {
+          (value: _, failure: final error?, stackTrace: _) =>
+            EditReview.failed(error),
+          (value: final value, failure: _, stackTrace: _) =>
+            EditReview.ready(value!),
+        },
+      );
+      _notify();
+    }
+    return result;
+  }
+
   /// Captures only unsent work. Refresh externally before taking this snapshot.
   EditGroupReview<S, E> inspectUnsubmitted(EditGroupId id) {
     final owner = _groups[id];
@@ -1327,6 +1419,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _notificationPending = true;
       return;
     }
+    _startReviews();
     notifyListeners();
   }
 
@@ -1341,6 +1434,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       interaction.close();
     }
     _tasks.clear();
+    _reviews.clear();
     super.dispose();
   }
 }
