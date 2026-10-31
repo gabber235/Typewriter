@@ -7,9 +7,6 @@ files:
   - panel/test/**
   - panel/testkit/test/**
   - panel/widgetbook/test/**
-ignores:
-  # Rewrites the shared creation fixture only when asked; every run reads the committed one.
-  - panel/test/authoring/application/resource_creation_flow_test.dart
 rule:
   # Dart patterns cannot start inside an expression, so match the member access by kind.
   kind: member_expression

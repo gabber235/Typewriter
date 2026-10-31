@@ -4,15 +4,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-final compiledSdkInheritedInspectorValue = skir.DataValue.serializer.fromBytes(
-  base64Decode(
-    "c2tpcvgO+Pf4/PjzB2ZpeHR1cmXzEEluc3BlY3Rvck1lc3NhZ2UB+A33+gX48wdtZXNzYWdl+AjzDEhlbGxvIHBsYXllcvjzBG5h"
-    "bWX4CPMHV2VsY29tZfjzBW5vdGVz+AjzC1NoYXJlZCBub3Rl+PMFb3RoZXL4CPMIQ29vbGRvd2748wlwbGFjZW1lbnT4Dvj3+Pv3"
-    "8yA1NzhmMGQ0MmJjOTY0YjFmYWI1MmM4ZGU1ZTAyZjljNQH4Dff6BPjzBmhlaWdodPgF8wEx+PMFd2lkdGj4BfMBMfjzAXj4BfMB"
-    "MPjzAXn4BfMBMA==",
-  ),
-);
-
 void main() {
   final coordinates = [
     for (final field in ["x", "y", "width", "height"])

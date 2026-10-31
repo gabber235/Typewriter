@@ -76,22 +76,18 @@ expect(calls, 1);
 
 ## Watch the harness
 
-A test file holds only its entry point and its test cases. Pumps, setups, fakes, driver actions,
-assertions and data builders live in the stack's kit (panel testkit, the Kotlin test kit and
-`testFixtures`, the Rust component kit); test data stays inline. `cargo xtask check quality`
-fails on a local helper.
+A test file holds only its entry point and its test cases; `cargo xtask check quality` fails on
+any local helper or class. Pumps, setups, fakes, drivers, page objects, assertions and data
+builders live in the stack's kit: panel testkit, Kotlin `testFixtures`, Rust `test_support` or
+`tests/support`. Test data stays inline. A page object for one widget may have one user.
+Generated fixtures are imported from the kit, never pasted as bytes or constants.
 
-While writing or reviewing tests, ask whether the harness should grow instead of the test:
+Grow the kit, not the test, when you see:
 
-- The same private helper in several files (`_pump`, `_fixture`, `record()`), or a helper made
-  for one test that hides what it sets up.
-- Long setup repeated across cases, or a fake that reimplements production.
+- The same setup or helper shape in several files, or a helper that hides what it sets up.
+- A fake that reimplements production.
 - Many narrow helpers (`createJoinCode`, `approveJoinRequest`, ...) where one general driver or
   builder would read as well.
-
-When it should, propose it to the user with the duplicated places, at the right scope: a shared
-helper in the file, a fixture for the module, or a project harness (testkit, setups, the scenario
-driver). Do not grow a large harness silently, and do not add one more narrow helper.
 
 ## Properties
 

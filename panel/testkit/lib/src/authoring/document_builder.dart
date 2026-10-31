@@ -25,7 +25,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/authoring/application/catalog_fixtures.dart";
-import "package:typewriter_testkit/src/authoring/application/realm_catalog_fixture.dart";
 import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 import "package:typewriter_testkit/src/shared/portable/values.dart";
 
@@ -280,10 +279,18 @@ skir.EndpointBindingTemplate endpointBinding(
   containsCollection: path.contains(skir.FieldPatternSegment.items),
 );
 
+/// The catalog generation authored content is saved under unless a test names
+/// another; [authoredCatalog] defaults to it.
+final realmFixtureGeneration = skir.CatalogGeneration(value: "fixture");
+
 /// The checked catalog of [generation] declaring [types], [relations] and
 /// the [endpoints] binding them. Each type also gets the fields and the
 /// ancestors of the parents it refines, its own fields after theirs; its
 /// direct parents come first among its ancestors.
+///
+/// Builds on [testCheckedCatalog], which checks a [testCatalogSnapshot]: use
+/// those directly for a catalog whose types need no resolved ancestry, and
+/// `authoredCatalog(const [])` for an empty catalog of the fixture generation.
 CheckedEditorCatalog authoredCatalog(
   List<skir.PublishedType> types, {
   List<skir.RelationContract> relations = const [],
@@ -410,7 +417,7 @@ final class AuthoredDoc {
   /// The catalog typing the content: the one given, or one of [generation]
   /// that declares nothing, so only edits by location apply.
   CheckedEditorCatalog get catalog =>
-      _catalog ?? receivedCheckedEditorCatalog(generation: generation);
+      _catalog ?? authoredCatalog(const [], generation: generation.value);
 
   /// The saved state the Realm reports for the content.
   skir.AuthoringState get state => skir.AuthoringState(
