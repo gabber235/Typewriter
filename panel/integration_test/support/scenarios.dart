@@ -124,8 +124,6 @@ void scenario(
     } finally {
       // Restored before the test ends, since the binding checks it was.
       debugPrint = original;
-      // The scenario's spans reach the stack's collector while it still runs.
-      await flushTelemetry();
       final end = DateTime.now().millisecondsSinceEpoch;
       _cases.add(
         results.TestCase(
@@ -143,6 +141,9 @@ void scenario(
         ),
       );
       _publish();
+      // The scenario's spans reach the stack's collector while it still runs;
+      // the case is recorded first, so a failed export cannot drop it.
+      await flushTelemetry();
     }
   });
 }

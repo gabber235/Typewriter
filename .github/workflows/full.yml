@@ -55,11 +55,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: full-tier-evidence
-          # Artifacts of this public repository are downloadable; failure folders hold logs and
-          # spans and stay out.
+          # Artifacts of this public repository are downloadable; logs and spans stay out.
           path: |
             .xtask/results/
-            !.xtask/results/*/attempts/*/failures/
+            !.xtask/results/**/failures/
+            !.xtask/results/**/logs/
+            !.xtask/results/**/drive.log
           if-no-files-found: ignore
       - if: failure() && github.event_name == 'schedule'
         run: gh issue create --title "Full tier failed $(date -I)" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

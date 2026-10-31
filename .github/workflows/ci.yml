@@ -96,11 +96,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: results-e2e-${{ matrix.suite }}
-          # Artifacts of this public repository are downloadable; failure folders hold logs and
-          # spans and stay out.
+          # Artifacts of this public repository are downloadable; logs and spans stay out.
           path: |
             .xtask/results/${{ matrix.suite }}/
-            !.xtask/results/${{ matrix.suite }}/attempts/*/failures/
+            !.xtask/results/${{ matrix.suite }}/**/failures/
+            !.xtask/results/${{ matrix.suite }}/**/logs/
+            !.xtask/results/${{ matrix.suite }}/**/drive.log
           if-no-files-found: ignore
 
   # Runs when checks or suites fail too, since a failure is what the description must show. Jobs
