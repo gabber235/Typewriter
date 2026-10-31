@@ -11,6 +11,12 @@ Source design: the topic files in docs/design/ (start at overview.md) and docs/v
 
 - Layer order v4 adopted 2026-10-30 (see Draft for the list; it moves to Decided as the confirmed order).
 - No separate multi server layer (2026-10-31): the primitives are multi server by design, so every layer whose behavior crosses servers proves it with a two engine test in its own PR (two engines in one process, no second Paper server). Server move handoff lands with sessions (3) and holds (15). The harness gets two engine support in layer 3.
+- Design contradictions are settled by the first layer that needs them, before that layer is built:
+  - single writer for a running step (home engine per interaction or lease per session): layer 3 (sessions).
+  - `ItemRef` as an identity: layer 7 (stored data).
+  - record keys for `Due<E>`: layer 8 (time and reactions).
+  - interaction home follows the leader or the majority: layer 10 (groups).
+  - purpose of `BookScope` next to `PublishScope`: layer 12 (book variables and instances).
 
 ## Unreviewed input
 
