@@ -13,6 +13,8 @@ Each folder contains its own `AGENTS.md` with more details:
 - [documentation/AGENTS.md](documentation/AGENTS.md)
 - [engine/AGENTS.md](engine/AGENTS.md)
 - [extensions/AGENTS.md](extensions/AGENTS.md)
+  - [extensions/EntityExtension/AGENTS.md](extensions/EntityExtension/AGENTS.md) – read it before adding or
+    changing entities or entity data.
 - [app/AGENTS.md](app/AGENTS.md)
 - [module-plugin/AGENTS.md](module-plugin/AGENTS.md)
 

@@ -1,6 +1,7 @@
 # Auto detect text files and perform LF normalization
 /extensions/_DocsExtension/**/*.kt text eol=lf
 * text=auto
+/extensions/EntityExtension/scripts/*.sh text eol=lf
 *.md linguist-vendored=false
 *.md linguist-generated=false
 *.md linguist-documentation=false

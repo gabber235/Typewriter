@@ -12,6 +12,10 @@ Run from this folder:
 
 This validates that all existing extensions compile successfully.
 
+Some extensions have their own guide with faster, more specific steps. Read it before changing that extension:
+
+- [EntityExtension/AGENTS.md](EntityExtension/AGENTS.md)
+
 ## Adding a New Extension
 
 1. Create a directory ending with `Extension` (e.g. `MyPluginExtension`).
