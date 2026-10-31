@@ -56,6 +56,9 @@ impl Service for Faults {
     }
 }
 
+/// The collector's spans file in `<state>/telemetry`.
+pub const TRACES: &str = "traces.jsonl";
+
 /// An OpenTelemetry collector that writes every span of this stack run to
 /// `<state>/telemetry/traces.jsonl` (OTLP JSON, one export request per line), so the panel's,
 /// the backend's and the Realm's spans of one run sit in one file, joined by the trace context
@@ -69,11 +72,8 @@ impl Service for Collector {
         fs::create_dir_all(&telemetry)
             .with_context(|| format!("cannot create {}", telemetry.display()))?;
         let config = ctx.state().join("collector.yaml");
-        fs::write(
-            &config,
-            collector_config(ctx, &telemetry.join("traces.jsonl")),
-        )
-        .with_context(|| format!("cannot write {}", config.display()))?;
+        fs::write(&config, collector_config(ctx, &telemetry.join(TRACES)))
+            .with_context(|| format!("cannot write {}", config.display()))?;
         let mut command = Command::new("otelcol-contrib");
         command.arg("--config").arg(config);
         Ok(command)

@@ -17,8 +17,10 @@ use clap::ValueEnum as _;
 use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
-use crate::results::{Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun};
-use crate::skirout::base::harness::v1::test_run::Runner;
+use crate::results::{
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun,
+};
+use crate::skirout::base::harness::v1::test_run::{Runner, Span};
 use crate::stack::StackRecord;
 use crate::{CommandExt as _, Context};
 
@@ -192,6 +194,101 @@ pub fn once(first: TestRun) -> impl FnMut(u32, &[String]) -> Result<TestRun> {
         assert_eq!(n, 1, "nothing should run again");
         Ok(first.clone())
     }
+}
+
+/// A run of the one case `id` with `attempts`.
+pub fn run_of(id: &str, attempts: Vec<Attempt>) -> TestRun {
+    TestRun {
+        runner: Runner::Panel,
+        cases: vec![TestCase {
+            id: id.to_owned(),
+            attempts,
+            ..TestCase::default()
+        }],
+        ..TestRun::default()
+    }
+}
+
+/// A failed attempt over `span` (Unix milliseconds) with `artifacts` of these kinds and paths.
+pub fn failed_attempt(span: (i64, i64), artifacts: &[(ArtifactKind, &str)]) -> Attempt {
+    Attempt {
+        outcome: failed("boom"),
+        span: Some(Span {
+            start_millis: span.0,
+            end_millis: span.1,
+            ..Span::default()
+        }),
+        artifacts: artifacts
+            .iter()
+            .map(|(kind, path)| Artifact {
+                kind: kind.clone(),
+                path: (*path).to_owned(),
+                ..Artifact::default()
+            })
+            .collect(),
+        ..Attempt::default()
+    }
+}
+
+/// A passing attempt over `span` (Unix milliseconds) without artifacts.
+pub fn passed_attempt(span: (i64, i64)) -> Attempt {
+    Attempt {
+        outcome: Outcome::Passed,
+        ..failed_attempt(span, &[])
+    }
+}
+
+/// One OTLP JSON export request from `service` holding `spans`, each
+/// `(trace id, span id, parent span id, start in Unix nanoseconds)`, in the collector's shape.
+pub fn otlp_request(service: &str, spans: &[(&str, &str, &str, i64)]) -> serde_json::Value {
+    let spans: Vec<_> = spans
+        .iter()
+        .map(|(trace, span, parent, start)| {
+            serde_json::json!({
+                "traceId": trace,
+                "spanId": span,
+                "parentSpanId": parent,
+                "name": "work",
+                "startTimeUnixNano": start.to_string(),
+            })
+        })
+        .collect();
+    serde_json::json!({ "resourceSpans": [{
+        "resource": { "attributes": [
+            { "key": "service.name", "value": { "stringValue": service } },
+        ] },
+        "scopeSpans": [{ "scope": { "name": "test" }, "spans": spans }],
+    }] })
+}
+
+/// Every span in `jsonl` (OTLP JSON export requests, one per line) as `<service>/<span id>`, in
+/// file order.
+pub fn otlp_spans(jsonl: &str) -> Vec<String> {
+    let mut spans = Vec::new();
+    for line in jsonl.lines() {
+        let request: serde_json::Value = serde_json::from_str(line).unwrap();
+        for resource in request["resourceSpans"].as_array().unwrap() {
+            let service = resource["resource"]["attributes"][0]["value"]["stringValue"]
+                .as_str()
+                .unwrap();
+            for scope in resource["scopeSpans"].as_array().unwrap() {
+                for span in scope["spans"].as_array().unwrap() {
+                    spans.push(format!("{service}/{}", span["spanId"].as_str().unwrap()));
+                }
+            }
+        }
+    }
+    spans
+}
+
+/// The names of the entries in `dir`, sorted.
+pub fn file_names(dir: &Path) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    names.sort();
+    names
 }
 
 /// The exit status of a process that exited with `code`.

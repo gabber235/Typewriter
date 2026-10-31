@@ -26,6 +26,7 @@ use serde::{Deserialize, Serialize};
 
 use self::spec::{DynService, PortLease, Probe, Published, Registry, StackContext, StackSpec};
 use crate::Context;
+use crate::e2e::failures::StackEvidence;
 use crate::lock::E2eSlot;
 use crate::process::{self, Group, POLL, STOP_GRACE, Supervisor, interrupted, kill_group};
 
@@ -44,14 +45,40 @@ impl Keep {
     }
 }
 
-/// Runs `inside` with `spec` up for this worktree. `cargo xtask stack run` and the end to end
-/// suites call this.
+/// Runs `inside` with `spec` up for this worktree. `cargo xtask stack run` calls this.
 pub fn run<T>(
     ctx: &Context,
     spec: &StackSpec,
     timeout: Duration,
     inside: impl FnOnce(&mut Stack) -> Result<T>,
 ) -> Result<T> {
+    Ok(run_then(ctx, spec, timeout, inside, |_| Ok(()))?.0)
+}
+
+/// [`run`], then, once the stack has stopped and every exporter has flushed, copies every
+/// service log and the collected spans into `keep` (cleared first), before another run of this
+/// worktree can reset the stack state. The end to end suites call this for failure folders.
+pub fn run_keeping_evidence<T>(
+    ctx: &Context,
+    spec: &StackSpec,
+    timeout: Duration,
+    keep: &Path,
+    inside: impl FnOnce(&mut Stack) -> Result<T>,
+) -> Result<(T, StackEvidence)> {
+    run_then(ctx, spec, timeout, inside, |state| {
+        StackEvidence::copy(state, keep)
+    })
+}
+
+/// Runs `inside` with `spec` up, stops the stack, and runs `after` on the stack state while the
+/// worktree's slot is still held.
+fn run_then<T, U>(
+    ctx: &Context,
+    spec: &StackSpec,
+    timeout: Duration,
+    inside: impl FnOnce(&mut Stack) -> Result<T>,
+    after: impl FnOnce(&Path) -> Result<U>,
+) -> Result<(T, U)> {
     let order = spec.ordered()?;
     process::install_interrupt_handler();
     let _slot = E2eSlot::acquire(&ctx.root)?;
@@ -67,7 +94,39 @@ pub fn run<T>(
     }
     stack.env = published.values;
     stack.deadline = Some(Instant::now() + timeout);
-    inside(&mut stack)
+    let inside = inside(&mut stack)?;
+    drop(stack);
+    Ok((inside, after(&stack_ctx.state())?))
+}
+
+impl StackEvidence {
+    /// Copies the service logs and the spans file of the stack `state` into `keep`.
+    fn copy(state: &Path, keep: &Path) -> Result<Self> {
+        if keep.exists() {
+            fs::remove_dir_all(keep).with_context(|| format!("cannot clear {}", keep.display()))?;
+        }
+        let logs_dir = keep.join("logs");
+        fs::create_dir_all(&logs_dir)
+            .with_context(|| format!("cannot create {}", logs_dir.display()))?;
+        let mut logs = Vec::new();
+        for entry in fs::read_dir(state.join("logs"))? {
+            let path = entry?.path();
+            if path.extension().is_some_and(|extension| extension == "log") {
+                let copy = logs_dir.join(path.file_name().context("a log without a name")?);
+                fs::copy(&path, &copy)
+                    .with_context(|| format!("cannot copy {}", path.display()))?;
+                logs.push(copy);
+            }
+        }
+        logs.sort();
+        let traces = keep.join(typewriter::TRACES);
+        let collected = state.join("telemetry").join(typewriter::TRACES);
+        if collected.exists() {
+            fs::copy(&collected, &traces)
+                .with_context(|| format!("cannot copy {}", collected.display()))?;
+        }
+        Ok(Self { logs, traces })
+    }
 }
 
 /// Clears `state` except the entries `keep` names.

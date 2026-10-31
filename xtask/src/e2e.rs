@@ -1,14 +1,17 @@
 //! `cargo xtask e2e`: the end to end suites. Each suite starts the worktree's panel stack, drives
 //! the panel's `integration_test` scenarios through `flutter drive` inside the evidence recorder
 //! and writes their `TestRun`, every attempt included, to `.xtask/results/<suite>`, where the
-//! change report and the evidence section read it. Each attempt keeps its clips and screenshots
-//! under `attempts/<n>/` beside it. `--only` selects scenarios and `--repeat` runs each of them an
-//! exact number of times, to hunt a flaky scenario. The full suite runs the panel web
+//! change report and the evidence section read it. Each attempt keeps its clips, screenshots and
+//! stamped drive output under `attempts/<n>/` beside it, and a failed attempt also leaves a local
+//! failure folder there ([`failures`]). `--only` selects scenarios and `--repeat` runs each of
+//! them an exact number of times, to hunt a flaky scenario. The full suite runs the panel web
 //! scenarios against a fresh CI cluster instead (`cargo xtask cluster ci`, `cargo xtask deploy ci`).
 //!
 //! `flutter drive` rather than `flutter test integration_test`: only the host driver
 //! (`panel/test_driver/integration_test.dart`) can write files on desktop and on web, and it is
 //! what receives the scenarios' results and screenshots.
+
+pub(crate) mod failures;
 
 use std::io::Write;
 use std::net::{Ipv4Addr, TcpListener};
@@ -30,6 +33,10 @@ use crate::{CommandExt, Context, cluster, generate, secrets};
 /// Where the stack writes the panel's compile time defines (it publishes the same path as
 /// `STACK_PANEL_DEFINES`), relative to the repository root.
 const PANEL_DEFINES: &str = ".xtask/state/stack/panel.json";
+
+/// Where a suite keeps its stopped stack's logs and spans for failure folders, relative to the
+/// repository root; outside the results folder, so CI never uploads them.
+const STACK_EVIDENCE: &str = ".xtask/state/e2e";
 
 /// Xcode build settings (Flutter passes `FLUTTER_XCODE_<setting>` variables to xcodebuild) that
 /// sign the macOS app ad hoc without the keychain entitlement, so the build needs no provisioning
@@ -148,22 +155,27 @@ fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Res
             drive(ctx, supervisor, suite, defines, &evidence, n, ids)
         })
     };
-    let run = match target {
+    let (mut run, stack) = match target {
         Target::Stack => {
             let budget = suite.budget() * args.repeat.get();
-            stack::run(ctx, &typewriter::panel(), budget, |stack| {
-                let _lock = lock()?;
-                attempts(&ctx.root.join(PANEL_DEFINES), stack)
-            })?
+            let keep = ctx.root.join(STACK_EVIDENCE).join(&name);
+            let (run, stack) =
+                stack::run_keeping_evidence(ctx, &typewriter::panel(), budget, &keep, |stack| {
+                    let _lock = lock()?;
+                    attempts(&ctx.root.join(PANEL_DEFINES), stack)
+                })?;
+            (run, Some(stack))
         }
         Target::Cluster => {
             let _lock = lock()?;
-            attempts(
+            let run = attempts(
                 &ctx.root.join(cluster::STATE).join("panel.json"),
                 &mut Unsupervised::with_interrupts(),
-            )?
+            )?;
+            (run, None)
         }
     };
+    failures::collect(&evidence, &mut run, stack.as_ref())?;
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
     results::write(&run, &file)?;
@@ -280,7 +292,8 @@ fn drive_once(
         Suite::Full => unreachable!("the full suite drives the panel web scenarios"),
     }
     .in_dir("panel")
-    .env("EVIDENCE_DIR", out.display().to_string());
+    .env("EVIDENCE_DIR", out.display().to_string())
+    .log_to(out.join(failures::DRIVE_LOG));
     // Without a results file the scenarios never ran (the build or the launch failed), and
     // recording fails.
     let (run, exit) = evidence::record_with(ctx, out, recorded, supervisor)?;

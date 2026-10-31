@@ -14,6 +14,7 @@ use anyhow::Result;
 use clap::{ArgAction, Args, Subcommand};
 
 use self::prune::Prune;
+pub(crate) use self::record::file_name;
 pub use self::record::{Recorded, record_with};
 use crate::branch::{ATTEMPTS, BranchCheckout, REPOSITORY};
 use crate::{CommandExt, Context};

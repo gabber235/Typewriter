@@ -34,7 +34,7 @@ struct Attempt(85010004) {
   // Where the attempt sits in the run's recording, when there is one.
   span: Span?;
   duration_millis: int64;
-  // Clips, screenshots and log excerpts that show the outcome.
+  // Clips, screenshots, log excerpts and spans that show the outcome.
   artifacts: [Artifact];
 }
 
@@ -72,6 +72,8 @@ enum ArtifactKind(85010010) {
   clip;
   screenshot;
   log_excerpt;
+  // OTLP JSON spans of the traces an attempt started.
+  spans;
 }
 
 struct Artifact(85010011) {

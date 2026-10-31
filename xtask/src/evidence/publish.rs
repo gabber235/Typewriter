@@ -437,13 +437,13 @@ fn result(verdict: CaseVerdict) -> &'static str {
     }
 }
 
-/// The previews and links of a case's artifacts, every attempt's, then what broke, as one table
-/// cell.
+/// The previews and links of a case's published artifacts, every attempt's, then what broke, as
+/// one table cell.
 fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
     let media_url = section.media_url;
     let mut parts = Vec::new();
-    for artifact in results::artifacts(case) {
+    for artifact in results::artifacts(case).filter(|artifact| artifact.kind.published()) {
         let Some(base) = media_url else {
             parts.push(format!("`{runner}/{}` in the run artifacts", artifact.path));
             continue;
@@ -458,7 +458,9 @@ fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
                 )
             }
             ArtifactKind::Screenshot => format!("![]({url})"),
-            ArtifactKind::LogExcerpt | ArtifactKind::Unknown(_) => format!("[log]({url})"),
+            ArtifactKind::LogExcerpt | ArtifactKind::Spans | ArtifactKind::Unknown(_) => {
+                continue;
+            }
         });
     }
     if verdict(section, run, case) != CaseVerdict::Passed
@@ -491,14 +493,16 @@ pub(crate) fn listed(items: &[String]) -> String {
     }
 }
 
-/// Every artifact file of every run with its path in the commit folder, `<runner>/<path>`.
+/// Every published artifact file of every run with its path in the commit folder,
+/// `<runner>/<path>`.
 /// Artifact paths are relative to the folder of the run file; a clip's preview travels with it.
 fn media(runs: &[(PathBuf, TestRun)]) -> Vec<(PathBuf, String)> {
     let mut media = Vec::new();
     for (path, run) in runs {
         let folder = path.parent().unwrap_or(Path::new("."));
         let runner = runner_name(&run.runner);
-        for artifact in run.cases.iter().flat_map(results::artifacts) {
+        let artifacts = run.cases.iter().flat_map(results::artifacts);
+        for artifact in artifacts.filter(|artifact| artifact.kind.published()) {
             media.push((
                 folder.join(&artifact.path),
                 format!("{runner}/{}", artifact.path),
@@ -659,6 +663,7 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::{failed_attempt, run_of};
 
     const SECRET: &str = "ghp_0123456789abcdefghij";
 
@@ -700,6 +705,36 @@ mod tests {
         let media = [(log, "case.log".to_owned())];
         let error = scrub("clean", &media, &[SECRET.to_owned()]).unwrap_err();
         assert!(error.to_string().contains("case.log contains a secret"));
+    }
+
+    #[test]
+    fn only_clips_and_screenshots_reach_the_evidence_branch() {
+        let run = run_of(
+            "[CONN-1] Reconnects",
+            vec![failed_attempt(
+                (0, 1),
+                &[
+                    (ArtifactKind::Clip, "attempts/1/clips/conn.mp4"),
+                    (ArtifactKind::Screenshot, "attempts/1/failure.png"),
+                    (ArtifactKind::LogExcerpt, "attempts/1/logs/CONN-1/panel.log"),
+                    (
+                        ArtifactKind::Spans,
+                        "attempts/1/failures/conn/spans.otlp.jsonl",
+                    ),
+                ],
+            )],
+        );
+        let published: Vec<String> = media(&[(PathBuf::from("panel/test_run.json"), run)])
+            .into_iter()
+            .map(|(_, target)| target)
+            .collect();
+        assert_eq!(
+            published,
+            [
+                "panel/attempts/1/clips/conn.mp4",
+                "panel/attempts/1/failure.png"
+            ]
+        );
     }
 
     #[test]

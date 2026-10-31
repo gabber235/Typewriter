@@ -51,7 +51,9 @@ void runScenarios(List<void Function()> groups) {
 /// `REALM-1` or its edge case `REALM-1.E1`, on a freshly launched panel.
 ///
 /// The scenario's outcome, its span in Unix milliseconds and its captures land
-/// in the `TestRun`; a failing scenario also captures the screen it failed on.
+/// in the `TestRun`; a failing scenario also captures the screen it failed on
+/// and keeps the panel's log, which `cargo xtask e2e` copies into the
+/// attempt's failure folder.
 void scenario(
   String requirement,
   String title,
@@ -68,17 +70,30 @@ void scenario(
   final id = "[$requirement] $title";
   testWidgets(id, skip: !_selected(id, requirement), (tester) async {
     final artifacts = <results.Artifact>[];
-    final panel = await Panel.launch(
-      tester,
-      onCapture: (name, png) {
-        final path = "screenshots/$requirement/$name.png";
-        _captures[path] = base64Encode(png);
-        artifacts.add(
-          results.Artifact(kind: results.ArtifactKind.screenshot, path: path),
-        );
-        _publish();
-      },
-    );
+    // The panel logs through debugPrint; a failure keeps what it printed.
+    final log = StringBuffer();
+    final original = debugPrint;
+    debugPrint = (message, {wrapWidth}) {
+      log.writeln("${_now()} $message");
+      original(message, wrapWidth: wrapWidth);
+    };
+    final Panel panel;
+    try {
+      panel = await Panel.launch(
+        tester,
+        onCapture: (name, png) {
+          final path = "screenshots/$requirement/$name.png";
+          _captures[path] = base64Encode(png);
+          artifacts.add(
+            results.Artifact(kind: results.ArtifactKind.screenshot, path: path),
+          );
+          _publish();
+        },
+      );
+    } on Object {
+      debugPrint = original;
+      rethrow;
+    }
     final start = DateTime.now().millisecondsSinceEpoch;
     results.Outcome outcome = results.Outcome.passed;
     try {
@@ -89,14 +104,25 @@ void scenario(
       if (pending != null) {
         Error.throwWithStackTrace(pending as Object, StackTrace.current);
       }
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
       outcome = results.Outcome.createFailed(
         message: error.toString(),
         firstBroken: null,
       );
       await panel.capture("failure");
+      log.writeln("${_now()} $error\n$stackTrace");
+      // A framework error the failure left pending is logged too.
+      final pending = tester.takeException();
+      if (pending != null) log.writeln("${_now()} $pending");
+      final path = "logs/$requirement/panel.log";
+      _captures[path] = base64Encode(utf8.encode(log.toString()));
+      artifacts.add(
+        results.Artifact(kind: results.ArtifactKind.logExcerpt, path: path),
+      );
       rethrow;
     } finally {
+      // Restored before the test ends, since the binding checks it was.
+      debugPrint = original;
       // The scenario's spans reach the stack's collector while it still runs.
       await flushTelemetry();
       final end = DateTime.now().millisecondsSinceEpoch;
@@ -138,6 +164,10 @@ void faultScenario(
     await body(panel);
   });
 }
+
+/// The time a panel log line starts with, the RFC 3339 UTC form failure
+/// folders cut logs by.
+String _now() => DateTime.now().toUtc().toIso8601String();
 
 /// A scenario is selected by its full id or by its requirement id.
 bool _selected(String id, String requirement) {

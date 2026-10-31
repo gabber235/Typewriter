@@ -3,14 +3,18 @@
 //! `TestRun`. On macOS the command and its companions run unrecorded; the runner's screenshots
 //! still work.
 
-use std::fs;
+use std::fs::{self, File};
+use std::io::{self, BufRead as _, BufReader, PipeReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Stdio};
-use std::thread::sleep;
+use std::sync::mpsc::{self, Receiver};
+use std::sync::{Arc, Mutex};
+use std::thread::{self, sleep};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, bail};
 
+use crate::e2e::failures::rfc3339;
 use crate::process::{Group, Supervisor, Unsupervised};
 use crate::results::{self, TestRun};
 use crate::skirout::base::harness::v1::test_run::{Artifact, ArtifactKind, Attempt};
@@ -21,6 +25,8 @@ const RUN_FILE: &str = "test_run.json";
 const SCREEN: (u32, u32) = (1280, 800);
 /// GitHub's image proxy refuses files over about 5 MB; previews stay well below.
 const PREVIEW_LIMIT: u64 = 3 * 1024 * 1024;
+/// How long the output log waits for the pipes to drain after the command exited.
+const TEE_DRAIN: Duration = Duration::from_secs(10);
 
 /// A command to record, with the programs it needs on the same display.
 pub struct Recorded {
@@ -33,6 +39,8 @@ pub struct Recorded {
     pub env: Vec<(String, String)>,
     /// Variables the command must not inherit.
     pub env_remove: Vec<String>,
+    /// Where the command's output is kept too, each line stamped with its arrival time.
+    pub log: Option<PathBuf>,
 }
 
 impl Recorded {
@@ -45,6 +53,7 @@ impl Recorded {
             cwd: ".".into(),
             env: Vec::new(),
             env_remove: Vec::new(),
+            log: None,
         }
     }
 
@@ -67,6 +76,13 @@ impl Recorded {
 
     pub fn env_remove(mut self, key: &str) -> Self {
         self.env_remove.push(key.into());
+        self
+    }
+
+    /// Prints the command's output as before and appends each line to `log`, stamped with its
+    /// arrival time in the format failure folders cut logs by.
+    pub fn log_to(mut self, log: PathBuf) -> Self {
+        self.log = Some(log);
         self
     }
 }
@@ -101,6 +117,11 @@ pub fn record_with(
     for key in &recorded.env_remove {
         command.env_remove(key);
     }
+    let tee = recorded
+        .log
+        .as_deref()
+        .map(|log| Tee::attach(&mut command, log))
+        .transpose()?;
     if !cfg!(target_os = "linux") {
         let _companions = recorded
             .companions
@@ -108,6 +129,9 @@ pub fn record_with(
             .map(|companion| companion_spawn(ctx, supervisor, companion, None))
             .collect::<Result<Vec<_>>>()?;
         let status = supervisor.run(&mut command)?;
+        if let Some(tee) = tee {
+            tee.finish(&mut command);
+        }
         return Ok((read_run(out, &command, status)?, status));
     }
     let display = Xvfb::start(supervisor)?;
@@ -126,6 +150,9 @@ pub fn record_with(
         .env("DISPLAY", &display.name)
         .env("RECORDING_STARTED_AT", started.to_string());
     let status = supervisor.run(&mut command)?;
+    if let Some(tee) = tee {
+        tee.finish(&mut command);
+    }
     if let Some(ffmpeg) = ffmpeg {
         ffmpeg.finish()?;
     }
@@ -139,6 +166,65 @@ pub fn record_with(
         results::write(&test_run, &out.join(RUN_FILE))?;
     }
     Ok((test_run, status))
+}
+
+/// A command's stdout and stderr, each printed to its own stream as it arrives and appended,
+/// line by line with an arrival stamp, to one log file.
+struct Tee {
+    done: Receiver<()>,
+    streams: usize,
+}
+
+impl Tee {
+    /// Pipes `command`'s output through a reader thread per stream into `log`.
+    fn attach(command: &mut Command, log: &Path) -> Result<Self> {
+        let file = File::create(log).with_context(|| format!("cannot create {}", log.display()))?;
+        let file = Arc::new(Mutex::new(file));
+        let (sender, done) = mpsc::channel();
+        let (stdout, stdout_writer) = io::pipe()?;
+        let (stderr, stderr_writer) = io::pipe()?;
+        command.stdout(stdout_writer).stderr(stderr_writer);
+        let streams: [(PipeReader, Box<dyn Write + Send>); 2] = [
+            (stdout, Box::new(io::stdout())),
+            (stderr, Box::new(io::stderr())),
+        ];
+        for (reader, mut echo) in streams {
+            let (file, sender) = (Arc::clone(&file), sender.clone());
+            thread::spawn(move || {
+                let mut reader = BufReader::new(reader);
+                let mut line = Vec::new();
+                while reader
+                    .read_until(b'\n', &mut line)
+                    .is_ok_and(|read| read > 0)
+                {
+                    let _ = echo.write_all(&line).and_then(|()| echo.flush());
+                    let stamp = rfc3339(millis(SystemTime::now()));
+                    let text = String::from_utf8_lossy(&line);
+                    if let Ok(mut file) = file.lock() {
+                        let _ = writeln!(file, "{stamp} {}", text.trim_end_matches(['\r', '\n']));
+                    }
+                    line.clear();
+                }
+                let _ = sender.send(());
+            });
+        }
+        Ok(Self { done, streams: 2 })
+    }
+
+    /// Waits for the output the exited `command` left in its pipes. The command holds its end of
+    /// the pipes until its output is redirected again; a process it left behind that still holds
+    /// them is not waited for longer than [`TEE_DRAIN`].
+    fn finish(self, command: &mut Command) {
+        command.stdout(Stdio::null()).stderr(Stdio::null());
+        let deadline = Instant::now() + TEE_DRAIN;
+        for _ in 0..self.streams {
+            let left = deadline.saturating_duration_since(Instant::now());
+            if self.done.recv_timeout(left).is_err() {
+                eprintln!("evidence: the command's output log may miss its last lines");
+                return;
+            }
+        }
+    }
 }
 
 /// The run file, or an error when the command failed before writing one.
@@ -316,7 +402,7 @@ fn seconds(millis: i64) -> String {
 }
 
 /// A case id as a file name that works in a URL.
-fn file_name(id: &str) -> String {
+pub(crate) fn file_name(id: &str) -> String {
     id.chars()
         .map(|c| {
             if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {

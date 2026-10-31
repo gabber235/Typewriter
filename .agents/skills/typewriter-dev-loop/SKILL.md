@@ -19,6 +19,13 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
   environment. Logs: `.xtask/state/stack/logs/`.
 - A killed run can leave processes: `cargo xtask stack gc` (doctor reports them).
 
+## End to end failures
+- `cargo xtask e2e <suite> --only CONN-1` reruns one scenario; `--repeat <n>` hunts a flaky one.
+- A failed attempt leaves `.xtask/results/<suite>/attempts/<n>/failures/<case>/`: the failure
+  screenshot, `panel.log` (the panel's debugPrint and its error), `drive.log` and every service
+  log cut to the attempt's time window, and `spans.otlp.jsonl` (the panel, backend and Realm
+  spans of the traces the scenario started). It stays local; read it before rerunning.
+
 ## Main checkout only
 - Backend deploy: `cargo xtask deploy local`; builds, pushes, restarts on `k3d-seamlezz-local`.
 - Paper starts from the IntelliJ run configurations in `.run/` (`Paper Embedded`,

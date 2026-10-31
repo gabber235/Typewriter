@@ -16,7 +16,7 @@ use serde::Deserialize;
 use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
-    Artifact, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.
@@ -100,6 +100,15 @@ pub fn last_failure(case: &TestCase) -> Option<&Failure> {
 /// Every artifact of every attempt of `case`, in attempt order.
 pub fn artifacts(case: &TestCase) -> impl Iterator<Item = &Artifact> {
     case.attempts.iter().flat_map(|attempt| &attempt.artifacts)
+}
+
+impl ArtifactKind {
+    /// Whether an artifact of this kind is proof for review that goes to the public evidence
+    /// branch. Logs and spans stay on the machine, so no token they print can leak through a
+    /// scrub rule that missed it.
+    pub fn published(&self) -> bool {
+        matches!(self, Self::Clip | Self::Screenshot)
+    }
 }
 
 /// The 1 based numbers of `case`'s attempts that did not pass.
