@@ -16,6 +16,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "panel.dart";
+import "reported_run.dart";
 import "stack.dart" as stack;
 
 export "package:flutter_test/flutter_test.dart" show expect, isNot;
@@ -33,8 +34,9 @@ final _requirementFormat = RegExp(r"^[A-Z]+(-[A-Z]+)*-\d+(\.[EF]\d+)?$");
 
 final IntegrationTestWidgetsFlutterBinding _binding =
     IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-final int _startedAt = DateTime.now().millisecondsSinceEpoch;
-final List<results.TestCase> _cases = [];
+final ReportedRun _run = ReportedRun(
+  kIsWeb ? results.Runner.panelWeb : results.Runner.panel,
+);
 final Map<String, String> _captures = {};
 
 /// Registers every scenario group in [groups] and reports their results.
@@ -68,7 +70,7 @@ void scenario(
       "not a requirement ID such as REALM-1 or REALM-1.E1",
     );
   }
-  final id = "[$requirement] $title";
+  final id = ReportedRun.id(requirement, title);
   testWidgets(id, skip: !_selected(id, requirement), (tester) async {
     final artifacts = <results.Artifact>[];
     // The panel logs through debugPrint; a failure keeps what it printed.
@@ -106,10 +108,7 @@ void scenario(
         Error.throwWithStackTrace(pending as Object, StackTrace.current);
       }
     } on Object catch (error, stackTrace) {
-      outcome = results.Outcome.createFailed(
-        message: error.toString(),
-        firstBroken: null,
-      );
+      outcome = failedWith(error);
       await panel.capture("failure");
       log.writeln("${_now()} $error\n$stackTrace");
       // A framework error the failure left pending is logged too.
@@ -125,20 +124,14 @@ void scenario(
       // Restored before the test ends, since the binding checks it was.
       debugPrint = original;
       final end = DateTime.now().millisecondsSinceEpoch;
-      _cases.add(
-        results.TestCase(
-          id: id,
-          requirement: requirement,
-          demonstrates: demonstrates,
-          attempts: [
-            results.Attempt(
-              outcome: outcome,
-              span: results.Span(startMillis: start, endMillis: end),
-              durationMillis: end - start,
-              artifacts: artifacts,
-            ),
-          ],
-        ),
+      _run.add(
+        requirement: requirement,
+        title: title,
+        demonstrates: demonstrates,
+        outcome: outcome,
+        start: start,
+        end: end,
+        artifacts: artifacts,
       );
       _publish();
       // The scenario's spans reach the stack's collector while it still runs;
@@ -175,18 +168,8 @@ bool _selected(String id, String requirement) {
 
 /// Hands the driver the results so far; it writes them once the run ends.
 void _publish() {
-  final run = results.TestRun(
-    runner: kIsWeb ? results.Runner.panelWeb : results.Runner.panel,
-    // `cargo xtask e2e` knows the commit; the device does not.
-    commit: "",
-    startedAtMillis: _startedAt,
-    // One attempt of each scenario; `cargo xtask e2e` folds the attempts it
-    // made into one run under its own policy.
-    attemptPolicy: results.AttemptPolicy.wrapExactly(1),
-    cases: _cases,
-  );
   // The binding keeps its own screenshots under "screenshots" in the same map.
   (_binding.reportData ??= {})
-    ..["testRun"] = results.TestRun.serializer.toJson(run, readableFlavor: true)
+    ..["testRun"] = _run.toJson()
     ..["captures"] = _captures;
 }

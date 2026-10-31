@@ -35,7 +35,22 @@ valid:
         expect(panel.shows("Startup ready"), isTrue);
       });
     }
+  # A host driven journey runs its steps from the entry point, page steps through its support.
+  - |
+    Future<void> main() => journey("AUTH-2", "a user signs in", Demonstrates.happyPath, (user) async {
+      await user.provider.endsSessionDuring(() async {
+        await user.tap("Logout");
+      });
+      await until("Authentik asks for the user", user.provider.asksForUser);
+    });
 invalid:
+  # A host driven journey's page step as a top level function.
+  - |
+    Future<void> main() => journey("AUTH-2", "a user signs in", Demonstrates.happyPath, (user) async {
+      await _type(user, "input[name=uidField]", user.username);
+    });
+
+    Future<void> _type(Journey user, String selector, String text) async {}
   # A top level pump helper.
   - |
     Future<Panel> _pumpReady(WidgetTester tester) => tester.pumpPanel([signedIn(ada)], at: _ready);

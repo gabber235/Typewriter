@@ -91,7 +91,8 @@ Future<void> realmLink({required bool enabled}) => _expect(
 
 /// Restores every link and removes every toxic, so the next scenario starts
 /// from a healthy stack.
-Future<void> resetFaults() => _expect(204, http.post(Uri.parse("$_faults/reset")));
+Future<void> resetFaults() =>
+    _expect(204, http.post(Uri.parse("$_faults/reset")));
 
 Future<void> _expect(int status, Future<http.Response> request) async {
   final response = await request;
