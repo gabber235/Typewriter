@@ -130,11 +130,8 @@ mod tests {
     #[test]
     fn a_heavy_lock_taken_inside_heavy_fails_instead_of_waiting() {
         if std::env::var_os(lock::HELD_BY_PARENT).is_some() {
-            let dir = tempfile::tempdir().unwrap();
-            let message = refusal(HeavyLock::acquire_at(
-                &dir.path().join("heavy.lock"),
-                "check",
-            ));
+            // Refused before the machine's lock file is opened, so the test never touches it.
+            let message = refusal(HeavyLock::acquire("check"));
             assert!(
                 message.contains("already holds the heavy lock"),
                 "{message}"

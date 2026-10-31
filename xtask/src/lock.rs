@@ -33,8 +33,15 @@ impl HeavyLock {
 
     /// The lock at `path`; tests pass a temp file so they never queue behind real builds.
     pub fn acquire_at(path: &Path, holder: &str) -> Result<Self> {
-        // flock is per open file, so a nested acquire would wait on its own parent forever.
-        if std::env::var_os(HELD_BY_PARENT).is_some() {
+        Self::acquire_under(path, holder, std::env::var_os(HELD_BY_PARENT).is_some())
+    }
+
+    /// [`Self::acquire_at`], where `inside_heavy` says whether a `cargo xtask heavy` parent holds
+    /// the machine's heavy lock. flock is per open file, so a nested acquire of that lock would
+    /// wait on its own parent forever and is refused; every other lock, such as a test's temp
+    /// file, is taken as usual.
+    fn acquire_under(path: &Path, holder: &str, inside_heavy: bool) -> Result<Self> {
+        if inside_heavy && path == Path::new(HEAVY_LOCK) {
             bail!(
                 "{holder}: runs inside `cargo xtask heavy`, which already holds the heavy lock; \
                  run it directly"
@@ -235,6 +242,20 @@ mod tests {
     use std::sync::mpsc;
 
     use super::*;
+
+    #[test]
+    fn inside_cargo_xtask_heavy_only_the_machine_heavy_lock_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let temp = HeavyLock::acquire_under(&dir.path().join("heavy.lock"), "test", true);
+        assert!(temp.is_ok(), "a test's own lock is taken inside heavy");
+        let nested = HeavyLock::acquire_under(Path::new(HEAVY_LOCK), "build", true)
+            .err()
+            .expect("the heavy lock the parent holds is refused");
+        assert!(
+            nested.to_string().contains("already holds the heavy lock"),
+            "{nested}"
+        );
+    }
 
     #[test]
     fn a_second_heavy_build_waits_until_the_first_releases() {
