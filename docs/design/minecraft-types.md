@@ -190,6 +190,133 @@ it.is_like(reward_item)        // same item, amount ignored
 protagonist.inventory.count { it.is_like(reward_item) } >= 5
 ```
 
+## Types still to design
+
+Inventory of Minecraft values that need their own typed value in entry fields, formulas, stored data, or events, including ones legacy never had. Each row is designed later; this list fixes only the name and the reason. **(R)** marks a registry id: valid values are data driven per server and version, so the engines report them and the panel picks from that report. Legacy is `origin/develop` (`engine/`, `extensions/`).
+
+### Registry ids
+
+| Type | What it is | Why we need it | Hard part | Legacy had it |
+| --- | --- | --- | --- | --- |
+| `Material` (R) | item or block kind | item form, block checks | items and blocks are two registries; changes every version | yes |
+| `BlockType` (R) | block kind without state | "player breaks any oak log" | split from `Material`; changes every version | partial (`Material`) |
+| `EntityType` (R) | entity kind | spawn check, kill objective | variant data differs per type | yes |
+| `SoundEvent` (R) | sound id | play a sound | custom sounds from resource packs are not in the registry | yes (`SoundId`) |
+| `ParticleType` (R) | particle id | particle effect | options differ per particle (see `Particle`) | yes (enum only) |
+| `PotionEffectType` (R) | status effect id | give speed | changes every version | yes |
+| `Potion` (R) | potion recipe id (`strong_swiftness`) | potion item component | data driven | no |
+| `Enchantment` (R) | enchantment id | `Enchantments` component, checks | data driven per server (datapacks) | no |
+| `Attribute` (R) | attribute id (`max_health`) | attribute modifier on item or player | changes every version | no |
+| `DamageType` (R) | damage source kind | "player dies from fall" | data driven per server | partial (`DamageCause`) |
+| `Biome` (R) | biome id | "player enters a desert" | data driven per server | partial |
+| `Dimension` (R) | dimension type id | world rules by dimension | data driven; distinct from `World` | no |
+| `Structure` (R) | structure id | "player enters a village" | data driven; needs world query | no |
+| `Advancement` (R) | advancement id | grant or check advancement | data driven per server | no |
+| `Recipe` (R) | recipe id | unlock or detect craft | data driven per server | no |
+| `LootTable` (R) | loot table id | reward from a table | data driven per server | no |
+| `ItemTag` (R) | item tag (`#logs`) | match any log in a formula | data driven; content changes per version | no |
+| `BlockTag` (R) | block tag | "break any ore" | data driven | no |
+| `EntityTypeTag` (R) | entity type tag | "kill any undead" | data driven | no |
+| `GameRule` (R) | game rule id with typed value | set `doDaylightCycle` per world | value type differs per rule (boolean or int) | no |
+| `Statistic` (R) | statistic id | "walked 1000 blocks" | nested: statistic type plus target | no |
+| `VillagerProfession` (R) | profession id | NPC villager look | changes every version | yes |
+| `VillagerType` (R) | villager biome skin | NPC villager look | data driven | yes |
+| `PaintingVariant` (R) | painting motive | display or reward | data driven per server | no |
+| `TrimPattern` (R) | armor trim pattern | armor component | data driven | no |
+| `TrimMaterial` (R) | armor trim material | armor component | data driven | no |
+| `BannerPattern` (R) | banner pattern id | banner component | data driven | no |
+| `JukeboxSong` (R) | music disc song | `JukeboxPlayable` component | data driven | yes (component) |
+| `Instrument` (R) | goat horn sound | instrument component | data driven | no |
+| `MobVariant` (R) | wolf, cat, frog, pig, cow, chicken variant | NPC look | one registry per mob; grows each version | partial (per mob enums) |
+| `Font` (R) | font id | rich text font | resource pack defined; not a server registry | no |
+| `ItemModel` (R) | item model id | `ItemModel` component | resource pack defined | yes (component) |
+| `DialogId` (R) | data driven dialog | open a datapack dialog | new (1.21.6); data driven | no |
+
+### World and blocks
+
+| Type | What it is | Why we need it | Hard part | Legacy had it |
+| --- | --- | --- | --- | --- |
+| `BlockState` | block type plus property values | fake block, block display, block event match | properties per block change every version; per property conditional fields | partial (`Material` only) |
+| `BlockStateMatch` | block type plus a subset of properties | "any lit furnace" | partial match semantics | no |
+| `Direction` | six faces | sign facing, block face clicked | none | yes |
+| `Region` | shaped area in a world (box, sphere, polygon) | area enter and leave | panel editing in 3D; spatial index | partial (extensions) |
+| `Weather` | clear, rain, thunder | per player weather | per player versus world | yes (`WeatherType`) |
+| `TimeOfDay` | world ticks in a day | per player time, time window checks | ticks versus clock time | yes (`GameTimeRange`) |
+| `WorldBorder` | center, size, warning, damage | per player border cinematic | per player border is packet only | yes (segment) |
+| `Difficulty` | peaceful to hard | world rule checks | none | no |
+| `Heightmap` | surface kind | "highest block" queries | rarely needed | no |
+
+### Entities
+
+| Type | What it is | Why we need it | Hard part | Legacy had it |
+| --- | --- | --- | --- | --- |
+| `GameMode` | survival, creative, adventure, spectator | set or check mode | none | partial (internal) |
+| `EquipmentSlot` | hand, offhand, armor, body, saddle | equipment data, events | slots grow per version | yes |
+| `Hand` | main or off hand | interact events | none | yes (`HoldingHand`) |
+| `EntityPose` | standing, sneaking, swimming, sleeping | NPC pose | grows per version | yes |
+| `Skin` | texture value plus signature | NPC skin | signing; fetching from Mojang | yes (`SkinProperty`) |
+| `PlayerProfile` | uuid, name, skin | head item, NPC identity | lookup and caching | partial |
+| `EntityData` | per entity type settable data | NPC look (sheep color, slime size) | per entity type conditional fields; changes every version | yes (about 90 data classes) |
+| `AttributeModifier` | attribute, amount, operation, slot | item and player stats | operation and slot groups | no |
+| `DisplayTransform` | translation, scale, rotation (quaternions) | display entity cinematics | quaternion editing; needs panel preview | partial |
+| `Billboard` | fixed, vertical, horizontal, center | display entities | none | yes |
+| `Brightness` | block and sky light | display entities | none | yes |
+| `ArmSwing` | swing animation | NPC animation | none | yes |
+| `Team` | scoreboard team id | glow color, name tag rules | per player teams via packets | no |
+
+### Effects and visuals
+
+| Type | What it is | Why we need it | Hard part | Legacy had it |
+| --- | --- | --- | --- | --- |
+| `Sound` | sound event, source, volume, pitch, seed | play, stop, item `Consumable` | custom ids; per player versus world | yes |
+| `SoundSource` | master, music, records, ambient | volume channel | none | yes (`Source`) |
+| `Particle` | particle type plus options | particle effect | options per type: dust (color, scale), block, item, vibration, trail, entity effect color; changes every version | partial (no options) |
+| `PotionEffect` | type, amplifier, duration, ambient, particles, icon | give or check an effect | infinite duration | yes (segment) |
+| `FireworkEffect` | shape, colors, fade colors, trail, twinkle | fireworks cinematic, item component | lists of colors | partial |
+| `DyeColor` | sixteen dye colors | sheep, beds, banners | maps to `Color` for some uses | yes |
+| `ScreenEffect` | camera overlay (pumpkin, freeze, blindness) | cinematic overlays | some are effects, some packets | partial (segments) |
+
+### Text and UI
+
+| Type | What it is | Why we need it | Hard part | Legacy had it |
+| --- | --- | --- | --- | --- |
+| `RichText` | styled text with click and hover events, fonts | messages, names, lore | needs panel preview; placeholders | yes (MiniMessage string) |
+| `ClickAction` | open url, run command, copy, show dialog, custom | rich text and dialogs | action set grows per version | partial |
+| `HoverContent` | text, item, or entity tooltip | rich text | nested values | partial |
+| `TextColor` | named or hex text color | text, teams, glowing | named versus hex | partial (`Color`) |
+| `Title` | title, subtitle, fade in, stay, fade out | title cue | times as `Duration` | yes |
+| `BossBar` | text, progress, color, overlay, flags | progress display | color and overlay enums | yes (parts) |
+| `ScoreboardSidebar` | objective title plus lines | sidebar display | per player, number format | partial |
+| `ObjectiveCriteria` | scoreboard criterion | vanilla scoreboard link | data driven names | no |
+| `DisplaySlot` | sidebar, list, below name | scoreboard placement | team colored sidebars | no |
+| `MenuType` | chest rows, anvil, hopper, crafter | custom menus | per type slot layout | partial (`InventoryType`) |
+| `Dialog` | native dialog screen: notice, confirmation, multi action, inputs | quest choices, input forms | new (1.21.6); input kinds and actions grow per version; needs panel preview | no |
+| `Toast` | advancement style popup | quest notifications | needs a fake advancement | no |
+| `WaypointStyle` (R) | locator bar style | quest marker on the locator bar | new (1.21.6); data driven | no |
+| `KeyBind` | client key id (`key.jump`) | "press [jump]" in text | client side only | no |
+| `TabListEntry` | header, footer, entry name | tab list display | per player | no |
+
+### Gameplay and rules
+
+| Type | What it is | Why we need it | Hard part | Legacy had it |
+| --- | --- | --- | --- | --- |
+| `Command` | command line to run | run as console or player | placeholders; validation | yes (string) |
+| `Permission` | permission node | gate content | provider plugins | yes |
+| `InteractAction` | left or right click, on block or air | interact events | none | yes |
+| `ItemUseAnimation` | eat, drink, block, bow, spear | `Consumable` component | grows per version | no |
+| `ExperienceAmount` | levels or points | reward, check | levels versus points | no |
+| `Damage` | amount plus damage type and source | damage action, death events | source entity optional | partial |
+| `Cooldown` | duration plus group | `UseCooldown` component | none | no |
+
+### Other
+
+| Type | What it is | Why we need it | Hard part | Legacy had it |
+| --- | --- | --- | --- | --- |
+| `NamespacedKey` | generic `namespace:path` | data container keys, custom ids | which registry it points to | yes |
+| `CronSchedule` | calendar schedule | daily quests, resets | time zones | yes (`CronExpression`) |
+| `Server` | server id in a network | cross server teleport | network topology | no |
+| `ResourcePack` | pack url, hash, prompt | send a pack | hash and per player status | no |
+
 ## Requirements on other layers
 
 - Formula type checker (layer 1): bounded generics (`S : HasVector<S>`) and `where` clauses with several bounds.
