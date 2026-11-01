@@ -484,7 +484,7 @@ class CommunicatorRouter internal constructor(
 
     /** Closes the subscriptions of a start that did not complete and drains the messages they already accepted. */
     private suspend fun shutdownStarted(): RouterResult {
-        val (owned, result) = beginShutdown(starting = true)
+        val (owned, result) = beginShutdown()
         if (owned) performShutdown(result, drain = true)
         return result.await()
     }
@@ -494,21 +494,26 @@ class CommunicatorRouter internal constructor(
      * Ordinary cleanup failures retain subscriptions for a later stop attempt. Successful stop remains idempotent.
      */
     suspend fun stop(): RouterResult {
-        val (owned, result) = beginShutdown()
+        val (owned, result) =
+            lifecycle.withLock {
+                check(completion != null || state != RouterState.STARTING) { "Router is starting" }
+                joinOrClaimShutdown()
+            }
         if (owned) performShutdown(result, drain = true)
         return result.await()
     }
 
-    /** Claims the shutdown, or joins the one in progress; only the router itself may stop a start in progress. */
-    private suspend fun beginShutdown(starting: Boolean = false): Pair<Boolean, CompletableDeferred<RouterResult>> =
-        lifecycle.withLock {
-            completion?.let { return@withLock false to it }
-            check(starting || state != RouterState.STARTING) { "Router is starting" }
-            mutableState.value = RouterState.STOPPING
-            val deferred = CompletableDeferred<RouterResult>()
-            completion = deferred
-            true to deferred
-        }
+    /** Claims or joins the shutdown from the router's own failure paths, which may stop a start in progress. */
+    private suspend fun beginShutdown(): Pair<Boolean, CompletableDeferred<RouterResult>> = lifecycle.withLock { joinOrClaimShutdown() }
+
+    /** Joins the shutdown in progress, or claims a new one and returns true; the caller holds [lifecycle]. */
+    private fun joinOrClaimShutdown(): Pair<Boolean, CompletableDeferred<RouterResult>> {
+        completion?.let { return false to it }
+        mutableState.value = RouterState.STOPPING
+        val deferred = CompletableDeferred<RouterResult>()
+        completion = deferred
+        return true to deferred
+    }
 
     private suspend fun performShutdown(
         result: CompletableDeferred<RouterResult>,
@@ -759,7 +764,7 @@ class CommunicatorRouter internal constructor(
 
     private suspend fun shutdownRouter() =
         withContext(NonCancellable) {
-            val (owned, result) = beginShutdown(starting = true)
+            val (owned, result) = beginShutdown()
             if (owned) {
                 performShutdown(result, drain = false)
             } else {
