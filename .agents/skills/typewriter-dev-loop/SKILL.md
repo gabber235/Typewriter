@@ -31,8 +31,9 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
 - Backend deploy: `cargo xtask deploy local`; builds, pushes, restarts on `k3d-seamlezz-local`.
 - Paper starts from the IntelliJ run configurations in `.run/` (`Paper Embedded`,
   `Paper Kubernetes`), never from the command line.
-- Service artifacts without a Paper restart: `./gradlew :engine-paper:stagePaperArtifacts` from
-  `services/`; the loader imports from `plugins/Typewriter/artifacts/inbox/manual`.
+- Service artifacts without a Paper restart:
+  `cargo xtask heavy -- ./gradlew :engine-paper:stagePaperArtifacts` from `services/`; the loader
+  imports from `plugins/Typewriter/artifacts/inbox/manual`.
 - Run only one Realm locally.
 - Panel: from `panel/`, `flutter run -d chrome --web-port=2350
   --dart-define-from-file=config/local.json`, then `http://localhost:2350` (port required by the

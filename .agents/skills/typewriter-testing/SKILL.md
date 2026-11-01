@@ -58,7 +58,7 @@ assert!(reply.user_jwt.is_none());
 // Checks the six expectations the edit carries.
 expect(edit.prepare().expectations, hasLength(6));
 // Checks what they are for.
-await expectRefusedAfterRemoteChange(edit, saved: saved, remoteChange: renameBook);
+expect(edit, refusedAfter(renameBook, saved: saved));
 ```
 
 ```dart
@@ -78,7 +78,8 @@ expect(calls, 1);
 
 A test file holds only its entry point and its test cases; `cargo xtask check quality` fails on
 any local helper or class. Pumps, setups, fakes, drivers, page objects, assertions and data
-builders live in the stack's kit: panel testkit, Kotlin `testFixtures`, Rust `test_support` or
+builders live in the stack's kit: panel testkit (end to end support in `integration_test/support`
+and, for host side journeys, `test_driver/support`), Kotlin `testFixtures`, Rust `test_support` or
 `tests/support`. Test data stays inline. A page object for one widget may have one user.
 Generated fixtures are imported from the kit, never pasted as bytes or constants.
 
@@ -88,6 +89,9 @@ Grow the kit, not the test, when you see:
 - A fake that reimplements production.
 - Many narrow helpers (`createJoinCode`, `approveJoinRequest`, ...) where one general driver or
   builder would read as well.
+
+Propose the growth to the user with the duplicated places before building it; never grow a large
+harness silently, and never add one more narrow helper.
 
 ## Properties
 

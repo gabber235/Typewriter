@@ -317,7 +317,7 @@ pub struct ChangeReport {
     /// Detector hits on changed lines only; exported as SARIF.
     pub findings: Vec<Finding>,
     pub tests: TestChanges,
-    /// Flaky, quarantined and over budget cases from every `TestRun`.
+    /// Flaky and quarantined cases from every `TestRun`.
     pub health: RunHealth,
     /// Coverage of the changed lines, per area.
     pub coverage: Coverage,
