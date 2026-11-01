@@ -17,12 +17,25 @@ void main() {
     "review observation failure preserves the journal and sends no request",
     () async {
       final world = testWorld([..._original, heldSaves]);
-      final realm = world.requireRealm..refreshFailure = StateError("Offline");
+      final realm = world.requireRealm;
       final editing = await world.openRealmEditing();
       final form = editing.form(_resource)..setText("Name", _name, "Local");
+      realm
+        ..refreshFailure = StateError("Offline")
+        ..remoteChange(
+          (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Remote")),
+        );
+      await world.container.pump();
+      expect(form.phase, isA<EditGroupConflict<AuthoringDocument>>());
       await expectLater(
-        editing.reviewConflict(form.editingGroup),
-        throwsStateError,
+        editing.refreshedConflictReview(form.editingGroup),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            "message",
+            "Offline",
+          ),
+        ),
       );
       expect(
         editing.document.valueAt(_name),
@@ -115,17 +128,17 @@ void main() {
           ),
         );
       realm.serve(removed.toDocument());
-      final review = await editing.reviewConflict(form.editingGroup);
-      expect(review.canKeepMine, isFalse);
-      expect(
-        editing.resolveConflict(review, AuthoringConflictChoice.keepMine),
-        isA<EditStageRejected>(),
-      );
+      await world.container.pump();
+
+      expect(form.phase, isA<EditGroupRejected<AuthoringDocument>>());
+      expect(editing.conflictReview(form.editingGroup), isNull);
       expect(realm.saves, isEmpty);
-      editing
-          .resolveConflict(review, AuthoringConflictChoice.useSaved)
-          .requireAccepted();
+      expect(form.discard(), isTrue);
       expect(editing.state.groups, isEmpty);
+      expect(
+        editing.document.valueAt(itemsAt),
+        realm.document.valueAt(itemsAt),
+      );
     },
   );
 
@@ -137,7 +150,7 @@ void main() {
       ..setText("Name", _name, "Local").requireAccepted()
       ..setText("Position", _position, "Local position").requireAccepted();
     realm.serve(realm.document.copyWith(entries: {}));
-    final review = await editing.reviewConflict(form.editingGroup);
+    final review = await editing.refreshedConflictReview(form.editingGroup);
     expect(review.canKeepMine, isFalse);
     expect(
       review.proposal.valueAt(_name),
@@ -445,7 +458,7 @@ void main() {
           authoredRecord(_resource, texts({"name": "Remote", "position": "0"})),
         ]).document,
       );
-      final review = await editing.reviewConflict(form.editingGroup);
+      final review = await editing.refreshedConflictReview(form.editingGroup);
       expect(
         editing.resolveConflict(review, AuthoringConflictChoice.keepMine),
         isA<EditStaged>(),
@@ -490,7 +503,7 @@ void main() {
           authoredRecord(_resource, texts({"name": "Remote", "position": "0"})),
         ]).document,
       );
-      final review = await editing.reviewConflict(form.editingGroup);
+      final review = await editing.refreshedConflictReview(form.editingGroup);
       editing
           .resolveConflict(review, AuthoringConflictChoice.useSaved)
           .requireAccepted();
@@ -519,7 +532,7 @@ void main() {
           authoredRecord(_resource, texts({"name": "Remote", "position": "0"})),
         ]).document,
       );
-      final review = await editing.reviewConflict(form.editingGroup);
+      final review = await editing.refreshedConflictReview(form.editingGroup);
       editing.acceptConfirmed(
         authoredDoc([
           authoredRecord(
@@ -593,7 +606,7 @@ void main() {
     await saving;
 
     expect(form.phase, isA<EditGroupConflict>());
-    final review = await editing.reviewConflict(form.editingGroup);
+    final review = await editing.refreshedConflictReview(form.editingGroup);
     expect(
       {
         for (final fact in review.comparisonFacts)
@@ -890,46 +903,83 @@ void main() {
     );
   });
 
-  test("an autosave whose outcome is unknown saves once the Realm answers "
-      "without it", () async {
-    final world = testWorld([..._original, heldSaves]);
-    final realm = world.requireRealm;
-    final form = await world.autosaveReceived(_resource, _name, "Local");
-    realm.saves.single.loseReply(TimeoutException("No answer in time"));
+  final created = skir.ResourceId(value: "created");
+  for (final (saved, resource, change, read, expected) in [
+    (
+      "a rename",
+      _resource,
+      (AuthoringEdit edit) =>
+          edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+      (AuthoringDocument document) => document.valueAt(_name),
+      equals(skir.DataValue.wrapStringValue("Local")),
+    ),
+    (
+      "a created resource",
+      created,
+      (AuthoringEdit edit) => edit.create(
+        created,
+        skir.AuthoringRecord(
+          configuration: skir.TypeSelection.unknown,
+          fields: [
+            skir.FieldValue(
+              name: "name",
+              value: skir.DataValue.wrapStringValue("Created"),
+            ),
+          ],
+        ),
+      ),
+      (AuthoringDocument document) =>
+          document.valueAt(authoredFieldLocation(created, ["name"])),
+      equals(skir.DataValue.wrapStringValue("Created")),
+    ),
+    (
+      "a deleted resource",
+      _resource,
+      (AuthoringEdit edit) => edit.delete(_resource),
+      (AuthoringDocument document) => document.entry(_resource),
+      isNull,
+    ),
+  ]) {
+    test("an autosave of $saved whose outcome is unknown saves once the "
+        "Realm answers without it", () async {
+      final world = testWorld([..._original, heldSaves]);
+      final realm = world.requireRealm;
+      final form = await world.autosaveReceived(resource, change);
+      realm.saves.single.loseReply(TimeoutException("No answer in time"));
 
-    await eventually(() => expect(realm.saves, hasLength(2)));
-    realm.saves.last.confirm();
-    await eventually(() => expect(form.dirty, isFalse));
+      await eventually(() => expect(realm.saves, hasLength(2)));
+      realm.saves.last.confirm();
+      await eventually(() => expect(form.dirty, isFalse));
 
-    expect(
-      realm.document.valueAt(_name),
-      skir.DataValue.wrapStringValue("Local"),
-    );
-    expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
-  });
+      expect(read(realm.document), expected);
+      expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
+    });
 
-  test("an autosave whose outcome is unknown is not sent again once the Realm "
-      "shows it was saved", () async {
-    final world = testWorld([..._original, heldSaves]);
-    final realm = world.requireRealm;
-    final form = await world.autosaveReceived(_resource, _name, "Local");
-    realm.saves.single.keepAndLoseReply(TimeoutException("No answer in time"));
+    test("an autosave of $saved whose outcome is unknown is not sent again "
+        "once the Realm shows it was saved", () async {
+      final world = testWorld([..._original, heldSaves]);
+      final realm = world.requireRealm;
+      final form = await world.autosaveReceived(resource, change);
+      realm.saves.single.keepAndLoseReply(
+        TimeoutException("No answer in time"),
+      );
 
-    await eventually(() => expect(form.dirty, isFalse));
+      await eventually(() => expect(form.dirty, isFalse));
 
-    expect(realm.saves, hasLength(1));
-    expect(
-      form.document.valueAt(_name),
-      skir.DataValue.wrapStringValue("Local"),
-    );
-    expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
-  });
+      expect(realm.saves, hasLength(1));
+      expect(read(form.document), expected);
+      expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
+    });
+  }
 
   test("an autosave whose outcome is unknown asks for review when the Realm "
       "holds other values", () async {
     final world = testWorld([..._original, heldSaves]);
     final realm = world.requireRealm;
-    final form = await world.autosaveReceived(_resource, _name, "Local");
+    final form = await world.autosaveReceived(
+      _resource,
+      (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Local")),
+    );
     realm.saves.single.loseReply(TimeoutException("No answer in time"));
     realm.remoteChange(
       (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Remote")),
@@ -940,7 +990,9 @@ void main() {
     );
 
     expect(realm.saves, hasLength(1));
-    final review = await form.workspace.reviewConflict(form.editingGroup);
+    final review = await form.workspace.refreshedConflictReview(
+      form.editingGroup,
+    );
     expect(
       review.saved.valueAt(_name),
       skir.DataValue.wrapStringValue("Remote"),

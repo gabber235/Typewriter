@@ -22,13 +22,14 @@ final class RealmEditingReview extends HookWidget {
     if (phase != null && phase.needsReview) {
       final reviewed =
           workspace.conflictReview(id) ?? const EditReview.reading();
-      final review = reviewed.value;
+      final review = reviewed.comparison;
+      final reading = reviewed is EditReviewReading;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (reviewed.reading) const Text("Loading current saved values"),
-          if (reviewed.failure != null)
+          if (reading) const Text("Loading current saved values"),
+          if (reviewed is EditReviewFailed)
             const Text(
               "Current saved values are unavailable. Your edits are retained.",
             ),
@@ -36,7 +37,7 @@ final class RealmEditingReview extends HookWidget {
             AuthoringConflictComparison(
               key: ValueKey(review),
               review: review,
-              enabled: !reviewed.reading,
+              enabled: !reading,
               onKeepMine: review.canKeepMine
                   ? () => workspace.resolveConflict(
                       review,

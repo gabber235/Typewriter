@@ -69,19 +69,18 @@ extension RealmWorld on World {
     return subscription.read();
   }
 
-  /// Opens [resource] in an autosaving form, sets the text at [at] to
-  /// [value] and saves it; returns the form once the seeded Realm, which
-  /// holds saves, received the save and before it answers.
+  /// Opens [resource] in an autosaving form, makes [change] in it and saves
+  /// it; returns the form once the seeded Realm, which holds saves, received
+  /// the save and before it answers.
   Future<RealmEditingBinding> autosaveReceived(
     skir.ResourceId resource,
-    skir.ValueLocation at,
-    String value,
+    void Function(AuthoringEdit edit) change,
   ) async {
     final editing = await openRealmEditing();
     final form = editing.form(
       resource,
       policy: EditorCommitPolicy.autosaveChanges,
-    )..setText("Autosave", at, value);
+    )..edit(label: "Autosave", apply: change).requireAccepted();
     unawaited(form.save());
     await eventually(() => expect(requireRealm.saves, isNotEmpty));
     return form;
@@ -156,6 +155,35 @@ extension RealmEditingForms on RealmEditing {
       group: group,
       staged: stagePrepared(group: group, label: label, edit: edit.prepare()),
     );
+  }
+
+  /// The conflict review of [group] once Refresh review read the saved
+  /// values again and the review settled, as the review a user sees; throws
+  /// why the read failed, or when the group shows no review.
+  Future<AuthoringConflictReview> refreshedConflictReview(
+    EditGroupId group,
+  ) async {
+    await refreshConflictReview(group);
+    final settled = Completer<void>();
+    void settle() {
+      if (conflictReview(group) is! EditReviewReading && !settled.isCompleted) {
+        settled.complete();
+      }
+    }
+
+    addListener(settle);
+    settle();
+    try {
+      await settled.future;
+    } finally {
+      removeListener(settle);
+    }
+    return switch (conflictReview(group)) {
+      EditReviewReady(:final value) => value,
+      EditReviewFailed(:final error, :final stackTrace) =>
+        Error.throwWithStackTrace(error, stackTrace),
+      _ => throw StateError("The group shows no review"),
+    };
   }
 
   /// Opens [resource] in a form saved under [policy], applied with its

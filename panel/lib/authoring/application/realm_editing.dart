@@ -149,18 +149,15 @@ final class RealmEditing implements Listenable {
   /// The conflict review of [id] while its group needs one. The workspace
   /// starts it when the group enters a conflict and reads the saved values
   /// the Realm reports as current for it; null while no review is needed.
-  EditReview<AuthoringConflictReview>? conflictReview(EditGroupId id) => workspace
-      .reviewOf(id)
-      ?.map((review) => const RealmEditModel().review(id, review));
+  EditReview<AuthoringConflictReview>? conflictReview(EditGroupId id) =>
+      workspace
+          .reviewOf(id)
+          ?.convert((review) => const RealmEditModel().review(id, review));
 
   /// Reads the saved values again for the conflict review of [id]; the
   /// result shows through [conflictReview].
   Future<void> refreshConflictReview(EditGroupId id) =>
       workspace.refreshReview(id);
-
-  /// Reviews [id] against the saved values the Realm reports as current.
-  Future<AuthoringConflictReview> reviewConflict(EditGroupId id) async =>
-      const RealmEditModel().review(id, await workspace.review(id));
 
   EditStageResult resolveConflict(
     AuthoringConflictReview reviewed,

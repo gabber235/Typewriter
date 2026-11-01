@@ -150,10 +150,18 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
 
   /// The user decides between this group's work and the saved values, which
   /// the workspace reads again for that decision.
-  bool get needsReview =>
-      this is EditGroupConflict<S> ||
-      this is EditGroupResourceMissing<S> ||
-      this is EditGroupRepeatedContention<S>;
+  bool get needsReview => switch (this) {
+    EditGroupConflict() ||
+    EditGroupResourceMissing() ||
+    EditGroupRepeatedContention() => true,
+    EditGroupDirty() ||
+    EditGroupAwaitingDependency() ||
+    EditGroupSaving() ||
+    EditGroupCommittedAwaitingRefresh() ||
+    EditGroupRejected() ||
+    EditGroupContractChanged() ||
+    EditGroupUncertain() => false,
+  };
 
   String get message => switch (this) {
     EditGroupDirty() => "Changes await applying",
@@ -272,28 +280,37 @@ abstract class EditGroupReview<S, E> with _$EditGroupReview<S, E> {
 /// The review of one group in a phase that [EditGroupPhase.needsReview]:
 /// its unsent work against the saved values last read for it.
 ///
-/// [reading] holds while saved values are read again; the previous [value]
-/// stays for comparison meanwhile. A failed read leaves no [value], only its
-/// [failure], so nothing is resolved against values that were not read.
-@immutable
-final class EditReview<R> {
-  const EditReview.reading([this.value]) : reading = true, failure = null;
-  const EditReview.ready(R this.value) : reading = false, failure = null;
-  const EditReview.failed(Object this.failure)
-    : reading = false,
-      value = null;
+/// A review is [EditReview.reading] while the saved values are read again;
+/// the previous review stays for comparison meanwhile. A failed read keeps no
+/// review, only its failure, so nothing is resolved against values that were
+/// not read.
+@freezed
+sealed class EditReview<R> with _$EditReview<R> {
+  const factory EditReview.reading([R? previous]) = EditReviewReading<R>;
+  const factory EditReview.ready(R value) = EditReviewReady<R>;
+  const factory EditReview.failed(Object error, StackTrace stackTrace) =
+      EditReviewFailed<R>;
 
-  final R? value;
-  final bool reading;
-  final Object? failure;
+  const EditReview._();
+
+  /// The review to compare against: the ready one, or the previous one while
+  /// the saved values are read again.
+  R? get comparison => switch (this) {
+    EditReviewReading(:final previous) => previous,
+    EditReviewReady(:final value) => value,
+    EditReviewFailed() => null,
+  };
 
   /// This review with its value converted by [convert], such as into the
   /// review of one domain.
-  EditReview<T> map<T>(T Function(R value) convert) => switch (this) {
-    EditReview(:final failure?) => EditReview.failed(failure),
-    EditReview(reading: true, :final value) => EditReview.reading(
-      value == null ? null : convert(value),
+  EditReview<T> convert<T>(T Function(R value) convert) => switch (this) {
+    EditReviewReading(:final previous) => EditReview.reading(
+      previous == null ? null : convert(previous),
     ),
-    EditReview(:final value) => EditReview.ready(convert(value as R)),
+    EditReviewReady(:final value) => EditReview.ready(convert(value)),
+    EditReviewFailed(:final error, :final stackTrace) => EditReview.failed(
+      error,
+      stackTrace,
+    ),
   };
 }

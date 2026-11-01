@@ -82,7 +82,9 @@ void main() {
         skir.DataValue.wrapStringValue("Remote"),
       );
     seeded.serve(remote.toDocument());
-    final review = await workspace.reviewConflict(binding.editingGroup);
+    final review = await workspace.refreshedConflictReview(
+      binding.editingGroup,
+    );
     await panel.showAbove(
       Scaffold(
         body: SizedBox(
