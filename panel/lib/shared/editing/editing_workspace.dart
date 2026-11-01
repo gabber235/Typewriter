@@ -763,7 +763,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     };
     if (settlement == null) {
       final submission = group.submission;
-      if (submission != null && (submission.sending || submission.resending)) {
+      if (submission != null && submission.delivering) {
         // Nothing answered yet, and the submission sends the same request
         // again under the same key: the save is still on its way.
         group.phase = const EditGroupPhase.saving();

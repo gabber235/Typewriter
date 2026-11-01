@@ -46,8 +46,7 @@ extension _LocalWorkSnapshot on ScopedWorkSession {
     MutationSubmission<Object?> submission,
   ) {
     final result = submission.result;
-    // A scheduled resend is still on its way, like a send.
-    final phase = submission.sending || submission.resending
+    final phase = submission.delivering
         ? const LocalWorkSubmissionPhase.active()
         : switch (result) {
             null => const LocalWorkSubmissionPhase.prepared(),

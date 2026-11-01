@@ -49,9 +49,9 @@ final class MutationSubmission<T> extends ChangeNotifier {
   SubmissionResult<T>? get result => _result;
   bool get sending => _active != null;
 
-  /// Whether this submission sends its unanswered request again on its own.
-  /// Like [sending], it is still on its way.
-  bool get resending => _resend != null;
+  /// Whether the request is on its way: being sent now, or unanswered and
+  /// scheduled to be sent again on its own.
+  bool get delivering => sending || _resend != null;
   bool get unsettled => sending || _result is! SubmissionConfirmed<T>;
   bool get canReplay =>
       !sending &&
