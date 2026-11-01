@@ -31,7 +31,7 @@ void main() {
       );
 
     await expectLater(
-      writeReportedEvidence(EvidenceFolder(directory), {
+      EvidenceFolder(directory).writeReported({
         "testRun": run.toJson(),
         "captures": {
           written: base64Encode([1, 2, 3]),

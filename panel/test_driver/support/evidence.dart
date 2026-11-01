@@ -54,31 +54,28 @@ final class EvidenceFolder {
       flush: true,
     );
   }
-}
 
-/// Writes what the scenarios inside the app reported to the driver: every
-/// capture in `captures` (path to base64 bytes), then the `TestRun` in
-/// `testRun` listing only the captures that were written. A capture that could
-/// not be written fails the drive after the run file is down.
-Future<void> writeReportedEvidence(
-  EvidenceFolder folder,
-  Map<String, dynamic>? data,
-) async {
-  final captures = (data?["captures"] as Map?)?.cast<String, String>() ?? {};
-  final failed = <String>[];
-  for (final MapEntry(:key, :value) in captures.entries) {
-    try {
-      await folder.write(key, base64Decode(value));
-    } on Object catch (error) {
-      stderr.writeln("could not write the capture $key: $error");
-      failed.add(key);
+  /// Writes what the scenarios inside the app reported to the driver: every
+  /// capture in `captures` (path to base64 bytes), then the `TestRun` in
+  /// `testRun` listing only the captures that were written. A capture that
+  /// could not be written fails the drive after the run file is down.
+  Future<void> writeReported(Map<String, dynamic>? data) async {
+    final captures = (data?["captures"] as Map?)?.cast<String, String>() ?? {};
+    final failed = <String>[];
+    for (final MapEntry(:key, :value) in captures.entries) {
+      try {
+        await write(key, base64Decode(value));
+      } on Object catch (error) {
+        stderr.writeln("could not write the capture $key: $error");
+        failed.add(key);
+      }
     }
-  }
-  final run = data?["testRun"];
-  if (run != null) {
-    await folder.writeRun(results.TestRun.serializer.fromJson(run));
-  }
-  if (failed.isNotEmpty) {
-    throw StateError("captures not written: ${failed.join(", ")}");
+    final run = data?["testRun"];
+    if (run != null) {
+      await writeRun(results.TestRun.serializer.fromJson(run));
+    }
+    if (failed.isNotEmpty) {
+      throw StateError("captures not written: ${failed.join(", ")}");
+    }
   }
 }

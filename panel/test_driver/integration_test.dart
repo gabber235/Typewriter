@@ -14,7 +14,7 @@ Future<void> main() {
     Directory(Platform.environment["EVIDENCE_DIR"] ?? "build/evidence/panel"),
   );
   return integrationDriver(
-    responseDataCallback: (data) => writeReportedEvidence(evidence, data),
+    responseDataCallback: evidence.writeReported,
     // Failed scenarios are results too.
     writeResponseOnFailure: true,
     // Web screenshots taken through the binding arrive here (flutter#118470),
