@@ -97,9 +97,16 @@ pub fn last_failure(case: &TestCase) -> Option<&Failure> {
         })
 }
 
-/// Every artifact of every attempt of `case`, in attempt order.
-pub fn artifacts(case: &TestCase) -> impl Iterator<Item = &Artifact> {
-    case.attempts.iter().flat_map(|attempt| &attempt.artifacts)
+/// Every artifact of every attempt of `case`, in attempt order, with its path relative to the
+/// run file's folder (the attempt's folder joined with the artifact's path).
+pub fn artifacts(case: &TestCase) -> impl Iterator<Item = (PathBuf, &Artifact)> {
+    case.attempts.iter().flat_map(|attempt| {
+        let folder = Path::new(&attempt.folder);
+        attempt
+            .artifacts
+            .iter()
+            .map(move |artifact| (folder.join(&artifact.path), artifact))
+    })
 }
 
 impl ArtifactKind {
@@ -215,9 +222,12 @@ pub fn read(path: &Path) -> Result<TestRun> {
         .map_err(|error| anyhow::anyhow!("{} is not a TestRun: {error:?}", path.display()))
 }
 
-/// Folders inside a run's folder that hold its evidence, never another run. The writers that
-/// create them (the end to end suites' drives and journey, the panel driver) name them here.
-pub const RUN_EVIDENCE: [&str; 4] = [crate::e2e::ATTEMPTS, "failures", "screenshots", "logs"];
+/// The folder of a run's attempts, one `attempts/<n>/` each, below the run file's folder.
+pub const ATTEMPTS: &str = "attempts";
+
+/// Folders inside a run's folder that hold its evidence, never another run, so a drive's own
+/// `test_run.json` below `attempts/` is read only through the suite's run.
+pub const RUN_EVIDENCE: [&str; 4] = [ATTEMPTS, "failures", "screenshots", "logs"];
 
 /// Every `TestRun` under `dir`, at any depth, with the path it was read from, skipping run
 /// evidence folders.
@@ -285,16 +295,15 @@ pub fn report(
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        let see = match (evidence, failures.first()) {
-            (Some(evidence), Some(first)) => format!(
-                "; see {}/",
-                evidence
-                    .join(crate::e2e::attempt_folder(
-                        case,
-                        u32::try_from(*first).unwrap_or(u32::MAX)
-                    ))
-                    .display()
-            ),
+        // `Path::join("")` would add a trailing separator, so an empty folder is the run's.
+        let first = failures.first().map(|first| &case.attempts[first - 1]);
+        let see = match (evidence, first) {
+            (Some(evidence), Some(attempt)) if attempt.folder.is_empty() => {
+                format!("; see {}/", evidence.display())
+            }
+            (Some(evidence), Some(attempt)) => {
+                format!("; see {}/", evidence.join(&attempt.folder).display())
+            }
             _ => String::new(),
         };
         match verdict {
@@ -458,12 +467,18 @@ mod tests {
             AttemptPolicy::RerunFailures(2),
             &[],
             &Quarantine::default(),
-            |n, ids| match n {
-                1 => Ok(run(&[("a", failed("boom")), ("b", Outcome::Passed)])),
-                _ => {
-                    assert_eq!(ids, ["a"]);
-                    Ok(run(&[("a", Outcome::Passed)]))
+            |n, ids| {
+                let mut reported = match n {
+                    1 => run(&[("a", failed("boom")), ("b", Outcome::Passed)]),
+                    _ => {
+                        assert_eq!(ids, ["a"]);
+                        run(&[("a", Outcome::Passed)])
+                    }
+                };
+                for case in &mut reported.cases {
+                    case.attempts[0].folder = format!("attempts/{n}");
                 }
+                Ok(reported)
             },
         )
         .unwrap();
@@ -538,6 +553,7 @@ mod tests {
                 };
                 let mut reported = run(&[("[CONN-1] Reconnects", outcome)]);
                 reported.cases[0].requirement = Some("CONN-1".to_owned());
+                reported.cases[0].attempts[0].folder = format!("attempts/{n}");
                 Ok(reported)
             },
         )

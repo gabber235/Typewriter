@@ -43,6 +43,8 @@ final class ReportedRun {
             span: results.Span(startMillis: start, endMillis: end),
             durationMillis: end - start,
             artifacts: artifacts,
+            // `cargo xtask e2e` sets the drive's folder when it reads the run.
+            folder: "",
           ),
         ],
       ),

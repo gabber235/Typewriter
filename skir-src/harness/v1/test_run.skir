@@ -34,8 +34,11 @@ struct Attempt(85010004) {
   // Where the attempt sits in the run's recording, when there is one.
   span: Span?;
   duration_millis: int64;
-  // Clips, screenshots, log excerpts and spans that show the outcome.
+  // Clips, screenshots, log excerpts and spans that show the outcome, relative to `folder`.
   artifacts: [Artifact];
+  // Where this attempt's evidence lies, relative to the folder of the run file; empty for
+  // that folder itself.
+  folder: string;
 }
 
 enum Runner(85010005) {

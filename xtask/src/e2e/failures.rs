@@ -1,6 +1,5 @@
-//! The local folder a failed attempt leaves: `failures/<case>/` inside the attempt's folder of
-//! the suite's evidence folder (`attempts/<n>/` for a scenario, `attempts/<n>/journey/` for the
-//! sign in journey), holding what the screen showed (screenshots), what the panel, the drive and
+//! The local folder a failed attempt leaves: `failures/<case>/` inside the attempt's own folder
+//! (`Attempt.folder`, where its drive wrote), holding what the screen showed (screenshots), what the panel, the drive and
 //! every stack service logged during the attempt, and every span of the traces the panel started
 //! in it. None of it is published: [`ArtifactKind::published`] keeps logs and spans off the
 //! evidence branch, and CI leaves the failure folders out of its upload.
@@ -16,7 +15,6 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result};
 use serde_json::Value;
 
-use super::attempt_folder;
 use crate::evidence::file_name;
 use crate::results::{Artifact, ArtifactKind, Outcome, TestRun};
 
@@ -39,24 +37,23 @@ pub struct StackEvidence {
 }
 
 /// For each failed attempt in `run`, whose evidence lies under `evidence` (the suite folder),
-/// fills `failures/<case>/` in the attempt's folder ([`attempt_folder`]): copies of its screenshots and panel log, the attempt
-/// folder's drive log and every service log of `stack` cut to the attempt's span, and every span
-/// of the traces whose panel root started inside that span. The cut logs and the spans join the
-/// attempt's artifacts, with paths relative to `evidence` like every other artifact. A passing
-/// attempt, or one without a span, gets no folder.
+/// fills `failures/<case>/` in the attempt's own folder (`Attempt.folder`): copies of its
+/// screenshots and panel log, the attempt folder's drive log and every service log of `stack` cut
+/// to the attempt's span, and every span of the traces whose panel root started inside that span.
+/// The cut logs and the spans join the attempt's artifacts, with paths relative to the attempt's
+/// folder like every other artifact of it. A passing attempt, or one without a span, gets no
+/// folder.
 pub fn collect(evidence: &Path, run: &mut TestRun, stack: &StackEvidence) -> Result<()> {
     let traces = Traces::read(&stack.traces)?;
     for case in &mut run.cases {
-        let folders: Vec<PathBuf> = (1..=case.attempts.len())
-            .map(|n| attempt_folder(case, u32::try_from(n).unwrap_or(u32::MAX)))
-            .collect();
-        for (attempt, folder) in case.attempts.iter_mut().zip(&folders) {
+        for attempt in &mut case.attempts {
+            let folder = evidence.join(&attempt.folder);
             let (Outcome::Failed(_), Some(span)) = (&attempt.outcome, &attempt.span) else {
                 continue;
             };
             let window = (span.start_millis, span.end_millis);
-            let dir = folder.join("failures").join(file_name(&case.id));
-            let absolute = evidence.join(&dir);
+            let dir = Path::new("failures").join(file_name(&case.id));
+            let absolute = folder.join(&dir);
             fs::create_dir_all(&absolute)
                 .with_context(|| format!("cannot create {}", absolute.display()))?;
             for artifact in &attempt.artifacts {
@@ -64,23 +61,23 @@ pub fn collect(evidence: &Path, run: &mut TestRun, stack: &StackEvidence) -> Res
                     artifact.kind,
                     ArtifactKind::Screenshot | ArtifactKind::LogExcerpt
                 ) {
-                    copy_into(&evidence.join(&artifact.path), &absolute)?;
+                    copy_into(&folder.join(&artifact.path), &absolute)?;
                 }
             }
             let logs = (window.0 - LOG_SLACK_MILLIS, window.1 + LOG_SLACK_MILLIS);
-            let drive = evidence.join(folder).join(DRIVE_LOG);
+            let drive = folder.join(DRIVE_LOG);
             for log in stack.logs.iter().cloned().chain([drive]) {
                 let file = dir.join(log.file_name().context("a log without a file name")?);
                 let text = fs::read_to_string(&log)
                     .with_context(|| format!("cannot read {}", log.display()))?;
-                fs::write(evidence.join(&file), cut_lines(&text, logs))?;
+                fs::write(folder.join(&file), cut_lines(&text, logs))?;
                 attempt
                     .artifacts
                     .push(artifact(ArtifactKind::LogExcerpt, &file));
             }
             let file = dir.join(SPANS);
             let spans = traces.rooted_in(PANEL_SERVICE, window).to_jsonl();
-            fs::write(evidence.join(&file), spans)?;
+            fs::write(folder.join(&file), spans)?;
             attempt.artifacts.push(artifact(ArtifactKind::Spans, &file));
         }
     }
@@ -475,23 +472,20 @@ WARNING: before any time
             logs: vec![root.path("stack/logs/backend.log")],
             traces: root.path("stack/traces.jsonl"),
         };
-        let mut run = run_of(
-            "[CONN-1] Reconnects",
-            vec![failed_attempt(
-                ATTEMPT,
-                &[
-                    (
-                        ArtifactKind::Screenshot,
-                        "attempts/1/screenshots/CONN-1/failure.png",
-                    ),
-                    (ArtifactKind::LogExcerpt, "attempts/1/logs/CONN-1/panel.log"),
-                ],
-            )],
+        let mut failed = failed_attempt(
+            ATTEMPT,
+            &[
+                (ArtifactKind::Screenshot, "screenshots/CONN-1/failure.png"),
+                (ArtifactKind::LogExcerpt, "logs/CONN-1/panel.log"),
+            ],
         );
+        failed.folder = "attempts/1".to_owned();
+        let mut run = run_of("[CONN-1] Reconnects", vec![failed]);
 
         collect(&evidence, &mut run, &stack).unwrap();
 
         let folder = "attempts/1/failures/_CONN-1__Reconnects";
+        let below_attempt = "failures/_CONN-1__Reconnects";
         let files = file_names(&evidence.join(folder));
         assert_eq!(
             files,
@@ -520,15 +514,24 @@ WARNING: before any time
         assert_eq!(
             added,
             [
-                (ArtifactKind::LogExcerpt, format!("{folder}/backend.log")),
-                (ArtifactKind::LogExcerpt, format!("{folder}/drive.log")),
-                (ArtifactKind::Spans, format!("{folder}/spans.otlp.jsonl")),
+                (
+                    ArtifactKind::LogExcerpt,
+                    format!("{below_attempt}/backend.log")
+                ),
+                (
+                    ArtifactKind::LogExcerpt,
+                    format!("{below_attempt}/drive.log")
+                ),
+                (
+                    ArtifactKind::Spans,
+                    format!("{below_attempt}/spans.otlp.jsonl")
+                ),
             ]
         );
     }
 
     #[test]
-    fn each_failed_journey_attempt_leaves_its_failure_folder_and_its_own_drive_log_in_its_journey_folder()
+    fn each_failed_sign_in_attempt_leaves_its_failure_folder_and_its_own_drive_log_in_its_drive_folder()
      {
         let root = TempRoot::new();
         let evidence = root.dir("full-panel-web");
@@ -538,11 +541,11 @@ WARNING: before any time
         );
         for n in [1, 2] {
             root.write(
-                &format!("full-panel-web/attempts/{n}/journey/drive.log"),
+                &format!("full-panel-web/attempts/{n}/sign-in/drive.log"),
                 &format!("2026-10-31T07:26:45.000Z journey attempt {n}\n"),
             );
             root.write(
-                &format!("full-panel-web/attempts/{n}/journey/screenshots/AUTH-2/failure.png"),
+                &format!("full-panel-web/attempts/{n}/sign-in/screenshots/AUTH-2/failure.png"),
                 "png",
             );
         }
@@ -554,22 +557,21 @@ WARNING: before any time
             "[AUTH-2] Signs in",
             [1, 2]
                 .map(|n| {
-                    failed_attempt(
+                    let mut failed = failed_attempt(
                         ATTEMPT,
-                        &[(
-                            ArtifactKind::Screenshot,
-                            &format!("attempts/{n}/journey/screenshots/AUTH-2/failure.png"),
-                        )],
-                    )
+                        &[(ArtifactKind::Screenshot, "screenshots/AUTH-2/failure.png")],
+                    );
+                    failed.folder = format!("attempts/{n}/sign-in");
+                    failed
                 })
                 .to_vec(),
         );
-        run.cases[0].requirement = Some(super::super::JOURNEY.to_owned());
+        run.cases[0].requirement = Some("AUTH-2".to_owned());
 
         collect(&evidence, &mut run, &stack).unwrap();
 
         for n in [1, 2] {
-            let folder = evidence.join(format!("attempts/{n}/journey/failures/_AUTH-2__Signs_in"));
+            let folder = evidence.join(format!("attempts/{n}/sign-in/failures/_AUTH-2__Signs_in"));
             assert_eq!(
                 file_names(&folder),
                 ["drive.log", "failure.png", "spans.otlp.jsonl"]
@@ -592,10 +594,11 @@ WARNING: before any time
             logs: Vec::new(),
             traces: root.path("stack/traces.jsonl"),
         };
-        let mut run = run_of(
-            "[CONN-1] Reconnects",
-            vec![failed_attempt(ATTEMPT, &[]), passed_attempt(ATTEMPT)],
-        );
+        let mut attempts = vec![failed_attempt(ATTEMPT, &[]), passed_attempt(ATTEMPT)];
+        for (n, attempt) in attempts.iter_mut().enumerate() {
+            attempt.folder = format!("attempts/{}", n + 1);
+        }
+        let mut run = run_of("[CONN-1] Reconnects", attempts);
 
         collect(&evidence, &mut run, &stack).unwrap();
 

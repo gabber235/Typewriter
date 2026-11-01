@@ -443,15 +443,20 @@ fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
     let media_url = section.media_url;
     let mut parts = Vec::new();
-    for artifact in results::artifacts(case).filter(|artifact| artifact.kind.published()) {
+    for (path, artifact) in
+        results::artifacts(case).filter(|(_, artifact)| artifact.kind.published())
+    {
         let Some(base) = media_url else {
-            parts.push(format!("`{runner}/{}` in the run artifacts", artifact.path));
+            parts.push(format!(
+                "`{runner}/{}` in the run artifacts",
+                path.display()
+            ));
             continue;
         };
-        let url = format!("{base}/{runner}/{}", artifact.path);
+        let url = format!("{base}/{runner}/{}", path.display());
         parts.push(match artifact.kind {
             ArtifactKind::Clip => {
-                let preview = Path::new(&artifact.path).with_extension("webp");
+                let preview = path.with_extension("webp");
                 format!(
                     "![]({base}/{runner}/{}) [full video]({url})",
                     preview.display()
@@ -502,13 +507,10 @@ fn media(runs: &[(PathBuf, TestRun)]) -> Vec<(PathBuf, String)> {
         let folder = path.parent().unwrap_or(Path::new("."));
         let runner = runner_name(&run.runner);
         let artifacts = run.cases.iter().flat_map(results::artifacts);
-        for artifact in artifacts.filter(|artifact| artifact.kind.published()) {
-            media.push((
-                folder.join(&artifact.path),
-                format!("{runner}/{}", artifact.path),
-            ));
+        for (path, artifact) in artifacts.filter(|(_, artifact)| artifact.kind.published()) {
+            media.push((folder.join(&path), format!("{runner}/{}", path.display())));
             if artifact.kind == ArtifactKind::Clip {
-                let preview = Path::new(&artifact.path).with_extension("webp");
+                let preview = path.with_extension("webp");
                 if folder.join(&preview).exists() {
                     media.push((
                         folder.join(&preview),
@@ -709,21 +711,17 @@ mod tests {
 
     #[test]
     fn only_clips_and_screenshots_reach_the_evidence_branch() {
-        let run = run_of(
-            "[CONN-1] Reconnects",
-            vec![failed_attempt(
-                (0, 1),
-                &[
-                    (ArtifactKind::Clip, "attempts/1/clips/conn.mp4"),
-                    (ArtifactKind::Screenshot, "attempts/1/failure.png"),
-                    (ArtifactKind::LogExcerpt, "attempts/1/logs/CONN-1/panel.log"),
-                    (
-                        ArtifactKind::Spans,
-                        "attempts/1/failures/conn/spans.otlp.jsonl",
-                    ),
-                ],
-            )],
+        let mut attempt = failed_attempt(
+            (0, 1),
+            &[
+                (ArtifactKind::Clip, "clips/conn.mp4"),
+                (ArtifactKind::Screenshot, "failure.png"),
+                (ArtifactKind::LogExcerpt, "logs/CONN-1/panel.log"),
+                (ArtifactKind::Spans, "failures/conn/spans.otlp.jsonl"),
+            ],
         );
+        attempt.folder = "attempts/1".to_owned();
+        let run = run_of("[CONN-1] Reconnects", vec![attempt]);
         let published: Vec<String> = media(&[(PathBuf::from("panel/test_run.json"), run)])
             .into_iter()
             .map(|(_, target)| target)

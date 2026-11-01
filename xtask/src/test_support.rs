@@ -442,43 +442,30 @@ pub fn ids(services: &[&dyn crate::stack::spec::DynService]) -> Vec<&'static str
     services.iter().map(|service| service.id().0).collect()
 }
 
-/// Folds the full suite's attempts of `only` under `policy` against `target`, where the scenario
-/// drive reports `[CONN-1] Reconnects` and the sign in journey `[AUTH-2] Signs in`, each with
-/// `outcome(attempt, requirement)`. Returns the folded run and every drive made, in order, as
-/// `"<attempt> scenarios <ids>"` or `"<attempt> journey"`.
-pub fn full_suite_attempts(
-    target: &crate::e2e::Target,
-    policy: AttemptPolicy,
-    only: &[String],
-    outcome: impl Fn(u32, &str) -> Outcome,
-) -> (TestRun, Vec<String>) {
-    use crate::e2e::{JOURNEY, attempt};
-    let drives = std::cell::RefCell::new(Vec::new());
-    let folded = crate::results::attempts(policy, only, &Quarantine::default(), |n, ids| {
-        attempt(
-            n,
-            ids,
-            target,
-            |n, ids| {
-                drives
-                    .borrow_mut()
-                    .push(format!("{n} scenarios {}", ids.join(",")));
-                Ok(requirement_run(
-                    "CONN-1",
-                    "[CONN-1] Reconnects",
-                    outcome(n, "CONN-1"),
-                ))
-            },
-            |n| {
-                drives.borrow_mut().push(format!("{n} journey"));
-                Ok(requirement_run(
-                    JOURNEY,
-                    "[AUTH-2] Signs in",
-                    outcome(n, JOURNEY),
-                ))
-            },
-        )
-    })
-    .unwrap();
-    (folded, drives.into_inner())
+/// Each drive an attempt made, in order: its folder below the suite folder and the ids it was
+/// handed.
+pub type Drove = Vec<(String, Vec<String>)>;
+
+/// Folds the attempts of `args` on target `T`, where every drive reports
+/// `reply(drive folder, attempt)` and exits 0. Returns the folded run and each drive made, in
+/// order, as (its folder below the suite folder, the ids it was handed).
+pub fn drive_attempts<T: crate::e2e::Target>(
+    args: &E2eArgs,
+    reply: impl Fn(&str, u32) -> TestRun,
+) -> Result<(TestRun, Drove)> {
+    let evidence = Path::new("results/suite");
+    let drove = std::cell::RefCell::new(Vec::new());
+    let folded = crate::results::attempts(
+        args.policy(),
+        &args.only,
+        &Quarantine::default(),
+        |n, ids| {
+            crate::e2e::attempt::<T>(evidence, n, ids, |drive, out, ids| {
+                let folder = out.strip_prefix(evidence).unwrap().display().to_string();
+                drove.borrow_mut().push((folder, ids.to_vec()));
+                Ok((reply(drive.folder, n), exited(0)))
+            })
+        },
+    )?;
+    Ok((folded, drove.into_inner()))
 }
