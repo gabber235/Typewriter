@@ -51,18 +51,19 @@ final class ReportedRun {
     );
   }
 
-  /// The run as JSON, the form the host driver writes to `test_run.json`.
-  Object? toJson() => results.TestRun.serializer.toJson(
-    results.TestRun(
-      runner: runner,
-      // `cargo xtask e2e` knows the commit; the runner does not.
-      commit: "",
-      startedAtMillis: _startedAt,
-      attemptPolicy: results.AttemptPolicy.wrapExactly(1),
-      cases: _cases,
-    ),
-    readableFlavor: true,
+  /// The cases so far as one run.
+  results.TestRun get testRun => results.TestRun(
+    runner: runner,
+    // `cargo xtask e2e` knows the commit; the runner does not.
+    commit: "",
+    startedAtMillis: _startedAt,
+    attemptPolicy: results.AttemptPolicy.wrapExactly(1),
+    cases: _cases,
   );
+
+  /// The run as JSON, the form the app reports it to the host driver in.
+  Object? toJson() =>
+      results.TestRun.serializer.toJson(testRun, readableFlavor: true);
 }
 
 /// The outcome of a case that failed with [error].

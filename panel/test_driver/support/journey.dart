@@ -7,7 +7,6 @@
 /// writes its one case, like a scenario's, to the evidence folder.
 library;
 
-import "dart:convert";
 import "dart:io";
 
 import "package:flutter_driver/flutter_driver.dart";
@@ -17,6 +16,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v
 import "../../integration_test/support/reported_run.dart";
 import "../../integration_test/support/wait.dart";
 import "authentik.dart";
+import "evidence.dart";
 
 export "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v1/test_run.dart"
     show Demonstrates;
@@ -33,7 +33,9 @@ Future<void> journey(
   results.Demonstrates demonstrates,
   Future<void> Function(Journey journey) body,
 ) async {
-  final evidence = Directory(Platform.environment["EVIDENCE_DIR"]!);
+  final evidence = EvidenceFolder(
+    Directory(Platform.environment["EVIDENCE_DIR"]!),
+  );
   final driver = await FlutterDriver.connect() as WebFlutterDriver;
   final run = ReportedRun(results.Runner.panelWeb);
   final user = Journey._(driver, evidence, requirement);
@@ -56,9 +58,8 @@ Future<void> journey(
       end: DateTime.now().millisecondsSinceEpoch,
       artifacts: user._artifacts,
     );
-    await evidence.create(recursive: true);
-    await File("${evidence.path}/test_run.json")
-        .writeAsString(jsonEncode(run.toJson()));
+    // Every capture is on disk by now, so the run lists only written ones.
+    await evidence.writeRun(run.testRun);
     await driver.close();
   }
 }
@@ -70,7 +71,7 @@ final class Journey {
     : provider = AuthentikPages(_driver);
 
   final WebFlutterDriver _driver;
-  final Directory _evidence;
+  final EvidenceFolder _evidence;
   final String _requirement;
   final List<results.Artifact> _artifacts = [];
 
@@ -116,9 +117,10 @@ final class Journey {
   /// Saves what the browser shows as the screenshot [name] of the case.
   Future<void> capture(String name) async {
     final path = "screenshots/$_requirement/$name.png";
-    final file = File("${_evidence.path}/$path");
-    await file.parent.create(recursive: true);
-    await file.writeAsBytes(await _driver.webDriver.captureScreenshotAsList());
+    await _evidence.write(
+      path,
+      await _driver.webDriver.captureScreenshotAsList(),
+    );
     _artifacts.add(
       results.Artifact(kind: results.ArtifactKind.screenshot, path: path),
     );
