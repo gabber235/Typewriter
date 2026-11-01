@@ -86,7 +86,6 @@ import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.edit.AuthoringMutationPlan
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.operation.PreparationEvaluator
 import com.typewritermc.realm.publication.StagedEngineImplementationSource
@@ -102,6 +101,7 @@ import com.typewritermc.realm.testing.itemIds
 import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.linkTargets
 import com.typewritermc.realm.testing.links
+import com.typewritermc.realm.testing.storeSeed
 import com.typewritermc.realm.testing.typesOf
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -174,7 +174,6 @@ import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
-import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.DeclarationStatus
@@ -742,17 +741,7 @@ internal class RealmLifecycleFixture(
                 TestDatabaseProvider(
                     onConnect = { databaseOpen = true },
                     onClose = { databaseOpen = false },
-                    initialize = { database ->
-                        if (initialSeed != null) {
-                            SurrealAuthoringStorage(database).persistAtomic(
-                                AuthoringMutationPlan(
-                                    initialSeed.resources,
-                                    emptySet(),
-                                    RelationProjectionDelta(removals = emptyList(), created = emptyList()),
-                                ),
-                            )
-                        }
-                    },
+                    initialize = { database -> initialSeed?.let { SurrealAuthoringStorage(database).storeSeed(it.resources) } },
                 ),
             catalogs = catalogs,
             scope = scope,

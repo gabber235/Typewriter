@@ -10,6 +10,7 @@ import com.typewritermc.authoring.RealmRootFields
 import com.typewritermc.authoring.RealmSection
 import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.RealmSections
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
@@ -57,8 +58,8 @@ internal class RealmStructureProvisioning(
 ) {
     suspend fun ensure(views: AuthoringViewStore) {
         val edit = views.capture().use { lease -> prepare(lease.root) } ?: return
-        val result = authoring.commit(edit)
-        check(result == CommitPreparedEditResponse.COMMITTED) { "The realm root and sections could not be created: $result" }
+        val result = authoring.commit(edit, SubmissionKey("realm-structure:${UUID.randomUUID()}"))
+        check(result is CommitPreparedEditResponse.CommittedWrapper) { "The realm root and sections could not be created: $result" }
     }
 
     /**

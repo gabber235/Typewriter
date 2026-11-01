@@ -41,6 +41,7 @@ import com.typewritermc.realm.testing.codes
 import com.typewritermc.realm.testing.expectRefused
 import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.links
+import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.SetupHandle
@@ -58,7 +59,6 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.AuthoringObservationId
-import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
@@ -198,7 +198,7 @@ val ResourceOperationRoutesTest by testSuite {
                     .shouldBeInstanceOf<AuthoringActionResult.PreviewWrapper>()
             resources shouldBe before
 
-            commit(preview.value.edit.requireValid()) shouldBe CommitPreparedEditResponse.COMMITTED
+            commit(preview.value.edit.requireValid()).shouldBeCommitted()
 
             val saved = resources
             val copy = (saved.keys - before.keys).single()

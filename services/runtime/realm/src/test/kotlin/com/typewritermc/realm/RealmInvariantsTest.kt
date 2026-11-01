@@ -32,6 +32,7 @@ import com.typewritermc.realm.testing.itemIds
 import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.linkTargets
 import com.typewritermc.realm.testing.links
+import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.typesOf
 import com.typewritermc.testing.routes.FixtureTimelinePage
 import com.typewritermc.testing.routes.FixtureTimelinePageDefinition
@@ -90,7 +91,7 @@ val RealmInvariantsTest by testSuite {
                         val refusal = model.refusal(action)
                         val response = realm.write(action)
                         if (refusal == null) {
-                            response shouldBe CommitPreparedEditResponse.COMMITTED
+                            response.shouldBeCommitted()
                             model.apply(action)
                         } else {
                             response.shouldBeInstanceOf<CommitPreparedEditResponse.RejectedErrorWrapper>().value.codes shouldContainAll

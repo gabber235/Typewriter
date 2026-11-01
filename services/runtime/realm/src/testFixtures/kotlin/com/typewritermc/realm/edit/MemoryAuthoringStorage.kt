@@ -1,5 +1,6 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.realm.authoring.AuthoringSeed
 
 /**
@@ -18,10 +19,19 @@ internal class MemoryAuthoringStorage(
         return seed
     }
 
-    override fun persistAtomic(plan: AuthoringMutationPlan) {
+    /** Committed submissions, kept across fixture restarts as the Surreal table keeps them. */
+    private val submissions = mutableMapOf<SubmissionKey, String>()
+
+    override fun submittedRequest(submission: SubmissionKey): String? = submissions[submission]
+
+    override fun persistAtomic(
+        plan: AuthoringMutationPlan,
+        submission: SubmissionKey,
+        request: String,
+    ) {
         check(!failBeforeWrite) { "write unavailable" }
-        seed =
-            AuthoringSeed(seed.resources + plan.resources - plan.removedResources)
+        seed = AuthoringSeed(seed.resources + plan.resources - plan.removedResources)
+        submissions[submission] = request
         check(!failAfterWrite) { "commit result unavailable" }
     }
 }

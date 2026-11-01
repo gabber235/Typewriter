@@ -1,6 +1,7 @@
 package com.typewritermc.realm.testing
 
 import com.typewritermc.authoring.EditContext
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.definition
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.edit.AuthoringPlanRejected
@@ -44,7 +45,10 @@ internal class FixtureSetupEditor(
             }
         }
 
-    override suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse = realm.commit(edit)
+    override suspend fun commit(
+        edit: PreparedEdit,
+        submission: SubmissionKey,
+    ): CommitPreparedEditResponse = realm.commit(edit, submission)
 }
 
 /** The setup's view of an edit: the Realm's edit context plus its catalog and section ids. */

@@ -11,12 +11,12 @@ import com.typewritermc.operations.capability
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.operation.ResourceOperationRuntime
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.use
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.AuthoringObservationId
-import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.capability.InvocationId
 import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.resource_operations.AuthoringActionResult
@@ -97,7 +97,7 @@ internal class OperationDriver(
         val before = realm.resources
         val preview = routes.prepare(request).shouldBeInstanceOf<AuthoringActionResult.PreviewWrapper>()
         realm.resources shouldBe before
-        realm.commit(preview.value.edit.requireValid()) shouldBe CommitPreparedEditResponse.COMMITTED
+        realm.commit(preview.value.edit.requireValid()).shouldBeCommitted()
         return realm.resources
     }
 

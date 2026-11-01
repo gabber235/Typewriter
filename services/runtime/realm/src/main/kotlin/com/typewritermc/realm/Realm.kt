@@ -1,6 +1,7 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.RuntimeCleanupOwner
 import com.typewritermc.discovery.RuntimeRegistrar
@@ -112,7 +113,7 @@ internal class Realm(
             val seed = storage.readCoherent()
             val viewStore = InMemoryAuthoringViewStore(catalog, seed)
             views = viewStore
-            val authoring = RealmAuthoringOwner(storage, viewStore)
+            val authoring = RealmAuthoringOwner(storage, viewStore, findings = { checks?.findings().orEmpty() })
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
@@ -310,9 +311,12 @@ private class CheckingAuthoringRepository(
     private val checks: RealmCheckRuntime,
     private val events: EditorUpdatePublisher,
 ) : AuthoringRepository {
-    override suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse =
-        delegate.commit(edit).also { result ->
-            if (result is CommitPreparedEditResponse.COMMITTED) {
+    override suspend fun commit(
+        edit: PreparedEdit,
+        submission: SubmissionKey,
+    ): CommitPreparedEditResponse =
+        delegate.commit(edit, submission).also { result ->
+            if (result is CommitPreparedEditResponse.CommittedWrapper) {
                 checks.invalidateCurrent()
                 events.committed()
             }

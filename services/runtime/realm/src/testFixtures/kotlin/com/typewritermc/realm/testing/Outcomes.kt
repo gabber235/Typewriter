@@ -5,6 +5,8 @@ import com.typewritermc.realm.edit.WorkingViewEditContext
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.authoring.AuthoringDiagnostic
+import skirout.editor.v1.authoring.AuthoringState
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
@@ -65,5 +67,12 @@ private suspend fun RealmFixture.expectUnchanged(commit: suspend () -> CommitPre
     return problems
 }
 
-/** Asserts the commit was admitted. */
-fun CommitPreparedEditResponse.shouldBeCommitted() = this shouldBe CommitPreparedEditResponse.COMMITTED
+/** Asserts the commit was admitted and returns the saved state its reply carried. */
+fun CommitPreparedEditResponse.shouldBeCommitted(): AuthoringState = shouldBeInstanceOf<CommitPreparedEditResponse.CommittedWrapper>().value
+
+/** Asserts the commit was refused as a request no editor may send, for at least [codes], and returns its diagnostics. */
+fun CommitPreparedEditResponse.shouldBeInvalid(vararg codes: String): List<AuthoringDiagnostic> {
+    val diagnostics = shouldBeInstanceOf<CommitPreparedEditResponse.InvalidErrorWrapper>().value.diagnostics
+    diagnostics.map { it.code } shouldContainAll codes.toList()
+    return diagnostics
+}

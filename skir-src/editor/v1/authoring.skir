@@ -247,15 +247,22 @@ method SearchAuthoring(
   internal_error: InternalError = 4;
 } = 940202;
 
-/// committed confirms installation of saved authoring state. It does not confirm check completion,
-/// compilation, publication selection, or engine application. conflict_error requires refreshing
-/// original facts; rejected_error reports invalid intent or missing guards; catalog_changed_error
-/// requires a new catalog; invalid_error reports a prepared edit no editor may send, such as an
-/// unknown intent or a record with duplicate field names, with the reason.
+/// Commits one save attempt. submission names the attempt: the client sets a new key of 1 to 128
+/// characters per attempt and keeps it when it resends the same edit. A key already committed
+/// with the same edit applies nothing and answers committed with the current saved state.
+/// committed confirms installation of saved authoring state and carries the saved state. It does
+/// not confirm check completion, compilation, publication selection, or engine application.
+/// conflict_error requires refreshing original facts; rejected_error reports invalid intent or
+/// missing guards; catalog_changed_error requires a new catalog; invalid_error reports a request
+/// no editor may send, such as an unknown intent, a record with duplicate field names, a missing
+/// submission or a submission reused for a different edit, with the reason.
 method CommitPreparedEdit(
-  PreparedEdit
+  struct {
+    edit: PreparedEdit = 0;
+    submission: string = 1;
+  }
 ): enum {
-  committed = 1;
+  committed: AuthoringState = 1;
   conflict_error: [ExpectationConflict] = 2;
   rejected_error: [ValueProblem] = 3;
   catalog_changed_error: CatalogGeneration = 4;

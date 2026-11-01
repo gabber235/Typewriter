@@ -29,6 +29,7 @@ import com.typewritermc.realm.testing.itemIds
 import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.links
 import com.typewritermc.realm.testing.refusals
+import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.typesOf
 import com.typewritermc.realm.testing.unfilledRecord
 import com.typewritermc.realm.testing.withSetup
@@ -202,8 +203,7 @@ val RealmStructureTest by testSuite {
                     .namedUse(listOf(TagDefinition.id.use()))
                     .use
 
-            first.commit { insert(tags, null, encoder.encode(tagLink, Ref<Nothing, Nothing>(quest.id))) } shouldBe
-                CommitPreparedEditResponse.COMMITTED
+            first.commit { insert(tags, null, encoder.encode(tagLink, Ref<Nothing, Nothing>(quest.id))) }.shouldBeCommitted()
             val saved = resources
 
             second

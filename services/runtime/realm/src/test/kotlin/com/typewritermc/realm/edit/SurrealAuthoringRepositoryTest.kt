@@ -1,6 +1,7 @@
 package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.CheckedWriteResult
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
 import com.typewritermc.realm.authoring.AuthoringSeed
@@ -18,7 +19,9 @@ import com.typewritermc.realm.testing.conflictingFacts
 import com.typewritermc.realm.testing.linkOrNull
 import com.typewritermc.realm.testing.realmDatabase
 import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.realm.testing.shouldBeInvalid
 import com.typewritermc.realm.testing.shouldBeRejected
+import com.typewritermc.realm.testing.storeSeed
 import com.typewritermc.realm.testing.text
 import com.typewritermc.realm.testing.value
 import com.typewritermc.types.bytes
@@ -40,7 +43,6 @@ import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.CounterpartChoice
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrenceId
-import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -79,7 +81,7 @@ val SurrealAuthoringRepositoryTest by testSuite {
     /** Disconnects the first side of the pair at [source]. */
     val unpairLink = EditIntent.DisconnectRelationWrapper(LinkOccurrenceId(endpoint = PAIR_FIRST, location = at(source, "first")))
 
-    val noRelationChanges = RelationProjectionDelta(removals = emptyList(), created = emptyList())
+    val attempt = SubmissionKey("save-1")
 
     test("an edit guarded on the title commits without touching an unrelated field") {
         val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial.with("count", DataValue.integer(BigInteger.TWO)))))
@@ -187,12 +189,13 @@ val SurrealAuthoringRepositoryTest by testSuite {
         }
     }
 
-    test("a commit whose result is lost reloads the saved state while an open lease keeps what it read") {
+    test("a commit whose result is lost reloads the saved state, and its resend answers committed without saving again") {
         val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))
         RealmFixture.of(catalog, storage = storage).use { realm ->
             realm.views.capture().use { retained ->
+                val edit = renameEdit(realm.generation, id, initial)
                 storage.failAfterWrite = true
-                shouldThrow<IllegalStateException> { realm.commit(renameEdit(realm.generation, id, initial)) }
+                shouldThrow<IllegalStateException> { realm.commit(edit, attempt) }
                 storage.failAfterWrite = false
                 storage.failReads = true
                 shouldThrow<IllegalStateException> { realm.views.capture() }
@@ -200,9 +203,56 @@ val SurrealAuthoringRepositoryTest by testSuite {
                 storage.failReads = false
 
                 realm.resources.getValue(id).text("name") shouldBe "Story"
-                realm.commit(renameEdit(realm.generation, id, initial)).conflictingFacts() shouldBe
-                    listOf(EditExpectation.createValue(at = title, expected = DataValue.StringValueWrapper("Story")))
+                val saved = realm.resources
+                realm
+                    .commit(edit, attempt)
+                    .shouldBeCommitted()
+                    .resources
+                    .single { it.id == id }
+                    .content
+                    .text("name") shouldBe "Story"
+                realm.resources shouldBe saved
             }
+        }
+    }
+
+    test("a resent submission answers committed with the saved state and saves once") {
+        RealmFixture.surreal(catalog, seed = mapOf(id to initial)).use { realm ->
+            val edit = renameEdit(realm.generation, id, initial)
+            realm.commit(edit, attempt).shouldBeCommitted()
+            val saved = realm.resources
+
+            realm
+                .commit(edit, attempt)
+                .shouldBeCommitted()
+                .resources
+                .single { it.id == id }
+                .content shouldBe saved.getValue(id)
+            realm.resources shouldBe saved
+        }
+    }
+
+    test("a submission resent after a restart answers committed and saves once") {
+        RealmFixture.surreal(catalog, seed = mapOf(id to initial)).use { realm ->
+            val edit = renameEdit(realm.generation, id, initial)
+            realm.commit(edit, attempt).shouldBeCommitted()
+            realm.restart()
+            val saved = realm.resources
+
+            realm.commit(edit, attempt).shouldBeCommitted()
+            realm.resources shouldBe saved
+        }
+    }
+
+    test("a submission key reused for a different edit is refused as invalid and saves nothing") {
+        RealmFixture.surreal(catalog, seed = mapOf(id to initial)).use { realm ->
+            realm.commit(renameEdit(realm.generation, id, initial), attempt).shouldBeCommitted()
+            val saved = realm.resources
+
+            realm
+                .commit(renameEdit(realm.generation, id, initial, expected = "Story", next = "Tale"), attempt)
+                .shouldBeInvalid("submission_reused")
+            realm.resources shouldBe saved
         }
     }
 
@@ -230,9 +280,9 @@ val SurrealAuthoringRepositoryTest by testSuite {
                         }.awaitAll()
                 }
 
-            val committed = names.filterIndexed { index, _ -> results[index] == CommitPreparedEditResponse.COMMITTED }
+            val committed = names.filterIndexed { index, _ -> results[index] is CommitPreparedEditResponse.CommittedWrapper }
             committed.size shouldBe 1
-            results.filter { it != CommitPreparedEditResponse.COMMITTED }.forEach {
+            results.filter { it !is CommitPreparedEditResponse.CommittedWrapper }.forEach {
                 it.conflictingFacts() shouldBe
                     listOf(EditExpectation.createValue(at = title, expected = DataValue.StringValueWrapper(committed.single())))
             }
@@ -365,7 +415,7 @@ val SurrealAuthoringRepositoryTest by testSuite {
                     ),
                 )
 
-            storage.persistAtomic(AuthoringMutationPlan(mapOf(id to edges), emptySet(), noRelationChanges))
+            storage.storeSeed(mapOf(id to edges))
 
             storage.readCoherent().resources shouldBe mapOf(id to edges)
         }
@@ -374,10 +424,12 @@ val SurrealAuthoringRepositoryTest by testSuite {
     test("a committed record is stored as a native object with its search text and a fresh owner reads it back") {
         realmDatabase("native_owner").use { database ->
             val storage = SurrealAuthoringStorage(database)
-            storage.persistAtomic(AuthoringMutationPlan(mapOf(id to initial), emptySet(), noRelationChanges))
+            storage.storeSeed(mapOf(id to initial))
             val generation = CatalogGeneration(value = "fresh")
             InMemoryAuthoringViewStore(catalog.lease(generation), storage.readCoherent()).use { views ->
-                RealmAuthoringOwner(storage, views).commit(renameEdit(generation, id, initial)).shouldBeCommitted()
+                RealmAuthoringOwner(storage, views, findings = { emptyList() })
+                    .commit(renameEdit(generation, id, initial), attempt)
+                    .shouldBeCommitted()
             }
 
             database.query("SELECT VALUE content FROM ONLY resource:quest;").take(0).isObject shouldBe true

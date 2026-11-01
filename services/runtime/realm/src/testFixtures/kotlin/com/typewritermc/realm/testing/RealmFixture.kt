@@ -2,12 +2,14 @@ package com.typewritermc.realm.testing
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.EditContext
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.edit.AuthoringMutationPlan
 import com.typewritermc.realm.edit.AuthoringMutationPlanner
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.AuthoringStorage
@@ -29,11 +31,13 @@ import com.typewritermc.types.toResourceIds
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
+import java.util.UUID
 
 /** Where a [RealmFixture] saves authoring: in memory, or in an embedded SurrealDB with the Realm schema. */
 enum class RealmStorage { Memory, Surreal }
@@ -44,6 +48,16 @@ internal fun realmDatabase(name: String = "realm"): Surreal =
         openTestDatabase(name)
         MigrationResources().loadRealmSchema().forEach { query(it.script).take(0) }
     }
+
+/** The key the seeded resources are stored under; no test commits it. */
+internal val SEED_SUBMISSION = SubmissionKey("fixture-seed")
+
+/** Saves [resources] as one write, as content no author committed. */
+internal fun SurrealAuthoringStorage.storeSeed(resources: Map<ResourceId, AuthoringRecord>) {
+    if (resources.isEmpty()) return
+    val plan = AuthoringMutationPlan(resources, emptySet(), RelationProjectionDelta(removals = emptyList(), created = emptyList()))
+    persistAtomic(plan, SEED_SUBMISSION, request = "fixture-seed")
+}
 
 /**
  * The operation preparation over [subjects] that writes into this edit, as an operation's prepare callback receives it.
@@ -101,7 +115,7 @@ class RealmFixture private constructor(
         val active = catalog.activate("realm-${++generations}")
         activation = active.owner
         views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent())
-        owner = RealmAuthoringOwner(storage, views)
+        owner = RealmAuthoringOwner(storage, views, findings = { emptyList() })
         provision()
     }
 
@@ -117,8 +131,11 @@ class RealmFixture private constructor(
         return setup.handles
     }
 
-    /** Commits [edit] through the Realm's admission, as the commit route does. */
-    suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse = owner.commit(edit)
+    /** Commits [edit] as the save attempt [submission] through the Realm's admission, as the commit route does. */
+    suspend fun commit(
+        edit: PreparedEdit,
+        submission: SubmissionKey = SubmissionKey(UUID.randomUUID().toString()),
+    ): CommitPreparedEditResponse = owner.commit(edit, submission)
 
     /**
      * Commits [intents] as an editor sends them: one edit on the current state, guarded by exactly the expectations
@@ -248,10 +265,17 @@ class RealmFixture private constructor(
             storage: MemoryAuthoringStorage = MemoryAuthoringStorage(AuthoringSeed(seed)),
         ): RealmFixture = start(RealmFixture(null, catalog, storage))
 
-        /** A Realm on [catalog] whose authoring is saved in an embedded SurrealDB with the Realm schema. */
-        suspend fun surreal(catalog: DefinitionCatalog): RealmFixture {
+        /**
+         * A Realm on [catalog] whose authoring is saved in an embedded SurrealDB with the Realm schema, starting with
+         * [seed] already saved, as [of] does in memory.
+         */
+        suspend fun surreal(
+            catalog: DefinitionCatalog,
+            seed: Map<ResourceId, AuthoringRecord> = emptyMap(),
+        ): RealmFixture {
             val database = realmDatabase()
-            return start(RealmFixture(database, catalog, SurrealAuthoringStorage(database)))
+            val storage = SurrealAuthoringStorage(database).apply { storeSeed(seed) }
+            return start(RealmFixture(database, catalog, storage))
         }
 
         private suspend fun start(fixture: RealmFixture): RealmFixture =

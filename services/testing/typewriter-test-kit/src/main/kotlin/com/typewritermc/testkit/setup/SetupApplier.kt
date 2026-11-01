@@ -4,6 +4,7 @@ package com.typewritermc.testkit.setup
 
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
@@ -30,6 +31,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import java.util.UUID
 
 /** The realm operations a setup needs; in process for Realm tests, over NATS for a running Realm. */
 interface SetupEditor {
@@ -42,8 +44,11 @@ interface SetupEditor {
         block: suspend SetupEdit.() -> T,
     ): T
 
-    /** Commits [edit] through the commit route as a member. */
-    suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse
+    /** Commits [edit] as the save attempt [submission] through the commit route as a member. */
+    suspend fun commit(
+        edit: PreparedEdit,
+        submission: SubmissionKey,
+    ): CommitPreparedEditResponse
 }
 
 /** An [EditContext] plus what a setup must read: the catalog that encodes its records and the realm's section ids. */
@@ -104,8 +109,8 @@ class SetupApplier(
             } catch (refused: EditRefused) {
                 throw SetupRejected(setup.name, setup.describe(refused.problems), refused)
             }
-        val response = editor.commit(edit)
-        if (response != CommitPreparedEditResponse.COMMITTED) throw SetupRejected(setup.name, setup.describe(response))
+        val response = editor.commit(edit, SubmissionKey("setup:${setup.name.value}:${UUID.randomUUID()}"))
+        if (response !is CommitPreparedEditResponse.CommittedWrapper) throw SetupRejected(setup.name, setup.describe(response))
     }
 }
 

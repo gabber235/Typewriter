@@ -8,6 +8,7 @@ import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.setup.SetupHandle
 import com.typewritermc.types.qualified
+import skirout.editor.v1.authoring.CommitPreparedEditRequest
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring_facts.EditExpectation
@@ -24,6 +25,7 @@ import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import java.util.UUID
 
 /** A commit payload that cannot be decoded or validated, built from the setup's book. */
 internal class InvalidCommit(
@@ -44,8 +46,12 @@ internal fun RealmFixture.rename(
 internal fun RealmFixture.edit(intent: EditIntent) =
     PreparedEdit(catalog = generation, expectations = emptyList(), intents = listOf(intent))
 
-/** The wire bytes of [edit], as a client sends a prepared edit. */
-internal fun encode(edit: PreparedEdit): ByteArray = PreparedEdit.serializer.toBytes(edit).toByteArray()
+/** [this] edit as one save attempt, as a client sends it. */
+internal fun PreparedEdit.submitted(submission: String = UUID.randomUUID().toString()) =
+    CommitPreparedEditRequest(edit = this, submission = submission)
+
+/** The wire bytes of [request], as a client sends a commit. */
+internal fun encode(request: CommitPreparedEditRequest): ByteArray = CommitPreparedEditRequest.serializer.toBytes(request).toByteArray()
 
 /** Two title fields in one record, which admission refuses as duplicated. */
 internal fun duplicateTitles() =

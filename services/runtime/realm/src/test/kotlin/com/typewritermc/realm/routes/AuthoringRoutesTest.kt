@@ -18,6 +18,7 @@ import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.realm.testing.shouldBeInvalid
 import com.typewritermc.realm.testing.text
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -62,41 +63,46 @@ val AuthoringRoutesTest by testSuite {
     val undecodableCommits =
         listOf(
             InvalidCommit("malformed binary") { byteArrayOf(-1) },
-            InvalidCommit("truncated binary") { book -> encode(rename(book, "Renamed")).dropLast(1).toByteArray() },
+            InvalidCommit("truncated binary") { book -> encode(rename(book, "Renamed").submitted()).dropLast(1).toByteArray() },
         )
 
     /** Prepared edits no editor may send, each paired with the rule its refusal names. */
     val invalidCommits =
         listOf(
-            InvalidCommit("an unknown intent") { book -> encode(rename(book, "Renamed").copy(intents = listOf(EditIntent.UNKNOWN))) } to
+            InvalidCommit("an unknown intent") { book ->
+                encode(rename(book, "Renamed").copy(intents = listOf(EditIntent.UNKNOWN)).submitted())
+            } to
                 "Unknown edit intent",
             InvalidCommit("an unknown expectation") { book ->
                 val edit = rename(book, "Renamed")
-                encode(edit.copy(expectations = edit.expectations + EditExpectation.UNKNOWN))
+                encode(edit.copy(expectations = edit.expectations + EditExpectation.UNKNOWN).submitted())
             } to "Unknown edit expectation",
             InvalidCommit("a created record with duplicate field names") { book ->
                 val duplicate = AuthoringRecord(configuration = resources.getValue(book.resource).configuration, fields = duplicateTitles())
-                encode(edit(EditIntent.createCreateResource(id = ResourceId(value = "copy"), record = duplicate)))
+                encode(edit(EditIntent.createCreateResource(id = ResourceId(value = "copy"), record = duplicate)).submitted())
             } to "Record field title is duplicated",
             InvalidCommit("a nested record with duplicate field names") { book ->
-                encode(edit(EditIntent.createSetValue(at = titleOf(book), value = DataValue.createRecord(fields = duplicateTitles()))))
+                encode(
+                    edit(
+                        EditIntent.createSetValue(at = titleOf(book), value = DataValue.createRecord(fields = duplicateTitles())),
+                    ).submitted(),
+                )
             } to "Record field title is duplicated",
         )
 
-    test("an edit committed over the wire is saved and the state query returns it") {
+    test("an edit committed over the wire answers with the saved state the state query then returns") {
         runTest {
             withSetup(tutorial) { book ->
                 authoringRoutes().use { wire ->
-                    wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed")) shouldBe CommitPreparedEditResponse.COMMITTED
+                    val committed = wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed").submitted()).shouldBeCommitted()
 
                     resources.getValue(book.resource).text("title") shouldBe "Renamed"
-                    wire
-                        .state(generation)
-                        .resources
+                    committed.resources
                         .single { it.id == book.resource }
                         .content
                         .requireValid()
                         .text("title") shouldBe "Renamed"
+                    wire.state(generation) shouldBe committed
                 }
             }
         }
@@ -119,9 +125,23 @@ val AuthoringRoutesTest by testSuite {
                         diagnostic.code shouldBe "invalid_edit"
                         diagnostic.message shouldContain reason
                         resources shouldBe before
-                        wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed")) shouldBe
-                            CommitPreparedEditResponse.COMMITTED
+                        wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed").submitted()).shouldBeCommitted()
                     }
+                }
+            }
+        }
+    }
+
+    test("a commit without a submission key is refused as invalid and saves nothing") {
+        runTest {
+            withSetup(tutorial) { book ->
+                authoringRoutes().use { wire ->
+                    val before = resources
+
+                    wire
+                        .call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed").submitted(submission = ""))
+                        .shouldBeInvalid("invalid_submission")
+                    resources shouldBe before
                 }
             }
         }
@@ -139,8 +159,7 @@ val AuthoringRoutesTest by testSuite {
                             .shouldBeInstanceOf<CommitPreparedEditResponse.InternalErrorWrapper>()
 
                         resources shouldBe before
-                        wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed")) shouldBe
-                            CommitPreparedEditResponse.COMMITTED
+                        wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed").submitted()).shouldBeCommitted()
                     }
                 }
             }
@@ -217,7 +236,7 @@ val AuthoringRoutesTest by testSuite {
                             .shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.PreparedWrapper>()
                             .value.edit
 
-                    wire.call(RealmRouteScope::authoringEditCommit, prepared) shouldBe CommitPreparedEditResponse.COMMITTED
+                    wire.call(RealmRouteScope::authoringEditCommit, prepared.submitted()).shouldBeCommitted()
                     resources.getValue(book.resource).configuration shouldBe saved
                 }
             }

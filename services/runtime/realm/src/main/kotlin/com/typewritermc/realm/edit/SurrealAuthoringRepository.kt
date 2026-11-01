@@ -1,23 +1,27 @@
 package com.typewritermc.realm.edit
 
 import com.surrealdb.Surreal
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.CapturedAuthoringValues
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.conflicts
+import com.typewritermc.realm.authoring.savedState
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.search.authoredSearchText
 import com.typewritermc.realm.storage.encodeSkir
 import com.typewritermc.realm.storage.inTransaction
 import com.typewritermc.realm.storage.surrealRecordId
+import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.unknownVariant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -33,6 +37,7 @@ import skirout.editor.v1.type_catalog.ValueLocation
 internal class RealmAuthoringOwner(
     private val storage: AuthoringStorage,
     private val views: AuthoringViewStore,
+    private val findings: () -> List<FindingSet>,
 ) : AuthoringRepository {
     private val admission = Mutex()
 
@@ -56,8 +61,28 @@ internal class RealmAuthoringOwner(
         }
     }
 
-    override suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse =
+    override suspend fun commit(
+        edit: PreparedEdit,
+        submission: SubmissionKey,
+    ): CommitPreparedEditResponse =
         admission.withLock {
+            // A resent attempt applies nothing; the lookup runs under admission, so concurrent resends apply once.
+            val request =
+                PreparedEdit.serializer
+                    .toBytes(edit)
+                    .toByteArray()
+                    .sha256Hex()
+            when (storage.submittedRequest(submission)) {
+                null -> {}
+
+                request -> {
+                    return@withLock CommitPreparedEditResponse.CommittedWrapper(views.read { it.savedState(findings()) })
+                }
+
+                else -> {
+                    return@withLock invalidCommit("submission_reused", "Submission $submission was committed with a different edit.")
+                }
+            }
             views.read { current ->
                 if (edit.catalog !=
                     current.catalog.generation
@@ -95,26 +120,44 @@ internal class RealmAuthoringOwner(
                 }
                 val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources))
                 try {
-                    storage.persistAtomic(plan)
+                    storage.persistAtomic(plan, submission, request)
                 } catch (failure: Throwable) {
                     views.invalidate(storage::readCoherent)
                     runCatching { next.catalog.close() }.exceptionOrNull()?.let(failure::addSuppressed)
                     throw failure
                 }
                 views.install(next)
-                CommitPreparedEditResponse.COMMITTED
+                CommitPreparedEditResponse.CommittedWrapper(next.savedState(findings()))
             }
         }
 }
 
-/** Writes authored objects, declared links, and derived text in one database transaction. */
+/**
+ * Committed submission keys a Realm keeps. A row is a key of at most 128 characters, a 64 character digest and a
+ * time, so the bound costs a few hundred kilobytes and covers far more unanswered saves than a realm has editors.
+ * It bounds storage only: a resent key that aged out conflicts with its own write through the mandatory guards.
+ */
+internal const val COMMIT_SUBMISSIONS_KEPT = 1024
+
+/** Writes authored objects, declared links, derived text and the commit's submission in one database transaction. */
 internal class SurrealAuthoringStorage(
     private val database: Surreal,
     private val relationStore: DeclaredRelationStore = SurrealDeclaredRelationStore(),
 ) : AuthoringStorage {
     override fun readCoherent() = SurrealAuthoringSeedLoader(database).load()
 
-    override fun persistAtomic(plan: AuthoringMutationPlan) {
+    override fun submittedRequest(submission: SubmissionKey): String? =
+        database
+            .query("SELECT VALUE request FROM ONLY \$submission;", mapOf("submission" to submission.surrealRecordId()))
+            .take(0)
+            .takeUnless { it.isNone || it.isNull }
+            ?.getString()
+
+    override fun persistAtomic(
+        plan: AuthoringMutationPlan,
+        submission: SubmissionKey,
+        request: String,
+    ) {
         database.inTransaction { transaction ->
             val relations = relationStore.prepare(plan.relations, transaction)
             plan.resources.forEach { (id, record) ->
@@ -132,6 +175,16 @@ internal class SurrealAuthoringStorage(
             plan.removedResources.forEach { id ->
                 transaction.query("DELETE ONLY \$resource;", mapOf("resource" to id.surrealRecordId())).take(0)
             }
+            transaction
+                .query(
+                    "CREATE ONLY \$submission SET request = \$request;",
+                    mapOf("submission" to submission.surrealRecordId(), "request" to request),
+                ).take(0)
+            transaction
+                .query(
+                    "DELETE (SELECT VALUE id FROM commit_submission ORDER BY committed_at DESC START \$kept);",
+                    mapOf("kept" to COMMIT_SUBMISSIONS_KEPT),
+                ).take(0)
         }
     }
 }
