@@ -70,8 +70,9 @@ isAuthenticatedProvider.overrideWithValue(const AsyncValue.data(true));
 ```dart
 // Checks how: the key the fake recorded on each send.
 expect(realm.saves.last.submission, realm.saves.first.submission);
-// Checks what: a save whose reply was lost ends saved, once, without a review.
-realm.saves.single.keepAndLoseReply();
+// Checks what: a held save whose reply was lost ends saved, once, without a
+// review. The first save, since the resend is a second one.
+realm.saves.first.keepAndLoseReply();
 await eventually(() => expect(form.dirty, isFalse));
 expect(realm.document.valueAt(title), saved);
 expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));

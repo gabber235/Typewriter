@@ -22,10 +22,14 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
 
 ## End to end failures
 - `cargo xtask e2e <suite> --only CONN-1` reruns one scenario; `--repeat <n>` hunts a flaky one.
-- A failed attempt leaves `.xtask/results/<suite>/attempts/<n>/failures/<case>/`: the failure
-  screenshot, `panel.log` (the panel's debugPrint and its error), `drive.log` and every service
-  log cut to the attempt's time window, and `spans.otlp.jsonl` (the panel, backend and Realm
-  spans of the traces the scenario started). It stays local; read it before rerunning.
+- A run's results folder is `.xtask/results/<target prefix><device>/`: `panel`, `panel-web`, or
+  `full-panel-web` on the CI cluster.
+- A failed attempt leaves `attempts/<n>/[<drive>/]failures/<case>/` there (a drive other than the
+  scenario drive has its own folder): the failure screenshot, `panel.log` (the panel's debugPrint
+  and its error), `drive.log` and every service log cut to the attempt's time window, and
+  `spans.otlp.jsonl` (the panel, backend and Realm spans of the traces the scenario started). It
+  stays local, since CI uploads only what `cargo xtask evidence stage` writes to `.xtask/public`;
+  read it before rerunning.
 
 ## Main checkout only
 - Backend deploy: `cargo xtask deploy local`; builds, pushes, restarts on `k3d-seamlezz-local`.
