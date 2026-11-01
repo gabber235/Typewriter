@@ -176,3 +176,11 @@ invalid:
         testWidgets("shows the panel", (tester) async => open(tester));
       });
     }
+  # A helper in a call that names a value and runs a body registering cases is outside every case.
+  - |
+    void main() {
+      withClock(clock, () {
+        Future<void> open(WidgetTester tester) => tester.pumpPanel([]);
+        testWidgets("the panel opens at the fixed time", (tester) async => open(tester));
+      });
+    }
