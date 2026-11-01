@@ -51,6 +51,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -80,10 +82,13 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.thread
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmCheckRuntimeTest by testSuite {
@@ -401,6 +406,41 @@ val RealmCheckRuntimeTest by testSuite {
                     runtime.reported() shouldBe emptySet()
                 }
             }
+        }
+    }
+
+    test("commits keep answering while checks reschedule for the commits before them") {
+        val provider =
+            object : RealmCheckProvider {
+                override fun RealmChecks.register() {
+                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                        val name = read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
+                        check(name) { it == "valid" }.error("Name is invalid.", draft.binding.location)
+                    }
+                }
+            }
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(13, provider))
+        val seed = mapOf(firstResource to record(name = "a"), secondResource to record(name = "a"))
+        val daemons = ThreadFactory { task -> Thread(task).apply { isDaemon = true } }
+        Executors.newFixedThreadPool(4, daemons).asCoroutineDispatcher().use { worker ->
+            // Runs apart from the test thread, so commits that deadlock against the check runtime fail by timeout.
+            val answered = CompletableFuture<Unit>()
+            thread(isDaemon = true) {
+                runCatching {
+                    runBlocking {
+                        checking(catalog, seed, worker) { realm, runtime ->
+                            runtime.reloadCatalog()
+                            coroutineScope {
+                                seed.keys.forEach { resource ->
+                                    launch(worker) { repeat(200) { realm.commitChecked(runtime, rename(resource, "name $it")) } }
+                                }
+                            }
+                            runtime.drain()
+                        }
+                    }
+                }.fold(answered::complete, answered::completeExceptionally)
+            }
+            answered.get(60, TimeUnit.SECONDS)
         }
     }
 

@@ -73,7 +73,7 @@ internal val REALM = ResourceId(value = "realm")
 
 /**
  * Runs [test] on a Realm of [catalog] that starts with [seed] saved, and a check runtime over its views that runs
- * checks on [dispatcher]. The runtime is closed before the Realm.
+ * checks on [dispatcher] and whose findings committed replies carry. The runtime is closed before the Realm.
  */
 internal suspend fun checking(
     catalog: DefinitionCatalog,
@@ -85,6 +85,7 @@ internal suspend fun checking(
 ) {
     RealmFixture.of(catalog, seed).use { realm ->
         val runtime = RealmCheckRuntime(realm.views, dispatcher, selectionPredicates = selectionPredicates, readLimits = readLimits)
+        realm.findings = runtime::findings
         runtime.use { test(realm, it) }
     }
 }

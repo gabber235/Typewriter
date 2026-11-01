@@ -3,6 +3,7 @@ package com.typewritermc.realm.edit
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
+import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.CapturedAuthoringValues
@@ -76,60 +77,74 @@ internal class RealmAuthoringOwner(
                 null -> {}
 
                 request -> {
-                    return@withLock CommitPreparedEditResponse.CommittedWrapper(views.read { it.savedState(findings()) })
+                    return@withLock views.capture().use { CommitPreparedEditResponse.CommittedWrapper(it.root.savedState(findings())) }
                 }
 
                 else -> {
                     return@withLock invalidCommit("submission_reused", "Submission $submission was committed with a different edit.")
                 }
             }
-            views.read { current ->
-                if (edit.catalog !=
-                    current.catalog.generation
-                ) {
-                    return@read CommitPreparedEditResponse.CatalogChangedErrorWrapper(current.catalog.generation)
-                }
-                val projections =
-                    ResourceValueMapper.project(
-                        current.links.values,
-                        current.resources,
-                        current.catalog.relations,
-                        current.catalog.checked,
-                    )
-                val values = CapturedAuthoringValues(current.resources, projections.projections)
-                val conflicts = values.conflicts(edit.expectations)
-                if (conflicts.isNotEmpty()) return@read CommitPreparedEditResponse.ConflictErrorWrapper(conflicts)
-                val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations)
-                val plan =
-                    when (val planned = planner.plan(current.resources, edit)) {
-                        is MutationPlanningResult.Rejected -> return@read CommitPreparedEditResponse.RejectedErrorWrapper(planned.problems)
-                        is MutationPlanningResult.Accepted -> planned.plan
+            // Findings are read once the view lock is released, since the check runtime takes the view lock under its own.
+            val admitted =
+                views.read { current ->
+                    if (edit.catalog != current.catalog.generation) {
+                        return@read Admission.Refused(CommitPreparedEditResponse.CatalogChangedErrorWrapper(current.catalog.generation))
                     }
-                val required =
-                    values.requiredExpectations(
-                        edit,
-                        current.resources,
-                        current.catalog.relations.mapTo(linkedSetOf()) { it.id },
-                        plan,
-                    )
-                val missing = required.filter { fact -> edit.expectations.none { it.sameFact(fact) } }
-                if (missing.isNotEmpty()) {
-                    return@read CommitPreparedEditResponse.RejectedErrorWrapper(
-                        missing.map { ValueProblem(location = it.location(), code = "missing_expectation") },
-                    )
+                    val projections =
+                        ResourceValueMapper.project(
+                            current.links.values,
+                            current.resources,
+                            current.catalog.relations,
+                            current.catalog.checked,
+                        )
+                    val values = CapturedAuthoringValues(current.resources, projections.projections)
+                    val conflicts = values.conflicts(edit.expectations)
+                    if (conflicts.isNotEmpty()) return@read Admission.Refused(CommitPreparedEditResponse.ConflictErrorWrapper(conflicts))
+                    val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations)
+                    val plan =
+                        when (val planned = planner.plan(current.resources, edit)) {
+                            is MutationPlanningResult.Rejected ->
+                                return@read Admission.Refused(CommitPreparedEditResponse.RejectedErrorWrapper(planned.problems))
+                            is MutationPlanningResult.Accepted -> planned.plan
+                        }
+                    val required =
+                        values.requiredExpectations(
+                            edit,
+                            current.resources,
+                            current.catalog.relations.mapTo(linkedSetOf()) { it.id },
+                            plan,
+                        )
+                    val missing = required.filter { fact -> edit.expectations.none { it.sameFact(fact) } }
+                    if (missing.isNotEmpty()) {
+                        return@read Admission.Refused(
+                            CommitPreparedEditResponse.RejectedErrorWrapper(
+                                missing.map { ValueProblem(location = it.location(), code = "missing_expectation") },
+                            ),
+                        )
+                    }
+                    val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources))
+                    try {
+                        storage.persistAtomic(plan, submission, request)
+                    } catch (failure: Throwable) {
+                        views.invalidate(storage::readCoherent)
+                        runCatching { next.catalog.close() }.exceptionOrNull()?.let(failure::addSuppressed)
+                        throw failure
+                    }
+                    views.install(next)
+                    Admission.Installed(views.retain(next.readContext))
                 }
-                val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources))
-                try {
-                    storage.persistAtomic(plan, submission, request)
-                } catch (failure: Throwable) {
-                    views.invalidate(storage::readCoherent)
-                    runCatching { next.catalog.close() }.exceptionOrNull()?.let(failure::addSuppressed)
-                    throw failure
-                }
-                views.install(next)
-                CommitPreparedEditResponse.CommittedWrapper(next.savedState(findings()))
+            when (admitted) {
+                is Admission.Refused -> admitted.response
+                is Admission.Installed -> admitted.saved.use { CommitPreparedEditResponse.CommittedWrapper(it.root.savedState(findings())) }
             }
         }
+
+    /** What admission decided under the view lock: a refusal, or the installed view retained for the reply. */
+    private sealed interface Admission {
+        class Refused(val response: CommitPreparedEditResponse) : Admission
+
+        class Installed(val saved: AuthoringLease) : Admission
+    }
 }
 
 /**

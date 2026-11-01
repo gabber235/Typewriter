@@ -32,6 +32,7 @@ import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.RelationProjectionDelta
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -93,6 +94,9 @@ class RealmFixture private constructor(
     internal lateinit var owner: RealmAuthoringOwner
         private set
 
+    /** The check findings committed replies carry, as the Realm reads them from its check runtime; none by default. */
+    internal var findings: () -> List<FindingSet> = { emptyList() }
+
     /** Saved resources by id, as the Realm reads them now. */
     val resources: Map<ResourceId, AuthoringRecord> get() = views.read { it.resources }
 
@@ -115,7 +119,7 @@ class RealmFixture private constructor(
         val active = catalog.activate("realm-${++generations}")
         activation = active.owner
         views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent())
-        owner = RealmAuthoringOwner(storage, views, findings = { emptyList() })
+        owner = RealmAuthoringOwner(storage, views, findings = { findings() })
         provision()
     }
 
