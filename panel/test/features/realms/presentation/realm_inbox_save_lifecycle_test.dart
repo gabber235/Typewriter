@@ -190,8 +190,8 @@ void main() {
     expect(form.dirty, isFalse);
   });
 
-  testWidgets("Retry captured request in the activity on an unanswered "
-      "Apply settles it from the reply", (tester) async {
+  testWidgets("an unanswered Apply shows that Retry is safe, and Retry "
+      "captured request in the activity settles it from the reply", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [original]),
@@ -216,6 +216,15 @@ void main() {
       OrganizationRoute(organizationId: acme.organizationId.id),
     );
     await panel.activity.open("Needs attention");
+    // A Realm save is safe to repeat, so the activity offers Retry instead of
+    // asking to verify first.
+    expect(
+      panel.shows(
+        "Outcome unknown. Retry sends the same request, which is safe to "
+        "repeat.",
+      ),
+      isTrue,
+    );
     // The resend shows progress until the held Realm answers, so the panel
     // cannot settle before then.
     await tester.tap(find.text("Retry captured request"));
