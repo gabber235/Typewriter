@@ -33,5 +33,7 @@ sealed class SubmissionResult<T> with _$SubmissionResult<T> {
   }) = SubmissionUncertain<T>;
 }
 
-/// Declares whether an uncertain attempt may send the same captured request.
+/// Declares whether an uncertain attempt may send the same captured request:
+/// by the user's Retry, or on its own when the submission was given a
+/// redelivery scheduler.
 enum SubmissionReplay { unsupported, identicalRequest }

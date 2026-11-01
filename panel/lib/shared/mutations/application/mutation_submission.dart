@@ -4,7 +4,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The supplied sender must capture an immutable request and destination.
 /// Repeated attempts reuse that sender. Only protocols with verified replay
-/// support may retry an uncertain result. Concurrent attempts share one Future.
+/// support may retry an uncertain result; a submission given a redelivery
+/// scheduler resends such a result on its own, with [redeliveryDelay] between
+/// attempts, until a known answer arrives. Concurrent attempts share one Future.
 /// Known results enter local integration independently of delivery. Successful
 /// integration is retained; failed integration can run again without resending
 /// an already accepted mutation. Disposal stops publication and releases owned
