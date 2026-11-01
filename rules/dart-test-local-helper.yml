@@ -35,6 +35,26 @@ utils:
           - has:
               field: object
               matches: function-value
+  # A test case: a call that names what it proves with a string, or a variable holding one, and
+  # runs a body, the shape of test, testWidgets, scenario, faultScenario and journey. A group has
+  # the same shape but only collects cases, so a helper inside it stays outside every case.
+  test-case:
+    all:
+      - kind: call_expression
+      - not:
+          has:
+            field: function
+            regex: ^group$
+      # The string and the body are the call's own arguments, so a call that only wraps a case
+      # (`forEach`, `withClock`) is not a case itself.
+      - has:
+          field: arguments
+          all:
+            - has:
+                any:
+                  - kind: string_literal
+                  - kind: identifier
+            - has: { matches: function-value }
 rule:
   any:
     # Named types: fakes, fixtures, widgets, extensions.
@@ -80,10 +100,7 @@ rule:
         - not:
             inside:
               stopBy: end
-              kind: call_expression
-              has:
-                field: function
-                regex: ^(test|testWidgets|scenario|faultScenario|journey)$
+              matches: test-case
 ---
 id: dart-test-helper-file
 language: dart

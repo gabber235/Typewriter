@@ -52,6 +52,25 @@ valid:
       }
       await user.provider.endsSessionDuring(signOut);
     });
+  # A case runner the rule has never heard of keeps its own local functions.
+  - |
+    void main() {
+      story("a story renders its empty state", (tester) async {
+        Future<void> open() => tester.pumpPanel([]);
+        await open();
+      });
+    }
+  # A case named by a variable, one case per fixture, keeps its own local functions.
+  - |
+    void main() {
+      for (final fixture in fixtures) {
+        final id = fixture["id"]! as String;
+        test(id, () {
+          Object? owner(Map<String, Object?> fixture) => fixture["owner"];
+          expect(owner(fixture), isNotNull);
+        });
+      }
+    }
 invalid:
   # A host driven journey's page step as a top level function.
   - |
@@ -139,5 +158,21 @@ invalid:
       group("startup", () {
         final ready = (Panel panel) => panel.labeled("Retry").first;
         testWidgets("shows the panel", (tester) async {});
+      });
+    }
+  # A helper in a closure that only wraps cases is outside every case.
+  - |
+    void main() {
+      ["light", "dark"].forEach((theme) {
+        Future<void> open(WidgetTester tester) => tester.pumpPanel([]);
+        testWidgets("the panel opens in $theme", (tester) async => open(tester));
+      });
+    }
+  # A call with a string and a body that is a group still collects cases only.
+  - |
+    void main() {
+      group("startup", () {
+        Future<void> open(WidgetTester tester) => tester.pumpPanel([]);
+        testWidgets("shows the panel", (tester) async => open(tester));
       });
     }
