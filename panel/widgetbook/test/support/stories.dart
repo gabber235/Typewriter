@@ -4,7 +4,9 @@ import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook/widgetbook.dart";
 
 /// Where story images land: build output of the repository, never checked
-/// in and never compared, published as pull request evidence.
+/// in and never compared, published as pull request evidence. xtask's
+/// evidence staging (`STORIES` in xtask/src/evidence/stage.rs) reads the same
+/// folder.
 const storyImages = "../../.xtask/results/stories";
 
 /// Marks the boundary a story renders in; a symbol, so no story key matches.
