@@ -3,12 +3,12 @@
 //! and every publish reads only what this writes to [`PUBLIC`]: each `TestRun` with only its
 //! published artifacts ([`ArtifactKind::published`]: clips and screenshots), their files with a
 //! clip's preview, the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
-//! is written while any public text holds a known secret.
+//! is written while any public text holds a known secret or any run lists a file missing on disk.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context as _, Result};
+use anyhow::{Context as _, Result, bail};
 
 use super::RESULTS;
 use super::publish::{known_secrets, scrub};
@@ -60,6 +60,15 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
             attempt
                 .artifacts
                 .retain(|artifact| artifact.kind.published());
+        }
+        // Before anything is written: a run that lists a file it never wrote is a fault.
+        for case in &run.cases {
+            for (file, _) in results::artifacts(case) {
+                let source = folder.join(file);
+                if !source.exists() {
+                    bail!("{}: {} is listed but missing", case.id, source.display());
+                }
+            }
         }
         let below = at.parent().unwrap_or(Path::new(""));
         for file in published_files(folder, &run) {
@@ -193,6 +202,22 @@ mod tests {
         let error = staged(&root.path(""), Path::new("results"), &[SECRET.to_owned()]).unwrap_err();
 
         assert!(error.to_string().contains("contains a secret"), "{error}");
+        assert!(!root.path(PUBLIC).exists());
+    }
+
+    #[test]
+    fn a_run_listing_a_screenshot_missing_on_disk_is_not_staged() {
+        let root = TempRoot::new();
+        raw_failed_run(&root, "results/panel");
+        fs::remove_file(root.path("results/panel/attempts/1/screenshots/CONN-1/failure.png"))
+            .unwrap();
+
+        let error = staged(&root.path(""), Path::new("results"), &[]).unwrap_err();
+
+        assert!(
+            error.to_string().contains("screenshots/CONN-1/failure.png"),
+            "{error}"
+        );
         assert!(!root.path(PUBLIC).exists());
     }
 
