@@ -492,16 +492,16 @@ void main() {
       ),
     };
     for (final MapEntry(key: name, value: save) in saves.entries) {
-      test("$name whose reply was lost is resent unchanged and settles from "
-          "the repeat's reply", () async {
+      test("$name whose reply was lost settles saved from the Retry's reply "
+          "without needing attention", () async {
         final world = testWorld(_acme);
         final services = await world.watchedServicesOf(_organization);
         await services.watchTopology();
-        final sent = <List<int>>[];
-        world.nats.registerHandler(save.subject, (data) {
-          sent.add(data);
-          if (sent.length == 1) throw StateError("transport failed");
-          return save.reply;
+        var lost = false;
+        world.nats.registerHandler(save.subject, (_) {
+          if (lost) return save.reply;
+          lost = true;
+          throw StateError("transport failed");
         });
 
         await expectLater(save.save(services), throwsA(_uncertain));
@@ -513,9 +513,15 @@ void main() {
             .read(localWorkControllerProvider)
             .retrySubmission(submission.id);
 
-        expect(sent, hasLength(2));
-        expect(sent[1], sent[0]);
-        await world.container.pump();
+        final settled = (await world.container.eventually(
+          localWorkProvider,
+          (work) =>
+              work.submissions.single.result != LocalWorkSubmissionResult.ready,
+          description: "the retried save settling",
+        )).submissions.single;
+        expect(settled.result, LocalWorkSubmissionResult.confirmed);
+        expect(settled.integrationFailed, isFalse);
+        expect(settled.message, isNull);
         expect(await save.saved(services), save.expected);
       });
     }
