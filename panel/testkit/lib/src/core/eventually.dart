@@ -84,3 +84,39 @@ extension EventuallyProvider on ProviderContainer {
     }
   }
 }
+
+/// The one way a test waits on a [Listenable] owner, such as an editing
+/// workspace: until [read] gives a value [condition] accepts, or [timeout]
+/// passed.
+///
+/// Listens instead of polling, so it serves plain and widget tests alike and
+/// returns the value that first satisfied [condition]. The failure names
+/// [description] and the last value seen.
+extension EventuallyListenable on Listenable {
+  Future<T> eventually<T>(
+    T Function() read,
+    bool Function(T value) condition, {
+    required String description,
+    Duration timeout = eventuallyTimeout,
+  }) async {
+    final reached = Completer<T>();
+    var last = read();
+    void check() {
+      last = read();
+      if (!reached.isCompleted && condition(last)) reached.complete(last);
+    }
+
+    addListener(check);
+    try {
+      check();
+      return await reached.future.timeout(
+        timeout,
+        onTimeout: () => throw TestFailure(
+          "Timed out waiting for $description. Last value: $last",
+        ),
+      );
+    } finally {
+      removeListener(check);
+    }
+  }
+}

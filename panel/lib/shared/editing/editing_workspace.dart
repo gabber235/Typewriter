@@ -901,6 +901,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     _rebuild();
   }
 
+  /// The refresh [_recoverUnsettled] started, while it runs.
+  Future<void>? _recovering;
+
   /// Refreshes acknowledged state without replaying a submitted request.
   /// Groups awaiting refresh release only their frozen operations after the
   /// refresh succeeds. Later edits remain in the journal.
@@ -911,8 +914,6 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   /// landed and saved again, or a conflict for review when other values
   /// replaced the ones it read. A delayed request that lands after this read
   /// meets the next save or review the same way.
-  Future<void>? _recovering;
-
   Future<void> refreshConfirmed() async {
     if (_closed || _saving != null) return;
     try {

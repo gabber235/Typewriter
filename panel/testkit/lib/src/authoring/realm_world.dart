@@ -164,21 +164,12 @@ extension RealmEditingForms on RealmEditing {
     EditGroupId group,
   ) async {
     await refreshConflictReview(group);
-    final settled = Completer<void>();
-    void settle() {
-      if (conflictReview(group) is! EditReviewReading && !settled.isCompleted) {
-        settled.complete();
-      }
-    }
-
-    addListener(settle);
-    settle();
-    try {
-      await settled.future;
-    } finally {
-      removeListener(settle);
-    }
-    return switch (conflictReview(group)) {
+    final settled = await EventuallyListenable(this).eventually(
+      () => conflictReview(group),
+      (review) => review is! EditReviewReading,
+      description: "the conflict review of $group to finish reading",
+    );
+    return switch (settled) {
       EditReviewReady(:final value) => value,
       EditReviewFailed(:final error, :final stackTrace) =>
         Error.throwWithStackTrace(error, stackTrace),
