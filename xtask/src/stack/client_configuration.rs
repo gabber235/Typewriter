@@ -12,6 +12,7 @@ use serde_json::Value;
 
 use super::spec::StackContext;
 use crate::Context;
+use crate::cluster::CiClients;
 
 /// The OAuth application the panel signs in with.
 pub const PANEL_CLIENT_ID: &str = "typewriter-panel";
@@ -21,24 +22,6 @@ pub const SERVICES_CLIENT_ID: &str = "typewriter-services";
 pub const FIXTURE_USERS: &str = "backend/tests/component/fixtures/stack-users.json";
 /// The panel's configuration for the local development cluster.
 const LOCAL_PANEL_CONFIG: &str = "panel/config/local.json";
-
-/// The CI overlay's toxiproxy API behind Traefik, which a browser may call (Infrastructure
-/// `platform/_ci/faults`).
-const CI_FAULTS_URL: &str = "https://faults.local.seamlezz.net";
-/// The host ports of the CI overlay's faults links, each in front of the address the local
-/// configuration names: the desktop panel's NATS, the web panel's NATS websocket and the Realm
-/// host's NATS (Infrastructure `platform/_ci/faults/proxies.json`, `config/k3d/ci.yaml`).
-const CI_NATS_LINK: u16 = 14222;
-const CI_NATS_WEB_LINK: u16 = 18443;
-const CI_REALM_NATS_LINK: u16 = 24222;
-/// The local configuration's sign in pages, which only a provider with real pages uses: the CI
-/// cluster's Authentik redirects back to the panel the full tier serves on `localhost:2350`.
-const SIGN_IN_PAGES: [&str; 4] = [
-    "AUTH_SCOPES",
-    "AUTH_REDIRECT_URI",
-    "AUTH_POST_LOGOUT_REDIRECT_URI",
-    "AUTH_FRONT_CHANNEL_LOGOUT_URI",
-];
 
 pub struct ClientConfiguration {
     /// Each NATS address goes through its own faults link, so scenarios can cut the desktop
@@ -104,9 +87,10 @@ impl ClientConfiguration {
 
     /// The CI cluster's addresses, with its test users in `users_file`. Its overlay is the local
     /// overlay with decryption, images and resources swapped and faults links added, so it
-    /// answers on the addresses the panel's local configuration names, each NATS address through
-    /// its faults link.
-    pub fn ci_cluster(ctx: &Context, users_file: PathBuf) -> Result<Self> {
+    /// answers on the addresses and scopes the panel's local configuration names, each NATS
+    /// address through the faults link `ci` names. Its Authentik sends the panel back to the
+    /// origin `ci` names, so the sign in pages are built from that origin, never local.json's.
+    pub fn ci_cluster(ctx: &Context, ci: &CiClients, users_file: PathBuf) -> Result<Self> {
         let file = ctx.root.join(LOCAL_PANEL_CONFIG);
         let config: Value = serde_json::from_str(
             &fs::read_to_string(&file)
@@ -121,20 +105,26 @@ impl ClientConfiguration {
         };
         let issuer = key("AUTH_ISSUER")?;
         let nats = key("NATS_DESKTOP_URL")?;
+        let redirect = format!("{}/redirect.html", ci.panel_origin.origin);
         Ok(Self {
-            nats_desktop_url: with_port(&nats, CI_NATS_LINK),
-            nats_web_url: with_port(&key("NATS_WEB_URL")?, CI_NATS_WEB_LINK),
-            nats_host_url: with_port(&nats, CI_REALM_NATS_LINK),
+            nats_desktop_url: with_port(&nats, ci.links.nats),
+            nats_web_url: with_port(&key("NATS_WEB_URL")?, ci.links.nats_web),
+            nats_host_url: with_port(&nats, ci.links.realm_nats),
             api_base_url: key("API_BASE_URL")?,
             auth_base_url: issuer.trim_end_matches('/').to_owned(),
             auth_issuer: issuer,
             auth_discovery_document_uri: key("AUTH_DISCOVERY_DOCUMENT_URI")?,
-            sign_in_pages: SIGN_IN_PAGES
-                .into_iter()
-                .map(|name| Ok((name, key(name)?)))
-                .collect::<Result<_>>()?,
+            sign_in_pages: BTreeMap::from([
+                ("AUTH_SCOPES", key("AUTH_SCOPES")?),
+                ("AUTH_REDIRECT_URI", redirect.clone()),
+                ("AUTH_POST_LOGOUT_REDIRECT_URI", redirect.clone()),
+                (
+                    "AUTH_FRONT_CHANNEL_LOGOUT_URI",
+                    format!("{redirect}?requestType=front-channel-logout"),
+                ),
+            ]),
             control: StackControl {
-                faults_url: CI_FAULTS_URL.into(),
+                faults_url: ci.faults_url.clone(),
                 users_file,
             },
             telemetry: None,
@@ -243,7 +233,7 @@ impl ClientConfiguration {
 }
 
 /// `url` with its port replaced by, or set to, `port`, such as `wss://nats.example.com` with
-/// 18443 as `wss://nats.example.com:18443`.
+/// 18000 as `wss://nats.example.com:18000`.
 fn with_port(url: &str, port: u16) -> String {
     let (scheme, rest) = url.split_once("://").unwrap_or(("", url));
     let (authority, path) = rest.split_at(rest.find('/').unwrap_or(rest.len()));
@@ -259,16 +249,54 @@ fn with_port(url: &str, port: u16) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::{TempRoot, ci_clients};
+
+    #[test]
+    fn the_ci_panel_signs_in_and_out_at_the_origin_clients_json_names() {
+        let root = TempRoot::new();
+        root.write(
+            LOCAL_PANEL_CONFIG,
+            r#"{
+              "NATS_WEB_URL": "wss://nats.example", "NATS_DESKTOP_URL": "tls://nats.example:4222",
+              "API_BASE_URL": "https://api.example", "AUTH_ISSUER": "https://auth.example/",
+              "AUTH_DISCOVERY_DOCUMENT_URI": "https://auth.example/.well-known/openid-configuration",
+              "AUTH_SCOPES": "openid",
+              "AUTH_REDIRECT_URI": "http://localhost:2350/redirect.html",
+              "AUTH_POST_LOGOUT_REDIRECT_URI": "http://localhost:2350/redirect.html",
+              "AUTH_FRONT_CHANNEL_LOGOUT_URI": "http://localhost:2350/redirect.html?requestType=front-channel-logout"
+            }"#,
+        );
+        let mut facts = ci_clients();
+        facts["panel_origin"] = "http://localhost:4000".into();
+        let ci = CiClients::parse(&facts.to_string()).unwrap();
+
+        let config =
+            ClientConfiguration::ci_cluster(&root.ctx, &ci, root.path("users.json")).unwrap();
+
+        let pages = &config.sign_in_pages;
+        assert_eq!(
+            pages["AUTH_REDIRECT_URI"],
+            "http://localhost:4000/redirect.html"
+        );
+        assert_eq!(
+            pages["AUTH_POST_LOGOUT_REDIRECT_URI"],
+            "http://localhost:4000/redirect.html"
+        );
+        assert_eq!(
+            pages["AUTH_FRONT_CHANNEL_LOGOUT_URI"],
+            "http://localhost:4000/redirect.html?requestType=front-channel-logout"
+        );
+    }
 
     #[test]
     fn a_link_port_replaces_the_port_a_url_names_or_is_added_to_one_without() {
         assert_eq!(
-            with_port("tls://nats.local.seamlezz.net:4222", 14222),
-            "tls://nats.local.seamlezz.net:14222"
+            with_port("tls://nats.example.com:4222", 14000),
+            "tls://nats.example.com:14000"
         );
         assert_eq!(
-            with_port("wss://nats.local.seamlezz.net", 18443),
-            "wss://nats.local.seamlezz.net:18443"
+            with_port("wss://nats.example.com", 18000),
+            "wss://nats.example.com:18000"
         );
         assert_eq!(
             with_port("https://api.example.com/v1", 8443),

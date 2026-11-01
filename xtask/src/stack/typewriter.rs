@@ -18,7 +18,8 @@ use serde_json::Value;
 
 use super::client_configuration::{ClientConfiguration, FIXTURE_USERS};
 use super::spec::{Probe, Published, Service, ServiceId, StackContext, StackSpec};
-use crate::{CommandExt, cluster, deploy, generate};
+use crate::cluster::CiCluster;
+use crate::{CommandExt, deploy, generate};
 
 /// The component test workspace the `typewriter-stack` binary lives in.
 const STACK_WORKSPACE: &str = "backend/tests/component/Cargo.toml";
@@ -42,10 +43,10 @@ pub fn panel() -> StackSpec {
     with_realm(backend())
 }
 
-/// The CI cluster's backend, which `cargo xtask deploy ci` released, plus the same organization
-/// and Realm host [`panel`] adds, for the full suite.
-pub fn ci_cluster_panel() -> StackSpec {
-    with_realm(StackSpec::default().with(CiClusterBackend))
+/// `ci`'s backend, which `cargo xtask deploy ci` released, plus the same organization and Realm
+/// host [`panel`] adds, for the full suite.
+pub fn ci_cluster_panel(ci: &CiCluster) -> StackSpec {
+    with_realm(StackSpec::default().with(CiClusterBackend(ci.clone())))
 }
 
 fn with_realm(backend: StackSpec) -> StackSpec {
@@ -280,7 +281,7 @@ fn front(ctx: &StackContext, listen: &str, upstream: &str) -> Result<Command> {
 /// The backend the CI cluster runs, as the worktree's services reach it: its addresses and the
 /// test users its overlay generated, whose passwords `publish` reads from the cluster. Ready once
 /// the overlay has generated them.
-pub struct CiClusterBackend;
+pub struct CiClusterBackend(CiCluster);
 
 /// Where the CI cluster's test users are written, in the fixture's format.
 const CI_USERS: &str = "users.json";
@@ -290,7 +291,7 @@ impl Service for CiClusterBackend {
     /// start after it on either target.
     const ID: ServiceId = BackendRoutes::ID;
     fn command(&self, ctx: &StackContext) -> Result<Command> {
-        Ok(cluster::test_users_generated(ctx.ctx))
+        Ok(self.0.test_users_generated(ctx.ctx))
     }
     fn ready(&self, _: &StackContext) -> Probe {
         Probe::ExitSuccess
@@ -302,11 +303,11 @@ impl Service for CiClusterBackend {
         let users_file = ctx.state().join(CI_USERS);
         write_ci_users(
             &ctx.root().join(FIXTURE_USERS),
-            &cluster::test_user_passwords(ctx.ctx)?,
+            &self.0.test_user_passwords(ctx.ctx)?,
             &users_file,
         )?;
         out.publish_clients(
-            ClientConfiguration::ci_cluster(ctx.ctx, users_file)?,
+            ClientConfiguration::ci_cluster(ctx.ctx, &self.0.clients, users_file)?,
             &ctx.state(),
         );
         Ok(())
@@ -325,7 +326,12 @@ fn write_ci_users(fixture: &Path, passwords: &BTreeMap<String, String>, out: &Pa
         let username = field(user, "username")?;
         let password = passwords
             .get(&format!("{username}.app-password"))
-            .with_context(|| format!("the CI cluster generated no app password for {username}"))?;
+            .with_context(|| {
+                format!(
+                    "the CI cluster has no account for the fixture user {username}; add it to \
+                     Infrastructure platform/_ci/typewriter-test-users/secret.yaml"
+                )
+            })?;
         let user = user
             .as_object_mut()
             .with_context(|| format!("{username} is not an object"))?;

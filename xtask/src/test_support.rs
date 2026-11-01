@@ -14,6 +14,7 @@ use std::time::Duration;
 use anyhow::Result;
 use clap::ValueEnum as _;
 
+use crate::cluster::{CiClients, CiCluster};
 use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
@@ -84,6 +85,30 @@ impl TempRoot {
     /// Records an empty commit with `message` on the checked out branch.
     pub fn commit(&self, message: &str) {
         self.git(&["commit", "--quiet", "--allow-empty", "-m", message]);
+    }
+}
+
+/// A complete clients.json, with values of its own, for tests to change one fact of.
+pub fn ci_clients() -> serde_json::Value {
+    serde_json::json!({
+        "context": "k3d-example",
+        "faults_url": "https://faults.example",
+        "links": { "nats": 1, "nats_web": 2, "realm_nats": 3 },
+        "test_users": { "namespace": "users", "name": "users" },
+        "panel_origin": "http://localhost:1000",
+        "registry": {
+            "host": "registry.example",
+            "user": "pusher",
+            "password": { "namespace": "registry", "name": "pusher", "key": "password" }
+        },
+        "tenant": { "source": "source", "kustomizations": ["first", "second"] }
+    })
+}
+
+/// A CI cluster with [`ci_clients`]' facts, for tests that need one without a checkout.
+pub fn ci_cluster() -> CiCluster {
+    CiCluster {
+        clients: CiClients::parse(&ci_clients().to_string()).unwrap(),
     }
 }
 
@@ -408,7 +433,7 @@ pub(crate) use fake_service;
 /// `outcome(attempt, requirement)`. Returns the folded run and every drive made, in order, as
 /// `"<attempt> scenarios <ids>"` or `"<attempt> journey"`.
 pub fn full_suite_attempts(
-    target: crate::e2e::Target,
+    target: &crate::e2e::Target,
     policy: AttemptPolicy,
     only: &[String],
     outcome: impl Fn(u32, &str) -> Outcome,

@@ -10,8 +10,9 @@ use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 use serde_json::Value;
 
+use crate::cluster::CiCluster;
 use crate::lock::HeavyLock;
-use crate::{CommandExt, Context, Scratch, cluster, secrets};
+use crate::{CommandExt, Context, Scratch, secrets};
 
 /// Tools deploy runs, for the doctor.
 pub const TOOLS: &[&str] = &["wash", "crane", "kubectl", "tar", "git"];
@@ -31,22 +32,6 @@ pub enum Cluster {
 }
 
 impl Cluster {
-    fn context(self) -> &'static str {
-        match self {
-            Self::Local => "k3d-seamlezz-local",
-            Self::Ci => cluster::CONTEXT,
-        }
-    }
-
-    /// The CI overlay keeps the local overlay's in cluster registry.
-    fn registry(self) -> &'static str {
-        "oci.local.seamlezz.net"
-    }
-
-    fn repository(self) -> String {
-        format!("{}/typewriter", self.registry())
-    }
-
     /// The tag the component overlays pull (`deploy/local/workloaddeployment-patch.yaml`).
     fn component_tag(self) -> &'static str {
         "latest"
@@ -70,8 +55,17 @@ impl Cluster {
 /// How pushes reach a cluster's registry.
 struct Registry {
     cluster: Cluster,
-    user: &'static str,
+    /// The cluster's kubeconfig context.
+    context: String,
+    host: String,
+    user: String,
     password: String,
+}
+
+impl Registry {
+    fn repository(&self) -> String {
+        format!("{}/typewriter", self.host)
+    }
 }
 
 /// A component the runtime deploys: a cdylib with a `deploy/` folder, the predicate the
@@ -81,28 +75,43 @@ pub(crate) struct Component {
     pub(crate) artifact: PathBuf,
 }
 
-/// Pushes this commit's backend to `cluster`'s registry. The CI cluster then gets the commit
-/// released to its Typewriter tenant.
+/// Pushes this commit's backend to `cluster`'s registry; the CI cluster is the one an earlier
+/// `cargo xtask cluster ci` created.
 pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
-    ensure_main_checkout(ctx)?;
-    let registry = match cluster {
-        Cluster::Local => Registry {
-            cluster,
-            user: "gabber235",
-            password: secrets::local_registry_password()?,
-        },
-        Cluster::Ci => Registry {
-            cluster,
-            user: "admin",
-            password: cluster::registry_password(ctx)?,
-        },
-    };
-    publish(ctx, &registry)?;
-    if let Cluster::Ci = cluster {
-        let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
-        cluster::release(ctx, revision.trim())?;
+    match cluster {
+        Cluster::Local => {
+            ensure_main_checkout(ctx)?;
+            publish(
+                ctx,
+                &Registry {
+                    cluster,
+                    context: "k3d-seamlezz-local".into(),
+                    host: "oci.local.seamlezz.net".into(),
+                    user: "gabber235".into(),
+                    password: secrets::local_registry_password()?,
+                },
+            )
+        }
+        Cluster::Ci => deploy_ci(ctx, &CiCluster::open(ctx)?),
     }
-    Ok(())
+}
+
+/// Pushes this commit's backend to `ci`'s registry and releases it to its Typewriter tenant.
+pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
+    ensure_main_checkout(ctx)?;
+    let registry = &ci.clients.registry;
+    publish(
+        ctx,
+        &Registry {
+            cluster: Cluster::Ci,
+            context: ci.clients.context.clone(),
+            host: registry.host.clone(),
+            user: registry.user.clone(),
+            password: ci.registry_password(ctx)?,
+        },
+    )?;
+    let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
+    ci.release(ctx, revision.trim())
 }
 
 fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
@@ -117,7 +126,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
     for component in &components {
         let reference = format!(
             "{}/{}:{}",
-            cluster.repository(),
+            registry.repository(),
             component.package,
             cluster.component_tag()
         );
@@ -131,7 +140,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
                 "oci",
                 "push",
                 "-u",
-                registry.user,
+                &registry.user,
                 &format!("--password={}", registry.password),
                 &reference,
             ],
@@ -146,7 +155,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
         "kubectl",
         &[
             "--context",
-            cluster.context(),
+            &registry.context,
             "delete",
             "workloadreplicasets",
             "--all-namespaces",
@@ -246,7 +255,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
     let cluster = registry.cluster;
     let image = format!(
         "{}/database:{}",
-        cluster.repository(),
+        registry.repository(),
         cluster.database_tag()
     );
     let scratch = Scratch::new("database-image")?;
@@ -302,9 +311,9 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
             &[
                 "auth",
                 "login",
-                cluster.registry(),
+                &registry.host,
                 "-u",
-                registry.user,
+                &registry.user,
                 "--password-stdin",
             ],
         )
@@ -319,7 +328,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
     ensure!(
         login.wait()?.success(),
         "crane cannot log in to {}",
-        cluster.registry()
+        registry.host
     );
 
     ctx.tool(
