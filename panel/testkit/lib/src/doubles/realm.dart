@@ -254,6 +254,10 @@ final class FakeRealm {
   /// lets saves be sent. Nothing reaches the Realm while it is set.
   String? unpreparable;
 
+  /// How many saves the panel sent while the Realm was [away]; none of them
+  /// reached it.
+  int missedSaves = 0;
+
   /// Takes the Realm away; see [away].
   void goAway() => away = true;
 
@@ -363,6 +367,7 @@ final class FakeRealm {
           return SubmissionResult.notSubmitted(message: message);
         }
         if (away) {
+          missedSaves++;
           return const SubmissionResult.undelivered(
             message: "Nothing answered; the service may be away",
           );

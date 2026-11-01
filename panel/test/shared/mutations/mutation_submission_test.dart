@@ -81,6 +81,77 @@ void main() {
     },
   );
 
+  test("an attempt nothing received after an unanswered one leaves the "
+      "outcome unknown, since the first may have landed", () async {
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+      const SubmissionResult<String>.undelivered(message: "Away"),
+    ]);
+
+    await save.submission.run();
+    expect(await save.submission.run(), isA<SubmissionUncertain<String>>());
+  });
+
+  test("an unanswered request is sent again on its own, pausing longer each "
+      "time, until it is answered", () async {
+    final scheduler = ControlledScheduler();
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+      TimeoutException("Reply lost"),
+    ], redelivery: scheduler);
+
+    await save.submission.run();
+    expect(save.submission.delivering, isTrue);
+    (await scheduler.scheduledAt(0)).execute();
+    (await scheduler.scheduledAt(1)).execute();
+    await pumpEventQueue();
+
+    expect(save.submission.result, const SubmissionResult.confirmed("Saved"));
+    expect(save.submission.delivering, isFalse);
+    expect(save.sends, 3);
+    expect(scheduler.delays, [
+      const Duration(milliseconds: 250),
+      const Duration(milliseconds: 500),
+    ]);
+  });
+
+  test("Retry while a resend waits sends at once, and once answered the "
+      "request is no longer on its way", () async {
+    final scheduler = ControlledScheduler();
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+    ], redelivery: scheduler);
+
+    await save.submission.run();
+    final waiting = await scheduler.scheduledAt(0);
+    expect(
+      await save.submission.run(),
+      const SubmissionResult.confirmed("Saved"),
+    );
+    expect(save.submission.delivering, isFalse);
+    waiting.execute();
+    await pumpEventQueue();
+
+    expect(save.sends, 2);
+  });
+
+  test("disposing a submission stops its waiting resend, and it is never "
+      "sent again", () async {
+    final scheduler = ControlledScheduler();
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+    ], redelivery: scheduler);
+
+    await save.submission.run();
+    final waiting = await scheduler.scheduledAt(0);
+    save.submission.dispose();
+    expect(waiting.cancelled, isTrue);
+    waiting.execute();
+    await pumpEventQueue();
+
+    expect(save.sends, 1);
+  });
+
   test("a new attempt replaces only the same resource rejection", () async {
     final journal = testWorkSession();
     MutationSubmission<int> attempt(String id, String scope) =>

@@ -1025,6 +1025,33 @@ void main() {
       skir.DataValue.wrapStringValue("Local"),
     );
   });
+  test("a save whose reply was lost, resent while the Realm is away, lands "
+      "once when it returns", () async {
+    final world = testWorld([..._original, heldSaves]);
+    final realm = world.requireRealm;
+    final name = await world.autosaveReceived(
+      _resource,
+      (edit) => edit.set(_name, skir.DataValue.wrapStringValue("First")),
+    );
+    final editing = name.workspace;
+    realm
+      ..goAway()
+      ..saves.single.keepAndLoseReply(TimeoutException("No answer in time"));
+    await eventually(() => expect(realm.missedSaves, 1));
+    realm.returns();
+
+    // The Realm kept the first save, so the one that reaches it after it
+    // returns is the same save, answered from its key; a new save would wait
+    // for the test to answer it.
+    await eventually(() => expect(name.dirty, isFalse));
+    expect(realm.saves.map((save) => save.submission).toSet(), hasLength(1));
+    expect(
+      editing.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("First"),
+    );
+    expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
+  });
+
   test("a resent save answered while another save applies is saved, and so "
       "is the other save", () async {
     final world = testWorld([..._original, heldSaves]);

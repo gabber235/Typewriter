@@ -25,6 +25,7 @@ export "ui/reduced_motion.dart";
 export "ui/resizable_pane.dart";
 export "ui/loading_buttons.dart";
 export "work_sessions.dart";
+export "scripted_save.dart";
 export "ui/choice_dropdown.dart";
 export "ui/panes.dart";
 export "ui/number_field.dart";
