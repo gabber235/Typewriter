@@ -33,8 +33,9 @@ use wasmcloud_utils::{
 #[derive(Debug, Deserialize)]
 #[serde(tag = "outcome", rename_all = "kebab-case")]
 enum ServiceUpdateOutcome {
-    /// `changed` is false when a stale request's name was already stored and nothing was written.
-    Updated { service: ServiceRecord, changed: bool },
+    Updated { service: ServiceRecord },
+    /// A stale request whose name is already stored; nothing was written.
+    Unchanged { service: ServiceRecord },
     ConflictError { actual: ServiceRecord },
     ServiceNotFoundError,
     NameInvalid,
@@ -43,8 +44,8 @@ enum ServiceUpdateOutcome {
 impl ServiceUpdateOutcome {
     fn as_str(&self) -> &'static str {
         match self {
-            Self::Updated { changed: true, .. } => "updated",
-            Self::Updated { changed: false, .. } => "unchanged",
+            Self::Updated { .. } => "updated",
+            Self::Unchanged { .. } => "unchanged",
             Self::ConflictError { .. } => "conflict-error",
             Self::ServiceNotFoundError => "service-not-found-error",
             Self::NameInvalid => "name-invalid",
@@ -99,7 +100,7 @@ pub async fn handle_update(
                 -- A rename to the stored name, as when its first send landed, answers
                 -- with the stored service and changes nothing.
                 IF $current.name = $name {
-                    RETURN { outcome: 'updated', changed: false, service: $current }
+                    RETURN { outcome: 'unchanged', service: $current }
                 };
                 RETURN { outcome: 'conflict-error', actual: $current }
             };
@@ -113,7 +114,7 @@ pub async fn handle_update(
                 revision = $current.revision + 1
                 RETURN AFTER;
 
-            LET $result = { outcome: 'updated', changed: true, service: $updated };
+            LET $result = { outcome: 'updated', service: $updated };
             RETURN $result;
         };
 
@@ -133,7 +134,9 @@ pub async fn handle_update(
     let result = wasmcloud_utils::skir_domain_result!(UpdateOrganizationServiceResponse, result);
     otel_wasi::main_attribute!("service.outcome" = result.as_str());
     let service = match result {
-        ServiceUpdateOutcome::Updated { service, .. } => Service::try_from(service)?,
+        ServiceUpdateOutcome::Updated { service } | ServiceUpdateOutcome::Unchanged { service } => {
+            Service::try_from(service)?
+        }
         ServiceUpdateOutcome::ConflictError { actual } => {
             return Ok(skir_variant!(
                 UpdateOrganizationServiceResponse::ConflictError {
