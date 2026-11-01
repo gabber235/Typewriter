@@ -60,16 +60,15 @@ valid:
         await open();
       });
     }
-  # A case named by a variable, one case per fixture, keeps its own local functions.
+  # A case's own helpers stay inside it when its body wraps work in a call that is not a case.
   - |
     void main() {
-      for (final fixture in fixtures) {
-        final id = fixture["id"]! as String;
-        test(id, () {
-          Object? owner(Map<String, Object?> fixture) => fixture["owner"];
-          expect(owner(fixture), isNotNull);
+      test("doubling uses the fixed time", () {
+        int twice(int x) => x * 2;
+        withClock(clock, () {
+          expect(twice(2), 4);
         });
-      }
+      });
     }
 invalid:
   # A host driven journey's page step as a top level function.
@@ -182,5 +181,15 @@ invalid:
       withClock(clock, () {
         Future<void> open(WidgetTester tester) => tester.pumpPanel([]);
         testWidgets("the panel opens at the fixed time", (tester) async => open(tester));
+      });
+    }
+  # A helper declared directly in a group is outside every case.
+  - |
+    void main() {
+      group("x", () {
+        void h() {}
+        test("h runs", () {
+          h();
+        });
       });
     }

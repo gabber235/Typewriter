@@ -35,42 +35,23 @@ utils:
           - has:
               field: object
               matches: function-value
-  # A test case: a call that names what it proves with a string, or a variable holding one, and
-  # runs a body, the shape of test, testWidgets, scenario, faultScenario and journey. The string
-  # and the body are the call's own arguments, so a call that only wraps a case (`forEach`) is not
-  # a case itself.
+  # A test case: a call that names what it proves with a string and runs a body, the shape of
+  # test, testWidgets, scenario, faultScenario and journey. The string and the body are the call's
+  # own arguments, so a call that only wraps a case (`forEach`, `withClock`) is not a case itself.
+  # `group` has that shape too but only collects cases, so a helper inside it stays outside every
+  # case.
   test-case:
     all:
       - kind: call_expression
       - has:
           field: arguments
           all:
-            - has:
-                any:
-                  - kind: string_literal
-                  - kind: identifier
+            - has: { kind: string_literal }
             - has: { matches: function-value }
-      # A call whose body registers cases only collects them (`group`, `withClock`,
-      # `List.generate`), so a helper inside it stays outside every case. A registration is a case
-      # called as a plain function and named by its first argument, which leaves member calls and
-      # `expect(() => ..., matcher)` in a case body to that case.
       - not:
           has:
-            field: arguments
-            has:
-              matches: function-value
-              has:
-                stopBy: end
-                all:
-                  - matches: test-case
-                  - has: { field: function, kind: identifier }
-                  - has:
-                      field: arguments
-                      has:
-                        nthChild: 1
-                        any:
-                          - kind: string_literal
-                          - kind: identifier
+            field: function
+            regex: ^group$
 rule:
   any:
     # Named types: fakes, fixtures, widgets, extensions.

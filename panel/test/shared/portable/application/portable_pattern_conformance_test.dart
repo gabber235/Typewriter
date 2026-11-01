@@ -25,7 +25,7 @@ void main() {
             .cast<Map<String, Object?>>()) {
       final id = fixture["id"]! as String;
       final unique = ids.add(id);
-      test(id, () {
+      test("expands $id as Realm does", () {
         expect(unique, isTrue, reason: "case ids are unique");
         // The owner sits at the root of the resource the fixture names.
         skir.ValueLocation owner(Map<String, Object?> fixture) =>
@@ -55,7 +55,7 @@ void main() {
         in (document["rules"]! as List<Object?>).cast<Map<String, Object?>>()) {
       final id = fixture["id"]! as String;
       final unique = ids.add(id);
-      test(id, () {
+      test("projects $id as Realm does", () {
         expect(unique, isTrue, reason: "case ids are unique");
         // The owner sits at the root of the resource the fixture names.
         skir.ValueLocation owner(Map<String, Object?> fixture) =>
