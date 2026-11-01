@@ -211,8 +211,9 @@ impl CiClients {
 }
 
 /// The CI cluster at the pinned Infrastructure revision: its client facts, read once from the
-/// checkout, and every command that reaches it. Only [`create_ci`] and [`CiCluster::open`] make
-/// one, both after checking the checkout is at the pin.
+/// checkout, and every command that reaches it. Outside tests, which build one from fixed facts,
+/// only [`create_ci`] and [`CiCluster::open`] make one, both after checking the checkout is at
+/// the pin.
 #[derive(Clone)]
 pub struct CiCluster {
     pub(crate) clients: CiClients,
@@ -450,7 +451,7 @@ impl CiCluster {
     }
 
     /// kubectl against this cluster only.
-    fn kubectl(&self, ctx: &Context, args: &[&str]) -> Command {
+    pub(crate) fn kubectl(&self, ctx: &Context, args: &[&str]) -> Command {
         let mut command = ctx.tool(".", "kubectl", &["--context", &self.clients.context]);
         command.args(args);
         command

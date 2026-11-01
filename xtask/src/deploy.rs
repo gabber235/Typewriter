@@ -21,6 +21,15 @@ pub const TOOLS: &[&str] = &["wash", "crane", "kubectl", "tar", "git"];
 const SURREALKIT_IMAGE: &str = "ghcr.io/surrealdb/surrealkit:0.6.3";
 /// A base with `/bin/sh` and CA certificates, which the database jobs need.
 const DATABASE_BASE_IMAGE: &str = "alpine:3.20";
+/// The tag the component overlays pull (`deploy/local/workloaddeployment-patch.yaml`).
+const COMPONENT_TAG: &str = "latest";
+/// The tag the database overlay pulls (`backend/database/deploy/local/start/kustomization.yaml`).
+const DATABASE_TAG: &str = "dev";
+/// The local k3d cluster's kubeconfig context.
+const LOCAL_CONTEXT: &str = "k3d-seamlezz-local";
+/// The kubectl arguments that restart every workload, so the runtime operator pulls the images
+/// just pushed.
+const RESTART_WORKLOADS: [&str; 4] = ["delete", "workloadreplicasets", "--all-namespaces", "--all"];
 
 /// A cluster this command may deploy to. Nothing else is reachable.
 #[derive(Clone, Copy, ValueEnum)]
@@ -31,32 +40,17 @@ pub enum Cluster {
     Ci,
 }
 
-impl Cluster {
-    /// The tag the component overlays pull (`deploy/local/workloaddeployment-patch.yaml`).
-    fn component_tag(self) -> &'static str {
-        "latest"
-    }
-
-    /// The tag the database overlay pulls (`backend/database/deploy/local/start/kustomization.yaml`).
-    fn database_tag(self) -> &'static str {
-        "dev"
-    }
-
-    /// k3d nodes run the host's architecture.
-    fn platform(self) -> &'static str {
-        if cfg!(target_arch = "aarch64") {
-            "linux/arm64"
-        } else {
-            "linux/amd64"
-        }
+/// The platform images are pushed for: k3d nodes run the host's architecture.
+fn platform() -> &'static str {
+    if cfg!(target_arch = "aarch64") {
+        "linux/arm64"
+    } else {
+        "linux/amd64"
     }
 }
 
 /// How pushes reach a cluster's registry.
 struct Registry {
-    cluster: Cluster,
-    /// The cluster's kubeconfig context.
-    context: String,
     host: String,
     user: String,
     password: String,
@@ -84,13 +78,14 @@ pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
             publish(
                 ctx,
                 &Registry {
-                    cluster,
-                    context: "k3d-seamlezz-local".into(),
                     host: "oci.local.seamlezz.net".into(),
                     user: "gabber235".into(),
                     password: secrets::local_registry_password()?,
                 },
-            )
+            )?;
+            ctx.tool(".", "kubectl", &["--context", LOCAL_CONTEXT])
+                .args(RESTART_WORKLOADS)
+                .run()
         }
         Cluster::Ci => deploy_ci(ctx, &CiCluster::open(ctx)?),
     }
@@ -103,19 +98,19 @@ pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
     publish(
         ctx,
         &Registry {
-            cluster: Cluster::Ci,
-            context: ci.clients.context.clone(),
             host: registry.host.clone(),
             user: registry.user.clone(),
             password: ci.registry_password(ctx)?,
         },
     )?;
+    ci.kubectl(ctx, &RESTART_WORKLOADS).run()?;
     let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
     ci.release(ctx, revision.trim())
 }
 
+/// Builds every deployable component and pushes it and the database image to `registry`; the
+/// caller restarts the cluster's workloads so they pull them.
 fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
-    let cluster = registry.cluster;
     // The components compile against the generated Skir sources.
     crate::generate::generate(ctx, None)?;
     let components = deployable(ctx)?;
@@ -128,7 +123,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
             "{}/{}:{}",
             registry.repository(),
             component.package,
-            cluster.component_tag()
+            COMPONENT_TAG
         );
         // The wash fork reads registry credentials from flags only; the long form keeps the
         // password out of errors (`crate::display`), and `=` keeps a password that starts with
@@ -149,20 +144,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
         .run()
         .with_context(|| format!("cannot push {reference}"))?;
     }
-    push_database_image(ctx, registry)?;
-    ctx.tool(
-        ".",
-        "kubectl",
-        &[
-            "--context",
-            &registry.context,
-            "delete",
-            "workloadreplicasets",
-            "--all-namespaces",
-            "--all",
-        ],
-    )
-    .run()
+    push_database_image(ctx, registry)
 }
 
 /// Agent worktrees never deploy; only the main checkout publishes to a cluster.
@@ -252,12 +234,7 @@ pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
 
 /// alpine, plus /usr/local/bin/surrealkit and /workspace/backend/database, entrypoint surrealkit.
 fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
-    let cluster = registry.cluster;
-    let image = format!(
-        "{}/database:{}",
-        registry.repository(),
-        cluster.database_tag()
-    );
+    let image = format!("{}/database:{DATABASE_TAG}", registry.repository());
     let scratch = Scratch::new("database-image")?;
     let stage = |name: &str| -> Result<PathBuf> {
         let path = scratch.0.join(name);
@@ -270,7 +247,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
     ctx.tool(
         ".",
         "crane",
-        &["export", "--platform", cluster.platform(), SURREALKIT_IMAGE],
+        &["export", "--platform", platform(), SURREALKIT_IMAGE],
     )
     .arg(&exported)
     .run()?;
@@ -337,7 +314,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
         &[
             "append",
             "--platform",
-            cluster.platform(),
+            platform(),
             "-b",
             DATABASE_BASE_IMAGE,
             "-t",
