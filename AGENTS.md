@@ -31,5 +31,5 @@ a Rust and wasmCloud backend, a Flutter panel, and Skir contracts shared between
 
 ## Git
 
-- Branches are `features/<topic>`. Sibling repositories (`AGENTS.local.md`) push to their default
-  branch and are referenced by pinned git revision, never by local path.
+- Branches are `features/<topic>`. Sibling repositories (`AGENTS.local.md`) push to the branch their
+  pin follows (Infrastructure: `v3`) and are referenced by pinned git revision, never by local path.
