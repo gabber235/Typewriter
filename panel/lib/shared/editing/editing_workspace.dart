@@ -1005,10 +1005,10 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     if (!canRetry(id)) throw StateError("This work cannot be retried");
     final group = _groups[id]!;
     if (group.phase is EditGroupUncertain<S>) {
-      // Retry sends the same request; its result settles in the lane like a
-      // resend's, and the listener finds it settled.
-      final submission = group.submission!;
-      await _settleInLane(group, submission, await submission.run());
+      // Retry sends the same request, like every other Retry; the listener
+      // settles its result in the lane, and Retry returns once it has.
+      await group.submission!.run();
+      await group.settling;
       return;
     }
     group
@@ -1041,7 +1041,8 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
           identical(group.settled, result)) {
         return;
       }
-      unawaited(_settleInLane(group, submission, result));
+      group.settling = _settleInLane(group, submission, result);
+      unawaited(group.settling);
     }
 
     _listened[submission] = received;
@@ -1565,6 +1566,11 @@ final class _LiveEditGroup<S> {
   /// start and its submission listener can both see one result; it settles
   /// once.
   SubmissionResult<EditSettlement<S>>? settled;
+
+  /// The submission listener's settling of the latest result it received.
+  /// It begins before the attempt's `run()` future completes, so
+  /// [EditingWorkspace.retry] awaits it after the attempt.
+  Future<void> settling = Future.value();
 }
 
 final class _EditOperation<S, E> {
@@ -1748,7 +1754,9 @@ final class _WorkspacePreparedApply<S, E> implements EditPreparedApply {
       ..lastSubmissionId = submission.id;
     workspace._listen(group, submission);
     // The lane covers this attempt from send to reply, so its result settles
-    // here; the results of later attempts reach the listener.
+    // here, before the lane admits what it deferred; the listener would wait
+    // for this lane and then find the result settled. The results of later
+    // attempts reach the listener.
     final result = await submission.run();
     if (!workspace._closed) {
       await workspace._settleResult(group, submission, result);
