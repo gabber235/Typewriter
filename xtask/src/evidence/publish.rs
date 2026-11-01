@@ -456,10 +456,9 @@ fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
         let url = format!("{base}/{runner}/{}", path.display());
         parts.push(match artifact.kind {
             ArtifactKind::Clip => {
-                let preview = path.with_extension("webp");
                 format!(
                     "![]({base}/{runner}/{}) [full video]({url})",
-                    preview.display()
+                    stage::preview(&path).display()
                 )
             }
             ArtifactKind::Screenshot => format!("![]({url})"),

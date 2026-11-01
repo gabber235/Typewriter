@@ -109,13 +109,13 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
 }
 
 /// The files of `run`'s artifacts relative to its `folder` (each attempt's folder joined by
-/// `results::artifacts`), each clip followed by its preview when the recorder wrote one. The one
-/// place that knows a preview travels with its clip; `publish::media` reads it too.
+/// `results::artifacts`), each clip followed by its [`preview`] when the recorder wrote one. The
+/// one place that knows a preview travels with its clip; `publish::media` reads it too.
 pub(super) fn published_files(folder: &Path, run: &TestRun) -> Vec<PathBuf> {
     let mut files = Vec::new();
     for (path, artifact) in run.cases.iter().flat_map(results::artifacts) {
         if artifact.kind == ArtifactKind::Clip {
-            let preview = path.with_extension("webp");
+            let preview = preview(&path);
             files.push(path);
             if folder.join(&preview).exists() {
                 files.push(preview);
@@ -125,6 +125,11 @@ pub(super) fn published_files(folder: &Path, run: &TestRun) -> Vec<PathBuf> {
         }
     }
     files
+}
+
+/// The still image the recorder writes beside `clip`, which the pull request shows in its place.
+pub(super) fn preview(clip: &Path) -> PathBuf {
+    clip.with_extension("webp")
 }
 
 fn write_file(path: &Path, bytes: &[u8]) -> Result<()> {
