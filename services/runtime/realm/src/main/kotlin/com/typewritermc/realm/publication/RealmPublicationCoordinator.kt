@@ -7,7 +7,7 @@ import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.conflicts
+import com.typewritermc.realm.authoring.judgedForRelease
 import com.typewritermc.realm.storage.decodeSkir
 import com.typewritermc.realm.storage.encodeSkir
 import com.typewritermc.realm.storage.inTransaction
@@ -35,7 +35,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.FindingSet
-import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.diagnostic.Diagnostic
@@ -435,16 +434,7 @@ internal class RealmPublicationCoordinator(
         }
     }
 
-    private fun capturedFindings(root: AuthoringView) =
-        findings().map { set ->
-            val current =
-                set.status == FindingStatus.CURRENT &&
-                    set.ticket.catalog == root.catalog.generation &&
-                    root.values.conflicts(set.expectations).isEmpty()
-            set.copy(
-                status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED,
-            )
-        }
+    private fun capturedFindings(root: AuthoringView) = findings().map { it.judgedForRelease(root) }
 
     private fun updateForPrepared(next: Prepared) {
         val active = releasing
