@@ -67,7 +67,9 @@ extension RealmEditingRegistration on LocalWork {
     );
     // A new workspace starts from the saved document the session already
     // holds, so it is ready as soon as it exists; later values and a
-    // failure it holds now arrive through the workspace's inbox.
+    // failure it holds now arrive through the workspace's inbox. The
+    // provider holds a document or a failure, never both, so a start from
+    // the document drops no failure.
     final current = subscription.read();
     workspace = EditingWorkspace<AuthoringDocument, RealmPreparedEdit>(
       model: const RealmEditModel(),
