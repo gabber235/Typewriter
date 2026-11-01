@@ -138,6 +138,45 @@ async fn stale_update_returns_canonical_conflict_without_writing(
 }
 
 #[component_test(ServiceRegistration)]
+async fn repeated_rename_after_it_landed_answers_and_republishes_the_stored_service(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_organization_services(context, &acme(), ada(), &["lobby"]).await?;
+    let first: UpdateOrganizationServiceResponse = context
+        .arrange(
+            from_member(ada(), &acme(), "services.update"),
+            &rename_service("lobby", 1, "arena"),
+        )
+        .await?;
+    assert!(
+        matches!(first, UpdateOrganizationServiceResponse::Success(_)),
+        "{first:?}"
+    );
+    context.expect_publish(
+        to_organization(&acme(), "services.watch"),
+        |event: &OrganizationServicesChanged| {
+            matches!(event, OrganizationServicesChanged::Update(service)
+                if service.name == "arena" && service.revision == 2)
+        },
+    )?;
+
+    let reply: UpdateOrganizationServiceResponse = context
+        .request(
+            from_member(ada(), &acme(), "services.update"),
+            &rename_service("lobby", 1, "arena"),
+        )
+        .await?;
+
+    let UpdateOrganizationServiceResponse::Success(service) = reply else {
+        anyhow::bail!("expected the repeated rename to succeed, received {reply:?}");
+    };
+    assert_eq!(service.name, "arena");
+    assert_eq!(service.revision, 2);
+    assert_jm!(context.database()?.query_json(STORED).await?, ["arena", 2]);
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
 async fn update_rejects_noncanonical_snake_case_name(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {

@@ -168,47 +168,6 @@ void main() {
       expect(await services.listed(), [actual]);
       expect(reports, isEmpty);
     });
-
-    test("a rename lost in transport keeps its cause and the newer "
-        "observation and is never sent again", () async {
-      final reports = captureFlutterErrors();
-      final world = testWorld(_acme);
-      final services = await world.watchedServicesOf(_organization);
-      final newest = _newest;
-      world.nats.registerHandler(_updateSubject, (_) {
-        services.repository.acceptService(newest);
-        throw StateError("transport failed");
-      });
-
-      await expectLater(
-        services.rename(_service, "requested"),
-        throwsA(
-          isA<SubmissionException<TypedMutationResult>>().having(
-            (error) => error.submission.result,
-            "retained outcome",
-            isA<SubmissionUncertain<TypedMutationResult>>().having(
-              (result) => result.cause,
-              "cause",
-              isA<StateError>(),
-            ),
-          ),
-        ),
-      );
-      expect(await services.listed(), [newest]);
-      expect(reports, isEmpty);
-
-      final submission = world.container
-          .read(localWorkProvider)
-          .submissions
-          .single;
-      expect(submission.result, LocalWorkSubmissionResult.uncertain);
-      expect(submission.canReplay, isFalse);
-      final sent = world.nats.connection.requests.length;
-      await world.container
-          .read(localWorkControllerProvider)
-          .retrySubmission(submission.id);
-      expect(world.nats.connection.requests, hasLength(sent));
-    });
   });
 
   group("bind", () {
@@ -496,6 +455,68 @@ void main() {
         );
 
         expect(await services.applyHost(_host), isA<MutationUnavailable>());
+      });
+    }
+  });
+
+  group("lost reply", () {
+    final renamed = service(
+      "service1",
+      name: "requested",
+      revision: 2,
+      status: null,
+    );
+    final applied = (_host.toMutable()..revision = 2).toFrozen();
+    final saves = {
+      "a rename": (
+        subject: _updateSubject,
+        reply: skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+          skir.UpdateOrganizationServiceResponse.wrapSuccess(renamed),
+        ),
+        save: (OrganizationServices services) =>
+            services.rename(_service, "requested"),
+        saved: (OrganizationServices services) => services.listed(),
+        expected: [renamed],
+      ),
+      "a host Apply": (
+        subject: _configureSubject,
+        reply: skir.ConfigureServiceHostResponse.serializer.toBytes(
+          skir.ConfigureServiceHostResponse.wrapSuccess(
+            hostConfiguration(applied),
+          ),
+        ),
+        save: (OrganizationServices services) => services.applyHost(_host),
+        saved: (OrganizationServices services) async =>
+            (await services.watchTopology()).hosts,
+        expected: [applied],
+      ),
+    };
+    for (final MapEntry(key: name, value: save) in saves.entries) {
+      test("$name whose reply was lost is resent unchanged and settles from "
+          "the repeat's reply", () async {
+        final world = testWorld(_acme);
+        final services = await world.watchedServicesOf(_organization);
+        await services.watchTopology();
+        final sent = <List<int>>[];
+        world.nats.registerHandler(save.subject, (data) {
+          sent.add(data);
+          if (sent.length == 1) throw StateError("transport failed");
+          return save.reply;
+        });
+
+        await expectLater(save.save(services), throwsA(_uncertain));
+        final submission = world.container
+            .read(localWorkProvider)
+            .submissions
+            .single;
+        await world.container
+            .read(localWorkControllerProvider)
+            .retrySubmission(submission.id);
+
+        expect(sent, hasLength(2));
+        expect(sent[1], sent[0]);
+        await world.container.pump();
+        expect(await save.saved(services), save.expected);
       });
     }
   });

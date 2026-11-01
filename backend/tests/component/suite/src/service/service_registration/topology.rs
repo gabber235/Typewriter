@@ -379,19 +379,72 @@ async fn realm_only_host_may_target_an_engine_it_does_not_execute(
 }
 
 #[component_test(ServiceRegistration)]
-async fn configure_returns_conflict_for_stale_host_revision(
+async fn a_different_configuration_with_a_stale_revision_conflicts_and_changes_nothing(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     organization_with_hosts(context, &acme(), ada(), &["lobby"], &["paper"]).await?;
+    arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
     expect_no_topology_change(context, &acme(), "lobby")?;
 
-    let reply = configure_host(context, "lobby", 0, HostExecutionConfiguration::default()).await?;
+    let reply = configure_host(context, "lobby", 1, realm_only(paper())).await?;
 
     let ConfigureServiceHostResponse::ConflictError(conflict) = reply else {
         anyhow::bail!("expected a host conflict, received {reply:?}");
     };
-    assert_eq!(conflict.actual.host.revision, 1);
-    assert_jm!(context.database()?.query_json(TOPOLOGY).await?, [1, 0, 0]);
+    assert_eq!(conflict.actual.host.revision, 2);
+    assert!(conflict.actual.engine.is_some());
+    assert_jm!(context.database()?.query_json(TOPOLOGY).await?, [2, 1, 1]);
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn repeated_configuration_after_it_landed_answers_and_republishes_the_stored_state(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    organization_with_hosts(context, &acme(), ada(), &["lobby"], &["paper"]).await?;
+    let first =
+        arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
+    expect_configuration_change(context, &acme(), |change| {
+        change.host.revision == 2 && change.removed_resources.is_empty()
+    })?;
+    expect_desired_execution(context, "lobby", |desired| {
+        matches!(desired, WatchHostExecutionResponse::Desired(desired)
+            if desired.topology_revision == 1)
+    })?;
+
+    let reply = configure_host(context, "lobby", 1, realm_with_engine(paper())).await?;
+
+    let ConfigureServiceHostResponse::Success(stored) = reply else {
+        anyhow::bail!("expected the repeated configuration to succeed, received {reply:?}");
+    };
+    assert_eq!(stored.host.revision, 2);
+    assert_eq!(stored.host.topology_revision.desired, 1);
+    assert_eq!(stored.realm, first.realm);
+    assert_eq!(stored.engine, first.engine);
+    assert!(stored.removed_resources.is_empty());
+    assert_jm!(context.database()?.query_json(TOPOLOGY).await?, [2, 1, 1]);
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn repeated_engine_in_another_realm_after_it_landed_answers_the_stored_state(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    organization_with_hosts(context, &acme(), ada(), &["arena", "lobby"], &["paper"]).await?;
+    let arena = arrange_host_configuration(context, "arena", 1, realm_only(paper())).await?;
+    let realm = arena.realm.expect("arena hosts a Realm").realm_id;
+    let first =
+        arrange_host_configuration(context, "lobby", 1, engine_in(realm.clone(), paper())).await?;
+    expect_configuration_change(context, &acme(), |change| change.host.revision == 2)?;
+    expect_desired_execution(context, "lobby", |_| true)?;
+
+    let reply = configure_host(context, "lobby", 1, engine_in(realm, paper())).await?;
+
+    let ConfigureServiceHostResponse::Success(stored) = reply else {
+        anyhow::bail!("expected the repeated configuration to succeed, received {reply:?}");
+    };
+    assert_eq!(stored.host.revision, 2);
+    assert_eq!(stored.engine, first.engine);
     Ok(())
 }
 

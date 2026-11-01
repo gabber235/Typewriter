@@ -31,8 +31,9 @@ method WatchOrganizationServices(
 
 // Performs an organization scoped compare and set update of service metadata.
 // The registration service owns revision and increments it only after accepting the name change. A stale expected
-// revision returns the current service in conflict_error, while service_not_found_error means the service is absent
-// from this organization.
+// revision returns the current service in conflict_error, unless the requested name is already stored: then success
+// returns the stored service unchanged, so a client may resend a request whose reply was lost.
+// service_not_found_error means the service is absent from this organization.
 method UpdateOrganizationService(
   struct {
     service_id: RecordId;

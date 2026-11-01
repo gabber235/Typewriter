@@ -6,8 +6,10 @@
 //! ownership. Unbinding removes ownership and clears the lease.
 //!
 //! The database transaction owns the revision check, name validation, and write. It returns the
-//! canonical updated record or the canonical current
-//! record for a revision conflict. Validation and not found outcomes perform no write and publish
+//! canonical updated record or the canonical current record for a revision conflict. A stale
+//! request whose name is already stored, as when a resend follows a send that landed, returns
+//! the stored record without writing and publishes it again, so a resend delivers a change
+//! whose first publish failed. Validation and not found outcomes perform no write and publish
 //! nothing. The watch update is published only after commit, because a message cannot participate
 //! in the database rollback boundary.
 
@@ -31,7 +33,8 @@ use wasmcloud_utils::{
 #[derive(Debug, Deserialize)]
 #[serde(tag = "outcome", rename_all = "kebab-case")]
 enum ServiceUpdateOutcome {
-    Updated { service: ServiceRecord },
+    /// `changed` is false when a stale request's name was already stored and nothing was written.
+    Updated { service: ServiceRecord, changed: bool },
     ConflictError { actual: ServiceRecord },
     ServiceNotFoundError,
     NameInvalid,
@@ -40,7 +43,8 @@ enum ServiceUpdateOutcome {
 impl ServiceUpdateOutcome {
     fn as_str(&self) -> &'static str {
         match self {
-            Self::Updated { .. } => "updated",
+            Self::Updated { changed: true, .. } => "updated",
+            Self::Updated { changed: false, .. } => "unchanged",
             Self::ConflictError { .. } => "conflict-error",
             Self::ServiceNotFoundError => "service-not-found-error",
             Self::NameInvalid => "name-invalid",
@@ -50,9 +54,10 @@ impl ServiceUpdateOutcome {
 
 /// Updates the name of a service owned by the addressed organization.
 ///
-/// The expected revision makes concurrent edits explicit. Success returns the committed service;
-/// a conflict returns the current service and the caller's expected revision, allowing the caller
-/// to reconcile against canonical state. Invalid names and services outside the organization
+/// The expected revision makes concurrent edits explicit. Success returns the committed service,
+/// or the stored one, published again, when a stale request's name is already stored; a conflict
+/// returns the current service and the caller's expected revision, allowing the caller to
+/// reconcile against canonical state. Invalid names and services outside the organization
 /// map to their contract responses without a metadata publication.
 /// After a successful commit, the organization service watch receives the updated projection. A
 /// publication failure occurs after durable mutation and is therefore not rolled back.
@@ -91,6 +96,11 @@ pub async fn handle_update(
 
             LET $current = array::first($services);
             IF $current.revision != $expected_revision {
+                -- A rename to the stored name, as when its first send landed, answers
+                -- with the stored service and changes nothing.
+                IF $current.name = $name {
+                    RETURN { outcome: 'updated', changed: false, service: $current }
+                };
                 RETURN { outcome: 'conflict-error', actual: $current }
             };
 
@@ -103,7 +113,7 @@ pub async fn handle_update(
                 revision = $current.revision + 1
                 RETURN AFTER;
 
-            LET $result = { outcome: 'updated', service: $updated };
+            LET $result = { outcome: 'updated', changed: true, service: $updated };
             RETURN $result;
         };
 
@@ -123,7 +133,7 @@ pub async fn handle_update(
     let result = wasmcloud_utils::skir_domain_result!(UpdateOrganizationServiceResponse, result);
     otel_wasi::main_attribute!("service.outcome" = result.as_str());
     let service = match result {
-        ServiceUpdateOutcome::Updated { service } => Service::try_from(service)?,
+        ServiceUpdateOutcome::Updated { service, .. } => Service::try_from(service)?,
         ServiceUpdateOutcome::ConflictError { actual } => {
             return Ok(skir_variant!(
                 UpdateOrganizationServiceResponse::ConflictError {
