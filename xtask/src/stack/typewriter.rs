@@ -334,8 +334,10 @@ fn write_ci_users(fixture: &Path, passwords: &BTreeMap<String, String>, out: &Pa
             .get(&format!("{username}.app-password"))
             .with_context(|| {
                 format!(
-                    "the CI cluster has no account for the fixture user {username}; add it to \
-                     Infrastructure platform/_ci/typewriter-test-users/secret.yaml"
+                    "the CI cluster has no account for the fixture user {username}: the Secret \
+                     `test_users` names in Infrastructure's platform/_ci/clients.json holds no \
+                     {username}.app-password; add the user to Infrastructure \
+                     platform/_ci/typewriter-test-users/secret.yaml"
                 )
             })?;
         let user = user

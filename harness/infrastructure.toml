@@ -1,5 +1,6 @@
 # The Infrastructure revision the full tier builds its CI cluster from (`cargo xtask cluster ci`).
-# Its `ci:up` task creates the cluster from `config/k3d/ci.yaml` and the `clusters/ci` overlay;
-# bump the revision to pick up Infrastructure changes.
+# Its `ci:up` task creates the cluster from `config/k3d/ci.yaml` and the `clusters/ci` overlay.
+# Typewriter also reads `platform/_ci/clients.json` from this checkout: how it reaches the cluster
+# and which Secret holds its test users. Bump the revision to pick up Infrastructure changes.
 repository = "Seamlezz/Infrastructure"
 revision = "223f89bf85da82e71766f7d604f0be2d1a2e852e"
