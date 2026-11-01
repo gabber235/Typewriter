@@ -234,7 +234,7 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
             let _lock = lock()?;
             results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
                 attempt::<T>(&evidence, n, ids, |drive, out, ids| {
-                    let recorded = (drive.launch)(&launch, out, ids)?
+                    let recorded = (drive.launch)(&launch, ids)?
                         .in_dir("panel")
                         .env("EVIDENCE_DIR", out.display().to_string())
                         .log_to(out.join(failures::DRIVE_LOG));
@@ -267,24 +267,26 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
 /// One `flutter drive` an attempt on a `T` makes: where its evidence lies inside
 /// `attempts/<n>/`, the requirements it reports and the command it records.
 pub(crate) struct Drive<T> {
-    /// Below `attempts/<n>/`; empty for the attempt folder itself.
-    pub(crate) folder: &'static str,
+    /// Below `attempts/<n>/`; `None` for the attempt folder itself.
+    pub(crate) folder: Option<&'static str>,
     owns: Owns,
-    /// The command for the drive's `ids` (every case when empty), writing into `out`.
-    launch: fn(&Launch<'_, T>, &Path, &[String]) -> Result<Recorded>,
+    /// The command for the drive's `ids` (every case when empty); it writes into the folder
+    /// `EVIDENCE_DIR` names.
+    launch: fn(&Launch<'_, T>, &[String]) -> Result<Recorded>,
 }
 
 /// The requirements a drive reports.
 enum Owns {
     /// Every requirement no other drive of its target declares.
     Rest,
+    /// Exactly these; every case the drive reports names one of them.
     Requirements(&'static [&'static str]),
 }
 
 /// The sign in journey, which names its requirement in
 /// `panel/test_driver/sign_in_journey_test.dart`.
 const SIGN_IN: Drive<CiCluster> = Drive {
-    folder: "sign-in",
+    folder: Some("sign-in"),
     owns: Owns::Requirements(&["AUTH-2"]),
     launch: sign_in_journey,
 };
@@ -301,7 +303,7 @@ struct Launch<'a, T> {
 impl<T: Target> Drive<T> {
     /// The panel's `integration_test` scenarios, which run on every target.
     const SCENARIOS: Self = Self {
-        folder: "",
+        folder: None,
         owns: Owns::Rest,
         launch: scenario_drive::<T>,
     };
@@ -316,19 +318,15 @@ impl<T: Target> Drive<T> {
     }
 
     fn name(&self) -> &'static str {
-        if self.folder.is_empty() {
-            "the scenario drive"
-        } else {
-            self.folder
-        }
+        self.folder.unwrap_or("the scenario drive")
     }
 
     /// Attempt `n`'s evidence folder, relative to the suite's evidence folder.
     fn folder(&self, n: u32) -> PathBuf {
         let attempt = Path::new(results::ATTEMPTS).join(n.to_string());
         match self.folder {
-            "" => attempt,
-            below => attempt.join(below),
+            None => attempt,
+            Some(below) => attempt.join(below),
         }
     }
 }
@@ -381,8 +379,9 @@ pub(crate) fn attempt<T: Target>(
 }
 
 /// Drives `drive`'s attempt `n` of `ids` into its folder of `evidence`: records it, reads its
-/// run, records that folder on every attempt, and fails when the drive crashed ([`driven`]) or
-/// reported a requirement it does not declare.
+/// run, records that folder on every attempt, and fails when the drive crashed ([`driven`]),
+/// reported a requirement it does not declare, or, owning requirements, reported a case without
+/// one.
 fn run_drive<T: Target>(
     drive: &Drive<T>,
     evidence: &Path,
@@ -394,13 +393,17 @@ fn run_drive<T: Target>(
     let (run, exit) = record(drive, &evidence.join(&folder), ids)?;
     let mut run = driven(exit, run)?;
     for case in &mut run.cases {
-        if let Some(requirement) = case.requirement.as_deref()
-            && !drive.declares(requirement)
-        {
-            bail!(
+        match case.requirement.as_deref() {
+            Some(requirement) if !drive.declares(requirement) => bail!(
                 "{} reported {requirement}, which it does not declare",
                 drive.name()
-            );
+            ),
+            None if matches!(drive.owns, Owns::Requirements(_)) => bail!(
+                "{} reported {} without the requirement it proves",
+                drive.name(),
+                case.id
+            ),
+            _ => {}
         }
         for attempt in &mut case.attempts {
             attempt.folder = folder.display().to_string();
@@ -411,11 +414,7 @@ fn run_drive<T: Target>(
 
 /// The panel's `integration_test` scenarios, `ids` limiting them to those scenario or
 /// requirement ids (every scenario when empty). A failing scenario is a result, not an error.
-fn scenario_drive<T: Target>(
-    launch: &Launch<'_, T>,
-    _out: &Path,
-    ids: &[String],
-) -> Result<Recorded> {
+fn scenario_drive<T: Target>(launch: &Launch<'_, T>, ids: &[String]) -> Result<Recorded> {
     let mut command: Vec<String> = [
         "flutter",
         "drive",
@@ -494,11 +493,7 @@ const JOURNEY_USER: &str = "ada";
 /// The sign in journey through the CI cluster's Authentik pages, which no scenario can drive
 /// (`panel/test_driver/sign_in_journey_test.dart`), signing in as [`JOURNEY_USER`] with the
 /// password of its sign in form. It runs its one case whatever ids it is handed.
-fn sign_in_journey(
-    launch: &Launch<'_, CiCluster>,
-    _out: &Path,
-    _ids: &[String],
-) -> Result<Recorded> {
+fn sign_in_journey(launch: &Launch<'_, CiCluster>, _ids: &[String]) -> Result<Recorded> {
     let password = launch
         .target
         .test_user_passwords(launch.ctx)?
@@ -576,9 +571,62 @@ fn desktop_device() -> Result<&'static str> {
 mod tests {
     use super::*;
     use crate::test_support::{
-        drive_attempts, e2e_args as parsed, exited, failed, refusal, report_text, requirement_run,
-        run,
+        Drove, drive_attempts, drove, e2e_args as parsed, exited, failed, refusal, report_text,
+        requirement_run, run,
     };
+
+    #[test]
+    fn each_attempt_launches_the_drives_of_its_target_that_own_the_selection() {
+        let reply = |folder: Option<&str>, _| match folder {
+            None => requirement_run("CONN-1", "[CONN-1] Reconnects", Outcome::Passed),
+            Some(_) => requirement_run("AUTH-2", "[AUTH-2] Signs in", Outcome::Passed),
+        };
+        let ci = |args: &[&str]| {
+            drive_attempts::<CiCluster>(&parsed(args).unwrap(), reply)
+                .unwrap()
+                .1
+        };
+        let worktree = |args: &[&str]| {
+            drive_attempts::<WorktreeStack>(&parsed(args).unwrap(), reply)
+                .unwrap()
+                .1
+        };
+        let table: [(Drove, Drove); 4] = [
+            (
+                ci(&["full"]),
+                drove(&[("attempts/1", &[]), ("attempts/1/sign-in", &[])]),
+            ),
+            (worktree(&["panel-web"]), drove(&[("attempts/1", &[])])),
+            (
+                ci(&["full", "--only", "CONN-1"]),
+                drove(&[("attempts/1", &["CONN-1"])]),
+            ),
+            (
+                ci(&["full", "--only", "CONN-1,AUTH-2", "--repeat", "2"]),
+                drove(&[
+                    ("attempts/1", &["CONN-1"]),
+                    ("attempts/1/sign-in", &["AUTH-2"]),
+                    ("attempts/2", &["CONN-1"]),
+                    ("attempts/2/sign-in", &["AUTH-2"]),
+                ]),
+            ),
+        ];
+        for (made, expected) in table {
+            assert_eq!(made, expected);
+        }
+    }
+
+    #[test]
+    fn a_requirement_drive_reporting_a_case_without_a_requirement_fails_the_run() {
+        let args = parsed(&["full", "--only", "AUTH-2"]).unwrap();
+        let error =
+            drive_attempts::<CiCluster>(&args, |_, _| run(&[("Signs in", Outcome::Passed)]))
+                .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "sign-in reported Signs in without the requirement it proves"
+        );
+    }
 
     #[test]
     fn a_waiting_run_keeps_the_running_run_s_results_until_its_turn() {
@@ -629,22 +677,19 @@ mod tests {
     #[test]
     fn a_rerun_after_a_failed_journey_drives_only_the_journey() {
         let args = parsed(&["full", "--only", "CONN-1,AUTH-2"]).unwrap();
-        let (_, drove) = drive_attempts::<CiCluster>(&args, |folder, n| match (folder, n) {
-            ("", _) => requirement_run("CONN-1", "[CONN-1] Reconnects", Outcome::Passed),
+        let (_, made) = drive_attempts::<CiCluster>(&args, |folder, n| match (folder, n) {
+            (None, _) => requirement_run("CONN-1", "[CONN-1] Reconnects", Outcome::Passed),
             (_, 1) => requirement_run("AUTH-2", "[AUTH-2] Signs in", failed("boom")),
             _ => requirement_run("AUTH-2", "[AUTH-2] Signs in", Outcome::Passed),
         })
         .unwrap();
         assert_eq!(
-            drove,
-            [
-                ("attempts/1".to_owned(), vec!["CONN-1".to_owned()]),
-                ("attempts/1/sign-in".to_owned(), vec!["AUTH-2".to_owned()]),
-                (
-                    "attempts/2/sign-in".to_owned(),
-                    vec!["[AUTH-2] Signs in".to_owned()]
-                ),
-            ]
+            made,
+            drove(&[
+                ("attempts/1", &["CONN-1"]),
+                ("attempts/1/sign-in", &["AUTH-2"]),
+                ("attempts/2/sign-in", &["[AUTH-2] Signs in"]),
+            ])
         );
     }
 

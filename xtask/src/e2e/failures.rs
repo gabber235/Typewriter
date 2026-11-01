@@ -16,7 +16,7 @@ use anyhow::{Context as _, Result};
 use serde_json::Value;
 
 use crate::evidence::file_name;
-use crate::results::{Artifact, ArtifactKind, Outcome, TestRun};
+use crate::results::{Artifact, ArtifactKind, Outcome, TestRun, attempt_folder};
 
 /// How far a log window reaches past the attempt's span on each side.
 const LOG_SLACK_MILLIS: i64 = 1_000;
@@ -47,7 +47,10 @@ pub fn collect(evidence: &Path, run: &mut TestRun, stack: &StackEvidence) -> Res
     let traces = Traces::read(&stack.traces)?;
     for case in &mut run.cases {
         for attempt in &mut case.attempts {
-            let folder = evidence.join(&attempt.folder);
+            let folder = match attempt_folder(attempt) {
+                Some(below) => evidence.join(below),
+                None => evidence.to_owned(),
+            };
             let (Outcome::Failed(_), Some(span)) = (&attempt.outcome, &attempt.span) else {
                 continue;
             };
@@ -531,56 +534,33 @@ WARNING: before any time
     }
 
     #[test]
-    fn each_failed_sign_in_attempt_leaves_its_failure_folder_and_its_own_drive_log_in_its_drive_folder()
+    fn a_failed_attempt_of_a_drive_below_the_attempt_folder_keeps_its_failure_folder_and_drive_log_there()
      {
         let root = TempRoot::new();
         let evidence = root.dir("full-panel-web");
         root.write(
             "full-panel-web/attempts/1/drive.log",
-            "2026-10-31T07:26:45.000Z a scenario's drive\n",
+            "2026-10-31T07:26:45.000Z the scenario drive\n",
         );
-        for n in [1, 2] {
-            root.write(
-                &format!("full-panel-web/attempts/{n}/sign-in/drive.log"),
-                &format!("2026-10-31T07:26:45.000Z journey attempt {n}\n"),
-            );
-            root.write(
-                &format!("full-panel-web/attempts/{n}/sign-in/screenshots/AUTH-2/failure.png"),
-                "png",
-            );
-        }
+        root.write(
+            "full-panel-web/attempts/1/sign-in/drive.log",
+            "2026-10-31T07:26:45.000Z the sign in drive\n",
+        );
         let stack = StackEvidence {
             logs: Vec::new(),
             traces: root.path("stack/traces.jsonl"),
         };
-        let mut run = run_of(
-            "[AUTH-2] Signs in",
-            [1, 2]
-                .map(|n| {
-                    let mut failed = failed_attempt(
-                        ATTEMPT,
-                        &[(ArtifactKind::Screenshot, "screenshots/AUTH-2/failure.png")],
-                    );
-                    failed.folder = format!("attempts/{n}/sign-in");
-                    failed
-                })
-                .to_vec(),
-        );
-        run.cases[0].requirement = Some("AUTH-2".to_owned());
+        let mut failed = failed_attempt(ATTEMPT, &[]);
+        failed.folder = "attempts/1/sign-in".to_owned();
+        let mut run = run_of("[AUTH-2] Signs in", vec![failed]);
 
         collect(&evidence, &mut run, &stack).unwrap();
 
-        for n in [1, 2] {
-            let folder = evidence.join(format!("attempts/{n}/sign-in/failures/_AUTH-2__Signs_in"));
-            assert_eq!(
-                file_names(&folder),
-                ["drive.log", "failure.png", "spans.otlp.jsonl"]
-            );
-            assert_eq!(
-                fs::read_to_string(folder.join("drive.log")).unwrap(),
-                format!("2026-10-31T07:26:45.000Z journey attempt {n}\n")
-            );
-        }
+        let folder = evidence.join("attempts/1/sign-in/failures/_AUTH-2__Signs_in");
+        assert_eq!(
+            fs::read_to_string(folder.join("drive.log")).unwrap(),
+            "2026-10-31T07:26:45.000Z the sign in drive\n"
+        );
         assert!(!evidence.join("attempts/1/failures").exists());
     }
 

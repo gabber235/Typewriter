@@ -101,12 +101,20 @@ pub fn last_failure(case: &TestCase) -> Option<&Failure> {
 /// run file's folder (the attempt's folder joined with the artifact's path).
 pub fn artifacts(case: &TestCase) -> impl Iterator<Item = (PathBuf, &Artifact)> {
     case.attempts.iter().flat_map(|attempt| {
-        let folder = Path::new(&attempt.folder);
-        attempt
-            .artifacts
-            .iter()
-            .map(move |artifact| (folder.join(&artifact.path), artifact))
+        attempt.artifacts.iter().map(move |artifact| {
+            let path = match attempt_folder(attempt) {
+                Some(folder) => folder.join(&artifact.path),
+                None => PathBuf::from(&artifact.path),
+            };
+            (path, artifact)
+        })
     })
+}
+
+/// Where `attempt`'s evidence lies below the run file's folder; `None` when it lies in that
+/// folder itself, which the `TestRun` field states as an empty string.
+pub fn attempt_folder(attempt: &Attempt) -> Option<&Path> {
+    (!attempt.folder.is_empty()).then(|| Path::new(&attempt.folder))
 }
 
 impl ArtifactKind {
@@ -295,15 +303,12 @@ pub fn report(
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        // `Path::join("")` would add a trailing separator, so an empty folder is the run's.
         let first = failures.first().map(|first| &case.attempts[first - 1]);
         let see = match (evidence, first) {
-            (Some(evidence), Some(attempt)) if attempt.folder.is_empty() => {
-                format!("; see {}/", evidence.display())
-            }
-            (Some(evidence), Some(attempt)) => {
-                format!("; see {}/", evidence.join(&attempt.folder).display())
-            }
+            (Some(evidence), Some(attempt)) => match attempt_folder(attempt) {
+                Some(folder) => format!("; see {}/", evidence.join(folder).display()),
+                None => format!("; see {}/", evidence.display()),
+            },
             _ => String::new(),
         };
         match verdict {
@@ -636,8 +641,8 @@ mod tests {
             "full-panel-web/test_run.json",
         ];
         let evidence = [
-            // The journey's own run, whose case the suite's run already holds.
-            "full-panel-web/attempts/1/journey/test_run.json",
+            // The sign in drive's own run, whose case the suite's run already holds.
+            "full-panel-web/attempts/1/sign-in/test_run.json",
             "inputs/results-e2e-panel/attempts/1/test_run.json",
             "inputs/results-e2e-panel/attempts/2/test_run.json",
             "inputs/results-e2e-panel/failures/1/test_run.json",

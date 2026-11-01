@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
 
-use anyhow::{Context as _, Result, anyhow, bail};
+use anyhow::{Context as _, Result, bail};
 use sha2::{Digest, Sha256};
 
 use super::client_configuration::ClientConfiguration;
@@ -385,20 +385,36 @@ impl<'a> StackContext<'a> {
             .context("no backend has published its clients yet; declare needs_roles BACKEND")
     }
 
-    /// Takes what a ready service published: its values join `stack.env`, its clients become
-    /// [`Self::clients`] and their files; then rewrites the client files and `stack.env` in the
-    /// state directory, which later services and the command under test read. The supervisor is
-    /// their only writer.
-    pub(super) fn absorb(&self, published: Published) -> Result<()> {
+    /// Takes what `service`, now ready, published: its values join `stack.env`, its clients
+    /// become [`Self::clients`] and their files; then rewrites the client files and `stack.env` in
+    /// the state directory, which later services and the command under test read. The supervisor
+    /// is their only writer. A [`BACKEND`] provider must publish clients and no other service may;
+    /// either mistake is refused before anything is written.
+    pub(super) fn absorb(&self, service: &dyn DynService, published: Published) -> Result<()> {
+        let id = service.id().0;
+        let clients = match (service.provides().contains(&BACKEND), published.clients) {
+            (true, None) => bail!(
+                "`{id}` provides the {} but published no clients; its publish must call \
+                 Published::clients",
+                BACKEND.0
+            ),
+            (false, Some(_)) => bail!(
+                "`{id}` published clients but does not provide the {}; only its provider does",
+                BACKEND.0
+            ),
+            (_, clients) => clients,
+        };
         let state = self.state();
         let mut values = self.values.borrow_mut();
         values.extend(published.values);
-        if let Some(clients) = published.clients {
+        if let Some(clients) = clients {
             clients.write(&state)?;
             values.extend(clients.published(&state));
-            self.clients
-                .set(clients)
-                .map_err(|_| anyhow!("two services published how clients reach the backend"))?;
+            // `StackSpec::ordered` admits one provider of each role, so this is the only one.
+            assert!(
+                self.clients.set(clients).is_ok(),
+                "a second backend provider published clients"
+            );
         }
         let env: String = values
             .iter()
@@ -428,7 +444,8 @@ impl<'a> StackContext<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{fake_service, ids, refusal};
+    use crate::stack::client_configuration::ClientConfiguration;
+    use crate::test_support::{TempRoot, fake_service, ids, refusal, stack_context};
 
     mod roles {
         use super::*;
@@ -462,6 +479,32 @@ mod tests {
             refusal(spec.ordered()),
             "`Routes` and `Cluster` both provide backend"
         );
+    }
+
+    #[test]
+    fn a_backend_provider_that_publishes_no_clients_is_refused_before_anything_is_written() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        assert_eq!(
+            refusal(ctx.absorb(&roles::Routes, Published::default())),
+            "`Routes` provides the backend but published no clients; its publish must call \
+             Published::clients"
+        );
+        assert!(!ctx.state().join("stack.env").exists());
+    }
+
+    #[test]
+    fn clients_from_a_service_that_does_not_provide_the_backend_are_refused() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        let mut published = Published::default();
+        published.clients(ClientConfiguration::worktree(&ctx));
+        assert_eq!(
+            refusal(ctx.absorb(&roles::Owner, published)),
+            "`Owner` published clients but does not provide the backend; only its provider does"
+        );
+        assert!(ctx.clients().is_err());
+        assert!(!ctx.state().join("panel.json").exists());
     }
 
     mod chain {

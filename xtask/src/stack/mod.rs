@@ -91,7 +91,7 @@ fn run_then<T, U>(
         service.publish(&stack_ctx, &mut published)?;
         // Later services read the clients before they start: typed through
         // `StackContext::clients`, or as files, like the Realm host its `realm.properties`.
-        stack_ctx.absorb(published)?;
+        stack_ctx.absorb(service, published)?;
     }
     stack.env = stack_ctx.env();
     stack.deadline = Some(Instant::now() + timeout);

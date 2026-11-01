@@ -23,6 +23,7 @@ use crate::results::{
 };
 use crate::skirout::base::harness::v1::test_run::{Runner, Span};
 use crate::stack::StackRecord;
+use crate::stack::spec::{PortLease, StackContext};
 use crate::{CommandExt as _, Context};
 
 /// A throwaway repository root: a temporary directory and the [`Context`] that resolves against
@@ -110,6 +111,18 @@ pub fn ci_cluster() -> CiCluster {
     CiCluster {
         clients: CiClients::parse(&ci_clients().to_string()).unwrap(),
     }
+}
+
+/// What services of a stack in `root` see while it starts, on port block 20000 with its state
+/// directory created and nothing published yet.
+pub fn stack_context(root: &TempRoot) -> StackContext<'_> {
+    let ports = PortLease {
+        base: 20000,
+        record: root.path("registry/stack.json"),
+    };
+    let ctx = StackContext::new(&root.ctx, ports);
+    fs::create_dir_all(ctx.state()).unwrap();
+    ctx
 }
 
 /// The message of `result`'s error. Panics when `result` succeeded.
@@ -304,18 +317,11 @@ pub fn raw_failed_run(root: &TempRoot, at: &str) {
 
 /// Every file below `dir`, relative to it and sorted; empty when `dir` is absent.
 pub fn files_below(dir: &Path) -> Vec<String> {
-    let mut files = Vec::new();
-    let mut pending = vec![dir.to_path_buf()];
-    while let Some(next) = pending.pop() {
-        for entry in fs::read_dir(&next).into_iter().flatten() {
-            let path = entry.unwrap().path();
-            if path.is_dir() {
-                pending.push(path);
-            } else {
-                files.push(path.strip_prefix(dir).unwrap().display().to_string());
-            }
-        }
-    }
+    let mut files: Vec<String> = crate::review::files_in(dir)
+        .unwrap()
+        .iter()
+        .map(|path| path.strip_prefix(dir).unwrap().display().to_string())
+        .collect();
     files.sort();
     files
 }
@@ -504,12 +510,25 @@ pub fn ids(services: &[&dyn crate::stack::spec::DynService]) -> Vec<&'static str
 /// handed.
 pub type Drove = Vec<(String, Vec<String>)>;
 
+/// The drives `drives` names, as [`drive_attempts`] returns them: (folder, ids) each.
+pub fn drove(drives: &[(&str, &[&str])]) -> Drove {
+    drives
+        .iter()
+        .map(|(folder, ids)| {
+            (
+                (*folder).to_owned(),
+                ids.iter().map(|id| (*id).to_owned()).collect(),
+            )
+        })
+        .collect()
+}
+
 /// Folds the attempts of `args` on target `T`, where every drive reports
-/// `reply(drive folder, attempt)` and exits 0. Returns the folded run and each drive made, in
+/// `reply(drive folder, attempt)` and exits 0, the folder `None` for the attempt folder itself. Returns the folded run and each drive made, in
 /// order, as (its folder below the suite folder, the ids it was handed).
 pub fn drive_attempts<T: crate::e2e::Target>(
     args: &E2eArgs,
-    reply: impl Fn(&str, u32) -> TestRun,
+    reply: impl Fn(Option<&str>, u32) -> TestRun,
 ) -> Result<(TestRun, Drove)> {
     let evidence = Path::new("results/suite");
     let drove = std::cell::RefCell::new(Vec::new());
