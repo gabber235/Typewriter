@@ -109,7 +109,7 @@ class SetupApplier(
             } catch (refused: EditRefused) {
                 throw SetupRejected(setup.name, setup.describe(refused.problems), refused)
             }
-        val response = editor.commit(edit, SubmissionKey("setup:${setup.name.value}:${UUID.randomUUID()}"))
+        val response = editor.commit(edit, SubmissionKey("setup:${UUID.randomUUID()}"))
         if (response !is CommitPreparedEditResponse.CommittedWrapper) throw SetupRejected(setup.name, setup.describe(response))
     }
 }
