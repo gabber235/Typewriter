@@ -106,7 +106,7 @@ class AuthoringSession extends _$AuthoringSession {
       _start(repository, lifecycleRevision, organizationId, realmId).catchError(
         (Object error, StackTrace stackTrace) {
           if (!_isActive(lifecycleRevision)) return;
-          state = state.copyWith(refreshing: false, failure: error);
+          state = state.copyWith(failure: error);
         },
       ),
     );
@@ -190,7 +190,6 @@ class AuthoringSession extends _$AuthoringSession {
     required bool refreshCatalog,
   }) async {
     if (!_isActive(lifecycleRevision)) return;
-    state = state.copyWith(refreshing: true, failure: null);
     try {
       var catalog = state.catalog?.snapshot;
       if (catalog == null || refreshCatalog) {
@@ -219,7 +218,7 @@ class AuthoringSession extends _$AuthoringSession {
     } on Object catch (error) {
       if (error is TransferCancelled && repository._isDisposed) return;
       if (!_isActive(lifecycleRevision)) return;
-      state = state.copyWith(refreshing: false, failure: error);
+      state = state.copyWith(failure: error);
       rethrow;
     }
   }

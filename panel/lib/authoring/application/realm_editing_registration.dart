@@ -58,22 +58,23 @@ extension RealmEditingRegistration on LocalWork {
         realmEditPersistenceProvider(scope),
         (_, _) {},
       );
-      final workspace = EditingWorkspace<AuthoringDocument, RealmPreparedEdit>(
+      late final EditingWorkspace<AuthoringDocument, RealmPreparedEdit>
+      workspace;
+      final subscription = ref.listen(
+        confirmedAuthoringDocumentProvider(scope),
+        (_, next) => workspace.observe(next),
+      );
+      // A new workspace starts from the saved document the session already
+      // holds, so it is ready as soon as it exists; later values and a
+      // failure it holds now arrive through the workspace's inbox.
+      final current = subscription.read();
+      workspace = EditingWorkspace<AuthoringDocument, RealmPreparedEdit>(
         model: const RealmEditModel(),
         persistence: persistence.read(),
         submissions: this,
+        initial: current.value,
       );
-      final subscription = ref.listen(
-        confirmedAuthoringDocumentProvider(scope),
-        (_, next) {
-          if (next.value case final document?) {
-            workspace.acceptConfirmed(document);
-          } else if (next.error case final error?) {
-            workspace.acceptFailure(error);
-          }
-        },
-        fireImmediately: true,
-      );
+      if (current.value == null) workspace.observe(current);
       return EditingWorkDriver(
         id: WorkDriverId(domain: "authoring", scope: scope),
         workspace: workspace,

@@ -197,21 +197,20 @@ ValueEditingRegistration serviceIdentityTarget({
       : (workspace) => work.observe(
           canonicalOrganizationServicesProvider(repository.organization),
           (next) {
-            if (next.value case final values?) {
-              final current = values.firstWhereOrNull(
-                (value) => value.serviceId == service.serviceId,
-              );
-              workspace.acceptConfirmed(
-                current == null
-                    ? workspace.confirmed.copyWith(exists: false)
-                    : ValueEditDocument.fromSnapshot(
-                        current.editorSnapshot,
-                        identity: workspace.confirmed.identity,
-                      ),
-              );
-            } else if (next.error case final error?) {
-              workspace.acceptFailure(error);
+            if (next.mapUnready<ValueEditDocument>() case final unready?) {
+              return workspace.observe(unready);
             }
+            final current = next.requireValue.firstWhereOrNull(
+              (value) => value.serviceId == service.serviceId,
+            );
+            workspace.acceptConfirmed(
+              current == null
+                  ? workspace.confirmed.copyWith(exists: false)
+                  : ValueEditDocument.fromSnapshot(
+                      current.editorSnapshot,
+                      identity: workspace.confirmed.identity,
+                    ),
+            );
           },
         ),
   portablePresentation: (source) => service.portablePresentationHost(

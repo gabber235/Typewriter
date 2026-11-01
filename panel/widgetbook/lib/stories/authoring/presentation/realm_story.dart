@@ -23,8 +23,9 @@ PanelLocation realmSurface(skir.ResourceId resource) => PanelLocation.route(
 /// every surface of that Realm edits through, for components no route shows
 /// on their own.
 ///
-/// Builds nothing until the session resolved, so the editing [builder]
-/// receives belongs to the signed in user's work and survives the story.
+/// Builds nothing until the session resolved and the editing admitted the
+/// saved document, so the editing [builder] receives belongs to the signed in
+/// user's work, survives the story, and has a document to show.
 class RealmEditingScene extends HookConsumerWidget {
   const RealmEditingScene({required this.builder, super.key});
 
@@ -44,6 +45,7 @@ class RealmEditingScene extends HookConsumerWidget {
       authoredResourceCommandsProvider(storyRealmScope),
     );
     useListenable(workspace);
+    if (workspace.state.working == null) return const SizedBox.shrink();
     return builder(context, workspace, commands);
   }
 }

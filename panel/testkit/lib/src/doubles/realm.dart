@@ -243,13 +243,14 @@ final class FakeRealm {
     return refreshes;
   }
 
-  /// Makes every later refresh change the observed saved document as soon as
-  /// it starts and answer a fresh read of it, the way the panel's session
-  /// reports a refresh it begins and then reads the Realm again.
-  void announceRefreshes() => answerRefresh = () {
+  /// Makes every later refresh publish a fresh read of the saved document
+  /// once the read answers, the way the panel's session publishes only what
+  /// a refresh read.
+  void announceRefreshes() => answerRefresh = () async {
+    await Future<void>.value();
     final read = document.copyWith();
     serve(read);
-    return Future.value(read);
+    return read;
   };
 
   /// Replaces how the Realm answers a resource search; by default it has no

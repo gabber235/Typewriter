@@ -36,7 +36,9 @@ final _remoteTwo = recordEditorDocument(
 );
 
 void main() {
-  test("incompatible replacement stays pending across a host rebuild", () {
+  test(
+    "incompatible replacement stays pending across a host rebuild",
+    () async {
     final workspace = testWorkSession();
     final source = resourceTarget(
       _key,
@@ -51,7 +53,9 @@ void main() {
     ).acquire(workspace);
 
     expect(rebuilt.workspace, same(source.workspace));
-    expect(source.contractReconciliationPending, isTrue);
+    await eventually(
+      () => expect(source.contractReconciliationPending, isTrue),
+    );
     expect(source.readOnly, isTrue);
     expect(
       source.value(_title).valueOrNull,
@@ -73,9 +77,10 @@ void main() {
       source.value(_description).valueOrNull,
       skir.DataValue.wrapStringValue("Remote two"),
     );
-  });
+  },
+  );
 
-  test("discard accepts an incompatible replacement explicitly", () {
+  test("discard accepts an incompatible replacement explicitly", () async {
     final workspace = testWorkSession();
     final source = resourceTarget(
       _key,
@@ -87,6 +92,9 @@ void main() {
       contract: "two",
       document: _remoteTwo,
     ).acquire(workspace);
+    await eventually(
+      () => expect(source.contractReconciliationPending, isTrue),
+    );
 
     expect(source.discardDraftAndAcceptPendingContract(), isTrue);
     expect(source.hasWork, isFalse);
@@ -110,7 +118,7 @@ void main() {
       ..update(_title, skir.DataValue.wrapStringValue("Draft"))
       ..markContractUnavailable("Catalog unavailable");
 
-    expect(source.contractUnavailable, isTrue);
+    await eventually(() => expect(source.contractUnavailable, isTrue));
     expect(source.readOnly, isTrue);
     expect(
       source.value(_title).valueOrNull,
@@ -169,13 +177,15 @@ void main() {
         },
       ).acquire(workspace);
       expect(replacement.workspace, same(source.workspace));
+      await eventually(
+        () => expect(
+          source.value(_description).valueOrNull,
+          skir.DataValue.wrapStringValue("Remote description"),
+        ),
+      );
       expect(
         source.value(_title).valueOrNull,
         skir.DataValue.wrapStringValue("Draft"),
-      );
-      expect(
-        source.value(_description).valueOrNull,
-        skir.DataValue.wrapStringValue("Remote description"),
       );
 
       expect(

@@ -414,7 +414,7 @@ void main() {
     final (:source, :task) = debouncedTitleEdit(commits);
     source.acceptRemoteDeletion();
 
-    expect(task.cancelled, isTrue);
+    await eventually(() => expect(task.cancelled, isTrue));
     expect(await task.completed, EditorTaskCompletion.cancelled);
     expect(commits.length, 0);
     source.dispose();
@@ -451,7 +451,7 @@ void main() {
     final retry = await scheduler.scheduledAt(1);
     source.acceptRemoteDeletion();
 
-    expect(retry.cancelled, isTrue);
+    await eventually(() => expect(retry.cancelled, isTrue));
     expect(await flush, isA<MutationUnavailable>());
     expect(calls, 1);
     source.dispose();
@@ -613,7 +613,7 @@ void main() {
     );
   });
 
-  test("clean remote deletion remains visible at the root", () {
+  test("clean remote deletion remains visible at the root", () async {
     final source = titleAndColorSource(
       commit: (commit) async => TypedMutationResult.success(
         revision: commit.expectedRevision + 1,
@@ -623,14 +623,16 @@ void main() {
 
     source.acceptRemoteDeletion();
 
-    expect(
-      source.saveState(editorRootPath).phase,
-      EditorSavePhase.deletedElsewhere,
+    await eventually(
+      () => expect(
+        source.saveState(editorRootPath).phase,
+        EditorSavePhase.deletedElsewhere,
+      ),
     );
     source.dispose();
   });
 
-  test("metadata refresh preserves a rebased local draft", () {
+  test("metadata refresh preserves a rebased local draft", () async {
     final source = titleAndColorSource(
       commit: (commit) async => TypedMutationResult.success(
         revision: commit.expectedRevision + 1,
@@ -649,13 +651,15 @@ void main() {
     );
     source.refreshDocument(refreshed);
 
+    await eventually(
+      () => expect(
+        source.value(editorRootPath.field("color")).valueOrNull,
+        skir.DataValue.wrapStringValue("Remote"),
+      ),
+    );
     expect(
       source.value(title).valueOrNull,
       skir.DataValue.wrapStringValue("Local"),
-    );
-    expect(
-      source.value(editorRootPath.field("color")).valueOrNull,
-      skir.DataValue.wrapStringValue("Remote"),
     );
     expect(source.document.readOnly, isTrue);
     expect(notifications, greaterThan(notificationsBeforeRefresh));

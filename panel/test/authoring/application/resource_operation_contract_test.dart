@@ -291,7 +291,13 @@ void main() {
       (edit) =>
           edit.set(_firstTitle, skir.DataValue.wrapStringValue("External")),
     );
-    await world.container.pump();
+    await workspace.eventually(
+      () => workspace.workspace.confirmed.resource(_first)!.authoredField(
+        "title",
+      ),
+      (title) => title == skir.DataValue.wrapStringValue("External"),
+      description: "the external title admitted",
+    );
     final remote = AuthoringEdit.fromDocument(workspace.document)
       ..set(_firstTitle, skir.DataValue.wrapStringValue("Prefix Draft"));
     final (group: operation, :staged) = workspace.stageRequired(

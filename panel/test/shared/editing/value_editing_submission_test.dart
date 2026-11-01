@@ -18,14 +18,26 @@ void main() {
     "uncertain delivery blocks fresh requests and cannot discard evidence",
     () async {
       var sends = 0;
+      late final ScriptedValuePersistence saved;
+      saved = ScriptedValuePersistence(
+        key: const EditorResourceKey(scope: null, identity: "title"),
+        current: CallbackEditorSnapshot(
+          original,
+          acceptTestEditorMutation,
+          null,
+        ),
+        commit: (_) async {
+          sends++;
+          // The saved values stay unread, so the outcome stays unknown.
+          saved.load = () => Completer<EditorSnapshot?>().future;
+          throw TimeoutException("Lost response");
+        },
+      );
       final source = fakeValueEditing(
         document: original,
         validation: acceptTestEditorMutation,
         debounce: const Duration(days: 1),
-        commit: (_) async {
-          sends++;
-          throw TimeoutException("Lost response");
-        },
+        persistence: saved,
       );
       addTearDown(source.dispose);
       source.update(_title, skir.DataValue.wrapStringValue("Submitted"));

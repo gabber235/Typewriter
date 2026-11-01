@@ -58,15 +58,22 @@ extension RealmWorld on World {
     addCleanup(subscription.close);
   }
 
-  /// The panel's editing of the seeded Realm once the session resolved, kept
-  /// alive until the world is disposed, as an open surface keeps it.
+  /// The panel's editing of the seeded Realm once it admitted the saved
+  /// document, kept alive until the world is disposed, as an open surface
+  /// keeps it.
   Future<RealmEditing> openRealmEditing() async {
     await whenSignedIn();
     final subscription = container.listen(
       realmEditingProvider(requireRealm.scope),
       (_, _) {},
     );
-    return subscription.read();
+    final editing = subscription.read();
+    await editing.eventually(
+      () => editing.state.confirmed,
+      (confirmed) => confirmed != null,
+      description: "the editing workspace admitting the saved document",
+    );
+    return editing;
   }
 
   /// Opens [resource] in an autosaving form, makes [change] in it and saves

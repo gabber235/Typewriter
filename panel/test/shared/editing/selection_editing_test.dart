@@ -210,14 +210,19 @@ void main() {
 
   test("independent server boundaries preserve partial outcomes", () async {
     final session = testWorkSession();
-    final boundary = ScriptedValuePersistence(
+    late final ScriptedValuePersistence boundary;
+    boundary = ScriptedValuePersistence(
       key: const EditorResourceKey(scope: null, identity: "second"),
       current: textSnapshot(),
-      commit: (_) async => MutationUncertain(
-        message: "Lost reply",
-        cause: StateError("Lost reply"),
-        stackTrace: StackTrace.current,
-      ),
+      commit: (_) async {
+        // The saved values stay unread, so the outcome stays unknown.
+        boundary.load = () => Completer<EditorSnapshot?>().future;
+        return MutationUncertain(
+          message: "Lost reply",
+          cause: StateError("Lost reply"),
+          stackTrace: StackTrace.current,
+        );
+      },
     );
     final first = identifiedOwner(session, "first");
     final second = identifiedOwner(session, "second", persistence: boundary);

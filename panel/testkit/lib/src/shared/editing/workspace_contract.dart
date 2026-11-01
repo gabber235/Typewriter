@@ -298,6 +298,8 @@ void editingWorkspaceContract<S, E>(
         stage("Draft");
         final applying = control.apply();
         await boundary.started.future;
+        // The saved values stay unread, so the outcome stays unknown.
+        boundary.refreshReply = Completer();
         reply.complete(
           SubmissionUncertain(
             message: "Reply lost",

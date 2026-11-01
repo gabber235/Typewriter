@@ -59,7 +59,6 @@ void main() {
       );
 
       expect(state.confirmedDocument, isNull);
-      expect(state.refreshing, isFalse);
     },
   );
 
@@ -350,6 +349,11 @@ void main() {
       (_, _) {},
     );
     world.addCleanup(subscription.close);
+    await editing.eventually(
+      () => editing.state.confirmed,
+      (confirmed) => confirmed != null,
+      description: "the editing workspace admitting the saved document",
+    );
     final staged = editing.setText(
       "Rename",
       _titleLocation,

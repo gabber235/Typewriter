@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "editing_workspace.freezed.dart";
+
 enum EditGroupLifetime { reusable, operation }
 
 /// Owns the ordered local edit journal for one persistence boundary.
@@ -25,7 +27,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     EditorJitterSource? jitter,
     this.debounce = const Duration(milliseconds: 250),
   }) : jitter = jitter ?? RandomEditorJitterSource(),
-       _state = EditingState<S>(confirmed: initial, working: initial);
+       _state = EditingState<S>(confirmed: initial, working: initial) {
+    _inputs = _inbox.stream.listen(_receive);
+  }
 
   final EditModel<S, E> model;
   EditPersistence<S, E> persistence;
@@ -57,6 +61,13 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
 
   /// The latest read of each review; an older read finishing later is dropped.
   final _reviewRuns = <EditGroupId, Object>{};
+
+  /// Inputs wait here for a later microtask, in arrival order: a caller may
+  /// be inside the provider notification that produced one, and what the
+  /// workspace starts in response (a save, a refresh) must not change that
+  /// provider again in the same frame.
+  final _inbox = StreamController<_Input<S>>();
+  late final StreamSubscription<_Input<S>> _inputs;
   bool get isPreparing => _preparations != 0;
   bool get hasPendingWork => isPreparing || _operations.isNotEmpty;
   int get revision => _revision;
@@ -399,12 +410,42 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     return result;
   }
 
+  /// Hands over what a saved state provider holds now: its value is an
+  /// observation, its error a failure, and loading changes nothing. Read the
+  /// workspace once it has admitted the input, not right after this call.
+  void observe(AsyncValue<S> next) {
+    if (next.value case final observation?) {
+      acceptConfirmed(observation);
+    } else if (next.error case final error?) {
+      acceptFailure(error);
+    }
+  }
+
+  /// Hands over a saved state observation; see [observe].
+  void acceptConfirmed(S observation) => _add(_Input.observed(observation));
+
+  /// Hands over a failure to read the saved values; see [observe].
+  void acceptFailure(Object error) => _add(_Input.failed(error));
+
+  /// Hands over that the editor contract is unavailable; see [observe].
+  void acceptUnavailable(Object error) => _add(_Input.unavailable(error));
+
+  void _add(_Input<S> input) {
+    if (!_closed) _inbox.add(input);
+  }
+
+  void _receive(_Input<S> input) => switch (input) {
+    _Observed(:final observation) => _admitObserved(observation),
+    _Failed(:final error) => _fail(error),
+    _Unavailable(:final error) => _markUnavailable(error),
+  };
+
   /// Admits a canonical observation and rebases pending local intent.
   /// Available observations received during a save are deferred until the
   /// active lane settles, preventing them from replacing its captured baseline.
   /// Saved values observed again also settle groups the last read left
   /// unsettled; an observation held back during the save predates them.
-  void acceptConfirmed(S observation) {
+  void _admitObserved(S observation) {
     _admitConfirmed(observation);
     if (model.isAvailable(observation)) _recoverUnsettled();
   }
@@ -437,10 +478,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       },
     );
     if (!unsettled) return;
-    // The observation can arrive while its provider rebuilds; a refresh started
-    // now would change that provider again in the same frame.
-    _recovering = Future<void>.microtask(refreshConfirmed)
-        .whenComplete(() => _recovering = null);
+    _recovering = refreshConfirmed().whenComplete(() => _recovering = null);
   }
 
   void _install(S incoming) {
@@ -451,7 +489,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       if (admission.kind == EditObservationKind.stale) return;
       if (admission.kind == EditObservationKind.inconsistent) {
         _state = _state.copyWith(confirmed: observation);
-        acceptFailure(
+        _fail(
           StateError(admission.message ?? "Inconsistent confirmed observation"),
         );
         for (final group in _groups.values) {
@@ -476,13 +514,13 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     _rebuild();
   }
 
-  void acceptUnavailable(Object error) {
+  void _markUnavailable(Object error) {
     if (_closed) return;
     _state = _state.copyWith(available: false, failure: error);
     _notify();
   }
 
-  void acceptFailure(Object error) {
+  void _fail(Object error) {
     if (_closed) return;
     _state = _state.copyWith(failure: error);
     _notify();
@@ -660,6 +698,11 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   }
 
   Future<void> _drain() async {
+    // Choose after the turn that started this drain, so every save
+    // requested in that turn joins it. [save] stores this drain in [_saving]
+    // only once _drain returns; a drain that chose at once and found
+    // nothing would leave its loop while a later save in the same turn
+    // joined it and was never sent.
     await Future<void>.value();
     while (!_closed) {
       final id = _requested.firstWhereOrNull(
@@ -974,7 +1017,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         }
       }
     } on Object catch (error) {
-      acceptFailure(error);
+      _fail(error);
     }
   }
 
@@ -1094,10 +1137,6 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     EditReview<EditGroupReview<S, E>> result;
     try {
       inspectUnsubmitted(id);
-      // Reading saved values publishes them to the confirmed state, whose
-      // listeners may be running the change that started this review; the
-      // read starts once that change is done and no save is applying.
-      await Future<void>.value();
       late S observation;
       for (var current = false; !current;) {
         if (_saving case final saving?) {
@@ -1111,7 +1150,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         // A save that started meanwhile moves the saved values again.
         current = _saving == null;
       }
-      acceptConfirmed(observation);
+      _admitObserved(observation);
       result = EditReview.ready(inspectUnsubmitted(id));
     } on Object catch (error, stackTrace) {
       result = EditReview.failed(error, stackTrace);
@@ -1472,6 +1511,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   void dispose() {
     if (_closed) return;
     _closed = true;
+    // Inputs still queued are dropped; the workspace is gone.
+    unawaited(_inputs.cancel());
+    unawaited(_inbox.close());
     for (final task in _tasks.values) {
       task.cancel();
     }
@@ -1701,4 +1743,16 @@ final class _WorkspacePreparedApply<S, E> implements EditPreparedApply {
     final result = await submission.run();
     if (!workspace._closed) await workspace._settle(group, result);
   }
+}
+
+/// One input from outside the workspace.
+@freezed
+sealed class _Input<S> with _$Input<S> {
+  const factory _Input.observed(S observation) = _Observed<S>;
+
+  /// The saved values could not be read.
+  const factory _Input.failed(Object error) = _Failed<S>;
+
+  /// The editor contract is unavailable, not only the saved values.
+  const factory _Input.unavailable(Object error) = _Unavailable<S>;
 }

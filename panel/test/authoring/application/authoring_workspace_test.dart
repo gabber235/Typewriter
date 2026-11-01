@@ -25,8 +25,11 @@ void main() {
         ..remoteChange(
           (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Remote")),
         );
-      await world.container.pump();
-      expect(form.phase, isA<EditGroupConflict<AuthoringDocument>>());
+      await editing.eventually(
+        () => form.phase,
+        (phase) => phase is EditGroupConflict<AuthoringDocument>,
+        description: "the local rename in conflict with the remote one",
+      );
       await expectLater(
         editing.refreshedConflictReview(form.editingGroup),
         throwsA(
@@ -128,9 +131,11 @@ void main() {
           ),
         );
       realm.serve(removed.toDocument());
-      await world.container.pump();
-
-      expect(form.phase, isA<EditGroupRejected<AuthoringDocument>>());
+      await editing.eventually(
+        () => form.phase,
+        (phase) => phase is EditGroupRejected<AuthoringDocument>,
+        description: "the move of the removed item rejected",
+      );
       expect(editing.conflictReview(form.editingGroup), isNull);
       expect(realm.saves, isEmpty);
       expect(form.discard(), isTrue);
@@ -533,13 +538,17 @@ void main() {
         ]).document,
       );
       final review = await editing.refreshedConflictReview(form.editingGroup);
-      editing.acceptConfirmed(
-        authoredDoc([
-          authoredRecord(
-            _resource,
-            texts({"name": "Changed again", "position": "0"}),
-          ),
-        ]).document,
+      final changedAgain = authoredDoc([
+        authoredRecord(
+          _resource,
+          texts({"name": "Changed again", "position": "0"}),
+        ),
+      ]).document;
+      editing.acceptConfirmed(changedAgain);
+      await editing.eventually(
+        () => editing.state.confirmed,
+        (confirmed) => identical(confirmed, changedAgain),
+        description: "the saved name changed again admitted",
       );
       for (final choice in AuthoringConflictChoice.values) {
         expect(
@@ -674,7 +683,13 @@ void main() {
         realmEditingProvider(world.requireRealm.scope),
         (_, _) {},
       );
-      surface.read().setText(
+      final editing = surface.read();
+      await editing.eventually(
+        () => editing.state.confirmed,
+        (confirmed) => confirmed != null,
+        description: "the editing workspace admitting the saved document",
+      );
+      editing.setText(
         "Rename",
         _name,
         "Retained",
@@ -708,6 +723,11 @@ void main() {
       (_, _) {},
     );
     final workspace = surface.read();
+    await workspace.eventually(
+      () => workspace.state.confirmed,
+      (confirmed) => confirmed != null,
+      description: "the editing workspace admitting the saved document",
+    );
     final gate = Completer<void>();
     final preparing = workspace.prepare(
       label: "Prepare rename",
@@ -1093,7 +1113,11 @@ void main() {
             ),
           );
       workspace.acceptConfirmed(changed);
-      expect(form.phase, isA<EditGroupContractChanged>());
+      await workspace.eventually(
+        () => form.phase,
+        (phase) => phase is EditGroupContractChanged,
+        description: "the pending rename stopped by the new contract",
+      );
       expect(
         form.document.valueAt(_name),
         skir.DataValue.wrapStringValue("Local"),
@@ -1114,9 +1138,11 @@ void main() {
   test(
     "unrelated remote changes merge while guarded changes retain a conflict",
     () async {
-      final workspace = await testWorld(_original).openRealmEditing();
+      final world = testWorld(_original);
+      final realm = world.requireRealm;
+      final workspace = await world.openRealmEditing();
       final form = workspace.form(_resource)..setText("Rename", _name, "Local");
-      workspace.acceptConfirmed(
+      realm.serve(
         authoredDoc([
           authoredRecord(
             _resource,
@@ -1124,12 +1150,13 @@ void main() {
           ),
         ]).document,
       );
-      expect(form.blocked, isFalse);
-      expect(
-        workspace.document.valueAt(_position),
-        skir.DataValue.wrapStringValue("Remote"),
+      await workspace.eventually(
+        () => workspace.document.valueAt(_position),
+        (position) => position == skir.DataValue.wrapStringValue("Remote"),
+        description: "the remote position merged",
       );
-      workspace.acceptConfirmed(
+      expect(form.blocked, isFalse);
+      realm.serve(
         authoredDoc([
           authoredRecord(
             _resource,
@@ -1137,7 +1164,11 @@ void main() {
           ),
         ]).document,
       );
-      expect(form.phase, isA<EditGroupConflict>());
+      await workspace.eventually(
+        () => form.phase,
+        (phase) => phase is EditGroupConflict,
+        description: "the local rename in conflict with the remote one",
+      );
       expect(
         workspace.document.valueAt(_name),
         skir.DataValue.wrapStringValue("Local"),
@@ -1339,6 +1370,30 @@ void main() {
     },
   );
 
+  test("a save requested in the same turn as one with nothing to send is "
+      "sent", () async {
+    final world = testWorld(_original);
+    final realm = world.requireRealm;
+    final editing = await world.openRealmEditing();
+    final untouched = editing.form(_resource);
+    final rename =
+        editing.setText(
+              "Rename",
+              _name,
+              "Next",
+              policy: EditorCommitPolicy.applyResource,
+            )
+            as EditStaged;
+
+    unawaited(untouched.save());
+    await editing.workspace.save(rename.group);
+
+    expect(
+      realm.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Next"),
+    );
+  });
+
   test("missing resources retain their proposal for comparison", () async {
     final workspace = await testWorld(_original).openRealmEditing();
     final form = workspace.form(_resource)
@@ -1347,6 +1402,11 @@ void main() {
       authoredDoc([
         authoredRecord(_resource, texts({"name": "Original", "position": "0"})),
       ]).document.copyWith(entries: const {}),
+    );
+    await workspace.eventually(
+      () => form.phase,
+      (phase) => phase is EditGroupResourceMissing,
+      description: "the renamed resource missing from the saved values",
     );
     final phase = form.phase! as EditGroupResourceMissing;
     expect(
@@ -1379,18 +1439,22 @@ void main() {
         },
       );
       final entry = document.entry(_resource)!;
-      workspace.acceptConfirmed(
-        document.copyWith(
-          entries: {
-            _resource: skir.AuthoringResource(
-              id: _resource,
-              content: skir.AuthoringRecord(
-                configuration: entry.content.configuration,
-                fields: entry.content.fields.toList().reversed,
-              ),
+      final reordered = document.copyWith(
+        entries: {
+          _resource: skir.AuthoringResource(
+            id: _resource,
+            content: skir.AuthoringRecord(
+              configuration: entry.content.configuration,
+              fields: entry.content.fields.toList().reversed,
             ),
-          },
-        ),
+          ),
+        },
+      );
+      workspace.acceptConfirmed(reordered);
+      await workspace.eventually(
+        () => workspace.state.confirmed,
+        (confirmed) => identical(confirmed, reordered),
+        description: "the reordered record admitted",
       );
       expect(form.blocked, isFalse);
       form.discard();
@@ -1405,7 +1469,13 @@ void main() {
       );
       final prepared = AuthoringEdit.fromDocument(document)
         ..set(itemsAt, items(["first", "second"]));
-      workspace.acceptConfirmed(prepared.toDocument());
+      final listed = prepared.toDocument();
+      workspace.acceptConfirmed(listed);
+      await workspace.eventually(
+        () => workspace.state.confirmed,
+        (confirmed) => identical(confirmed, listed),
+        description: "the saved items admitted",
+      );
       form.edit(
         label: "Guard collection",
         apply: (edit) {
@@ -1414,10 +1484,14 @@ void main() {
             ..set(_position, skir.DataValue.wrapStringValue("Next"));
         },
       );
-      final remote = AuthoringEdit.fromDocument(prepared.toDocument())
+      final remote = AuthoringEdit.fromDocument(listed)
         ..set(itemsAt, items(["second", "first"]));
       workspace.acceptConfirmed(remote.toDocument());
-      expect(form.phase, isA<EditGroupConflict>());
+      await workspace.eventually(
+        () => form.phase,
+        (phase) => phase is EditGroupConflict,
+        description: "the reordered items in conflict with the guarded order",
+      );
     },
   );
 
@@ -1426,7 +1500,13 @@ void main() {
     final world = await signedInWorld(_original);
     final scope = world.requireRealm.scope;
     final view = world.container.listen(realmEditingProvider(scope), (_, _) {});
-    view.read().attach(_resource, policy: EditorCommitPolicy.applyResource)
+    final editing = view.read();
+    await editing.eventually(
+      () => editing.state.confirmed,
+      (confirmed) => confirmed != null,
+      description: "the editing workspace admitting the saved document",
+    );
+    editing.attach(_resource, policy: EditorCommitPolicy.applyResource)
       ..setText("Rename", _name, "Local")
       ..detach();
 
