@@ -1351,7 +1351,8 @@ void main() {
   });
 
   test("a save settles from its reply while the saved document cannot be "
-      "read, and its later edit stays local and editable", () async {
+      "read, and its later edit stays local and editable until it is saved "
+      "once the read recovers", () async {
     final world = testWorld([..._original, heldSaves]);
     final realm = world.requireRealm
       ..refreshFailure = StateError("Refresh lost");
@@ -1373,6 +1374,20 @@ void main() {
       skir.DataValue.wrapStringValue("Tail"),
     );
     expect(form.blocked, isFalse);
+
+    realm
+      ..refreshFailure = null
+      ..serve(realm.document);
+    final tail = form.save();
+    await eventually(() => expect(realm.saves, hasLength(2)));
+    realm.saves.last.confirm();
+    await tail;
+
+    expect(form.hasSubmittedWork, isFalse);
+    expect(
+      realm.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Tail"),
+    );
   });
 
   test(

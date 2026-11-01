@@ -145,7 +145,8 @@ void main() {
   });
 
   test(
-    "uncertain delivery retains the reservation and replays without refresh",
+    "uncertain delivery retains the reservation and replays the captured "
+    "request",
     () async {
       final workspace = testWorkSession();
       final resource = UncertainSaveResource(
