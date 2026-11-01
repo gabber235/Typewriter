@@ -89,7 +89,8 @@ impl ClientConfiguration {
     /// overlay with decryption, images and resources swapped and faults links added, so it
     /// answers on the addresses and scopes the panel's local configuration names, each NATS
     /// address through the faults link `ci` names. Its Authentik sends the panel back to the
-    /// origin `ci` names, so the sign in pages are built from that origin, never local.json's.
+    /// origin `ci` names, so the sign in pages are the panel's own routes from its configuration
+    /// at that origin instead of local.json's.
     pub fn ci_cluster(ctx: &Context, ci: &CiClients, users_file: PathBuf) -> Result<Self> {
         let file = ctx.root.join(LOCAL_PANEL_CONFIG);
         let config: Value = serde_json::from_str(
@@ -105,7 +106,9 @@ impl ClientConfiguration {
         };
         let issuer = key("AUTH_ISSUER")?;
         let nats = key("NATS_DESKTOP_URL")?;
-        let redirect = format!("{}/redirect.html", ci.panel_origin.origin);
+        let page = |name: &str| -> Result<String> {
+            Ok(with_origin(&key(name)?, &ci.panel_origin.origin))
+        };
         Ok(Self {
             nats_desktop_url: with_port(&nats, ci.links.nats),
             nats_web_url: with_port(&key("NATS_WEB_URL")?, ci.links.nats_web),
@@ -116,11 +119,14 @@ impl ClientConfiguration {
             auth_discovery_document_uri: key("AUTH_DISCOVERY_DOCUMENT_URI")?,
             sign_in_pages: BTreeMap::from([
                 ("AUTH_SCOPES", key("AUTH_SCOPES")?),
-                ("AUTH_REDIRECT_URI", redirect.clone()),
-                ("AUTH_POST_LOGOUT_REDIRECT_URI", redirect.clone()),
+                ("AUTH_REDIRECT_URI", page("AUTH_REDIRECT_URI")?),
+                (
+                    "AUTH_POST_LOGOUT_REDIRECT_URI",
+                    page("AUTH_POST_LOGOUT_REDIRECT_URI")?,
+                ),
                 (
                     "AUTH_FRONT_CHANNEL_LOGOUT_URI",
-                    format!("{redirect}?requestType=front-channel-logout"),
+                    page("AUTH_FRONT_CHANNEL_LOGOUT_URI")?,
                 ),
             ]),
             control: StackControl {
@@ -131,8 +137,8 @@ impl ClientConfiguration {
         })
     }
 
-    /// The values later services and the command under test read from `stack.env`, with the
-    /// client files in `state`.
+    /// The values the command under test reads from `stack.env`, naming the client files in
+    /// `state`. Later services read the clients typed, through `StackContext::clients`.
     pub fn published(&self, state: &Path) -> [(String, String); 9] {
         [
             ("STACK_API_BASE_URL", self.api_base_url.clone()),
@@ -246,13 +252,22 @@ fn with_port(url: &str, port: u16) -> String {
     format!("{prefix}{host}:{port}{path}")
 }
 
+/// `uri`'s path and query at `origin` instead of its own, such as
+/// `http://localhost:2350/redirect.html` at `http://localhost:4000` as
+/// `http://localhost:4000/redirect.html`.
+fn with_origin(uri: &str, origin: &str) -> String {
+    let rest = uri.split_once("://").map_or(uri, |(_, rest)| rest);
+    let path = rest.find(['/', '?', '#']).map_or("", |at| &rest[at..]);
+    format!("{}{path}", origin.trim_end_matches('/'))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::test_support::{TempRoot, ci_clients};
 
     #[test]
-    fn the_ci_panel_signs_in_and_out_at_the_origin_clients_json_names() {
+    fn the_ci_panel_signs_in_and_out_on_its_own_routes_at_the_origin_clients_json_names() {
         let root = TempRoot::new();
         root.write(
             LOCAL_PANEL_CONFIG,
@@ -261,9 +276,9 @@ mod tests {
               "API_BASE_URL": "https://api.example", "AUTH_ISSUER": "https://auth.example/",
               "AUTH_DISCOVERY_DOCUMENT_URI": "https://auth.example/.well-known/openid-configuration",
               "AUTH_SCOPES": "openid",
-              "AUTH_REDIRECT_URI": "http://localhost:2350/redirect.html",
-              "AUTH_POST_LOGOUT_REDIRECT_URI": "http://localhost:2350/redirect.html",
-              "AUTH_FRONT_CHANNEL_LOGOUT_URI": "http://localhost:2350/redirect.html?requestType=front-channel-logout"
+              "AUTH_REDIRECT_URI": "http://localhost:2350/auth/back.html",
+              "AUTH_POST_LOGOUT_REDIRECT_URI": "http://localhost:2350/auth/gone.html",
+              "AUTH_FRONT_CHANNEL_LOGOUT_URI": "http://localhost:2350/auth/back.html?logout=front"
             }"#,
         );
         let mut facts = ci_clients();
@@ -276,15 +291,15 @@ mod tests {
         let pages = &config.sign_in_pages;
         assert_eq!(
             pages["AUTH_REDIRECT_URI"],
-            "http://localhost:4000/redirect.html"
+            "http://localhost:4000/auth/back.html"
         );
         assert_eq!(
             pages["AUTH_POST_LOGOUT_REDIRECT_URI"],
-            "http://localhost:4000/redirect.html"
+            "http://localhost:4000/auth/gone.html"
         );
         assert_eq!(
             pages["AUTH_FRONT_CHANNEL_LOGOUT_URI"],
-            "http://localhost:4000/redirect.html?requestType=front-channel-logout"
+            "http://localhost:4000/auth/back.html?logout=front"
         );
     }
 
