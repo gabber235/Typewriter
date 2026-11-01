@@ -189,13 +189,12 @@ val SurrealAuthoringRepositoryTest by testSuite {
         }
     }
 
-    test("a commit whose result is lost reloads the saved state, and its resend answers committed without saving again") {
+    test("a commit whose result is lost reloads the saved state before the next read") {
         val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))
         RealmFixture.of(catalog, storage = storage).use { realm ->
             realm.views.capture().use { retained ->
-                val edit = renameEdit(realm.generation, id, initial)
                 storage.failAfterWrite = true
-                shouldThrow<IllegalStateException> { realm.commit(edit, attempt) }
+                shouldThrow<IllegalStateException> { realm.commit(renameEdit(realm.generation, id, initial), attempt) }
                 storage.failAfterWrite = false
                 storage.failReads = true
                 shouldThrow<IllegalStateException> { realm.views.capture() }
@@ -203,16 +202,27 @@ val SurrealAuthoringRepositoryTest by testSuite {
                 storage.failReads = false
 
                 realm.resources.getValue(id).text("name") shouldBe "Story"
-                val saved = realm.resources
-                realm
-                    .commit(edit, attempt)
-                    .shouldBeCommitted()
-                    .resources
-                    .single { it.id == id }
-                    .content
-                    .text("name") shouldBe "Story"
-                realm.resources shouldBe saved
             }
+        }
+    }
+
+    test("the resend of a commit whose result was lost answers committed without saving again") {
+        val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))
+        RealmFixture.of(catalog, storage = storage).use { realm ->
+            val edit = renameEdit(realm.generation, id, initial)
+            storage.failAfterWrite = true
+            shouldThrow<IllegalStateException> { realm.commit(edit, attempt) }
+            storage.failAfterWrite = false
+            val saved = realm.resources
+
+            realm
+                .commit(edit, attempt)
+                .shouldBeCommitted()
+                .resources
+                .single { it.id == id }
+                .content
+                .text("name") shouldBe "Story"
+            realm.resources shouldBe saved
         }
     }
 
