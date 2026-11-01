@@ -34,6 +34,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/devenv
+        with:
+          op-service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       - run: devenv shell -- cargo xtask hook commit-msg --range ${{ github.event.before }}..${{ github.sha }}
 
   full:
@@ -46,6 +48,9 @@ jobs:
         with:
           ref: ${{ github.event_name == 'schedule' && 'features/v1' || github.ref }}
       - uses: ./.github/actions/devenv
+        with:
+          op-service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          caches: flutter
       # xtask resolves the `ci` secrets through this service account and fetches the pinned
       # Infrastructure revision with the deploy key among them.
       - run: devenv shell -- cargo xtask e2e full

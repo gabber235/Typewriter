@@ -8,7 +8,7 @@ This document outlines the process for setting up the local development environm
 
 ### Secrets
 
-[`secretspec.toml`](secretspec.toml) declares every secret by name, grouped in profiles: `default` (local tools), `deploy`, `ci`, `bot`, `release` and `marketplace`. Values never live in the repository.
+[`secretspec.toml`](secretspec.toml) declares every secret by name, grouped in profiles: `default` (local tools), `deploy`, `ci`, `cache`, `bot`, `release` and `marketplace`. Values never live in the repository.
 
 | Who | Where values come from |
 |---|---|

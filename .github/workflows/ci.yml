@@ -32,7 +32,11 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      # Every other job waits for this one, so the shell it pushes to the Nix cache is theirs to
+      # pull.
       - uses: ./.github/actions/devenv
+        with:
+          op-service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       # The last line only: the shell may print its own messages before the JSON.
       - id: plan
         run: echo "areas=$(devenv shell -- cargo xtask check --list --base "$BASE_SHA" | tail -n 1)" >> "$GITHUB_OUTPUT"
@@ -50,7 +54,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      # Generation runs Gradle and build_runner whatever the area.
       - uses: ./.github/actions/devenv
+        with:
+          caches: gradle flutter
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
@@ -95,6 +102,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/devenv
+        with:
+          caches: flutter
       - run: devenv shell -- cargo xtask e2e ${{ matrix.suite }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.

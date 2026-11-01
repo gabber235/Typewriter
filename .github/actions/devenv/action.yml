@@ -1,30 +1,147 @@
 name: devenv
 description: >-
-  Installs Nix with the pinned toolchain's binary caches and devenv, so a job's steps can run
-  `devenv shell -- cargo xtask ...` exactly as on a developer machine.
+  Installs Nix and devenv and builds the devenv shell, so a job's steps can run
+  `devenv shell -- cargo xtask ...` exactly as on a developer machine. Nix paths come from
+  gabber235.cachix.org, which trusted runs fill; tool caches come from the long lived branches.
+
+inputs:
+  op-service-account-token:
+    description: >-
+      The 1Password service account token (`secrets.OP_SERVICE_ACCOUNT_TOKEN`). On a trusted run it
+      reads the `cache` secrets to push the shell to gabber235.cachix.org. Fork pull requests get
+      none, so they only read.
+    default: ""
+  caches:
+    description: >-
+      Tool caches besides xtask's Cargo build, space separated: `gradle` (dependencies and the
+      wrapper) and `flutter` (the pub cache).
+    default: ""
 
 runs:
   using: composite
   steps:
-    # Room for the Nix store, Cargo, Gradle and Flutter on the 14 GB runner disk.
-    - uses: jlumbroso/free-disk-space@v1.3.1
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
+    # Trusted runs (pushes to the long lived branches, pull requests from this repository) push
+    # to the shared Nix cache. Tool caches are saved by pushes to the long lived branches only:
+    # every pull request is its own cache scope, and copies per pull request would evict each
+    # other from the 10 GB the repository gets, while a long lived branch's copy is read by every
+    # pull request into it.
+    - id: trust
+      shell: bash
+      env:
+        EVENT: ${{ github.event_name }}
+        REF: ${{ github.ref }}
+        HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        REPO: ${{ github.repository }}
+        HAS_TOKEN: ${{ inputs.op-service-account-token != '' }}
+      run: |
+        long_lived=false
+        if [[ $EVENT == push && ( $REF == refs/heads/develop || $REF == refs/heads/features/v1 ) ]]; then
+          long_lived=true
+        fi
+        trusted=$long_lived
+        if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" ]]; then
+          trusted=true
+        fi
+        echo "save-caches=$long_lived" >> "$GITHUB_OUTPUT"
+        echo "push-nix=$([[ $trusted == true && $HAS_TOKEN == true ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        # Incremental artifacts only grow a cache that starts each job from the same state.
+        echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
     - uses: cachix/install-nix-action@v31
-    # The store from the last run with the same toolchain pins turns a cold install of about
-    # 20 minutes into a few.
-    - uses: nix-community/cache-nix-action@v6
-      with:
-        primary-key: nix-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.yaml', 'devenv.lock', 'nix/**') }}
-        restore-prefixes-first-match: nix-${{ runner.os }}-
-    # Read only: no auth token, so jobs pull Flutter from gabber235.cachix.org and devenv itself
-    # from the public devenv cache, and never push.
+    # Reads gabber235.cachix.org (Flutter, the Rust toolchain and every other path a trusted run
+    # built) and the public devenv cache. Pushing is the explicit step below, with a token only
+    # trusted runs can read.
     - uses: cachix/cachix-action@v17
       with:
         name: gabber235
         extraPullNames: devenv
     - shell: bash
       run: nix profile add nixpkgs#devenv
+    # The first entry builds the shell; later steps reuse it.
+    #
+    # Patch for the Nix resume bug (NixOS/nix#4533): when a download's connection drops, Nix
+    # resumes it with a range request, the cache answers HTTP 416, and Nix treats that as fatal.
+    # A new attempt keeps every path already fetched, so at most two retries, and only for that
+    # error.
+    - shell: bash
+      run: |
+        log="$RUNNER_TEMP/devenv-shell.log"
+        retries=0
+        until devenv shell -- true 2>&1 | tee "$log"; do
+          if ! grep -qF 'HTTP error 416' "$log" || (( retries == 2 )); then
+            exit 1
+          fi
+          retries=$((retries + 1))
+          echo "::warning::Nix failed a download resume with HTTP 416; building the shell again ($retries of 2)"
+        done
+    # The shell's closure holds every path it built: the Rust toolchain, cargo-llvm-cov and the
+    # rest. Cachix skips paths it or cache.nixos.org already has. A failed push costs the next run
+    # time, not this run its result.
+    - if: steps.trust.outputs.push-nix == 'true'
+      continue-on-error: true
+      shell: bash
+      env:
+        OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op-service-account-token }}
+      run: |
+        token=$(devenv shell -- secretspec get CACHIX_AUTH_TOKEN --profile cache --provider vault \
+          --reason "push the devenv shell to gabber235.cachix.org")
+        echo "::add-mask::$token"
+        realpath .devenv/gc/* | CACHIX_AUTH_TOKEN=$token cachix push gabber235
+
+    # Each tool cache is a pair: `actions/cache` saves at the end of the job where caches are saved,
+    # `actions/cache/restore` only reads everywhere else. Keep the pair's values the same.
+    #
+    # xtask's dependencies, which every job compiles before its first command. The toolchain is
+    # pinned in devenv.nix and devenv.lock, so a new toolchain starts empty instead of restoring
+    # artifacts it would rebuild anyway; a new Cargo.lock starts from the same toolchain's last.
+    - if: steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+          xtask/target/debug
+        key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('xtask/Cargo.lock') }}
+        restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+    - if: steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+          xtask/target/debug
+        key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('xtask/Cargo.lock') }}
+        restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+
+    # Gradle's downloaded dependencies and distribution, keyed by the build files that pin them.
+    - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches/modules-2
+          ~/.gradle/wrapper
+        key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/gradle/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: gradle-${{ runner.os }}-
+    - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.gradle/caches/modules-2
+          ~/.gradle/wrapper
+        key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/gradle/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: gradle-${{ runner.os }}-
+
+    # The packages of the panel, its testkit and its widgetbook.
+    - if: contains(inputs.caches, 'flutter') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.pub-cache
+        key: pub-${{ runner.os }}-${{ hashFiles('panel/**/pubspec.lock') }}
+        restore-keys: pub-${{ runner.os }}-
+    - if: contains(inputs.caches, 'flutter') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.pub-cache
+        key: pub-${{ runner.os }}-${{ hashFiles('panel/**/pubspec.lock') }}
+        restore-keys: pub-${{ runner.os }}-
