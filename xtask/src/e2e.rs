@@ -124,7 +124,7 @@ pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
 
 /// What the scenarios run against.
 #[derive(Clone, Copy)]
-enum Target {
+pub(crate) enum Target {
     /// A fresh worktree stack, up for the run only.
     Stack,
     /// The CI cluster `cargo xtask deploy ci` deployed to, with this worktree's organization and
@@ -339,7 +339,7 @@ fn in_chrome(mut command: Vec<String>, target: Target) -> Result<Recorded> {
 }
 
 /// The requirement the full suite's sign in journey proves.
-const JOURNEY: &str = "AUTH-2";
+pub(crate) const JOURNEY: &str = "AUTH-2";
 
 /// The folder of a suite's evidence its attempts write to, one `attempts/<n>/` each; run
 /// evidence, never another run (`results::RUN_EVIDENCE`), so the journey's own `test_run.json`
@@ -384,7 +384,7 @@ pub(crate) fn attempt_folder(case: &TestCase, n: u32) -> PathBuf {
 /// Attempt `n` of the cases `ids` selects (every case when empty): `scenarios(n, ids)` drives the
 /// scenario ids among them and `journey(n)` the sign in journey when selected, folded into one
 /// run, so the journey is attempted, rerun and repeated like every scenario.
-fn attempt(
+pub(crate) fn attempt(
     n: u32,
     ids: &[String],
     target: Target,
@@ -406,7 +406,6 @@ fn attempt(
 }
 
 /// What one run of a suite drives, from its `--only` ids.
-#[derive(Debug, PartialEq)]
 struct Selection {
     /// The scenario ids to drive (every scenario when empty), or none when only the journey was
     /// selected.
@@ -544,29 +543,9 @@ fn desktop_device() -> Result<&'static str> {
 mod tests {
     use super::*;
     use crate::test_support::{
-        e2e_args as parsed, exited, failed, refusal, report_text, requirement_run, run,
+        e2e_args as parsed, exited, failed, full_suite_attempts, refusal, report_text,
+        requirement_run, run,
     };
-
-    #[test]
-    fn a_plain_run_attempts_every_scenario_once_and_reruns_failures() {
-        let args = parsed(&["panel"]).unwrap();
-        assert!(args.only.is_empty());
-        assert_eq!(args.policy(), AttemptPolicy::RerunFailures(2));
-    }
-
-    #[test]
-    fn a_repeated_selection_attempts_each_selected_scenario_exactly_that_often() {
-        let args = parsed(&[
-            "panel",
-            "--only",
-            "CONN-1,[REALM-2] Opens",
-            "--repeat",
-            "20",
-        ])
-        .unwrap();
-        assert_eq!(args.only, ["CONN-1", "[REALM-2] Opens"]);
-        assert_eq!(args.policy(), AttemptPolicy::Exactly(20));
-    }
 
     #[test]
     fn a_waiting_run_keeps_the_running_run_s_results_until_its_turn() {
@@ -592,127 +571,73 @@ mod tests {
     }
 
     #[test]
-    fn the_journey_alone_runs_only_the_journey_on_the_ci_cluster() {
-        for only in [
-            vec!["AUTH-2".to_owned()],
-            vec![format!("[{JOURNEY}] Signs in")],
-        ] {
+    fn an_attempt_drives_the_scenarios_and_the_journey_its_selection_names() {
+        let cases = [
+            (Target::Cluster, "", vec!["1 scenarios ", "1 journey"]),
+            (Target::Stack, "", vec!["1 scenarios "]),
+            (Target::Cluster, "AUTH-2", vec!["1 journey"]),
+            (Target::Cluster, "[AUTH-2] Signs in", vec!["1 journey"]),
+            (
+                Target::Cluster,
+                "CONN-1,AUTH-2",
+                vec!["1 scenarios CONN-1", "1 journey"],
+            ),
+            (Target::Cluster, "CONN-1", vec!["1 scenarios CONN-1"]),
+        ];
+        for (target, only, expected) in cases {
+            let only: Vec<String> = only
+                .split(',')
+                .filter(|id| !id.is_empty())
+                .map(String::from)
+                .collect();
+            let (run, drives) =
+                full_suite_attempts(target, AttemptPolicy::Exactly(1), &only, |_, _| {
+                    Outcome::Passed
+                });
+            assert_eq!(drives, expected, "{only:?}");
+            let journey_reported = run
+                .cases
+                .iter()
+                .any(|case| case.requirement.as_deref() == Some(JOURNEY));
             assert_eq!(
-                Selection::of(&only, Target::Cluster),
-                Selection {
-                    scenarios: None,
-                    journey: true
-                }
+                journey_reported,
+                expected.contains(&"1 journey"),
+                "{only:?}"
             );
         }
     }
 
     #[test]
-    fn scenarios_with_the_journey_drive_those_scenarios_and_the_journey() {
-        let only = ["CONN-1".to_owned(), "AUTH-2".to_owned()];
-        assert_eq!(
-            Selection::of(&only, Target::Cluster),
-            Selection {
-                scenarios: Some(vec!["CONN-1".to_owned()]),
-                journey: true
-            }
-        );
+    fn a_selection_repeated_on_the_command_line_attempts_each_case_exactly_that_often() {
+        let args = parsed(&["full", "--repeat", "20", "--only", "CONN-1,AUTH-2"]).unwrap();
+        let (folded, drives) =
+            full_suite_attempts(Target::Cluster, args.policy(), &args.only, |_, _| {
+                Outcome::Passed
+            });
+        let expected: Vec<String> = (1..=20)
+            .flat_map(|n| [format!("{n} scenarios CONN-1"), format!("{n} journey")])
+            .collect();
+        assert_eq!(drives, expected);
+        assert_eq!(folded.cases.len(), 2);
+        assert!(folded.cases.iter().all(|case| case.attempts.len() == 20));
     }
 
     #[test]
-    fn an_empty_selection_drives_every_scenario_and_on_the_ci_cluster_the_journey() {
-        assert_eq!(
-            Selection::of(&[], Target::Cluster),
-            Selection {
-                scenarios: Some(Vec::new()),
-                journey: true
-            }
-        );
-        assert_eq!(
-            Selection::of(&[], Target::Stack),
-            Selection {
-                scenarios: Some(Vec::new()),
-                journey: false
-            }
-        );
-    }
-
-    #[test]
-    fn scenarios_without_the_journey_leave_it_out() {
-        let only = ["CONN-1".to_owned()];
-        assert!(!Selection::of(&only, Target::Cluster).journey);
-    }
-
-    #[test]
-    fn a_repeated_journey_is_attempted_exactly_that_often() {
-        let mut journeys = Vec::new();
-        let folded = results::attempts(
-            AttemptPolicy::Exactly(20),
-            &["AUTH-2".to_owned()],
-            &Quarantine::default(),
-            |n, ids| {
-                attempt(
-                    n,
-                    ids,
-                    Target::Cluster,
-                    |_, _| panic!("only the journey was selected"),
-                    |n| {
-                        journeys.push(n);
-                        Ok(requirement_run(
-                            JOURNEY,
-                            "[AUTH-2] Signs in",
-                            Outcome::Passed,
-                        ))
-                    },
-                )
+    fn a_plain_run_attempts_a_failed_journey_again_until_it_passes() {
+        let args = parsed(&["full"]).unwrap();
+        let (folded, drives) = full_suite_attempts(
+            Target::Cluster,
+            args.policy(),
+            &args.only,
+            |n, requirement| {
+                if n == 1 && requirement == JOURNEY {
+                    failed("boom")
+                } else {
+                    Outcome::Passed
+                }
             },
-        )
-        .unwrap();
-        assert_eq!(journeys, (1..=20).collect::<Vec<_>>());
-        assert_eq!(folded.cases.len(), 1);
-        assert_eq!(folded.cases[0].attempts.len(), 20);
-    }
-
-    #[test]
-    fn a_failed_journey_is_attempted_again_until_it_passes() {
-        let asked = std::cell::RefCell::new(Vec::new());
-        let folded = results::attempts(
-            AttemptPolicy::RerunFailures(2),
-            &[],
-            &Quarantine::default(),
-            |n, ids| {
-                attempt(
-                    n,
-                    ids,
-                    Target::Cluster,
-                    |n, ids| {
-                        asked.borrow_mut().push((n, "scenarios", ids.to_vec()));
-                        Ok(run(&[("[CONN-1] Reconnects", Outcome::Passed)]))
-                    },
-                    |n| {
-                        asked.borrow_mut().push((n, "journey", Vec::new()));
-                        Ok(requirement_run(
-                            JOURNEY,
-                            "[AUTH-2] Signs in",
-                            if n == 1 {
-                                failed("boom")
-                            } else {
-                                Outcome::Passed
-                            },
-                        ))
-                    },
-                )
-            },
-        )
-        .unwrap();
-        assert_eq!(
-            asked.into_inner(),
-            [
-                (1, "scenarios", Vec::new()),
-                (1, "journey", Vec::new()),
-                (2, "journey", Vec::new()),
-            ]
         );
+        assert_eq!(drives, ["1 scenarios ", "1 journey", "2 journey"]);
         let journey = folded
             .cases
             .iter()
