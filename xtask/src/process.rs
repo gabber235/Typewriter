@@ -58,21 +58,35 @@ fn group_alive(group: u32) -> bool {
 }
 
 /// Stops the process group `leader` leads, whether or not the leader already exited: SIGTERM,
-/// up to [`STOP_GRACE`] for the group to empty, then SIGKILL. Reaps the leader.
+/// up to [`STOP_GRACE`] for the group to empty, then SIGKILL and up to [`STOP_GRACE`] more for
+/// the killed members to be gone. Reaps the leader. Returns once the group is empty unless a
+/// member outlasts both deadlines, for example one stuck in uninterruptible sleep.
 pub fn stop(leader: &mut Child) {
     let group = leader.id();
     kill_group(group, libc::SIGTERM);
+    if !wait_until_empty(leader, group) {
+        // SIGKILL lands asynchronously, and a killed orphan counts as a member until its new
+        // parent reaps it, so the group can outlive the signal by a moment.
+        kill_group(group, libc::SIGKILL);
+        wait_until_empty(leader, group);
+    }
+    let _ = leader.wait();
+}
+
+/// Waits up to [`STOP_GRACE`] for the group to have no members left.
+fn wait_until_empty(leader: &mut Child, group: u32) -> bool {
     let deadline = Instant::now() + STOP_GRACE;
-    while Instant::now() < deadline {
+    loop {
         // Reaping the leader keeps an exited leader from counting as a member.
         let _ = leader.try_wait();
         if !group_alive(group) {
-            break;
+            return true;
+        }
+        if Instant::now() >= deadline {
+            return false;
         }
         thread::sleep(POLL);
     }
-    kill_group(group, libc::SIGKILL);
-    let _ = leader.wait();
 }
 
 /// A child leading its own process group. Dropping it stops the whole group.
@@ -178,11 +192,22 @@ mod tests {
 
     #[test]
     fn a_group_that_ignores_sigterm_is_killed() {
-        let group =
-            Group::spawn(Command::new("sh").args(["-c", "trap '' TERM; sleep 60 & wait"])).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let ready = dir.path().join("ready");
+        let group = Group::spawn(Command::new("sh").args([
+            "-c".as_ref(),
+            "trap '' TERM; sleep 60 & touch \"$1\"; wait".as_ref(),
+            "sh".as_ref(),
+            ready.as_os_str(),
+        ]))
+        .unwrap();
         let id = group.id();
-        // Gives the shell time to ignore SIGTERM before the stop.
-        thread::sleep(Duration::from_millis(200));
+        // The stop must find SIGTERM already ignored, or it never reaches SIGKILL.
+        let deadline = Instant::now() + Duration::from_secs(30);
+        while !ready.exists() {
+            assert!(Instant::now() < deadline, "the shell never ignored SIGTERM");
+            thread::sleep(Duration::from_millis(10));
+        }
         drop(group);
         assert!(!group_alive(id));
     }
