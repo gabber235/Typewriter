@@ -13,6 +13,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 import "panel.dart";
 import "stack.dart" as stack;
+import "wait.dart";
 
 /// The fixture user [username] signed in on a session of their own, until
 /// the scenario ends.
@@ -119,7 +120,7 @@ final class RemoteSession {
     _followed = target.scope;
     await container.read(authProvider.future);
     container.listen(workingAuthoringDocumentProvider(target.scope), (_, _) {});
-    await _until(
+    await until(
       "$username's session reads the realm",
       () => container
           .read(workingAuthoringDocumentProvider(target.scope))
@@ -152,7 +153,7 @@ final class RemoteSession {
       };
     }
 
-    await _until(
+    await until(
       "$username reads \"$text\" at ${fields.join(".")}; it reads "
       "\"${saved()}\"",
       () => saved() == text,
@@ -194,7 +195,7 @@ final class RemoteSession {
       throw TestFailure("$username could not stage \"$label\": $staged");
     }
     await editing.save(staged.group);
-    await _until(
+    await until(
       "$username's \"$label\" is saved",
       () => !editing.hasWorkFor(target.resource),
     );
@@ -228,18 +229,6 @@ final class RemoteSession {
     ProviderContainer container,
     ProviderListenable<Future<T>> provider,
   ) => container.listen(provider, (_, _) {}).read();
-
-  /// Waits in real time until [condition] holds, failing after 30 seconds
-  /// with [description].
-  Future<void> _until(String description, bool Function() condition) async {
-    final deadline = DateTime.now().add(const Duration(seconds: 30));
-    while (!condition()) {
-      if (DateTime.now().isAfter(deadline)) {
-        throw TestFailure("Waited 30s until $description");
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    }
-  }
 
   void _close() {
     _container?.dispose();

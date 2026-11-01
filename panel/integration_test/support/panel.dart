@@ -18,10 +18,7 @@ import "package:typewriter_testkit/testing.dart"
     show FieldDriver, SemanticsReading, visibleTextFields;
 
 import "stack.dart" as stack;
-
-/// How long a step waits for the screen it needs; replies cross the real
-/// broker, backend and Realm host.
-const _patience = Duration(seconds: 30);
+import "wait.dart" as wait;
 
 /// How often a waiting step looks at the screen again.
 const _frame = Duration(milliseconds: 100);
@@ -356,14 +353,14 @@ final class Panel {
 
   /// Waits up to [within] until the screen shows [text]; a state the panel
   /// derives from a slow signal, such as a host's heartbeat, needs longer.
-  Future<void> expectVisible(String text, {Duration within = _patience}) =>
+  Future<void> expectVisible(String text, {Duration within = wait.patience}) =>
       until("the screen shows \"$text\"", () => sees(text), timeout: within);
 
   /// Waits until the screen no longer shows [text], then checks it stays
   /// gone for [settled], so a slow reply cannot bring it back unnoticed.
   Future<void> expectHidden(
     String text, {
-    Duration within = _patience,
+    Duration within = wait.patience,
     Duration settled = const Duration(seconds: 3),
   }) async {
     await until(
@@ -400,19 +397,14 @@ final class Panel {
   Future<void> until(
     String description,
     bool Function() condition, {
-    Duration timeout = _patience,
-  }) async {
-    final deadline = DateTime.now().add(timeout);
-    while (!condition()) {
-      if (DateTime.now().isAfter(deadline)) {
-        throw TestFailure(
-          "Waited ${timeout.inSeconds}s until $description; "
-          "the screen shows ${_labels.toSet().toList()}",
-        );
-      }
-      await tester.pump(_frame);
-    }
-  }
+    Duration timeout = wait.patience,
+  }) => wait.until(
+    description,
+    condition,
+    within: timeout,
+    between: () => tester.pump(_frame),
+    shows: () => "the screen shows ${_labels.toSet().toList()}",
+  );
 
   /// Every label and field text the screen reads out, in reading order.
   List<String> get _labels => [

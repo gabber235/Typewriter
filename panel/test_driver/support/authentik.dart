@@ -4,7 +4,12 @@ library;
 
 import "package:flutter_driver/flutter_driver.dart";
 
-import "wait.dart";
+import "../../integration_test/support/wait.dart";
+
+/// How long a journey step waits: longer than a scenario's [patience],
+/// because Authentik's pages load in full and the panel reloads after each
+/// redirect back.
+const redirectPatience = Duration(seconds: 60);
 
 /// The WebDriver key code of Enter.
 const _enter = "";
@@ -38,15 +43,21 @@ final class AuthentikPages {
     await until(
       "Authentik's end session window opens",
       () async => await windows() > before,
+      within: redirectPatience,
     );
     await until(
       "Authentik's end session completes",
       () async => await windows() == before,
+      within: redirectPatience,
     );
   }
 
   Future<void> _submit(String selector, String text) async {
-    await until("Authentik shows $selector", () => _focus(selector));
+    await until(
+      "Authentik shows $selector",
+      () => _focus(selector),
+      within: redirectPatience,
+    );
     await _driver.webDriver.keyboard.sendKeys("$text$_enter");
   }
 

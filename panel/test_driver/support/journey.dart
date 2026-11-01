@@ -15,11 +15,14 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v
     as results;
 
 import "../../integration_test/support/reported_run.dart";
+import "../../integration_test/support/wait.dart";
 import "authentik.dart";
-import "wait.dart";
 
 export "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v1/test_run.dart"
     show Demonstrates;
+
+export "../../integration_test/support/wait.dart" show until;
+export "authentik.dart" show redirectPatience;
 
 /// Runs the journey [title] proving [requirement] and writes its case to the
 /// folder `cargo xtask e2e` names in `EVIDENCE_DIR`. A failed journey still
@@ -87,17 +90,17 @@ final class Journey {
         [],
       );
       return type == "function";
-    });
+    }, within: redirectPatience);
     await _driver.waitUntilFirstFrameRasterized();
   }
 
   /// Activates the panel control that reads [text].
   Future<void> tap(String text) =>
-      _driver.tap(find.text(text), timeout: patience);
+      _driver.tap(find.text(text), timeout: redirectPatience);
 
   /// Waits until the panel shows [text].
   Future<void> expectVisible(String text) =>
-      _driver.waitFor(find.text(text), timeout: patience);
+      _driver.waitFor(find.text(text), timeout: redirectPatience);
 
   /// Opens the panel again in the same browser, the way a user comes back,
   /// and waits until it runs.

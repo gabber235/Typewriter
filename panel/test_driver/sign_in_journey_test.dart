@@ -1,5 +1,4 @@
 import "support/journey.dart";
-import "support/wait.dart";
 
 /// The sign in journey against the CI cluster's Authentik, driven from the
 /// host: scenarios sign in with the password grant inside the page, because
@@ -33,6 +32,7 @@ Future<void> main() => journey(
     await until(
       "Authentik asks for the user again instead of signing them in",
       user.provider.asksForUser,
+      within: redirectPatience,
     );
     await user.capture("asked-again");
   },
