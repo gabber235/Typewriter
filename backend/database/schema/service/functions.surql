@@ -155,19 +155,18 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
     LET $host = array::first($hosts);
     LET $current_realm = array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host_id);
     LET $current_engine = array::first(SELECT * FROM engine_instance WHERE owner_host_id = $host_id);
+    -- Whether the stored realm and engine already hold the requested target and realm.
+    LET $engine_realm_id = IF $uses_hosted_realm { $current_realm.id } ELSE { $existing_realm_id };
+    LET $realm_target_stored = $current_realm != NONE AND $current_realm.target_engine = $realm_target;
+    LET $engine_assignment_stored = $current_engine != NONE
+        AND $current_engine.target = $engine_target
+        AND $current_engine.realm_id = $engine_realm_id;
     IF $host.revision != $expected_revision {
         -- A request whose assignment is already stored, as when its first send
         -- landed, answers with the stored state and changes nothing.
-        LET $realm_stored = IF $has_realm {
-            $current_realm != NONE AND $current_realm.target_engine = $realm_target
-        } ELSE {
-            $current_realm == NONE
-        };
-        LET $engine_realm_id = IF $uses_hosted_realm { $current_realm.id } ELSE { $existing_realm_id };
+        LET $realm_stored = IF $has_realm { $realm_target_stored } ELSE { $current_realm == NONE };
         LET $engine_stored = IF $has_engine {
-            $current_engine != NONE
-            AND $current_engine.target = $engine_target
-            AND $current_engine.realm_id = $engine_realm_id
+            $engine_assignment_stored
         } ELSE {
             $current_engine == NONE
         };
@@ -229,7 +228,7 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
             CREATE ONLY realm_instance SET
                 owner_host_id = $host_id,
                 target_engine = $realm_target
-        } ELSE IF $current_realm.target_engine != $realm_target {
+        } ELSE IF !$realm_target_stored {
             UPDATE ONLY $current_realm.id SET
                 target_engine = $realm_target,
                 revision += 1,
@@ -249,8 +248,7 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
                 owner_host_id = $host_id,
                 realm_id = $assigned_realm.id,
                 target = $engine_target
-        } ELSE IF $current_engine.target != $engine_target
-            OR $current_engine.realm_id != $assigned_realm.id {
+        } ELSE IF !$engine_assignment_stored {
             UPDATE ONLY $current_engine.id SET
                 realm_id = $assigned_realm.id,
                 target = $engine_target,
