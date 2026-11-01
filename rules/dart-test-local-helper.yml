@@ -83,7 +83,7 @@ rule:
               kind: call_expression
               has:
                 field: function
-                regex: ^(test|testWidgets|scenario|faultScenario)$
+                regex: ^(test|testWidgets|scenario|faultScenario|journey)$
 ---
 id: dart-test-helper-file
 language: dart

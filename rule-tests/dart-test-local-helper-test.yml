@@ -43,6 +43,15 @@ valid:
       });
       await until("Authentik asks for the user", user.provider.asksForUser);
     });
+  # A journey keeps its own local functions inside its body.
+  - |
+    Future<void> main() => journey("AUTH-2", "a user signs in", Demonstrates.happyPath, (user) async {
+      Future<void> signOut() async {
+        await user.tap(user.username);
+        await user.tap("Logout");
+      }
+      await user.provider.endsSessionDuring(signOut);
+    });
 invalid:
   # A host driven journey's page step as a top level function.
   - |
