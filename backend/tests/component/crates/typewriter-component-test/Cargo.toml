@@ -10,7 +10,6 @@ repository.workspace = true
 anyhow.workspace = true
 async-nats.workspace = true
 async-trait.workspace = true
-auth-callout.workspace = true
 base64.workspace = true
 component-test.workspace = true
 futures-util.workspace = true
@@ -18,6 +17,7 @@ http.workspace = true
 jose.workspace = true
 json-matcher.workspace = true
 nats-broker.workspace = true
+nats-permissions.workspace = true
 nats-jwt-rs.workspace = true
 nkeys.workspace = true
 database-schema = { path = "../../../../database/schema" }

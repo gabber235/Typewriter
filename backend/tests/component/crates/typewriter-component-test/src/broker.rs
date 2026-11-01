@@ -48,7 +48,7 @@ impl Connection {
 
     /// A broker user holding exactly what the component granted.
     pub async fn granted(account: &Account, permissions: Permissions) -> anyhow::Result<Self> {
-        let credentials = account.user(&auth_callout::convert_permissions(permissions))?;
+        let credentials = account.user(&nats_permissions::convert_permissions(permissions))?;
         Self::open(account, &credentials).await
     }
 

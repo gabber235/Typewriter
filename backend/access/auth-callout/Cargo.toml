@@ -6,7 +6,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 base64.workspace = true
@@ -16,6 +16,8 @@ nkeys.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 url.workspace = true
+
+nats-permissions.workspace = true
 
 wasmcloud-utils.workspace = true
 wit-bindgen.workspace = true
