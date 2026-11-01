@@ -17,7 +17,7 @@ use anyhow::{Context as _, Result};
 use serde_json::Value;
 
 use super::client_configuration::{ClientConfiguration, FIXTURE_USERS};
-use super::spec::{Probe, Published, Service, ServiceId, StackContext, StackSpec};
+use super::spec::{BACKEND, Probe, Published, Role, Service, ServiceId, StackContext, StackSpec};
 use crate::cluster::CiCluster;
 use crate::{CommandExt, deploy, generate};
 
@@ -254,6 +254,9 @@ impl Service for BackendRoutes {
     fn needs(&self) -> &'static [ServiceId] {
         &[Backend::ID]
     }
+    fn provides(&self) -> &'static [Role] {
+        &[BACKEND]
+    }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         front(ctx, "http", "backend-http")
     }
@@ -261,7 +264,7 @@ impl Service for BackendRoutes {
         Probe::http(ctx.port("http"), "/auth/sentinel")
     }
     fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()> {
-        out.publish_clients(ClientConfiguration::worktree(ctx), &ctx.state());
+        out.clients(ClientConfiguration::worktree(ctx));
         Ok(())
     }
 }
@@ -287,9 +290,11 @@ pub struct CiClusterBackend(CiCluster);
 const CI_USERS: &str = "users.json";
 
 impl Service for CiClusterBackend {
-    /// Stands where the worktree's backend routes do, so the organization and the Realm host
-    /// start after it on either target.
-    const ID: ServiceId = BackendRoutes::ID;
+    const ID: ServiceId = ServiceId("ci-cluster");
+    /// The organization and the Realm host start after it, as after the worktree's routes.
+    fn provides(&self) -> &'static [Role] {
+        &[BACKEND]
+    }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         Ok(self.0.test_users_generated(ctx.ctx))
     }
@@ -306,10 +311,11 @@ impl Service for CiClusterBackend {
             &self.0.test_user_passwords(ctx.ctx)?,
             &users_file,
         )?;
-        out.publish_clients(
-            ClientConfiguration::ci_cluster(ctx.ctx, &self.0.clients, users_file)?,
-            &ctx.state(),
-        );
+        out.clients(ClientConfiguration::ci_cluster(
+            ctx.ctx,
+            &self.0.clients,
+            users_file,
+        )?);
         Ok(())
     }
 }
@@ -347,8 +353,8 @@ pub struct Provision;
 
 impl Service for Provision {
     const ID: ServiceId = ServiceId("provision");
-    fn needs(&self) -> &'static [ServiceId] {
-        &[BackendRoutes::ID]
+    fn needs_roles(&self) -> &'static [Role] {
+        &[BACKEND]
     }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         let mut command = stack_binary(ctx, "provision")?;
@@ -440,6 +446,10 @@ impl Service for BindRealmHost {
     fn needs(&self) -> &'static [ServiceId] {
         &[RealmHost::ID]
     }
+    /// It reads the clients through [`owner_args`].
+    fn needs_roles(&self) -> &'static [Role] {
+        &[BACKEND]
+    }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         let mut command = stack_binary(ctx, "bind")?;
         command
@@ -470,32 +480,21 @@ fn realm_host_dir(ctx: &StackContext) -> PathBuf {
     ctx.state().join("realm-host")
 }
 
-/// What `provision` and `bind` need to sign the owner in, from what the backend published: they
-/// connect the way the desktop panel does.
+/// What `provision` and `bind` need to sign the owner in, from the clients the backend
+/// published: they connect the way the desktop panel does.
 fn owner_args(ctx: &StackContext) -> Result<Vec<String>> {
-    let published: BTreeMap<String, String> = fs::read_to_string(ctx.state().join("stack.env"))
-        .context("the backend published nothing")?
-        .lines()
-        .filter_map(|line| line.split_once('='))
-        .map(|(key, value)| (key.to_owned(), value.to_owned()))
-        .collect();
-    let value = |key: &str| {
-        published
-            .get(key)
-            .cloned()
-            .with_context(|| format!("the backend did not publish {key}"))
-    };
+    let clients = ctx.clients()?;
     Ok(vec![
         "--users".into(),
-        value("STACK_USERS_FILE")?,
+        clients.control.users_file.display().to_string(),
         "--state".into(),
         ctx.state().display().to_string(),
         "--identity".into(),
-        value("STACK_AUTH_BASE_URL")?,
+        clients.auth_base_url.clone(),
         "--api".into(),
-        value("STACK_API_BASE_URL")?,
+        clients.api_base_url.clone(),
         "--nats".into(),
-        value("STACK_NATS_DESKTOP_URL")?,
+        clients.nats_desktop_url.clone(),
     ])
 }
 
@@ -575,6 +574,22 @@ fn deployable_components(ctx: &StackContext) -> Result<Vec<(String, PathBuf)>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::{ci_cluster, ids};
+
+    #[test]
+    fn the_organization_is_provisioned_after_the_worktree_backend_routes() {
+        let order = ids(&panel().ordered().unwrap());
+        let position = |id: &str| order.iter().position(|ordered| *ordered == id).unwrap();
+        assert!(position("backend-routes") < position("provision"));
+    }
+
+    #[test]
+    fn the_ci_target_provisions_after_the_ci_cluster_backend() {
+        assert_eq!(
+            ids(&ci_cluster_panel(&ci_cluster()).ordered().unwrap()),
+            ["ci-cluster", "provision", "realm", "bind-realm-host"]
+        );
+    }
 
     #[test]
     fn ci_users_sign_in_with_their_generated_app_password_and_no_fixture_subject() {

@@ -85,14 +85,15 @@ fn run_then<T, U>(
     let stack_ctx = StackContext::new(ctx, PortLease::acquire(&Registry::machine(), &ctx.root)?);
     reset_state(&stack_ctx.state(), &[Keep::BrokerKeys])?;
     let mut stack = Stack::register(&stack_ctx)?;
-    let mut published = Published::default();
     for service in order {
         stack.start(service, &stack_ctx)?;
+        let mut published = Published::default();
         service.publish(&stack_ctx, &mut published)?;
-        // Later services read the client files, like the Realm host its `realm.properties`.
-        published.write(&stack_ctx.state())?;
+        // Later services read the clients before they start: typed through
+        // `StackContext::clients`, or as files, like the Realm host its `realm.properties`.
+        stack_ctx.absorb(published)?;
     }
-    stack.env = published.values;
+    stack.env = stack_ctx.env();
     stack.deadline = Some(Instant::now() + timeout);
     let inside = inside(&mut stack)?;
     drop(stack);

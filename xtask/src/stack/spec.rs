@@ -1,7 +1,7 @@
 //! How a stack is described: each service is a typed handle with its dependencies, the command
 //! that runs it and the probe that says it is ready. Internal to xtask, not a reusable library.
 
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
 use std::net::{Ipv4Addr, TcpListener};
@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
 
-use anyhow::{Context as _, Result, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 use sha2::{Digest, Sha256};
 
 use super::client_configuration::ClientConfiguration;
@@ -20,11 +20,28 @@ use super::{StackRecord, process_alive};
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct ServiceId(pub &'static str);
 
+/// Something later services rely on without naming who supplies it, such as a backend clients
+/// can reach. A spec holds exactly one provider of each role its services need.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct Role(pub &'static str);
+
+/// Serves the backend's routes and publishes the [`ClientConfiguration`] clients reach it with:
+/// the worktree's backend routes or the CI cluster's backend.
+pub const BACKEND: Role = Role("backend");
+
 /// One process in a stack.
 pub trait Service {
     const ID: ServiceId;
     /// Services that must be ready before this one starts.
     fn needs(&self) -> &'static [ServiceId] {
+        &[]
+    }
+    /// Roles this service fills once it is ready and has published.
+    fn provides(&self) -> &'static [Role] {
+        &[]
+    }
+    /// Roles whose provider must be ready, and published, before this one starts.
+    fn needs_roles(&self) -> &'static [Role] {
         &[]
     }
     /// The process. Building what it runs happens here, under the heavy build lock.
@@ -45,6 +62,8 @@ pub trait Service {
 pub trait DynService {
     fn id(&self) -> ServiceId;
     fn needs(&self) -> &'static [ServiceId];
+    fn provides(&self) -> &'static [Role];
+    fn needs_roles(&self) -> &'static [Role];
     fn command(&self, ctx: &StackContext) -> Result<Command>;
     fn ready(&self, ctx: &StackContext) -> Probe;
     fn startup(&self) -> Duration;
@@ -57,6 +76,12 @@ impl<S: Service> DynService for S {
     }
     fn needs(&self) -> &'static [ServiceId] {
         Service::needs(self)
+    }
+    fn provides(&self) -> &'static [Role] {
+        Service::provides(self)
+    }
+    fn needs_roles(&self) -> &'static [Role] {
+        Service::needs_roles(self)
     }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         Service::command(self, ctx)
@@ -98,29 +123,18 @@ impl StackSpec {
         self
     }
 
-    /// Dependencies before dependents, otherwise in declaration order. A dependency missing from
-    /// the spec or a cycle is an error naming the services involved.
+    /// Dependencies and role providers before their dependents, otherwise in declaration order.
+    /// A missing dependency, a role with no provider or two, or a cycle is an error naming the
+    /// services involved.
     pub fn ordered(&self) -> Result<Vec<&dyn DynService>> {
-        let declared: BTreeSet<ServiceId> = self.0.iter().map(|service| service.id()).collect();
-        for service in &self.0 {
-            for need in service.needs() {
-                if !declared.contains(need) {
-                    bail!(
-                        "service `{}` needs `{}`, which the stack does not contain",
-                        service.id().0,
-                        need.0
-                    );
-                }
-            }
-        }
+        let needs = self.resolved_needs()?;
         let mut ordered: Vec<&dyn DynService> = Vec::new();
         let mut started = BTreeSet::new();
         while ordered.len() < self.0.len() {
-            let next = self.0.iter().find(|service| {
-                !started.contains(&service.id())
-                    && service.needs().iter().all(|need| started.contains(need))
+            let next = self.0.iter().zip(&needs).find(|(service, needs)| {
+                !started.contains(&service.id()) && needs.iter().all(|need| started.contains(need))
             });
-            let Some(next) = next else {
+            let Some((next, _)) = next else {
                 let waiting: Vec<&str> = self
                     .0
                     .iter()
@@ -134,6 +148,51 @@ impl StackSpec {
         }
         Ok(ordered)
     }
+
+    /// Each service's needs with its roles replaced by their one provider, in spec order.
+    fn resolved_needs(&self) -> Result<Vec<Vec<ServiceId>>> {
+        let mut providers: BTreeMap<Role, ServiceId> = BTreeMap::new();
+        for service in &self.0 {
+            for role in service.provides() {
+                if let Some(first) = providers.insert(*role, service.id()) {
+                    bail!(
+                        "`{}` and `{}` both provide {}",
+                        first.0,
+                        service.id().0,
+                        role.0
+                    );
+                }
+            }
+        }
+        let declared: BTreeSet<ServiceId> = self.0.iter().map(|service| service.id()).collect();
+        self.0
+            .iter()
+            .map(|service| {
+                let mut needs = Vec::new();
+                for need in service.needs() {
+                    if !declared.contains(need) {
+                        bail!(
+                            "service `{}` needs `{}`, which the stack does not contain",
+                            service.id().0,
+                            need.0
+                        );
+                    }
+                    needs.push(*need);
+                }
+                for role in service.needs_roles() {
+                    let provider = providers.get(role).with_context(|| {
+                        format!(
+                            "service `{}` needs a {}, which no service provides",
+                            service.id().0,
+                            role.0
+                        )
+                    })?;
+                    needs.push(*provider);
+                }
+                Ok(needs)
+            })
+            .collect()
+    }
 }
 
 /// Values services publish for later services, the client files and the command under test.
@@ -144,25 +203,9 @@ pub struct Published {
 }
 
 impl Published {
-    /// Publishes how clients reach the backend: the client files and the values in `stack.env`
-    /// that point at them in `state`.
-    pub fn publish_clients(&mut self, clients: ClientConfiguration, state: &Path) {
-        self.values.extend(clients.published(state));
+    /// How clients reach the backend; only a [`BACKEND`] provider publishes it.
+    pub fn clients(&mut self, clients: ClientConfiguration) {
         self.clients = Some(clients);
-    }
-
-    /// Writes the client files and `stack.env`; the supervisor is their only writer.
-    pub fn write(&self, dir: &Path) -> Result<()> {
-        if let Some(clients) = &self.clients {
-            clients.write(dir)?;
-        }
-        let env: String = self
-            .values
-            .iter()
-            .map(|(key, value)| format!("{key}={value}\n"))
-            .collect();
-        let path = dir.join("stack.env");
-        fs::write(&path, env).with_context(|| format!("cannot write {}", path.display()))
     }
 }
 
@@ -294,6 +337,9 @@ pub struct StackContext<'a> {
     pub ctx: &'a crate::Context,
     pub ports: PortLease,
     built: RefCell<BTreeSet<&'static str>>,
+    /// What the started services published, in start order.
+    values: RefCell<BTreeMap<String, String>>,
+    clients: OnceCell<ClientConfiguration>,
 }
 
 impl<'a> StackContext<'a> {
@@ -302,6 +348,8 @@ impl<'a> StackContext<'a> {
             ctx,
             ports,
             built: RefCell::default(),
+            values: RefCell::default(),
+            clients: OnceCell::new(),
         }
     }
 
@@ -330,6 +378,41 @@ impl<'a> StackContext<'a> {
         format!("{scheme}://127.0.0.1:{}", self.port(port))
     }
 
+    /// How clients reach the backend, as the [`BACKEND`] provider published it.
+    pub fn clients(&self) -> Result<&ClientConfiguration> {
+        self.clients
+            .get()
+            .context("no backend has published its clients yet; declare needs_roles BACKEND")
+    }
+
+    /// Takes what a ready service published: its values join `stack.env`, its clients become
+    /// [`Self::clients`] and their files; then rewrites the client files and `stack.env` in the
+    /// state directory, which later services and the command under test read. The supervisor is
+    /// their only writer.
+    pub(super) fn absorb(&self, published: Published) -> Result<()> {
+        let state = self.state();
+        let mut values = self.values.borrow_mut();
+        values.extend(published.values);
+        if let Some(clients) = published.clients {
+            clients.write(&state)?;
+            values.extend(clients.published(&state));
+            self.clients
+                .set(clients)
+                .map_err(|_| anyhow!("two services published how clients reach the backend"))?;
+        }
+        let env: String = values
+            .iter()
+            .map(|(key, value)| format!("{key}={value}\n"))
+            .collect();
+        let path = state.join("stack.env");
+        fs::write(&path, env).with_context(|| format!("cannot write {}", path.display()))
+    }
+
+    /// Everything published, for the command under test's environment.
+    pub(super) fn env(&self) -> BTreeMap<String, String> {
+        self.values.borrow().clone()
+    }
+
     /// Runs `build` once per stack start, under the heavy build lock.
     pub fn build_once(&self, what: &'static str, build: impl FnOnce() -> Result<()>) -> Result<()> {
         if self.built.borrow().contains(what) {
@@ -345,7 +428,41 @@ impl<'a> StackContext<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{fake_service, refusal};
+    use crate::test_support::{fake_service, ids, refusal};
+
+    mod roles {
+        use super::*;
+        fake_service!(Routes, ; provides BACKEND);
+        fake_service!(Cluster, ; provides BACKEND);
+        fake_service!(Owner, ; needs_roles BACKEND);
+    }
+
+    #[test]
+    fn a_service_that_needs_a_role_starts_after_its_provider() {
+        let spec = StackSpec::default().with(roles::Owner).with(roles::Routes);
+        assert_eq!(ids(&spec.ordered().unwrap()), ["Routes", "Owner"]);
+    }
+
+    #[test]
+    fn a_needed_role_no_service_provides_is_refused_before_anything_starts() {
+        let spec = StackSpec::default().with(roles::Owner);
+        assert_eq!(
+            refusal(spec.ordered()),
+            "service `Owner` needs a backend, which no service provides"
+        );
+    }
+
+    #[test]
+    fn two_providers_of_one_role_are_both_named() {
+        let spec = StackSpec::default()
+            .with(roles::Routes)
+            .with(roles::Cluster)
+            .with(roles::Owner);
+        assert_eq!(
+            refusal(spec.ordered()),
+            "`Routes` and `Cluster` both provide backend"
+        );
+    }
 
     mod chain {
         use super::*;

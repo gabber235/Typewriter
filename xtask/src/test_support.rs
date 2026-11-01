@@ -403,16 +403,25 @@ pub fn scopes(scopes: &[&str]) -> Scopes {
     Scopes::load(&root.ctx).unwrap()
 }
 
-/// Declares a fake stack service `$name` that only names the services it needs: its command does
-/// nothing and it is ready once that command exits.
+/// Declares a fake stack service `$name` that only names the services it needs, optionally
+/// followed by `; provides ROLE, ...` and `; needs_roles ROLE, ...`: its command does nothing and
+/// it is ready once that command exits.
 macro_rules! fake_service {
-    ($name:ident, $($need:ident),*) => {
+    ($name:ident, $($need:ident),*
+        $(; provides $($provided:path),+)?
+        $(; needs_roles $($role:path),+)?) => {
         pub struct $name;
         impl $crate::stack::spec::Service for $name {
             const ID: $crate::stack::spec::ServiceId =
                 $crate::stack::spec::ServiceId(stringify!($name));
             fn needs(&self) -> &'static [$crate::stack::spec::ServiceId] {
                 &[$(<$need as $crate::stack::spec::Service>::ID),*]
+            }
+            fn provides(&self) -> &'static [$crate::stack::spec::Role] {
+                &[$($($provided),+)?]
+            }
+            fn needs_roles(&self) -> &'static [$crate::stack::spec::Role] {
+                &[$($($role),+)?]
             }
             fn command(
                 &self,
@@ -427,6 +436,11 @@ macro_rules! fake_service {
     };
 }
 pub(crate) use fake_service;
+
+/// The ids of `services`, in their order.
+pub fn ids(services: &[&dyn crate::stack::spec::DynService]) -> Vec<&'static str> {
+    services.iter().map(|service| service.id().0).collect()
+}
 
 /// Folds the full suite's attempts of `only` under `policy` against `target`, where the scenario
 /// drive reports `[CONN-1] Reconnects` and the sign in journey `[AUTH-2] Signs in`, each with
