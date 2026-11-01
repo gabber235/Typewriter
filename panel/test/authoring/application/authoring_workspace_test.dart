@@ -77,7 +77,7 @@ void main() {
   });
 
   test(
-    "a removed stable collection item cannot be forced by Keep mine",
+    "an edit to a removed stable collection item is rejected and sends nothing",
     () async {
       final itemsAt = authoredFieldLocation(_resource, ["items"]);
       final stable = skir.ItemId(value: "stable");
