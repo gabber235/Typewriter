@@ -11,6 +11,7 @@ mod sarif;
 mod tests;
 pub mod verdict;
 
+pub(crate) use self::coverage::walk as files_in;
 pub use self::coverage::{COVERAGE_DIR, stamp as stamp_coverage};
 
 use std::fs::{self, File};

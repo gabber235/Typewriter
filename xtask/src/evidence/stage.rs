@@ -2,8 +2,9 @@
 //! of this public repository are downloadable and the evidence branch is public, so every upload
 //! and every publish reads only what this writes to [`PUBLIC`]: each `TestRun` with only its
 //! published artifacts ([`ArtifactKind::published`]: clips and screenshots), their files with a
-//! clip's preview, and the coverage files. Nothing is written while any public text holds a known
-//! secret.
+//! clip's preview, the coverage files, and the widgetbook story images below [`STORIES`]. An
+//! artifact whose file is missing is left out with a warning instead of failing the step. Nothing
+//! is written while any public text holds a known secret.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -14,11 +15,14 @@ use super::RESULTS;
 use super::publish::{known_secrets, scrub};
 use crate::Context;
 use crate::results::{self, TestRun};
-use crate::review::COVERAGE_DIR;
+use crate::review::{self, COVERAGE_DIR};
 use crate::skirout::base::harness::v1::test_run::ArtifactKind;
 
 /// Where the public projection is written, relative to the repository root.
 pub const PUBLIC: &str = ".xtask/public";
+/// Where the widgetbook writes an image of every story variant for the pull request evidence,
+/// relative to the results folder.
+const STORIES: &str = "stories";
 
 /// `cargo xtask evidence stage`: stages the results folder.
 pub fn stage(ctx: &Context) -> Result<()> {
@@ -52,10 +56,13 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
     for (path, mut run) in results::read_all(results)? {
         let at = path.strip_prefix(results)?.to_path_buf();
         let folder = path.parent().context("a run file without a folder")?;
-        for attempt in run.cases.iter_mut().flat_map(|case| &mut case.attempts) {
-            attempt
-                .artifacts
-                .retain(|artifact| artifact.kind.published());
+        for case in &mut run.cases {
+            for attempt in &mut case.attempts {
+                let below = folder.join(&attempt.folder);
+                attempt.artifacts.retain(|artifact| {
+                    artifact.kind.published() && on_disk(&below.join(&artifact.path), &case.id)
+                });
+            }
         }
         let below = at.parent().unwrap_or(Path::new(""));
         for file in published_files(folder, &run) {
@@ -71,6 +78,11 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
             .file_name()
             .context("a coverage file without a name")?;
         files.push((source.clone(), coverage.join(name).display().to_string()));
+    }
+    // Story images keep their layout below the stories folder.
+    for source in review::files_in(&results.join(STORIES))? {
+        let at = source.strip_prefix(results)?.display().to_string();
+        files.push((source, at));
     }
     let texts: Vec<String> = runs
         .iter()
@@ -88,6 +100,20 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
             .with_context(|| format!("cannot copy {} to {}", source.display(), target.display()))?;
     }
     Ok(())
+}
+
+/// Whether the artifact file at `path` exists. A driver interrupted between writing its run file
+/// and its captures can list a file it never wrote; the projection leaves that artifact out and
+/// says so, so the rest of the run still reaches the public folder.
+fn on_disk(path: &Path, case: &str) -> bool {
+    let exists = path.exists();
+    if !exists {
+        eprintln!(
+            "{case}: {} is listed but missing; it is left out of the public folder",
+            path.display()
+        );
+    }
+    exists
 }
 
 /// The files of `run`'s artifacts relative to its `folder` (each attempt's folder joined by
@@ -155,6 +181,50 @@ mod tests {
             .map(|artifact| artifact.kind.clone())
             .collect();
         assert_eq!(kinds, [ArtifactKind::Clip, ArtifactKind::Screenshot]);
+    }
+
+    #[test]
+    fn a_listed_screenshot_missing_on_disk_is_left_out_and_the_rest_is_staged() {
+        let root = TempRoot::new();
+        raw_failed_run(&root, "results/panel");
+        fs::remove_file(root.path("results/panel/attempts/1/screenshots/CONN-1/failure.png"))
+            .unwrap();
+
+        let runs = staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            [
+                "coverage/panel.lcov",
+                "coverage/panel.lcov.commit",
+                "panel/attempts/1/clips/conn.mp4",
+                "panel/attempts/1/clips/conn.webp",
+                "panel/test_run.json",
+            ]
+        );
+        let kinds: Vec<ArtifactKind> = runs[0].1.cases[0].attempts[0]
+            .artifacts
+            .iter()
+            .map(|artifact| artifact.kind.clone())
+            .collect();
+        assert_eq!(kinds, [ArtifactKind::Clip]);
+    }
+
+    #[test]
+    fn story_images_reach_the_public_folder_in_their_layout() {
+        let root = TempRoot::new();
+        root.write("results/stories/shared/editors/text_field/dark.png", "png");
+        root.write("results/stories/shared/editors/text_field/light.png", "png");
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            [
+                "stories/shared/editors/text_field/dark.png",
+                "stories/shared/editors/text_field/light.png",
+            ]
+        );
     }
 
     #[test]

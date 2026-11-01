@@ -14,12 +14,11 @@ use serde::Serialize;
 
 use super::change::{Change, Status, git};
 use super::report::{Finding, Severity};
+use crate::evidence::RESULTS;
 use crate::{CommandExt, Context};
 
 /// Where the check steps write coverage, relative to the repository root.
 pub const COVERAGE_DIR: &str = ".xtask/results/coverage";
-/// Searched at any depth for coverage files.
-const RESULTS: &str = ".xtask/results";
 /// Next to every coverage file: the commit it measured.
 const COMMIT_SUFFIX: &str = ".commit";
 
@@ -296,7 +295,8 @@ pub fn stamp(
     }
 }
 
-fn walk(dir: &Path) -> Result<Vec<PathBuf>> {
+/// Every file below `dir` at any depth; empty when `dir` is absent.
+pub(crate) fn walk(dir: &Path) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
     let Ok(entries) = fs::read_dir(dir) else {
         return Ok(files);
