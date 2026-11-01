@@ -6,6 +6,7 @@
 mod prune;
 pub(crate) mod publish;
 mod record;
+mod stage;
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -63,6 +64,9 @@ pub enum EvidenceCommand {
         #[command(flatten)]
         inputs: Inputs,
     },
+    /// Writes the public projection of the results folder to `.xtask/public`, the only folder
+    /// CI uploads; refuses when it would hold a known secret.
+    Stage,
     /// Drops media nobody can see any more from the evidence branch.
     #[command(subcommand)]
     Prune(PruneCommand),
@@ -71,7 +75,8 @@ pub enum EvidenceCommand {
 /// What the section is rendered from.
 #[derive(Args)]
 pub struct Inputs {
-    /// The folder searched, at any depth, for `TestRun` JSON files.
+    /// The folder searched, at any depth, for `TestRun` JSON files; only its staged projection
+    /// is read.
     #[arg(long, default_value = RESULTS)]
     results: PathBuf,
     /// The change report, as `cargo xtask review report --json` prints it.
@@ -119,6 +124,7 @@ pub fn run(ctx: &Context, command: EvidenceCommand) -> Result<()> {
             Ok(())
         }
         EvidenceCommand::Publish { pr, sha, inputs } => publish::publish(ctx, pr, &sha, &inputs),
+        EvidenceCommand::Stage => stage::stage(ctx),
         EvidenceCommand::Summary { sha, inputs } => {
             let sha = match sha {
                 Some(sha) => sha,

@@ -13,6 +13,7 @@ use anyhow::{Context as _, Result, anyhow, bail};
 use serde::Deserialize;
 use serde::de::IgnoredAny;
 
+use super::stage::{self, published_files};
 use super::{ATTEMPTS, Inputs, REPOSITORY, clone_branch, media_url, pr_folder};
 use crate::results::{self, Quarantine, TestRun, Verdict as CaseVerdict, runner_name};
 use crate::review::verdict::{
@@ -34,12 +35,13 @@ const CHANGE_MAP_LIMIT: usize = 50;
 /// Uploads the media of every run under the results folder to `pr/<pr>/<sha>/` on the evidence
 /// branch and rewrites the managed section of pull request `pr`.
 pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()> {
-    let runs = results::read_all(&ctx.root.join(&inputs.results))?;
+    let secrets = known_secrets();
+    // Raw results never reach the evidence branch: only their staged projection is read.
+    let runs = stage::staged(&ctx.root, &inputs.results, &secrets)?;
     let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
     let quarantine = Quarantine::load(ctx)?;
     let media = media(&runs);
     let prefix = pr_folder(pr, Some(sha));
-    let secrets = known_secrets();
     let section = |verdict: Option<&Verdict>| {
         render_section(&Section {
             sha,
@@ -78,7 +80,7 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
 
 /// The section without media links, for fork pull requests, whose workflow token cannot push.
 pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
-    let runs = results::read_all(&ctx.root.join(&inputs.results))?;
+    let runs = stage::staged(&ctx.root, &inputs.results, &known_secrets())?;
     let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
     let quarantine = Quarantine::load(ctx)?;
     let section = render_section(&Section {
@@ -443,9 +445,7 @@ fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
     let media_url = section.media_url;
     let mut parts = Vec::new();
-    for (path, artifact) in
-        results::artifacts(case).filter(|(_, artifact)| artifact.kind.published())
-    {
+    for (path, artifact) in results::artifacts(case) {
         let Some(base) = media_url else {
             parts.push(format!(
                 "`{runner}/{}` in the run artifacts",
@@ -498,26 +498,15 @@ pub(crate) fn listed(items: &[String]) -> String {
     }
 }
 
-/// Every published artifact file of every run with its path in the commit folder,
-/// `<runner>/<path>`.
-/// Artifact paths are relative to the folder of the run file; a clip's preview travels with it.
+/// Every artifact file of every staged run with its path in the commit folder,
+/// `<runner>/<path>`, relative to the folder of the run file.
 fn media(runs: &[(PathBuf, TestRun)]) -> Vec<(PathBuf, String)> {
     let mut media = Vec::new();
     for (path, run) in runs {
         let folder = path.parent().unwrap_or(Path::new("."));
         let runner = runner_name(&run.runner);
-        let artifacts = run.cases.iter().flat_map(results::artifacts);
-        for (path, artifact) in artifacts.filter(|(_, artifact)| artifact.kind.published()) {
-            media.push((folder.join(&path), format!("{runner}/{}", path.display())));
-            if artifact.kind == ArtifactKind::Clip {
-                let preview = path.with_extension("webp");
-                if folder.join(&preview).exists() {
-                    media.push((
-                        folder.join(&preview),
-                        format!("{runner}/{}", preview.display()),
-                    ));
-                }
-            }
+        for file in published_files(folder, run) {
+            media.push((folder.join(&file), format!("{runner}/{}", file.display())));
         }
     }
     media
@@ -525,7 +514,7 @@ fn media(runs: &[(PathBuf, TestRun)]) -> Vec<(PathBuf, String)> {
 
 /// The values of [`SECRETS`] that are set, and each long line of them, so a log that printed
 /// part of a key is caught too.
-fn known_secrets() -> Vec<String> {
+pub(super) fn known_secrets() -> Vec<String> {
     let mut secrets = Vec::new();
     for value in SECRETS.iter().filter_map(|name| std::env::var(name).ok()) {
         let value = value.trim().to_string();
@@ -544,8 +533,8 @@ fn known_secrets() -> Vec<String> {
     secrets
 }
 
-/// Refuses to publish when the section or a text artifact contains a secret.
-fn scrub(section: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Result<()> {
+/// Refuses when `text` or a text file of `media` contains a secret.
+pub(super) fn scrub(text: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Result<()> {
     let leaked = |bytes: &[u8]| {
         secrets.iter().any(|secret| {
             bytes
@@ -553,8 +542,8 @@ fn scrub(section: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Resu
                 .any(|window| window == secret.as_bytes())
         })
     };
-    if leaked(section.as_bytes()) {
-        bail!("the evidence section contains a secret; nothing was published");
+    if leaked(text.as_bytes()) {
+        bail!("the evidence text contains a secret; nothing leaves the runner");
     }
     // Recordings and screenshots are pixels; logs and other text are what can carry a secret.
     let pixels = |path: &Path| {
@@ -569,7 +558,7 @@ fn scrub(section: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Resu
             fs::read(source).with_context(|| format!("cannot read {}", source.display()))?;
         if leaked(&bytes) {
             bail!(
-                "{} contains a secret; nothing was published",
+                "{} contains a secret; nothing leaves the runner",
                 source.display()
             );
         }
@@ -665,7 +654,7 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{failed_attempt, run_of};
+    use crate::test_support::{TempRoot, raw_failed_run};
 
     const SECRET: &str = "ghp_0123456789abcdefghij";
 
@@ -710,28 +699,28 @@ mod tests {
     }
 
     #[test]
-    fn only_clips_and_screenshots_reach_the_evidence_branch() {
-        let mut attempt = failed_attempt(
-            (0, 1),
-            &[
-                (ArtifactKind::Clip, "clips/conn.mp4"),
-                (ArtifactKind::Screenshot, "failure.png"),
-                (ArtifactKind::LogExcerpt, "logs/CONN-1/panel.log"),
-                (ArtifactKind::Spans, "failures/conn/spans.otlp.jsonl"),
-            ],
-        );
-        attempt.folder = "attempts/1".to_owned();
-        let run = run_of("[CONN-1] Reconnects", vec![attempt]);
-        let published: Vec<String> = media(&[(PathBuf::from("panel/test_run.json"), run)])
-            .into_iter()
-            .map(|(_, target)| target)
-            .collect();
+    fn a_publish_of_raw_results_uploads_only_the_staged_clips_and_screenshots() {
+        let root = TempRoot::new();
+        raw_failed_run(&root, ".xtask/results/panel");
+
+        let runs = stage::staged(&root.path(""), Path::new(".xtask/results"), &[]).unwrap();
+        let uploaded = media(&runs);
+
         assert_eq!(
-            published,
+            uploaded
+                .iter()
+                .map(|(_, target)| target.as_str())
+                .collect::<Vec<_>>(),
             [
                 "panel/attempts/1/clips/conn.mp4",
-                "panel/attempts/1/failure.png"
+                "panel/attempts/1/clips/conn.webp",
+                "panel/attempts/1/screenshots/CONN-1/failure.png",
             ]
+        );
+        assert!(
+            uploaded
+                .iter()
+                .all(|(source, _)| source.starts_with(root.path(".xtask/public")))
         );
     }
 

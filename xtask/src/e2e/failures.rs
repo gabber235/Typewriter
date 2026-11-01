@@ -1,8 +1,8 @@
 //! The local folder a failed attempt leaves: `failures/<case>/` inside the attempt's own folder
 //! (`Attempt.folder`, where its drive wrote), holding what the screen showed (screenshots), what the panel, the drive and
 //! every stack service logged during the attempt, and every span of the traces the panel started
-//! in it. None of it is published: [`ArtifactKind::published`] keeps logs and spans off the
-//! evidence branch, and CI leaves the failure folders out of its upload.
+//! in it. None of it is public: [`ArtifactKind::published`] keeps logs and spans out of the
+//! folder `cargo xtask evidence stage` writes, the only one CI uploads and publish reads.
 //!
 //! Log lines and panel root spans are matched to an attempt by time, which works because
 //! scenarios run one at a time. Log windows widen by [`LOG_SLACK_MILLIS`] on each side, since

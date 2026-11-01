@@ -51,16 +51,17 @@ jobs:
       - run: devenv shell -- cargo xtask e2e full
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      # Artifacts of this public repository are downloadable, so only the staged public folder
+      # is uploaded; the token is here only so staging refuses text that holds it.
+      - if: always()
+        run: devenv shell -- cargo xtask evidence stage
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: full-tier-evidence
-          # Artifacts of this public repository are downloadable; logs and spans stay out.
-          path: |
-            .xtask/results/
-            !.xtask/results/**/failures/
-            !.xtask/results/**/logs/
-            !.xtask/results/**/drive.log
+          path: .xtask/public/
           if-no-files-found: ignore
       - if: failure() && github.event_name == 'schedule'
         run: gh issue create --title "Full tier failed $(date -I)" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

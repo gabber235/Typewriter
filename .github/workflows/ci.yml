@@ -61,11 +61,15 @@ jobs:
       - if: matrix.area.area == 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
         run: devenv shell -- cargo xtask review gate --base "$BASE_SHA"
+      # Artifacts of this public repository are downloadable, so only the staged public folder
+      # is uploaded.
+      - if: always()
+        run: devenv shell -- cargo xtask evidence stage
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: results-check-${{ matrix.area.area }}
-          path: .xtask/results/
+          path: .xtask/public/
           if-no-files-found: ignore
 
   commits:
@@ -92,16 +96,15 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/devenv
       - run: devenv shell -- cargo xtask e2e ${{ matrix.suite }}
+      # Artifacts of this public repository are downloadable, so only the staged public folder
+      # is uploaded.
+      - if: always()
+        run: devenv shell -- cargo xtask evidence stage
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: results-e2e-${{ matrix.suite }}
-          # Artifacts of this public repository are downloadable; logs and spans stay out.
-          path: |
-            .xtask/results/${{ matrix.suite }}/
-            !.xtask/results/${{ matrix.suite }}/**/failures/
-            !.xtask/results/${{ matrix.suite }}/**/logs/
-            !.xtask/results/${{ matrix.suite }}/**/drive.log
+          path: .xtask/public/
           if-no-files-found: ignore
 
   # Runs when checks or suites fail too, since a failure is what the description must show. Jobs

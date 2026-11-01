@@ -110,9 +110,9 @@ pub fn artifacts(case: &TestCase) -> impl Iterator<Item = (PathBuf, &Artifact)> 
 }
 
 impl ArtifactKind {
-    /// Whether an artifact of this kind is proof for review that goes to the public evidence
-    /// branch. Logs and spans stay on the machine, so no token they print can leak through a
-    /// scrub rule that missed it.
+    /// Whether an artifact of this kind is proof for review that `cargo xtask evidence stage`
+    /// makes public. Logs and spans stay on the machine, so no token they print can leak
+    /// through a scrub rule that missed it.
     pub fn published(&self) -> bool {
         matches!(self, Self::Clip | Self::Screenshot)
     }

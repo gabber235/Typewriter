@@ -262,6 +262,64 @@ pub fn failed_attempt(span: (i64, i64), artifacts: &[(ArtifactKind, &str)]) -> A
     }
 }
 
+/// Writes a failed panel run's raw results under `<root>/<at>/`, as a suite leaves them: the run
+/// file, and in its attempt folder `attempts/1` the drive log, the whole recording, a clip with its
+/// preview, a screenshot, a panel log and a failure folder's cut log and spans, each listed as an
+/// artifact where it is one; plus coverage beside the run's folder.
+pub fn raw_failed_run(root: &TempRoot, at: &str) {
+    let attempt_folder = format!("{at}/attempts/1");
+    for (file, contents) in [
+        ("drive.log", "flutter drive"),
+        ("run.mp4", "video"),
+        ("clips/conn.mp4", "clip"),
+        ("clips/conn.webp", "preview"),
+        ("screenshots/CONN-1/failure.png", "png"),
+        ("logs/CONN-1/panel.log", "panel"),
+        ("failures/conn/backend.log", "backend"),
+        ("failures/conn/spans.otlp.jsonl", "{}"),
+    ] {
+        root.write(&format!("{attempt_folder}/{file}"), contents);
+    }
+    let coverage = Path::new(at).parent().unwrap().join("coverage");
+    root.write(&format!("{}/panel.lcov", coverage.display()), "SF:a.dart");
+    root.write(
+        &format!("{}/panel.lcov.commit", coverage.display()),
+        "abc123",
+    );
+    let mut attempt = failed_attempt(
+        (0, 1),
+        &[
+            (ArtifactKind::Clip, "clips/conn.mp4"),
+            (ArtifactKind::Screenshot, "screenshots/CONN-1/failure.png"),
+            (ArtifactKind::LogExcerpt, "logs/CONN-1/panel.log"),
+            (ArtifactKind::LogExcerpt, "failures/conn/backend.log"),
+            (ArtifactKind::Spans, "failures/conn/spans.otlp.jsonl"),
+        ],
+    );
+    attempt.folder = "attempts/1".to_owned();
+    let mut run = run_of("[CONN-1] Reconnects", vec![attempt]);
+    run.cases[0].requirement = Some("CONN-1".to_owned());
+    crate::results::write(&run, &root.path(&format!("{at}/test_run.json"))).unwrap();
+}
+
+/// Every file below `dir`, relative to it and sorted; empty when `dir` is absent.
+pub fn files_below(dir: &Path) -> Vec<String> {
+    let mut files = Vec::new();
+    let mut pending = vec![dir.to_path_buf()];
+    while let Some(next) = pending.pop() {
+        for entry in fs::read_dir(&next).into_iter().flatten() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                pending.push(path);
+            } else {
+                files.push(path.strip_prefix(dir).unwrap().display().to_string());
+            }
+        }
+    }
+    files.sort();
+    files
+}
+
 /// A passing attempt over `span` (Unix milliseconds) without artifacts.
 pub fn passed_attempt(span: (i64, i64)) -> Attempt {
     Attempt {
