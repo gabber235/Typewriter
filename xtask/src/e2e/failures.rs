@@ -1,6 +1,6 @@
 //! The local folder a failed attempt leaves: `failures/<case>/` inside the attempt's folder of
-//! the suite's evidence folder (`attempts/<n>/` for a scenario, `journey/` for the sign in
-//! journey), holding what the screen showed (screenshots), what the panel, the drive and
+//! the suite's evidence folder (`attempts/<n>/` for a scenario, `attempts/<n>/journey/` for the
+//! sign in journey), holding what the screen showed (screenshots), what the panel, the drive and
 //! every stack service logged during the attempt, and every span of the traces the panel started
 //! in it. None of it is published: [`ArtifactKind::published`] keeps logs and spans off the
 //! evidence branch, and CI leaves the failure folders out of its upload.
@@ -528,48 +528,57 @@ WARNING: before any time
     }
 
     #[test]
-    fn a_failed_journey_leaves_its_failure_folder_and_its_own_drive_log_in_the_journey_folder() {
+    fn each_failed_journey_attempt_leaves_its_failure_folder_and_its_own_drive_log_in_its_journey_folder()
+     {
         let root = TempRoot::new();
         let evidence = root.dir("full-panel-web");
         root.write(
             "full-panel-web/attempts/1/drive.log",
             "2026-10-31T07:26:45.000Z a scenario's drive\n",
         );
-        root.write(
-            "full-panel-web/journey/drive.log",
-            "2026-10-31T07:26:45.000Z the journey's drive\n",
-        );
-        root.write(
-            "full-panel-web/journey/screenshots/AUTH-2/failure.png",
-            "png",
-        );
+        for n in [1, 2] {
+            root.write(
+                &format!("full-panel-web/attempts/{n}/journey/drive.log"),
+                &format!("2026-10-31T07:26:45.000Z journey attempt {n}\n"),
+            );
+            root.write(
+                &format!("full-panel-web/attempts/{n}/journey/screenshots/AUTH-2/failure.png"),
+                "png",
+            );
+        }
         let stack = StackEvidence {
             logs: Vec::new(),
             traces: root.path("stack/traces.jsonl"),
         };
         let mut run = run_of(
             "[AUTH-2] Signs in",
-            vec![failed_attempt(
-                ATTEMPT,
-                &[(
-                    ArtifactKind::Screenshot,
-                    "journey/screenshots/AUTH-2/failure.png",
-                )],
-            )],
+            [1, 2]
+                .map(|n| {
+                    failed_attempt(
+                        ATTEMPT,
+                        &[(
+                            ArtifactKind::Screenshot,
+                            &format!("attempts/{n}/journey/screenshots/AUTH-2/failure.png"),
+                        )],
+                    )
+                })
+                .to_vec(),
         );
         run.cases[0].requirement = Some(super::super::JOURNEY.to_owned());
 
         collect(&evidence, &mut run, &stack).unwrap();
 
-        let folder = evidence.join("journey/failures/_AUTH-2__Signs_in");
-        assert_eq!(
-            file_names(&folder),
-            ["drive.log", "failure.png", "spans.otlp.jsonl"]
-        );
-        assert_eq!(
-            fs::read_to_string(folder.join("drive.log")).unwrap(),
-            "2026-10-31T07:26:45.000Z the journey's drive\n"
-        );
+        for n in [1, 2] {
+            let folder = evidence.join(format!("attempts/{n}/journey/failures/_AUTH-2__Signs_in"));
+            assert_eq!(
+                file_names(&folder),
+                ["drive.log", "failure.png", "spans.otlp.jsonl"]
+            );
+            assert_eq!(
+                fs::read_to_string(folder.join("drive.log")).unwrap(),
+                format!("2026-10-31T07:26:45.000Z journey attempt {n}\n")
+            );
+        }
         assert!(!evidence.join("attempts/1/failures").exists());
     }
 

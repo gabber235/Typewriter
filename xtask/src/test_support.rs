@@ -108,6 +108,13 @@ pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
     }
 }
 
+/// A run reporting one attempt of the case `id`, which proves `requirement`, with `outcome`.
+pub fn requirement_run(requirement: &str, id: &str, outcome: Outcome) -> TestRun {
+    let mut reported = run(&[(id, outcome)]);
+    reported.cases[0].requirement = Some(requirement.to_owned());
+    reported
+}
+
 /// A components run under `policy` whose cases made `attempts`, in order.
 pub fn attempted(policy: AttemptPolicy, attempts: &[Outcome]) -> TestRun {
     TestRun {

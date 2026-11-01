@@ -176,24 +176,25 @@ fn scenarios(ctx: &Context, args: &E2eArgs, suite: Suite, target: Target) -> Res
     };
     let budget = suite.budget() * args.repeat.get();
     let keep = ctx.root.join(STACK_EVIDENCE).join(&name);
-    let selection = Selection::of(&args.only, target);
     let (mut run, stack) = stack::run_keeping_evidence(ctx, &spec, budget, &keep, |stack| {
         let _lock = lock()?;
-        let mut run = match &selection.scenarios {
-            Some(ids) => results::attempts(args.policy(), ids, &quarantine, |n, ids| {
-                drive(ctx, stack, suite, target, &defines, &evidence, n, ids)
-            })?,
-            None => TestRun {
-                runner: Runner::PanelWeb,
-                attempt_policy: args.policy(),
-                ..TestRun::default()
-            },
-        };
-        if selection.journey {
-            run.cases
-                .extend(sign_in_journey(ctx, stack, &defines, &evidence)?.cases);
-        }
-        Ok(run)
+        // Both drives share the stack, so each attempt borrows it in turn.
+        let stack = std::cell::RefCell::new(stack);
+        results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
+            attempt(
+                n,
+                ids,
+                target,
+                |n, ids| {
+                    let stack = &mut **stack.borrow_mut();
+                    drive(ctx, stack, suite, target, &defines, &evidence, n, ids)
+                },
+                |n| {
+                    let stack = &mut **stack.borrow_mut();
+                    sign_in_journey(ctx, stack, &defines, &evidence, n)
+                },
+            )
+        })
     })?;
     failures::collect(&evidence, &mut run, &stack)?;
     let run = TestRun { commit, ..run };
@@ -229,7 +230,7 @@ fn drive(
     n: u32,
     only: &[String],
 ) -> Result<TestRun> {
-    let folder = Path::new(ATTEMPTS).join(n.to_string());
+    let folder = Drive::Scenarios.folder(n);
     let mut run = drive_once(
         ctx,
         supervisor,
@@ -340,23 +341,68 @@ fn in_chrome(mut command: Vec<String>, target: Target) -> Result<Recorded> {
 /// The requirement the full suite's sign in journey proves.
 const JOURNEY: &str = "AUTH-2";
 
-/// The folder of a suite's evidence each scenario drive writes its attempt to, as
-/// `attempts/<n>/`; run evidence, never another run (`results::RUN_EVIDENCE`).
+/// The folder of a suite's evidence its attempts write to, one `attempts/<n>/` each; run
+/// evidence, never another run (`results::RUN_EVIDENCE`), so the journey's own `test_run.json`
+/// inside it is read only through the suite's run.
 pub(crate) const ATTEMPTS: &str = "attempts";
 
-/// The folder of the full suite's evidence the sign in journey writes its run, screenshots and
-/// drive log to; its case is folded into the suite's run, so the folder is run evidence, never
-/// another run (`results::RUN_EVIDENCE`).
-pub(crate) const JOURNEY_EVIDENCE: &str = "journey";
+/// One of the two drives an attempt of the full suite makes.
+#[derive(Clone, Copy)]
+enum Drive {
+    /// The scenarios' `flutter drive`, writing to `attempts/<n>/`.
+    Scenarios,
+    /// The sign in journey's `flutter drive`, writing to `attempts/<n>/journey/`.
+    Journey,
+}
+
+impl Drive {
+    /// The drive that reported `case`.
+    fn of(case: &TestCase) -> Self {
+        if case.requirement.as_deref() == Some(JOURNEY) {
+            Self::Journey
+        } else {
+            Self::Scenarios
+        }
+    }
+
+    /// Where the drive keeps attempt `n`'s evidence, relative to the suite's evidence folder.
+    fn folder(self, n: u32) -> PathBuf {
+        let attempt = Path::new(ATTEMPTS).join(n.to_string());
+        match self {
+            Self::Scenarios => attempt,
+            Self::Journey => attempt.join("journey"),
+        }
+    }
+}
 
 /// Where attempt `n` of `case` keeps its evidence, relative to the suite's evidence folder: the
-/// sign in journey's one folder, or the scenario drive's `attempts/<n>/`.
+/// one layout the drives, the failure folders and the report all read.
 pub(crate) fn attempt_folder(case: &TestCase, n: u32) -> PathBuf {
-    if case.requirement.as_deref() == Some(JOURNEY) {
-        PathBuf::from(JOURNEY_EVIDENCE)
-    } else {
-        Path::new(ATTEMPTS).join(n.to_string())
+    Drive::of(case).folder(n)
+}
+
+/// Attempt `n` of the cases `ids` selects (every case when empty): `scenarios(n, ids)` drives the
+/// scenario ids among them and `journey(n)` the sign in journey when selected, folded into one
+/// run, so the journey is attempted, rerun and repeated like every scenario.
+fn attempt(
+    n: u32,
+    ids: &[String],
+    target: Target,
+    mut scenarios: impl FnMut(u32, &[String]) -> Result<TestRun>,
+    mut journey: impl FnMut(u32) -> Result<TestRun>,
+) -> Result<TestRun> {
+    let selection = Selection::of(ids, target);
+    let mut run = match &selection.scenarios {
+        Some(ids) => scenarios(n, ids)?,
+        None => TestRun {
+            runner: Runner::PanelWeb,
+            ..TestRun::default()
+        },
+    };
+    if selection.journey {
+        run.cases.extend(journey(n)?.cases);
     }
+    Ok(run)
 }
 
 /// What one run of a suite drives, from its `--only` ids.
@@ -398,16 +444,17 @@ const CI_PANEL_PORT: u16 = 2350;
 
 /// The full suite's sign in journey through the CI cluster's Authentik pages, which no scenario
 /// can drive (`panel/test_driver/sign_in_journey_test.dart`), signing in as [`JOURNEY_USER`]
-/// with the password of its sign in form. Its one case and its evidence land in `journey/` of the
-/// suite's `evidence` folder.
+/// with the password of its sign in form. Attempt `n`'s one case and its evidence land in its
+/// journey folder ([`Drive::Journey`]) of the suite's `evidence` folder.
 fn sign_in_journey(
     ctx: &Context,
     supervisor: &mut dyn Supervisor,
     defines_file: &Path,
     evidence: &Path,
+    n: u32,
 ) -> Result<TestRun> {
-    let folder = Path::new(JOURNEY_EVIDENCE);
-    let out = evidence.join(folder);
+    let folder = Drive::Journey.folder(n);
+    let out = evidence.join(&folder);
     let password = cluster::test_user_passwords(ctx)?
         .remove(&format!("{JOURNEY_USER}.password"))
         .with_context(|| format!("the CI cluster has no sign in password for {JOURNEY_USER}"))?;
@@ -496,7 +543,9 @@ fn desktop_device() -> Result<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{e2e_args as parsed, exited, failed, refusal, run};
+    use crate::test_support::{
+        e2e_args as parsed, exited, failed, refusal, report_text, requirement_run, run,
+    };
 
     #[test]
     fn a_plain_run_attempts_every_scenario_once_and_reruns_failures() {
@@ -592,6 +641,101 @@ mod tests {
     fn scenarios_without_the_journey_leave_it_out() {
         let only = ["CONN-1".to_owned()];
         assert!(!Selection::of(&only, Target::Cluster).journey);
+    }
+
+    #[test]
+    fn a_repeated_journey_is_attempted_exactly_that_often() {
+        let mut journeys = Vec::new();
+        let folded = results::attempts(
+            AttemptPolicy::Exactly(20),
+            &["AUTH-2".to_owned()],
+            &Quarantine::default(),
+            |n, ids| {
+                attempt(
+                    n,
+                    ids,
+                    Target::Cluster,
+                    |_, _| panic!("only the journey was selected"),
+                    |n| {
+                        journeys.push(n);
+                        Ok(requirement_run(
+                            JOURNEY,
+                            "[AUTH-2] Signs in",
+                            Outcome::Passed,
+                        ))
+                    },
+                )
+            },
+        )
+        .unwrap();
+        assert_eq!(journeys, (1..=20).collect::<Vec<_>>());
+        assert_eq!(folded.cases.len(), 1);
+        assert_eq!(folded.cases[0].attempts.len(), 20);
+    }
+
+    #[test]
+    fn a_failed_journey_is_attempted_again_until_it_passes() {
+        let asked = std::cell::RefCell::new(Vec::new());
+        let folded = results::attempts(
+            AttemptPolicy::RerunFailures(2),
+            &[],
+            &Quarantine::default(),
+            |n, ids| {
+                attempt(
+                    n,
+                    ids,
+                    Target::Cluster,
+                    |n, ids| {
+                        asked.borrow_mut().push((n, "scenarios", ids.to_vec()));
+                        Ok(run(&[("[CONN-1] Reconnects", Outcome::Passed)]))
+                    },
+                    |n| {
+                        asked.borrow_mut().push((n, "journey", Vec::new()));
+                        Ok(requirement_run(
+                            JOURNEY,
+                            "[AUTH-2] Signs in",
+                            if n == 1 {
+                                failed("boom")
+                            } else {
+                                Outcome::Passed
+                            },
+                        ))
+                    },
+                )
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            asked.into_inner(),
+            [
+                (1, "scenarios", Vec::new()),
+                (1, "journey", Vec::new()),
+                (2, "journey", Vec::new()),
+            ]
+        );
+        let journey = folded
+            .cases
+            .iter()
+            .find(|case| case.requirement.as_deref() == Some(JOURNEY))
+            .unwrap();
+        assert!(matches!(journey.attempts[1].outcome, Outcome::Passed));
+    }
+
+    #[test]
+    fn the_report_points_a_failed_journey_at_its_own_attempt_folder() {
+        let mut journey = requirement_run(JOURNEY, "[AUTH-2] Signs in", failed("boom"));
+        journey.cases[0].attempts.extend(
+            requirement_run(JOURNEY, "[AUTH-2] Signs in", Outcome::Passed).cases[0]
+                .attempts
+                .clone(),
+        );
+        journey.attempt_policy = AttemptPolicy::RerunFailures(2);
+        let (result, out) = report_text(&journey, &Quarantine::default());
+        assert!(result.is_ok());
+        assert_eq!(
+            out,
+            "[AUTH-2] Signs in: flaky, failed 1 of 2 attempts (1); see results/panel/attempts/1/journey/\n"
+        );
     }
 
     #[test]
