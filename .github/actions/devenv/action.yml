@@ -14,7 +14,8 @@ inputs:
   caches:
     description: >-
       Tool caches besides xtask's Cargo build, space separated: `gradle` (dependencies and the
-      wrapper) and `flutter` (the pub cache).
+      wrapper), `gradle-outputs` (Gradle's build cache, which it turns on for this job) and
+      `flutter` (the pub cache).
     default: ""
 
 runs:
@@ -131,6 +132,29 @@ runs:
           ~/.gradle/wrapper
         key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/gradle/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
         restore-keys: gradle-${{ runner.os }}-
+
+    # Gradle's build cache, on in CI only: the user home's gradle.properties wins over the
+    # project's and never reaches a developer machine. Its outputs change with every commit, so
+    # each save is a new entry under the commit, restored by prefix; the cache evicts the least
+    # recently used entries, which are the older commits', and Gradle drops outputs unused for 7
+    # days from the copy it saves.
+    - if: contains(inputs.caches, 'gradle-outputs')
+      shell: bash
+      run: |
+        mkdir -p ~/.gradle
+        echo "org.gradle.caching=true" >> ~/.gradle/gradle.properties
+    - if: contains(inputs.caches, 'gradle-outputs') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/caches/build-cache-1
+        key: gradle-outputs-${{ runner.os }}-${{ github.sha }}
+        restore-keys: gradle-outputs-${{ runner.os }}-
+    - if: contains(inputs.caches, 'gradle-outputs') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.gradle/caches/build-cache-1
+        key: gradle-outputs-${{ runner.os }}-${{ github.sha }}
+        restore-keys: gradle-outputs-${{ runner.os }}-
 
     # The packages of the panel, its testkit and its widgetbook.
     - if: contains(inputs.caches, 'flutter') && steps.trust.outputs.save-caches == 'true'
