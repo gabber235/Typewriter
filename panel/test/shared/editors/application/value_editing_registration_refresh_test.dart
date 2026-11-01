@@ -39,45 +39,44 @@ void main() {
   test(
     "incompatible replacement stays pending across a host rebuild",
     () async {
-    final workspace = testWorkSession();
-    final source = resourceTarget(
-      _key,
-      contract: "one",
-      document: _remoteOne,
-    ).hold(workspace)..update(_title, skir.DataValue.wrapStringValue("Draft"));
+      final workspace = testWorkSession();
+      final source =
+          resourceTarget(_key, contract: "one", document: _remoteOne).hold(
+            workspace,
+          )..update(_title, skir.DataValue.wrapStringValue("Draft"));
 
-    final rebuilt = resourceTarget(
-      _key,
-      contract: "two",
-      document: _remoteTwo,
-    ).acquire(workspace);
+      final rebuilt = resourceTarget(
+        _key,
+        contract: "two",
+        document: _remoteTwo,
+      ).acquire(workspace);
 
-    expect(rebuilt.workspace, same(source.workspace));
-    await eventually(
-      () => expect(source.contractReconciliationPending, isTrue),
-    );
-    expect(source.readOnly, isTrue);
-    expect(
-      source.value(_title).valueOrNull,
-      skir.DataValue.wrapStringValue("Draft"),
-    );
-    expect(
-      source.value(_description).valueOrNull,
-      skir.DataValue.wrapStringValue("Remote one"),
-    );
+      expect(rebuilt.workspace, same(source.workspace));
+      await eventually(
+        () => expect(source.contractReconciliationPending, isTrue),
+      );
+      expect(source.readOnly, isTrue);
+      expect(
+        source.value(_title).valueOrNull,
+        skir.DataValue.wrapStringValue("Draft"),
+      );
+      expect(
+        source.value(_description).valueOrNull,
+        skir.DataValue.wrapStringValue("Remote one"),
+      );
 
-    expect(source.reconcilePendingContract(), isTrue);
-    expect(source.contractReconciliationPending, isFalse);
-    expect(source.readOnly, isFalse);
-    expect(
-      source.value(_title).valueOrNull,
-      skir.DataValue.wrapStringValue("Draft"),
-    );
-    expect(
-      source.value(_description).valueOrNull,
-      skir.DataValue.wrapStringValue("Remote two"),
-    );
-  },
+      expect(source.reconcilePendingContract(), isTrue);
+      expect(source.contractReconciliationPending, isFalse);
+      expect(source.readOnly, isFalse);
+      expect(
+        source.value(_title).valueOrNull,
+        skir.DataValue.wrapStringValue("Draft"),
+      );
+      expect(
+        source.value(_description).valueOrNull,
+        skir.DataValue.wrapStringValue("Remote two"),
+      );
+    },
   );
 
   test("discard accepts an incompatible replacement explicitly", () async {

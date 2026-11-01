@@ -265,8 +265,8 @@ class AuthoringSession extends _$AuthoringSession {
   }
 
   PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
-    skir.PreparedEdit edit,
-  ) => _repository.prepareCommit(edit);
+    skir.CommitPreparedEditRequest commit,
+  ) => _repository.prepareCommit(commit);
 
   Future<skir.PreviewTypeArgumentChangeResponse> previewTypeArguments({
     required skir.ResourceId resource,

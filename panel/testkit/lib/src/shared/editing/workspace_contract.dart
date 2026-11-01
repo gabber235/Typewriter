@@ -166,27 +166,6 @@ void editingWorkspaceContract<S, E>(
       expect(read(owner.confirmed), "Later");
     });
 
-    test(
-      "acknowledged operation remains until refresh succeeds then retires",
-      () async {
-        final operation = stagedMove();
-        final reply = boundary.reply = Completer();
-        final refresh = boundary.refreshReply = Completer();
-        final saving = owner.save(operation);
-        await boundary.started.future;
-        reply.complete(const SubmissionConfirmed(EditAccepted()));
-        await boundary.observing.future;
-        refresh.completeError(StateError("Refresh failed"));
-        await saving;
-        expect(owner.canRetry(operation), isTrue);
-        expect(owner.disposeEmptyGroup(operation), isFalse);
-        boundary.current = accepted(boundary.captures.single.proposed);
-        await owner.retry(operation);
-        expect(() => owner.group(operation), throwsStateError);
-        expect(read(owner.confirmed), "Move");
-      },
-    );
-
     test("group cleanup cannot discard an admitted operation", () {
       stage("Draft");
       expect(owner.disposeEmptyGroup(id), isFalse);
@@ -194,35 +173,6 @@ void editingWorkspaceContract<S, E>(
       expect(control.state.hasWork, isTrue);
     });
 
-    test("an acknowledged save remains active while refreshing and retains later edits", () async {
-      final reply = boundary.reply = Completer();
-      final observation = boundary.refreshReply = Completer();
-      stage("Draft");
-      final applying = control.apply();
-      await boundary.started.future;
-      reply.complete(const SubmissionConfirmed(EditAccepted()));
-      await boundary.observing.future;
-
-      final entry = driver.snapshot.entries.single;
-      expect(entry.needsAttention, isFalse);
-      expect(entry.saving, isTrue);
-      expect(entry.phase, "Changes were applied. Refreshing saved values");
-      expect(control.state.canApply, isFalse);
-      expect(control.state.hasSubmittedWork, isTrue);
-      inspectActiveSave?.call(owner, id);
-
-      stage("Later");
-      expect(boundary.captures, hasLength(1));
-      observation.complete(accepted(boundary.captures.single.proposed));
-      await applying;
-      expect(read(owner.confirmed), "Draft");
-      expect(read(owner.document), "Later");
-      expect(control.state.canApply, isTrue);
-      await control.apply();
-      expect(read(owner.confirmed), "Later");
-      expect(boundary.captures, hasLength(2));
-      expect(control.state.hasWork, isFalse);
-    });
     test(
       "Apply settles one request and the same owner accepts another edit",
       () async {
@@ -247,28 +197,36 @@ void editingWorkspaceContract<S, E>(
       await control.apply();
       expect(boundary.captures, isEmpty);
     });
-    test(
-      "a submitted prefix settles independently of its later local tail",
-      () async {
-        final reply = boundary.reply = Completer();
-        stage("Draft");
-        final applying = control.apply();
-        await boundary.started.future;
-        stage("Later");
-        reply.complete(
-          SubmissionConfirmed(
-            EditConfirmed(accepted(boundary.captures.single.proposed)),
-          ),
-        );
-        await applying;
-        expect(read(owner.confirmed), "Draft");
-        expect(read(owner.document), "Later");
-        expect(control.state.canApply, isTrue);
-        await control.apply();
-        expect(read(owner.confirmed), "Later");
-        expect(boundary.captures, hasLength(2));
-      },
-    );
+    test("a save in flight remains active, and its submitted prefix settles "
+        "independently of its later local tail", () async {
+      final reply = boundary.reply = Completer();
+      stage("Draft");
+      final applying = control.apply();
+      await boundary.started.future;
+
+      final entry = driver.snapshot.entries.single;
+      expect(entry.needsAttention, isFalse);
+      expect(entry.saving, isTrue);
+      expect(entry.phase, "Applying");
+      expect(control.state.canApply, isFalse);
+      expect(control.state.hasSubmittedWork, isTrue);
+      inspectActiveSave?.call(owner, id);
+
+      stage("Later");
+      expect(boundary.captures, hasLength(1));
+      reply.complete(
+        SubmissionConfirmed(
+          EditConfirmed(accepted(boundary.captures.single.proposed)),
+        ),
+      );
+      await applying;
+      expect(read(owner.confirmed), "Draft");
+      expect(read(owner.document), "Later");
+      expect(control.state.canApply, isTrue);
+      await control.apply();
+      expect(read(owner.confirmed), "Later");
+      expect(boundary.captures, hasLength(2));
+    });
     test(
       "Discard removes only unsent work while a request is pending",
       () async {
@@ -298,8 +256,6 @@ void editingWorkspaceContract<S, E>(
         stage("Draft");
         final applying = control.apply();
         await boundary.started.future;
-        // The saved values stay unread, so the outcome stays unknown.
-        boundary.refreshReply = Completer();
         reply.complete(
           SubmissionUncertain(
             message: "Reply lost",
@@ -330,21 +286,13 @@ final class ContractPersistence<S, E> implements EditPersistence<S, E> {
   final key = Object();
   final captures = <EditCapture<S, E>>[];
   final started = Completer<void>();
-  final observing = Completer<void>();
   Completer<SubmissionResult<EditSettlement<S>>>? reply;
-  Completer<S>? refreshReply;
   @override
   Set<Object> reservationsFor(Iterable<E> pendingEdits) => {key};
   @override
   Future<S> observeForCommit(S known) async => current;
   @override
-  Future<S> refresh() async {
-    if (!observing.isCompleted) observing.complete();
-    final pending = refreshReply;
-    refreshReply = null;
-    if (pending != null) current = await pending.future;
-    return current;
-  }
+  Future<S> refresh() async => current;
 
   @override
   PreparedCommit<EditSettlement<S>> prepare(EditCapture<S, E> capture) =>
@@ -363,7 +311,7 @@ final class ContractPersistence<S, E> implements EditPersistence<S, E> {
                 )
               : await pending.future;
           if (result case SubmissionConfirmed(
-            value: EditConfirmed(:final observation),
+            value: EditConfirmed(:final observation?),
           )) {
             current = observation;
           }

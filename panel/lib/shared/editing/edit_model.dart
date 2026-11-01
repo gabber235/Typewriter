@@ -31,8 +31,9 @@ abstract interface class EditRead<S> {
 ///
 /// Reservations must cover the resources that preparation can capture. The
 /// workspace observes under that reservation before [prepare] freezes a request.
-/// [refresh] recovers acknowledged state after a save whose response did not
-/// include its resulting observation.
+/// [prepare] settles every save from its reply. [refresh] reads the saved
+/// values for a review, a reload, or a baseline a newer observation and a
+/// reply both claim.
 abstract interface class EditPersistence<S, E> {
   Set<Object> reservationsFor(Iterable<E> pendingEdits);
   Future<S> observeForCommit(S known);
@@ -88,8 +89,11 @@ abstract class EditCapture<S, E> with _$EditCapture<S, E> {
 
 @freezed
 sealed class EditSettlement<S> with _$EditSettlement<S> {
-  const factory EditSettlement.confirmed(S observation) = EditConfirmed<S>;
-  const factory EditSettlement.accepted() = EditAccepted<S>;
+  /// The persistence saved the edit; [observation] is the saved state its
+  /// reply carried. It is null when that state is under a contract the
+  /// request could not read, as a Realm reply under a newer catalog; the
+  /// persistence's next observation then brings the state.
+  const factory EditSettlement.confirmed(S? observation) = EditConfirmed<S>;
   const factory EditSettlement.conflict({
     required EditConflictEvidence evidence,
     S? observation,
@@ -111,9 +115,10 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
   const factory EditGroupPhase.dirty() = EditGroupDirty<S>;
   const factory EditGroupPhase.awaitingDependency(Set<EditGroupId> groups) =
       EditGroupAwaitingDependency<S>;
+
+  /// The group's submission is on its way: sending, or waiting to send the
+  /// same request again because nothing answered it yet.
   const factory EditGroupPhase.saving() = EditGroupSaving<S>;
-  const factory EditGroupPhase.committedAwaitingRefresh(Object? cause) =
-      EditGroupCommittedAwaitingRefresh<S>;
   const factory EditGroupPhase.conflict(
     String message,
     EditConflictEvidence? evidence,
@@ -121,6 +126,9 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
   const factory EditGroupPhase.rejected(String message, Object? cause) =
       EditGroupRejected<S>;
   const factory EditGroupPhase.contractChanged() = EditGroupContractChanged<S>;
+
+  /// Nothing answered the group's submission and it does not resend on its
+  /// own: an Apply waits for Retry, or the submission cannot replay.
   const factory EditGroupPhase.uncertain(Object cause) = EditGroupUncertain<S>;
   const factory EditGroupPhase.repeatedContention(
     int attempts,
@@ -135,13 +143,12 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
       this is! EditGroupAwaitingDependency<S> &&
       this is! EditGroupSaving<S>;
   bool get submitted =>
-      this is EditGroupSaving<S> ||
-      this is EditGroupCommittedAwaitingRefresh<S> ||
-      this is EditGroupUncertain<S>;
+      this is EditGroupSaving<S> || this is EditGroupUncertain<S>;
 
-  /// Applying changes and observing an acknowledged save are normal progress.
+  /// Applying changes, including resending an unanswered save, is normal
+  /// progress.
   bool get active => switch (this) {
-    EditGroupSaving() || EditGroupCommittedAwaitingRefresh(cause: null) => true,
+    EditGroupSaving() => true,
     _ => false,
   };
 
@@ -157,7 +164,6 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
     EditGroupDirty() ||
     EditGroupAwaitingDependency() ||
     EditGroupSaving() ||
-    EditGroupCommittedAwaitingRefresh() ||
     EditGroupRejected() ||
     EditGroupContractChanged() ||
     EditGroupUncertain() => false,
@@ -168,16 +174,13 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
     EditGroupAwaitingDependency() =>
       "Waiting for related pending changes. Apply or discard that work first",
     EditGroupSaving() => "Applying",
-    EditGroupCommittedAwaitingRefresh(cause: null) =>
-      "Changes were applied. Refreshing saved values",
-    EditGroupCommittedAwaitingRefresh() => "Changes were applied. Current values are unavailable; later edits remain local",
     EditGroupConflict(:final message) ||
     EditGroupRejected(:final message) => message,
     EditGroupContractChanged() =>
       "The editor contract changed. Review or discard pending work",
     EditGroupRepeatedContention() =>
       "The resource changed repeatedly. Retry when other edits stop",
-    EditGroupUncertain() => "The outcome is unknown. Local work is retained until the saved values show whether it was applied",
+    EditGroupUncertain() => "The outcome is unknown. Local work is retained",
     EditGroupResourceMissing() =>
       "The resource was removed. Its proposal is retained for comparison",
   };

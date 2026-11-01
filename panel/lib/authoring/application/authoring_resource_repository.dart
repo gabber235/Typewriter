@@ -5,7 +5,8 @@ part of "authoring_session.dart";
 /// Rebinding retires old listeners and fences late callbacks by transport
 /// generation. Reconnect schedules a current snapshot refresh rather than replaying
 /// events. Reads and preparation borrow the session transport; commit preparation
-/// hands delivery to its submission owner with automatic replay unsupported.
+/// hands delivery to its submission owner with identical replay under the
+/// request's submission key.
 final class AuthoringResourceRepository {
   AuthoringResourceRepository(this.session, this.organization, this.realm);
 
@@ -161,15 +162,18 @@ final class AuthoringResourceRepository {
     };
   }
 
+  /// The Realm answers a repeated [skir.CommitPreparedEditRequest.submission]
+  /// with the current saved state and applies nothing, so an unanswered commit
+  /// may be sent again byte for byte.
   PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
-    skir.PreparedEdit edit,
+    skir.CommitPreparedEditRequest commit,
   ) => session.transport.prepare(
-    edit.operation(organizationId: organization, realmId: realm),
-    submissionId: uuid.v4(),
-    replay: SubmissionReplay.unsupported,
+    commit.operation(organizationId: organization, realmId: realm),
+    submissionId: commit.submission,
+    replay: SubmissionReplay.identicalRequest,
     label: "Save Realm changes",
     resources: {
-      for (final resource in edit.editedResources)
+      for (final resource in commit.edit.editedResources)
         (organization, realm, resource),
     },
     rejectionMessage: (response) => response.rejectionMessage,

@@ -22,17 +22,18 @@ EditorSnapshot savedTitleSnapshot({
 );
 
 /// A value editing draft over [resource] in [workspace] with its title set to
-/// "Draft", holding the resource lease until the test ends.
+/// "Draft", saved by [policy], holding the resource lease until the test ends.
 ValueEditing titleDraft(
   ScopedWorkSession workspace,
-  ValueEditPersistence resource,
-) {
+  ValueEditPersistence resource, {
+  EditorCommitPolicy policy = EditorCommitPolicy.applyResource,
+}) {
   final source = ValueEditingRegistration(
     targetId: resource.key.identity,
     label: "Resource",
     persistence: resource,
     snapshot: savedTitleSnapshot(),
-    commitPolicy: EditorCommitPolicy.applyResource,
+    commitPolicy: policy,
   ).acquire(workspace);
   addTearDown(
     workspace.lease(WorkDriverId(domain: "value", scope: resource.key)).release,
@@ -94,9 +95,8 @@ final class UncertainSaveResource extends ScriptedValuePersistence {
   );
 }
 
-/// A configuration resource whose every send reports an uncertain outcome and
-/// whose saved values can be read only before the first save, so the outcome
-/// stays unknown.
+/// A configuration resource whose every send reports an uncertain outcome
+/// and which cannot replay it, so the outcome stays unknown.
 final class UncertainConfigurationResource extends ValueEditPersistence {
   UncertainConfigurationResource(this.key, this.snapshot);
 
@@ -107,14 +107,8 @@ final class UncertainConfigurationResource extends ValueEditPersistence {
   @override
   Set<Object> get reservations => {key};
 
-  var _read = false;
-
   @override
-  Future<EditorSnapshot?> refreshSnapshot() async {
-    if (_read) throw StateError("The saved values cannot be read");
-    _read = true;
-    return snapshot;
-  }
+  Future<EditorSnapshot?> refreshSnapshot() async => snapshot;
 
   @override
   PreparedCommit<TypedMutationResult> prepareValue(

@@ -960,8 +960,8 @@ void main() {
       isNull,
     ),
   ]) {
-    test("an autosave of $saved whose outcome is unknown saves once the "
-        "Realm answers without it", () async {
+    test("an autosave of $saved whose reply was lost is saved once the Realm "
+        "answers a resend", () async {
       final world = testWorld([..._original, heldSaves]);
       final realm = world.requireRealm;
       final form = await world.autosaveReceived(resource, change);
@@ -975,8 +975,8 @@ void main() {
       expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
     });
 
-    test("an autosave of $saved whose outcome is unknown is not sent again "
-        "once the Realm shows it was saved", () async {
+    test("an autosave of $saved whose reply was lost after it landed is saved "
+        "once, without a review", () async {
       final world = testWorld([..._original, heldSaves]);
       final realm = world.requireRealm;
       final form = await world.autosaveReceived(resource, change);
@@ -986,14 +986,14 @@ void main() {
 
       await eventually(() => expect(form.dirty, isFalse));
 
-      expect(realm.saves, hasLength(1));
+      expect(read(realm.document), expected);
       expect(read(form.document), expected);
       expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
     });
   }
 
-  test("an autosave whose outcome is unknown asks for review when the Realm "
-      "holds other values", () async {
+  test("an autosave whose reply was lost asks for review when its resend "
+      "meets other values", () async {
     final world = testWorld([..._original, heldSaves]);
     final realm = world.requireRealm;
     final form = await world.autosaveReceived(
@@ -1004,12 +1004,15 @@ void main() {
     realm.remoteChange(
       (edit) => edit.set(_name, skir.DataValue.wrapStringValue("Remote")),
     );
+    await eventually(() => expect(realm.saves, hasLength(2)));
+    realm.saves.last.reject(
+      skir.CommitPreparedEditResponse.wrapConflictError(const []),
+    );
 
     await eventually(
       () => expect(form.phase, isA<EditGroupConflict<AuthoringDocument>>()),
     );
 
-    expect(realm.saves, hasLength(1));
     final review = await form.workspace.refreshedConflictReview(
       form.editingGroup,
     );
@@ -1022,40 +1025,114 @@ void main() {
       skir.DataValue.wrapStringValue("Local"),
     );
   });
-  for (final uncertain in [false, true]) {
-    test(
-      "discarding a later unsent edit preserves the ${uncertain ? 'uncertain' : 'committed'} prefix",
-      () async {
-        final world = testWorld([..._original, heldSaves]);
-        final realm = world.requireRealm
-          ..refreshFailure = StateError("Refresh unavailable");
-        final workspace = await world.openRealmEditing();
-        final binding = workspace.form(_resource)
-          ..setText("First", _name, "First");
-        final saving = binding.save();
-        await Future<void>.delayed(Duration.zero);
-        binding.setText("Later", _name, "Later");
-        if (uncertain) {
-          realm.saves.last.loseReply(StateError("Reply lost"));
-        } else {
-          realm.saves.last.confirm(observed: false);
-        }
-        await saving;
-        final phase = binding.phase;
-        expect(binding.control.state.canDiscard, isTrue);
-        expect(binding.discard(), isTrue);
-        expect(binding.phase, phase);
-        expect(binding.hasSubmittedWork, isTrue);
-        expect(
-          binding.document.valueAt(_name),
-          skir.DataValue.wrapStringValue("First"),
-        );
-        expect(binding.control.state.canDiscard, isFalse);
-        expect(binding.discard(), isFalse);
-        await binding.save();
-        expect(realm.saves, hasLength(1));
-      },
+  test("a resent save answered while another save applies is saved, and so "
+      "is the other save", () async {
+    final world = testWorld([..._original, heldSaves]);
+    final realm = world.requireRealm;
+    final name = await world.autosaveReceived(
+      _resource,
+      (edit) => edit.set(_name, skir.DataValue.wrapStringValue("First")),
     );
+    final editing = name.workspace;
+    realm.saves.single.keepAndLoseReply(TimeoutException("No answer in time"));
+    final position = editing.setText("Position", _position, "1") as EditStaged;
+    final applying = editing.workspace.save(position.group);
+
+    // The Realm holds the position save and answers the name's resend on its
+    // own meanwhile, from the key it kept.
+    await eventually(() => expect(realm.saves, hasLength(3)));
+    realm.saves.singleWhere((save) => !save.answered).confirm();
+    await applying;
+
+    await eventually(() {
+      expect(name.dirty, isFalse);
+      expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("First"),
+      );
+      expect(
+        editing.document.valueAt(_position),
+        skir.DataValue.wrapStringValue("1"),
+      );
+    });
+    expect(
+      realm.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("First"),
+    );
+    expect(
+      realm.document.valueAt(_position),
+      skir.DataValue.wrapStringValue("1"),
+    );
+    expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
+  });
+
+  test("a resend answered under a new catalog is saved while the saved "
+      "document cannot be read, and shows once the session reads it", () async {
+    final world = testWorld([..._original, heldSaves]);
+    final realm = world.requireRealm;
+    final name = await world.autosaveReceived(
+      _resource,
+      (edit) => edit.set(_name, skir.DataValue.wrapStringValue("First")),
+    );
+    final editing = name.workspace;
+    realm
+      ..refreshFailure = StateError("Refresh lost")
+      ..saves.single.loseReply(TimeoutException("No answer in time"));
+    final saved = authoredDoc([
+      authoredRecord(_resource, texts({"name": "First", "position": "0"})),
+    ]).document.withCatalogGeneration("catalog:changed");
+
+    // The Realm answers the resend with its saved document, now typed by a
+    // newer catalog the panel has not read.
+    await eventually(() => expect(realm.saves, hasLength(2)));
+    realm.saves.last.confirm(saved: saved, observed: false);
+
+    await eventually(() => expect(name.hasSubmittedWork, isFalse));
+    expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
+
+    realm
+      ..refreshFailure = null
+      ..serve(realm.document);
+    await eventually(
+      () => expect(
+        editing.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("First"),
+      ),
+    );
+  });
+
+  for (final uncertain in [false, true]) {
+    test("discarding a later unsent edit keeps the "
+        "${uncertain ? 'unanswered' : 'saved'} prefix", () async {
+      final world = testWorld([..._original, heldSaves]);
+      final realm = world.requireRealm;
+      final workspace = await world.openRealmEditing();
+      final binding = workspace.form(_resource)
+        ..setText("First", _name, "First");
+      final saving = binding.save();
+      await Future<void>.delayed(Duration.zero);
+      binding.setText("Later", _name, "Later");
+      if (uncertain) {
+        realm.saves.last.loseReply(StateError("Reply lost"));
+      } else {
+        realm.saves.last.confirm(observed: false);
+      }
+      await saving;
+      final phase = binding.phase;
+      expect(binding.control.state.canDiscard, isTrue);
+      expect(binding.discard(), isTrue);
+      expect(binding.hasSubmittedWork, uncertain);
+      expect(
+        binding.document.valueAt(_name),
+        skir.DataValue.wrapStringValue("First"),
+      );
+      expect(binding.discard(), isFalse);
+      await binding.save();
+      // An unanswered prefix keeps waiting for its reply; a saved one left
+      // no work behind. Either way nothing more was sent.
+      expect(binding.phase, uncertain ? phase : isNull);
+      expect(realm.saves, hasLength(1));
+    });
   }
 
   test(
@@ -1246,50 +1323,30 @@ void main() {
     );
   });
 
-  for (final observed in [false, true]) {
-    test(
-      observed
-          ? "a commit whose refresh failed recovers when its saved values are "
-                "observed again, even while that observation rebuilds"
-          : "a known committed prefix refreshes without replaying and retains "
-                "its tail",
-      () async {
-        final world = testWorld([..._original, heldSaves]);
-        final realm = world.requireRealm
-          ..refreshFailure = StateError("Refresh lost");
-        final workspace = await world.openRealmEditing();
-        final form = workspace.form(_resource)
-          ..setText("First", _name, "First");
-        final saving = form.save();
-        await Future<void>.delayed(Duration.zero);
-        form.setText("Tail", _name, "Tail");
-        realm.saves.last.confirm(observed: false);
-        await saving;
-        expect(form.phase, isA<EditGroupCommittedAwaitingRefresh>());
-        expect(form.control.state.canDiscard, isTrue);
-        realm.refreshFailure = null;
-        if (observed) {
-          realm
-            ..announceRefreshes()
-            ..remoteChange((_) {});
-        } else {
-          await workspace.refreshConfirmed();
-        }
-        await eventually(
-          () => expect(
-            form.phase,
-            isNot(isA<EditGroupCommittedAwaitingRefresh>()),
-          ),
-        );
-        expect(realm.saves, hasLength(1));
-        expect(
-          workspace.document.valueAt(_name),
-          skir.DataValue.wrapStringValue("Tail"),
-        );
-        expect(form.blocked, isFalse);
-      },
+  test("a save settles from its reply while the saved document cannot be "
+      "read, and its later edit stays local and editable", () async {
+    final world = testWorld([..._original, heldSaves]);
+    final realm = world.requireRealm
+      ..refreshFailure = StateError("Refresh lost");
+    final workspace = await world.openRealmEditing();
+    final form = workspace.form(_resource)..setText("First", _name, "First");
+    final saving = form.save();
+    await Future<void>.delayed(Duration.zero);
+    form.setText("Tail", _name, "Tail");
+    realm.saves.last.confirm(observed: false);
+    await saving;
+
+    expect(form.hasSubmittedWork, isFalse);
+    expect(
+      realm.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("First"),
     );
-  }
+    expect(
+      workspace.document.valueAt(_name),
+      skir.DataValue.wrapStringValue("Tail"),
+    );
+    expect(form.blocked, isFalse);
+  });
 
   test(
     "the lane orders independent groups and excludes unrelated form work",
@@ -1376,14 +1433,12 @@ void main() {
     final realm = world.requireRealm;
     final editing = await world.openRealmEditing();
     final untouched = editing.form(_resource);
-    final rename =
-        editing.setText(
-              "Rename",
-              _name,
-              "Next",
-              policy: EditorCommitPolicy.applyResource,
-            )
-            as EditStaged;
+    final rename = editing.setText(
+      "Rename",
+      _name,
+      "Next",
+      policy: EditorCommitPolicy.applyResource,
+    ) as EditStaged;
 
     unawaited(untouched.save());
     await editing.workspace.save(rename.group);

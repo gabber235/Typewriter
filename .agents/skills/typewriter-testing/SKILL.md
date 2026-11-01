@@ -68,10 +68,13 @@ isAuthenticatedProvider.overrideWithValue(const AsyncValue.data(true));
 ```
 
 ```dart
-// Good: the count is the requirement. A lost reply is never sent again.
-await submission.run();
-await submission.run();
-expect(calls, 1);
+// Checks how: the key the fake recorded on each send.
+expect(realm.saves.last.submission, realm.saves.first.submission);
+// Checks what: a save whose reply was lost ends saved, once, without a review.
+realm.saves.single.keepAndLoseReply();
+await eventually(() => expect(form.dirty, isFalse));
+expect(realm.document.valueAt(title), saved);
+expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
 ```
 
 ## Watch the harness

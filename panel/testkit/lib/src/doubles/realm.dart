@@ -230,29 +230,6 @@ final class FakeRealm {
   /// a refresh the test answers later; by default it reads [document].
   Future<AuthoringDocument> Function()? answerRefresh;
 
-  /// Holds every later refresh of the saved document until the test
-  /// completes it; returns the refreshes the Realm was asked for, oldest
-  /// first.
-  List<Completer<AuthoringDocument>> holdRefreshes() {
-    final refreshes = <Completer<AuthoringDocument>>[];
-    answerRefresh = () {
-      final refresh = Completer<AuthoringDocument>();
-      refreshes.add(refresh);
-      return refresh.future;
-    };
-    return refreshes;
-  }
-
-  /// Makes every later refresh publish a fresh read of the saved document
-  /// once the read answers, the way the panel's session publishes only what
-  /// a refresh read.
-  void announceRefreshes() => answerRefresh = () async {
-    await Future<void>.value();
-    final read = document.copyWith();
-    serve(read);
-    return read;
-  };
-
   /// Replaces how the Realm answers a resource search; by default it has no
   /// search.
   Future<skir.SearchAuthoringResponse> Function(
@@ -294,11 +271,16 @@ final class FakeRealm {
   var _observations = 0;
 
   /// [edit] as the Realm saves it: a document with a new observation.
-  AuthoringDocument _observed(AuthoringEdit edit) => edit.toDocument().copyWith(
-    confirmedObservation: skir.AuthoringObservationId(
-      value: "${scope.realmId.id}:saved:${++_observations}",
-    ),
-  );
+  AuthoringDocument _observed(AuthoringEdit edit) =>
+      _withObservation(edit.toDocument());
+
+  /// [document] as the Realm saves it, with a new observation.
+  AuthoringDocument _withObservation(AuthoringDocument document) =>
+      document.copyWith(
+        confirmedObservation: skir.AuthoringObservationId(
+          value: "${scope.realmId.id}:saved:${++_observations}",
+        ),
+      );
 
   /// Replaces the saved document, such as one typed by a newer catalog.
   void serve(AuthoringDocument document) => _publish(AsyncData(document));
@@ -315,10 +297,32 @@ final class FakeRealm {
     }
   }
 
-  Future<skir.CommitPreparedEditResponse> _receive(skir.PreparedEdit edit) {
-    final save = RealmSave._(this, edit);
+  /// The edit each committed submission carried, by key.
+  final _committed = <String, skir.PreparedEdit>{};
+
+  /// The reply to a committed submission: the current saved state.
+  skir.CommitPreparedEditResponse get _committedReply =>
+      skir.CommitPreparedEditResponse.wrapCommitted(document.savedState);
+
+  Future<skir.CommitPreparedEditResponse> _receive(
+    skir.CommitPreparedEditRequest commit,
+  ) {
+    final save = RealmSave._(this, commit.edit, commit.submission);
     _saves.add(save);
-    if (!holdSaves) unawaited(_reply(save.confirm));
+    if (_committed[commit.submission] case final first?) {
+      // A repeat applies nothing and answers with the current saved state.
+      unawaited(
+        _reply(
+          () => save._response.complete(
+            first == commit.edit
+                ? _committedReply
+                : _submissionReused(commit.submission),
+          ),
+        ),
+      );
+    } else if (!holdSaves) {
+      unawaited(_reply(save.confirm));
+    }
     return save._response.future;
   }
 
@@ -335,17 +339,25 @@ final class FakeRealm {
   /// The save boundary, for components composed without the panel, such as
   /// stories; the panel reaches it through [overrides].
   late final RealmEditPersistence persistence = RealmEditPersistence(
+    // Resources are named as the panel's Realm persistence names them, so
+    // the Realm's inbox and activity attribute these saves to the Realm.
     reservations: (edits) => {
-      for (final edit in edits) ...edit.editedResources,
+      for (final edit in edits)
+        for (final resource in edit.editedResources)
+          (scope.organizationId, scope.realmId, resource),
     },
     observe: () async {
       if (refreshFailure case final error?) throw error;
       return answerRefresh?.call() ?? document;
     },
-    request: (edit) => PreparedCommit(
-      id: Object(),
+    request: (commit) => PreparedCommit(
+      id: commit.submission,
       label: "Save to $name",
-      resources: edit.editedResources.toSet(),
+      resources: {
+        for (final resource in commit.edit.editedResources)
+          (scope.organizationId, scope.realmId, resource),
+      },
+      replay: SubmissionReplay.identicalRequest,
       send: () async {
         if (unpreparable case final message?) {
           return SubmissionResult.notSubmitted(message: message);
@@ -355,7 +367,7 @@ final class FakeRealm {
             message: "Nothing answered; the service may be away",
           );
         }
-        final response = await _receive(edit);
+        final response = await _receive(commit);
         return switch (response) {
           skir.CommitPreparedEditResponse_internalErrorWrapper() ||
           skir.CommitPreparedEditResponse_unknown() =>
@@ -364,7 +376,7 @@ final class FakeRealm {
               cause: response,
               stackTrace: StackTrace.current,
             ),
-          skir.CommitPreparedEditResponse.committed =>
+          skir.CommitPreparedEditResponse_committedWrapper() =>
             SubmissionResult.confirmed(response),
           _ => SubmissionResult.rejected(
             message: response.rejectionMessage,
@@ -496,40 +508,49 @@ final class FakeRealm {
 /// One save the Realm received, answered by the Realm or, while it holds
 /// saves, by the test.
 final class RealmSave {
-  RealmSave._(this._realm, this.edit);
+  RealmSave._(this._realm, this.edit, this.submission);
 
   final FakeRealm _realm;
 
   /// The edit the panel asked the Realm to save.
   final skir.PreparedEdit edit;
 
+  /// The key the panel named this save attempt with.
+  final String submission;
+
   final _response = Completer<skir.CommitPreparedEditResponse>();
 
   /// Whether the save was answered or its reply lost.
   bool get answered => _response.isCompleted;
 
-  /// Keeps the edit and answers that it was saved; the saved document shows
-  /// it. [saved] replaces the document the Realm keeps, for a save another
-  /// author's change reached first. Without [observed], the panel only sees
-  /// the saved document once it refreshes, as when the Realm's observation
-  /// lags behind its reply.
+  /// Keeps the edit and answers with the saved document, which shows it.
+  /// [saved] replaces the document the Realm keeps, for a save another
+  /// author's change reached first. Without [observed], the Realm's
+  /// observation lags behind its reply: the reply settles the save, and other
+  /// readers see the document once they refresh.
   void confirm({AuthoringDocument? saved, bool observed = true}) {
-    final document =
-        saved ??
-        _realm._observed(
-          AuthoringEdit.fromDocument(_realm.document)..applyPrepared(edit),
-        );
+    final document = switch (saved) {
+      null => _realm._observed(
+        AuthoringEdit.fromDocument(_realm.document)..applyPrepared(edit),
+      ),
+      // Every saved state carries its observation, as the Realm's reply does.
+      AuthoringDocument(confirmedObservation: null) => _realm._withObservation(
+        saved,
+      ),
+      _ => saved,
+    };
     if (observed) {
       _realm.serve(document);
     } else {
       _realm._observation = AsyncData(document);
     }
-    _response.complete(skir.CommitPreparedEditResponse.committed);
+    _realm._committed[submission] = edit;
+    _response.complete(_realm._committedReply);
   }
 
   /// Refuses the save with [response] and keeps the saved document.
   void reject(skir.CommitPreparedEditResponse response) {
-    if (response == skir.CommitPreparedEditResponse.committed) {
+    if (response is skir.CommitPreparedEditResponse_committedWrapper) {
       throw ArgumentError("A refusal cannot answer committed; use confirm()");
     }
     _response.complete(response);
@@ -542,17 +563,34 @@ final class RealmSave {
   );
 
   /// Keeps the edit but loses the reply with [error], as when the Realm saved
-  /// it and restarted before answering. The panel sees the saved document only
-  /// once it reads it again.
+  /// it and restarted before answering. A resend under the same key is
+  /// answered with the current saved state.
   void keepAndLoseReply([Object? error]) {
     _realm._observation = AsyncData(
       _realm._observed(
         AuthoringEdit.fromDocument(_realm.document)..applyPrepared(edit),
       ),
     );
+    _realm._committed[submission] = edit;
     loseReply(error);
   }
 }
+
+/// The Realm's refusal of [submission] reused for a different edit.
+skir.CommitPreparedEditResponse _submissionReused(String submission) =>
+    skir.CommitPreparedEditResponse.wrapInvalidError(
+      skir.AuthoringInvalid(
+        diagnostics: [
+          skir.AuthoringDiagnostic(
+            code: "submission_reused",
+            message:
+                "Submission $submission was committed with a different edit.",
+            resource: null,
+            path: null,
+          ),
+        ],
+      ),
+    );
 
 /// [document] whose catalog declares a capability for each of [operations],
 /// so the panel can prepare them.

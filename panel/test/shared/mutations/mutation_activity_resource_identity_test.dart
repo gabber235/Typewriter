@@ -36,10 +36,7 @@ void main() {
     await panel.activity.open("Needs attention");
 
     expect(
-      panel.shows(
-        "The outcome is unknown. Local work is retained until the saved "
-        "values show whether it was applied",
-      ),
+      panel.shows("The outcome is unknown. Local work is retained"),
       isTrue,
     );
     expect(

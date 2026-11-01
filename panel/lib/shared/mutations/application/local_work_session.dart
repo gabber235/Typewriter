@@ -16,9 +16,12 @@ abstract interface class LocalWorkCommands {
   Future<MutationReservation> reserve(Set<Object> resources);
 
   /// Starts an already captured commit, optionally transferring [reservation].
+  /// With [redelivery], the submission sends an unanswered request again on
+  /// its own while [PreparedCommit.replay] allows it.
   MutationSubmission<T> start<T>(
     PreparedCommit<T> commit, {
     MutationReservation? reservation,
+    EditorDelayScheduler? redelivery,
   });
 
   /// Starts [commit] and returns its feature response, throwing when delivery
@@ -97,11 +100,13 @@ final class ScopedWorkSession implements LocalWorkCommands {
   MutationSubmission<T> start<T>(
     PreparedCommit<T> commit, {
     MutationReservation? reservation,
-  }) => _start(commit, reservation);
+    EditorDelayScheduler? redelivery,
+  }) => _start(commit, reservation, redelivery);
 
   MutationSubmission<T> _start<T>(
     PreparedCommit<T> commit,
     MutationReservation? initialReservation,
+    EditorDelayScheduler? redelivery,
   ) {
     if (_disposed) throw StateError("Mutation session ended");
     if (_submissions.containsKey(commit.id)) {
@@ -115,6 +120,7 @@ final class ScopedWorkSession implements LocalWorkCommands {
       label: commit.label,
       resources: commit.resources,
       replay: commit.replay,
+      redelivery: redelivery,
       integrate: (result) async {
         try {
           await commit.integrate?.call(result);

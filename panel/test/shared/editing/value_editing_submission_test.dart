@@ -18,8 +18,7 @@ void main() {
     "uncertain delivery blocks fresh requests and cannot discard evidence",
     () async {
       var sends = 0;
-      late final ScriptedValuePersistence saved;
-      saved = ScriptedValuePersistence(
+      final saved = ScriptedValuePersistence(
         key: const EditorResourceKey(scope: null, identity: "title"),
         current: CallbackEditorSnapshot(
           original,
@@ -28,8 +27,6 @@ void main() {
         ),
         commit: (_) async {
           sends++;
-          // The saved values stay unread, so the outcome stays unknown.
-          saved.load = () => Completer<EditorSnapshot?>().future;
           throw TimeoutException("Lost response");
         },
       );
@@ -46,6 +43,8 @@ void main() {
 
       expect(await source.flush(), isA<MutationUncertain>());
       source.discardDraft();
+      // Nothing the workspace still runs sends the save again or settles it.
+      await pumpEventQueue();
       expect(
         source.value(_title).valueOrNull,
         skir.DataValue.wrapStringValue("Submitted"),

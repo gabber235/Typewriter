@@ -166,12 +166,38 @@ void main() {
       expect(acquired, isFalse);
       expect(await source.flush(), isA<MutationSuccess>());
       (await next).release();
-      expect(resource.reads, 1);
+      // The capture read once; the replay sent the captured request without
+      // reading again. The second read follows its reply, which arrived
+      // outside the save lane, as every such reply that carries a state does.
+      expect(resource.reads, 2);
 
       expect(resource.sends, 2);
       expect(resource.requests[0], same(resource.requests[1]));
     },
   );
+
+  test("an autosave whose reply was lost reports an unknown outcome while "
+      "it is sent again, and is saved once the resend is answered", () async {
+    final workspace = testWorkSession();
+    final resource = UncertainSaveResource(
+      key: _key,
+      current: savedTitleSnapshot(),
+    );
+    final source = titleDraft(
+      workspace,
+      resource,
+      policy: EditorCommitPolicy.autosaveChanges,
+    );
+
+    expect(await source.flush(), isA<MutationUncertain>());
+    expect(source.saveState(editorRootPath).phase, EditorSavePhase.saving);
+
+    await eventually(
+      () =>
+          expect(source.saveState(editorRootPath).phase, EditorSavePhase.saved),
+    );
+    expect(source.document.confirmedValue, titleValue("Draft"));
+  });
 
   test("concurrent flushes share one refresh and submission", () async {
     final workspace = testWorkSession();

@@ -250,34 +250,31 @@ void main() {
     },
   );
 
-  testWidgets(
-    "an Apply whose outcome is unknown is offered again once the saved value "
-    "shows it was not applied",
-    (tester) async {
-      var sends = 0;
-      final owner = savedTextOwner(
-        commit: (_) async {
-          sends++;
-          throw TimeoutException("Lost response");
-        },
-      );
-      final panel = await tester.pumpPanel(
-        const [],
-        at: PanelLocation.component(
-          Scaffold(body: ApplyControls(control: boundControl(owner))),
-        ),
-      );
+  testWidgets("an Apply whose reply was lost is saved by Retry", (
+    tester,
+  ) async {
+    final resource = UncertainSaveResource(
+      key: const EditorResourceKey(scope: "organization", identity: "resource"),
+      current: savedTitleSnapshot(),
+    );
+    final owner = titleDraft(testWorkSession(), resource);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(body: ApplyControls(control: boundControl(owner))),
+      ),
+    );
 
-      owner.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
-      await panel.settle();
-      await panel.applyControls.press("Apply");
+    await panel.applyControls.press("Apply");
+    await panel.settle();
+    expect(panel.applyControls.actions, contains("Retry"));
 
-      expect(sends, 1);
-      expect(panel.applyControls.actions, ["Discard", "Apply"]);
-      expect(panel.applyControls.isEnabled("Apply"), isTrue);
-      expect(owner.value(editorRootPath).valueOrNull?.authoredString, "Draft");
-    },
-  );
+    await panel.applyControls.press("Retry");
+    await panel.settle();
+
+    expect(panel.applyControls.actions, isEmpty);
+    expect(owner.document.confirmedValue, titleValue("Draft"));
+  });
 
   testWidgets("Apply acts only on its bound owner", (tester) async {
     final first = savedTextOwner();

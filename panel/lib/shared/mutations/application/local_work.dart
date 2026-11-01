@@ -118,7 +118,12 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
   MutationSubmission<T> start<T>(
     PreparedCommit<T> commit, {
     MutationReservation? reservation,
-  }) => _activeSession.start(commit, reservation: reservation);
+    EditorDelayScheduler? redelivery,
+  }) => _activeSession.start(
+    commit,
+    reservation: reservation,
+    redelivery: redelivery,
+  );
 
   @override
   Future<T> execute<T>(PreparedCommit<T> commit) =>

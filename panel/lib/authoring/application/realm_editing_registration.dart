@@ -26,7 +26,7 @@ RealmEditPersistence realmEditPersistence(Ref ref, AuthoringScope scope) {
     authoringSessionProvider(scope.organizationId, scope.realmId).notifier,
   );
   return RealmEditPersistence(
-    request: (edit) => session().prepareCommit(edit),
+    request: (commit) => session().prepareCommit(commit),
     reservations: (edits) => {
       for (final edit in edits)
         for (final resource in edit.editedResources)
@@ -51,47 +51,46 @@ RealmEditPersistence realmEditPersistence(Ref ref, AuthoringScope scope) {
 /// The destination supplies a route back to the Realm when pending work needs review.
 extension RealmEditingRegistration on LocalWork {
   EditingWorkDriver<AuthoringDocument, RealmPreparedEdit>
-  getOrRegisterRealmEditing(AuthoringScope scope) => getOrRegisterScoped(
-    WorkDriverId(domain: "authoring", scope: scope),
-    (ref) {
-      final persistence = ref.listen(
-        realmEditPersistenceProvider(scope),
-        (_, _) {},
-      );
-      late final EditingWorkspace<AuthoringDocument, RealmPreparedEdit>
-      workspace;
-      final subscription = ref.listen(
-        confirmedAuthoringDocumentProvider(scope),
-        (_, next) => workspace.observe(next),
-      );
-      // A new workspace starts from the saved document the session already
-      // holds, so it is ready as soon as it exists; later values and a
-      // failure it holds now arrive through the workspace's inbox.
-      final current = subscription.read();
-      workspace = EditingWorkspace<AuthoringDocument, RealmPreparedEdit>(
-        model: const RealmEditModel(),
-        persistence: persistence.read(),
-        submissions: this,
-        initial: current.value,
-      );
-      if (current.value == null) workspace.observe(current);
-      return EditingWorkDriver(
-        id: WorkDriverId(domain: "authoring", scope: scope),
-        workspace: workspace,
-        onDispose: () {
-          subscription.close();
-          persistence.close();
-        },
-        reviewFactory: (id) => WorkReviewContent(
-          body: RealmEditingReview(
-            workspace: RealmEditing.fromWorkspace(workspace),
-            id: id,
-          ),
+  getOrRegisterRealmEditing(
+    AuthoringScope scope,
+  ) => getOrRegisterScoped(WorkDriverId(domain: "authoring", scope: scope), (
+    ref,
+  ) {
+    final persistence = ref.listen(
+      realmEditPersistenceProvider(scope),
+      (_, _) {},
+    );
+    late final EditingWorkspace<AuthoringDocument, RealmPreparedEdit> workspace;
+    final subscription = ref.listen(
+      confirmedAuthoringDocumentProvider(scope),
+      (_, next) => workspace.observe(next),
+    );
+    // A new workspace starts from the saved document the session already
+    // holds, so it is ready as soon as it exists; later values and a
+    // failure it holds now arrive through the workspace's inbox.
+    final current = subscription.read();
+    workspace = EditingWorkspace<AuthoringDocument, RealmPreparedEdit>(
+      model: const RealmEditModel(),
+      persistence: persistence.read(),
+      submissions: this,
+      initial: current.value,
+    );
+    if (current.value == null) workspace.observe(current);
+    return EditingWorkDriver(
+      id: WorkDriverId(domain: "authoring", scope: scope),
+      workspace: workspace,
+      onDispose: () {
+        subscription.close();
+        persistence.close();
+      },
+      reviewFactory: (id) => WorkReviewContent(
+        body: RealmEditingReview(
+          workspace: RealmEditing.fromWorkspace(workspace),
+          id: id,
         ),
-      );
-    },
-    destination: (ref) => RealmWorkDestination.of(ref, scope),
-  );
+      ),
+    );
+  }, destination: (ref) => RealmWorkDestination.of(ref, scope));
 }
 
 @riverpod

@@ -292,9 +292,9 @@ void main() {
           edit.set(_firstTitle, skir.DataValue.wrapStringValue("External")),
     );
     await workspace.eventually(
-      () => workspace.workspace.confirmed.resource(_first)!.authoredField(
-        "title",
-      ),
+      () => workspace.workspace.confirmed
+          .resource(_first)!
+          .authoredField("title"),
       (title) => title == skir.DataValue.wrapStringValue("External"),
       description: "the external title admitted",
     );
