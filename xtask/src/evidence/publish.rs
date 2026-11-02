@@ -763,7 +763,9 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 mod tests {
     use super::*;
     use crate::results::Outcome;
-    use crate::test_support::{TempRoot, failed, raw_failed_run, requirement_run};
+    use crate::test_support::{
+        TempRoot, empty_change_report, failed, raw_failed_run, requirement_run,
+    };
 
     const SECRET: &str = "ghp_0123456789abcdefghij";
 
@@ -883,45 +885,26 @@ mod tests {
         );
     }
 
-    fn report() -> ChangeReport {
-        serde_json::from_value(serde_json::json!({
-            "base": "base",
-            "findings": [],
-            "tests": {
-                "added": [], "deleted": [], "weakened": [], "disabled": [],
-                "expectations_rewritten": [], "harness_edits": [],
-            },
-            "change_map": [],
-            "coverage": { "areas": [] },
-        }))
-        .unwrap()
-    }
-
-    /// The section for one requirement scenario with `outcome`, reviewed or not.
-    fn section_for(outcome: Outcome, verdict: Option<&Verdict>, covered: bool) -> String {
+    #[test]
+    fn a_proven_and_reviewed_change_leads_with_ready_and_hides_its_recordings() {
         let runs = [(
             PathBuf::from("panel"),
-            requirement_run("a user joins", "JOIN-1", outcome),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
         )];
-        render_section(&Section {
+        let verdict = Verdict {
+            commit: "abcdef1234".to_owned(),
+            text: "Looks right.".to_owned(),
+        };
+        let section = render_section(&Section {
             sha: "abcdef1234",
             provenance: "Evidence from abcdef1.",
             pr: None,
             runs: &runs,
             quarantine: &Quarantine::default(),
-            report: &report(),
-            verdict,
-            covered,
-        })
-    }
-
-    #[test]
-    fn a_proven_and_reviewed_change_leads_with_ready_and_hides_its_recordings() {
-        let verdict = Verdict {
-            commit: "abcdef1234".to_owned(),
-            text: "Looks right.".to_owned(),
-        };
-        let section = section_for(Outcome::Passed, Some(&verdict), true);
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: Some(&verdict),
+            covered: true,
+        });
         assert!(section.starts_with("**Ready for a maintainer**: 1 of 1 tests proven"));
         assert!(!section.contains("Needs attention"));
         assert!(section.contains("<details><summary>Recordings (1 scenarios)"));
@@ -929,7 +912,20 @@ mod tests {
 
     #[test]
     fn a_broken_scenario_leads_with_not_ready_and_shows_above_every_fold() {
-        let section = section_for(failed("the realm never appeared"), None, false);
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", failed("the realm never appeared")),
+        )];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a broken run.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+        });
         assert!(section.starts_with("**Not ready**: 0 of 1 tests proven"));
         let attention = section.find("### Needs attention").unwrap();
         let first_fold = section.find("<details>").unwrap();
@@ -939,11 +935,24 @@ mod tests {
 
     #[test]
     fn a_verdict_on_other_changes_is_marked_stale() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
+        )];
         let verdict = Verdict {
             commit: "1234567".to_owned(),
             text: "Looks right.".to_owned(),
         };
-        let section = section_for(Outcome::Passed, Some(&verdict), false);
+        let section = render_section(&Section {
+            sha: "2222222",
+            provenance: "Evidence from a later push.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: Some(&verdict),
+            covered: false,
+        });
         assert!(section.starts_with("**Proven, not reviewed**"));
         assert!(section.contains("review is stale"));
         assert!(section.contains("**Stale**: reviewed 1234567"));

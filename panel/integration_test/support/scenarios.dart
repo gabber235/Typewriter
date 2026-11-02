@@ -10,6 +10,7 @@
 library;
 
 import "package:flutter_test/flutter_test.dart";
+import "package:integration_test/common.dart" as integration;
 import "package:integration_test/integration_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v1/test_run.dart"
     as results;
@@ -45,6 +46,16 @@ final Map<String, String> _captures = {};
 /// passes every group's `main` here.
 void runScenarios(List<void Function()> groups) {
   _publish();
+  // An error after a scenario's body fails that scenario in the binding alone.
+  // Reported, it stays a result of the scenario, which keeps the run's evidence.
+  tearDownAll(() {
+    for (final MapEntry(key: id, :value) in _binding.results.entries) {
+      if (value case final integration.Failure failure) {
+        _run.failLate(id, failure.details ?? "failed after its body ended");
+      }
+    }
+    _publish();
+  });
   for (final group in groups) {
     group();
   }
@@ -110,6 +121,7 @@ void scenario(
     results.Outcome outcome = results.Outcome.passed;
     try {
       await body(panel);
+      await panel.close();
       // An exception the framework caught during a frame fails the test only
       // after the body returns; surfacing it here records it as the failure.
       final pending = tester.takeException();
@@ -117,7 +129,7 @@ void scenario(
         Error.throwWithStackTrace(pending as Object, StackTrace.current);
       }
     } on Object catch (error, stackTrace) {
-      outcome = failedWith(error);
+      outcome = failedWith(error, firstBroken: panel.steps.lastOrNull?.says);
       await panel.capture("failure");
       log.writeln("${_now()} $error\n$stackTrace");
       // A framework error the failure left pending is logged too.
@@ -142,6 +154,8 @@ void scenario(
         start: start,
         end: end,
         artifacts: artifacts,
+        steps: panel.steps,
+        taps: panel.taps,
       );
       _publish();
       // The scenario's spans reach the stack's collector while it still runs;

@@ -2,6 +2,7 @@
 //! request description current with what the run proved. Media lives in the two [`Store`]s of
 //! [`REPOSITORY`], on branches that share no history with the code.
 
+mod captions;
 mod prune;
 pub(crate) mod publish;
 mod record;

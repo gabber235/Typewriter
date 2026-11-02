@@ -51,6 +51,8 @@ in
   # the browser for panel web. llvmpipe and lavapipe need no host driver, so no apt packages are
   # involved. A profile, so the jobs that run no suite do not download them.
   profiles.e2e.module = pkgs.lib.mkIf pkgs.stdenv.isLinux {
+    # The captions of a recording; a fixed file, so every run draws them the same.
+    env.EVIDENCE_FONT = "${pkgs.dejavu_fonts}/share/fonts/truetype/DejaVuSans.ttf";
     packages = [
       pkgs.xvfb
       # The full build: the default one leaves out the x11grab input the recorder captures with.

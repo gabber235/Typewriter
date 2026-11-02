@@ -13,6 +13,8 @@ library;
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v1/test_run.dart"
+    as results;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart"
     show FieldDriver, SemanticsReading, visibleTextFields;
@@ -37,6 +39,34 @@ final Future<void> _platform = initializePanel();
 /// The running panel and the session store it keeps between launches.
 final class Panel {
   Panel._(this.tester, this._onCapture);
+
+  /// What the scenario did and checked so far, for the captions of its
+  /// recording. Typed values stay out: a caption cannot be scrubbed later.
+  final List<results.Step> steps = [];
+
+  /// Where the scenario tapped so far, in pixels of the recorded screen.
+  final List<results.Tap> taps = [];
+
+  var _inStep = false;
+
+  /// Runs [act] as one step of the scenario, saying what a reader would call
+  /// it. What it does through other actions belongs to this step.
+  Future<T> _step<T>(String says, Future<T> Function() act) async {
+    if (_inStep) return act();
+    _inStep = true;
+    steps.add(
+      results.Step(
+        atMillis: DateTime.now().millisecondsSinceEpoch,
+        actor: _user,
+        says: says,
+      ),
+    );
+    try {
+      return await act();
+    } finally {
+      _inStep = false;
+    }
+  }
 
   /// Boots the real panel with an in memory session store, so no keychain or
   /// keyring is involved, and waits until it shows its first page.
@@ -92,16 +122,23 @@ final class Panel {
 
   /// Closes the panel and opens it again, the way a user quits and restarts
   /// it; the stored session survives, everything in memory does not.
-  Future<void> restart() async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    _container?.dispose();
-    _container = null;
+  Future<void> restart() => _step("restart the panel", () async {
+    await close();
     await _start();
-  }
+  });
 
   /// Closes the panel and opens it the way another machine does: nothing
   /// stored, nobody signed in, so a second user can take over the run.
-  Future<void> startElsewhere() async {
+  Future<void> startElsewhere() => _step("open the panel elsewhere", () async {
+    await close();
+    _store = OidcMemoryStore();
+    _user = null;
+    await _start();
+  });
+
+  /// Closes the panel and lets it finish, the one way a scenario leaves it, so
+  /// what closing does happens while the scenario still owns the failure.
+  Future<void> close() async {
     // Remove this wait once `flutter --version` in the devenv shell is a
     // release that contains https://github.com/flutter/flutter/pull/192699
     // (issue flutter#192533). On the web, closing an AnimatedList in the frame
@@ -109,9 +146,12 @@ final class Panel {
     // error stops the whole web run. Scenarios leave right after a new row
     // shows, so they hit that frame by chance.
     await tester.pump(_listAnimation);
-    _store = OidcMemoryStore();
-    _user = null;
-    await restart();
+    await tester.pumpWidget(const SizedBox.shrink());
+    // Focus moves in a microtask after the tree is gone; it must run before
+    // the test binding replaces its focus manager.
+    await tester.pump(_frame);
+    _container?.dispose();
+    _container = null;
   }
 
   /// Signs in the fixture user [username] through the real session client
@@ -122,24 +162,25 @@ final class Panel {
   /// leaves the page the scenario runs in. The full suite's host driven
   /// journey (`test_driver/sign_in_journey_test.dart`) covers it against the
   /// CI cluster's Authentik.
-  Future<void> signIn(String username) async {
-    final user = stack.user(username);
-    final manager = await _app.read(authProvider.future);
-    if (manager == null) {
-      throw StateError("the panel has no session client");
-    }
-    await manager.loginPassword(
-      username: user.username,
-      password: user.password,
-    );
-    _app.invalidate(authProvider);
-    _user = username;
-    await expectVisible(username);
-  }
+  Future<void> signIn(String username) =>
+      _step("sign in as $username", () async {
+        final user = stack.user(username);
+        final manager = await _app.read(authProvider.future);
+        if (manager == null) {
+          throw StateError("the panel has no session client");
+        }
+        await manager.loginPassword(
+          username: user.username,
+          password: user.password,
+        );
+        _app.invalidate(authProvider);
+        _user = username;
+        await expectVisible(username);
+      });
 
   /// Signs out through the user menu, waits for the sign in page, and checks
   /// the panel asked the identity provider to end its session once.
-  Future<void> signOut() async {
+  Future<void> signOut() => _step("sign out", () async {
     final user = _user ?? (throw StateError("nobody is signed in"));
     final ends = _providerSessionEnds;
     await _tap(await _control(user));
@@ -151,15 +192,16 @@ final class Panel {
       1,
       reason: "signing out asks the identity provider to end its session",
     );
-  }
+  });
 
   /// Opens [place] the way the user sees it on screen, then [inside] within
   /// it when given: an organization in the list, a link in the sidebar, or a
   /// card on the services graph by its kind, such as `open("Acme", "Realm")`.
-  Future<void> open(String place, [String? inside]) async {
-    await _activate(place);
-    if (inside != null) await _activate(inside);
-  }
+  Future<void> open(String place, [String? inside]) =>
+      _step("open ${inside == null ? place : "$place > $inside"}", () async {
+        await _activate(place);
+        if (inside != null) await _activate(inside);
+      });
 
   /// Runs the command [name] through the search palette, the one path every
   /// action has: opens Search, types [name] and activates the result that
@@ -168,19 +210,20 @@ final class Panel {
 
   /// Opens Search, types [query] and, when given, activates the result that
   /// reads [choose].
-  Future<void> search(String query, {String? choose}) async {
-    await _tap(await _control("Search"));
-    await _typeInChooser(query);
-    if (choose != null) await _tap(await _row(choose));
-  }
+  Future<void> search(String query, {String? choose}) =>
+      _step("search for \"$query\"", () async {
+        await _tap(await _control("Search"));
+        await _typeInChooser(query);
+        if (choose != null) await _tap(await _row(choose));
+      });
 
   /// Picks [name] in the chooser on screen, such as the one a link field
   /// opens: types it into the chooser's search and activates the result
   /// reading it.
-  Future<void> pick(String name) async {
+  Future<void> pick(String name) => _step("pick \"$name\"", () async {
     await _typeInChooser(name);
     await _tap(await _row(name));
-  }
+  });
 
   /// A chooser opens with its search field focused; [text] goes there.
   Future<void> _typeInChooser(String text) async {
@@ -204,18 +247,19 @@ final class Panel {
 
   /// Opens the context menu of the item the user reads as [item], the way a
   /// secondary click does, and chooses [entry] in it.
-  Future<void> menu(String item, String entry) async {
-    SemanticsNode? target;
-    await until("\"$item\" is on screen", () {
-      target = _tappable(
-        (spoken) => spoken == item || spoken.split("\n").first == item,
-      );
-      return target != null;
-    });
-    await tester.tapAt(_centerOf(target!), buttons: kSecondaryMouseButton);
-    await tester.pump(_frame);
-    await press(entry);
-  }
+  Future<void> menu(String item, String entry) =>
+      _step("open the menu of \"$item\" and choose \"$entry\"", () async {
+        SemanticsNode? target;
+        await until("\"$item\" is on screen", () {
+          target = _tappable(
+            (spoken) => spoken == item || spoken.split("\n").first == item,
+          );
+          return target != null;
+        });
+        await tester.tapAt(_centerOf(target!), buttons: kSecondaryMouseButton);
+        await tester.pump(_frame);
+        await press(entry);
+      });
 
   /// Waits for text on screen matching [pattern] and returns the match, such
   /// as a join code the panel generated.
@@ -247,34 +291,38 @@ final class Panel {
 
   /// Focuses the text field the user reads as [label] and replaces its text
   /// with [text], as typing does, without committing it.
-  Future<void> type(String label, String text) async {
-    final field = _field(label);
-    // A field rebuilt while its surface loads drops the focus a click gave
-    // it, so the click repeats until the field takes text. A read only field,
-    // as editing that is still resuming shows, waits until it opens.
-    var clicked = DateTime(0);
-    await until("the text field \"$label\" accepts text", () {
-      if (!field.exists || field.isReadOnly || !field.canClickInput) {
+  Future<void> type(String label, String text) => _step(
+    "fill in \"$label\"",
+    () async {
+      final field = _field(label);
+      // A field rebuilt while its surface loads drops the focus a click gave
+      // it, so the click repeats until the field takes text. A read only field,
+      // as editing that is still resuming shows, waits until it opens.
+      var clicked = DateTime(0);
+      await until("the text field \"$label\" accepts text", () {
+        if (!field.exists || field.isReadOnly || !field.canClickInput) {
+          return false;
+        }
+        if (field.acceptsText) return true;
+        if (DateTime.now().difference(clicked) > _refocus) {
+          clicked = DateTime.now();
+          field.clickInput();
+        }
         return false;
-      }
-      if (field.acceptsText) return true;
-      if (DateTime.now().difference(clicked) > _refocus) {
-        clicked = DateTime.now();
-        field.clickInput();
-      }
-      return false;
-    }, shows: () => field.exists ? field.describe : "no such field");
-    field.setText(text);
-    await tester.pump(_frame);
-  }
+      }, shows: () => field.exists ? field.describe : "no such field");
+      field.setText(text);
+      await tester.pump(_frame);
+    },
+  );
 
   /// Types [text] into the text field the user reads as [label] and commits
   /// it with Enter, the way a user finishes a value.
-  Future<void> submit(String label, String text) async {
-    await type(label, text);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pump(_frame);
-  }
+  Future<void> submit(String label, String text) =>
+      _step("fill in \"$label\" and press Enter", () async {
+        await type(label, text);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump(_frame);
+      });
 
   /// The row of the list on screen that shows [name], such as a member or a
   /// join request.
@@ -282,7 +330,8 @@ final class Panel {
 
   /// Presses the button [label]; with a dialog open, its button wins over one
   /// behind it with the same label.
-  Future<void> press(String label) async => _tap(await _control(label));
+  Future<void> press(String label) =>
+      _step("press \"$label\"", () async => _tap(await _control(label)));
 
   /// Creates a resource of [kind] in the open surface the way its "New" action
   /// does and names it [name] in the field [field].
@@ -367,7 +416,14 @@ final class Panel {
   /// Waits up to [within] until the screen shows [text]; a state the panel
   /// derives from a slow signal, such as a host's heartbeat, needs longer.
   Future<void> expectVisible(String text, {Duration within = wait.patience}) =>
-      until("the screen shows \"$text\"", () => sees(text), timeout: within);
+      _step(
+        "expect \"$text\"",
+        () => until(
+          "the screen shows \"$text\"",
+          () => sees(text),
+          timeout: within,
+        ),
+      );
 
   /// Waits until the screen no longer shows [text], then checks it stays
   /// gone for [settled], so a slow reply cannot bring it back unnoticed.
@@ -375,7 +431,7 @@ final class Panel {
     String text, {
     Duration within = wait.patience,
     Duration settled = const Duration(seconds: 3),
-  }) async {
+  }) => _step("expect \"$text\" gone", () async {
     await until(
       "the screen hides \"$text\"",
       () => !sees(text),
@@ -386,7 +442,7 @@ final class Panel {
       await tester.pump(_frame);
       if (sees(text)) throw TestFailure("\"$text\" came back");
     }
-  }
+  });
 
   /// Captures the whole panel as evidence named [name].
   Future<void> capture(String name) async {
@@ -539,6 +595,14 @@ final class Panel {
   /// Activates [node] the way assistive technology does, through its tap
   /// action.
   Future<void> _tap(SemanticsNode node) async {
+    final at = _centerOf(node) * tester.view.devicePixelRatio;
+    taps.add(
+      results.Tap(
+        atMillis: DateTime.now().millisecondsSinceEpoch,
+        x: at.dx.round(),
+        y: at.dy.round(),
+      ),
+    );
     tester.semantics.tap(
       find.semantics.byPredicate((candidate) => identical(candidate, node)),
     );
@@ -577,14 +641,15 @@ final class PanelRow {
   /// Chooses the action [label] in the row, such as `Approve`: the control
   /// reading [label] nearest to the name, in the smallest part of the screen
   /// holding both.
-  Future<void> choose(String label) async {
-    SemanticsNode? action;
-    await _panel.until("the row \"$name\" offers \"$label\"", () {
-      action = _action(label);
-      return action != null;
-    });
-    await _panel._tap(action!);
-  }
+  Future<void> choose(String label) =>
+      _panel._step("choose \"$label\" for $name", () async {
+        SemanticsNode? action;
+        await _panel.until("the row \"$name\" offers \"$label\"", () {
+          action = _action(label);
+          return action != null;
+        });
+        await _panel._tap(action!);
+      });
 
   /// The control reading [label] closest to a node showing [name]: the one
   /// reached through the fewest ancestors, so a row's own action wins over

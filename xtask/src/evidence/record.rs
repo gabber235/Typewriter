@@ -248,8 +248,8 @@ fn read_run(out: &Path, command: &Command, status: ExitStatus) -> Result<TestRun
     results::read(&path)
 }
 
-/// One clip and one looping preview (640 px wide, 8 fps, under [`PREVIEW_LIMIT`]) for a case with
-/// a span. Spans are Unix milliseconds, so the offset into the recording is the span minus
+/// One captioned clip and one looping preview (640 px wide, 8 fps, under [`PREVIEW_LIMIT`]) for a
+/// case with a span. Spans are Unix milliseconds, so the offset into the recording is the span minus
 /// `started`. The preview sits next to the clip as `<name>.webp`.
 fn cut(out: &Path, video: &Path, started: i64, id: &str, attempt: &mut Attempt) -> Result<()> {
     let Some(span) = &attempt.span else {
@@ -261,10 +261,14 @@ fn cut(out: &Path, video: &Path, started: i64, id: &str, attempt: &mut Attempt) 
     let clip = PathBuf::from("clips").join(format!("{name}.mp4"));
     let preview = out.join("clips").join(format!("{name}.webp"));
     fs::create_dir_all(out.join("clips"))?;
+    let scratch = out.join("captions").join(&name);
+    fs::create_dir_all(&scratch)?;
+    let captions = super::captions::filter(&scratch, id, span, attempt)?;
     let input = ["-ss", &from, "-to", &to, "-i"];
     ffmpeg()
         .args(input)
         .arg(video)
+        .args(["-vf", &captions])
         .args([
             "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
         ])
@@ -275,7 +279,8 @@ fn cut(out: &Path, video: &Path, started: i64, id: &str, attempt: &mut Attempt) 
         ffmpeg()
             .args(input)
             .arg(video)
-            .args(["-vf", "fps=8,scale=640:-2", "-loop", "0", "-an"])
+            .args(["-vf", &format!("{captions},fps=8,scale=640:-2")])
+            .args(["-loop", "0", "-an"])
             .args(["-c:v", "libwebp", "-quality", quality])
             .arg(&preview)
             .run()?;
@@ -284,6 +289,7 @@ fn cut(out: &Path, video: &Path, started: i64, id: &str, attempt: &mut Attempt) 
         }
         fs::remove_file(&preview)?;
     }
+    fs::remove_dir_all(&scratch)?;
     if !preview.exists() {
         eprintln!(
             "{}: preview too large for GitHub; only the clip is kept",

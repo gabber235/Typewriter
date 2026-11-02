@@ -31,6 +31,8 @@ final class ReportedRun {
     required int start,
     required int end,
     required List<results.Artifact> artifacts,
+    List<results.Step> steps = const [],
+    List<results.Tap> taps = const [],
   }) {
     _cases.add(
       results.TestCase(
@@ -45,9 +47,36 @@ final class ReportedRun {
             artifacts: artifacts,
             // `cargo xtask e2e` sets the drive's folder when it reads the run.
             folder: "",
+            steps: steps,
+            taps: taps,
           ),
         ],
       ),
+    );
+  }
+
+  /// Fails the passed case [id] for what went wrong after its body ended.
+  void failLate(String id, String details) {
+    final index = _cases.indexWhere((reported) => reported.id == id);
+    if (index < 0) return;
+    final reported = _cases[index];
+    final attempt = reported.attempts.single;
+    if (attempt.outcome != results.Outcome.passed) return;
+    _cases[index] = results.TestCase(
+      id: reported.id,
+      requirement: reported.requirement,
+      demonstrates: reported.demonstrates,
+      attempts: [
+        results.Attempt(
+          outcome: failedWith(details, firstBroken: "after the scenario ended"),
+          span: attempt.span,
+          durationMillis: attempt.durationMillis,
+          artifacts: attempt.artifacts,
+          folder: attempt.folder,
+          steps: attempt.steps,
+          taps: attempt.taps,
+        ),
+      ],
     );
   }
 
@@ -66,6 +95,9 @@ final class ReportedRun {
       results.TestRun.serializer.toJson(testRun, readableFlavor: true);
 }
 
-/// The outcome of a case that failed with [error].
-results.Outcome failedWith(Object error) =>
-    results.Outcome.createFailed(message: error.toString(), firstBroken: null);
+/// The outcome of a case that failed with [error] during the step [firstBroken].
+results.Outcome failedWith(Object error, {String? firstBroken}) =>
+    results.Outcome.createFailed(
+      message: error.toString(),
+      firstBroken: firstBroken,
+    );

@@ -21,7 +21,7 @@ use crate::hooks::commit_msg::Scopes;
 use crate::results::{
     Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun,
 };
-use crate::skirout::base::harness::v1::test_run::{Runner, Span};
+use crate::skirout::base::harness::v1::test_run::{Runner, Span, Step as ScenarioStep};
 use crate::stack::StackRecord;
 use crate::stack::spec::{PortLease, StackContext};
 use crate::{CommandExt as _, Context};
@@ -60,6 +60,13 @@ impl TempRoot {
         let path = self.path(relative);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(path, contents).unwrap();
+    }
+
+    /// Writes `relative` and commits it.
+    pub fn save(&self, relative: &str, contents: &str) {
+        self.write(relative, contents);
+        self.git(&["add", "."]);
+        self.git(&["commit", "--quiet", "-m", relative]);
     }
 
     /// Runs `git args` in the root under a fixed identity without signing, and returns its
@@ -207,6 +214,42 @@ pub fn e2e_args(args: &[&str]) -> Result<E2eArgs, clap::Error> {
     }
     let line = std::iter::once("e2e").chain(args.iter().copied());
     <Command as clap::Parser>::try_parse_from(line).map(|command| command.args)
+}
+
+/// A repository whose `base` branch gained a commit after `feature` left it.
+pub fn diverged_branches() -> TempRoot {
+    let root = TempRoot::new();
+    root.git(&["init", "--quiet", "--initial-branch=base"]);
+    root.save("shared.txt", "one\n");
+    root.git(&["checkout", "--quiet", "-b", "feature"]);
+    root.save("feature.txt", "reviewed\n");
+    root.git(&["checkout", "--quiet", "base"]);
+    root.save("other.txt", "from the base\n");
+    root
+}
+
+/// A step `actor` took at `at_millis`.
+pub fn scenario_step(at_millis: i64, actor: Option<&str>, says: &str) -> ScenarioStep {
+    ScenarioStep {
+        at_millis,
+        actor: actor.map(str::to_owned),
+        says: says.to_owned(),
+        _unrecognized: None,
+    }
+}
+
+/// `cargo xtask review report --json` for a change with nothing to say.
+pub fn empty_change_report() -> serde_json::Value {
+    serde_json::json!({
+        "base": "base",
+        "findings": [],
+        "tests": {
+            "added": [], "deleted": [], "weakened": [], "disabled": [],
+            "expectations_rewritten": [], "harness_edits": [],
+        },
+        "change_map": [],
+        "coverage": { "areas": [] },
+    })
 }
 
 /// A failure with `message`.

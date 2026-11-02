@@ -123,29 +123,11 @@ fn patch_id(ctx: &Context, commit: &str, base: &str) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::TempRoot;
-
-    /// A repository whose `base` branch gained a commit after `feature` left it.
-    fn diverged() -> TempRoot {
-        let root = TempRoot::new();
-        root.git(&["init", "--quiet", "--initial-branch=base"]);
-        save(&root, "shared.txt", "one\n");
-        root.git(&["checkout", "--quiet", "-b", "feature"]);
-        save(&root, "feature.txt", "reviewed\n");
-        root.git(&["checkout", "--quiet", "base"]);
-        save(&root, "other.txt", "from the base\n");
-        root
-    }
-
-    fn save(root: &TempRoot, file: &str, text: &str) {
-        root.write(file, text);
-        root.git(&["add", "."]);
-        root.git(&["commit", "--quiet", "-m", file]);
-    }
+    use crate::test_support::diverged_branches;
 
     #[test]
     fn a_clean_rebase_keeps_the_verdict() {
-        let root = diverged();
+        let root = diverged_branches();
         let reviewed = commit(&root.ctx, "feature").unwrap();
         root.git(&["rebase", "--quiet", "base", "feature"]);
         let head = commit(&root.ctx, "feature").unwrap();
@@ -155,10 +137,10 @@ mod tests {
 
     #[test]
     fn a_new_change_needs_a_new_verdict() {
-        let root = diverged();
+        let root = diverged_branches();
         let reviewed = commit(&root.ctx, "feature").unwrap();
         root.git(&["checkout", "--quiet", "feature"]);
-        save(&root, "feature.txt", "not reviewed\n");
+        root.save("feature.txt", "not reviewed\n");
         let head = commit(&root.ctx, "feature").unwrap();
         assert!(!covers(&root.ctx, &reviewed, &head, "base").unwrap());
     }
