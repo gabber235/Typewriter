@@ -88,8 +88,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`check(formula)`**: the query graph step that type checks one formula. See [formula-language.md](formula-language.md#type-checking).
 
-**Checkpoint**: the moment a running step's local stored values are saved to the realm: server move, step end, and every few seconds. See [stored-data.md](stored-data.md#where-values-live-at-runtime).
-
 **Checks**: the one list of build time (KSP) and realm findings, where errors block publication and warnings and info never do. See [live-data.md](live-data.md#checks).
 
 **`ChosenTarget`**: stored value `ChosenTarget(user, target)` naming the protagonist a panel user acts on, so the choice follows the user across devices. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
@@ -168,7 +166,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Engine**: runs published content through extensions (Paper, panel, future engines); engines share stored state only through the realm; live effects and events go directly between sessions. `Engine(id)` is also an identity, keyed by the stable topology engine id, so what an engine knows (`Stored`) and is doing (`Live`) are ordinary values keyed by it. See [live-data.md](live-data.md#engines-and-traits).
 
-**Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewriter:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and grace, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
+**Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewritermc:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and grace, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
 
 **Entry record**: a chain context record keyed by producing entry plus type, add only. See [events-and-handlers.md](events-and-handlers.md#context).
 
@@ -237,8 +235,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`HasChat`, `HasInventory`, `Living`**: example live capability traits an engine provides for its identities. See [live-data.md](live-data.md#live-capability-traits).
 
 **Hold**: a live, never saved change to how something looks or behaves on an engine, held while a derive returns it. See [interactions.md](interactions.md#holds).
-
-**Home engine**: the one engine where an interaction's stored only step handlers run and its running step values are written; it follows the leader or the majority (open). See [interactions.md](interactions.md#home-engine).
 
 **Hot publish**: publishing content while things run; content is a tracked input, so whatever read it reruns. See [live-data.md](live-data.md#hot-publish).
 
@@ -386,7 +382,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Preview**: adds a `Simulating(mode)` stored value to the previewed step; handlers run for real unless they check it. See [interactions.md](interactions.md#preview-and-recording).
 
-**`PrincipalId`**: an authenticated party, `kind` plus `id` (user, service, protagonist), derived from the transport credential. See [authoring-writes.md](authoring-writes.md#skir-sketch).
+**`PrincipalId`**: an authenticated party, `kind` plus `id` (user, service, minecraft), derived from the transport credential. See [authoring-writes.md](authoring-writes.md#skir-sketch).
 
 **Priority (hold)**: the highest priority derive wins when several produce the same hold type, holder, and key; a tie is a check warning. See [interactions.md](interactions.md#priority).
 
@@ -394,7 +390,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`produces { }`**: `dynamic()` builder declaring the chain context records an entry adds for downstream entries. See [formula-language.md](formula-language.md#dynamic-what-content-means-to-the-type-system).
 
-**Protagonist**: the engine neutral person (a Minecraft player, also the panel user) that owns stored data; named `protagonist` in formulas. See [stored-data.md](stored-data.md#identity).
+**Protagonist**: the engine neutral person (a Minecraft player, also the panel user) that owns stored data; named `protagonist` in formulas. Portable form: `Protagonist(principal: PrincipalId)`, the account it comes from; nothing mints it. A linked panel tab (beta) reports as the player's protagonist. See [stored-data.md](stored-data.md#identity).
 
 **Protagonist subject**: `typewriter.protagonist.<id>`, subscribed by every engine holding a session of that protagonist; events about the protagonist go there and each engine runs the handlers it can. See [live-data.md](live-data.md#routing).
 

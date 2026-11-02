@@ -128,7 +128,7 @@ Interactions, steps, groups, and holds are covered in [interactions.md](interact
 
 | Data | Lives on | Saved |
 | --- | --- | --- |
-| Stored values, `Due` | The realm; a running step's values are written on its home engine and saved at checkpoints | Yes |
+| Stored values, `Due` | The realm; every write is a transaction, also for a running step | Yes |
 | `Hold` | The engine holding the protagonist's session | Snapshot only |
 | `Live` mirrors | The engine that produces them; `Indexed` ones are reported to the realm | No |
 | `Runtime` objects | One server | No |

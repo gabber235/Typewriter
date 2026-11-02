@@ -233,7 +233,7 @@ struct EventOrigin { session: SessionId = 0; principal: PrincipalId = 1; }
 struct EventDelivery { event: DataValue = 0; origin: EventOrigin? = 1; reply_to: string? = 2; }
 ```
 
-A panel user is `PrincipalId("user", <user id>)`; a player is `PrincipalId("protagonist", <protagonist id>)`. The result (above) goes to `reply_to`, the origin session's subject.
+A panel user is `PrincipalId("user", <user id>)`; a player is `PrincipalId("minecraft", <uuid>)`. Both are also the principal inside their `Protagonist`. The result (above) goes to `reply_to`, the origin session's subject.
 
 ### Threads
 

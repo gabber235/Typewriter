@@ -43,7 +43,7 @@ Typewriter Cloud                  Realm (owner's hardware)
 
 **Content and player data live only on the realm.** Someday the cloud may offer **backups and sync** for a monthly fee; not now.
 
-**Cloud outage:** today, servers keep running and protagonists keep playing as long as NATS and the servers stay up, but engines cannot reconnect. Goal (end of closed beta or later): a **NATS leaf node** that owners can host, so engines and the realm keep talking to each other during an outage.
+**Cloud outage:** today, servers keep running and protagonists keep playing as long as NATS and the servers stay up, but engines cannot reconnect. Goal (during the closed beta or later): an optional **NATS leaf node** that owners can host for added redundancy, so their engines and realm connect to it and keep talking to each other during an outage. Some owners will do this; most will not, so both setups must work.
 
 A realm runs in **development** or **production** mode (see [realm-modes.md](realm-modes.md)).
 
@@ -65,7 +65,7 @@ Separating content ownership (realm) from execution (engines) lets one set of co
 | Panel as mobile apps (see [panel.md](panel.md)) | someday | wish |
 | Renting a realm hosted by the Typewriter team (far future) | someday | wish |
 | Content and player data only on the realm | closed beta | settled |
-| Self hosted NATS leaf node for cloud outages (end of closed beta or later) | closed beta (not at the start)? | sketch |
+| Optional self hosted NATS leaf node for redundancy (during the closed beta or later) | closed beta (not at the start)? | sketch |
 | Paid cloud backups and sync | someday | wish |
 
 ## Open questions

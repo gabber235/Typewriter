@@ -162,11 +162,11 @@ The step marker stores only moments (`startedAt`, `skippedAt`), not counters or 
 
 Variants (Java chat versus a Bedrock form) are picked by the step when it starts, by adding a different stored value. There is no "most specific handler wins" rule.
 
-### Home engine
+### Where step handlers run
 
-Each interaction has one home engine. Handlers for its steps that need only stored data run there; handlers that ask for live traits of a member run on that member's engine. The home starts where the interaction started and follows the leader or the majority (see Open).
+Handlers for a step that need only stored data run once, on an engine where the event happened ([events-and-handlers.md](events-and-handlers.md#where-a-handler-runs)); handlers that ask for live traits of a member run on that member's engine. There is no home engine and no single writer (decided 2026-11-03): every stored write is a realm transaction ([stored-data.md](stored-data.md#where-values-live-at-runtime)). When two engines end the same step, the generation check drops the second, and only the engine whose end committed fires the next links.
 
-Running step values are local on the home engine and saved at checkpoints ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Interactions stay inside one engine kind. Engines share stored state only through the realm; live effects and events go directly between sessions ([live-data.md](live-data.md#routing)).
+Interactions stay inside one engine kind. Engines share stored state only through the realm; live effects and events go directly between sessions ([live-data.md](live-data.md#routing)).
 
 ## Clashes
 
@@ -326,8 +326,6 @@ fun Confirm.place(mode: PlacingCorners, player: PaperPlayer, origin: Origin) {
 
 ## Open
 
-- Home engine for a group interaction: whether it follows the leader or the majority of members when they move.
-- How the step checkpoint rule (running step values local on the home engine, saved at checkpoints) fits the per session single writer lease and `apply()` transactions in [stored-data.md](stored-data.md) (layer 3).
 - Interaction bounds (blocking versus interrupting, changing over time; roadmap layer 17) are not designed yet.
 - How a Hold names its holder (server, group, protagonist) in code.
 - How content marks a `Protected` period inside a step.

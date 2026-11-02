@@ -221,17 +221,17 @@ interface SessionReporter {
 
 | Engine kind | Session id | Survives |
 | --- | --- | --- |
-| Minecraft | proxy connection id | server moves |
-| Panel | per tab id kept in sessionStorage | reloads; each tab is its own session, held by the panel engine (grace 45 s) |
+| Minecraft | the player's UUID (one login per UUID behind a proxy; Paper receives no connection id) | server moves, rejoins within the grace |
+| Panel | per tab id kept in sessionStorage on web, and for the app run on desktop and mobile | reloads; each tab is its own session, held by the panel engine (grace 45 s) |
 | Future engines | defined by the engine | engine specific |
 
 - A protagonist may have several sessions at once (tabs, Minecraft plus panel).
-- A session ends when no engine reports its id for longer than a grace set per engine kind (about 10 seconds for Minecraft).
+- A session ends when no engine reports its id for longer than a grace set per engine kind (about 10 seconds for Minecraft). Ids come back: a player who ended a session while the realm was down and then returns simply keeps the session and its values. This is accepted (2026-11-03).
 - A protagonist is online while it has at least one session. `ProtagonistJoined` fires on the first session, its counterpart on the last.
 - Values keyed by a session are removed when it ends.
-- Open, settled by layer 3 ([closed-beta-roadmap.md](closed-beta-roadmap.md)): whether the single writer lease is per session or a home engine per interaction. Mirrors live on the engine that produces them.
+- Sessions hold no write lease: every stored write is a realm transaction ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Mirrors live on the engine that produces them.
 
-`Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology engine id, so the identity survives restarts and ends only when the engine leaves the topology. The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
+`Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology `engine_instance` record id, so the identity survives restarts and ends only when the engine leaves the topology. The panel engine has no record: one runs per realm, so its id is `panel.<realm id>` and it ends with the realm. The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
 
 ## Engines and traits
 
@@ -271,7 +271,7 @@ What the realm owns goes through the realm:
 
 Engines write the `sessions` KV themselves (see NATS JetStream). `Indexed` is being replaced ([panel-engine-communication.md](panel-engine-communication.md) question 14).
 
-Events and live effects for a protagonist go to its protagonist subject `typewriter.protagonist.<id>`. Every engine holding a session of that protagonist subscribes to it and runs the handlers it can; the sender needs only the protagonist id, so there is no routing table and a server move keeps the address. A target that is one connection (the tab that started a capture) uses the session subject `typewriter.session.<id>`, which the engine holding that session subscribes to.
+Events and live effects for a protagonist go to its protagonist subject (a realm scoped route, name settled in layer 4; written here as `typewriter.protagonist.<id>`). Every engine holding a session of that protagonist subscribes to it and runs the handlers it can; the sender needs only the protagonist id, so there is no routing table and a server move keeps the address. A target that is one connection (the tab that started a capture) uses the session subject `typewriter.session.<id>`, which the engine holding that session subscribes to.
 
 - Order is per identity, in commit order.
 - No events are queued for offline protagonists.
@@ -279,11 +279,11 @@ Events and live effects for a protagonist go to its protagonist subject `typewri
 
 ## NATS JetStream
 
-Short lived data lives on NATS JetStream. This needs NATS 2.11 or newer with JetStream, for per message TTL and per key TTL with expiry markers. The realm creates these resources at startup.
+Short lived data lives on NATS JetStream. This needs NATS 2.11 or newer with JetStream, for per message TTL and per key TTL with expiry markers. The realm creates these resources at startup. A bucket holds one realm only, so realms stay apart by construction and an owner's optional NATS leaf can hold its realm's bucket. All bucket access goes through one function, because the bucket's JetStream domain will differ on a leaf. Engines get read and write rights through a bucket declaration in `transport-routes.yaml`; the realm coordinator alone may create it, and engines retry until it exists.
 
 | Resource | Content | Behaviour |
 | --- | --- | --- |
-| `sessions` KV bucket | one key per session | refreshed by the holding engine with a TTL equal to the grace; an expired key ends the session, so a crashed engine's sessions end on their own and the realm keeps no grace timers |
+| `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; holder: EngineId }` | while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it rewrites once with a TTL equal to the grace and stops. Every write checks the revision, so a server move works in either join and quit order (the old engine's write fails and it stops). An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no grace timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
 | session stream | backs each `typewriter.protagonist.<id>` and `typewriter.session.<id>` subject, about 30 seconds | after a server move the new engine continues where the old one stopped, so events and live effects sent in the move gap are not lost |
 | `Indexed` KV bucket per type (being replaced, question 14) | keys `<protagonist>.<node>` | refreshed on change, expiring when the engine dies; watched by the panel and engines, so the online index survives realm restarts and outages |
 

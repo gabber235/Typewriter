@@ -10,7 +10,7 @@ An identity is something stored data can be about. Identities are the only types
 
 | Identity | What it is |
 | --- | --- |
-| `Protagonist` | The engine neutral person: a Minecraft player, also the panel user. Owns stored data. |
+| `Protagonist` | The engine neutral person: a Minecraft player, also the panel user. Owns stored data. Its id is the account it comes from, `Protagonist(PrincipalId("minecraft", <uuid>))` or `Protagonist(PrincipalId("user", <user id>))`, so an engine knows it at join without asking the realm. |
 | `Step` | One running step of an interaction. |
 | `Interaction` | The running group of steps (see [interactions.md](interactions.md)). |
 | `Session` | One connection of a protagonist (see [live-data.md](live-data.md)). |
@@ -122,7 +122,7 @@ Stored values are indexed per type, so finding every value of a type, or every v
 
 The guideline is **store moments, not counters**: `startedAt`, `skippedAt`. Steps then rarely write, and a restarted step is a real resume.
 
-Stored values of a running step are local on the interaction's home engine, which is their single writer (open: home engine per interaction or a lease per session, settled by layer 3). They are saved to the realm at checkpoints: server move, step end, and every few seconds. All other stored data is owned by the realm. Engines subscribe to the stored keys they currently demand and receive `Changed<X>` pushes in commit order per identity (see [live-data.md](live-data.md) for routing).
+All stored data is owned by the realm, also the values of a running step, and every write is an `apply()` transaction (decided 2026-11-03). There is no single writer: the realm serializes writes, and a generation check drops a stale write. Fast changing state that needs no saving lives in a `Runtime`. Engines subscribe to the stored keys they currently demand and receive `Changed<X>` pushes in commit order per identity (see [live-data.md](live-data.md) for routing).
 
 Stored data and `Due` are never put on NATS streams: they need transactions and exactly once delivery, which the realm owns.
 

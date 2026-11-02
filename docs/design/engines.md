@@ -39,6 +39,21 @@ val item: Item = stack.fromPlatform()         // specific bridges first, the fal
 - KSP registers bridges per engine kind, like capabilities. A future engine supplies its own bridges for the same Typewriter types, so content never changes.
 - `toPlatform` on a value the engine cannot provide (an unknown Nexo id) is a typed failure; publication checks catch it earlier through the reported id check over `KnownIds`.
 
+## Wiring inside an engine
+
+Engine internals are plain classes wired with Koin (decided 2026-11-03). Each engine deployment has one isolated `koinApplication`, closed with its runtime; `startKoin` is never used, because a global Koin would keep old engine classes alive after a reload and two engines in one test process would share it. Each engine kind brings its own module.
+
+Paper engine code loads outside Paper's plugin system, so one line in the Paper module brings in the plugin object, and every class needing it receives it through its constructor:
+
+```kotlin
+val paperModule = module {
+    single<Plugin> { JavaPlugin.getPlugin(TypewriterLoaderPlugin::class.java) }
+    single { SessionListener(get(), get()) }
+}
+```
+
+On a join, the session listener starts the key write off the game thread, so the tick never waits on NATS; on a quit, it shortens the key to the grace. An engine reload without a Paper restart unregisters the listener and leaves the keys alone; the new engine lists the online players and takes their keys over, so sessions survive an engine upgrade.
+
 ## Engine communication
 
 - Engine reports are ordinary typed values keyed by the `Engine` identity ([panel-engine-communication.md](panel-engine-communication.md) question 10): what an engine knows (worlds, registries, external plugin ids) is `Stored`, so search and checks read the last known value while the engine is offline; what it is doing now (`ContentDelivery`: the applied publication or its delivery failure) is `Live`, so the publication view shows "applied on N of M engines". Panel actions are sent only once every connected engine running the content has applied the publication.
@@ -47,7 +62,7 @@ val item: Item = stack.fromPlatform()         // specific bridges first, the fal
 - A panel user chooses a target player (any online player), remembered in the user's settings; no account link is needed. In game tools are gated by a server permission and history records the Minecraft player as `initiated_by`. Linking Minecraft accounts to a Typewriter user is beta, for presence and per user team permissions in game.
 - One host can run the realm, the Paper engine, and the panel engine together (exists: standalone runs every role).
 - The panel engine is to a panel client (browser tab, desktop app, or mobile app) what the Paper engine is to a Minecraft client: each connected client instance is a session of the user's protagonist, reported by the panel engine. The panel engine holds each tab's session (`typewriter.session.<tab>`) and runs its handlers and derives; the tab is a thin client over direct per tab subjects and has grants only to its own subjects. A minimal panel engine (session reporter) arrives with layer 3 and forwards panel emits from layer 9; its full shape and API syntax are decided later, when higher layers show what the panel engine needs.
-- Panel sessions reuse the existing presence heartbeat (`skir-src/organization/v1/presence.skir`: `PanelPresence{session_id, sequence, location}` on `presence.organization.{organization}.user.{user}`, route `organization_presence`). The panel engine consumes it to report sessions; there is no second heartbeat.
+- Panel sessions reuse the existing presence heartbeat (`skir-src/organization/v1/presence.skir`: `PanelPresence{session_id, sequence, location}` on `presence.organization.{organization}.user.{user}`, route `organization_presence`). The panel engine consumes it to report sessions; there is no second heartbeat. `organization_presence` gains `realm_participant` as a subscriber, which needs a subject family for events from a panel role to a service role (`subject.ts`). A panel engine reports only tabs whose `PresenceLocation` is in its own realm, so a tab on the members page has no session. The heartbeat is the refresh: each one rewrites the key with a 45 second TTL; `PresenceLeft` or leaving the realm rewrites it with a 10 second TTL, so a reload continues; when heartbeats stop, the key expires. The `Protagonist` comes from the permission bound `{user}` subject token, never from the payload.
 - A panel request is one event delivered to the engine where its subject is live (hybrid routing); this does not contradict "interactions do not span engines".
 - Same host shortcut (milestone open): engines and a realm on one host talk through the host locally instead of over NATS, for most traffic including stored data sync; engines and the realm do not notice. Contracts never assume NATS, and the host binds caller identity the way caller bound subjects do.
 - Registry search and existence checks (materials, particles, worlds, a Nexo id) read `KnownIds`, the stored reported ids, so they work while engines are offline. Actions (capture, teleport) are events to the engine where the subject is live, not a channel through the realm.

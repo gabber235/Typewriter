@@ -182,7 +182,7 @@ No event core, sessions, principals, or bridges are built yet; `runtimes/paper` 
 
 1. Settled 2026-10-31: the panel engine holds each tab's session (`typewriter.session.<tab>`) and runs its handlers and derives; the tab is a thin client that talks directly to the panel engine over per tab subjects, like a Minecraft client to Paper. The browser has grants only to its own subjects. Panel session grace: 45 s, the current presence expiry. (G3, C1, C6, D1, D2)
 2. Settled 2026-10-31: events about a protagonist go to `typewriter.protagonist.<id>`; every engine holding a session of it subscribes and runs the handlers it can. Session subjects stay for one connection targets. (C6, D2, D3, G1)
-3. Single writer (conflict 1): stays with layer 3, the first layer that needs it. (G1, D2, C3)
+3. Settled 2026-11-03: there is no single writer; every stored write is a realm transaction (stored-data.md). (G1, D2, C3)
 4. Settled 2026-10-31: the result of an event emitted from a session goes back to that session's subject once its after handlers finish: `Done`, `Denied(reason)`, `Failed(reason)`, or `NotHandled`. Deny verdicts carry the typed reason (D3); permission checks are deny handlers. `NotHandled` means no engine holding the subject's sessions has a handler; every holder answers (roadmap todo, layer 4), so there is no timeout. Open: the reason type set. (D2, D3, G1, G2)
 5. Settled 2026-10-31: there is no mode concept and no generic content framework or helper. Each feature that needs a running mode (capture, pick, an editor, recording) builds it from the primitives: a stored value keyed by the session is the mode, holds draw it and offer its input, a `Runtime` holds in progress buffers, an authoring `edit` saves, an event ends it (its result reaches the panel). Server moves, cancel, clashes, and session loss follow the existing rules. (C1, C2, C3, G1)
 6. Settled 2026-10-31: there is no capture concept; each type owner defines its own event and handler (Location: the Minecraft capability). The engine saves; the value never returns to the panel to be saved. `initiated_by` comes from the occurrence's `Origin` (replaced the `@As(Requester)` role on 2026-11-01, see Draft below). The field to write is a `BoundPath<T>` (exists: `TypedPath.kt:99`). (C1, C2)
@@ -259,7 +259,7 @@ Gaps: no engine or player target, no caller in capability contexts, no progress 
 
 ### Conflicts to settle before layer 3 (from earlier decisions)
 
-1. Single writer: home engine per interaction versus a lease per session (live-data.md Session versus stored-data.md and interactions.md).
+1. Settled 2026-11-03: no single writer; every stored write is a realm transaction.
 2. Settled 2026-10-31: engines share stored state only through the realm; live effects and events go directly between sessions. The realm is not a gateway (vision updated).
 3. Settled with 2.
 4. "The realm is treated as untrusted" has no source in any design or vision doc; authoring-writes.md says `initiated_by` comes from a trusted service. Drop unless a source turns up.
@@ -280,6 +280,6 @@ Gaps: no engine or player target, no caller in capability contexts, no progress 
 
 - Question 14: the shape of demand that crosses engines (direction settled; layer 8).
 - Question 4: the reason type set (D3).
-- Conflicts 1 (single writer, layer 3), 4 (the untrusted realm statement), and 7 (where the decision runs, layer 4).
+- Conflicts 4 (the untrusted realm statement) and 7 (where the decision runs, layer 4).
 - G4: whether the same host shortcut is alpha or beta.
 - Phase 2: fit map of every alpha scenario onto the existing system, then directions in real code.
