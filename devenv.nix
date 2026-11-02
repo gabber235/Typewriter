@@ -58,6 +58,8 @@ in
       pkgs.mesa
       pkgs.vulkan-loader
       pkgs.gtk3
+      # The panel's Linux build links flutter_secure_storage_linux against it.
+      pkgs.libsecret
       pkgs.chromium
     ];
     env = {
