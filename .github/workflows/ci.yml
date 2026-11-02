@@ -70,6 +70,14 @@ jobs:
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
+      # Temporary diagnostic: what fills the panel runner's memory before it is shut down.
+      - if: matrix.area.area == 'panel'
+        run: |
+          ( while true; do
+              echo "== memory $(date +%T) $(free -m | awk '/Mem:/{print "used " $3 " MB of " $2 ", available " $7}') $(df -m / | awk 'NR==2{print "disk free " $4 " MB"}')"
+              ps -eo rss,args --sort=-rss | head -6 | awk 'NR>1{printf "   %6d MB %s\n", $1/1024, substr($0, index($0,$2), 100)}'
+              sleep 10
+            done ) &
       - if: matrix.area.area != 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
         run: devenv shell -- cargo xtask check ${{ matrix.area.area }}
