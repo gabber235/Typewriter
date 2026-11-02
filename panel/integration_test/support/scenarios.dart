@@ -80,6 +80,13 @@ void scenario(
       log.writeln("${_now()} $message");
       original(message, wrapWidth: wrapWidth);
     };
+    // The binding reports several caught errors as one "Multiple exceptions"
+    // message; each is logged here, so the failure shows what was thrown.
+    final reportError = FlutterError.onError;
+    FlutterError.onError = (details) {
+      log.writeln("${_now()} ${details.exceptionAsString()}\n${details.stack}");
+      reportError?.call(details);
+    };
     final Panel panel;
     try {
       panel = await Panel.launch(
@@ -95,6 +102,7 @@ void scenario(
       );
     } on Object {
       debugPrint = original;
+      FlutterError.onError = reportError;
       rethrow;
     }
     final start = DateTime.now().millisecondsSinceEpoch;
@@ -121,8 +129,9 @@ void scenario(
       );
       rethrow;
     } finally {
-      // Restored before the test ends, since the binding checks it was.
+      // Restored before the test ends, since the binding checks they were.
       debugPrint = original;
+      FlutterError.onError = reportError;
       final end = DateTime.now().millisecondsSinceEpoch;
       _run.add(
         requirement: requirement,

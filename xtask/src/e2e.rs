@@ -474,6 +474,9 @@ fn in_chrome<T: Target>(mut command: Vec<String>, launch: &Launch<'_, T>) -> Res
         } else {
             "--headless".into()
         },
+        // Without a GPU (a CI runner), WebGL2, which the panel's Rive animations need, comes
+        // only from SwiftShader, and Chrome no longer falls back to it on its own.
+        "--web-browser-flag=--enable-unsafe-swiftshader".into(),
     ]);
     // chromedriver drives only the Chrome release it was built for. Without a binary it starts
     // whatever Chrome the machine has, such as a CI runner's preinstalled one, so the devenv
