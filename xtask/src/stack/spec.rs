@@ -247,7 +247,9 @@ pub const PORTS: [&str; 14] = [
 ];
 const BLOCK_SIZE: u16 = 20;
 const FIRST_PORT: u16 = 20000;
-const BLOCKS: u16 = 2000;
+// Below 32768, where Linux (32768 to 60999) and macOS (49152 and up) start handing out the local
+// ports of outgoing connections, so no connection takes a leased port before its service binds it.
+const BLOCKS: u16 = (32768 - FIRST_PORT) / BLOCK_SIZE;
 
 /// A block of ports leased through the stack registry and released with the stack record.
 pub struct PortLease {
@@ -452,6 +454,21 @@ mod tests {
         fake_service!(Routes, ; provides BACKEND);
         fake_service!(Cluster, ; provides BACKEND);
         fake_service!(Owner, ; needs_roles BACKEND);
+    }
+
+    #[test]
+    fn leased_ports_stay_below_the_ports_outgoing_connections_take() {
+        let root = TempRoot::new();
+        let registry = Registry::at(&root.dir("registry"));
+        // Each lease stays held (its owner, this test, is alive), so later ones move on to
+        // other blocks, as they do with many worktrees.
+        for n in 0..200 {
+            let lease =
+                PortLease::acquire(&registry, &root.path(&format!("worktree-{n}"))).unwrap();
+            for name in PORTS {
+                assert!(lease.port(name) < 32768, "{name} got {}", lease.port(name));
+            }
+        }
     }
 
     #[test]
