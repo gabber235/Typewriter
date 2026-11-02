@@ -447,6 +447,7 @@ pub fn shell(name: &'static str, script: &'static str, budget: Duration) -> Step
         budget,
         needs_generate: false,
         coverage: None,
+        junit: None,
     }
 }
 

@@ -20,6 +20,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clap::ValueEnum;
 
+use crate::junit;
 use crate::lock::HeavyLock;
 use crate::process::{self, Group};
 use crate::results::{self, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun};
@@ -121,6 +122,9 @@ pub struct Step {
     pub needs_generate: bool,
     /// The coverage file the step writes into [`review::COVERAGE_DIR`] while it tests.
     pub coverage: Option<&'static str>,
+    /// The folder, relative to the repository root, below which the step's test tasks write
+    /// JUnit XML; its tests become the cases of a second run next to the step's.
+    pub junit: Option<&'static str>,
 }
 
 pub enum Run {
@@ -153,6 +157,7 @@ const fn program(
         budget: mins(minutes),
         needs_generate: true,
         coverage: None,
+        junit: None,
     }
 }
 
@@ -176,6 +181,13 @@ impl Step {
             ..self
         }
     }
+
+    const fn junit(self, root: &'static str) -> Self {
+        Self {
+            junit: Some(root),
+            ..self
+        }
+    }
 }
 
 /// Brings the generated sources up to date. Not heavy itself: it takes the heavy lock only around
@@ -192,6 +204,7 @@ pub const GENERATE: Step = Step {
     budget: mins(20),
     needs_generate: false,
     coverage: None,
+    junit: None,
 };
 
 pub const CHECKS: &[Step] = &[
@@ -206,7 +219,8 @@ pub const CHECKS: &[Step] = &[
         &["check", "coverageReport"],
     )
     .heavy()
-    .coverage("services.xml"),
+    .coverage("services.xml")
+    .junit("services"),
     program(
         "backend:lint",
         Area::Backend,
@@ -279,6 +293,7 @@ pub const CHECKS: &[Step] = &[
         budget: mins(30),
         needs_generate: true,
         coverage: None,
+        junit: None,
     },
     program(
         "protocol",
@@ -380,6 +395,7 @@ pub const CHECKS: &[Step] = &[
         // The subscription ConfigMaps it validates are tracked deployment manifests.
         needs_generate: false,
         coverage: None,
+        junit: None,
     },
     // One native step: the install must finish before validate and build, and steps run in
     // parallel.
@@ -395,6 +411,7 @@ pub const CHECKS: &[Step] = &[
         // The site reads only its own sources.
         needs_generate: false,
         coverage: None,
+        junit: None,
     },
     Step {
         name: "quality",
@@ -408,6 +425,7 @@ pub const CHECKS: &[Step] = &[
         // The detectors read tracked sources only; generated output is ignored.
         needs_generate: false,
         coverage: None,
+        junit: None,
     },
     // Building the harness already needs its own generated types, so these never wait for
     // generate.
@@ -628,7 +646,17 @@ fn run_step(ctx: &Context, step: &Step, logs: &Path, commit: &str) -> bool {
     };
     let path = ctx.root.join(format!(".xtask/results/steps/{name}.json"));
     let written = results::write(&run, &path);
-    let outcome = outcome.and(written).and(stamped);
+    // The tests' run is written whatever the step's outcome: a failed step is when it names
+    // the tests that failed.
+    let tests = step.junit.map_or(Ok(()), |root| {
+        let tests = junit::run(&ctx.root.join(root), started_at, commit, millis(started_at))?;
+        results::write(
+            &tests,
+            &ctx.root
+                .join(format!(".xtask/results/steps/{name}-tests.json")),
+        )
+    });
+    let outcome = outcome.and(written).and(stamped).and(tests);
     report(step, outcome, elapsed, &log)
 }
 

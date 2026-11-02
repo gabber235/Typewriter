@@ -15,6 +15,7 @@ mod gitops;
 mod graph;
 mod heavy;
 mod hooks;
+mod junit;
 mod lock;
 mod process;
 mod results;

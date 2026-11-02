@@ -47,6 +47,8 @@ enum Runner(85010005) {
   panel;
   panel_web;
   step;
+  // The JUnit XML a step's test tasks wrote, one case per test (the Gradle services suites).
+  junit;
 }
 
 enum Demonstrates(85010006) {
