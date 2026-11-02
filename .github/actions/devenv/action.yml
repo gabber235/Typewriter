@@ -14,8 +14,9 @@ inputs:
   caches:
     description: >-
       Tool caches besides xtask's Cargo build, space separated: `gradle` (dependencies and the
-      wrapper), `gradle-outputs` (Gradle's build cache, which it turns on for this job) and
-      `flutter` (the pub cache).
+      wrapper), `gradle-outputs` (Gradle's build cache, which it turns on for this job),
+      `flutter` (the pub cache) and `frame-vectors` (the Cargo build of `cargo xtask generate`'s
+      frame vector writer).
     default: ""
 
 runs:
@@ -114,6 +115,27 @@ runs:
           xtask/target/debug
         key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('xtask/Cargo.lock') }}
         restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+
+    # The dependencies of the frame vector writer, which every job that generates compiles. Its
+    # own target (xtask/src/generate.rs) holds them without debug info: about 700 MB, 200 MB
+    # compressed. Not part of xtask's cache: the plan job saves that one first and never generates.
+    # The writer's own crate is left out; a fresh checkout's file times rebuild it anyway.
+    - if: contains(inputs.caches, 'frame-vectors') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          .xtask/frame-vectors-target/debug
+          !.xtask/frame-vectors-target/debug/deps/*wasmcloud_utils*
+        key: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('backend/Cargo.lock') }}
+        restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+    - if: contains(inputs.caches, 'frame-vectors') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          .xtask/frame-vectors-target/debug
+          !.xtask/frame-vectors-target/debug/deps/*wasmcloud_utils*
+        key: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('backend/Cargo.lock') }}
+        restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
 
     # Gradle's downloaded dependencies and distribution, keyed by the build files that pin them.
     - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches == 'true'
