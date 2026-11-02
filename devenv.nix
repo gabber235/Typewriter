@@ -38,7 +38,8 @@ in
     # runs, software OpenGL and Vulkan for the Flutter desktop app and the browser for panel web.
     # llvmpipe and lavapipe need no host driver, so no apt packages are involved.
     pkgs.xvfb
-    pkgs.ffmpeg
+    # The full build: the default one leaves out the x11grab input the recorder captures with.
+    pkgs.ffmpeg-full
     pkgs.mesa
     pkgs.vulkan-loader
     pkgs.gtk3

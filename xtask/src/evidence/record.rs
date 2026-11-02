@@ -153,11 +153,17 @@ pub fn record_with(
     if let Some(tee) = tee {
         tee.finish(&mut command);
     }
-    if let Some(ffmpeg) = ffmpeg {
-        ffmpeg.finish()?;
-    }
+    // The suite's run is written only when every drive returns, so a failed recorder must not
+    // end the drive: its cases are kept and only the clips are missing.
+    let recorded_video = match ffmpeg.map(Ffmpeg::finish) {
+        Some(Err(error)) => {
+            eprintln!("xtask: the recording failed, so the run has no clips: {error:#}");
+            false
+        }
+        finished => finished.is_some(),
+    };
     let mut test_run = read_run(out, &command, status)?;
-    if recorded.video {
+    if recorded_video {
         for case in &mut test_run.cases {
             for attempt in &mut case.attempts {
                 cut(out, &video, started, &case.id, attempt)?;
