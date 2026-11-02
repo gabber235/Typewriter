@@ -9,7 +9,7 @@ Related files: [overview.md](overview.md) (the primitives), [events-and-handlers
 A **Hold** is a live change to how something looks or behaves on an engine: the camera, the chat, the action bar, a title, an NPC shown to one viewer. A Hold is the result of a `@Derive`: while the derive returns a Hold, the system holds it; when it returns `null` or another Hold, the system removes or reconciles it.
 
 ```kotlin
-data class Speaking(@Key val step: Step, val entry: Ref<DialogueEntry>, val startedAt: Instant) : Stored
+data class Speaking(@Key val step: Step, val entry: DialogueEntry, val startedAt: Instant) : Stored
 
 @Derive
 fun Speaking.show(/* inputs */): DialogueHold
@@ -79,7 +79,7 @@ When a derive stops returning a Hold, its removal (`Removed<H>`, then `restore`)
 `@Key` on a Hold field lets one holder hold many Holds of one type:
 
 ```kotlin
-data class NpcView(@Key val npc: Ref<NpcEntry>) : Hold   // one per NPC
+data class NpcView(@Key val npc: NpcEntry) : Hold   // one per NPC
 ```
 
 ### Priority
@@ -88,7 +88,7 @@ When several derives produce the same Hold type for the same holder and key, the
 
 ### Input holds
 
-Raw input becomes intent events such as `Confirm` only for the key the current input holder offers ([events-and-handlers.md](events-and-handlers.md#event)). The offered key shown in a hint is a `Formula<T>` parameter of the render handler.
+Raw input becomes intent events such as `Confirm` only for the key the current input holder offers ([events-and-handlers.md](events-and-handlers.md#event)). The offered key shown in a hint is a `Var` field read as a plain parameter of the render handler.
 
 ### Leaving and returning
 
@@ -166,7 +166,7 @@ Variants (Java chat versus a Bedrock form) are picked by the step when it starts
 
 Each interaction has one home engine. Handlers for its steps that need only stored data run there; handlers that ask for live traits of a member run on that member's engine. The home starts where the interaction started and follows the leader or the majority (see Open).
 
-Running step values are local on the home engine and saved at checkpoints ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Interactions stay inside one engine kind; engine kinds meet only through stored state in the realm.
+Running step values are local on the home engine and saved at checkpoints ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Interactions stay inside one engine kind. Engines share stored state only through the realm; live effects and events go directly between sessions ([live-data.md](live-data.md#routing)).
 
 ## Clashes
 
@@ -220,7 +220,7 @@ A **grouping** is a way to bucket protagonists, declared by a static group entry
 
 ```kotlin
 data class Membership(
-    @Key val grouping: Ref<GroupEntry>,
+    @Key val grouping: GroupEntry,
     @Key val who: Protagonist,
     val key: String,
 ) : Stored
@@ -286,7 +286,7 @@ The running activity is a `Runtime` created on `Added<NpcRunning>` and never sav
 
 ## Preview and recording
 
-Content mode adds a `Simulating(mode)` stored value to the previewed step. Preview is opt out, like legacy: handlers run for real unless they check for `Simulating`.
+Preview adds a `Simulating(mode)` stored value to the previewed step. Preview is opt out, like legacy: handlers run for real unless they check for `Simulating`.
 
 ```kotlin
 @Handler
@@ -295,10 +295,39 @@ fun Added<CameraHold>.spectate(player: PaperPlayer, preview: Simulating?) = ...
 
 A camera shows a preview display; a blinding effect shows nothing.
 
+There is no content mode concept and no generic content framework. A feature that needs a running mode (capture, pick, an in game editor, recording) builds it from the primitives:
+
+- a stored value keyed by the session is the mode; removing it ends the mode and undoes its holds;
+- holds draw the mode and offer its input (input holds);
+- a `Runtime` holds in progress buffers such as a recording, so a server move drops only the recording in progress;
+- an authoring `edit` saves ([authoring-writes.md](authoring-writes.md));
+- an event from the panel or the game ends or changes it, and its result returns to the session it came from.
+
+Example: the region feature's own corner placing mode (nothing in it is shared with other features).
+
+```kotlin
+data class PlacingCorners(@Key val session: Session, val region: RegionEntry, val first: BlockLocation?) : Stored
+
+@Derive
+fun PlacingCorners.tool(): CornerToolHold = CornerToolHold(region, first)
+
+@Handler
+fun Confirm.place(mode: PlacingCorners, player: PaperPlayer, origin: Origin) {
+    val corner = player.targetBlock().fromPlatform()
+    if (mode.first == null) return mode.update { copy(first = corner) }
+    realm.edit(scope = AuthoringScope.resources(listOf(mode.region.target)), initiatedBy = origin.principal) {
+        mode.region.draft().setShape(Cuboid(mode.first, corner))
+    }
+    mode.end()
+}
+```
+
+`mode.update` and `mode.end()` are placeholders until layer 6 designs applying a single stored `Change` from handler code ([closed-beta-roadmap.md](closed-beta-roadmap.md), Decided).
+
 ## Open
 
 - Home engine for a group interaction: whether it follows the leader or the majority of members when they move.
-- How the step checkpoint rule (running step values local on the home engine, saved at checkpoints) fits the per session single writer lease and `apply()` transactions in [stored-data.md](stored-data.md).
+- How the step checkpoint rule (running step values local on the home engine, saved at checkpoints) fits the per session single writer lease and `apply()` transactions in [stored-data.md](stored-data.md) (layer 3).
 - Interaction bounds (blocking versus interrupting, changing over time; roadmap layer 17) are not designed yet.
 - How a Hold names its holder (server, group, protagonist) in code.
 - How content marks a `Protected` period inside a step.

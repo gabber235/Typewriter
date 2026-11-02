@@ -12,7 +12,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`@Key`**: marks the fields of a Kotlin `Stored`, `Live`, or `Hold` type that are its keys; KSP turns a stored type into a `stored(...)` call. See [stored-data.md](stored-data.md#kotlin-form).
 
-**`@TypewriterType`**: the v1 type annotation; on a developer defined stored type it carries an id and a revision so the migrator can convert its data. See [migrations.md](migrations.md#developer-migrator).
+**`@TypewriterType`**: the v1 type annotation; on a developer defined stored type it carries an id and a revision so the migrator can convert its data, and every event carries it, so an event crosses engines as its catalog value. See [migrations.md](migrations.md#developer-migrator) and [events-and-handlers.md](events-and-handlers.md#event).
 
 **`/tw fire`**: the command that fires an entry for a target, written target first (`/tw fire <player> <entry>`) so suggestions follow the target. See [events-and-handlers.md](events-and-handlers.md#content-commands).
 
@@ -44,6 +44,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Audience**: an `AudienceEntry` tree whose criteria are formulas over mirrors and whose membership is the `InAudience` mirror. See [live-data.md](live-data.md#audiences).
 
+**`AuthoringCommit`**: one record of the realm commit history: id, actor, session, and a `ValueChange` (before and after) per changed value; it stores attribution and drives undo. See [panel-engine-communication.md](panel-engine-communication.md) question 12.
+
 ## B
 
 **`Because`**: field on a mirror's `Added` and `Removed` saying whether the value really changed (`Value`) or tracking started or stopped (`Tracking`). See [live-data.md](live-data.md#added-changed-removed-and-because).
@@ -60,6 +62,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`BookScope`**: formula context whose purpose is open; the book's `instances` field uses `PublishScope`. See [formula-language.md](formula-language.md#formula-contexts).
 
+**`BoundPath<T>`**: the place in authored content a capture or mode writes to; its portable form is the `value_location` representation, so a waiting mode keeps it in its stored value. See [panel-engine-communication.md](panel-engine-communication.md#emit-without-extension-code-in-the-panel-engine-2026-11-01).
+
+**Bridge**: the conversion of one Typewriter value type to and from an engine's own type (`toPlatform`, `fromPlatform`), registered per engine kind. See [engines.md](engines.md#bridges).
+
 ## C
 
 **`CameraHold`**: the hold a scene uses for the camera; it snapshots location, flight, and velocity and restores them at the end. See [interactions.md](interactions.md#scenes).
@@ -68,7 +74,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Capability**: an engine specific feature set (such as `Tick` or the Minecraft traits) kept out of the engine neutral core. See [live-data.md](live-data.md#engines-and-traits).
 
-**Capability root**: a scope contribution from a capability (such as `minecraft`) that formulas resolve last. See [formula-language.md](formula-language.md#lookup-order).
+**Capability root**: a scope contribution from a capability (such as `minecraft`) that formulas resolve last. Holds pure values only (constants, registry ids, types); live data hangs off `engine: Engine`. See [formula-language.md](formula-language.md#lookup-order).
 
 **Chain**: entries linked by triggers, where links fire explicitly and carry a growing context. See [events-and-handlers.md](events-and-handlers.md#chain).
 
@@ -85,6 +91,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Checkpoint**: the moment a running step's local stored values are saved to the realm: server move, step end, and every few seconds. See [stored-data.md](stored-data.md#where-values-live-at-runtime).
 
 **Checks**: the one list of build time (KSP) and realm findings, where errors block publication and warnings and info never do. See [live-data.md](live-data.md#checks).
+
+**`ChosenTarget`**: stored value `ChosenTarget(user, target)` naming the protagonist a panel user acts on, so the choice follows the user across devices. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
 **Clash**: what happens when an incoming step needs a hold type another interaction holds for the same protagonist. See [interactions.md](interactions.md#clashes).
 
@@ -103,6 +111,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`ConfiguredSource<E, C>`**: source interface whose `open(demand: Demand<C>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
 **`ContentCommandRan`**: event a content command node runs; its handler fires the node's triggers with the arguments as context. See [events-and-handlers.md](events-and-handlers.md#content-commands).
+
+**`ContentDelivery`**: `Live` value keyed by `Engine` with the publication the engine applied or its delivery failure, so the panel shows "applied on N of M engines". See [panel-engine-communication.md](panel-engine-communication.md) question 10.
 
 **Context (chain)**: a typed bag of produced records passed along a chain that only grows. See [events-and-handlers.md](events-and-handlers.md#context).
 
@@ -138,7 +148,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Derive**: a pure function over tracked inputs whose result type decides what it maintains. See [overview.md](overview.md#derive).
 
-**Derived type**: a type built by `bind`, with id (resource id, parameter name) and no revision. See [formula-language.md](formula-language.md#bind).
+**Derived type**: a type built by `bind`, with id `content(at)` (the field the `bind` reads) and revision 1. See [formula-language.md](formula-language.md#bind).
 
 **Developer migrator**: the step a developer writes to convert a stored type's data between two revisions. See [migrations.md](migrations.md#developer-migrator).
 
@@ -152,15 +162,19 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## E
 
+**`EditExpectation.exists`**: authoring guard that a value location exists or not; it replaces `resource_exists`, and list operations guard only the items they name with it. See [panel-engine-communication.md](panel-engine-communication.md) question 12.
+
 **`emit()`**: queues an event from a handler; it is decided after the current event finishes, without nesting. See [events-and-handlers.md](events-and-handlers.md#emitting).
 
-**Engine**: runs published content through extensions (Paper, panel, future engines); engines meet only through stored state in the realm. See [live-data.md](live-data.md#engines-and-traits).
+**Engine**: runs published content through extensions (Paper, panel, future engines); engines share stored state only through the realm; live effects and events go directly between sessions. `Engine(id)` is also an identity, keyed by the stable topology engine id, so what an engine knows (`Stored`) and is doing (`Live`) are ordinary values keyed by it. See [live-data.md](live-data.md#engines-and-traits).
 
-**Engine kind**: a family of engines (Minecraft, panel) that defines session ids and session grace; interactions stay inside one kind. See [live-data.md](live-data.md#session).
+**Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewriter:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and grace, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
 
 **Entry record**: a chain context record keyed by producing entry plus type, add only. See [events-and-handlers.md](events-and-handlers.md#context).
 
-**Event**: a plain Kotlin type saying one thing happened, one type per meaning. See [events-and-handlers.md](events-and-handlers.md#event).
+**Event**: a plain Kotlin type saying one thing happened, one type per meaning; every event is a `@TypewriterType`, so it crosses engines as its catalog value. See [events-and-handlers.md](events-and-handlers.md#event).
+
+**Event result**: what an event emitted from a session reports back to that session: `Done`, `Denied(reason)`, `Failed(reason)`, or `NotHandled`. See [events-and-handlers.md](events-and-handlers.md#follow-ups-and-cancel).
 
 **Event without a subject**: an event such as `Tick` whose handler parameters become a query, running once per match. See [events-and-handlers.md](events-and-handlers.md#events-without-a-subject).
 
@@ -185,8 +199,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Follow up**: a block on a verdict (`allow { }`, `deny { }`, `pass { }`) that runs when the final outcome matches it. See [events-and-handlers.md](events-and-handlers.md#follow-ups-and-cancel).
 
 **Formula**: a creator or extension expression in its own typed language with its own interpreter, separate from v1 portable expressions. See [formula-language.md](formula-language.md).
-
-**`Formula<T>`**: handler or derive parameter that reads a Kotlin declared formula and always sees its current value. See [formula-language.md](formula-language.md#the-formula-primitive-in-kotlin).
 
 **Formula kind**: Pure, Stored, or Live, the strongest kind a formula calls, which decides where it can run. See [formula-language.md](formula-language.md#where-formulas-run).
 
@@ -240,9 +252,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`InAudience`**: `Live` and `Indexed` mirror for a protagonist being inside an audience node. See [live-data.md](live-data.md#audiences).
 
-**`Indexed`**: marks a `Live` type whose `Added` and `Removed` the engine reports to the realm for an online index. See [live-data.md](live-data.md#indexed).
+**`Indexed`** (being replaced, question 14): marks a `Live` type whose `Added` and `Removed` the engine reports to the realm for an online index. See [live-data.md](live-data.md#indexed).
 
-**`Indexed` KV bucket**: NATS KV bucket per `Indexed` type, keyed `<protagonist>.<node>`, that keeps the online index alive across realm outages. See [live-data.md](live-data.md#nats-jetstream).
+**`Indexed` KV bucket** (being replaced, question 14): NATS KV bucket per `Indexed` type, keyed `<protagonist>.<node>`, that keeps the online index alive across realm outages. See [live-data.md](live-data.md#nats-jetstream).
+
+**`initiated_by`**: the principal a trusted service names as behind a commit (the player behind an in game capture), taken from `Origin`; recorded for history, never used for authorization. See [authoring-writes.md](authoring-writes.md#principles).
 
 **Input hold**: whatever currently holds the protagonist's input and so decides which raw key becomes an intent event. See [interactions.md](interactions.md#input-holds).
 
@@ -258,7 +272,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`interpolate()`**: provider that decides how a value enters a text template; `RichText` escapes tags by default. See [formula-language.md](formula-language.md#text-templates).
 
-**Interpreter**: the formula interpreter in the engine core, shared by realm and engines, that parses, binds, runs, and records reads. See [formula-language.md](formula-language.md#interpreter).
+**Interpreter**: the formula interpreter in the `formula` module, shared by realm and engines, that parses, binds, runs, and records reads. See [formula-language.md](formula-language.md#interpreter).
 
 **`Island`**: example identity type that the `islands` group entry exports through `bind`. See [interactions.md](interactions.md#groupings-and-membership).
 
@@ -269,6 +283,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Keyed hold**: a hold with `@Key` fields so one holder can hold many holds of one type, such as `NpcView`. See [interactions.md](interactions.md#keyed-holds).
 
 **Keys**: the identities a stored value is about: none (global), one, several (ordered), or a `Set` (symmetric). See [stored-data.md](stored-data.md#keys).
+
+**`KnownIds`**: stored value `KnownIds(engine, type, ids)` with the ids one engine reports for one reported id type; the shared picker and the reported id check read it. See [panel-engine-communication.md](panel-engine-communication.md) question 10.
 
 ## L
 
@@ -302,6 +318,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`MigrationScope`**: the formula scope migration inputs see; it contains `old`. See [migrations.md](migrations.md#pendingmigration).
 
+**Milestones**: alpha is the first closed beta release (the PR stack), beta is added during the closed beta, after comes after the closed beta, someday has no plan. See [closed-beta-roadmap.md](closed-beta-roadmap.md).
+
 **Mirror**: see `Live`. See [live-data.md](live-data.md#live-mirrors).
 
 ## N
@@ -320,17 +338,21 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## O
 
-**Occurrence**: one real happening that may reach several sources; sources of the same meaning join it. See [events-and-handlers.md](events-and-handlers.md#occurrences-and-dedupe).
-
 **Objective**: an entry system of its own (display, tracking, progress) whose criteria are formulas. See [live-data.md](live-data.md#audiences).
+
+**Occurrence**: one real happening that may reach several sources; sources of the same meaning join it. See [events-and-handlers.md](events-and-handlers.md#occurrences-and-dedupe).
 
 **Offline changes**: stored data changing while its protagonist is offline; stored only handlers run anywhere the book runs, live reactions may be missed. See [stored-data.md](stored-data.md#offline-changes).
 
 **`onClash`**: step entry field and `startStep` argument: `Drop` (default), `Queue`, or `Replace`. See [interactions.md](interactions.md#clashes).
 
+**`OnlinePlayer`**: `Live` mirror in the Minecraft capability with an online protagonist's name and its `Engine`, read by the panel's target list. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
+
 **`onRejoin`**: step entry field and `startStep` argument: `Drop` (default), `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#leaving-and-rejoining).
 
 **`OnWrite<K, T>`**: variable reaction that runs inside every write's own transaction. See [stored-data.md](stored-data.md#reactions).
+
+**Origin**: who caused an occurrence (session and `PrincipalId`), filled by the source beside the event, never an event field; handlers ask for it as the `Origin` parameter. See [events-and-handlers.md](events-and-handlers.md).
 
 **`Outcome`**: handler parameter with the final outcome; it lets an after handler also see denied events. See [events-and-handlers.md](events-and-handlers.md#follow-ups-and-cancel).
 
@@ -340,11 +362,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## P
 
+**Panel engine**: the engine next to the realm that holds each panel tab's session and runs its handlers and derives; the tab is a thin client. See [engines.md](engines.md#engine-communication).
+
 **`PaperPlayer`, `PaperProtagonist`**: the Paper engine's live object for a protagonist, implementing traits such as `Player` and `HasChat`. See [live-data.md](live-data.md#live-capability-traits).
 
 **`PaperPlayerFormulas`**: example engine implementation of a capability's formula function interface, checked for completeness by KSP. See [formula-language.md](formula-language.md#members-and-providers).
 
-**`papi(...)`**: PlaceholderAPI provider function, backed by a `Tick` mirror polled only where used. See [formula-language.md](formula-language.md#standard-library).
+**`PaperServer`**: the live trait of the `Engine` identity on Paper, as `PaperPlayer` is for a protagonist. See [panel-engine-communication.md](panel-engine-communication.md) question 10.
+
+**`papi(...)`**: PlaceholderAPI provider function, backed by a `Tick` mirror polled only where used. Takes `engine: Engine` as a context parameter. See [formula-language.md](formula-language.md#standard-library).
 
 **`PendingMigration`**: core resource storing a migration's creator inputs as `Var` values; unfinished inputs block publication. See [migrations.md](migrations.md#pendingmigration).
 
@@ -356,9 +382,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Portable expression**: the v1 panel operation encoding, unrelated to formulas and never reused by them. See [formula-language.md](formula-language.md).
 
-**`PortableKernel`**: the shared kernel the generated formula standard library calls through a mapping layer. See [formula-language.md](formula-language.md#standard-library).
+**Portable kernels**: the Kotlin and Dart implementations of `operations.yaml` that keep panel and realm expression results equal; formula stdlib providers may call the Kotlin ones as a library. See [formula-language.md](formula-language.md#standard-library).
 
-**Preview**: content mode that adds a `Simulating(mode)` stored value to the previewed step; handlers run for real unless they check it. See [interactions.md](interactions.md#preview-and-recording).
+**Preview**: adds a `Simulating(mode)` stored value to the previewed step; handlers run for real unless they check it. See [interactions.md](interactions.md#preview-and-recording).
+
+**`PrincipalId`**: an authenticated party, `kind` plus `id` (user, service, protagonist), derived from the transport credential. See [authoring-writes.md](authoring-writes.md#skir-sketch).
 
 **Priority (hold)**: the highest priority derive wins when several produce the same hold type, holder, and key; a tie is a check warning. See [interactions.md](interactions.md#priority).
 
@@ -367,6 +395,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`produces { }`**: `dynamic()` builder declaring the chain context records an entry adds for downstream entries. See [formula-language.md](formula-language.md#dynamic-what-content-means-to-the-type-system).
 
 **Protagonist**: the engine neutral person (a Minecraft player, also the panel user) that owns stored data; named `protagonist` in formulas. See [stored-data.md](stored-data.md#identity).
+
+**Protagonist subject**: `typewriter.protagonist.<id>`, subscribed by every engine holding a session of that protagonist; events about the protagonist go there and each engine runs the handlers it can. See [live-data.md](live-data.md#routing).
 
 **`ProtagonistJoined`**: core event fired on a protagonist's first session. See [live-data.md](live-data.md#session).
 
@@ -380,7 +410,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## Q
 
-**Query graph**: the realm's incremental computation of `dynamic()` and formula checks with early cutoff. See [formula-language.md](formula-language.md#query-graph).
+**Query graph**: the realm's incremental computation with early cutoff and the one tracked read mechanism for realm checks and searches (`dynamic()`, formula checks); stored reads are inputs too; it replaces `ReverseDependencyIndex`. See [formula-language.md](formula-language.md#query-graph) and [closed-beta-roadmap.md](closed-beta-roadmap.md).
 
 **Queue (clash)**: an incoming step waits until it can start, giving up through a formula, when its book stops applying, or when its interaction ends. See [interactions.md](interactions.md#clashes).
 
@@ -396,7 +426,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`RealmCheckProvider`**: the existing realm check interface through which core and extensions report findings. See [live-data.md](live-data.md#checks).
 
-**`Ref<E>`**: identity for any published entry. See [stored-data.md](stored-data.md#identity).
+**`Ref<E, T>`**: an authored relation to resource `T` through endpoint `E` of a `@ReferenceContract`; runtime values name the entry type directly instead (`npc: NpcEntry`). See [stored-data.md](stored-data.md#identity).
 
 **`Removed<T>`**: lifecycle event fired when a value is removed; for mirrors it cancels suspended handlers that resolved it. See [stored-data.md](stored-data.md#lifecycle-events).
 
@@ -406,7 +436,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`RichText`**: text type whose `template` provider (MiniMessage) comes from the Minecraft capability. See [formula-language.md](formula-language.md#text-templates).
 
-**Routing**: an event goes where a handler can run; realm owned data goes through the realm, live effects go straight to the session subject. See [live-data.md](live-data.md#routing).
+**Reported id**: an id type whose valid values only engines know (`World`, registry ids such as `BlockType`, extension ids such as `NexoItemId`); implements `ReportedId`, engines record their values in `KnownIds`, and one panel picker and one realm check serve every such type. See [panel-engine-communication.md](panel-engine-communication.md).
+
+**Routing**: an event goes where a handler can run; realm owned data goes through the realm; events and live effects about a protagonist go to its protagonist subject, and session subjects serve only targets that are one connection. See [live-data.md](live-data.md#routing).
 
 **`Runtime`**: a mutable local object on one server, never saved, with a creator lifetime; created by returning it from a handler. See [interactions.md](interactions.md#runtime-objects).
 
@@ -424,7 +456,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Session`**: identity for one connection of a protagonist, `Session(protagonist, id: SessionId)`. See [live-data.md](live-data.md#session).
 
-**Session stream**: NATS stream behind `typewriter.session.<id>`, keeping about 30 seconds so live effects survive a server move. See [live-data.md](live-data.md#nats-jetstream).
+**Session stream**: NATS stream behind `typewriter.protagonist.<id>` and `typewriter.session.<id>`, keeping about 30 seconds so events and live effects survive a server move. See [live-data.md](live-data.md#nats-jetstream).
+
+**Session subject**: `typewriter.session.<id>`, subscribed by the engine holding that session; used only for targets that are one connection, such as the tab that started a capture, and for event results. See [live-data.md](live-data.md#routing).
 
 **`SessionReporter`**: engine kind interface reporting session `connected` and `disconnected`. See [live-data.md](live-data.md#session).
 
@@ -446,7 +480,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Speaking`**: example step marker storing the dialogue entry and `startedAt`. See [stored-data.md](stored-data.md#kotlin-form).
 
-**Standard library**: formula providers generated from `operations.yaml` (`Int.plus`, `sumOf`, units, `format`). See [formula-language.md](formula-language.md#standard-library).
+**Standard library**: ordinary Kotlin formula providers (`Int.plus`, `sumOf`, units, `format`). See [formula-language.md](formula-language.md#standard-library).
 
 **`startStep(...)`**: starts a step with its marker values and its `onClash` and `onRejoin` rules. See [interactions.md](interactions.md#stepstate).
 
@@ -464,7 +498,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Stored derive**: a `@Derive` with a `Stored` result that keeps a saved value in sync; an equal result writes nothing. See [stored-data.md](stored-data.md#derive-with-a-stored-result).
 
-**Stored form**: what a `Var<T, C>` stores: `Value(value)` or `Formula(source, form: Expression | Template)`. See [formula-language.md](formula-language.md#stored-form).
+**Stored form**: what a `Var<T, C>` stores: `Value(value)` or `Formula(source, references)` (a template is stored as its string template expression), where each reference links a name in the text to its target resource. See [formula-language.md](formula-language.md#stored-form).
 
 **Subject**: the identity an event is about, usually a protagonist; chain events have a group. See [events-and-handlers.md](events-and-handlers.md#event).
 
@@ -490,7 +524,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Type checking**: local and bidirectional; the field pushes the expected type down and expressions infer up. See [formula-language.md](formula-language.md#type-checking).
 
-**`TypeDefinition`**: describes formula types; it has no id or revision. See [formula-language.md](formula-language.md#members-and-providers).
+**`TypeDefinition`**: describes a named type; its id is `declared` (Kotlin), `qualified` (builtins) or `content` (types declared by content), with a revision. Structural types have none. See [formula-language.md](formula-language.md#members-and-providers).
 
 **`TypeScope`**: formula context for type fields; pure values only, types in scope. See [formula-language.md](formula-language.md#formula-contexts).
 
@@ -505,6 +539,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 ## V
 
 **`ValueAdmission`**: the existing admission that flags stored values and instances that no longer fit their type. See [formula-language.md](formula-language.md#bind).
+
+**`value_location`**: the representation and `DataValue` variant for a place in authored content, the portable form of `BoundPath<T>`; named so it never reads as the Minecraft `Location`. See [panel-engine-communication.md](panel-engine-communication.md#emit-without-extension-code-in-the-panel-engine-2026-11-01).
 
 **`Var<T, C>`**: the one formula field kind; `T` decides what the text may be and `C` what it sees. See [formula-language.md](formula-language.md#vart-c-the-one-field-kind).
 

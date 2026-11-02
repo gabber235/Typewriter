@@ -14,13 +14,15 @@ Read `overview.md` first; it introduces the seven primitives and links to the re
 | [formula-language.md](formula-language.md) | Formulas, `Var<T, C>`, `dynamic()`, contexts, definitions, books, type checking |
 | [migrations.md](migrations.md) | Migration hook, pending migrations, the developer migrator, the 0.9 importer |
 | [minecraft-types.md](minecraft-types.md) | Minecraft value types: space (world, vectors, rotation, locations, positions) and items |
-| [engines.md](engines.md) | Bridges between Typewriter values and engine types; engine requests |
+| [engines.md](engines.md) | Bridges; engine communication summary |
+| [authoring-writes.md](authoring-writes.md) | How any client (panel, engine, MCP service) writes authored state: actor, generic SDK, generated helpers |
+| [panel-engine-communication.md](panel-engine-communication.md) | Panel and engine communication: scenarios, target choice, emit actions, engine reports, results |
 | [glossary.md](glossary.md) | Every type and term, one line each |
 | [closed-beta-roadmap.md](closed-beta-roadmap.md) | The stacked PR order toward the closed beta, with what each layer needs |
 
-The topic files describe the current design only. Each ends with its own Open list. The roadmap keeps the record format below.
+The topic files describe the current design only. Each ends with its own Open list. The roadmap and panel-engine-communication.md keep the record format below.
 
-The roadmap has four sections:
+Those records have four sections:
 
 - **Decided**: agreed with a maintainer; build on it.
 - **Unreviewed input**: research and agent output not yet reviewed; never treat it as a decision.

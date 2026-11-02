@@ -67,7 +67,7 @@ A derive is a pure function over tracked inputs. Its result type decides what th
 fun Speaking.show(...): DialogueHold
 
 @Derive
-fun AudienceEntry.inside(protagonist: Protagonist, parent: InAudience?, criterion: Formula<Boolean>): InAudience?
+fun AudienceEntry.inside(protagonist: Protagonist, parent: InAudience?, criterion: Boolean): InAudience?
 ```
 
 ## Runtime
@@ -85,7 +85,7 @@ See [live-data.md](live-data.md) for mirrors, sessions, and routing, and [intera
 
 ## Formula
 
-Formulas are a separate language from the v1 portable expressions, with their own interpreter in the engine core. A formula field is `Var<T, C>`: `T` decides what the text may be (a value, a function body, `Changes`), `C` is the context interface whose properties are in scope. Formulas stay pure; `Changes` are applied by the entry.
+Formulas are a separate language from the v1 portable expressions, with their own interpreter in the shared `formula` module. A formula field is `Var<T, C>`: `T` decides what the text may be (a value, a function body, `Changes`), `C` is the context interface whose properties become the context parameters of the formula's function type. Formulas stay pure; `Changes` are applied by the entry.
 
 ```kotlin
 val text: Var<RichText, MemberContext>
@@ -97,7 +97,7 @@ quest.coins += 50
 if (quest.coins > 100) quest.rank = gold
 ```
 
-Handlers read Kotlin declared formulas as `Formula<T>` parameters, always current. See [formula-language.md](formula-language.md).
+Handlers read a `Var` field of their receiver as a plain parameter with the field's name, always current. See [formula-language.md](formula-language.md).
 
 ## Chain
 
@@ -133,7 +133,7 @@ Interactions, steps, groups, and holds are covered in [interactions.md](interact
 | `Live` mirrors | The engine that produces them; `Indexed` ones are reported to the realm | No |
 | `Runtime` objects | One server | No |
 
-Engines meet only through stored state in the realm; interactions do not span engines. A server move is a leave and a rejoin.
+Engines share stored state only through the realm; live effects and events go directly between sessions ([live-data.md](live-data.md#routing)); interactions do not span engines. A server move is a leave and a rejoin.
 
 ## Open
 

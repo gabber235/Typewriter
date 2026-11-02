@@ -6,7 +6,7 @@ The seven primitives are summarized in [overview.md](overview.md). Stored values
 
 ## Event
 
-An event is a plain Kotlin type that says one thing happened. Extensions declare their own events in common code, next to their entries.
+An event is a plain Kotlin type that says one thing happened. Extensions declare their own events next to the types they use (common code, or the capability that owns those types). Every event is a Typewriter type, `@TypewriterType(id = ...)` like any value type, so it crosses engines as its catalog value and an engine with the class decodes it through its binding; every field must therefore be a Typewriter type, which KSP enforces.
 
 - **One event type per meaning.** What a particular delivery may do (decide, change, which thread it is on) is typed on the source, not on the event.
 - **Meaning decides how many events exist.** A change with a different effect at the packet than at the Paper event is two events: `ClientPosition` is a fake view on the wire, `PlayerMove` really moves the player. The same effect (`ArmSwing`) is one event: the first source starts the occurrence, the others join it. Nothing may rely on the packet arriving before the Paper event.
@@ -103,8 +103,9 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | A live capability trait (`HasChat`, `HasInventory`, `Living`) | The engine object for that identity; for a group subject, one per member. |
 | `All<T>` | Every value of type `T`. |
 | `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject. |
-| `Formula<T>` | A formula declared in Kotlin, always current ([formula-language.md](formula-language.md)). |
+| A plain value named like a `Var` field of the receiver | That field's current value, context filled from the subject; reruns on `FormulaChanged` ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
+| `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
 | `Snapshot<H>` | A hold's stored snapshot, readable and writable ([interactions.md](interactions.md)). |
 | `Demanded<X>` | The keys of mirror `X` demanded for this subject now ([live-data.md](live-data.md)). |
 
@@ -211,6 +212,29 @@ The triggers fire exactly once either way. Deny and start goes through a deny fo
 
 By default an after handler only sees allowed events. A handler that asks for an `Outcome` parameter also sees denied ones.
 
+An event emitted from a session reports its result back to that session once its after handlers finish: `Done`, `Denied(reason)`, `Failed(reason)` (an after handler ended with a typed failure, such as an edit that could not commit), or `NotHandled`. A deny verdict carries the typed reason, so permission checks and unavailability are deny handlers ([panel-engine-communication.md](panel-engine-communication.md)). An engine that lacks the event's exact `TypeDefinitionId` (type and revision) or cannot decode it answers `Failed(reason)`, never stays silent. `NotHandled` means no engine holding the subject's sessions has a handler for the event; every holder answers, also without a handler, so `NotHandled` does not wait for a timeout.
+
+Events have no sender field. Who caused an occurrence travels beside the event as its origin, filled by the source and never by the event: the panel engine fills it from the tab's session, Paper from its player. A client cannot fake it, because only engines publish to protagonist subjects. A handler that needs it asks for `Origin` and passes it on explicitly; nothing reads it implicitly.
+
+```kotlin
+@TypewriterType(id = CAPTURE_LOCATION_TYPE_ID)
+data class CaptureLocation(val player: Protagonist, val into: BoundPath<Location>) : Event
+
+@Handler
+fun CaptureLocation.capture(player: PaperPlayer, origin: Origin) {
+    realm.edit(scope = AuthoringScope.resources(listOf(into.location.resource)), initiatedBy = origin.principal) { into.set(player.location.fromPlatform()) }
+}
+```
+
+`player` is the event's only `Protagonist` field, so it is the subject and no roles are needed. On the wire (layer 4):
+
+```skir
+struct EventOrigin { session: SessionId = 0; principal: PrincipalId = 1; }
+struct EventDelivery { event: DataValue = 0; origin: EventOrigin? = 1; reply_to: string? = 2; }
+```
+
+A panel user is `PrincipalId("user", <user id>)`; a player is `PrincipalId("protagonist", <protagonist id>)`. The result (above) goes to `reply_to`, the origin session's subject.
+
 ### Threads
 
 There is no "main thread". Live access runs on the thread that owns the identity (protagonist, entity, region), so Folia style region threads work.
@@ -303,6 +327,7 @@ A command is three things at once: a hold (it exists for a player now, contribut
 A contribution is a data class whose `nodes` are built with a small data DSL: `literal`, `argument`, `runs<Event>()`. A node that can run names a typed event whose fields are filled from the path arguments by name; KSP checks this on every path.
 
 ```kotlin
+@TypewriterType(id = CLAIM_REWARD_TYPE_ID)
 data class ClaimReward(val amount: Int) : Event
 
 // inside a contribution

@@ -96,7 +96,7 @@ Every formula field is `Var<T, CONTEXT>`: `T` is the value type, `CONTEXT` is wh
 | `T` | Text | Example |
 | --- | --- | --- |
 | A plain type | An expression | `protagonist.level * 10` |
-| A function type | The **body**; parameters are in scope. A constant ignores them | `reward: (protagonist: Player) -> Int`: Riverside `50`, Hilltop `protagonist.level * 10` |
+| A function type | The **body**; parameters are in scope. A constant ignores them | `reward: context(protagonist: Player) () -> Int`: Riverside `50`, Hilltop `protagonist.level * 10` |
 | `Changes` | Several lines of changes, run in order | `quest.coins += 50` then `if (quest.coins > 100) quest.rank = gold` |
 | `Type` | A type | `(protagonist: Player, town: Town) -> Int` |
 
@@ -188,7 +188,7 @@ There is no special error mechanism. A value that can be one of several things i
 ```
 blacksmith.location      Spawned(position) or NotSpawned(npc)
 
-when (val loc = blacksmith.location) {
+when (let loc = blacksmith.location) {
   is Spawned    -> loc.position.distance(protagonist.location) < 20
   is NotSpawned -> false
 }
@@ -254,7 +254,7 @@ Kotlin is the base, with additions that make content formulas short and safe:
 
 ```
 protagonist.level > 10 ? "Hero" : "Novice"                    ternary; if and when are expressions too
-if (let quest = protagonist.active_quest) quest.name else "No quest"
+if let quest = protagonist.active_quest { quest.name } else { "No quest" }
 when (reward) { is Money(amount) if amount > 100 -> "Big payday"; is Item(item) -> item.name }
 members.filter(.is_veteran).sumOf(.coins)                      member shorthand
 town in [riverside, hilltop]                                   collection literals
@@ -307,7 +307,7 @@ Creators define their own types with a definition whose type is `Type`: `Definit
 
 ### Live formula values
 
-Seeing the value of a formula **right now for a specific protagonist**, in the panel. Needs communication between the panel and engines, and knowing which panel account belongs to which Minecraft account. The same system is needed when content capture is redone (see [panel.md](panel.md)).
+Seeing the value of a formula **right now for a specific protagonist**, in the panel. Needs communication between the panel and engines, and a chosen target protagonist. The same system is needed when content capture is redone (see [panel.md](panel.md)).
 
 Far future, only if needed for speed: compile formulas to bytecode, or JIT. Not in the closed beta, probably not in any beta.
 

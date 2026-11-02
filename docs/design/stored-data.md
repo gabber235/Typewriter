@@ -14,7 +14,8 @@ An identity is something stored data can be about. Identities are the only types
 | `Step` | One running step of an interaction. |
 | `Interaction` | The running group of steps (see [interactions.md](interactions.md)). |
 | `Session` | One connection of a protagonist (see [live-data.md](live-data.md)). |
-| `Ref<E>` | Any published entry. |
+| `Engine` | One engine, by its stable topology engine id; survives restarts and ends when the engine leaves the topology (see [live-data.md](live-data.md#session)). |
+| An entry type (`NpcEntry`) | A published entry: a `Resource` typed field in a runtime value (stored data, holds, live values, events) is that entry's identity, stored as its `ResourceId`, read as the current published version, and ended when the entry is unpublished. Authored fields keep `Ref<Contract.Side, T>`; KSP rejects a `Resource` typed field in an authored type. |
 | `ItemRef<X>` | One item of a list field inside an entry, by v1 `ItemId`. Ends when the item is removed. |
 | Group identity | A (group entry, key) pair such as `Group(islands, "42")`. Each group entry exports its own identity type through `bind` (`islands` gives `Island`). |
 | Book instance | One instance of a book (see [formula-language.md](formula-language.md)). |
@@ -51,7 +52,7 @@ In extension code a stored value is a Kotlin type with `@Key` fields. KSP splits
 // About one protagonist and one NPC entry.
 data class Reputation(
     @Key val protagonist: Protagonist,
-    @Key val npc: Ref<NpcEntry>,
+    @Key val npc: NpcEntry,
     val value: Int,
 ) : Stored
 
@@ -62,7 +63,7 @@ data class Friendship(@Key val pair: Set<Protagonist>, val level: Int) : Stored
 data class Debt(@Key val from: Protagonist, @Key val to: Protagonist, val amount: Int) : Stored
 
 // The marker of a running step: stores a moment, not progress.
-data class Speaking(@Key val step: Step, val entry: Ref<DialogueEntry>, val startedAt: Instant) : Stored
+data class Speaking(@Key val step: Step, val entry: DialogueEntry, val startedAt: Instant) : Stored
 ```
 
 Developer defined stored types are Typewriter types (`@TypewriterType` with an id and a revision), because they are persisted. The migrator converts their data between revisions (see [migrations.md](migrations.md)).
@@ -121,7 +122,7 @@ Stored values are indexed per type, so finding every value of a type, or every v
 
 The guideline is **store moments, not counters**: `startedAt`, `skippedAt`. Steps then rarely write, and a restarted step is a real resume.
 
-Stored values of a running step are local on the interaction's home engine, which is their single writer. They are saved to the realm at checkpoints: server move, step end, and every few seconds. All other stored data is owned by the realm. Engines subscribe to the stored keys they currently demand and receive `Changed<X>` pushes in commit order per identity (see [live-data.md](live-data.md) for routing).
+Stored values of a running step are local on the interaction's home engine, which is their single writer (open: home engine per interaction or a lease per session, settled by layer 3). They are saved to the realm at checkpoints: server move, step end, and every few seconds. All other stored data is owned by the realm. Engines subscribe to the stored keys they currently demand and receive `Changed<X>` pushes in commit order per identity (see [live-data.md](live-data.md) for routing).
 
 Stored data and `Due` are never put on NATS streams: they need transactions and exactly once delivery, which the realm owns.
 
@@ -206,7 +207,7 @@ Examples a creator might declare:
 | Name | Keys | Type | Default |
 | --- | --- | --- | --- |
 | `coins` | `protagonist: Protagonist` | `Int` | `0` |
-| `mood` | `npc: Ref<NpcEntry>`, `protagonist: Protagonist` | `Mood` | `Neutral` |
+| `mood` | `npc: NpcEntry`, `protagonist: Protagonist` | `Mood` | `Neutral` |
 | `island_bank` | `island: Island` | `Int` | `0` |
 
 Variables are for data. Anything computed is a formula function instead: `protagonist.inventory.count(item)` needs no variable.
@@ -343,3 +344,5 @@ Errors block publication; warnings never do.
 - Key fields that are records: whether a key may be a record whose fields are all identities. `Due<E>(@Key event: E, at)` relies on it to satisfy the key rule.
 - Book instance identity: whether an instance is the identity (book, key), the same shape as groups, so that renaming an instance key creates a new instance and the book's migration moves its data.
 - Variables: the direction is adopted, but details such as the variable editor are still in progress.
+- Applying a single `Change` from Kotlin handler code (`knownIds(engine, type).append(id).apply()`, starting a mode); the design shows `apply()` only on `Changes` returned by an entry field (layer 6, [closed-beta-roadmap.md](closed-beta-roadmap.md)).
+- Stored reads as query graph inputs (type plus partial key), so a stored commit reruns the realm checks and searches that read it (layer 6, [closed-beta-roadmap.md](closed-beta-roadmap.md)).

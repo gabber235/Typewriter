@@ -125,8 +125,8 @@ When a type's revision changes, the migrator is the same step as a content migra
 
 Types without a revision never migrate this way:
 
-- Derived types (a book's `V`, id is resource id plus parameter name) are rebuilt by `dynamic()`; `ValueAdmission` flags instances that no longer fit.
-- Formula types described with `TypeDefinition` have no id or revision.
+- Types declared by content (`content(at)` ids, revision 1: creator types, inline types, a book's `V`) change through publication and content migrations; `dynamic()` rebuilds them and `ValueAdmission` flags values that no longer fit.
+- Function types are structural and have no id.
 
 ## Importer for 0.9
 

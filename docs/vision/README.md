@@ -1,6 +1,6 @@
 # Typewriter product vision
 
-A living map of what Typewriter is, who it serves, why it exists, and where it is going, from the first milestone to things we want someday. It records product intent, not designs or implementation. Design documents (for example `docs/event-system/`) should check their assumptions against this map.
+A living map of what Typewriter is, who it serves, why it exists, and where it is going, from the first milestone to things we want someday. It records product intent, not designs or implementation. Design documents (for example `docs/design/`) should check their assumptions against this map.
 
 ## What Typewriter is
 
@@ -46,6 +46,8 @@ A milestone is a bundle of features.
 
 A trailing `?` on a horizon means it is not confirmed yet.
 
+Design records use milestones instead ([closed-beta-roadmap.md](../design/closed-beta-roadmap.md)): closed beta is alpha, closed beta (not at the start) is beta, later is after, and someday is someday.
+
 **Maturity** (how settled the intent is, not how far implementation is):
 
 | Mark | Meaning |
@@ -61,7 +63,7 @@ A trailing `?` on a horizon means it is not confirmed yet.
 | Term | Meaning |
 | --- | --- |
 | Typewriter Cloud | What the Typewriter team hosts: backend, web panel |
-| Realm | Runs on the server owner's hardware; owns content, state, and the gateway to engines |
+| Realm | Runs on the server owner's hardware; owns content and state |
 | Engine | Executes published content in a concrete runtime (Paper, the panel) |
 | Host | A process that runs a realm, engines, or both |
 | Capability | A complete set of behaviour an engine implements and extensions target. Only core defines capabilities |
@@ -75,7 +77,7 @@ A trailing `?` on a horizon means it is not confirmed yet.
 | Context | Everything a formula can use: the protagonist, the book, `minecraft`, and more. Not one single type |
 | Field types | `Var<T, CONTEXT>` (a value or a formula) and `Formula` (always a formula, with a declared signature) |
 | Identity | Anything clearly identifiable that data can belong to (protagonist, group, NPC, book instance) |
-| Protagonist | A player |
+| Protagonist | A player (also the panel user) |
 | Development realm | A realm for building and trying content; full editing and history |
 | Production realm | A realm that runs compiled revisions of content; no editing, easy rollback |
 | Configuration | A typed, overridable set of settings that replaces legacy snippets |

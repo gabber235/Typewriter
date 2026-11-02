@@ -97,7 +97,7 @@ A one shot handler parameter pulls once (seeding if missing) and does not subscr
 ```kotlin
 data class InRegion(
     @Key val protagonist: Protagonist,
-    @Key val region: Ref<RegionEntry>,
+    @Key val region: RegionEntry,
 ) : Live
 
 @Handler
@@ -144,7 +144,7 @@ A parameter is a key, and a key is an identity. Content configuration is an entr
 ```kotlin
 data class NearbyNpcs(
     @Key val protagonist: Protagonist,
-    @Key val trigger: Ref<NearbyTriggerEntry>,
+    @Key val trigger: NearbyTriggerEntry,
     val npcs: List<Npc>,
 ) : Live
 ```
@@ -163,7 +163,7 @@ A stored derive that reads a mirror keeps its last result when the input vanishe
 
 ## Formula changes
 
-Formulas read mirrors like any other input. On the engine, evaluation records its reads, as the realm does, and each read kind has a change signal:
+Formulas read mirrors like any other input. On the engine, evaluation records its reads in the same `TrackedGraph` the realm uses ([formula-language.md](formula-language.md#interpreter)); each read kind has a change signal that sets the matching input, and observers on watched formulas fire `FormulaChanged`:
 
 | Read | Change signal |
 | --- | --- |
@@ -174,7 +174,7 @@ Formulas read mirrors like any other input. On the engine, evaluation records it
 
 `FormulaChanged<T>(entry, subject, old, new)` is the event for a watched formula whose result changed. A condition becoming true is the Boolean case. A trigger can fire whenever a formula's output changes and receives the old and new value. A reaction when a variable crosses a line is an event entry on `Changed<Variable>` or `FormulaChanged`, not a variable reaction. Formulas themselves are in [formula-language.md](formula-language.md).
 
-PlaceholderAPI is a provider function (`papi("player_level")`) backed by a `Tick` mirror that is polled only where a formula uses it.
+PlaceholderAPI is a provider function (`context(engine: Engine) fun papi(name: String)`) backed by a `Tick` mirror that is polled only where a formula uses it.
 
 ## Audiences
 
@@ -183,14 +183,14 @@ Audience entries stay their own entry system with the same visible behaviour as 
 ```kotlin
 data class InAudience(
     @Key val protagonist: Protagonist,
-    @Key val node: Ref<AudienceEntry>,
+    @Key val node: AudienceEntry,
 ) : Live, Indexed
 
 @Derive
 fun AudienceEntry.inside(
     protagonist: Protagonist,
     parent: InAudience?,
-    criterion: Formula<Boolean>,
+    criterion: Boolean,
 ): InAudience? = ...
 ```
 
@@ -203,6 +203,8 @@ Enter and exit triggers come from `TriggerAudienceEntry(onEnter, onExit, fireOnJ
 Displays derive from membership: a `SidebarHold` is derived from `InAudience`, and its text updates through `FormulaChanged<SidebarText>`. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md)).
 
 ### Indexed
+
+Being replaced (2026-11-01, [panel-engine-communication.md](panel-engine-communication.md) question 14): demand crosses engines, so a reader anywhere creates the demand that publishes a mirror; the marker below goes away once that shape is settled.
 
 `Indexed` marks a `Live` type whose `Added` and `Removed` the engine reports to the realm. The realm keeps an online index for the session, which powers the panel ("who is in spawn"), network counts, and formula readers such as `spawn_audience.players`.
 
@@ -220,14 +222,16 @@ interface SessionReporter {
 | Engine kind | Session id | Survives |
 | --- | --- | --- |
 | Minecraft | proxy connection id | server moves |
-| Panel | per tab id kept in sessionStorage | reloads; each tab is its own session |
+| Panel | per tab id kept in sessionStorage | reloads; each tab is its own session, held by the panel engine (grace 45 s) |
 | Future engines | defined by the engine | engine specific |
 
 - A protagonist may have several sessions at once (tabs, Minecraft plus panel).
 - A session ends when no engine reports its id for longer than a grace set per engine kind (about 10 seconds for Minecraft).
 - A protagonist is online while it has at least one session. `ProtagonistJoined` fires on the first session, its counterpart on the last.
 - Values keyed by a session are removed when it ends.
-- The single writer lease is per session. Mirrors live on the engine that produces them.
+- Open, settled by layer 3 ([closed-beta-roadmap.md](closed-beta-roadmap.md)): whether the single writer lease is per session or a home engine per interaction. Mirrors live on the engine that produces them.
+
+`Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology engine id, so the identity survives restarts and ends only when the engine leaves the topology. The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
 
 ## Engines and traits
 
@@ -236,7 +240,7 @@ An engine runs published content through extensions ([../vision/engines.md](../v
 - `Tick` is a capability, not core.
 - Tracked inputs for formulas and derives are an extensible set of sources (the panel engine tracks draft content).
 - Hold lifecycle runs per live connection of the holder (a Minecraft session, a browser tab), not per server.
-- Engines meet only through stored state in the realm; interactions do not span engines.
+- Engines share stored state only through the realm; live effects and events go directly between sessions (see Routing); interactions do not span engines.
 
 ### Live capability traits
 
@@ -264,10 +268,10 @@ What the realm owns goes through the realm:
 - stored commits
 - `Changed<X>` pushes (engines subscribe to the stored keys they currently demand)
 - `Due` deliveries ([stored-data.md](stored-data.md))
-- `Indexed` reports
-- session reports
 
-Live effects for a protagonist on another engine go directly to that session. The engine holding a session subscribes to its NATS subject `typewriter.session.<id>`, so senders need no routing table and a server move keeps the address.
+Engines write the `sessions` KV themselves (see NATS JetStream). `Indexed` is being replaced ([panel-engine-communication.md](panel-engine-communication.md) question 14).
+
+Events and live effects for a protagonist go to its protagonist subject `typewriter.protagonist.<id>`. Every engine holding a session of that protagonist subscribes to it and runs the handlers it can; the sender needs only the protagonist id, so there is no routing table and a server move keeps the address. A target that is one connection (the tab that started a capture) uses the session subject `typewriter.session.<id>`, which the engine holding that session subscribes to.
 
 - Order is per identity, in commit order.
 - No events are queued for offline protagonists.
@@ -280,8 +284,8 @@ Short lived data lives on NATS JetStream. This needs NATS 2.11 or newer with Jet
 | Resource | Content | Behaviour |
 | --- | --- | --- |
 | `sessions` KV bucket | one key per session | refreshed by the holding engine with a TTL equal to the grace; an expired key ends the session, so a crashed engine's sessions end on their own and the realm keeps no grace timers |
-| session stream | backs each `typewriter.session.<id>` subject, about 30 seconds | after a server move the new engine continues where the session stopped, so live effects sent in the move gap are not lost |
-| `Indexed` KV bucket per type | keys `<protagonist>.<node>` | refreshed on change, expiring when the engine dies; watched by the panel and engines, so the online index survives realm restarts and outages |
+| session stream | backs each `typewriter.protagonist.<id>` and `typewriter.session.<id>` subject, about 30 seconds | after a server move the new engine continues where the old one stopped, so events and live effects sent in the move gap are not lost |
+| `Indexed` KV bucket per type (being replaced, question 14) | keys `<protagonist>.<node>` | refreshed on change, expiring when the engine dies; watched by the panel and engines, so the online index survives realm restarts and outages |
 
 Not on streams: stored data and `Due` (transactions, exactly once, realm owned) and mirrors that are not `Indexed`.
 
@@ -294,7 +298,7 @@ Content is a tracked input. Publishing new content reruns whatever read it; ther
 - An identity defined by an entry ends when that entry is removed, and with it every value keyed by it.
 
 ```kotlin
-data class Speaking(@Key val step: Step, val entry: Ref<DialogueEntry>, val startedAt: Instant) : Stored
+data class Speaking(@Key val step: Step, val entry: DialogueEntry, val startedAt: Instant) : Stored
 
 @Derive
 fun Speaking.show(...): DialogueHold = ...
@@ -342,6 +346,7 @@ All checks form one list. Errors block publication; warnings and info never bloc
 | error | derive cycles |
 | error | unfinished migration inputs |
 | error | failing migration dry runs |
+| warning or error | a `ReportedId` value no engine reports (`KnownIds`): a warning while no engine has reported the type, an error once one has |
 | warning | tied allow and deny priorities |
 | warning | tied hold priorities for the same hold type, holder, and key |
 | warning | live handlers on `Changed<X>` when X can change offline |
@@ -352,3 +357,4 @@ All checks form one list. Errors block publication; warnings and info never bloc
 ## Open
 
 - How the legacy quest item audience (`QuestItemAudienceEntry`) maps onto `InAudience` and holds.
+- The shape of demand that crosses engines, replacing `Indexed` (direction settled, [panel-engine-communication.md](panel-engine-communication.md) question 14; layer 8).

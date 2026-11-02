@@ -11,8 +11,8 @@ Typewriter Cloud (hosted by the Typewriter team)
         v
 Realm (server owner's hardware)        one per installation
   manages content
-  synchronizes content and state between engines
-  gateway between the panel and engines
+  synchronizes content and stored state between engines
+  (live effects and events go directly between engines)
         |
         v
 Engines (Paper engine, panel engine, ...)
@@ -24,7 +24,7 @@ Host: a process that runs a realm, engines, or both
 | Part | Runs where | Responsibility |
 | --- | --- | --- |
 | Typewriter Cloud | Typewriter team | Official backend and the hosted web panel |
-| Realm | Server owner's hardware (hosting company or VPS) | Owns content, synchronizes content and state between engines, gateway between panel and engines |
+| Realm | Server owner's hardware (hosting company or VPS) | Owns content, synchronizes content and stored state between engines; live effects and events go directly between engines |
 | Engine | A Minecraft server or another runtime | Takes published content as configuration and enacts it, using extensions |
 | Host | Server owner's hardware | Runs a realm, engines, or both. Host types differ in what they can run |
 
@@ -49,7 +49,7 @@ A realm runs in **development** or **production** mode (see [realm-modes.md](rea
 
 ## Who it serves
 
-Server owners run realms and hosts. Content creators reach engines through the panel and realm. Protagonists only see engines.
+Server owners run realms and hosts. Content creators reach engines through the panel and the panel engine; stored state goes through the realm. Protagonists only see engines.
 
 ## Why
 
@@ -60,7 +60,7 @@ Separating content ownership (realm) from execution (engines) lets one set of co
 | Item | Horizon | Maturity |
 | --- | --- | --- |
 | Cloud, realm, engine, host split | closed beta | shaped |
-| Realm synchronizes state between engines | closed beta | shaped |
+| Realm synchronizes stored state between engines | closed beta | shaped |
 | Panel as desktop apps (see [panel.md](panel.md)) | later | wish |
 | Panel as mobile apps (see [panel.md](panel.md)) | someday | wish |
 | Renting a realm hosted by the Typewriter team (far future) | someday | wish |

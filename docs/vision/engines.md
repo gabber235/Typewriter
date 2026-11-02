@@ -57,10 +57,12 @@ Capabilities decouple extensions from a specific runtime, so content and extensi
 | Capabilities, complete implementation rule | closed beta | shaped |
 | Capabilities defined only by core; small ones plus bundles | closed beta | shaped |
 | Optional capability use with fallback | closed beta | shaped |
-| Same book on several engine types at once | someday | shaped |
+| Several engines and engine kinds on one realm (Paper and the panel engine) | closed beta | shaped |
+| Same book on engines for several games at once (Minecraft and a non Minecraft game) | someday | shaped |
 | Version dependent features as capabilities; catalog filtered per book | closed beta | shaped |
 | Paper engine | closed beta | shaped |
-| Panel engine (not a closed beta priority) | later | sketch |
+| Panel engine: sessions and actions for panel users | closed beta | shaped |
+| Panel engine tutorials | later | sketch |
 | Other Minecraft engines (Fabric, Minestom) | someday | wish |
 | Hytale engine | someday | wish |
 

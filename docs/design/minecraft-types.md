@@ -1,6 +1,6 @@
 # Minecraft value types
 
-Value types that Minecraft capabilities and Paper extensions use in entry fields, formulas, and stored data. They live under the Minecraft capability; core primitives never depend on them (see [overview.md](overview.md)). Build order: layer 4 in [closed-beta-roadmap.md](closed-beta-roadmap.md).
+Value types that Minecraft capabilities and Paper extensions use in entry fields, formulas, and stored data. They live under the Minecraft capability; core primitives never depend on them (see [overview.md](overview.md)). Build order: layer 10 in [closed-beta-roadmap.md](closed-beta-roadmap.md).
 
 ## Type identity
 
@@ -28,10 +28,10 @@ A combination without a real use (world + rotation) gets no type until something
 @JvmInline
 @Serializable
 @TypewriterType(id = WORLD_TYPE_ID)
-value class World(val key: String) // "minecraft:overworld", "myserver:arena"
+value class World(override val key: String) : ReportedId // "minecraft:overworld", "myserver:arena"
 ```
 
-A world is identified by its namespaced key (Paper `World.getKey()`), not by UUID or name. A UUID changes when a world is copied to another server, which breaks templates and multi server setups; a key is stable and readable. A reference to a key that no engine reports is a publication check diagnostic. The panel edits a world through a picker of the worlds the engines report.
+A world is identified by its namespaced key (Paper `World.getKey()`), not by UUID or name. A UUID changes when a world is copied to another server, which breaks templates and multi server setups; a key is stable and readable. `World` is a `ReportedId` ([panel-engine-communication.md](panel-engine-communication.md) question 10b): engines record the worlds they have in `KnownIds`, a reference to a key that no engine reports is a publication check diagnostic, and the panel edits it with the shared reported id picker.
 
 ### Part interfaces
 
@@ -127,7 +127,7 @@ spawn.copy(y = 64).add(z = 2)
 
 ### Panel
 
-Each exact type has its own editor showing exactly its parts. Capture (layer 13) fills exactly those parts from the player; teleport to a `Location` keeps the player's current facing.
+Each exact type has its own editor showing exactly its parts. Capture (layer 10, with the types) fills exactly those parts from the player; teleport to a `Location` (layer 25, with highlights) keeps the player's current facing.
 
 ## Items
 
@@ -148,7 +148,7 @@ data class MinecraftItem(
 ) : Item
 
 // Nexo extension: Nexo owns the item's look and behavior
-data class NexoItem(val id: NexoId, override val amount: Int = 1) : Item
+data class NexoItem(val id: NexoItemId, override val amount: Int = 1) : Item
 ```
 
 A real stack read from the game comes back in its most specific form (see [engines.md](engines.md#bridges)), so `it is NexoItem && it.id == ruby` works in match formulas. Legacy `SerializedItem` (Bukkit bytes) does not exist: everything an item carries is a typed component, and anything that cannot be represented is dropped on capture with a panel notice.
@@ -192,7 +192,7 @@ protagonist.inventory.count { it.is_like(reward_item) } >= 5
 
 ## Types still to design
 
-Inventory of Minecraft values that need their own typed value in entry fields, formulas, stored data, or events, including ones legacy never had. Each row is designed later; this list fixes only the name and the reason. **(R)** marks a registry id: valid values are data driven per server and version, so the engines report them and the panel picks from that report. Legacy is `origin/develop` (`engine/`, `extensions/`).
+Inventory of Minecraft values that need their own typed value in entry fields, formulas, stored data, or events, including ones legacy never had. Each row is designed later; this list fixes only the name and the reason. **(R)** marks a registry id: valid values are data driven per server and version, so the type is a `ReportedId` (engines record values in `KnownIds`; one shared picker and check). Legacy is `origin/develop` (`engine/`, `extensions/`).
 
 ### Registry ids
 
@@ -314,7 +314,6 @@ Inventory of Minecraft values that need their own typed value in entry fields, f
 | --- | --- | --- | --- | --- |
 | `NamespacedKey` | generic `namespace:path` | data container keys, custom ids | which registry it points to | yes |
 | `CronSchedule` | calendar schedule | daily quests, resets | time zones | yes (`CronExpression`) |
-| `Server` | server id in a network | cross server teleport | network topology | no |
 | `ResourcePack` | pack url, hash, prompt | send a pack | hash and per player status | no |
 
 ## Requirements on other layers
@@ -323,6 +322,6 @@ Inventory of Minecraft values that need their own typed value in entry fields, f
 
 ## Open
 
-- Verify in layer 4 that Kotlin overload resolution picks the world aware `distance` for `Location` and `Position` over `Vector.distance`; if not, the worldless version gets its own name.
+- Verify in layer 10 that Kotlin overload resolution picks the world aware `distance` for `Location` and `Position` over `Vector.distance`; if not, the worldless version gets its own name.
 - The full component list (every settable Minecraft data component as a component type).
-- Registry ids (sound, particle, material, entity type, potion effect) and sounds are not designed yet.
+- Registry ids (sound, particle, material, entity type, potion effect) and sounds: their value shapes and per id extras are not designed yet. Validity, the picker, and the check are decided: `ReportedId` and `KnownIds` ([panel-engine-communication.md](panel-engine-communication.md) question 10).

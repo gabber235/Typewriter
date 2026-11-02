@@ -2,7 +2,7 @@
 
 How formulas work: the field kind that holds them, how content tells the type system what it means, which names a formula can see, how formulas are checked while a creator types, and how and where they run.
 
-Formulas are their own language with their own interpreter in the engine core. They are not the v1 portable expressions. Portable expressions encode operations the panel must perform; they have no roots, no members on types, and no per field context. Formulas never reuse the expression AST (`ExpressionNode`) or `PortableExpressionChecker`.
+Formulas are their own language with their own interpreter in the shared `formula` module. They are not the v1 portable expressions. Portable expressions encode operations the panel must perform; they have no roots, no members on types, and no per field context. Formulas never reuse the expression AST (`ExpressionNode`) or `PortableExpressionChecker`.
 
 The product intent and full syntax tour live in [../vision/formulas.md](../vision/formulas.md). The primitives this builds on are in [overview.md](overview.md).
 
@@ -11,7 +11,7 @@ The product intent and full syntax tour live in [../vision/formulas.md](../visio
 A formula is built from three ideas:
 
 - **Types**: every value has a catalog type.
-- **Functions**: members and operators are plain functions. Their parameters are filled explicitly or from scope by type, with the same rule as handler parameters.
+- **Functions**: members and operators are plain functions. Context parameters are filled from scope by type (the same rule as handler parameters) or explicitly; normal parameters are always passed.
 - **Scope**: typed named values. Lambdas and blocks stack more levels on top.
 
 Sugar keeps formulas short: nothing in scope needs a prefix, and a call needs no parentheses when nothing is left to pass.
@@ -24,14 +24,14 @@ Formulas are side effect free. Conditions, text, verdicts and derives are pure. 
 
 ## The Formula primitive in Kotlin
 
-Extensions declare formulas in Kotlin; inputs may be stored values or other formulas. There is no separate derived value concept. A handler or derive reads a formula as a `Formula<T>` parameter and always sees the current value.
+Kotlin formulas are provider functions ([Standard library](#standard-library)); there is no separate derived value concept. A handler or derive reads a `Var` field of its receiver as a plain parameter with the field's name and value type: it receives the field's current value, with the formula context filled from the handler's subject and parameters, and reruns when `FormulaChanged` fires for it. KSP rejects such a parameter when no receiver field matches its name and type, so a rename is a build error.
 
 ```kotlin
 @Derive
 fun AudienceEntry.inside(
     protagonist: Protagonist,
     parent: InAudience?,
-    criterion: Formula<Boolean>,
+    criterion: Boolean,
 ): InAudience? = ...
 ```
 
@@ -46,7 +46,7 @@ Every formula field on an entry or resource is `Var<T, C>`. `T` is the value typ
 data class GiveCoinsActionEntry(
     val amount: Var<Int, MemberContext>,
     val message: Var<RichText, MemberContext>,
-    override val triggers: List<Ref<Entry>>,
+    override val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
     override val changes: Var<Changes, InteractionContext>,
 ) : ActionEntry, Triggerable
 ```
@@ -64,28 +64,67 @@ Each field has a plain mode (the normal editor for `T`) and a formula mode (text
 
 ### Stored form
 
-A `Var<T, C>` stores one of two forms:
+A formula is a function value: a formula for `Var<Int, MemberContext>` has type `context(group: Group, chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int`. A formula context `C` is the context parameters of that function type. `Var`, `Formula` and `FormulaReference` are ordinary declared types in `typewriter-contracts`, next to `Icon` and `Color`:
 
-```
-Value(value)
-Formula(source, form: Expression | Template)
+```kotlin
+@TypewriterType(id = FORMULA_TYPE_ID)
+data class Formula(
+    val source: String,
+    val references: List<FormulaReference>,
+)
+
+@TypewriterType(id = FORMULA_REFERENCE_TYPE_ID)
+data class FormulaReference(
+    val at: TextRange,
+    val target: Ref<FormulaReferences.Source, Resource>,
+)
+
+@TypewriterType(id = VAR_TYPE_ID)
+sealed interface Var<T, F> {
+    data class Value<T, F>(val value: T) : Var<T, F>
+    data class Computed<T, F>(val formula: F) : Var<T, F>
+}
 ```
 
-When `T` has a `template` provider (see [Text templates](#text-templates)), its plain editor is a template editor that stores `Formula(source, Template)`, where `source` is the template body without quotes.
+- Every function type is stored as a `Formula` record: the checked catalog resolves `TypeUse.function` to `Formula`'s schema, while the function type stays the type used for checking. Names in `source` resolve against where the value sits, so no captured values are stored.
+- `Var<T, F>` is an existing union (abstract record plus `parents`), so the plain and formula toggle is picking a concrete form (`concreteForms`), the stored form is `NamedValue.actual_type`, and Kotlin decodes it like any sealed type. A plain value nests one level: `Var.Value { value: 50 }`.
+- KSP lowers the Kotlin context slot: `Var<Int, MemberContext>` becomes `Var<Int, context(group: Group, chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int>`, and `Var<Int>` becomes `Var<Int, () -> Int>`. This is one converter rule, next to the one for `Ref`.
+- Pure only contexts (`PublishScope`, `TypeScope`) provide no context parameters and lower to `() -> T`. Only context parameters reach stored or live data, so a function type without context is pure by construction (see [Where formulas run](#where-formulas-run)).
+- A function typed `T` needs no special case: `Var.Value.value` is already a `Formula`.
+
+When `T` has a `template` provider (see [Text templates](#text-templates)), its plain editor is a template editor that stores `Var.Computed` whose `source` is the string template expression it means (`"Hello ${protagonist.name}"`); the editor shows the body without quotes and adds quotes and escaping on save. A formula stores no editor mode: the panel opens the template editor whenever `T` has a `template` provider and `source` is exactly one string template literal.
 
 ### Function typed fields
 
-Function types are a catalog type, `FunctionTypeTemplate { parameters: [name, type], result }`, with any number of named parameters, named and default arguments, and an optional receiver. The receiver becomes a scope level inside the body.
+Function types are a structural catalog type with no id:
+
+```
+struct FunctionParameterTemplate { name: string = 0; type: TypeTemplate = 1; }
+struct FunctionTypeTemplate {
+  context: [FunctionParameterTemplate|name] = 0;
+  parameters: [FunctionParameterTemplate|name] = 1;
+  result: TypeTemplate = 2;
+}
+// TypeTemplate.function = 5; TypeUse.function = 4 holds the same shape over TypeUse
+```
+
+- **Context** parameters fill from scope by type, innermost scope level first; two candidates on one level is an error. They can also be passed by name. A dot call fills the first one: `player.health` is `health(player)`.
+- **Normal** parameters are passed explicitly, by position or name, so `bonus` with `level: Int` never picks up an unrelated `Int` from scope.
+- Both are in scope in the body by name. A body has no member scope: it writes `protagonist.quests_done`, not `quests_done`.
+- Function types carry no default arguments; defaults stay on declared functions.
+- Written as `context(protagonist: Protagonist) (level: Int) -> Int`; without context it is `(level: Int) -> Int`.
+
+Kotlin maps onto this: an extension receiver is the first context parameter (KSP names it from its type, like `@Key` fields), `context(...)` parameters follow, and normal parameters stay normal. Generated Kotlin goes the other way: the first context parameter becomes the receiver. Handler parameters and stored reader keys are context parameters.
 
 A book variable of function type lets each instance supply a constant or a formula:
 
 ```
-reward: (protagonist: Protagonist) -> Int
+reward: context(protagonist: Protagonist) () -> Int
 // instance A: 12
 // instance B: protagonist.level * 10
 ```
 
-The book then reads `book.reward`. Dot calls fill the first parameter for every function: `energy.current` is `current(energy)`.
+The book then reads `book.reward`. Dot calls fill the first context parameter: `energy.current` is `current(energy)`.
 
 ### Type fields
 
@@ -95,6 +134,39 @@ A field holding a type is `Var<Type, TypeScope>`. Plain mode is a type picker: s
 (protagonist: Protagonist, town: Town) -> Int
 Map<Ref<Npc>, Mood>?
 ```
+
+A `Type` value is an ordinary declared union in `typewriter-contracts`, so it is authored content with value paths:
+
+```kotlin
+@TypewriterType(id = TYPE_TYPE_ID)
+sealed interface Type {
+    data class Named(val name: TypeName, val arguments: List<Type> = emptyList()) : Type
+    data class Nullable(val value: Type) : Type
+    data class Scalar(val kind: ScalarType) : Type          // mirrors ScalarKind
+    data class Function(val context: List<Parameter>, val parameters: List<Parameter>, val result: Type) : Type
+    sealed interface Declaration : Type
+    data class Record(val fields: List<Field>) : Declaration
+    data class Union(val fields: List<Field> = emptyList(), val cases: List<Case>) : Declaration
+    data class Reference(val target: Named) : Declaration
+}
+data class Parameter(val name: String, val type: Type)
+data class Field(val name: String, val type: Type)
+data class Case(val name: String, val declaration: Type.Declaration)
+
+@TypewriterType(id = TYPE_NAME_TYPE_ID)
+sealed interface TypeName {
+    data class Catalog(val id: CatalogTypeId) : TypeName    // a TypeId, no revision
+    data class Content(val at: BoundPath<Type>) : TypeName
+}
+```
+
+- References carry no revision: content always means the current revision of a catalog type.
+- Every `Declaration` is a content type with id `content(at)`, where `at` is its own location: the stored path in plain mode, or the path inside the computed `Type` value in formula mode. Each `Case` is its own content type whose parent is the union; `Union.fields` are inherited by every case, like properties on a Kotlin sealed interface.
+- A case is always a new declaration (a record, possibly empty, or a nested union). An enum is a union whose cases are all empty records, `union { Open, Closed }`; the panel shows it as a dropdown, never a reference: parents are declared on the subtype and `Scalar` or `Function` values carry no `actual_type`.
+- A creator type whose value is `Named(...)` is an alias.
+- A `Reference` (written `Ref<Npc>` in type text) declares its own relation contract at its location, as KSP does for a Kotlin `@ReferenceContract`: the first endpoint is the content holding the reference (`many` inside a list, set or map, `one` otherwise), the second is the target type and is never authored on the target (`LinkTarget.opposite` stays absent), and deleting the target clears the link, so the field becomes `unfilled` and the completeness check blocks publish until it is fixed. `RelationId` gets a `content(at: ValueLocation)` variant next to its declared string, mirroring `TypeId`. Kotlin keeps the two argument form `Ref<Contract.Side, T>`.
+- `dynamic()` lowers a `Type` value to the checker's `TypeUse` in the query graph: `Named(Catalog(id))` to `named(TypeDefinitionId(id, current revision))`, `Named(Content(at))` to `named(content(at))`, a `Declaration` at L to `named(content(L))` plus its registered `TypeDefinition`, and `Function`, `Nullable`, `Scalar` to their `TypeUse` shapes.
+- The type picker is a custom editor for `Type` through the existing presentation mechanism.
 
 ### Changes fields
 
@@ -130,11 +202,12 @@ Core defines every context. Capability modules define none: engine values are me
 
 | Context | Used by | Provides |
 | --- | --- | --- |
-| `InteractionContext` | Fields evaluated once per interaction | `group`, `chain` |
+| `InteractionContext` | Fields evaluated once per interaction | `group`, `chain`, `engine` |
 | `MemberContext` | Fields evaluated per member | `InteractionContext` plus `protagonist` |
 | `PublishScope` | Fields evaluated by the realm at publish (book instances) | Pure values only |
 | `TypeScope` | `Var<Type, TypeScope>` type fields | Pure values only; types in scope |
 | `DefinitionScope` | A `Definition`'s value | The definition's surroundings |
+| `MigrationScope` | Migration inputs ([migrations.md](migrations.md)) | `old` |
 | `ReactionScope<K, T>` | Variable reaction changes | `keys: K`, `value: Settable<T>`, `previous: T?` |
 | `BookScope` | Open: no field uses it yet (book `instances` uses `PublishScope`) | Open |
 
@@ -183,7 +256,7 @@ Content names such as quest stages are enums through `bind`.
 
 ### bind
 
-`bind` derives a generic parameter from content. KSP generates a handle per type parameter. A bound parameter has no picker; an unbound one stays creator picked through `TypeSelection`. The realm reruns `dynamic()` on every edit and sets the configuration to the derived type; existing `ValueAdmission` flags book instances that no longer fit the derived `V`. The engine runs the same code at load. A derived type's id is (resource id, parameter name), with no revision. The generated book entry type is also a live `bind`, not a publish step.
+`bind` derives a generic parameter from content. KSP generates a handle per type parameter. A bound parameter has no picker; an unbound one stays creator picked through `TypeSelection`. A bound argument is never stored: the configuration holds `ArgumentSelection.bound` for it (a new case next to `chosen` and `unfilled`), and the checked catalog resolves it through the query graph from `dynamic(resource)`, which yields `named(content(at))` and the registered `TypeDefinition`. An edit that changes the bound type reruns `dynamic()` and changes the definition behind the same id; nothing is written back, and existing `ValueAdmission` flags book instances that no longer fit the derived `V`. The engine resolves `bound` the same way at load. A derived type's id is `content(at)`, the location of the field the `bind` reads, with revision 1 (see [Members and providers](#members-and-providers)). The generated book entry type is also a live `bind`, not a publish step.
 
 ```kotlin
 bind(V) {
@@ -211,11 +284,12 @@ Names resolve innermost first:
 
 1. Lambda levels
 2. The context's values (`C`)
-3. Element scope
-4. Page
-5. Book
-6. Imports
-7. Capability roots (`minecraft`)
+3. Each container, innermost first: the element's own `scope(::field)`, then its page's `scope(contents)`, then its book's `scope(contents)` (which includes the book's imports)
+4. Capability roots (`minecraft`), which hold pure values only: constants, registry ids such as `minecraft.item.diamond`, and types
+
+The page level holds that page's elements and the book level holds all of them, so the same page wins; otherwise two elements with one name are an ambiguity error at the use site with a quick fix that qualifies by page (`village.spawn`). Element names need no uniqueness check.
+
+Chain records are functions on their producing entry: `produces { field("chosen", Chosen) }` on `smith_question` generates `chosen: context(entry: SmithQuestionEntry, chain: Chain) () -> Chosen`, so `smith_question.chosen.index` fills `entry` by the dot and `chain` from `C`. The short form `chosen.index` belongs to chains (layer 4).
 
 ### Names
 
@@ -225,7 +299,14 @@ Any name is allowed, Kotlin style. Identifier like names (Unicode letters, digit
 `Dragon Quest`.stage
 ```
 
-`Element.name` is used directly. Variable, instance and import keys need only be non blank and unique per scope level. The realm records what each name in a formula resolved to (a resource id) and rewrites the formula text on rename, like an IDE refactor.
+`Element.name` is used directly. Variable, instance and import keys need only be non blank and unique per scope level. A name in a formula that resolves to a content resource is stored as a `FormulaReference`: the text range of the name in `source` and an ordinary typed link to the target. Formula references are links like any other, so they reuse the existing machinery:
+
+- **Rename** writes nothing. The panel and the realm show `source` with each reference range replaced by the target's current name; the next edit of the formula stores the new text.
+- **Delete** follows the relation's `clear` policy, as for a content `Ref` field: the link empties, the old name stays visible in the text, and an error finding ("`bonus` was deleted") blocks publish.
+- **Usages** and reruns come from the existing `Incoming` input and the query graph, with no separate index.
+- **Binding** of these names uses the ids, in the realm and in the engine; name lookup by text applies only while typing, and every formula edit stores the text and its references together in one prepared edit.
+
+Only names that resolve to content resources become references. Local names, provider functions and catalog types stay text: they are code, and renaming them is a code migration. Precedent: Airtable stores field ids in formulas and shows field names.
 
 ## Members and providers
 
@@ -237,17 +318,22 @@ Members on types come from code per type, like presentations: a KSP generated `X
 class PaperPlayerFormulas : ... { ... }
 ```
 
-Formula types are described with `TypeDefinition` (no id or revision).
+Every named type has a `TypeDefinitionId` (type id and revision). Kotlin catalog types use `declared(uuid)` with their code revision; builtins use `qualified(namespace, name)` with revision 1; cases without their own annotation use `member(owner, name)` (see [Unions and errors](#unions-and-errors)); types declared by content use `content(at: ValueLocation)` with revision 1, where `at` is the location of the content that declares the type (a `Definition`'s `value`, a position inside a `Type` value such as `[type, result]`, or the field a `bind` reads, such as a book's `variables`). A content type changes through publication and content migrations, never through its revision. The checked catalog takes content definitions from the query graph.
+
+Inline types are content types too: a record or union written in a type position without a name is a full `TypeDefinition` with any representation, identified by its location, so every field keeps a required `declaration_owner`. Two inline types that look alike are different types (nominal); share one through a creator type. Expression formula text names types but cannot declare an inline type (`let x: (gold: Int) = ...`), because text has no stable location; a type field in formula mode can, because its declarations sit at paths inside the computed `Type` value. Only function types are structural and have no id.
 
 ### Standard library
 
-The standard library is providers too (`Int.plus`, `List<T>.sumOf(f: (T) -> Int)`). It is generated from `operations.yaml` into a stdlib formula provider that calls the shared kernel through a mapping layer:
+The standard library is ordinary providers written in Kotlin, with `FormulaFunction`s generated by KSP like any extension's. It is not generated from `operations.yaml`: formulas have one checker and one interpreter, both in Kotlin, so there is no panel parity to protect, and the expression signature kinds (`each<T,R>`, `partial<X>`, `maybe<X>`) do not fit formula signatures.
 
 ```kotlin
-operator fun Int.plus(other: Int) = PortableKernel.numberAdd(this, other)
+operator fun Int.plus(other: Int): Int = this + other
+fun <T> List<T>.sumOf(f: (T) -> Int): Int = fold(0) { total, item -> total + f(item) }
 ```
 
-Units and formatting are ordinary providers through existing sugar (`5.seconds` is `val Int.seconds: Duration`, `format`). PlaceholderAPI is a provider function (`papi("player_level")`), backed by a `Tick` mirror where it is used.
+Stdlib providers may call the existing Kotlin portable kernels (`sdk/typewriter-api/.../expression/operations/`, for example `PortableNumberKernel`, the regex matcher) as a library where their rules matter, such as regex step budgets. Each catalog scalar is the Kotlin type KSP maps it from, and arithmetic is checked (see [Exceptions](#exceptions)).
+
+Units and formatting are ordinary providers through existing sugar (`5.seconds` is `val Int.seconds: Duration`, `format`). PlaceholderAPI is a provider function `context(engine: Engine) fun papi(name: String): String`, backed by a `Tick` mirror where it is used.
 
 ## Book
 
@@ -263,7 +349,7 @@ A `Book` is a `Resource` (v1 `LibraryModel.kt`), not an entry. It carries the va
 
 ```kotlin
 val instances: Var<Map<String, V>, PublishScope>
-// Bounty board: BountyBoardVariables { town: Town; reward: (protagonist: Protagonist) -> Int }
+// Bounty board: BountyBoardVariables { town: Town; reward: context(protagonist: Protagonist) () -> Int }
 ```
 
 Plain mode is the normal map editor whose values are real records (one field per variable, the right editor, checked by `ValueAdmission`). Formula mode generates the instances, so there is no separate formula field:
@@ -295,7 +381,7 @@ Its `dynamic()` does `bind(T) { use(type) }` and `exports { use(T) }`, so it is 
 - **Functions**: a definition whose type is a function type. The text is the body with the parameters in scope. There is no separate function entry type.
 
   ```
-  Definition "is_veteran" type: (protagonist: Protagonist) -> Boolean
+  Definition "is_veteran" type: context(protagonist: Protagonist) () -> Boolean
   value: protagonist.quests_done >= 10
   ```
 
@@ -310,12 +396,24 @@ Copy is a plain generated function (Kotlin data class `copy`; for creator record
 
 ## Unions and errors
 
-There is no error specific mechanism. Unions are the existing catalog subtyping: an abstract record type plus `parents` on its subtypes (Kotlin sealed interfaces, creator `Type` definitions). Values carry their concrete type (`NamedValue.actual_type`), so `is`, smart casts and `when` narrow. The polymorphic editor and `concreteForms` already handle them.
+There is no error specific mechanism. A record has one of three forms:
+
+```
+struct RecordRepresentationTemplate { fields: [FieldDeclaration] = 0; form: RecordForm = 1; }
+enum RecordForm { concrete = 1; open = 2; closed: ClosedCases = 3; }
+struct ClosedCases { cases: [NamedTypeTemplate] = 0; }   // declaration order
+```
+
+- **Open** (Kotlin `interface`, `abstract class`): anyone adds subtypes through `parents`, and `when` needs `else`.
+- **Closed** (Kotlin `sealed`, Kotlin `enum class`, content `union`): the parent lists its cases in order; `when` is exhaustive over that list and `concreteForms` returns it. An enum is a closed union whose cases are all unit; the panel shows a dropdown for it, and `enum.cases` and `enum.from_name` work on it. `RepresentationTemplate.enumeration` and `DataValue.enum_case` are removed; an enum value is stored as `named(actual_type = Door.OPEN, unit)`.
+- A case without its own `@TypewriterType` (an enum entry, an unannotated nested sealed subtype) gets `TypeId.member { owner: TypeId; name: string }`, anchored to its parent's id instead of its Kotlin name.
+
+Unions are closed records (Kotlin sealed interfaces, creator `union` types). Values carry their concrete type (`NamedValue.actual_type`), so `is`, smart casts and `when` narrow. The polymorphic editor and `concreteForms` already handle them.
 
 ```kotlin
 sealed interface NpcLocation
 data class Spawned(val position: Position) : NpcLocation
-data class NotSpawned(val npc: Ref<Npc>) : NpcLocation
+data class NotSpawned(val npc: Npc) : NpcLocation
 ```
 
 ```
@@ -325,20 +423,40 @@ when (npc.location) {
 }
 ```
 
+- Type text uses one keyword form per declaration: `record { gold: Int, xp: Int }`, `union { Spawned(position: Position), NotSpawned }` (an enum is `union { Open, Closed }`), `Ref<Npc>`. Bindings use `let` everywhere: `if let quest = ... { }`, `when (let loc = ...) { }`.
 - Unrelated types are wrapped; there is no ad hoc `A | B`.
-- An unhandled union is a panel type error with quick fixes. `when` is exhaustive against the current catalog, and live checks flag it when a new subtype appears.
+- An unhandled union is a panel type error with quick fixes. `when` over a closed union is exhaustive against its case list, and live checks flag it when a case is added; an open type needs `else`.
 - `T?` stays the catalog nullable; `?.` and `?:` work on null.
-- Several return values are named results, an inline record: `(gold: Int, xp: Int)`, read with `let (gold, xp) = ...`.
+- Several return values are named results, an inline record type declared in a type position: `record { gold: Int, xp: Int }`, read with `let (gold, xp) = ...`.
 
 ### Exceptions
 
-A provider that throws, or hitting the recursion limit, fails one evaluation:
+Arithmetic is checked: overflow, division by zero, a non finite float result, and a narrowing conversion that does not fit (`toInt()`) fail the evaluation instead of wrapping, as in Swift and Rust debug builds. Stdlib operators use the exact JVM operations (`Math.addExact`) and the portable kernel's `finite()`. A provider that throws, a checked arithmetic failure, or hitting the recursion limit fails one evaluation:
+
+```kotlin
+sealed interface Evaluation<out T> {
+    data class Value<T>(val value: T) : Evaluation<T>
+    data class Failed(val at: ValueLocation, val reason: FormulaFailure) : Evaluation<Nothing>
+}
+
+sealed interface FormulaFailure {
+    data class ProviderThrew(val message: String) : FormulaFailure
+    data object Overflow : FormulaFailure
+    data object DivisionByZero : FormulaFailure
+    data object NotFinite : FormulaFailure
+    data object RecursionLimit : FormulaFailure
+}
+```
 
 | Field kind | On failure |
 | --- | --- |
 | Text | Shows a fallback |
 | Verdicts and conditions | Count as not met |
 | `Changes` | Not applied |
+| Other values (`reward: Int`, records) | The step that uses the value does not run |
+| A pure formula the realm evaluates (a `Definition`) | Error finding that blocks publish, since the engine would fail the same way |
+
+The engine reports every failure with its location so the panel can show it.
 
 ## Type checking
 
@@ -348,24 +466,47 @@ Checking is local and bidirectional, as in Kotlin, Swift and TypeScript:
 - Expressions infer their type up: `let needed = 5 - x` is `Int`.
 - Generics are solved per call from the arguments plus the expected type; lambda parameters come from the function's parameter types.
 
-There is no global inference, so errors stay local. Annotations are optional: `let x: Decimal = ...`. Checking runs as `check(formula)` in the query graph and is part of the engine core formula interpreter that the realm and engines share.
+Generic provider signatures are the checker's internal Kotlin model in the shared formula interpreter, never a contract. The checker has its own type form, `TypeUse` plus inference variables (`FormulaType`), and each provider function becomes a KSP generated `FormulaFunction` (name, type parameters with bounds, context parameters with the receiver first, parameters, defaulted parameter names, result, and an `invoke` that calls the Kotlin function). A `where` clause is extra bounds. A call unifies the context and argument types to solve the type parameters; the panel only receives closed results (`result_type: TypeUse`, diagnostics, hover and completion text with type parameters filled in), and an unsolved variable is a "cannot infer" diagnostic. Function types stay non generic, as in Kotlin. In provider signatures KSP names a single unnamed function type parameter `it` and rejects unnamed ones when there are two or more.
+
+Name rules:
+
+- **Fields are functions.** A record field is a function with no normal parameters whose first context parameter is the record: `name` on `Npc` is `name: context(npc: Npc) () -> String`. KSP types and content records both generate them.
+- **Calling versus referring is decided by the expected type.** Where a function type is expected, a name is the function value (`members.sumOf(book.reward)`); elsewhere it is a call with context filled from scope (`book.reward` in an `Int` field). There is no `::` syntax. `members.filter(.is_veteran)` is shorthand for `{ it.is_veteran }`.
+- **Overloads:** among same named functions the most specific context type wins (`distance(npc: Npc)` over `distance(entity: Entity)`); a tie is an ambiguity error with a quick fix. A generated function and a provider with the same context type stay the Open provider override question.
+- **Type names:** catalog types by display name, content types by definition name through scope; scope hides the catalog; two catalog types with one name are an ambiguity error, qualified by extension (`citizens.Npc`). Scalars use Kotlin names (`Int`, `Long`, `Float`, `Double`, `Decimal`, `String`, `Boolean`, `Instant`, `Duration`) mapped to `ScalarKind`; the width table belongs to the interpreter value model.
+
+There is no global inference, so errors stay local. Annotations are optional: `let x: Decimal = ...`. Checking runs as `check(formula)` in the query graph and is part of the formula interpreter that the realm and engines share.
 
 ## Live editing
 
 ### Query graph
 
-The realm runs `dynamic()` and formula checks as a query graph with early cutoff, like rust-analyzer's Salsa:
+The realm runs `dynamic()` and formula checks as a query graph with early cutoff, like rust-analyzer's Salsa, on the shared `TrackedGraph` (see [Interpreter](#interpreter)):
 
 ```
 draft(resource) → dynamic(resource) outputs → scopeAt(field) → check(formula)
 ```
 
-- Reads inside `dynamic()` (`ref.resolve()`, field reads) are recorded automatically.
+- Reads inside `dynamic()` (`ref.resolve()`, field reads) are recorded automatically. Realm checks and searches use the same graph, and stored reads (type plus partial key) are inputs too: a stored commit reruns what read it ([closed-beta-roadmap.md](closed-beta-roadmap.md), Decided).
 - An edit reruns only what read the change.
 - A rerun whose output equals the previous one stops propagation.
 - Cycles (A binds from B's exports, B from A's) are detected while running: both get an error and an error type; everything else keeps working.
 
+Shape:
+
+- **Inputs** come from the installed `AuthoringView`: `Resource(id) -> AuthoringRecord?`, `ResourceIds`, `Links(resource)`, and `Catalog`.
+- **Commits set inputs** where views are installed: `AuthoringViewStore.install` applies the same `AuthoringViewDelta` (upserted resources, removed resources, catalog lease) to the graph, so a commit needs no separate report of changed inputs. A full reload (`views.invalidate`) sets every input again; early cutoff keeps that cheap.
+- **Derived queries:** each `InputIdentity` kind is a query, plus `checkRun(instance) -> FindingSet`, `dynamic`, `scopeAt` and `check`. `CapturedAuthoringReads` keeps its API; each read is a query call, and it still records `EditExpectation`s for the commit guard.
+- **Revision:** one per view install.
+- **Finding currency:** a finding is current when its query is verified at the latest revision. This replaces the expectation comparison in `EditorUpdatePublisher`.
+- **Publication** accepts when every check is verified at revision R and the captured view is R; otherwise it answers `RetryRequired`.
+- **`WatchFormula` overlay:** `graph.fork(overrides: Map<ResourceId, AuthoringRecord>)` reuses base results whose inputs exclude the overridden resources, like the staged view.
+- **Cancellation:** a new revision cancels running queries; each query call checks the revision and stops when stale.
+- **Memory:** `checkRun` and `dynamic` results stay; other results are LRU bounded.
+
 The engine runs every `dynamic()` once at load, in dependency order, with the same code and no tracking.
+
+Compiled content carries each formula in its stored form (`Formula(source, references)` inside the `Var`), not a bound tree. At load the engine parses, binds and checks it with the same `runtime/formula` code against the published content and its catalog, the inputs the realm checked at publish, and caches the result. A formula that fails to bind at load is a load error; the publish checks make that unreachable in normal operation.
 
 ### WatchFormula
 
@@ -394,7 +535,7 @@ The base is Kotlin. The full tour, with examples, is in [../vision/formulas.md](
 | Patterns | Destructuring and guards in `when`: `is Money(amount) if amount > 100 ->` |
 | Shorthand | `members.filter(.is_veteran).sumOf(.coins)` |
 | Collections | `[riverside, hilltop]`, `[sword: 50]`, `10..49`, `in`; indexing returns nullable |
-| Calls | Named and default arguments, trailing lambdas, `with` as a plain stdlib function |
+| Calls | Named and default arguments, trailing lambdas; no `with` (no member scope) |
 | Functions | Local functions `let double(x: Int) = x * 2` (recursion works); lambdas `{ x -> }`, `it`, `_`, `{ (k, v) -> }` |
 | Comparisons | Chained `0 < x < 10`; `==` is structural only |
 | Logic | `&&`, `\|\|`, `!` plus `and`, `or`, `not` |
@@ -404,7 +545,7 @@ The base is Kotlin. The full tour, with examples, is in [../vision/formulas.md](
 | Lines | A newline ends a line; `;` optional; comments `//`, `/* */`, doc comments `///` shown in autocomplete and hover |
 | Not included | `!!`, `x with { }` |
 
-Keywords: `let`, `if`, `else`, `when`, `is`, `in`, `as?`, `and`, `or`, `not`, `true`, `false`, `null`.
+Keywords: `let`, `record`, `union`, `context`, `if`, `else`, `when`, `is`, `in`, `as?`, `and`, `or`, `not`, `true`, `false`, `null`.
 
 ## Text templates
 
@@ -437,11 +578,13 @@ The same rule as handlers: the types a function touches decide its kind.
 | Stored | Stored values | Anywhere stored data is reachable |
 | Live | Live traits such as `Player` | The engine where the subject is live |
 
-KSP reads the kind from Kotlin signatures. A formula's kind is the strongest kind it calls, computed by the realm while typing. A field says where it runs through its context: `Var<Map<String, V>, PublishScope>` and `Var<Type, TypeScope>` accept pure formulas only; `Var<String, MemberContext>` accepts anything. The realm can evaluate formulas that need no engine type.
+Only context parameters reach stored or live data: identities such as `protagonist` and `engine: Engine` (the neutral identity of the server a formula runs on) carry the stored and live members, and capability roots hold pure values only (KSP rejects a stored or live member on a root). A provider that reads stored or live data without such an input declares it as a context parameter (`context(engine: Engine) fun papi(name: String)`); KSP cannot see function bodies, so this is a declaration it trusts. A formula's kind therefore follows from its context: `Var<Map<String, V>, PublishScope>` and `Var<Type, TypeScope>` provide no context parameters, so their formulas are pure by construction, and `Var<String, MemberContext>` can reach anything its context provides. A function type needs no kind marker. KSP still reads each provider's kind from its signature, and the realm computes a formula's kind while typing to decide where it can run. The realm can evaluate formulas that need no engine type.
 
 ### Interpreter
 
-The formula interpreter lives in the engine core and is shared by the realm and engines: it parses text, binds names, runs, and caches outcomes. How evaluation records its reads, which change signal each read kind has, and the `FormulaChanged` event are in [live-data.md](live-data.md#formula-changes).
+The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to fire `FormulaChanged(old, new)`, as Jane Street's Incremental does with observers. Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1; engine inputs and observers come with layers 6 to 8.
+
+Values during evaluation are plain Kotlin values, so a `FormulaFunction.invoke` calls the provider without conversion: catalog scalars use the Kotlin type KSP maps them from (`Int` is `kotlin.Int`, `Decimal` is `BigDecimal`), Kotlin catalog types are instances of their class (an enum case is its constant), `null` is `null`, and functions are closures. Content types have no Kotlin class, so they are `ContentValue` instances (a record carries its `TypeId` and its fields by name, a case its `TypeId` and payload). The realm reads stored `DataValue` into these values with the same reader the engine uses for compiled content. Creating the module is a build change the layer 1 build asks for. How evaluation records its reads, which change signal each read kind has, and the `FormulaChanged` event are in [live-data.md](live-data.md#formula-changes).
 
 ## Time and randomness
 
@@ -456,7 +599,6 @@ A formula can start a chain: when a condition turns true, or whenever a formula'
 ## Open
 
 - What `BookScope` provides and which fields use it. The book's `instances` field uses `PublishScope`.
-- The roadmap survey found no Kotlin `PortableKernel` (only the panel's Dart kernel); the generated stdlib needs a Kotlin kernel or another target.
 - `XDraft` modeling of invalid values: confirmed by the roadmap survey (`Availability`), but its fit for `dynamic()` is not yet verified in code.
 - Provider override details: whether a same name function replaces a generated member and how `hidden` hides one.
 - Instances as identities (book, key), formula instances evaluated at publish, and placed generated book entries as instances are proposed, not decided.
