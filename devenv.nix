@@ -32,18 +32,6 @@ in
     # xtask's secretspec crate, and the 1Password CLI its vault provider calls.
     pkgs.secretspec
     pkgs._1password-cli
-  ]
-  ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
-    # The end to end suites on Linux (CI): the virtual display and recorder `cargo xtask evidence`
-    # runs, software OpenGL and Vulkan for the Flutter desktop app and the browser for panel web.
-    # llvmpipe and lavapipe need no host driver, so no apt packages are involved.
-    pkgs.xvfb
-    # The full build: the default one leaves out the x11grab input the recorder captures with.
-    pkgs.ffmpeg-full
-    pkgs.mesa
-    pkgs.vulkan-loader
-    pkgs.gtk3
-    pkgs.chromium
   ];
 
   # Xcode and the macOS SDK come from the system: Flutter's native asset builds and
@@ -56,13 +44,29 @@ in
     FLUTTER_ROOT = "${flutter.sdk}";
 
     NATS_SERVER_BIN = "${pins.nats-server}/bin/nats-server";
-  }
-  // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
-    LIBGL_DRIVERS_PATH = "${pkgs.mesa}/lib/dri";
-    __EGL_VENDOR_LIBRARY_DIRS = "${pkgs.mesa}/share/glvnd/egl_vendor.d";
-    VK_ICD_FILENAMES = "${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json";
-    # Flutter's web device looks for Chrome here; chromedriver drives the same browser.
-    CHROME_EXECUTABLE = "${pkgs.chromium}/bin/chromium";
+  };
+
+  # The end to end suites on Linux (CI): `devenv --profile e2e shell`. The virtual display and
+  # recorder `cargo xtask evidence` runs, software OpenGL and Vulkan for the Flutter desktop app and
+  # the browser for panel web. llvmpipe and lavapipe need no host driver, so no apt packages are
+  # involved. A profile, so the jobs that run no suite do not download them.
+  profiles.e2e.module = pkgs.lib.mkIf pkgs.stdenv.isLinux {
+    packages = [
+      pkgs.xvfb
+      # The full build: the default one leaves out the x11grab input the recorder captures with.
+      pkgs.ffmpeg-full
+      pkgs.mesa
+      pkgs.vulkan-loader
+      pkgs.gtk3
+      pkgs.chromium
+    ];
+    env = {
+      LIBGL_DRIVERS_PATH = "${pkgs.mesa}/lib/dri";
+      __EGL_VENDOR_LIBRARY_DIRS = "${pkgs.mesa}/share/glvnd/egl_vendor.d";
+      VK_ICD_FILENAMES = "${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json";
+      # Flutter's web device looks for Chrome here; chromedriver drives the same browser.
+      CHROME_EXECUTABLE = "${pkgs.chromium}/bin/chromium";
+    };
   };
 
   languages.rust = {

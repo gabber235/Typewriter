@@ -51,15 +51,16 @@ jobs:
         with:
           op-service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           caches: flutter frame-vectors
+          profile: e2e
       # xtask resolves the `ci` secrets through this service account and fetches the pinned
       # Infrastructure revision with the deploy key among them.
-      - run: devenv shell -- cargo xtask e2e full
+      - run: devenv --profile e2e shell -- cargo xtask e2e full
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded; the token is here only so staging refuses text that holds it.
       - if: always()
-        run: devenv shell -- cargo xtask evidence stage
+        run: devenv --profile e2e shell -- cargo xtask evidence stage
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       - if: always()

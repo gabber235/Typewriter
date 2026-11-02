@@ -310,11 +310,13 @@ impl Xvfb {
             .context("no free X display number")?;
         let name = format!(":{number}");
         let screen = format!("{}x{}x24", SCREEN.0, SCREEN.1);
-        let group = supervisor.spawn(
-            Command::new("Xvfb")
-                .args([&name, "-screen", "0", &screen, "-nolisten", "tcp"])
-                .stdout(Stdio::null()),
-        )?;
+        let group = supervisor
+            .spawn(
+                Command::new("Xvfb")
+                    .args([&name, "-screen", "0", &screen, "-nolisten", "tcp"])
+                    .stdout(Stdio::null()),
+            )
+            .context("Xvfb, the recorder and the browser come from `devenv --profile e2e shell`")?;
         let display = Self {
             _group: group,
             name,

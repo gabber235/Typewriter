@@ -6,6 +6,8 @@ This document outlines the process for setting up the local development environm
 
 [devenv](https://devenv.sh) provides every tool (`devenv.nix`). Run commands inside `devenv shell`, or prefix them with `devenv shell --`. `cargo xtask` is the command surface: `cargo xtask --help` lists it, and `cargo xtask doctor` says what is wrong with a setup and how to fix it.
 
+On Linux the end to end suites (`cargo xtask e2e`) also need the virtual display, recorder and browser of the `e2e` profile: `devenv --profile e2e shell`.
+
 ### Secrets
 
 [`secretspec.toml`](secretspec.toml) declares every secret by name, grouped in profiles: `default` (local tools), `deploy`, `ci`, `cache`, `bot`, `release` and `marketplace`. Values never live in the repository.

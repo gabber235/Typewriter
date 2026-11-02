@@ -18,6 +18,11 @@ inputs:
       `flutter` (the pub cache) and `frame-vectors` (the Cargo build of `cargo xtask generate`'s
       frame vector writer).
     default: ""
+  profile:
+    description: >-
+      The devenv profile the job's steps enter (`devenv --profile <profile> shell`), such as
+      `e2e` for the end to end suites' display, recorder and browser; empty for the base shell.
+    default: ""
 
 runs:
   using: composite
@@ -64,10 +69,12 @@ runs:
     # A new attempt keeps every path already fetched, so at most two retries, and only for that
     # error.
     - shell: bash
+      env:
+        PROFILE: ${{ inputs.profile }}
       run: |
         log="$RUNNER_TEMP/devenv-shell.log"
         retries=0
-        until devenv shell -- true 2>&1 | tee "$log"; do
+        until devenv ${PROFILE:+--profile "$PROFILE"} shell -- true 2>&1 | tee "$log"; do
           if ! grep -qF 'HTTP error 416' "$log" || (( retries == 2 )); then
             exit 1
           fi

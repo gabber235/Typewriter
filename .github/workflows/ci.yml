@@ -99,7 +99,7 @@ jobs:
       - uses: ./.github/actions/devenv
       - run: devenv shell -- cargo xtask hook commit-msg --range "$BASE_SHA..$HEAD_SHA"
 
-  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv shell, not apt.
+  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt.
   e2e:
     name: e2e (${{ matrix.suite }})
     needs: plan
@@ -115,11 +115,12 @@ jobs:
       - uses: ./.github/actions/devenv
         with:
           caches: flutter frame-vectors
-      - run: devenv shell -- cargo xtask e2e ${{ matrix.suite }}
+          profile: e2e
+      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.
       - if: always()
-        run: devenv shell -- cargo xtask evidence stage
+        run: devenv --profile e2e shell -- cargo xtask evidence stage
       - if: always()
         uses: actions/upload-artifact@v4
         with:
