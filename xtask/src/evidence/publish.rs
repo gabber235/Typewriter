@@ -1,6 +1,6 @@
 //! The managed section of the pull request description. Everything between [`START`] and [`END`]
 //! is rendered from the `TestRun`s and the change report and replaced on every push; text outside
-//! the markers (the agent's summary, notes) is left alone. Media goes to the evidence branch
+//! the markers (the agent's summary, notes) is left alone. Media goes to its stores
 //! first, and nothing leaves the runner while it contains a secret the run knew.
 
 use std::fmt::Write as _;
@@ -14,7 +14,7 @@ use serde::Deserialize;
 use serde::de::IgnoredAny;
 
 use super::stage::{self, published_files};
-use super::{ATTEMPTS, Inputs, REPOSITORY, clone_branch, media_url, pr_folder};
+use super::{ATTEMPTS, Inputs, REPOSITORY, Store};
 use crate::results::{self, Quarantine, TestRun, Verdict as CaseVerdict, runner_name};
 use crate::review::verdict::{
     COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START,
@@ -36,36 +36,36 @@ const CHANGE_MAP_LIMIT: usize = 50;
 /// branch and rewrites the managed section of pull request `pr`.
 pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()> {
     let secrets = known_secrets();
-    // Raw results never reach the evidence branch: only their staged projection is read.
+    // Raw results never reach a media store: only their staged projection is read.
     let runs = stage::staged(&ctx.root, &inputs.results, &secrets)?;
     let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
     let quarantine = Quarantine::load(ctx)?;
     let media = media(&runs);
-    let prefix = pr_folder(pr, Some(sha));
+    let provenance = provenance(ctx, sha)?;
     let section = |verdict: Option<&Verdict>| {
         render_section(&Section {
             sha,
+            provenance: &provenance,
             pr: Some(pr),
             runs: &runs,
             quarantine: &quarantine,
             report: &report,
             verdict,
-            media_url: Some(&media_url(&prefix)),
         })
     };
     // Media is uploaded before the description is read, so the read modify write stays short.
     // The verdict comes from the description, so the final section is scrubbed again there.
     scrub(&section(None), &media, &secrets)?;
-    if !media.is_empty() {
-        let repository = clone_branch(ctx)?;
-        for (source, target) in &media {
-            let destination = repository.path(&format!("{prefix}/{target}"));
-            if let Some(parent) = destination.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            fs::copy(source, &destination)
-                .with_context(|| format!("cannot copy {}", source.display()))?;
+    for store in Store::ALL {
+        let files: Vec<&(PathBuf, String)> = media
+            .iter()
+            .filter(|(_, target)| Store::of(Path::new(target)) == store)
+            .collect();
+        if files.is_empty() {
+            continue;
         }
+        let repository = store.checkout(ctx)?;
+        replace_media(&repository.path(""), store, pr, sha, &files)?;
         repository.commit_and_push(ctx, &format!("pr {pr} at {}", &sha[..sha.len().min(7)]))?;
     }
     edit_pull_body(ctx, pr, |body| {
@@ -79,18 +79,68 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
 }
 
 /// The section without media links, for fork pull requests, whose workflow token cannot push.
+/// Makes `files` the only media of pull request `pr` in `store`'s checkout at `root`: only the
+/// description's latest run is worth keeping.
+fn replace_media(
+    root: &Path,
+    store: Store,
+    pr: u64,
+    sha: &str,
+    files: &[&(PathBuf, String)],
+) -> Result<()> {
+    let folder = root.join(store.folder(pr, None));
+    if folder.exists() {
+        fs::remove_dir_all(&folder)
+            .with_context(|| format!("cannot remove {}", folder.display()))?;
+    }
+    let commit = root.join(store.folder(pr, Some(sha)));
+    for (source, target) in files {
+        let destination = commit.join(target);
+        if let Some(parent) = destination.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::copy(source, &destination)
+            .with_context(|| format!("cannot copy {}", source.display()))?;
+    }
+    Ok(())
+}
+
+/// The section's first line: which commit it shows, when it was written and which run wrote it, so
+/// a reader can tell whether it is current.
+fn provenance(ctx: &Context, sha: &str) -> Result<String> {
+    let now = ctx
+        .tool(".", "date", &["-u", "+%Y-%m-%d %H:%M"])
+        .output_text()?;
+    let run = std::env::var("GITHUB_RUN_ID").ok();
+    Ok(provenance_line(sha, now.trim(), run.as_deref()))
+}
+
+fn provenance_line(sha: &str, now: &str, run: Option<&str>) -> String {
+    let short = &sha[..sha.len().min(7)];
+    let line = format!(
+        "Evidence from [{short}](https://github.com/{REPOSITORY}/commit/{sha}), {now} UTC."
+    );
+    match run {
+        Some(run) => {
+            format!("{line} [CI run](https://github.com/{REPOSITORY}/actions/runs/{run}).")
+        }
+        None => line,
+    }
+}
+
 pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
     let runs = stage::staged(&ctx.root, &inputs.results, &known_secrets())?;
     let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
     let quarantine = Quarantine::load(ctx)?;
+    let provenance = provenance(ctx, sha)?;
     let section = render_section(&Section {
         sha,
+        provenance: &provenance,
         pr: None,
         runs: &runs,
         quarantine: &quarantine,
         report: &report,
         verdict: None,
-        media_url: None,
     });
     scrub(&section, &[], &known_secrets())?;
     Ok(section)
@@ -187,19 +237,20 @@ fn take_verdict(body: &str) -> (String, Option<Verdict>) {
 
 struct Section<'a> {
     sha: &'a str,
+    provenance: &'a str,
+    /// The pull request the media was uploaded for; `None` when it was not uploaded.
     pr: Option<u64>,
     runs: &'a [(PathBuf, TestRun)],
     quarantine: &'a Quarantine,
     report: &'a ChangeReport,
     verdict: Option<&'a Verdict>,
-    /// Where the media folder is served; `None` when the media was not uploaded.
-    media_url: Option<&'a str>,
 }
 
 fn render_section(section: &Section) -> String {
     let mut out = String::new();
     let short = &section.sha[..section.sha.len().min(7)];
 
+    let _ = writeln!(out, "{}\n", section.provenance);
     let _ = writeln!(out, "### Recordings");
     let scenarios: Vec<(&TestRun, &TestCase)> = cases(section.runs)
         .filter(|(_, case)| case.requirement.is_some() || results::artifacts(case).next().is_some())
@@ -371,11 +422,7 @@ fn render_section(section: &Section) -> String {
     if map.len() > CHANGE_MAP_LIMIT {
         let _ = writeln!(out, "- and {} more", map.len() - CHANGE_MAP_LIMIT);
     }
-    let _ = writeln!(out, "\n</details>\n");
-    let _ = write!(
-        out,
-        "<sub>Commit {short}. Rewritten by CI on every push.</sub>"
-    );
+    let _ = writeln!(out, "\n</details>");
     out
 }
 
@@ -443,25 +490,28 @@ fn result(verdict: CaseVerdict) -> &'static str {
 /// one table cell.
 fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
-    let media_url = section.media_url;
     let mut parts = Vec::new();
     for (path, artifact) in results::artifacts(case) {
-        let Some(base) = media_url else {
+        let Some(pr) = section.pr else {
             parts.push(format!(
                 "`{runner}/{}` in the run artifacts",
                 path.display()
             ));
             continue;
         };
-        let url = format!("{base}/{runner}/{}", path.display());
+        let url = |file: &Path| {
+            let file = Path::new(runner).join(file);
+            Store::of(&file).url(pr, section.sha, &file)
+        };
         parts.push(match artifact.kind {
             ArtifactKind::Clip => {
                 format!(
-                    "![]({base}/{runner}/{}) [full video]({url})",
-                    stage::preview(&path).display()
+                    "![]({}) [full video]({})",
+                    url(&stage::preview(&path)),
+                    url(&path)
                 )
             }
-            ArtifactKind::Screenshot => format!("![]({url})"),
+            ArtifactKind::Screenshot => format!("![]({})", url(&path)),
             ArtifactKind::LogExcerpt | ArtifactKind::Spans | ArtifactKind::Unknown(_) => {
                 continue;
             }
@@ -720,6 +770,56 @@ mod tests {
             uploaded
                 .iter()
                 .all(|(source, _)| source.starts_with(root.path(".xtask/public")))
+        );
+    }
+
+    #[test]
+    fn a_clip_plays_from_the_site_and_its_preview_shows_from_the_branch() {
+        let clip = Path::new("panel/attempts/1/clips/conn.mp4");
+        let preview = stage::preview(clip);
+
+        assert_eq!(
+            Store::of(clip).url(546, "8f93ae1abc", clip),
+            "https://docs.typewritermc.com/evidence/pr/546/8f93ae1/panel/attempts/1/clips/conn.mp4"
+        );
+        assert_eq!(
+            Store::of(&preview).url(546, "8f93ae1abc", &preview),
+            format!(
+                "https://raw.githubusercontent.com/{REPOSITORY}/evidence/pr/546/8f93ae1/panel/attempts/1/clips/conn.webp"
+            )
+        );
+    }
+
+    #[test]
+    fn a_new_run_replaces_the_pull_requests_older_media_and_no_other() {
+        let root = TempRoot::new();
+        root.write("site/evidence/pr/546/old/panel/old.mp4", "old");
+        root.write("site/evidence/pr/7/keep/panel/other.mp4", "other");
+        root.write("site/branches/pr-546/index.html", "docs preview");
+        root.write("new.mp4", "new");
+        let file = (root.path("new.mp4"), "panel/new.mp4".to_owned());
+
+        replace_media(&root.path("site"), Store::Videos, 546, "abc1234", &[&file]).unwrap();
+
+        assert!(!root.path("site/evidence/pr/546/old").exists());
+        assert!(
+            root.path("site/evidence/pr/546/abc1234/panel/new.mp4")
+                .exists()
+        );
+        assert!(
+            root.path("site/evidence/pr/7/keep/panel/other.mp4")
+                .exists()
+        );
+        assert!(root.path("site/branches/pr-546/index.html").exists());
+    }
+
+    #[test]
+    fn the_section_says_which_commit_and_run_it_shows_and_when() {
+        assert_eq!(
+            provenance_line("8f93ae1abc", "2026-11-02 10:14", Some("41415929881")),
+            format!(
+                "Evidence from [8f93ae1](https://github.com/{REPOSITORY}/commit/8f93ae1abc), 2026-11-02 10:14 UTC. [CI run](https://github.com/{REPOSITORY}/actions/runs/41415929881)."
+            )
         );
     }
 

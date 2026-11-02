@@ -1,6 +1,5 @@
-//! Keeps the evidence branch to media someone can still see. A pull request that closes
-//! unmerged loses its media; a merged one keeps only its final commit's folder, for the
-//! retention. Pushes retry onto whatever another job pushed first, and a squash pushes with a lease
+//! Keeps both media stores to what someone can still see. A pull request that closes unmerged
+//! loses its media; a merged one keeps only its final commit's folder, for the retention. Pushes retry onto whatever another job pushed first, and a squash pushes with a lease
 //! and starts over when it loses it, so neither drops media published a moment earlier.
 
 use std::fs;
@@ -8,7 +7,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result};
 
-use super::{ATTEMPTS, clone_branch, pr_folder};
+use super::{ATTEMPTS, Store};
 use crate::Context;
 use crate::branch::BranchCheckout;
 
@@ -27,7 +26,10 @@ pub enum Prune {
 pub fn prune(ctx: &Context, action: Prune) -> Result<()> {
     let mut attempt = 1;
     loop {
-        match prune_once(ctx, &action) {
+        match Store::ALL
+            .into_iter()
+            .try_for_each(|store| prune_store(ctx, store, &action))
+        {
             Err(error) if matches!(action, Prune::Weekly { .. }) && attempt < ATTEMPTS => {
                 eprintln!("squash lost its lease, starting over: {error:#}");
                 attempt += 1;
@@ -37,23 +39,23 @@ pub fn prune(ctx: &Context, action: Prune) -> Result<()> {
     }
 }
 
-fn prune_once(ctx: &Context, action: &Prune) -> Result<()> {
-    let repository = clone_branch(ctx)?;
+fn prune_store(ctx: &Context, store: Store, action: &Prune) -> Result<()> {
+    let repository = store.checkout(ctx)?;
     if repository.tip.is_empty() {
-        println!("no evidence branch yet");
+        println!("no {store:?} branch yet");
         return Ok(());
     }
     match action {
         Prune::Closed {
             pr, merged: false, ..
-        } => remove(&repository, &pr_folder(*pr, None))?,
+        } => remove(&repository, &store.folder(*pr, None))?,
         Prune::Closed {
             pr,
             merged: true,
             keep,
         } => {
-            let folder = repository.path(&pr_folder(*pr, None));
-            let kept = repository.path(&pr_folder(*pr, Some(keep)));
+            let folder = repository.path(&store.folder(*pr, None));
+            let kept = repository.path(&store.folder(*pr, Some(keep)));
             if folder.exists() {
                 for entry in fs::read_dir(&folder)? {
                     let path = entry?.path();
@@ -66,7 +68,7 @@ fn prune_once(ctx: &Context, action: &Prune) -> Result<()> {
         }
         Prune::Weekly { retention } => {
             let cutoff = now().saturating_sub(*retention).as_secs();
-            let prs = repository.path("pr");
+            let prs = repository.path(store.root());
             if prs.exists() {
                 for entry in fs::read_dir(&prs)? {
                     let folder = entry?.path();

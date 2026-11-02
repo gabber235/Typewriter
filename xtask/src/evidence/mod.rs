@@ -1,26 +1,27 @@
 //! `cargo xtask evidence`: records end to end runs, and keeps one managed section of the pull
-//! request description current with what the run proved. Media lives on [`BRANCH`], an orphan
-//! branch of [`REPOSITORY`] that shares no history with the code, so previews render inline from
-//! [`media_url`].
+//! request description current with what the run proved. Media lives in the two [`Store`]s of
+//! [`REPOSITORY`], on branches that share no history with the code.
 
 mod prune;
 pub(crate) mod publish;
 mod record;
 mod stage;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use anyhow::Result;
 use clap::{ArgAction, Args, Subcommand};
 
 use self::prune::Prune;
+pub(crate) use self::record::SCREEN;
 pub(crate) use self::record::file_name;
 pub use self::record::{Recorded, record_with};
 use crate::branch::{ATTEMPTS, BranchCheckout, REPOSITORY};
+use crate::docs::{PAGES, SITE};
 use crate::{CommandExt, Context};
 
-/// The orphan branch holding the media, one folder per pull request commit.
+/// The orphan branch holding the images, one folder per pull request.
 const BRANCH: &str = "evidence";
 /// Where the runners write their `TestRun`s, relative to the repository root; CI downloads the
 /// other jobs' runs below it.
@@ -67,7 +68,7 @@ pub enum EvidenceCommand {
     /// Writes the public projection of the results folder to `.xtask/public`, the only folder
     /// CI uploads; refuses when it would hold a known secret.
     Stage,
-    /// Drops media nobody can see any more from the evidence branch.
+    /// Drops media nobody can see any more from both stores.
     #[command(subcommand)]
     Prune(PruneCommand),
 }
@@ -154,24 +155,69 @@ fn days(text: &str) -> Result<Duration, String> {
         .ok_or_else(|| format!("expected days such as 30d, got {text}"))
 }
 
-/// Where `path` on [`BRANCH`] is served. The raw host answers directly, where
-/// `github.com/<repo>/raw/` redirects to it first. GitHub renders these images inline without its
-/// image proxy, and browsers decode webp and png even though the host labels webp
-/// `application/octet-stream`; for the same reason a linked mp4 downloads rather than playing in
-/// the tab.
-fn media_url(path: &str) -> String {
-    format!("https://raw.githubusercontent.com/{REPOSITORY}/{BRANCH}/{path}")
+/// Where a kind of media lives. Each pull request holds only its latest run's commit folder; the
+/// commit stays in the path because GitHub's image proxy may keep serving an old file at a reused
+/// URL.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Store {
+    /// Previews and screenshots on [`BRANCH`]. The raw host answers directly, where
+    /// `github.com/<repo>/raw/` redirects to it first, and browsers decode webp and png even
+    /// though it labels webp `application/octet-stream`.
+    Images,
+    /// Clips on the documentation site's branch, in a folder of their own. The raw host labels an
+    /// mp4 `application/octet-stream`, so a link to it downloads; the site serves it as a video
+    /// that plays in the tab. Only clips live here: they are small, and the site shares GitHub's
+    /// limit of about 1 GB with the documentation.
+    Videos,
 }
 
-/// The folder of one pull request's media, or of one of its commits.
-fn pr_folder(pr: u64, sha: Option<&str>) -> String {
-    match sha {
-        Some(sha) => format!("pr/{pr}/{}", &sha[..sha.len().min(7)]),
-        None => format!("pr/{pr}"),
+impl Store {
+    const ALL: [Self; 2] = [Self::Images, Self::Videos];
+
+    /// The store `file` belongs in.
+    fn of(file: &Path) -> Self {
+        if file.extension().is_some_and(|extension| extension == "mp4") {
+            Self::Videos
+        } else {
+            Self::Images
+        }
     }
-}
 
-/// A shallow checkout of [`BRANCH`].
-fn clone_branch(ctx: &Context) -> Result<BranchCheckout> {
-    BranchCheckout::clone_shallow(ctx, BRANCH, "Typewriter evidence")
+    /// The folder of every pull request's media, relative to the branch.
+    fn root(self) -> &'static str {
+        match self {
+            Self::Images => "pr",
+            Self::Videos => "evidence/pr",
+        }
+    }
+
+    /// The folder of one pull request's media, or of one of its commits.
+    fn folder(self, pr: u64, sha: Option<&str>) -> String {
+        let root = self.root();
+        match sha {
+            Some(sha) => format!("{root}/{pr}/{}", &sha[..sha.len().min(7)]),
+            None => format!("{root}/{pr}"),
+        }
+    }
+
+    /// Where `file` of pull request `pr`'s commit `sha` is served.
+    fn url(self, pr: u64, sha: &str, file: &Path) -> String {
+        let folder = self.folder(pr, Some(sha));
+        let file = file.display();
+        match self {
+            Self::Images => {
+                format!("https://raw.githubusercontent.com/{REPOSITORY}/{BRANCH}/{folder}/{file}")
+            }
+            Self::Videos => format!("{SITE}/{folder}/{file}"),
+        }
+    }
+
+    /// A shallow checkout of the store's branch.
+    fn checkout(self, ctx: &Context) -> Result<BranchCheckout> {
+        let branch = match self {
+            Self::Images => BRANCH,
+            Self::Videos => PAGES,
+        };
+        BranchCheckout::clone_shallow(ctx, branch, "Typewriter evidence")
+    }
 }

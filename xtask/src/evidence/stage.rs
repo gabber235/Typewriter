@@ -1,8 +1,8 @@
 //! `cargo xtask evidence stage`: the one public projection of a results folder. Actions artifacts
-//! of this public repository are downloadable and the evidence branch is public, so every upload
+//! of this public repository are downloadable and both media stores are public, so every upload
 //! and every publish reads only what this writes to [`PUBLIC`]: each `TestRun` with only its
-//! published artifacts ([`ArtifactKind::published`]: clips and screenshots), their files with a
-//! clip's preview, the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
+//! published artifacts ([`ArtifactKind::published`]: clips, and screenshots of failed attempts,
+//! since a clip shows a passing one better), their files with a clip's preview, the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
 //! is written while any public text holds a known secret or any run lists a file missing on disk.
 
 use std::fs;
@@ -13,7 +13,7 @@ use anyhow::{Context as _, Result, bail};
 use super::RESULTS;
 use super::publish::{known_secrets, scrub};
 use crate::Context;
-use crate::results::{self, TestRun};
+use crate::results::{self, Outcome, TestRun};
 use crate::review::{self, COVERAGE_DIR};
 use crate::skirout::base::harness::v1::test_run::ArtifactKind;
 
@@ -57,9 +57,10 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
         let at = path.strip_prefix(results)?.to_path_buf();
         let folder = path.parent().context("a run file without a folder")?;
         for attempt in run.cases.iter_mut().flat_map(|case| &mut case.attempts) {
-            attempt
-                .artifacts
-                .retain(|artifact| artifact.kind.published());
+            let passed = attempt.outcome == Outcome::Passed;
+            attempt.artifacts.retain(|artifact| {
+                artifact.kind.published() && !(passed && artifact.kind == ArtifactKind::Screenshot)
+            });
         }
         // Before anything is written: a run that lists a file it never wrote is a fault.
         for case in &run.cases {
@@ -178,6 +179,37 @@ mod tests {
             .map(|artifact| artifact.kind.clone())
             .collect();
         assert_eq!(kinds, [ArtifactKind::Clip, ArtifactKind::Screenshot]);
+    }
+
+    #[test]
+    fn a_passed_attempt_publishes_its_clip_but_not_its_screenshots() {
+        let root = TempRoot::new();
+        root.write("results/panel/attempts/1/clips/conn.mp4", "clip");
+        root.write(
+            "results/panel/attempts/1/screenshots/CONN-1/open.png",
+            "png",
+        );
+        let mut attempt = crate::test_support::passed_attempt((0, 1));
+        attempt.folder = "attempts/1".to_owned();
+        attempt.artifacts = [
+            (ArtifactKind::Clip, "clips/conn.mp4"),
+            (ArtifactKind::Screenshot, "screenshots/CONN-1/open.png"),
+        ]
+        .map(|(kind, path)| results::Artifact {
+            kind,
+            path: path.to_owned(),
+            _unrecognized: None,
+        })
+        .to_vec();
+        let run = crate::test_support::run_of("[CONN-1] Reconnects", vec![attempt]);
+        results::write(&run, &root.path("results/panel/test_run.json")).unwrap();
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            ["panel/attempts/1/clips/conn.mp4", "panel/test_run.json"]
+        );
     }
 
     #[test]

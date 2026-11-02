@@ -1,19 +1,19 @@
 name: Evidence prune
 
-# Drops media from the evidence branch once nobody can see it: when a pull request closes,
-# and in a weekly run that expires merged pull requests and squashes history.
+# Drops media from the evidence and gh-pages branches once nobody can see it: when a pull request
+# closes, and in a weekly run that expires merged pull requests and squashes both histories.
 on:
   pull_request_target:
     types: [closed]
   schedule:
     - cron: "0 4 * * 0"
 
-# Pushes to the evidence branch with the workflow token.
+# Pushes to both branches with the workflow token.
 permissions:
   contents: write
 
-# No concurrency group: CI publishes and prunes retry their pushes onto each other's commits, and
-# the weekly squash starts over when a push lands during it.
+# No concurrency group: CI publishes, documentation previews and prunes retry their pushes onto
+# each other's commits, and the weekly squash starts over when a push lands during it.
 
 jobs:
   prune:

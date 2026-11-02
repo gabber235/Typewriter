@@ -22,7 +22,9 @@ use crate::{CommandExt, Context};
 
 /// The file the runner writes inside the evidence folder.
 const RUN_FILE: &str = "test_run.json";
-const SCREEN: (u32, u32) = (1280, 800);
+/// The virtual display: the panel's own window size (panel/linux/runner/my_application.cc), so a
+/// recording holds only the panel.
+pub(crate) const SCREEN: (u32, u32) = (1280, 720);
 /// GitHub's image proxy refuses files over about 5 MB; previews stay well below.
 const PREVIEW_LIMIT: u64 = 3 * 1024 * 1024;
 /// How long the output log waits for the pipes to drain after the command exited.
@@ -372,6 +374,9 @@ impl Ffmpeg {
                 .args([
                     "-f",
                     "x11grab",
+                    // Nothing moves the pointer, so it would only sit in the frame's center.
+                    "-draw_mouse",
+                    "0",
                     "-video_size",
                     &size,
                     "-framerate",

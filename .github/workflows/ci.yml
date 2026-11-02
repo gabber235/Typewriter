@@ -129,13 +129,13 @@ jobs:
           if-no-files-found: ignore
 
   # Runs when checks or suites fail too, since a failure is what the description must show. Jobs
-  # of other pull requests and the prune write the evidence branch at the same time; the publish
+  # of other pull requests and the prune write the media branches at the same time; the publish
   # retries its push onto their commits instead of queueing behind them.
   report:
     needs: [plan, check, e2e]
     if: always() && needs.plan.outputs.areas != '[]'
     runs-on: ubuntu-latest
-    # The evidence branch, the description and code scanning. Fork pull requests get a read
+    # The media branches, the description and code scanning. Fork pull requests get a read
     # only token whatever is asked here, so they get the job summary instead.
     permissions:
       contents: write

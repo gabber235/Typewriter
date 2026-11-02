@@ -27,7 +27,7 @@ use anyhow::{Context as _, Result, bail};
 
 use crate::cluster::CiCluster;
 use crate::deploy;
-use crate::evidence::{self, Recorded};
+use crate::evidence::{self, Recorded, SCREEN};
 use crate::lock::{self, HeavyLock};
 use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestRun};
 use crate::stack::spec::StackSpec;
@@ -478,6 +478,15 @@ fn in_chrome<T: Target>(mut command: Vec<String>, launch: &Launch<'_, T>) -> Res
         // only from SwiftShader, and Chrome no longer falls back to it on its own.
         "--web-browser-flag=--enable-unsafe-swiftshader".into(),
     ]);
+    // A recording shows the panel alone: without these Chrome opens larger than the virtual
+    // display, under its toolbar and automation banner, and the page runs off screen.
+    if cfg!(target_os = "linux") {
+        command.extend([
+            "--web-browser-flag=--kiosk".into(),
+            format!("--web-browser-flag=--window-size={},{}", SCREEN.0, SCREEN.1),
+            "--web-browser-flag=--window-position=0,0".into(),
+        ]);
+    }
     // chromedriver drives only the Chrome release it was built for. Without a binary it starts
     // whatever Chrome the machine has, such as a CI runner's preinstalled one, so the devenv
     // Chrome it matches is named where devenv provides one.
