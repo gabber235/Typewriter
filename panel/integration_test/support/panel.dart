@@ -27,6 +27,10 @@ const _frame = Duration(milliseconds: 100);
 /// repeats.
 const _refocus = Duration(seconds: 2);
 
+/// How long a step lets the panel's list animations, 300 ms at most, finish
+/// before the panel closes.
+const _listAnimation = Duration(milliseconds: 500);
+
 /// Platform services initialize once per run, however many panels launch.
 final Future<void> _platform = initializePanel();
 
@@ -98,6 +102,13 @@ final class Panel {
   /// Closes the panel and opens it the way another machine does: nothing
   /// stored, nobody signed in, so a second user can take over the run.
   Future<void> startElsewhere() async {
+    // Remove this wait once `flutter --version` in the devenv shell is a
+    // release that contains https://github.com/flutter/flutter/pull/192699
+    // (issue flutter#192533). On the web, closing an AnimatedList in the frame
+    // that ends its animation disposes that item's controller twice, and the
+    // error stops the whole web run. Scenarios leave right after a new row
+    // shows, so they hit that frame by chance.
+    await tester.pump(_listAnimation);
     _store = OidcMemoryStore();
     _user = null;
     await restart();

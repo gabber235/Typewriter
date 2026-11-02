@@ -36,13 +36,6 @@ void main() {
       await panel.expectVisible("Every book of the realm");
       await panel.capture("joined-realm");
     },
-    // Skipped on web until the panel's Flutter release contains
-    // https://github.com/flutter/flutter/pull/192699 (issue flutter#192533):
-    // the members page leaves in the frame that ends a list animation, the
-    // AnimatedList disposes that item's controller twice, and the error stops
-    // the whole web run. Remove `skipOnWeb` once `flutter --version` in the
-    // devenv shell is a release that includes the fix.
-    skipOnWeb: true,
   );
 
   scenario(
