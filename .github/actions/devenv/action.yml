@@ -2,7 +2,7 @@ name: devenv
 description: >-
   Installs Nix and devenv and builds the devenv shell, so a job's steps can run
   `devenv shell -- cargo xtask ...` exactly as on a developer machine. Nix paths come from
-  gabber235.cachix.org, which trusted runs fill; tool caches come from the long lived branches.
+  gabber235.cachix.org, which trusted runs fill, as they fill the tool caches.
 
 inputs:
   op-service-account-token:
@@ -23,10 +23,9 @@ runs:
   using: composite
   steps:
     # Trusted runs (pushes to the long lived branches, pull requests from this repository) push
-    # to the shared Nix cache. Tool caches are saved by pushes to the long lived branches only:
-    # every pull request is its own cache scope, and copies per pull request would evict each
-    # other from the 10 GB the repository gets, while a long lived branch's copy is read by every
-    # pull request into it.
+    # to the shared Nix cache and save the tool caches. A pull request reads only its own caches
+    # and its base branch's, so one into a branch that never saves (a stacked pull request) would
+    # otherwise start every run cold; the 10 GB the repository gets evicts the oldest copies.
     - id: trust
       shell: bash
       env:
@@ -44,7 +43,7 @@ runs:
         if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" ]]; then
           trusted=true
         fi
-        echo "save-caches=$long_lived" >> "$GITHUB_OUTPUT"
+        echo "save-caches=$trusted" >> "$GITHUB_OUTPUT"
         echo "push-nix=$([[ $trusted == true && $HAS_TOKEN == true ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
         # Incremental artifacts only grow a cache that starts each job from the same state.
         echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"

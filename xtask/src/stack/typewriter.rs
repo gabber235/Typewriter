@@ -241,7 +241,9 @@ impl Service for Backend {
         Probe::FileExists(ctx.state().join("backend/ready"))
     }
     fn startup(&self) -> Duration {
-        Duration::from_secs(120)
+        // The host compiles each component on start, one after another; on CI runners that took
+        // from 86 seconds to past two minutes.
+        Duration::from_secs(300)
     }
 }
 

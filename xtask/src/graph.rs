@@ -228,7 +228,8 @@ pub const CHECKS: &[Step] = &[
     program(
         "backend:test",
         Area::Backend,
-        15,
+        // A CI runner with no Cargo cache compiles the workspace first, past 15 minutes.
+        30,
         "backend",
         "cargo",
         &[
@@ -319,8 +320,9 @@ pub const CHECKS: &[Step] = &[
     program(
         "panel:app",
         Area::Panel,
-        // Coverage instrumentation takes the suite from about 7 to about 11 minutes.
-        15,
+        // Coverage instrumentation takes the suite from about 7 to about 11 minutes; a CI runner
+        // with no pub or build cache needs past 15.
+        30,
         "panel",
         "flutter",
         &[
@@ -352,7 +354,8 @@ pub const CHECKS: &[Step] = &[
     program(
         "panel:widgetbook",
         Area::Panel,
-        5,
+        // Every story variant renders and is captured; a cold CI runner took 286 seconds.
+        10,
         "panel/widgetbook",
         "flutter",
         &[

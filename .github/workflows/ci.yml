@@ -1,7 +1,7 @@
 # The pull request workflow. Every job is one `cargo xtask` line inside the devenv shell, so CI
 # runs exactly what a developer runs; `gate` is the one required check. Pushes to the long lived
-# branches run it too: they check what each push changed and are the only runs that save the
-# tool caches pull requests restore (.github/actions/devenv).
+# branches run it too: they check what each push changed and save the tool caches every pull
+# request into them restores (.github/actions/devenv).
 name: CI
 
 on:
