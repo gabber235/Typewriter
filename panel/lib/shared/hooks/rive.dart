@@ -141,7 +141,14 @@ class _RiveFileLoaderHookState
 
   @override
   void dispose() {
-    _fileLoader.dispose();
+    // rive's FileLoader.dispose during a load nulls the completer the load then
+    // completes (rive 0.14.11, file_loader.dart:91), and the file it loads is
+    // never disposed. Disposing once the load settles avoids both; a failed
+    // load was already shown by the widget that asked for it.
+    _fileLoader
+        .file()
+        .then<void>((_) {}, onError: (Object _) {})
+        .whenComplete(_fileLoader.dispose);
     super.dispose();
   }
 
