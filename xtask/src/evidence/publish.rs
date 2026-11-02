@@ -17,7 +17,7 @@ use super::stage::{self, published_files};
 use super::{ATTEMPTS, Inputs, REPOSITORY, Store};
 use crate::results::{self, Quarantine, TestRun, Verdict as CaseVerdict, runner_name};
 use crate::review::verdict::{
-    COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START,
+    COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START, covers,
 };
 use crate::skirout::base::harness::v1::test_run::{ArtifactKind, Demonstrates, TestCase};
 use crate::{CommandExt, Context};
@@ -42,7 +42,7 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
     let quarantine = Quarantine::load(ctx)?;
     let media = media(&runs);
     let provenance = provenance(ctx, sha)?;
-    let section = |verdict: Option<&Verdict>| {
+    let section = |verdict: Option<&Verdict>, covered: bool| {
         render_section(&Section {
             sha,
             provenance: &provenance,
@@ -51,11 +51,12 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
             quarantine: &quarantine,
             report: &report,
             verdict,
+            covered,
         })
     };
     // Media is uploaded before the description is read, so the read modify write stays short.
     // The verdict comes from the description, so the final section is scrubbed again there.
-    scrub(&section(None), &media, &secrets)?;
+    scrub(&section(None, false), &media, &secrets)?;
     for store in Store::ALL {
         let files: Vec<&(PathBuf, String)> = media
             .iter()
@@ -70,7 +71,11 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
     }
     edit_pull_body(ctx, pr, |body| {
         let (body, verdict) = take_verdict(body);
-        let section = section(verdict.as_ref());
+        let covered = match &verdict {
+            Some(verdict) => covers(ctx, &verdict.commit, sha, &report.base)?,
+            None => false,
+        };
+        let section = section(verdict.as_ref(), covered);
         scrub(&section, &[], &secrets)?;
         Ok(replace_between(&body, START, END, &section))
     })?;
@@ -141,6 +146,7 @@ pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
         quarantine: &quarantine,
         report: &report,
         verdict: None,
+        covered: false,
     });
     scrub(&section, &[], &known_secrets())?;
     Ok(section)
@@ -149,6 +155,7 @@ pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
 /// The parts of `cargo xtask review report --json` the section shows.
 #[derive(Deserialize)]
 struct ChangeReport {
+    base: String,
     findings: Vec<Finding>,
     tests: TestChanges,
     change_map: Vec<EntityChange>,
@@ -244,17 +251,171 @@ struct Section<'a> {
     quarantine: &'a Quarantine,
     report: &'a ChangeReport,
     verdict: Option<&'a Verdict>,
+    /// Whether the verdict read everything in this commit (`covers`).
+    covered: bool,
 }
 
+/// One glance answers "can this merge?": the headline says it, what needs a person stays open, and
+/// everything that only backs the headline up is collapsed.
 fn render_section(section: &Section) -> String {
     let mut out = String::new();
-    let short = &section.sha[..section.sha.len().min(7)];
+    let _ = writeln!(out, "{}\n\n{}\n", headline(section), section.provenance);
+    render_attention(&mut out, section);
+    render_review(&mut out, section);
+    render_recordings(&mut out, section);
+    render_coverage(&mut out, &section.report.coverage);
+    render_test_changes(&mut out, section);
+    render_change_map(&mut out, section);
+    out
+}
 
-    let _ = writeln!(out, "{}\n", section.provenance);
-    let _ = writeln!(out, "### Recordings");
+/// The cases that hold the pull request back, each with its verdict.
+fn troubled<'a>(section: &'a Section) -> Vec<(&'a TestRun, &'a TestCase, CaseVerdict)> {
+    cases(section.runs)
+        .map(|(run, case)| (run, case, verdict(section, run, case)))
+        .filter(|(_, _, verdict)| *verdict != CaseVerdict::Passed)
+        .collect()
+}
+
+fn gating_findings(section: &Section) -> usize {
+    section
+        .report
+        .findings
+        .iter()
+        .filter(|finding| finding.severity == "gate")
+        .count()
+}
+
+fn headline(section: &Section) -> String {
+    let trouble = troubled(section).len();
+    let gating = gating_findings(section);
+    let passed = cases(section.runs).count() - trouble;
+    let total = passed + trouble;
+    let state = if total == 0 {
+        "**No tests reported**"
+    } else if trouble > 0 || gating > 0 {
+        "**Not ready**"
+    } else if section.covered {
+        "**Ready for a maintainer**"
+    } else {
+        "**Proven, not reviewed**"
+    };
+    let review = match (section.verdict, section.covered) {
+        (None, _) => "no review yet",
+        (Some(_), true) => "review covers this commit",
+        (Some(_), false) => "review is stale",
+    };
+    format!("{state}: {passed} of {total} tests proven, {gating} findings to fix, {review}.")
+}
+
+/// Everything that is not proven, with its message and recording open.
+fn render_attention(out: &mut String, section: &Section) {
+    let troubled = troubled(section);
+    let gating: Vec<&Finding> = section
+        .report
+        .findings
+        .iter()
+        .filter(|finding| finding.severity == "gate")
+        .collect();
+    if troubled.is_empty() && gating.is_empty() {
+        return;
+    }
+    let _ = writeln!(out, "### Needs attention");
+    for (run, case, verdict) in troubled {
+        let explained = results::last_failure(case).map_or_else(
+            || "no failure message".to_owned(),
+            |failure| {
+                format!(
+                    "{}{}",
+                    cell(&failure.message),
+                    failure
+                        .first_broken
+                        .as_ref()
+                        .map(|step| format!(" (first broken: {})", cell(step)))
+                        .unwrap_or_default()
+                )
+            },
+        );
+        let name = match &case.requirement {
+            Some(requirement) => format!("{requirement} `{}`", case.id),
+            None => format!("`{}`", case.id),
+        };
+        let _ = writeln!(
+            out,
+            "- {} {}, {name}: {explained}\n\n  {}\n",
+            result(verdict),
+            runner_name(&run.runner),
+            recording(section, run, case),
+        );
+    }
+    if !gating.is_empty() {
+        let _ = writeln!(
+            out,
+            "- **{} findings to fix**, inline on the changed lines{}.",
+            gating.len(),
+            section
+                .pr
+                .map(|pr| format!(
+                    " ([code scanning](https://github.com/{REPOSITORY}/pull/{pr}/checks))"
+                ))
+                .unwrap_or_default()
+        );
+    }
+    out.push('\n');
+}
+
+fn render_review(out: &mut String, section: &Section) {
+    let short = &section.sha[..section.sha.len().min(7)];
+    let _ = writeln!(out, "### Review");
+    match section.verdict {
+        Some(verdict) => {
+            let stale = if section.covered {
+                String::new()
+            } else {
+                format!(
+                    "{STALE}reviewed {}, the head is now {short} with other changes.\n",
+                    &verdict.commit[..verdict.commit.len().min(7)]
+                )
+            };
+            let _ = writeln!(
+                out,
+                "{VERDICT_START}\n{VERDICT_COMMIT}{} -->\n{stale}{}\n{VERDICT_END}",
+                verdict.commit, verdict.text
+            );
+        }
+        None => {
+            let _ = writeln!(out, "{VERDICT_START}\nNo verdict yet.\n{VERDICT_END}");
+        }
+    }
+}
+
+/// Every scenario's recording, collapsed: the failing ones are already open above.
+fn render_recordings(out: &mut String, section: &Section) {
     let scenarios: Vec<(&TestRun, &TestCase)> = cases(section.runs)
         .filter(|(_, case)| case.requirement.is_some() || results::artifacts(case).next().is_some())
         .collect();
+    let per_runner: Vec<String> = section
+        .runs
+        .iter()
+        .map(|(_, run)| {
+            let passed = run
+                .cases
+                .iter()
+                .filter(|case| verdict(section, run, case) == CaseVerdict::Passed)
+                .count();
+            format!(
+                "{}: {passed} of {}",
+                runner_name(&run.runner),
+                run.cases.len()
+            )
+        })
+        .collect();
+    let _ = writeln!(
+        out,
+        "\n<details><summary>Recordings ({} scenarios). Tests proven per suite: {}</summary>\n",
+        scenarios.len(),
+        per_runner.join(", "),
+    );
     if scenarios.is_empty() {
         let _ = writeln!(out, "No requirement scenarios ran.");
     } else {
@@ -276,121 +437,17 @@ fn render_section(section: &Section) -> String {
             );
         }
     }
+    let _ = writeln!(out, "\n</details>");
+}
 
-    let _ = writeln!(out, "\n### Broken and unreliable");
-    let mut troubled = 0;
-    for (run, case) in cases(section.runs) {
-        let word = match verdict(section, run, case) {
-            CaseVerdict::Failed => "**broken**",
-            CaseVerdict::Flaky => "**unreliable**",
-            _ => continue,
-        };
-        troubled += 1;
-        let explained = results::last_failure(case).map_or_else(
-            || "an outcome this harness does not know".to_owned(),
-            |failure| {
-                format!(
-                    "{}{}",
-                    cell(&failure.message),
-                    failure
-                        .first_broken
-                        .as_ref()
-                        .map(|step| format!(" (first broken: {})", cell(step)))
-                        .unwrap_or_default()
-                )
-            },
-        );
-        let _ = writeln!(
-            out,
-            "- {word} {}/{}: {explained}",
-            runner_name(&run.runner),
-            case.id,
-        );
-    }
-    if troubled == 0 {
-        let _ = writeln!(out, "None.");
-    }
-
-    let _ = writeln!(out, "\n### Review");
-    match section.verdict {
-        Some(verdict) => {
-            let fresh =
-                section.sha.starts_with(&verdict.commit) || verdict.commit.starts_with(section.sha);
-            let stale = if fresh {
-                String::new()
-            } else {
-                format!(
-                    "{STALE}reviewed {}, the head is now {short}.\n",
-                    &verdict.commit[..verdict.commit.len().min(7)]
-                )
-            };
-            let _ = writeln!(
-                out,
-                "{VERDICT_START}\n{VERDICT_COMMIT}{} -->\n{stale}{}\n{VERDICT_END}",
-                verdict.commit, verdict.text
-            );
-        }
-        None => {
-            let _ = writeln!(out, "{VERDICT_START}\nNo verdict yet.\n{VERDICT_END}");
-        }
-    }
-    let gates = section
-        .report
-        .findings
-        .iter()
-        .filter(|finding| finding.severity == "gate")
-        .count();
-    let flags = section.report.findings.len() - gates;
-    let _ = writeln!(
-        out,
-        "Findings inline: {gates} gating, {flags} flags{}.",
-        section
-            .pr
-            .map(|pr| format!(
-                " ([code scanning](https://github.com/{REPOSITORY}/pull/{pr}/checks))"
-            ))
-            .unwrap_or_default()
-    );
-
-    render_coverage(&mut out, &section.report.coverage);
-
-    let _ = writeln!(out, "\n### Run health");
-    let mut flaky = Vec::new();
-    let mut quarantined = Vec::new();
-    for (run, case) in cases(section.runs) {
-        let id = format!("{}/{}", runner_name(&run.runner), case.id);
-        match verdict(section, run, case) {
-            CaseVerdict::Flaky => flaky.push(format!("{id} (passed on rerun)")),
-            CaseVerdict::Quarantined => quarantined.push(id),
-            _ => {}
-        }
-    }
-    let _ = writeln!(
-        out,
-        "Flaky {}{}. Quarantined {}{}.",
-        flaky.len(),
-        listed(&flaky),
-        quarantined.len(),
-        listed(&quarantined),
-    );
-    for (_, run) in section.runs {
-        let passed = run
-            .cases
-            .iter()
-            .filter(|case| verdict(section, run, case) == CaseVerdict::Passed)
-            .count();
-        let _ = writeln!(
-            out,
-            "- {}: {passed} of {} passed",
-            runner_name(&run.runner),
-            run.cases.len()
-        );
-    }
-
+/// Test changes, open when a test lost strength, since that is what a reader must judge.
+fn render_test_changes(out: &mut String, section: &Section) {
     let tests = &section.report.tests;
+    let suspect = tests.weakened.len() + tests.disabled.len() + tests.deleted.len();
     let _ = writeln!(
         out,
-        "\n### Test changes\nAdded {}. Deleted {}. Weakened {}. Disabled {}. Expectations rewritten {}. Harness edits {}.",
+        "\n<details{}><summary>Test changes: {} added, {} deleted, {} weakened, {} disabled</summary>\n\nExpectations rewritten {}. Harness edits {}.\n\n</details>",
+        if suspect > 0 { " open" } else { "" },
         tests.added.len(),
         tests.deleted.len(),
         tests.weakened.len(),
@@ -398,7 +455,9 @@ fn render_section(section: &Section) -> String {
         tests.expectations_rewritten.len(),
         tests.harness_edits.len()
     );
+}
 
+fn render_change_map(out: &mut String, section: &Section) {
     let map = &section.report.change_map;
     let _ = writeln!(
         out,
@@ -423,18 +482,17 @@ fn render_section(section: &Section) -> String {
         let _ = writeln!(out, "- and {} more", map.len() - CHANGE_MAP_LIMIT);
     }
     let _ = writeln!(out, "\n</details>");
-    out
 }
 
 /// How much of the changed code the tests ran, one row per area the change touched. Reported,
-/// never gating; the uncovered lines are inline findings.
+/// never gating; the uncovered lines are in the reviewer's report.
 fn render_coverage(out: &mut String, coverage: &Coverage) {
     if coverage.areas.is_empty() {
         return;
     }
     let _ = writeln!(
         out,
-        "\n### Coverage\n| Area | Changed lines covered |\n|---|---|"
+        "\n<details><summary>Coverage of changed lines</summary>\n\n| Area | Changed lines covered |\n|---|---|"
     );
     let mut notes = Vec::new();
     for area in &coverage.areas {
@@ -456,6 +514,7 @@ fn render_coverage(out: &mut String, coverage: &Coverage) {
     if !notes.is_empty() {
         let _ = writeln!(out, "\n<sub>{}</sub>", notes.join(". "));
     }
+    let _ = writeln!(out, "\n</details>");
 }
 
 fn cases(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = (&TestRun, &TestCase)> {
@@ -647,7 +706,7 @@ pub(crate) fn edit_pull_body(
     bail!("the description of #{pr} kept changing; gave up after {ATTEMPTS} attempts")
 }
 
-fn pull_body(ctx: &Context, pr: u64) -> Result<String> {
+pub(crate) fn pull_body(ctx: &Context, pr: u64) -> Result<String> {
     #[derive(Deserialize)]
     struct Pull {
         body: String,
@@ -703,7 +762,8 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{TempRoot, raw_failed_run};
+    use crate::results::Outcome;
+    use crate::test_support::{TempRoot, failed, raw_failed_run, requirement_run};
 
     const SECRET: &str = "ghp_0123456789abcdefghij";
 
@@ -821,6 +881,72 @@ mod tests {
                 "Evidence from [8f93ae1](https://github.com/{REPOSITORY}/commit/8f93ae1abc), 2026-11-02 10:14 UTC. [CI run](https://github.com/{REPOSITORY}/actions/runs/41415929881)."
             )
         );
+    }
+
+    fn report() -> ChangeReport {
+        serde_json::from_value(serde_json::json!({
+            "base": "base",
+            "findings": [],
+            "tests": {
+                "added": [], "deleted": [], "weakened": [], "disabled": [],
+                "expectations_rewritten": [], "harness_edits": [],
+            },
+            "change_map": [],
+            "coverage": { "areas": [] },
+        }))
+        .unwrap()
+    }
+
+    /// The section for one requirement scenario with `outcome`, reviewed or not.
+    fn section_for(outcome: Outcome, verdict: Option<&Verdict>, covered: bool) -> String {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", outcome),
+        )];
+        render_section(&Section {
+            sha: "abcdef1234",
+            provenance: "Evidence from abcdef1.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &report(),
+            verdict,
+            covered,
+        })
+    }
+
+    #[test]
+    fn a_proven_and_reviewed_change_leads_with_ready_and_hides_its_recordings() {
+        let verdict = Verdict {
+            commit: "abcdef1234".to_owned(),
+            text: "Looks right.".to_owned(),
+        };
+        let section = section_for(Outcome::Passed, Some(&verdict), true);
+        assert!(section.starts_with("**Ready for a maintainer**: 1 of 1 tests proven"));
+        assert!(!section.contains("Needs attention"));
+        assert!(section.contains("<details><summary>Recordings (1 scenarios)"));
+    }
+
+    #[test]
+    fn a_broken_scenario_leads_with_not_ready_and_shows_above_every_fold() {
+        let section = section_for(failed("the realm never appeared"), None, false);
+        assert!(section.starts_with("**Not ready**: 0 of 1 tests proven"));
+        let attention = section.find("### Needs attention").unwrap();
+        let first_fold = section.find("<details>").unwrap();
+        let message = section.find("the realm never appeared").unwrap();
+        assert!(attention < message && message < first_fold);
+    }
+
+    #[test]
+    fn a_verdict_on_other_changes_is_marked_stale() {
+        let verdict = Verdict {
+            commit: "1234567".to_owned(),
+            text: "Looks right.".to_owned(),
+        };
+        let section = section_for(Outcome::Passed, Some(&verdict), false);
+        assert!(section.starts_with("**Proven, not reviewed**"));
+        assert!(section.contains("review is stale"));
+        assert!(section.contains("**Stale**: reviewed 1234567"));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! Each detector maps one way agent written code goes wrong to findings on changed lines. Entities
 //! and their structure come from the shared index; project rules come from ast-grep. Cheap and
-//! unambiguous detectors gate (`review gate`, the `quality` step); the rest flag lines for the
-//! reviewer.
+//! unambiguous detectors gate (`review gate`, the `quality` step) and alone reach the pull request;
+//! the rest are input for the reviewer, in `review report`.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -57,12 +57,6 @@ pub const DETECTORS: &[Detector] = &[
     Detector {
         name: "parallel-concept",
         run: similar_names,
-        gate: false,
-    },
-    // Dead additions: new entities nothing references.
-    Detector {
-        name: "unreferenced",
-        run: without_dependents,
         gate: false,
     },
     // Contract changes: public declarations removed or with a changed signature.
@@ -349,23 +343,6 @@ pub fn words(name: &str) -> Vec<String> {
     }
     words.retain(|word| !word.is_empty());
     words
-}
-
-/// New functions and types that nothing references, apart from entry points and overrides.
-fn without_dependents(_: &Context, change: &ChangeContext) -> Result<Vec<Finding>> {
-    Ok(change
-        .added()
-        .filter(|e| e.kind != EntityKind::Test && !e.overrides && e.name != "main")
-        .filter(|e| change.head.callers_of(e).is_empty() && !change.head.is_mentioned(&e.name))
-        .map(|e| {
-            Finding::flag(
-                "unreferenced",
-                e,
-                format!("nothing references {}", e.qualified),
-                "Delete it, or wire it in within this change.",
-            )
-        })
-        .collect())
 }
 
 /// Public declarations the change removed or whose signature it changed.

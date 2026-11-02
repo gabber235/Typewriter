@@ -10,25 +10,24 @@ use super::report::{ChangeReport, Severity};
 
 const SCHEMA: &str = "https://json.schemastore.org/sarif-2.1.0.json";
 
-/// One run for the xtask detectors, limited to lines the change added or rewrote.
+/// One run for the gating detectors, limited to lines the change added or rewrote. Code scanning
+/// shows a reader only what they must fix; flags stay in the reviewer's report.
 pub fn to_sarif(report: &ChangeReport, change: &Change) -> Value {
     let rules: Vec<Value> = DETECTORS
         .iter()
-        .map(|detector| detector.name)
-        .chain(["coverage"])
-        .map(|name| json!({ "id": name, "name": name }))
+        .filter(|detector| detector.gate)
+        .map(|detector| json!({ "id": detector.name, "name": detector.name }))
         .collect();
     let results: Vec<Value> = report
         .findings
         .iter()
-        .filter(|finding| change.touches(&finding.file, finding.line))
+        .filter(|finding| {
+            finding.severity == Severity::Gate && change.touches(&finding.file, finding.line)
+        })
         .map(|finding| {
             json!({
                 "ruleId": finding.detector,
-                "level": match finding.severity {
-                    Severity::Gate => "error",
-                    Severity::Flag => "warning",
-                },
+                "level": "error",
                 "message": { "text": format!("{}\nFix: {}", finding.message, finding.fix) },
                 "locations": [{
                     "physicalLocation": {

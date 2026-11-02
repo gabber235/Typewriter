@@ -58,6 +58,14 @@ pub enum ReviewCommand {
     Investigate(InvestigateCommand),
     /// Publishes the reviewer's verdict for the current head commit into the pull request description.
     Verdict { file: PathBuf },
+    /// Fails unless the pull request's verdict covers `head`: the same commit, or a commit with
+    /// the same changes. The `Review` workflow's one job.
+    Covered {
+        #[arg(long)]
+        pr: u64,
+        #[arg(long)]
+        head: String,
+    },
 }
 
 pub fn run(ctx: &Context, args: ReviewArgs) -> Result<()> {
@@ -71,6 +79,7 @@ pub fn run(ctx: &Context, args: ReviewArgs) -> Result<()> {
         }
         ReviewCommand::Investigate(command) => investigate::run(ctx, command, base, args.json),
         ReviewCommand::Verdict { file } => verdict::publish(ctx, &file),
+        ReviewCommand::Covered { pr, head } => verdict::require_covered(ctx, pr, &head, base),
     }
 }
 
