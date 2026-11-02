@@ -193,8 +193,29 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     return EditGroupControl(this, id);
   }
 
+  // TEMPORARY LINK-1 diagnostic: names the first condition that keeps a
+  // group read only, once per change. Remove once the Linux cause is known.
+  String? _lastReadOnlyReason;
+
   bool canEdit(EditGroupId id) {
     final group = _groups[id];
+    final reason = _closed
+        ? "closed"
+        : !_state.available
+        ? "unavailable"
+        : _state.working == null
+        ? "no working document"
+        : _state.confirmed == null
+        ? "no confirmed document"
+        : !model.sameContract(confirmed, document)
+        ? "contract differs"
+        : group == null
+        ? "no group $id"
+        : "phase ${group.phase.runtimeType} admission ${group.admission}";
+    if (reason != _lastReadOnlyReason) {
+      _lastReadOnlyReason = reason;
+      debugPrint("LINK-1 diagnostic: canEdit($id) state: $reason");
+    }
     return !_closed &&
         _state.available &&
         _state.working != null &&
