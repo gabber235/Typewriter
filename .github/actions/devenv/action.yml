@@ -55,6 +55,12 @@ runs:
         # A job never reuses a Gradle daemon, and an idle one held 2.4 GB that the panel's
         # analyzer (11 GB on Linux) needs on a 16 GB runner.
         echo "GRADLE_OPTS=-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process" >> "$GITHUB_ENV"
+    # devenv provides every tool, so the runner's own SDKs only take the disk the Nix store and a
+    # cold build need: a panel check ran out of it during generation.
+    - shell: bash
+      run: |
+        sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift
+        df -h /
     - uses: cachix/install-nix-action@v31
     # Reads gabber235.cachix.org (Flutter, the Rust toolchain and every other path a trusted run
     # built) and the public devenv cache. Pushing is the explicit step below, with a token only
