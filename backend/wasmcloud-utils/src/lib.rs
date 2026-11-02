@@ -53,7 +53,7 @@ pub use skir_response_trait::{
 pub mod skir_utils;
 
 #[path = "transport_routes/skirout/mod.rs"]
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::box_default, clippy::too_many_lines)]
 pub mod transport_routes;
 
 /// Validate that SKIR record IDs belong to the expected database table.
