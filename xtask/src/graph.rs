@@ -188,7 +188,8 @@ pub const GENERATE: Step = Step {
         run: generate::step,
     },
     heavy: false,
-    budget: mins(10),
+    // A cold CI runner builds every generator from scratch.
+    budget: mins(20),
     needs_generate: false,
     coverage: None,
 };
