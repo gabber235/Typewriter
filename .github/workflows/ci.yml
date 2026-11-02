@@ -72,17 +72,7 @@ jobs:
       - run: devenv shell -- cargo xtask --help > /dev/null
       - if: matrix.area.area != 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
-        # The sampler is a temporary diagnostic: what fills the panel runner's memory before it is
-        # shut down. It runs inside this step, since a step's background processes end with it.
-        run: |
-          if [[ "${{ matrix.area.area }}" == panel ]]; then
-            ( while true; do
-                echo "== memory $(date +%T) $(free -m | awk '/Mem:/{print "used " $3 " MB of " $2 ", available " $7}') $(df -m / | awk 'NR==2{print "disk free " $4 " MB"}')"
-                ps -eo rss,args --sort=-rss | head -6 | awk 'NR>1{printf "   %6d MB %s\n", $1/1024, substr($0, index($0,$2), 100)}'
-                sleep 10
-              done ) &
-          fi
-          devenv shell -- cargo xtask check ${{ matrix.area.area }}
+        run: devenv shell -- cargo xtask check ${{ matrix.area.area }}
       # A CI checkout has no local branches to infer a base from; pass the event's base.
       - if: matrix.area.area == 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
