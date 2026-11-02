@@ -110,12 +110,17 @@ final class FieldDriver extends ComponentDriver {
   /// the same field; the innermost text field is the input a click reaches.
   /// A field rebuilt while its surface loads drops the focus a click gave
   /// it, so a step waiting for [acceptsText] clicks again, as a user does.
+  /// An input merged into an enclosing node has its tap there, the node a
+  /// screen reader activates.
   void clickInput() {
     final field = _node;
-    final input = [
+    var input = [
       field,
       ...field.descendants,
     ].where((node) => node.getSemanticsData().flagsCollection.isTextField).last;
+    while (input.isMergedIntoParent && input.parent != null) {
+      input = input.parent!;
+    }
     tester.semantics.tap(
       find.semantics.byPredicate((node) => identical(node, input)),
     );
