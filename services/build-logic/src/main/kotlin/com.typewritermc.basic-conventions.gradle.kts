@@ -80,4 +80,7 @@ tasks.withType<Test> {
         showCauses = true
         showStackTraces = true
     }
+    // Realm suites hold a 100,000 resource realm next to the rest of the suite; at Gradle's 512 MB
+    // default the worker spent most of the suite in full collections.
+    maxHeapSize = "2g"
 }
