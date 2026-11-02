@@ -21,8 +21,40 @@ final class ReportedRun {
   /// The case id of [title] proving [requirement], as xtask selects it.
   static String id(String requirement, String title) => "[$requirement] $title";
 
+  /// Lists the case [title] proving [requirement] before it runs, as failed:
+  /// an error can stop every later test before it reports, and a run must not
+  /// read as complete without them.
+  void expectCase({
+    required String requirement,
+    required String title,
+    required results.Demonstrates demonstrates,
+  }) {
+    _cases.add(
+      results.TestCase(
+        id: id(requirement, title),
+        requirement: requirement,
+        demonstrates: demonstrates,
+        attempts: [
+          results.Attempt(
+            outcome: failedWith(
+              "the scenario never finished; a failure in an earlier scenario "
+              "can stop the ones after it",
+            ),
+            span: null,
+            durationMillis: 0,
+            artifacts: const [],
+            folder: "",
+            steps: const [],
+            taps: const [],
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Records the one attempt of the case [title] proving [requirement], which
-  /// ran from [start] to [end] (Unix milliseconds) and ended in [outcome].
+  /// ran from [start] to [end] (Unix milliseconds) and ended in [outcome],
+  /// replacing what [expectCase] listed.
   void add({
     required String requirement,
     required String title,
@@ -34,34 +66,41 @@ final class ReportedRun {
     List<results.Step> steps = const [],
     List<results.Tap> taps = const [],
   }) {
-    _cases.add(
-      results.TestCase(
-        id: id(requirement, title),
-        requirement: requirement,
-        demonstrates: demonstrates,
-        attempts: [
-          results.Attempt(
-            outcome: outcome,
-            span: results.Span(startMillis: start, endMillis: end),
-            durationMillis: end - start,
-            artifacts: artifacts,
-            // `cargo xtask e2e` sets the drive's folder when it reads the run.
-            folder: "",
-            steps: steps,
-            taps: taps,
-          ),
-        ],
-      ),
+    final reported = results.TestCase(
+      id: id(requirement, title),
+      requirement: requirement,
+      demonstrates: demonstrates,
+      attempts: [
+        results.Attempt(
+          outcome: outcome,
+          span: results.Span(startMillis: start, endMillis: end),
+          durationMillis: end - start,
+          artifacts: artifacts,
+          // `cargo xtask e2e` sets the drive's folder when it reads the run.
+          folder: "",
+          steps: steps,
+          taps: taps,
+        ),
+      ],
     );
+    final listed = _cases.indexWhere((known) => known.id == reported.id);
+    if (listed < 0) {
+      _cases.add(reported);
+    } else {
+      _cases[listed] = reported;
+    }
   }
 
-  /// Fails the passed case [id] for what went wrong after its body ended.
+  /// Fails the case [id] for an error the test reported, when the case passed
+  /// or has not reported yet (no span); a failure it reported itself stands.
   void failLate(String id, String details) {
     final index = _cases.indexWhere((reported) => reported.id == id);
     if (index < 0) return;
     final reported = _cases[index];
     final attempt = reported.attempts.single;
-    if (attempt.outcome != results.Outcome.passed) return;
+    final open =
+        attempt.outcome == results.Outcome.passed || attempt.span == null;
+    if (!open) return;
     _cases[index] = results.TestCase(
       id: reported.id,
       requirement: reported.requirement,

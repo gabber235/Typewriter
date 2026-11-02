@@ -10,7 +10,6 @@
 library;
 
 import "package:flutter_test/flutter_test.dart";
-import "package:integration_test/common.dart" as integration;
 import "package:integration_test/integration_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v1/test_run.dart"
     as results;
@@ -40,22 +39,25 @@ final ReportedRun _run = ReportedRun(
 );
 final Map<String, String> _captures = {};
 
+/// What first failed each test. The binding keeps only the last report, and one
+/// error can set off many.
+final Map<String, FlutterErrorDetails> _firstFailures = {};
+
 /// Registers every scenario group in [groups] and reports their results.
 ///
 /// `flutter drive` accepts one target per run, so `integration_test/all_test.dart`
 /// passes every group's `main` here.
 void runScenarios(List<void Function()> groups) {
   _publish();
-  // An error after a scenario's body fails that scenario in the binding alone.
-  // Reported, it stays a result of the scenario, which keeps the run's evidence.
-  tearDownAll(() {
-    for (final MapEntry(key: id, :value) in _binding.results.entries) {
-      if (value case final integration.Failure failure) {
-        _run.failLate(id, failure.details ?? "failed after its body ended");
-      }
-    }
+  final report = reportTestException;
+  reportTestException = (details, id) {
+    _firstFailures.putIfAbsent(id, () => details);
+    // An error after a scenario's body fails that scenario in the binding
+    // alone. Recorded now, it stays a result of the scenario.
+    _run.failLate(id, _firstFailures[id]!.exceptionAsString());
     _publish();
-  });
+    report(details, id);
+  };
   for (final group in groups) {
     group();
   }
@@ -83,6 +85,13 @@ void scenario(
   }
   final id = ReportedRun.id(requirement, title);
   final skip = !_selected(id, requirement);
+  if (!skip) {
+    _run.expectCase(
+      requirement: requirement,
+      title: title,
+      demonstrates: demonstrates,
+    );
+  }
   testWidgets(id, skip: skip, (tester) async {
     final artifacts = <results.Artifact>[];
     // The panel logs through debugPrint; a failure keeps what it printed.
@@ -112,9 +121,20 @@ void scenario(
           _publish();
         },
       );
-    } on Object {
+    } on Object catch (error) {
       debugPrint = original;
       FlutterError.onError = reportError;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      _run.add(
+        requirement: requirement,
+        title: title,
+        demonstrates: demonstrates,
+        outcome: failedWith(error, firstBroken: "launching the panel"),
+        start: now,
+        end: now,
+        artifacts: artifacts,
+      );
+      _publish();
       rethrow;
     }
     final start = DateTime.now().millisecondsSinceEpoch;
@@ -129,12 +149,24 @@ void scenario(
         Error.throwWithStackTrace(pending as Object, StackTrace.current);
       }
     } on Object catch (error, stackTrace) {
-      outcome = failedWith(error, firstBroken: panel.steps.lastOrNull?.says);
-      await panel.capture("failure");
+      // The body's own error reports only after this rethrow, so a failure
+      // already reported came first and ended the test under the body. What
+      // the body then hit is a consequence.
+      final cause = _firstFailures[id];
+      outcome = failedWith(
+        cause?.exceptionAsString() ?? error,
+        firstBroken: panel.steps.lastOrNull?.says,
+      );
+      if (cause != null) log.writeln("${_now()} $cause");
       log.writeln("${_now()} $error\n$stackTrace");
       // A framework error the failure left pending is logged too.
       final pending = tester.takeException();
       if (pending != null) log.writeln("${_now()} $pending");
+      try {
+        await panel.capture("failure");
+      } on Object catch (captureError) {
+        log.writeln("${_now()} no failure screenshot: $captureError");
+      }
       final path = "logs/$requirement/panel.log";
       _captures[path] = base64Encode(utf8.encode(log.toString()));
       artifacts.add(
@@ -146,6 +178,14 @@ void scenario(
       debugPrint = original;
       FlutterError.onError = reportError;
       final end = DateTime.now().millisecondsSinceEpoch;
+      // An error can end the test while its body runs on and returns normally.
+      final failure = _firstFailures[id];
+      if (failure != null && outcome == results.Outcome.passed) {
+        outcome = failedWith(
+          failure.exceptionAsString(),
+          firstBroken: panel.steps.lastOrNull?.says,
+        );
+      }
       _run.add(
         requirement: requirement,
         title: title,
