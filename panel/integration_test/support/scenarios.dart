@@ -139,8 +139,11 @@ void scenario(
     }
     final start = DateTime.now().millisecondsSinceEpoch;
     results.Outcome outcome = results.Outcome.passed;
+    int? bodyEnded;
     try {
       await body(panel);
+      // The recording ends on what the body proved, not on the panel closing.
+      bodyEnded = DateTime.now().millisecondsSinceEpoch;
       await panel.close();
       // An exception the framework caught during a frame fails the test only
       // after the body returns; surfacing it here records it as the failure.
@@ -177,7 +180,7 @@ void scenario(
       // Restored before the test ends, since the binding checks they were.
       debugPrint = original;
       FlutterError.onError = reportError;
-      final end = DateTime.now().millisecondsSinceEpoch;
+      final end = bodyEnded ?? DateTime.now().millisecondsSinceEpoch;
       // An error can end the test while its body runs on and returns normally.
       final failure = _firstFailures[id];
       if (failure != null && outcome == results.Outcome.passed) {

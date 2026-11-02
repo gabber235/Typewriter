@@ -37,6 +37,24 @@ const _listAnimation = Duration(milliseconds: 500);
 final Future<void> _platform = initializePanel();
 
 /// The running panel and the session store it keeps between launches.
+/// The page size a web recording keeps, set by `cargo xtask e2e` where it
+/// records; empty otherwise.
+const _recordedViewport = String.fromEnvironment("RECORDED_VIEWPORT");
+
+/// A recording keeps only the part of Chrome's window where the page should
+/// be; a page anywhere else makes every recording show the wrong thing.
+void _requireRecordedViewport(WidgetTester tester) {
+  if (_recordedViewport.isEmpty) return;
+  final size = tester.view.physicalSize;
+  final actual = "${size.width.toInt()}x${size.height.toInt()}";
+  if (actual != _recordedViewport) {
+    throw StateError(
+      "the page is $actual, but the recording keeps $_recordedViewport: "
+      "update CHROME_MARGINS in xtask/src/e2e.rs",
+    );
+  }
+}
+
 final class Panel {
   Panel._(this.tester, this._onCapture);
 
@@ -75,6 +93,7 @@ final class Panel {
     required void Function(String name, Uint8List png) onCapture,
   }) async {
     await _platform;
+    _requireRecordedViewport(tester);
     final panel = Panel._(tester, onCapture);
     addTearDown(() => panel._container?.dispose());
     await panel._start();

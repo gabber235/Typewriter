@@ -25,6 +25,14 @@ const RUN_FILE: &str = "test_run.json";
 /// The virtual display: the panel's own window size (panel/linux/runner/my_application.cc), so a
 /// recording holds only the panel.
 pub(crate) const SCREEN: (u32, u32) = (1280, 720);
+/// What a program's window draws beside the page it shows, when the page cannot fill the window.
+/// The display grows by this much and the recording keeps only the page.
+#[derive(Clone, Copy, Default)]
+pub struct WindowMargins {
+    pub right: u32,
+    pub top: u32,
+}
+
 /// GitHub's image proxy refuses files over about 5 MB; previews stay well below.
 const PREVIEW_LIMIT: u64 = 3 * 1024 * 1024;
 /// How long the output log waits for the pipes to drain after the command exited.
@@ -36,6 +44,7 @@ pub struct Recorded {
     pub companions: Vec<Vec<String>>,
     /// False when only the display is needed, because the program records itself.
     pub video: bool,
+    pub margins: WindowMargins,
     /// Where the command runs, relative to the repository root.
     pub cwd: String,
     pub env: Vec<(String, String)>,
@@ -52,6 +61,7 @@ impl Recorded {
             command,
             companions: Vec::new(),
             video: true,
+            margins: WindowMargins::default(),
             cwd: ".".into(),
             env: Vec::new(),
             env_remove: Vec::new(),
@@ -62,6 +72,12 @@ impl Recorded {
     /// Runs `companion` next to the command, on the same display, for as long as it runs.
     pub fn with(mut self, companion: Vec<String>) -> Self {
         self.companions.push(companion);
+        self
+    }
+
+    /// Records only the page inside a window that draws `margins` beside it.
+    pub fn with_margins(mut self, margins: WindowMargins) -> Self {
+        self.margins = margins;
         self
     }
 
@@ -136,7 +152,7 @@ pub fn record_with(
         }
         return Ok((read_run(out, &command, status)?, status));
     }
-    let display = Xvfb::start(supervisor)?;
+    let display = Xvfb::start(supervisor, recorded.margins)?;
     let _companions = recorded
         .companions
         .iter()
@@ -145,27 +161,24 @@ pub fn record_with(
     let video = out.join("run.mp4");
     let ffmpeg = recorded
         .video
-        .then(|| Ffmpeg::x11grab(supervisor, &display, &video))
+        .then(|| Ffmpeg::x11grab(supervisor, &display, recorded.margins, &video))
         .transpose()?;
-    let started = millis(SystemTime::now());
-    command
-        .env("DISPLAY", &display.name)
-        .env("RECORDING_STARTED_AT", started.to_string());
+    command.env("DISPLAY", &display.name);
     let status = supervisor.run(&mut command)?;
     if let Some(tee) = tee {
         tee.finish(&mut command);
     }
     // The suite's run is written only when every drive returns, so a failed recorder must not
     // end the drive: its cases are kept and only the clips are missing.
-    let recorded_video = match ffmpeg.map(Ffmpeg::finish) {
-        Some(Err(error)) => {
+    let started = match ffmpeg.map(Ffmpeg::finish).transpose() {
+        Ok(started) => started,
+        Err(error) => {
             eprintln!("xtask: the recording failed, so the run has no clips: {error:#}");
-            false
+            None
         }
-        finished => finished.is_some(),
     };
     let mut test_run = read_run(out, &command, status)?;
-    if recorded_video {
+    if let Some(started) = started {
         for case in &mut test_run.cases {
             for attempt in &mut case.attempts {
                 cut(out, &video, started, &case.id, attempt)?;
@@ -312,12 +325,12 @@ struct Xvfb {
 
 impl Xvfb {
     /// Starts on the first free display number from :99 and waits for its socket.
-    fn start(supervisor: &mut dyn Supervisor) -> Result<Self> {
+    fn start(supervisor: &mut dyn Supervisor, margins: WindowMargins) -> Result<Self> {
         let number = (99..200)
             .find(|n| !Path::new(&format!("/tmp/.X11-unix/X{n}")).exists())
             .context("no free X display number")?;
         let name = format!(":{number}");
-        let screen = format!("{}x{}x24", SCREEN.0, SCREEN.1);
+        let screen = format!("{}x{}x24", SCREEN.0 + margins.right, SCREEN.1 + margins.top);
         let group = supervisor
             .spawn(
                 Command::new("Xvfb")
@@ -370,13 +383,25 @@ fn companion_spawn(
 }
 
 /// ffmpeg recording a display.
-struct Ffmpeg(Group);
+struct Ffmpeg {
+    group: Group,
+    log: PathBuf,
+}
 
 impl Ffmpeg {
-    fn x11grab(supervisor: &mut dyn Supervisor, display: &Xvfb, video: &Path) -> Result<Self> {
+    fn x11grab(
+        supervisor: &mut dyn Supervisor,
+        display: &Xvfb,
+        margins: WindowMargins,
+        video: &Path,
+    ) -> Result<Self> {
         let size = format!("{}x{}", SCREEN.0, SCREEN.1);
+        let log = video.with_extension("log");
+        let stderr = File::create(&log)?;
         let group = supervisor.spawn(
             ffmpeg()
+                // The input line of this log holds the first frame's time.
+                .args(["-loglevel", "info"])
                 .args([
                     "-f",
                     "x11grab",
@@ -389,28 +414,43 @@ impl Ffmpeg {
                     "15",
                     "-i",
                 ])
-                .arg(&display.name)
+                .arg(format!("{}+0,{}", display.name, margins.top))
                 .args([
                     "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                 ])
                 .arg(video)
-                .stdin(Stdio::null()),
+                .stdin(Stdio::null())
+                .stderr(stderr),
         )?;
-        Ok(Self(group))
+        Ok(Self { group, log })
     }
 
-    /// Stops with SIGINT and waits, so ffmpeg writes the index and the file plays.
-    fn finish(mut self) -> Result<()> {
+    /// Stops with SIGINT and waits, so ffmpeg writes the index and the file plays. Returns the
+    /// first frame's time in Unix milliseconds, which is some time after ffmpeg started.
+    fn finish(mut self) -> Result<i64> {
         Command::new("kill")
-            .args(["-INT", &self.0.id().to_string()])
+            .args(["-INT", &self.group.id().to_string()])
             .run()?;
-        let status = self.0.child().wait()?;
+        let status = self.group.child().wait()?;
         // ffmpeg exits with 255 after SIGINT once the file is finalized.
         if !status.success() && status.code() != Some(255) {
             bail!("ffmpeg failed with {status}");
         }
-        Ok(())
+        first_frame(&fs::read_to_string(&self.log)?)
     }
+}
+
+/// The first frame's time in Unix milliseconds, from the `start:` of ffmpeg's input line.
+fn first_frame(log: &str) -> Result<i64> {
+    let start = log
+        .split_once(", start: ")
+        .and_then(|(_, rest)| rest.split(',').next())
+        .context("ffmpeg's log names no start time")?;
+    let seconds: f64 = start
+        .trim()
+        .parse()
+        .with_context(|| format!("ffmpeg's start time {start:?}"))?;
+    Ok((seconds * 1000.0).round() as i64)
 }
 
 fn ffmpeg() -> Command {
@@ -440,4 +480,21 @@ pub(crate) fn file_name(id: &str) -> String {
             }
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_first_frame_time_comes_from_ffmpegs_input_line() {
+        let log = "Input #0, x11grab, from ':9':\n  Duration: N/A, start: 1793657724.941246, bitrate: 30720 kb/s\n";
+
+        assert_eq!(first_frame(log).unwrap(), 1793657724941);
+    }
+
+    #[test]
+    fn a_log_without_a_start_time_fails_instead_of_guessing() {
+        assert!(first_frame("ffmpeg version 8\n").is_err());
+    }
 }

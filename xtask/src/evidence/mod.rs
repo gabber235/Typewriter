@@ -15,9 +15,9 @@ use anyhow::Result;
 use clap::{ArgAction, Args, Subcommand};
 
 use self::prune::Prune;
-pub(crate) use self::record::SCREEN;
 pub(crate) use self::record::file_name;
 pub use self::record::{Recorded, record_with};
+pub(crate) use self::record::{SCREEN, WindowMargins};
 use crate::branch::{ATTEMPTS, BranchCheckout, REPOSITORY};
 use crate::docs::{PAGES, SITE};
 use crate::{CommandExt, Context};

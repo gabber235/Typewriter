@@ -27,7 +27,7 @@ use anyhow::{Context as _, Result, bail};
 
 use crate::cluster::CiCluster;
 use crate::deploy;
-use crate::evidence::{self, Recorded, SCREEN};
+use crate::evidence::{self, Recorded, SCREEN, WindowMargins};
 use crate::lock::{self, HeavyLock};
 use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestRun};
 use crate::stack::spec::StackSpec;
@@ -478,13 +478,16 @@ fn in_chrome<T: Target>(mut command: Vec<String>, launch: &Launch<'_, T>) -> Res
         // only from SwiftShader, and Chrome no longer falls back to it on its own.
         "--web-browser-flag=--enable-unsafe-swiftshader".into(),
     ]);
-    // A recording shows the panel alone: without these Chrome opens larger than the virtual
-    // display, under its toolbar and automation banner, and the page runs off screen.
+    // A permission prompt would cover the panel and wait for a click nothing gives.
+    command.push("--web-browser-flag=--deny-permission-prompts".into());
     if cfg!(target_os = "linux") {
         command.extend([
-            "--web-browser-flag=--kiosk".into(),
-            format!("--web-browser-flag=--window-size={},{}", SCREEN.0, SCREEN.1),
-            "--web-browser-flag=--window-position=0,0".into(),
+            format!(
+                "--browser-dimension={}x{}",
+                SCREEN.0 + CHROME_MARGINS.right,
+                SCREEN.1 + CHROME_MARGINS.top
+            ),
+            format!("--dart-define=RECORDED_VIEWPORT={}x{}", SCREEN.0, SCREEN.1),
         ]);
     }
     // chromedriver drives only the Chrome release it was built for. Without a binary it starts
@@ -496,8 +499,15 @@ fn in_chrome<T: Target>(mut command: Vec<String>, launch: &Launch<'_, T>) -> Res
     if let Some(web_port) = launch.target.web_port() {
         command.push(format!("--web-port={web_port}"));
     }
-    Ok(Recorded::video(command).with(vec!["chromedriver".into(), format!("--port={port}")]))
+    Ok(Recorded::video(command)
+        .with_margins(CHROME_MARGINS)
+        .with(vec!["chromedriver".into(), format!("--port={port}")]))
 }
+
+/// What Chrome draws beside the page: its tabs, toolbar and automation banner. `flutter drive`
+/// always resizes the window, which ends kiosk and fullscreen modes, and the banner stays in both.
+/// A scenario fails when the page is not the recorded size (`Panel.launch`).
+const CHROME_MARGINS: WindowMargins = WindowMargins { right: 1, top: 144 };
 
 /// The fixture user the sign in journey signs in as.
 const JOURNEY_USER: &str = "ada";
