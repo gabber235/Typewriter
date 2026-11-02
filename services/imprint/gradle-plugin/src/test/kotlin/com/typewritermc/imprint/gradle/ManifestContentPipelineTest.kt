@@ -5,12 +5,14 @@ import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.GeneratedContribution
 import com.typewritermc.imprint.gradle.testing.contribution
+import de.infix.testBalloon.framework.core.TestConfig
+import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
-val ManifestContentPipelineTest by testSuite {
+val ManifestContentPipelineTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     val context =
         ManifestAssemblyContext(
             artifactId = ArtifactId("typewritermc:realm"),

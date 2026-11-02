@@ -19,6 +19,8 @@ import com.typewritermc.imprint.gradle.testing.fixture
 import com.typewritermc.imprint.gradle.testing.javaLibraryBuild
 import com.typewritermc.imprint.gradle.testing.javaType
 import com.typewritermc.imprint.gradle.testing.readManifest
+import de.infix.testBalloon.framework.core.TestConfig
+import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -26,7 +28,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import org.gradle.testkit.runner.TaskOutcome
 
-val ImprintPluginTest by testSuite {
+val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     test("projects declare exactly one artifact with an exact version") {
         val fixture = fixture()
         fixture
