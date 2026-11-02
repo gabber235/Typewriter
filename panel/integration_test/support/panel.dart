@@ -243,14 +243,16 @@ final class Panel {
     // as editing that is still resuming shows, waits until it opens.
     var clicked = DateTime(0);
     await until("the text field \"$label\" accepts text", () {
-      if (!field.exists || field.isReadOnly) return false;
+      if (!field.exists || field.isReadOnly || !field.canClickInput) {
+        return false;
+      }
       if (field.acceptsText) return true;
       if (DateTime.now().difference(clicked) > _refocus) {
         clicked = DateTime.now();
         field.clickInput();
       }
       return false;
-    });
+    }, shows: () => field.exists ? field.describe : "no such field");
     field.setText(text);
     await tester.pump(_frame);
   }
@@ -393,17 +395,22 @@ final class Panel {
   }
 
   /// Pumps frames until [condition] holds; fails after [timeout] naming
-  /// [description] and what the screen shows.
+  /// [description], what the screen shows and, when given, what [shows]
+  /// reports about the element waited on.
   Future<void> until(
     String description,
     bool Function() condition, {
     Duration timeout = wait.patience,
+    String Function()? shows,
   }) => wait.until(
     description,
     condition,
     within: timeout,
     between: () => tester.pump(_frame),
-    shows: () => "the screen shows ${_labels.toSet().toList()}",
+    shows: () => [
+      "the screen shows ${_labels.toSet().toList()}",
+      if (shows != null) shows(),
+    ].join("; "),
   );
 
   /// Every label and field text the screen reads out, in reading order.

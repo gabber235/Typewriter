@@ -103,16 +103,43 @@ final class FieldDriver extends ComponentDriver {
   bool get acceptsText =>
       _node.getSemanticsData().hasAction(SemanticsAction.setText);
 
+  /// Whether a click reaches the field's input now; a read only input, as an
+  /// editor that is still loading shows, offers no tap until it opens.
+  bool get canClickInput =>
+      _clickTarget.getSemanticsData().hasAction(SemanticsAction.tap);
+
+  /// The field's semantics and its input's flags and actions, for a failure
+  /// message.
+  String get describe {
+    final field = _node.getSemanticsData();
+    final input = _clickTarget.getSemanticsData();
+    String flags(SemanticsData data) =>
+        data.flagsCollection.toStrings().join(",");
+    String actions(SemanticsData data) => SemanticsAction.values
+        .where(data.hasAction)
+        .map((action) => action.name)
+        .join(",");
+    return "field flags [${flags(field)}] actions [${actions(field)}], "
+        "input flags [${flags(input)}] actions [${actions(input)}]";
+  }
+
   /// Clicks the field's input the way a screen reader does, without waiting
-  /// for the panel to react.
+  /// for the panel to react; the input must [canClickInput].
   ///
-  /// An editor field wraps its text input in a focus boundary that reads as
-  /// the same field; the innermost text field is the input a click reaches.
   /// A field rebuilt while its surface loads drops the focus a click gave
   /// it, so a step waiting for [acceptsText] clicks again, as a user does.
-  /// An input merged into an enclosing node has its tap there, the node a
-  /// screen reader activates.
   void clickInput() {
+    final target = _clickTarget;
+    tester.semantics.tap(
+      find.semantics.byPredicate((node) => identical(node, target)),
+    );
+  }
+
+  /// The node a screen reader activates for the field's input: the innermost
+  /// text field, since an editor field wraps its input in a focus boundary
+  /// that reads as the same field, or the node that input merged into, which
+  /// holds its tap.
+  SemanticsNode get _clickTarget {
     final field = _node;
     var input = [
       field,
@@ -121,9 +148,7 @@ final class FieldDriver extends ComponentDriver {
     while (input.isMergedIntoParent && input.parent != null) {
       input = input.parent!;
     }
-    tester.semantics.tap(
-      find.semantics.byPredicate((node) => identical(node, input)),
-    );
+    return input;
   }
 
   /// Replaces the field's text with [text] the way a screen reader does,
