@@ -57,12 +57,17 @@ void runScenarios(List<void Function()> groups) {
 /// in the `TestRun`; a failing scenario also captures the screen it failed on
 /// and keeps the panel's log, which `cargo xtask e2e` copies into the
 /// attempt's failure folder.
+///
+/// [skipOnWeb] leaves the scenario out of the web run; set it only for a
+/// Flutter web bug that stops the whole run, with a comment linking the fix
+/// so it can be removed once the panel's Flutter release has it.
 void scenario(
   String requirement,
   String title,
   results.Demonstrates demonstrates,
-  Future<void> Function(Panel panel) body,
-) {
+  Future<void> Function(Panel panel) body, {
+  bool skipOnWeb = false,
+}) {
   if (!_requirementFormat.hasMatch(requirement)) {
     throw ArgumentError.value(
       requirement,
@@ -71,7 +76,8 @@ void scenario(
     );
   }
   final id = ReportedRun.id(requirement, title);
-  testWidgets(id, skip: !_selected(id, requirement), (tester) async {
+  final skip = !_selected(id, requirement) || (kIsWeb && skipOnWeb);
+  testWidgets(id, skip: skip, (tester) async {
     final artifacts = <results.Artifact>[];
     // The panel logs through debugPrint; a failure keeps what it printed.
     final log = StringBuffer();
