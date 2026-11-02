@@ -394,21 +394,26 @@ fn render_recordings(out: &mut String, section: &Section) {
     let scenarios: Vec<(&TestRun, &TestCase)> = cases(section.runs)
         .filter(|(_, case)| case.requirement.is_some() || results::artifacts(case).next().is_some())
         .collect();
-    let per_runner: Vec<String> = section
-        .runs
-        .iter()
-        .map(|(_, run)| {
-            let passed = run
-                .cases
-                .iter()
-                .filter(|case| verdict(section, run, case) == CaseVerdict::Passed)
-                .count();
-            format!(
-                "{}: {passed} of {}",
-                runner_name(&run.runner),
-                run.cases.len()
-            )
-        })
+    // A step's own run, one test each, counts under one name with its siblings.
+    let mut per_runner: Vec<(String, usize, usize)> = Vec::new();
+    for (_, run) in section.runs {
+        let name = runner_name(&run.runner);
+        let passed = run
+            .cases
+            .iter()
+            .filter(|case| verdict(section, run, case) == CaseVerdict::Passed)
+            .count();
+        match per_runner.iter_mut().find(|(known, ..)| *known == name) {
+            Some((_, proven, total)) => {
+                *proven += passed;
+                *total += run.cases.len();
+            }
+            None => per_runner.push((name.to_owned(), passed, run.cases.len())),
+        }
+    }
+    let per_runner: Vec<String> = per_runner
+        .into_iter()
+        .map(|(name, proven, total)| format!("{name}: {proven} of {total}"))
         .collect();
     let _ = writeln!(
         out,
