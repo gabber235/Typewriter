@@ -71,6 +71,11 @@ const CREATION_FIXTURES: &str = "services/runtime/realm/src/test/resources/creat
 /// Where the frame vectors land, beside the transport contracts every host implements.
 const FRAME_VECTORS: &str = "skir-src/transport/v1/fixtures/frames.json";
 
+/// The frame vector writer's own Cargo target. The backend's shared target grows to tens of GB,
+/// while this one holds only the writer's dependencies, built without debug info: under a GB, so
+/// CI can cache it (`frame-vectors` in .github/actions/devenv).
+const FRAME_VECTORS_TARGET: &str = ".xtask/frame-vectors-target";
+
 pub const SDK_EXPRESSION_CORPUS: &str =
     "services/sdk/typewriter-api/build/fixtures/expression_corpus.json";
 
@@ -290,6 +295,9 @@ impl Generator {
                         &output,
                     ],
                 );
+                write
+                    .env("CARGO_TARGET_DIR", ctx.root.join(FRAME_VECTORS_TARGET))
+                    .env("CARGO_PROFILE_DEV_DEBUG", "0");
                 write.log_output(log)?.run()
             }
         }
