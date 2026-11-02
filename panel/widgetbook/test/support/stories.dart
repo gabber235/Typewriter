@@ -9,6 +9,9 @@ import "package:widgetbook/widgetbook.dart";
 /// folder.
 const storyImages = "../../.xtask/results/stories";
 
+/// Characters a story image path keeps; the rest become `-`.
+final _unpublishable = RegExp(r"[^\w/=,.-]+");
+
 /// Marks the boundary a story renders in; a symbol, so no story key matches.
 const _storyKey = ValueKey(#widgetbookStory);
 
@@ -134,14 +137,17 @@ extension StoryTester on WidgetTester {
   Map<String, Knob> get storyKnobs =>
       WidgetbookState.of(element(find.byKey(_storyKey))).knobs;
 
-  /// Writes what the story shows to [name] below [storyImages].
+  /// Writes what the story shows to [name] below [storyImages], with every
+  /// character a published artifact path refuses (generic arguments such as
+  /// `<dynamic, dynamic>`, spaces, colons) replaced by `-`.
   Future<void> captureStory(String name) async {
+    final path = name.replaceAll(_unpublishable, "-");
     final boundary = renderObject<RenderRepaintBoundary>(find.byKey(_storyKey));
     await runAsync(() async {
       final image = await boundary.toImage();
       final bytes = await image.toByteData(format: ImageByteFormat.png);
       image.dispose();
-      final file = File("$storyImages/$name.png");
+      final file = File("$storyImages/$path.png");
       await file.parent.create(recursive: true);
       await file.writeAsBytes(bytes!.buffer.asUint8List());
     });
