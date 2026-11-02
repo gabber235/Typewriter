@@ -66,6 +66,10 @@ in
       LIBGL_DRIVERS_PATH = "${pkgs.mesa}/lib/dri";
       __EGL_VENDOR_LIBRARY_DIRS = "${pkgs.mesa}/share/glvnd/egl_vendor.d";
       VK_ICD_FILENAMES = "${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json";
+      # GTK 3 on X11 makes its GL contexts through GLX, and Nix's libglvnd looks for the vendor
+      # library in /run/opengl-driver, which only NixOS has; Mesa's libGLX_mesa is named here.
+      __GLX_VENDOR_LIBRARY_NAME = "mesa";
+      LD_LIBRARY_PATH = "${pkgs.mesa}/lib";
       # Flutter's web device looks for Chrome here; chromedriver drives the same browser.
       CHROME_EXECUTABLE = "${pkgs.chromium}/bin/chromium";
     };

@@ -124,6 +124,14 @@ jobs:
         with:
           caches: flutter frame-vectors
           profile: e2e
+      # Temporary diagnostic: what OpenGL the virtual display offers the Linux app.
+      - if: matrix.suite == 'panel'
+        continue-on-error: true
+        run: |
+          devenv --profile e2e shell -- bash -c '
+            Xvfb :90 -screen 0 1280x720x24 +extension GLX -nolisten tcp & sleep 3
+            DISPLAY=:90 LIBGL_DEBUG=verbose nix shell github:NixOS/nixpkgs/674a2028661e550a97400c1cc992b9cca9a668a1#mesa-demos -c glxinfo -B 2>&1 | head -40
+            kill %1'
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.

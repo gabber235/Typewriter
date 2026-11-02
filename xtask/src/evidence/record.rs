@@ -313,7 +313,16 @@ impl Xvfb {
         let group = supervisor
             .spawn(
                 Command::new("Xvfb")
-                    .args([&name, "-screen", "0", &screen, "-nolisten", "tcp"])
+                    .args([
+                        &name,
+                        "-screen",
+                        "0",
+                        &screen,
+                        "+extension",
+                        "GLX",
+                        "-nolisten",
+                        "tcp",
+                    ])
                     .stdout(Stdio::null()),
             )
             .context("Xvfb, the recorder and the browser come from `devenv --profile e2e shell`")?;
