@@ -90,9 +90,31 @@ sealed interface Var<T, F> {
 - `Var<T, F>` is an existing union (abstract record plus `parents`), so the plain and formula toggle is picking a concrete form (`concreteForms`), the stored form is `NamedValue.actual_type`, and Kotlin decodes it like any sealed type. A plain value nests one level: `Var.Value { value: 50 }`.
 - KSP lowers the Kotlin context slot: `Var<Int, MemberContext>` becomes `Var<Int, context(group: Group, chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int>`, and `Var<Int>` becomes `Var<Int, () -> Int>`. This is one converter rule, next to the one for `Ref`.
 - Pure only contexts (`PublishScope`, `TypeScope`) provide no context parameters and lower to `() -> T`. Only context parameters reach stored or live data, so a function type without context is pure by construction (see [Where formulas run](#where-formulas-run)).
-- A function typed `T` needs no special case: `Var.Value.value` is already a `Formula`.
+- A function typed `T` needs no special case in storage: `Var.Value.value` is already a `Formula`, so its editor is the body editor with no formula switch.
 
-When `T` has a `template` provider (see [Text templates](#text-templates)), its plain editor is a template editor that stores `Var.Computed` whose `source` is the string template expression it means (`"Hello ${protagonist.name}"`); the editor shows the body without quotes and adds quotes and escaping on save. A formula stores no editor mode: the panel opens the template editor whenever `T` has a `template` provider and `source` is exactly one string template literal.
+The editor follows from `T`:
+
+| `T` | Editor | Stored as |
+| --- | --- | --- |
+| A plain type (`Int`, `Boolean`, a record) | Plain input with a switch to formula mode | `Value(50)` or `Computed("base_reward * 2")` |
+| A type with a `template` provider (`String`) | Template editor with a switch to formula mode | Without holes `Value("Hello")`; with holes `Computed` whose `source` is the string template expression it means (`"Total: ${total}"`) |
+| A function type | Body editor under the read only signature, no switch | `Value(Formula("level * 2"))` |
+
+The template editor ([Text templates](#text-templates)) shows the body without quotes. The body is the inside of the string literal except that `"` is typed freely and saved as `\"`; `${...}` is a hole, `\$` a literal `$`, `\\` a backslash, and string literals accept real line breaks. One panel function, covered by unit tests, maps positions: source position = body position + 1 + the number of `"` before it.
+
+```
+body:    She said "hi" to ${npc}
+source:  "She said \"hi\" to ${npc}"
+```
+
+The panel selects these editors through presentations, with no special case in editor selection:
+
+- `Var` has a default presentation declared next to it in the contracts, built from existing elements: a header toggle (`HeaderBooleanToggleItem`) that switches the concrete form, and a `polymorphic_match` that shows `default_presentation` of `T` for `Value` and `formula_input` for `Computed`. Plain mode is therefore `T`'s own editor.
+- `formula_input` is the one new presentation element: a code editor bound to a `Formula` with the modes expression, template and body. It opens the `WatchFormula` subscription and renders the display text, diagnostics, completions, hover and value.
+- `formula_input` is built on Flutter's own text field, with no editor package: a `TextEditingController` whose `buildTextSpan` colors references and underlines `TextSpan` details from the snapshot, and a completion popup anchored at the caret with keyboard handling through `Shortcuts` and `Actions`. Typing, mobile keyboards, IME, selection and accessibility come from the platform text field; formulas need no line numbers or folding. Packages checked 2026-11-02: `re_editor` leaves completion UI to the caller, `flutter_code_editor` has no web support, `code_forge` needs a separate web package.
+- The panel knows the mode before contacting the realm: function types are visible as `TypeUse.function`, and KSP marks types that have a `template` provider in the editor catalog.
+
+A formula stores no editor mode: on load the template editor opens for a `Value` and for a `Computed` whose `source` is exactly one string template literal; any other formula opens in formula mode.
 
 ### Function typed fields
 
@@ -128,7 +150,7 @@ The book then reads `book.reward`. Dot calls fill the first context parameter: `
 
 ### Type fields
 
-A field holding a type is `Var<Type, TypeScope>`. Plain mode is a type picker: scalars, generics with argument slots, nullable, function types with named parameter rows and a result, and inline records with named field rows. Its list holds catalog types plus content types in scope (group identity types, creator types). Formula mode writes the type as text, parsed by the formula parser's type grammar and checked live:
+A field holding a type is `Var<Type, TypeScope>`. Plain mode is a type picker: scalars, generics with argument slots, nullable, function types with named parameter rows and a result, and inline records with named field rows. The same picker chooses a resource's type argument (a `Definition`'s `T`). It is the existing panel type picker (`authored_type_picker.dart`) extended, not a second one: its search list holds code types from the local editor catalog plus creator types in scope from the realm (type position completions of the `WatchFormula` subscription, the existing `scopeAt`); structured builders add function types (context rows, parameter rows, result) and inline records and unions; and an "as text" input is `formula_input` in a fourth mode, `type`. Rows and text both store the same `Type` value. Text mode writes the type as text, parsed by the formula parser's type grammar and checked live:
 
 ```
 (protagonist: Protagonist, town: Town) -> Int
@@ -301,10 +323,10 @@ Any name is allowed, Kotlin style. Identifier like names (Unicode letters, digit
 
 `Element.name` is used directly. Variable, instance and import keys need only be non blank and unique per scope level. A name in a formula that resolves to a content resource is stored as a `FormulaReference`: the text range of the name in `source` and an ordinary typed link to the target. Formula references are links like any other, so they reuse the existing machinery:
 
-- **Rename** writes nothing. The panel and the realm show `source` with each reference range replaced by the target's current name; the next edit of the formula stores the new text.
+- **Rename** writes nothing. The realm alone builds the display text, `source` with each reference range replaced by the target's current `name` (the field formulas bind to, not `ResourceAppearance.label`), and sends it in the `WatchFormula` snapshot; the panel never resolves names. The next edit of the formula stores the new text.
 - **Delete** follows the relation's `clear` policy, as for a content `Ref` field: the link empties, the old name stays visible in the text, and an error finding ("`bonus` was deleted") blocks publish.
 - **Usages** and reruns come from the existing `Incoming` input and the query graph, with no separate index.
-- **Binding** of these names uses the ids, in the realm and in the engine; name lookup by text applies only while typing, and every formula edit stores the text and its references together in one prepared edit.
+- **Binding** of these names uses the ids, in the realm and in the engine; name lookup by text applies only while typing, and the panel saves only the text, and the realm fills in the references while it prepares the edit, binding the names against the same working state the edit was made in, so text and references always match. A name that resolves to nothing gets no reference and shows the usual unknown name error.
 
 Only names that resolve to content resources become references. Local names, provider functions and catalog types stay text: they are code, and renaming them is a code migration. Precedent: Airtable stores field ids in formulas and shows field names.
 
@@ -318,9 +340,9 @@ Members on types come from code per type, like presentations: a KSP generated `X
 class PaperPlayerFormulas : ... { ... }
 ```
 
-Every named type has a `TypeDefinitionId` (type id and revision). Kotlin catalog types use `declared(uuid)` with their code revision; builtins use `qualified(namespace, name)` with revision 1; cases without their own annotation use `member(owner, name)` (see [Unions and errors](#unions-and-errors)); types declared by content use `content(at: ValueLocation)` with revision 1, where `at` is the location of the content that declares the type (a `Definition`'s `value`, a position inside a `Type` value such as `[type, result]`, or the field a `bind` reads, such as a book's `variables`). A content type changes through publication and content migrations, never through its revision. The checked catalog takes content definitions from the query graph.
+Every named type has a `TypeDefinitionId` (type id and revision). Kotlin catalog types use `declared(uuid)` with their code revision; builtins use `qualified(namespace, name)` with revision 1; cases without their own annotation use `member(owner, name)` (see [Unions and errors](#unions-and-errors)); types declared by content use `content(at: ValueLocation)` with revision 1, where `at` is the location of the content that declares the type (a `Definition`'s `value`, a position inside a `Type` value such as `[type, result]`, a position inside a resource's type argument (`ArgumentLocation`), or the field a `bind` reads, such as a book's `variables`; `content` therefore takes a declaration location that is either a `ValueLocation` or an `ArgumentLocation`). A content type changes through publication and content migrations, never through its revision. The checked catalog takes content definitions from the query graph.
 
-Inline types are content types too: a record or union written in a type position without a name is a full `TypeDefinition` with any representation, identified by its location, so every field keeps a required `declaration_owner`. Two inline types that look alike are different types (nominal); share one through a creator type. Expression formula text names types but cannot declare an inline type (`let x: (gold: Int) = ...`), because text has no stable location; a type field in formula mode can, because its declarations sit at paths inside the computed `Type` value. Only function types are structural and have no id.
+Inline types are content types too: a record or union written in a type position without a name is a full `TypeDefinition` with any representation, identified by its location, so every field keeps a required `declaration_owner`. Two inline types that look alike are different types (nominal); share one through a creator type. Expression formula text names types but cannot declare an inline type (`let x: (gold: Int) = ...`), because text has no stable location; a type field or a type argument can, because its declarations sit at paths inside a stored `Type` value. Only function types are structural and have no id.
 
 ### Standard library
 
@@ -331,7 +353,7 @@ operator fun Int.plus(other: Int): Int = this + other
 fun <T> List<T>.sumOf(f: (T) -> Int): Int = fold(0) { total, item -> total + f(item) }
 ```
 
-Stdlib providers may call the existing Kotlin portable kernels (`sdk/typewriter-api/.../expression/operations/`, for example `PortableNumberKernel`, the regex matcher) as a library where their rules matter, such as regex step budgets. Each catalog scalar is the Kotlin type KSP maps it from, and arithmetic is checked (see [Exceptions](#exceptions)).
+Stdlib providers may call the existing Kotlin portable kernels (`sdk/typewriter-api/.../expression/operations/`, for example `PortableNumberKernel`, the regex matcher) as a library where their rules matter, such as regex step budgets. Text functions (`length`, `substring`, `indexOf`, and the like) count code points, as the portable text operations do, by calling the portable kernel instead of Kotlin's UTF-16 `String` members, so a creator gets the same answer in formulas and rules. Text positions inside formula source are a separate, internal matter and count UTF-16 units (see [WatchFormula](#watchformula)). Each catalog scalar is the Kotlin type KSP maps it from, and arithmetic is checked (see [Exceptions](#exceptions)).
 
 Units and formatting are ordinary providers through existing sugar (`5.seconds` is `val Int.seconds: Duration`, `format`). PlaceholderAPI is a provider function `context(engine: Engine) fun papi(name: String): String`, backed by a `Tick` mirror where it is used.
 
@@ -371,12 +393,11 @@ The map key is the instance key. Renaming an instance key moves its stored data 
 ```kotlin
 data class Definition<T>(
     val name: String,
-    val type: Var<Type, TypeScope>,
     val value: Var<T, DefinitionScope>,
 ) : StaticEntry
 ```
 
-Its `dynamic()` does `bind(T) { use(type) }` and `exports { use(T) }`, so it is visible by name through the book's contents scope and to other books through imports.
+`T` is the resource's own type argument in its configuration, chosen with the existing type argument editor; there is no `type` field and no `bind`, so a `Definition` works before `bind` exists (layer 13). Changing the type uses the existing `PreviewTypeArgumentChange` and `PrepareTypeArgumentChange` repair preview, which shows what happens to the current value before the change is confirmed. Configuration arguments hold the authored `Type` value (`ArgumentSelection.chosen: Type`, replacing `TypeUse`), so a type argument can be a function type or an inline declaration; the checked catalog lowers it to `TypeUse` like any `Type` value. Typing a type as text (`record { gold: Int }`) is another input of the type picker that parses into a `Type` value; no formula is stored. Its `dynamic()` does `exports { use(T) }`, so it is visible by name through the book's contents scope and to other books through imports.
 
 - **Functions**: a definition whose type is a function type. The text is the body with the parameters in scope. There is no separate function entry type.
 
@@ -500,7 +521,7 @@ Shape:
 - **Revision:** one per view install.
 - **Finding currency:** a finding is current when its query is verified at the latest revision. This replaces the expectation comparison in `EditorUpdatePublisher`.
 - **Publication** accepts when every check is verified at revision R and the captured view is R; otherwise it answers `RetryRequired`.
-- **`WatchFormula` overlay:** `graph.fork(overrides: Map<ResourceId, AuthoringRecord>)` reuses base results whose inputs exclude the overridden resources, like the staged view.
+- **`WatchFormula` overlay:** `graph.fork(working: OperationWorkingContext)` takes the panel's existing working context (saved observation plus unsaved upserts and removals, `resource_operations.skir`) and reuses base results whose inputs exclude the overlaid resources, like the staged view. On a new revision the overlay is applied to the latest saved view; only a saved change to an overlaid resource is a `stale_observation_error`.
 - **Cancellation:** a new revision cancels running queries; each query call checks the revision and stops when stale.
 - **Memory:** `checkRun` and `dynamic` results stay; other results are LRU bounded.
 
@@ -510,18 +531,85 @@ Compiled content carries each formula in its stored form (`Formula(source, refer
 
 ### WatchFormula
 
-The panel edits formulas language server style. The realm answers per keystroke through a subscription that follows the existing search pattern (`search.skir`: a retained job, a snapshot stream, replaced on each query):
+The panel edits formulas language server style. The realm answers through a live subscription built from the existing search pieces (`search.skir`: a retained job, a snapshot stream, reusing the subscription id cancels the previous job), except that it never reaches `ready`: a `TrackedGraph` observer sends a new snapshot whenever the result changes, for example after another creator renames `base_reward`, until the panel replaces or cancels it. Unsaved panel edits arrive as the existing `OperationWorkingContext`:
 
-```
-WatchFormula(location: ValueLocation, text, cursor)
-  streams FormulaSnapshot { diagnostics, result_type: TypeUse, completions, hover }
+```skir
+// editor/v1/formula.skir, next to search.skir
+method WatchFormula(struct {
+  subscription_id: string;          // one per open editor, reused on every keystroke
+  input_revision: int64;            // rises per keystroke; echoed back
+  location: ValueLocation;
+  source: string;
+  caret: int32?;                    // UTF-16; completions only when set
+  working: OperationWorkingContext; // unsaved panel edits
+  catalog: CatalogGeneration;
+}) streams FormulaUpdate
+
+enum FormulaUpdate {
+  snapshot: FormulaSnapshot;
+  stale_observation_error: StaleAuthoringObservation;
+  unavailable_error: [Diagnostic];
+  internal_error: InternalError;
+}
+
+struct FormulaSnapshot {
+  subscription_id: string;
+  input_revision: int64;            // the panel drops snapshots older than its latest keystroke
+  display: string;
+  references: [FormulaReference];
+  diagnostics: [Diagnostic];        // TextSpan details
+  result_type: TypeUse?;
+  value: DataValue?;                // pure formulas only
+  completions: [FormulaCompletion];
+}
+
+struct FormulaCompletion {
+  label: string;
+  kind: enum { value, function, type, keyword, local };
+  detail: string;                   // the type, such as "Int"
+  insert: string;
+  replace: TextSpan;                // the text the completion replaces
+}
+
+method FormulaHover(struct { subscription_id: string; position: int32; })
+  -> struct { text: string; span: TextSpan; }?
+method CancelFormulaWatch(struct { subscription_id: string; })
 ```
 
-Snapshots are computed by `scopeAt` and `check` over the unapplied text. There is one checker, in Kotlin. The panel stays thin and may filter the last completion list locally while the next snapshot arrives.
+Hover is a separate call answered from the subscription's computed state, because the pointer moves far more often than the text changes (the language server protocol separates them too). The snapshot carries no references for saving; the realm fills those while preparing the save.
+
+Snapshots are computed by `scopeAt` and `check` over the unapplied text. All text positions in formulas (`FormulaReference.at`, the cursor, diagnostic and completion ranges) count UTF-16 code units, the native string index of Dart and Kotlin and the language server protocol default. `display` is the text with current names and `references` are its ranges, used for highlighting and saved with the text; until the first snapshot arrives the editor shows the stored `source`. A deleted target keeps its old name, underlined with its error. For a pure formula the snapshot also carries its value, evaluated through the same query graph (`total` shows `= 70`); a stored or live formula shows that it needs a player until live values per protagonist exist. There is one checker, in Kotlin. The panel stays thin and may filter the last completion list locally while the next snapshot arrives.
 
 ### Formula checks
 
 Formula findings go through the existing `RealmCheckProvider` and are computed through the query graph. Errors block publication: type errors (unhandled union kinds, non exhaustive `when`), formulas that need engine or stored data in realm run fields, keys not fillable from scope, and `dynamic()` cycles. The full checks list is in [live-data.md](live-data.md).
+
+Errors keep one type, `Diagnostic`, for saved findings (`FindingSet`) and live editor snapshots alike. A diagnostic points at a field plus optional typed detail that the field's editor understands:
+
+```diff
++ struct DiagnosticAnchor {
++   at: ValueLocation = 0;
++   detail: DataValue? = 1;     // a value of a declared type, such as TextSpan
++ }
+  struct Diagnostic {
+    ...
+-   primary: ValueLocation? = 5;
+-   related: [ValueLocation] = 6;
++   primary: DiagnosticAnchor? = 5;
++   related: [DiagnosticAnchor] = 6;
+  }
+```
+
+```kotlin
+@TypewriterType(id = TEXT_SPAN_TYPE_ID)
+data class TextSpan(val start: Int, val end: Int)   // UTF-16 units
+
+report(at = total.value, detail = TextSpan(14, 19), message = "`bonus` is unknown")
+```
+
+- An editor renders the detail types it knows (the formula editor underlines a `TextSpan`) and highlights the whole field for any other, which is the behavior without detail.
+- Detail types are ordinary declared types, so later layers and extensions add their own (a moment on a cinematic track, a corner of a region) without changing the core contract. A closed `enum DiagnosticDetail` was rejected for that reason. Precedent: the language server protocol's `data` and SARIF's property bag, both untyped.
+- While a formula editor is open, its live diagnostics replace the saved findings for that field; the check list and closed fields show saved findings, and the next check run after a save makes them agree.
 
 ## Syntax summary
 
@@ -582,7 +670,7 @@ Only context parameters reach stored or live data: identities such as `protagoni
 
 ### Interpreter
 
-The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to fire `FormulaChanged(old, new)`, as Jane Street's Incremental does with observers. Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1; engine inputs and observers come with layers 6 to 8.
+The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to fire `FormulaChanged(old, new)`, as Jane Street's Incremental does with observers. Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1 and its observers in layer 2 (`WatchFormula`); engine inputs and engine observers come with layers 6 to 8.
 
 Values during evaluation are plain Kotlin values, so a `FormulaFunction.invoke` calls the provider without conversion: catalog scalars use the Kotlin type KSP maps them from (`Int` is `kotlin.Int`, `Decimal` is `BigDecimal`), Kotlin catalog types are instances of their class (an enum case is its constant), `null` is `null`, and functions are closures. Content types have no Kotlin class, so they are `ContentValue` instances (a record carries its `TypeId` and its fields by name, a case its `TypeId` and payload). The realm reads stored `DataValue` into these values with the same reader the engine uses for compiled content. Creating the module is a build change the layer 1 build asks for. How evaluation records its reads, which change signal each read kind has, and the `FormulaChanged` event are in [live-data.md](live-data.md#formula-changes).
 
