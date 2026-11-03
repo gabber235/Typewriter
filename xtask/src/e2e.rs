@@ -480,18 +480,24 @@ fn in_chrome<T: Target>(mut command: Vec<String>, launch: &Launch<'_, T>) -> Res
     ]);
     // A permission prompt would cover the panel and wait for a click nothing gives.
     command.push("--web-browser-flag=--deny-permission-prompts".into());
-    if cfg!(target_os = "linux") {
-        command.extend([
-            format!(
-                "--browser-dimension={}x{}",
-                SCREEN.0 + CHROME_MARGINS.right,
-                SCREEN.1 + CHROME_MARGINS.top
-            ),
-            // Chrome on the runner otherwise scales the page by 1.05, past the display's edge.
-            "--web-browser-flag=--force-device-scale-factor=1".into(),
-            format!("--dart-define=RECORDED_VIEWPORT={}x{}", SCREEN.0, SCREEN.1),
-        ]);
-    }
+    // Every machine runs the scenarios at the recorded size, since a layout can break at only
+    // one size. A wrong margin stops the run with the page's real size.
+    let (right, top) = if cfg!(target_os = "linux") {
+        (CHROME_MARGINS.right, CHROME_MARGINS.top)
+    } else {
+        // Headless Chrome on macOS still takes its toolbar's height off the page.
+        (0, 143)
+    };
+    command.extend([
+        format!(
+            "--browser-dimension={}x{}",
+            SCREEN.0 + right,
+            SCREEN.1 + top
+        ),
+        // Chrome on the runner otherwise scales the page by 1.05, past the display's edge.
+        "--web-browser-flag=--force-device-scale-factor=1".into(),
+        format!("--dart-define=RECORDED_VIEWPORT={}x{}", SCREEN.0, SCREEN.1),
+    ]);
     // chromedriver drives only the Chrome release it was built for. Without a binary it starts
     // whatever Chrome the machine has, such as a CI runner's preinstalled one, so the devenv
     // Chrome it matches is named where devenv provides one.
