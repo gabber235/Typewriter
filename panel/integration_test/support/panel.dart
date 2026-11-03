@@ -511,16 +511,34 @@ final class Panel {
     return false;
   }
 
-  /// Whether the user can see [node]: not hidden, and inside the bounds of
-  /// everything around it, such as the scrollable that clips it.
+  /// Whether the user can see [node]: inside the bounds of everything around
+  /// it, such as the scrollable that clips it.
+  ///
+  /// Scrolling moves a node without updating what lies inside the scrollable:
+  /// its hidden flag and the bounds around it keep describing the old scroll
+  /// offset. So below a scrollable only the node's own place counts, measured
+  /// against the viewport and what surrounds that.
   bool _onScreen(SemanticsNode node) {
-    if (node.getSemanticsData().flagsCollection.isHidden) return false;
     final center = node.screenRect.center;
-    for (var parent = node.parent; parent != null;) {
-      if (!parent.screenRect.contains(center)) return false;
-      parent = parent.parent;
+    var around = node.parent;
+    while (around != null && !_scrolls(around)) {
+      around = around.parent;
+    }
+    if (around == null) {
+      if (node.getSemanticsData().flagsCollection.isHidden) return false;
+      around = node.parent;
+    }
+    for (; around != null; around = around.parent) {
+      if (!around.screenRect.contains(center)) return false;
     }
     return true;
+  }
+
+  /// Whether [node] is a scrollable that has somewhere to scroll to.
+  bool _scrolls(SemanticsNode node) {
+    final data = node.getSemanticsData();
+    return data.hasAction(SemanticsAction.scrollUp) ||
+        data.hasAction(SemanticsAction.scrollDown);
   }
 
   /// Waits until the screen no longer shows [text], then checks it stays
