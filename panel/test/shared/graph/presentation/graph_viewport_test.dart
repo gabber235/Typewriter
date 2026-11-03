@@ -54,4 +54,51 @@ void main() {
 
     expect(centers.last, isNull);
   });
+
+  testWidgets("a graph that narrows keeps the center of what it showed", (
+    tester,
+  ) async {
+    final width = ValueNotifier(900.0);
+    addTearDown(width.dispose);
+    final centers = <Offset?>[];
+    final data = GraphData(
+      cellSize: 50,
+      elements: [
+        GraphElement(
+          id: const GraphIdentifier("Node"),
+          x: 2,
+          y: 0,
+          width: 1,
+          height: 1,
+          builder: (_) => const GraphNode("Node"),
+        ),
+      ],
+      edges: const [],
+    );
+
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Align(
+          alignment: Alignment.topLeft,
+          child: ValueListenableBuilder(
+            valueListenable: width,
+            builder: (_, width, _) => SizedBox(
+              width: width,
+              height: 400,
+              child: Graph(data: data, onViewportCenterChanged: centers.add),
+            ),
+          ),
+        ),
+      ),
+    );
+    final before = centers.whereType<Offset>().last;
+
+    width.value = 340;
+    await panel.settle();
+
+    final after = centers.whereType<Offset>().last;
+    expect(after.dx, closeTo(before.dx, 0.001));
+    expect(after.dy, closeTo(before.dy, 0.001));
+  });
 }

@@ -68,6 +68,16 @@ class GraphViewportController {
     animateTo(target);
   }
 
+  /// Keeps the scene point at the viewport's center there after the viewport
+  /// grew by [sizeChange], such as when a pane opens beside the graph.
+  void keepCenter({required Offset sizeChange}) {
+    transformation.value = Matrix4.translationValues(
+      sizeChange.dx / 2,
+      sizeChange.dy / 2,
+      0,
+    )..multiply(transformation.value);
+  }
+
   /// Resets the transform to unit scale with its origin at [centerOffset].
   void reset(Offset centerOffset) {
     animateTo(
