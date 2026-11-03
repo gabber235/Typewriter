@@ -33,6 +33,8 @@ const _refocus = Duration(seconds: 2);
 /// the frame that holds its result, before the browser painted it and while
 /// transitions still run, and its recording has to show that result.
 const _result = Duration(milliseconds: 1500);
+const _resultFrames = 20;
+const _resultLimit = Duration(seconds: 10);
 
 /// Platform services initialize once per run, however many panels launch.
 final Future<void> _platform = initializePanel();
@@ -157,7 +159,18 @@ final class Panel {
   });
 
   /// Keeps the final screen up long enough to be seen in the recording.
-  Future<void> holdResult() => tester.pump(_result);
+  ///
+  /// It counts frames as well as time, since a transition that rasterizes
+  /// slowly, as on a runner without a GPU, is still on screen after the time.
+  Future<void> holdResult() async {
+    final watch = Stopwatch()..start();
+    var frames = 0;
+    while ((watch.elapsed < _result || frames < _resultFrames) &&
+        watch.elapsed < _resultLimit) {
+      await tester.pump(_frame);
+      frames++;
+    }
+  }
 
   /// Closes the panel and lets it finish, the one way a scenario leaves it, so
   /// what closing does happens while the scenario still owns the failure.
@@ -230,7 +243,17 @@ final class Panel {
       _step("search for \"$query\"", () async {
         await _tap(await _control("Search"));
         await _typeInChooser(query);
-        if (choose != null) await _tap(await _row(choose));
+        if (choose == null) return;
+        await _tap(await _row(choose));
+        // A result can read what the chosen page shows too, so what comes next
+        // has to look at the page and not at the closing search.
+        await until(
+          "the search for \"$query\" closes",
+          () => !visibleTextFields().any(
+            (field) =>
+                field.isFocused && field.getSemanticsData().value == query,
+          ),
+        );
       });
 
   /// Picks [name] in the chooser on screen, such as the one a link field
