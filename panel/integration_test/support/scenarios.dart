@@ -162,9 +162,12 @@ void scenario(
       );
       if (cause != null) log.writeln("${_now()} $cause");
       log.writeln("${_now()} $error\n$stackTrace");
-      // A framework error the failure left pending is logged too.
-      final pending = tester.takeException();
-      if (pending != null) log.writeln("${_now()} $pending");
+      // A framework error the failure left pending is logged too. A reported
+      // failure ended the test, and the binding only answers during one.
+      if (cause == null) {
+        final pending = tester.takeException();
+        if (pending != null) log.writeln("${_now()} $pending");
+      }
       try {
         await panel.capture("failure");
       } on Object catch (captureError) {
