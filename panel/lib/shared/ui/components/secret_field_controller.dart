@@ -38,7 +38,15 @@ _SecretFieldController _useSecretFieldController(
     if (value == null) return;
 
     final fullValue = field.prefix != null ? "${field.prefix}$value" : value;
-    await Clipboard.setData(ClipboardData(text: fullValue));
+    try {
+      await Clipboard.setData(ClipboardData(text: fullValue));
+    } on PlatformException {
+      // A browser can refuse the page the clipboard. The value stays on screen.
+      if (context.mounted) {
+        showErrorSnackBar(context, field.copyFailedSnackbarText);
+      }
+      return;
+    }
     field.onCopied?.call();
     if (context.mounted) {
       showSuccessSnackBar(context, field.copiedSnackbarText);

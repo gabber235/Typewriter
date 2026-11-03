@@ -24,4 +24,24 @@ extension RecordClipboard on WidgetTester {
     );
     return writes;
   }
+
+  /// Makes every clipboard write fail until the test ends, as a browser does
+  /// when it refuses the page access to the clipboard.
+  void refuseClipboard() {
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == "Clipboard.setData") {
+          throw PlatformException(code: "copy_fail");
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+  }
 }

@@ -24,6 +24,7 @@ class SecretField extends HookWidget {
     this.copyButtonText = "Copy",
     this.expiredText = "Expired",
     this.copiedSnackbarText = "Copied to clipboard",
+    this.copyFailedSnackbarText = "Could not copy to the clipboard",
     this.errorSnackbarText = "Failed to generate",
     this.copyOnGenerate = true,
     this.onCopied,
@@ -57,6 +58,9 @@ class SecretField extends HookWidget {
 
   /// Success message shown after clipboard write completes.
   final String copiedSnackbarText;
+
+  /// Error message shown when the clipboard refuses the write.
+  final String copyFailedSnackbarText;
 
   /// Prefix for the exception message shown when generation fails.
   final String errorSnackbarText;

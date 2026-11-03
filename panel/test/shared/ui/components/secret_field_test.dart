@@ -4,6 +4,14 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   const secret = "join-4821";
+  final neverExpiring = SizedBox(
+    width: 600,
+    child: SecretField(
+      title: "Join Code",
+      description: "Invite new members.",
+      onGenerate: () => SecretFieldRevealed(value: secret, expiresAt: null),
+    ),
+  );
 
   testWidgets("a generated secret is revealed, copied, and hidden again when "
       "it expires", (tester) async {
@@ -38,6 +46,20 @@ void main() {
     expect(find.text("Regenerate"), findsOneWidget);
   });
 
+  testWidgets("a refused clipboard keeps the generated secret and says only "
+      "the copy failed", (tester) async {
+    tester.refuseClipboard();
+    final panel = await tester.showComponent(neverExpiring);
+
+    await panel.tapOn(find.text("Generate"));
+
+    await panel.eventually(() => expect(panel.reads(secret), isTrue));
+    expect(panel.shows("Could not copy to the clipboard"), isTrue);
+    expect(panel.shows("Failed to generate"), isFalse);
+    expect(panel.shows("Copied to clipboard"), isFalse);
+    expect(find.text("Copy"), findsOneWidget);
+  });
+
   testWidgets("with automatic copying off, the secret is copied only on "
       "request", (tester) async {
     final clipboard = tester.recordClipboard();
@@ -65,16 +87,7 @@ void main() {
 
   testWidgets("a secret without expiry stays revealed", (tester) async {
     tester.recordClipboard();
-    final panel = await tester.showComponent(
-      SizedBox(
-        width: 600,
-        child: SecretField(
-          title: "Join Code",
-          description: "Invite new members.",
-          onGenerate: () => SecretFieldRevealed(value: secret, expiresAt: null),
-        ),
-      ),
-    );
+    final panel = await tester.showComponent(neverExpiring);
 
     await panel.tapOn(find.text("Generate"));
     await tester.pump(const Duration(hours: 1));
