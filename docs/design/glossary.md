@@ -34,13 +34,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`All<T>`**: handler parameter that resolves to every value of type `T`. See [events-and-handlers.md](events-and-handlers.md#parameters).
 
-**`apply()`**: commits `Changes` as one optimistic transaction in which all operations commit or none do. See [stored-data.md](stored-data.md#transactions-apply).
-
 **`ArmSwing`**: example event with one meaning reached through several sources; the first source starts the occurrence and the others join it. See [events-and-handlers.md](events-and-handlers.md#event).
 
 **`At<K, T>`**: variable reaction that runs at an instant computed from the value and re-armed on each write. See [stored-data.md](stored-data.md#reactions).
 
 **`AtElapsed<K>`**: event delivered through a `Due` when an `At` reaction is due. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
+
+**`attempt()`**: runs a transaction function or `Changes` field. It waits only when the write is guarded and returns `Committed` or `Refused(message)`. `ensure()` always waits. See [stored-data.md](stored-data.md#transaction-functions).
 
 **Audience**: an `AudienceEntry` tree whose criteria are formulas over mirrors and whose membership is the `InAudience` mirror. See [live-data.md](live-data.md#audiences).
 
@@ -78,13 +78,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Chain**: entries linked by triggers, where links fire explicitly and carry a growing context. See [events-and-handlers.md](events-and-handlers.md#chain).
 
-**`Change`**: one storage operation value, returned by formula operator providers such as `plusAssign`. See [stored-data.md](stored-data.md#operators-are-providers).
-
 **Change operations**: the native storage operations (`set`, `add`, `multiply`, `max`, `min`, `setIfAbsent`, `append`, `remove`, `addAll`, `removeAll`, `put`, `clear`, `require`) the realm applies itself. See [stored-data.md](stored-data.md#change-operations).
 
 **`Changed<T>(old, new)`**: lifecycle event fired when the value at a set of keys changes; for stored values it runs after the commit. See [stored-data.md](stored-data.md#lifecycle-events).
 
-**`Changes`**: the value type of an update field; an ordered list of change lines that the entry applies with `apply()`. See [stored-data.md](stored-data.md#changes-fields).
+**`Changes`**: the value type of an update field; an ordered list of change lines, a transaction written in formula text, that the entry commits with `attempt()`. See [stored-data.md](stored-data.md#changes-fields).
 
 **`check(formula)`**: the query graph step that type checks one formula. See [formula-language.md](formula-language.md#type-checking).
 
@@ -232,6 +230,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## H
 
+**`GuardedTransaction`**: a `Transaction` that also has `require`; declaring it in the signature tells codegen and the checker that the write can be refused. See [stored-data.md](stored-data.md#transaction-functions).
+
 **Handler**: a Kotlin function with the event as receiver; parameters decide when and where it runs, the return type decides its phase. See [events-and-handlers.md](events-and-handlers.md#handler).
 
 **`HasChat`, `HasInventory`, `Living`**: example live capability traits an engine provides for its identities. See [live-data.md](live-data.md#live-capability-traits).
@@ -340,7 +340,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Occurrence**: one real happening that may reach several sources; sources of the same meaning join it. See [events-and-handlers.md](events-and-handlers.md#occurrences-and-dedupe).
 
-**Offline changes**: stored data changing while its protagonist is offline; stored only handlers run anywhere the book runs, live reactions may be missed. See [stored-data.md](stored-data.md#offline-changes).
+**Offline changes**: stored data changing while its protagonist is offline; stored only handlers run on the realm, live reactions may be missed. See [stored-data.md](stored-data.md#offline-changes).
 
 **`onClash`**: step entry field and `startStep` argument: `Drop` (default), `Queue`, or `Replace`. See [interactions.md](interactions.md#clashes).
 
@@ -519,6 +519,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Trigger**: an ordinary handler on a world event that fires an entry's links. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
 **`TriggerAudienceEntry`**: audience entry with `onEnter`, `onExit`, and `fireOnJoin`; exit fires only on `because == Value`. See [live-data.md](live-data.md#audiences).
+
+**Transaction function**: a Kotlin function with a `Transaction` context, the only way Kotlin writes a stored value; it runs on the engine as the prediction and on the realm as the decision. See [stored-data.md](stored-data.md#transaction-functions).
 
 **`Triggerable`**: core trait for entries with `triggers` and a `changes: Var<Changes, InteractionContext>` field. See [events-and-handlers.md](events-and-handlers.md#triggerable-and-complete).
 

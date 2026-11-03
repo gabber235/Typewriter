@@ -36,7 +36,7 @@ KSP generates one hook per content type, `XMigrations`, with the function `fun X
 - `old` is the last published view of the content.
 - `new` is the draft.
 - `input(name, type, default)` asks the creator for a value the migration cannot decide alone.
-- The result is decided `Changes`, the same storage operations an `apply()` commits (see [stored-data.md](stored-data.md)).
+- The result is decided `Changes`, the same storage operations a transaction commits (see [stored-data.md](stored-data.md)).
 
 For the `Variable` static entry the hook compares type and keys and asks for a conversion formula:
 
@@ -103,7 +103,7 @@ All pending migrations run in the publication transaction, together with switchi
 
 - Any failure changes nothing: no data is converted and the old content stays live. The publication shows the error.
 - Change operations are applied by the realm's storage, which needs no engine running, so offline protagonists are migrated too.
-- After the commit, `Changed<X>` handlers run as for any other `apply()`.
+- After the commit, `Changed<X>` handlers run as for any other transaction.
 - Running interactions see the new content through hot publish (see [interactions.md](interactions.md)).
 
 Rolling a production realm back to an earlier revision is a realm mode feature, not part of a migration: see [../vision/realm-modes.md](../vision/realm-modes.md).

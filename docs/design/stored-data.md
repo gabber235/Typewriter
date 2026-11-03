@@ -108,6 +108,8 @@ Handlers take a stored type as a parameter; the keys are filled from the event (
 fun Tick<EveryTick>.type(speaking: Speaking, dialogue: DialogueHold, step: Step) = ...
 ```
 
+Kotlin reads a `Settable` only inside a [transaction function](#transaction-functions) (decided 2026-11-04). A `get()` anywhere else does not compile, so a handler cannot read a value and write it back by accident. Kotlin cannot see where a plain value came from, so `Set(event.new + 1).attempt()` with a value from an event or parameter still compiles.
+
 Formulas read stored values through generated readers. Each `stored()` declaration generates a `Settable<T>` reader that takes the keys as parameters filled from scope, and `.all` reads every key:
 
 ```kotlin
@@ -122,7 +124,7 @@ Stored values are indexed per type, so finding every value of a type, or every v
 
 The guideline is **store moments, not counters**: `startedAt`, `skippedAt`. Steps then rarely write, and a restarted step is a real resume.
 
-All stored data is owned by the realm, also the values of a running step, and every write is an `apply()` transaction (decided 2026-11-03). There is no single writer: the realm serializes writes, and a generation check drops a stale write. Fast changing state that needs no saving lives in a `Runtime`. Engines tell the realm which stored keys they currently demand and receive `Changed<X>` pushes in commit order on their own subject (see [live-data.md](live-data.md#lost-pushes)).
+All stored data is owned by the realm, also the values of a running step, and every write is a transaction (decided 2026-11-03). There is no single writer: the realm serializes writes, and a generation check drops a stale write. Fast changing state that needs no saving lives in a `Runtime`. Engines tell the realm which stored keys they currently demand and receive `Changed<X>` pushes in commit order on their own subject (see [live-data.md](live-data.md#lost-pushes)).
 
 Stored data and `Due` are never put on NATS streams: they need transactions and exactly once delivery, which the realm owns.
 
@@ -149,45 +151,112 @@ There is no general `update { old -> new }`, no bounded add, no list insert or m
 
 ### Operators are providers
 
-Formula operators are plain provider functions in the standard library that return a `Change`:
+Formula operators are plain provider functions in the standard library. They need the `Transaction` context and record the operation on it (decided 2026-11-04), so Kotlin and formula text share one set, and assigning in a pure field is an error because no `Transaction` is in scope:
 
 ```kotlin
-operator fun Settable<Int>.plusAssign(amount: Int): Change = Change.add(this, amount)
+context(tx: Transaction)
+operator fun Settable<Int>.plusAssign(amount: Int) = tx.add(this, amount)
 ```
 
 `+=` and `-=` are stored as `add`; `=` is `set`; `*=` is `multiply`; `?=` is `setIfAbsent`.
 
 ### Changes fields
 
-An update field has the type `Var<Changes, C>`. Its syntax (change lines, their order, purity) is in [formula-language.md](formula-language.md#changes-fields). Evaluating the field writes nothing; the entry applies the returned `Changes` through `apply()`. `now` inside a changes field is the realm commit time.
+An update field has the type `Var<Changes, C>`. Its syntax (change lines, their order, purity) is in [formula-language.md](formula-language.md#changes-fields). Evaluating the field writes nothing; the entry commits it through `attempt()`. `now` inside a changes field is the realm commit time.
 
-## Transactions: `apply()`
+## Transactions
 
-`Changes` are committed with `apply()`. One `apply()` is one transaction: all of its operations commit, or none do.
+`Changes` are committed with `attempt()`. One call is one transaction: all of its operations commit, or none do.
 
 ```kotlin
-entry.changes(context).apply()
+entry.changes(context).attempt()
 entry.triggers.fire(context)
 ```
 
-Most entries use the `Triggerable` shortcut `entry.complete(context)`, which applies the changes and then fires the triggers, so the next entry sees the changes (see [events-and-handlers.md](events-and-handlers.md)). Extra update fields, such as a dialogue option's changes, are applied the same way: `option.changes(context).apply()`.
+Most entries use the `Triggerable` shortcut `entry.complete(context)`, which applies the changes and then fires the triggers, so the next entry sees the changes (see [events-and-handlers.md](events-and-handlers.md)). Extra update fields, such as a dialogue option's changes, are applied the same way: `option.changes(context).attempt()`.
 
-The transaction is optimistic:
+The engine predicts and the realm decides (decided 2026-11-04):
 
-1. The changes formula is evaluated against the current stored values.
-2. The realm tries to commit.
-3. On a conflict, the formula is evaluated again with the same inputs but the updated stored values, and the commit is retried.
+1. The engine evaluates the changes formula against its local view and applies the result there, so the next entry reads it.
+2. The engine sends the formula reference and its revision, the inputs, and every live value the formula read. A provider that needs the server (`papi`) counts as a live read: the engine reads it once and sends the value.
+3. The realm evaluates the formula against the committed values, outside the database transaction, so a slow provider holds up no commit. It then commits optimistically.
+4. On a conflict, the realm evaluates again with the same inputs and the updated stored values, and retries. The engine is not involved.
 
-So a line like `if (quest.coins > 100) quest.rank = gold` always decides on the committed value, never on a stale one.
+So a line like `if (quest.coins > 100) quest.rank = gold` always decides on the committed value, never on a stale one. The realm has the extension artifacts to do this (`DefaultRealmRuntimeFactory.kt:129`). How long the realm keeps old revisions for an engine still on one during a rollout is open for the plan.
 
 A transaction fails as a whole when a `require` guard is false, or when evaluating the formula throws (a provider error, the recursion limit). A failed transaction applies nothing. `Changed<X>` handlers run only after a successful commit.
+
+### Transaction functions
+
+Decided 2026-11-04. Kotlin writes a stored value only inside a transaction function, also for a single operation. The write operations need the `Transaction` context, so a write anywhere else does not compile. Codegen generates the call a handler uses, and the same function runs on the engine as the prediction and on the realm as the decision.
+
+```kotlin
+@Transaction
+context(tx: Transaction, quest: Quest)
+fun pay(price: Int) {
+    require(quest.coins >= price, "Too poor")
+    quest.coins -= price
+}
+```
+
+`require` exists only on `GuardedTransaction`, a `Transaction` that the signature declares. KSP reads the signature, so a guard cannot hide in a function body. A guarded function can call a plain one; a plain one cannot call a guarded one. For a guarded function, the generated `attempt()` always waits. The text checker treats a formula as guarded when it contains `require` or calls a guarded function.
+
+```kotlin
+@Transaction
+context(tx: GuardedTransaction, quest: Quest)
+fun pay(price: Int) {
+    require(quest.coins >= price, "Too poor")
+    quest.coins -= price
+}
+
+when (val paid = Pay(10).ensure()) {
+    Committed -> give(sword)
+    is Refused -> player.sendMessage(paid.message)
+}
+```
+
+An `OnWrite` reaction with a guard makes every write to that variable guarded, also when the writer has no `require`. The text checker sees this from the variables a field writes. Kotlin code is compiled before a creator adds a reaction, so the engine sees it while predicting, from the variables the function wrote.
+
+A `Triggerable` entry gets `refused` links, which fire when its changes are refused (decided 2026-11-04).
+
+Kotlin has two calls and no `apply()` (decided 2026-11-04). `attempt()` waits only when the write is guarded; `ensure()` always waits. Both return `Committed` or `Refused(message)`. Kotlin's return value checker (`-Xreturn-value-checker`) reports an ignored result, so a refusal cannot be dropped by accident.
+
+Kotlin reaches a creator variable only as an argument, never by looking one up (decided 2026-11-04), and stored types declared in Kotlin have no reactions. So the guard is known from the signature and the arguments, without running the function or depending on which branch it takes.
+
+```kotlin
+AddCoins(entry.coins(context), 5).attempt()
+```
+
+### Which fields are guarded
+
+The realm answers this on the query graph, next to `check(formula)`, and the engine gets the answers with the published content:
+
+```kotlin
+fun guarded(field): Boolean =
+    check(field).hasRequire
+        || check(field).calls.any { it.guarded }
+        || writes(field).any { guardedVariable(it) }
+
+fun guardedVariable(variable): Boolean =
+    reactions(variable).filterIsInstance<OnWrite>().any { guarded(it.changes) }
+```
+
+An edit reruns only what read the change, so adding a guard to an `OnWrite` reaction reaches every field that writes that variable, on any page. A reaction loop is a query cycle, reported as an error.
+
+The panel gets the answers from the realm through a `WatchGuards` subscription per page and reads them as `expressions.changes.guarded`. The `refused` row (under `changes` in the inspector) and port (on the graph node) appear only when the field is guarded. When the guard goes away but `refused` links remain, the row stays with a warning, so no links silently disappear.
+
+With a link on `refused`, the link wins and the next entry can read `refused.message`. With no link, the message goes to the subject.
+
+The shape of the generated call is left for the plan.
 
 ### Who waits for a commit
 
 Chosen 2026-11-03 with the [tick pipeline](events-and-handlers.md#tick-pipeline). A chain waits for the realm only at a `require` guard:
 
 - **No guard.** The write applies to the engine's local view at once, so the next entry reads it, and goes to the realm behind the chain. The chain does not wait.
+- **Reads do not wait (decided 2026-11-04).** A read does not make a write wait, because the realm evaluates the transaction again against the committed values and the engine reruns nothing. The next entry can briefly act on a stale local value; the stored result stays correct.
 - **With a guard.** The chain waits for the realm's answer, so nobody spends what they do not have. Earlier writes go first, in order.
+- **`ensure()`.** Kotlin code that needs the committed result writes `Pay(10).ensure()` instead of `Pay(10).attempt()`, and the chain waits for the realm's answer.
 - **Batching.** An engine keeps one commit in flight; what arrives meanwhile shares the next commit. Each write has a per engine id, so a retry applies once.
 - **The answer.** The committed value replaces the local one. What a player saw can briefly differ when another engine wrote the same key. The stored result stays correct.
 
@@ -321,18 +390,37 @@ The same `@Derive` shape with a `Hold` result is live and never saved (see [inte
 
 Stored data can change while its protagonist is offline, for example through a panel edit or a `Due`.
 
-- Stored only derives and handlers run on any engine that runs the book. The realm picks one; when none runs, they catch up when one starts.
+- Stored only derives and handlers run on the realm (decided 2026-11-04), through the same evaluator as transactions, also when no engine runs. They cannot touch Bukkit, so KSP requires them in a part the realm loads. Each one is evaluated outside the database transaction, so a slow one holds up other readers and never a commit; a stuck one is timed out and reported.
+- No stored derive or stored only handler loses work (decided 2026-11-04). The commit also inserts a pending row per reader and key, keeping the oldest old value; the row exists only while work waits. The reader's writes and clearing the row are one transaction, so running twice has one effect. A newer change keeps the row and runs the reader again. Steps can merge: a handler may see one `Changed(9, 12)`, and a value going 9, 10, 9 shows no change. This is level triggered like Kubernetes controllers, and the same model as `Due`. A handler that needs every step writes its own record as part of the write.
+- Firing links needs an engine, because a chain may need a player (decided 2026-11-04). A handler that fires links runs where its subject is live, so it does not run while the subject is offline; firing from the realm is an error, not a silent no-op. This matches legacy, which watches facts only for online players.
 - Live reactions to a moment can be missed, and missed events are never replayed. The guideline is **store what is owed, not what happened**: a derive produces owed state, and a live handler acts on it whenever the protagonist is online.
+
+The handler asks for a live trait, so it runs only while the protagonist is online. Like a hold's `Added<H>`, it fires per live connection while the value exists: when `SwordOwed` appears, and again at each join or server move. So it must be safe to repeat. A stored only handler fires once, on the realm.
+
+A derive owns its result, so a handler cannot remove `SwordOwed`: the next input change would derive it again. The derive reads what was already given, and a guarded transaction picks one winner:
 
 ```kotlin
 @Derive
-fun QuestStage.owed(): SwordOwed? = ...
+fun Coins.owed(given: SwordGiven?): SwordOwed? =
+    if (value >= 10 && given == null) SwordOwed(protagonist) else null
+
+@Transaction
+context(tx: GuardedTransaction)
+fun claimSword(protagonist: Protagonist) {
+    require(swordGiven(protagonist).get() == null)
+    swordGiven(protagonist) = SwordGiven(protagonist)
+}
 
 @Handler
-fun Added<SwordOwed>.give(owed: SwordOwed, inventory: HasInventory) = ...
+fun Added<SwordOwed>.give(owed: SwordOwed, inventory: HasInventory) {
+    when (ClaimSword(owed.protagonist).ensure()) {
+        Committed -> inventory.give(sword)
+        is Refused -> Unit
+    }
+}
 ```
 
-The handler asks for a live trait, so it runs only while the protagonist is online: when `SwordOwed` appears, or on join if it appeared while they were away.
+The realm and the inventory cannot commit together, so a crash between the two steps costs something. This is the pattern to teach and the one the layer 6 demo uses: claim first, so a crash can lose a reward but never duplicate one. It is not a framework rule; an extension may choose the other order.
 
 A realm check warns about live handlers on `Changed<X>` when X can change offline.
 
@@ -355,5 +443,4 @@ Errors block publication; warnings never do.
 - Key fields that are records: whether a key may be a record whose fields are all identities. `Due<E>(@Key event: E, at)` relies on it to satisfy the key rule.
 - Book instance identity: whether an instance is the identity (book, key), the same shape as groups, so that renaming an instance key creates a new instance and the book's migration moves its data.
 - Variables: the direction is adopted, but details such as the variable editor are still in progress.
-- Applying a single `Change` from Kotlin handler code (`knownIds(engine, type).append(id).apply()`, starting a mode); the design shows `apply()` only on `Changes` returned by an entry field (layer 6, [closed-beta-roadmap.md](closed-beta-roadmap.md)).
-- Stored reads as query graph inputs (type plus partial key), so a stored commit reruns the realm checks and searches that read it (layer 6, [closed-beta-roadmap.md](closed-beta-roadmap.md)).
+- Stored reads as query graph inputs (type plus partial key), so a stored commit reruns the realm checks and searches that read it (layer 9, [closed-beta-roadmap.md](closed-beta-roadmap.md)).

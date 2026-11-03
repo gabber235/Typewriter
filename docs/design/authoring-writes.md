@@ -2,7 +2,7 @@
 
 > **Status: decided** (actor, tier A, tier B). The Open questions at the end are not decided. Every name marked *(proposed)* does not exist yet; every other name refers to existing code.
 
-How any client writes authored state (entries, fields, resources, list items, records of any catalog type) to the realm through the one existing edit contract, `CommitPreparedEdit`. Related: [engines.md](engines.md#engine-communication) (engines write authored state directly), [stored-data.md](stored-data.md#transactions-apply) (the optimistic `apply()` pattern this mirrors), [live-data.md](live-data.md#session) (sessions).
+How any client writes authored state (entries, fields, resources, list items, records of any catalog type) to the realm through the one existing edit contract, `CommitPreparedEdit`. Related: [engines.md](engines.md#engine-communication) (engines write authored state directly), [stored-data.md](stored-data.md#transactions) (the optimistic transaction pattern this mirrors), [live-data.md](live-data.md#session) (sessions).
 
 ## Problem
 
@@ -485,7 +485,7 @@ What happens:
 3. A rerun happens only when the anchor was removed: if another edit removed `n2` first, the insert gets `conflict_error` on its `exists` guard, and `edit` reruns the block on a fresh scoped read. A tool that means "append" reads the last item **inside** the block, as example 4 does, so the rerun picks an anchor that still exists.
 4. After `attempts` conflicts the outcome is `Exhausted(conflicts)`.
 
-Rule (as for `apply()`): every decision that depends on authored state belongs inside the block.
+Rule (as for transaction functions): every decision that depends on authored state belongs inside the block.
 
 ### 6. Failures
 

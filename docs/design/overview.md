@@ -50,7 +50,7 @@ An identity is something data can be about: `Protagonist`, `Interaction`, `Step`
 data class Friendship(@Key val pair: Set<Protagonist>, val level: Int) : Stored
 ```
 
-`@Key` is sugar for the storage declaration `stored(name, keys, value, default)`. Creators declare the same thing as a `Variable` static entry. Writes are `Changes` committed by `apply()` as one transaction. Every stored value emits `Added<T>`, `Removed<T>`, and `Changed<T>(old, new)`. See [stored-data.md](stored-data.md).
+`@Key` is sugar for the storage declaration `stored(name, keys, value, default)`. Creators declare the same thing as a `Variable` static entry. Writes are transactions committed by `attempt()` as one transaction. Every stored value emits `Added<T>`, `Removed<T>`, and `Changed<T>(old, new)`. See [stored-data.md](stored-data.md).
 
 ## Derive
 

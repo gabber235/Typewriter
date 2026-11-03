@@ -234,7 +234,7 @@ Parameter types decide placement. The realm sees this statically, and the panel 
 
 | Handler asks for | Runs |
 | --- | --- |
-| Only stored data | Once, on an engine where the event happened; for realm delivered events (`Changed<X>` while offline, `Due`), on any engine that runs the book. |
+| Only stored data | Once, on an engine where the event happened; for realm delivered events (`Changed<X>`, `Due`), on the realm ([stored-data.md](stored-data.md#offline-changes)). |
 | Mirrors, no live trait | On the engine that owns the mirror, without live object access. |
 | A live trait | On the engine where its subject is live. The handler runs on a worker; the engine's trait implementation places each read and effect ([tick pipeline](#tick-pipeline)). |
 | A live trait on a group subject | On each member's engine. |
@@ -352,7 +352,7 @@ Chosen 2026-11-03, after a prototype compared it with waiting per write, chain t
 3. **On the worker.** The worker takes chains until the queue is empty and runs each chain's handlers in one go. A worker stuck in a slow handler holds up only that chain: the next tick's worker takes the rest.
 4. **Effects.** Handlers never run on an owner thread. An engine's trait implementation chooses where each effect runs, not the shared trait, because this differs between engines. Paper sends chat from the worker and queues a world change for the owner thread; all queued changes of a tick share one visit. An effect sent after a queued change joins that queue, so effects keep their order.
 
-Every chain gets the same limit: at most one owner visit to read live values, one owner visit per tick for world changes, and a realm wait only for a `require` guard ([stored-data.md](stored-data.md#transactions-apply)).
+Every chain gets the same limit: at most one owner visit to read live values, one owner visit per tick for world changes, and a realm wait only for a `require` guard ([stored-data.md](stored-data.md#transactions)).
 
 Accepted costs: a chain starts up to one tick after its event, while the verdict stays instant. A player who leaves right after paying can lose the item, as in every option tested; what must arrive is stored as owed.
 
@@ -415,22 +415,23 @@ Entries that apply changes and fire links implement the core trait:
 ```kotlin
 interface Triggerable {
     val triggers: ...
+    val refused: ...
     val changes: Var<Changes, InteractionContext>
 }
 ```
 
-`changes` replaces legacy modifiers. Two styles:
+`changes` replaces legacy modifiers. `refused` links fire when the changes are refused; the triggers do not fire then, and the event result is `Failed(reason)` ([stored-data.md](stored-data.md#which-fields-are-guarded)). Two styles:
 
 ```kotlin
 // Shortcut: apply changes, then fire triggers (legacy order; the next entry sees the changes).
 entry.complete(context)
 
 // Manual, when an entry needs another order or timing.
-entry.changes(context).apply()
+entry.changes(context).attempt()
 entry.triggers.fire(context)
 ```
 
-Extra update fields (dialogue options) are applied the same way: `option.changes(context).apply(); option.triggers.fire(context)`. What `apply()` commits and how it handles conflicts is in [stored-data.md](stored-data.md).
+Extra update fields (dialogue options) are applied the same way: `option.changes(context).attempt()`, then `option.triggers.fire(context)` unless refused. What `attempt()` commits and how the realm handles conflicts is in [stored-data.md](stored-data.md).
 
 ## Commands
 

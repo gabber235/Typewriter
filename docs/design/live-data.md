@@ -307,7 +307,7 @@ Core NATS can lose a push, and an engine's cache would then stay wrong. JetStrea
 - A heartbeat every 5 seconds carries the last `seq`, so a lost final push is noticed.
 - A gap, a new epoch, or a reconnect makes the engine read its demanded keys again and continue from the `seq` in the answer.
 
-After a loss, several steps can arrive as one `Changed(old, new)`, and a value that returned to its old value shows no change. Live reactions already accept this. Stored only handlers and derives cannot: how the realm delivers those is a separate topic.
+After a loss, several steps can arrive as one `Changed(old, new)`, and a value that returned to its old value shows no change. Live reactions already accept this. Stored only handlers and derives cannot, so the realm runs them through pending rows ([stored-data.md](stored-data.md#offline-changes)).
 
 ## NATS JetStream
 

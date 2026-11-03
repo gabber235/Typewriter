@@ -203,7 +203,7 @@ group.members.forEach { it.reputation += 5 }
 
 `Settable` members come from `stored()` declarations and their keys fill from scope. Change operators are plain stdlib provider functions; the operations they produce are in [stored-data.md](stored-data.md#change-operations).
 
-Assigning inside a verdict or another pure field is a type error. Update fields may set and update stored values only, never world actions such as giving items; those stay explicit entries. The change operations, `apply()` transactions and the `Triggerable` trait are in [stored-data.md](stored-data.md).
+Assigning inside a verdict or another pure field is a type error. Update fields may set and update stored values only, never world actions such as giving items; those stay explicit entries. The change operations, transactions and the `Triggerable` trait are in [stored-data.md](stored-data.md).
 
 ## Formula contexts
 
