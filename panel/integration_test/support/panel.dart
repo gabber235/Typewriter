@@ -486,7 +486,20 @@ final class Panel {
       },
       timeout: within,
     );
+    await _bringIntoView(text);
   });
+
+  /// Scrolls [text] fully into view when a scrollable's edge still cuts it, as
+  /// a user reading it would. Text that already shows stays where it is.
+  Future<void> _bringIntoView(String text) async {
+    final shown = find.textContaining(text).evaluate().lastOrNull;
+    if (shown == null) return;
+    await Scrollable.ensureVisible(
+      shown,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+    );
+    await tester.pump(_frame);
+  }
 
   /// Whether [node] lies in the node labeled [label].
   bool _within(SemanticsNode node, String? label) {
