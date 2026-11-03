@@ -1,8 +1,9 @@
 //! The results contract every runner writes (`skir-src/harness/v1/test_run.skir`) and the one
 //! attempt policy for every suite. [`attempts`] records every attempt of a case; [`verdict`]
 //! reads them under the run's policy. Under `RerunFailures` a failed case runs again until it
-//! passes, and passing after a failure makes it flaky: visible, not gating. Under `Exactly` any
-//! failed attempt fails the case. A case listed in [`QUARANTINE`] still runs and is reported but
+//! passes, and passing after a failure makes it flaky, which gates like a failure: the rerun tells
+//! a test that fails sometimes from one that always fails, and only a test that always passes is
+//! trusted. Under `Exactly` any failed attempt fails the case. A case listed in [`QUARANTINE`] still runs and is reported but
 //! does not gate; each entry names a reason and an issue, and every report lists the quarantined
 //! cases so they cannot be forgotten.
 
@@ -57,7 +58,8 @@ impl Quarantine {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Verdict {
     Passed,
-    /// Failed, then passed when run again under `RerunFailures`: reported, not gating.
+    /// Failed, then passed when run again under `RerunFailures`: gates like a failure, and says the
+    /// test fails only sometimes.
     Flaky,
     Failed,
     /// Listed in the quarantine: reported, not gating.
@@ -286,6 +288,7 @@ pub fn report(
 ) -> Result<()> {
     let repeated = matches!(run.attempt_policy, AttemptPolicy::Exactly(n) if n > 1);
     let mut failed = Vec::new();
+    let mut flaky = Vec::new();
     for case in &run.cases {
         let Ok(verdict) = verdict(run, case, quarantine) else {
             writeln!(out, "{}: failed, no attempts recorded", case.id)?;
@@ -324,7 +327,10 @@ pub fn report(
                 writeln!(out, "{}: failed {attempts}{see}", case.id)?;
                 failed.push(case.id.as_str());
             }
-            Verdict::Flaky => writeln!(out, "{}: flaky, failed {attempts}{see}", case.id)?,
+            Verdict::Flaky => {
+                writeln!(out, "{}: flaky, failed {attempts}{see}", case.id)?;
+                flaky.push(case.id.as_str());
+            }
             Verdict::Quarantined => match quarantine.entry(&run.runner, &case.id) {
                 Some(entry) => writeln!(
                     out,
@@ -341,6 +347,14 @@ pub fn report(
             failed.len(),
             run.cases.len(),
             failed.join(", ")
+        );
+    }
+    if !flaky.is_empty() {
+        bail!(
+            "{} of {} cases are flaky: {}",
+            flaky.len(),
+            run.cases.len(),
+            flaky.join(", ")
         );
     }
     Ok(())
@@ -492,7 +506,12 @@ mod tests {
         assert_eq!(outcomes(&folded, "a"), [failed("boom"), Outcome::Passed]);
         assert_eq!(outcomes(&folded, "b"), [Outcome::Passed]);
         let (result, out) = report_text(&folded, &Quarantine::default());
-        assert!(result.is_ok());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("1 of 2 cases are flaky: a")
+        );
         assert_eq!(
             out,
             "a: flaky, failed 1 of 2 attempts (1); see results/panel/attempts/1/\n"
