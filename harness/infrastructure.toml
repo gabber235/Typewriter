@@ -3,4 +3,4 @@
 # Typewriter also reads `platform/_ci/clients.json` from this checkout: how it reaches the cluster
 # and which Secret holds its test users. Bump the revision to pick up Infrastructure changes.
 repository = "Seamlezz/Infrastructure"
-revision = "223f89bf85da82e71766f7d604f0be2d1a2e852e"
+revision = "ed205b4b509161456a70233f86d19d1a421e1884"
