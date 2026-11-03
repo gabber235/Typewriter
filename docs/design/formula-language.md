@@ -64,7 +64,7 @@ Each field has a plain mode (the normal editor for `T`) and a formula mode (text
 
 ### Stored form
 
-A formula is a function value: a formula for `Var<Int, MemberContext>` has type `context(group: Group, chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int`. A formula context `C` is the context parameters of that function type. `Var`, `Formula` and `FormulaReference` are ordinary declared types in `typewriter-contracts`, next to `Icon` and `Color`:
+A formula is a function value: a formula for `Var<Int, MemberContext>` has type `context(chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int`. A formula context `C` is the context parameters of that function type. `Var`, `Formula` and `FormulaReference` are ordinary declared types in `typewriter-contracts`, next to `Icon` and `Color`:
 
 ```kotlin
 @TypewriterType(id = FORMULA_TYPE_ID)
@@ -88,7 +88,7 @@ sealed interface Var<T, F> {
 
 - Every function type is stored as a `Formula` record: the checked catalog resolves `TypeUse.function` to `Formula`'s schema, while the function type stays the type used for checking. Names in `source` resolve against where the value sits, so no captured values are stored.
 - `Var<T, F>` is an existing union (abstract record plus `parents`), so the plain and formula toggle is picking a concrete form (`concreteForms`), the stored form is `NamedValue.actual_type`, and Kotlin decodes it like any sealed type. A plain value nests one level: `Var.Value { value: 50 }`.
-- KSP lowers the Kotlin context slot: `Var<Int, MemberContext>` becomes `Var<Int, context(group: Group, chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int>`, and `Var<Int>` becomes `Var<Int, () -> Int>`. This is one converter rule, next to the one for `Ref`.
+- KSP lowers the Kotlin context slot: `Var<Int, MemberContext>` becomes `Var<Int, context(chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int>`, and `Var<Int>` becomes `Var<Int, () -> Int>`. This is one converter rule, next to the one for `Ref`.
 - Pure only contexts (`PublishScope`, `TypeScope`) provide no context parameters and lower to `() -> T`. Only context parameters reach stored or live data, so a function type without context is pure by construction (see [Where formulas run](#where-formulas-run)).
 - A function typed `T` needs no special case in storage: `Var.Value.value` is already a `Formula`, so its editor is the body editor with no formula switch.
 
@@ -210,7 +210,7 @@ Assigning inside a verdict or another pure field is a type error. Update fields 
 A context is a plain Kotlin interface whose properties are the scope values a field gets. KSP turns `C` into the field's `scope` call. The code that evaluates the field (the entry's handler) passes an instance, with core helpers for core contexts:
 
 ```kotlin
-interface InteractionContext { val group: Group; val chain: Chain }
+interface InteractionContext { val chain: Chain } // `protagonist` or the widened `group` comes from `produces`
 interface MemberContext : InteractionContext { val protagonist: Protagonist }
 
 interface ShopItemContext : MemberContext { val item: ShopItem }
@@ -224,7 +224,7 @@ Core defines every context. Capability modules define none: engine values are me
 
 | Context | Used by | Provides |
 | --- | --- | --- |
-| `InteractionContext` | Fields evaluated once per interaction | `group`, `chain`, `engine` |
+| `InteractionContext` | Fields evaluated once per interaction | `chain`, `engine`, plus the chain's subject: `protagonist`, or `group` after widening |
 | `MemberContext` | Fields evaluated per member | `InteractionContext` plus `protagonist` |
 | `PublishScope` | Fields evaluated by the realm at publish (book instances) | Pure values only |
 | `TypeScope` | `Var<Type, TypeScope>` type fields | Pure values only; types in scope |
@@ -311,7 +311,7 @@ Names resolve innermost first:
 
 The page level holds that page's elements and the book level holds all of them, so the same page wins; otherwise two elements with one name are an ambiguity error at the use site with a quick fix that qualifies by page (`village.spawn`). Element names need no uniqueness check.
 
-Chain records are functions on their producing entry: `produces { field("chosen", Chosen) }` on `smith_question` generates `chosen: context(entry: SmithQuestionEntry, chain: Chain) () -> Chosen`, so `smith_question.chosen.index` fills `entry` by the dot and `chain` from `C`. The short form `chosen.index` belongs to chains (layer 4).
+Chain records are functions on their producing entry: `produces { field("chosen", Chosen) }` on `smith_question` generates `chosen: context(entry: SmithQuestionEntry, chain: Chain) () -> Chosen`, so `smith_question.chosen.index` fills `entry` by the dot and `chain` from `C`. The short form `chosen.index` (decided 2026-11-04) walks the links backwards from the entry holding the formula. One producer fills `entry`; no producer falls through to normal lookup. Two producers, or a producer and a container element with the same name, are an ambiguity error at the use site with a quick fix that qualifies, so adding a link or an element never silently changes what a formula means. A producer that is not on every path gives a nullable record.
 
 ### Names
 

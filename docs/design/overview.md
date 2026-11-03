@@ -23,7 +23,7 @@ A new concept is only added when it is useful in several unrelated scenarios and
 An event is one type per meaning (`PlayerMove`, `ArmSwing`, `Confirm`, `Tick`). What a delivery can do (decide, change, run on which thread) is typed on the source, not on the event. Sources receive `Demand<C>`, so they only work for events some handler can actually run for.
 
 ```kotlin
-ConfiguredSource<E, C>.open(demand: Demand<C>)
+ConfiguredSource<E, C>.open(demand: Demand<C>, sink: Sink<E>)
 ```
 
 `emit()` queues an event; it is decided after the current one finishes. See [events-and-handlers.md](events-and-handlers.md).

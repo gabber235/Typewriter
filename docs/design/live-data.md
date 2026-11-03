@@ -114,8 +114,8 @@ Entering and leaving a region is `Added<InRegion>` and `Removed<InRegion>`; ther
 Configured events (`Tick<C>` and other real events with a configuration, see [events-and-handlers.md](events-and-handlers.md)) use the same demand. A source receives `Demand<C>`, the configurations that currently have a runnable handler, so only those are active:
 
 ```kotlin
-interface ConfiguredSource<E, C> {
-    fun open(demand: Demand<C>)
+interface ConfiguredSource<E, C> : EnginePart {
+    fun open(demand: Demand<C>, sink: Sink<E>): AutoCloseable
 }
 ```
 
@@ -227,7 +227,16 @@ interface SessionReporter {
 
 - A protagonist may have several sessions at once (tabs, Minecraft plus panel).
 - A session ends when no engine reports its id for longer than a grace set per engine kind (about 10 seconds for Minecraft). Ids come back: a player who ended a session while the realm was down and then returns simply keeps the session and its values. This is accepted (2026-11-03).
-- A protagonist is online while it has at least one session. `ProtagonistJoined` fires on the first session, its counterpart on the last.
+- A protagonist is online while it has at least one session. Three core events follow from this:
+
+| Event | Fired by | When |
+| --- | --- | --- |
+| `SessionArrived(session)` | the engine that now holds the session | every time an engine takes a session: join, relog, server move, return after a crash |
+| `ProtagonistJoined(protagonist)` | that same engine | the protagonist had no session key yet |
+| `ProtagonistLeft(protagonist)` | the engine named as holder in the last key | the key expired and the protagonist has no other session |
+
+- `ProtagonistLeft` means gone everywhere and is best effort: after a crash or a server stop no holder is left, so it does not fire. It runs after the grace, so the player is no longer available; work that needs the player belongs to the session. Cleanup that must always happen uses session scoped values, which the realm removes.
+- Two engines taking a protagonist's first sessions at the same moment may both fire `ProtagonistJoined`. This is rare and accepted.
 - Values keyed by a session are removed when it ends.
 - Sessions hold no write lease: every stored write is a realm transaction ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Mirrors live on the engine that produces them.
 
@@ -266,16 +275,39 @@ Routing is hybrid: an event goes where a handler for it can run, and engines run
 What the realm owns goes through the realm:
 
 - stored commits
-- `Changed<X>` pushes (engines subscribe to the stored keys they currently demand)
+- `Changed<X>` pushes (the realm knows which stored keys each engine demands and pushes to that engine's own subject; see Lost pushes below)
 - `Due` deliveries ([stored-data.md](stored-data.md))
 
 Engines write the `sessions` KV themselves (see NATS JetStream). `Indexed` is being replaced ([panel-engine-communication.md](panel-engine-communication.md) question 14).
 
-Events and live effects for a protagonist go to its protagonist subject (a realm scoped route, name settled in layer 4; written here as `typewriter.protagonist.<id>`). Every engine holding a session of that protagonist subscribes to it and runs the handlers it can; the sender needs only the protagonist id, so there is no routing table and a server move keeps the address. A target that is one connection (the tab that started a capture) uses the session subject `typewriter.session.<id>`, which the engine holding that session subscribes to.
+Events and live effects for a protagonist go to its protagonist subject (a realm scoped route, see [Routes](#routes); written here as `typewriter.protagonist.<id>`). Every engine holding a session of that protagonist subscribes to it and runs the handlers it can; the sender needs only the protagonist id, so there is no routing table and a server move keeps the address. A target that is one connection (the tab that started a capture) uses the session subject `typewriter.session.<id>`, which the engine holding that session subscribes to.
 
 - Order is per identity, in commit order.
-- No events are queued for offline protagonists.
+- Core NATS is at most once (decided 2026-11-04): events use acks, not JetStream. An event with an origin is sent again with the same `OccurrenceId` until a holder sends `received`, and a holder runs one occurrence once. A final result is sent again until the origin engine acks it. An event without an origin stays best effort; what matters is stored as owed. JetStream would remove only the retry loop and add a consumer per holder, because the reader changes with every server move.
+- No events are queued for offline protagonists, and none are replayed after a server move: cross engine events use plain NATS (decided 2026-11-03).
 - Cross server live effects keep working while the realm is down.
+
+### Routes
+
+Declared in `transport-routes.yaml`, realm scoped (decided 2026-11-03). Only `realm_participant` publishes and subscribes, so "only engines publish" follows from the grants, and the realm is in the subject prefix.
+
+| Route | Address | Carries |
+| --- | --- | --- |
+| protagonist event | `protagonist.{principal_kind}.{principal_id}` | `EventDelivery` for every engine holding the protagonist |
+| session event | `session.{session}` | `EventResult`, and targets that are one connection |
+| stored changes | `changed.{engine}` | `Changed<X>` batches and heartbeats from the realm |
+
+These addresses hold free values, so the generator gets free parameters next to its bound ones (`subject.ts:4`), granted through a wildcard token. Panel tab routes are `session.user.{user}.{session}`, granted per user, and arrive when the panel first emits events; they also need the subject family for panel to service events.
+
+### Lost pushes
+
+Core NATS can lose a push, and an engine's cache would then stay wrong. JetStream is not used here (decided 2026-11-04): a cache only needs the latest value, and an engine needs a read of its demanded keys anyway for first reads and restarts, so JetStream would add consumers, grants, and player data stored in NATS while still needing that read and an outbox.
+
+- Each push carries the realm's `epoch` and a per engine `seq`.
+- A heartbeat every 5 seconds carries the last `seq`, so a lost final push is noticed.
+- A gap, a new epoch, or a reconnect makes the engine read its demanded keys again and continue from the `seq` in the answer.
+
+After a loss, several steps can arrive as one `Changed(old, new)`, and a value that returned to its old value shows no change. Live reactions already accept this. Stored only handlers and derives cannot: how the realm delivers those is a separate topic.
 
 ## NATS JetStream
 
@@ -284,7 +316,6 @@ Short lived data lives on NATS JetStream. This needs NATS 2.11 or newer with Jet
 | Resource | Content | Behaviour |
 | --- | --- | --- |
 | `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; holder: EngineId }` | while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it rewrites once with a TTL equal to the grace and stops. Every write checks the revision, so a server move works in either join and quit order (the old engine's write fails and it stops). An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no grace timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
-| session stream | backs each `typewriter.protagonist.<id>` and `typewriter.session.<id>` subject, about 30 seconds | after a server move the new engine continues where the old one stopped, so events and live effects sent in the move gap are not lost |
 | `Indexed` KV bucket per type (being replaced, question 14) | keys `<protagonist>.<node>` | refreshed on change, expiring when the engine dies; watched by the panel and engines, so the online index survives realm restarts and outages |
 
 Not on streams: stored data and `Due` (transactions, exactly once, realm owned) and mirrors that are not `Indexed`.
@@ -312,8 +343,8 @@ A server move is a leave and a rejoin. There is no separate continue or follow s
 
 | Part | On a server move |
 | --- | --- |
-| Session | kept (Minecraft uses the proxy connection id) |
-| Live effects in flight | kept by the session stream and delivered to the new engine |
+| Session | kept (the Minecraft session id is the player UUID) |
+| Live effects in flight | one shot effects sent from another engine during the move gap are lost; state is not, because stored data is in the realm and `Added<H>` sends holds again. A session emit reports `Failed("no_response")` |
 | Mirrors | `Removed` then `Added` with `because = Tracking`; tracking restarts on the new engine |
 | Stored derives over mirrors | keep their last result |
 | Holds | `Removed` on the old connection, `Added` on the new one; derives rerun |

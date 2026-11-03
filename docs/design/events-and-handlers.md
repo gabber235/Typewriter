@@ -11,7 +11,7 @@ An event is a plain Kotlin type that says one thing happened. Extensions declare
 - **One event type per meaning.** What a particular delivery may do (decide, change, which thread it is on) is typed on the source, not on the event.
 - **Meaning decides how many events exist.** A change with a different effect at the packet than at the Paper event is two events: `ClientPosition` is a fake view on the wire, `PlayerMove` really moves the player. The same effect (`ArmSwing`) is one event: the first source starts the occurrence, the others join it. Nothing may rely on the packet arriving before the Paper event.
 - **Raw input becomes intent events.** A raw key press becomes `Confirm` only when it is the key currently offered by whatever holds the protagonist's input, so a raw key is only taken when it is the offered key.
-- **Subject.** Most events have a subject (usually a protagonist; chain events have a group). Events without a subject (`Tick`, world events) turn handler parameters into a query, see [Events without a subject](#events-without-a-subject).
+- **Subject.** Most events have a subject (usually a protagonist; a widened chain has a group). Events without a subject (`Tick`, world events) turn handler parameters into a query, see [Events without a subject](#events-without-a-subject).
 - **Engine neutral core.** `Tick` is a capability, not core. Core events say protagonist, never player (`ProtagonistJoined`). `Player` is only a Minecraft capability trait or part of a Minecraft event name (`PlayerMove`).
 
 Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `Removed<T>`, `Changed<T>(old, new)` fire for every stored value ([stored-data.md](stored-data.md)), hold ([interactions.md](interactions.md)), and mirror ([live-data.md](live-data.md)). `Seed<X>` and `FormulaChanged<T>` are core events described in [live-data.md](live-data.md); `Due` delivery is in [stored-data.md](stored-data.md). `Demanded<X>` is a core parameter, not an event ([live-data.md](live-data.md#demanded)).
@@ -19,6 +19,8 @@ Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `R
 ### Emitting
 
 Events without a source are emitted by handlers. `emit()` queues: the emitted event is decided after the current event finishes. There is no nesting.
+
+An emitted event runs locally when this engine holds a session of the subject, and is published to the protagonist subject only when another engine holds one too (decided 2026-11-03). Each engine keeps a local copy of the `sessions` bucket through a KV watch to know this. A normal chain therefore never touches NATS and keeps working while NATS is down. An engine that holds no session of the subject only publishes, and runs none of its own handlers for it. An offline subject drops the event. An engine skips its own published events. Source events follow the same rule: a source event decides inline, and when another engine also holds the subject it is forwarded as an ordinary delivery, which that engine decides for itself. Events without a subject are always local.
 
 ```kotlin
 @Handler
@@ -36,6 +38,52 @@ There is no order among handlers reacting to the same event (stable in practice,
 ## Source
 
 A source turns something outside Typewriter (a Paper event, a packet, a timer) into events. Sources are lazy: a source only produces what some handler could actually run for. That is the same notion of demand used for mirrors ([live-data.md](live-data.md)).
+
+### Writing a source
+
+A source is a class implementing an engine neutral interface; the engine it runs on supplies a helper for its own event system (decided 2026-11-03). No generator knows Paper.
+
+```kotlin
+fun interface Source<E : Event> : EnginePart {
+    fun open(sink: Sink<E>): AutoCloseable
+}
+
+interface Sink<E : Event> {
+    fun decide(event: E, origin: Origin?, apply: (Outcome<E>) -> Unit = {})
+}
+```
+
+The Paper engine's `PaperEvents` turns most Paper events into a source with only the conversion left to write:
+
+```kotlin
+class BlockBreakSource(paper: PaperEvents) : Source<BlockBreak> by
+    paper.source<BlockBreakEvent, BlockBreak> { BlockBreak(player.protagonist) }
+```
+
+- `source` listens, decides, and cancels the Paper event on deny. It defaults to `ignoreCancelled = true`. The conversion returns `null` when the event does not apply. A deny on an event Paper cannot cancel logs a warning once.
+- `origin` comes from the event's subject: a Minecraft session id is the UUID, so the protagonist gives the session.
+- A `change` verdict is applied with `apply = { damage = it.event.damage }`, read from `outcome.event`.
+- `PaperEvents.listen` is the fallback for unusual cases, such as a cause that is not the subject.
+
+| Detail | Who does it |
+| --- | --- |
+| Opening on the first runnable handler, closing after the last, recomputed on publish | event runtime |
+| Occurrence id, running verdicts inline, merging the outcome | `Sink` |
+| Applying the outcome | the `apply` block; follow ups and after handlers run once it ends |
+| Forwarding to other holders, dropping when the subject has no session | `Sink` |
+
+A verdict handler that throws counts as `pass` and is logged. Packet sources and their dedupe arrive with the packet layer (14). A test can use a small test source with a real `Sink`, without Paper.
+
+### Engine parts
+
+`EnginePart` is a marker for a class an engine builds and runs (decided 2026-11-03). Implementing it is the registration: there is no list to write and no annotation to forget.
+
+1. KSP finds every concrete class implementing `EnginePart`, generates a provider, and adds a row to the provider index. This is the first processor searching by supertype instead of annotation.
+2. On start, the engine reads the index for the source parts it loaded, so a Paper part only reaches Paper, and adds each class to its deployment Koin ([engines.md](engines.md#wiring-inside-an-engine)).
+3. Koin builds the classes from their constructors, so an extension reaches `PaperEvents` by asking for it.
+4. The event runtime asks for every `Source` and opens them by demand. The Koin closes with the deployment.
+
+A missing constructor dependency fails at engine start, naming the class and the type, because KSP cannot see what Koin provides. `ConfiguredSource` extends `EnginePart` and others may follow. `RuntimeRegistrar` stays for imperative setup.
 
 ### Occurrences and dedupe
 
@@ -60,7 +108,7 @@ How it works:
 
 1. KSP indexes every (event, configuration type) pair used by a handler.
 2. Publication turns each pair into configuration instances: one for an object, one per published entry for an entry type. These stay live across hot publish.
-3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, C>.open(demand: Demand<C>)`, and indexes them its own way (a timing wheel, a map by region).
+3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, C>.open(demand: Demand<C>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
 
 Configurations a source cannot index are not configured events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
 
@@ -111,6 +159,43 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 
 Live capability traits are provided by the engine (`PaperProtagonist : Player, HasChat, ...`). Optional capabilities are plain Kotlin type checks.
 
+### What KSP generates
+
+KSP generates a thin `EnginePart` per handler whose parameters are described as data; resolution is ordinary code in the runtime (decided 2026-11-03).
+
+```kotlin
+// generated
+class BlockBreak_rule : VerdictHandler<BlockBreak>, EnginePart {
+    override val event = BlockBreak::class
+    override val params = listOf(Param.Candidate(BlockBreakEventEntry::class))
+
+    override fun run(event: BlockBreak, values: List<Any?>) =
+        event.rule(values[0] as Candidate<BlockBreakEventEntry>)
+}
+```
+
+The plan is the one source for resolution, demand, and placement, and later for debug output. Later layers add a `Param` kind and its resolver. Layer 4 has `Identity`, `Trait`, `Candidate`, `Field`, `Origin`, and `Outcome`.
+
+Live objects come from the engine, which is what keeps handlers engine neutral:
+
+```kotlin
+interface LiveResolver<I : Identity> : EnginePart {
+    fun live(identity: I): Any?
+}
+```
+
+The runtime checks the result against the requested trait; `null` or the wrong type means the handler does not apply.
+
+KSP also generates one accessor per `Var` field of an entry, so a handler reads a candidate's field as a plain value:
+
+```kotlin
+// generated
+val Candidate<BlockBreakEventEntry>.cancel: Boolean
+    get() = read(entry.cancel)
+```
+
+`read` evaluates with `runtime/formula`. A formula that fails counts as a failed handler and is logged; for a verdict that means `pass`. Check in the plan that KSP can generate this for entries from another extension.
+
 ### Resolution
 
 - **From the subject, else from the only field of that kind.** A value whose key is a `Step` resolves from the event's only `Step` field, so events can address a step:
@@ -151,7 +236,7 @@ Parameter types decide placement. The realm sees this statically, and the panel 
 | --- | --- |
 | Only stored data | Once, on an engine where the event happened; for realm delivered events (`Changed<X>` while offline, `Due`), on any engine that runs the book. |
 | Mirrors, no live trait | On the engine that owns the mirror, without live object access. |
-| A live trait | On the engine where its subject is live, on the thread that owns that identity. |
+| A live trait | On the engine where its subject is live. The handler runs on a worker; the engine's trait implementation places each read and effect ([tick pipeline](#tick-pipeline)). |
 | A live trait on a group subject | On each member's engine. |
 
 A handler needs exactly one live anchor. When it would need two, it reads the second through its mirror:
@@ -197,6 +282,8 @@ Priority: a `Candidate<E>` verdict carries that entry's inherited priority. A ha
 
 Every verdict may carry a follow up: `allow { }`, `deny { }`, `pass { }`. A follow up runs when the final outcome matches its verdict: a deny follow up on denied, allow and pass follow ups on allowed. `pass(on = Allowed | Denied | Any) { }` chooses when a pass follow up runs (default `Allowed`; `Any` receives the `Outcome`). One handler can thus hold the decision and every reaction.
 
+The outcome is Typewriter's own, from its verdicts. Another plugin cancelling the Paper event after that does not change it (decided 2026-11-04): this is often what a server wants, such as a fake mine where another plugin cancels the break and resets the block while Typewriter still rewards it. An event already cancelled before Typewriter's listener is skipped through `ignoreCancelled`, like legacy.
+
 Rule control (cancelling world behavior) is a cancelable event entry, like legacy. There is no separate rule entry concept.
 
 ```kotlin
@@ -212,7 +299,9 @@ The triggers fire exactly once either way. Deny and start goes through a deny fo
 
 By default an after handler only sees allowed events. A handler that asks for an `Outcome` parameter also sees denied ones.
 
-An event emitted from a session reports its result back to that session once its after handlers finish: `Done`, `Denied(reason)`, `Failed(reason)` (an after handler ended with a typed failure, such as an edit that could not commit), or `NotHandled`. A deny verdict carries the typed reason, so permission checks and unavailability are deny handlers ([panel-engine-communication.md](panel-engine-communication.md)). An engine that lacks the event's exact `TypeDefinitionId` (type and revision) or cannot decode it answers `Failed(reason)`, never stays silent. `NotHandled` means no engine holding the subject's sessions has a handler for the event; every holder answers, also without a handler, so `NotHandled` does not wait for a timeout.
+An event emitted from a session reports its result back to that session once its after handlers finish: `Done`, `Denied(reason)`, `Failed(reason)` (an after handler ended with a typed failure, such as an edit that could not commit), or `NotHandled`. A deny verdict carries the typed reason, so permission checks and unavailability are deny handlers ([panel-engine-communication.md](panel-engine-communication.md)). An engine that lacks the event's exact `TypeDefinitionId` (type and revision) or cannot decode it answers `Failed(reason)`, never stays silent. `NotHandled` means no engine holding the subject's sessions has a handler for the event; every holder answers, also without a handler.
+
+Each engine decides for itself (decided 2026-11-03): no engine waits on another for a verdict. A source event decides inline on its source's engine; an emitted event is decided by each holder with its own handlers, and each holder sends one result. The sender reads the holders from the `sessions` KV and merges their results, the strongest winning: `Denied`, then `Failed`, then `Done`, then `NotHandled`. No holders gives `NotHandled` right away, because the protagonist is offline. With several holders, one engine's after handlers can run while another denied; in alpha a protagonist's sessions sit on one engine, so this first becomes possible with account linking.
 
 Events have no sender field. Who caused an occurrence travels beside the event as its origin, filled by the source and never by the event: the panel engine fills it from the tab's session, Paper from its player. A client cannot fake it, because only engines publish to protagonist subjects. A handler that needs it asks for `Origin` and passes it on explicitly; nothing reads it implicitly.
 
@@ -230,10 +319,18 @@ fun CaptureLocation.capture(player: PaperPlayer, origin: Origin) {
 
 ```skir
 struct EventOrigin { session: SessionId = 0; principal: PrincipalId = 1; }
-struct EventDelivery { event: DataValue = 0; origin: EventOrigin? = 1; reply_to: string? = 2; }
+struct EventDelivery { occurrence: OccurrenceId = 0; event: DataValue = 1; origin: EventOrigin? = 2; }
+struct EventResult {
+  occurrence: OccurrenceId = 0;
+  engine: EngineId = 1;
+  outcome: enum { received; done; denied: EventReason; failed: EventReason; not_handled; } = 2;
+}
+struct EventReason { code: string = 0; message: string = 1; detail: DataValue? = 2; }
 ```
 
-A panel user is `PrincipalId("user", <user id>)`; a player is `PrincipalId("minecraft", <uuid>)`. Both are also the principal inside their `Protagonist`. The result (above) goes to `reply_to`, the origin session's subject.
+`OccurrenceId` is a UUIDv7 set by the source. Only events with an origin get results, through `session.emit(event): EventResult`; a handler's `emit` queues and returns nothing. A holder sends `received` as soon as it gets the event, and its final result when its after handlers finish. With no `received` within 5 seconds the sender records `Failed("no_response")`; with no final result within 60 seconds, the session key's TTL, it records `Failed("timeout")`, while the handler keeps running. A long job finishes its handler quickly and reports through stored data. The engine holding the origin session merges the results. `EventReason` matches `code` and `message` on `Diagnostic`, so a panel can show any reason without knowing its type; `detail` is typed, and an editor shows the details it knows.
+
+A panel user is `PrincipalId("user", <user id>)`; a player is `PrincipalId("minecraft", <uuid>)`. Both are also the principal inside their `Protagonist`. The result goes to the origin session's subject.
 
 ### Threads
 
@@ -246,6 +343,23 @@ There is no "main thread". Live access runs on the thread that owns the identity
 
 Verdict handlers never suspend: they run inline (for example inside a Paper event) and read cached stored data.
 
+### Tick pipeline
+
+Chosen 2026-11-03, after a prototype compared it with waiting per write, chain transactions, and starting each chain at once. Priorities: few context switches, little work on owner threads, and Typewriter out of the way. The prototype simulated the game thread and the realm distance, so the plan checks these numbers on real Paper.
+
+1. **In the event, on the owner thread.** The verdict decides at once. Each chain start joins a queue, without waking a thread. Starts with the same subject, entry, and context in one tick merge into one, so an autoclick does not run a chain three times.
+2. **At tick end, on the owner thread.** Live values that the queued handlers demand are copied, so they include the event's own result. One worker wakes for the whole engine.
+3. **On the worker.** The worker takes chains until the queue is empty and runs each chain's handlers in one go. A worker stuck in a slow handler holds up only that chain: the next tick's worker takes the rest.
+4. **Effects.** Handlers never run on an owner thread. An engine's trait implementation chooses where each effect runs, not the shared trait, because this differs between engines. Paper sends chat from the worker and queues a world change for the owner thread; all queued changes of a tick share one visit. An effect sent after a queued change joins that queue, so effects keep their order.
+
+Every chain gets the same limit: at most one owner visit to read live values, one owner visit per tick for world changes, and a realm wait only for a `require` guard ([stored-data.md](stored-data.md#transactions-apply)).
+
+Accepted costs: a chain starts up to one tick after its event, while the verdict stays instant. A player who leaves right after paying can lose the item, as in every option tested; what must arrive is stored as owed.
+
+Open for the plan: the real names and shapes of the worker, the effect queue, and the live copy (the design so far only sketched them, and they must not become magic types); and how KSP knows which live values a handler reads.
+
+Folia (decided 2026-11-03): the first version targets Paper's server wide tick end. Picking up queued chain starts stays one small piece of the Paper engine, so the design does not block Folia. Folia later replaces only that piece, with a next tick task per active player, because no per region tick end hook was found. Expected cost there, not measured: one post per active player per tick, and chains start up to one tick later.
+
 ### Suspending handlers
 
 After handlers may suspend. A suspended handler is cancelled when any value it resolved through a parameter is removed (step ended, stored value removed, member gone, a mirror `Removed` including `because = Tracking`). `Changed` never cancels it. Stale writes are also dropped by the owner generation check: an event for a finished step is dropped ([interactions.md](interactions.md)).
@@ -256,7 +370,7 @@ A chain is how entries lead to entries. Links fire, entries do not: nothing foll
 
 ### Firing and `Triggered`
 
-Firing a link emits an ordinary `Triggered<E>(entry, group, context)` event per linked entry, queued like `emit`. The entry is a field of the event, and the subject is the group.
+Firing a link emits an ordinary `Triggered<E>(entry, subject, context)` event per linked entry, queued like `emit`. The entry is a field of the event. The subject is the identity the chain is for: a protagonist, or a group after widening ([interactions.md](interactions.md#widening)).
 
 ```kotlin
 entry.triggers.fire(context)

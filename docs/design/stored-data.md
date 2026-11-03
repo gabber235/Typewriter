@@ -122,7 +122,7 @@ Stored values are indexed per type, so finding every value of a type, or every v
 
 The guideline is **store moments, not counters**: `startedAt`, `skippedAt`. Steps then rarely write, and a restarted step is a real resume.
 
-All stored data is owned by the realm, also the values of a running step, and every write is an `apply()` transaction (decided 2026-11-03). There is no single writer: the realm serializes writes, and a generation check drops a stale write. Fast changing state that needs no saving lives in a `Runtime`. Engines subscribe to the stored keys they currently demand and receive `Changed<X>` pushes in commit order per identity (see [live-data.md](live-data.md) for routing).
+All stored data is owned by the realm, also the values of a running step, and every write is an `apply()` transaction (decided 2026-11-03). There is no single writer: the realm serializes writes, and a generation check drops a stale write. Fast changing state that needs no saving lives in a `Runtime`. Engines tell the realm which stored keys they currently demand and receive `Changed<X>` pushes in commit order on their own subject (see [live-data.md](live-data.md#lost-pushes)).
 
 Stored data and `Due` are never put on NATS streams: they need transactions and exactly once delivery, which the realm owns.
 
@@ -181,6 +181,17 @@ The transaction is optimistic:
 So a line like `if (quest.coins > 100) quest.rank = gold` always decides on the committed value, never on a stale one.
 
 A transaction fails as a whole when a `require` guard is false, or when evaluating the formula throws (a provider error, the recursion limit). A failed transaction applies nothing. `Changed<X>` handlers run only after a successful commit.
+
+### Who waits for a commit
+
+Chosen 2026-11-03 with the [tick pipeline](events-and-handlers.md#tick-pipeline). A chain waits for the realm only at a `require` guard:
+
+- **No guard.** The write applies to the engine's local view at once, so the next entry reads it, and goes to the realm behind the chain. The chain does not wait.
+- **With a guard.** The chain waits for the realm's answer, so nobody spends what they do not have. Earlier writes go first, in order.
+- **Batching.** An engine keeps one commit in flight; what arrives meanwhile shares the next commit. Each write has a per engine id, so a retry applies once.
+- **The answer.** The committed value replaces the local one. What a player saw can briefly differ when another engine wrote the same key. The stored result stays correct.
+
+Accepted costs for writes without a guard: when an engine crashes, a player may have seen the result of a write that never reached the realm. The window is about one realm round trip. While the realm is down, these chains keep running and their writes wait; guarded chains wait too. A limit on waiting writes during a long outage is open for the plan.
 
 ## Variables
 

@@ -106,7 +106,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Configured event**: an event with a configuration type parameter (`Tick<C : TickConfig>`) whose source only emits for configurations some handler can run for. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
-**`ConfiguredSource<E, C>`**: source interface whose `open(demand: Demand<C>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+**`ConfiguredSource<E, C>`**: source interface whose `open(demand: Demand<C>, sink: Sink<E>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
 **`ContentCommandRan`**: event a content command node runs; its handler fires the node's triggers with the arguments as context. See [events-and-handlers.md](events-and-handlers.md#content-commands).
 
@@ -167,6 +167,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Engine**: runs published content through extensions (Paper, panel, future engines); engines share stored state only through the realm; live effects and events go directly between sessions. `Engine(id)` is also an identity, keyed by the stable topology engine id, so what an engine knows (`Stored`) and is doing (`Live`) are ordinary values keyed by it. See [live-data.md](live-data.md#engines-and-traits).
 
 **Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewritermc:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and grace, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
+
+**`EnginePart`**: marker for a class an extension adds to an engine; KSP finds it by supertype and it joins the deployment's Koin. See [events-and-handlers.md](events-and-handlers.md#engine-parts).
 
 **Entry record**: a chain context record keyed by producing entry plus type, add only. See [events-and-handlers.md](events-and-handlers.md#context).
 
@@ -292,7 +294,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Live anchor**: the one live trait parameter that pins a handler to an engine; a second one is read through its mirror. See [events-and-handlers.md](events-and-handlers.md#where-a-handler-runs).
 
-**Live capability trait**: an engine provided interface (`HasChat`, `HasInventory`, `Player`) giving live access and effects on the owning thread. See [live-data.md](live-data.md#live-capability-traits).
+**Live capability trait**: an engine provided interface (`HasChat`, `HasInventory`, `Player`) giving live access and effects; the engine's implementation places each one on a worker or the owner thread. See [live-data.md](live-data.md#live-capability-traits).
 
 **Live members**: members of a group interaction, derived from `Membership`, so joins and leaves take effect at once. See [interactions.md](interactions.md#live-members).
 
@@ -320,7 +322,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## N
 
-**NATS JetStream**: store for short lived data (sessions KV, session stream, `Indexed` KV); never holds stored data or `Due`. See [live-data.md](live-data.md#nats-jetstream).
+**NATS JetStream**: store for short lived data (sessions KV, `Indexed` KV); never holds stored data or `Due`. See [live-data.md](live-data.md#nats-jetstream).
 
 **`NearestNpc`, `NearbyNpcs`**: example finder mirrors; the second shows an entry reference as a parameter key. See [live-data.md](live-data.md#finders-are-mirrors).
 
@@ -394,7 +396,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Protagonist subject**: `typewriter.protagonist.<id>`, subscribed by every engine holding a session of that protagonist; events about the protagonist go there and each engine runs the handlers it can. See [live-data.md](live-data.md#routing).
 
-**`ProtagonistJoined`**: core event fired on a protagonist's first session. See [live-data.md](live-data.md#session).
+**`ProtagonistJoined`**: core event fired when a protagonist with no session gets one. See [live-data.md](live-data.md#session).
+
+**`ProtagonistLeft`**: best effort core event fired by the last holder when a protagonist has no session left anywhere. See [live-data.md](live-data.md#session).
 
 **`Protected`**: stored value on a running step that turns an incoming `Replace` into `Queue`. See [interactions.md](interactions.md#clashes).
 
@@ -452,7 +456,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Session`**: identity for one connection of a protagonist, `Session(protagonist, id: SessionId)`. See [live-data.md](live-data.md#session).
 
-**Session stream**: NATS stream behind `typewriter.protagonist.<id>` and `typewriter.session.<id>`, keeping about 30 seconds so events and live effects survive a server move. See [live-data.md](live-data.md#nats-jetstream).
+**`SessionArrived`**: fired by the engine that takes a session, each time it takes one. See [live-data.md](live-data.md#session).
 
 **Session subject**: `typewriter.session.<id>`, subscribed by the engine holding that session; used only for targets that are one connection, such as the tab that started a capture, and for event results. See [live-data.md](live-data.md#routing).
 
@@ -471,6 +475,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`Snapshot<H>`**: handler parameter that reads and writes a hold's stored snapshot. See [interactions.md](interactions.md#snapshot-and-restore).
 
 **`snapshot()`**: hold method run once on first start, returning a stored snapshot of what to restore. See [interactions.md](interactions.md#snapshot-and-restore).
+
+**`Sink`**: what a source hands an event to; it decides the verdict and applies the outcome. See [events-and-handlers.md](events-and-handlers.md#writing-a-source).
 
 **Source**: turns something outside Typewriter into events, lazily, only for what some handler can run for. See [events-and-handlers.md](events-and-handlers.md#source).
 
@@ -505,6 +511,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Template**: string template sugar where the expected type picks the `template` provider. See [formula-language.md](formula-language.md#text-templates).
 
 **Threads**: there is no main thread; live access runs on the thread that owns the identity. See [events-and-handlers.md](events-and-handlers.md#threads).
+
+**Tick pipeline**: how chains run: starts queue and merge during a tick, one worker runs them at tick end, world changes share one owner visit, and only `require` guards wait for the realm. See [events-and-handlers.md](events-and-handlers.md#tick-pipeline).
 
 **`Tick<C : TickConfig>`**: configured capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 

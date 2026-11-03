@@ -152,7 +152,7 @@ The step rules are explicit `startStep` arguments:
 startStep(context, marker, onClash = entry.onClash, onRejoin = entry.onRejoin)
 ```
 
-A handler may hardcode them (a cinematic passes `onRejoin = Drop` and shows no panel field); an omitted argument means the default. `startStep` stores a core `StepState(entry, context, onClash, onRejoin)` keyed by the step, because the rules must survive the protagonist being gone. The interaction has a matching `InteractionState`.
+A handler may hardcode them when a rule is not a creator choice; an omitted argument means the default. `startStep` stores a core `StepState(entry, context, onClash, onRejoin)` keyed by the step, because the rules must survive the protagonist being gone. The interaction has a matching `InteractionState`.
 
 ### Step markers store moments
 
@@ -201,7 +201,7 @@ One core handler implements return, so extensions write nothing for resume:
 
 ```kotlin
 @Handler
-fun ProtagonistJoined.rejoin(interaction: InteractionState, steps: All<StepState>) = ...
+fun SessionArrived.rejoin(interaction: InteractionState, steps: All<StepState>) = ...
 ```
 
 It takes the strictest `onRejoin`; `RestartStep` emits `Triggered(state.entry, state.context)` again. While the protagonist is away, live handlers simply do not apply because their parameters cannot be resolved.
@@ -254,7 +254,7 @@ Members of a group interaction are live: derived from `Membership`, which is a t
 
 ### Handlers with a group subject
 
-Chain events have a group subject; how handlers then iterate members is in [events-and-handlers.md](events-and-handlers.md#resolution).
+A widened chain's events have a group subject; how handlers then iterate members is in [events-and-handlers.md](events-and-handlers.md#resolution).
 
 ### Party dialogues and leaving
 
@@ -270,7 +270,7 @@ Scenes are steps whose Holds take the camera and hide the protagonist. Their fea
 - `CameraHold` snapshots the protagonist's location, flight, and velocity, and restores them at the end. Content can overwrite the snapshot through `Snapshot<CameraHold>` to land the protagonist somewhere else with one teleport.
 - While `CameraHold` is held, the formula member `protagonist.position` reads the camera position. Covers legacy `PlayerPositionOverride` in the context: the override disappears with the Hold.
 - Back to back scenes adopt the camera Hold within grace, so the cut has no restore in between.
-- A cinematic hardcodes `onRejoin = Drop` in its `startStep` call.
+- A cinematic has the normal step entry field `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
 
 ## NPC scope
 
