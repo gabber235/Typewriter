@@ -426,6 +426,8 @@ final class Panel {
     await tester.pump(_frame);
   }
 
+  DateTime _lastScroll = DateTime(0);
+
   /// Whether the panel built [text], as text or as a semantics label, on
   /// screen or not. [expectVisible] asks whether the user can read it.
   bool sees(String text) => _labels.any((label) => label.contains(text));
@@ -441,7 +443,6 @@ final class Panel {
     String? outside,
     Duration within = wait.patience,
   }) => _step("expect \"$text\"", () async {
-    var scrolled = DateTime.now();
     await until(
       "the screen shows \"$text\"${outside == null ? "" : " outside \"$outside\""}",
       () {
@@ -457,11 +458,7 @@ final class Panel {
             )
             .evaluate();
         if (nodes.any(_onScreen)) return true;
-        if (nodes.isNotEmpty &&
-            DateTime.now().difference(scrolled) > _refocus) {
-          scrolled = DateTime.now();
-          _scrollContentForward();
-        }
+        if (nodes.isNotEmpty) _scrollToward();
         return false;
       },
       timeout: within,
@@ -583,16 +580,32 @@ final class Panel {
     return found!;
   }
 
-  SemanticsNode? _tappable(bool Function(String spoken) reads) => find.semantics
-      .byPredicate(
-        (node) =>
-            node.isTappable &&
-            node.isEnabled &&
-            !node.isInvisible &&
-            reads(node.named),
-      )
-      .evaluate()
-      .lastOrNull;
+  /// The last enabled control whose name [reads] accepts. A user can only
+  /// press what they see, so a control beyond the edge of a scrollable is
+  /// scrolled to first.
+  SemanticsNode? _tappable(bool Function(String spoken) reads) {
+    final controls = find.semantics
+        .byPredicate(
+          (node) =>
+              node.isTappable &&
+              node.isEnabled &&
+              !node.isInvisible &&
+              reads(node.named),
+        )
+        .evaluate();
+    final seen = controls.where(_onScreen).lastOrNull;
+    if (seen == null && controls.isNotEmpty) _scrollToward();
+    return seen;
+  }
+
+  /// Scrolls forward at the pace a person does, so a scrollable has moved and
+  /// rebuilt before the next look.
+  void _scrollToward() {
+    final now = DateTime.now();
+    if (now.difference(_lastScroll) < _refocus) return;
+    _lastScroll = now;
+    _scrollContentForward();
+  }
 
   /// Opens [place]: the entry reading it nearest the left edge, where the
   /// navigation lists places, so a sidebar link wins over a breadcrumb of
@@ -617,6 +630,7 @@ final class Panel {
                 !node.isInvisible &&
                 !node.isMergedIntoParent &&
                 node.isTappable &&
+                _onScreen(node) &&
                 (node.named == place || node.named.split("\n").first == place),
           )
           .evaluate()
