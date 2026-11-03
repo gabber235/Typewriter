@@ -3,10 +3,12 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.ResourceTypeMatch
@@ -22,6 +24,7 @@ import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.TEXT_USE
+import com.typewritermc.realm.authoring.TestDraft
 import com.typewritermc.realm.authoring.TestDraftType
 import com.typewritermc.realm.authoring.ViewReadLimits
 import com.typewritermc.realm.authoring.conflicts
@@ -441,6 +444,51 @@ val RealmCheckRuntimeTest by testSuite {
                 }.fold(answered::complete, answered::completeExceptionally)
             }
             answered.get(60, TimeUnit.SECONDS)
+        }
+    }
+
+    test("closing waits for a rediscovery in progress, so none of it outlives the view store") {
+        val rediscovering = AtomicBoolean()
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val blockedInRediscovery =
+            object : DraftType<TestDraft> {
+                override val match: ResourceTypeMatch
+                    get() {
+                        if (rediscovering.get()) {
+                            entered.countDown()
+                            release.await(30, TimeUnit.SECONDS)
+                        }
+                        return ResourceTypeMatch.Definition(TEST_TYPE)
+                    }
+
+                override fun bind(binding: DraftBinding) = TestDraft(binding)
+            }
+        val provider =
+            object : RealmCheckProvider {
+                override fun RealmChecks.register() {
+                    each(blockedInRediscovery) {}
+                }
+            }
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(14, provider))
+        val daemons = ThreadFactory { task -> Thread(task).apply { isDaemon = true } }
+        Executors.newFixedThreadPool(2, daemons).asCoroutineDispatcher().use { worker ->
+            checking(catalog, mapOf(firstResource to record(name = "a")), worker) { _, runtime ->
+                runtime.reloadCatalog()
+                runtime.drain()
+                rediscovering.set(true)
+                runtime.invalidateCurrent()
+                entered.await(30, TimeUnit.SECONDS) shouldBe true
+
+                val closing = thread(isDaemon = true) { runtime.close() }
+                closing.join(500)
+                val closedDuringRediscovery = !closing.isAlive
+                release.countDown()
+                closing.join(30_000)
+
+                closedDuringRediscovery shouldBe false
+                closing.isAlive shouldBe false
+            }
         }
     }
 

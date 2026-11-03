@@ -20,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.job
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -235,22 +236,22 @@ class RealmCheckRuntime(
     }
 
     override fun close() {
-        val closing =
+        val catalog =
             synchronized(lock) {
                 if (closed) return
                 closed = true
-                val jobs = (instances.values.mapNotNull(InstanceState::job) + retiredJobs).distinct()
                 instances.values.forEach { state ->
                     state.job?.cancel()
                     dependencies.retire(state.id)
                 }
                 instances.clear()
                 retiredJobs.clear()
-                ClosingRuntime(jobs, activeCatalog.also { activeCatalog = null })
+                activeCatalog.also { activeCatalog = null }
             }
         scope.cancel()
-        runBlocking { closing.jobs.joinAll() }
-        closing.catalog?.close()
+        // All of the scope, since a rediscovery belongs to no instance and reads the view store.
+        runBlocking { scope.coroutineContext.job.join() }
+        catalog?.close()
     }
 
     private fun reconcileAndSchedule() {
@@ -397,11 +398,6 @@ class RealmCheckRuntime(
         var findings: FindingSet? = null,
     )
 }
-
-private data class ClosingRuntime(
-    val jobs: List<Job>,
-    val catalog: ActiveCatalog?,
-)
 
 private data class RetainedCatalog(
     val catalog: ActiveCatalog,
