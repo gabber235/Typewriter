@@ -157,12 +157,12 @@ jobs:
           sarif_file: .xtask/review/review.sarif
           category: typewriter
       - if: github.event.pull_request.head.repo.full_name == github.repository
-        run: devenv shell -- cargo xtask evidence publish --pr ${{ github.event.number }} --sha "$HEAD_SHA"
+        run: devenv shell -- cargo xtask evidence publish --pr ${{ github.event.number }} --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != 'success') && '--jobs-failed' || '' }}
         env:
           GH_TOKEN: ${{ github.token }}
       # Fork pull requests, pushes and dispatched runs, which have no description to write.
       - if: github.event.pull_request.head.repo.full_name != github.repository
-        run: devenv shell -- cargo xtask evidence summary --sha "$HEAD_SHA" >> "$GITHUB_STEP_SUMMARY"
+        run: devenv shell -- cargo xtask evidence summary --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != 'success') && '--jobs-failed' || '' }} >> "$GITHUB_STEP_SUMMARY"
 
   # Skipped jobs pass only when the plan found nothing to check, or for the commits, on a push.
   gate:

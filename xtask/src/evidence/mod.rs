@@ -77,6 +77,9 @@ pub enum EvidenceCommand {
 /// What the section is rendered from.
 #[derive(Args)]
 pub struct Inputs {
+    /// A check or suite job did not succeed, so the results here may not be all of them.
+    #[arg(long)]
+    pub jobs_failed: bool,
     /// The folder searched, at any depth, for `TestRun` JSON files; only its staged projection
     /// is read.
     #[arg(long, default_value = RESULTS)]

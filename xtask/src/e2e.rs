@@ -487,6 +487,8 @@ fn in_chrome<T: Target>(mut command: Vec<String>, launch: &Launch<'_, T>) -> Res
                 SCREEN.0 + CHROME_MARGINS.right,
                 SCREEN.1 + CHROME_MARGINS.top
             ),
+            // Chrome on the runner otherwise scales the page by 1.05, past the display's edge.
+            "--web-browser-flag=--force-device-scale-factor=1".into(),
             format!("--dart-define=RECORDED_VIEWPORT={}x{}", SCREEN.0, SCREEN.1),
         ]);
     }

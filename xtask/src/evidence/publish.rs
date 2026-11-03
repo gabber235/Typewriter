@@ -52,6 +52,7 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
             report: &report,
             verdict,
             covered,
+            jobs_failed: inputs.jobs_failed,
         })
     };
     // Media is uploaded before the description is read, so the read modify write stays short.
@@ -147,6 +148,7 @@ pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
         report: &report,
         verdict: None,
         covered: false,
+        jobs_failed: inputs.jobs_failed,
     });
     scrub(&section, &[], &known_secrets())?;
     Ok(section)
@@ -253,6 +255,8 @@ struct Section<'a> {
     verdict: Option<&'a Verdict>,
     /// Whether the verdict read everything in this commit (`covers`).
     covered: bool,
+    /// A check or suite job failed, so the results here may not be all of them.
+    jobs_failed: bool,
 }
 
 /// One glance answers "can this merge?": the headline says it, what needs a person stays open, and
@@ -293,7 +297,7 @@ fn headline(section: &Section) -> String {
     let total = passed + trouble;
     let state = if total == 0 {
         "**No tests reported**"
-    } else if trouble > 0 || gating > 0 {
+    } else if trouble > 0 || gating > 0 || section.jobs_failed {
         "**Not ready**"
     } else if section.covered {
         "**Ready for a maintainer**"
@@ -317,10 +321,17 @@ fn render_attention(out: &mut String, section: &Section) {
         .iter()
         .filter(|finding| finding.severity == "gate")
         .collect();
-    if troubled.is_empty() && gating.is_empty() {
+    if troubled.is_empty() && gating.is_empty() && !section.jobs_failed {
         return;
     }
     let _ = writeln!(out, "### Needs attention");
+    if section.jobs_failed {
+        let _ = writeln!(
+            out,
+            "- **A check or suite job failed**, so the results below may be missing some tests. \
+             The CI run says which job.\n"
+        );
+    }
     for (run, case, verdict) in troubled {
         let explained = results::last_failure(case).map_or_else(
             || "no failure message".to_owned(),
@@ -909,10 +920,33 @@ mod tests {
             report: &serde_json::from_value(empty_change_report()).unwrap(),
             verdict: Some(&verdict),
             covered: true,
+            jobs_failed: false,
         });
         assert!(section.starts_with("**Ready for a maintainer**: 1 of 1 tests proven"));
         assert!(!section.contains("Needs attention"));
         assert!(section.contains("<details><summary>Recordings (1 scenarios)"));
+    }
+
+    #[test]
+    fn a_failed_job_is_not_ready_even_when_every_reported_test_passed() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
+        )];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a run that lost a suite.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: true,
+        });
+
+        assert!(section.starts_with("**Not ready**"), "{section}");
+        assert!(section.contains("A check or suite job failed"), "{section}");
     }
 
     #[test]
@@ -930,6 +964,7 @@ mod tests {
             report: &serde_json::from_value(empty_change_report()).unwrap(),
             verdict: None,
             covered: false,
+            jobs_failed: false,
         });
         assert!(section.starts_with("**Not ready**: 0 of 1 tests proven"));
         let attention = section.find("### Needs attention").unwrap();
@@ -957,6 +992,7 @@ mod tests {
             report: &serde_json::from_value(empty_change_report()).unwrap(),
             verdict: Some(&verdict),
             covered: false,
+            jobs_failed: false,
         });
         assert!(section.starts_with("**Proven, not reviewed**"));
         assert!(section.contains("review is stale"));

@@ -181,7 +181,10 @@ pub fn record_with(
     if let Some(started) = started {
         for case in &mut test_run.cases {
             for attempt in &mut case.attempts {
-                cut(out, &video, started, &case.id, attempt)?;
+                // A clip that cannot be cut loses that clip, never the run's results.
+                if let Err(error) = cut(out, &video, started, &case.id, attempt) {
+                    eprintln!("xtask: no clip for {}: {error:#}", case.id);
+                }
             }
         }
         results::write(&test_run, &out.join(RUN_FILE))?;
@@ -268,6 +271,10 @@ fn cut(out: &Path, video: &Path, started: i64, id: &str, attempt: &mut Attempt) 
     let Some(span) = &attempt.span else {
         return Ok(());
     };
+    // A case that failed before it did anything has no moment to show.
+    if span.end_millis <= span.start_millis {
+        return Ok(());
+    }
     let from = seconds(span.start_millis - started);
     let to = seconds(span.end_millis - started);
     let name = file_name(id);
@@ -485,12 +492,37 @@ pub(crate) fn file_name(id: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::skirout::base::harness::v1::test_run::Span;
 
     #[test]
     fn the_first_frame_time_comes_from_ffmpegs_input_line() {
         let log = "Input #0, x11grab, from ':9':\n  Duration: N/A, start: 1793657724.941246, bitrate: 30720 kb/s\n";
 
         assert_eq!(first_frame(log).unwrap(), 1793657724941);
+    }
+
+    #[test]
+    fn a_case_that_took_no_time_has_no_clip() {
+        let out = tempfile::tempdir().unwrap();
+        let mut attempt = Attempt {
+            span: Some(Span {
+                start_millis: 5,
+                end_millis: 5,
+                ..Span::default()
+            }),
+            ..Attempt::default()
+        };
+
+        cut(
+            out.path(),
+            &out.path().join("none.mp4"),
+            0,
+            "a",
+            &mut attempt,
+        )
+        .unwrap();
+
+        assert!(attempt.artifacts.is_empty());
     }
 
     #[test]
