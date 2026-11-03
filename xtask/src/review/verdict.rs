@@ -76,7 +76,7 @@ pub fn require_covered(ctx: &Context, pr: u64, head: &str, base: Option<&str>) -
 fn reviewed_commit(body: &str) -> Option<&str> {
     let (_, block) = body.split_once(START)?;
     let (commit, _) = block.trim_start().strip_prefix(COMMIT)?.split_once("-->")?;
-    Some(commit.trim())
+    Some(commit.trim()).filter(|commit| !commit.is_empty())
 }
 
 /// Whether a review of `reviewed` also read everything in `head`: the same commit, or the same
@@ -150,5 +150,7 @@ mod tests {
         let body = format!("text\n{START}\n{COMMIT}abc123 -->\nLooks right.\n{END}");
         assert_eq!(reviewed_commit(&body), Some("abc123"));
         assert_eq!(reviewed_commit("no verdict here"), None);
+        let unnamed = format!("{START}\n{COMMIT} -->\nFine.");
+        assert_eq!(reviewed_commit(&unnamed), None);
     }
 }

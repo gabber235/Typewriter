@@ -192,18 +192,25 @@ fn default_base(ctx: &Context) -> Result<String> {
         .tool(
             ".",
             "gh",
-            &[
-                "pr",
-                "view",
-                "--json",
-                "baseRefName",
-                "--jq",
-                ".baseRefName",
-            ],
+            &["pr", "view", "--json", "baseRefOid", "--jq", ".baseRefOid"],
         )
         .output_text();
     match pull_request {
-        Ok(name) if !name.trim().is_empty() => Ok(format!("origin/{}", name.trim())),
+        Ok(commit) if !commit.trim().is_empty() => {
+            let commit = commit.trim();
+            // The local remote branch can be behind the pull request's base, and then shows
+            // the base's own commits as part of this change.
+            let known = git(ctx, &["cat-file", "-e", &format!("{commit}^{{commit}}")])
+                .stderr(Stdio::null())
+                .status()
+                .is_ok_and(|status| status.success());
+            if !known {
+                git(ctx, &["fetch", "--quiet", "origin", commit])
+                    .status()
+                    .context("fetching the pull request's base")?;
+            }
+            Ok(commit.to_owned())
+        }
         _ => nearest_base(ctx),
     }
 }
