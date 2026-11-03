@@ -31,6 +31,12 @@ pub use nats_jwt_rs::types::{Permission, Permissions, ResponsePermission};
 /// How long the server may take to report that it is ready.
 const STARTUP_TIMEOUT: Duration = Duration::from_secs(10);
 
+/// How long the server may take to read a subscription a client has written to its socket.
+const REGISTRATION_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// How often a wait for a subscription asks the server again.
+const REGISTRATION_POLL: Duration = Duration::from_millis(5);
+
 static SHARED: OnceCell<Broker> = OnceCell::const_new();
 
 /// The shared server's process and state directory, for the exit handler.
@@ -98,6 +104,7 @@ impl Broker {
         Ok(Account {
             key,
             endpoint: self.endpoint.clone(),
+            system: self.system.clone(),
         })
     }
 
@@ -178,6 +185,7 @@ pub fn account_claims(name: &str, key: &KeyPair) -> Claims<AccountClaims> {
 pub struct Account {
     key: KeyPair,
     endpoint: String,
+    system: async_nats::Client,
 }
 
 impl Account {
@@ -189,6 +197,39 @@ impl Account {
     /// A user holding exactly `permissions`; an empty allow list allows every subject.
     pub fn user(&self, permissions: &Permissions) -> Result<Credentials> {
         mint_user(&self.key, permissions)
+    }
+
+    /// Waits until the server holds `client`'s subscription to `subject`, so a message another
+    /// connection publishes from now on reaches it.
+    ///
+    /// `Client::flush` cannot promise this: it returns once the bytes are written to the socket,
+    /// and the server reads each connection on its own.
+    pub async fn subscription_registered(
+        &self,
+        client: &async_nats::Client,
+        subject: &str,
+    ) -> Result<()> {
+        let connection = client.server_info().client_id;
+        let request = format!("$SYS.REQ.ACCOUNT.{}.SUBSZ", self.key.public_key());
+        tokio::time::timeout(REGISTRATION_TIMEOUT, async {
+            loop {
+                let reply = self.system.request(request.clone(), "".into()).await?;
+                let subscriptions: SubscriptionsResponse =
+                    serde_json::from_slice(&reply.payload)
+                        .context("SUBSZ answered with an unreadable response")?;
+                let registered = subscriptions
+                    .data
+                    .subscriptions_list
+                    .iter()
+                    .any(|held| held.cid == connection && held.subject == subject);
+                if registered {
+                    return Ok(());
+                }
+                tokio::time::sleep(REGISTRATION_POLL).await;
+            }
+        })
+        .await
+        .with_context(|| format!("the server never registered the subscription to {subject}"))?
     }
 
     /// A user that may publish and subscribe to every subject of the account.
@@ -241,6 +282,25 @@ fn mint_user(account: &KeyPair, permissions: &Permissions) -> Result<Credentials
         jwt: claims.encode(account)?,
         seed: key.seed()?,
     })
+}
+
+/// The part of a `$SYS.REQ.ACCOUNT.<account>.SUBSZ` answer that names the subscriptions.
+#[derive(Deserialize)]
+struct SubscriptionsResponse {
+    data: Subscriptions,
+}
+
+#[derive(Deserialize)]
+struct Subscriptions {
+    /// Absent when the account holds no subscription.
+    #[serde(default)]
+    subscriptions_list: Vec<HeldSubscription>,
+}
+
+#[derive(Deserialize)]
+struct HeldSubscription {
+    subject: String,
+    cid: u64,
 }
 
 /// The payload of a `$SYS.REQ.CLAIMS.DELETE` request.

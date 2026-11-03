@@ -18,6 +18,7 @@ pub const SILENCE: Duration = Duration::from_millis(300);
 
 /// A broker connection that reports the errors the broker sends it.
 pub struct Connection {
+    account: Account,
     client: Client,
     errors: mpsc::UnboundedReceiver<String>,
 }
@@ -43,7 +44,11 @@ impl Connection {
             })
             .connect(account.endpoint())
             .await?;
-        Ok(Self { client, errors })
+        Ok(Self {
+            account: account.clone(),
+            client,
+            errors,
+        })
     }
 
     /// A broker user holding exactly what the component granted.
@@ -56,6 +61,9 @@ impl Connection {
     pub async fn subscribe(&self, subject: &str) -> anyhow::Result<Subscriber> {
         let subscriber = self.client.subscribe(subject.to_owned()).await?;
         self.client.flush().await?;
+        self.account
+            .subscription_registered(&self.client, subject)
+            .await?;
         Ok(subscriber)
     }
 
