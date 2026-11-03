@@ -27,6 +27,8 @@ nats-broker = { path = "../../../../testing/nats-broker" }
 nats-jwt-rs.workspace = true
 nkeys.workspace = true
 reqwest = { workspace = true, features = ["form", "json"] }
+# Both rustls backends arrive through dependencies, so this binary names the one it runs on.
+rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs"] }
 serde.workspace = true
 serde_json.workspace = true
 tokio = { workspace = true, features = ["signal"] }

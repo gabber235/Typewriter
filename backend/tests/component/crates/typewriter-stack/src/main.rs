@@ -35,6 +35,12 @@ enum Command {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Dependencies enable both of rustls's backends, and then rustls refuses to pick one. A client
+    // that takes the process default (`async-nats` on a `tls://` URL) would panic without this.
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .map_err(|_| anyhow::anyhow!("a rustls crypto provider was installed before main"))?;
+
     // The wash runtime's own setup, as the `wash` host has it: console logs, and with an
     // `OTEL_EXPORTER_OTLP_ENDPOINT` the OpenTelemetry layer that joins the trace context arriving
     // on NATS messages and exports the host's and the components' spans.
