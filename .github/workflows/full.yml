@@ -12,7 +12,7 @@ on:
   schedule:
     - cron: "17 3 * * *"
   push:
-    branches: [develop, features/v1]
+    branches: [develop, features/v1, features/test-review]
   workflow_dispatch:
 
 permissions:
