@@ -294,13 +294,102 @@ pub fn create_ci(ctx: &Context, secrets: &Ci) -> Result<CiCluster> {
         if let Err(status) = task("ci:status").run() {
             eprintln!("ci:status failed too: {status:#}");
         }
+        cluster.print_failure(ctx);
         return Err(error)
             .with_context(|| format!("ci:up failed in {}", infrastructure.0.display()));
     }
     Ok(cluster)
 }
 
+/// What explains a cluster that did not come up, beyond what `ci:status` lists: its bootstrap order
+/// runs through OpenBao's self init and the Terraform that configures it, which report nowhere else.
+/// CI logs are public, so this reads state and errors only: no Secret contents, Terraform state or
+/// full controller logs. The cluster and everything in it are thrown away with the runner.
+const FAILURE_REPORT: &[&[&str]] = &[
+    &[
+        "-n",
+        "flux-system",
+        "get",
+        "kustomization",
+        "infrastructure-configs",
+        "-o",
+        "jsonpath={range .status.conditions[*]}{.type}={.status} {.reason}: {.message}{\"\\n\"}{end}",
+    ],
+    &[
+        "-n",
+        "openbao",
+        "get",
+        "terraform",
+        "openbao-config",
+        "-o",
+        "jsonpath={range .status.conditions[*]}{.type}={.status} {.reason}: {.message}{\"\\n\"}{end}reconciliationFailures={.status.reconciliationFailures}{\"\\n\"}",
+    ],
+    &[
+        "-n",
+        "openbao",
+        "get",
+        "openbaocluster",
+        "openbao-cluster",
+        "-o",
+        "jsonpath={.status}",
+    ],
+    &[
+        "-n",
+        "openbao",
+        "get",
+        "pods,certificates,networkpolicies",
+        "-o",
+        "wide",
+    ],
+    &[
+        "-n",
+        "openbao",
+        "logs",
+        "statefulset/openbao-cluster",
+        "--all-containers",
+        "--prefix",
+        "--tail=150",
+    ],
+    &[
+        "-n",
+        "openbao",
+        "logs",
+        "statefulset/openbao-cluster",
+        "--all-containers",
+        "--prefix",
+        "--previous",
+        "--tail=100",
+    ],
+    &[
+        "get",
+        "clustersecretstore",
+        "openbao-backend",
+        "-o",
+        "jsonpath={range .status.conditions[*]}{.type}={.status} {.reason}: {.message}{\"\\n\"}{end}",
+    ],
+    &["get", "pods", "-A", "-o", "wide"],
+    &[
+        "get",
+        "events",
+        "-A",
+        "--field-selector",
+        "type=Warning",
+        "--sort-by=.lastTimestamp",
+    ],
+];
+
 impl CiCluster {
+    /// Prints [`FAILURE_REPORT`]. A step that fails says so and the rest still run, since a broken
+    /// cluster is what this reads.
+    fn print_failure(&self, ctx: &Context) {
+        for args in FAILURE_REPORT {
+            eprintln!("--- kubectl {}", args.join(" "));
+            if let Err(error) = self.kubectl(ctx, args).run() {
+                eprintln!("{error:#}");
+            }
+        }
+    }
+
     /// The cluster an earlier `cargo xtask cluster ci` created from this checkout.
     pub fn open(ctx: &Context) -> Result<Self> {
         Infrastructure::existing(ctx)?.cluster()
