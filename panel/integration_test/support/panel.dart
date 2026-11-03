@@ -72,9 +72,13 @@ final class Panel {
 
   /// Runs [act] as one step of the scenario, saying what a reader would call
   /// it. What it does through other actions belongs to this step.
+  /// What the last step proved the screen shows, until another step begins.
+  ({String text, String? outside})? _proof;
+
   Future<T> _step<T>(String says, Future<T> Function() act) async {
     if (_inStep) return act();
     _inStep = true;
+    _proof = null;
     steps.add(
       results.Step(
         atMillis: DateTime.now().millisecondsSinceEpoch,
@@ -170,6 +174,7 @@ final class Panel {
       await tester.pump(_frame);
       frames++;
     }
+    _expectProofOnScreen();
   }
 
   /// Closes the panel and lets it finish, the one way a scenario leaves it, so
@@ -463,42 +468,88 @@ final class Panel {
   }) => _step("expect \"$text\"", () async {
     await until(
       "the screen shows \"$text\"${outside == null ? "" : " outside \"$outside\""}",
-      () {
-        final nodes = find.semantics
-            .byPredicate(
-              (node) =>
-                  !node.isInvisible &&
-                  [
-                    node.spoken,
-                    node.getSemanticsData().value,
-                  ].any((label) => label.contains(text)) &&
-                  !_within(node, outside),
-            )
-            .evaluate();
-        if (nodes.any(_onScreen)) return true;
+      () async {
+        final nodes = _nodesSaying(text, outside: outside);
+        if (nodes.any(_onScreen)) return _bringIntoView(text);
         if (nodes.isNotEmpty) _scrollToward();
         return false;
       },
       timeout: within,
     );
-    await _bringIntoView(text);
+    _proof = (text: text, outside: outside);
   });
 
+  /// The semantics nodes that say [text], leaving out those in [outside].
+  Iterable<SemanticsNode> _nodesSaying(String text, {String? outside}) => find
+      .semantics
+      .byPredicate(
+        (node) =>
+            !node.isInvisible &&
+            [
+              node.spoken,
+              node.getSemanticsData().value,
+            ].any((label) => label.contains(text)) &&
+            !_within(node, outside),
+      )
+      .evaluate();
+
   /// Scrolls [text] fully into view when a scrollable's edge still cuts it, as
-  /// a user reading it would. Text that already shows stays where it is.
-  Future<void> _bringIntoView(String text) async {
-    // A route that is closing still holds its text, without the user reading it.
-    final shown = find
-        .textContaining(text)
-        .evaluate()
-        .where((element) => ModalRoute.of(element)?.isCurrent ?? true)
-        .lastOrNull;
-    if (shown == null) return;
-    await Scrollable.ensureVisible(
-      shown,
-      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-    );
+  /// a user reading it would, and says whether the user can now read it. Text
+  /// that already shows stays where it is.
+  Future<bool> _bringIntoView(String text) async {
+    final shown = _textOnTop(text).lastOrNull;
+    if (shown == null) return find.textContaining(text).evaluate().isEmpty;
+    // Each policy moves the scrollable only past its own edge.
+    for (final edge in const [
+      ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+    ]) {
+      await Scrollable.ensureVisible(shown, alignmentPolicy: edge);
+    }
     await tester.pump(_frame);
+    return shown.mounted && _rendersOnScreen(shown);
+  }
+
+  /// The widgets rendering [text] on the route in front. A route that is closing
+  /// or covered still holds its text, without the user reading it.
+  Iterable<Element> _textOnTop(String text) => find
+      .textContaining(text)
+      .evaluate()
+      .where((element) => ModalRoute.of(element)?.isCurrent ?? true);
+
+  /// Whether [element] is laid out on the screen, inside every viewport that
+  /// paints it. The render tree is what gets painted: unlike semantics it cannot
+  /// describe an earlier scroll offset, and unlike the widget tree it places an
+  /// overlay where it shows rather than where it is anchored.
+  bool _rendersOnScreen(Element element) {
+    final box = element.renderObject;
+    if (box is! RenderBox || !box.hasSize) return false;
+    final center = box.localToGlobal(box.size.center(Offset.zero));
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    if (!(Offset.zero & screen).contains(center)) return false;
+    for (RenderObject? around = box; around != null; around = around.parent) {
+      if (around is! RenderBox || around is! RenderAbstractViewport) continue;
+      final bounds = around.localToGlobal(Offset.zero) & around.size;
+      if (!bounds.contains(center)) return false;
+    }
+    return true;
+  }
+
+  /// Fails when the scenario's last step proved something the screen no longer
+  /// shows, so a result frame always holds what the scenario claims.
+  void _expectProofOnScreen() {
+    final proof = _proof;
+    if (proof == null) return;
+    final texts = _textOnTop(proof.text);
+    final stillShown = texts.isEmpty
+        ? _nodesSaying(proof.text, outside: proof.outside).any(_onScreen)
+        : texts.any(_rendersOnScreen);
+    if (!stillShown) {
+      throw TestFailure(
+        "the result screen no longer shows \"${proof.text}\", "
+        "which the scenario's last step proved",
+      );
+    }
   }
 
   /// Whether [node] lies in the node labeled [label].
@@ -582,7 +633,7 @@ final class Panel {
   /// reports about the element waited on.
   Future<void> until(
     String description,
-    bool Function() condition, {
+    FutureOr<bool> Function() condition, {
     Duration timeout = wait.patience,
     String Function()? shows,
   }) => wait.until(
