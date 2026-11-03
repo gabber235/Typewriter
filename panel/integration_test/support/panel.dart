@@ -426,20 +426,69 @@ final class Panel {
     await tester.pump(_frame);
   }
 
-  /// Whether the screen shows [text], as text or as a semantics label.
+  /// Whether the panel built [text], as text or as a semantics label, on
+  /// screen or not. [expectVisible] asks whether the user can read it.
   bool sees(String text) => _labels.any((label) => label.contains(text));
 
-  /// Waits up to [within] until the screen shows [text]; a state the panel
-  /// derives from a slow signal, such as a host's heartbeat, needs longer.
-  Future<void> expectVisible(String text, {Duration within = wait.patience}) =>
-      _step(
-        "expect \"$text\"",
-        () => until(
-          "the screen shows \"$text\"",
-          () => sees(text),
-          timeout: within,
-        ),
-      );
+  /// Waits up to [within] until the user can read [text], outside the node
+  /// labeled [outside] if given. A label a scrollable only built does not
+  /// count: it comes into view the way a screen reader user reaches it.
+  ///
+  /// A state the panel derives from a slow signal, such as a host's heartbeat,
+  /// needs longer.
+  Future<void> expectVisible(
+    String text, {
+    String? outside,
+    Duration within = wait.patience,
+  }) => _step("expect \"$text\"", () async {
+    var scrolled = DateTime.now();
+    await until(
+      "the screen shows \"$text\"${outside == null ? "" : " outside \"$outside\""}",
+      () {
+        final nodes = find.semantics
+            .byPredicate(
+              (node) =>
+                  !node.isInvisible &&
+                  [
+                    node.spoken,
+                    node.getSemanticsData().value,
+                  ].any((label) => label.contains(text)) &&
+                  !_within(node, outside),
+            )
+            .evaluate();
+        if (nodes.any(_onScreen)) return true;
+        if (nodes.isNotEmpty &&
+            DateTime.now().difference(scrolled) > _refocus) {
+          scrolled = DateTime.now();
+          _scrollContentForward();
+        }
+        return false;
+      },
+      timeout: within,
+    );
+  });
+
+  /// Whether [node] lies in the node labeled [label].
+  bool _within(SemanticsNode node, String? label) {
+    if (label == null) return false;
+    for (var parent = node.parent; parent != null;) {
+      if (parent.spoken == label) return true;
+      parent = parent.parent;
+    }
+    return false;
+  }
+
+  /// Whether the user can see [node]: not hidden, and inside the bounds of
+  /// everything around it, such as the scrollable that clips it.
+  bool _onScreen(SemanticsNode node) {
+    if (node.getSemanticsData().flagsCollection.isHidden) return false;
+    final center = node.screenRect.center;
+    for (var parent = node.parent; parent != null;) {
+      if (!parent.screenRect.contains(center)) return false;
+      parent = parent.parent;
+    }
+    return true;
+  }
 
   /// Waits until the screen no longer shows [text], then checks it stays
   /// gone for [settled], so a slow reply cannot bring it back unnoticed.

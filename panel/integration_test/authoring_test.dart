@@ -67,6 +67,7 @@ void main() {
       await panel.open("Acme", "Realm");
       await panel.search("Greeting $run", choose: "Greeting $run");
       expect(await panel.fieldValue("X coordinate"), "2");
+      await panel.expectVisible("Greeting $run", outside: "Inspector");
       await panel.capture("entry-placed");
     },
   );
