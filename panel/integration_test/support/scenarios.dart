@@ -142,6 +142,7 @@ void scenario(
     int? bodyEnded;
     try {
       await body(panel);
+      await panel.holdResult();
       // The recording ends on what the body proved, not on the panel closing.
       bodyEnded = DateTime.now().millisecondsSinceEpoch;
       await panel.close();

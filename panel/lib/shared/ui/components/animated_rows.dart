@@ -145,8 +145,8 @@ typedef SliverAnimatedRowBuilder = Widget Function(
 /// [AnimatedTable].
 ///
 /// Flutter's `SliverAnimatedList` is not used because it disposes a finished
-/// row's controller a second time when the list leaves the tree in that frame;
-/// see [AnimatedRows]. Callers own the data source and keep it consistent with
+/// row's controller a second time when the list leaves the tree in that frame
+/// (flutter/flutter#192533); see [AnimatedRows]. Callers own the data source and keep it consistent with
 /// the state methods.
 class SliverAnimatedRows extends StatefulWidget {
   const SliverAnimatedRows({

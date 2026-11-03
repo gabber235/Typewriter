@@ -29,9 +29,10 @@ const _frame = Duration(milliseconds: 100);
 /// repeats.
 const _refocus = Duration(seconds: 2);
 
-/// How long a step lets the panel's list animations, 300 ms at most, finish
-/// before the panel closes.
-const _listAnimation = Duration(milliseconds: 500);
+/// How long a passed scenario stays on its final screen. A scenario passes on
+/// the frame that holds its result, before the browser painted it and while
+/// transitions still run, and its recording has to show that result.
+const _result = Duration(milliseconds: 1500);
 
 /// Platform services initialize once per run, however many panels launch.
 final Future<void> _platform = initializePanel();
@@ -155,16 +156,12 @@ final class Panel {
     await _start();
   });
 
+  /// Keeps the final screen up long enough to be seen in the recording.
+  Future<void> holdResult() => tester.pump(_result);
+
   /// Closes the panel and lets it finish, the one way a scenario leaves it, so
   /// what closing does happens while the scenario still owns the failure.
   Future<void> close() async {
-    // Remove this wait once `flutter --version` in the devenv shell is a
-    // release that contains https://github.com/flutter/flutter/pull/192699
-    // (issue flutter#192533). On the web, closing an AnimatedList in the frame
-    // that ends its animation disposes that item's controller twice, and the
-    // error stops the whole web run. Scenarios leave right after a new row
-    // shows, so they hit that frame by chance.
-    await tester.pump(_listAnimation);
     await tester.pumpWidget(const SizedBox.shrink());
     // Focus moves in a microtask after the tree is gone; it must run before
     // the test binding replaces its focus manager.
