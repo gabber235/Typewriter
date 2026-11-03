@@ -368,6 +368,7 @@ const FAILURE_REPORT: &[&[&str]] = &[
         "jsonpath={range .status.conditions[*]}{.type}={.status} {.reason}: {.message}{\"\\n\"}{end}",
     ],
     &["get", "pods", "-A", "-o", "wide"],
+    &["describe", "nodes"],
     &[
         "get",
         "events",
@@ -377,6 +378,66 @@ const FAILURE_REPORT: &[&[&str]] = &[
         "--sort-by=.lastTimestamp",
     ],
 ];
+
+/// A container that is not ready after having restarted, so its previous run says why it died.
+#[derive(Debug, PartialEq, Eq)]
+struct CrashedContainer {
+    namespace: String,
+    pod: String,
+    container: String,
+}
+
+/// The part of `kubectl get pods -A -o json` that says which containers crashed.
+#[derive(Deserialize)]
+struct PodList {
+    items: Vec<Pod>,
+}
+
+#[derive(Deserialize)]
+struct Pod {
+    metadata: PodMetadata,
+    status: PodStatus,
+}
+
+#[derive(Deserialize)]
+struct PodMetadata {
+    namespace: String,
+    name: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PodStatus {
+    /// Absent on a pod that was never scheduled.
+    #[serde(default)]
+    container_statuses: Vec<ContainerStatus>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ContainerStatus {
+    name: String,
+    ready: bool,
+    restart_count: u32,
+}
+
+/// Reads the crashed containers from the output of `kubectl get pods -A -o json`.
+fn crashed_containers(pods: &str) -> Result<Vec<CrashedContainer>> {
+    let pods: PodList = serde_json::from_str(pods).context("cannot read the cluster's pods")?;
+    let mut crashed = Vec::new();
+    for pod in pods.items {
+        for status in pod.status.container_statuses {
+            if !status.ready && status.restart_count > 0 {
+                crashed.push(CrashedContainer {
+                    namespace: pod.metadata.namespace.clone(),
+                    pod: pod.metadata.name.clone(),
+                    container: status.name,
+                });
+            }
+        }
+    }
+    Ok(crashed)
+}
 
 impl CiCluster {
     /// Prints [`FAILURE_REPORT`]. A step that fails says so and the rest still run, since a broken
@@ -388,6 +449,33 @@ impl CiCluster {
                 eprintln!("{error:#}");
             }
         }
+        if let Err(error) = self.print_crashes(ctx) {
+            eprintln!("{error:#}");
+        }
+    }
+
+    /// Prints why each crashed container died, from the logs of its previous run.
+    fn print_crashes(&self, ctx: &Context) -> Result<()> {
+        let pods = self
+            .kubectl(ctx, &["get", "pods", "-A", "-o", "json"])
+            .output_text()?;
+        for crash in crashed_containers(&pods)? {
+            let args = [
+                "-n",
+                &crash.namespace,
+                "logs",
+                &crash.pod,
+                "-c",
+                &crash.container,
+                "--previous",
+                "--tail=60",
+            ];
+            eprintln!("--- kubectl {}", args.join(" "));
+            if let Err(error) = self.kubectl(ctx, &args).run() {
+                eprintln!("{error:#}");
+            }
+        }
+        Ok(())
     }
 
     /// The cluster an earlier `cargo xtask cluster ci` created from this checkout.
@@ -551,6 +639,30 @@ impl CiCluster {
 mod tests {
     use super::*;
     use crate::test_support::{ci_clients, refusal};
+
+    #[test]
+    fn only_containers_that_restarted_and_are_not_ready_count_as_crashed() {
+        let pods = serde_json::json!({ "items": [{
+            "metadata": { "namespace": "surrealdb", "name": "tikv-0" },
+            "status": { "containerStatuses": [
+                { "name": "crashing", "ready": false, "restartCount": 12 },
+                { "name": "recovered", "ready": true, "restartCount": 1 },
+                { "name": "starting", "ready": false, "restartCount": 0 },
+            ]},
+        }, {
+            "metadata": { "namespace": "surrealdb", "name": "surrealdb-1" },
+            "status": { "phase": "Pending" },
+        }]});
+
+        assert_eq!(
+            crashed_containers(&pods.to_string()).unwrap(),
+            [CrashedContainer {
+                namespace: "surrealdb".into(),
+                pod: "tikv-0".into(),
+                container: "crashing".into(),
+            }]
+        );
+    }
 
     #[test]
     fn a_clients_file_without_a_fact_is_refused_naming_it() {
