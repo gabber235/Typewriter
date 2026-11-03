@@ -154,9 +154,13 @@ async fn rejected_provider_response_returns_internal_error_without_persistence(
     Ok(())
 }
 
+/// The caller gets the persistence failure whether or not the account could be deleted.
 #[component_test(ServiceIdentity)]
+#[case::deleted(http::StatusCode::NO_CONTENT)]
+#[case::delete_refused(http::StatusCode::INTERNAL_SERVER_ERROR)]
 async fn persistence_failure_deletes_provisioned_account(
     context: &mut TestContext<ServiceIdentity>,
+    delete_answer: http::StatusCode,
 ) -> TestResult {
     Seed::new().service("duplicate_uid").apply(context).await?;
     expect_account_creation(context, "duplicate_uid", 314)?;
@@ -165,7 +169,7 @@ async fn persistence_failure_deletes_provisioned_account(
         .expect()
         .method(http::Method::DELETE)
         .path_query("/api/v3/core/users/314/")
-        .status(http::StatusCode::NO_CONTENT)
+        .status(delete_answer)
         .register()?;
 
     let response = issue_identity(context, host_role()).await?;

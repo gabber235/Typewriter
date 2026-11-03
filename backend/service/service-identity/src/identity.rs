@@ -252,3 +252,29 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_database_rejection_answers_with_the_response_its_slug_names() {
+        let error =
+            IdentityRepositoryError::rejected("An error occurred: role-version-invalid-error");
+
+        assert!(matches!(
+            error.into_response(),
+            Ok(IssueServiceIdentityResponse::RoleVersionInvalidError(_))
+        ));
+    }
+
+    #[test]
+    fn a_database_rejection_with_an_unknown_slug_fails_instead_of_answering() {
+        let error = IdentityRepositoryError::rejected("future-error");
+
+        let failure = error
+            .into_response()
+            .expect_err("an unknown slug has no response");
+        assert!(format!("{failure:?}").contains("skir-domain-error-unknown"));
+    }
+}
