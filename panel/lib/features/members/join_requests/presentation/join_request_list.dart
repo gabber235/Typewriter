@@ -169,7 +169,7 @@ class JoinRequestsList extends HookConsumerWidget {
               ),
             ),
           ),
-          SliverAnimatedList(
+          SliverAnimatedRows(
             key: animation.key,
             initialItemCount: animation.items.length,
             itemBuilder: (context, index, animation) {

@@ -1,3 +1,4 @@
+import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_testkit/testing.dart";
 
@@ -23,6 +24,55 @@ void main() {
       expect(AnimatedItems.opacityOf(tester, "a"), 1);
       expect(AnimatedItems.opacityOf(tester, "b"), 1);
     });
+
+    // The web engine runs both halves of a frame without flushing microtasks
+    // between them, so a list can leave the tree after a row's animation ended
+    // and before the code waiting on that animation runs. These frames do the same.
+    testWidgets(
+      "a list can go away in the frame a removed row finishes leaving",
+      (tester) async {
+        final source = await tester.showAnimatedItems(
+          [const AnimatedItem(id: "a", label: "Alpha")],
+          insertDuration: insertion,
+          removeDuration: removal,
+        );
+        source.update(const []);
+        await tester.pump();
+
+        final binding = tester.binding;
+        binding.handleBeginFrame(
+          binding.currentSystemFrameTimeStamp + removal * 2,
+        );
+        binding.attachRootWidget(binding.wrapWithDefaultView(const SizedBox()));
+        binding.handleDrawFrame();
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      "a list can go away in the frame an inserted row finishes arriving",
+      (tester) async {
+        final source = await tester.showAnimatedItems(
+          <AnimatedItem>[],
+          insertDuration: insertion,
+          removeDuration: removal,
+        );
+        source.update(const [AnimatedItem(id: "a", label: "Alpha")]);
+        await tester.pump();
+
+        final binding = tester.binding;
+        binding.handleBeginFrame(
+          binding.currentSystemFrameTimeStamp + insertion * 2,
+        );
+        binding.attachRootWidget(binding.wrapWithDefaultView(const SizedBox()));
+        binding.handleDrawFrame();
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+      },
+    );
 
     testWidgets("inserts in the middle using the configured duration", (
       tester,
@@ -319,33 +369,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  for (final variant in [
-    AnimatedItemsLayout.list,
-    AnimatedItemsLayout.sliverList,
-    AnimatedItemsLayout.grid,
-    AnimatedItemsLayout.sliverGrid,
-  ]) {
-    testWidgets("${variant.name} uses its typed key and synchronizes", (
-      tester,
-    ) async {
-      final source = await tester.showAnimatedItems([
-        const AnimatedItem(id: "a", label: "Alpha"),
-      ], layout: variant);
+  testWidgets("an inserted row survives the removal of the row before it", (
+    tester,
+  ) async {
+    final source = await tester.showAnimatedItems([
+      const AnimatedItem(id: "a", label: "Alpha"),
+    ]);
 
-      source.update([
-        const AnimatedItem(id: "a", label: "Alpha"),
-        const AnimatedItem(id: "b", label: "Beta"),
-      ]);
-      await tester.pump();
-      source.update([const AnimatedItem(id: "b", label: "Beta")]);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 501));
-      await tester.pump();
+    source.update([
+      const AnimatedItem(id: "a", label: "Alpha"),
+      const AnimatedItem(id: "b", label: "Beta"),
+    ]);
+    await tester.pump();
+    source.update([const AnimatedItem(id: "b", label: "Beta")]);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 501));
+    await tester.pump();
 
-      expect(find.text("Alpha"), findsNothing);
-      expect(find.text("Beta"), findsOneWidget);
-      expect(source.renderedIds, ["b"]);
-      expect(tester.takeException(), isNull);
-    });
-  }
+    expect(find.text("Alpha"), findsNothing);
+    expect(find.text("Beta"), findsOneWidget);
+    expect(source.renderedIds, ["b"]);
+    expect(tester.takeException(), isNull);
+  });
 }

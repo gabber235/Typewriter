@@ -7,6 +7,7 @@ export "admonition.dart";
 export "anchored_overlay/anchored_overlay.dart";
 export "anchored_popup.dart";
 export "animated_list.dart";
+export "animated_rows.dart";
 export "animated_slivers.dart";
 export "animated_status_content.dart";
 export "animated_table.dart";

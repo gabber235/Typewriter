@@ -58,7 +58,7 @@ final class AnimatedItemSource {
 }
 
 /// The collection widget an [AnimatedItems] renders through its hook.
-enum AnimatedItemsLayout { list, sliverList, grid, sliverGrid, table }
+enum AnimatedItemsLayout { sliverList, table }
 
 /// A collection of [AnimatedItemSource] items driven by the panel's animated
 /// collection hook for [layout].
@@ -98,13 +98,8 @@ final class AnimatedItems extends HookWidget {
     useValueListenable(source._revision);
     final visible = useValueListenable(source.visible);
     final collection = switch (layout) {
-      AnimatedItemsLayout.list => _list(),
       AnimatedItemsLayout.sliverList => CustomScrollView(
         slivers: [_sliverList()],
-      ),
-      AnimatedItemsLayout.grid => _grid(),
-      AnimatedItemsLayout.sliverGrid => CustomScrollView(
-        slivers: [_sliverGrid()],
       ),
       AnimatedItemsLayout.table => _table(),
     };
@@ -121,23 +116,6 @@ final class AnimatedItems extends HookWidget {
     return _item(item, animation, id: "removed-${item.id}");
   }
 
-  Widget _list() {
-    final result = useAnimatedList<AnimatedItem>(
-      items: source.items,
-      identity: (item) => item.id,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      removedItemBuilder: _removed,
-    );
-    source.renderedItems = result.items;
-    return AnimatedList(
-      key: result.key,
-      initialItemCount: result.items.length,
-      itemBuilder: (context, index, animation) =>
-          _item(result.items[index], animation),
-    );
-  }
-
   Widget _sliverList() {
     final result = useSliverAnimatedList<AnimatedItem>(
       items: source.items,
@@ -147,45 +125,9 @@ final class AnimatedItems extends HookWidget {
       removedItemBuilder: _removed,
     );
     source.renderedItems = result.items;
-    return SliverAnimatedList(
+    return SliverAnimatedRows(
       key: result.key,
       initialItemCount: result.items.length,
-      itemBuilder: (context, index, animation) =>
-          _item(result.items[index], animation),
-    );
-  }
-
-  Widget _grid() {
-    final result = useAnimatedGrid<AnimatedItem>(
-      items: source.items,
-      identity: (item) => item.id,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      removedItemBuilder: _removed,
-    );
-    source.renderedItems = result.items;
-    return AnimatedGrid(
-      key: result.key,
-      initialItemCount: result.items.length,
-      gridDelegate: _gridDelegate,
-      itemBuilder: (context, index, animation) =>
-          _item(result.items[index], animation),
-    );
-  }
-
-  Widget _sliverGrid() {
-    final result = useSliverAnimatedGrid<AnimatedItem>(
-      items: source.items,
-      identity: (item) => item.id,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      removedItemBuilder: _removed,
-    );
-    source.renderedItems = result.items;
-    return SliverAnimatedGrid(
-      key: result.key,
-      initialItemCount: result.items.length,
-      gridDelegate: _gridDelegate,
       itemBuilder: (context, index, animation) =>
           _item(result.items[index], animation),
     );
@@ -226,10 +168,6 @@ final class AnimatedItems extends HookWidget {
     key: ValueKey(id ?? item.id),
     opacity: animation,
     child: SizedBox(height: 48, child: Text(item.label)),
-  );
-
-  static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
-    crossAxisCount: 2,
   );
 }
 

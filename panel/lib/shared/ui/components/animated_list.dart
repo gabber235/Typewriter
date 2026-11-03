@@ -1,6 +1,6 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Builds an item while it is being removed from an animated list or grid.
+/// Builds an item while it is being removed from an animated list.
 typedef AnimatedListRemovedItemBuilder<T> = Widget Function(
   BuildContext context,
   T item,
@@ -37,38 +37,6 @@ class AnimatedListHookResult<T, S extends State<StatefulWidget>> {
   final List<T> items;
 }
 
-/// Synchronizes [items] with an [AnimatedList].
-///
-/// The returned key must be assigned to that list and the returned snapshot
-/// must supply its initial count and item builder. [identity] must return a
-/// stable, unique value for every item. Reordering follows
-/// [AnimatedListHookResult]; insertion and removal use the configured durations.
-AnimatedListHookResult<T, AnimatedListState> useAnimatedList<T>({
-  required List<T> items,
-  required Object Function(T item) identity,
-  required AnimatedListRemovedItemBuilder<T> removedItemBuilder,
-  Duration insertDuration = const Duration(milliseconds: 750),
-  Duration removeDuration = const Duration(milliseconds: 500),
-  String? debugLabel,
-}) {
-  return use(
-    _AnimatedListHook<T, AnimatedListState, Widget>(
-      items: items,
-      identity: identity,
-      removedItemBuilder: removedItemBuilder,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      debugLabel: debugLabel,
-      insertItem: (state, index, duration) {
-        state.insertItem(index, duration: duration);
-      },
-      removeItem: (state, index, builder, duration) {
-        state.removeItem(index, builder, duration: duration);
-      },
-    ),
-  );
-}
-
 /// Synchronizes [items] with an [AnimatedTable].
 ///
 /// The returned key must be assigned to that table and the returned snapshot
@@ -101,13 +69,13 @@ AnimatedListHookResult<T, AnimatedTableState> useAnimatedTable<T>({
   );
 }
 
-/// Synchronizes [items] with a [SliverAnimatedList].
+/// Synchronizes [items] with an [SliverAnimatedRows].
 ///
 /// The returned key must be assigned to that sliver and the returned snapshot
 /// must supply its initial count and item builder. [identity] must return a
 /// stable, unique value for every item. Reordering follows
 /// [AnimatedListHookResult]; insertion and removal use the configured durations.
-AnimatedListHookResult<T, SliverAnimatedListState> useSliverAnimatedList<T>({
+AnimatedListHookResult<T, SliverAnimatedRowsState> useSliverAnimatedList<T>({
   required List<T> items,
   required Object Function(T item) identity,
   required AnimatedListRemovedItemBuilder<T> removedItemBuilder,
@@ -116,71 +84,7 @@ AnimatedListHookResult<T, SliverAnimatedListState> useSliverAnimatedList<T>({
   String? debugLabel,
 }) {
   return use(
-    _AnimatedListHook<T, SliverAnimatedListState, Widget>(
-      items: items,
-      identity: identity,
-      removedItemBuilder: removedItemBuilder,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      debugLabel: debugLabel,
-      insertItem: (state, index, duration) {
-        state.insertItem(index, duration: duration);
-      },
-      removeItem: (state, index, builder, duration) {
-        state.removeItem(index, builder, duration: duration);
-      },
-    ),
-  );
-}
-
-/// Synchronizes [items] with an [AnimatedGrid].
-///
-/// The returned key must be assigned to that grid and the returned snapshot
-/// must supply its initial count and item builder. [identity] must return a
-/// stable, unique value for every item. Reordering follows
-/// [AnimatedListHookResult]; insertion and removal use the configured durations.
-AnimatedListHookResult<T, AnimatedGridState> useAnimatedGrid<T>({
-  required List<T> items,
-  required Object Function(T item) identity,
-  required AnimatedListRemovedItemBuilder<T> removedItemBuilder,
-  Duration insertDuration = const Duration(milliseconds: 300),
-  Duration removeDuration = const Duration(milliseconds: 300),
-  String? debugLabel,
-}) {
-  return use(
-    _AnimatedListHook<T, AnimatedGridState, Widget>(
-      items: items,
-      identity: identity,
-      removedItemBuilder: removedItemBuilder,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      debugLabel: debugLabel,
-      insertItem: (state, index, duration) {
-        state.insertItem(index, duration: duration);
-      },
-      removeItem: (state, index, builder, duration) {
-        state.removeItem(index, builder, duration: duration);
-      },
-    ),
-  );
-}
-
-/// Synchronizes [items] with a [SliverAnimatedGrid].
-///
-/// The returned key must be assigned to that sliver and the returned snapshot
-/// must supply its initial count and item builder. [identity] must return a
-/// stable, unique value for every item. Reordering follows
-/// [AnimatedListHookResult]; insertion and removal use the configured durations.
-AnimatedListHookResult<T, SliverAnimatedGridState> useSliverAnimatedGrid<T>({
-  required List<T> items,
-  required Object Function(T item) identity,
-  required AnimatedListRemovedItemBuilder<T> removedItemBuilder,
-  Duration insertDuration = const Duration(milliseconds: 300),
-  Duration removeDuration = const Duration(milliseconds: 300),
-  String? debugLabel,
-}) {
-  return use(
-    _AnimatedListHook<T, SliverAnimatedGridState, Widget>(
+    _AnimatedListHook<T, SliverAnimatedRowsState, Widget>(
       items: items,
       identity: identity,
       removedItemBuilder: removedItemBuilder,

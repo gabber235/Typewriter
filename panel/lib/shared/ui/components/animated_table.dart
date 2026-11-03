@@ -70,100 +70,11 @@ class AnimatedTable extends StatefulWidget {
 }
 
 class AnimatedTableState extends State<AnimatedTable>
-    with TickerProviderStateMixin {
-  final List<_RowEntry> _rows = [];
-  bool _disposed = false;
-
+    with TickerProviderStateMixin, AnimatedRows<AnimatedTable, TableRow> {
   @override
-  void initState() {
-    super.initState();
-    for (var index = 0; index < widget.initialItemCount; index++) {
-      _rows.add(_RowEntry(index: index, animation: kAlwaysCompleteAnimation));
-    }
-  }
+  int get initialRowCount => widget.initialItemCount;
 
-  /// Inserts an active row at [index] and animates it into the table.
-  ///
-  /// The row builder receives the new logical index. A still animating outgoing
-  /// row does not consume an active index.
-  void insertItem(
-    int index, {
-    Duration duration = const Duration(milliseconds: 300),
-  }) {
-    assert(index >= 0 && index <= _activeCount);
-    final controller = AnimationController(duration: duration, vsync: this);
-    final visualIndex = _visualIndexForInsertion(index);
-    setState(() {
-      _rows.insert(
-        visualIndex,
-        _RowEntry(index: index, animation: controller, controller: controller),
-      );
-      _reindexActiveRows();
-    });
-    controller.forward().then<void>((_) {
-      if (_disposed || !_rows.any((row) => row.controller == controller)) {
-        return;
-      }
-      setState(() {
-        _rows.firstWhere((row) => row.controller == controller)
-          ..animation = kAlwaysCompleteAnimation
-          ..controller = null;
-      });
-      controller.dispose();
-    });
-  }
-
-  /// Removes the active row at [index] while keeping its supplied snapshot
-  /// builder alive for the reverse animation.
-  ///
-  /// The removed row is no longer interactive or exposed to assistive
-  /// technology before the animation completes.
-  void removeItem(
-    int index,
-    AnimatedTableRemovedRowBuilder builder, {
-    Duration duration = const Duration(milliseconds: 300),
-  }) {
-    assert(index >= 0 && index < _activeCount);
-    final row = _rows.firstWhere((row) => !row.outgoing && row.index == index);
-    final controller =
-        row.controller ??
-        AnimationController(duration: duration, value: 1, vsync: this);
-    setState(() {
-      row
-        ..outgoing = true
-        ..removedBuilder = builder
-        ..controller = controller
-        ..animation = controller;
-      _reindexActiveRows();
-    });
-    controller.reverse().then<void>((_) {
-      if (_disposed || !_rows.contains(row)) return;
-      setState(() => _rows.remove(row));
-      controller.dispose();
-    });
-  }
-
-  int get _activeCount => _rows.where((row) => !row.outgoing).length;
-
-  int _visualIndexForInsertion(int index) {
-    var activeIndex = 0;
-    for (var visualIndex = 0; visualIndex < _rows.length; visualIndex++) {
-      if (_rows[visualIndex].outgoing) continue;
-      if (activeIndex == index) return visualIndex;
-      activeIndex++;
-    }
-    return _rows.length;
-  }
-
-  void _reindexActiveRows() {
-    var index = 0;
-    for (final row in _rows) {
-      if (row.outgoing) continue;
-      row.index = index++;
-    }
-  }
-
-  TableRow _buildRow(_RowEntry entry) {
+  TableRow _buildRow(AnimatedRow<TableRow> entry) {
     final source = entry.outgoing
         ? entry.removedBuilder!(context, entry.animation)
         : widget.rowBuilder(context, entry.index, entry.animation);
@@ -202,14 +113,14 @@ class AnimatedTableState extends State<AnimatedTable>
       border: widget.border,
       defaultVerticalAlignment: widget.defaultVerticalAlignment,
       textBaseline: widget.textBaseline,
-      children: [...widget.headerRows, ..._rows.map(_buildRow)],
+      children: [...widget.headerRows, ...rows.map(_buildRow)],
     );
     return widget.tableBuilder?.call(context, table) ?? table;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isVisuallyEmpty = _rows.isEmpty;
+    final isVisuallyEmpty = rows.isEmpty;
     if (widget.emptyBuilder == null) {
       return AnimatedSize(
         duration: const Duration(milliseconds: 300),
@@ -244,23 +155,4 @@ class AnimatedTableState extends State<AnimatedTable>
       ),
     );
   }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    for (final row in _rows) {
-      row.controller?.dispose();
-    }
-    super.dispose();
-  }
-}
-
-class _RowEntry {
-  _RowEntry({required this.index, required this.animation, this.controller});
-
-  int index;
-  Animation<double> animation;
-  AnimationController? controller;
-  bool outgoing = false;
-  AnimatedTableRemovedRowBuilder? removedBuilder;
 }
