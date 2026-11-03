@@ -244,16 +244,11 @@ final class Panel {
         await _tap(await _control("Search"));
         await _typeInChooser(query);
         if (choose == null) return;
-        await _tap(await _row(choose));
+        final result = await _row(choose);
+        await _tap(result);
         // A result can read what the chosen page shows too, so what comes next
         // has to look at the page and not at the closing search.
-        await until(
-          "the search for \"$query\" closes",
-          () => !visibleTextFields().any(
-            (field) =>
-                field.isFocused && field.getSemanticsData().value == query,
-          ),
-        );
+        await until("the search for \"$query\" closes", () => !result.attached);
       });
 
   /// Picks [name] in the chooser on screen, such as the one a link field
@@ -492,7 +487,12 @@ final class Panel {
   /// Scrolls [text] fully into view when a scrollable's edge still cuts it, as
   /// a user reading it would. Text that already shows stays where it is.
   Future<void> _bringIntoView(String text) async {
-    final shown = find.textContaining(text).evaluate().lastOrNull;
+    // A route that is closing still holds its text, without the user reading it.
+    final shown = find
+        .textContaining(text)
+        .evaluate()
+        .where((element) => ModalRoute.of(element)?.isCurrent ?? true)
+        .lastOrNull;
     if (shown == null) return;
     await Scrollable.ensureVisible(
       shown,
