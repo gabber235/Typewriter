@@ -367,6 +367,7 @@ const FAILURE_REPORT: &[&[&str]] = &[
         "-o",
         "jsonpath={range .status.conditions[*]}{.type}={.status} {.reason}: {.message}{\"\\n\"}{end}",
     ],
+    &["get", "gitrepositories,kustomizations", "-A"],
     &["get", "pods", "-A", "-o", "wide"],
     &["describe", "nodes"],
     &[
@@ -378,6 +379,16 @@ const FAILURE_REPORT: &[&[&str]] = &[
         "--sort-by=.lastTimestamp",
     ],
 ];
+
+/// Refuses a source that holds anything but `revision`, such as a branch that moved on.
+fn ensure_fetched(fetched: &str, branch: &str, revision: &str) -> Result<()> {
+    ensure!(
+        fetched.ends_with(revision),
+        "Flux fetched {fetched} from {branch}, not {revision}; the branch must still be at the \
+         commit under test, and a newer commit gets its own run",
+    );
+    Ok(())
+}
 
 /// A container that is not ready after having restarted, so its previous run says why it died.
 #[derive(Debug, PartialEq, Eq)]
@@ -553,13 +564,24 @@ impl CiCluster {
             .collect())
     }
 
-    /// Points the cluster's Typewriter tenant at `revision` and reconciles it, now that its
-    /// images are in the registry; returns once every tenant Kustomization is Ready at
-    /// `revision`.
-    pub fn release(&self, ctx: &Context, revision: &str) -> Result<()> {
+    /// Points the cluster's Typewriter tenant at `branch` and reconciles it, now that its images
+    /// are in the registry; returns once every tenant Kustomization is Ready at `revision`, the
+    /// commit `branch` must hold. Prints the cluster's state when it cannot.
+    pub fn release(&self, ctx: &Context, branch: &str, revision: &str) -> Result<()> {
+        let released = self.reconcile_tenant(ctx, branch, revision);
+        if released.is_err() {
+            self.print_failure(ctx);
+        }
+        released
+    }
+
+    fn reconcile_tenant(&self, ctx: &Context, branch: &str, revision: &str) -> Result<()> {
         let tenant = &self.clients.tenant;
+        // A branch is a shallow fetch of one commit; a commit ref clones the repository's whole
+        // history. A later push to the branch cancels the run this commit is tested in, and the
+        // check below refuses any other commit.
         let patch = serde_json::json!([
-            { "op": "add", "path": "/spec/ref", "value": { "commit": revision } }
+            { "op": "add", "path": "/spec/ref", "value": { "branch": branch } }
         ])
         .to_string();
         self.kubectl(
@@ -582,6 +604,21 @@ impl CiCluster {
             .args(["--timeout", "15m"])
             .run()
             .context("Flux cannot fetch the commit under test")?;
+        let fetched = self
+            .kubectl(
+                ctx,
+                &[
+                    "--namespace",
+                    "flux-system",
+                    "get",
+                    "gitrepository",
+                    &tenant.source,
+                    "--output",
+                    "jsonpath={.status.artifact.revision}",
+                ],
+            )
+            .output_text()?;
+        ensure_fetched(fetched.trim(), branch, revision)?;
         // Without --wait, resuming several Kustomizations returns before any of them is Ready.
         self.flux(ctx, &["resume", "kustomization"])
             .args(&tenant.kustomizations)
@@ -639,6 +676,15 @@ impl CiCluster {
 mod tests {
     use super::*;
     use crate::test_support::{ci_clients, refusal};
+
+    #[test]
+    fn a_branch_that_moved_past_the_commit_under_test_is_refused() {
+        assert!(ensure_fetched("main@sha1:abc", "main", "abc").is_ok());
+
+        let error = refusal(ensure_fetched("main@sha1:def", "main", "abc"));
+        assert!(error.contains("main@sha1:def"), "{error}");
+        assert!(error.contains("not abc"), "{error}");
+    }
 
     #[test]
     fn only_containers_that_restarted_and_are_not_ready_count_as_crashed() {

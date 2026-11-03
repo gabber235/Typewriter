@@ -105,7 +105,14 @@ pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
     )?;
     ci.kubectl(ctx, &RESTART_WORKLOADS).run()?;
     let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
-    ci.release(ctx, revision.trim())
+    let branch = ctx
+        .tool(".", "git", &["branch", "--show-current"])
+        .output_text()?;
+    ensure!(
+        !branch.trim().is_empty(),
+        "the cluster reads this commit from its branch on GitHub, and HEAD is on no branch"
+    );
+    ci.release(ctx, branch.trim(), revision.trim())
 }
 
 /// Builds every deployable component and pushes it and the database image to `registry`; the
