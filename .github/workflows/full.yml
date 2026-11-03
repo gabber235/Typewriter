@@ -50,7 +50,7 @@ jobs:
       - uses: ./.github/actions/devenv
         with:
           op-service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          caches: flutter frame-vectors
+          caches: gradle flutter frame-vectors
           profile: e2e
       # xtask resolves the `ci` secrets through this service account and fetches the pinned
       # Infrastructure revision with the deploy key among them.
