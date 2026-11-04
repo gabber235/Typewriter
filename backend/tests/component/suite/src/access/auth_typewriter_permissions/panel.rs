@@ -7,7 +7,7 @@ use json_matcher::assert_jm;
 use typewriter_component_test::{
     access::{
         PANEL_POLICY, SESSION, assert_consumer_grant, member_grants, permits, request_permissions,
-        sign_in,
+        sign_in, sign_in_without_email,
     },
     prelude::*,
 };
@@ -41,6 +41,30 @@ async fn panel_login_stores_the_profile_and_a_later_login_updates_it(
             "avatar_url": "https://example.test/avatar.png"
         }
     );
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn people_without_an_email_can_sign_in_and_are_stored_without_one(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    for (person, name) in [(ada(), "Ada Lovelace"), (grace(), "Grace Hopper")] {
+        let grant = request_permissions(
+            context,
+            PANEL_POLICY,
+            &sign_in_without_email(person.token(), name),
+        )
+        .await?;
+        assert_eq!(grant.tags, [format!("user:{}", person.token())]);
+
+        assert_jm!(
+            context
+                .database()?
+                .read("SELECT name, email FROM ONLY $user", &[("user", person.id())])
+                .await?,
+            { "name": name, "email": null }
+        );
+    }
     Ok(())
 }
 

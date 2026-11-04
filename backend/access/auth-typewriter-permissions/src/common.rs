@@ -52,24 +52,29 @@ pub struct TrustedUserProfile {
 
 impl AuthentikClaims {
     /// Project durable profile values while preserving the established provider fallback order.
+    ///
+    /// Authentik sends an account's unset profile fields as empty strings, and an empty value
+    /// means the provider has nothing, so the next source is asked and the record holds none.
     pub fn user_profile(&self) -> TrustedUserProfile {
+        let discord = self.discord.as_ref();
         TrustedUserProfile {
-            name: self
-                .name
-                .clone()
-                .or_else(|| self.discord.as_ref().map(|value| value.username.clone()))
+            name: provided(&self.name)
+                .or_else(|| discord.and_then(|value| provided_str(&value.username)))
                 .unwrap_or_else(|| "Unknown".to_owned()),
-            email: self
-                .email
-                .clone()
-                .or_else(|| self.discord.as_ref().and_then(|value| value.email.clone())),
-            avatar_url: self.avatar_url.clone().or_else(|| {
-                self.discord
-                    .as_ref()
-                    .and_then(|value| value.avatar_url.clone())
-            }),
+            email: provided(&self.email)
+                .or_else(|| discord.and_then(|value| provided(&value.email))),
+            avatar_url: provided(&self.avatar_url)
+                .or_else(|| discord.and_then(|value| provided(&value.avatar_url))),
         }
     }
+}
+
+fn provided(value: &Option<String>) -> Option<String> {
+    value.as_deref().and_then(provided_str)
+}
+
+fn provided_str(value: &str) -> Option<String> {
+    (!value.is_empty()).then(|| value.to_owned())
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

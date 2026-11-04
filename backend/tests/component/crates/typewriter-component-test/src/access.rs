@@ -47,12 +47,26 @@ pub fn sign_in(
     name: &str,
     organization: Option<RecordId>,
 ) -> GetEntityPermissionRequest {
-    let claims = json!({
-        "sub": subject,
-        "name": name,
-        "email": "panel@example.test",
-        "avatar_url": "https://example.test/avatar.png"
-    });
+    sign_in_with_claims(
+        json!({
+            "sub": subject,
+            "name": name,
+            "email": "panel@example.test",
+            "avatar_url": "https://example.test/avatar.png"
+        }),
+        organization,
+    )
+}
+
+/// The same sign in for an account that has no email set, which Authentik sends as an empty claim.
+pub fn sign_in_without_email(subject: &str, name: &str) -> GetEntityPermissionRequest {
+    sign_in_with_claims(json!({ "sub": subject, "name": name, "email": "" }), None)
+}
+
+fn sign_in_with_claims(
+    claims: serde_json::Value,
+    organization: Option<RecordId>,
+) -> GetEntityPermissionRequest {
     GetEntityPermissionRequest {
         qualifier: EntityPermissionQualifier::User(Box::new(EntityPermissionQualifier_User {
             organization_id: organization,
