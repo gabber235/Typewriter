@@ -54,6 +54,9 @@ impl IdentityRepositoryError {
         match self {
             Self::Domain(response) => Ok(response),
             Self::Infrastructure(error) => {
+                // An `error` event becomes the span's status, the one part of a span a host's log
+                // prints, so the reason is readable where no trace backend runs.
+                tracing::error!(error = %error);
                 otel_wasi::main_attribute!(
                     "error" = true,
                     "exception.slug" = "service-identity-repository-failed",

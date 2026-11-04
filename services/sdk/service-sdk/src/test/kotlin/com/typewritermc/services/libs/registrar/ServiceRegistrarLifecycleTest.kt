@@ -126,7 +126,7 @@ val ServiceRegistrarLifecycleTest by testSuite {
                     .finishedLogs()
                     .last()
                     .bodyValue
-                    ?.asString() shouldBe "Service identity issuance outcome is unknown"
+                    ?.asString() shouldBe "Service identity issuance outcome is unknown: identity_issuance: unavailable"
             }
         }
     }
@@ -679,6 +679,20 @@ val ServiceRegistrarLifecycleTest by testSuite {
                         "Stopping service registration",
                         "Service registration stopped",
                     )
+            }
+        }
+    }
+    test("a terminal failure tells the operator its reason on the console") {
+        runTest {
+            registrarFixture(this).use { f ->
+                f.issuer.enqueue(IdentityIssueResult.Failure(IdentityIssueError.Rejected(IdentityRejectionReason.MALFORMED_REQUEST)))
+                f.registrar.start()
+                runCurrent()
+
+                f.harness
+                    .finishedLogs()
+                    .mapNotNull { it.bodyValue?.asString() }
+                    .last() shouldBe "Service registration failed: identity_issuance: malformed_request"
             }
         }
     }
