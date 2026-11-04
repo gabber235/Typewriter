@@ -391,6 +391,14 @@ const FAILURE_REPORT: &[&[&str]] = &[
     ],
     &[
         "-n",
+        "typewriter",
+        "logs",
+        "-l",
+        "typewriter.seamlezz.com/db-rollout-action=start",
+        "--tail=40",
+    ],
+    &[
+        "-n",
         "wasmcloud",
         "logs",
         "-l",

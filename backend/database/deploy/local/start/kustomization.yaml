@@ -7,18 +7,25 @@ images:
     newName: oci.local.seamlezz.net/typewriter/database
     newTag: dev
 patches:
+  # Local and CI clusters hold disposable data, so they reach the schema of the commit they run
+  # with surrealkit's desired state sync; rollouts are for databases old code still reads.
   - target:
       kind: Job
       name: typewriter-db-rollout-start
     patch: |-
       - op: replace
         path: /metadata/name
-        value: typewriter-db-rollout-start-00000000000000-replace-me
+        value: typewriter-db-sync
       - op: add
         path: /metadata/annotations
         value:
-          typewriter.seamlezz.com/rollout-id: 00000000000000__replace_me
           typewriter.seamlezz.com/environment: local
       - op: replace
-        path: /spec/template/spec/containers/0/env/7/value
-        value: 00000000000000__replace_me
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+      - op: remove
+        path: /spec/template/spec/containers/0/env/7
+      - op: replace
+        path: /spec/template/spec/containers/0/args
+        value:
+          - exec /usr/local/bin/surrealkit sync

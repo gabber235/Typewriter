@@ -30,6 +30,14 @@ const LOCAL_CONTEXT: &str = "k3d-seamlezz-local";
 /// The kubectl arguments that restart every workload, so the runtime operator pulls the images
 /// just pushed.
 const RESTART_WORKLOADS: [&str; 4] = ["delete", "workloadreplicasets", "--all-namespaces", "--all"];
+/// The kubectl arguments that remove the local cluster's finished schema sync.
+const RESYNC_SCHEMA: [&str; 5] = [
+    "delete",
+    "job",
+    "--namespace=typewriter",
+    "--selector=typewriter.seamlezz.com/db-rollout-action=start",
+    "--ignore-not-found",
+];
 
 /// A cluster this command may deploy to. Nothing else is reachable.
 #[derive(Clone, Copy, ValueEnum)]
@@ -83,6 +91,11 @@ pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
                     password: secrets::local_registry_password()?,
                 },
             )?;
+            // A finished Job does not run again, so Flux recreates this one and it syncs the schema
+            // of the image just pushed (`backend/database/deploy/local/start`).
+            ctx.tool(".", "kubectl", &["--context", LOCAL_CONTEXT])
+                .args(RESYNC_SCHEMA)
+                .run()?;
             ctx.tool(".", "kubectl", &["--context", LOCAL_CONTEXT])
                 .args(RESTART_WORKLOADS)
                 .run()
