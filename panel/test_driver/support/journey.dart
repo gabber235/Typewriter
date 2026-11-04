@@ -84,13 +84,17 @@ final class Journey {
 
   /// Waits until the panel runs in the current page and answers Flutter
   /// Driver, as it does again after every redirect back from the provider.
+  ///
+  /// `test_driver/sign_in_journey.dart` sets the flag this reads. Asking through
+  /// the browser, one script at a time, leaves no command waiting in a page a
+  /// redirect may leave.
   Future<void> panelReady() =>
-      until("the panel answers Flutter Driver", () async {
-        final type = await _driver.webDriver.execute(
-          r"return typeof window.$flutterDriver;",
+      until("the panel runs and answers Flutter Driver", () async {
+        final running = await _driver.webDriver.execute(
+          "return window.panelRunning === true;",
           [],
         );
-        return type == "function";
+        return running == true;
       }, within: redirectPatience);
 
   /// Clicks the panel control that reads [text] with the browser's own mouse,
