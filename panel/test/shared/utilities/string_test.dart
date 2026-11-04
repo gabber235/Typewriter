@@ -107,27 +107,4 @@ void main() {
       });
     });
   });
-
-  group("generateCode", () {
-    test("generates code with default length of 20", () {
-      final code = generateCode();
-      expect(code.length, 20);
-    });
-
-    test("generates code with custom length", () {
-      final code = generateCode(10);
-      expect(code.length, 10);
-    });
-
-    test("generates only lowercase alphanumeric characters", () {
-      final code = generateCode(100);
-      expect(code, matches(RegExp(r"^[a-z0-9]+$")));
-    });
-
-    test("generates different codes on successive calls", () {
-      final codes = List.generate(10, (_) => generateCode());
-      final uniqueCodes = codes.toSet();
-      expect(uniqueCodes.length, 10);
-    });
-  });
 }

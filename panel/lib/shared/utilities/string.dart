@@ -53,12 +53,3 @@ extension StringX on String {
     return replaceRange(length - suffix.length, length, replacement);
   }
 }
-
-/// Generates a lowercase alphanumeric code using the shared random source.
-String generateCode([int length = 20]) {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  return List.generate(
-    length,
-    (_) => chars[random.nextInt(chars.length)],
-  ).join();
-}

@@ -2,12 +2,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Collection operations used by panel presentation and data assembly.
 extension ListX<T> on List<T> {
-  /// Picks a random element, or returns `null` when this list is empty.
-  T? randomOrNull() {
-    if (isEmpty) return null;
-    return elementAt(random.nextInt(length));
-  }
-
   /// Picks a random element and throws when this list is empty.
   T randomElement() {
     if (isEmpty) throw Exception("List is empty");

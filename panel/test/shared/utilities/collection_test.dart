@@ -3,24 +3,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("ListX", () {
-    group("randomOrNull", () {
-      test("returns null for empty list", () {
-        final list = <int>[];
-        expect(list.randomOrNull(), isNull);
-      });
-
-      test("returns element for non-empty list", () {
-        final list = [1, 2, 3];
-        final result = list.randomOrNull();
-        expect(list, contains(result));
-      });
-
-      test("returns single element for singleton list", () {
-        final list = [42];
-        expect(list.randomOrNull(), 42);
-      });
-    });
-
     group("randomElement", () {
       test("throws exception for empty list", () {
         final list = <int>[];
