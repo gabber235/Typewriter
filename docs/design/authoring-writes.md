@@ -202,12 +202,13 @@ suspend fun <R> RealmAuthoring.edit(                                  // propose
 ): EditOutcome<R>
 
 sealed interface EditOutcome<out R> {                                 // proposed
-    data class Committed<R>(val result: R, val attempts: Int) : EditOutcome<R>
-    data class Rejected(val problems: List<ValueProblem>) : EditOutcome<Nothing>
-    data class Exhausted(val conflicts: List<ExpectationConflict>) : EditOutcome<Nothing>
-    data object Forbidden : EditOutcome<Nothing>
+    data class Committed<R>(val result: R) : EditOutcome<R>
+    /** Invalid edit, conflicts after every attempt, or no right to write; `problems` is empty unless the edit was invalid. */
+    data class Refused(val message: String, val problems: List<ValueProblem>) : EditOutcome<Nothing>
 }
 ```
+
+Authored writes stay a block and do not become transaction functions (decided 2026-11-04). The two have different needs: a stored write can run hundreds of times per tick across servers and must never be lost, so the realm decides it and the engine predicts it. An authored write runs a few times per second at most, and a lost one is no tragedy, so it runs on the writer and sends the result. They share only the words `Committed` and `Refused`.
 
 The transaction is the existing `EditContext` (`typewriter-api/.../authoring/EditContext.kt`) plus untyped path access. Because it **is** an `EditContext`, every generated `XDraft.setX` works inside it unchanged.
 
@@ -405,8 +406,7 @@ class CapturePositionTool(private val realm: RealmAuthoring) {
         }
         when (outcome) {
             is EditOutcome.Committed -> player.sendMessage("Captured position into ${entry.value}")
-            is EditOutcome.Rejected -> player.sendMessage("Capture rejected: ${outcome.problems.joinToString { it.code }}")
-            else -> player.sendMessage("Capture failed: $outcome")
+            is EditOutcome.Refused -> player.sendMessage("Capture refused: ${outcome.message}")
         }
     }
 }
@@ -483,7 +483,7 @@ What happens:
 1. Each insert guards only its `after` anchor: `exists{at: network.nodes + ItemPathSegment(n2), expected: true}`. This is the **required** guard for `insert`, so a client could not omit it; nothing guards the whole list.
 2. Both commit; neither conflicts. The two new nodes land after `n2` in commit order.
 3. A rerun happens only when the anchor was removed: if another edit removed `n2` first, the insert gets `conflict_error` on its `exists` guard, and `edit` reruns the block on a fresh scoped read. A tool that means "append" reads the last item **inside** the block, as example 4 does, so the rerun picks an anchor that still exists.
-4. After `attempts` conflicts the outcome is `Exhausted(conflicts)`.
+4. After `attempts` conflicts the outcome is `Refused`.
 
 Rule (as for transaction functions): every decision that depends on authored state belongs inside the block.
 
@@ -500,14 +500,13 @@ val outcome = realm.edit(AuthoringScope.resources(listOf(section))) {
     delete(section)   // a realm section owned by the realm root
 }
 when (outcome) {
-    // Rejected by the planner or admission: invalid intent, broken relation rule, missing guard.
-    is EditOutcome.Rejected -> outcome.problems.forEach { log.warn("${it.location.path.text}: ${it.code}") } // owner_required
-    is EditOutcome.Forbidden -> log.warn("This principal may not author in this realm")
-    else -> Unit
+    // Refused by the planner or admission: invalid intent, broken relation rule, missing guard, no right to write.
+    is EditOutcome.Refused -> log.warn(outcome.message) // owner_required
+    is EditOutcome.Committed -> Unit
 }
 ```
 
-Catalog changed: the client sends `catalog = G1`; an extension reload produced `G2`; admission answers `catalog_changed_error(G2)` (`SurrealAuthoringRepository.kt:62-66`). `edit` fetches the `G2` catalog, rereads, and reruns the block once. If the field no longer exists in `G2`, the typed draft read returns `Unavailable` or the path write is rejected with `ValueProblem`, and the outcome is `Rejected`. A catalog change never counts toward `attempts`.
+Catalog changed: the client sends `catalog = G1`; an extension reload produced `G2`; admission answers `catalog_changed_error(G2)` (`SurrealAuthoringRepository.kt:62-66`). `edit` fetches the `G2` catalog, rereads, and reruns the block once. If the field no longer exists in `G2`, the typed draft read returns `Unavailable` or the path write is rejected with `ValueProblem`, and the outcome is `Refused`. A catalog change never counts toward `attempts`.
 
 A missing guard (`missing_expectation`) means a client bug in a non SDK client; the SDK cannot produce it because it uses the same `requiredExpectations` as admission. A scoped read that missed a fact (for example a link outside the scope) is the one exception, covered by the scope widening rule.
 
@@ -540,7 +539,7 @@ A missing guard (`missing_expectation`) means a client bug in a non SDK client; 
 ## Costs
 
 - **Extraction** is the largest item: about 1,000 lines of realm edit code plus the read helpers it depends on (`authoring/` is about 4,400 lines; only part moves). It must lose its dependency on the full `AuthoringView`.
-- **Scoped planning is weaker than admission.** Rules that need the whole realm (`singleton_exists`, relation cycles across unread resources) can only be checked by the realm. The client planner reports what it can; admission stays authoritative, and such rejections arrive as `Rejected` after a round trip.
+- **Scoped planning is weaker than admission.** Rules that need the whole realm (`singleton_exists`, relation cycles across unread resources) can only be checked by the realm. The client planner reports what it can; admission stays authoritative, and such rejections arrive as `Refused` after a round trip.
 - **List guards.** Today an insert guards the whole list value; the settled change (Open 8) guards only the named items, a change to `requiredExpectations`, admission, and the 15 files using `resource_exists`.
 - **Transport generator work** for caller bound subjects, plus a second principal kind in grants.
 - **`valueFromJson`** is a new converter over every `ResolvedRepresentation` (scalar, record, sequence, mapping, enumeration, link, named wrappers).
@@ -551,8 +550,8 @@ A missing guard (`missing_expectation`) means a client bug in a non SDK client; 
 1. Settled 2026-11-01 ([panel-engine-communication.md](panel-engine-communication.md) question 11): `organization_member` and `realm_participant` may commit, through the existing route roles; per player rights are engine deny handlers; per user permissions are team management (beta).
 2. **Delegated login for services.** How a service such as an MCP server logs in as a user (OAuth style delegation through the backend).
 3. Settled 2026-11-01 ([panel-engine-communication.md](panel-engine-communication.md) question 12): a realm commit history (`AuthoringCommit` with actor, session, and before and after values) stores attribution and drives undo.
-4. **Module placement.** A new `typewriter-authoring-client` module, or the shared code in `typewriter-api` next to `EditContext`? Extensions should reach drafts and `EditContext` without pulling a transport client.
-5. **`Var` shortcuts.** Generate `setToValue(Position)` for `Var<T, C>` fields, or keep `setTo(Var.value(...))`?
-6. **Findings in scoped reads.** Should a scoped read return findings for its resources only, or none (engines do not need them)?
-7. **Engines without the catalog.** Engines already decode compiled content with their own bindings (`CompiledContent.kt:34`, `EngineContent.kt`). Must they also fetch the editor catalog to write, or can the binding registry of the running publication serve, accepting `catalog_changed_error` when the editor generation moved ahead?
+4. Settled 2026-11-04: a new `authoring` module holds the shared machinery; the realm and engines depend on it, the same pattern as `formula`. Extensions see only `RealmAuthoring` and `EditContext` in `typewriter-api`, with no transport client.
+5. Settled 2026-11-04: no generated `Var` shortcut. `setTo(Var.value(...))` stays until tools show it repeating.
+6. Settled 2026-11-04: a scoped read returns no findings, because engines do not use them.
+7. Settled 2026-11-04: an engine fetches the editor catalog on its first `edit` and caches it per `CatalogGeneration`, the same path as any other service. An engine that never writes never fetches it. Binding from the running publication was rejected: a second path, and writes fail whenever the editor catalog has moved ahead of the publication.
 8. Settled 2026-11-01 ([panel-engine-communication.md](panel-engine-communication.md) question 12): list operations guard only the items they name through `EditExpectation.exists`, which replaces `resource_exists`.

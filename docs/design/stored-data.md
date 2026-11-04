@@ -573,4 +573,4 @@ Errors block publication; warnings never do.
 
 - Book instance identity: whether an instance is the identity (book, key), the same shape as groups, so that renaming an instance key creates a new instance and the book's migration moves its data.
 - Variables: the direction is adopted, but details such as the variable editor are still in progress.
-- Stored reads as query graph inputs (type plus partial key), so a stored commit reruns the realm checks and searches that read it (layer 9, [closed-beta-roadmap.md](closed-beta-roadmap.md)).
+- Stored reads as query graph inputs (type plus partial key), so a stored commit reruns the realm checks and searches that read it (layer 10, [closed-beta-roadmap.md](closed-beta-roadmap.md)).

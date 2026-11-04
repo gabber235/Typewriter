@@ -1,6 +1,6 @@
 # Panel and engine communication
 
-> **Status: phase 2, developer experience.** Planned with the planning flow: requirements, then developer experience, then the plan. Questions 1 to 13 are settled except the reason set of question 4; what remains is listed under Open. Sections: Decided, Unreviewed input, Draft, Open.
+> **Status: settled for layer 9** (2026-11-04). Scenarios tagged beta and later are designed by the layers that build them. Sections: Decided, Unreviewed input, Draft.
 
 Everything where a panel client (browser tab, desktop app, mobile app) and engines talk to each other, in either direction, and how a presentation declares such an action. Related: [engines.md](engines.md), [authoring-writes.md](authoring-writes.md), [live-data.md](live-data.md#session).
 
@@ -54,7 +54,7 @@ Scope rule: a scenario belongs here only when the panel and an engine talk to ea
 - G1 (alpha) An engine is offline, restarts, or the player moves between servers during a long action: the action in progress is cancelled with a clear reason; finished work is kept.
 - G2 (alpha) The realm is offline or the cloud is offline: actions fail with a clear reason (D3) and the game keeps running its content. Editing during a cloud outage is after.
 - G3 (alpha) Several engines and engine kinds run one realm; the panel engine runs next to the realm.
-- G4 (alpha or beta, to confirm) Same host shortcut: when engines, or engines and the realm, run on the same host, the host carries their traffic locally instead of over NATS. Engines and the realm do not notice. It covers most traffic, not only panel and engine communication: stored data sync saves the most. Alpha requirement either way: no contract or API assumes NATS, so the shortcut needs no engine or realm change.
+- G4 (beta, decided 2026-11-04) Same host shortcut: when engines, or engines and the realm, run on the same host, the host carries their traffic locally instead of over NATS. Engines and the realm do not notice. It covers most traffic, not only panel and engine communication: stored data sync saves the most, and it includes the `demand` and `mirrors` buckets. Alpha requirement either way: no contract or API assumes NATS, so the shortcut needs no engine or realm change.
 
 **H. After the closed beta, and team permissions**
 
@@ -211,7 +211,7 @@ No event core, sessions, principals, or bridges are built yet; `runtimes/paper` 
    ```
    (C1, C6, D2, D3)
    - Settled 2026-11-01: events come from extensions, so the panel and the panel engine never need an event's class. Every event is a Typewriter type with an explicit `@TypewriterType(id = ...)`, like `Location` (`TypewriterTypeProcessorProvider.kt:190`). It travels as its `DataValue`; Paper decodes it through `NativeBindingRegistry.bind` (needs the type in its checked catalog); the tab checks field values against the event's `PublishedType`. KSP rejects fields that are not Typewriter types (`KspTypeGraphConverter.kt:175`).
-9. Settled 2026-11-01: the chosen target is a stored value, `ChosenTarget(@Key val user: Protagonist, val target: Protagonist) : Stored` (the panel user is a protagonist), so it follows the user across devices; the tab reads it through its panel engine session and fills `EditorContext.targetProtagonist`. The online list is a mirror in the Minecraft capability, `OnlinePlayer(@Key val protagonist: Protagonist, val name: String, val server: Engine) : Live`, which the panel's target list demands across engines (question 14). Rejected: browser local storage (per device), reading the `sessions` KV (no name, includes panel sessions). (D1)
+9. Settled 2026-11-01: the chosen target is a stored value, `ChosenTarget(@Key val user: Protagonist, val target: Protagonist) : Stored` (the panel user is a protagonist), so it follows the user across devices; the tab reads it through the watch of question 15 and fills `EditorContext.targetProtagonist`. The online list is a mirror in the Minecraft capability, `OnlinePlayer(@Key val protagonist: Protagonist, val name: String, val server: Engine) : Live`, which the panel's target list demands across engines (question 14). Rejected: browser local storage (per device), reading the `sessions` KV (no name, includes panel sessions). (D1)
 10. Engine reports (F1, D3), split in three:
    - 10a settled 2026-11-01: there is no engine report concept. The engine is an identity, `Engine(id: EngineId) : Identity` (core, like `Session`). The engine kind is not a field and not a closed enum: it is the engine artifact id, `EngineKind(value: String)` = topology `EngineTarget.engine_id` (`topology.skir`), stored once in the topology and open to third party engines. Bridges register per artifact at build time, each engine's `SessionReporter` supplies its grace, and the realm reads `EngineInstance.target.engine_id` when it keeps an interaction inside one kind, and reports are ordinary typed values keyed by it. What an engine is doing now is `Live`: `ContentDelivery(@Key engine: Engine, health: EngineContentDeliveryHealth) : Live` (today's local type in `CompiledContentDelivery.kt`, made a Typewriter type); its keys are the connected engines of question 7 and `Active(P)` counts "applied on N of M". What an engine knows is `Stored`, written when the engine starts and when the fact changes, so it survives the engine being offline (F1); see 10b for its shape. Extensions report their own facts the same way. `EngineId` is the stable topology `engine_id` (`topology.skir` `EngineInstance`), so an engine identity survives restarts and ends only when the engine leaves the topology. The panel engine is an `Engine` too. `OnlinePlayer.server` (question 9) is an `Engine`. Rejected: a report route plus an `engines` KV (two paths for facts about one engine), and a live mirror copied into a stored value (one fact stored twice).
    - 10b settled 2026-11-01: worlds, the registry ids marked (R) in minecraft-types.md, and external plugin ids are one abstraction, a reported id: an id type whose valid values only engines know. `interface ReportedId { val key: String }`; `World`, `BlockType`, `NexoItemId`, ... implement it. One stored type serves them all: `KnownIds(@Key engine: Engine, @Key type: TypeDefinitionId, ids: Set<String>) : Stored`, written by the engine for each `ReportedId` type it supports when it starts and when the set changes. The panel has one picker for every `ReportedId` field and the realm one check ("no engine reports this id"); extensions add their own types with no core change, and each engine's own version decides its set (version aware). Replaces `KnownWorlds`, per type stored types, pickers, and checks, and the registry search and existence check request events (engines.md). Engines report through ordinary handlers, no separate reporting path: the Minecraft source turns Bukkit world events into `WorldLoaded(engine, world)` and `WorldUnloaded(engine, world)`; their handlers `append` and `remove` the key on the generated `knownIds(engine, type)` reader (native set operations, so concurrent updates are not lost), and `Added<ContentDelivery>.recordWorlds(server: PaperServer)` `set`s the full set when the engine connects, which also drops worlds deleted while it was offline. `PaperServer` is the live trait of the `Engine` identity on Paper, as `PaperPlayer` is for a protagonist. Not covered yet: tag contents (`#logs` members, with `ItemTag`) and per id extra data (`GameRule` value types, `Statistic` targets), designed with those types.
@@ -223,6 +223,29 @@ No event core, sessions, principals, or bridges are built yet; `runtimes/paper` 
    - Naming settled 2026-11-01 (questions 8 and 9): the host context input is `target_protagonist` (`EditorContext.targetProtagonist`), because core says protagonist, never player (events-and-handlers.md); a Minecraft server is the `Engine` identity, so minecraft-types.md has no separate `Server` type.
 13. Settled 2026-11-01: server drawn visuals need no new concept. Handles and highlights are holds: a mode or a stored value derives a hold (`RegionOutlineHold`), and a handler draws it per viewer (particles through `Player.spawnParticle`, entities shown to one viewer through the packet layer). The C6 highlight is an event (`HighlightRegion`) whose handler stores `Highlighting(@Key viewer, region, at) : Due`, which ends itself at `at`; its outline derive is the same hold the editor uses. All of C6 (teleport and highlight) lands in layer 25 with the editor handles, so C6 is not split inside alpha. Precedent: the region extension draws with per viewer particle packets and a `TextDisplay` (PR #522, `BoundaryPreview.kt`, `EditorHologram.kt`). (C3, C6)
 14. Settled 2026-11-04, alpha (layer 8): `Indexed` is dropped; demand crosses engines through the `demand` and `mirrors` KV buckets, with the TTL pattern of the `sessions` KV ([live-data.md](live-data.md#demand-across-engines)). A reader creates demand wherever it runs (a formula in published content, the panel's target list, question 7 gating, a tab watching one player), for one key or every key of a mirror type, and authors read through `All<X>` unchanged. One mechanism covers what `Indexed` did (`OnlinePlayer`, `ContentDelivery`, audience counts) and B1/B2. A server move rewrites the same key, so a watching tab sees no gap. An offline player has no mirrors, so last known state means stored values. (B1, B2)
+15. Settled 2026-11-04: a tab reads mirrors and stored values through one watch on the panel engine, because the panel engine loads no extension code and the browser never touches the buckets. Values travel as `DataValue`, so `MirrorEntry.value` and the stored `Changed<X>` push carry `DataValue`.
+   ```
+   // Tab to panel engine
+   struct WatchValues { watch: WatchId; type: TypeDefinitionId; keys: [DataValue?]; }   // null = free key
+   struct CancelWatch { watch: WatchId; }
+
+   // Panel engine to tab, on session.user.{user}.{session}
+   struct WatchUpdate {
+     watch: WatchId; epoch: string; seq: int;
+     entries: [WatchEntry];   // a batch of at most 512 KB, since updates are not framed
+     ready: bool;             // the first values are complete
+   }
+   struct WatchEntry { key: string; value: DataValue?; }   // null = gone
+   struct WatchHeartbeat { epoch: string; seq: int; }      // every 5 seconds
+   ```
+   - The watch is an ordinary reader on the panel engine, so demand starts and stops by the rules of [live-data.md](live-data.md#demand); several tabs share one reader per key. The panel engine picks the source (mirror or stored) from the type. A type with no wire form, such as `NearestNpc`, answers an error.
+   - `key` is the opaque bucket token. The tab never decodes it, since a value holds its `@Key` fields. One function in core turns key values into tokens, because NATS rejects characters such as `:` in a key.
+   - Updates use the per user tab subject, not the realm wide subject of `editor_presentation_search`, where every tab would receive every other tab's updates.
+   - Recovery is the rule of [Lost pushes](live-data.md#lost-pushes): a gap in `seq`, a new `epoch`, a reconnect, or 15 seconds without a heartbeat makes the tab send its watches again. On a reconnect the panel's stream machinery already does this (`skir_nats.dart`, `replaceSubscription`); nothing today notices a server restart, so the heartbeat is new.
+   - The panel engine keeps a permanent reader of `All<ContentDelivery>`, so a new tab never sees 0 of 0 engines and enables a button too early. An engine that has not applied the content answers `Failed`. A crashed engine holds the gate until its key expires, at most 60 seconds, and the button names it.
+   - Any organization member can watch any type in alpha; team permissions tighten it (H3).
+   - `ContentDelivery` has an event writer, because `Tick` is a capability and the fact changes only when core applies content. `OnlinePlayer` has a `Tick<EverySecond>` writer in the Minecraft capability.
+   - Checked 2026-11-04 on a real NATS 2.14.7 server with the `nats` CLI: a wildcard watch delivers current values then updates, and skips other types; `_` is a valid key token and `:` is rejected; a delete and an expiry arrive as DELETE and PURGE; rewriting a key with `Nats-TTL` and a revision check extends it, and a stale revision is rejected. Not checked: `natskt` and NATS 2.15 (layer 3 covers both), and the deployed `max_payload`. (D1, D3, B1, B4)
 
 ### Cross cutting needs
 
@@ -262,10 +285,10 @@ Gaps: no engine or player target, no caller in capability contexts, no progress 
 1. Settled 2026-11-03: no single writer; every stored write is a realm transaction.
 2. Settled 2026-10-31: engines share stored state only through the realm; live effects and events go directly between sessions. The realm is not a gateway (vision updated).
 3. Settled with 2.
-4. "The realm is treated as untrusted" has no source in any design or vision doc; authoring-writes.md says `initiated_by` comes from a trusted service. Drop unless a source turns up.
+4. Dropped 2026-11-04: "the realm is treated as untrusted" has no source in any design or vision doc; authoring-writes.md says `initiated_by` comes from a trusted service.
 5. Settled 2026-10-31: the panel session grace is 45 s, the current presence expiry.
 6. Settled 2026-11-01 by questions 10a and 14: engine reports are mirrors (published through cross engine demand) and stored values keyed by `Engine`; neither needs a report path.
-7. Where the decision runs when one event reaches several engines (verdicts from Paper and from the emitting engine must meet). An event core gap, not only a panel one: settle with layer 4 (event core).
+7. Settled 2026-11-03: each engine decides for itself, and the sender merges the results (events-and-handlers.md).
 
 ### Emit without extension code in the panel engine (2026-11-01)
 
@@ -275,10 +298,3 @@ Gaps: no engine or player target, no caller in capability contexts, no progress 
 - Settled 2026-11-01: `BoundPath<T>` gets a portable form, because a place in authored content must outlive the panel's view: a mode that waits for the player (pick a block) keeps it in its stored value, so selecting something else, closing the tab, or a second tab cannot redirect the write (legacy: `ContentModeRequest` carried entry id and field path). Returning the value for the panel to write was rejected for that reason. Contract: a `value_location` representation next to `link` (`RepresentationTemplate.value_location: { target: TypeTemplate }`, `DataValue.value_location: ValueLocation`), and `BoundPath<T>` becomes a standard generic type like `List<T>` (`StandardTypes.kt`). Named `value_location`, not `location`, so it never reads as the Minecraft `Location`. Cost: every exhaustive match over these enums (about 31 Kotlin, 13 Dart, 3 Rust files, measured on `link`).
 - Settled 2026-11-01: engines on another extension version need no new piece. An event names its exact `TypeDefinitionId` (type and revision); a primary engine only applies a publication whose `implementation_token` matches its own (`ReloadableEngineRuntime.kt:56-58`), and question 7 waits for that apply. An engine that lacks the exact type or cannot decode the value answers `Failed(reason)` ("paper-2 runs another version of CaptureLocation"); roadmap todo for layer 4.
 - Moved to the roadmap as todos: portable `Protagonist` and the `sessions` KV value (layer 3); merging results across engines and every holder answering (layer 4).
-
-## Open
-
-- Question 4: the reason type set (D3).
-- Conflicts 4 (the untrusted realm statement) and 7 (where the decision runs, layer 4).
-- G4: whether the same host shortcut is alpha or beta.
-- Phase 2: fit map of every alpha scenario onto the existing system, then directions in real code.

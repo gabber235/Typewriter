@@ -556,6 +556,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## W
 
+**`WatchValues`**: how a tab reads a mirror or stored value: one watch on the panel engine, with values as `DataValue`. See [panel-engine-communication.md](panel-engine-communication.md) (question 15).
+
 **`Watched<T>`**: the mirror of a watched formula, keyed by its field and subject; its `Changed` is a real change and is what formula starts use. See [live-data.md](live-data.md#formula-changes).
 
 **`WatchFormula`**: realm subscription that streams diagnostics, type, completions, and hover per keystroke. See [formula-language.md](formula-language.md#watchformula).
