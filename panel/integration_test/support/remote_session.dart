@@ -54,6 +54,7 @@ final class RemoteSession {
     _container?.dispose();
     _followed = null;
     final container = ProviderContainer(
+      retry: panelRetry,
       overrides: [
         ...appOverrides(),
         oidcStoreProvider.overrideWithValue(_store),
