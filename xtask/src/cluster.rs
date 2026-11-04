@@ -407,6 +407,31 @@ const FAILURE_REPORT: &[&[&str]] = &[
         "--prefix",
         "--tail=80",
     ],
+    // "nothing serves" a subject the workloads subscribe to: whether each server knows the
+    // accounts and their subscriptions, what the servers logged, and whether the Terraform that
+    // issues the account JWTs was applying them at that moment.
+    &[
+        "-n",
+        "nats",
+        "exec",
+        "deployment/nats-box",
+        "--",
+        "nats",
+        "server",
+        "report",
+        "accounts",
+    ],
+    &["-n", "nats", "logs", "nats-0", "-c", "nats", "--tail=60"],
+    &["-n", "nats", "logs", "nats-1", "-c", "nats", "--tail=60"],
+    &[
+        "-n",
+        "nats",
+        "get",
+        "terraform",
+        "nats-bootstrap",
+        "-o",
+        "jsonpath={range .status.conditions[*]}{.type}={.status} {.lastTransitionTime} {.reason}: {.message}{\"\\n\"}{end}",
+    ],
     &["get", "pods", "-A", "-o", "wide"],
     &["describe", "nodes"],
     &[
