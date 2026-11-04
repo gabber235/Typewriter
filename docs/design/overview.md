@@ -67,7 +67,7 @@ A derive is a pure function over tracked inputs. Its result type decides what th
 fun Speaking.show(...): DialogueHold
 
 @Derive
-fun AudienceEntry.inside(protagonist: Protagonist, parent: InAudience?, criterion: Boolean): InAudience?
+fun AudienceEntry.inside(protagonist: Protagonist, @From(Parent::class) inParents: List<InAudience>, criterion: Boolean): InAudience?
 ```
 
 ## Runtime
@@ -130,7 +130,7 @@ Interactions, steps, groups, and holds are covered in [interactions.md](interact
 | --- | --- | --- |
 | Stored values, `Due` | The realm; every write is a transaction, also for a running step | Yes |
 | `Hold` | The engine holding the protagonist's session | Snapshot only |
-| `Live` mirrors | The engine that produces them; `Indexed` ones are reported to the realm | No |
+| `Live` mirrors | The engine that produces them; values demanded across engines are published to the `mirrors` KV bucket | No |
 | `Runtime` objects | One server | No |
 
 Engines share stored state only through the realm; live effects and events go directly between sessions ([live-data.md](live-data.md#routing)); interactions do not span engines. A server move is a leave and a rejoin.

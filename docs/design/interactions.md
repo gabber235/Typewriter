@@ -182,7 +182,7 @@ Rules:
 - `Replace` wins only against a lower inherited priority.
 - `Replace` against `Protected` becomes `Queue`.
 - `Replace` ends the whole running interaction, so it can simply be started again later.
-- A queued step gives up through a formula, for example `waited > 10s || !protagonist.in_region(arena)`. It also gives up when its book stops applying or its interaction ends.
+- A queued step gives up through a formula, for example `waited > 10s || !protagonist.inRegion(arena)`. It also gives up when its book stops applying or its interaction ends.
 - Server wide events are normal steps; the creator decides per event through the clash field.
 
 ## Leaving and rejoining

@@ -31,27 +31,26 @@ data class Health(@Key val protagonist: Protagonist, val value: Double) : Live
 
 A mirror is written by handlers that return it. The handler's return type tells KSP which mirror it produces.
 
-```kotlin
-// Exact event: the value changes because of this event.
-@Handler
-fun EntityDamage.health(player: PaperPlayer): Health = Health(player.protagonist, player.health)
+A writer copies a small engine property, so it runs on the owner thread at tick end, in step 2 of the [tick pipeline](events-and-handlers.md#tick-pipeline), and only for demanded keys (decided 2026-11-04). This copy is the mirror; there is no separate live copy. A writer runs once per tick and key, however many of its events fired, so at most one `Changed` per tick follows from how it runs. KSP rejects `suspend`, stored writes, and effects in a writer. Anything computed belongs in a derive over the copy, which leaves the owner thread. KSP cannot see a slow body, so this rests on writers being tiny.
 
-// Safety net or polling: a slow Tick handler reads the current value.
+```kotlin
+// A tiny value: one writer, polled every tick while demanded.
 @Handler
 fun Tick<EveryTick>.health(player: PaperPlayer): Health = Health(player.protagonist, player.health)
 
-// First read: Seed fires when the mirror is first needed for an identity.
-@Handler
-fun Seed<Health>.health(player: PaperPlayer): Health = Health(player.protagonist, player.health)
+// A big value: a slower poll, plus the events that change it.
+@Handler fun Tick<EverySecond>.inventory(player: PaperPlayer) = player.inventoryMirror()
+@Handler fun InventoryClick.inventory(player: PaperPlayer) = player.inventoryMirror()
+@Handler fun PlayerDropItem.inventory(player: PaperPlayer) = player.inventoryMirror()
 ```
 
 Phase decides which value a reader sees. A writer in the Unit phase (after the event was allowed) records the post event value; verdict handlers on the same event still see the pre event value.
 
 Returning `null` means there is no value for that identity; a handler that asks for it is skipped.
 
-### Seed
+### First read
 
-`Seed<X>` is a core event emitted when mirror `X` is first needed for an identity. Its handler reads the current value once. Seeding starts tracking, so the resulting `Added<X>` carries `because = Tracking`.
+A tick writer also gives the first value (decided 2026-11-04): when a key becomes demanded, core runs the writer once, whatever its poll rate. So no separate first read handler exists. A tick writer is the default, since a poll cannot miss a change that fires no event, such as another plugin's `setHealth`. Event writers are for a big value, as above, or a value only an event carries; a mirror with only event writers has no value until its event fires. The first value starts tracking, so its `Added<X>` carries `because = Tracking`.
 
 ### Added, Changed, Removed and Because
 
@@ -75,12 +74,53 @@ fun Removed<InRegion>.leftArena(chat: HasChat) {
 
 - Equality is defined by the mirror type, so the type chooses its own precision (a position mirror may round).
 - At most one `Changed` fires per mirror and identity per tick; the last value in the tick wins.
-- The thread that owns the identity writes the mirror. Other threads read the last committed value without a thread hop.
-- A miss on the owner thread seeds inline. A miss on any other thread is unresolved once (the handler is skipped) while demand starts, so the next read finds a value.
+- Writers run on the thread that owns the identity. Other threads read the last committed value without a thread hop.
+- A miss on the owner thread runs the writer inline. A handler on a worker that misses waits for the next tick end, which is the one owner visit in the chain limit; it is never silently skipped (decided 2026-11-04). A key whose subject is held on another engine follows [Demand across engines](#demand-across-engines).
+
+### Reading a mirror in a formula
+
+Every `Live` type generates a reader, by the same rule as a `stored()` reader (decided 2026-11-04). KSP generates a `live(...)` call from the type, and the keys become parameters filled from scope:
+
+```kotlin
+data class Health(@Key val protagonist: Protagonist, val value: Double) : Live
+live("health", keys = { protagonist: Protagonist }, value = Double)
+// health(protagonist): Double
+
+data class InRegion(@Key val protagonist: Protagonist, @Key val region: RegionEntry) : Live
+live("inRegion", keys = { protagonist: Protagonist, region: RegionEntry }, value = Boolean)
+// inRegion(protagonist, region): Boolean
+```
+
+```
+health                        // protagonist from scope
+it.protagonist.health         // a dot call fills the first key
+inRegion(arena)              // a key scope cannot fill is an argument
+health.all                    // every key, on every engine
+health.orNull                 // null when there is no value
+```
+
+- **Shape:** one `value` field gives that value, several fields give a record (`location.x`), keys only gives `Boolean` (does the value exist).
+- **Read only:** there is no `Settable`, since a mirror has one writer.
+- **Engine only:** a reader also takes `engine` from scope, so a formula on the realm, such as a `ReactionScope` field, gets a normal resolution error.
+- **No value** (decided 2026-11-04) is one rule, however it arose: the subject is offline, or a writer returned `null`. As with a handler's `Health` and `Health?`, the creator states which they mean:
+
+  ```
+  health < 5                 // sure it exists; otherwise Failed(at, NoValue)
+  health.orNull ?: 20        // unsure; Double?
+  nearestNpc.orNull?.name
+  ```
+
+  A first read before the first value is never visible: an inline read waits for the next tick end. A bare inline read that finds no value is a real mistake, so it fails by the [field table](formula-language.md#exceptions) and the panel shows it. A bare read in a watched formula has no value and nothing is reported: a quit is `Removed(Tracking)`. With `.orNull` a watched formula keeps a value, so a quit is `Changed` to `null`.
+- **The body is one tracked read of that key**, so it has no input to hide. `FormulaReads` holds the filled keys as context reads and the reader as the provider.
+- **Live data reaches a formula only through a mirror.** A handwritten provider function is pure, so a value that changes on its own, such as a server's mood, is a mirror with a reader.
 
 ## Demand
 
-Mirrors and lazy sources share one notion of demand. Demand is per identity and key, and it exists only where some reader could actually run, meaning all its other parameters are satisfiable. Readers that create demand:
+Mirrors and lazy sources share one notion of demand. Demand is per identity and key, and it exists only where some reader could actually run, meaning all its other parameters are satisfiable.
+
+Demand is necessity in the `TrackedGraph` (decided 2026-11-04), not a separate registry. Every reader is an observer of the graph, and a key is demanded when a path leads from an observer to it. A derive input therefore needs no registration: the derive's own read is the path. A key that becomes necessary runs its writer and starts its producers; a key that stops being necessary waits out its grace, then fires `Removed<X>` with `because = Tracking` and stops its producers. The plan proves that the graph fits handlers on workers and several owner threads, and measures its cost per tick; if it fails, a registry can sit behind the same observer calls without changing readers.
+
+Readers that create demand:
 
 - formula subscriptions (for example a watched dialogue text)
 - derive inputs
@@ -88,26 +128,29 @@ Mirrors and lazy sources share one notion of demand. Demand is per identity and 
 - queued step give up formulas
 - handlers on `Added<X>`, `Changed<X>`, `Removed<X>`, gated by their other parameters and by `Candidate` keys
 
-A one shot handler parameter pulls once (seeding if missing) and does not subscribe. Producing handlers run only for identities with demand; KSP knows which mirror each handler produces from its return type.
+A one shot handler parameter pulls once (running the writer if missing) and does not subscribe. Producing handlers run only for identities with demand; KSP knows which mirror each handler produces from its return type.
 
-### Demanded
+### Keyed derives
 
-`Demanded<X>` is a core parameter: the keys of mirror `X` demanded for the handler's subject right now. Producers check only those keys. A producer that returns a list replaces the subject's values for the demanded keys.
+A computed mirror is a derive over a copy, with one graph node per demanded key (decided 2026-11-04). A derive parameter named like a `@Key` of the result is filled from the demanded key, so a producer never lists its keys:
 
 ```kotlin
+data class Position(@Key val protagonist: Protagonist, val value: Location) : Live
+
 data class InRegion(
     @Key val protagonist: Protagonist,
     @Key val region: RegionEntry,
 ) : Live
 
 @Handler
-fun Tick<EveryTick>.regions(player: PaperPlayer, demanded: Demanded<InRegion>): List<InRegion> =
-    demanded.keys
-        .filter { it.region.contains(player.location) }
-        .map { InRegion(player.protagonist, it.region) }
+fun Tick<EveryTick>.position(player: PaperPlayer): Position = Position(player.protagonist, player.location)
+
+@Derive
+fun Position.inRegion(region: RegionEntry): InRegion? =
+    InRegion(protagonist, region).takeIf { region.contains(value) }
 ```
 
-Entering and leaving a region is `Added<InRegion>` and `Removed<InRegion>`; there are no separate enter and exit events.
+The check runs on the worker and reruns only when the position changes. Entering and leaving a region is `Added<InRegion>` and `Removed<InRegion>`; there are no separate enter and exit events.
 
 ### Demand for configured sources
 
@@ -123,7 +166,7 @@ interface ConfiguredSource<E, C> : EnginePart {
 
 Anything that "finds" a value for a handler (the nearest NPC, NPCs in range) is a `Live` type plus producing handlers. Extensions add value types, never resolution logic.
 
-- Pull at event time through `Seed<X>`; keep it current with a `Tick` handler while it is watched.
+- A `Tick` handler gives the first value and keeps it current while it is demanded.
 - `null` means no value, so the handler is skipped.
 - Free keys iterate: a handler runs once per value.
 - `Removed<X>` cancels a suspended handler that resolved it.
@@ -131,10 +174,11 @@ Anything that "finds" a value for a handler (the nearest NPC, NPCs in range) is 
 
 ```kotlin
 data class NearestNpc(@Key val protagonist: Protagonist, val npc: Npc) : Live
+data class NpcPosition(@Key val npc: Npc, val value: Location) : Live
 
-@Handler
-fun Seed<NearestNpc>.find(player: PaperPlayer, npcs: All<Npc>): NearestNpc? =
-    npcs.minByOrNull { it.distanceTo(player) }?.let { NearestNpc(player.protagonist, it) }
+@Derive
+fun Position.nearestNpc(npcs: All<NpcPosition>): NearestNpc? =
+    npcs.minByOrNull { it.value.distanceTo(value) }?.let { NearestNpc(protagonist, it.npc) }
 ```
 
 ### Parameterized mirrors
@@ -172,6 +216,11 @@ Formulas read mirrors like any other input. On the engine, evaluation records it
 | content | hot publish |
 | `now` | timer recheck |
 
+A formula is evaluated in one of two ways (decided 2026-11-04):
+
+- **Inline.** A chain field, a `Changes` prediction, or a verdict field walks the formula once on the thread that asked, over committed values, and keeps nothing. It never changes the graph, so it needs no lock; where a published result exists for a part's key, it reads that instead of walking. A demand it creates is posted to the next recheck.
+- **On change.** Watched formulas and `Live` and `Hold` derives live in the graph. Step 2 of the [tick pipeline](events-and-handlers.md#tick-pipeline) hands the changed values over, and the worker marks what depends on them, recomputes only that, and stops where a result is unchanged. Results become visible together as one revision, then lifecycle events queue chains. Only this recheck touches the graph. If it is still running when the next tick ends, those changes merge into the following one, so a slow formula delays derived values and never the game. An engine without a game tick rechecks when inputs change; the plan decides how often.
+
 A watched formula is a mirror (decided 2026-11-04), so it needs no event of its own. Demand, equality, seeding, and `Because` all come from mirrors:
 
 ```kotlin
@@ -189,48 +238,98 @@ fun Changed<Watched<Boolean>>.start(trigger: Candidate<FormulaEventEntry>) { ...
 - `Added` fires once every input has a value. `Removed` fires when a watch ends or an input loses tracking, with `because = Tracking`, so a quit never looks like a real change:
 
   ```kotlin
-  // protagonist.in_region(arena), then the player quits
+  // protagonist.inRegion(arena), then the player quits
   Removed<InRegion>(because = Tracking)
   Removed<Watched<Boolean>>(because = Tracking) // not Changed, so a trigger stays quiet
   ```
 
 - A trigger handles `Changed` only, so a formula that is already true at join does not fire; handling `Added` too is an "also at join" option. A crossing while offline is missed; when it must arrive, use owed state ([stored-data.md](stored-data.md#offline-changes)).
 - Like every mirror, at most one `Changed` fires per tick, so a flip and back inside one tick fires nothing. Legacy `FactChangeEventEntry` watched every change.
-- For the layer 7 plan: how a handler narrows to one entry's field through `Candidate`, the rate of the `now` recheck, and the cost of one mirror per watched formula and subject.
+- For the plan: how a handler narrows to one entry's field through `Candidate`. Only formulas that read `now` recheck on a timer. `Watched` stays one mirror per subject, and computing is shared underneath by what a formula reads ([formula-language.md](formula-language.md#what-a-formula-reads)).
 
 PlaceholderAPI is a provider function (`context(engine: Engine) fun papi(name: String)`) backed by a `Tick` mirror that is polled only where a formula uses it.
 
 ## Audiences
 
-Audience entries stay their own entry system with the same visible behaviour as legacy: trees, enter and leave, children, inversion. Their criteria are formulas, and membership is a mirror. Objectives likewise stay their own entry system (display, tracking, progress); only their criteria become formulas.
+Audience entries stay their own entry system: trees, enter and leave, children. There is one formula audience (decided 2026-11-04). Its criterion runs per protagonist on that protagonist's engine, and membership is a mirror. Objectives likewise stay their own entry system (display, tracking, progress); only their criteria become formulas.
 
 ```kotlin
+data class AudienceMember(val protagonist: Protagonist, val since: Instant, val here: Boolean)
+
+interface AudienceContext {
+    val protagonist: Protagonist
+    val engine: Engine
+    val considered: List<AudienceMember>
+}
+
+data class FormulaAudienceEntry(
+    override val children: List<Ref<AudienceEntry>> = emptyList(),
+    val criterion: Var<Boolean, AudienceContext>,
+) : AudienceFilterEntry
+
 data class InAudience(
     @Key val protagonist: Protagonist,
     @Key val node: AudienceEntry,
-) : Live, Indexed
+    val since: Instant, // when they entered; core stamps it and equality ignores it
+) : Live
+
+data class Members(@Key val node: AudienceEntry, val value: List<AudienceMember>) : Live
+
+interface AudienceEntry : Entry {
+    val children: List<Ref<AudienceEntry>>
+    @As(Parent::class) val parents: List<AudienceEntry> // computed from children in published content
+}
 
 @Derive
 fun AudienceEntry.inside(
     protagonist: Protagonist,
-    parent: InAudience?,
+    @From(Parent::class) inParents: List<InAudience>,
     criterion: Boolean,
 ): InAudience? = ...
 ```
 
-- Criteria are formulas over mirrors.
-- A child recomputes when its parent changes.
+```
+health > 5                                                                      // this player
+considered.sortedBy { it.since }.take(5).any { it.protagonist == protagonist }  // first 5, whole network
+considered.filter { it.here }.size < 20                                         // this server only
+spawn.members                                                                   // everyone in spawn, also on other engines
+spawn.contains(it.protagonist)                                                  // one key read
+```
+
+- A criterion is one kind of formula, so it can read anything a formula can: stored values, mirrors, also a mirror on another engine. A read that crosses engines costs publishes; the `info` finding for `All<X>` of a frequently changing mirror flags it.
+- `considered` is who can take a place: every game session on the network at a root, otherwise the members of its parents. Panel users take no place. `here` means this engine holds their session.
+- `considered` exists only in a criterion. `spawn.members` is a reader usable in any formula. A criterion reading its own node's members, even through other nodes, is an error at publish.
+- `spawn.contains(protagonist)` is a plain definition over the `inAudience` key read: it reads one key, so it does not publish everyone. It replaces `InAudienceFact`.
+- Engines can disagree for a moment on a shared cap such as "first 5"; they converge as `sessions` and `InAudience` arrive.
+- A node is a root when it has no parents. Otherwise it needs at least one parent holding the protagonist, as in legacy (decided 2026-11-04).
+- Legacy `inverted` becomes `not` in the criterion: a child under an unmet parent stays out either way. The 18 legacy filter entries (Criteria, Cron, Region, HoldingItem, ...) become formulas through the importer.
+- A child recomputes when a parent's membership or the published links change. A branch nobody reads is not computed.
+- A parent removed with `because = Value` removes the child with `because = Value`, and a quit removes both with `because = Tracking`.
 - There is no offline last known audience.
 
-Enter and exit triggers come from `TriggerAudienceEntry(onEnter, onExit, fireOnJoin = true)`. Like legacy, enter fires on every join by default. Exit fires only on `because == Value`, so quitting or moving servers does not count as leaving.
+Enter and exit triggers stay separate entries: `TriggerAudienceEntry(onEnter, onExit, fireOnJoin = true)`. Like legacy, enter fires on every join by default. Exit fires only on `because == Value`, so quitting or moving servers does not count as leaving.
 
 Displays derive from membership: a `SidebarHold` is derived from `InAudience`, and its text updates through `Changed<Watched<RichText>>`. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md)).
 
-### Indexed
+### Demand across engines
 
-Being replaced (2026-11-01, [panel-engine-communication.md](panel-engine-communication.md) question 14): demand crosses engines, so a reader anywhere creates the demand that publishes a mirror; the marker below goes away once that shape is settled.
+Demand crosses engines through two KV buckets (decided 2026-11-04), replacing `Indexed`. A reader anywhere creates the demand that publishes a mirror, for one key or for every key of a type.
 
-`Indexed` marks a `Live` type whose `Added` and `Removed` the engine reports to the realm. The realm keeps an online index for the session, which powers the panel ("who is in spawn"), network counts, and formula readers such as `spawn_audience.players`.
+```
+demand_<realm id>     <type>.<keys>.<reader engine>    one entry per reader; `_` stands for a free key
+mirrors_<realm id>    <type>.<keys>                    MirrorEntry { holder: EngineId; value }
+```
+
+- **Same pattern as sessions.** Both are rewritten every 20 seconds with a 60 second TTL and checked by revision, so a dead reader stops demand and a dead producer ends its values. A server move rewrites the same key, so a reader sees no removal within the grace; the old holder's late write fails and it stops.
+- **Reader.** A watch on the key pattern delivers current values, then updates, and sets them as `TrackedGraph` inputs. A put sets the value, a delete is `Removed` with `because = Value`, and an expiry (`MaxAge` marker, a purge in the watch) is `Removed` with `because = Tracking`.
+- **Producer.** Every engine watches `demand`. A demanded key this engine can produce becomes necessary here, exactly as if a local reader had asked.
+- **Rate.** A key is published at most 4 times a second across engines, keeping the latest value; local readers stay on every tick.
+- **The browser never touches the buckets.** A tab talks to the panel engine, and the panel engine is the reader.
+- **Which reads cross** (decided 2026-11-04). `All<X>` of a mirror always means every engine; there is no local variant until a reader needs one. A key read crosses when its subject is not held here. A query without a subject does not cross, because it runs on each owning engine. Live identities and traits never cross, because they have no wire form, and stored values come from the realm. A mirror with a live identity as a key or value has no wire form either, so it stays on its engine: `All<NpcPosition>` is this engine's NPCs, and `NearestNpc` of a protagonist on another engine has no value.
+- **One shot read of a key on another engine** (decided 2026-11-04). An after handler writes the demand and waits up to 1 second for the value, only on a miss (the plan measures this limit). A subject with no session skips at once; a value that does not arrive skips the handler and is logged. A verdict never waits, so KSP rejects a verdict with a non nullable mirror or stored parameter keyed by a field other than the subject; with `Health?` a miss is `null` and the verdict says what it means. A verdict that needs a value every time reads `All<X>`. The demand entry lives out its TTL unrefreshed, so a read soon after is a hit.
+- **Remote values feed the graph.** Reads and derives rerun; lifecycle handlers run only on the engine that owns the mirror, so nothing runs twice.
+
+JetStream is right here though it was rejected for `Changed<X>` (see Lost pushes), because the realm holds the truth for stored values and a read exists. A mirror has no such store: the bucket is that read.
 
 ## Session
 
@@ -302,7 +401,7 @@ What the realm owns goes through the realm:
 - `Changed<X>` pushes (the realm knows which stored keys each engine demands and pushes to that engine's own subject; see Lost pushes below)
 - `Due` firing; its handlers run on the realm, and live work follows the commit ([stored-data.md](stored-data.md#due))
 
-Engines write the `sessions` KV themselves (see NATS JetStream). `Indexed` is being replaced ([panel-engine-communication.md](panel-engine-communication.md) question 14).
+Engines write the `sessions`, `demand`, and `mirrors` KV buckets themselves (see NATS JetStream).
 
 Events and live effects for a protagonist go to its protagonist subject (a realm scoped route, see [Routes](#routes); written here as `typewriter.protagonist.<id>`). Every engine holding a session of that protagonist subscribes to it and runs the handlers it can; the sender needs only the protagonist id, so there is no routing table and a server move keeps the address. A target that is one connection (the tab that started a capture) uses the session subject `typewriter.session.<id>`, which the engine holding that session subscribes to.
 
@@ -339,10 +438,10 @@ Short lived data lives on NATS JetStream. This needs NATS 2.11 or newer with Jet
 
 | Resource | Content | Behaviour |
 | --- | --- | --- |
-| `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; holder: EngineId }` | while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it rewrites once with a TTL equal to the grace and stops. Every write checks the revision, so a server move works in either join and quit order (the old engine's write fails and it stops). An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no grace timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
-| `Indexed` KV bucket per type (being replaced, question 14) | keys `<protagonist>.<node>` | refreshed on change, expiring when the engine dies; watched by the panel and engines, so the online index survives realm restarts and outages |
+| `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; holder: EngineId; since: Instant }` | while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it rewrites once with a TTL equal to the grace and stops. Every write checks the revision, so a server move works in either join and quit order (the old engine's write fails and it stops). An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no grace timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
+| `demand_<realm id>` and `mirrors_<realm id>` KV buckets, one each per realm | what readers demand and the published values ([Demand across engines](#demand-across-engines)) | rewritten every 20 seconds with a 60 second TTL, as for sessions; watched by engines, so they survive realm restarts and outages |
 
-Not on streams: stored data and `Due` (transactions, exactly once, realm owned) and mirrors that are not `Indexed`.
+Not on streams: stored data and `Due` (transactions, exactly once, realm owned) and mirrors no reader on another engine demands.
 
 ## Hot publish
 
@@ -407,9 +506,5 @@ All checks form one list. Errors block publication; warnings and info never bloc
 | warning | live handlers on `Changed<X>` when X can change offline |
 | warning | stored derives reading mirrors |
 | info | mirrors always tracked because of a handler |
+| info | `All<X>` of a mirror that changes often, since it publishes every key across engines |
 | info | formulas reading polled values |
-
-## Open
-
-- How the legacy quest item audience (`QuestItemAudienceEntry`) maps onto `InAudience` and holds.
-- The shape of demand that crosses engines, replacing `Indexed` (direction settled, [panel-engine-communication.md](panel-engine-communication.md) question 14; layer 8).

@@ -176,7 +176,7 @@ No event core, sessions, principals, or bridges are built yet; `runtimes/paper` 
 | Fresh content | partly: panel engine tracks drafts; silent for Paper | not built |
 | Long running work | building blocks only (session keyed values, cancellation, `Runtime`, `Simulating`) | search watch only |
 | Feedback | partly: engines emit back to panel sessions (draft); no reply concept | `PanelInstruction.notify` for realm commands |
-| Streams on demand | partly: demand, `Indexed` watched by the panel; cross engine demand: direction settled, shape open (question 14) | realm served `watch` only |
+| Streams on demand | settled: demand crosses engines (question 14) | realm served `watch` only |
 
 ### Open questions from the fit map (ordered; earlier answers inform later ones)
 
@@ -222,7 +222,7 @@ No event core, sessions, principals, or bridges are built yet; `runtimes/paper` 
    - List guards settled 2026-11-01: list operations guard only the items they name, not the whole list. `EditExpectation.exists { at: ValueLocation; expected: bool }` replaces `resource_exists` (a resource is its root location); insert guards its `after` anchor, remove its item, move its item and anchor, each at the list path plus `ItemPathSegment(id)`. Two tools adding nodes to one road network no longer conflict, and a removed anchor reruns on a fresh read instead of failing at apply (`AuthoringRecordValues.kt` `insertionIndex`). Inserts after the same anchor land in commit order; rules over a whole list stay with realm admission.
    - Naming settled 2026-11-01 (questions 8 and 9): the host context input is `target_protagonist` (`EditorContext.targetProtagonist`), because core says protagonist, never player (events-and-handlers.md); a Minecraft server is the `Engine` identity, so minecraft-types.md has no separate `Server` type.
 13. Settled 2026-11-01: server drawn visuals need no new concept. Handles and highlights are holds: a mode or a stored value derives a hold (`RegionOutlineHold`), and a handler draws it per viewer (particles through `Player.spawnParticle`, entities shown to one viewer through the packet layer). The C6 highlight is an event (`HighlightRegion`) whose handler stores `Highlighting(@Key viewer, region, at) : Due`, which ends itself at `at`; its outline derive is the same hold the editor uses. All of C6 (teleport and highlight) lands in layer 25 with the editor handles, so C6 is not split inside alpha. Precedent: the region extension draws with per viewer particle packets and a `TextDisplay` (PR #522, `BoundaryPreview.kt`, `EditorHologram.kt`). (C3, C6)
-14. Direction settled 2026-11-01, alpha (layer 8): `Indexed` is dropped; demand crosses engines. A reader creates demand wherever it runs (a formula in published content, the panel's target list, question 7 gating, a tab watching one player), for one key or every key of a mirror type; producing engines publish demanded values while demand lasts, with the TTL pattern of the `sessions` KV. One mechanism covers what `Indexed` did (`OnlinePlayer`, `ContentDelivery`, audience counts) and B1/B2. Shape not settled: a first sketch (a `demand` KV of reader entries with partial keys and the reader's grace as TTL; a `mirror.<type>` KV of published values refreshed by the producer; authors read through `All<X>` unchanged) relies on pieces that are not designed yet: the engine's demand registry, the Kotlin KV client, and mirrors themselves. Those are designed first, then this shape. Earlier note: Demand is per engine today (live-data.md, Demand), so a reader on the panel engine cannot demand a mirror produced on Paper. Likely mapping: demand from a session travels like an event to the target's protagonist subject, the producing engine treats it as local demand, and values return through `Indexed` or the requesting session's subject. Details (server moves, offline last known state, cost per watched player) wait for mirrors (layer 8). (B1, B2)
+14. Settled 2026-11-04, alpha (layer 8): `Indexed` is dropped; demand crosses engines through the `demand` and `mirrors` KV buckets, with the TTL pattern of the `sessions` KV ([live-data.md](live-data.md#demand-across-engines)). A reader creates demand wherever it runs (a formula in published content, the panel's target list, question 7 gating, a tab watching one player), for one key or every key of a mirror type, and authors read through `All<X>` unchanged. One mechanism covers what `Indexed` did (`OnlinePlayer`, `ContentDelivery`, audience counts) and B1/B2. A server move rewrites the same key, so a watching tab sees no gap. An offline player has no mirrors, so last known state means stored values. (B1, B2)
 
 ### Cross cutting needs
 
@@ -278,7 +278,6 @@ Gaps: no engine or player target, no caller in capability contexts, no progress 
 
 ## Open
 
-- Question 14: the shape of demand that crosses engines (direction settled; layer 8).
 - Question 4: the reason type set (D3).
 - Conflicts 4 (the untrusted realm statement) and 7 (where the decision runs, layer 4).
 - G4: whether the same host shortcut is alpha or beta.

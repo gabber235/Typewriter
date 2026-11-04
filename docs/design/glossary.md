@@ -132,11 +132,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`DefinitionScope`**: formula context for a `Definition`'s value, providing the definition's surroundings. See [formula-language.md](formula-language.md#formula-contexts).
 
-**Demand**: per identity and key interest from a reader that could actually run; mirrors and lazy sources only work where there is demand. See [live-data.md](live-data.md#demand).
+**Demand**: per identity and key interest from a reader that could actually run; mirrors and lazy sources only work where there is demand. It is necessity in the `TrackedGraph`: a key is demanded when a path leads from an observer to it. See [live-data.md](live-data.md#demand).
+
+**`demand` and `mirrors` KV buckets**: per realm NATS KV buckets through which a reader on one engine demands a mirror and producers on other engines publish its values. See [live-data.md](live-data.md#demand-across-engines).
 
 **`Demand<C>`**: source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. See [events-and-handlers.md](events-and-handlers.md#demand).
-
-**`Demanded<X>`**: core handler parameter (not an event) giving the keys of mirror `X` demanded for the subject now. See [live-data.md](live-data.md#demanded).
 
 **Derive**: a pure function over tracked inputs whose result type decides what it maintains. See [overview.md](overview.md#derive).
 
@@ -196,6 +196,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Formula kind**: Pure, Stored, or Live, the strongest kind a formula calls, which decides where it can run. See [formula-language.md](formula-language.md#where-formulas-run).
 
+**`FormulaReads`**: what a formula or part can read, computed by the checker at publish. It decides the formula's kind and its memo key, so a formula is identified by what it reads, not by who asked. See [formula-language.md](formula-language.md#what-a-formula-reads).
+
 **Formula start**: a chain start that fires when a formula turns true or whenever its output changes. See [formula-language.md](formula-language.md#formula-starts).
 
 **`FormulaSnapshot`**: one streamed answer to `WatchFormula` with diagnostics, result type, completions, and hover. See [formula-language.md](formula-language.md#watchformula).
@@ -242,11 +244,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Importer**: a separate one time tool that moves legacy 0.9 content and data into the new model. See [migrations.md](migrations.md#importer-for-09).
 
-**`InAudience`**: `Live` and `Indexed` mirror for a protagonist being inside an audience node. See [live-data.md](live-data.md#audiences).
-
-**`Indexed`** (being replaced, question 14): marks a `Live` type whose `Added` and `Removed` the engine reports to the realm for an online index. See [live-data.md](live-data.md#indexed).
-
-**`Indexed` KV bucket** (being replaced, question 14): NATS KV bucket per `Indexed` type, keyed `<protagonist>.<node>`, that keeps the online index alive across realm outages. See [live-data.md](live-data.md#nats-jetstream).
+**`InAudience`**: `Live` mirror for a protagonist being inside an audience node, with `since`, the moment they entered. See [live-data.md](live-data.md#audiences).
 
 **`initiated_by`**: the principal a trusted service names as behind a commit (the player behind an in game capture), taken from `Origin`; recorded for history, never used for authorization. See [authoring-writes.md](authoring-writes.md#principles).
 
@@ -314,9 +312,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Mirror**: see `Live`. See [live-data.md](live-data.md#live-mirrors).
 
+**Mirror reader**: the read only formula call KSP generates from a `Live` type, such as `health` or `inRegion(arena)`. See [live-data.md](live-data.md#reading-a-mirror-in-a-formula).
+
 ## N
 
-**NATS JetStream**: store for short lived data (sessions KV, `Indexed` KV); never holds stored data or `Due`. See [live-data.md](live-data.md#nats-jetstream).
+**NATS JetStream**: store for short lived data (`sessions`, `demand`, and `mirrors` KV buckets); never holds stored data or `Due`. See [live-data.md](live-data.md#nats-jetstream).
 
 **`NearestNpc`, `NearbyNpcs`**: example finder mirrors; the second shows an entry reference as a parameter key. See [live-data.md](live-data.md#finders-are-mirrors).
 
@@ -449,8 +449,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`scope(target) { }`**: `dynamic()` builder saying what one own field's formulas, or my contents, can see. See [formula-language.md](formula-language.md#scope-and-exports).
 
 **`scopeAt(field)`**: query graph step computing the scope a field's formulas see. See [formula-language.md](formula-language.md#query-graph).
-
-**`Seed<X>`**: core event emitted when mirror `X` is first needed for an identity, so its handler reads the value once. See [live-data.md](live-data.md#seed).
 
 **Server move**: a leave plus a rejoin; the session is kept and everything else follows its own rule. See [live-data.md](live-data.md#multiple-servers).
 

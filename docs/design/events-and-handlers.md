@@ -14,7 +14,7 @@ An event is a plain Kotlin type that says one thing happened. Extensions declare
 - **Subject.** Most events have a subject (usually a protagonist; a widened chain has a group). Events without a subject (`Tick`, world events) turn handler parameters into a query, see [Events without a subject](#events-without-a-subject).
 - **Engine neutral core.** `Tick` is a capability, not core. Core events say protagonist, never player (`ProtagonistJoined`). `Player` is only a Minecraft capability trait or part of a Minecraft event name (`PlayerMove`).
 
-Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `Removed<T>`, `Changed<T>(old, new)` fire for every stored value ([stored-data.md](stored-data.md)), hold ([interactions.md](interactions.md)), mirror, and watched formula ([live-data.md](live-data.md)). `Seed<X>` is a core event described in [live-data.md](live-data.md); `Due` is in [stored-data.md](stored-data.md). `Demanded<X>` is a core parameter, not an event ([live-data.md](live-data.md#demanded)).
+Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `Removed<T>`, `Changed<T>(old, new)` fire for every stored value ([stored-data.md](stored-data.md)), hold ([interactions.md](interactions.md)), mirror, and watched formula ([live-data.md](live-data.md)). `Due` is in [stored-data.md](stored-data.md).
 
 ### Emitting
 
@@ -149,13 +149,13 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | A `Stored`, `Hold`, `Live`, or `Runtime` type | The value at keys filled from the subject or event fields; free keys iterate (one run per value). |
 | An identity (`Protagonist`, `Step`, `Npc`, ...) | The subject, or the event's only field of that kind. |
 | A live capability trait (`HasChat`, `HasInventory`, `Living`) | The engine object for that identity; for a group subject, one per member. |
-| `All<T>` | Every value of type `T`. |
+| `List<T>` | One run with the values that exist at these keys, filled like `T` from a list field or by `@From`; missing keys drop out. |
+| `All<T>` | Every value of type `T`; for a mirror, on every engine ([live-data.md](live-data.md#demand-across-engines)). |
 | `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject. |
 | A plain value named like a `Var` field of the receiver | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
 | `Snapshot<H>` | A hold's stored snapshot, readable and writable ([interactions.md](interactions.md)). |
-| `Demanded<X>` | The keys of mirror `X` demanded for this subject now ([live-data.md](live-data.md)). |
 
 Live capability traits are provided by the engine (`PaperProtagonist : Player, HasChat, ...`). Optional capabilities are plain Kotlin type checks.
 
@@ -205,7 +205,7 @@ val Candidate<BlockBreakEventEntry>.cancel: Boolean
   ```
 
 - **Every key must resolve.** A stored value is keyed by `@Key` fields ([stored-data.md](stored-data.md)); each key fills from the subject or event fields. Set keys (`Friendship(@Key pair: Set<Protagonist>, level)`) fill from all event fields of that kind.
-- **Typed roles.** When an event has two fields of one kind, the event marks them with `@As(Killer::class)` and handlers pick one with `@From(Killer::class)`.
+- **Typed roles.** When an event has two fields of one kind, the event marks them with `@As(Killer::class)` and handlers pick one with `@From(Killer::class)`. A derive's receiver entry marks its fields the same way (`@As(Parent::class) val parents`).
 - **Same kind means same identity.** Parameters of the same identity kind refer to the same identity, one parameter per trait, ECS style:
 
   ```kotlin
@@ -253,7 +253,7 @@ Routing an event to that engine is described in [live-data.md](live-data.md); of
 | --- | --- | --- |
 | `Verdict` | Decision | Pure; takes part in allow, deny, change, pass. Never suspends. |
 | `Unit` | After | Runs after the outcome was applied (the source decides when). May suspend. |
-| `Live` type | After | Writes a mirror ([live-data.md](live-data.md)). |
+| `Live` type | After | Writes a mirror on the owner thread at tick end ([live-data.md](live-data.md#writers)). Never suspends. |
 | `Runtime` type | After | Creates the runtime object; returning another replaces the previous one of that type, and a different value counts as a change. |
 
 Non cancellable events (`Tick`) accept only after handlers.
@@ -336,27 +336,27 @@ A panel user is `PrincipalId("user", <user id>)`; a player is `PrincipalId("mine
 
 There is no "main thread". Live access runs on the thread that owns the identity (protagonist, entity, region), so Folia style region threads work.
 
-- **Packets are never held.** Verdicts on wire events read only network safe data: stored values, holds, formulas, and `Live` mirrors (last committed value, at most one tick old). Live traits are forbidden there.
+- **Packets are never held.** Verdicts on wire events read only network safe data: stored values, holds, formulas, and `Live` mirrors (last committed value; at most one tick old for a writer, and a derived value can be older while a recheck runs). Live traits are forbidden there.
 - **Live access on world events only**, on the owning thread.
 - **Other threads** read the last committed mirror value without a hop.
 - **Codegen rejects violations** at build time.
 
-Verdict handlers never suspend: they run inline (for example inside a Paper event) and read cached stored data.
+Verdict handlers never suspend: they run inline (for example inside a Paper event) and read cached stored data. A value keyed by a field other than the subject can miss, so such a parameter must be nullable; KSP rejects it otherwise ([live-data.md](live-data.md#demand-across-engines)).
 
 ### Tick pipeline
 
 Chosen 2026-11-03, after a prototype compared it with waiting per write, chain transactions, and starting each chain at once. Priorities: few context switches, little work on owner threads, and Typewriter out of the way. The prototype simulated the game thread and the realm distance, so the plan checks these numbers on real Paper.
 
 1. **In the event, on the owner thread.** The verdict decides at once. Each chain start joins a queue, without waking a thread. Starts with the same subject, entry, and context in one tick merge into one, so an autoclick does not run a chain three times.
-2. **At tick end, on the owner thread.** Live values that the queued handlers demand are copied, so they include the event's own result. One worker wakes for the whole engine.
-3. **On the worker.** The worker takes chains until the queue is empty and runs each chain's handlers in one go. A worker stuck in a slow handler holds up only that chain: the next tick's worker takes the rest.
-4. **Effects.** Handlers never run on an owner thread. An engine's trait implementation chooses where each effect runs, not the shared trait, because this differs between engines. Paper sends chat from the worker and queues a world change for the owner thread; all queued changes of a tick share one visit. An effect sent after a queued change joins that queue, so effects keep their order.
+2. **At tick end, on the owner thread.** Mirror writers run for demanded keys (decided 2026-11-04). This is the live copy, so it includes the event's own result, and it is the only handler code on an owner thread. One worker wakes for the whole engine.
+3. **On the worker.** The worker first rechecks the formula graph once for everything that changed (decided 2026-11-04, [live-data.md](live-data.md#formula-changes)), then takes chains until the queue is empty and runs each chain's handlers in one go. A worker stuck in a slow handler holds up only that chain: the next tick's worker takes the rest.
+4. **Effects.** Apart from writers in step 2, handlers never run on an owner thread. An engine's trait implementation chooses where each effect runs, not the shared trait, because this differs between engines. Paper sends chat from the worker and queues a world change for the owner thread; all queued changes of a tick share one visit. An effect sent after a queued change joins that queue, so effects keep their order.
 
-Every chain gets the same limit: at most one owner visit to read live values, one owner visit per tick for world changes, and a realm wait only for a `require` guard ([stored-data.md](stored-data.md#transactions)).
+Every chain gets the same limit: at most one owner visit to read live values, one owner visit per tick for world changes, a realm wait only for a `require` guard ([stored-data.md](stored-data.md#transactions)), and a wait only for a mirror read that misses on another engine ([live-data.md](live-data.md#demand-across-engines)).
 
 Accepted costs: a chain starts up to one tick after its event, while the verdict stays instant. A player who leaves right after paying can lose the item, as in every option tested; what must arrive is stored as owed.
 
-Open for the plan: the real names and shapes of the worker, the effect queue, and the live copy (the design so far only sketched them, and they must not become magic types); and how KSP knows which live values a handler reads.
+Open for the plan: the real names and shapes of the worker and the effect queue (the design so far only sketched them, and they must not become magic types); and how a handler's live reads reach step 2: KSP knows its parameters, and `FormulaReads` knows its fields at publish, so writers can run before the chain ([formula-language.md](formula-language.md#what-a-formula-reads)).
 
 Folia (decided 2026-11-03): the first version targets Paper's server wide tick end. Picking up queued chain starts stays one small piece of the Paper engine, so the design does not block Folia. Folia later replaces only that piece, with a next tick task per active player, because no per region tick end hook was found. Expected cost there, not measured: one post per active player per tick, and chains start up to one tick later.
 
@@ -470,7 +470,7 @@ The shape must express the legacy command features: any tree shape in code and c
 
 ## Build time checks
 
-KSP rejects, for handlers: unresolvable parameters, live access in wire verdicts, handlers needing two live anchors, and command nodes whose event fields do not match the path arguments. The full check list is in [live-data.md](live-data.md).
+KSP rejects, for handlers: `suspend`, stored writes, and effects in a mirror writer; unresolvable parameters, live access in wire verdicts, non nullable verdict parameters keyed by a field other than the subject, handlers needing two live anchors, and command nodes whose event fields do not match the path arguments. The full check list is in [live-data.md](live-data.md).
 
 ## Open
 

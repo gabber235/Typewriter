@@ -30,7 +30,7 @@ Kotlin formulas are provider functions ([Standard library](#standard-library)); 
 @Derive
 fun AudienceEntry.inside(
     protagonist: Protagonist,
-    parent: InAudience?,
+    @From(Parent::class) inParents: List<InAudience>,
     criterion: Boolean,
 ): InAudience? = ...
 ```
@@ -220,7 +220,7 @@ val text = entry.text(memberContext(member))
 
 Inheritance lets a formula written for a wider context fit a narrower one. `Var<T>` without a context gets only the surrounding scope.
 
-Core defines every context. Capability modules define none: engine values are members on core types read from mirrors, and capability roots such as `minecraft` arrive as `scope` contributions. So contexts stay engine neutral. Extensions extend a core context.
+Core defines every context. Capability modules define none: engine values are generated readers of mirrors, and capability roots such as `minecraft` arrive as `scope` contributions. So contexts stay engine neutral. Extensions extend a core context.
 
 | Context | Used by | Provides |
 | --- | --- | --- |
@@ -268,6 +268,7 @@ Static Kotlin declarations compile through KSP to the same builder calls as gene
 - An entry's produced context becomes a default `produces { use(T) }`.
 - A Kotlin `Stored` value with `@Key` fields becomes a generated `stored(...)` call. Creator blueprints (`Variable`) use the same builder.
 - `Settable` members and readers such as `quest.stage(group)` are generated from `stored()`.
+- A Kotlin `Live` value becomes a generated `live(...)` call, which generates a read only reader by the same rule ([live-data.md](live-data.md#reading-a-mirror-in-a-formula)).
 - Names come from types (fields, cases), `scope` and `stored`. Implementations come from static Kotlin functions:
 
 ```kotlin
@@ -466,6 +467,7 @@ sealed interface FormulaFailure {
     data object DivisionByZero : FormulaFailure
     data object NotFinite : FormulaFailure
     data object RecursionLimit : FormulaFailure
+    data object NoValue : FormulaFailure // a bare mirror read with no value; see live-data.md
 }
 ```
 
@@ -664,13 +666,34 @@ The same rule as handlers: the types a function touches decide its kind.
 | --- | --- | --- |
 | Pure | Plain values, content | Realm and engines |
 | Stored | Stored values | Anywhere stored data is reachable |
-| Live | Live traits such as `Player` | The engine where the subject is live |
+| Live | Mirrors, through their [readers](live-data.md#reading-a-mirror-in-a-formula) | Any engine; a value held elsewhere crosses |
 
 Only context parameters reach stored or live data: identities such as `protagonist` and `engine: Engine` (the neutral identity of the server a formula runs on) carry the stored and live members, and capability roots hold pure values only (KSP rejects a stored or live member on a root). A provider that reads stored or live data without such an input declares it as a context parameter (`context(engine: Engine) fun papi(name: String)`); KSP cannot see function bodies, so this is a declaration it trusts. A formula's kind therefore follows from its context: `Var<Map<String, V>, PublishScope>` and `Var<Type, TypeScope>` provide no context parameters, so their formulas are pure by construction, and `Var<String, MemberContext>` can reach anything its context provides. A function type needs no kind marker. KSP still reads each provider's kind from its signature, and the realm computes a formula's kind while typing to decide where it can run. The realm can evaluate formulas that need no engine type.
 
+### What a formula reads
+
+A formula is identified by what it reads, not by who asked (decided 2026-11-04). This is memoization on formulas and parts of formulas, and it matches mirrors and derives, which are identified by their keys and parameters.
+
+```kotlin
+// Computed by the checker at publish, for each formula and part.
+data class FormulaReads(
+    val context: Set<ContextParameter>, // protagonist, engine, considered
+    val providers: Set<ProviderId>,     // coins, health, now, random
+)
+
+val kind = strongest(reads.providers)
+val key = FormulaKey(part, valuesOf(reads.context))
+```
+
+- **Shared by construction.** `now.hour >= 20` is computed once for 500 players, the same text in three entries is one memo per subject, and `is_veteran(protagonist)` is one memo per protagonist across all its callers. `random` reads its run, so it stays per subject with no rule of its own.
+- **Where a memo sits.** At a whole formula, at a `Definition` call, and at the largest part that drops a context read. In `protagonist in considered.sortedBy { it.protagonist.coins }.take(10)`, the sorted part has one memo per audience and each player has a tiny combine. A single combine is not tracked, because tracking it costs more than redoing it.
+- **Known at publish.** Every formula is published content, so the checker knows what each one can read. A branch or a function value counts as the union of what it can read. Which keys a list reads (`it.protagonist.coins`) follows from the list's values at run time, and the graph tracks those.
+- **What follows from it.** A formula's kind, what rechecks on a timer (only what reads `now`), what is polled (`papi`, only where read), and which writers run before a chain.
+- **A provider's signature is its contract** (decided 2026-11-04). KSP cannot see a body, so a Kotlin provider that reads something its signature does not declare is memoized on what it declares and may run only once. That is a bug in the extension, not something core guards against.
+
 ### Interpreter
 
-The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to update their `Watched<T>` mirrors, as Jane Street's Incremental does with observers. Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1 and its observers in layer 2 (`WatchFormula`); engine inputs and engine observers come with layers 6 to 8.
+The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to update their `Watched<T>` mirrors, as Jane Street's Incremental does with observers. On the engine only the worker's recheck touches the graph, once per tick, so it needs no locks ([live-data.md](live-data.md#formula-changes)). Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1 and its observers in layer 2 (`WatchFormula`); engine inputs and engine observers come with layers 6 to 8.
 
 Values during evaluation are plain Kotlin values, so a `FormulaFunction.invoke` calls the provider without conversion: catalog scalars use the Kotlin type KSP maps them from (`Int` is `kotlin.Int`, `Decimal` is `BigDecimal`), Kotlin catalog types are instances of their class (an enum case is its constant), `null` is `null`, and functions are closures. Content types have no Kotlin class, so they are `ContentValue` instances (a record carries its `TypeId` and its fields by name, a case its `TypeId` and payload). The realm reads stored `DataValue` into these values with the same reader the engine uses for compiled content. Creating the module is a build change the layer 1 build asks for. How evaluation records its reads, which change signal each read kind has, and the `Watched<T>` mirror are in [live-data.md](live-data.md#formula-changes).
 
