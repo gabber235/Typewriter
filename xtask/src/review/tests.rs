@@ -1,6 +1,7 @@
 //! What the change did to tests and to the harness that judges them. Test tampering hides every
 //! other failure, so each weakening is listed by name, never summarized away.
 
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -8,7 +9,7 @@ use anyhow::Result;
 use serde::Serialize;
 
 use super::change::Status;
-use super::index::EntityKind;
+use super::index::{EntityKind, Language};
 use super::report::ChangeContext;
 use crate::Context;
 
@@ -61,9 +62,20 @@ pub struct Weakened {
 #[derive(Serialize)]
 pub struct TestChanges {
     pub added: Vec<TestRef>,
+    /// Removed tests whose assertions the change's other tests all make now: a move, a rename or a
+    /// split. Named so a reviewer can look, but not suspect like [`Self::deleted`].
+    pub moved: Vec<TestRef>,
+    /// Removed tests with at least one assertion no other test took over, and removed tests with
+    /// no assertions to compare.
     pub deleted: Vec<TestRef>,
-    /// Assertions removed from tests that still exist.
+    /// Assertions that left tests still there and that the change's other tests make now.
+    pub assertions_moved: usize,
+    /// Tests that still exist with fewer assertions than before, and whose lost assertions no test
+    /// the change touched makes now.
     pub weakened: Vec<Weakened>,
+    /// Tests that still exist with as many assertions as before, some in different words. Text
+    /// cannot tell whether a rewrite is weaker, so a reviewer reads these.
+    pub rewritten: Vec<Weakened>,
     /// `#[ignore]`, skipped and disabled tests, and new entries in harness/quarantine.toml.
     pub disabled: Vec<TestRef>,
     /// Expected values rewritten: snapshots, goldens, fixture outputs.
@@ -84,36 +96,48 @@ pub fn changes(ctx: &Context, change: &ChangeContext) -> Result<TestChanges> {
         .filter(|e| tests(e.kind))
         .map(reference)
         .collect();
-    let deleted = change
-        .removed()
-        .filter(|e| tests(e.kind))
-        .map(reference)
-        .collect();
-    let mut weakened = Vec::new();
-    let mut disabled = Vec::new();
+    let mut gained = GainedAssertions::default();
+    for test in change.added().filter(|e| tests(e.kind)) {
+        gained.add(test.language, &test.assertions);
+    }
+    let mut lost = Vec::new();
     for (before, after) in change.modified().filter(|(_, after)| tests(after.kind)) {
-        let mut remaining = after.assertions.clone();
-        let removed: Vec<String> = before
-            .assertions
-            .iter()
-            .filter(
-                |assertion| match remaining.iter().position(|kept| kept == *assertion) {
-                    Some(position) => {
-                        remaining.swap_remove(position);
-                        false
-                    }
-                    None => true,
-                },
-            )
-            .cloned()
-            .collect();
+        let (removed, new) = difference(&before.assertions, &after.assertions);
+        gained.add(after.language, &new);
         if !removed.is_empty() {
-            weakened.push(Weakened {
-                test: reference(after),
-                removed,
-            });
+            lost.push((before, after, removed));
         }
     }
+    let mut weakened = Vec::new();
+    let mut rewritten = Vec::new();
+    let mut assertions_moved = 0;
+    for (before, after, removed) in lost {
+        let total = removed.len();
+        let removed: Vec<String> = removed
+            .into_iter()
+            .filter(|assertion| !gained.take(after.language, assertion))
+            .collect();
+        assertions_moved += total - removed.len();
+        if removed.is_empty() {
+            continue;
+        }
+        let list = if after.assertions.len() < before.assertions.len() {
+            &mut weakened
+        } else {
+            &mut rewritten
+        };
+        list.push(Weakened {
+            test: reference(after),
+            removed,
+        });
+    }
+    let (moved, deleted) = change
+        .removed()
+        .filter(|e| tests(e.kind))
+        .partition::<Vec<_>, _>(|test| gained.take_all(test.language, &test.assertions));
+    let moved = moved.into_iter().map(reference).collect();
+    let deleted = deleted.into_iter().map(reference).collect();
+    let mut disabled = Vec::new();
     // Every test of a changed file: a Rust `#[ignore]` sits outside the function it disables.
     for after in change
         .head
@@ -146,12 +170,79 @@ pub fn changes(ctx: &Context, change: &ChangeContext) -> Result<TestChanges> {
     }
     Ok(TestChanges {
         added,
+        moved,
         deleted,
+        assertions_moved,
         weakened,
+        rewritten,
         disabled,
         expectations_rewritten,
         harness_edits,
     })
+}
+
+/// What `before` has that `after` lacks and what `after` has that `before` lacks, counting copies.
+fn difference(before: &[String], after: &[String]) -> (Vec<String>, Vec<String>) {
+    let mut new = after.to_vec();
+    let removed = before
+        .iter()
+        .filter(
+            |assertion| match new.iter().position(|kept| kept == *assertion) {
+                Some(position) => {
+                    new.swap_remove(position);
+                    false
+                }
+                None => true,
+            },
+        )
+        .cloned()
+        .collect();
+    (removed, new)
+}
+
+/// The assertions tests gained in the change, as written, each copy usable once. A test review
+/// renames and splits tests, so an assertion that left one test often lives on in another.
+#[derive(Default)]
+struct GainedAssertions(HashMap<(Language, String), usize>);
+
+impl GainedAssertions {
+    fn add(&mut self, language: Language, assertions: &[String]) {
+        for assertion in assertions {
+            *self.0.entry((language, assertion.clone())).or_default() += 1;
+        }
+    }
+
+    /// Uses one gained copy of `assertion`, if one is left.
+    fn take(&mut self, language: Language, assertion: &str) -> bool {
+        match self.0.get_mut(&(language, assertion.to_owned())) {
+            Some(count) if *count > 0 => {
+                *count -= 1;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Uses one gained copy of every one of `assertions` if all are left, and none otherwise. A
+    /// test without assertions shows nothing to carry over, so it never counts as taken.
+    fn take_all(&mut self, language: Language, assertions: &[String]) -> bool {
+        let mut needed: HashMap<String, usize> = HashMap::new();
+        for assertion in assertions {
+            *needed.entry(assertion.clone()).or_default() += 1;
+        }
+        let enough = needed.into_iter().all(|(assertion, count)| {
+            self.0
+                .get(&(language, assertion))
+                .is_some_and(|gained| *gained >= count)
+        });
+        if assertions.is_empty() || !enough {
+            return false;
+        }
+        for assertion in assertions {
+            self.take(language, assertion);
+        }
+        true
+    }
 }
 
 /// The quarantine entries the change added, named by their case id.
@@ -183,4 +274,63 @@ fn is_expectation(path: &Path) -> bool {
         || path
             .extension()
             .is_some_and(|extension| extension == "snap" || extension == "golden")
+}
+
+#[cfg(test)]
+mod carried_over {
+    use super::*;
+
+    #[test]
+    fn a_removed_test_whose_assertions_all_live_on_counts_as_moved() {
+        let mut gained = GainedAssertions::default();
+        gained.add(Language::Rust, &["a", "b", "c"].map(String::from));
+        assert!(gained.take_all(Language::Rust, &["a", "b"].map(String::from)));
+    }
+
+    #[test]
+    fn a_removed_test_with_one_assertion_gone_keeps_every_assertion_available() {
+        let mut gained = GainedAssertions::default();
+        gained.add(Language::Rust, &["a"].map(String::from));
+        assert!(!gained.take_all(Language::Rust, &["a", "b"].map(String::from)));
+        assert!(gained.take(Language::Rust, "a"));
+    }
+
+    #[test]
+    fn a_gained_assertion_carries_over_only_one_lost_copy() {
+        let mut gained = GainedAssertions::default();
+        gained.add(Language::Rust, &["a"].map(String::from));
+        assert!(gained.take(Language::Rust, "a"));
+        assert!(!gained.take(Language::Rust, "a"));
+    }
+
+    #[test]
+    fn two_lost_copies_need_two_gained_copies() {
+        let mut gained = GainedAssertions::default();
+        gained.add(Language::Rust, &["a"].map(String::from));
+        assert!(!gained.take_all(Language::Rust, &["a", "a"].map(String::from)));
+    }
+
+    #[test]
+    fn a_removed_test_without_assertions_never_counts_as_moved() {
+        let mut gained = GainedAssertions::default();
+        gained.add(Language::Rust, &["a"].map(String::from));
+        assert!(!gained.take_all(Language::Rust, &[]));
+    }
+
+    #[test]
+    fn an_assertion_in_another_language_carries_nothing_over() {
+        let mut gained = GainedAssertions::default();
+        gained.add(Language::Rust, &["a"].map(String::from));
+        assert!(!gained.take(Language::Dart, "a"));
+    }
+
+    #[test]
+    fn difference_counts_copies_on_both_sides() {
+        let (removed, new) = difference(
+            &["a", "a", "b"].map(String::from),
+            &["a", "c"].map(String::from),
+        );
+        assert_eq!(removed, ["a", "b"]);
+        assert_eq!(new, ["c"]);
+    }
 }

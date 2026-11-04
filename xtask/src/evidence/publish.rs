@@ -185,8 +185,10 @@ struct Finding {
 #[derive(Deserialize)]
 struct TestChanges {
     added: Vec<IgnoredAny>,
+    moved: Vec<IgnoredAny>,
     deleted: Vec<IgnoredAny>,
     weakened: Vec<IgnoredAny>,
+    rewritten: Vec<IgnoredAny>,
     disabled: Vec<IgnoredAny>,
     expectations_rewritten: Vec<IgnoredAny>,
     harness_edits: Vec<IgnoredAny>,
@@ -462,11 +464,13 @@ fn render_test_changes(out: &mut String, section: &Section) {
     let suspect = tests.weakened.len() + tests.disabled.len() + tests.deleted.len();
     let _ = writeln!(
         out,
-        "\n<details{}><summary>Test changes: {} added, {} deleted, {} weakened, {} disabled</summary>\n\nExpectations rewritten {}. Harness edits {}.\n\n</details>",
+        "\n<details{}><summary>Test changes: {} added, {} moved, {} deleted, {} weakened, {} rewritten, {} disabled</summary>\n\nExpectations rewritten {}. Harness edits {}.\n\n</details>",
         if suspect > 0 { " open" } else { "" },
         tests.added.len(),
+        tests.moved.len(),
         tests.deleted.len(),
         tests.weakened.len(),
+        tests.rewritten.len(),
         tests.disabled.len(),
         tests.expectations_rewritten.len(),
         tests.harness_edits.len()

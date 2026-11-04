@@ -244,7 +244,7 @@ pub fn empty_change_report() -> serde_json::Value {
         "base": "base",
         "findings": [],
         "tests": {
-            "added": [], "deleted": [], "weakened": [], "disabled": [],
+            "added": [], "moved": [], "deleted": [], "weakened": [], "rewritten": [], "disabled": [],
             "expectations_rewritten": [], "harness_edits": [],
         },
         "change_map": [],

@@ -433,10 +433,13 @@ impl ChangeReport {
         let tests = &self.tests;
         let _ = writeln!(
             out,
-            "\n## Test changes\n\nAdded {}. Deleted {}. Weakened {}. Disabled {}. Expectations rewritten {}. Harness edits {}.",
+            "\n## Test changes\n\nAdded {}. Moved {} (and {} assertions out of tests that remain). Deleted {}. Weakened {}. Rewritten {}. Disabled {}. Expectations rewritten {}. Harness edits {}.",
             tests.added.len(),
+            tests.moved.len(),
+            tests.assertions_moved,
             tests.deleted.len(),
             tests.weakened.len(),
+            tests.rewritten.len(),
             tests.disabled.len(),
             tests.expectations_rewritten.len(),
             tests.harness_edits.len()
@@ -450,20 +453,24 @@ impl ChangeReport {
                 test.line
             );
         }
-        for weakened in &tests.weakened {
-            let _ = writeln!(
-                out,
-                "- weakened: {} ({}:{}), removed {}",
-                weakened.test.name,
-                weakened.test.file.display(),
-                weakened.test.line,
-                weakened
-                    .removed
-                    .iter()
-                    .map(|assertion| format!("`{assertion}`"))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
+        for (kind, tests) in [
+            ("weakened", &tests.weakened),
+            ("rewritten", &tests.rewritten),
+        ] {
+            for test in tests {
+                let _ = writeln!(
+                    out,
+                    "- {kind}: {} ({}:{}), removed {}",
+                    test.test.name,
+                    test.test.file.display(),
+                    test.test.line,
+                    test.removed
+                        .iter()
+                        .map(|assertion| format!("`{assertion}`"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+            }
         }
         for test in &tests.disabled {
             let _ = writeln!(
