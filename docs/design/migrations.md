@@ -16,7 +16,7 @@ A migration is needed when content changes and something outside the content mus
 
 | Change | What the migration does |
 | --- | --- |
-| A variable's type or keys change | Converts every stored value with a conversion formula; the default clears the values |
+| A variable's type or keys change | Converts every stored value with a conversion formula; the default clears the values. Armed `AfterWrite` timers have the same keys, so they follow their value (plan in layer 28) |
 | An instance key is renamed | Moves the instance's stored data to the new key (through the book's migration) |
 | A quest stage is removed | Moves protagonists off the removed stage |
 | A running step is removed | Moves or ends the interactions running it |

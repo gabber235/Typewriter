@@ -24,7 +24,7 @@ Formulas are side effect free. Conditions, text, verdicts and derives are pure. 
 
 ## The Formula primitive in Kotlin
 
-Kotlin formulas are provider functions ([Standard library](#standard-library)); there is no separate derived value concept. A handler or derive reads a `Var` field of its receiver as a plain parameter with the field's name and value type: it receives the field's current value, with the formula context filled from the handler's subject and parameters, and reruns when `FormulaChanged` fires for it. KSP rejects such a parameter when no receiver field matches its name and type, so a rename is a build error.
+Kotlin formulas are provider functions ([Standard library](#standard-library)); there is no separate derived value concept. A handler or derive reads a `Var` field of its receiver as a plain parameter with the field's name and value type: it receives the field's current value, with the formula context filled from the handler's subject and parameters, and reruns when its `Watched<T>` mirror changes. KSP rejects such a parameter when no receiver field matches its name and type, so a rename is a build error.
 
 ```kotlin
 @Derive
@@ -670,19 +670,43 @@ Only context parameters reach stored or live data: identities such as `protagoni
 
 ### Interpreter
 
-The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to fire `FormulaChanged(old, new)`, as Jane Street's Incremental does with observers. Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1 and its observers in layer 2 (`WatchFormula`); engine inputs and engine observers come with layers 6 to 8.
+The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to update their `Watched<T>` mirrors, as Jane Street's Incremental does with observers. Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1 and its observers in layer 2 (`WatchFormula`); engine inputs and engine observers come with layers 6 to 8.
 
-Values during evaluation are plain Kotlin values, so a `FormulaFunction.invoke` calls the provider without conversion: catalog scalars use the Kotlin type KSP maps them from (`Int` is `kotlin.Int`, `Decimal` is `BigDecimal`), Kotlin catalog types are instances of their class (an enum case is its constant), `null` is `null`, and functions are closures. Content types have no Kotlin class, so they are `ContentValue` instances (a record carries its `TypeId` and its fields by name, a case its `TypeId` and payload). The realm reads stored `DataValue` into these values with the same reader the engine uses for compiled content. Creating the module is a build change the layer 1 build asks for. How evaluation records its reads, which change signal each read kind has, and the `FormulaChanged` event are in [live-data.md](live-data.md#formula-changes).
+Values during evaluation are plain Kotlin values, so a `FormulaFunction.invoke` calls the provider without conversion: catalog scalars use the Kotlin type KSP maps them from (`Int` is `kotlin.Int`, `Decimal` is `BigDecimal`), Kotlin catalog types are instances of their class (an enum case is its constant), `null` is `null`, and functions are closures. Content types have no Kotlin class, so they are `ContentValue` instances (a record carries its `TypeId` and its fields by name, a case its `TypeId` and payload). The realm reads stored `DataValue` into these values with the same reader the engine uses for compiled content. Creating the module is a build change the layer 1 build asks for. How evaluation records its reads, which change signal each read kind has, and the `Watched<T>` mirror are in [live-data.md](live-data.md#formula-changes).
 
 ## Time and randomness
 
-- `now` is fixed per evaluation. In a `Changes` field it is the realm commit time.
-- `random(...)` is seeded by (interaction, entry, field), so reruns give the same result and a new interaction rolls again. A fresh roll on purpose is stored through a `Changes` field.
-- Random is pure for a given seed, so the realm can preview it.
+`now` is fixed per evaluation. In a `Changes` field the engine's prediction uses the engine's clock, and the realm's evaluation uses the realm's clock, also on each retry after a conflict. The committed value replaces the predicted one, so the stored time is the realm's ([stored-data.md](stored-data.md#transactions)).
+
+`random(...)` has one rule (decided 2026-11-04):
+
+```
+seed   = (run, place)   // place: the field's value_location, so list items differ
+random = the next number from one stream per evaluation
+```
+
+So rechecking a field gives the same result, and two calls in one formula differ. Only the run differs per context:
+
+| Where | Run | Rolls again |
+| --- | --- | --- |
+| Chain field (`InteractionContext`) | The chain's seed record | New chain |
+| Member field (`MemberContext`) | The seed record plus the member | Per member |
+| `Changes` field, also a reaction's `changes` and `schedule` | The write's id | Every write |
+| `Candidate` field | The event's `OccurrenceId` | Every event |
+| Function definition | The caller's stream | As the caller |
+| Watched formula | The subject | Per subject, then never |
+| `PublishScope`, `TypeScope`, a constant `Definition` | None: place only | Never |
+
+- **A fresh roll on purpose** is stored through a `Changes` field. Each write rolls again, also in a looping chain.
+- **Prediction and decision agree.** The engine's prediction and the realm's evaluation, with its retries, share one write id. A write the realm starts itself gets its id from the realm, so each key of an `Every` rolls its own number. A crash before the commit shows nothing, so a new roll there is harmless.
+- **Engines agree.** One event on several engines has one `OccurrenceId`, so their `Candidate` fields roll alike.
+- **Places that never roll again** allow `random`, and the realm reports a warning finding on the formula. The roll is stable across publishes, and the preview shows the real value.
+- **Kotlin** transaction functions use `tx.random`, seeded like a `Changes` field. Its exact form is for the layer 7 plan, as is confirming that every local event has an `OccurrenceId` from its `Sink`.
+- **Not for secrets.** The numbers are predictable from the seed.
 
 ## Formula starts
 
-A formula can start a chain: when a condition turns true, or whenever a formula's output changes. Both use `FormulaChanged<T>` ([live-data.md](live-data.md#formula-changes)).
+A formula can start a chain: when a condition turns true, or whenever a formula's output changes. Both are `Changed<Watched<T>>` ([live-data.md](live-data.md#formula-changes)).
 
 ## Open
 

@@ -14,7 +14,7 @@ An event is a plain Kotlin type that says one thing happened. Extensions declare
 - **Subject.** Most events have a subject (usually a protagonist; a widened chain has a group). Events without a subject (`Tick`, world events) turn handler parameters into a query, see [Events without a subject](#events-without-a-subject).
 - **Engine neutral core.** `Tick` is a capability, not core. Core events say protagonist, never player (`ProtagonistJoined`). `Player` is only a Minecraft capability trait or part of a Minecraft event name (`PlayerMove`).
 
-Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `Removed<T>`, `Changed<T>(old, new)` fire for every stored value ([stored-data.md](stored-data.md)), hold ([interactions.md](interactions.md)), and mirror ([live-data.md](live-data.md)). `Seed<X>` and `FormulaChanged<T>` are core events described in [live-data.md](live-data.md); `Due` delivery is in [stored-data.md](stored-data.md). `Demanded<X>` is a core parameter, not an event ([live-data.md](live-data.md#demanded)).
+Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `Removed<T>`, `Changed<T>(old, new)` fire for every stored value ([stored-data.md](stored-data.md)), hold ([interactions.md](interactions.md)), mirror, and watched formula ([live-data.md](live-data.md)). `Seed<X>` is a core event described in [live-data.md](live-data.md); `Due` is in [stored-data.md](stored-data.md). `Demanded<X>` is a core parameter, not an event ([live-data.md](live-data.md#demanded)).
 
 ### Emitting
 
@@ -102,12 +102,12 @@ object EveryTick : TickConfig
 fun Tick<EveryTick>.type(speaking: Speaking, dialogue: DialogueHold, step: Step) = ...
 ```
 
-A configuration is either a Kotlin object (code) or an entry type (content: one configuration per published entry).
+A configuration is either a Kotlin object (code), an entry type (content: one configuration per published entry), or a list item type inside an entry (content: one configuration per published item, such as `Every`).
 
 How it works:
 
 1. KSP indexes every (event, configuration type) pair used by a handler.
-2. Publication turns each pair into configuration instances: one for an object, one per published entry for an entry type. These stay live across hot publish.
+2. Publication turns each pair into configuration instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
 3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, C>.open(demand: Demand<C>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
 
 Configurations a source cannot index are not configured events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
@@ -151,7 +151,7 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | A live capability trait (`HasChat`, `HasInventory`, `Living`) | The engine object for that identity; for a group subject, one per member. |
 | `All<T>` | Every value of type `T`. |
 | `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject. |
-| A plain value named like a `Var` field of the receiver | That field's current value, context filled from the subject; reruns on `FormulaChanged` ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
+| A plain value named like a `Var` field of the receiver | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
 | `Snapshot<H>` | A hold's stored snapshot, readable and writable ([interactions.md](interactions.md)). |

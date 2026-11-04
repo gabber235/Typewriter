@@ -55,14 +55,14 @@ Returning `null` means there is no value for that identity; a handler that asks 
 
 ### Added, Changed, Removed and Because
 
-Every mirror emits the same lifecycle events as stored values and holds: `Added<X>`, `Changed<X>(old, new)`, `Removed<X>`. `Added` and `Removed` carry `because: Because`:
+Mirrors, holds, stored values, and watched formulas all emit the same lifecycle events: `Added<X>`, `Changed<X>(old, new)`, `Removed<X>` (decided 2026-11-04). `Added` and `Removed` carry `because: Because`, and `Changed` is always a real change:
 
 | `Because` | Meaning | Examples |
 | --- | --- | --- |
-| `Value` | the value really appeared or vanished | the player entered or left a region |
-| `Tracking` | tracking started or stopped | join, quit, server move, first or last reader |
+| `Value` | the value really appeared or vanished | the player entered or left a region; a derive started or stopped returning a hold; a stored value was written or cleared |
+| `Tracking` | tracking started or stopped | join, quit, server move, connection closed, first or last reader |
 
-Display reacts to both. Logic reacts to `Value` only.
+A handler sees both, and `because` lets it filter. Owed state reacts to both on purpose, so it also acts at join. Stored only handlers run on the realm and only ever see `Value`.
 
 ```kotlin
 @Handler
@@ -163,7 +163,7 @@ A stored derive that reads a mirror keeps its last result when the input vanishe
 
 ## Formula changes
 
-Formulas read mirrors like any other input. On the engine, evaluation records its reads in the same `TrackedGraph` the realm uses ([formula-language.md](formula-language.md#interpreter)); each read kind has a change signal that sets the matching input, and observers on watched formulas fire `FormulaChanged`:
+Formulas read mirrors like any other input. On the engine, evaluation records its reads in the same `TrackedGraph` the realm uses ([formula-language.md](formula-language.md#interpreter)); each read kind has a change signal that sets the matching input, and observers update the watched formula's mirror:
 
 | Read | Change signal |
 | --- | --- |
@@ -172,7 +172,31 @@ Formulas read mirrors like any other input. On the engine, evaluation records it
 | content | hot publish |
 | `now` | timer recheck |
 
-`FormulaChanged<T>(entry, subject, old, new)` is the event for a watched formula whose result changed. A condition becoming true is the Boolean case. A trigger can fire whenever a formula's output changes and receives the old and new value. A reaction when a variable crosses a line is an event entry on `Changed<Variable>` or `FormulaChanged`, not a variable reaction. Formulas themselves are in [formula-language.md](formula-language.md).
+A watched formula is a mirror (decided 2026-11-04), so it needs no event of its own. Demand, equality, seeding, and `Because` all come from mirrors:
+
+```kotlin
+data class Watched<T>(
+    @Key val at: BoundPath<Var<T, *>>,
+    @Key val subject: Identity,
+    val value: T,
+) : Live
+
+@Handler // a real change, so old is never null
+fun Changed<Watched<Boolean>>.start(trigger: Candidate<FormulaEventEntry>) { ... }
+```
+
+- A condition becoming true is the Boolean case. A trigger can fire whenever a formula's output changes and receives the old and new value. A reaction when a variable crosses a line is an event entry on `Changed<Variable>` or `Changed<Watched<T>>`, not a variable reaction.
+- `Added` fires once every input has a value. `Removed` fires when a watch ends or an input loses tracking, with `because = Tracking`, so a quit never looks like a real change:
+
+  ```kotlin
+  // protagonist.in_region(arena), then the player quits
+  Removed<InRegion>(because = Tracking)
+  Removed<Watched<Boolean>>(because = Tracking) // not Changed, so a trigger stays quiet
+  ```
+
+- A trigger handles `Changed` only, so a formula that is already true at join does not fire; handling `Added` too is an "also at join" option. A crossing while offline is missed; when it must arrive, use owed state ([stored-data.md](stored-data.md#offline-changes)).
+- Like every mirror, at most one `Changed` fires per tick, so a flip and back inside one tick fires nothing. Legacy `FactChangeEventEntry` watched every change.
+- For the layer 7 plan: how a handler narrows to one entry's field through `Candidate`, the rate of the `now` recheck, and the cost of one mirror per watched formula and subject.
 
 PlaceholderAPI is a provider function (`context(engine: Engine) fun papi(name: String)`) backed by a `Tick` mirror that is polled only where a formula uses it.
 
@@ -200,7 +224,7 @@ fun AudienceEntry.inside(
 
 Enter and exit triggers come from `TriggerAudienceEntry(onEnter, onExit, fireOnJoin = true)`. Like legacy, enter fires on every join by default. Exit fires only on `because == Value`, so quitting or moving servers does not count as leaving.
 
-Displays derive from membership: a `SidebarHold` is derived from `InAudience`, and its text updates through `FormulaChanged<SidebarText>`. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md)).
+Displays derive from membership: a `SidebarHold` is derived from `InAudience`, and its text updates through `Changed<Watched<RichText>>`. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md)).
 
 ### Indexed
 
@@ -276,7 +300,7 @@ What the realm owns goes through the realm:
 
 - stored commits
 - `Changed<X>` pushes (the realm knows which stored keys each engine demands and pushes to that engine's own subject; see Lost pushes below)
-- `Due` deliveries ([stored-data.md](stored-data.md))
+- `Due` firing; its handlers run on the realm, and live work follows the commit ([stored-data.md](stored-data.md#due))
 
 Engines write the `sessions` KV themselves (see NATS JetStream). `Indexed` is being replaced ([panel-engine-communication.md](panel-engine-communication.md) question 14).
 

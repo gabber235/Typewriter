@@ -30,15 +30,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`AfterWrite<K, T>`**: variable reaction that runs a duration after the first or last write (`from: Write`, `First` or `Last`). See [stored-data.md](stored-data.md#reactions).
 
-**`AfterWriteElapsed<K>`**: event delivered through a `Due` when an `AfterWrite` reaction is due. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
-
 **`All<T>`**: handler parameter that resolves to every value of type `T`. See [events-and-handlers.md](events-and-handlers.md#parameters).
 
 **`ArmSwing`**: example event with one meaning reached through several sources; the first source starts the occurrence and the others join it. See [events-and-handlers.md](events-and-handlers.md#event).
-
-**`At<K, T>`**: variable reaction that runs at an instant computed from the value and re-armed on each write. See [stored-data.md](stored-data.md#reactions).
-
-**`AtElapsed<K>`**: event delivered through a `Due` when an `At` reaction is due. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
 
 **`attempt()`**: runs a transaction function or `Changes` field. It waits only when the write is guarded and returns `Committed` or `Refused(message)`. `ensure()` always waits. See [stored-data.md](stored-data.md#transaction-functions).
 
@@ -48,7 +42,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## B
 
-**`Because`**: field on a mirror's `Added` and `Removed` saying whether the value really changed (`Value`) or tracking started or stopped (`Tracking`). See [live-data.md](live-data.md#added-changed-removed-and-because).
+**`Because`**: field on every `Added` and `Removed` saying whether the value really changed (`Value`) or tracking started or stopped (`Tracking`). See [live-data.md](live-data.md#added-changed-removed-and-because).
 
 **`bind`**: `dynamic()` builder that derives a generic type parameter from content, so a bound parameter needs no picker. See [formula-language.md](formula-language.md#bind).
 
@@ -62,7 +56,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`BookScope`**: formula context whose purpose is open; the book's `instances` field uses `PublishScope`. See [formula-language.md](formula-language.md#formula-contexts).
 
-**`BoundPath<T>`**: the place in authored content a capture or mode writes to; its portable form is the `value_location` representation, so a waiting mode keeps it in its stored value. See [panel-engine-communication.md](panel-engine-communication.md#emit-without-extension-code-in-the-panel-engine-2026-11-01).
+**`BoundPath<T>`**: a place in authored content, such as where a capture or mode writes or which reaction a `Due` runs; its portable form is the `value_location` representation, so stored values can keep it, and it is an identity that ends when the place is gone. See [panel-engine-communication.md](panel-engine-communication.md#emit-without-extension-code-in-the-panel-engine-2026-11-01).
 
 **Bridge**: the conversion of one Typewriter value type to and from an engine's own type (`toPlatform`, `fromPlatform`), registered per engine kind. See [engines.md](engines.md#bridges).
 
@@ -124,6 +118,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Creator type**: a `Definition` whose type is `Type`; exported types become type names and records get a constructor. See [formula-language.md](formula-language.md#definition).
 
+**`CronSchedule`**: core `Schedule` from a cron expression and a time zone. See [stored-data.md](stored-data.md#due).
+
 **`CustomCommandEntry`**: manifest entry that, with its argument entries, builds content command nodes. See [events-and-handlers.md](events-and-handlers.md#content-commands).
 
 ## D
@@ -152,7 +148,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Dry run**: a read only evaluation of a migration against real stored values on every edit. See [migrations.md](migrations.md#checks-while-editing).
 
-**`Due<E>`**: durable time; a stored value whose event the realm delivers once `at` passes. See [stored-data.md](stored-data.md#due).
+**`Due`**: durable time; a stored value with `at` and an optional `repeat`. When `at` passes, the realm removes the row or moves it to its next time and fires `Elapsed<D>`, whose handlers are stored only. See [stored-data.md](stored-data.md#due).
 
 **`dynamic()`**: the hook on every resource and entry type that tells the type system what its content means through builders. See [formula-language.md](formula-language.md#dynamic-what-content-means-to-the-type-system).
 
@@ -161,6 +157,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`EditExpectation.exists`**: authoring guard that a value location exists or not; it replaces `resource_exists`, and list operations guard only the items they name with it. See [panel-engine-communication.md](panel-engine-communication.md) question 12.
 
 **`emit()`**: queues an event from a handler; it is decided after the current event finishes, without nesting. See [events-and-handlers.md](events-and-handlers.md#emitting).
+
+**`Elapsed<D>`**: event fired on the realm when a `Due` of type `D` reaches `at`; carries the fired value as `due`. See [stored-data.md](stored-data.md#due).
 
 **Engine**: runs published content through extensions (Paper, panel, future engines); engines share stored state only through the realm; live effects and events go directly between sessions. `Engine(id)` is also an identity, keyed by the stable topology engine id, so what an engine knows (`Stored`) and is doing (`Live`) are ordinary values keyed by it. See [live-data.md](live-data.md#engines-and-traits).
 
@@ -176,11 +174,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Event without a subject**: an event such as `Tick` whose handler parameters become a query, running once per match. See [events-and-handlers.md](events-and-handlers.md#events-without-a-subject).
 
-**`Every<K, T>`**: variable reaction that runs for every stored key on a cron schedule. See [stored-data.md](stored-data.md#reactions).
+**`Every<K, T>`**: variable reaction that runs for every stored key on a `Schedule`. See [stored-data.md](stored-data.md#reactions).
 
-**`EveryElapsed`**: event delivered through a `Due` when an `Every` reaction is due. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
-
-**`EveryRan`**: stored value keyed by an `Every` reaction item that keeps its last run time. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
+**`EverySource`**: core configured source that arms the `ReactionTimer` of every published `Every`, at startup and after each publish. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
 
 **`EveryTick`**: core `TickConfig` object for a handler that runs every tick. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
@@ -201,8 +197,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Formula kind**: Pure, Stored, or Live, the strongest kind a formula calls, which decides where it can run. See [formula-language.md](formula-language.md#where-formulas-run).
 
 **Formula start**: a chain start that fires when a formula turns true or whenever its output changes. See [formula-language.md](formula-language.md#formula-starts).
-
-**`FormulaChanged<T>`**: core event for a watched formula whose result changed, carrying entry, subject, old, and new. See [live-data.md](live-data.md#formula-changes).
 
 **`FormulaSnapshot`**: one streamed answer to `WatchFormula` with diagnostics, result type, completions, and hover. See [formula-language.md](formula-language.md#watchformula).
 
@@ -272,9 +266,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Interpreter**: the formula interpreter in the `formula` module, shared by realm and engines, that parses, binds, runs, and records reads. See [formula-language.md](formula-language.md#interpreter).
 
-**`Island`**: example identity type that the `islands` group entry exports through `bind`. See [interactions.md](interactions.md#groupings-and-membership).
+**`Interval`**: core `Schedule` that fires a fixed duration after the given time. See [stored-data.md](stored-data.md#due).
 
-**`ItemRef<X>`**: identity for one item of a list field inside an entry, by v1 `ItemId`; ends when the item is removed. See [stored-data.md](stored-data.md#identity).
+**`Island`**: example identity type that the `islands` group entry exports through `bind`. See [interactions.md](interactions.md#groupings-and-membership).
 
 ## K
 
@@ -343,6 +337,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Offline changes**: stored data changing while its protagonist is offline; stored only handlers run on the realm, live reactions may be missed. See [stored-data.md](stored-data.md#offline-changes).
 
 **`onClash`**: step entry field and `startStep` argument: `Drop` (default), `Queue`, or `Replace`. See [interactions.md](interactions.md#clashes).
+
+**`Once`**: core `Schedule` for one fixed time; a time in the past means never. See [stored-data.md](stored-data.md#due).
 
 **`OnlinePlayer`**: `Live` mirror in the Minecraft capability with an online protagonist's name and its `Engine`, read by the panel's target list. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
@@ -416,9 +412,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## R
 
-**`random(...)`**: formula randomness seeded by (interaction, entry, field), so reruns agree and a new interaction rolls again. See [formula-language.md](formula-language.md#time-and-randomness).
+**`random(...)`**: formula randomness seeded by (run, place), so rechecking agrees and a new run rolls again; the run is the chain's seed record, the write, or the event, depending on the context. See [formula-language.md](formula-language.md#time-and-randomness).
 
-**Reaction**: behaviour attached to a variable that only changes data; kinds are `OnWrite`, `AfterWrite`, `At`, and `Every`. See [stored-data.md](stored-data.md#reactions).
+**Reaction**: behaviour attached to a variable that only changes data; kinds are `OnWrite`, `AfterWrite`, and `Every`. See [stored-data.md](stored-data.md#reactions).
+
+**`ReactionTimer<K, T>`**: the one `Due` type of timed reactions; the variable declares one per `AfterWrite` (with the value's keys) and per `Every` (with no keys) at the reaction's place. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
 
 **`ReactionScope<K, T>`**: formula context interface for reaction changes, providing `keys`, `value`, and `previous`. See [formula-language.md](formula-language.md#formula-contexts).
 
@@ -446,6 +444,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Scene**: a step whose holds take the camera and hide the protagonist by packets. See [interactions.md](interactions.md#scenes).
 
+**`Schedule`**: open catalog type that answers when a repeating `Due` fires next; `next(after)` returns `null` for never again. See [stored-data.md](stored-data.md#due).
+
 **`scope(target) { }`**: `dynamic()` builder saying what one own field's formulas, or my contents, can see. See [formula-language.md](formula-language.md#scope-and-exports).
 
 **`scopeAt(field)`**: query graph step computing the scope a field's formulas see. See [formula-language.md](formula-language.md#query-graph).
@@ -466,7 +466,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Settable<T>`**: generated reader and write target for a `stored()` declaration, with keys filled from scope. See [stored-data.md](stored-data.md#reading).
 
-**`SidebarHold`**: example display hold derived from `InAudience`, whose text updates through `FormulaChanged<SidebarText>`. See [live-data.md](live-data.md#audiences).
+**`SidebarHold`**: example display hold derived from `InAudience`, whose text updates through `Changed<Watched<RichText>>`. See [live-data.md](live-data.md#audiences).
 
 **`Simulating(mode)`**: stored value marking a previewed step. See [interactions.md](interactions.md#preview-and-recording).
 
@@ -557,6 +557,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`Verdict`**: a decision phase result: `allow`, `deny`, `change`, or `pass`. See [events-and-handlers.md](events-and-handlers.md#verdicts).
 
 ## W
+
+**`Watched<T>`**: the mirror of a watched formula, keyed by its field and subject; its `Changed` is a real change and is what formula starts use. See [live-data.md](live-data.md#formula-changes).
 
 **`WatchFormula`**: realm subscription that streams diagnostics, type, completions, and hover per keystroke. See [formula-language.md](formula-language.md#watchformula).
 

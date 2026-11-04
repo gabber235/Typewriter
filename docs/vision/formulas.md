@@ -290,7 +290,7 @@ This is about execution on engines, not editing in the panel.
 Both are allowed.
 
 - A formula that reads the current time states that it must **always be recomputed**. This loses some optimization, not all of it.
-- Randomness is **seeded by where it runs** (the interaction, the entry, and the field), so recomputing gives the same result and a new interaction rolls again. A fresh roll on purpose is stored through an update field.
+- Randomness is **seeded by where it runs** (the run and the field), so recomputing gives the same result and a new run rolls again: a new chain, a new event, or a new write. A fresh roll on purpose is stored through an update field.
 - In an update field, `now` is the moment the changes are committed.
 
 ### Several return values

@@ -60,12 +60,12 @@ A `Snapshot<H>` parameter reads and updates a Hold's stored snapshot. Content us
 
 ### Lifecycle
 
-Holds use the same lifecycle events as stored values: `Added<H>`, `Removed<H>`, `Changed<H>(old, new)`.
+Holds use the same lifecycle events as stored values, including `because` ([live-data.md](live-data.md#added-changed-removed-and-because)): `Added<H>`, `Removed<H>`, `Changed<H>(old, new)`.
 
 | Event | When it fires for a Hold |
 | --- | --- |
-| `Added<H>` | Per live connection of the holder: first start, server move, rejoin |
-| `Removed<H>` | Per live connection: the derive stopped returning it (after grace), or the connection closed |
+| `Added<H>` | Per live connection of the holder: first start (`Value`), server move or rejoin (`Tracking`) |
+| `Removed<H>` | Per live connection: the derive stopped returning it, after grace (`Value`), or the connection closed (`Tracking`) |
 | `Changed<H>(old, new)` | The derive returned a different Hold of the same type and key; when nobody handles it, it acts as remove plus add |
 
 A live connection is a session (a Minecraft server connection, a browser tab), not a server; see [live-data.md](live-data.md). Adoption within grace fires neither `Added` nor `Removed`.
@@ -314,15 +314,30 @@ fun PlacingCorners.tool(): CornerToolHold = CornerToolHold(region, first)
 @Handler
 fun Confirm.place(mode: PlacingCorners, player: PaperPlayer, origin: Origin) {
     val corner = player.targetBlock().fromPlatform()
-    if (mode.first == null) return mode.update { copy(first = corner) }
+    if (mode.first == null) {
+        val _ = SetFirstCorner(mode.session, corner).attempt()
+        return
+    }
     realm.edit(scope = AuthoringScope.resources(listOf(mode.region.target)), initiatedBy = origin.principal) {
         mode.region.draft().setShape(Cuboid(mode.first, corner))
     }
-    mode.end()
+    val _ = EndPlacingCorners(mode.session).attempt()
+}
+
+@Transaction
+context(tx: Transaction)
+fun setFirstCorner(session: Session, corner: BlockLocation) {
+    placingCorners(session).first = corner
+}
+
+@Transaction
+context(tx: Transaction)
+fun endPlacingCorners(session: Session) {
+    placingCorners(session).clear()
 }
 ```
 
-`mode.update` and `mode.end()` are placeholders until layer 6 designs applying a single stored `Change` from handler code ([closed-beta-roadmap.md](closed-beta-roadmap.md), Decided).
+Writes go through [transaction functions](stored-data.md#transaction-functions).
 
 ## Open
 

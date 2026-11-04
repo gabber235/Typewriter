@@ -16,7 +16,7 @@ An identity is something stored data can be about. Identities are the only types
 | `Session` | One connection of a protagonist (see [live-data.md](live-data.md)). |
 | `Engine` | One engine, by its stable topology engine id; survives restarts and ends when the engine leaves the topology (see [live-data.md](live-data.md#session)). |
 | An entry type (`NpcEntry`) | A published entry: a `Resource` typed field in a runtime value (stored data, holds, live values, events) is that entry's identity, stored as its `ResourceId`, read as the current published version, and ended when the entry is unpublished. Authored fields keep `Ref<Contract.Side, T>`; KSP rejects a `Resource` typed field in an authored type. |
-| `ItemRef<X>` | One item of a list field inside an entry, by v1 `ItemId`. Ends when the item is removed. |
+| `BoundPath<X>` | A place in authored content: an entry plus a path through fields, list items, and map rows, in its portable `value_location` form. Reads the current published value. Only the location is its identity. |
 | Group identity | A (group entry, key) pair such as `Group(islands, "42")`. Each group entry exports its own identity type through `bind` (`islands` gives `Island`). |
 | Book instance | One instance of a book (see [formula-language.md](formula-language.md)). |
 
@@ -29,7 +29,7 @@ Every identity has a lifetime:
 - A step or interaction ends when it finishes.
 - A session ends when no engine reports it for longer than the grace of its engine kind.
 - An identity defined by an entry ends when that entry is removed by a publication.
-- An `ItemRef` ends when its list item is removed.
+- A `BoundPath` ends when its place is gone, for example when its list item is removed.
 
 Owners such as steps and interactions carry a generation. An event addressed to a step whose generation has finished is dropped, and a stale write from a finished step is dropped by the same check.
 
@@ -93,11 +93,11 @@ Every stored value, whether written by a derive, by a step, or by code, emits:
 
 | Event | When |
 | --- | --- |
-| `Added<T>` | A value appears for a set of keys. |
+| `Added<T>` | A value appears for a set of keys, or a live handler starts tracking one (`because`). |
 | `Changed<T>(old, new)` | The value at those keys changes. |
-| `Removed<T>` | The value is removed (cleared, or a key identity ended). |
+| `Removed<T>` | The value is removed (cleared, or a key identity ended), or a live handler stops tracking it (`because`). |
 
-`Changed<D>` also works on a storage declaration: `Changed<Reputation>`, or `Changed<Variable<K, T>>` for a creator variable. `Changed` handlers run after the commit of the transaction that caused the change.
+`Changed<D>` also works on a storage declaration: `Changed<Reputation>`, or `Changed<Variable<K, T>>` for a creator variable. `Changed` handlers run after the commit of the transaction that caused the change. `because` is defined in [live-data.md](live-data.md#added-changed-removed-and-because).
 
 ### Reading
 
@@ -192,10 +192,9 @@ Decided 2026-11-04. Kotlin writes a stored value only inside a transaction funct
 
 ```kotlin
 @Transaction
-context(tx: Transaction, quest: Quest)
-fun pay(price: Int) {
-    require(quest.coins >= price, "Too poor")
-    quest.coins -= price
+context(tx: Transaction)
+fun addCoins(protagonist: Protagonist, amount: Int) {
+    coins(protagonist) += amount
 }
 ```
 
@@ -203,13 +202,13 @@ fun pay(price: Int) {
 
 ```kotlin
 @Transaction
-context(tx: GuardedTransaction, quest: Quest)
-fun pay(price: Int) {
-    require(quest.coins >= price, "Too poor")
-    quest.coins -= price
+context(tx: GuardedTransaction)
+fun pay(protagonist: Protagonist, price: Int) {
+    require(coins(protagonist).get() >= price, "Too poor")
+    coins(protagonist) -= price
 }
 
-when (val paid = Pay(10).ensure()) {
+when (val paid = Pay(protagonist, 10).ensure()) {
     Committed -> give(sword)
     is Refused -> player.sendMessage(paid.message)
 }
@@ -256,7 +255,7 @@ Chosen 2026-11-03 with the [tick pipeline](events-and-handlers.md#tick-pipeline)
 - **No guard.** The write applies to the engine's local view at once, so the next entry reads it, and goes to the realm behind the chain. The chain does not wait.
 - **Reads do not wait (decided 2026-11-04).** A read does not make a write wait, because the realm evaluates the transaction again against the committed values and the engine reruns nothing. The next entry can briefly act on a stale local value; the stored result stays correct.
 - **With a guard.** The chain waits for the realm's answer, so nobody spends what they do not have. Earlier writes go first, in order.
-- **`ensure()`.** Kotlin code that needs the committed result writes `Pay(10).ensure()` instead of `Pay(10).attempt()`, and the chain waits for the realm's answer.
+- **`ensure()`.** Kotlin code that needs the committed result writes `AddCoins(protagonist, 5).ensure()` instead of `AddCoins(protagonist, 5).attempt()`, and the chain waits for the realm's answer.
 - **Batching.** An engine keeps one commit in flight; what arrives meanwhile shares the next commit. Each write has a per engine id, so a retry applies once.
 - **The answer.** The committed value replaces the local one. What a player saw can briefly differ when another engine wrote the same key. The stored result stays correct.
 
@@ -315,11 +314,8 @@ Each reaction kind is a type plus handlers in an extension.
 | Reaction | Runs | Typical use |
 | --- | --- | --- |
 | `OnWrite<K, T>` | Inside every write's own transaction. | Cap a value, guard with `require`, write a history variable, trim a list. |
-| `AfterWrite<K, T>(duration, from)` | `duration` after the first or last write (`from: Write`, `First` or `Last`). | Timed values: clear a buff ten minutes after it was set. |
-| `At<K, T>(at)` | At `at: Var<Instant, ReactionScope<K, T>>`, computed from the value and re-armed on each write. | Cooldowns, auction ends. |
-| `Every<K, T>(cron)` | For every stored key, on a cron schedule. | Daily resets. |
-
-`AfterWrite` is the friendly shortcut for the common case of `At`.
+| `AfterWrite<K, T>(schedule, from)` | At the next time of `schedule: Var<Schedule, ReactionScope<K, T>>` after the first or last write (`from: Write`, `First` or `Last`). `changes` defaults to `clear`. | Timed values, cooldowns, auction ends. |
+| `Every<K, T>(schedule)` | For every stored key, on a `Schedule` (see [Due](#due)). | Daily resets. |
 
 Example changes formulas:
 
@@ -327,44 +323,178 @@ Example changes formulas:
 // OnWrite on coins: never negative.
 require(value >= 0, "coins cannot go negative")
 
-// AfterWrite(10.minutes, from = Last) on a buff: reset it.
-value = 0
+// AfterWrite(Interval(10.minutes), from = Last) on a buff: no formula, the default clears it.
+
+// Every(CronSchedule(midnight)) on savings: daily interest.
+value = value * 1.01
 ```
 
 ### How timed reactions fire
 
-Timed reactions run through `Due`:
+Timed reactions run on the realm through `Due`, so there is one clock (decided 2026-11-04). The write and its timer commit in one transaction; one core stored only handler runs the reaction's changes when the timer elapses. Both reactions share one timer type and that handler; only the keys differ:
 
-| Reaction | Event delivered through a `Due` | Fields |
-| --- | --- | --- |
-| `AfterWrite` | `AfterWriteElapsed<K>` | `variable`, `keys`, `reaction` |
-| `At` | `AtElapsed<K>` | `variable`, `keys`, `reaction` |
-| `Every` | `EveryElapsed` | `variable`, `reaction` |
+| Reaction | Declaration | Keys | Handler runs |
+| --- | --- | --- | --- |
+| `AfterWrite` | The reaction's place, such as `coins.reactions[r7]` | `K`, the same keys as the value | Once: the keys are filled from the timer |
+| `Every` | The reaction's place | None | Once per stored value: the keys are free, so the parameter is a query |
 
-All fields are identities, so the `Due` disappears when the variable, the reaction item, or a key identity ends. `Every` keeps its last run time in an `EveryRan` stored value keyed by the reaction item (one per `Every` reaction, removed with it).
+- On a write, `at = schedule.next(now)` commits with that write (decided 2026-11-04). `null` arms nothing, so a `Once` in the past never fires. `AfterWrite` never sets `repeat`; `Every` always does, and it takes a plain `Schedule` because it has no single key for a formula to read.
+- A reaction's own write does not arm its own timer, so `AfterWrite(from = Last)` with `value = 0` does not repeat forever.
+- Clearing a value removes its armed `AfterWrite` timer, so a timer never brings a cleared value back.
+- A refused timed reaction is dropped and reported, not retried: the same inputs would refuse again.
+
+A timer needs no record key (decided 2026-11-04). `K` exists only at runtime, so the variable declares each timer with the same builder as the value. The declaration is the reaction's place, so the entry is not a key field, and each book instance gets its own timers because it duplicates its entries:
+
+```kotlin
+// In Variable.dynamic(). The exact form is for the layer 7 plan.
+stored(name, keys = K, value = T, default)
+stored(afterWritePlace, keys = K, value = ReactionTimer, default = null)
+stored(everyPlace, keys = {}, value = ReactionTimer, default = null)
+
+data class ReactionTimer<K, T>(
+    override val at: Instant,
+    override val repeat: Schedule? = null,
+) : Due
+
+@Handler
+fun <K, T> Elapsed<ReactionTimer<K, T>>.run(value: VariableValue<K, T>) {
+    val _ = reaction.changes(ReactionScope(value)).attempt()
+}
+
+// Rows
+// coins               { protagonist: alex }
+// coins.reactions[r7] { protagonist: alex }  an AfterWrite timer
+// coins.reactions[r8] { }                    an Every timer
+```
+
+Kotlin entries see plain lists without item ids; the runtime gets the ids from `members(path)` and builds the place. A timer ends with its keys, or when publishing removes its reaction. `K` and `T` are not Kotlin types for a creator variable, so the handler is generic and `VariableValue` is one stored value, not the entry. The names `VariableValue` and `ReactionScope(value)`, and how the handler reaches `reaction`, are for the layer 7 plan. One handler serving both cases relies on how a dynamic `K` resolves, so the plan proves that first.
+
+A timer is a stored value, so a formula can read when it elapses, through the exports of `stored()` ([formula-language.md](formula-language.md#scope-and-exports)). Time left and next reset read the same way, which keeps what legacy offers as `time.expires` (`TimedFactEntry`, `CronFactEntry`, `CountdownFact`). How a formula names a reaction's timer is for the layer 7 plan.
+
+`Every` is a configured source, like `Tick<C>` (decided 2026-11-04). Nothing writes to the value when a creator publishes an `Every`, so the source arms its timer. It compares every published `Every` with its timer at startup and after each publish, and writes only differences, so a lost row heals and a schedule edit applies. The core event runtime already recomputes `Demand<C>` on publish ([events-and-handlers.md](events-and-handlers.md#configured-events)). An extension's own timed reaction can reuse `ReactionTimer` and the handler: a type, a way to arm, and nothing else.
+
+```kotlin
+class EverySource : ConfiguredSource<Elapsed<ReactionTimer<*, *>>, Every<*, *>> {
+    override fun open(demand: Demand<Every<*, *>>, sink: Sink<Elapsed<ReactionTimer<*, *>>>) =
+        demand.watch { reactions -> // at startup, and after each publish
+            reactions.forEach { (place, every) ->
+                val _ = ArmEvery(place, every.schedule).attempt()
+            }
+        }
+}
+
+@Transaction
+context(tx: Transaction)
+fun armEvery(place: BoundPath<Every<*, *>>, schedule: Schedule) {
+    val timer = reactionTimer(place) // by place at runtime, no generated accessor
+    if (timer.get()?.repeat != schedule) {
+        timer.set(ReactionTimer(at = schedule.next(now), repeat = schedule))
+    }
+}
+```
+
+The `Demand<C>` API (`watch`, `(place, every)`) and how the event names its configuration are for the layer 7 plan. A midnight between the content switch and the arming is skipped once. `AfterWrite` needs no source: it arms on the next write, and a schedule edit leaves armed timers at their old time.
+
+Each key is its own transaction, so a refusal or conflict affects only that key. The run is not one moment: at many keys, values change a little apart.
 
 ### Legacy timed data
 
-Legacy timed, cron, countdown, and per session data needs no special storage. Each becomes a variable: timed values use `AfterWrite`, cron values use `Every`, countdowns use `At`, and per session values use a `Session` key, so they are removed when the session ends.
+Legacy timed, cron, countdown, and per session data needs no special storage. Each becomes a variable: timed values and cron values use `AfterWrite` with an `Interval` or a `CronSchedule`, countdowns use `AfterWrite` with a `Once`, and per session values use a `Session` key, so they are removed when the session ends.
 
 ## Due
 
-`Due` is durable time. It is an ordinary stored value plus a core source:
+`Due` is durable time: a stored value with a time (decided 2026-11-04). It is an ordinary `@Key` stored type plus a core source:
 
 ```kotlin
-data class Due<E>(@Key val event: E, val at: Instant) : Stored
+interface Due : Stored {
+    val at: Instant
+    val repeat: Schedule? get() = null
+}
+
+data class Elapsed<D : Due>(val due: D) : Event
+
+interface Schedule {
+    fun next(after: Instant): Instant? // null: never again
+}
+
+data class CronSchedule(val cron: CronExpression, val zone: ZoneId) : Schedule
+data class Interval(val every: Duration) : Schedule
+data class Once(val at: Instant) : Schedule
 ```
 
-The realm is the clock. When `at` passes, the realm delivers `event` to an engine where a handler for it can run:
+KSP reads only signatures, so it finds a timer by its class and generates its `stored()` call and accessor like any stored type. Keys follow the normal [key rule](#keys), and writing again at the same keys replaces the timer. Fields other than keys are ordinary data, also carried to the handler:
 
-- Stored only handlers: any engine that runs the book.
-- Handlers asking for live traits: the subject's engine. For an offline subject the event fires when it joins.
+```kotlin
+data class RewardDue(
+    @Key val protagonist: Protagonist,
+    val amount: Int,
+    override val at: Instant,
+) : Due
+
+@Transaction
+context(tx: Transaction)
+fun promiseReward(protagonist: Protagonist, amount: Int) {
+    rewardDue(protagonist) = RewardDue(protagonist, amount, at = now + 1.hours)
+}
+
+@Handler // realm, exactly once
+fun Elapsed<RewardDue>.pay() {
+    val _ = AddCoins(due.protagonist, due.amount).attempt()
+}
+```
+
+A value that should only end at a time needs no handler, because firing removes the row and stores the time once:
+
+```kotlin
+data class Highlighting(
+    @Key val viewer: Protagonist,
+    val region: RegionEntry,
+    override val at: Instant,
+) : Due
+```
+
+`Schedule` is an open catalog type, so an extension can add a kind such as `RandomInterval(min, max)`, in a part the realm loads (decided 2026-11-04). `at` is saved, so a random time is picked once. How a `CronSchedule` treats a daylight saving change is for the layer 7 plan.
+
+The realm is the clock. One core source per `Due` type reads the earliest `at` across that type's declarations (the plan adds an index on `at`). Firing is one transaction: it removes the row, or sets `at = repeat.next(now)`, and adds a pending row per `Elapsed<D>` handler ([Offline changes](#offline-changes)). The pending row keeps the fired value, because the timer is already gone or moved on. Each handler then runs like any stored only reader: its writes and clearing its row are one transaction. A `Due` is a pending row with a time.
+
+Firing is an ordinary write, so `Removed<D>` or `Changed<D>` also fire. `Elapsed<D>` is what tells firing apart from cancelling.
+
+Handlers on `Elapsed<D>` are stored only (decided 2026-11-04). The realm reaches engines only through stored commits, no events are queued for offline protagonists, and an event without an origin is best effort ([live-data.md](live-data.md#routing)), so a live effect at a time goes through owed state:
+
+```kotlin
+data class ReminderDue(@Key val protagonist: Protagonist, override val at: Instant) : Due
+data class Reminder(@Key val protagonist: Protagonist) : Stored
+
+@Handler // realm, exactly once
+fun Elapsed<ReminderDue>.owe() {
+    val _ = OweReminder(due.protagonist).attempt()
+}
+
+@Handler // engine: at once if online, otherwise at join
+fun Added<Reminder>.send(reminder: Reminder, chat: HasChat) {
+    when (ClaimReminder(reminder.protagonist).ensure()) {
+        Committed -> chat.send("Your buff is ready")
+        is Refused -> Unit
+    }
+}
+
+@Transaction
+context(tx: GuardedTransaction)
+fun claimReminder(protagonist: Protagonist) {
+    require(reminder(protagonist).get() != null)
+    reminder(protagonist).clear()
+}
+```
+
+Every engine holding the protagonist sees `Added`, and the claim picks one winner. A crash between the claim and the effect loses the effect and never doubles it.
 
 Guarantees:
 
-- **Exactly once effect.** Removing the `Due` is part of the handler's transaction, so a crash before commit redelivers.
-- **Catch up.** Dues that passed while nothing ran fire once on startup.
-- **Lifetime.** A `Due` disappears when any identity inside `event` ends.
+- **Exactly once effect.** A pending row and the handler's writes clear together, so a crash reruns only what is not done.
+- **No overlap.** A handler still running when its `Due` fires again keeps its row and runs again, instead of running twice at once.
+- **Query handlers resume.** A query handler on a `Due` runs once per match; its pending row also holds its progress, so a crash resumes at the next match.
+- **Catch up.** Dues that passed while nothing ran fire once on startup, and the next `at` counts from `now`.
+- **Lifetime.** A `Due` follows the normal [owners](#owners-and-lifetime) rule: it is removed when any key identity ends.
 - **Precision** is seconds and up. Below a second, use `Tick`.
 
 ## Derive with a `Stored` result
@@ -395,7 +525,7 @@ Stored data can change while its protagonist is offline, for example through a p
 - Firing links needs an engine, because a chain may need a player (decided 2026-11-04). A handler that fires links runs where its subject is live, so it does not run while the subject is offline; firing from the realm is an error, not a silent no-op. This matches legacy, which watches facts only for online players.
 - Live reactions to a moment can be missed, and missed events are never replayed. The guideline is **store what is owed, not what happened**: a derive produces owed state, and a live handler acts on it whenever the protagonist is online.
 
-The handler asks for a live trait, so it runs only while the protagonist is online. Like a hold's `Added<H>`, it fires per live connection while the value exists: when `SwordOwed` appears, and again at each join or server move. So it must be safe to repeat. A stored only handler fires once, on the realm.
+The handler asks for a live trait, so it runs only while the protagonist is online. Like a hold's `Added<H>`, it fires per live connection while the value exists: when `SwordOwed` appears (`because = Value`), and again at each join or server move (`because = Tracking`). So it must be safe to repeat. A stored only handler fires once, on the realm.
 
 A derive owns its result, so a handler cannot remove `SwordOwed`: the next input change would derive it again. The derive reads what was already given, and a guarded transaction picks one winner:
 
@@ -431,6 +561,7 @@ The stored data checks from the one check list:
 | Where | Severity | Check |
 | --- | --- | --- |
 | KSP | build error | A key field that is not an identity or a `Set` of one. |
+| KSP | build error | A live parameter on an `Elapsed<D>` handler. |
 | Realm | error | Keys of a stored reader that cannot be filled from scope. |
 | Realm | error | A cycle between derives. |
 | Realm | warning | A live handler on `Changed<X>` when X can change offline. |
@@ -440,7 +571,6 @@ Errors block publication; warnings never do.
 
 ## Open
 
-- Key fields that are records: whether a key may be a record whose fields are all identities. `Due<E>(@Key event: E, at)` relies on it to satisfy the key rule.
 - Book instance identity: whether an instance is the identity (book, key), the same shape as groups, so that renaming an instance key creates a new instance and the book's migration moves its data.
 - Variables: the direction is adopted, but details such as the variable editor are still in progress.
 - Stored reads as query graph inputs (type plus partial key), so a stored commit reruns the realm checks and searches that read it (layer 9, [closed-beta-roadmap.md](closed-beta-roadmap.md)).
