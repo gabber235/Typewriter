@@ -216,21 +216,154 @@ Interaction fields read `group`, `chain`, and `protagonist` through `Interaction
 
 ### Groupings and Membership
 
-A **grouping** is a way to bucket protagonists, declared by a static group entry (like legacy `GroupEntry`). Core stores one value:
+A **grouping** is a way to bucket protagonists by a key: island 42, team red. Decided 2026-11-05 in the layer 11 rough design. There are two kinds of group entry, because there are two ways to land in a group: outside facts decide it, or something assigns you.
+
+The entry's picked type argument `K` decides everything (decided 2026-11-05), chosen with the same editor as `Definition<T>`. `X` means one group per player, and `List<X>` means several. `X` can be a creator type, such as a union.
 
 ```kotlin
-data class Membership(
-    @Key val grouping: GroupEntry,
-    @Key val who: Protagonist,
-    val key: String,
-) : Stored
+interface GroupEntry<K> : StaticEntry
+
+// Outside facts decide: the formula is checked against K. With X?, null means in no group.
+@TypewriterType(id = FORMULA_GROUP_ENTRY_TYPE_ID)
+class FormulaGroupEntry<K>(/* page, name, placement */ val key: Var<K, MemberContext>) : GroupEntry<K>
+
+// Something assigns you, through the JoinGroup and LeaveGroup actions.
+@TypewriterType(id = MANUAL_GROUP_ENTRY_TYPE_ID)
+class ManualGroupEntry<K>(/* page, name, placement */) : GroupEntry<K>
+
+// X is bound from the group's K.
+class JoinGroupEntry<X>(
+    /* page, name, placement, triggers */
+    val group: Ref<ManualGroupEntry<*>>,
+    val key: Var<X, MemberContext>,
+) : ActionEntry
+
+class LeaveGroupEntry<X>(
+    /* page, name, placement, triggers */
+    val group: Ref<ManualGroupEntry<*>>,
+    val key: Var<X?, MemberContext>,   // null: every group of this entry
+) : ActionEntry
 ```
 
-- A group identity is (group entry, key), for example `Group(islands, "42")`. A group has stored data and derived members.
-- Membership is stored, so it works offline (last known group), member lookup is an index, and the panel shows it.
-- Each group entry kind keeps membership in sync with normal tools: a Skyblock plugin uses a handler on the plugin event; placeholder and world groupings use a derive. A stored derive over mirrors keeps its last result when an input vanishes by tracking, so group sync keeps the last group while offline.
-- `ManualGroupEntry` changes only through the `JoinGroup` and `LeaveGroup` actions, so creators build parties with data. Party is not a Typewriter concept.
+A group identity says what members belong to. Our two entries use `EntryGroup`; the entry is part of the identity, so deleting the entry ends all its groups, and the [owner rule](stored-data.md#owners-and-lifetime) removes their memberships and everything keyed by them. Other group identities are not tied to an entry.
+
+```kotlin
+interface GroupIdentity : Identity
+
+data class EntryGroup<X>(val entry: GroupEntry<*>, val key: X) : GroupIdentity
+
+// ContinueForEveryone. Ends with the interaction.
+data class Snapshot(val interaction: Interaction) : GroupIdentity
+
+// One row per group, so everything that reads a group works the same way.
+data class Membership(@Key val who: Protagonist, @Key val group: GroupIdentity) : Stored
+```
+
+The rows of one kind are found through the existing per key index: `Membership.all(who)` gives a player's groups, and `Membership.all(group)` gives a group's members.
+
+```kotlin
+// ManualGroupEntry: the actions write it. With one, joining moves you.
+// The realm reruns a transaction on a conflict, so two joins at once leave one row.
+@Transaction
+fun join(entry: ManualGroupEntry<*>, who: Protagonist, key: Any) {
+    if (!entry.isMany) memberships(who, entry).forEach { it.clear() }
+    Membership(who, EntryGroup(entry, key)).set()
+}
+
+// FormulaGroupEntry: core compares with what is stored, not with the old formula value,
+// because the formula can differ after a rejoin. keys() makes a Set from X? or a List,
+// so one and many are the same code.
+@Handler
+fun Added<Watched<K>>.sync(group: Candidate<FormulaGroupEntry<K>>, who: Protagonist) =
+    syncMemberships(group.entry, who, value.keys())
+
+@Handler
+fun Changed<Watched<K>>.sync(group: Candidate<FormulaGroupEntry<K>>, who: Protagonist) =
+    syncMemberships(group.entry, who, new.keys())
+
+@Transaction
+fun syncMemberships(entry: GroupEntry<*>, who: Protagonist, keys: Set<Any>) {
+    val stored = memberships(who, entry).map { it.group.key }.toSet()
+    (stored - keys).forEach { Membership(who, EntryGroup(entry, it)).clear() }
+    (keys - stored).forEach { Membership(who, EntryGroup(entry, it)).set() }
+}
+```
+
+A formula never looks at the player to learn one or many. `exports` reads `K`, so the reader's type is known while editing, and the writers and migrations keep the rows valid:
+
+```
+protagonist.party.bank                       // K = String: a Party, with no value when in no group
+protagonist.party.any { it.bank > 5 }        // K = List<String>: a List<Party>
+```
+
+Inside a widened chain `group` is always one group, so `bank += 1` works the same for both.
+
+The key must be stable, or stored data leaks. One ordinary realm check walks the type, with no list of allowed classes. A catalog bound cannot express this: bounds read through parents, and a scalar or a creator union has none.
+
+```kotlin
+fun TypeUse.isStableKey(seen: Set<TypeUse> = emptySet()): Boolean = when (this) {
+    is Scalar -> kind !is FloatScalar
+    is Nullable -> value.isStableKey(seen)
+    is Named -> when {
+        isA(Identity) || isA(DomainValue) -> true
+        isCollection || this in seen -> false
+        else -> fields.all { it.type.isStableKey(seen + this) }   // records, and every union case
+    }
+}
+
+each(GroupEntryDraft) { entry ->
+    if (!entry.element.isStableKey()) report("A group key must be stable", at = entry.typeArgument)
+}
+```
+
+So `String`, an enum, `World`, `Protagonist`, and `union { Guild(name: String), Solo }` pass. `Position` fails because it holds a `Double`, and an item fails because it holds lists. The check runs through the query graph, so editing a union later reports it on the group entry and blocks publishing. The panel's type picker offers everything for now and shows this error.
+
+Changing `K` reuses [migrations](migrations.md#group-entries).
+
+- A group has stored data and derived members. `Island` is the type `islands` exports for its `EntryGroup`, so two group entries with the same key type are still different types. It has `.key` and `.members`.
+- Membership is stored, so it works offline (last known group), member lookup is an index, and the panel shows it. Going offline is `Removed` with `because = Tracking`, which the sync handler ignores, so a formula group keeps the last groups while offline.
+- One for a party where joining another moves you; many for overlapping regions or several guilds. Joining a group you are already in changes nothing.
+- `Ref<ManualGroupEntry<*>>` means `JoinGroup` cannot point at a formula group; the panel only offers manual ones.
+- Party is not a Typewriter concept; creators build parties with a manual group.
 - Each group entry exports its own identity type through `bind` (`islands` gives `Island`). Formulas name the grouping, `protagonist.island`; there is no ambiguous `protagonist.group`.
+- Anything else about a group, such as an island's name, is a provider or a variable keyed by the group, unless it belongs in the key type.
+
+Every legacy group is one of these:
+
+| Legacy | Now |
+| --- | --- |
+| `WorldGroupEntry` | Formula group with `K = World`: `protagonist.world` |
+| `PlaceholderGroupEntry` | Formula group: `papi("%team%")` |
+| `BalanceGroupEntry` | Formula group: `if (protagonist.balance > 1000) "rich" else "poor"` |
+| A plugin's group | Formula group over a mirror the plugin's extension supplies |
+| `GlobalGroupEntry` | A variable with no keys, or a formula group with key `"all"` |
+| `PlayerGroupEntry` | No group: a variable keyed by protagonist |
+
+An extension only supplies a value, with no group code:
+
+```kotlin
+data class TeamId(@Key val protagonist: Protagonist, val value: String) : Live
+
+@Handler
+fun Tick<EverySecond>.teamId(player: PaperPlayer, teams: TeamPlugin): TeamId? =
+    teams.teamOf(player)?.let { TeamId(player.protagonist, it.id) }
+```
+
+A mirror updates at its poll rate. An extension that needs a change at once adds an event writer, as any mirror can.
+
+| Case | What happens |
+| --- | --- |
+| Formula key becomes null | The player leaves. Their handlers stop, and the data stays with the group. |
+| Formula key edited | Online players move at once. Offline ones stay until they return. |
+| Everyone in a group offline | Its data stays, because it is keyed by the group. |
+| Members on two servers | Per member handlers run on each member's own engine. |
+| Reading a group with none | With one, `protagonist.island` has no value; `.orNull` handles it, as with mirrors. With many, the list is empty. |
+| `ContinueForGroup` for a player in two groups | It fires once per group, so both groups run it. |
+| Panel edit of a group value | With one, it goes to the player's group, or last group when offline. With many, the panel must ask which; not designed. |
+| Group entry deleted | All its groups end: memberships and values keyed by them are removed. A variable keyed by its type and a `JoinGroup` pointing at it are errors that block publishing until fixed. |
+| Leaving a group you are not in | Nothing happens. |
+
+Not proven: `dynamic()` and `bind` are not built, and `bind` is planned after groups, so the layer order needs checking in the plan; how a key of any allowed type is written as a stable row key; narrowing a watched formula to one entry is already open for the plan; which engine writes when a key reads a mirror and a player is held by two engines; the cost of one watched formula per online player per formula group.
 
 ### Widening
 

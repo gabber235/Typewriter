@@ -232,11 +232,17 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Grace (session)**: how long a session survives without an engine reporting it, set per engine kind (about 10 seconds for Minecraft). See [live-data.md](live-data.md#session).
 
-**Group identity**: a (group entry, key) pair such as `Group(islands, "42")` with stored data and derived members. See [interactions.md](interactions.md#groupings-and-membership).
+**`EntryGroup<X>`**: the group identity of our group entries, (entry, key), so deleting the entry ends its groups. See [interactions.md](interactions.md#groupings-and-membership).
+
+**`GroupIdentity`**: catalog parent of what members belong to, with stored data and derived members: `EntryGroup` and `Snapshot`, and an extension's own. See [interactions.md](interactions.md#groupings-and-membership).
 
 **Group subject**: the subject of chain events; protagonist kind handler parameters then iterate its members. See [events-and-handlers.md](events-and-handlers.md#resolution).
 
-**Grouping**: a way to bucket protagonists, declared by a static `GroupEntry`. See [interactions.md](interactions.md#groupings-and-membership).
+**`FormulaGroupEntry`**: grouping whose key is a formula, so outside facts decide who is in which group. See [interactions.md](interactions.md#groupings-and-membership).
+
+**`GroupEntry<K>`**: a grouping; `K` is picked, `X` means one group per player and `List<X>` means several. See [interactions.md](interactions.md#groupings-and-membership).
+
+**Grouping**: a way to bucket protagonists, declared by a `FormulaGroupEntry` or a `ManualGroupEntry`. See [interactions.md](interactions.md#groupings-and-membership).
 
 ## H
 
@@ -312,7 +318,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`MemberContext`**: core formula context evaluated per member, adding `protagonist` to `InteractionContext`. See [formula-language.md](formula-language.md#formula-contexts).
 
-**Membership**: core stored value (grouping, protagonist, key) that places a protagonist in a group. See [interactions.md](interactions.md#groupings-and-membership).
+**Membership**: core stored value (protagonist, group identity) that places a protagonist in a group. See [interactions.md](interactions.md#groupings-and-membership).
 
 **Membership (interaction)**: every entry reachable from a start through trigger links, computed at publication. See [interactions.md](interactions.md#creation-and-membership).
 

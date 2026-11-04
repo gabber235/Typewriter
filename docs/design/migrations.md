@@ -20,7 +20,7 @@ A migration is needed when content changes and something outside the content mus
 | An instance key is renamed | Moves the instance's stored data to the new key (through the book's migration) |
 | A quest stage is removed | Moves protagonists off the removed stage |
 | A running step is removed | Moves or ends the interactions running it |
-| A group entry changes | Moves the stored data that depends on it, such as `Membership` |
+| A group entry's `K` changes | See [Group entries](#group-entries) |
 
 No migration is needed when:
 
@@ -107,6 +107,39 @@ All pending migrations run in the publication transaction, together with switchi
 - Running interactions see the new content through hot publish (see [interactions.md](interactions.md)).
 
 Rolling a production realm back to an earlier revision is a realm mode feature, not part of a migration: see [../vision/realm-modes.md](../vision/realm-modes.md).
+
+## Group entries
+
+A group entry's `K` is its type argument, so a change goes through the existing `PreviewTypeArgumentChange` and `PrepareTypeArgumentChange`, and its generated hook asks for what it needs (decided 2026-11-05).
+
+| Change | Formula | Runs |
+| --- | --- | --- |
+| One to many | None. One row already fits | Never |
+| Many to one | `pick`: `old: List<Party>` gives `Party?`, for example `old.first()` | Per player with several rows |
+| A stored key no longer fits the key type | `convert`: `old: String` gives `Int?`, for example `old.toIntOrNull()` | Per group |
+
+```kotlin
+fun GroupEntryMigrationScope.migrate() {
+    // Compares stored keys through ValueAdmission, not type names: a creator union
+    // keeps its name when a case is removed, and adding a case needs no conversion.
+    if (keysNotAdmitted(new.element)) {
+        val convert = input("convert", type = new.element.orNull, default = clear)
+        // Moves Membership and every value keyed by this group.
+    }
+    if (old.isMany && !new.isMany) {
+        val pick = input("pick", type = new.group.orNull, default = clear)
+        // Keeps one row for each player who has several.
+    }
+}
+```
+
+There are two formulas because `island_bank` belongs to a group, not a player: a formula per player cannot say where group `b` went when a player's `["a", "b"]` became `"a"`.
+
+- Moving everything keyed by one identity is new, and renaming a book instance needs it too.
+- Two groups becoming one key fail the dry run when both hold the same variable.
+- `convert` giving null ends the group, so its data goes by the owner rule.
+- Formula groups use the same hook. Online players correct themselves after publish, and offline players on rejoin, so the default clear loses little.
+- Whether a migration formula may read stored values, such as `old.maxBy { it.island_bank }`, is open.
 
 ## Developer migrator
 

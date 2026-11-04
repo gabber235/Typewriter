@@ -17,7 +17,7 @@ An identity is something stored data can be about. Identities are the only types
 | `Engine` | One engine, by its stable topology engine id; survives restarts and ends when the engine leaves the topology (see [live-data.md](live-data.md#session)). |
 | An entry type (`NpcEntry`) | A published entry: a `Resource` typed field in a runtime value (stored data, holds, live values, events) is that entry's identity, stored as its `ResourceId`, read as the current published version, and ended when the entry is unpublished. Authored fields keep `Ref<Contract.Side, T>`; KSP rejects a `Resource` typed field in an authored type. |
 | `BoundPath<X>` | A place in authored content: an entry plus a path through fields, list items, and map rows, in its portable `value_location` form. Reads the current published value. Only the location is its identity. |
-| Group identity | A (group entry, key) pair such as `Group(islands, "42")`. Each group entry exports its own identity type through `bind` (`islands` gives `Island`). |
+| `GroupIdentity` | What members belong to. Our group entries use `EntryGroup(entry, key)`, such as `EntryGroup(islands, "42")`, so it ends with the entry. Each group entry exports its own type through `bind` (`islands` gives `Island`). `Snapshot(interaction)` ends with the interaction. |
 | Book instance | One instance of a book (see [formula-language.md](formula-language.md)). |
 
 `Identity` is a catalog parent type. Every type above has it as a parent, so the catalog, KSP, and realm admission can all ask "is this an identity?" the same way.
@@ -29,6 +29,7 @@ Every identity has a lifetime:
 - A step or interaction ends when it finishes.
 - A session ends when no engine reports it for longer than the grace of its engine kind.
 - An identity defined by an entry ends when that entry is removed by a publication.
+- An identity ends when an identity inside it ends (decided 2026-11-05), so `EntryGroup(islands, "42")` ends with `islands`.
 - A `BoundPath` ends when its place is gone, for example when its list item is removed.
 
 Owners such as steps and interactions carry a generation. An event addressed to a step whose generation has finished is dropped, and a stale write from a finished step is dropped by the same check.
@@ -512,7 +513,7 @@ Rules:
 - An equal result writes nothing; a different one is one stored write, emitting `Added`, `Changed`, or `Removed` as usual.
 - Stored derives are pure over their tracked inputs and rerun only when an input changes.
 - A cycle between derives is a realm check error.
-- A stored derive that reads a mirror keeps its last result when that input vanished by `Tracking` (a quit or server move), so group sync keeps the last group while the protagonist is offline. The realm warns that such a derive cannot run offline.
+- A stored derive that reads a mirror keeps its last result when that input vanished by `Tracking` (a quit or server move). The realm warns that such a derive cannot run offline.
 
 The same `@Derive` shape with a `Hold` result is live and never saved (see [interactions.md](interactions.md)); with a `Live` result it is a computed mirror (see [live-data.md](live-data.md)).
 
