@@ -79,6 +79,8 @@ final class Panel {
     if (_inStep) return act();
     _inStep = true;
     _proof = null;
+    // `cargo xtask e2e` reads this line when a run stops before it reports.
+    debugPrint("scenario step: $says");
     steps.add(
       results.Step(
         atMillis: DateTime.now().millisecondsSinceEpoch,

@@ -16,8 +16,10 @@ use anyhow::{Context as _, Result, bail};
 
 use crate::e2e::failures::rfc3339;
 use crate::process::{Group, Supervisor, Unsupervised};
-use crate::results::{self, TestRun};
-use crate::skirout::base::harness::v1::test_run::{Artifact, ArtifactKind, Attempt};
+use crate::results::{self, Outcome, TestRun};
+use crate::skirout::base::harness::v1::test_run::{
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Demonstrates, Failure, Runner, Span, TestCase,
+};
 use crate::{CommandExt, Context};
 
 /// The file the runner writes inside the evidence folder.
@@ -37,6 +39,14 @@ pub struct WindowMargins {
 const PREVIEW_LIMIT: u64 = 3 * 1024 * 1024;
 /// How long the output log waits for the pipes to drain after the command exited.
 const TEE_DRAIN: Duration = Duration::from_secs(10);
+/// The id of the case a command leaves when it was stopped before it reported.
+const STOPPED_CASE: &str = "the drive was stopped before it reported";
+/// How much of the recording shows a stopped command.
+const STOPPED_CLIP_MILLIS: i64 = 2 * 60 * 1000;
+/// The lines a scenario logs as it advances (panel/integration_test/support/scenarios.dart and
+/// panel.dart), with the panel's own output and whatever surrounds them in a browser log.
+const SCENARIO_START: &str = "scenario start: ";
+const SCENARIO_STEP: &str = "scenario step: ";
 
 /// A command to record, with the programs it needs on the same display.
 pub struct Recorded {
@@ -52,6 +62,11 @@ pub struct Recorded {
     pub env_remove: Vec<String>,
     /// Where the command's output is kept too, each line stamped with its arrival time.
     pub log: Option<PathBuf>,
+    /// Where the companions' output goes instead of this process's own.
+    pub companion_log: Option<PathBuf>,
+    /// The runner of the run a command stopped before it reported leaves in its place: without
+    /// one, such a stop leaves nothing.
+    pub runner: Option<Runner>,
 }
 
 impl Recorded {
@@ -66,6 +81,8 @@ impl Recorded {
             env: Vec::new(),
             env_remove: Vec::new(),
             log: None,
+            companion_log: None,
+            runner: None,
         }
     }
 
@@ -101,6 +118,18 @@ impl Recorded {
     /// arrival time in the format failure folders cut logs by.
     pub fn log_to(mut self, log: PathBuf) -> Self {
         self.log = Some(log);
+        self
+    }
+
+    /// Writes the companions' output to `log`; a browser's is too much to print.
+    pub fn companions_log_to(mut self, log: PathBuf) -> Self {
+        self.companion_log = Some(log);
+        self
+    }
+
+    /// Reports as `runner` when the command is stopped before it reports.
+    pub fn reporting_as(mut self, runner: Runner) -> Self {
+        self.runner = Some(runner);
         self
     }
 }
@@ -144,19 +173,20 @@ pub fn record_with(
         let _companions = recorded
             .companions
             .iter()
-            .map(|companion| companion_spawn(ctx, supervisor, companion, None))
+            .map(|companion| companion_spawn(ctx, supervisor, companion, None, &recorded))
             .collect::<Result<Vec<_>>>()?;
-        let status = supervisor.run(&mut command)?;
+        let outcome = supervisor.run(&mut command);
         if let Some(tee) = tee {
             tee.finish(&mut command);
         }
+        let status = outcome.map_err(|error| stopped(out, &recorded, None, error))?;
         return Ok((read_run(out, &command, status)?, status));
     }
     let display = Xvfb::start(supervisor, recorded.margins)?;
     let _companions = recorded
         .companions
         .iter()
-        .map(|companion| companion_spawn(ctx, supervisor, companion, Some(&display)))
+        .map(|companion| companion_spawn(ctx, supervisor, companion, Some(&display), &recorded))
         .collect::<Result<Vec<_>>>()?;
     let video = out.join("run.mp4");
     let ffmpeg = recorded
@@ -164,7 +194,7 @@ pub fn record_with(
         .then(|| Ffmpeg::x11grab(supervisor, &display, recorded.margins, &video))
         .transpose()?;
     command.env("DISPLAY", &display.name);
-    let status = supervisor.run(&mut command)?;
+    let outcome = supervisor.run(&mut command);
     if let Some(tee) = tee {
         tee.finish(&mut command);
     }
@@ -177,6 +207,10 @@ pub fn record_with(
             None
         }
     };
+    let status = outcome.map_err(|error| {
+        let recording = started.map(|started| (video.as_path(), started));
+        stopped(out, &recorded, recording, error)
+    })?;
     let mut test_run = read_run(out, &command, status)?;
     if let Some(started) = started {
         for case in &mut test_run.cases {
@@ -262,6 +296,108 @@ fn read_run(out: &Path, command: &Command, status: ExitStatus) -> Result<TestRun
         );
     }
     results::read(&path)
+}
+
+/// The `error` a command was stopped with, such as its time budget ending, naming where the
+/// scenarios were. Nothing reports for such a command, so what it leaves is written here: one
+/// failed case with the end of `recording` (the video and its first frame's time).
+fn stopped(
+    out: &Path,
+    recorded: &Recorded,
+    recording: Option<(&Path, i64)>,
+    error: anyhow::Error,
+) -> anyhow::Error {
+    let seen = [&recorded.log, &recorded.companion_log]
+        .into_iter()
+        .flatten()
+        .find_map(|log| last_progress(&fs::read_to_string(log).ok()?));
+    if let Some(runner) = &recorded.runner {
+        let now = millis(SystemTime::now());
+        let run = stopped_run(runner.clone(), now, &error, seen.clone());
+        if let Err(failure) = write_stopped(out, run, recording) {
+            eprintln!("xtask: the stopped run left no evidence: {failure:#}");
+        }
+    }
+    match seen {
+        Some(seen) => error.context(format!("stopped at {seen}")),
+        None => error,
+    }
+}
+
+/// What `run` shows of a stop: its one attempt's clip when there is a recording, then the run
+/// file itself.
+fn write_stopped(out: &Path, mut run: TestRun, recording: Option<(&Path, i64)>) -> Result<()> {
+    if let Some((video, started)) = recording {
+        for case in &mut run.cases {
+            for attempt in &mut case.attempts {
+                if let Some(span) = &mut attempt.span {
+                    span.start_millis = span.start_millis.max(started);
+                }
+                cut(out, video, started, &case.id, attempt)?;
+            }
+        }
+    }
+    results::write(&run, &out.join(RUN_FILE))
+}
+
+/// The run of a command stopped at `now`: one failed case that names `error` and where the
+/// scenarios were, and spans the end of the recording.
+fn stopped_run(runner: Runner, now: i64, error: &anyhow::Error, seen: Option<String>) -> TestRun {
+    TestRun {
+        runner,
+        started_at_millis: now,
+        attempt_policy: AttemptPolicy::Exactly(1),
+        cases: vec![TestCase {
+            id: STOPPED_CASE.to_owned(),
+            demonstrates: Demonstrates::Failure,
+            attempts: vec![Attempt {
+                outcome: Outcome::Failed(Box::new(Failure {
+                    message: format!("{error:#}"),
+                    first_broken: seen,
+                    ..Failure::default()
+                })),
+                span: Some(Span {
+                    start_millis: now - STOPPED_CLIP_MILLIS,
+                    end_millis: now,
+                    ..Span::default()
+                }),
+                duration_millis: STOPPED_CLIP_MILLIS,
+                ..Attempt::default()
+            }],
+            ..TestCase::default()
+        }],
+        ..TestRun::default()
+    }
+}
+
+/// The scenario and step `log` last named, whatever surrounds those lines, such as a browser
+/// log's prefix and source: `[REALM-1] the title, at step "open Acme"`.
+fn last_progress(log: &str) -> Option<String> {
+    let after = |marker: &str, line: &str| {
+        let (_, rest) = line.split_once(marker)?;
+        // A browser log quotes the message and ends the line with its source.
+        Some(
+            rest.split("\", source: ")
+                .next()?
+                .trim_end_matches('"')
+                .to_owned(),
+        )
+    };
+    let mut scenario = None;
+    let mut step = None;
+    for line in log.lines() {
+        if let Some(started) = after(SCENARIO_START, line) {
+            scenario = Some(started);
+            step = None;
+        } else if let Some(reached) = after(SCENARIO_STEP, line) {
+            step = Some(reached);
+        }
+    }
+    let scenario = scenario?;
+    Some(match step {
+        Some(step) => format!("{scenario}, at step \"{step}\""),
+        None => format!("{scenario}, before its first step"),
+    })
 }
 
 /// One captioned clip and one looping preview (640 px wide, 8 fps, under [`PREVIEW_LIMIT`]) for a
@@ -377,6 +513,7 @@ fn companion_spawn(
     supervisor: &mut dyn Supervisor,
     line: &[String],
     display: Option<&Xvfb>,
+    recorded: &Recorded,
 ) -> Result<Group> {
     let [program, args @ ..] = line else {
         bail!("empty companion command");
@@ -385,6 +522,10 @@ fn companion_spawn(
     command.args(args);
     if let Some(display) = display {
         command.env("DISPLAY", &display.name);
+    }
+    if let Some(log) = &recorded.companion_log {
+        let file = File::create(log).with_context(|| format!("cannot create {}", log.display()))?;
+        command.stdout(file.try_clone()?).stderr(file);
     }
     supervisor.spawn(&mut command)
 }
@@ -492,7 +633,6 @@ pub(crate) fn file_name(id: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::skirout::base::harness::v1::test_run::Span;
 
     #[test]
     fn the_first_frame_time_comes_from_ffmpegs_input_line() {
@@ -523,6 +663,74 @@ mod tests {
         .unwrap();
 
         assert!(attempt.artifacts.is_empty());
+    }
+
+    #[test]
+    fn a_stopped_run_names_the_scenario_and_step_a_browser_log_reached_last() {
+        let log = concat!(
+            "[1:1:INFO:CONSOLE(9)] \"scenario start: [AUTH-1] signs out\", source: http://a (9)\n",
+            "[1:1:INFO:CONSOLE(9)] \"scenario start: [REALM-1] opens\", source: http://a (9)\n",
+            "[1:1:INFO:CONSOLE(9)] \"scenario step: sign in as ada\", source: http://a (9)\n",
+            "[1:1:INFO:CONSOLE(9)] \"scenario step: open Acme\", source: http://a (9)\n",
+            "[1:1:INFO:CONSOLE(9)] \"the panel logs on\", source: http://a (9)\n",
+        );
+
+        assert_eq!(
+            last_progress(log).unwrap(),
+            "[REALM-1] opens, at step \"open Acme\""
+        );
+    }
+
+    #[test]
+    fn a_scenario_that_took_no_step_is_named_with_none() {
+        let log = "scenario start: [AUTH-1] a\nscenario step: b\nscenario start: [AUTH-2] c\n";
+
+        assert_eq!(
+            last_progress(log).unwrap(),
+            "[AUTH-2] c, before its first step"
+        );
+    }
+
+    #[test]
+    fn a_log_without_a_scenario_names_nowhere() {
+        assert_eq!(last_progress("flutter says hello\n"), None);
+    }
+
+    #[test]
+    fn a_stopped_command_leaves_a_failed_case_with_the_reason() {
+        let out = tempfile::tempdir().unwrap();
+        let log = out.path().join("browser.log");
+        fs::write(&log, "scenario start: [AUTH-1] a\n").unwrap();
+        let recorded = Recorded::video(vec!["flutter".into()])
+            .companions_log_to(log)
+            .reporting_as(Runner::PanelWeb);
+
+        let error = stopped(out.path(), &recorded, None, anyhow::anyhow!("out of time"));
+
+        assert_eq!(
+            format!("{error:#}"),
+            "stopped at [AUTH-1] a, before its first step: out of time"
+        );
+        let run = results::read(&out.path().join(RUN_FILE)).unwrap();
+        assert_eq!(run.cases.len(), 1);
+        let Outcome::Failed(failure) = &run.cases[0].attempts[0].outcome else {
+            panic!("the stopped case did not fail");
+        };
+        assert_eq!(failure.message, "out of time");
+        assert_eq!(
+            failure.first_broken.as_deref(),
+            Some("[AUTH-1] a, before its first step")
+        );
+    }
+
+    #[test]
+    fn a_stopped_command_nothing_reports_for_leaves_no_run() {
+        let out = tempfile::tempdir().unwrap();
+        let recorded = Recorded::video(vec!["flutter".into()]);
+
+        stopped(out.path(), &recorded, None, anyhow::anyhow!("out of time"));
+
+        assert!(!out.path().join(RUN_FILE).exists());
     }
 
     #[test]

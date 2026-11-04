@@ -30,6 +30,7 @@ use crate::deploy;
 use crate::evidence::{self, Recorded, SCREEN, WindowMargins};
 use crate::lock::{self, HeavyLock};
 use crate::results::{self, AttemptPolicy, Outcome, Quarantine, TestRun};
+use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::stack::spec::StackSpec;
 use crate::stack::{self, typewriter};
 use crate::{CommandExt, Context, cluster, generate, secrets};
@@ -115,6 +116,14 @@ impl Device {
         match self {
             Self::Desktop => "panel",
             Self::Chrome => "panel-web",
+        }
+    }
+
+    /// The runner its scenarios report as.
+    fn runner(self) -> Runner {
+        match self {
+            Self::Desktop => Runner::Panel,
+            Self::Chrome => Runner::PanelWeb,
         }
     }
 }
@@ -244,14 +253,21 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
                     let recorded = (drive.launch)(&launch, ids)?
                         .in_dir("panel")
                         .env("EVIDENCE_DIR", out.display().to_string())
-                        .log_to(out.join(failures::DRIVE_LOG));
+                        .log_to(out.join(failures::DRIVE_LOG))
+                        .companions_log_to(out.join(BROWSER_LOG))
+                        .reporting_as(device.runner());
                     // Without a results file the drive never ran (the build or the launch
                     // failed), and recording fails.
                     evidence::record_with(ctx, out, recorded, &mut *stack)
                 })
             })
         })
-        .inspect_err(|_| target.report_stack_failure(ctx))?;
+        .inspect_err(|_| {
+            target.report_stack_failure(ctx);
+            if let Err(error) = keep_stopped_run(&evidence, &commit) {
+                eprintln!("xtask: the stopped run left no evidence: {error:#}");
+            }
+        })?;
     failures::collect(&evidence, &mut run, &stack)?;
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
@@ -270,6 +286,39 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
         file.display()
     );
     Ok(())
+}
+
+/// Folds the drives' runs below `evidence`'s attempts into the suite's run, as a stopped suite has
+/// no other: staging reads only that, so what finished and what was stopped reach the evidence.
+fn keep_stopped_run(evidence: &Path, commit: &str) -> Result<()> {
+    let mut suite: Option<TestRun> = None;
+    for (path, mut run) in results::read_all(&evidence.join(results::ATTEMPTS))? {
+        let folder = path
+            .parent()
+            .context("a run file without a folder")?
+            .strip_prefix(evidence)?
+            .display()
+            .to_string();
+        for attempt in run.cases.iter_mut().flat_map(|case| &mut case.attempts) {
+            attempt.folder.clone_from(&folder);
+        }
+        let Some(suite) = &mut suite else {
+            suite = Some(run);
+            continue;
+        };
+        for case in run.cases {
+            match suite.cases.iter_mut().find(|known| known.id == case.id) {
+                Some(known) => known.attempts.extend(case.attempts),
+                None => suite.cases.push(case),
+            }
+        }
+    }
+    let Some(suite) = suite else { return Ok(()) };
+    let suite = TestRun {
+        commit: commit.to_owned(),
+        ..suite
+    };
+    results::write(&suite, &evidence.join("test_run.json"))
 }
 
 /// One `flutter drive` an attempt on a `T` makes: where its evidence lies inside
@@ -517,8 +566,17 @@ fn in_chrome<T: Target>(mut command: Vec<String>, launch: &Launch<'_, T>) -> Res
     }
     Ok(Recorded::video(command)
         .with_margins(CHROME_MARGINS)
-        .with(vec!["chromedriver".into(), format!("--port={port}")]))
+        // Chrome's log holds the page's console, which `flutter drive` does not forward on the
+        // web, so a stopped run still knows where its scenarios were.
+        .with(vec![
+            "chromedriver".into(),
+            format!("--port={port}"),
+            "--enable-chrome-logs".into(),
+        ]))
 }
+
+/// Where a drive's companions log, beside its output: the browser and its driver.
+const BROWSER_LOG: &str = "browser.log";
 
 /// What Chrome draws beside the page: its tabs, toolbar and automation banner. `flutter drive`
 /// always resizes the window, which ends kiosk and fullscreen modes, and the banner stays in both.
@@ -612,6 +670,53 @@ mod tests {
         Drove, drive_attempts, drove, e2e_args as parsed, exited, failed, refusal, report_text,
         requirement_run, run,
     };
+
+    #[test]
+    fn a_stopped_suite_keeps_what_every_drive_left() {
+        let evidence = tempfile::tempdir().unwrap();
+        let attempts = evidence.path().join(results::ATTEMPTS);
+        results::write(
+            &requirement_run("CONN-1", "[CONN-1] Reconnects", Outcome::Passed),
+            &attempts.join("1").join("test_run.json"),
+        )
+        .unwrap();
+        results::write(
+            &requirement_run("CONN-1", "[CONN-1] Reconnects", Outcome::Passed),
+            &attempts.join("2").join("test_run.json"),
+        )
+        .unwrap();
+        results::write(
+            &run(&[(
+                "the drive was stopped before it reported",
+                failed("out of time"),
+            )]),
+            &attempts.join("2").join("sign-in").join("test_run.json"),
+        )
+        .unwrap();
+
+        keep_stopped_run(evidence.path(), "abc").unwrap();
+
+        let suite = results::read(&evidence.path().join("test_run.json")).unwrap();
+        assert_eq!(suite.commit, "abc");
+        let folders = |id: &str| -> Vec<String> {
+            let case = suite.cases.iter().find(|case| case.id == id).unwrap();
+            case.attempts.iter().map(|a| a.folder.clone()).collect()
+        };
+        assert_eq!(folders("[CONN-1] Reconnects"), ["attempts/1", "attempts/2"]);
+        assert_eq!(
+            folders("the drive was stopped before it reported"),
+            ["attempts/2/sign-in"]
+        );
+    }
+
+    #[test]
+    fn a_suite_stopped_before_any_drive_keeps_nothing() {
+        let evidence = tempfile::tempdir().unwrap();
+
+        keep_stopped_run(evidence.path(), "abc").unwrap();
+
+        assert!(!evidence.path().join("test_run.json").exists());
+    }
 
     #[test]
     fn each_attempt_launches_the_drives_of_its_target_that_own_the_selection() {

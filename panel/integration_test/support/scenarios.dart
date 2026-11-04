@@ -18,6 +18,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "panel.dart";
 import "reported_run.dart";
 import "stack.dart" as stack;
+import "wait.dart" show patience;
 
 export "package:flutter_test/flutter_test.dart" show expect, isNot;
 export "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v1/test_run.dart"
@@ -29,6 +30,11 @@ export "panel.dart";
 /// runs every scenario. `cargo xtask e2e` sets it for `--only` and to run
 /// failed scenarios again.
 const _selection = String.fromEnvironment("SCENARIOS");
+
+/// The longest a scenario may run. The slowest takes about two and a half
+/// minutes on a runner. A scenario that hangs fails here, naming its last step,
+/// and the ones after it still run.
+const _scenarioLimit = Duration(minutes: 5);
 
 final _requirementFormat = RegExp(r"^[A-Z]+(-[A-Z]+)*-\d+(\.[EF]\d+)?$");
 
@@ -93,6 +99,8 @@ void scenario(
     );
   }
   testWidgets(id, skip: skip, (tester) async {
+    // `cargo xtask e2e` reads this line when a run stops before it reports.
+    debugPrint("scenario start: $id");
     final artifacts = <results.Artifact>[];
     // The panel logs through debugPrint; a failure keeps what it printed.
     final log = StringBuffer();
@@ -110,16 +118,21 @@ void scenario(
     };
     final Panel panel;
     try {
-      panel = await Panel.launch(
-        tester,
-        onCapture: (name, png) {
-          final path = "screenshots/$requirement/$name.png";
-          _captures[path] = base64Encode(png);
-          artifacts.add(
-            results.Artifact(kind: results.ArtifactKind.screenshot, path: path),
-          );
-          _publish();
-        },
+      panel = await _withinLimit(
+        Panel.launch(
+          tester,
+          onCapture: (name, png) {
+            final path = "screenshots/$requirement/$name.png";
+            _captures[path] = base64Encode(png);
+            artifacts.add(
+              results.Artifact(
+                kind: results.ArtifactKind.screenshot,
+                path: path,
+              ),
+            );
+            _publish();
+          },
+        ),
       );
     } on Object catch (error) {
       debugPrint = original;
@@ -141,11 +154,13 @@ void scenario(
     results.Outcome outcome = results.Outcome.passed;
     int? bodyEnded;
     try {
-      await body(panel);
-      await panel.holdResult();
-      // The recording ends on what the body proved, not on the panel closing.
-      bodyEnded = DateTime.now().millisecondsSinceEpoch;
-      await panel.close();
+      await _withinLimit(() async {
+        await body(panel);
+        await panel.holdResult();
+        // The recording ends on what the body proved, not on the panel closing.
+        bodyEnded = DateTime.now().millisecondsSinceEpoch;
+        await panel.close();
+      }());
       // An exception the framework caught during a frame fails the test only
       // after the body returns; surfacing it here records it as the failure.
       final pending = tester.takeException();
@@ -170,7 +185,7 @@ void scenario(
         if (pending != null) log.writeln("${_now()} $pending");
       }
       try {
-        await panel.capture("failure");
+        await panel.capture("failure").timeout(patience);
       } on Object catch (captureError) {
         log.writeln("${_now()} no failure screenshot: $captureError");
       }
@@ -207,10 +222,18 @@ void scenario(
       _publish();
       // The scenario's spans reach the stack's collector while it still runs;
       // the case is recorded first, so a failed export cannot drop it.
-      await flushTelemetry();
+      await flushTelemetry().timeout(patience);
     }
   });
 }
+
+/// [running], failing once it passes [_scenarioLimit].
+Future<T> _withinLimit<T>(Future<T> running) => running.timeout(
+  _scenarioLimit,
+  onTimeout: () => throw TimeoutException(
+    "The scenario did not finish within ${_scenarioLimit.inMinutes} minutes",
+  ),
+);
 
 /// A scenario that switches the stack's faults through [stack]. Faults are
 /// reset after the scenario, so the next one starts from a healthy stack.
