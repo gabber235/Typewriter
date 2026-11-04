@@ -384,6 +384,13 @@ const FAILURE_REPORT: &[&[&str]] = &[
     ],
     &[
         "-n",
+        "surrealdb",
+        "logs",
+        "deployment/surrealdb",
+        "--tail=40",
+    ],
+    &[
+        "-n",
         "wasmcloud",
         "logs",
         "-l",
