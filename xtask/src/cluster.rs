@@ -368,6 +368,30 @@ const FAILURE_REPORT: &[&[&str]] = &[
         "jsonpath={range .status.conditions[*]}{.type}={.status} {.reason}: {.message}{\"\\n\"}{end}",
     ],
     &["get", "gitrepositories,kustomizations", "-A"],
+    &[
+        "get",
+        "workloaddeployments,workloads",
+        "-A",
+        "-o",
+        "jsonpath={range .items[*]}{.kind} {.metadata.name}:{range .status.conditions[*]} {.type}={.status}({.message}){end}{\"\\n\"}{end}",
+    ],
+    &[
+        "-n",
+        "wasmcloud",
+        "logs",
+        "deployment/runtime-operator",
+        "--tail=80",
+    ],
+    &[
+        "-n",
+        "wasmcloud",
+        "logs",
+        "-l",
+        "wasmcloud.com/hostgroup=default",
+        "--all-containers",
+        "--prefix",
+        "--tail=80",
+    ],
     &["get", "pods", "-A", "-o", "wide"],
     &["describe", "nodes"],
     &[
@@ -453,7 +477,7 @@ fn crashed_containers(pods: &str) -> Result<Vec<CrashedContainer>> {
 impl CiCluster {
     /// Prints [`FAILURE_REPORT`]. A step that fails says so and the rest still run, since a broken
     /// cluster is what this reads.
-    fn print_failure(&self, ctx: &Context) {
+    pub(crate) fn print_failure(&self, ctx: &Context) {
         for args in FAILURE_REPORT {
             eprintln!("--- kubectl {}", args.join(" "));
             if let Err(error) = self.kubectl(ctx, args).run() {
@@ -566,7 +590,8 @@ impl CiCluster {
 
     /// Points the cluster's Typewriter tenant at `branch` and reconciles it, now that its images
     /// are in the registry; returns once every tenant Kustomization is Ready at `revision`, the
-    /// commit `branch` must hold. Prints the cluster's state when it cannot.
+    /// commit `branch` must hold, and every component runs on a host. Prints the cluster's state
+    /// when it cannot.
     pub fn release(&self, ctx: &Context, branch: &str, revision: &str) -> Result<()> {
         let released = self.reconcile_tenant(ctx, branch, revision);
         if released.is_err() {
@@ -645,7 +670,21 @@ impl CiCluster {
                 applied.trim()
             );
         }
-        Ok(())
+        // An applied WorkloadDeployment is only a request: Ready says its component runs on a host
+        // and answers its subjects.
+        self.kubectl(
+            ctx,
+            &[
+                "wait",
+                "workloaddeployments",
+                "--all",
+                "--all-namespaces",
+                "--for=condition=Ready",
+                "--timeout=10m",
+            ],
+        )
+        .run()
+        .context("the backend's components did not start on a host")
     }
 
     /// flux against this cluster's `flux-system` namespace only.

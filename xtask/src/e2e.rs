@@ -143,6 +143,8 @@ pub(crate) trait Target: Sized + 'static {
     /// The port Chrome serves the panel on when the target accepts only one; any free port
     /// otherwise.
     fn web_port(&self) -> Option<u16>;
+    /// Prints what explains a stack that could not run on the target, beyond the stack's own logs.
+    fn report_stack_failure(&self, _ctx: &Context) {}
 }
 
 /// A fresh worktree stack, up for the run only; its own services bring its backend up.
@@ -183,6 +185,11 @@ impl Target for CiCluster {
     /// Its Authentik accepts the panel only at clients.json's panel origin.
     fn web_port(&self) -> Option<u16> {
         Some(self.panel_port())
+    }
+
+    /// The backend runs in the cluster, which is thrown away with the runner.
+    fn report_stack_failure(&self, ctx: &Context) {
+        self.print_failure(ctx);
     }
 }
 
@@ -243,7 +250,8 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
                     evidence::record_with(ctx, out, recorded, &mut *stack)
                 })
             })
-        })?;
+        })
+        .inspect_err(|_| target.report_stack_failure(ctx))?;
     failures::collect(&evidence, &mut run, &stack)?;
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
