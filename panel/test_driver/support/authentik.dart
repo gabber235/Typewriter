@@ -34,17 +34,20 @@ final class AuthentikPages {
 
   /// Runs [signOut] and waits until the end session Authentik opens in a
   /// window of its own has opened and, once Authentik redirected back,
-  /// closed again.
+  /// closed again. The watch starts first, so a window that opens and closes
+  /// while [signOut] runs still counts.
   Future<void> endsSessionDuring(Future<void> Function() signOut) async {
     Future<int> windows() async =>
         (await _driver.webDriver.windows.toList()).length;
     final before = await windows();
-    await signOut();
-    await until(
-      "Authentik's end session window opens",
-      () async => await windows() > before,
-      within: redirectPatience,
-    );
+    await Future.wait([
+      until(
+        "Authentik's end session window opens",
+        () async => await windows() > before,
+        within: redirectPatience,
+      ),
+      signOut(),
+    ]);
     await until(
       "Authentik's end session completes",
       () async => await windows() == before,

@@ -84,24 +84,70 @@ final class Journey {
 
   /// Waits until the panel runs in the current page and answers Flutter
   /// Driver, as it does again after every redirect back from the provider.
-  Future<void> panelReady() async {
-    await until("the panel answers Flutter Driver", () async {
-      final type = await _driver.webDriver.execute(
-        r"return typeof window.$flutterDriver;",
-        [],
-      );
-      return type == "function";
-    }, within: redirectPatience);
-    await _driver.waitUntilFirstFrameRasterized();
+  Future<void> panelReady() =>
+      until("the panel answers Flutter Driver", () async {
+        final type = await _driver.webDriver.execute(
+          r"return typeof window.$flutterDriver;",
+          [],
+        );
+        return type == "function";
+      }, within: redirectPatience);
+
+  /// Clicks the panel control that reads [text] with the browser's own mouse,
+  /// as a user does. A Flutter Driver tap would wait for its result in a page
+  /// the click may just have left, which the sign in button does.
+  Future<void> tap(String text) async {
+    final center = await _settledCenter(text);
+    final mouse = _driver.webDriver.mouse;
+    await mouse.moveTo(
+      xOffset: center.dx.round(),
+      yOffset: center.dy.round(),
+      absolute: true,
+    );
+    await mouse.click();
   }
 
-  /// Activates the panel control that reads [text].
-  Future<void> tap(String text) =>
-      _driver.tap(find.text(text), timeout: redirectPatience);
-
   /// Waits until the panel shows [text].
-  Future<void> expectVisible(String text) =>
-      _driver.waitFor(find.text(text), timeout: redirectPatience);
+  Future<void> expectVisible(String text) => _driver.runUnsynchronized(
+    () => _driver.waitFor(find.text(text), timeout: redirectPatience),
+  );
+
+  /// Where the control that reads [text] rests, once an opening menu or page
+  /// stopped moving it.
+  Future<DriverOffset> _settledCenter(String text) async {
+    DriverOffset? last;
+    await until("the panel's \"$text\" stops moving", () async {
+      final seen = await _center(text);
+      final settled = seen.dx == last?.dx && seen.dy == last?.dy;
+      last = seen;
+      return settled;
+    }, within: redirectPatience);
+    return last!;
+  }
+
+  /// The center of the control that reads [text], answered unsynchronized
+  /// because Flutter Driver otherwise waits for animations to end, and the
+  /// character on the sign in page never does.
+  ///
+  /// A patch around `FlutterDriver.getCenter`, which throws on the web: a whole
+  /// coordinate crosses from the browser as a JSON integer, and
+  /// `GetOffsetResult.fromJson` casts it to a double. This sends the same
+  /// command and reads any number; it can go once Flutter fixes that cast.
+  Future<DriverOffset> _center(String text) async {
+    final center = await _driver.runUnsynchronized(
+      () => _driver.sendCommand(
+        GetOffset(
+          find.text(text),
+          OffsetType.center,
+          timeout: redirectPatience,
+        ),
+      ),
+    );
+    return DriverOffset(
+      (center["dx"] as num).toDouble(),
+      (center["dy"] as num).toDouble(),
+    );
+  }
 
   /// Opens the panel again in the same browser, the way a user comes back,
   /// and waits until it runs.
