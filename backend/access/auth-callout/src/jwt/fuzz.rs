@@ -81,6 +81,20 @@ const UNKNOWN_ALGORITHM_KEY: &str = r#"{
     "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY"
 }"#;
 
+/// Authentik publishes each key with its certificate (`providers/oauth2/views/jwks.py`).
+const KEY_WITH_CERTIFICATE: &str = r#"{
+    "kty": "OKP", "kid": "fixture-key", "crv": "Ed25519", "alg": "EdDSA", "use": "sig",
+    "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY",
+    "x5c": ["AAECAwQ="],
+    "x5t": "CJV2UCQq6OLdqP9jIUVaE9PlMno",
+    "x5t#S256": "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU"
+}"#;
+
+#[test]
+fn a_key_published_with_its_certificate_verifies_tokens() {
+    assert!(identity_with(&jwks_document(&[KEY_WITH_CERTIFICATE])));
+}
+
 #[test]
 fn a_jwks_with_one_bad_key_still_verifies_tokens_signed_by_its_good_key() {
     assert!(identity_with(&jwks_document(&[

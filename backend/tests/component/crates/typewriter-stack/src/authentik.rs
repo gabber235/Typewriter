@@ -142,8 +142,20 @@ impl AuthentikStandIn {
 
     async fn jwks(State(this): Shared) -> Json<Value> {
         let public = URL_SAFE_NO_PAD.encode(this.signing.verifying_key().to_bytes());
+        // Authentik publishes each key with its certificate's thumbprints
+        // (`providers/oauth2/views/jwks.py`). It also sends the certificate (`x5c`), which the
+        // panel parses, and this double has none to send.
         Json(json!({
-            "keys": [{ "kty": "OKP", "crv": "Ed25519", "alg": "EdDSA", "use": "sig", "kid": KEY_ID, "x": public }]
+            "keys": [{
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "alg": "EdDSA",
+                "use": "sig",
+                "kid": KEY_ID,
+                "x": public,
+                "x5t": "CJV2UCQq6OLdqP9jIUVaE9PlMno",
+                "x5t#S256": "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU",
+            }]
         }))
     }
 

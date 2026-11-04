@@ -455,6 +455,9 @@ fn parse_jwks_response(
 /// a key's `alg` is checked as plain JSON before jose sees the key. `alg` is the only field of a
 /// key that reaches those types. Dropped keys could never match anyway, since a token's key must
 /// declare its exact algorithm. Remove this guard once a jose release with the fix is pinned.
+///
+/// jose reads a key's `x5t` as a string borrowed from the text it parses, so each kept key is parsed
+/// from text: a `serde_json::Value` owns its strings and refuses every key that has a certificate.
 pub(crate) fn parse_jwks(body: &[u8]) -> Result<Jwks, otel_wasi::Error> {
     #[derive(Deserialize)]
     struct RawJwks {
@@ -472,7 +475,7 @@ pub(crate) fn parse_jwks(body: &[u8]) -> Result<Jwks, otel_wasi::Error> {
                 .and_then(serde_json::Value::as_str)
                 .is_some_and(|algorithm| SUPPORTED_ALGORITHMS.contains(&algorithm))
         })
-        .map(serde_json::from_value)
+        .map(|key| serde_json::from_str(&key.to_string()))
         .collect::<Result<Vec<jose::Jwk>, _>>()
         .error_with_slug("auth-callout-jwks-response-parse-failed")?;
     main_attribute!("auth.jwks.keys.dropped" = (declared - keys.len()) as i64);
