@@ -27,6 +27,19 @@ data class Health(@Key val protagonist: Protagonist, val value: Double) : Live
 
 `Runtime` objects (mutable, local, such as an NPC activity) are covered in [interactions.md](interactions.md). Holds are covered there too.
 
+### Generic mirrors
+
+When the value type alone says what a mirror means, the mirror needs no record of its own (decided 2026-11-05). Core has one generic `Live` type, and an alias gives it a short name without adding a type. So `Position` is one type, whether stored in content or read live.
+
+```kotlin
+data class Mirror<K, V>(@Key val key: K, val value: V) : Live
+
+typealias PlayerPosition = Mirror<Protagonist, Position>
+typealias NpcPosition = Mirror<Npc, Position>
+```
+
+A bare value keeps its own record, because `Health` and `Hunger` would both be `Mirror<Protagonist, Double>`. So does a value used twice (main and off hand are both `Item`) and a mirror with several keys (`InRegion`).
+
 ### Writers
 
 A mirror is written by handlers that return it. The handler's return type tells KSP which mirror it produces.
@@ -72,7 +85,7 @@ fun Removed<InRegion>.leftArena(chat: HasChat) {
 
 ### Equality, rate, and threads
 
-- Equality is defined by the mirror type, so the type chooses its own precision (a position mirror may round).
+- Equality is defined by the mirror type, so a record chooses its own precision. A `Mirror<K, V>` uses the equality of `V`, so every small move of a `PlayerPosition` is a change. That cost is not measured.
 - At most one `Changed` fires per mirror and identity per tick; the last value in the tick wins.
 - Writers run on the thread that owns the identity. Other threads read the last committed value without a thread hop.
 - A miss on the owner thread runs the writer inline. A handler on a worker that misses waits for the next tick end, which is the one owner visit in the chain limit; it is never silently skipped (decided 2026-11-04). A key whose subject is held on another engine follows [Demand across engines](#demand-across-engines).
@@ -100,6 +113,7 @@ health.orNull                 // null when there is no value
 ```
 
 - **Shape:** one `value` field gives that value, several fields give a record (`location.x`), keys only gives `Boolean` (does the value exist).
+- **Name:** a `Mirror<K, V>` reader is named after `V`, so `Mirror<Protagonist, Position>` gives `protagonist.position` and `Mirror<Npc, Position>` gives `npc.position`.
 - **Read only:** there is no `Settable`, since a mirror has one writer.
 - **Engine only:** a reader also takes `engine` from scope, so a formula on the realm, such as a `ReactionScope` field, gets a normal resolution error.
 - **No value** (decided 2026-11-04) is one rule, however it arose: the subject is offline, or a writer returned `null`. As with a handler's `Health` and `Health?`, the creator states which they mean:
@@ -135,19 +149,18 @@ A one shot handler parameter pulls once (running the writer if missing) and does
 A computed mirror is a derive over a copy, with one graph node per demanded key (decided 2026-11-04). A derive parameter named like a `@Key` of the result is filled from the demanded key, so a producer never lists its keys:
 
 ```kotlin
-data class Position(@Key val protagonist: Protagonist, val value: Location) : Live
-
 data class InRegion(
     @Key val protagonist: Protagonist,
     @Key val region: RegionEntry,
 ) : Live
 
 @Handler
-fun Tick<EveryTick>.position(player: PaperPlayer): Position = Position(player.protagonist, player.location)
+fun Tick<EveryTick>.position(player: PaperPlayer) =
+    Mirror(player.protagonist, player.location.fromPlatform<Position>())
 
 @Derive
-fun Position.inRegion(region: RegionEntry): InRegion? =
-    InRegion(protagonist, region).takeIf { region.contains(value) }
+fun PlayerPosition.inRegion(region: RegionEntry): InRegion? =
+    InRegion(key, region).takeIf { region.contains(value) }
 ```
 
 The check runs on the worker and reruns only when the position changes. Entering and leaving a region is `Added<InRegion>` and `Removed<InRegion>`; there are no separate enter and exit events.
@@ -174,11 +187,10 @@ Anything that "finds" a value for a handler (the nearest NPC, NPCs in range) is 
 
 ```kotlin
 data class NearestNpc(@Key val protagonist: Protagonist, val npc: Npc) : Live
-data class NpcPosition(@Key val npc: Npc, val value: Location) : Live
 
 @Derive
-fun Position.nearestNpc(npcs: All<NpcPosition>): NearestNpc? =
-    npcs.minByOrNull { it.value.distanceTo(value) }?.let { NearestNpc(protagonist, it.npc) }
+fun PlayerPosition.nearestNpc(npcs: All<NpcPosition>): NearestNpc? =
+    npcs.minByOrNull { it.value.distanceTo(value) }?.let { NearestNpc(key, it.key) }
 ```
 
 ### Parameterized mirrors
@@ -500,7 +512,7 @@ All checks form one list. Errors block publication; warnings and info never bloc
 | error | derive cycles |
 | error | unfinished migration inputs |
 | error | failing migration dry runs |
-| warning or error | a `ReportedId` value no engine reports (`KnownIds`): a warning while no engine has reported the type, an error once one has |
+| warning or error | a [domain](domains.md) value no engine reports (`KnownIds`): a warning while no engine has reported the type, an error once one has (always a warning for `OpenDomainValue`) |
 | warning | tied allow and deny priorities |
 | warning | tied hold priorities for the same hold type, holder, and key |
 | warning | live handlers on `Changed<X>` when X can change offline |

@@ -64,11 +64,17 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`CameraHold`**: the hold a scene uses for the camera; it snapshots location, flight, and velocity and restores them at the end. See [interactions.md](interactions.md#scenes).
 
+**`CancelableEvent`**: interface of an event a verdict can deny, such as `BlockBreak`. See [events-and-handlers.md](events-and-handlers.md#event-entries).
+
+**`CancelableEventEntry<E>`**: the shared entry for a cancelable event: `condition` and `cancel` formulas plus links. See [events-and-handlers.md](events-and-handlers.md#event-entries).
+
 **`Candidate<E>`**: handler parameter that runs once per published entry of type `E` whose book applies to the subject. See [events-and-handlers.md](events-and-handlers.md#parameters).
 
 **Capability**: an engine specific feature set (such as `Tick` or the Minecraft traits) kept out of the engine neutral core. See [live-data.md](live-data.md#engines-and-traits).
 
-**Capability root**: a scope contribution from a capability (such as `minecraft`) that formulas resolve last. Holds pure values only (constants, registry ids, types); live data hangs off `engine: Engine`. See [formula-language.md](formula-language.md#lookup-order).
+**`Capture`**: core event that runs a formula on a player and writes the result into a field; `captureButton` sends it from a presentation. See [capture.md](capture.md).
+
+**`CaptureContext`**: core formula context of a `Capture` formula, providing `protagonist` and `engine`. See [capture.md](capture.md).
 
 **Chain**: entries linked by triggers, where links fire explicitly and carry a growing context. See [events-and-handlers.md](events-and-handlers.md#chain).
 
@@ -146,6 +152,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`DialogueHold`**: example hold derived from `Speaking` that shows a dialogue. See [interactions.md](interactions.md#holds).
 
+**`Domain<T>`**: the formula type of a name such as `minecraft.item`; any name on it gives a `T`, such as `ItemType("diamond")`. See [domains.md](domains.md).
+
+**`DomainValue`**: interface of a type whose valid values live elsewhere (`World`, `ItemType`, `MythicSkill`), so one picker and one check serve them all; `OpenDomainValue` makes an unknown value a warning. See [domains.md](domains.md).
+
 **Dry run**: a read only evaluation of a migration against real stored values on every edit. See [migrations.md](migrations.md#checks-while-editing).
 
 **`Due`**: durable time; a stored value with `at` and an optional `repeat`. When `at` passes, the realm removes the row or moves it to its next time and fires `Elapsed<D>`, whose handlers are stored only. See [stored-data.md](stored-data.md#due).
@@ -169,6 +179,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Entry record**: a chain context record keyed by producing entry plus type, add only. See [events-and-handlers.md](events-and-handlers.md#context).
 
 **Event**: a plain Kotlin type saying one thing happened, one type per meaning; every event is a `@TypewriterType`, so it crosses engines as its catalog value. See [events-and-handlers.md](events-and-handlers.md#event).
+
+**`EventContext<E>`**: formula context of an event entry's fields, adding `event: E`. See [events-and-handlers.md](events-and-handlers.md#event-entries).
+
+**`EventEntry<E>`**: the shared entry for an event that cannot be denied: a `condition` formula plus links. An extension writes only the event and its source. See [events-and-handlers.md](events-and-handlers.md#event-entries).
 
 **Event result**: what an event emitted from a session reports back to that session: `Done`, `Denied(reason)`, `Failed(reason)`, or `NotHandled`. See [events-and-handlers.md](events-and-handlers.md#follow-ups-and-cancel).
 
@@ -274,7 +288,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Keys**: the identities a stored value is about: none (global), one, several (ordered), or a `Set` (symmetric). See [stored-data.md](stored-data.md#keys).
 
-**`KnownIds`**: stored value `KnownIds(engine, type, ids)` with the ids one engine reports for one reported id type; the shared picker and the reported id check read it. See [panel-engine-communication.md](panel-engine-communication.md) question 10.
+**`KnownIds`**: stored value `KnownIds(engine, type, ids)` with the ids one engine reports for one domain; the shared picker and the domain check read it. See [domains.md](domains.md).
 
 ## L
 
@@ -290,7 +304,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Live members**: members of a group interaction, derived from `Membership`, so joins and leaves take effect at once. See [interactions.md](interactions.md#live-members).
 
-**Lookup order**: names resolve innermost first: lambdas, context, element, page, book, imports, capability roots. See [formula-language.md](formula-language.md#lookup-order).
+**Lookup order**: names resolve innermost first: lambdas, context, element, page, book, imports, top level providers. See [formula-language.md](formula-language.md#lookup-order).
 
 ## M
 
@@ -311,6 +325,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Milestones**: alpha is the first closed beta release (the PR stack), beta is added during the closed beta, after comes after the closed beta, someday has no plan. See [closed-beta-roadmap.md](closed-beta-roadmap.md).
 
 **Mirror**: see `Live`. See [live-data.md](live-data.md#live-mirrors).
+
+**`Mirror<K, V>`**: the generic `Live` type for a value type that says on its own what it means, such as `Mirror<Protagonist, Position>`. See [live-data.md](live-data.md#generic-mirrors).
 
 **Mirror reader**: the read only formula call KSP generates from a `Live` type, such as `health` or `inRegion(arena)`. See [live-data.md](live-data.md#reading-a-mirror-in-a-formula).
 
@@ -434,8 +450,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`RichText`**: text type whose `template` provider (MiniMessage) comes from the Minecraft capability. See [formula-language.md](formula-language.md#text-templates).
 
-**Reported id**: an id type whose valid values only engines know (`World`, registry ids such as `BlockType`, extension ids such as `NexoItemId`); implements `ReportedId`, engines record their values in `KnownIds`, and one panel picker and one realm check serve every such type. See [panel-engine-communication.md](panel-engine-communication.md).
-
 **Routing**: an event goes where a handler can run; realm owned data goes through the realm; events and live effects about a protagonist go to its protagonist subject, and session subjects serve only targets that are one connection. See [live-data.md](live-data.md#routing).
 
 **`Runtime`**: a mutable local object on one server, never saved, with a creator lifetime; created by returning it from a handler. See [interactions.md](interactions.md#runtime-objects).
@@ -549,6 +563,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`Var<T, C>`**: the one formula field kind; `T` decides what the text may be and `C` what it sees. See [formula-language.md](formula-language.md#vart-c-the-one-field-kind).
 
 **`Variable<K, T>`**: creator declared stored data as a static entry with name, keys, type, default, and reactions. See [stored-data.md](stored-data.md#variables).
+
+**Version layer**: a part of an extension or engine with `since`, loaded on that Minecraft release and newer, holding only what changed. See [engines.md](engines.md#version-layers).
 
 **Variants**: different behaviour (Java chat versus a Bedrock form) picked by the step at start through a different stored value. See [interactions.md](interactions.md#variants).
 

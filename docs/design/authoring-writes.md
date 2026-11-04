@@ -390,6 +390,8 @@ The MCP service logs in as the user, so its commits carry the user as principal.
 
 ### 2. In game capture: write the player's Position into a field
 
+Common captures use the core `Capture` event ([capture.md](capture.md)); this form is for custom steps.
+
 ```kotlin
 class CapturePositionTool(private val realm: RealmAuthoring) {
     suspend fun capture(player: PaperPlayer, entry: ResourceId, origin: Origin) {

@@ -104,8 +104,8 @@ Handlers read a `Var` field of their receiver as a plain parameter with the fiel
 Entries are linked by triggers. Links always fire explicitly; nothing follows links automatically. Firing emits an ordinary `Triggered<E>` event per linked entry, queued like `emit`. Context is a typed bag of records that only grows along the chain.
 
 ```kotlin
-fun PlayerChat.containsText(trigger: Candidate<PlayerMessageContainsTextEventEntry>) {
-    if (trigger.matches(this)) trigger.triggers.fire(context)
+fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
+    if (entry.condition) entry.complete(context)
 }
 ```
 

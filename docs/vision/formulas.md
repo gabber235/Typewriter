@@ -233,7 +233,7 @@ if (needed <= 0) "Go to the dragon!" else "Find $needed more scales."
 | --- | --- | --- |
 | Durations | Types from core or extensions | Kotlin style, for example `5.seconds` |
 | Coordinates, vectors | Types | Ordinary values |
-| Items, blocks, sounds | A `minecraft` root in context, generated from game data. Ordinary context: present in fields under the Minecraft capability, absent elsewhere (for example a future Hytale engine) | For example `minecraft.block.diamond_ore` |
+| Items, blocks, sounds | A `minecraft` root in context, whose ids come from what engines report. Ordinary context: present in fields under the Minecraft capability, absent elsewhere (for example a future Hytale engine) | For example `minecraft.block.diamond_ore` |
 | Entry references | Data driven members, like everything else | |
 
 Members are defined by the core engine, extensions, or engine capabilities. The realm runs the type information and linting, so the panel knows what is possible, what each formula produces, and what will error. Values are computed on the engine during execution.

@@ -35,9 +35,39 @@ val item: Item = stack.fromPlatform()         // specific bridges first, the fal
 ```
 
 - The full path of a value is: stored data, decoded natively into a Kotlin value (`CompiledContent`), bridged into the engine's value.
-- Reading back asks every bridge registered for that platform type: specific bridges first (Nexo), then the fallback (Minecraft). This lookup is why bridges are registered objects, not plain extension functions.
+- Reading back asks every bridge registered for that platform type whose Typewriter type fits the wanted type: specific bridges first (Nexo), then the fallback (Minecraft). So `fromPlatform<Position>()` and `fromPlatform<Location>()` read the same Paper `Location` through different bridges. This lookup is why bridges are registered objects, not plain extension functions.
 - KSP registers bridges per engine kind, like capabilities. A future engine supplies its own bridges for the same Typewriter types, so content never changes.
-- `toPlatform` on a value the engine cannot provide (an unknown Nexo id) is a typed failure; publication checks catch it earlier through the reported id check over `KnownIds`.
+- `toPlatform` on a value the engine cannot provide (an unknown Nexo id) is a typed failure; publication checks catch it earlier through the [domain](domains.md) check over `KnownIds`.
+
+## Version layers
+
+Extensions and most engine code never mention a Minecraft version (decided 2026-11-05). Code is written once, compiled against the oldest supported Paper (1.21.4), and runs on every release. A newer layer holds only what really changed.
+
+```kotlin
+typewriter {
+    extension {
+        // Runs on every supported release. Most extensions stop here.
+        sourceSet("enginePaper") { engine(project(":engine-paper"), version = "^1") }
+
+        // Optional, only to use something newer.
+        sourceSet("paperSince26_2") {
+            engine(project(":engine-paper"), version = "^1")
+            since("26.2")
+            includes("enginePaper")
+        }
+    }
+}
+```
+
+- A server loads every layer up to its version, oldest first, so servers on different versions share one deployment.
+- `since` is the only version word. There are no exact versions or upper limits, so nobody lists releases.
+- For a bridge or a capability of the same type, the newest layer wins. A handler only adds; a layer cannot replace it.
+- A release newer than any layer loads them all. A failing bridge is a typed failure for that one component.
+- A server older than 1.21.4 fits no base layer, so the loader reports it and does not start the engine.
+- The build also compiles each extension against the newest Paper, so a method that is gone is a build error and not a crash. From 1.21.4 to 26.2, 219 of the 19,783 members in `org.bukkit` are gone or changed by signature: 0 of 90 in `ItemStack`, 2 of 297 in `Player`.
+- Version dependent features stay [capabilities](../vision/engines.md) to the code that uses them; a layer is how an engine provides one.
+
+Not proven: the loader only adds parts today, so "newest wins" is new; a part per layer with its own Paper on the classpath, and KSP on it, are untried; a method that keeps its signature but acts differently is not caught.
 
 ## Wiring inside an engine
 
@@ -65,4 +95,4 @@ On a join, the session listener starts the key write off the game thread, so the
 - Panel sessions reuse the existing presence heartbeat (`skir-src/organization/v1/presence.skir`: `PanelPresence{session_id, sequence, location}` on `presence.organization.{organization}.user.{user}`, route `organization_presence`). The panel engine consumes it to report sessions; there is no second heartbeat. `organization_presence` gains `realm_participant` as a subscriber, which needs a subject family for events from a panel role to a service role (`subject.ts`). A panel engine reports only tabs whose `PresenceLocation` is in its own realm, so a tab on the members page has no session. The heartbeat is the refresh: each one rewrites the key with a 45 second TTL; `PresenceLeft` or leaving the realm rewrites it with a 10 second TTL, so a reload continues; when heartbeats stop, the key expires. The `Protagonist` comes from the permission bound `{user}` subject token, never from the payload.
 - A panel request is one event delivered to the engine where its subject is live (hybrid routing); this does not contradict "interactions do not span engines".
 - Same host shortcut (beta, decided 2026-11-04): engines and a realm on one host talk through the host locally instead of over NATS, for most traffic including stored data sync; engines and the realm do not notice. Contracts never assume NATS, and the host binds caller identity the way caller bound subjects do.
-- Registry search and existence checks (materials, particles, worlds, a Nexo id) read `KnownIds`, the stored reported ids, so they work while engines are offline. Actions (capture, teleport) are events to the engine where the subject is live, not a channel through the realm.
+- Registry search and existence checks (materials, particles, worlds, a Nexo id) read `KnownIds`, the stored [domain](domains.md) values, so they work while engines are offline. Actions (capture, teleport) are events to the engine where the subject is live, not a channel through the realm.

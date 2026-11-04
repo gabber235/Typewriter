@@ -28,10 +28,10 @@ A combination without a real use (world + rotation) gets no type until something
 @JvmInline
 @Serializable
 @TypewriterType(id = WORLD_TYPE_ID)
-value class World(override val key: String) : ReportedId // "minecraft:overworld", "myserver:arena"
+value class World(override val key: String) : DomainValue // "overworld", "myserver:arena"
 ```
 
-A world is identified by its namespaced key (Paper `World.getKey()`), not by UUID or name. A UUID changes when a world is copied to another server, which breaks templates and multi server setups; a key is stable and readable. `World` is a `ReportedId` ([panel-engine-communication.md](panel-engine-communication.md) question 10b): engines record the worlds they have in `KnownIds`, a reference to a key that no engine reports is a publication check diagnostic, and the panel edits it with the shared reported id picker.
+A world is identified by its namespaced key (Paper `World.getKey()`), not by UUID or name. A UUID changes when a world is copied to another server, which breaks templates and multi server setups; a key is stable and readable. `World` is a [domain](domains.md): engines record the worlds they have in `KnownIds`, a reference to a key that no engine reports is a publication check diagnostic, and the panel edits it with the shared picker.
 
 ### Part interfaces
 
@@ -118,6 +118,8 @@ fun <A, B> A.isInRange(other: B, range: Double): Boolean // false across worlds
     where A : InWorld<A>, A : Vector, B : InWorld<B>, B : Vector
 ```
 
+Checked with the Kotlin compiler (2026-11-05): `Location.distance(Position)` picks the world aware one and gives `Double?`, and `Location.distance(Vec3)` picks the plain one and gives `Double`. The formula checker's own overload rule must match this; no checker exists yet.
+
 In a formula:
 
 ```
@@ -127,7 +129,7 @@ spawn.copy(y = 64).add(z = 2)
 
 ### Panel
 
-Each exact type has its own editor showing exactly its parts. Capture (layer 10, with the types) fills exactly those parts from the player; teleport to a `Location` (layer 25, with highlights) keeps the player's current facing.
+Each exact type has its own editor showing exactly its parts. [Capture](capture.md) (layer 10, with the types) fills exactly those parts from the player; teleport to a `Location` (layer 25, with highlights) keeps the player's current facing.
 
 ## Items
 
@@ -142,7 +144,7 @@ interface Item { val amount: Int }
 
 @TypewriterType(id = MINECRAFT_ITEM_TYPE_ID)
 data class MinecraftItem(
-    val material: Material,
+    val type: ItemType,
     override val amount: Int = 1,
     val components: Set<ItemComponent> = emptySet(),
 ) : Item
@@ -162,17 +164,19 @@ interface ItemComponent
 
 data class Name(val text: RichText) : ItemComponent
 data class Lore(val lines: List<RichText>) : ItemComponent
-data class Consumable(val duration: Duration, val animation: UseAnimation, val sound: Sound) : ItemComponent
-data class Food(val nutrition: Int, val saturation: Float, val alwaysEdible: Boolean = false) : ItemComponent
-data class UseCooldown(val duration: Duration, val group: String = "") : ItemComponent
+data class Consumable(val consumeSeconds: Duration? = null, val animation: ItemUseAnimation? = null, val sound: Sound? = null) : ItemComponent
+data class Food(val nutrition: Int, val saturation: Float, val canAlwaysEat: Boolean? = null) : ItemComponent
+data class UseCooldown(val seconds: Duration, val cooldownGroup: String? = null) : ItemComponent
 data class Durability(val max: Int, val remaining: Int = max) : ItemComponent
-data class Tag(@Key val key: String, val value: String) : ItemComponent
+data class CustomData(val values: Map<String, NbtValue>) : ItemComponent
 ```
 
-- A component without `@Key` appears at most once per item; with `@Key`, once per key. `with(x)` replaces the component with the same type and key; two equal-keyed components written by hand are a publication check error.
-- Reading falls back to the material default: `item[Food]?.nutrition` on an apple is 4. `without(Food)` stores a removal, so defaults can be removed.
-- Components follow Minecraft's composable split (an edible item is `Consumable` + `Food`) and merge only true duplicates: one `Name` (`item_name` and `custom_name`), one `Enchantments` (`enchantments` and `stored_enchantments`), hiding as a field on the component (`tooltip_display`), `Durability(max, remaining)` (`max_damage` and `damage`), and real `Duration`, `Color`, and `Sound` values.
-- The Minecraft capability owns the mapping from components to Minecraft data components (Java 26.3 has 122). Components Paper's typed API lacks are written through NMS by the Paper engine. Not stored: components the game never encodes (`creative_slot_lock`, `map_post_processing`, `additional_trade_cost`, `debug_stick_state`) and raw NBT components (`entity_data`, `bucket_entity_data`, `block_entity_data`, `bees`, `lock`).
+- A component appears at most once per item. `with(x)` replaces the component of the same type.
+- Reading falls back to the item type's default: `item[Food]?.nutrition` on an apple is 4. `without(Food)` stores a removal, so defaults can be removed.
+- Components follow Minecraft's composable split (an edible item is `Consumable` + `Food`) and keep the game's field names, as [generated types](generated-types.md) write them. They merge only true duplicates, by hand: one `Name` (`item_name` and `custom_name`), one `Enchantments` (`enchantments` and `stored_enchantments`), hiding as a field on the component (`tooltip_display`), `Durability(max, remaining)` (`max_damage` and `damage`), and real `Duration`, `Color`, and `Sound` values.
+- Typewriter owns its item data (decided 2026-11-04): every component is a typed record, converted at the bridge. There is no serialized item form and no raw component, unlike legacy `SerializedItem`, so the field set and migrations stay in our hands, in our database, on our terms. This costs a record and a mapping per component, which [generated types](generated-types.md) write for us.
+- Layer 10 builds a record for every component of the game version the plan targets, with the value types they need, so none are left for later (decided 2026-11-04). New ones from new game versions are ordinary follow up work. A component without a record is simply not supported yet: reading an item drops it, with no notice.
+- The Minecraft capability owns the mapping from components to Minecraft data components (measured: 67 on 1.21.4, 111 on 26.2; Paper's typed API has 59 and 102 of them, and is marked experimental). Components Paper's typed API lacks are written through NMS by the Paper engine. On 26.2 that means nine components: `additional_trade_cost`, `bees`, `block_entity_data`, `bucket_entity_data`, `creative_slot_lock`, `custom_data`, `debug_stick_state`, `entity_data`, and `lock`. The game never saves `creative_slot_lock`, `additional_trade_cost`, and `map_post_processing`, so those records only act on a live stack. `entity_data`, `bucket_entity_data`, and `block_entity_data` get real records per entity and block entity from the same generator. `custom_data` holds whatever a plugin put there, so `CustomData` is a typed tree of `NbtValue` (byte, short, int, long, float, double, string, three arrays, list, compound), decided 2026-11-05. It keeps the whole component, so capturing another plugin's item loses nothing, and Bukkit's tags live inside it. `Sheep.data` and block predicates use the same tree.
 - Item behavior ("on use, do X") is not part of the item: it is an event with a match formula.
 
 ### Recognizing items
@@ -184,22 +188,24 @@ class RemoveItem(val matches: Var<(Item) -> Boolean, MemberContext>, val amount:
 ```
 
 ```
-it is MinecraftItem and it.material == minecraft.item.diamond
-it[Tag("quest")]?.value == "lost_key"
+it is MinecraftItem and it.type == minecraft.item.diamond
+it.tag("quest") == "lost_key"     // reads a Bukkit tag inside CustomData
 it.is_like(reward_item)        // same item, amount ignored
 protagonist.inventory.count { it.is_like(reward_item) } >= 5
 ```
 
 ## Types still to design
 
-Inventory of Minecraft values that need their own typed value in entry fields, formulas, stored data, or events, including ones legacy never had. Each row is designed later; this list fixes only the name and the reason. **(R)** marks a registry id: valid values are data driven per server and version, so the type is a `ReportedId` (engines record values in `KnownIds`; one shared picker and check). Legacy is `origin/develop` (`engine/`, `extensions/`).
+Which layer builds what (decided 2026-11-04): layer 10 builds every registry id in the table below, as ids only, together with the types its own demo needs and every item component with its value types. Every other type lands in the first layer whose demo needs it. Extra data that depends on the id (`Particle` options, `GameRule` value types, `Statistic` targets, `BlockState` properties) arrives with the type that uses it, not with the id.
+
+Inventory of Minecraft values that need their own typed value in entry fields, formulas, stored data, or events, including ones legacy never had. Each row is designed later; this list fixes only the name and the reason. **(R)** marks a registry id: valid values are data driven per server and version, so the type is a [domain](domains.md) (engines record values in `KnownIds`; one shared picker and check). Legacy is `origin/develop` (`engine/`, `extensions/`).
 
 ### Registry ids
 
 | Type | What it is | Why we need it | Hard part | Legacy had it |
 | --- | --- | --- | --- | --- |
-| `Material` (R) | item or block kind | item form, block checks | items and blocks are two registries; changes every version | yes |
-| `BlockType` (R) | block kind without state | "player breaks any oak log" | split from `Material`; changes every version | partial (`Material`) |
+| `ItemType` (R) | item kind | item form, item checks | changes every version | yes (`Material`) |
+| `BlockType` (R) | block kind without state | "player breaks any oak log" | changes every version | partial (`Material`) |
 | `EntityType` (R) | entity kind | spawn check, kill objective | variant data differs per type | yes |
 | `SoundEvent` (R) | sound id | play a sound | custom sounds from resource packs are not in the registry | yes (`SoundId`) |
 | `ParticleType` (R) | particle id | particle effect | options differ per particle (see `Particle`) | yes (enum only) |
@@ -227,7 +233,7 @@ Inventory of Minecraft values that need their own typed value in entry fields, f
 | `BannerPattern` (R) | banner pattern id | banner component | data driven | no |
 | `JukeboxSong` (R) | music disc song | `JukeboxPlayable` component | data driven | yes (component) |
 | `Instrument` (R) | goat horn sound | instrument component | data driven | no |
-| `MobVariant` (R) | wolf, cat, frog, pig, cow, chicken variant | NPC look | one registry per mob; grows each version | partial (per mob enums) |
+| `CatVariant`, `WolfVariant`, `FrogVariant`, ... (R) | one type per mob variant registry | NPC look | Paper has one registry per mob; grows each version | partial (per mob enums) |
 | `Font` (R) | font id | rich text font | resource pack defined; not a server registry | no |
 | `ItemModel` (R) | item model id | `ItemModel` component | resource pack defined | yes (component) |
 | `DialogId` (R) | data driven dialog | open a datapack dialog | new (1.21.6); data driven | no |
@@ -280,9 +286,8 @@ Inventory of Minecraft values that need their own typed value in entry fields, f
 
 | Type | What it is | Why we need it | Hard part | Legacy had it |
 | --- | --- | --- | --- | --- |
-| `RichText` | styled text with click and hover events, fonts | messages, names, lore | needs panel preview; placeholders | yes (MiniMessage string) |
-| `ClickAction` | open url, run command, copy, show dialog, custom | rich text and dialogs | action set grows per version | partial |
-| `HoverContent` | text, item, or entity tooltip | rich text | nested values | partial |
+| `RichText` | a MiniMessage string, see [text templates](formula-language.md#text-templates) | messages, names, lore | panel preview | yes (MiniMessage string) |
+| `ClickAction` | open url, run command, copy, show dialog, custom | dialogs | action set grows per version | partial |
 | `TextColor` | named or hex text color | text, teams, glowing | named versus hex | partial (`Color`) |
 | `Title` | title, subtitle, fade in, stay, fade out | title cue | times as `Duration` | yes |
 | `BossBar` | text, progress, color, overlay, flags | progress display | color and overlay enums | yes (parts) |
@@ -306,14 +311,12 @@ Inventory of Minecraft values that need their own typed value in entry fields, f
 | `ItemUseAnimation` | eat, drink, block, bow, spear | `Consumable` component | grows per version | no |
 | `ExperienceAmount` | levels or points | reward, check | levels versus points | no |
 | `Damage` | amount plus damage type and source | damage action, death events | source entity optional | partial |
-| `Cooldown` | duration plus group | `UseCooldown` component | none | no |
 
 ### Other
 
 | Type | What it is | Why we need it | Hard part | Legacy had it |
 | --- | --- | --- | --- | --- |
 | `NamespacedKey` | generic `namespace:path` | data container keys, custom ids | which registry it points to | yes |
-| `CronSchedule` | calendar schedule | daily quests, resets | time zones | yes (`CronExpression`) |
 | `ResourcePack` | pack url, hash, prompt | send a pack | hash and per player status | no |
 
 ## Requirements on other layers
@@ -322,6 +325,4 @@ Inventory of Minecraft values that need their own typed value in entry fields, f
 
 ## Open
 
-- Verify in layer 10 that Kotlin overload resolution picks the world aware `distance` for `Location` and `Position` over `Vector.distance`; if not, the worldless version gets its own name.
-- The full component list (every settable Minecraft data component as a component type).
-- Registry ids (sound, particle, material, entity type, potion effect) and sounds: their value shapes and per id extras are not designed yet. Validity, the picker, and the check are decided: `ReportedId` and `KnownIds` ([panel-engine-communication.md](panel-engine-communication.md) question 10).
+- Registry ids (sound, particle, item type, entity type, potion effect) and sounds: their value shapes and per id extras are not designed yet. Validity, the picker, and the check are decided: [domains.md](domains.md).

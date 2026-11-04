@@ -220,7 +220,7 @@ val text = entry.text(memberContext(member))
 
 Inheritance lets a formula written for a wider context fit a narrower one. `Var<T>` without a context gets only the surrounding scope.
 
-Core defines every context. Capability modules define none: engine values are generated readers of mirrors, and capability roots such as `minecraft` arrive as `scope` contributions. So contexts stay engine neutral. Extensions extend a core context.
+Core defines every context. Capability modules define none: engine values are generated readers of mirrors, and names such as `minecraft` are top level providers. So contexts stay engine neutral. Extensions extend a core context.
 
 | Context | Used by | Provides |
 | --- | --- | --- |
@@ -230,6 +230,8 @@ Core defines every context. Capability modules define none: engine values are ge
 | `TypeScope` | `Var<Type, TypeScope>` type fields | Pure values only; types in scope |
 | `DefinitionScope` | A `Definition`'s value | The definition's surroundings |
 | `MigrationScope` | Migration inputs ([migrations.md](migrations.md)) | `old` |
+| `CaptureContext` | A formula run on a player by [`Capture`](capture.md) | `protagonist`, `engine` |
+| `EventContext<E>` | The condition and cancel of an [event entry](events-and-handlers.md#event-entries) | `InteractionContext` plus `event: E` |
 | `ReactionScope<K, T>` | Variable reaction changes | `keys: K`, `value: Settable<T>`, `previous: T?` |
 | `BookScope` | Open: no field uses it yet (book `instances` uses `PublishScope`) | Open |
 
@@ -299,7 +301,7 @@ Scope has two directions:
 - **Inward**: `scope(target) { }` always aims at one own field (`scope(::text)`) or at my contents (`scope(contents)`), never at all fields.
 - **Outward**: `exports { }`, for every resource. The generated default exports its fields, `stored()` values and bound types.
 
-Which siblings a container makes visible is the container's own code, not a fixed realm rule. The book puts `book`, its elements by name and its imports into `scope(contents)`, and exports its variables per instance. Book scope, chain context (from upstream `produces`) and capability roots all arrive as `scope` contributions, while `C` stays the entry's own static scope.
+Which siblings a container makes visible is the container's own code, not a fixed realm rule. The book puts `book`, its elements by name and its imports into `scope(contents)`, and exports its variables per instance. Book scope and chain context (from upstream `produces`) arrive as `scope` contributions, while `C` stays the entry's own static scope.
 
 ## Lookup order
 
@@ -308,7 +310,7 @@ Names resolve innermost first:
 1. Lambda levels
 2. The context's values (`C`)
 3. Each container, innermost first: the element's own `scope(::field)`, then its page's `scope(contents)`, then its book's `scope(contents)` (which includes the book's imports)
-4. Capability roots (`minecraft`), which hold pure values only: constants, registry ids such as `minecraft.item.diamond`, and types
+4. Top level providers, such as `now` and `minecraft` (decided 2026-11-04); `minecraft.item.diamond` is a [domain](domains.md)
 
 The page level holds that page's elements and the book level holds all of them, so the same page wins; otherwise two elements with one name are an ambiguity error at the use site with a quick fix that qualifies by page (`village.spawn`). Element names need no uniqueness check.
 
@@ -496,6 +498,7 @@ Name rules:
 - **Fields are functions.** A record field is a function with no normal parameters whose first context parameter is the record: `name` on `Npc` is `name: context(npc: Npc) () -> String`. KSP types and content records both generate them.
 - **Calling versus referring is decided by the expected type.** Where a function type is expected, a name is the function value (`members.sumOf(book.reward)`); elsewhere it is a call with context filled from scope (`book.reward` in an `Int` field). There is no `::` syntax. `members.filter(.is_veteran)` is shorthand for `{ it.is_veteran }`.
 - **Overloads:** among same named functions the most specific context type wins (`distance(npc: Npc)` over `distance(entity: Entity)`); a tie is an ambiguity error with a quick fix. A generated function and a provider with the same context type stay the Open provider override question.
+- **Domains:** after real members, any name on a `Domain<T>` calls `T`'s constructor with that name and records the use for the domain check ([domains.md](domains.md)). The checker reads no game data, so the call is pure and engines bind it without `KnownIds`.
 - **Type names:** catalog types by display name, content types by definition name through scope; scope hides the catalog; two catalog types with one name are an ambiguity error, qualified by extension (`citizens.Npc`). Scalars use Kotlin names (`Int`, `Long`, `Float`, `Double`, `Decimal`, `String`, `Boolean`, `Instant`, `Duration`) mapped to `ScalarKind`; the width table belongs to the interpreter value model.
 
 There is no global inference, so errors stay local. Annotations are optional: `let x: Decimal = ...`. Checking runs as `check(formula)` in the query graph and is part of the formula interpreter that the realm and engines share.
@@ -650,6 +653,24 @@ A string template is sugar for a function call, and the expected type picks whic
 - `interpolate()` providers decide how a value enters text. `RichText` escapes tags by default, so player input cannot inject tags; `RichText.interpolate()` keeps them. Types can render richly (`Item.interpolate()` with hover).
 - The template editor highlights holes, renders MiniMessage, and runs `WatchFormula` inside holes.
 
+`RichText` is a MiniMessage string, and Adventure handles it at the edges (decided 2026-11-05). Adventure runs without Paper, and engines on other platforms have it too, so a typed tree of our own would add code without adding support. New text features arrive with a library bump. This is the one deliberate exception to [owning game data as typed records](minecraft-types.md#components): the string is the readable language creators write, like a formula, and is not tied to a game version.
+
+```kotlin
+@TypewriterType(id = RICH_TEXT_TYPE_ID)
+@JvmInline @Serializable
+value class RichText(val text: String)
+
+object RichTextBridge : Bridge<RichText, Component> {
+    override fun toPlatform(value: RichText) = miniMessage.deserialize(value.text)
+    override fun fromPlatform(platform: Component) = RichText(miniMessage.serialize(platform))
+}
+```
+
+- **Tested on MiniMessage 4.20, without Paper:** 20 of 20 kinds of text survived the trip to a string and back, including click, hover, translations, key binds, scores, selectors, NBT, shadow, and font. A gradient stays a gradient. Player text is escaped, so it cannot inject tags. One parse took 11 microseconds.
+- **Library versions differ by release:** Paper bundles Adventure 4.20 on 1.21.4, 4.26 on 1.21.11 and 26.1.2, and 5.1 on 26.2. The stored string does not depend on them, and each release compiles its own [bridges](generated-types.md#supported-versions).
+- **A newer tag on an older server** shows as plain text: `<sprite:x>` stayed literal in the test.
+- **Not proven:** a hover item with components may depend on the game version. The panel preview is not designed; turning the string into the existing `RichTextContent` runs on the server avoids a parser in Dart.
+
 Entry authors only declare the field:
 
 ```kotlin
@@ -668,7 +689,7 @@ The same rule as handlers: the types a function touches decide its kind.
 | Stored | Stored values | Anywhere stored data is reachable |
 | Live | Mirrors, through their [readers](live-data.md#reading-a-mirror-in-a-formula) | Any engine; a value held elsewhere crosses |
 
-Only context parameters reach stored or live data: identities such as `protagonist` and `engine: Engine` (the neutral identity of the server a formula runs on) carry the stored and live members, and capability roots hold pure values only (KSP rejects a stored or live member on a root). A provider that reads stored or live data without such an input declares it as a context parameter (`context(engine: Engine) fun papi(name: String)`); KSP cannot see function bodies, so this is a declaration it trusts. A formula's kind therefore follows from its context: `Var<Map<String, V>, PublishScope>` and `Var<Type, TypeScope>` provide no context parameters, so their formulas are pure by construction, and `Var<String, MemberContext>` can reach anything its context provides. A function type needs no kind marker. KSP still reads each provider's kind from its signature, and the realm computes a formula's kind while typing to decide where it can run. The realm can evaluate formulas that need no engine type.
+Only context parameters reach stored or live data: identities such as `protagonist` and `engine: Engine` (the neutral identity of the server a formula runs on) carry the stored and live members. A provider that reads stored or live data without such an input declares it as a context parameter (`context(engine: Engine) fun papi(name: String)`); KSP cannot see function bodies, so this is a declaration it trusts. A formula's kind therefore follows from its context: `Var<Map<String, V>, PublishScope>` and `Var<Type, TypeScope>` provide no context parameters, so their formulas are pure by construction, and `Var<String, MemberContext>` can reach anything its context provides. A function type needs no kind marker. KSP still reads each provider's kind from its signature, and the realm computes a formula's kind while typing to decide where it can run. The realm can evaluate formulas that need no engine type.
 
 ### What a formula reads
 

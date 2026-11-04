@@ -161,16 +161,16 @@ Live capability traits are provided by the engine (`PaperProtagonist : Player, H
 
 ### What KSP generates
 
-KSP generates a thin `EnginePart` per handler whose parameters are described as data; resolution is ordinary code in the runtime (decided 2026-11-03).
+KSP generates a thin `EnginePart` per handler whose parameters are described as data; resolution is ordinary code in the runtime (decided 2026-11-03). The example is an extension's own entry with a `locked` field: `fun BlockBreak.vault(entry: Candidate<VaultEntry>): Verdict`.
 
 ```kotlin
 // generated
-class BlockBreak_rule : VerdictHandler<BlockBreak>, EnginePart {
+class BlockBreak_vault : VerdictHandler<BlockBreak>, EnginePart {
     override val event = BlockBreak::class
-    override val params = listOf(Param.Candidate(BlockBreakEventEntry::class))
+    override val params = listOf(Param.Candidate(VaultEntry::class))
 
     override fun run(event: BlockBreak, values: List<Any?>) =
-        event.rule(values[0] as Candidate<BlockBreakEventEntry>)
+        event.vault(values[0] as Candidate<VaultEntry>)
 }
 ```
 
@@ -190,8 +190,8 @@ KSP also generates one accessor per `Var` field of an entry, so a handler reads 
 
 ```kotlin
 // generated
-val Candidate<BlockBreakEventEntry>.cancel: Boolean
-    get() = read(entry.cancel)
+val Candidate<VaultEntry>.locked: Boolean
+    get() = read(entry.locked)
 ```
 
 `read` evaluates with `runtime/formula`. A formula that fails counts as a failed handler and is logged; for a verdict that means `pass`. Check in the plan that KSP can generate this for entries from another extension.
@@ -284,15 +284,17 @@ Every verdict may carry a follow up: `allow { }`, `deny { }`, `pass { }`. A foll
 
 The outcome is Typewriter's own, from its verdicts. Another plugin cancelling the Paper event after that does not change it (decided 2026-11-04): this is often what a server wants, such as a fake mine where another plugin cancels the break and resets the block while Typewriter still rewards it. An event already cancelled before Typewriter's listener is skipped through `ignoreCancelled`, like legacy.
 
-Rule control (cancelling world behavior) is a cancelable event entry, like legacy. There is no separate rule entry concept.
+Rule control (cancelling world behavior) is a cancelable event entry, like legacy. There is no separate rule entry concept. The shared entry does this for every cancelable event ([Event entries](#event-entries)):
 
 ```kotlin
-data class BlockBreakEventEntry(..., val cancel: Var<Boolean>) : ...
-
 @Handler
-fun BlockBreak.rule(entry: Candidate<BlockBreakEventEntry>): Verdict =
-    if (entry.cancel) deny { entry.complete(context) }
-    else pass { entry.complete(context) }
+fun <E : CancelableEvent> E.rule(
+    entry: Candidate<CancelableEventEntry<E>>,
+): Verdict = when {
+    !entry.condition -> pass()
+    entry.cancel -> deny { entry.complete(context) }
+    else -> pass { entry.complete(context) }
+}
 ```
 
 The triggers fire exactly once either way. Deny and start goes through a deny follow up, so it only starts if that deny wins. When two cancelling entries both deny, both fire their triggers, like legacy; clash rules settle competing starts ([interactions.md](interactions.md)).
@@ -315,7 +317,7 @@ fun CaptureLocation.capture(player: PaperPlayer, origin: Origin) {
 }
 ```
 
-`player` is the event's only `Protagonist` field, so it is the subject and no roles are needed. On the wire (layer 4):
+`player` is the event's only `Protagonist` field, so it is the subject and no roles are needed. Common captures use the core `Capture` event instead ([capture.md](capture.md)); an event of your own, like this one, is for what a formula cannot do. On the wire (layer 4):
 
 ```skir
 struct EventOrigin { session: SessionId = 0; principal: PrincipalId = 1; }
@@ -386,12 +388,12 @@ Actions, steps, and triggers share this one flow:
 
 ```kotlin
 @Handler
-fun PlayerChat.containsText(trigger: Candidate<PlayerMessageContainsTextEventEntry>) {
-    if (trigger.matches(this)) trigger.triggers.fire(context)
+fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
+    if (entry.condition) entry.complete(context)
 }
 ```
 
-Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`. Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
+That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`. Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
 
 Forwarding is declared by the trigger type: the extension marks it forwardable.
 
@@ -432,6 +434,176 @@ entry.triggers.fire(context)
 ```
 
 Extra update fields (dialogue options) are applied the same way: `option.changes(context).attempt()`, then `option.triggers.fire(context)` unless refused. What `attempt()` commits and how the realm handles conflicts is in [stored-data.md](stored-data.md).
+
+## Event entries
+
+One shared entry serves almost every event (decided 2026-11-04 in the layer 10 rough design). An extension writes the event and its source; the entry, its editor, the filter, cancel, and the chain record come along. The filter is one boolean formula over the event, which is what the vision asks in place of criteria and how [items are already recognized](minecraft-types.md#recognizing-items). Filter fields generated from an event's fields do not work: only 13 of the 30 legacy events have no filter or a plain equal.
+
+Nothing here is built yet. See [Event entries not proven](#event-entries-not-proven).
+
+### End to end
+
+A player breaks diamond ore with an iron pickaxe. The break is cancelled, and a message names the location.
+
+**The event and source.** The facts a filter needs sit on the event, because a verdict cannot wait for a mirror. `@TypewriterDisplay` on the event gives the name, icon, and color the entry shows.
+
+```kotlin
+@TypewriterType(id = BLOCK_BREAK_TYPE_ID)
+@TypewriterDisplay(name = "On block break", icon = "mingcute:pickax-fill", color = Color.Hex.YELLOW)
+data class BlockBreak(
+    val player: Protagonist,
+    val blockType: BlockType,
+    val location: BlockLocation,
+    val mainHand: Item,
+    val offHand: Item,
+) : CancelableEvent
+
+class BlockBreakSource(paper: PaperEvents) : Source<BlockBreak> by
+    paper.source<BlockBreakEvent, BlockBreak> {
+        BlockBreak(
+            player.protagonist,
+            block.type.fromPlatform(),
+            block.location.fromPlatform(),
+            player.inventory.itemInMainHand.fromPlatform(),
+            player.inventory.itemInOffHand.fromPlatform(),
+        )
+    }
+```
+
+**The entries, in core.** `E` is the resource's type argument, the same way a `Definition<T>` holds its `T`.
+
+```kotlin
+interface CancelableEvent : Event
+
+interface EventContext<E : Event> : InteractionContext { val event: E }
+
+@TypewriterType(id = EVENT_ENTRY_TYPE_ID)
+class EventEntry<E : Event>(
+    // page, name, placement, triggers, refused, changes
+    val condition: Var<Boolean, EventContext<E>>,
+) : SequenceEntry, Triggerable
+
+@TypewriterType(id = CANCELABLE_EVENT_ENTRY_TYPE_ID)
+class CancelableEventEntry<E : CancelableEvent>(
+    // page, name, placement, triggers, refused, changes
+    val condition: Var<Boolean, EventContext<E>>,
+    val cancel: Var<Boolean, EventContext<E>>,
+) : SequenceEntry, Triggerable
+```
+
+**The handlers, in core.**
+
+```kotlin
+@Handler
+fun <E : CancelableEvent> E.rule(
+    entry: Candidate<CancelableEventEntry<E>>,
+): Verdict = when {
+    !entry.condition -> pass()
+    entry.cancel -> deny { entry.complete(context) }
+    else -> pass { entry.complete(context) }
+}
+
+@Handler
+fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
+    if (entry.condition) entry.complete(context)
+}
+```
+
+**What the creator writes.** Completion after `event.` lists the event's fields; after `minecraft.block.` it uses the [picker's search](domains.md).
+
+```
+event.blockType == minecraft.block.diamond_ore and event.mainHand.is_like(iron_pickaxe)
+```
+
+**The next entry reads the event.** The event itself is the chain record, which replaces the 14 legacy `ContextKeys` enums.
+
+```kotlin
+// Generated default on the entry, once, from E.
+produces { use(E) }
+```
+
+```
+"You cannot break this at ${on_block_break.location}"
+```
+
+**The action runs on the player.** Actions stay hand written: their fields are their parameters, so nothing can be derived.
+
+```kotlin
+@Handler
+fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat, message: RichText) {
+    chat.send(message)
+    entry.complete(context)
+}
+```
+
+### Own entries stay
+
+Any extension can write its own entry and handler on any event, next to the shared one; both run. Write one when the shared entry's shape is not enough, such as a second link set:
+
+```kotlin
+class PlayerKillPlayerEventEntry(
+    // page, name, placement, triggers, refused, changes
+    val condition: Var<Boolean, EventContext<PlayerKillPlayer>>,
+    val killedTriggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
+) : SequenceEntry, Triggerable
+
+@Handler
+fun PlayerKillPlayer.fire(entry: Candidate<PlayerKillPlayerEventEntry>) {
+    if (!entry.condition) return
+    entry.complete(context)
+    entry.killedTriggers.fire(context, for = killed)
+}
+```
+
+### When things go differently
+
+| Case | What happens |
+| --- | --- |
+| Condition reads a mirror | `protagonist.heldItem` misses on the first read, so it counts as not met and posts a demand. This is why filter facts sit on the event. |
+| Condition fails at run time | Counts as not met: `pass`, no links fire, logged. |
+| Event field renamed in code | The formula gets a check error at publish. |
+| Cancel on a non cancelable event | Refused by the bound on the type argument. |
+| One exact block | Capture into a `Definition`, then name it in the formula. |
+
+### Legacy events and actions by layer
+
+Of the 30 legacy events, 24 use the shared entry. `PlayerDamaged`, `PlayerKillPlayer`, and `PlayerProjectileHitEntity` have a second link set for the other player, so they get their own entry. `StandOnBlock` and `PlayerNearLocation` are one `PlayerMove` event with a condition, so they need no fields of their own and can still cancel (decided 2026-11-05). `FactChange` becomes a `FormulaEventEntry` on `Changed<Watched<Boolean>>` ([live-data.md](live-data.md)). `RunCommand` and `FireTrigger` are commands.
+
+| Layer | Events | Actions |
+| --- | --- | --- |
+| 4 Events | `PlayerJoin`, `PlayerQuit`, `ChatContainsText`, `BlockBreak` | `Simple`, `SimpleMessage`, `GroupTrigger`, `RandomTriggerGate`, `WeightedRandomTriggerGate` |
+| 5 Commands | `RunCommand`, `FireTrigger`, `DetectCommandRan` | `ConsoleCommand`, `PlayerCommand` |
+| 6 Stored data | | `BulkFactsReset`, `FactsPreset` |
+| 7 Time | | `Delayed`, `Repeat` |
+| 8 Mirrors | `FactChange` | |
+| 10 Minecraft types | `BlockPlace`, `ConsumeItem`, `CraftItem`, `DropItem`, `PickupItem`, `Fish`, `Interact`, `InteractBlock`, `ChangeWorld`, `Teleport`, `PlayerRespawn`, `PlayerMove`; `BlockBreak` gains its fields | `GiveItem`, `RemoveItem`, `RemoveItemFromSlot`, `SetItem`, `DropItem`, `Teleport`, `ApplyVelocity`, `BurnPlayer`, `AddPotionEffect`, `RemovePotionEffect`, `SwitchServer` |
+| 16 Dialogue | | `Message`, `ActionBarSimpleMessage`, `ShowTitle`, `SendToast` |
+| 18 Scenes | | `PlaySound`, `StopSound`, `SpawnParticle`, `Firework`, `SetBlock`, `Cinematic` |
+| 20 Assets | `ResourcePack` | |
+| 21 Entities | `LeashEntity`, `PlayerHitEntity`, `PlayerKillEntity`, `PlayerKillPlayer`, `PlayerProjectileHitBlock`, `PlayerProjectileHitEntity` | |
+| 22 Regions, rules | `PlayerDamaged`, `PlayerDeath` | |
+
+`PlayerMove` holds the player, `from`, and `to`. A condition covers what legacy needed fields for:
+
+```
+event.to.block.below.type == minecraft.block.gold_block          // stand on a block
+event.to.distance(spot) < 5 and event.from.distance(spot) >= 5   // walked near a place
+```
+
+`SwitchServer` takes a `ServerName`, an open id, so an unknown name is a warning. Nothing reports server names until assets, so until then it warns that there are no reports yet.
+
+### Event entries not proven
+
+- **Generic handlers.** A handler plan names one event class today. `fun <E> E.rule` needs demand per type argument. If that fails, KSP generates one handler per event instead.
+- **Generic context.** `EventContext<E>` inside a `Var` is new; `Definition<T>` only has `T` as the value.
+- **Palette.** "On block break" must appear as its own choice when creating an entry. `resource_creation.dart` does not mention type arguments.
+- **Cost.** Both hand items convert on every event while the source is open. Not measured; `Interact` is the frequent one.
+- **Nothing here ran.** It rests on layers 1, 4, and 8, none of which are built.
+
+### Open
+
+- A form on top of the condition, likely a presentation with rows for `event.x == value`, gives creators pickers and writes the same formula, so the data does not change. It is wanted during the beta and not for alpha (decided 2026-11-05). Not designed. Until then, 0.9 creators write a formula for what was a form.
+- `PlayerMove` runs its condition on every move while an entry uses it. That cost is not measured.
 
 ## Commands
 
