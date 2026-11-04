@@ -19,8 +19,12 @@ pub const TOOLS: &[&str] = &["wash", "crane", "kubectl", "tar", "git"];
 
 /// The database jobs run surrealkit from this image's binary (`deploy/base/start/job.yaml`).
 const SURREALKIT_IMAGE: &str = "ghcr.io/surrealdb/surrealkit:0.6.3";
-/// A base with `/bin/sh` and CA certificates, which the database jobs need.
-const DATABASE_BASE_IMAGE: &str = "alpine:3.20";
+/// The base of the database jobs, which need `/bin/sh`. surrealkit is linked against glibc, and
+/// its image is built on Debian 12; on a musl base such as Alpine it does not start, which the
+/// shell reports as the file not being found.
+const DATABASE_BASE_IMAGE: &str = "debian:12-slim";
+/// surrealkit's own CA bundle, which the slim base does not have.
+const SURREALKIT_CA_BUNDLE: &str = "etc/ssl/certs/ca-certificates.crt";
 /// The tag the component overlays pull (`deploy/local/workloaddeployment-patch.yaml`).
 const COMPONENT_TAG: &str = "latest";
 /// The tag the database overlay pulls (`backend/database/deploy/local/start/kustomization.yaml`).
@@ -252,7 +256,7 @@ pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
     Ok(components)
 }
 
-/// alpine, plus /usr/local/bin/surrealkit and /workspace/backend/database, entrypoint surrealkit.
+/// Debian, plus /usr/local/bin/surrealkit, its CA bundle and /workspace/backend/database, entrypoint surrealkit.
 fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
     let image = format!("{}/database:{DATABASE_TAG}", registry.repository());
     let scratch = Scratch::new("database-image")?;
@@ -277,6 +281,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
         .arg("-C")
         .arg(&surrealkit)
         .arg("usr/local/bin/surrealkit")
+        .arg(SURREALKIT_CA_BUNDLE)
         .run()?;
 
     let schema = stage("schema/workspace/backend")?;
@@ -292,6 +297,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
         .arg("-C")
         .arg(&surrealkit)
         .arg("usr")
+        .arg("etc")
         .run()?;
     tar(ctx)
         .arg("-cf")
