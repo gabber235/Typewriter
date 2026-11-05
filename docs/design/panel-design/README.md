@@ -26,7 +26,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 
 - Material Symbols as the one icon set.
 - Which duplicate component survives, in the Components table.
-- Table rows at about 38 px, taken from the trial's table option.
+- Table rows at about 42 px, chosen in a trial.
 
 ## Draft when rules, not confirmed
 
@@ -51,7 +51,7 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - The active pane lift in light mode.
 - A replacement for `Ctrl+Esc` as cancel, and the full key map per scope.
 - Undo depends on realm commit history (`docs/design/authoring-writes.md`), which is not built.
-- What gives a static page its identity. Rules and markers were rejected.
+- Whether interest from real information holds on pages without people.
 - Golden pages: none exist, since no page meets the target yet.
 - Whether declining a join request or cancelling one's own needs a hold.
 - What "keep the user's work" means while a realm is suspended, where changes are paused.
@@ -81,8 +81,9 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Members page | Table with inspector, with a bit more character and identity; the cast sheet is too different | Static look stays restrained: structure first, a little character. Motion is where the panel goes strong |
 | Static identity | Typed details over physical keys or paper | Static identity is typographic; depth belongs to motion |
 | Dense page and controls | Muted labels, no rule, no marker; soft filled controls as today | Choosing an option does not mean liking every part; the rule and marker from the earlier pick were wrong |
+| Calm but not boring | Person colours, activity bars, roomier rows; no large tile | Interest comes from real information, never decoration |
 
-Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right, static identity wrong, dense page wrong, controls wrong.
+Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right, static identity wrong, dense page wrong, controls wrong, interest wrong.
 
 Options must differ in concept. Three sizes of one idea taught nothing.
 
