@@ -57,6 +57,17 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - Using saved in a conflict discards work: whether it needs a hold.
 - The demo does not yet show hover or loading.
 
+## Trials
+
+Each trial offers three live options, one being the rule as written, shown blind. The takeaway is a general rule, not that element's design.
+
+| Trial | Result for the rule as written | Takeaways |
+|---|---|---|
+| Hold to confirm | Too flat; linear fill, text popped in and shifted content | Springs over linear; nothing just appears; reserve space; typing leaves time to read; the key in use glows |
+| Failed action | Shake liked; red border and second button rejected; label swaps felt inconsistent | Animate state changes inside a component; one control repeats its action; alarms on a control fade by themselves; busy looks pressed in |
+
+The maintainer mixes parts across options, so options test ideas rather than whole designs.
+
 ## Findings
 
 Measured at `c5db6eb2f` on 2026-11-05. Counts come from searches. Remove a row when it is fixed.
