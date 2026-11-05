@@ -26,7 +26,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 
 - Material Symbols as the one icon set.
 - Which duplicate component survives, in the Components table.
-- Row density: 32, 48, and 58 px were all rejected in a trial; undecided.
+- Table rows at about 38 px, taken from the trial's table option.
 
 ## Draft when rules, not confirmed
 
@@ -77,8 +77,11 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Larger surface | The row grows into it | Continuity beats a strike from elsewhere |
 | List density | All three rejected | No model yet for static look |
 | Empty state | Mascot, large playful line, serious subtitle, action on the right | Play and clarity sit side by side, each in its own place |
+| Members page | Table with inspector, with some of the cast sheet's character, but not all | Static look stays restrained: structure first, a little character. Motion is where the panel goes strong |
 
-Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right.
+Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right.
+
+Options must differ in concept. Three sizes of one idea taught nothing.
 
 Across trials, every added element was rejected: red border, second button, caret, ribbon, countdown line.
 
