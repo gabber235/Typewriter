@@ -1,0 +1,9 @@
+# Everything this throwaway prototype downloads, generates or runs
+.gradle/
+build/
+**/build/
+cache/
+runs/
+.mc-sources/
+__pycache__/
+*.log

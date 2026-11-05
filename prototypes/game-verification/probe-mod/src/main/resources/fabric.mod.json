@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "probe",
+  "version": "0",
+  "name": "Probe",
+  "environment": "client",
+  "entrypoints": { "client": ["probe.mod.Probe"] },
+  "mixins": ["probe.mixins.json", "probe.speed.mixins.json"],
+  "depends": { "fabricloader": ">=0.20.0", "minecraft": "*" }
+}

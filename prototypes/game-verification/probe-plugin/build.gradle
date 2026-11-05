@@ -1,0 +1,14 @@
+plugins { id 'java' }
+
+base { archivesName = 'probe-plugin' }
+version = '0'
+
+// Compiles against the patched Paper jar and its bundled libraries (includes paper-api), so NMS
+// is directly usable. Run `orchestrator/run.py prepare` first to create cache/patched.
+dependencies {
+    compileOnly files('/Users/thijs/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/23.0.0/8cc20c07506ec18e0834947b84a864bfc094484e/annotations-23.0.0.jar')
+    compileOnly fileTree("${rootDir}/cache/patched/versions") { include '**/*.jar' }
+    compileOnly fileTree("${rootDir}/cache/patched/libraries") { include '**/*.jar' }
+}
+
+tasks.withType(JavaCompile).configureEach { it.options.release = 25 }
