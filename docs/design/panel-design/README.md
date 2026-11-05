@@ -38,7 +38,7 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - Waits: the 300 ms and 5 s limits, doorway versus skeleton, and refreshing without motion.
 - Bulk actions, the 800 ms hold, and showing the hold after preparation.
 - Moves that repeat fast, and which move wins when several play together.
-- Slow ink for changes by others (not trialled), and scroll anchoring.
+- Scroll anchoring.
 - Filled action placement, and per row actions.
 - Hiding key caps, hints, and the mode chip with touch only.
 - Where jokes are allowed.
@@ -71,8 +71,10 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Row collapse | Squash with its text; the countdown line clashed with the row below | A countdown is the background draining, the inverse of a hold |
 | Change shown elsewhere | Letters ripple, not a background flash | Text changes through its letters |
 | Tooltip | Short types itself; long rises with a bounce and chunks inside | Effects scale with length; fun when it is not in the way |
+| Moving between pages | The opened row becomes the heading; ripple when nothing carries over | Continuity connects an action with its result |
+| Change by someone else | Slow wave plus a chip | The animation performs the change; show who when it was not the user; an added element is fine if it carries new information |
 
-Author predictions for the last two: wrong on the change mark (predicted the flash), half right on the tooltip (predicted the bounce only).
+Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right.
 
 Across trials, every added element was rejected: red border, second button, caret, ribbon, countdown line.
 
