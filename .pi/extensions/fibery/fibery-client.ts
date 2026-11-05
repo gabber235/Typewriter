@@ -1,4 +1,3 @@
-import { access, readFile } from "node:fs/promises";
 import {
 	BETA_PUBLICATION_FIELD,
 	BUG_PRIORITY_SORT,
@@ -166,49 +165,27 @@ let schemaCache: unknown | null = null;
 let schemaCachedAt = 0;
 const schemaTtlMs = 5 * 60 * 1000;
 
-function parseDotEnv(content: string): Record<string, string> {
-	const parsed: Record<string, string> = {};
-	for (const line of content.split("\n")) {
-		const trimmed = line.trim();
-		if (!trimmed || trimmed.startsWith("#")) continue;
-		const separator = trimmed.indexOf("=");
-		if (separator <= 0) continue;
-		const key = trimmed.slice(0, separator).trim();
-		const value = trimmed.slice(separator + 1).trim();
-		if (key) parsed[key] = value;
+/** Reads the process environment only; `secretspec run` puts the Fibery secrets there. */
+function getEnv(name: string): string {
+	return String(process.env[name] ?? "").trim();
+}
+
+function required(name: string): string {
+	const value = getEnv(name);
+	if (!value) {
+		throw new Error(
+			`Missing ${name}. Start pi through \`secretspec run -- pi\` (secretspec.toml, default profile).`,
+		);
 	}
-	return parsed;
-}
-
-async function loadDotEnv(cwd: string): Promise<Record<string, string>> {
-	const path = `${cwd}/.env`;
-	try {
-		await access(path);
-		return parseDotEnv(await readFile(path, "utf8"));
-	} catch {
-		return {};
-	}
-}
-
-async function getEnv(name: string, cwd: string): Promise<string> {
-	const direct = String(process.env[name] ?? "").trim();
-	if (direct) return direct;
-	const env = await loadDotEnv(cwd);
-	return String(env[name] ?? "").trim();
-}
-
-async function required(name: string, cwd: string): Promise<string> {
-	const value = await getEnv(name, cwd);
-	if (!value) throw new Error(`Missing required environment variable: ${name}`);
 	return value;
 }
 
-export async function getConfig(cwd: string): Promise<FiberyConfig> {
+export function getConfig(): FiberyConfig {
 	return {
-		workspace: await required("FIBERY_WORKSPACE", cwd),
-		token: await required("FIBERY_API_TOKEN", cwd),
-		maxRetries: Number((await getEnv("FIBERY_MAX_RETRIES", cwd)) || "3"),
-		retryDelayMs: Number((await getEnv("FIBERY_RETRY_DELAY_MS", cwd)) || "400"),
+		workspace: required("FIBERY_WORKSPACE"),
+		token: required("FIBERY_API_TOKEN"),
+		maxRetries: Number(getEnv("FIBERY_MAX_RETRIES") || "3"),
+		retryDelayMs: Number(getEnv("FIBERY_RETRY_DELAY_MS") || "400"),
 	};
 }
 

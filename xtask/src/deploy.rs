@@ -13,7 +13,7 @@ use serde_json::Value;
 
 use crate::lock::HeavyLock;
 use crate::stack::client_configuration::ClientConfiguration;
-use crate::{CommandExt, Context, Scratch, cluster};
+use crate::{CommandExt, Context, Scratch, cluster, secrets};
 
 /// Tools deploy runs, for the doctor.
 pub const TOOLS: &[&str] = &["wash", "crane", "kubectl", "tar", "git"];
@@ -67,23 +67,13 @@ impl Cluster {
             "linux/amd64"
         }
     }
+}
 
-    fn user(self) -> &'static str {
-        "gabber235"
-    }
-
-    fn password(self, ctx: &Context) -> Result<String> {
-        match self {
-            Self::Local => {
-                let file = ctx.root.join("backend/.artifact_keeper_password");
-                let password = fs::read_to_string(&file)
-                    .with_context(|| format!("cannot read {}", file.display()))?;
-                Ok(password.trim().to_owned())
-            }
-            Self::Ci => std::env::var("CI_REGISTRY_PASSWORD")
-                .context("CI_REGISTRY_PASSWORD must hold the CI cluster's registry password"),
-        }
-    }
+/// How pushes reach a cluster's registry.
+struct Registry {
+    cluster: Cluster,
+    user: &'static str,
+    password: String,
 }
 
 /// A component the runtime deploys: a cdylib with a `deploy/` folder, the predicate the
@@ -93,11 +83,34 @@ pub(crate) struct Component {
     pub(crate) artifact: PathBuf,
 }
 
+/// Pushes this commit's backend to `cluster`'s registry. The CI cluster then gets the commit
+/// released to its Typewriter tenant.
 pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
     ensure_main_checkout(ctx)?;
+    let registry = match cluster {
+        Cluster::Local => Registry {
+            cluster,
+            user: "gabber235",
+            password: secrets::local_registry_password()?,
+        },
+        Cluster::Ci => Registry {
+            cluster,
+            user: "admin",
+            password: cluster::registry_password(ctx)?,
+        },
+    };
+    publish(ctx, &registry)?;
+    if let Cluster::Ci = cluster {
+        let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
+        cluster::release(ctx, revision.trim())?;
+    }
+    Ok(())
+}
+
+fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
+    let cluster = registry.cluster;
     // The components compile against the generated Skir sources.
     crate::generate::generate(ctx, None)?;
-    let password = cluster.password(ctx)?;
     let components = deployable(ctx)?;
     {
         let _lock = HeavyLock::acquire("deploy")?;
@@ -111,7 +124,8 @@ pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
             cluster.component_tag()
         );
         // The wash fork reads registry credentials from flags only; the long form keeps the
-        // password out of errors (`crate::display`).
+        // password out of errors (`crate::display`), and `=` keeps a password that starts with
+        // `-` from parsing as a flag.
         ctx.tool(
             ".",
             "wash",
@@ -119,9 +133,8 @@ pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
                 "oci",
                 "push",
                 "-u",
-                cluster.user(),
-                "--password",
-                &password,
+                registry.user,
+                &format!("--password={}", registry.password),
                 &reference,
             ],
         )
@@ -129,7 +142,7 @@ pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
         .run()
         .with_context(|| format!("cannot push {reference}"))?;
     }
-    push_database_image(ctx, cluster, &password)?;
+    push_database_image(ctx, registry)?;
     if let Cluster::Ci = cluster {
         let state = ctx.root.join(cluster::STATE);
         fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;
@@ -236,7 +249,8 @@ pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
 }
 
 /// alpine, plus /usr/local/bin/surrealkit and /workspace/backend/database, entrypoint surrealkit.
-fn push_database_image(ctx: &Context, cluster: Cluster, password: &str) -> Result<()> {
+fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
+    let cluster = registry.cluster;
     let image = format!(
         "{}/database:{}",
         cluster.repository(),
@@ -297,7 +311,7 @@ fn push_database_image(ctx: &Context, cluster: Cluster, password: &str) -> Resul
                 "login",
                 cluster.registry(),
                 "-u",
-                cluster.user(),
+                registry.user,
                 "--password-stdin",
             ],
         )
@@ -308,7 +322,7 @@ fn push_database_image(ctx: &Context, cluster: Cluster, password: &str) -> Resul
         .stdin
         .take()
         .expect("stdin is piped")
-        .write_all(password.as_bytes())?;
+        .write_all(registry.password.as_bytes())?;
     ensure!(
         login.wait()?.success(),
         "crane cannot log in to {}",

@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use anyhow::{Result, bail};
 
 use crate::graph::{CHECKS, Run};
-use crate::{CommandExt, Context, cluster, deploy};
+use crate::{CommandExt, Context, cluster, deploy, secrets};
 
 /// Tools native steps and commands call, beyond the programs the graph names.
 const NATIVE_TOOLS: &[&str] = &[
@@ -18,6 +18,9 @@ const NATIVE_TOOLS: &[&str] = &[
     "kubeconform",
     "yamllint",
     "gh",
+    // `secretspec run` for the tools outside xtask, and the vault provider's CLI.
+    "secretspec",
+    "op",
 ];
 
 const ENTER_SHELL: &str = "run inside `devenv shell`, or prefix the command with `devenv shell --`";
@@ -42,6 +45,15 @@ pub fn doctor(ctx: &Context) -> Result<()> {
                 problems += 1;
                 println!("{name:<12} {problem}");
             }
+        }
+    }
+    // Which secret profiles resolve; an incomplete one is information, since each machine needs
+    // only some of them.
+    match secrets::summary(ctx) {
+        Ok(summary) => println!("{:<12} {summary}", "secrets"),
+        Err(error) => {
+            problems += 1;
+            println!("{:<12} {error:#}", "secrets");
         }
     }
     if problems > 0 {

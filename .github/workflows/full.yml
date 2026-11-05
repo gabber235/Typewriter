@@ -1,7 +1,7 @@
 # The full tier: a fresh k3d cluster from the pinned Infrastructure CI overlay, this commit's
 # backend deployed to it, and the panel web scenarios against the real Authentik, operator mode
 # NATS and runtime operator. Trusted events only, never fork pull requests, because it reads the
-# Infrastructure deploy key and the CI cluster's secrets.
+# `ci` secrets (secretspec.toml) from the Typewriter 1Password vault.
 name: Full tier
 
 # TODO: once features/v1 merges into develop, run on develop only: drop features/v1 from the push
@@ -38,26 +38,19 @@ jobs:
 
   full:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Infrastructure's ci:up may take 55 minutes, the tenant release 20 and the scenarios 30, on
+    # top of the backend build.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'schedule' && 'features/v1' || github.ref }}
-      - id: pin
-        run: echo "revision=$(sed -n 's/^revision = "\(.*\)"/\1/p' harness/infrastructure.toml)" >> "$GITHUB_OUTPUT"
-      # Where `cargo xtask cluster ci` expects the pinned revision.
-      - uses: actions/checkout@v6
-        with:
-          repository: Seamlezz/Infrastructure
-          ref: ${{ steps.pin.outputs.revision }}
-          ssh-key: ${{ secrets.INFRASTRUCTURE_DEPLOY_KEY }}
-          path: .xtask/infrastructure
-          persist-credentials: false
       - uses: ./.github/actions/devenv
+      # xtask resolves the `ci` secrets through this service account and fetches the pinned
+      # Infrastructure revision with the deploy key among them.
       - run: devenv shell -- cargo xtask e2e full
         env:
-          CI_AGE_KEY: ${{ secrets.CI_AGE_KEY }}
-          CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       - if: always()
         uses: actions/upload-artifact@v4
         with:

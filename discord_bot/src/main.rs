@@ -62,7 +62,6 @@ static DISCORD_CLIENT: Lazy<arc_swap::ArcSwap<Option<serenity::Context>>> =
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().ok();
     env_logger::init();
     info!("Starting bot...");
 

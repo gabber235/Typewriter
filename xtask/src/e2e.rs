@@ -20,7 +20,7 @@ use crate::lock::HeavyLock;
 use crate::process::{Supervisor, Unsupervised};
 use crate::results::{self, Outcome, Quarantine, TestRun};
 use crate::stack::{self, Stack, typewriter};
-use crate::{CommandExt, Context, Scratch, cluster, generate};
+use crate::{CommandExt, Context, Scratch, cluster, generate, secrets};
 
 /// Where the stack writes the panel's compile time defines (it publishes the same path as
 /// `STACK_PANEL_DEFINES`), relative to the repository root.
@@ -76,7 +76,7 @@ impl Suite {
 pub fn run(ctx: &Context, suite: Suite) -> Result<()> {
     match suite {
         Suite::Full => {
-            cluster::create_ci(ctx)?;
+            cluster::create_ci(ctx, &secrets::Ci::load()?)?;
             deploy::deploy(ctx, Cluster::Ci)?;
             scenarios(ctx, Suite::PanelWeb, Target::Cluster)
         }

@@ -14,11 +14,16 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: ./.github/actions/secrets
+        with:
+          scope: sponsors
+          token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
       # Generate the sponsors
       - name: Generate Sponsors 💖
         uses: JamesIves/github-sponsors-readme-action@v1
         with:
-          token: ${{ secrets.PAT }}
+          token: ${{ env.SPONSORS_GITHUB_TOKEN }}
           file: 'README.md'
           minimum: 1000
 
