@@ -20,7 +20,7 @@ Load the `panel-design` skill first. Read each of its rules as: when you see Whe
 5. Check every `panel-design` rule that applies. Record `pass`, `fail`, or `cannot_verify` for each.
 6. Run the action walk and the critique below.
 7. Drop findings with no evidence, findings under Exceptions, and severity 0.
-8. When a finding is severity 3 or 4, repeat its check from fresh evidence. Keep it only if it holds.
+8. When a finding is severity 3 or 4, check it a second way: a probe test for what the source says, the source for what an image shows. Keep it only if both agree.
 9. Write `docs/design/panel-design/reviews/<page>.md`.
 
 ## Getting evidence
@@ -29,9 +29,11 @@ Load the `panel-design` skill first. Read each of its rules as: when you see Whe
 |---|---|---|
 | Layout, colour, type, static states | Story image, naming the region | `cannot_verify` |
 | A row that looks faded in an image | Source code. It may be caught mid entrance; never report it as contrast | `cannot_verify` |
-| Motion | Tokens, curves, and call sites in source. Images never prove motion | `cannot_verify` |
-| Focus target, key path, or semantics | Run or write a widget test with `pumpPanel` | Read the source and say so |
-| How a move feels | Nothing you can check | `cannot_verify`, for a maintainer |
+| Motion | For every action and state change on the page, find the `panel-design` Motion rule whose When fits and the token it names, then the code that runs when it happens. Fail when that code has no move, a different move, a literal duration or curve, an exit that bounces, a linear curve outside `drain`, or no reduced motion path | Never `cannot_verify` for a missing or wrong move; only for feel |
+| Focus target, key path, or semantics | Write a throwaway widget test: `pumpStory` for a story, `pumpPanel` for a route. Run it through `cargo xtask heavy --`, cite what it showed, delete it | Read the source and say so |
+| A value that differs from the Values tables | Quote "Setting any visual value" | |
+| A state the story offers but no image shows | A finding under "A surface is new or changed" | |
+| How a move feels, once the right token runs | Nothing you can check | `cannot_verify`, for a maintainer |
 | Contrast | Compute it from the token values | `cannot_verify` |
 
 ## Action walk
@@ -41,10 +43,11 @@ For every action on the page:
 | When the page has | Do | Expect | Otherwise |
 |---|---|---|---|
 | Any action | Reach it and run it with keys only | It works, and the command list shows it | 3 |
-| Any action | Cancel it | Esc steps out, focus returns to the opener | 3 |
+| Any action that opens something | Cancel it | Esc steps out, focus returns to the opener | 3 |
 | Any action | Note where focus lands afterwards | The target in `panel-design` Focus | 3 |
+| Any action or state change | Name the move that should play, and find it in source | The move its Motion rule names, on tokens | 2 |
 | A create action | Run it | Focus on the new thing's first empty required field | 3 |
-| A remove action on books, pages, or entries | Run it | No question, Undo offered, focus on the next row | 4 |
+| A remove action | Run it | Book content: no question, Undo offered. Anything else: a hold. Focus on the next row | 4 |
 | An action that cannot be undone | Press its key once, then press with every modifier | Nothing happens without the full hold | 4 |
 | A failing action | Fail it through a fake | The message stays and says what to do; the same control repeats the action | 3 |
 | A value revealed on hover | Reach it with keys, then touch | It reveals both ways | 3 |
@@ -75,7 +78,7 @@ When the rules have a gap, propose a new When and Then row under Suggestions.
 | 4 | Work is lost or a task is blocked | Shift+D deletes with no question and no undo |
 | 3 | A required path fails, or trust is damaged | A value only a pointer can reveal |
 | 2 | Friction that adds up | Title and content on different left edges |
-| 1 | Cosmetic | `item(s)` |
+| 1 | Cosmetic | A gap of 13 where the scale gives 12 |
 
 Use the rule's `Sev`. Change it only when frequency or impact on this page clearly differs, and say why.
 
@@ -97,11 +100,18 @@ Is this page good? The single most valuable change.
 ## Cannot verify
 The rule, and what would settle it.
 
+## Rule results
+<details> with one row per checked rule: When cell, pass, fail, or cannot_verify.
+
+## Skill friction
+Where this skill was unclear or made you guess.
+
 ## Suggestions
 Region and proposal.
 ```
 
-- `rule` quotes the When cell exactly.
+- `rule` quotes the When cell exactly: the `panel-design` row, or the action walk row when no design row fits.
+- A fault in a shared component or the theme goes once in `cross-page.md`. A page report names its id and does not repeat it.
 - `evidence` names a file and line, a story image, or a test.
 - A maintainer decides what gets fixed. Do not change panel code during a review.
 
@@ -116,7 +126,7 @@ Compare the reports and images across pages. Report in `docs/design/panel-design
 
 ## Before a full run
 
-Review Members, Services, and the resource editor first. Stop and have a maintainer mark each finding right or wrong. Tighten this skill where it was wrong, then continue.
+When a rule in this skill or `panel-design` changes meaning, review one of Members, Services, or the resource editor again and compare with its report in `docs/design/panel-design/reviews/`. A finding that appears or disappears must follow from the change.
 
 ## Inventory
 
