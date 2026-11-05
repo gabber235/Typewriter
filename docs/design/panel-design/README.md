@@ -77,9 +77,10 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Larger surface | The row grows into it | Continuity beats a strike from elsewhere |
 | List density | All three rejected | No model yet for static look |
 | Empty state | Mascot, large playful line, serious subtitle, action on the right | Play and clarity sit side by side, each in its own place |
-| Members page | Table with inspector, with some of the cast sheet's character, but not all | Static look stays restrained: structure first, a little character. Motion is where the panel goes strong |
+| Members page | Table with inspector, with a bit more character and identity; the cast sheet is too different | Static look stays restrained: structure first, a little character. Motion is where the panel goes strong |
+| Static identity | Typed details over physical keys or paper | Static identity is typographic; depth belongs to motion |
 
-Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right.
+Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right, static identity wrong.
 
 Options must differ in concept. Three sizes of one idea taught nothing.
 
