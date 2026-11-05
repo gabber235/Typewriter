@@ -16,6 +16,7 @@ Read `overview.md` first; it introduces the seven primitives and links to the re
 | [domains.md](domains.md) | Types whose valid values live elsewhere (worlds, items, plugin ids): the full flow from code to player |
 | [formula-language.md](formula-language.md) | Formulas, `Var<T, C>`, `dynamic()`, contexts, definitions, books, type checking |
 | [configurations.md](configurations.md) | Typed settings that replace snippets: layers through the owner chain, `Partial<T>`, the entry editor, and the general panel parts |
+| [packets.md](packets.md) | Packets as sources on Typewriter's own wire, Paper's API first, and why not PacketEvents |
 | [migrations.md](migrations.md) | Migration hook, pending migrations, the developer migrator, the 0.9 importer |
 | [minecraft-types.md](minecraft-types.md) | Minecraft value types: space (world, vectors, rotation, locations, positions) and items |
 | [engines.md](engines.md) | Bridges; engine communication summary |

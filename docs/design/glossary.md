@@ -390,6 +390,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Panel engine**: the engine next to the realm that holds each panel tab's session and runs its handlers and derives; the tab is a thin client. See [engines.md](engines.md#engine-communication).
 
+**`PaperWire`**: the Paper engine's helper that turns packets into sources and sends Typewriter's own packets, like `PaperEvents` for Paper events. See [packets.md](packets.md).
+
 **`PaperPlayer`, `PaperProtagonist`**: the Paper engine's live object for a protagonist, implementing traits such as `Player` and `HasChat`. See [live-data.md](live-data.md#live-capability-traits).
 
 **`PaperPlayerFormulas`**: example engine implementation of a capability's formula function interface, checked for completeness by KSP. See [formula-language.md](formula-language.md#members-and-providers).

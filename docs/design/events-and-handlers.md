@@ -72,7 +72,7 @@ class BlockBreakSource(paper: PaperEvents) : Source<BlockBreak> by
 | Applying the outcome | the `apply` block; follow ups and after handlers run once it ends |
 | Forwarding to other holders, dropping when the subject has no session | `Sink` |
 
-A verdict handler that throws counts as `pass` and is logged. Packet sources and their dedupe arrive with the packet layer (14). A test can use a small test source with a real `Sink`, without Paper.
+A verdict handler that throws counts as `pass` and is logged. Packet sources and their dedupe arrive with the [packet layer](packets.md) (14). A test can use a small test source with a real `Sink`, without Paper.
 
 ### Engine parts
 
