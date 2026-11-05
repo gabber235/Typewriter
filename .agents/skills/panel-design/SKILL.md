@@ -33,7 +33,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 |---|---|---|
 | Anything needs saying | Say it where it happened: under the field, at the control, at the save status. With no such place, say it at page level | 3 |
 | Something succeeds | Say nothing if the result is visible. Otherwise type the result word at the control, or show a clearing toast for background work | 2 |
-| Something fails | Jam once. Stay until dealt with, say what happened and the next step, offer Retry, and keep the user's work | 3 |
+| Something fails | The control shakes and turns red briefly, then returns to its normal action, so pressing it again repeats the action. Never add a second button or a red border. The message says what happened and the next step, and stays until the next try. Keep the user's work | 3 |
 | Several things fail at once | The first takes the move and focus. The rest show still messages | 2 |
 | A change appears elsewhere on screen | Put an ink mark on the other places, not on the place the user edited | 2 |
 | A list is empty | Say what belongs here. If the user can add one, name the key | 2 |
@@ -58,7 +58,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When | Then | Sev |
 |---|---|---|
 | An action can be undone | One press, no question, offer Undo at once | 4 |
-| An action cannot be undone, or undo is not built yet | Hold to confirm with `hold`. The row fills and one line states the outcome and count. Show the hold only once that text is known. Releasing cancels. The hold setting swaps this for a dialog with Cancel focused, confirmed by Ctrl or Cmd+Enter | 4 |
+| An action cannot be undone, or undo is not built yet | Hold to confirm with `hold`. The row grows a fill on a spring, the key cap glows, and one line states the outcome and count, typed in reserved space in the first third of the hold. Show the hold only once that text is known. Releasing cancels. The hold setting swaps this for a dialog with Cancel focused, confirmed by Ctrl or Cmd+Enter | 4 |
 | Anything would skip those rules | Remove it | 4 |
 
 ## Motion
@@ -66,6 +66,11 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When | Then | Sev |
 |---|---|---|
 | The user causes something to arrive | It comes from where it was caused and lands with its token. Deeper navigation arrives from the right, and back from the left | 2 |
+| Anything changes state | Animate between the states inside the component: label, width, colour. Nothing swaps. Shared letters stay and only the different letters type: Publish, Publishing, Published | 2 |
+| Anything grows or responds over time: a hold, a fill, progress, a press | Drive it with a spring so it has weight. Nothing moves linearly | 2 |
+| Text appears | Reserve its space so nothing shifts, and type it. It must finish with time left to read it | 2 |
+| A key is in use | Its key cap glows | 2 |
+| A control is busy or unavailable | It looks pressed in, like a held key | 2 |
 | Anything leaves | It goes towards its origin, faster than it arrived, with no bounce | 2 |
 | The pointer reaches something you can act on | It rises with `hoverIn`, without a shadow, and leaves with `hoverOut`. If it has a key, its key cap strikes up with `capIn` | 2 |
 | A button has a key | Always show the key cap. Pressing either one presses both | 2 |
@@ -119,6 +124,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A shared component does the job | Use it. If none does, build it once in `panel/lib/shared` | 2 |
 | A surface is new or changed | Its story shows every state that applies: default, hover, focus, active, disabled, loading, empty, error, offline, compact | 2 |
 | Keyboard behaviour is new or changed | A widget test proves the key path and where focus lands | 3 |
+| No rule or demo settles how something should feel | Build three live options and let a maintainer pick. Add what you learn here as a general rule, not as that element's design | 2 |
 | You must break a rule | Ask a maintainer. If approved, add it to the exceptions in the `panel-review` skill | 3 |
 
 ## Values
@@ -150,10 +156,10 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | `panelOut` | Exit | 200 ms | None |
 | `dialogOut` | Exit | 150 ms | None |
 | `rowOut` | Exit | 160 ms | None |
-| `hold` | Linear | 800 ms | None |
+| `hold` | Spring | 800 ms | The fill leads and settles |
 | `type` | Stepped | 36 ms per letter | None |
 | `ink` | Ease out | 900 ms fade; 2 s for changes by others | None |
-| `jam` | Judder | 240 ms | 2 cycles, 4 px |
+| `jam` | Judder | 240 ms | 2 cycles, 4 px, with a red flash that fades in 1.5 s |
 
 - **Arrivals:** reach the final position within 150 ms; the landing plays after that.
 - **Strike:** `1 - e^(-z*w*t) * (cos(wd*t) + (z*w/wd) * sin(wd*t))`, `t` from 0 to 1, `w = 5/z`, `wd = w*sqrt(1 - z*z)`, `z = -ln(o) / sqrt(pi^2 + ln(o)^2)`, `o` the overshoot.
@@ -196,7 +202,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Moment | Write |
 |---|---|
 | Empty book | This page is blank. Press N and fix that. |
-| Normal error | The realm did not answer. Retry. |
+| Normal error | The realm did not answer. Press Publish to try again. |
 | Wait | Connecting to the realm |
 | Permanent action | Remove Ada? They lose access straight away. |
 | Removed, with undo | Deleted Arrival. Undo |
