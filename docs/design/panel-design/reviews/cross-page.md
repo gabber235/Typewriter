@@ -56,4 +56,4 @@ No page meets the rules yet. Most faults come from a few shared causes, so fix t
 ## Outside the panel
 
 - Services send durations and curves in the presentation contract (`SurfaceLayouts.kt:11-14`, `PresentationPaint.kt:88-91`). See MOTION-20 and the maintainer choice on motion from services.
-- The story renderer skips each knob's first option (`support/stories.dart:200`), and a Loading knob past the 10 s timeout captures the crash screen. Several states never render because of this.
+- The story renderer skips each knob's first option (`panel/widgetbook/test/support/stories.dart:200`), and a Loading knob past the 10 s timeout captures the crash screen. Several states never render because of this.
