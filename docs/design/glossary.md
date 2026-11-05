@@ -48,13 +48,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Book**: a `Resource` (not an entry) that carries variables, instances, and imports. See [formula-language.md](formula-language.md#book).
 
-**Book instance**: one entry in a book's `instances` map, keyed by the instance key, and an identity stored data can be about. See [formula-language.md](formula-language.md#instances).
+**Book instance**: one entry in a book's `instances` map; publishing makes a copy of the book's resources for it, identified by source plus instance path. See [formula-language.md](formula-language.md#copies-at-publish).
 
 **Book narrowing**: the check inside `fire` that only follows links into books that apply to the subject. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
-**`BookConfiguration`**: the existing configuration system whose key rules apply to a book's `variables`. See [formula-language.md](formula-language.md#variables).
+**`BookVariable`**: a book variable's type and optional default. See [formula-language.md](formula-language.md#variables).
 
-**`BookScope`**: formula context whose purpose is open; the book's `instances` field uses `PublishScope`. See [formula-language.md](formula-language.md#formula-contexts).
+**`BookConfiguration`**: the existing configuration system whose key rules apply to a book's `variables`. See [formula-language.md](formula-language.md#variables).
 
 **`BoundPath<T>`**: a place in authored content, such as where a capture or mode writes or which reaction a `Due` runs; its portable form is the `value_location` representation, so stored values can keep it, and it is an identity that ends when the place is gone. See [panel-engine-communication.md](panel-engine-communication.md#emit-without-extension-code-in-the-panel-engine-2026-11-01).
 

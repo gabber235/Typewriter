@@ -15,10 +15,10 @@ An identity is something stored data can be about. Identities are the only types
 | `Interaction` | The running group of steps (see [interactions.md](interactions.md)). |
 | `Session` | One connection of a protagonist (see [live-data.md](live-data.md)). |
 | `Engine` | One engine, by its stable topology engine id; survives restarts and ends when the engine leaves the topology (see [live-data.md](live-data.md#session)). |
-| An entry type (`NpcEntry`) | A published entry: a `Resource` typed field in a runtime value (stored data, holds, live values, events) is that entry's identity, stored as its `ResourceId`, read as the current published version, and ended when the entry is unpublished. Authored fields keep `Ref<Contract.Side, T>`; KSP rejects a `Resource` typed field in an authored type. |
+| An entry type (`NpcEntry`) | A published entry: a `Resource` typed field in a runtime value (stored data, holds, live values, events) is that entry's identity, stored as its `ResourceId` plus its instance path, read as the current published version, and ended when the entry is unpublished. Authored fields keep `Ref<Contract.Side, T>`; KSP rejects a `Resource` typed field in an authored type. |
 | `BoundPath<X>` | A place in authored content: an entry plus a path through fields, list items, and map rows, in its portable `value_location` form. Reads the current published value. Only the location is its identity. |
 | `GroupIdentity` | What members belong to. Our group entries use `EntryGroup(entry, key)`, such as `EntryGroup(islands, "42")`, so it ends with the entry. Each group entry exports its own type through `bind` (`islands` gives `Island`). `Snapshot(interaction)` ends with the interaction. |
-| Book instance | One instance of a book (see [formula-language.md](formula-language.md)). |
+| Book instance | One instance of a book, a path on the identity of each [copy](formula-language.md#copies-at-publish). |
 
 `Identity` is a catalog parent type. Every type above has it as a parent, so the catalog, KSP, and realm admission can all ask "is this an identity?" the same way.
 
@@ -572,6 +572,5 @@ Errors block publication; warnings never do.
 
 ## Open
 
-- Book instance identity: whether an instance is the identity (book, key), the same shape as groups, so that renaming an instance key creates a new instance and the book's migration moves its data.
 - Variables: the direction is adopted, but details such as the variable editor are still in progress.
 - Stored reads as query graph inputs (type plus partial key), so a stored commit reruns the realm checks and searches that read it (layer 10, [closed-beta-roadmap.md](closed-beta-roadmap.md)).

@@ -233,7 +233,6 @@ Core defines every context. Capability modules define none: engine values are ge
 | `CaptureContext` | A formula run on a player by [`Capture`](capture.md) | `protagonist`, `engine` |
 | `EventContext<E>` | The condition and cancel of an [event entry](events-and-handlers.md#event-entries) | `InteractionContext` plus `event: E` |
 | `ReactionScope<K, T>` | Variable reaction changes | `keys: K`, `value: Settable<T>`, `previous: T?` |
-| `BookScope` | Open: no field uses it yet (book `instances` uses `PublishScope`) | Open |
 
 In formulas the protagonist is named `protagonist`, matching the engine neutral identity.
 
@@ -362,11 +361,28 @@ Units and formatting are ordinary providers through existing sugar (`5.seconds` 
 
 ## Book
 
-A `Book` is a `Resource` (v1 `LibraryModel.kt`), not an entry. It carries the variables, the instances and the imports.
+A `Book` is a `Resource` (v1 `LibraryModel.kt`), not an entry. It carries the variables, the instances and the imports. Decided 2026-11-05 in the layer 13 rough design.
+
+```kotlin
+data class Book<V : Record>(
+    /* library, title, icon, color, tags, pages */
+    override val configurations: List<Ref<Configuration<*>>> = emptyList(),
+    val variables: Map<String, BookVariable> = emptyMap(),
+    val instances: Var<Map<String, V>, PublishScope> = ...,
+    val imports: List<Import> = emptyList(),
+) : Resource, ConfigurationHolder
+
+data class BookVariable(val type: Var<Type, TypeScope>, val default: Var<*, PublishScope>? = null)
+```
 
 ### Variables
 
-`variables: Map<String, Type>` on the book, with key rules from the existing configuration system (`BookConfiguration`). Book variables hold per instance values and per instance functions.
+Each variable is a type with an optional default, with key rules from the existing configuration system (`BookConfiguration`). Book variables hold per instance values and per instance functions. Entries read them through `scope(contents) { value("book", V) }`:
+
+```
+text = "The ${book.town.name} board has work for you."
+amount = book.reward     // context(protagonist: Protagonist) () -> Int, protagonist filled from context
+```
 
 ### Instances
 
@@ -383,11 +399,41 @@ Plain mode is the normal map editor whose values are real records (one field per
 towns.associate { it.id to BountyBoardVariables(town = it) }
 ```
 
-The map key is the instance key. Renaming an instance key moves its stored data through the book's migration ([migrations.md](migrations.md)).
+A book with no listed instances has one root copy with an empty path. A variable without a default must be filled by every instance, or publishing is blocked. A failing instances formula also blocks publishing.
+
+### Copies at publish
+
+Publishing makes one copy of every resource a book owns, per instance (decided 2026-11-05). Each copy is its own entry, so handlers, `Candidate<E>`, links, and stored data need no special code. The compiled form exists today and always has an empty path:
+
+```
+CompiledResourceKey(source = give_money, context = ["riverside"])
+CompiledEdge((talk, ["riverside"]) -> (give_money, ["riverside"]))   // a link stays inside its copy
+CompiledEdge((talk, ["riverside"]) -> (some_tag, []))                // a reference leaving the book keeps its target
+```
+
+- `book` in a copy reads that instance's record.
+- An entry identity in stored data is source plus path, so stored data is per instance automatically.
+- A variable's copy is its own identity: `bounties_done(variable = (bounties_done, ["riverside"]), protagonist = ann)`.
+- A `Definition` is copied too, and is the same everywhere unless it reads `book`.
+- A link from another book is not allowed. Books connect through edges (layer 31).
+
+Instance changes follow [migrations](migrations.md#books): the map key is the instance key, and renaming one moves its stored data.
 
 ### Imports
 
-`imports` brings other books' exports into the book's contents scope. An import is `Import(book, alias: String? = null)`, named by the book title by default. An import exposes everything the other book exports.
+`imports` brings other books' exports into the book's contents scope. An import is `Import(book, alias: String? = null)`, named by the book title by default. An import exposes everything the other book exports. With several instances the caller picks one like a field:
+
+```
+bounty.riverside.bounties_done > 2   // several instances
+bounty.bounties_done > 2             // one instance: left out
+```
+
+### Not proven
+
+- Picking by name needs the instance keys while checking. In formula mode, that means running the formula while editing.
+- Whether copies can share bytes in the compiled file, and how much memory an engine needs. Without sharing, 200 entries in 50 towns is 10,000 records.
+- A rename in formula mode looks like a remove and an add, so only the migration's question can tell.
+- The path is a list, but this design only uses one segment.
 
 ## Definition
 
@@ -400,7 +446,7 @@ data class Definition<T>(
 ) : StaticEntry
 ```
 
-`T` is the resource's own type argument in its configuration, chosen with the existing type argument editor; there is no `type` field and no `bind`, so a `Definition` works before `bind` exists (layer 13). Changing the type uses the existing `PreviewTypeArgumentChange` and `PrepareTypeArgumentChange` repair preview, which shows what happens to the current value before the change is confirmed. Configuration arguments hold the authored `Type` value (`ArgumentSelection.chosen: Type`, replacing `TypeUse`), so a type argument can be a function type or an inline declaration; the checked catalog lowers it to `TypeUse` like any `Type` value. Typing a type as text (`record { gold: Int }`) is another input of the type picker that parses into a `Type` value; no formula is stored. Its `dynamic()` does `exports { use(T) }`, so it is visible by name through the book's contents scope and to other books through imports.
+`T` is the resource's own type argument in its configuration, chosen with the existing type argument editor; there is no `type` field and no `bind`, so a `Definition` works before `bind` exists (layer 11). Changing the type uses the existing `PreviewTypeArgumentChange` and `PrepareTypeArgumentChange` repair preview, which shows what happens to the current value before the change is confirmed. Configuration arguments hold the authored `Type` value (`ArgumentSelection.chosen: Type`, replacing `TypeUse`), so a type argument can be a function type or an inline declaration; the checked catalog lowers it to `TypeUse` like any `Type` value. Typing a type as text (`record { gold: Int }`) is another input of the type picker that parses into a `Type` value; no formula is stored. Its `dynamic()` does `exports { use(T) }`, so it is visible by name through the book's contents scope and to other books through imports.
 
 - **Functions**: a definition whose type is a function type. The text is the body with the parameters in scope. There is no separate function entry type.
 
@@ -754,10 +800,9 @@ A formula can start a chain: when a condition turns true, or whenever a formula'
 
 ## Open
 
-- What `BookScope` provides and which fields use it. The book's `instances` field uses `PublishScope`.
 - `XDraft` modeling of invalid values: confirmed by the roadmap survey (`Availability`), but its fit for `dynamic()` is not yet verified in code.
 - Provider override details: whether a same name function replaces a generated member and how `hidden` hides one.
-- Instances as identities (book, key), formula instances evaluated at publish, and placed generated book entries as instances are proposed, not decided.
+- Placed generated book entries as instances (layer 31).
 - Where cross resource diagnostics from `dynamic()` are produced.
 - Editor design for function type parameters in the panel.
 - Live formula values per protagonist in the panel (vision item) have no design yet.

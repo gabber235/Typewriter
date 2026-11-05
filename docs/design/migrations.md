@@ -141,6 +141,19 @@ There are two formulas because `island_bank` belongs to a group, not a player: a
 - Formula groups use the same hook. Online players correct themselves after publish, and offline players on rejoin, so the default clear loses little.
 - Whether a migration formula may read stored values, such as `old.maxBy { it.island_bank }`, is open.
 
+## Books
+
+Instance changes run through the book's generated hook (decided 2026-11-05).
+
+| Change | What happens |
+| --- | --- |
+| Instance added | New copies with no data |
+| Instance removed | Its identities end, so its data goes by the owner rule. The dry run shows how much |
+| Instance renamed | The hook asks which old key became the new one, then moves the data. The default clears, as with other migrations |
+| First instance added to a book with data | The same question: the root copy's data moves to an instance |
+
+Moving uses the same step as [group entries](#group-entries).
+
 ## Developer migrator
 
 Developer defined stored types are Typewriter types, because they are persisted. They carry an id and a revision, like entry and configuration data:
