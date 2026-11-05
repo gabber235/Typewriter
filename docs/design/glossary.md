@@ -42,6 +42,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`All<T>`**: handler parameter that resolves to every value of type `T`. See [events-and-handlers.md](events-and-handlers.md#parameters).
 
+**`Animating`**: dialogue `Live` value that exists only while a view animates, so the every tick draw has nothing to run otherwise. See [dialogue.md](dialogue.md#3-the-dialogue-package).
+
 **`ArmSwing`**: example event with one meaning reached through several sources; the first source starts the occurrence and the others join it. See [events-and-handlers.md](events-and-handlers.md#event).
 
 **`attempt()`**: runs a transaction function or `Changes` field. It waits only when the write is guarded and returns `Committed` or `Refused(message)`. `ensure()` always waits. See [stored-data.md](stored-data.md#transaction-functions).
@@ -94,6 +96,12 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Changes`**: the value type of an update field; an ordered list of change lines, a transaction written in formula text, that the entry commits with `attempt()`. See [stored-data.md](stored-data.md#changes-fields).
 
+**`ChatHistory`**: `Runtime` holding a player's recent chat, including blocked messages, built on `HasChat`'s primitives. See [dialogue.md](dialogue.md#2-core-chat).
+
+**`ChatHold`**: hold with no data that says this chat is held; it blocks other chat. See [dialogue.md](dialogue.md#2-core-chat).
+
+**`ChatSent`**: event for a chat message going to a player, from the wire. See [dialogue.md](dialogue.md#2-core-chat).
+
 **`check(formula)`**: the query graph step that type checks one formula. See [formula-language.md](formula-language.md#type-checking).
 
 **Checks**: the one list of build time (KSP) and realm findings, where errors block publication and warnings and info never do. See [live-data.md](live-data.md#checks).
@@ -110,7 +118,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`complete(context)`**: the `Triggerable` shortcut that applies the entry's changes and then fires its triggers. See [events-and-handlers.md](events-and-handlers.md#triggerable-and-complete).
 
-**`Confirm`**: intent event for advancing, raised only when the raw key is the one currently offered. See [events-and-handlers.md](events-and-handlers.md#event).
+**`Confirm`**: intent event for advancing, naming the step whose key offer took the press. See [dialogue.md](dialogue.md#6-the-key).
 
 **`Configuration<C>`**: root resource holding a `Partial<C>`, one named version of an extension's record. See [configurations.md](configurations.md).
 
@@ -166,7 +174,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Developer migrator**: the step a developer writes to convert a stored type's data between two revisions. See [migrations.md](migrations.md#developer-migrator).
 
-**`DialogueHold`**: example hold derived from `Speaking` that shows a dialogue. See [interactions.md](interactions.md#holds).
+**`DialogueView`**: `Live` interface shared by the dialogue kinds, with `doneAt` and `render`; not core. See [dialogue.md](dialogue.md#3-the-dialogue-package).
 
 **`Domain<T>`**: the formula type of a name such as `minecraft.item`; any name on it gives a `T`, such as `ItemType("diamond")`. See [domains.md](domains.md).
 
@@ -242,6 +250,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Generation**: counter on steps and interactions so events and writes for a finished owner are dropped. See [stored-data.md](stored-data.md#identities-end).
 
+**`giveUp`**: step rule, a formula: when true, a queued step leaves the queue. See [interactions.md](interactions.md#the-queue).
+
 **Global record**: a chain context record keyed by type only that describes the chain as a whole; newest wins, never removed. See [events-and-handlers.md](events-and-handlers.md#context).
 
 **Grace (hold)**: the short delay (about 10 ticks) before a hold that stopped being returned is removed and restored. See [interactions.md](interactions.md#grace-and-adoption).
@@ -270,11 +280,21 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`HasChat`, `HasInventory`, `HasHealth`**: example live capability traits an engine provides for its identities, each small and for one capability. See [live-data.md](live-data.md#live-capability-traits).
 
+**`Held`**: core `Live` value per protagonist naming which interaction holds each Hold type, and which steps have settled. See [interactions.md](interactions.md#clashes).
+
+**`HeldBy`**: who holds a Hold type: its interaction, priority, and whether it is protected. See [interactions.md](interactions.md#clashes).
+
 **Hold**: a live, never saved change to how something looks or behaves on an engine, held while a derive returns it. See [interactions.md](interactions.md#holds).
 
-**Holder**: the `@Key` of a hold that says who has it: a `Protagonist`, `Session`, `GroupIdentity`, or `Engine`; a hold has exactly one. See [interactions.md](interactions.md#the-holder-is-a-key).
+**Holder**: an identity that can run a step or hold a Hold: `Protagonist`, `Session`, `GroupIdentity`, or `Engine`. A Hold has exactly one as a `@Key`. See [interactions.md](interactions.md#the-holder-is-a-key).
+
+**`HoldType`**: the id of a Hold's type, the unit clashes compare. See [interactions.md](interactions.md#clashes).
 
 **Hot publish**: publishing content while things run; content is a tracked input, so whatever read it reruns. See [live-data.md](live-data.md#hot-publish).
+
+**`HotbarScrollHold`**: hold taken only by a step that uses the wheel; it blocks slot changes. See [dialogue.md](dialogue.md#5-the-wheel).
+
+**`HotbarSlotChanged`**: raw event with `from` and `to` slots, from `PlayerItemHeldEvent`. See [dialogue.md](dialogue.md#5-the-wheel).
 
 ## I
 
@@ -292,13 +312,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`input(name, type, default)`**: asks the creator for a value a migration cannot decide alone. See [migrations.md](migrations.md#the-xmigrations-hook).
 
-**Intent event**: an event such as `Confirm` made from raw input only when the key is the one offered. See [events-and-handlers.md](events-and-handlers.md#event).
+**Intent event**: an event such as `Confirm` made from raw input only when the key is the one offered. Input with one holder needs none. See [events-and-handlers.md](events-and-handlers.md#event).
 
 **Interaction**: the running group of steps that one start produced, and an identity. See [interactions.md](interactions.md#interactions).
 
 **`InteractionContext`**: core formula context evaluated once per interaction, providing `group` and `chain`. See [formula-language.md](formula-language.md#formula-contexts).
 
-**`InteractionState`**: core stored value keyed by the interaction that keeps its rules while the protagonist is gone. See [interactions.md](interactions.md#stepstate).
+**`InteractionStart`**: stored value keyed by the interaction: the entry and context it began with, for restarting it. See [interactions.md](interactions.md#steps).
 
 **`interpolate()`**: provider that decides how a value enters a text template; `RichText` escapes tags by default. See [formula-language.md](formula-language.md#text-templates).
 
@@ -308,11 +328,21 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Island`**: example identity type that the `islands` group entry exports through `bind`. See [interactions.md](interactions.md#groupings-and-membership).
 
+## J
+
+**`JumpLock`**: hold that weakens jumping while Jump is the offered key, restored after a crash. See [dialogue.md](dialogue.md#6-the-key).
+
 ## K
 
 **Keyed hold**: a hold with `@Key` fields beyond the holder, so one holder can hold many holds of one type, such as `NpcView`. See [interactions.md](interactions.md#keyed-holds).
 
+**`KeyOffer`**: `Live` value in which a step asks for a key press. Offers do not clash; the newest takes presses. See [dialogue.md](dialogue.md#6-the-key).
+
+**`KeyPressed`**: raw event for one of the confirmation keys. See [dialogue.md](dialogue.md#6-the-key).
+
 **Keys**: the identities a stored value is about: none (global), one, several (ordered), or a `Set` (symmetric). See [stored-data.md](stored-data.md#keys).
+
+**`KeysLeft`**: `Live` value saying which keys a camera or lock leaves usable. See [dialogue.md](dialogue.md#6-the-key).
 
 **`KnownIds`**: stored value `KnownIds(engine, type, ids)` with the ids one engine reports for one domain; the shared picker and the domain check read it. See [domains.md](domains.md).
 
@@ -378,15 +408,17 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Occurrence**: one real happening that may reach several sources; sources of the same meaning join it. See [events-and-handlers.md](events-and-handlers.md#occurrences-and-dedupe).
 
+**`OfferedKey`**: hold naming the one key and step a player's press goes to now; not counted in clashes. See [dialogue.md](dialogue.md#6-the-key).
+
 **Offline changes**: stored data changing while its protagonist is offline; stored only handlers run on the realm, live reactions may be missed. See [stored-data.md](stored-data.md#offline-changes).
 
-**`onClash`**: step entry field and `startStep` argument: `Drop` (default), `Queue`, or `Replace`. See [interactions.md](interactions.md#clashes).
+**`onClash`**: step rule: `Drop` (default), `Queue`, or `Replace`. See [interactions.md](interactions.md#clashes).
 
 **`Once`**: core `Schedule` for one fixed time; a time in the past means never. See [stored-data.md](stored-data.md#due).
 
 **`OnlinePlayer`**: `Live` mirror in the Minecraft capability with an online protagonist's name and its `Engine`, read by the panel's target list. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
-**`onRejoin`**: step entry field and `startStep` argument: `Drop` (default), `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#leaving-and-rejoining).
+**`onRejoin`**: step rule: `Drop` (default), `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#leaving-and-rejoining).
 
 **`OnWrite<K, T>`**: variable reaction that runs inside every write's own transaction. See [stored-data.md](stored-data.md#reactions).
 
@@ -442,7 +474,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`ProtagonistLeft`**: best effort core event fired by the last holder when a protagonist has no session left anywhere. See [live-data.md](live-data.md#session).
 
-**`Protected`**: stored value on a running step that turns an incoming `Replace` into `Queue`. See [interactions.md](interactions.md#clashes).
+**`protected`**: step rule, a formula: while true, an incoming `Replace` queues instead. See [interactions.md](interactions.md#clashes).
 
 **Provider**: KSP generated per type code (`XFormulaProvider`) that supplies formula members and operators. See [formula-language.md](formula-language.md#members-and-providers).
 
@@ -456,6 +488,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Queue (clash)**: an incoming step waits until it can start, giving up through a formula, when its book stops applying, or when its interaction ends. See [interactions.md](interactions.md#clashes).
 
+**`Queued<E>`**: stored row of a step waiting for its holds. See [interactions.md](interactions.md#the-queue).
+
 ## R
 
 **`random(...)`**: formula randomness seeded by (run, place), so rechecking agrees and a new run rolls again; the run is the chain's seed record, the write, or the event, depending on the context. See [formula-language.md](formula-language.md#time-and-randomness).
@@ -465,6 +499,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`ReactionTimer<K, T>`**: the one `Due` type of timed reactions; the variable declares one per `AfterWrite` (with the value's keys) and per `Every` (with no keys) at the reaction's place. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
 
 **`ReactionScope<K, T>`**: formula context interface for reaction changes, providing `keys`, `value`, and `previous`. See [formula-language.md](formula-language.md#formula-contexts).
+
+**`Ready`**: `Live` value saying a queued step may begin or replace now. See [interactions.md](interactions.md#the-queue).
 
 **Realm**: the backend that owns stored data, `Due`, publication, checks, and routing of what it owns. See [live-data.md](live-data.md#routing).
 
@@ -481,6 +517,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`RichText`**: text type whose `template` provider (MiniMessage) comes from the Minecraft capability. See [formula-language.md](formula-language.md#text-templates).
 
 **Routing**: an event goes where a handler can run; realm owned data goes through the realm; events and live effects about a protagonist go to its protagonist subject, and session subjects serve only targets that are one connection. See [live-data.md](live-data.md#routing).
+
+**`Running<E>`**: stored row of a running step: its entry, subject, context, and `startedAt`. Handlers and derives take it as a parameter. See [interactions.md](interactions.md#steps).
 
 **`Runtime`**: a mutable local object on one server, never saved, with a creator lifetime; created by returning it from a handler. See [interactions.md](interactions.md#runtime-objects).
 
@@ -520,19 +558,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Source**: turns something outside Typewriter into events, lazily, only for what some handler can run for. See [events-and-handlers.md](events-and-handlers.md#source).
 
-**`Speaking`**: example step marker storing the dialogue entry and `startedAt`. See [stored-data.md](stored-data.md#kotlin-form).
-
 **Standard library**: ordinary Kotlin formula providers (`Int.plus`, `sumOf`, units, `format`). See [formula-language.md](formula-language.md#standard-library).
-
-**`startStep(...)`**: starts a step with its marker values and its `onClash` and `onRejoin` rules. See [interactions.md](interactions.md#stepstate).
 
 **Static entry**: an entry that declares data and is never triggered (`Variable`, `Definition`, `GroupEntry`). See [stored-data.md](stored-data.md#variables).
 
-**Step**: an entry that takes time inside an interaction, and an identity with a generation. See [interactions.md](interactions.md#steps).
+**Step**: an entry that takes time inside an interaction, started by firing into a `StepEntry`, and an identity with a new id at each start. See [interactions.md](interactions.md#steps).
 
-**Step marker**: the stored value a step keeps, holding only moments such as `startedAt` and `skippedAt`. See [interactions.md](interactions.md#step-markers-store-moments).
+**`StepEntry`**: entry that takes time; firing into it starts a step. See [interactions.md](interactions.md#steps).
 
-**`StepState`**: core stored value `StepState(entry, context, onClash, onRejoin)` keyed by the step. See [interactions.md](interactions.md#stepstate).
+**`StepRules`**: the step's rules: `onClash`, `onRejoin`, `protected`, `giveUp`. Collapsed in the inspector, and `giveUp` hidden when the entry cannot queue. See [interactions.md](interactions.md#steps).
 
 **`Stored`**: saved data keyed by identities and removed when any key identity ends. See [stored-data.md](stored-data.md#stored-values).
 

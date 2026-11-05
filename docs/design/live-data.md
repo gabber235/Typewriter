@@ -459,18 +459,16 @@ Not on streams: stored data and `Due` (transactions, exactly once, realm owned) 
 
 Content is a tracked input. Publishing new content reruns whatever read it; there is no `Republished` event.
 
-- Step data the protagonist sees is a derive over the step marker plus the entry. The marker stores only moments (`startedAt`), so text is live and a publish updates it in place.
+- Step data the protagonist sees is a derive over the `Running` row plus the entry. The row stores only moments (`startedAt`), so text is live and a publish updates it in place.
 - Configured event configurations and `Candidate<E>` entries are live across hot publish.
 - An identity defined by an entry ends when that entry is removed, and with it every value keyed by it.
 
 ```kotlin
-data class Speaking(@Key val step: Step, val entry: DialogueEntry, val startedAt: Instant) : Stored
-
 @Derive
-fun Speaking.show(who: Protagonist, text: RichText): DialogueHold = ...
+fun Running<OptionDialogueEntry>.view(who: Protagonist, text: RichText, /* ... */) = OptionView(/* ... */)
 ```
 
-Typing is a `Tick` handler over `DialogueHold`.
+Typing is a `Tick` handler over `Animating`, a `Live` value that exists only while animating ([dialogue.md](dialogue.md#3-the-dialogue-package)).
 
 ## Multiple servers
 

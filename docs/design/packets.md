@@ -30,7 +30,7 @@ Sources live in [version layers](engines.md#version-layers), like item bridges. 
 
 ```kotlin
 @Handler
-fun ActionBarSent.block(hold: ActionBarHold?): Verdict = if (hold != null) deny else pass
+fun ActionBarSent.block(hold: ActionBarHold): Verdict = deny()
 ```
 
 It runs inline on the network thread, so it may only read [network safe data](events-and-handlers.md#threads).

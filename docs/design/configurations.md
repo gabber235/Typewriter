@@ -23,9 +23,9 @@ The record knows nothing about layers. Its defaults are the last layer, so a new
 data class SpokenDialogueConfiguration(
     // A function, so speaker and message are checked names, not "<speaker>" text.
     val format: Var<(speaker: RichText, message: RichText) -> RichText, MemberContext> = ...,
-    val minLines: Var<Int, MemberContext> = ConstVar(4),
-    val maxLineLength: Var<Int, MemberContext> = ConstVar(40),
-    val percentage: Var<Double, MemberContext> = ConstVar(0.5),
+    val minLines: Var<Int, MemberContext> = Var.Value(4),
+    val maxLineLength: Var<Int, MemberContext> = Var.Value(40),
+    val percentage: Var<Double, MemberContext> = Var.Value(0.5),
 )
 ```
 
@@ -103,10 +103,10 @@ Handlers never see `Partial`.
 
 ```kotlin
 @Derive
-fun Speaking.show(who: Protagonist, context: MemberContext): DialogueHold {
+fun Running<SpokenDialogueEntry>.view(who: Protagonist, text: RichText, context: MemberContext): SpokenView {
     val spoken = entry.spoken.value
     val lines = text.wrap(spoken.maxLineLength(context), spoken.minLines(context))
-    return DialogueHold(who, spoken.format(context)(speaker, lines))
+    return SpokenView(step, who, spoken.format(context)(speaker, lines), startedAt)
 }
 ```
 

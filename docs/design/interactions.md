@@ -80,15 +80,15 @@ Rules:
 
 ### The holder is a key
 
-A Hold names its holder with an ordinary `@Key`, the same rule as a `Stored` value. So a parameter finds a Hold the way it finds a stored value: `ActionBarSent(player, ...)` fills the key of `ActionBarHold?`, with no second lookup.
+A Hold names its holder with an ordinary `@Key`, the same rule as a `Stored` value. So a parameter finds a Hold the way it finds a stored value: `ActionBarSent(player, ...)` fills the key of `ActionBarHold`, with no second lookup.
 
 | Hold | Holder key | Reaches |
 | --- | --- | --- |
-| `PotionHold`, `DialogueHold` | `Protagonist` | Each of the player's connections |
+| `PotionHold`, `ChatHold` | `Protagonist` | Each of the player's connections |
 | `CornerToolHold` | `Session` | One connection |
 | `NpcView` | `Protagonist`, plus `NpcEntry` as a second key | That viewer, one Hold per NPC |
 | Shared world time | `Engine` | That server |
-| `NpcRunning` | `Identity`, picked by content | [Server, group, or protagonist](#npc-scope) |
+| `NpcRunning` | `Holder`, picked by content | [Server, group, or protagonist](#npc-scope) |
 
 A Hold has exactly one holder key, of a type above or a `GroupIdentity`. KSP rejects zero or two. In a group step, a derive's `who: Protagonist` iterates the members, so each member gets a Hold with their own formula values.
 
@@ -112,7 +112,7 @@ A Hold has no `apply()` method. View changes are normal handlers that take the H
 
 ```kotlin
 @Handler
-fun Tick<EveryTick>.type(dialogue: DialogueHold, chat: HasChat) = ...
+fun Tick<EverySecond>.resend(bar: ActionBarHold, actionBar: HasActionBar) = ...
 ```
 
 Initial sending, and sending again after a join or a server move, are handlers on `Added<H>`:
@@ -175,6 +175,8 @@ Adoption within grace fires neither `Added` nor `Removed`.
 
 When a derive stops returning a Hold, its removal (`Removed<H>`, then `RestoreSnapshot<H>`) waits a short grace: about 10 ticks (half a second) by default, set per Hold type and overridable by content. A Hold of the same type and keys within the grace, from any interaction, adopts it together with its snapshot. Two camera scenes back to back, or a choice inside a scene that picks the next scene, are cuts without flicker and without a restore in between. A rejoin gets the same grace before a stored snapshot is restored.
 
+For a Hold from a `Running`, the grace starts only when that interaction's chain has settled: `complete` began and every event it fired is done. Until then the Hold still blocks and counts as protected, so a queued step cannot jump between two steps of one chain.
+
 ### Keyed holds
 
 `@Key` fields beyond the holder let one holder hold many Holds of one type:
@@ -189,7 +191,7 @@ When several derives produce the same Hold type and keys, the highest priority w
 
 ### Input holds
 
-Raw input becomes intent events such as `Confirm` only for the key the current input holder offers ([events-and-handlers.md](events-and-handlers.md#event)). The offered key shown in a hint is a `Var` field read as a plain parameter of the render handler.
+A Hold is for the input a step actually uses, not for input in general: `HotbarScrollHold` for the wheel, while keys are offers that do not clash. See [dialogue.md](dialogue.md).
 
 ### Leaving and returning
 
@@ -227,7 +229,7 @@ A display is a node in the audience tree, so it has its own `InAudience`, and a 
 - **Restore order.** Two Holds touching the same game state restore in an unknown order.
 - **The snapshot row's shape.** Its key holds the Hold's type and keys. A key that is an entry ends with the entry, which would delete the row with no restore.
 - **Cost.** Each start of a Hold with a snapshot is one realm write. A value that changes every tick reruns the derive every tick.
-- **`NpcRunning` with `Identity` as its key.** The build cannot check that holder. A group held NPC with members on two servers runs once on each. Layer 21 confirms both.
+- **`NpcRunning` with `Holder` as its key.** The build cannot check which holder content picks. A group held NPC with members on two servers runs once on each. Layer 21 confirms both.
 - **A display with no `criterion`.** `AudienceEntry.inside` must treat that as true, which is a small change to the audience design.
 - **Many small traits.** The engine object implements them all. How an extension adds its own trait for an identity is not designed.
 
@@ -256,44 +258,134 @@ An **Interaction** is the running group of steps that one start produced.
 - An interaction is created when a start fires into an entry that is not a member of a running interaction.
 - Membership is computed at publication: every entry reachable from the start through trigger links, crossing book edges.
 - When a start fires into an entry that is already a member of a running interaction, the trigger type decides whether it forwards into that interaction. Forwarding is declared by the trigger type (the extension marks it forwardable). Clicking NPC B while talking to NPC A forwards when both are in the same interaction and clashes otherwise.
-- An interaction ends when no step runs and nothing is pending in any branch.
+- An interaction ends when it has no `Running` or `Queued` row left and its chain has settled. Core then clears `InteractionStart`.
+- Newest wins among siblings in one interaction: a forwarded click replaces the current dialogue, as legacy.
 
 ### Steps
 
 Entries that take time are **steps**: a dialogue, a scene, a delay, a search followed by a click. Instant entries (actions) run inside the interaction without becoming steps.
 
-Steps and interactions are identities, with a generation, so an event for a finished step is dropped. A step belongs to a group (`step.group`). Stored values keyed by a step are removed when the step ends, so step data cannot leak after a crash, a server move, or a hot publish.
-
-A step entry's handler starts the step; whoever ends the step fires the next links:
+Firing into a `StepEntry` starts it. An extension writes no start code, no marker type, and no generation. Each start gets a new unique `Step` id, so a late event finds nothing.
 
 ```kotlin
-@Handler
-fun Triggered<DialogueEntry>.start(...) {
-    startStep(context, Speaking(step, entry, startedAt = now))
+interface StepEntry : Triggerable { val rules: StepRules }
+
+@TypewriterType(id = "...")
+data class StepRules(
+    val onClash: OnClash = OnClash.Drop,
+    val onRejoin: OnRejoin = OnRejoin.Drop,
+    val protected: Var<Boolean, StepContext> = Var.Value(false),
+    val giveUp: Var<Boolean, QueuedContext> = Var.Value(false),
+)
+
+enum class OnClash { Drop, Queue, Replace }
+enum class OnRejoin { Drop, RestartStep, RestartInteraction }
+
+interface StepContext : MemberContext { val elapsed: Duration }
+interface QueuedContext : MemberContext { val waited: Duration }
+
+// Most creators never open this. giveUp is hidden when the entry can never queue.
+object StepRulesInspector : StepRulesPresentation {
+    override val roles = setOf(PresentationRole.INSPECTOR)
+    override val group = FieldGroup("step", "Interruptions", collapsed = true)
+    override fun StepRulesPresentationScope.present() {
+        onClash.input()
+        showIf(onClash.read() eq literal(OnClash.Drop), whenFalse = { giveUp.input() }) {}
+        onRejoin.input()
+        protected.input()
+    }
 }
 
-@Handler
-fun Confirm.advance(talk: Talking) {
-    step.end()
-    // the ender fires the next links, e.g. entry.complete(context)
+@JvmInline value class Step(val id: UUID) : Identity
+@JvmInline value class Interaction(val id: UUID) : Identity
+
+// Protagonist, Session, GroupIdentity, and Engine are holders.
+interface Holder : Identity
+
+data class Running<E : StepEntry>(
+    @Key val step: Step,
+    val interaction: Interaction,
+    val entry: E,
+    val subject: Holder,
+    val context: ChainContext,
+    val startedAt: Instant,
+) : Stored {
+    val elapsed: Duration get() = now - startedAt
 }
+
+data class Queued<E : StepEntry>(
+    @Key val step: Step,
+    val interaction: Interaction,
+    val entry: E,
+    val subject: Holder,
+    val context: ChainContext,
+    val queuedAt: Instant,
+) : Stored
+
+data class InteractionStart(
+    @Key val interaction: Interaction,
+    val entry: StepEntry,
+    val context: ChainContext,
+) : Stored
 ```
 
-The event addresses the step directly: it is the event's only `Step` field. Chains, `Triggered`, `fire`, and `complete` are explained in [events-and-handlers.md](events-and-handlers.md).
-
-### StepState
-
-The step rules are explicit `startStep` arguments:
+What an extension writes for the smallest step:
 
 ```kotlin
-startStep(context, marker, onClash = entry.onClash, onRejoin = entry.onRejoin)
+class SpokenDialogueEntry(
+    /* page, name, placement, triggers, refused, changes */
+    override val rules: StepRules = StepRules(),
+    val text: Var<RichText, MemberContext>,
+) : StepEntry
+
+@Derive fun Running<SpokenDialogueEntry>.chat(who: Protagonist) = ChatHold(who)
+
+@Handler suspend fun Confirm.advance(running: Running<SpokenDialogueEntry>) = running.complete()
 ```
 
-A handler may hardcode them when a rule is not a creator choice; an omitted argument means the default. `startStep` stores a core `StepState(entry, context, onClash, onRejoin)` keyed by the step, because the rules must survive the protagonist being gone. The interaction has a matching `InteractionState`.
+How a `Running<E>` parameter resolves:
 
-### Step markers store moments
+| Handler | Runs for |
+| --- | --- |
+| Event with a `Step` field | That step, if its entry is an `E` |
+| Protagonist subject, no `Step` field | One run per step of type `E` they are in |
+| `who: Protagonist` on a `Running` derive | Each member of `subject`, through the group rule |
 
-The step marker stores only moments (`startedAt`, `skippedAt`), not counters or progress. Everything the protagonist sees is a derive over the marker plus the entry, so steps rarely write and a restart from the stored marker is a real resume. How a hot publish updates a running step (the `Speaking` derive) is in [live-data.md](live-data.md#hot-publish).
+Other steps use the same row:
+
+| Need | Code |
+| --- | --- |
+| A scene ends | `Tick<EveryTick>` comparing `running.elapsed` with its length |
+| A delay | `Added<Running<DelayEntry>>` writes `DelayDue(step, at) : Due`, and `Elapsed<DelayDue>` completes the step |
+| A search and a click | An event handler that takes `Running<E>` and completes it |
+| A skip | `Skipped(@Key step, at) : Stored`, removed with the step |
+| A preview | `Simulating(@Key step) : Stored` |
+
+Stored values keyed by a step are removed when the step ends, so step data cannot leak after a crash, a server move, or a hot publish. Everything the protagonist sees is a derive over `Running` plus its entry, so a hot publish updates a running step in place ([live-data.md](live-data.md#hot-publish)).
+
+### Ending a step
+
+```kotlin
+@Transaction context(tx: GuardedTransaction)
+fun completeStep(step: Step) {
+    require(running(step).exists(), "Already ended")
+    running(step).clear()
+}
+
+suspend fun Running<*>.complete(
+    links: List<Triggerable> = listOf(entry),
+    context: ChainContext = this.context,
+) {
+    when (CompleteStep(step).ensure()) {
+        Committed -> links.forEach { it.complete(context) }
+        is Refused -> Unit
+    }
+}
+
+fun Running<*>.end()   // no links
+```
+
+The guard is what makes a double press safe: the second press is refused and fires nothing.
 
 ### Variants
 
@@ -307,29 +399,203 @@ Interactions stay inside one engine kind. Engines share stored state only throug
 
 ## Clashes
 
-Clash rules apply at every step start, and only when the incoming step needs a Hold type that another interaction holds for the same protagonist.
+The step system does not limit anyone to one at a time. Any number of steps and interactions run together. Two clash only when they need the same Hold type for the same protagonist. Only a `Hold` returned by a derive on `Running<E>` counts; a `Live` value from a step never clashes.
 
-| Who | Declares | Values |
-| --- | --- | --- |
-| Incoming step | `onClash` (a normal entry field, the default of the `startStep` argument) | `Drop` (default), `Queue`, `Replace` |
-| Running step | `Protected` stored value | whole step, or a period of it |
+An incoming step counts every Hold type its derives can return. A running step counts what it holds now, so a released Hold can be taken. If a step later wants a Hold that someone took, its own `onClash` applies.
+
+```kotlin
+@JvmInline value class HoldType(val id: TypeDefinitionId)
+
+data class HeldBy(val interaction: Interaction, val priority: Int, val protected: Boolean)
+
+// Written by core at tick end.
+data class Held(
+    @Key val who: Protagonist,
+    val holds: Map<HoldType, HeldBy>,
+    val settled: Set<Step>,
+) : Live
+
+fun holdTypes(entry: StepEntry): Set<HoldType>   // from KSP: Hold return types of derives on Running<E>
+
+fun blockers(
+    held: List<Held>,
+    mine: List<Running<*>>,
+    types: Set<HoldType>,
+    self: Interaction,
+): List<HeldBy> {
+    val now = held.flatMap { h -> types.mapNotNull { h.holds[it] } }
+    val starting = mine.filter { row -> held.none { row.step in it.settled } }
+        .filter { (holdTypes(it.entry) intersect types).isNotEmpty() }
+        .map { HeldBy(it.interaction, it.entry.priority, protected = true) }
+    return (now + starting).filter { it.interaction != self }.distinct()
+}
+
+sealed interface Decision {
+    data object Begin : Decision
+    data object Drop : Decision
+    data object Queue : Decision
+    data class Replace(val ended: List<Interaction>) : Decision
+}
+
+fun decideClash(rules: StepRules, priority: Int, others: List<HeldBy>, ahead: Boolean): Decision {
+    if (others.isEmpty() && !ahead) return Decision.Begin
+    return when (rules.onClash) {
+        OnClash.Drop -> Decision.Drop
+        OnClash.Queue -> Decision.Queue
+        OnClash.Replace -> when {
+            others.isEmpty() || others.any { it.protected } -> Decision.Queue
+            others.any { it.priority >= priority } -> Decision.Drop
+            else -> Decision.Replace(others.map { it.interaction }.distinct())
+        }
+    }
+}
+
+@Handler
+fun <E : StepEntry> Triggered<E>.start(
+    held: List<Held>,
+    mine: List<Running<*>>,
+    waiting: List<Queued<*>>,
+) {
+    val interaction = chain.interaction ?: forwardInto(mine) ?: Interaction(uuid7())
+    val step = Step(uuid7())
+    val types = holdTypes(entry)
+    val others = blockers(held, mine, types, interaction)
+    val ahead = waiting.any {
+        it.interaction != interaction && (holdTypes(it.entry) intersect types).isNotEmpty()
+    }
+    val row = Running(step, interaction, entry, subject, context, now)
+    val _ = when (val decision = decideClash(entry.rules, entry.priority, others, ahead)) {
+        Decision.Begin -> BeginStep(row, siblingsOf(mine, types, interaction))
+        Decision.Queue -> QueueStep(Queued(step, interaction, entry, subject, context, now))
+        is Decision.Replace -> ReplaceAndBegin(decision.ended, row)
+        Decision.Drop -> return
+    }.attempt()
+}
+
+@Transaction context(tx: Transaction)
+fun beginStep(row: Running<*>, siblings: List<Step>) {
+    siblings.forEach { running(it).clear() }
+    interactionStart(row.interaction).setIfAbsent(InteractionStart(row.interaction, row.entry, row.context))
+    running(row.step).set(row)
+}
+
+@Transaction context(tx: Transaction)
+fun queueStep(row: Queued<*>) {
+    interactionStart(row.interaction).setIfAbsent(InteractionStart(row.interaction, row.entry, row.context))
+    queued(row.step).set(row)
+}
+
+@Transaction context(tx: Transaction)
+fun replaceAndBegin(ended: List<Interaction>, row: Running<*>) {
+    ended.forEach { interactionStart(it).clear() }   // its steps end with the identity
+    interactionStart(row.interaction).setIfAbsent(InteractionStart(row.interaction, row.entry, row.context))
+    running(row.step).set(row)
+}
+```
 
 Rules:
 
-- `Replace` wins only against a lower inherited priority.
-- `Replace` against `Protected` becomes `Queue`.
-- `Replace` ends the whole running interaction, so it can simply be started again later.
-- A queued step gives up through a formula, for example `waited > 10s || !protagonist.inRegion(arena)`. It also gives up when its book stops applying or its interaction ends.
+- `Replace` wins only against a lower priority, and ends the whole running interaction, so it can simply be started again later.
+- `Replace` against a protected step becomes `Queue`.
+- `protected` is a formula on the step, read while it runs (`elapsed` is in its context). It covers only what the step holds now.
+- A step's chain stays protected until it settles. See the [grace rule](#grace-and-adoption).
 - Server wide events are normal steps; the creator decides per event through the clash field.
+
+### Groups
+
+A group step is all or nothing. It guarantees everyone in the group sees it at the same time, so one person holding out holds it out for everyone.
+
+- **Blockers** are the union over all online members.
+- **`Drop`** drops it whole. **`Queue`** waits until all are free. **`Replace`** ends each blocking interaction, unless one is protected or not lower.
+- **To decide per person**, trigger for individuals with `ContinueForEachMember`.
+
+### The queue
+
+```kotlin
+fun decideQueued(row: Queued<*>, others: List<HeldBy>): Decision = when {
+    others.isEmpty() -> Decision.Begin
+    row.entry.rules.onClash != OnClash.Replace -> Decision.Queue
+    others.any { it.protected } -> Decision.Queue
+    others.any { it.priority >= row.entry.priority } -> Decision.Queue
+    else -> Decision.Replace(others.map { it.interaction }.distinct())
+}
+
+data class Ready(@Key val step: Step, val decision: Decision) : Live
+
+// Reruns on any change of Held, so a queue also moves when a blocker stops being protected.
+@Derive
+fun Queued<*>.ready(held: List<Held>, mine: List<Running<*>>, waiting: List<Queued<*>>): Ready? {
+    val types = holdTypes(entry)
+    val older = waiting.any {
+        it.queuedAt < queuedAt && (holdTypes(it.entry) intersect types).isNotEmpty()
+    }
+    if (older) return null
+    val decision = decideQueued(this, blockers(held, mine, types, interaction))
+    return if (decision == Decision.Queue) null else Ready(step, decision)
+}
+
+@Handler
+fun Added<Ready>.begin(row: Queued<*>) {
+    val _ = when (val decision = value.decision) {
+        Decision.Begin -> BeginQueued(row)
+        is Decision.Replace -> ReplaceAndBeginQueued(decision.ended, row)
+        else -> return
+    }.attempt()
+}
+
+@Transaction context(tx: Transaction)
+fun beginQueued(row: Queued<*>) {
+    queued(row.step).clear()
+    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context, now))
+}
+
+@Transaction context(tx: Transaction)
+fun replaceAndBeginQueued(ended: List<Interaction>, row: Queued<*>) {
+    ended.forEach { interactionStart(it).clear() }
+    queued(row.step).clear()
+    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context, now))
+}
+
+// waited reads now, so this rechecks on the timer.
+data class GaveUp(@Key val step: Step) : Live
+@Derive fun Queued<*>.gaveUp(context: QueuedContext) = if (entry.rules.giveUp(context)) GaveUp(step) else null
+
+@Handler
+fun Added<GaveUp>.leave(row: Queued<*>) {
+    val _ = LeaveQueue(row.step).attempt()
+}
+
+@Transaction context(tx: Transaction)
+fun leaveQueue(step: Step) {
+    queued(step).clear()
+}
+```
+
+- A queued step never drops: it begins, replaces, or waits. Only `giveUp` removes it, for example `waited > 10s || !protagonist.inRegion(arena)`. It also ends when its book stops applying or its interaction ends.
+- The oldest queued step for a Hold type goes first, whatever its priority.
+
+### Clashes: not proven
+
+Nothing compiled or ran.
+
+- **Accessor forms.** `running(step).exists()` and `setIfAbsent` on these rows are assumed.
+- **Ending an interaction's rows.** "Its steps end with the identity" needs `interaction` as a key of `Running` and `Queued`, or a listing in the transaction. The plan decides.
+- **Settled across engines.** A group chain on one engine, a Hold on another.
+- **`Held` for `Session` and `Engine` holders.** An `Engine` subject has no `who` to iterate, so only `server: Engine` derives run. First use is layer 18 or 21.
+- **`protected` always watched** while a step runs, and queued priority read at decision time.
+- **A generic stored index by `E`**, and an entry deleted while running (core ends the step with no links).
+- **Chain settle** needs a counter across guard waits.
+- **Static needs are cautious.** A camera used only at minute 5 clashes at the start.
+- **Realm latency** on every step start, skip, and end.
 
 ## Leaving and rejoining
 
-A step entry field `onRejoin` says what happens to running steps when the protagonist leaves and returns:
+The step rule `onRejoin` says what happens to running steps when the protagonist leaves and returns:
 
 | Value | Effect |
 | --- | --- |
 | `Drop` (default) | The step ends on leave, like legacy teardown on quit |
-| `RestartStep` | The stored step starts again with its stored context and a new `startedAt` |
+| `RestartStep` | The step starts again with its stored context, a new `Step`, and a new `startedAt` |
 | `RestartInteraction` | The interaction starts again from its start |
 
 With several branches running, the strictest wins: `Drop`, then `RestartInteraction`, then `RestartStep`.
@@ -338,12 +604,12 @@ One core handler implements return, so extensions write nothing for resume:
 
 ```kotlin
 @Handler
-fun SessionArrived.rejoin(interaction: InteractionState, steps: All<StepState>) = ...
+fun SessionArrived.rejoin(steps: List<Running<*>>, starts: List<InteractionStart>) = ...
 ```
 
-It takes the strictest `onRejoin`; `RestartStep` emits `Triggered(state.entry, state.context)` again. While the protagonist is away, live handlers simply do not apply because their parameters cannot be resolved.
+It takes the strictest `entry.rules.onRejoin`; `RestartStep` fires `Triggered(row.entry, row.subject, row.context)` again, which makes a new `Step` id. While the protagonist is away, live handlers simply do not apply because their parameters cannot be resolved.
 
-A server move is a leave and a rejoin, and the step entry's `onRejoin` applies. There is no separate "continue" choice and no follow setting.
+A server move is a leave and a rejoin, and the step's `onRejoin` applies. There is no separate "continue" choice and no follow setting.
 
 ## Contexts
 
@@ -513,7 +779,7 @@ entry.triggers.fire(context, for = group)   // default: the current subject
 | Action entry | Effect | `group` in formulas |
 | --- | --- | --- |
 | `ContinueForGroup(grouping)` | Fires once per distinct group of the members | the grouping's type (`Island`) |
-| `ContinueForEachMember` | One copy per member, like legacy `GroupTriggerActionEntry` | none, only `protagonist` |
+| `ContinueForEachMember(who: Var<List<Protagonist>, InteractionContext>)` | One copy per listed member, like legacy `GroupTriggerActionEntry`, each deciding its own clashes | none, only `protagonist` |
 | `ContinueForEveryone(who: Var<List<Protagonist>, InteractionContext>)` | Evaluates the list and creates a snapshot group keyed by the new interaction, ending with it | `Snapshot` |
 
 Book narrowing happens inside `fire`. Which `group` type a field sees after widening is in [formula-language.md](formula-language.md#group-fields).
@@ -540,7 +806,7 @@ Scenes are steps whose Holds take the camera and hide the protagonist. Their fea
 - `CameraHold` takes a snapshot of the protagonist's location, flight, and velocity, and restores them at the end. Content can overwrite the snapshot through `Snapshot<CameraHold>` to land the protagonist somewhere else with one teleport.
 - While `CameraHold` is held, the formula member `protagonist.position` reads the camera position. Covers legacy `PlayerPositionOverride` in the context: the override disappears with the Hold.
 - Back to back scenes adopt the camera Hold within grace, so the cut has no restore in between.
-- A cinematic has the normal step entry field `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
+- A cinematic has the normal step rule `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
 
 ## NPC scope
 
@@ -612,4 +878,3 @@ Writes go through [transaction functions](stored-data.md#transaction-functions).
 ## Open
 
 - Interaction bounds (blocking versus interrupting, changing over time; roadmap layer 17) are not designed yet.
-- How content marks a `Protected` period inside a step.

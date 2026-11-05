@@ -10,7 +10,7 @@ An event is a plain Kotlin type that says one thing happened. Extensions declare
 
 - **One event type per meaning.** What a particular delivery may do (decide, change, which thread it is on) is typed on the source, not on the event.
 - **Meaning decides how many events exist.** A change with a different effect at the packet than at the Paper event is two events: `ClientPosition` is a fake view on the wire, `PlayerMove` really moves the player. The same effect (`ArmSwing`) is one event: the first source starts the occurrence, the others join it. Nothing may rely on the packet arriving before the Paper event.
-- **Raw input becomes intent events.** A raw key press becomes `Confirm` only when it is the key currently offered by whatever holds the protagonist's input, so a raw key is only taken when it is the offered key.
+- **Raw input becomes intent events.** A raw key press becomes `Confirm` only when it is the key currently offered ([dialogue.md](dialogue.md#6-the-key)), so a raw key is only taken when it is the offered key. Input with one holder, like the hotbar wheel, needs no intent event: its handlers take the raw event.
 - **Subject.** Most events have a subject (usually a protagonist; a widened chain has a group). Events without a subject (`Tick`, world events) turn handler parameters into a query, see [Events without a subject](#events-without-a-subject).
 - **Engine neutral core.** `Tick` is a capability, not core. Core events say protagonist, never player (`ProtagonistJoined`). `Player` is only a Minecraft capability trait or part of a Minecraft event name (`PlayerMove`).
 
@@ -99,7 +99,7 @@ An event type may take a configuration type parameter: `Tick<C : TickConfig>`. T
 object EveryTick : TickConfig
 
 @Handler
-fun Tick<EveryTick>.type(dialogue: DialogueHold, chat: HasChat) = ...
+fun Tick<EveryTick>.animate(animating: Animating, chat: HasChat, history: ChatHistory) = ...
 ```
 
 A configuration is either a Kotlin object (code), an entry type (content: one configuration per published entry), or a list item type inside an entry (content: one configuration per published item, such as `Every`).
@@ -124,18 +124,18 @@ A handler is a Kotlin function with the event as receiver and typed parameters. 
 
 ```kotlin
 @Handler
-fun NpcClicked.talk(talk: Talking, mood: Mood) = ...
+fun NpcClicked.talk(running: Running<SpokenDialogueEntry>, mood: Mood) = ...
 ```
 
-This runs when an NPC is clicked, only if a `Talking` value exists for the clicking protagonist and a `Mood` exists for the clicked NPC.
+This runs when an NPC is clicked, only if the clicking protagonist is in a spoken dialogue step and a `Mood` exists for the clicked NPC.
 
 ### Parameters
 
 Parameters take plain types. A type as a parameter is the requirement; nullable means optional. There are no wrapper types such as `Present<P>` or `Held<H>`.
 
 ```kotlin
-fun Tick<EveryTick>.type(
-    dialogue: DialogueHold,
+fun Tick<EveryTick>.animate(
+    animating: Animating,
     chat: HasChat,
     preview: Simulating?,
 )
@@ -200,7 +200,7 @@ val Candidate<VaultEntry>.locked: Boolean
 - **From the subject, else from the only field of that kind.** A value whose key is a `Step` resolves from the event's only `Step` field, so events can address a step:
 
   ```kotlin
-  fun Confirm.advance(talk: Talking)
+  fun Confirm.advance(running: Running<SpokenDialogueEntry>)
   ```
 
 - **Every key must resolve.** A stored value is keyed by `@Key` fields ([stored-data.md](stored-data.md)); each key fills from the subject or event fields. Set keys (`Friendship(@Key pair: Set<Protagonist>, level)`) fill from all event fields of that kind.
@@ -225,7 +225,7 @@ Variants (Java chat versus a Bedrock form) are chosen by the step when it starts
 
 ### Events without a subject
 
-For `Tick` and world events, parameters become a query and the handler runs once per match. `fun Tick<EveryTick>.type(speaking: Speaking)` runs once per step that has a `Speaking` value. Stored types are indexed per type, so a query costs about the values it finds.
+For `Tick` and world events, parameters become a query and the handler runs once per match. `fun Tick<EveryTick>.animate(animating: Animating)` runs once per `Animating` value. Stored types are indexed per type, so a query costs about the values it finds.
 
 ### Where a handler runs
 
@@ -382,7 +382,7 @@ chosen.link.fire(context)
 Actions, steps, and triggers share this one flow:
 
 - An **action** entry's handler on `Triggered<E>` does its work and fires its links.
-- A **step** entry's handler calls `startStep(...)`; whoever ends the step (`step.end()`) fires the next links. Steps, interactions, clashes, and rejoin are in [interactions.md](interactions.md).
+- Firing into a **step** entry starts it; whoever ends the step (`running.complete()`) fires the next links. Steps, interactions, clashes, and rejoin are in [interactions.md](interactions.md).
 - A **trigger** is an ordinary handler on a world event that fires an entry's links:
 
 ```kotlin

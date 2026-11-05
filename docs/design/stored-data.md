@@ -1,6 +1,6 @@
 # Stored data
 
-Stored data is everything Typewriter saves about the world of a realm: quest stages, coins, reputation, the marker of a running step, owed rewards, durable timers. There is one storage concept, `Stored`. It is the stored value from [the data storage vision](../vision/data-storage.md) with keys that decide what it is about and how long it lives.
+Stored data is everything Typewriter saves about the world of a realm: quest stages, coins, reputation, a running step, owed rewards, durable timers. There is one storage concept, `Stored`. It is the stored value from [the data storage vision](../vision/data-storage.md) with keys that decide what it is about and how long it lives.
 
 This file covers identities, stored values and their keys, change operations, transactions, creator variables and their reactions, `Due`, offline changes, and derives with a `Stored` result. For how handlers receive stored values as parameters, see [events-and-handlers.md](events-and-handlers.md). For live values that are never saved, see [live-data.md](live-data.md). For the formula language that reads and changes stored data, see [formula-language.md](formula-language.md). For type changes of stored data, see [migrations.md](migrations.md).
 
@@ -13,6 +13,7 @@ An identity is something stored data can be about. Identities are the only types
 | `Protagonist` | The engine neutral person: a Minecraft player, also the panel user. Owns stored data. Its id is the account it comes from, `Protagonist(PrincipalId("minecraft", <uuid>))` or `Protagonist(PrincipalId("user", <user id>))`, so an engine knows it at join without asking the realm. |
 | `Step` | One running step of an interaction. |
 | `Interaction` | The running group of steps (see [interactions.md](interactions.md)). |
+| `Holder` | An identity that can run a step or hold a Hold: `Protagonist`, `Session`, `GroupIdentity`, or `Engine`. |
 | `Session` | One connection of a protagonist (see [live-data.md](live-data.md)). |
 | `Engine` | One engine, by its stable topology engine id; survives restarts and ends when the engine leaves the topology (see [live-data.md](live-data.md#session)). |
 | An entry type (`NpcEntry`) | A published entry: a `Resource` typed field in a runtime value (stored data, holds, live values, events) is that entry's identity, stored as its `ResourceId` plus its instance path, read as the current published version, and ended when the entry is unpublished. Authored fields keep `Ref<Contract.Side, T>`; KSP rejects a `Resource` typed field in an authored type. |
@@ -63,8 +64,8 @@ data class Friendship(@Key val pair: Set<Protagonist>, val level: Int) : Stored
 // Ordered: two keys of one kind, each with its own meaning.
 data class Debt(@Key val from: Protagonist, @Key val to: Protagonist, val amount: Int) : Stored
 
-// The marker of a running step: stores a moment, not progress.
-data class Speaking(@Key val step: Step, val entry: DialogueEntry, val startedAt: Instant) : Stored
+// One moment about a running step, removed with the step.
+data class Skipped(@Key val step: Step, val at: Instant) : Stored
 ```
 
 Developer defined stored types are Typewriter types (`@TypewriterType` with an id and a revision), because they are persisted. The migrator converts their data between revisions (see [migrations.md](migrations.md)).
@@ -74,7 +75,7 @@ Developer defined stored types are Typewriter types (`@TypewriterType` with an i
 | Keys | Meaning |
 | --- | --- |
 | No key | Global: one value for the whole realm. |
-| One key | About one identity (`Speaking` on a `Step`). |
+| One key | About one identity (`Skipped` on a `Step`). |
 | Several keys | About several identities, ordered (`Debt(from, to)`). |
 | `Set<I>` key | Symmetric (`Friendship(pair)`): order free, any size, filled from all event fields of that kind, stored sorted. |
 
@@ -106,7 +107,7 @@ Handlers take a stored type as a parameter; the keys are filled from the event (
 
 ```kotlin
 @Handler
-fun Confirm.advance(talk: Talking) = ...
+fun Confirm.advance(running: Running<SpokenDialogueEntry>) = ...
 ```
 
 Kotlin reads a `Settable` only inside a [transaction function](#transaction-functions) (decided 2026-11-04). A `get()` anywhere else does not compile, so a handler cannot read a value and write it back by accident. Kotlin cannot see where a plain value came from, so `Set(event.new + 1).attempt()` with a value from an event or parameter still compiles.
@@ -435,7 +436,7 @@ data class RewardDue(
 @Transaction
 context(tx: Transaction)
 fun promiseReward(protagonist: Protagonist, amount: Int) {
-    rewardDue(protagonist) = RewardDue(protagonist, amount, at = now + 1.hours)
+    rewardDue(protagonist).set(RewardDue(protagonist, amount, at = now + 1.hours))
 }
 
 @Handler // realm, exactly once
@@ -539,7 +540,7 @@ fun Coins.owed(given: SwordGiven?): SwordOwed? =
 context(tx: GuardedTransaction)
 fun claimSword(protagonist: Protagonist) {
     require(swordGiven(protagonist).get() == null)
-    swordGiven(protagonist) = SwordGiven(protagonist)
+    swordGiven(protagonist).set(SwordGiven(protagonist))
 }
 
 @Handler
