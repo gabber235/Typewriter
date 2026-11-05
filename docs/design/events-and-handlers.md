@@ -606,38 +606,7 @@ event.to.distance(spot) < 5 and event.from.distance(spot) >= 5   // walked near 
 
 ## Commands
 
-A command is three things at once: a hold (it exists for a player now, contributed by a derive), an event (it ran, and can be denied), and data (the tree).
-
-### Shape
-
-A contribution is a data class whose `nodes` are built with a small data DSL: `literal`, `argument`, `runs<Event>()`. A node that can run names a typed event whose fields are filled from the path arguments by name; KSP checks this on every path.
-
-```kotlin
-@TypewriterType(id = CLAIM_REWARD_TYPE_ID)
-data class ClaimReward(val amount: Int) : Event
-
-// inside a contribution
-val nodes = literal("claim") {
-    argument("amount", Int) { runs<ClaimReward>() }
-}
-```
-
-- **One tree per player.** Contributions merge; there is no path or branch concept. A root command is just a literal node. Each contribution inserts its nodes where they match existing ones; removing it prunes nodes left with no executable and no children.
-- **Merging.** The same literal, or the same argument name and type, merges. Two runs at one node are settled by hold priority, which also resolves the same name from two books.
-- **Where contributions come from.** Derives: state dependent commands (`/claim` while a reward waits), commands available only during an interaction (`/accept` during an offer), and content commands through `Candidate<CustomCommandEntry>`.
-- **Applicability.** Commands from a book that does not apply to a player are hidden for that player (Brigadier `requires`); the tree is resent when applicability changes.
-- **Running.** Running a node emits its event, so ordinary handlers decide (deny blocks it) and react.
-- **Who it runs for** is separate from player arguments: a command can run for another player, or for the caller while a player argument stays usable in formulas and context.
-
-### Content commands
-
-`CustomCommandEntry` and its argument entries build the nodes. They are manifest (audience) entries, not sequence triggers. A node with triggers runs `ContentCommandRan(node, args)`, whose handler fires the node's triggers with the arguments as context.
-
-`/tw fire` takes the target first (`/tw fire <player> <entry>`), so suggestions follow the target.
-
-### Must also cover
-
-The shape must express the legacy command features: any tree shape in code and content, self or others, suggestions from state, console sender, detecting and cancelling other plugins' commands, blocking during interactions and re-running, running commands, and hot publish. Commands run from outside the game world are not needed. Prefer structured data over lambdas, with codegen doing the checking.
+A command is a hold, an event, and data at once; see [commands.md](commands.md).
 
 ## Build time checks
 

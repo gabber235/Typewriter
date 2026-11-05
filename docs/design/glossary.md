@@ -14,7 +14,17 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`@TypewriterType`**: the v1 type annotation; on a developer defined stored type it carries an id and a revision so the migrator can convert its data, and every event carries it, so an event crosses engines as its catalog value. See [migrations.md](migrations.md#developer-migrator) and [events-and-handlers.md](events-and-handlers.md#event).
 
-**`/tw fire`**: the command that fires an entry for a target, written target first (`/tw fire <player> <entry>`) so suggestions follow the target. See [events-and-handlers.md](events-and-handlers.md#content-commands).
+**`ArgumentEntry<T>`**: the one generic content command argument, with `T` picked and optional `choices`; its value reaches formulas as `name.value`. See [commands.md](commands.md#end-to-end-in-content).
+
+**`CommandArgument<T>`**: object that makes a type usable as a command argument, found by supertype. See [commands.md](commands.md#end-to-end-in-content).
+
+**`CommandContribution`**: parent of the holds that add `nodes` to a holder's command tree. See [commands.md](commands.md).
+
+**`CommandTree`**: the engine's shared command tree, where each node checks whether this player has it now. See [commands.md](commands.md).
+
+**`HasCommands`**: live trait that sends a connection its command tree. See [commands.md](commands.md).
+
+**`/tw fire`**: the command that fires an entry for a target, written target first (`/tw fire <player> <entry>`) so suggestions follow the target. See [commands.md](commands.md#end-to-end-in-content).
 
 ## A
 
@@ -94,9 +104,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`ClientPosition`**: example wire event that is only a fake view, kept separate from `PlayerMove` because its effect differs. See [events-and-handlers.md](events-and-handlers.md#event).
 
-**Command**: a hold (contributed by a derive), an event (it ran), and data (the node tree) at once. See [events-and-handlers.md](events-and-handlers.md#commands).
+**Command**: a hold (contributed by a derive), an event (it ran), and data (the node tree) at once. See [commands.md](commands.md).
 
-**Command node**: a `literal`, `argument`, or `runs<Event>()` element of a command contribution; contributions merge into one tree per player. See [events-and-handlers.md](events-and-handlers.md#shape).
+**Command node**: a `literal`, `argument`, or `runs<Event>()` element of a command contribution; contributions merge into one tree per player. See [commands.md](commands.md).
 
 **`complete(context)`**: the `Triggerable` shortcut that applies the entry's changes and then fires its triggers. See [events-and-handlers.md](events-and-handlers.md#triggerable-and-complete).
 
@@ -112,7 +122,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`ConfiguredSource<E, C>`**: source interface whose `open(demand: Demand<C>, sink: Sink<E>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
-**`ContentCommandRan`**: event a content command node runs; its handler fires the node's triggers with the arguments as context. See [events-and-handlers.md](events-and-handlers.md#content-commands).
+**`ContentCommandRan`**: event a content command node runs; its handler fires the node's triggers with the arguments as context. See [commands.md](commands.md#end-to-end-in-content).
 
 **`ContentDelivery`**: `Live` value keyed by `Engine` with the publication the engine applied or its delivery failure, so the panel shows "applied on N of M engines". See [panel-engine-communication.md](panel-engine-communication.md) question 10.
 
@@ -132,7 +142,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`CronSchedule`**: core `Schedule` from a cron expression and a time zone. See [stored-data.md](stored-data.md#due).
 
-**`CustomCommandEntry`**: manifest entry that, with its argument entries, builds content command nodes. See [events-and-handlers.md](events-and-handlers.md#content-commands).
+**`CommandEntry`**: the literal root of a content command, with an `available` formula, built from `LiteralEntry` and `ArgumentEntry<T>`. See [commands.md](commands.md#end-to-end-in-content).
 
 ## D
 
