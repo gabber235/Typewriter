@@ -5,7 +5,7 @@ description: Review a web panel page or surface against the design rules. Use wh
 
 # Panel Review
 
-Load the `panel-design` skill first. Read each of its rows as: when you see When, expect Then, otherwise report at `Sev`.
+Load the `panel-design` skill first. Read each of its rules as: when you see When, expect Then, otherwise report at `Sev`.
 
 ## Reviewing one page
 
@@ -17,7 +17,7 @@ Load the `panel-design` skill first. Read each of its rows as: when you see When
    ```
 3. Open each image in `.xtask/results/stories/` at full size, one at a time.
 4. List every action and state on the page. A state with no story is a finding.
-5. Check every `panel-design` row that applies. Record `pass`, `fail`, or `cannot_verify` for each.
+5. Check every `panel-design` rule that applies. Record `pass`, `fail`, or `cannot_verify` for each.
 6. Run the action walk and the critique below.
 7. Drop findings with no evidence, findings under Exceptions, and severity 0.
 8. When a finding is severity 3 or 4, repeat its check from fresh evidence. Keep it only if it holds.
@@ -42,12 +42,12 @@ For every action on the page:
 |---|---|---|---|
 | Any action | Reach it and run it with keys only | It works, and the command list shows it | 3 |
 | Any action | Cancel it | Esc steps out, focus returns to the opener | 3 |
-| Any action | Note where focus lands afterwards | The target in `panel-design` Moving focus | 3 |
+| Any action | Note where focus lands afterwards | The target in `panel-design` Focus | 3 |
 | A create action | Run it | Focus on the new thing's first empty required field | 3 |
 | A remove action on books, pages, or entries | Run it | No question, Undo offered, focus on the next row | 4 |
-| A permanent action | Press its key once, then press with every modifier | Nothing happens without the full hold | 4 |
+| An action that cannot be undone | Press its key once, then press with every modifier | Nothing happens without the full hold | 4 |
 | A failing action | Fail it through a fake | Failure stays, says what to do, offers Retry | 3 |
-| A hidden value | Reach it with keys | It reveals on focus | 3 |
+| A value revealed on hover | Reach it with keys, then touch | It reveals both ways | 3 |
 | A drag | Do it with keys, then with single clicks | Both give the same result | 2 |
 | Compact width | Render the compact story | Every action still reachable | 3 |
 
@@ -77,7 +77,7 @@ When the rules have a gap, propose a new When and Then row under Suggestions.
 | 2 | Friction that adds up | Title and content on different left edges |
 | 1 | Cosmetic | `item(s)` |
 
-Use the row's `Sev`. Change it only when frequency or impact on this page clearly differs, and say why.
+Use the rule's `Sev`. Change it only when frequency or impact on this page clearly differs, and say why.
 
 ## Output
 
@@ -87,7 +87,7 @@ Is this page good? The single most valuable change.
 
 ## Findings
 - id: MEMBERS-3
-  rule: "Revealing a hidden value"
+  rule: "Something works with one input"
   severity: 3
   region: "Email under each member name, table row"
   evidence: "blur_reveal.dart:4; story memberlistpage/default/initial.png"
