@@ -14,6 +14,9 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Keyboard | Visible modes; everything works without a pointer |
 | Destructive | Undo for book content, hold for permanent actions, no bypass |
 | Layout | The active pane lifts; bottom key hints stay |
+| Hover | Things rise with one overshoot and no shadow; key caps strike up; buttons with a key always show it |
+| Loading | Loaded rows ripple upwards from below |
+| Rules | General rules that decide many cases, over many specific rows |
 | Voice | Between plain and playful: jokes where possible, literal English when it matters |
 
 ## Choices by the author, not confirmed
@@ -24,18 +27,19 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 
 ## Draft when rules, not confirmed
 
-The maintainer chose what each behaviour looks like. These rules for when each one applies are the author's draft:
+The maintainer chose what each behaviour looks like. These rules for when each one applies are the author's draft, reviewed only in a sample:
 
-- Choosing a surface, including the option limit of 10 and compact layout.
+- Which surface a task uses, and compact layout.
 - Focus targets after each action.
-- Feedback by situation, including the 300 ms, 2 s, and 5 s limits.
-- Bulk actions, the 800 ms hold, and touch hold.
-- Motion under key repeat, off screen focus, bulk rows, loading, hover, and tooltips.
-- Ink marks: where they appear, and scroll anchoring.
+- Which feedback each situation gets, and where.
+- Waits: the 300 ms and 5 s limits, doorway versus skeleton, and refreshing without motion.
+- Bulk actions, the 800 ms hold, and showing the hold after preparation.
+- Moves that repeat fast, and which move wins when several play together.
+- Ink marks, and scroll anchoring.
 - Filled action placement, and per row actions.
-- Jam values, and the 2 s ink for changes by others.
-- Hiding key hints and the mode chip with touch only.
+- Hiding key caps, hints, and the mode chip with touch only.
 - Where jokes are allowed.
+- Values for `jam`, `hoverIn`, `capIn`, `loadIn`, and slow ink.
 
 ## Open
 
@@ -44,6 +48,10 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - A replacement for `Ctrl+Esc` as cancel, and the full key map per scope.
 - Undo depends on realm commit history (`docs/design/authoring-writes.md`), which is not built.
 - Golden pages: none exist, since no page meets the target yet.
+- Whether declining a join request or cancelling one's own needs a hold.
+- What "keep the user's work" means while a realm is suspended, where changes are paused.
+- Using saved in a conflict discards work: whether it needs a hold.
+- The demo does not yet show hover or loading.
 
 ## Findings
 
