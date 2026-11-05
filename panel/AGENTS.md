@@ -48,8 +48,13 @@ Prefer extension methods and getters over top level functions when behavior has 
 
 ## Design
 
-Before building or changing UI, read `docs/design/panel-design/README.md`, then the chapters it points to. Its
-rules are how the panel must look, move, and behave.
+When building or changing anything a panel user sees or presses, load the `panel-design` skill first. When reviewing a panel page, load the `panel-review` skill first.
+
+- When an action creates something, focus its first empty required field. When a surface closes, return focus to its opener.
+- When an action cannot be undone, require a hold, with no key that skips it.
+- When something fails, keep the failure visible until dealt with, in plain literal English.
+- When writing a duration or curve, use a motion token. Exits never bounce.
+- When adding an action, make it one command through an Intent, reachable by key and listed in the command list.
 
 ## Keyboard accessibility
 

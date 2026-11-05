@@ -55,15 +55,6 @@ pre{background:var(--code-background);border-radius:var(--radius);padding:12px 1
 <h2>The questions it answers</h2>
 <p class="note">Click any tile to play it.</p>
 <div class="grid" id="g"></div>
-<h2>What this means for the document</h2>
-<p>A new <strong>experience</strong> chapter comes first, and the motion chapter serves it. Each question becomes something the reviewer checks on every action, on every page:</p>
-<pre>XP-03 MUST  After an action, focus lands where the next step is.
-  Why    The user should never have to hunt for what's next.
-  Check  test (focus target) + visual-llm (the ring is visible)
-  Broken severity 3
-  Do     New page: focus moves to the new page's title field
-  Don't  New page: the row appears, focus stays on the button</pre>
-<p>Reduced motion keeps every answer. The ring jumps rather than slides, and marks and messages still appear.</p>
 <script>
 const OUT='cubic-bezier(.2,0,0,1)';
 const samp=f=>'linear('+Array.from({length:61},(_,i)=>f(i/60).toFixed(4)).join(',')+')';
