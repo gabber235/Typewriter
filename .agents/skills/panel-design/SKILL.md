@@ -35,7 +35,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Something succeeds | Say nothing if the result is visible. Otherwise type the result word at the control, or show a clearing toast for background work | 2 |
 | Something fails | The control shakes and turns red briefly, then returns to its normal action, so pressing it again repeats the action. Never add a second button or a red border. The message says what happened and the next step, and stays until the next try. Keep the user's work | 3 |
 | Several things fail at once | The first takes the move and focus. The rest show still messages | 2 |
-| A change appears elsewhere on screen | Put an ink mark on the other places, not on the place the user edited | 2 |
+| A change appears elsewhere on screen | Other places showing that text ripple their letters in brand blue, not the place the user edited. Changes that are not text use a fill that fades | 2 |
 | A list is empty | Say what belongs here. If the user can add one, name the key | 2 |
 | Access is lost | Hide the content and show a doorway screen | 3 |
 | The connection or a service is lost | Show one steady notice. Content stays readable | 3 |
@@ -69,12 +69,12 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Showing any state on something | Change the thing itself: its fill, its letters, its depth. Never add a border, line, spinner, or second control | 2 |
 | Anything changes state | Animate between the states inside the component: label, width, colour. Nothing swaps. Shared letters stay and only the different letters type: Publish, Publishing, Published | 2 |
 | Anything grows or responds over time: a hold, a fill, progress, a press | Drive it with a spring so it has weight. Nothing moves linearly | 2 |
-| Text appears | Reserve its space so nothing shifts, and type it. It must finish with time left to read it | 2 |
+| Text appears | Reserve its space so nothing shifts. Short text, about 20 letters or fewer, types itself. Longer text arrives whole, on a bounce, with chunks animating inside. It never delays reading | 2 |
 | A key is in use | Its key cap glows | 2 |
 | A control is busy or unavailable | It looks pressed in, like a held key. When busy, its label types the busy word and the letters ripple with `ripple` | 2 |
 | Anything leaves | It goes towards its origin, faster than it arrived, with no bounce. Something in a list squashes shut with its text, and its neighbours close the gap with it | 2 |
 | Something is temporary: an undo, a notice | Its background drains to show the time left | 2 |
-| Choosing how strong a move is | Go strong: a deep press, a big bounce, a hard shake. Keep it fast. Flat is the failure to avoid | 2 |
+| Choosing how strong a move is | Go strong: a deep press, a big bounce, a hard shake. Keep it fast. Flat is the failure to avoid. Be fun when it is not in the way, and shorten or drop any move that makes the user wait | 2 |
 | The pointer reaches something you can act on | It rises with `hoverIn`, without a shadow, and leaves with `hoverOut`. If it has a key, its key cap strikes up with `capIn` | 2 |
 | A button has a key | Always show the key cap. Pressing either one presses both | 2 |
 | Focus moves | The ring slides with `focusMove` | 2 |
