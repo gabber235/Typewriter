@@ -23,7 +23,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A task concerns something on screen | Do it where that thing is: its row, its control, or the inspector. New things appear as a row in place | 2 |
 | A choice comes from a short fixed list | Use a popover at the control or focused row | 2 |
 | A choice comes from a list that can grow or be searched | Use the search overlay | 2 |
-| A task needs more room than its place has | Open a surface from where it was asked for. It stays optional and Esc closes it | 2 |
+| A task needs more room than its place has | The row or control grows into a surface with `surfaceIn`, and Esc shrinks it back. It stays optional. Never strike in at the centre over a dimmed page | 2 |
 | Other work cannot continue until a question is answered | Use a dialog. Nothing else may use one | 2 |
 | The window is too narrow for side by side | Show one pane at a time, in the order tree, content, inspector. Floating surfaces become bottom sheets. No action is lost | 3 |
 
@@ -79,7 +79,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Choosing how strong a move is | Go strong: a deep press, a big bounce, a hard shake. Keep it fast. Flat is the failure to avoid. Be fun when it is not in the way, and shorten or drop any move that makes the user wait | 2 |
 | The pointer reaches something you can act on | It rises with `hoverIn`, without a shadow, and leaves with `hoverOut`. If it has a key, its key cap strikes up with `capIn` | 2 |
 | A button has a key | Always show the key cap. Pressing either one presses both | 2 |
-| Focus moves | The ring slides with `focusMove` | 2 |
+| Focus moves | The ring travels with `focusMove`, across panes too, so it leads the eye | 2 |
+| A pane gains focus | It lifts forward and brightens while the others sink back, with `paneFocus` | 2 |
 | A move repeats fast or would go off screen | Make it smaller, down to none. A held key makes the ring jump | 2 |
 | Several moves would play together | Only the user's latest action moves. Everything else changes without motion | 2 |
 | You cannot name what a move tells the user | Do not add it. Only rippling busy words and skeletons may loop | 2 |
@@ -150,6 +151,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Token | Curve | Duration | Landing |
 |---|---|---|---|
 | `panelIn` | Strike | 420 ms | 10% overshoot |
+| `surfaceIn` | Spring | Stiffness 280, damping 17 | Position and size go from the opener to the surface |
+| `paneFocus` | Spring | Stiffness 300, damping 13 | Active pane scale 1.03, others 0.985 |
 | `dialogIn` | Strike | 340 ms | 14% overshoot; the page behind scales to 0.98 |
 | `focusMove` | Strike | 170 ms | 5% overshoot |
 | `hoverIn` | Strike | 220 ms | Rises 2 px, scale 1.012, one overshoot |
