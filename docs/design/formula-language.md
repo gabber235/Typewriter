@@ -24,7 +24,9 @@ Formulas are side effect free. Conditions, text, verdicts and derives are pure. 
 
 ## The Formula primitive in Kotlin
 
-Kotlin formulas are provider functions ([Standard library](#standard-library)); there is no separate derived value concept. A handler or derive reads a `Var` field of its receiver as a plain parameter with the field's name and value type: it receives the field's current value, with the formula context filled from the handler's subject and parameters, and reruns when its `Watched<T>` mirror changes. KSP rejects such a parameter when no receiver field matches its name and type, so a rename is a build error.
+Kotlin formulas are provider functions ([Standard library](#standard-library)); there is no separate derived value concept. A handler or derive reads a `Var` field of its receiver's entry as a plain parameter with the field's name and value type: it receives the field's current value, with the formula context filled from the handler's subject and parameters, and reruns when its `Watched<T>` mirror changes. The receiver's entry is the receiver itself, the `E` of `Triggered<E>`, or the receiver's only entry field, as in `Speaking`. KSP rejects such a parameter when no field matches its name and type, so a rename is a build error.
+
+This is the normal form. A nested value has no parameter, so a derive reads it in the body: `spoken.minLines(context)`. That read is tracked too. When it finds no value, the derive gives nothing this run and reruns when the value arrives, as a [watched formula](live-data.md#formula-changes) does. The same call in a chain handler is one inline read and is not tracked ([live-data.md](live-data.md#formula-changes)).
 
 ```kotlin
 @Derive

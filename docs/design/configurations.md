@@ -103,10 +103,10 @@ Handlers never see `Partial`.
 
 ```kotlin
 @Derive
-fun Speaking.show(context: MemberContext): DialogueHold {
+fun Speaking.show(who: Protagonist, context: MemberContext): DialogueHold {
     val spoken = entry.spoken.value
     val lines = text.wrap(spoken.maxLineLength(context), spoken.minLines(context))
-    return DialogueHold(spoken.format(context)(speaker, lines))
+    return DialogueHold(who, spoken.format(context)(speaker, lines))
 }
 ```
 

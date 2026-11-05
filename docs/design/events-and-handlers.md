@@ -99,7 +99,7 @@ An event type may take a configuration type parameter: `Tick<C : TickConfig>`. T
 object EveryTick : TickConfig
 
 @Handler
-fun Tick<EveryTick>.type(speaking: Speaking, dialogue: DialogueHold, step: Step) = ...
+fun Tick<EveryTick>.type(dialogue: DialogueHold, chat: HasChat) = ...
 ```
 
 A configuration is either a Kotlin object (code), an entry type (content: one configuration per published entry), or a list item type inside an entry (content: one configuration per published item, such as `Every`).
@@ -135,9 +135,8 @@ Parameters take plain types. A type as a parameter is the requirement; nullable 
 
 ```kotlin
 fun Tick<EveryTick>.type(
-    speaking: Speaking,
     dialogue: DialogueHold,
-    step: Step,
+    chat: HasChat,
     preview: Simulating?,
 )
 ```
@@ -148,11 +147,11 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | --- | --- |
 | A `Stored`, `Hold`, `Live`, or `Runtime` type | The value at keys filled from the subject or event fields; free keys iterate (one run per value). |
 | An identity (`Protagonist`, `Step`, `Npc`, ...) | The subject, or the event's only field of that kind. |
-| A live capability trait (`HasChat`, `HasInventory`, `Living`) | The engine object for that identity; for a group subject, one per member. |
+| A live capability trait (`HasChat`, `HasInventory`, `HasHealth`) | The engine object for that identity; for a group subject, one per member. |
 | `List<T>` | One run with the values that exist at these keys, filled like `T` from a list field or by `@From`; missing keys drop out. |
 | `All<T>` | Every value of type `T`; for a mirror, on every engine ([live-data.md](live-data.md#demand-across-engines)). |
 | `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject. |
-| A plain value named like a `Var` field of the receiver | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
+| A plain value named like a `Var` field of the receiver's entry | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
 | `Snapshot<H>` | A hold's stored snapshot, readable and writable ([interactions.md](interactions.md)). |
@@ -209,7 +208,7 @@ val Candidate<VaultEntry>.locked: Boolean
 - **Same kind means same identity.** Parameters of the same identity kind refer to the same identity, one parameter per trait, ECS style:
 
   ```kotlin
-  fun SwapHands.heal(living: Living, inventory: HasInventory)
+  fun SwapHands.heal(health: HasHealth, inventory: HasInventory)
   ```
 
 - **Group subjects iterate members.** When the subject is a group, protagonist kind parameters iterate its members, joined per member. A group parameter plus traits gives the group once plus each member:

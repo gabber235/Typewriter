@@ -321,7 +321,7 @@ spawn.contains(it.protagonist)                                                  
 
 Enter and exit triggers stay separate entries: `TriggerAudienceEntry(onEnter, onExit, fireOnJoin = true)`. Like legacy, enter fires on every join by default. Exit fires only on `because == Value`, so quitting or moving servers does not count as leaving.
 
-Displays derive from membership: a `SidebarHold` is derived from `InAudience`, and its text updates through `Changed<Watched<RichText>>`. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md)).
+Displays derive from membership: a `SidebarHold` is derived from `InAudience` with its text as a tracked parameter, and a handler on `Changed<SidebarHold>` updates the game. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md#holds)).
 
 ### Demand across engines
 
@@ -383,18 +383,18 @@ An engine runs published content through extensions ([../vision/engines.md](../v
 
 - `Tick` is a capability, not core.
 - Tracked inputs for formulas and derives are an extensible set of sources (the panel engine tracks draft content).
-- Hold lifecycle runs per live connection of the holder (a Minecraft session, a browser tab), not per server.
+- A hold handler that asks for a trait runs per live connection of the holder (a Minecraft session, a browser tab), not per server ([interactions.md](interactions.md#lifecycle)).
 - Engines share stored state only through the realm; live effects and events go directly between sessions (see Routing); interactions do not span engines.
 
 ### Live capability traits
 
-An engine provides live traits for its identities, such as `PaperProtagonist : Player, HasChat, ...`. A trait gives live access and effects (teleport, packets, inventory). Optional capabilities are plain Kotlin type checks.
+An engine provides live traits for its identities, such as `PaperProtagonist : Player, HasChat, ...`. A trait gives live access and effects (teleport, packets, inventory). Traits are small, one per capability (`HasChat`, `HasPotionEffects`), so handlers combine them; there is no large trait such as `Living`. Optional capabilities are plain Kotlin type checks.
 
 A handler asks for one parameter per trait, ECS style. Parameters of the same identity kind refer to the same identity; typed roles (`@As`, `@From`) split them when an event has two.
 
 ```kotlin
 @Handler
-fun SwapHands.heal(living: Living, inventory: HasInventory) = ...
+fun SwapHands.heal(health: HasHealth, inventory: HasInventory) = ...
 ```
 
 When the subject is a group, protagonist kind parameters iterate its members; see [events-and-handlers.md](events-and-handlers.md#resolution).
@@ -467,7 +467,7 @@ Content is a tracked input. Publishing new content reruns whatever read it; ther
 data class Speaking(@Key val step: Step, val entry: DialogueEntry, val startedAt: Instant) : Stored
 
 @Derive
-fun Speaking.show(...): DialogueHold = ...
+fun Speaking.show(who: Protagonist, text: RichText): DialogueHold = ...
 ```
 
 Typing is a `Tick` handler over `DialogueHold`.

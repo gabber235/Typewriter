@@ -106,7 +106,7 @@ Handlers take a stored type as a parameter; the keys are filled from the event (
 
 ```kotlin
 @Handler
-fun Tick<EveryTick>.type(speaking: Speaking, dialogue: DialogueHold, step: Step) = ...
+fun Confirm.advance(talk: Talking) = ...
 ```
 
 Kotlin reads a `Settable` only inside a [transaction function](#transaction-functions) (decided 2026-11-04). A `get()` anywhere else does not compile, so a handler cannot read a value and write it back by accident. Kotlin cannot see where a plain value came from, so `Set(event.new + 1).attempt()` with a value from an event or parameter still compiles.

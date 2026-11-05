@@ -37,7 +37,7 @@ A handler asks for the event plus parameters. If any parameter cannot be resolve
 fun NpcClicked.talk(talk: Talking, mood: Mood) = ...
 
 @Handler
-fun Tick<EveryTick>.type(speaking: Speaking, dialogue: DialogueHold, step: Step) = ...
+fun Tick<EveryTick>.type(dialogue: DialogueHold, chat: HasChat) = ...
 ```
 
 Parameter types also decide where a handler runs: live traits (`HasChat`, `HasInventory`) pin it to the engine where its subject is live; stored data only lets it run wherever the event happened. See [events-and-handlers.md](events-and-handlers.md).
@@ -59,12 +59,12 @@ A derive is a pure function over tracked inputs. Its result type decides what th
 | Result | Meaning | Details |
 | --- | --- | --- |
 | `Stored` | Saved; an equal result writes nothing. | [stored-data.md](stored-data.md) |
-| `Hold` | Live view state with priority, grace, `snapshot()` and `restore()`. | [interactions.md](interactions.md) |
+| `Hold` | Live view state with priority, grace, and a stored snapshot to restore. | [interactions.md](interactions.md) |
 | `Live` | A computed mirror, demand driven, never saved. | [live-data.md](live-data.md) |
 
 ```kotlin
 @Derive
-fun Speaking.show(...): DialogueHold
+fun Speaking.show(who: Protagonist, text: RichText): DialogueHold
 
 @Derive
 fun AudienceEntry.inside(protagonist: Protagonist, @From(Parent::class) inParents: List<InAudience>, criterion: Boolean): InAudience?
@@ -117,8 +117,8 @@ A typical dialogue, end to end:
 
 1. A **source** delivers `NpcClicked`. A trigger **handler** with a `Candidate<E>` parameter matches the entry and fires its links.
 2. The **chain** emits `Triggered<DialogueEntry>`. Its handler calls `startStep(...)`, which creates a step inside an **interaction** and stores `Speaking(entry, startedAt)` (a **stored** value keyed by the step).
-3. A **derive** over `Speaking` returns a `DialogueHold`; the hold captures a snapshot and handlers on `Added<DialogueHold>` send the view.
-4. The dialogue text is a **formula** read by the derive, so it stays live through value changes and hot publish.
+3. A **derive** over `Speaking` returns a `DialogueHold`; a `TakeSnapshot<DialogueHold>` handler saves what to restore and handlers on `Added<DialogueHold>` send the view.
+4. The dialogue text is a **formula** read as a tracked parameter of the derive, so it stays live through value changes and hot publish.
 5. A `Confirm` event reaches `fun Confirm.advance(talk: Talking)`, which ends the step and calls `entry.complete(context)`: the option's `Changes` commit in one transaction and the next links fire.
 6. The derive stops returning the hold; after a short grace, `Removed<DialogueHold>` and `restore` run, unless the next step adopts an equal hold.
 

@@ -22,7 +22,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Added<T>`**: lifecycle event fired when a stored value, hold, or mirror appears for a set of keys. See [stored-data.md](stored-data.md#lifecycle-events).
 
-**Adoption**: an equal hold for the same protagonist within the grace takes over the old hold and its snapshot, so neither `Removed` nor `Added` fires. See [interactions.md](interactions.md#grace-and-adoption).
+**Adoption**: a hold of the same type and keys within the grace takes over the old hold and its snapshot, so neither `Removed` nor `Added` fires. See [interactions.md](interactions.md#grace-and-adoption).
 
 **`advance`**: dialogue creator field (`Anyone`, `Everyone`, `Leader`) that says which group members may advance a party dialogue. See [interactions.md](interactions.md#party-dialogues-and-leaving).
 
@@ -258,9 +258,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Handler**: a Kotlin function with the event as receiver; parameters decide when and where it runs, the return type decides its phase. See [events-and-handlers.md](events-and-handlers.md#handler).
 
-**`HasChat`, `HasInventory`, `Living`**: example live capability traits an engine provides for its identities. See [live-data.md](live-data.md#live-capability-traits).
+**`HasChat`, `HasInventory`, `HasHealth`**: example live capability traits an engine provides for its identities, each small and for one capability. See [live-data.md](live-data.md#live-capability-traits).
 
 **Hold**: a live, never saved change to how something looks or behaves on an engine, held while a derive returns it. See [interactions.md](interactions.md#holds).
+
+**Holder**: the `@Key` of a hold that says who has it: a `Protagonist`, `Session`, `GroupIdentity`, or `Engine`; a hold has exactly one. See [interactions.md](interactions.md#the-holder-is-a-key).
 
 **Hot publish**: publishing content while things run; content is a tracked input, so whatever read it reruns. See [live-data.md](live-data.md#hot-publish).
 
@@ -298,7 +300,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## K
 
-**Keyed hold**: a hold with `@Key` fields so one holder can hold many holds of one type, such as `NpcView`. See [interactions.md](interactions.md#keyed-holds).
+**Keyed hold**: a hold with `@Key` fields beyond the holder, so one holder can hold many holds of one type, such as `NpcView`. See [interactions.md](interactions.md#keyed-holds).
 
 **Keys**: the identities a stored value is about: none (global), one, several (ordered), or a `Set` (symmetric). See [stored-data.md](stored-data.md#keys).
 
@@ -306,7 +308,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## L
 
-**Lane**: not a separate concept; the hold type is the lane, and two things clash only on the same hold type for the same holder. See [interactions.md](interactions.md#holds).
+**Lane**: not a separate concept; the hold type is the lane, and two things clash only on the same hold type and keys. See [interactions.md](interactions.md#holds).
 
 **Lifecycle events**: `Added<T>`, `Changed<T>(old, new)`, and `Removed<T>`, fired for every stored value, hold, and mirror. See [stored-data.md](stored-data.md#lifecycle-events).
 
@@ -464,7 +466,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`require(condition, message)`**: change operation guard; when false at commit the whole transaction fails. See [stored-data.md](stored-data.md#change-operations).
 
-**`restore(snapshot)`**: hold method run once at the end to put back what `snapshot()` captured. See [interactions.md](interactions.md#snapshot-and-restore).
+**`RestoreSnapshot<H>`**: core event that runs once when a hold really ended, after grace, to put back what its snapshot saved; also after a rejoin. See [interactions.md](interactions.md#snapshot-and-restore).
 
 **`RichText`**: text type whose `template` provider (MiniMessage) comes from the Minecraft capability. See [formula-language.md](formula-language.md#text-templates).
 
@@ -496,15 +498,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Settable<T>`**: generated reader and write target for a `stored()` declaration, with keys filled from scope. See [stored-data.md](stored-data.md#reading).
 
-**`SidebarHold`**: example display hold derived from `InAudience`, whose text updates through `Changed<Watched<RichText>>`. See [live-data.md](live-data.md#audiences).
+**`SidebarHold`**: example display hold derived from `InAudience`, with its text as a tracked parameter and a handler on `Changed<SidebarHold>`. See [live-data.md](live-data.md#audiences).
 
 **`Simulating(mode)`**: stored value marking a previewed step. See [interactions.md](interactions.md#preview-and-recording).
 
 **`Snapshot` (group)**: the `group` type after `ContinueForEveryone`, a fixed snapshot group. See [interactions.md](interactions.md#widening).
 
 **`Snapshot<H>`**: handler parameter that reads and writes a hold's stored snapshot. See [interactions.md](interactions.md#snapshot-and-restore).
-
-**`snapshot()`**: hold method run once on first start, returning a stored snapshot of what to restore. See [interactions.md](interactions.md#snapshot-and-restore).
 
 **`Sink`**: what a source hands an event to; it decides the verdict and applies the outcome. See [events-and-handlers.md](events-and-handlers.md#writing-a-source).
 
@@ -537,6 +537,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Suspending handler**: an after handler that suspends; it is cancelled when any value it resolved is removed, never on `Changed`. See [events-and-handlers.md](events-and-handlers.md#suspending-handlers).
 
 ## T
+
+**`TakeSnapshot<H>`**: core event that runs when a hold starts and has no stored snapshot; its one handler returns the snapshot. See [interactions.md](interactions.md#snapshot-and-restore).
 
 **Template**: string template sugar where the expected type picks the `template` provider. See [formula-language.md](formula-language.md#text-templates).
 

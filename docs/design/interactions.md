@@ -6,31 +6,113 @@ Related files: [overview.md](overview.md) (the primitives), [events-and-handlers
 
 ## Holds
 
-A **Hold** is a live change to how something looks or behaves on an engine: the camera, the chat, the action bar, a title, an NPC shown to one viewer. A Hold is the result of a `@Derive`: while the derive returns a Hold, the system holds it; when it returns `null` or another Hold, the system removes or reconciles it.
+A **Hold** is a live change to how something looks or behaves on an engine: the camera, the chat, the action bar, a title, an NPC shown to one viewer. A Hold is the result of a `@Derive`: while the derive returns a Hold, the system holds it; when it returns `null`, the system removes it. Layer 15 rough design, decided 2026-11-05. Nothing here is built yet; see [Holds: not proven](#holds-not-proven).
 
-```kotlin
-data class Speaking(@Key val step: Step, val entry: DialogueEntry, val startedAt: Instant) : Stored
+### End to end
 
-@Derive
-fun Speaking.show(/* inputs */): DialogueHold
+Scenario: night vision while holding a spyglass. Legacy `PotionEffectAudienceEntry.kt` adds an infinite effect, polls the strength every tick, and removes the effect at the end, which loses a night vision the player already had.
+
+The creator builds an audience with a display under it:
+
+```
+FormulaAudienceEntry "holding_spyglass"
+  criterion: protagonist.inventory.mainHand.type == minecraft.item.spyglass
+  child: PotionEffectEntry
+           effect:   minecraft.potionEffect.night_vision
+           strength: if (protagonist.vip) 2 else 1
 ```
 
-Rules:
+The extension declares the Hold, and a derive returns it. The entry's fields arrive as [tracked parameters](#hold-values-are-tracked-parameters).
 
-- **Compared by value.** An equal Hold from the next step means nothing is undone (handover).
-- **Never saved.** A crash leaves nothing to undo.
-- **Engine view only.** Hold derives touch attributes, packets, and the camera; they never write stored data.
-- **No owner.** A Hold is not tied to a step or interaction. It exists while some derive returns it.
-- **Lane is the Hold type.** There is no separate lane concept. Two things clash only when they need the same Hold type for the same holder.
-- **Known before start.** Publication knows statically which Hold types a step can produce (from the step's stored values, the derives over them, and their Hold types). Clashes are therefore decided before a step starts, and checks can report them.
+```kotlin
+data class PotionHold(
+    @Key val who: Protagonist,
+    @Key val effect: PotionEffectType,
+    val level: Int,
+) : Hold
 
-### Applying a Hold: handlers, not methods
+@Derive
+fun PotionEffectEntry.hold(
+    who: Protagonist,
+    inside: InAudience,        // the receiver fills its node key
+    effect: PotionEffectType,
+    strength: Int,
+) = PotionHold(who, effect, strength)
+```
 
-A Hold has no `apply()` method. View changes are normal handlers that take the Hold type as a parameter. That parameter stays satisfied through grace and adoption, so a handover never flickers.
+Handlers change the game, and [snapshot handlers](#snapshot-and-restore) put back what was there.
 
 ```kotlin
 @Handler
-fun Tick<EveryTick>.type(speaking: Speaking, dialogue: DialogueHold, step: Step) = ...
+fun Added<PotionHold>.apply(effects: HasPotionEffects) = effects.set(value.effect, value.level)
+
+@Handler
+fun Changed<PotionHold>.level(effects: HasPotionEffects) = effects.set(new.effect, new.level)
+
+@Handler
+fun TakeSnapshot<PotionHold>.existing(effects: HasPotionEffects) =
+    PotionSnapshot(effects.effect(value.effect))
+
+@Handler
+fun RestoreSnapshot<PotionHold>.back(effects: HasPotionEffects, snapshot: PotionSnapshot) =
+    effects.set(value.effect, snapshot.existing)
+```
+
+| Moment | What happens |
+| --- | --- |
+| Enters the audience | `InAudience` exists, so the derive can run and `strength` becomes demanded. Writers for what the formula reads run once. The body waits until formulas settle |
+| First value | `TakeSnapshot`, the snapshot is saved, then `Added` |
+| `vip` changes | The formula reruns, the derive reruns, and `Changed` updates the game |
+| The result stays the same | The graph stops at the formula, and the derive does not run |
+| Swaps items and back within the grace | The Hold returns with the same keys, so nothing fires |
+| Puts it away | The derive cannot run, so `strength` is no longer demanded. After the grace, `Removed`, then `RestoreSnapshot` |
+| Server move | `Removed` on the old connection, `Added` on the new one, and no restore |
+| Server crash | On rejoin the snapshot row is still there, so the [same rule](#snapshot-and-restore) applies |
+
+Rules:
+
+- **Same type and keys is the same Hold.** A different value with the same keys is `Changed<H>`, so a handover from the next step undoes nothing.
+- **The Hold is never saved; its snapshot is.** After a crash the derive makes the Hold again, and the stored snapshot says what to put back.
+- **Engine view only.** Hold derives touch attributes, packets, and the camera; they never write stored data.
+- **No owner.** A Hold is not tied to a step or interaction. It exists while some derive returns it.
+- **Lane is the Hold type.** There is no separate lane concept. Two things clash only when they need the same Hold type and keys.
+- **Known before start.** Publication knows statically which Hold types a step can produce (from the step's stored values, the derives over them, and their Hold types). Clashes are therefore decided before a step starts, and checks can report them.
+
+### The holder is a key
+
+A Hold names its holder with an ordinary `@Key`, the same rule as a `Stored` value. So a parameter finds a Hold the way it finds a stored value: `ActionBarSent(player, ...)` fills the key of `ActionBarHold?`, with no second lookup.
+
+| Hold | Holder key | Reaches |
+| --- | --- | --- |
+| `PotionHold`, `DialogueHold` | `Protagonist` | Each of the player's connections |
+| `CornerToolHold` | `Session` | One connection |
+| `NpcView` | `Protagonist`, plus `NpcEntry` as a second key | That viewer, one Hold per NPC |
+| Shared world time | `Engine` | That server |
+| `NpcRunning` | `Identity`, picked by content | [Server, group, or protagonist](#npc-scope) |
+
+A Hold has exactly one holder key, of a type above or a `GroupIdentity`. KSP rejects zero or two. In a group step, a derive's `who: Protagonist` iterates the members, so each member gets a Hold with their own formula values.
+
+### Hold values are tracked parameters
+
+The Hold stores its data, and `Changed<H>` syncs it to the game. Everything a derive reads is tracked in the `TrackedGraph` ([live-data.md](live-data.md#formula-changes)), written in one of two forms:
+
+| | Parameter: `strength: Int` | In the body: `spoken.minLines(context)` |
+| --- | --- | --- |
+| Use | The normal form | Only for nested values |
+| What it reads | Known before the body runs, because formula reads are known at publish | Found while the body runs |
+| Value not loaded yet | The body does not run, so there is no Hold | The derive gives nothing this run, and reruns when the value arrives |
+| Context | Filled in | Passed by hand |
+| Follows an `if` | No, it always loads | Yes |
+
+A field is demanded only where the derive could run, so `inside: InAudience` keeps `strength` from loading for players outside the audience ([demand](live-data.md#demand)). Narrowing a watched formula to one field through `Candidate` is not needed here, because the receiver is the entry.
+
+### Applying a Hold: handlers, not methods
+
+A Hold has no `apply()` method. View changes are normal handlers that take the Hold type as a parameter. That parameter stays satisfied through grace and adoption, so a handover never flickers. The Hold carries the data these handlers read, so they need no other value.
+
+```kotlin
+@Handler
+fun Tick<EveryTick>.type(dialogue: DialogueHold, chat: HasChat) = ...
 ```
 
 Initial sending, and sending again after a join or a server move, are handlers on `Added<H>`:
@@ -42,19 +124,31 @@ fun Added<CameraHold>.spectate(player: PaperPlayer) = ...
 
 ### Snapshot and restore
 
-The Hold type keeps only the code that depends on what must be put back:
-
-- `snapshot()` runs once, on first start, and returns a stored snapshot with everything to restore (location, flight, velocity).
-- `restore(snapshot)` runs once, at the end.
+A Hold type that changes real game state declares how to put it back, through two handlers. They are handlers and not methods because a handler can ask for several small traits: a camera needs `HasLocation`, `HasFlight`, and `HasVelocity`.
 
 ```kotlin
-data class CameraHold(/* path, settings */) : Hold {
-    override fun snapshot(): CameraSnapshot      // location, flight, velocity
-    override fun restore(snapshot: CameraSnapshot)
-}
+@Handler
+fun TakeSnapshot<CameraHold>.save(location: HasLocation, flight: HasFlight, velocity: HasVelocity) =
+    CameraSnapshot(location.location, flight.flying, velocity.velocity)
+
+@Handler
+fun RestoreSnapshot<CameraHold>.back(location: HasLocation, flight: HasFlight, velocity: HasVelocity,
+    snapshot: CameraSnapshot) = ...
 ```
 
-Everything else goes into `Added<H>` and `Removed<H>` handlers. `Added<H>` handlers, `Removed<H>` handlers, and `restore` must be safe to repeat.
+`TakeSnapshot<H>` allows one handler, because its return value is the snapshot. A `RestoreSnapshot<H>` handler receives that value as a parameter. A Hold with no `TakeSnapshot` handler, such as a sidebar, has no row and nothing to restore.
+
+The stored snapshot row decides everything, so a crash has no path of its own:
+
+| Moment | Rule |
+| --- | --- |
+| Hold starts | No row: `TakeSnapshot`, save it, then `Added`. A row exists: only `Added` |
+| Hold ends and the holder is here | Grace, then `Removed`, then `RestoreSnapshot`, then the row is deleted |
+| Rejoin after a crash | The row exists, and a grace starts. A Hold with the same keys returns: keep the row and do not restore. No Hold: `RestoreSnapshot` |
+| Hold ended while offline | The same as a rejoin after a crash |
+| No connection provides the traits | Nothing runs and the row stays, for example while the player has only a browser tab open. The rule applies when a connection that fits appears |
+
+Everything else goes into `Added<H>` and `Removed<H>` handlers. `Added<H>` handlers, `Removed<H>` handlers, and `RestoreSnapshot<H>` handlers must be safe to repeat.
 
 A `Snapshot<H>` parameter reads and updates a Hold's stored snapshot. Content uses it to change where the protagonist lands after a camera scene, so the protagonist gets one teleport instead of being sent back first.
 
@@ -64,27 +158,34 @@ Holds use the same lifecycle events as stored values, including `because` ([live
 
 | Event | When it fires for a Hold |
 | --- | --- |
-| `Added<H>` | Per live connection of the holder: first start (`Value`), server move or rejoin (`Tracking`) |
-| `Removed<H>` | Per live connection: the derive stopped returning it, after grace (`Value`), or the connection closed (`Tracking`) |
-| `Changed<H>(old, new)` | The derive returned a different Hold of the same type and key; when nobody handles it, it acts as remove plus add |
+| `Added<H>` | First start (`Value`), server move or rejoin (`Tracking`) |
+| `Removed<H>` | The derive stopped returning it, after grace (`Value`), or the connection closed (`Tracking`) |
+| `Changed<H>(old, new)` | The derive returned a different Hold of the same type and keys; when nobody handles it, it acts as remove plus add, with no snapshot handlers |
 
-A live connection is a session (a Minecraft server connection, a browser tab), not a server; see [live-data.md](live-data.md). Adoption within grace fires neither `Added` nor `Removed`.
+The usual parameter rule decides how often a handler runs. A handler that asks for a trait runs once per live connection of the holder. A live connection is a session (a Minecraft server connection, a browser tab), not a server; see [live-data.md](live-data.md). A handler that asks for no trait runs once per engine, so a shared NPC starts one activity, not one per player:
+
+```kotlin
+fun Added<SidebarHold>.show(view: HasSidebar) = ...   // once per connection
+fun Added<NpcRunning>.start(): NpcActivity = ...      // once per engine
+```
+
+Adoption within grace fires neither `Added` nor `Removed`.
 
 ### Grace and adoption
 
-When a derive stops returning a Hold, its removal (`Removed<H>`, then `restore`) waits a short grace: about 10 ticks (half a second) by default, set per Hold type and overridable by content. An equal Hold for the same protagonist within the grace, from any interaction, adopts it together with its snapshot. Two camera scenes back to back, or a choice inside a scene that picks the next scene, are cuts without flicker and without a restore in between.
+When a derive stops returning a Hold, its removal (`Removed<H>`, then `RestoreSnapshot<H>`) waits a short grace: about 10 ticks (half a second) by default, set per Hold type and overridable by content. A Hold of the same type and keys within the grace, from any interaction, adopts it together with its snapshot. Two camera scenes back to back, or a choice inside a scene that picks the next scene, are cuts without flicker and without a restore in between. A rejoin gets the same grace before a stored snapshot is restored.
 
 ### Keyed holds
 
-`@Key` on a Hold field lets one holder hold many Holds of one type:
+`@Key` fields beyond the holder let one holder hold many Holds of one type:
 
 ```kotlin
-data class NpcView(@Key val npc: NpcEntry) : Hold   // one per NPC
+data class NpcView(@Key val viewer: Protagonist, @Key val npc: NpcEntry) : Hold   // one per NPC
 ```
 
 ### Priority
 
-When several derives produce the same Hold type for the same holder and key, the highest priority wins; the priority comes from the derive's entry. A tie is a check warning. Covers legacy priority audiences and tab list priority.
+When several derives produce the same Hold type and keys, the highest priority wins; the priority comes from the derive's entry. A tie is a check warning. Covers legacy priority audiences and tab list priority.
 
 ### Input holds
 
@@ -92,7 +193,43 @@ Raw input becomes intent events such as `Confirm` only for the key the current i
 
 ### Leaving and returning
 
-Holds need nothing special. When a connection closes, `Removed<H>` fires for it. On rejoin, derives rerun and `Added<H>` fires again.
+When a connection closes, `Removed<H>` fires for it. On rejoin, derives rerun and `Added<H>` fires again. A Hold with a snapshot follows [the snapshot rule](#snapshot-and-restore).
+
+### Displays in this layer
+
+Each one proves a different part of the design. Legacy has 16 displays and 17 filters; the filters became formulas ([live-data.md](live-data.md#audiences)).
+
+| Display | Proves | Reaches the game through |
+| --- | --- | --- |
+| Sidebar, with its lines | A tracked value, then `Changed` | Our wire ([packets.md](packets.md)) |
+| Boss bar | Many Holds per player, through `@Key` | Adventure `showBossBar` |
+| Tab list header and footer | Priority between entries | Paper `sendPlayerListHeaderAndFooter` |
+| Potion effect | Snapshot, restore, and rejoin after a crash | Paper's API |
+| Action bar | A verdict that reads a Hold and blocks other plugins | Adventure and our wire |
+| Title | A short Hold that ends itself | Adventure |
+
+| Later | Goes to |
+| --- | --- |
+| Weather, freeze time, experience | Conversion track, small once core exists |
+| Particle | Layer 25, with `RegionOutlineHold` |
+| Fake block, looping cinematic | Layer 18 |
+| Compass, quest item, item slot binder | Layer 23 |
+| Timer | No Hold: `Due` from layer 7 |
+| Trigger | No Hold: enter and exit entries from layer 8 |
+
+A display is a node in the audience tree, so it has its own `InAudience`, and a display at the root reaches everyone. It has no `criterion` field, which counts as true.
+
+### Holds: not proven
+
+- **Nothing ran.** All Kotlin here is a sketch, and `TrackedGraph` exists only in design records, not in `services/` or `backend/`.
+- **Slow loading.** If a formula's values take longer than the grace on rejoin, the restore fires too early and then the Hold returns. The grace may need to start once formulas settle, and a formula that never gets a value then needs a limit.
+- **Restore on another server.** A saved location may name a world that server does not have.
+- **Restore order.** Two Holds touching the same game state restore in an unknown order.
+- **The snapshot row's shape.** Its key holds the Hold's type and keys. A key that is an entry ends with the entry, which would delete the row with no restore.
+- **Cost.** Each start of a Hold with a snapshot is one realm write. A value that changes every tick reruns the derive every tick.
+- **`NpcRunning` with `Identity` as its key.** The build cannot check that holder. A group held NPC with members on two servers runs once on each. Layer 21 confirms both.
+- **A display with no `criterion`.** `AudienceEntry.inside` must treat that as true, which is a small change to the audience design.
+- **Many small traits.** The engine object implements them all. How an extension adds its own trait for an identity is not designed.
 
 ## Runtime objects
 
@@ -100,7 +237,7 @@ A `Runtime` is a mutable live object on one server: never stored, closed automat
 
 ```kotlin
 @Handler
-fun Added<NpcRunning>.start(/* traits */): NpcActivity   // NpcActivity : Runtime
+fun Added<NpcRunning>.start(): NpcActivity   // NpcActivity : Runtime
 
 @Handler
 fun Tick<EveryTick>.act(activity: NpcActivity) = ...
@@ -400,7 +537,7 @@ A widened chain's events have a group subject; how handlers then iterate members
 Scenes are steps whose Holds take the camera and hide the protagonist. Their feature details are decided when scenes are built (roadmap layer 18); the primitive level rules are:
 
 - The filming protagonist is hidden by packets, not by an invisibility potion, so nothing is persisted and nothing needs restoring.
-- `CameraHold` snapshots the protagonist's location, flight, and velocity, and restores them at the end. Content can overwrite the snapshot through `Snapshot<CameraHold>` to land the protagonist somewhere else with one teleport.
+- `CameraHold` takes a snapshot of the protagonist's location, flight, and velocity, and restores them at the end. Content can overwrite the snapshot through `Snapshot<CameraHold>` to land the protagonist somewhere else with one teleport.
 - While `CameraHold` is held, the formula member `protagonist.position` reads the camera position. Covers legacy `PlayerPositionOverride` in the context: the override disappears with the Hold.
 - Back to back scenes adopt the camera Hold within grace, so the cut has no restore in between.
 - A cinematic has the normal step entry field `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
@@ -442,7 +579,7 @@ Example: the region feature's own corner placing mode (nothing in it is shared w
 data class PlacingCorners(@Key val session: Session, val region: RegionEntry, val first: BlockLocation?) : Stored
 
 @Derive
-fun PlacingCorners.tool(): CornerToolHold = CornerToolHold(region, first)
+fun PlacingCorners.tool(): CornerToolHold = CornerToolHold(session, region, first)
 
 @Handler
 fun Confirm.place(mode: PlacingCorners, player: PaperPlayer, origin: Origin) {
@@ -475,5 +612,4 @@ Writes go through [transaction functions](stored-data.md#transaction-functions).
 ## Open
 
 - Interaction bounds (blocking versus interrupting, changing over time; roadmap layer 17) are not designed yet.
-- How a Hold names its holder (server, group, protagonist) in code.
 - How content marks a `Protected` period inside a step.
