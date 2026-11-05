@@ -1,0 +1,131 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Panel experience demos</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilex:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--background:#0b0d11;--foreground:#e2e2e9;--muted-foreground:#a3a6b0;--code-background:#14171c;--radius:8px;--ring:#33aeff;--font-sans:'IBM Plex Sans',sans-serif;--font-mono:'Lilex',monospace}
+html{background:var(--background);color:var(--foreground)}
+body{max-width:760px;margin:24px auto;padding:0 16px}
+body{font-family:var(--font-sans);line-height:1.5}
+h2{font-size:20px;font-weight:600;margin:30px 0 8px;line-height:1.3}
+h2:first-child{margin-top:4px}
+p{margin:0 0 12px;max-width:66ch}
+.lead{font-size:17px}
+ol{padding-left:22px;margin:0 0 12px}li{margin-bottom:7px;max-width:66ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:22px 16px}
+.c h3{font-size:15px;font-weight:600;margin:0 0 6px;line-height:1.35}
+.c p{font-size:13.5px;margin:6px 0 0;line-height:1.45}
+.c p b{font-weight:600}
+.st{--s:#1c1f24;--t:#e2e2e9;--m:#a3a6b0;--f:#33aeff;--r:#ff6b6b;--g:#5dc264;--l:#34373e;position:relative;display:block;width:100%;height:188px;background:#12151c;color:var(--t);border-radius:var(--radius);overflow:hidden;font:400 12.5px/18px 'Lilex',monospace;padding:0;box-sizing:border-box;border:0;text-align:left;cursor:pointer}
+.in{position:absolute;inset:0;padding:10px;box-sizing:border-box}
+.st:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.pl{position:absolute;right:8px;bottom:7px;font:500 11px/16px var(--font-sans);color:var(--m);pointer-events:none}
+.r{padding:5px 8px;height:28px;box-sizing:border-box;border-radius:5px;position:relative;white-space:nowrap;overflow:hidden}
+.rowb{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ring{position:absolute;border:2px solid var(--f);border-radius:6px;box-sizing:border-box;pointer-events:none;z-index:6}
+.btn{display:inline-block;background:#009fff;color:#000;font-weight:500;border-radius:5px;padding:3px 9px;white-space:nowrap}
+.gh{display:inline-block;background:var(--l);color:var(--t);font-weight:500;border-radius:5px;padding:3px 9px;white-space:nowrap}
+.key{display:inline-block;background:var(--l);border-radius:4px;padding:0 5px;font-size:11px;line-height:16px;margin-left:6px;color:var(--t);box-shadow:0 2px 0 #000}
+.fld{background:#0e1015;border-radius:5px;padding:4px 8px;height:26px;box-sizing:border-box;margin:2px 0 7px;position:relative;white-space:nowrap}
+.lab{font-weight:500;font-size:11px;line-height:15px;color:var(--m)}
+.err{color:var(--r);font:400 11.5px/15px 'IBM Plex Sans',sans-serif}
+.dlg{position:absolute;left:50%;top:50%;width:200px;margin:-44px 0 0 -100px;background:#2a2d33;border-radius:9px;padding:10px;box-sizing:border-box;box-shadow:0 10px 28px #000b;z-index:5}
+.dlg small{display:block;font:400 11.5px/15px 'IBM Plex Sans',sans-serif;color:var(--m);margin:2px 0 8px}
+.scr{position:absolute;inset:0;background:#000;opacity:0;z-index:4;pointer-events:none}
+.crumb{color:var(--m);font-size:11.5px;height:18px;white-space:pre;margin-bottom:6px}.crumb b{color:var(--t);font-weight:500}
+.ttl{font-weight:600;font-size:15px;line-height:22px}
+.say{position:absolute;left:10px;bottom:7px;font:400 11.5px/16px 'IBM Plex Sans',sans-serif;color:var(--m);right:44px}
+.caret{display:inline-block;width:2px;height:14px;background:var(--f);vertical-align:-2px;margin-left:1px}
+.line{height:9px;border-radius:3px;background:var(--l);margin:7px 0;transform-origin:left}
+.bar{height:6px;background:var(--l);border-radius:3px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;width:0;background:var(--f)}
+.toast{position:absolute;left:10px;right:10px;bottom:28px;background:#2a2d33;border-radius:6px;padding:5px 8px;display:flex;justify-content:space-between;box-shadow:0 6px 18px #000a;z-index:5}
+.mark{position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:2px;background:var(--f)}
+.note{font-size:14px;color:var(--muted-foreground)}
+pre{background:var(--code-background);border-radius:var(--radius);padding:12px 14px;font:13px/1.55 var(--font-mono);overflow-x:auto;margin:0 0 12px}
+</style></head><body>
+<h2>The concept</h2>
+<p class="lead"><strong>Motion is how the panel points. The typewriter is how it does it with character.</strong> Every move answers a question you have right now. If a move answers nothing, it doesn't happen.</p>
+<ol>
+<li><strong>Every move has a job.</strong> It explains, directs, confirms, or warns. Decoration alone isn't a job.</li>
+<li><strong>Things come from somewhere.</strong> What opens grows from what opened it, and goes back there.</li>
+<li><strong>The focus ring is the guide.</strong> It travels to where you need to look next, so your eyes get carried along.</li>
+<li><strong>One loud thing at a time.</strong> Your actions are loud. Everything else stays still, so the moving thing is the important thing.</li>
+<li><strong>Weight tells consequence.</strong> Routine actions feel light. Serious ones feel heavy, before they happen.</li>
+<li><strong>Quick to arrive, quiet to leave.</strong> You never wait for a landing, and exits never bounce.</li>
+<li><strong>One machine, everywhere.</strong> Keys strike, the carriage returns, paper feeds, text types, jams judder. The same few actions, so you learn their meaning.</li>
+</ol>
+<h2>The questions it answers</h2>
+<p class="note">Click any tile to play it.</p>
+<div class="grid" id="g"></div>
+<h2>What this means for the document</h2>
+<p>A new <strong>experience</strong> chapter comes first, and the motion chapter serves it. Each question becomes something the reviewer checks on every action, on every page:</p>
+<pre>XP-03 MUST  After an action, focus lands where the next step is.
+  Why    The user should never have to hunt for what's next.
+  Check  test (focus target) + visual-llm (the ring is visible)
+  Broken severity 3
+  Do     New page: focus moves to the new page's title field
+  Don't  New page: the row appears, focus stays on the button</pre>
+<p>Reduced motion keeps every answer. The ring jumps rather than slides, and marks and messages still appear.</p>
+<script>
+const OUT='cubic-bezier(.2,0,0,1)';
+const samp=f=>'linear('+Array.from({length:61},(_,i)=>f(i/60).toFixed(4)).join(',')+')';
+const spring=z=>{const w=5/z,wd=w*Math.sqrt(1-z*z);return samp(t=>t===1?1:1-Math.exp(-z*w*t)*(Math.cos(wd*t)+(z*w/wd)*Math.sin(wd*t)))};
+const stop=(h,a)=>samp(t=>t<h?1-Math.pow(1-t/h,1.6):1-a*Math.sin(Math.PI*Math.min(1,(t-h)/(1-h)))*Math.pow(1-(t-h)/(1-h),1.2));
+const STRIKE=spring(.6),LAND=spring(.7),CARR=stop(.42,.06);
+const z=m=>new Promise(r=>setTimeout(r,m));
+const A=(e,f,ms,ease=OUT,o={})=>e.animate(f,{duration:ms,easing:ease,...o});
+const press=e=>A(e,[{transform:'none',offset:0},{transform:'translateY(2px) scale(.96)',offset:.14},{transform:'none',offset:1}],220,CARR);
+const jam=e=>A(e,[{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(4px)'},{transform:'translateX(-2px)'},{transform:'none'}],240,'linear');
+const inkF=e=>A(e,[{background:'#1b6ea8'},{background:'transparent'}],900,OUT);
+const typeTo=async(e,s,ms=36)=>{e.textContent='';for(let i=1;i<=s.length;i++){e.textContent=s.slice(0,i);await z(ms)}};
+const ring=(st)=>{const r=document.createElement('div');r.className='ring';r.style.transition=`left 170ms ${LAND},top 170ms ${LAND},width 170ms ${LAND},height 170ms ${LAND}`;st.append(r);return r};
+const to=(st,r,el,pad=0)=>{const a=st.getBoundingClientRect(),b=el.getBoundingClientRect();Object.assign(r.style,{left:b.left-a.left-pad+'px',top:b.top-a.top-pad+'px',width:b.width+pad*2+'px',height:b.height+pad*2+'px'})};
+const D=[
+{q:'Where did this come from?',why:'The dialog grows out of the row it belongs to, and returns there. You always know what it is about.',ch:'A key strike on the way in.',
+ h:`<div class="r">paper_alpha</div><div class="r" data-t>realm_main</div><div class="r">engine_one</div><div class="scr"></div><div class="dlg" style="visibility:hidden"><b>Unbind realm_main?</b><small>Its engine stops receiving content.</small><span class="btn">Unbind</span></div>`,
+ p:async s=>{const t=s.querySelector('[data-t]'),d=s.querySelector('.dlg'),c=s.querySelector('.scr'),R=ring(s);to(s,R,t);await z(350);press(t);await z(120);
+  const a=s.getBoundingClientRect(),b=t.getBoundingClientRect(),dx=b.left+b.width/2-a.left-a.width/2,dy=b.top+b.height/2-a.top-a.height/2;
+  const from=`translate(${dx}px,${dy-0}px) scale(.3)`;d.style.visibility='visible';A(c,[{opacity:0},{opacity:.5}],120,OUT,{fill:'forwards'});
+  A(d,[{transform:from,opacity:0,offset:0},{opacity:1,offset:.2},{transform:'none',opacity:1,offset:1}],340,STRIKE);R.style.opacity=0;await z(1200);
+  A(c,[{opacity:.5},{opacity:0}],150,OUT,{fill:'forwards'});await A(d,[{transform:'none',opacity:1},{transform:from,opacity:0}],170,'cubic-bezier(.4,0,1,1)').finished;d.style.visibility='hidden';R.style.opacity=1}},
+{q:'What did that just change?',why:'Rename something, and every place showing it gets a brief ink mark. You see the consequence without searching for it.',ch:'Fresh ink that dries.',
+ h:`<div class="crumb">Library  ›  <b data-a>Old village</b></div><div class="r" data-b style="padding-left:8px">Old village</div><div class="lab" style="margin-top:6px">Name</div><div class="fld"><span data-f>Old village</span></div>`,
+ p:async s=>{const f=s.querySelector('[data-f]'),a=s.querySelector('[data-a]'),b=s.querySelector('[data-b]'),R=ring(s);to(s,R,f.parentNode);await z(300);await typeTo(f,'The Lost Village',30);await z(350);
+  a.textContent=b.textContent='The Lost Village';inkF(a);inkF(b)}},
+{q:'Where should I look next?',why:'After New page, the ring carries your eyes from the button to the title field, ready to type. The next step finds you.',ch:'The carriage return, then the caret.',
+ h:`<div class="rowb" style="margin-bottom:6px"><span class="ttl">Acts</span><span class="btn" data-b>New page</span></div><div data-l><div class="r">Arrival</div><div class="r">Market</div></div><div class="lab" style="margin-top:4px">Title</div><div class="fld" data-f></div>`,
+ p:async s=>{const b=s.querySelector('[data-b]'),l=s.querySelector('[data-l]'),f=s.querySelector('[data-f]'),R=ring(s);to(s,R,b,2);await z(450);press(b);await z(150);
+  l.firstElementChild.remove();const n=document.createElement('div');n.className='r';n.textContent='Untitled';l.append(n);A(n,[{transform:'translateX(-26px)',opacity:0,offset:0},{opacity:1,offset:.2},{transform:'none',opacity:1,offset:1}],280,CARR);
+  await z(200);to(s,R,f);await z(190);const c=document.createElement('span');c.className='caret';f.append(c);c.animate([{opacity:1},{opacity:1,offset:.5},{opacity:0,offset:.5},{opacity:0}],{duration:900,iterations:3})}},
+{q:'What matters most right now?',why:'Two fields are wrong. The first one moves and takes the ring. The second just shows its mark. One thing to fix, then the next.',ch:'A jam, like keys stuck together.',
+ h:`<div class="lab">Name</div><div class="fld" data-a></div><div data-ae></div><div class="lab">Lifetime</div><div class="fld" data-b>0</div><div class="rowb"><span data-be></span><span class="btn" data-p>Publish</span></div>`,
+ p:async s=>{const p=s.querySelector('[data-p]'),a=s.querySelector('[data-a]'),b=s.querySelector('[data-b]'),R=ring(s);to(s,R,p,2);await z(450);press(p);await z(130);
+  to(s,R,a);R.style.borderColor='var(--r)';await z(120);jam(a);s.querySelector('[data-ae]').innerHTML='<div class="err" style="margin:-5px 0 3px;padding-top:2px">Give this a name.</div>';
+  s.querySelector('[data-be]').innerHTML='<span class="err">Lifetime is 0</span>'}},
+{q:'Where am I going?',why:'Going deeper moves in from the right, going back from the left. The path types itself out, so it always matches.',ch:'Paper moving through the machine.',
+ h:`<div class="crumb" data-c>Library</div><div data-v><div class="ttl">Library</div><div class="r">The Lost Village</div><div class="r">Atlas of Echoes</div></div>`,
+ p:async s=>{const v=s.querySelector('[data-v]'),c=s.querySelector('[data-c]');const go=async(cr,html,dir)=>{await A(v,[{transform:'none',opacity:1},{transform:`translateX(${-dir*14}px)`,opacity:0}],80,'cubic-bezier(.4,0,1,1)').finished;v.innerHTML=html;A(v,[{transform:`translateX(${dir*34}px)`,opacity:0,offset:0},{opacity:1,offset:.3},{transform:'none',opacity:1,offset:1}],280,CARR);typeTo(c,cr,12)};
+  await z(250);await go('Library › The Lost Village','<div class="ttl">The Lost Village</div><div class="r">Arrival</div><div class="r">Market</div>',1);await z(1000);await go('Library › The Lost Village › Arrival','<div class="ttl">Arrival</div><div class="r">Title</div>',1);await z(1000);await go('Library › The Lost Village','<div class="ttl">The Lost Village</div><div class="r">Arrival</div><div class="r">Market</div>',-1)}},
+{q:'Did it work?',why:'Success types itself quietly and stays out of the way. Failure jams and stays until you deal with it.',ch:'Typed and jammed, the same two as above.',
+ h:`<div class="rowb"><span class="ttl">The Lost Village</span><span data-s style="color:var(--g);white-space:pre"></span></div><div class="fld" style="margin-top:8px">Edited title</div><div data-e style="min-height:18px"></div><div style="margin-top:6px"><span class="say" style="position:static" data-w></span></div>`,
+ p:async s=>{const k=s.querySelector('[data-s]'),w=s.querySelector('[data-w]');w.textContent='Saving works:';await z(350);await typeTo(k,'Saved');await z(1100);k.textContent='';w.textContent='Saving fails:';await z(450);k.style.color='var(--r)';k.textContent='Not saved';jam(k);s.querySelector('[data-e]').innerHTML='<span class="err">The realm did not answer.</span> <span class="gh" style="margin-left:6px">Retry</span>'}},
+{q:'Is it still working?',why:'The caret blinks in place of a spinner. Progress clicks forward in steps. If it takes long, the words say more, rather than the motion.',ch:'A caret waiting for the next letter.',
+ h:`<div><span data-t>Connecting</span><span class="caret" data-c></span></div><div class="bar"><i data-b></i></div><div data-l></div>`,
+ p:async s=>{const c=s.querySelector('[data-c]'),b=s.querySelector('[data-b]'),t=s.querySelector('[data-t]'),l=s.querySelector('[data-l]');c.animate([{opacity:1},{opacity:1,offset:.5},{opacity:0,offset:.5},{opacity:0}],{duration:900,iterations:4});
+  let w=0;for(const n of [20,45,60,85,100]){A(b,[{width:w+'%'},{width:n+'%'}],200,CARR,{fill:'forwards'});w=n;await z(520);if(n==60)t.textContent='Still connecting, the realm is starting'}
+  c.remove();t.textContent='Connected';for(const x of [92,70,84]){const d=document.createElement('div');d.className='line';d.style.width=x+'%';l.append(d);A(d,[{transform:'scaleX(0)'},{transform:'none'}],160,CARR);await z(90)}}},
+{q:'What can I do, and how faster?',why:'Click a button with the mouse, and its key cap presses too. Press the key, and the button presses too. The panel teaches shortcuts just by being used.',ch:'Real keys that go down.',
+ h:`<div class="r" style="margin-bottom:10px">paper_alpha</div><div><span class="gh" data-b>Duplicate<span class="key" data-k>D</span></span></div><div class="say" data-w></div>`,
+ p:async s=>{const b=s.querySelector('[data-b]'),k=s.querySelector('[data-k]'),w=s.querySelector('[data-w]');const kp=()=>A(k,[{transform:'none',boxShadow:'0 2px 0 #000',background:'#34373e',offset:0},{transform:'translateY(2px)',boxShadow:'0 0 0 #000',background:'#1b6ea8',offset:.2},{transform:'none',boxShadow:'0 2px 0 #000',background:'#34373e',offset:1}],340,OUT);
+  w.textContent='Clicked with the mouse';await z(500);press(b);kp();await z(1300);w.textContent='Pressed D on the keyboard';await z(500);kp();await z(60);press(b)}},
+{q:'How serious is this?',why:'Copy is one light tap. Delete has to be held, and the key slowly goes down while the page waits. After it, you can still undo.',ch:'A heavy key. Just a sketch: destructive actions get their own decision.',
+ h:`<div class="r" data-r>The Lost Village</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center"><span class="gh" data-c>Copy link</span><span data-o style="color:var(--g);white-space:pre"></span></div><div style="margin-top:8px"><span class="gh" data-d style="position:relative;overflow:hidden;display:inline-block"><i data-f style="position:absolute;inset:0;width:0;background:#a33333"></i><span style="position:relative">Hold to delete</span></span></div>`,
+ p:async s=>{const c=s.querySelector('[data-c]'),o=s.querySelector('[data-o]'),d=s.querySelector('[data-d]'),f=s.querySelector('[data-f]'),r=s.querySelector('[data-r]');await z(250);press(c);typeTo(o,'Copied');await z(1100);o.textContent='';
+  A(d,[{transform:'none'},{transform:'translateY(2px)'}],800,'linear',{fill:'forwards'});await A(f,[{width:0},{width:'100%'}],800,'cubic-bezier(.5,0,.8,.6)',{fill:'forwards'}).finished;d.getAnimations().forEach(a=>a.cancel());press(d);f.getAnimations().forEach(a=>a.cancel());
+  await A(r,[{transform:'none',opacity:1},{transform:'translateX(60px)',opacity:0}],140,'cubic-bezier(.4,0,1,1)',{fill:'forwards'}).finished;const t=document.createElement('div');t.className='toast';t.innerHTML='<span>Deleted</span><span class="key" style="margin:0">Undo U</span>';s.append(t);A(t,[{transform:'translateY(40px)'},{transform:'none'}],280,CARR)}},
+{q:'What happened without me?',why:'Someone else edits a row. It gets a slow mark, and nothing shifts. Your ring stays where you left it. Other people are never loud.',ch:'Ink appearing on the page, no key strike.',
+ h:`<div class="r" data-a>Arrival</div><div class="r" data-b>Market</div><div class="r">Finale</div><div class="say" data-w></div>`,
+ p:async s=>{const a=s.querySelector('[data-a]'),b=s.querySelector('[data-b]'),w=s.querySelector('[data-w]'),R=ring(s);to(s,R,a);await z(800);b.textContent='Market square';const m=document.createElement('i');m.className='mark';b.append(m);A(m,[{opacity:0},{opacity:1}],700,'linear');w.textContent='Sam renamed this. Your focus stays.'}}
+];
+const g=document.getElementById('g'),plays=[];
+D.forEach(d=>{const c=document.createElement('div');c.className='c';c.innerHTML=`<h3>${d.q}</h3><button class="st" aria-label="Play: ${d.q}"></button><p>${d.why}</p><p><b>Character:</b> ${d.ch}</p>`;g.append(c);
+ const st=c.querySelector('.st');const set=()=>{st.innerHTML='<div class="in">'+d.h+'</div><span class="pl">Play</span>'};set();const play=()=>{set();d.p(st).catch(e=>console.error(d.q,e))};st.onclick=play;plays.push(play)});
+</script></body></html>

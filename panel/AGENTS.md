@@ -46,6 +46,11 @@ In `build`, use `ref.watch`. Use `ref.read` only inside callbacks such as `onPre
 
 Prefer extension methods and getters over top level functions when behavior has a clear primary receiver. Use top level functions only for factories, entry points, and coordination with no natural receiver.
 
+## Design
+
+Before building or changing UI, read `docs/design/panel-design/README.md`, then the chapters it points to. Its
+rules are how the panel must look, move, and behave.
+
 ## Keyboard accessibility
 
 Every UI component and interaction must be fully usable with a keyboard alone. Users must never need a mouse to operate the web panel.
