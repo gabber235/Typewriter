@@ -57,7 +57,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 
 | When | Then | Sev |
 |---|---|---|
-| An action can be undone | One press, no question, offer Undo at once | 4 |
+| An action can be undone | One press, no question. The thing stays in place, struck through, with Undo and its countdown. Focus moves on. When time runs out it collapses | 4 |
 | An action cannot be undone, or undo is not built yet | Hold to confirm with `hold`. The row grows a fill on a spring, the key cap glows, and one line states the outcome and count, typed in reserved space in the first third of the hold. Show the hold only once that text is known. Releasing cancels. The hold setting swaps this for a dialog with Cancel focused, confirmed by Ctrl or Cmd+Enter | 4 |
 | Anything would skip those rules | Remove it | 4 |
 
@@ -71,7 +71,9 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Text appears | Reserve its space so nothing shifts, and type it. It must finish with time left to read it | 2 |
 | A key is in use | Its key cap glows | 2 |
 | A control is busy or unavailable | It looks pressed in, like a held key | 2 |
-| Anything leaves | It goes towards its origin, faster than it arrived, with no bounce | 2 |
+| Anything leaves | It goes towards its origin, faster than it arrived, with no bounce. Something in a list collapses, and its neighbours close the gap with it | 2 |
+| Something is temporary: an undo, a notice | Show how much time is left | 2 |
+| Choosing how strong a move is | Go strong: a deep press, a big bounce, a hard shake. Keep it fast. Flat is the failure to avoid | 2 |
 | The pointer reaches something you can act on | It rises with `hoverIn`, without a shadow, and leaves with `hoverOut`. If it has a key, its key cap strikes up with `capIn` | 2 |
 | A button has a key | Always show the key cap. Pressing either one presses both | 2 |
 | Focus moves | The ring slides with `focusMove` | 2 |
@@ -151,7 +153,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | `capIn` | Strike | 240 ms | Rises 9 px, one overshoot |
 | `loadIn` | Strike | 190 ms per row | Rises 14 px; the last visible row starts within 150 ms |
 | `rowIn` | Carriage | 280 ms | 6% recoil, hit at `h = 0.42` |
-| `press` | Carriage | 220 ms | 12% recoil, hit at `h = 0.3` |
+| `press` | Spring | Stiffness 300, damping 12 | Sinks 4 px, scale 0.93, big bounce back |
 | `hoverOut` | Exit | 90 ms | None |
 | `panelOut` | Exit | 200 ms | None |
 | `dialogOut` | Exit | 150 ms | None |
@@ -159,7 +161,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | `hold` | Spring | 800 ms | The fill leads and settles |
 | `type` | Stepped | 36 ms per letter | None |
 | `ink` | Ease out | 900 ms fade; 2 s for changes by others | None |
-| `jam` | Judder | 240 ms | 2 cycles, 4 px, with a red flash that fades in 1.5 s |
+| `jam` | Judder | 400 ms | 4 cycles, 9 px and decaying, with a red flash that fades in 1.5 s |
 
 - **Arrivals:** reach the final position within 150 ms; the landing plays after that.
 - **Strike:** `1 - e^(-z*w*t) * (cos(wd*t) + (z*w/wd) * sin(wd*t))`, `t` from 0 to 1, `w = 5/z`, `wd = w*sqrt(1 - z*z)`, `z = -ln(o) / sqrt(pi^2 + ln(o)^2)`, `o` the overshoot.
@@ -205,5 +207,5 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Normal error | The realm did not answer. Press Publish to try again. |
 | Wait | Connecting to the realm |
 | Permanent action | Remove Ada? They lose access straight away. |
-| Removed, with undo | Deleted Arrival. Undo |
+| Removed, with undo | ~~Arrival~~ Undo |
 | Crash | That jammed. Reload the panel, and tell us on Discord if it happens again. |

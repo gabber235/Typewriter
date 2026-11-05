@@ -51,6 +51,7 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - The active pane lift in light mode.
 - A replacement for `Ctrl+Esc` as cancel, and the full key map per scope.
 - Undo depends on realm commit history (`docs/design/authoring-writes.md`), which is not built.
+- The caret was rejected in a busy button. Whether it survives anywhere is being trialled.
 - Golden pages: none exist, since no page meets the target yet.
 - Whether declining a join request or cancelling one's own needs a hold.
 - What "keep the user's work" means while a realm is suspended, where changes are paused.
@@ -65,6 +66,8 @@ Each trial offers three live options, one being the rule as written, shown blind
 |---|---|---|
 | Hold to confirm | Too flat; linear fill, text popped in and shifted content | Springs over linear; nothing just appears; reserve space; typing leaves time to read; the key in use glows |
 | Failed action | Shake liked; red border and second button rejected; label swaps felt inconsistent | Animate state changes inside a component; one control repeats its action; alarms on a control fade by themselves; busy looks pressed in |
+| Juice strength | All used the first takeaways; strongest chosen | Go strong by default; the caret in a busy label feels wrong |
+| Delete with undo | In place, as the rule said; needed more | Strike through what is going; temporary things show time left; lists collapse rather than slide |
 
 The maintainer mixes parts across options, so options test ideas rather than whole designs.
 
