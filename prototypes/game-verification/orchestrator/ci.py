@@ -715,7 +715,7 @@ def golden(kind, backend, n, **k):
     label = f"{meta['arch']}-{backend}-{cpu}-{os.environ.get('GITHUB_RUN_ID', 'local')[-4:]}{os.environ.get('MATRIX_REPEAT', '')}-{kind[0]}{n}"
     a = argparse.Namespace(label=label, runs=k.get("runs", 3), break_runs=k.get("break_runs", 2), sets=k.get("sets", ""))
     out = goldens.cmd_session(a) if kind == "session" else goldens.cmd_terrain(a)
-    record("goldens", label=label, dir=str(out), kind=kind, backend=backend)
+    record("goldens", label=label, dir=str(out), golden=kind, backend=backend)
 
 
 def cmd_goldens(backends):

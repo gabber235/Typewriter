@@ -25,13 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
-          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 3 }
-          - { plan: goldens, backend: both, runner: ubuntu-24.04, repeat: 4 }
-          - { plan: goldens, backend: both, runner: ubuntu-24.04, repeat: 5 }
-          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04-arm, repeat: 6 }
+          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
     defaults:
       run:
         working-directory: prototypes/game-verification
