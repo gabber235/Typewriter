@@ -73,8 +73,10 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Tooltip | Short types itself; long rises with a bounce and chunks inside | Effects scale with length; fun when it is not in the way |
 | Moving between pages | The opened row becomes the heading; ripple when nothing carries over | Continuity connects an action with its result |
 | Change by someone else | Slow wave plus a chip | The animation performs the change; show who when it was not the user; an added element is fine if it carries new information |
+| Pane focus | Ring travels, plus lift, shrink, and brighten | Signals stack when each does its own job; the ring always leads |
+| Larger surface | The row grows into it | Continuity beats a strike from elsewhere |
 
-Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right.
+Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right.
 
 Across trials, every added element was rejected: red border, second button, caret, ribbon, countdown line.
 
