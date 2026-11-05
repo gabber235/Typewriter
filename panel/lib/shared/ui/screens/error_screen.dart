@@ -20,7 +20,11 @@ class ErrorScreen extends StatelessWidget {
     Key? key,
   }) = SmallErrorScreen;
 
-  /// Error heading. An empty value selects a title from [funnyErrorTitles].
+  /// Heading shown when the caller gives no title, so one failure always
+  /// reads the same.
+  static const defaultTitle = "Typewriter hit an error";
+
+  /// Error heading. An empty value shows [defaultTitle].
   final String title;
 
   /// Diagnostic or user facing detail shown below the heading.
@@ -32,85 +36,87 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Spacer(),
-        Expanded(
-          flex: 6,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.zoomIn,
-            child: const RiveAsset(
-              asset: "assets/robot_island.riv",
-              stateMachineName: "Motion",
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Spacer(),
+          Expanded(
+            flex: 6,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.zoomIn,
+              child: const RiveAsset(
+                asset: "assets/robot_island.riv",
+                stateMachineName: "Motion",
+              ),
             ),
           ),
-        ),
-        SizedBox(height: context.spacing.space6),
-        Padding(
-          padding: EdgeInsets.all(context.spacing.space2),
-          child: Column(
-            spacing: context.spacing.space2,
-            children: [
-              Text(
-                    title.isEmpty ? funnyErrorTitles.randomElement() : title,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: context.responsive(
-                        mobile: 24,
-                        tablet: 32,
-                        desktop: 40,
-                      ),
-                      fontWeight: FontWeight.bold,
-                      color: colors.error,
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 300.ms, delay: 100.ms)
-                  .slideY(begin: 0.1, end: 0),
-              Text(
-                    "Something went wrong, please report this to the Typewriter discord.",
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: context.responsive(
-                        mobile: 14,
-                        tablet: 16,
-                        desktop: 20,
-                      ),
-                      color: colors.onSurfaceVariant,
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 300.ms, delay: 200.ms)
-                  .slideY(begin: 0.1, end: 0),
-              if (message.isNotEmpty)
-                SelectableText(
-                      message,
+          SizedBox(height: context.spacing.space6),
+          Padding(
+            padding: EdgeInsets.all(context.spacing.space2),
+            child: Column(
+              spacing: context.spacing.space2,
+              children: [
+                Text(
+                      title.isEmpty ? ErrorScreen.defaultTitle : title,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: context.responsive(
-                          mobile: 12,
-                          tablet: 14,
-                          desktop: 18,
+                          mobile: 24,
+                          tablet: 32,
+                          desktop: 40,
                         ),
-                        color: colors.onSurface,
+                        fontWeight: FontWeight.bold,
+                        color: colors.error,
                       ),
                     )
                     .animate()
-                    .fadeIn(duration: 300.ms, delay: 300.ms)
+                    .fadeIn(duration: 300.ms, delay: 100.ms)
                     .slideY(begin: 0.1, end: 0),
-            ],
+                Text(
+                      "Something went wrong, please report this to the Typewriter discord.",
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: context.responsive(
+                          mobile: 14,
+                          tablet: 16,
+                          desktop: 20,
+                        ),
+                        color: colors.onSurfaceVariant,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: 200.ms)
+                    .slideY(begin: 0.1, end: 0),
+                if (message.isNotEmpty)
+                  SelectableText(
+                        message,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: context.responsive(
+                            mobile: 12,
+                            tablet: 14,
+                            desktop: 18,
+                          ),
+                          color: colors.onSurface,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 300.ms, delay: 300.ms)
+                      .slideY(begin: 0.1, end: 0),
+              ],
+            ),
           ),
-        ),
-        SizedBox(height: context.spacing.space6),
-        if (child != null)
-          child!
-              .animate()
-              .fadeIn(duration: 300.ms, delay: 300.ms)
-              .slideY(begin: 0.1, end: 0),
-        Spacer(),
-      ],
+          SizedBox(height: context.spacing.space6),
+          if (child != null)
+            child!
+                .animate()
+                .fadeIn(duration: 300.ms, delay: 300.ms)
+                .slideY(begin: 0.1, end: 0),
+          Spacer(),
+        ],
+      ),
     );
   }
 }
@@ -157,7 +163,7 @@ class SmallErrorScreen extends ErrorScreen {
             ),
           ),
         Text(
-              title.isEmpty ? funnyErrorTitles.randomElement() : title,
+              title.isEmpty ? ErrorScreen.defaultTitle : title,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: context.responsive(

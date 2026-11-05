@@ -194,6 +194,10 @@ class RealmInboxContent extends ConsumerWidget {
               "Removed resource",
         null => "Loading resource",
       },
+      removedLabel: (removed) => switch (document) {
+        final document? => document.catalog.appearanceOf(removed.record).label,
+        null => "Loading resource",
+      },
       onClose: onClose,
       openLocation: (location) async {
         ref

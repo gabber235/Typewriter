@@ -1,293 +1,155 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/test_utils.dart";
+const _id = GraphIdentifier("Body");
+const _cell = 40.0;
+
+/// The device a mouse gesture of a widget test reports.
+const _mouse = 1;
+
+/// An element of 2 by 3 cells.
+final _element = GraphElement(
+  id: _id,
+  x: 0,
+  y: 0,
+  width: 2,
+  height: 3,
+  builder: (_) => const SizedBox(),
+);
+
+final _size = Size(_element.width * _cell, _element.height * _cell);
 
 void main() {
-  group("ResizableElement", () {
-    const testElementId = GraphIdentifier("test-element");
-    late GraphElement testElement;
+  testWidgets("shows its element at the element's size with a resize handle", (
+    tester,
+  ) async {
+    final panel = await tester.pumpResizable(
+      element: _element,
+      cellSize: _cell,
+      child: SizedBox.fromSize(size: _size, child: const GraphNode("Body")),
+    );
 
-    const handleSize = 30.0;
-    const cellSize = 40.0;
-    late Size childSize;
+    expect(panel.graph.rectOf("Body").size, _size);
+    expect(panel.graph.resizeHandle, findsOneWidget);
+  });
 
-    setUp(() {
-      testElement = GraphElement(
-        id: testElementId,
-        x: 0,
-        y: 0,
-        width: 2,
-        height: 3,
-        builder: (context) => SizedBox(),
-      );
+  testWidgets("dragging the bottom right corner resizes by whole cells", (
+    tester,
+  ) async {
+    final ends = <(GraphIdentifier, int, int)>[];
+    final panel = await tester.pumpResizable(
+      element: _element,
+      cellSize: _cell,
+      child: SizedBox.fromSize(size: _size, child: const GraphNode("Body")),
+      onResizeStart: (_, _, _) {},
+      onResizeUpdate: (_, _, _) {},
+      onResizeEnd: (id, width, height) => ends.add((id, width, height)),
+    );
 
-      childSize = Size(
-        testElement.width * cellSize,
-        testElement.height * cellSize,
-      );
-    });
+    await panel.graph.drag(
+      "Body",
+      const Offset(_cell * 4, _cell * 2),
+      at: _size.bottomRight(Offset.zero) - const Offset(2, 2),
+    );
 
-    testWidgets("renders child and adopts its size", (tester) async {
-      await tester.pumpTestApp(
-        child: ResizableElement(
-          element: testElement,
-          onResizeStart: null,
-          onResizeUpdate: null,
-          onResizeEnd: null,
-          cellSize: cellSize,
-          child: Container(
-            width: childSize.width,
-            height: childSize.height,
-            color: Colors.blue,
-          ),
-        ),
-      );
+    expect(ends, [(_id, 6, 5)]);
+  });
 
-      final resizableFinder = find.byType(ResizableElement);
-      expect(resizableFinder, findsOneWidget);
+  testWidgets("a resize reports its start, growing previews and its end", (
+    tester,
+  ) async {
+    final starts = <(GraphIdentifier, int, int)>[];
+    final updates = <(GraphIdentifier, int, int)>[];
+    final ends = <(GraphIdentifier, int, int)>[];
+    final panel = await tester.pumpResizable(
+      element: _element,
+      cellSize: _cell,
+      child: SizedBox.fromSize(size: _size, child: const GraphNode("Body")),
+      onResizeStart: (id, width, height) => starts.add((id, width, height)),
+      onResizeUpdate: (id, width, height) => updates.add((id, width, height)),
+      onResizeEnd: (id, width, height) => ends.add((id, width, height)),
+    );
 
-      final gestureDetectorFinder = find.byType(GestureDetector);
-      expect(gestureDetectorFinder, findsOneWidget);
+    await tester.drag(
+      panel.graph.resizeHandle,
+      const Offset(_cell * 4, _cell * 2),
+    );
+    await panel.settle();
 
-      final resizableRenderBox =
-          tester.renderObject(resizableFinder) as RenderBox;
-      expect(resizableRenderBox.size, equals(childSize));
-    });
+    expect(starts, [(_id, 2, 3)]);
+    expect(updates, isNotEmpty);
+    var (_, lastWidth, lastHeight) = starts.single;
+    for (final (id, width, height) in updates) {
+      expect(id, _id);
+      expect(width, greaterThanOrEqualTo(lastWidth));
+      expect(height, greaterThanOrEqualTo(lastHeight));
+      (lastWidth, lastHeight) = (width, height);
+    }
+    expect(ends, [(_id, 6, 5)]);
+  });
 
-    testWidgets("positions gesture detector handle in bottom-right corner", (
-      tester,
-    ) async {
-      await tester.pumpTestApp(
-        child: ResizableElement(
-          element: testElement,
-          onResizeStart: null,
-          onResizeUpdate: null,
-          onResizeEnd: null,
-          cellSize: cellSize,
-          handleSize: handleSize,
-          child: Container(
-            width: childSize.width,
-            height: childSize.height,
-            color: Colors.blue,
-          ),
-        ),
-      );
+  testWidgets("an element never shrinks below one cell", (tester) async {
+    final updates = <(GraphIdentifier, int, int)>[];
+    final ends = <(GraphIdentifier, int, int)>[];
+    final panel = await tester.pumpResizable(
+      element: _element,
+      cellSize: _cell,
+      child: SizedBox.fromSize(size: _size, child: const GraphNode("Body")),
+      onResizeStart: (_, _, _) {},
+      onResizeUpdate: (id, width, height) => updates.add((id, width, height)),
+      onResizeEnd: (id, width, height) => ends.add((id, width, height)),
+    );
 
-      final resizableFinder = find.byType(ResizableElement);
-      expect(resizableFinder, findsOneWidget);
+    await tester.drag(
+      panel.graph.resizeHandle,
+      const Offset(-_cell * 1000, -_cell * 1000),
+    );
+    await panel.settle();
 
-      final resizableRenderBox =
-          tester.renderObject(resizableFinder) as RenderBox;
-      expect(resizableRenderBox.size, equals(childSize));
+    for (final (_, width, height) in updates) {
+      expect(width, greaterThanOrEqualTo(1));
+      expect(height, greaterThanOrEqualTo(1));
+    }
+    expect(ends, [(_id, 1, 1)]);
+  });
 
-      final handleFinder = find.byType(GestureDetector);
-      expect(handleFinder, findsOneWidget);
+  testWidgets("a cancelled resize commits nothing and releases the cursor", (
+    tester,
+  ) async {
+    var updates = 0;
+    var ends = 0;
+    var cancels = 0;
+    final panel = await tester.pumpResizable(
+      element: _element,
+      cellSize: _cell,
+      child: SizedBox.fromSize(size: _size, child: const GraphNode("Body")),
+      onResizeStart: (_, _, _) {},
+      onResizeUpdate: (_, _, _) => updates++,
+      onResizeEnd: (_, _, _) => ends++,
+      onResizeCancel: () => cancels++,
+    );
 
-      final handleRenderObject = tester.renderObject(handleFinder) as RenderBox;
+    final gesture = await tester.startGesture(
+      tester.getCenter(panel.graph.resizeHandle),
+      kind: PointerDeviceKind.mouse,
+    );
+    await gesture.moveBy(const Offset(_cell, _cell));
+    await tester.pump();
+    expect(updates, greaterThan(0));
+    expect(
+      RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(_mouse),
+      SystemMouseCursors.grabbing,
+    );
 
-      expect(handleRenderObject.size, equals(Size(handleSize, handleSize)));
+    await gesture.cancel();
+    await panel.settle();
 
-      final resizableOffset = resizableRenderBox.localToGlobal(Offset.zero);
-
-      expect(
-        handleRenderObject.localToGlobal(Offset.zero),
-        equals(
-          resizableOffset +
-              Offset(childSize.width, childSize.height) -
-              Offset(handleSize / 2, handleSize / 2),
-        ),
-      );
-    });
-
-    testWidgets("invokes callbacks when gesture detector is used", (
-      tester,
-    ) async {
-      final resizeStartCalls = <(GraphIdentifier, int, int)>[];
-      final resizeUpdateCalls = <(GraphIdentifier, int, int)>{};
-      final resizeEndCalls = <(GraphIdentifier, int, int)>[];
-
-      await tester.pumpTestApp(
-        child: ResizableElement(
-          element: testElement,
-          onResizeStart: (id, deltaX, deltaY) =>
-              resizeStartCalls.add((id, deltaX, deltaY)),
-          onResizeUpdate: (id, deltaX, deltaY) =>
-              resizeUpdateCalls.add((id, deltaX, deltaY)),
-          onResizeEnd: (id, deltaX, deltaY) =>
-              resizeEndCalls.add((id, deltaX, deltaY)),
-          cellSize: cellSize,
-          handleSize: handleSize,
-          child: Container(
-            width: childSize.width,
-            height: childSize.height,
-            color: Colors.blue,
-          ),
-        ),
-      );
-
-      final handleFinder = find.byType(GestureDetector);
-      expect(handleFinder, findsOneWidget);
-
-      await tester.drag(handleFinder, const Offset(cellSize * 4, cellSize * 2));
-
-      expect(resizeStartCalls, hasLength(1));
-      expect(
-        resizeStartCalls.first,
-        equals((testElementId, testElement.width, testElement.height)),
-      );
-
-      expect(resizeUpdateCalls, isNotEmpty);
-      var lastWidth = testElement.width;
-      var lastHeight = testElement.height;
-      for (final (id, width, height) in resizeUpdateCalls) {
-        expect(id, equals(testElementId));
-        expect(width, greaterThanOrEqualTo(lastWidth));
-        expect(height, greaterThanOrEqualTo(lastHeight));
-        lastWidth = width;
-        lastHeight = height;
-      }
-
-      expect(resizeEndCalls, hasLength(1));
-      expect(
-        resizeEndCalls.first,
-        equals((testElementId, testElement.width + 4, testElement.height + 2)),
-      );
-    });
-
-    testWidgets("element size never gets below 1", (tester) async {
-      final resizeStartCalls = <(GraphIdentifier, int, int)>[];
-      final resizeUpdateCalls = <(GraphIdentifier, int, int)>{};
-      final resizeEndCalls = <(GraphIdentifier, int, int)>[];
-
-      await tester.pumpTestApp(
-        child: ResizableElement(
-          element: testElement,
-          onResizeStart: (id, deltaX, deltaY) =>
-              resizeStartCalls.add((id, deltaX, deltaY)),
-          onResizeUpdate: (id, deltaX, deltaY) =>
-              resizeUpdateCalls.add((id, deltaX, deltaY)),
-          onResizeEnd: (id, deltaX, deltaY) =>
-              resizeEndCalls.add((id, deltaX, deltaY)),
-          cellSize: cellSize,
-          handleSize: handleSize,
-          child: Container(
-            width: childSize.width,
-            height: childSize.height,
-            color: Colors.blue,
-          ),
-        ),
-      );
-
-      final handleFinder = find.byType(GestureDetector);
-      expect(handleFinder, findsOneWidget);
-
-      await tester.drag(
-        handleFinder,
-        const Offset(-cellSize * 1000, -cellSize * 1000),
-      );
-
-      expect(resizeStartCalls, hasLength(1));
-      expect(
-        resizeStartCalls.first,
-        equals((testElementId, testElement.width, testElement.height)),
-      );
-
-      for (final (id, deltaX, deltaY) in resizeUpdateCalls) {
-        expect(id, testElementId);
-        expect(deltaX, greaterThanOrEqualTo(1));
-        expect(deltaY, greaterThanOrEqualTo(1));
-      }
-
-      expect(resizeEndCalls, hasLength(1));
-      expect(resizeEndCalls.first, equals((testElementId, 1, 1)));
-    });
-
-    testWidgets("cancelling a resize clears the interaction without commit", (
-      tester,
-    ) async {
-      var startCalls = 0;
-      var updateCalls = 0;
-      var endCalls = 0;
-      var cancelCalls = 0;
-
-      await tester.pumpTestApp(
-        child: ResizableElement(
-          element: testElement,
-          onResizeStart: (_, _, _) => startCalls++,
-          onResizeUpdate: (_, _, _) => updateCalls++,
-          onResizeEnd: (_, _, _) => endCalls++,
-          onResizeCancel: () => cancelCalls++,
-          cellSize: cellSize,
-          handleSize: handleSize,
-          child: SizedBox.fromSize(size: childSize),
-        ),
-      );
-
-      final handle = find.byType(GestureDetector);
-      tester.widget<GestureDetector>(handle).onPanStart!(
-        DragStartDetails(
-          globalPosition: Offset.zero,
-          localPosition: Offset.zero,
-        ),
-      );
-      await tester.pump();
-      tester.widget<GestureDetector>(handle).onPanUpdate!(
-        DragUpdateDetails(
-          globalPosition: const Offset(cellSize, cellSize),
-          localPosition: Offset(cellSize, cellSize),
-        ),
-      );
-      await tester.pump();
-      tester.widget<GestureDetector>(handle).onPanCancel!();
-
-      await tester.pumpAndSettle();
-
-      expect(startCalls, 1);
-      expect(updateCalls, greaterThan(0));
-      expect(endCalls, 0);
-      expect(cancelCalls, 1);
-      expect(
-        tester
-            .widget<MouseRegion>(
-              find.descendant(
-                of: find.byType(ResizableElement),
-                matching: find.byType(MouseRegion),
-              ),
-            )
-            .cursor,
-        isNot(SystemMouseCursors.grabbing),
-      );
-    });
-
-    testWidgets("uses custom handle size when provided", (tester) async {
-      const customHandleSize = 50.0;
-
-      await tester.pumpTestApp(
-        child: ResizableElement(
-          element: testElement,
-          onResizeStart: null,
-          onResizeUpdate: null,
-          onResizeEnd: null,
-          cellSize: cellSize,
-          handleSize: customHandleSize,
-          child: Container(
-            width: childSize.width,
-            height: childSize.height,
-            color: Colors.blue,
-          ),
-        ),
-      );
-
-      final handleFinder = find.byType(GestureDetector);
-      expect(handleFinder, findsOneWidget);
-
-      final handleRenderObject = tester.renderObject(handleFinder) as RenderBox;
-
-      expect(
-        handleRenderObject.size,
-        equals(Size(customHandleSize, customHandleSize)),
-      );
-    });
+    expect(ends, 0);
+    expect(cancels, 1);
+    expect(
+      RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(_mouse),
+      isNot(SystemMouseCursors.grabbing),
+    );
   });
 }

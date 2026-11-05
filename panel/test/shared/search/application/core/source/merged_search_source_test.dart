@@ -2,8 +2,7 @@
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("MergedSearchSource", () {
@@ -161,11 +160,14 @@ void main() {
       addTearDown(subscription.cancel);
       source.initialize(SearchQueryContext.empty);
 
-      first.emitSnapshot(errorSnapshot("first", "First failed"));
-      second.emitSnapshot(errorSnapshot("second", "Second failed"));
+      first.emitSnapshot(errorSnapshot("First failed", id: "first"));
+      second.emitSnapshot(errorSnapshot("Second failed", id: "second"));
 
       expect(snapshots.last.status, SearchSourceStatus.error);
-      expect(snapshots.last.errorSummaries, hasLength(2));
+      expect(snapshots.last.errorSummaries.map((summary) => summary.message), [
+        "First failed",
+        "Second failed",
+      ]);
     });
 
     test("preview is routed to the child that produced the result", () async {
@@ -323,7 +325,10 @@ void main() {
           );
 
       expect(result.values, isEmpty);
-      expect(result.warning, isNotNull);
+      expect(
+        result.warning,
+        "Selector suggestions are temporarily unavailable",
+      );
     });
 
     test("retains available suggestions when one owner fails", () async {
@@ -348,7 +353,10 @@ void main() {
           );
 
       expect(result.values, ["Arrival"]);
-      expect(result.warning, isNotNull);
+      expect(
+        result.warning,
+        "Some selector suggestions are temporarily unavailable",
+      );
     });
 
     test("acceptance from one owner wins shared selector validation", () {
@@ -368,10 +376,10 @@ void main() {
         SearchSourceSnapshot.ready(
           nodes: const [],
           selectorValidations: [
-            selectorValidation(
-              "book",
-              "Main",
-              SearchSelectorValidationStatus.rejected,
+            SearchSelectorValidation(
+              selectorId: "book",
+              value: "Main",
+              status: SearchSelectorValidationStatus.rejected,
             ),
           ],
         ),
@@ -380,10 +388,10 @@ void main() {
         SearchSourceSnapshot.ready(
           nodes: const [],
           selectorValidations: [
-            selectorValidation(
-              "book",
-              "main",
-              SearchSelectorValidationStatus.accepted,
+            SearchSelectorValidation(
+              selectorId: "book",
+              value: "main",
+              status: SearchSelectorValidationStatus.accepted,
             ),
           ],
         ),
@@ -413,10 +421,10 @@ void main() {
           SearchSourceSnapshot.ready(
             nodes: const [],
             selectorValidations: [
-              selectorValidation(
-                "book",
-                "Missing",
-                SearchSelectorValidationStatus.rejected,
+              SearchSelectorValidation(
+                selectorId: "book",
+                value: "Missing",
+                status: SearchSelectorValidationStatus.rejected,
               ),
             ],
           ),
@@ -446,15 +454,15 @@ void main() {
         SearchSourceSnapshot.ready(
           nodes: const [],
           selectorValidations: [
-            selectorValidation(
-              "book",
-              "Missing",
-              SearchSelectorValidationStatus.rejected,
+            SearchSelectorValidation(
+              selectorId: "book",
+              value: "Missing",
+              status: SearchSelectorValidationStatus.rejected,
             ),
           ],
         ),
       );
-      second.emitSnapshot(errorSnapshot("second", "Unavailable"));
+      second.emitSnapshot(errorSnapshot("Unavailable", id: "second"));
 
       expect(
         snapshots.last.selectorValidations.single.status,
@@ -477,57 +485,4 @@ void main() {
       expect(() => [first, second].merged(), throwsA(isA<StateError>()));
     });
   });
-}
-
-KeyValueSelectorDefinition sourceBackedSelector(String id) {
-  return KeyValueSelectorDefinition(
-    id: id,
-    key: "$id:",
-    value: const QuerySelectorValue.sourceBacked(),
-  );
-}
-
-SearchParsedSelector parsedSelector(String id, String value) {
-  return SearchParsedSelector(selectorId: id, key: "$id:", value: value);
-}
-
-SearchQueryContext selectorContext(String id, String value) {
-  final selector = parsedSelector(id, value);
-  return SearchQueryContext(
-    normalizedQuery: "$id:$value",
-    selectors: [selector],
-    selectorExpression: SearchSelectorExpression.leaf(selector),
-  );
-}
-
-SearchSelectorValidation selectorValidation(
-  String id,
-  String value,
-  SearchSelectorValidationStatus status,
-) {
-  return SearchSelectorValidation(selectorId: id, value: value, status: status);
-}
-
-SearchQueryContext queryContext(String query) {
-  return SearchQueryContext(normalizedQuery: query, selectors: const []);
-}
-
-SearchSourceSnapshot errorSnapshot(String id, String message) {
-  return SearchSourceSnapshot.error(
-    errorSummaries: [
-      SearchErrorSummary(
-        id: id,
-        message: message,
-        severity: SearchErrorSeverity.error,
-      ),
-    ],
-  );
-}
-
-List<String> resultIds(SearchSourceSnapshot snapshot) {
-  return snapshot.nodes
-      .walk()
-      .whereType<SearchResultNode>()
-      .map((node) => node.result.id)
-      .toList();
 }

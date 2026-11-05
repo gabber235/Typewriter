@@ -93,11 +93,11 @@ private fun RegistrarState.projection(): EventProjection =
         }
 
         is RegistrarState.Failed -> {
-            EventProjection.log(LogSeverity.ERROR, "Service registration failed")
+            EventProjection.log(LogSeverity.ERROR, "Service registration failed: ${failure.describe()}")
         }
 
         is RegistrarState.IdentityOutcomeUnknown -> {
-            EventProjection.log(LogSeverity.ERROR, "Service identity issuance outcome is unknown")
+            EventProjection.log(LogSeverity.ERROR, "Service identity issuance outcome is unknown: ${failure.describe()}")
         }
 
         RegistrarState.Stopping -> {
@@ -251,6 +251,9 @@ private fun TelemetryEventAttributes.degraded(
     attribute("retry.delay_ms", retry.delay.inWholeMilliseconds)
     failure(failure)
 }
+
+/** The failure as an operator reads it on the console, which shows no event attributes. */
+private fun RegistrarFailure.describe(): String = listOfNotNull(wireType(), wireReason()).joinToString(": ")
 
 private fun RegistrarFailure.wireType(): String =
     when (this) {

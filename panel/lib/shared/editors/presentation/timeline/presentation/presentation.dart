@@ -2,6 +2,7 @@
 library;
 
 export "timeline.dart";
+export "timeline_cue.dart";
 export "timeline_headers.dart";
 export "timeline_intents.dart";
 export "timeline_keyframe_surface.dart";

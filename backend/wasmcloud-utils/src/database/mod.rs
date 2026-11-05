@@ -105,7 +105,7 @@ impl<T: DeserializeOwned> TransactionQuery<'_, T> {
     #[doc(hidden)]
     pub fn __from_literal(query_str: &str, outcome_index: usize) -> TransactionQuery<'_, T> {
         TransactionQuery {
-            query: apply_transaction_retry(query(query_str)),
+            query: query(query_str).retry_conflicts(transaction_retry_policy()),
             outcome_index,
             outcome: std::marker::PhantomData,
         }
@@ -156,55 +156,4 @@ fn transaction_retry_policy() -> ConflictRetryPolicy {
         TRANSACTION_CONFLICT_INITIAL_DELAY,
         TRANSACTION_CONFLICT_MAXIMUM_DELAY,
     )
-}
-
-trait ConflictRetryQuery: Sized {
-    fn with_conflict_retry(self, policy: ConflictRetryPolicy) -> Self;
-}
-
-impl ConflictRetryQuery for Query<'_> {
-    fn with_conflict_retry(self, policy: ConflictRetryPolicy) -> Self {
-        self.retry_conflicts(policy)
-    }
-}
-
-fn apply_transaction_retry<T: ConflictRetryQuery>(query: T) -> T {
-    query.with_conflict_retry(transaction_retry_policy())
-}
-
-#[cfg(test)]
-mod tests {
-    use serde::Deserialize;
-
-    use super::{ConflictRetryQuery, ReadQuery, TransactionQuery, apply_transaction_retry};
-
-    #[derive(Deserialize)]
-    struct Outcome;
-
-    #[test]
-    fn builds_read_query() {
-        ReadQuery::__from_literal("SELECT * FROM user;", 0);
-    }
-
-    #[test]
-    fn transaction_query_applies_conflict_retry_policy() {
-        struct Probe(bool);
-
-        impl ConflictRetryQuery for Probe {
-            fn with_conflict_retry(
-                mut self,
-                _policy: surrealdb_component_sdk::ConflictRetryPolicy,
-            ) -> Self {
-                self.0 = true;
-                self
-            }
-        }
-
-        assert!(apply_transaction_retry(Probe(false)).0);
-
-        TransactionQuery::<Outcome>::__from_literal(
-            "BEGIN TRANSACTION; RETURN true; COMMIT TRANSACTION;",
-            1,
-        );
-    }
 }

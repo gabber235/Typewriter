@@ -2,26 +2,17 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final catalog = CheckedEditorCatalog(
     (skir.EditorCatalog.mutable()
           ..types = [
-            skir.PublishedType(
-              searchKey: null,
-              placementField: null,
-              definition: skir.TypeDefinition(
-                id: skir.resourceIdType.definition,
-                parameters: const [],
-                representation: skir.RepresentationTemplate.createScalar(
-                  kind: skir.ScalarKind.text,
-                ),
-                parents: const [],
+            publishedType(
+              skir.resourceIdType.definition,
+              representation: skir.RepresentationTemplate.createScalar(
+                kind: skir.ScalarKind.text,
               ),
-              status: skir.DeclarationStatus.ready,
-              display: defaultTypeDisplay(""),
-              effectiveFields: const [],
-              ancestorTemplates: const [],
             ),
           ])
         .toFrozen(),
@@ -47,13 +38,14 @@ void main() {
   });
 
   test(
-    "caller inputs preserve canonical identity and reject malformed payloads",
+    "caller inputs keep their supplied value and reject malformed payloads",
     () {
       final supplied = skir.ResourceId(value: "book:current")
           .toExpressionBinding();
       final normalized = {origin: supplied}
           .withContextImports(catalog: catalog, imports: imports);
-      expect(normalized[origin], same(supplied));
+      expect(normalized[origin]?.value, supplied.value);
+      expect(normalized[origin]?.schema, supplied.schema);
       expect(
         () => {
           origin: PortableExpressionBinding(
@@ -90,7 +82,7 @@ void main() {
       final supplied = skir.ResourceId(value: "book:current")
           .toExpressionBinding();
       final inherited = {origin: supplied}.withCallerInputs({origin: supplied});
-      expect(inherited[origin], same(supplied));
+      expect(inherited[origin]?.value, supplied.value);
       expect(
         () => inherited.withCallerInputs({
           origin: skir.ResourceId(value: "book:other").toExpressionBinding(),

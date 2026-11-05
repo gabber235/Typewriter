@@ -45,10 +45,12 @@ abstract class ValueEditingRegistration with _$ValueEditingRegistration {
   /// Returns a view of the session owned driver without acquiring a view lease.
   /// Callers retaining the view must separately lease [driverId] in [session].
   ValueEditing acquire(LocalWorkCommands session) {
+    var created = false;
     final driver = session
         .getOrRegister<EditingWorkDriver<ValueEditDocument, ValueEdit>>(
           driverId,
           () {
+            created = true;
             final owner = EditingWorkspace<ValueEditDocument, ValueEdit>(
               model: const ValueEditModel(),
               persistence: persistence,
@@ -97,9 +99,15 @@ abstract class ValueEditingRegistration with _$ValueEditingRegistration {
                     dispose: host.dispose,
                   );
           };
-    driver.workspace.acceptConfirmed(
-      ValueEditDocument.fromSnapshot(snapshot, identity: persistence.key),
-    );
+    // A new workspace starts from this snapshot. A retained one receives it
+    // as an observation on a later microtask; handing a new one its own start
+    // again would hold it back behind a save started in this turn and admit it
+    // over what that save read.
+    if (!created) {
+      driver.workspace.acceptConfirmed(
+        ValueEditDocument.fromSnapshot(snapshot, identity: persistence.key),
+      );
+    }
     return ValueEditing.fromWorkspace(driver.workspace, group);
   }
 

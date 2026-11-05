@@ -89,15 +89,10 @@ mod tests {
 
     #[test]
     fn random_seed_handles_short_reads() {
-        let mut calls = 0;
-        let seed = fill_random_16(|remaining| {
-            calls += 1;
-            vec![calls as u8; remaining.min(3)]
-        })
-        .unwrap();
-        assert_eq!(calls, 6);
-        assert_eq!(&seed[..3], &[1, 1, 1]);
-        assert_eq!(seed[15], 6);
+        let mut random = 0_u8..;
+        let seed =
+            fill_random_16(|remaining| random.by_ref().take(remaining.min(3)).collect()).unwrap();
+        assert_eq!(seed, std::array::from_fn(|index| index as u8));
     }
 
     #[test]

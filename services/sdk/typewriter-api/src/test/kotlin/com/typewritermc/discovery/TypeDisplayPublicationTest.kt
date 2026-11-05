@@ -1,13 +1,12 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.PlacementDefinition
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.imprint.ContributionName
-import com.typewritermc.imprint.ContributionSourceId
-import com.typewritermc.imprint.ProducerId
+import com.typewritermc.discovery.GeneratedProviderKind
+import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.TagDefinition
+import com.typewritermc.testkit.generatedProviders
+import com.typewritermc.testkit.origin
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.Icon
@@ -16,7 +15,6 @@ import com.typewritermc.types.toWire
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.DeclarationOwner
 import java.lang.reflect.Modifier
 import java.util.Collections
 
@@ -30,39 +28,44 @@ val TypeDisplayPublicationTest by testSuite {
                 color = Color(0xFF3F51B5u),
             )
         val providers =
-            generatedTypeProviders()
+            generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type)
                 .distinctBy { provider -> provider.definition.id }
-        val origin = providerOrigin()
+        val origin = origin("type_display", "test:type_display")
         val assembly =
             CatalogContributions(
                 declarations = providers.map { provider -> OwnedTypeDeclaration(origin, provider.definition, provider.display) },
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "type display publication")))
 
-        BookDefinition.display shouldBe expected
         val wireDisplay =
             assembly.editorCatalog.types
                 .single { published -> published.definition == BookDefinition.declaration }
                 .display
         wireDisplay shouldBe expected.toWire()
-        wireDisplay.description shouldBe expected.description
-        wireDisplay.icon shouldBe expected.icon.toWire()
-        wireDisplay.color.argb shouldBe expected.color.argb.toInt()
     }
 
     test("a type without a display annotation publishes its class name with the default icon and color") {
-        ColorDefinition.display shouldBe
-            TypeDisplay(
-                name = "Color",
-                description = "",
-                icon = TypeDisplay.DEFAULT_ICON,
-                color = TypeDisplay.DEFAULT_COLOR,
-            )
-        PlacementDefinition.display.name shouldBe "Placement"
+        val assembly =
+            CatalogContributions(
+                declarations =
+                    generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type)
+                        .distinctBy { provider -> provider.definition.id }
+                        .map { provider ->
+                            OwnedTypeDeclaration(origin("type_display", "test:type_display"), provider.definition, provider.display)
+                        },
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "default type display")))
+
+        assembly.editorCatalog.types
+            .single { it.definition == ColorDefinition.declaration }
+            .display shouldBe
+            TypeDisplay(name = "Color", description = "", icon = TypeDisplay.DEFAULT_ICON, color = TypeDisplay.DEFAULT_COLOR).toWire()
     }
 
     test("every resource type publishes its search key and other types publish none") {
-        val providers = generatedTypeProviders().distinctBy { provider -> provider.definition.id }
-        val origin = providerOrigin()
+        val providers =
+            generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type).distinctBy { provider ->
+                provider.definition.id
+            }
+        val origin = origin("type_display", "test:type_display")
         val published =
             CatalogContributions(
                 declarations =
@@ -79,46 +82,3 @@ val TypeDisplayPublicationTest by testSuite {
         published[ColorDefinition.id] shouldBe null
     }
 }
-
-internal fun generatedTypeProviders(): List<GeneratedTypeProvider> = generatedProviders(GeneratedProviderKind.Type)
-
-/** Instances of every generated provider of [kind] indexed on the test classpath. */
-internal fun <T> generatedProviders(kind: GeneratedProviderKind): List<T> {
-    val resources =
-        Collections.list(
-            requireNotNull(Thread.currentThread().contextClassLoader)
-                .getResources(GENERATED_PROVIDER_INDEX_PATH),
-        )
-    return resources
-        .flatMap { resource ->
-            resource.openStream().bufferedReader().use { GeneratedProviderIndex.parse(it.readText()) }
-        }.filter { entry -> entry.kind == kind }
-        .map { entry ->
-            @Suppress("UNCHECKED_CAST")
-            instantiateGeneratedProvider(Class.forName(entry.providerClass)) as T
-        }
-}
-
-private fun instantiateGeneratedProvider(type: Class<*>): Any =
-    type.fields
-        .singleOrNull { field ->
-            field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type === type
-        }?.get(null)
-        ?: type.getConstructor().newInstance()
-
-internal fun providerOrigin(): ProviderOrigin =
-    ProviderOrigin(
-        owner =
-            DeclarationOwner(
-                source =
-                    contributionKey(
-                        source = ContributionSourceId("test"),
-                        sourcePart = "main",
-                        producer = ProducerId("test"),
-                        name = ContributionName("type_display"),
-                    ),
-                localIdentity = "type_display",
-            ),
-        artifact = ArtifactId("test:type_display"),
-        sourcePart = "main",
-    )

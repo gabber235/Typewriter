@@ -1,39 +1,33 @@
 package com.typewritermc.realm.publication
 
-import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import skirout.editor.v1.compilation_root.CompilationProjectionId
-import skirout.editor.v1.compilation_root.CompilationRoot
-import skirout.editor.v1.compiled_content.CompiledArtifactReference
-import skirout.editor.v1.compiled_content.CompiledBlobPointer
-import skirout.editor.v1.compiled_content.PublishedContent
-import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.publication.PublishedRoot
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
-import skirout.kernel.v1.resource_id.ResourceId
 
 val PublicationComparisonTest by testSuite {
     test("publication identity catalog provenance input fingerprints and blob pointers are not runtime changes") {
-        val artifact = comparisonArtifact()
-        val selected = comparisonSelected(artifact)
+        val artifact = compiledArtifact()
+        val selected = publishedContent(listOf(artifact))
         val candidate = artifact.copy(inputFingerprint = ContentDigest("c".repeat(64)))
         PublicationComparison.between(
             selected.copy(publication = PublicationId(value = "other"), catalog = CatalogGeneration(value = "other")),
             listOf(candidate),
             testEngineInputs(),
+            published = ::publishedPage,
         ) shouldBe
             PublicationComparison.Unchanged
     }
     test("format media and semantic digest changes each update the root") {
-        val original = comparisonArtifact()
-        val selected = comparisonSelected(original)
+        val original = compiledArtifact()
+        val selected = publishedContent(listOf(original))
         listOf(
             original.copy(formatRevision = 3),
             original.copy(mediaType = "application/other"),
@@ -44,13 +38,14 @@ val PublicationComparisonTest by testSuite {
                     selected,
                     listOf(artifact),
                     testEngineInputs(),
+                    published = ::publishedPage,
                 ).shouldBeInstanceOf<PublicationComparison.Changed>()
                 .delta.allChanges shouldBe
                 listOf(PublicationChange.RootUpdatedWrapper(original.root))
         }
     }
     test("token changes are meaningful even with no roots") {
-        val selected = comparisonSelected(comparisonArtifact()).copy(outputs = emptyList())
+        val selected = publishedContent(listOf(compiledArtifact())).copy(outputs = emptyList())
         PublicationComparison
             .between(
                 selected,
@@ -60,76 +55,53 @@ val PublicationComparisonTest by testSuite {
                         skirout.editor.v1.type_catalog
                             .InputToken(value = "new"),
                 ),
+                published = ::publishedPage,
             ).shouldBeInstanceOf<PublicationComparison.Changed>()
             .delta.allChanges shouldBe
             listOf(PublicationChange.REQUIREMENTS_CHANGED)
-        PublicationComparison.between(null, emptyList(), testEngineInputs()) shouldBe PublicationComparison.Unchanged
+        PublicationComparison.between(null, emptyList(), testEngineInputs(), published = ::publishedPage) shouldBe
+            PublicationComparison.Unchanged
     }
     test("old envelope format requires explicit publication even without changed output") {
-        val artifact = comparisonArtifact()
-        for (outputs in listOf(comparisonSelected(artifact), comparisonSelected(artifact).copy(outputs = emptyList()))) {
+        val artifact = compiledArtifact()
+        for (outputs in listOf(publishedContent(listOf(artifact)), publishedContent(listOf(artifact)).copy(outputs = emptyList()))) {
             val candidate = if (outputs.outputs.isEmpty()) emptyList() else listOf(artifact)
             PublicationComparison
                 .between(
                     outputs.copy(formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION + 1),
                     candidate,
                     testEngineInputs(),
+                    published = ::publishedPage,
                 ).shouldBeInstanceOf<PublicationComparison.Changed>()
                 .delta.allChanges shouldBe
                 listOf(PublicationChange.REQUIREMENTS_CHANGED)
-            PublicationComparison.between(outputs, candidate, testEngineInputs()) shouldBe PublicationComparison.Unchanged
+            PublicationComparison.between(outputs, candidate, testEngineInputs(), published = ::publishedPage) shouldBe
+                PublicationComparison.Unchanged
         }
     }
     test("failed roots remain pending while definite removals and successful additions are comparable") {
-        val old = comparisonArtifact()
-        val fresh = comparisonArtifact("new")
-        val pending = comparisonArtifact("pending").root
+        val old = compiledArtifact()
+        val fresh = compiledArtifact(compilationRoot("fixture", "new"))
+        val pending = compiledArtifact(compilationRoot("fixture", "pending")).root
         PublicationComparison.confirmedChanges(
-            comparisonSelected(old),
+            publishedContent(listOf(old)),
             listOf(fresh),
             setOf(fresh.root, pending),
             testEngineInputs(),
+            published = ::publishedPage,
         ) shouldBe
-            listOf(PublicationChange.RootAddedWrapper(fresh.root), PublicationChange.RootRemovedWrapper(old.root))
+            listOf(
+                PublicationChange.RootAddedWrapper(fresh.root),
+                PublicationChange.RootRemovedWrapper(PublishedRoot(root = old.root, record = publishedPage(old.root))),
+            )
     }
-    test("a release delta is nonempty and lists each change once") {
-        shouldThrow<IllegalArgumentException> { publicationDelta(emptyList()) }
+    test("a release delta without changes is refused") {
+        shouldThrow<IllegalArgumentException> { publicationDelta(emptyList()) }.message shouldBe
+            "A publication delta needs at least one change."
+    }
+    test("a release delta that lists one change twice is refused") {
         shouldThrow<IllegalArgumentException> {
             publicationDelta(listOf(PublicationChange.REQUIREMENTS_CHANGED, PublicationChange.REQUIREMENTS_CHANGED))
-        }
-        val root = comparisonArtifact().root
-        publicationDelta(listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED))
-            .allChanges shouldBe listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED)
+        }.message shouldBe "Publication delta changes must be distinct."
     }
 }
-
-private fun comparisonArtifact(id: String = "root") =
-    CompiledArtifact(
-        CompilationRoot(projection = CompilationProjectionId(value = "fixture"), resource = ResourceId(value = id)),
-        2,
-        "application/fixture",
-        ContentDigest("1".repeat(64)),
-        ContentDigest("a".repeat(64)),
-        byteArrayOf(1),
-    )
-
-private fun comparisonSelected(artifact: CompiledArtifact) =
-    PublishedContent(
-        publication = PublicationId(value = "selected"),
-        formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        catalog = CatalogGeneration(value = "catalog"),
-        implementationToken = "implementation",
-        outputs =
-            listOf(
-                PublishedOutput(
-                    reference =
-                        CompiledArtifactReference(
-                            root = artifact.root,
-                            formatRevision = artifact.formatRevision,
-                            mediaType = artifact.mediaType,
-                            semanticDigest = artifact.semanticDigest.value,
-                        ),
-                    blob = CompiledBlobPointer(digest = ContentDigest("2".repeat(64)).value, size = 1),
-                ),
-            ),
-    )

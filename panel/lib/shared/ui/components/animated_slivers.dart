@@ -83,7 +83,7 @@ class AnimatedSliverList<T> extends HookWidget {
       removedItemBuilder: (context, item, animation) =>
           row(context, item, animation, departing: true),
     );
-    return SliverAnimatedList(
+    return SliverAnimatedRows(
       key: collection.key,
       initialItemCount: collection.items.length,
       itemBuilder: (context, index, animation) =>

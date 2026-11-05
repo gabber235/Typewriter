@@ -2,3 +2,4 @@ search/authoring_text.surql
 resource/resource.surql
 resource/resource_relation.surql
 compile/publication_attempt.surql
+edit/commit_submission.surql

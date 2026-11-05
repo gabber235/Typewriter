@@ -1,41 +1,36 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test(
-    "retrying failed local integration of a known rejection never sends again",
-    () async {
-      var sends = 0;
-      var integrations = 0;
-      final reported = <FlutterErrorDetails>[];
-      final previous = FlutterError.onError;
-      FlutterError.onError = reported.add;
-      addTearDown(() => FlutterError.onError = previous);
-      final submission = MutationSubmission<void>(
-        id: "known",
-        label: "Apply",
-        send: () async {
-          sends++;
-          return const SubmissionNotSubmitted(
-            message: "Connection unavailable",
-          );
-        },
-        integrate: (_) async {
-          if (++integrations == 1) throw StateError("Refresh failed");
-        },
-      );
-      addTearDown(submission.dispose);
-      await submission.run();
-      expect(submission.integrationError, isNotNull);
-      expect(submission.canReplay, isFalse);
-      await submission.run();
-      expect(sends, 1);
-      expect(integrations, 2);
-      expect(submission.integrationError, isNull);
-      expect(submission.canReplay, isTrue);
-      expect(reported, hasLength(1));
-    },
-  );
+  test("retrying a failed local refresh of a request that was not submitted "
+      "never sends it again", () async {
+    var sends = 0;
+    var integrations = 0;
+    final reported = <FlutterErrorDetails>[];
+    final previous = FlutterError.onError;
+    FlutterError.onError = reported.add;
+    addTearDown(() => FlutterError.onError = previous);
+    final submission = MutationSubmission<void>(
+      id: "known",
+      label: "Apply",
+      send: () async {
+        sends++;
+        return const SubmissionNotSubmitted(message: "Connection unavailable");
+      },
+      integrate: (_) async {
+        if (++integrations == 1) throw StateError("Refresh failed");
+      },
+    );
+    addTearDown(submission.dispose);
+    await submission.run();
+    expect(submission.integrationError?.error, isA<StateError>());
+    await submission.run();
+    expect(sends, 1);
+    expect(integrations, 2);
+    expect(submission.integrationError, isNull);
+    expect(reported, hasLength(1));
+  });
   test(
     "uncertain replay retains the submitted value after a newer edit",
     () async {
@@ -86,9 +81,79 @@ void main() {
     },
   );
 
+  test("an attempt nothing received after an unanswered one leaves the "
+      "outcome unknown, since the first may have landed", () async {
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+      const SubmissionResult<String>.undelivered(message: "Away"),
+    ]);
+
+    await save.submission.run();
+    expect(await save.submission.run(), isA<SubmissionUncertain<String>>());
+  });
+
+  test("an unanswered request is sent again on its own, pausing longer each "
+      "time, until it is answered", () async {
+    final scheduler = ControlledScheduler();
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+      TimeoutException("Reply lost"),
+    ], redelivery: scheduler);
+
+    await save.submission.run();
+    expect(save.submission.delivering, isTrue);
+    (await scheduler.scheduledAt(0)).execute();
+    (await scheduler.scheduledAt(1)).execute();
+    await pumpEventQueue();
+
+    expect(save.submission.result, const SubmissionResult.confirmed("Saved"));
+    expect(save.submission.delivering, isFalse);
+    expect(save.sends, 3);
+    expect(scheduler.delays, [
+      const Duration(milliseconds: 250),
+      const Duration(milliseconds: 500),
+    ]);
+  });
+
+  test("Retry while a resend waits sends at once, and once answered the "
+      "request is no longer on its way", () async {
+    final scheduler = ControlledScheduler();
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+    ], redelivery: scheduler);
+
+    await save.submission.run();
+    final waiting = await scheduler.scheduledAt(0);
+    expect(
+      await save.submission.run(),
+      const SubmissionResult.confirmed("Saved"),
+    );
+    expect(save.submission.delivering, isFalse);
+    waiting.execute();
+    await pumpEventQueue();
+
+    expect(save.sends, 2);
+  });
+
+  test("disposing a submission stops its waiting resend, and it is never "
+      "sent again", () async {
+    final scheduler = ControlledScheduler();
+    final save = ScriptedSave([
+      TimeoutException("Reply lost"),
+    ], redelivery: scheduler);
+
+    await save.submission.run();
+    final waiting = await scheduler.scheduledAt(0);
+    save.submission.dispose();
+    expect(waiting.cancelled, isTrue);
+    waiting.execute();
+    await pumpEventQueue();
+
+    expect(save.sends, 1);
+  });
+
   test("a new attempt replaces only the same resource rejection", () async {
-    final journal = ScopedWorkSession();
-    addTearDown(journal.dispose);
+    final journal = testWorkSession();
     MutationSubmission<int> attempt(String id, String scope) =>
         MutationSubmission<int>(
           id: id,

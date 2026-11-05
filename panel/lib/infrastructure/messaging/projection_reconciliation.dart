@@ -8,10 +8,11 @@ sealed class ProjectionDelivery with _$ProjectionDelivery {
   /// Uses a core NATS subscription for current observations.
   const factory ProjectionDelivery.ephemeral() = ProjectionDeliveryEphemeral;
 
-  /// Uses one exact named consumer from the persisted stream.
+  /// Uses the consumer [route] names for the watching connection from the
+  /// persisted stream.
   const factory ProjectionDelivery.persistent({
     required String stream,
-    required String consumer,
+    required PersistentProjectionRoute route,
   }) = ProjectionDeliveryPersistent;
 }
 

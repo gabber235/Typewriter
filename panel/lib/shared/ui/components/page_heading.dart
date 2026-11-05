@@ -34,13 +34,20 @@ class PageHeading extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            title,
-            textAlign: TextAlign.start,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontVariations: const [boldWeight],
-              letterSpacing: -1,
-              fontSize: context.responsive(mobile: 24, tablet: 26, desktop: 28),
+          Semantics(
+            header: true,
+            child: Text(
+              title,
+              textAlign: TextAlign.start,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontVariations: const [boldWeight],
+                letterSpacing: -1,
+                fontSize: context.responsive(
+                  mobile: 24,
+                  tablet: 26,
+                  desktop: 28,
+                ),
+              ),
             ),
           ),
           Padding(

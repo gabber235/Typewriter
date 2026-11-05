@@ -28,7 +28,6 @@ export "size.dart";
 export "snackbar.dart";
 export "spring_value.dart";
 export "string.dart";
-export "test_environment.dart";
 export "tree_view/tree_view.dart";
 export "two_dimensional_focus_traversal_policy.dart";
 export "uri.dart";

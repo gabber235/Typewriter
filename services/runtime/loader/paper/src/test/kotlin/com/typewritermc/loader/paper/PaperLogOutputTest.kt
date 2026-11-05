@@ -2,34 +2,23 @@
 
 package com.typewritermc.loader.paper
 
+import com.typewritermc.loader.paper.testing.RecordingLogHandler
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecord
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.api.logs.Severity
 import java.time.Instant
-import java.util.logging.Handler
 import java.util.logging.Level
-import java.util.logging.LogRecord
 import java.util.logging.Logger
 
 val PaperLogOutputTest by testSuite {
     test("forwards messages without prefixes and preserves severity families") {
-        val records = mutableListOf<LogRecord>()
+        val handler = RecordingLogHandler()
         val logger =
             Logger.getAnonymousLogger().apply {
                 useParentHandlers = false
                 level = Level.ALL
-                addHandler(
-                    object : Handler() {
-                        override fun publish(record: LogRecord) {
-                            records.add(record)
-                        }
-
-                        override fun flush() = Unit
-
-                        override fun close() = Unit
-                    },
-                )
+                addHandler(handler)
             }
         val output = PaperLogOutput(logger)
         val levels =
@@ -53,7 +42,7 @@ val PaperLogOutputTest by testSuite {
             output.write(ConsoleLogRecord(Instant.EPOCH, severity, "Realm failed [realm.failure]"))
         }
 
-        records.map { it.level } shouldBe levels.map { it.second }
-        records.map { it.message } shouldBe levels.map { "Realm failed [realm.failure]" }
+        handler.records.map { it.level } shouldBe levels.map { it.second }
+        handler.records.map { it.message } shouldBe levels.map { "Realm failed [realm.failure]" }
     }
 }

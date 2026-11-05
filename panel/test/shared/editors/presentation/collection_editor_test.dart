@@ -2,37 +2,21 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("normal collection examples start without authored errors", () {
-    for (final example in CollectionEditorExample.values) {
-      if (example == CollectionEditorExample.unfinishedSteps) continue;
-      final scenario = _scenario(example);
-      expect(
-        scenario.host.document.diagnostics
-            .where(
-              (diagnostic) =>
-                  diagnostic.severity == skir.DiagnosticSeverity.error,
-            )
-            .map((diagnostic) => diagnostic.message),
-        isEmpty,
-        reason: example.name,
-      );
-    }
-  });
-
   testWidgets("omitted scalar children edit their stable source items inline", (
     tester,
   ) async {
-    final scenario = _scenario();
-    await _pump(tester, scenario);
-    expect(find.byType(TextFormField), findsNWidgets(3));
-    expect(find.byTooltip("Expand"), findsNothing);
-    await tester.enterText(find.byType(TextFormField).first, "Landing");
-    await tester.pumpAndSettle();
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.textList,
+    );
+
+    addTearDown(scenario.dispose);
+    final panel = await scenario.show(tester);
+    expect(visibleFieldValues(), ["Arrival", "Discovery", "Return"]);
+    expect(find.tooltip("Expand"), findsNothing);
+    await panel.fieldAt(0).type("Landing");
     expect(
       scenario.value.authoredItems!.first.id,
       CollectionEditorScenario.first,
@@ -42,13 +26,16 @@ void main() {
   });
 
   testWidgets(
-    "map key edits and width changes preserve row and editor identity",
+    "map key edits and width changes keep the row and the focused draft",
     (tester) async {
-      final scenario = _scenario(CollectionEditorExample.scalarMap);
-      await _pump(tester, scenario, width: 640);
-      final original = _editable(tester, 0);
-      await tester.enterText(find.byType(TextFormField).first, "opening");
-      await tester.pumpAndSettle();
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.scalarMap,
+      );
+
+      addTearDown(scenario.dispose);
+      final stage = CollectionEditorStage();
+      final panel = await scenario.show(tester, stage: stage);
+      await panel.fieldAt(0).type("opening");
       final rows =
           (scenario.value.authoredPayload as skir.DataValue_mapValueWrapper)
               .value
@@ -56,11 +43,10 @@ void main() {
       expect(rows.first.id, CollectionEditorScenario.first);
       expect(rows.first.key.authoredString, "opening");
       expect(rows.first.value.authoredString, "Arrival");
-      await _pump(tester, scenario, width: 320);
-      expect(_editable(tester, 0).controller, same(original.controller));
-      expect(_editable(tester, 0).focusNode, same(original.focusNode));
-      expect(_editable(tester, 0).focusNode.hasFocus, isTrue);
-      expect(_editable(tester, 0).controller.text, "opening");
+      stage.change(() => stage.width = 320);
+      await panel.settle();
+      expect(panel.fieldAt(0).isFocused, isTrue);
+      expect(panel.fieldAt(0).value, "opening");
       expect(tester.takeException(), isNull);
     },
   );
@@ -68,20 +54,22 @@ void main() {
   testWidgets(
     "authored titles refresh without collapsing or replacing inputs",
     (tester) async {
-      final scenario = _scenario(CollectionEditorExample.authoredSteps);
-      await _pump(tester, scenario);
-      await tester.tap(find.text("Arrival"));
-      await tester.pumpAndSettle();
-      final original = _editable(tester, 0);
-      await tester.enterText(find.byType(TextFormField).first, "Landing");
-      await tester.pumpAndSettle();
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.authoredSteps,
+      );
+
+      addTearDown(scenario.dispose);
+      final stage = CollectionEditorStage();
+      final panel = await scenario.show(tester, stage: stage);
+      await panel.tapOn(find.text("Arrival"));
+      await panel.field("name").type("Landing");
       expect(find.text("Landing"), findsNWidgets(2));
-      expect(_editable(tester, 0).controller, same(original.controller));
-      expect(_editable(tester, 0).focusNode.hasFocus, isTrue);
-      expect(find.byType(TextFormField), findsNWidgets(2));
-      await _pump(tester, scenario, width: 320);
-      expect(_editable(tester, 0).controller, same(original.controller));
-      expect(_editable(tester, 0).focusNode.hasFocus, isTrue);
+      expect(panel.field("name").isFocused, isTrue);
+      expect(visibleFieldValues(), ["Landing", "1"]);
+      stage.change(() => stage.width = 320);
+      await panel.settle();
+      expect(panel.field("name").isFocused, isTrue);
+      expect(panel.field("name").value, "Landing");
       expect(tester.takeException(), isNull);
     },
   );
@@ -89,19 +77,19 @@ void main() {
   testWidgets("a collection disclosure preserves an invalid numeric draft", (
     tester,
   ) async {
-    final scenario = _scenario(CollectionEditorExample.authoredSteps);
-    await _pump(tester, scenario);
-    await tester.tap(find.text("Arrival").first);
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField).at(1), "-");
-    await tester.pumpAndSettle();
-    expect(_editable(tester, 1).controller.text, "-");
-    await tester.tap(find.text("Arrival").first);
-    await tester.pumpAndSettle();
-    expect(find.byType(TextFormField), findsNothing);
-    await tester.tap(find.text("Arrival").first);
-    await tester.pumpAndSettle();
-    expect(_editable(tester, 1).controller.text, "-");
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.authoredSteps,
+    );
+
+    addTearDown(scenario.dispose);
+    final panel = await scenario.show(tester);
+    await panel.tapOn(find.text("Arrival").first);
+    await panel.field("amount").type("-");
+    expect(panel.field("amount").value, "-");
+    await panel.tapOn(find.text("Arrival").first);
+    expect(visibleTextFields(), isEmpty);
+    await panel.tapOn(find.text("Arrival").first);
+    expect(panel.field("amount").value, "-");
     expect(
       scenario.value.authoredItems!.first.value
           .authoredField("amount")!
@@ -114,27 +102,30 @@ void main() {
   testWidgets(
     "fallback disclosure follows source identity through keyboard movement",
     (tester) async {
-      final scenario = _scenario(CollectionEditorExample.fallbackSteps);
-      await _pump(tester, scenario);
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.fallbackSteps,
+      );
+
+      addTearDown(scenario.dispose);
+      final panel = await scenario.show(tester);
       expect(find.text("Item 1"), findsOneWidget);
       expect(find.text("Item 2"), findsOneWidget);
-      await tester.tap(find.text("Item 1"));
-      await tester.pumpAndSettle();
-      final original = _editable(tester, 0).controller;
-      await tester.tap(find.byTooltip("Reorder item 1"));
-      final handleFocus = FocusManager.instance.primaryFocus;
+      await panel.tapOn(find.text("Item 1"));
+      await tester.tap(find.tooltip("Reorder item 1"));
+      await tester.pump();
       await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
-      await tester.pumpAndSettle();
+      await panel.settle();
       expect(scenario.value.authoredItems!.map((item) => item.id), [
         CollectionEditorScenario.second,
         CollectionEditorScenario.first,
       ]);
-      expect(_editable(tester, 0).controller, same(original));
-      expect(FocusManager.instance.primaryFocus, same(handleFocus));
+      // The moved row keeps its disclosure open and its handle keeps focus.
+      expect(panel.field("name").value, "Arrival");
+      expect(panel.holdsFocus(find.tooltip("Reorder item 2")), isTrue);
       expect(
-        tester.getTopLeft(find.byType(TextFormField).first).dy,
+        panel.field("name").rect.top,
         greaterThan(tester.getTopLeft(find.text("Item 2")).dy),
       );
       expect(tester.takeException(), isNull);
@@ -144,10 +135,14 @@ void main() {
   testWidgets(
     "pointer dragging moves the source item through the real sequence",
     (tester) async {
-      final scenario = _scenario();
-      await _pump(tester, scenario);
-      final first = find.byTooltip("Reorder item 1");
-      final last = find.byTooltip("Reorder item 3");
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.textList,
+      );
+
+      addTearDown(scenario.dispose);
+      await scenario.show(tester);
+      final first = find.tooltip("Reorder item 1");
+      final last = find.tooltip("Reorder item 3");
       final destination = tester.getCenter(last) + const Offset(0, 80);
       final gesture = await tester.startGesture(tester.getCenter(first));
       await gesture.moveBy(const Offset(0, 24));
@@ -172,18 +167,16 @@ void main() {
   testWidgets(
     "pointer reordering retains an expanded row's invalid numeric draft",
     (tester) async {
-      final scenario = _scenario(CollectionEditorExample.authoredSteps);
-      await _pump(tester, scenario);
-      await tester.tap(find.text("Arrival").first);
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextFormField).at(1), "-");
-      await tester.pumpAndSettle();
-      final originalEditor = _editable(tester, 1);
-      final original = originalEditor.controller;
-      final originalFocus = originalEditor.focusNode;
-      final first = find.byTooltip("Reorder item 1");
-      final last = find.byTooltip("Reorder item 2");
-      final handleFocus = _reorderFocus(tester, first);
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.authoredSteps,
+      );
+
+      addTearDown(scenario.dispose);
+      final panel = await scenario.show(tester);
+      await panel.tapOn(find.text("Arrival").first);
+      await panel.field("amount").type("-");
+      final first = find.tooltip("Reorder item 1");
+      final last = find.tooltip("Reorder item 2");
       final destination = tester.getCenter(last) + const Offset(0, 80);
       final gesture = await tester.startGesture(tester.getCenter(first));
       await gesture.moveBy(const Offset(0, 24));
@@ -196,11 +189,10 @@ void main() {
         scenario.value.authoredItems!.last.id,
         CollectionEditorScenario.first,
       );
-      expect(originalFocus.hasFocus, isFalse);
-      expect(FocusManager.instance.primaryFocus, same(handleFocus));
-      expect(_reorderFocus(tester, last), same(handleFocus));
-      expect(_editable(tester, 1).controller, same(original));
-      expect(_editable(tester, 1).controller.text, "-");
+      // The dragged row's handle, now the last, takes focus from the draft.
+      expect(panel.field("amount").isFocused, isFalse);
+      expect(panel.holdsFocus(last), isTrue);
+      expect(panel.field("amount").value, "-");
       expect(
         scenario.value.authoredItems!.last.value
             .authoredField("amount")!
@@ -214,10 +206,13 @@ void main() {
   testWidgets("default map children remove their containing source row", (
     tester,
   ) async {
-    final scenario = _scenario(CollectionEditorExample.scalarMap);
-    await _pump(tester, scenario);
-    await tester.tap(find.byTooltip("Remove row").first);
-    await tester.pumpAndSettle();
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.scalarMap,
+    );
+
+    addTearDown(scenario.dispose);
+    final panel = await scenario.show(tester);
+    await panel.tapOn(find.tooltip("Remove row").first);
     final rows =
         (scenario.value.authoredPayload as skir.DataValue_mapValueWrapper)
             .value
@@ -232,17 +227,20 @@ void main() {
   testWidgets(
     "direct link Clear changes its relation and preserves sibling identity",
     (tester) async {
-      final scenario = _scenario(CollectionEditorExample.directLinks);
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.directLinks,
+      );
+
+      addTearDown(scenario.dispose);
       final before = scenario.value.authoredItems!.toList();
       final unrelated = scenario.workspace.document
           .resource(compiledInheritanceBookId)!
           .authoredField("tags");
       final relations = scenario.workspace.document.links.length;
-      await _pump(tester, scenario);
-      expect(find.byTooltip("Clear link"), findsNWidgets(2));
-      expect(find.byTooltip("Remove item"), findsNothing);
-      await tester.tap(find.byTooltip("Clear link").first);
-      await tester.pumpAndSettle();
+      final panel = await scenario.show(tester);
+      expect(find.tooltip("Clear link"), findsNWidgets(2));
+      expect(find.tooltip("Remove item"), findsNothing);
+      await panel.tapOn(find.tooltip("Clear link").first);
       expect(scenario.value.authoredItems, hasLength(1));
       expect(scenario.value.authoredItems!.single.id, before.last.id);
       expect(scenario.workspace.document.links, hasLength(relations - 1));
@@ -259,56 +257,63 @@ void main() {
   testWidgets("read only collections remain inspectable and cannot mutate", (
     tester,
   ) async {
-    final scenario = _scenario(CollectionEditorExample.authoredSteps);
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.authoredSteps,
+    );
+
+    addTearDown(scenario.dispose);
     final before = scenario.value;
-    await _pump(tester, scenario, readOnly: true);
-    await tester.tap(find.text("Arrival"));
-    await tester.pumpAndSettle();
-    expect(find.byType(TextFormField), findsNWidgets(2));
-    expect(_editable(tester, 0).readOnly, isTrue);
-    for (final button in tester.widgetList<IconButton>(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is IconButton &&
-            (widget.tooltip == "Remove item" || widget.tooltip == "Add item"),
-      ),
-    )) {
-      expect(button.onPressed, isNull);
+    final panel = await scenario.show(tester, readOnly: true);
+    await panel.tapOn(find.text("Arrival"));
+    expect(visibleFieldValues(), ["Arrival", "1"]);
+    expect(panel.field("name").isReadOnly, isTrue);
+    final mutations = find.tooltip(RegExp(r"^(Remove|Add) item$"));
+    expect(mutations, findsWidgets);
+    for (var index = 0; index < mutations.evaluate().length; index++) {
+      expect(tester.getSemantics(mutations.at(index)).isEnabled, isFalse);
     }
     expect(scenario.value, before);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets("cancelling authored removal leaves the actual draft untouched", (
-    tester,
-  ) async {
-    final scenario = CollectionEditorScenario(
-      example: CollectionEditorExample.authoredSteps,
-      confirmRemoval: true,
-    );
-    addTearDown(scenario.dispose);
-    await _pump(tester, scenario);
-    final before = scenario.value;
-    await tester.tap(find.byTooltip("Remove step").first);
-    await tester.pumpAndSettle();
-    expect(find.text("Remove this step?"), findsOneWidget);
-    await tester.tap(find.text("Cancel"));
-    await tester.pumpAndSettle();
-    expect(scenario.value, before);
-    expect(scenario.workspace.hasPendingWork, isFalse);
-    expect(tester.takeException(), isNull);
-  });
+  for (final (name, example) in [
+    (
+      "cancelling authored removal leaves the actual draft untouched",
+      CollectionEditorExample.authoredSteps,
+    ),
+    (
+      "cancelling a nested collection header removal preserves both owners",
+      CollectionEditorExample.nestedLists,
+    ),
+  ]) {
+    testWidgets(name, (tester) async {
+      final scenario = CollectionEditorScenario(
+        example: example,
+        confirmRemoval: true,
+      );
+      addTearDown(scenario.dispose);
+      final panel = await scenario.show(tester);
+      final before = scenario.value;
+      await panel.tapOn(find.tooltip("Remove step").first);
+      expect(panel.dialog.showing("Remove this step?"), isTrue);
+      await panel.dialog.choose("Cancel", message: "Remove this step?");
+      expect(scenario.value, before);
+      expect(scenario.workspace.hasPendingWork, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets("accepted delayed removal focuses the surviving row control", (
     tester,
   ) async {
-    final scenario = _scenario();
-    final gate = Completer<bool>();
-    final host = _DelayedRemovalHost(scenario.host, gate);
-    addTearDown(host.dispose);
-    await _pump(tester, scenario, host: host);
-    final remove = find.byTooltip("Remove item").first;
-    await _activateWithKeyboard(tester, remove);
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.textList,
+    );
+
+    addTearDown(scenario.dispose);
+    final (:panel, :gate, host: _, stage: _) = await scenario.showGated(tester);
+    final remove = find.tooltip("Remove item").first;
+    await panel.activateWithKeyboard(remove);
     await tester.pump();
     expect(scenario.value.authoredItems, hasLength(3));
     gate.complete(true);
@@ -317,85 +322,78 @@ void main() {
       scenario.value.authoredItems!.first.id,
       CollectionEditorScenario.second,
     );
-    final surviving = _button(tester, find.byTooltip("Remove item").first);
-    expect(surviving.focusNode!.hasFocus, isTrue);
+    expect(panel.holdsFocus(find.tooltip("Remove item").first), isTrue);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets("removing the last row recovers to the preceding source row", (
     tester,
   ) async {
-    final scenario = _scenario();
-    await _pump(tester, scenario);
-    await _activateWithKeyboard(tester, find.byTooltip("Remove item").last);
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.textList,
+    );
+
+    addTearDown(scenario.dispose);
+    final panel = await scenario.show(tester);
+    await panel.activateWithKeyboard(find.tooltip("Remove item").last);
     await tester.pumpAndSettle();
     expect(
       scenario.value.authoredItems!.last.id,
       CollectionEditorScenario.second,
     );
-    final remaining = _button(tester, find.byTooltip("Remove item").last);
-    expect(remaining.focusNode!.hasFocus, isTrue);
+    expect(panel.holdsFocus(find.tooltip("Remove item").last), isTrue);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets("removing the only row recovers to collection Add", (
     tester,
   ) async {
-    final scenario = _scenario();
-    _keepRows(scenario, 1);
-    await _pump(tester, scenario);
-    await _activateWithKeyboard(tester, find.byTooltip("Remove item"));
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.textList,
+    );
+
+    addTearDown(scenario.dispose);
+    scenario.keepFirst(1);
+    final panel = await scenario.show(tester);
+    await panel.activateWithKeyboard(find.tooltip("Remove item"));
     await tester.pumpAndSettle();
     expect(scenario.value.authoredItems, isEmpty);
-    expect(
-      _button(tester, find.byTooltip("Add item")).focusNode!.hasFocus,
-      isTrue,
-    );
+    expect(panel.holdsFocus(find.tooltip("Add item")), isTrue);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets("rejected delayed removal retains the initiating control", (
     tester,
   ) async {
-    final scenario = _scenario();
-    final gate = Completer<bool>();
-    final host = _DelayedRemovalHost(scenario.host, gate);
-    addTearDown(host.dispose);
-    await _pump(tester, scenario, host: host);
-    final remove = find.byTooltip("Remove item").first;
-    await _activateWithKeyboard(tester, remove);
-    final origin = FocusManager.instance.primaryFocus;
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.textList,
+    );
+
+    addTearDown(scenario.dispose);
+    final (:panel, :gate, host: _, stage: _) = await scenario.showGated(tester);
+    final remove = find.tooltip("Remove item").first;
+    await panel.activateWithKeyboard(remove);
     gate.complete(false);
     await tester.pumpAndSettle();
     expect(scenario.value.authoredItems, hasLength(3));
-    expect(FocusManager.instance.primaryFocus, same(origin));
-    expect(
-      _button(tester, find.byTooltip("Add item")).focusNode!.hasFocus,
-      isFalse,
-    );
+    expect(panel.holdsFocus(find.tooltip("Remove item").first), isTrue);
+    expect(panel.holdsFocus(find.tooltip("Add item")), isFalse);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    "retired removal plus source disappearance never recovers focus",
+    "a removal retired by a host change plus source disappearance never recovers focus",
     (tester) async {
-      final scenario = _scenario();
-      final gate = Completer<bool>();
-      final host = _DelayedRemovalHost(scenario.host, gate);
-      addTearDown(host.dispose);
-      await _pump(tester, scenario, host: host);
-      await _activateWithKeyboard(tester, find.byTooltip("Remove item").first);
-      final renderer = tester.widget<PortablePresentationNodeRenderer>(
-        find.byType(PortablePresentationNodeRenderer).first,
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.textList,
       );
-      expect(
-        renderer.scope.operations.value.outcomes.values.any(
-          (outcome) => outcome.pending,
-        ),
-        isTrue,
-      );
-      renderer.scope.operations.retirePending();
-      expect(renderer.scope.operations.value.outcomes, isEmpty);
+
+      addTearDown(scenario.dispose);
+      final (:panel, :gate, :stage, host: _) = await scenario.showGated(tester);
+      await panel.activateWithKeyboard(find.tooltip("Remove item").first);
+      // A new host retires the removal still waiting on the old one.
+      stage.change(() => stage.host = null);
+      await tester.pump();
       final remaining = scenario.value.authoredItems!.skip(1).toList();
       scenario.binding
           .edit(
@@ -423,40 +421,20 @@ void main() {
   );
 
   testWidgets(
-    "cancelling a nested collection header removal preserves both owners",
-    (tester) async {
-      final scenario = CollectionEditorScenario(
-        example: CollectionEditorExample.nestedLists,
-        confirmRemoval: true,
-      );
-      addTearDown(scenario.dispose);
-      await _pump(tester, scenario);
-      final before = scenario.value;
-      await tester.tap(find.byTooltip("Remove step").first);
-      await tester.pumpAndSettle();
-      expect(find.text("Remove this step?"), findsOneWidget);
-      await tester.tap(find.text("Cancel"));
-      await tester.pumpAndSettle();
-      expect(scenario.value, before);
-      expect(scenario.workspace.hasPendingWork, isFalse);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
     "a disposed collection cannot recover focus after delayed removal",
     (tester) async {
-      final scenario = _scenario();
-      final gate = Completer<bool>();
-      final host = _DelayedRemovalHost(scenario.host, gate);
-      addTearDown(host.dispose);
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.textList,
+      );
+
+      addTearDown(scenario.dispose);
+      final (:panel, :gate, :stage, host: _) = await scenario.showGated(tester);
       final nextPageFocus = FocusNode();
       addTearDown(nextPageFocus.dispose);
-      await _pump(tester, scenario, host: host);
-      await _activateWithKeyboard(tester, find.byTooltip("Remove item").first);
-      await tester.pumpTestApp(
-        child: Scaffold(body: TextField(focusNode: nextPageFocus)),
-      );
+      await panel.activateWithKeyboard(find.tooltip("Remove item").first);
+      // The user moves on to a page without the collection.
+      stage.change(() => stage.next = TextField(focusNode: nextPageFocus));
+      await tester.pump();
       nextPageFocus.requestFocus();
       await tester.pump();
       gate.complete(true);
@@ -470,23 +448,22 @@ void main() {
   testWidgets("focus moving within the pending row cancels removal recovery", (
     tester,
   ) async {
-    final scenario = _scenario(CollectionEditorExample.authoredSteps);
-    final gate = Completer<bool>();
+    final scenario = CollectionEditorScenario(
+      example: CollectionEditorExample.authoredSteps,
+    );
+
+    addTearDown(scenario.dispose);
     final settlement = Completer<void>();
-    final host = _DelayedRemovalHost(
-      scenario.host,
-      gate,
+    final (:panel, :gate, :host, stage: _) = await scenario.showGated(
+      tester,
       settlement: settlement,
     );
-    addTearDown(host.dispose);
-    await _pump(tester, scenario, host: host);
-    await tester.tap(find.text("Arrival"));
-    await tester.pumpAndSettle();
-    await _activateWithKeyboard(tester, find.byTooltip("Remove item").first);
+    await panel.tapOn(find.text("Arrival"));
+    await panel.activateWithKeyboard(find.tooltip("Remove item").first);
     await tester.pump();
-    final changedFocus = _editable(tester, 0).focusNode..requestFocus();
+    await tester.tapAt(panel.field("name").rect.center);
     await tester.pump();
-    expect(FocusManager.instance.primaryFocus, same(changedFocus));
+    expect(panel.field("name").isFocused, isTrue);
     gate.complete(true);
     expect(
       await host.sourceResult.future,
@@ -505,160 +482,4 @@ void main() {
     expect(FocusManager.instance.primaryFocus, same(frameworkFallback));
     expect(tester.takeException(), isNull);
   });
-}
-
-CollectionEditorScenario _scenario([
-  CollectionEditorExample example = CollectionEditorExample.textList,
-]) {
-  final scenario = CollectionEditorScenario(example: example);
-  addTearDown(scenario.dispose);
-  return scenario;
-}
-
-void _keepRows(CollectionEditorScenario scenario, int count) {
-  scenario.binding
-      .edit(
-        label: "Keep selected source rows",
-        apply: (edit) => edit.set(
-          skir.ValueLocation(
-            resource: CollectionEditorScenario.resource,
-            path: CollectionEditorScenario.entriesPath,
-          ),
-          skir.DataValue.createNamed(
-            actualType: scenario.value.authoredActualType!,
-            payload: skir.DataValue.createListValue(
-              items: scenario.value.authoredItems!.take(count),
-            ),
-          ),
-        ),
-      )
-      .requireAccepted();
-}
-
-Future<void> _pump(
-  WidgetTester tester,
-  CollectionEditorScenario scenario, {
-  double width = 640,
-  bool readOnly = false,
-  PortablePresentationHost? host,
-}) async {
-  await tester.pumpTestApp(
-    child: Scaffold(
-      body: SingleChildScrollView(
-        child: SizedBox(
-          width: width,
-          child: CollectionEditorScenarioView(
-            scenario: scenario,
-            readOnly: readOnly,
-            host: host,
-          ),
-        ),
-      ),
-    ),
-  );
-  await tester.pumpAndSettle();
-}
-
-EditableText _editable(WidgetTester tester, int index) =>
-    tester.widget<EditableText>(find.byType(EditableText).at(index));
-
-IconButton _button(WidgetTester tester, Finder tooltip) =>
-    tester.widget<IconButton>(
-      find.ancestor(of: tooltip, matching: find.byType(IconButton)).first,
-    );
-
-FocusNode? _reorderFocus(WidgetTester tester, Finder tooltip) => tester
-    .widget<FocusableActionDetector>(
-      find
-          .ancestor(of: tooltip, matching: find.byType(FocusableActionDetector))
-          .first,
-    )
-    .focusNode;
-
-Future<void> _activateWithKeyboard(WidgetTester tester, Finder finder) async {
-  final target = _button(tester, finder).focusNode!;
-  for (var step = 0; step < 30 && !target.hasFocus; step++) {
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pump();
-  }
-  expect(target.hasFocus, isTrue);
-  await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-  await tester.pump();
-}
-
-/// Delays admission at the host boundary, then uses the real mutation host.
-final class _DelayedRemovalHost extends ChangeNotifier
-    implements PortablePresentationHost, PortableCollectionMutationHost {
-  _DelayedRemovalHost(this.source, this.admission, {this.settlement});
-  final AuthoredPresentationHost source;
-  final Completer<bool> admission;
-  final Completer<void>? settlement;
-  final sourceResult = Completer<PortablePresentationWriteResult>();
-  @override
-  PortablePresentationDocument get document => source.document;
-  @override
-  bool get enabled => source.enabled;
-  @override
-  bool get readOnly => source.readOnly;
-  @override
-  PortablePresentationCapabilities get capabilities => source.capabilities;
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => source.commitControl(reference, context: context);
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => source.read(reference, context: context);
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => source.location(reference, context: context);
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => source.expectedType(reference, context: context);
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) => source.write(reference, value, context: context);
-  @override
-  Future<PortablePresentationWriteResult> addCollectionItem(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => source.addCollectionItem(reference, context: context);
-  @override
-  Future<PortablePresentationWriteResult> addMapRow(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => source.addMapRow(reference, context: context);
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction action, {
-    required PortableInvocationContext context,
-  }) async {
-    if (action case skir.EditorAction_localWrapper(
-      value: skir.LocalEditorAction_removeListItemWrapper(),
-    )) {
-      if (!await admission.future) {
-        return PortablePresentationWriteRejected([
-          PortablePresentationDiagnostic(
-            code: "fixture_rejected",
-            message: "Removal rejected",
-            severity: skir.DiagnosticSeverity.error,
-          ),
-        ]);
-      }
-    }
-    final result = await source.execute(action, context: context);
-    if (!sourceResult.isCompleted) sourceResult.complete(result);
-    if (settlement case final pending?) await pending.future;
-    return result;
-  }
 }

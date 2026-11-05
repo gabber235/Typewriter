@@ -2,54 +2,51 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("ambient preferences are the selection, then the routed resource and every owner above it", () {
-    final page = skir.ResourceId(value: "page:owned");
-    final tag = skir.ResourceId(value: "tag:selected");
-    final document = fixtureAuthoringDocument(
-      realm: true,
-      books: [
-        Book(
-          bookId: _book,
-          title: "Owned",
-          icon: "mdi:book",
-          color: Colors.blue,
+  testWidgets("ambient preferences are the selection, then the routed "
+      "resource and every owner above it", (tester) async {
+    final owned = _owned;
+    final intro = page("Intro", book: owned);
+    final selected = tag("Selected");
+    final panel = await tester.pumpPanel(
+      [
+        signedIn(ada, organization: acme),
+        realm(books: [owned], pages: [intro], tags: [selected]),
+      ],
+      at: PanelLocation.route(
+        const RealmRouteTree().surface(
+          AuthoringScope(
+            organizationId: acme.organizationId,
+            realmId: skir.recordId("realm_instance:main"),
+          ),
+          SurfaceTarget.resource(routed: intro.pageId),
         ),
-      ],
-      pages: [Page(pageId: page, bookId: _book, name: "Intro")],
-      tags: [Tag(tagId: tag, name: "Selected", color: Colors.green)],
+      ),
     );
-    final ambient = Provider(
-      (ref) => ambientCreationResources(ref, _scope, document),
-    );
-    final container = ProviderContainer(
-      overrides: [
-        realmIdProvider.overrideWith((_) => _scope.realmId),
-        routedResourceIdProvider.overrideWith((_) => page),
-      ],
-    );
-    addTearDown(container.dispose);
-    container.read(selectionProvider.notifier).selectAll([
-      AuthoringResourceIdentifier.inScope(_scope, tag),
-    ]);
+    await panel.resources.selectOnly([selected.tagId]);
+    final scope = panel.world.requireRealm.scope;
 
-    expect(container.read(ambient), [
-      tag,
-      page,
-      _book,
-      fixtureLibraryId,
-      fixtureRealmRootId,
+    final ambient = panel.container.read(
+      Provider(
+        (ref) => ambientCreationResources(ref, scope, panel.workingDocument),
+      ),
+    );
+
+    expect(ambient, [
+      selected.tagId,
+      intro.pageId,
+      owned.bookId,
+      libraryId,
+      realmRootId,
     ]);
   });
 
   test(
     "a create action resolves its owner and evaluates its presets",
     () async {
-      final document = _document();
+      final document = realmDocument(books: [_owned]);
       final group = skir.ExpressionBindingId(value: "group");
       final created =
           <
@@ -61,10 +58,10 @@ void main() {
           bindings: {
             configuredValueBindingId: PortableExpressionBinding(
               value: skir.DataValue.createRecord(
-                fields: document.resource(_book)!.fields,
+                fields: document.resource(_owned.bookId)!.fields,
               ),
               location: skir.ValueLocation(
-                resource: _book,
+                resource: _owned.bookId,
                 path: editorRootPath,
               ),
             ),
@@ -90,7 +87,7 @@ void main() {
 
       await dispatcher.dispatch(
         skir.EditorAction.createCreate(
-          type: fixtureResourceType("page"),
+          type: libraryType("page"),
           owner: skir.BindingRef(
             bindingId: configuredValueBindingId,
             path: editorRootPath.field("pages"),
@@ -116,11 +113,11 @@ void main() {
       );
 
       final (type, owner, supplied) = created.single;
-      expect(type, fixtureResourceType("page"));
+      expect(type, libraryType("page"));
       expect(
         owner,
         skir.ValueLocation(
-          resource: _book,
+          resource: _owned.bookId,
           path: editorRootPath.field("pages"),
         ),
       );
@@ -165,20 +162,24 @@ void main() {
   testWidgets("a new Book joins the single Library without asking", (
     tester,
   ) async {
-    final result = await _create(
-      tester,
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [_owned]),
+    ]);
+    final type = libraryType("book");
+
+    final creation = await panel.create(
       ResourceCreationRequest(
-        type: fixtureResourceType("book"),
-        configuration: _document().catalog.beginSelection(
-          fixtureResourceType("book"),
-        ),
-        // The fixture prepares no nested records, so the icon is supplied.
+        type: type,
+        configuration: panel.workingDocument.catalog.beginSelection(type),
+        // The Realm double prepares no nested records, so the icon is
+        // supplied.
         supplied: [
           skir.FieldValue(
             name: "icon",
             value: skir.DataValue.createNamed(
               actualType: skir.NamedTypeUse(
-                definition: fixtureResourceType("icon"),
+                definition: libraryType("icon"),
                 arguments: const [],
               ),
               payload: skir.DataValue.createRecord(
@@ -195,105 +196,70 @@ void main() {
       ),
     );
 
-    expect(find.byType(SearchModal), findsNothing);
-    final book = result.document.resource(result.created)!;
+    expect(creation.error, isNull);
+    final created = creation.created!.resourceId;
+    final document = panel.workingDocument;
     expect(
-      book.authoredField("library")?.authoredLink?.target.resource,
-      fixtureLibraryId,
+      document
+          .resource(created)!
+          .authoredField("library")
+          ?.authoredLink
+          ?.target
+          .resource,
+      libraryId,
     );
-    expect(
-      result.document
-          .resource(fixtureLibraryId)!
-          .authoredField("books")!
-          .authoredItems,
-      hasLength(2),
-    );
+    expect(document.relations.children[libraryId], [_owned.bookId, created]);
   });
 
   testWidgets(
     "a resource created into an owning field links to its owner with presets",
     (tester) async {
-      final document = _document();
-      final transport = ScriptedAuthoringTransport(AsyncData(document));
-      addTearDown(transport.dispose);
-      RealmEditing? workspace;
-      AuthoringResourceIdentifier? created;
-      Object? error;
-      await tester.pumpTestApp(
-        overrides: [
-          organizationIdProvider.overrideWith((_) => _scope.organizationId),
-          realmIdProvider.overrideWith((_) => _scope.realmId),
-          ...authoringFixtureOverrides(
-            scope: _scope,
-            document: document,
-            transport: transport,
-          ),
-        ],
-        child: Consumer(
-          builder: (context, ref, _) => Scaffold(
-            body: FilledButton(
-              onPressed: () async {
-                workspace = ref.read(realmEditingProvider(_scope));
-                try {
-                  created = await ref
-                      .read(resourceCreationProvider(_scope))
-                      .create(
-                        context: context,
-                        request: ResourceCreationRequest(
-                          type: fixtureResourceType("page"),
-                          configuration: document.catalog.beginSelection(
-                            fixtureResourceType("page"),
-                          ),
-                          supplied: [
-                            skir.FieldValue(
-                              name: "chapter",
-                              value: skir.DataValue.wrapStringValue("act1"),
-                            ),
-                          ],
-                        ),
-                        creationContext: ownerCreationContext(
-                          document,
-                          skir.ValueLocation(
-                            resource: _book,
-                            path: editorRootPath.field("pages"),
-                          ),
-                        ),
-                      );
-                } on Object catch (caught) {
-                  error = caught;
-                }
-              },
-              child: const Text("Create"),
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: [_owned]),
+      ]);
+      final type = libraryType("page");
+      final book = _owned.bookId;
+
+      final creation = await panel.create(
+        ResourceCreationRequest(
+          type: type,
+          configuration: panel.workingDocument.catalog.beginSelection(type),
+          supplied: [
+            skir.FieldValue(
+              name: "chapter",
+              value: skir.DataValue.wrapStringValue("act1"),
             ),
+          ],
+        ),
+        context: ownerCreationContext(
+          panel.workingDocument,
+          skir.ValueLocation(
+            resource: book,
+            path: editorRootPath.field("pages"),
           ),
         ),
       );
 
-      await tester.tap(find.text("Create"));
-      await tester.pumpAndSettle();
-
-      expect(error, isNull);
-      expect(find.byType(SearchModal), findsNothing);
-      final page = workspace!.document.resource(created!.resourceId)!;
-      expect(page.authoredField("book")?.authoredLink?.target.resource, _book);
+      expect(creation.error, isNull);
+      final document = panel.workingDocument;
+      final page = document.resource(creation.created!.resourceId)!;
+      expect(page.authoredField("book")?.authoredLink?.target.resource, book);
       expect(page.authoredField("chapter")?.authoredString, "act1");
-      expect(
-        workspace!.document
-            .resource(_book)!
-            .authoredField("pages")!
-            .authoredItems,
-        hasLength(1),
-      );
+      expect(document.relations.children[book], [creation.created!.resourceId]);
     },
   );
 
   test("only owning link fields accept new owned resources", () {
-    final document = _document();
+    final document = realmDocument(books: [_owned]);
 
     expect(
       () => ownerCreationContext(
         document,
-        skir.ValueLocation(resource: _book, path: editorRootPath.field("tags")),
+        skir.ValueLocation(
+          resource: _owned.bookId,
+          path: editorRootPath.field("tags"),
+        ),
       ),
       throwsStateError,
     );
@@ -301,68 +267,19 @@ void main() {
       ownerCreationContext(
         document,
         skir.ValueLocation(
-          resource: _book,
+          resource: _owned.bookId,
           path: editorRootPath.field("pages"),
         ),
       ).constraints,
       [
         CreationReferenceConstraint(
-          route: [skir.EndpointId(value: "$fixtureBookPagesRelation:second")],
-          targets: {_book},
+          route: [skir.EndpointId(value: "$bookPagesRelation:second")],
+          targets: {_owned.bookId},
         ),
       ],
     );
   });
 }
 
-final _scope = AuthoringScope(
-  organizationId: skir.recordId("organization:owned"),
-  realmId: skir.recordId("realm:owned"),
-);
-final _book = skir.ResourceId(value: "book:owned");
-
-/// Creates [request] without an owner and returns the working document.
-Future<({AuthoringDocument document, skir.ResourceId created})> _create(
-  WidgetTester tester,
-  ResourceCreationRequest request,
-) async {
-  final document = _document();
-  final transport = ScriptedAuthoringTransport(AsyncData(document));
-  addTearDown(transport.dispose);
-  RealmEditing? workspace;
-  AuthoringResourceIdentifier? created;
-  await tester.pumpTestApp(
-    overrides: [
-      organizationIdProvider.overrideWith((_) => _scope.organizationId),
-      realmIdProvider.overrideWith((_) => _scope.realmId),
-      ...authoringFixtureOverrides(
-        scope: _scope,
-        document: document,
-        transport: transport,
-      ),
-    ],
-    child: Consumer(
-      builder: (context, ref, _) => Scaffold(
-        body: FilledButton(
-          onPressed: () async {
-            workspace = ref.read(realmEditingProvider(_scope));
-            created = await ref
-                .read(resourceCreationProvider(_scope))
-                .create(context: context, request: request);
-          },
-          child: const Text("Create"),
-        ),
-      ),
-    ),
-  );
-  await tester.tap(find.text("Create"));
-  await tester.pumpAndSettle();
-  return (document: workspace!.document, created: created!.resourceId);
-}
-
-AuthoringDocument _document() => fixtureAuthoringDocument(
-  realm: true,
-  books: [
-    Book(bookId: _book, title: "Owned", icon: "mdi:book", color: Colors.blue),
-  ],
-);
+/// The Book the Realm starts with.
+final _owned = book("Owned");

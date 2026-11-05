@@ -1,13 +1,11 @@
 package com.typewritermc.loader.rollout
 
-import com.typewritermc.loader.artifact.toSkir
+import com.typewritermc.loader.rollout.testing.deliverRolloutReply
+import com.typewritermc.loader.rollout.testing.participant
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.rolloutCommand
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
-import com.typewritermc.services.libs.communicator.transport.InboundMessage
-import com.typewritermc.services.libs.communicator.transport.TransportDelivery
-import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
@@ -20,11 +18,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import skirout.service.v1.rollout.ApplyRolloutCommandRequest
 import skirout.service.v1.rollout.ApplyRolloutCommandResponse
-import skirout.service.v1.rollout.ParticipantProjection
-import skirout.service.v1.rollout.ProjectionReference
 import skirout.service.v1.rollout.RolloutAttempt
 import skirout.service.v1.rollout.RolloutCommand
-import skirout.service.v1.rollout.RolloutCommandKind
 import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,24 +42,15 @@ val RolloutMessengerTest by testSuite {
             val replies = async { messenger.command(request, 5.minutes) }
             runCurrent()
             val published =
-                transport.actions
-                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                    .single()
-                    .message
+                transport.publications.single()
             published.address shouldBe scope.rolloutCommand.requestAddress.render(scope)
             scope.rolloutCommand.requestCodec.decode(published.payload) shouldBe request
-            for (reply in listOf(failed, accepted)) {
-                transport.deliver(
-                    TransportDelivery.Message(
-                        InboundMessage(
-                            requireNotNull(published.replyTo),
-                            scope.rolloutCommand.responseCodec
-                                .encode(reply)
-                                .toByteArray(),
-                        ),
-                    ),
-                )
-            }
+
+            deliverRolloutReply(transport, scope, requireNotNull(published.replyTo), failed)
+            runCurrent()
+            replies.isCompleted shouldBe false
+
+            deliverRolloutReply(transport, scope, requireNotNull(published.replyTo), accepted)
             runCurrent()
 
             replies.isCompleted shouldBe true
@@ -72,22 +58,4 @@ val RolloutMessengerTest by testSuite {
             transport.close()
         }
     }
-
-    test("a command kind is labelled with its Skir variant name") {
-        RolloutCommandKind.ROLL_BACK.label shouldBe "roll_back"
-        RolloutCommandKind.STAGE.label shouldBe "stage"
-        RolloutCommandKind.UNKNOWN.label shouldBe "unknown"
-    }
 }
-
-private fun participant(serviceId: String) =
-    ParticipantProjection(
-        serviceId = serviceId,
-        projection =
-            ProjectionReference.partial(
-                realmId = "realm",
-                generation = 1,
-                serviceId = serviceId,
-                blob = ArtifactDigest.sha256(serviceId.encodeToByteArray()).toSkir(),
-            ),
-    )

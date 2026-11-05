@@ -1,21 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../support/test_utils.dart";
-
-ActionShortcut testAction(
-  int i, {
-  FutureOr<void> Function(WidgetRef ref)? onInvoke,
-}) {
-  return ActionShortcut(
-    id: "action_$i",
-    label: "Action $i",
-    description: "Action $i description",
-    activators: [const SingleActivator(LogicalKeyboardKey.keyA)],
-    priority: i,
-    onInvoke: onInvoke,
-  );
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("primary action uses adaptive Enter keys without repeats", () {
@@ -36,156 +21,113 @@ void main() {
     );
   });
 
-  group("ActionShortcuts Registration", () {
-    testWidgets("registers an action shortcut", (tester) async {
-      final shortcut = testAction(0);
+  testWidgets("a focused action set shows its action and runs it on its key", (
+    tester,
+  ) async {
+    var invocations = 0;
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ActionSurface([numberedAction(0, onInvoke: (_) => invocations++)]),
+      ),
+    );
 
-      await tester.pumpTestApp(
-        child: Column(
-          children: [
-            ActionSet(shortcuts: [shortcut]),
-            const ActionRow(),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
+    expect(panel.shows("Action 0"), isTrue);
+    await panel.press(LogicalKeyboardKey.keyA);
 
-      expect(find.text("Action 0"), findsOneWidget);
-
-      final container = tester.container();
-      final state = container.read(actionShortcutsProvider);
-      expect(state.containsKey("action_0"), isTrue);
-    });
+    expect(invocations, 1);
   });
 
-  group("ActionShortcuts Cleanup", () {
-    testWidgets("sweeps unmounted actions", (tester) async {
-      Widget withAction({required bool include}) {
-        return Column(
-          children: [
-            ActionSet(
-              shortcuts: [
-                for (var i = 0; i < 2; i++)
-                  if (include || i.isEven) testAction(i),
-              ],
-            ),
-            const ActionRow(),
-          ],
-        );
-      }
+  testWidgets("a removed action leaves the row and its key does nothing", (
+    tester,
+  ) async {
+    final invocations = <int>[];
+    final include = ValueNotifier(true);
+    addTearDown(include.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: include,
+          builder: (context, include, _) => ActionSurface([
+            for (var i = 0; i < 2; i++)
+              if (include || i.isEven)
+                numberedAction(i, onInvoke: (_) => invocations.add(i)),
+          ]),
+        ),
+      ),
+    );
+    expect(panel.shows("Action 0"), isTrue);
+    expect(panel.shows("Action 1"), isTrue);
 
-      await tester.pumpTestApp(child: withAction(include: true));
-      await tester.pumpAndSettle();
-      for (var i = 0; i < 2; i++) {
-        expect(find.text("Action $i"), findsOneWidget);
-      }
+    include.value = false;
+    await panel.settle();
 
-      await tester.pumpTestApp(child: withAction(include: false));
-      await tester.pump();
-      await tester.pump();
-
-      for (var i = 0; i < 2; i++) {
-        if (i.isEven) {
-          expect(find.text("Action $i"), findsOne);
-        } else {
-          expect(find.text("Action $i"), findsNothing);
-        }
-      }
-      final container = tester.container();
-      final state = container.read(actionShortcutsProvider);
-      for (var i = 0; i < 2; i++) {
-        if (i.isEven) {
-          expect(state.containsKey("action_$i"), isTrue);
-        } else {
-          expect(state.containsKey("action_$i"), isFalse);
-        }
-      }
-    });
+    expect(panel.shows("Action 0"), isTrue);
+    expect(panel.shows("Action 1"), isFalse);
+    await panel.press(LogicalKeyboardKey.keyB);
+    await panel.press(LogicalKeyboardKey.keyA);
+    expect(invocations, [0]);
   });
 
-  group("ActionShortcuts Async Execution", () {
-    testWidgets("shows loading spinner while async action runs", (
-      tester,
-    ) async {
-      final shortcut = testAction(
-        2,
-        onInvoke: (ref) async {
-          await Future.delayed(const Duration(milliseconds: 300));
-        },
-      );
+  testWidgets("a running action cannot start again until it finished", (
+    tester,
+  ) async {
+    var invocations = 0;
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ActionSurface([
+          numberedAction(
+            2,
+            onInvoke: (_) async {
+              invocations++;
+              await Future<void>.delayed(const Duration(milliseconds: 300));
+            },
+          ),
+        ]),
+      ),
+    );
+    final action = find.text("Action 2");
 
-      await tester.pumpTestApp(
-        child: Column(
-          children: [
-            ActionSet(shortcuts: [shortcut]),
-            const ActionRow(),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.tap(action);
+    await tester.pump();
+    expect(tester.getSemantics(action).isTappable, isFalse);
+    await tester.tap(action, warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(invocations, 1);
 
-      expect(find.text("Action 2"), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-
-      await tester.tap(find.text("Action 2"));
-      await tester.pump(); // start async -> spinner visible
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-      await tester.pump(150.ms);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-      await tester.pump(200.ms);
-
-      await tester.pumpAndSettle();
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-    });
-
-    testWidgets("non-invokable action not clickable and no spinner", (
-      tester,
-    ) async {
-      final shortcut = testAction(3);
-
-      await tester.pumpTestApp(
-        child: Column(
-          children: [
-            ActionSet(shortcuts: [shortcut]),
-            const ActionRow(),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text("Action 3"), findsOneWidget);
-      await tester.tap(find.text("Action 3"));
-      await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-    });
+    await tester.pump(const Duration(milliseconds: 200));
+    await panel.settle();
+    expect(tester.getSemantics(action).isTappable, isTrue);
+    await tester.tap(action);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(invocations, 2);
   });
 
-  group("ActionShortcuts Overflow", () {
-    testWidgets("retains highest priority actions when width constrained", (
-      tester,
-    ) async {
-      final shortcuts = List.generate(5, testAction);
+  testWidgets("an action without a callback cannot be activated", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(ActionSurface([numberedAction(3)])),
+    );
 
-      await tester.pumpTestApp(
-        child: Column(
-          children: [
-            ActionSet(shortcuts: shortcuts),
-            const SizedBox(height: 8),
-            const SizedBox(
-              width: 500, // Force overflow
-              child: ActionRow(),
-            ),
-          ],
-        ),
-      );
+    expect(panel.shows("Action 3"), isTrue);
+    expect(tester.getSemantics(find.text("Action 3")).isTappable, isFalse);
+  });
 
-      await tester.pump();
-      await tester.pump();
+  testWidgets("retains highest priority actions when width constrained", (
+    tester,
+  ) async {
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ActionSurface(List.generate(5, numberedAction), rowWidth: 500),
+      ),
+    );
 
-      expect(find.text("Action 0").hitTestable(), findsNothing);
-      expect(find.text("Action 4").hitTestable(), findsOneWidget);
-    });
+    expect(find.text("Action 0").hitTestable(), findsNothing);
+    expect(find.text("Action 4").hitTestable(), findsOneWidget);
   });
 }

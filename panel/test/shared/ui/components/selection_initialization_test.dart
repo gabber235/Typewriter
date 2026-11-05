@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final (name, selected, preferred, choices, enabled, expected) in [
@@ -43,13 +42,16 @@ void main() {
   ]) {
     testWidgets(name, (tester) async {
       final changes = <String?>[];
-      await tester.pumpTestApp(
-        child: AdaptiveChoiceControl<String>(
-          choices: choices,
-          selected: selected,
-          defaultValue: preferred,
-          enabled: enabled,
-          onSelected: changes.add,
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          AdaptiveChoiceControl<String>(
+            choices: choices,
+            selected: selected,
+            defaultValue: preferred,
+            enabled: enabled,
+            onSelected: changes.add,
+          ),
         ),
       );
       expect(changes, expected == null ? isEmpty : [expected]);
@@ -65,13 +67,16 @@ void main() {
       final choices = ValueNotifier(<String, String>{});
       addTearDown(choices.dispose);
       final changes = <String?>[];
-      await tester.pumpTestApp(
-        child: ValueListenableBuilder(
-          valueListenable: choices,
-          builder: (context, choices, _) => AdaptiveChoiceControl<String>(
-            choices: choices,
-            selected: changes.lastOrNull,
-            onSelected: changes.add,
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          ValueListenableBuilder(
+            valueListenable: choices,
+            builder: (context, choices, _) => AdaptiveChoiceControl<String>(
+              choices: choices,
+              selected: changes.lastOrNull,
+              onSelected: changes.add,
+            ),
           ),
         ),
       );

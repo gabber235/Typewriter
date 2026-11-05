@@ -145,8 +145,8 @@ internal fun CurrentAuthoringValues.requiredExpectations(
         expectResource(it)
         links(it)
     }
-    val delta = plan?.relations ?: RelationProjectionDelta(removals = emptyList(), created = emptyList(), metadataChanged = emptyList())
-    (delta.removals + delta.created + delta.metadataChanged).forEach { edge ->
+    val delta = plan?.relations ?: RelationProjectionDelta(removals = emptyList(), created = emptyList())
+    (delta.removals + delta.created).forEach { edge ->
         links(edge.first)
         links(edge.second)
         listOfNotNull(

@@ -1,0 +1,24 @@
+id: dart-test-reads-environment
+valid:
+  # A compile time define is fixed by the harness.
+  - |
+    const evidenceDir = String.fromEnvironment("EVIDENCE_DIR", defaultValue: "build/evidence/panel");
+  # Other members of Platform describe the platform, not the machine's environment.
+  - |
+    void main() {
+      test("paths use the platform separator", () {
+        expect(Platform.pathSeparator, isNotEmpty);
+      });
+    }
+invalid:
+  - |
+    void main() {
+      final evidenceDir = Platform.environment["EVIDENCE_DIR"] ?? "build/evidence/panel";
+    }
+  - |
+    void main() {
+      test("the SDK is installed", () {
+        final path = "${Platform.environment["FLUTTER_ROOT"]}/bin/cache/dart-sdk";
+        expect(Directory(path).existsSync(), isTrue);
+      });
+    }

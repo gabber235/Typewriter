@@ -1,28 +1,12 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-GraphElement _element(
-  String id, {
-  required int x,
-  required int y,
-  required int width,
-  required int height,
-}) {
-  return GraphElement(
-    id: GraphIdentifier(id),
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    builder: (_) => const SizedBox(),
-  );
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("GraphInteractionController", () {
     test("disposal during notification defers final cleanup until listeners return", () async {
       final payload = GraphDragPayload(
-        value: const _TestDragData(GraphIdentifier("same")),
+        value: const TestGraphDragData(GraphIdentifier("same")),
       );
       final retired = Completer<void>();
       final phases = <GraphDragPhase>[];
@@ -54,17 +38,18 @@ void main() {
     test("same ID replacement ignores old movement and completion", () {
       final controller = GraphInteractionController();
       addTearDown(controller.dispose);
-      GraphDragPayload<GraphDragData> offer() =>
-          GraphDragPayload(value: const _TestDragData(GraphIdentifier("same")))
-            ..start();
-      final old = offer();
-      final replacement = offer();
+      final old = GraphDragPayload<GraphDragData>(
+        value: const TestGraphDragData(GraphIdentifier("same")),
+      )..start();
+      final replacement = GraphDragPayload<GraphDragData>(
+        value: const TestGraphDragData(GraphIdentifier("same")),
+      )..start();
       controller
         ..beginDrag(old, Offset.zero, inside: true)
         ..beginDrag(replacement, const Offset(40, 50), inside: true);
       final data = GraphData(
         cellSize: 50,
-        elements: [_element("same", x: 1, y: 1, width: 2, height: 2)],
+        elements: [graphElement("same", x: 1, y: 1, width: 2, height: 2)],
         edges: const [],
       );
       controller
@@ -88,7 +73,7 @@ void main() {
       final controller = GraphInteractionController();
       addTearDown(controller.dispose);
       final payload = GraphDragPayload(
-        value: const _TestDragData(GraphIdentifier("same")),
+        value: const TestGraphDragData(GraphIdentifier("same")),
       )..start();
       controller
         ..beginDrag(payload, const Offset(20, 30), inside: true)
@@ -102,7 +87,7 @@ void main() {
     test("closure retires authority and blocks late writes", () {
       final controller = GraphInteractionController();
       final payload = GraphDragPayload(
-        value: const _TestDragData(GraphIdentifier("same")),
+        value: const TestGraphDragData(GraphIdentifier("same")),
       )..start();
       controller
         ..beginDrag(payload, Offset.zero, inside: true)
@@ -127,7 +112,7 @@ void main() {
       "retirement notifies surviving targets after synchronous disposal",
       () async {
         final payload = GraphDragPayload(
-          value: const _TestDragData(GraphIdentifier("same")),
+          value: const TestGraphDragData(GraphIdentifier("same")),
         );
         final observations = <GraphDragPhase>[];
         payload.addListener(() => observations.add(payload.phase));
@@ -155,9 +140,9 @@ void main() {
       final data = GraphData(
         cellSize: 50,
         elements: [
-          _element("group", x: 1, y: 1, width: 4, height: 4),
-          _element("child", x: 2, y: 2, width: 1, height: 1),
-          _element("outside", x: 8, y: 8, width: 1, height: 1),
+          graphElement("group", x: 1, y: 1, width: 4, height: 4),
+          graphElement("child", x: 2, y: 2, width: 1, height: 1),
+          graphElement("outside", x: 8, y: 8, width: 1, height: 1),
         ],
         edges: const [],
       );
@@ -183,7 +168,7 @@ void main() {
       final controller = GraphInteractionController();
       final data = GraphData(
         cellSize: 50,
-        elements: [_element("a", x: 0, y: 0, width: 2, height: 2)],
+        elements: [graphElement("a", x: 0, y: 0, width: 2, height: 2)],
         edges: const [],
       );
 
@@ -211,7 +196,7 @@ void main() {
       final controller = GraphInteractionController();
       final data = GraphData(
         cellSize: 50,
-        elements: [_element("a", x: 0, y: 0, width: 1, height: 1)],
+        elements: [graphElement("a", x: 0, y: 0, width: 1, height: 1)],
         edges: const [],
       );
 
@@ -245,10 +230,4 @@ void main() {
       controller.dispose();
     });
   });
-}
-
-class _TestDragData extends GraphDragData {
-  const _TestDragData(this.graphId);
-  @override
-  final GraphIdentifier graphId;
 }

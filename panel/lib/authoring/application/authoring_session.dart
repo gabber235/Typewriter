@@ -76,12 +76,15 @@ class AuthoringSession extends _$AuthoringSession {
       ..onDispose(invalidations.cancel)
       ..onDispose(catalogInvalidations.close)
       ..onDispose(repository.dispose)
-      ..listen(
-        natsProvider,
-        (previous, next) {
-          if (previous == null || identical(previous, next)) return;
+      ..listen(natsProvider, (previous, next) {
+        // A replacement connection of the same scope arrives as new data;
+        // retained watches move to it instead of being rebuilt.
+        final current = previous?.value;
+        if (current == null || next is! AsyncData<NatsClient>) return;
+        final value = next.value;
+        if (!identical(current, value)) {
           unawaited(
-            repository.rebindTransport(next).catchError((
+            repository.rebindTransport(value).catchError((
               Object error,
               StackTrace stackTrace,
             ) {
@@ -97,20 +100,13 @@ class AuthoringSession extends _$AuthoringSession {
               );
             }),
           );
-        },
-        // A failed connection has no client to rebind to; its consumers
-        // observe the failure through natsProvider itself. It is not reported
-        // here: the connection fails routinely while an app lifecycle change
-        // rebuilds it before authentication settles ("User must be
-        // authenticated before connecting to NATS"), and reporting each of
-        // those would surface as an app error with nothing to act on.
-        onError: (_, _) {},
-      );
+        }
+      });
     unawaited(
       _start(repository, lifecycleRevision, organizationId, realmId).catchError(
         (Object error, StackTrace stackTrace) {
           if (!_isActive(lifecycleRevision)) return;
-          state = state.copyWith(refreshing: false, failure: error);
+          state = state.copyWith(failure: error);
         },
       ),
     );
@@ -157,11 +153,10 @@ class AuthoringSession extends _$AuthoringSession {
         ).whenComplete(() {
           if (!_isActive(lifecycleRevision)) return;
           _refreshing = null;
-          if (_refreshRequested) {
-            unawaited(
-              _refresh(repository, lifecycleRevision, organizationId, realmId),
-            );
-          }
+          // A request that arrived while the failed drain ran is read now.
+          // Nobody awaits it; its failure stays visible in the state, as for
+          // any scheduled refresh.
+          if (_refreshRequested) _scheduleRefresh(lifecycleRevision);
         });
     _refreshing = operation;
     return operation;
@@ -195,7 +190,6 @@ class AuthoringSession extends _$AuthoringSession {
     required bool refreshCatalog,
   }) async {
     if (!_isActive(lifecycleRevision)) return;
-    state = state.copyWith(refreshing: true, failure: null);
     try {
       var catalog = state.catalog?.snapshot;
       if (catalog == null || refreshCatalog) {
@@ -224,7 +218,7 @@ class AuthoringSession extends _$AuthoringSession {
     } on Object catch (error) {
       if (error is TransferCancelled && repository._isDisposed) return;
       if (!_isActive(lifecycleRevision)) return;
-      state = state.copyWith(refreshing: false, failure: error);
+      state = state.copyWith(failure: error);
       rethrow;
     }
   }
@@ -271,8 +265,8 @@ class AuthoringSession extends _$AuthoringSession {
   }
 
   PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
-    skir.PreparedEdit edit,
-  ) => _repository.prepareCommit(edit);
+    skir.CommitPreparedEditRequest commit,
+  ) => _repository.prepareCommit(commit);
 
   Future<skir.PreviewTypeArgumentChangeResponse> previewTypeArguments({
     required skir.ResourceId resource,

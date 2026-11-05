@@ -212,73 +212,82 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
       final color = context.theme.colorScheme.surfaceContainer;
       final focused = _presentation == PopupPresentation.focused;
       return Positioned.fill(
-        child: Stack(
-          children: [
-            if (focused)
-              ModalBarrier(
-                key: const ValueKey("popup barrier"),
-                onDismiss: _controller.close,
-                semanticsLabel: "Dismiss popup",
-              ),
-            CustomSingleChildLayout(
-              key: const ValueKey("popup content"),
-              delegate: _PopupPosition(
-                anchor: anchor,
-                targetAnchor: widget.targetAnchor,
-                popupAnchor: widget.popupAnchor,
-                offset: widget.offset,
-                maxWidth: widget.maxWidth,
-                maxHeight: widget.maxHeight,
-              ),
-              child: MouseRegion(
-                onEnter: _enter,
-                onExit: _exit,
-                child: Listener(
-                  onPointerDown: (_) => _controller.openFocused(),
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: 1),
-                    duration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 60),
-                    builder: (context, opacity, child) =>
-                        Opacity(opacity: opacity, child: child),
-                    child: Material(
-                      elevation: 4,
-                      color: color,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: context.shapes.mediumBorderRadius,
-                      ),
-                      child: Actions(
-                        actions: {
-                          DismissIntent: CallbackAction<DismissIntent>(
-                            onInvoke: (_) {
-                              _controller.close();
-                              return null;
-                            },
-                          ),
-                        },
-                        child: Shortcuts(
-                          shortcuts: const {
-                            SingleActivator(LogicalKeyboardKey.escape):
-                                DismissIntent(),
+        // The barrier blocks the semantics of everything painted before it
+        // up to the nearest boundary; this one keeps that inside the popup,
+        // which otherwise blanks the whole screen for assistive technology.
+        child: Semantics(
+          container: true,
+          child: Stack(
+            children: [
+              if (focused)
+                ModalBarrier(
+                  key: const ValueKey("popup barrier"),
+                  onDismiss: _controller.close,
+                  semanticsLabel: "Dismiss popup",
+                ),
+              CustomSingleChildLayout(
+                key: const ValueKey("popup content"),
+                delegate: _PopupPosition(
+                  anchor: anchor,
+                  targetAnchor: widget.targetAnchor,
+                  popupAnchor: widget.popupAnchor,
+                  offset: widget.offset,
+                  maxWidth: widget.maxWidth,
+                  maxHeight: widget.maxHeight,
+                ),
+                child: MouseRegion(
+                  onEnter: _enter,
+                  onExit: _exit,
+                  child: Listener(
+                    onPointerDown: (_) => _controller.openFocused(),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: 1),
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 60),
+                      builder: (context, opacity, child) =>
+                          Opacity(opacity: opacity, child: child),
+                      child: Material(
+                        elevation: 4,
+                        color: color,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: context.shapes.mediumBorderRadius,
+                        ),
+                        child: Actions(
+                          actions: {
+                            DismissIntent: CallbackAction<DismissIntent>(
+                              onInvoke: (_) {
+                                _controller.close();
+                                return null;
+                              },
+                            ),
                           },
-                          child: FocusScope(
-                            node: _focus,
-                            canRequestFocus: focused,
-                            descendantsAreFocusable: focused,
-                            descendantsAreTraversable: focused,
-                            autofocus: focused,
-                            child: Focus(
-                              focusNode: _entry,
-                              child: Surface(
-                                color: color,
-                                foreground: context.colors.contentPrimary,
-                                secondaryForeground:
-                                    context.colors.contentSecondary,
-                                child: Builder(
-                                  builder: (context) => widget.popupBuilder(
-                                    context,
-                                    _controller.close,
+                          child: Shortcuts(
+                            shortcuts: const {
+                              SingleActivator(LogicalKeyboardKey.escape):
+                                  DismissIntent(),
+                            },
+                            child: PopupFocusHold(
+                              active: focused,
+                              child: FocusScope(
+                                node: _focus,
+                                canRequestFocus: focused,
+                                descendantsAreFocusable: focused,
+                                descendantsAreTraversable: focused,
+                                autofocus: focused,
+                                child: Focus(
+                                  focusNode: _entry,
+                                  child: Surface(
+                                    color: color,
+                                    foreground: context.colors.contentPrimary,
+                                    secondaryForeground:
+                                        context.colors.contentSecondary,
+                                    child: Builder(
+                                      builder: (context) => widget.popupBuilder(
+                                        context,
+                                        _controller.close,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -290,8 +299,8 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     },

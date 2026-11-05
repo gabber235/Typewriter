@@ -1,5 +1,8 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// What assistive technology reads while the first results load.
+const searchLoadingSemanticLabel = "Loading results";
+
 typedef SearchFrameBuilder = Widget Function({
   required Widget queryBar,
   required Widget searchResults,
@@ -151,8 +154,12 @@ class SearchBody extends HookConsumerWidget {
                     ),
                     if (controller.snapshot.status == .loading &&
                         controller.snapshot.nodes.isEmpty)
-                      LinearProgressIndicator(
-                        backgroundColor: Colors.transparent,
+                      Semantics(
+                        container: true,
+                        child: LinearProgressIndicator(
+                          semanticsLabel: searchLoadingSemanticLabel,
+                          backgroundColor: Colors.transparent,
+                        ),
                       ),
                   ],
                 ),

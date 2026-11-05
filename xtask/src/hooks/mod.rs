@@ -2,7 +2,7 @@
 //! shell entry (devenv.nix) and each runs `cargo xtask hook <name>`, so the hook, CI and an agent
 //! checking its own commits run the same Rust. Nothing here installs hooks or touches git config.
 
-mod commit_msg;
+pub(crate) mod commit_msg;
 mod pre_commit;
 
 use std::fs;

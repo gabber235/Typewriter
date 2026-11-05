@@ -31,8 +31,9 @@ abstract interface class EditRead<S> {
 ///
 /// Reservations must cover the resources that preparation can capture. The
 /// workspace observes under that reservation before [prepare] freezes a request.
-/// [refresh] recovers acknowledged state after a save whose response did not
-/// include its resulting observation.
+/// [prepare] settles every save from its reply. [refresh] reads the saved
+/// values for a review, a reload, or a baseline a newer observation and a
+/// reply both claim.
 abstract interface class EditPersistence<S, E> {
   Set<Object> reservationsFor(Iterable<E> pendingEdits);
   Future<S> observeForCommit(S known);
@@ -88,8 +89,11 @@ abstract class EditCapture<S, E> with _$EditCapture<S, E> {
 
 @freezed
 sealed class EditSettlement<S> with _$EditSettlement<S> {
-  const factory EditSettlement.confirmed(S observation) = EditConfirmed<S>;
-  const factory EditSettlement.accepted() = EditAccepted<S>;
+  /// The persistence saved the edit; [observation] is the saved state its
+  /// reply carried. It is null when that state is under a contract the
+  /// request could not read, as a Realm reply under a newer catalog; the
+  /// persistence's next observation then brings the state.
+  const factory EditSettlement.confirmed(S? observation) = EditConfirmed<S>;
   const factory EditSettlement.conflict({
     required EditConflictEvidence evidence,
     S? observation,
@@ -111,9 +115,10 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
   const factory EditGroupPhase.dirty() = EditGroupDirty<S>;
   const factory EditGroupPhase.awaitingDependency(Set<EditGroupId> groups) =
       EditGroupAwaitingDependency<S>;
+
+  /// The group's submission is on its way: sending, or waiting to send the
+  /// same request again because nothing answered it yet.
   const factory EditGroupPhase.saving() = EditGroupSaving<S>;
-  const factory EditGroupPhase.committedAwaitingRefresh(Object? cause) =
-      EditGroupCommittedAwaitingRefresh<S>;
   const factory EditGroupPhase.conflict(
     String message,
     EditConflictEvidence? evidence,
@@ -121,6 +126,9 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
   const factory EditGroupPhase.rejected(String message, Object? cause) =
       EditGroupRejected<S>;
   const factory EditGroupPhase.contractChanged() = EditGroupContractChanged<S>;
+
+  /// Nothing answered the group's submission and it does not resend on its
+  /// own: an Apply waits for Retry, or the submission cannot replay.
   const factory EditGroupPhase.uncertain(Object cause) = EditGroupUncertain<S>;
   const factory EditGroupPhase.repeatedContention(
     int attempts,
@@ -135,34 +143,44 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
       this is! EditGroupAwaitingDependency<S> &&
       this is! EditGroupSaving<S>;
   bool get submitted =>
-      this is EditGroupSaving<S> ||
-      this is EditGroupCommittedAwaitingRefresh<S> ||
-      this is EditGroupUncertain<S>;
+      this is EditGroupSaving<S> || this is EditGroupUncertain<S>;
 
-  /// Applying changes and observing an acknowledged save are normal progress.
+  /// Applying changes, including resending an unanswered save, is normal
+  /// progress.
   bool get active => switch (this) {
-    EditGroupSaving() || EditGroupCommittedAwaitingRefresh(cause: null) => true,
+    EditGroupSaving() => true,
     _ => false,
   };
 
   /// Submission locks protect delivery independently of user recovery needs.
   bool get needsAttention => blocked && !active;
 
+  /// The user decides between this group's work and the saved values, which
+  /// the workspace reads again for that decision.
+  bool get needsReview => switch (this) {
+    EditGroupConflict() ||
+    EditGroupResourceMissing() ||
+    EditGroupRepeatedContention() => true,
+    EditGroupDirty() ||
+    EditGroupAwaitingDependency() ||
+    EditGroupSaving() ||
+    EditGroupRejected() ||
+    EditGroupContractChanged() ||
+    EditGroupUncertain() => false,
+  };
+
   String get message => switch (this) {
     EditGroupDirty() => "Changes await applying",
     EditGroupAwaitingDependency() =>
       "Waiting for related pending changes. Apply or discard that work first",
     EditGroupSaving() => "Applying",
-    EditGroupCommittedAwaitingRefresh(cause: null) =>
-      "Changes were applied. Refreshing saved values",
-    EditGroupCommittedAwaitingRefresh() => "Changes were applied. Current values are unavailable; later edits remain local",
     EditGroupConflict(:final message) ||
     EditGroupRejected(:final message) => message,
     EditGroupContractChanged() =>
       "The editor contract changed. Review or discard pending work",
     EditGroupRepeatedContention() =>
       "The resource changed repeatedly. Retry when other edits stop",
-    EditGroupUncertain() => "The outcome is unknown. Local work is retained and will not be resubmitted",
+    EditGroupUncertain() => "The outcome is unknown. Local work is retained",
     EditGroupResourceMissing() =>
       "The resource was removed. Its proposal is retained for comparison",
   };
@@ -260,4 +278,42 @@ abstract class EditGroupReview<S, E> with _$EditGroupReview<S, E> {
     @Default([]) List<EditConflictEvidence> conflicts,
     @Default([]) List<EditorDiagnostic> diagnostics,
   }) = _EditGroupReview<S, E>;
+}
+
+/// The review of one group in a phase that [EditGroupPhase.needsReview]:
+/// its unsent work against the saved values last read for it.
+///
+/// A review is [EditReview.reading] while the saved values are read again;
+/// the previous review stays for comparison meanwhile. A failed read keeps no
+/// review, only its failure, so nothing is resolved against values that were
+/// not read.
+@freezed
+sealed class EditReview<R> with _$EditReview<R> {
+  const factory EditReview.reading([R? previous]) = EditReviewReading<R>;
+  const factory EditReview.ready(R value) = EditReviewReady<R>;
+  const factory EditReview.failed(Object error, StackTrace stackTrace) =
+      EditReviewFailed<R>;
+
+  const EditReview._();
+
+  /// The review to compare against: the ready one, or the previous one while
+  /// the saved values are read again.
+  R? get comparison => switch (this) {
+    EditReviewReading(:final previous) => previous,
+    EditReviewReady(:final value) => value,
+    EditReviewFailed() => null,
+  };
+
+  /// This review with its value converted by [convert], such as into the
+  /// review of one domain.
+  EditReview<T> convert<T>(T Function(R value) convert) => switch (this) {
+    EditReviewReading(:final previous) => EditReview.reading(
+      previous == null ? null : convert(previous),
+    ),
+    EditReviewReady(:final value) => EditReview.ready(convert(value)),
+    EditReviewFailed(:final error, :final stackTrace) => EditReview.failed(
+      error,
+      stackTrace,
+    ),
+  };
 }

@@ -13,9 +13,13 @@ use anyhow::{Context as _, Result};
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context};
 
-pub const DESCRIBE: &str = "cargo xtask generate: bun services/protocol/generate.ts, then \
-                            dart run build_runner build in panel, panel/testkit and panel/widgetbook, \
-                            each only when its inputs changed or its output is missing";
+pub const DESCRIBE: &str = "cargo xtask generate: bun services/protocol/generate.ts, \
+                            ./gradlew :typewriter-api:writeSdkFixtures, dart run build_runner \
+                            build in panel and panel/testkit, flutter test \
+                            tool/write_creation_fixtures.dart in panel/testkit, then build_runner \
+                            in panel/widgetbook, then the write_frame_vectors example in \
+                            backend/wasmcloud-utils, each only when its inputs changed or its \
+                            output is missing";
 
 /// One program that writes generated sources.
 struct Generator {
@@ -26,6 +30,9 @@ struct Generator {
     /// Directories the generated files land in. The generated files found there after a run are
     /// recorded, so deleting any of them reruns the generator.
     outputs: &'static [&'static str],
+    /// Files written outside the generated source convention (build output, committed fixtures),
+    /// recorded like generated files.
+    files: &'static [&'static str],
     tool: Tool,
 }
 
@@ -34,6 +41,14 @@ enum Tool {
     Protocol,
     /// `build_runner` in the Dart package at this path.
     BuildRunner(&'static str),
+    /// The fixtures other hosts read from the Kotlin SDK: the canonical read schema, the compiled
+    /// control fixtures the panel embeds, and the expression differential corpus.
+    SdkFixtures,
+    /// The panel's creation edit and the catalog and seed it applies to, which the Realm commits
+    /// in `PanelCreationCommitTest`; written by a testkit tool that needs the Flutter engine.
+    CreationFixtures,
+    /// The frame vectors every transport's assembler reads, planned by the backend framer.
+    FrameVectors,
 }
 
 impl Tool {
@@ -42,9 +57,27 @@ impl Tool {
         match self {
             Tool::Protocol => ("bun", &["--revision"]),
             Tool::BuildRunner(_) => ("dart", &["--version"]),
+            Tool::SdkFixtures => ("java", &["-version"]),
+            Tool::CreationFixtures => ("dart", &["--version"]),
+            Tool::FrameVectors => ("rustc", &["--version"]),
         }
     }
 }
+
+/// The generated expressions and the results Kotlin computed, which the panel evaluates too.
+/// Where the creation fixtures land, as resources of the Realm's tests.
+const CREATION_FIXTURES: &str = "services/runtime/realm/src/test/resources/creation";
+
+/// Where the frame vectors land, beside the transport contracts every host implements.
+const FRAME_VECTORS: &str = "skir-src/transport/v1/fixtures/frames.json";
+
+/// The frame vector writer's own Cargo target. The backend's shared target grows to tens of GB,
+/// while this one holds only the writer's dependencies, built without debug info: under a GB, so
+/// CI can cache it (`frame-vectors` in .github/actions/devenv).
+const FRAME_VECTORS_TARGET: &str = ".xtask/frame-vectors-target";
+
+pub const SDK_EXPRESSION_CORPUS: &str =
+    "services/sdk/typewriter-api/build/fixtures/expression_corpus.json";
 
 const GENERATORS: &[Generator] = &[
     Generator {
@@ -71,7 +104,24 @@ const GENERATORS: &[Generator] = &[
             "services/protocol/transport-adapters/kotlin/skirout",
             "services/sdk/typewriter-api/src/main/skirout",
         ],
+        files: &[],
         tool: Tool::Protocol,
+    },
+    Generator {
+        name: "sdk-fixtures",
+        inputs: &[
+            "services/sdk/typewriter-api",
+            "services/testing/typewriter-test-kit",
+            "services/libs.versions.toml",
+            "panel/testkit/tool/update_compiled_sdk_control_fixture.py",
+        ],
+        outputs: &[],
+        files: &[
+            SDK_EXPRESSION_CORPUS,
+            "skir-src/editor/v1/fixtures/canonical_read_models.json",
+            "panel/testkit/lib/src/shared/editors/presentation/compiled_sdk_control_fixture.dart",
+        ],
+        tool: Tool::SdkFixtures,
     },
     build_runner(
         "panel",
@@ -90,6 +140,25 @@ const GENERATORS: &[Generator] = &[
             "panel/testkit/pubspec.lock",
         ],
     ),
+    Generator {
+        name: "creation-fixtures",
+        inputs: &[
+            "panel/lib",
+            "panel/pubspec.yaml",
+            "panel/pubspec.lock",
+            "panel/testkit/lib",
+            "panel/testkit/tool/write_creation_fixtures.dart",
+            "panel/testkit/pubspec.yaml",
+            "panel/testkit/pubspec.lock",
+        ],
+        outputs: &[],
+        files: &[
+            "services/runtime/realm/src/test/resources/creation/catalog.skir",
+            "services/runtime/realm/src/test/resources/creation/seed.skir",
+            "services/runtime/realm/src/test/resources/creation/edit.skir",
+        ],
+        tool: Tool::CreationFixtures,
+    },
     build_runner(
         "panel/widgetbook",
         &[
@@ -98,6 +167,20 @@ const GENERATORS: &[Generator] = &[
             "panel/widgetbook/pubspec.lock",
         ],
     ),
+    // Last, so a framing change reruns no other generator.
+    Generator {
+        name: "frame-vectors",
+        inputs: &[
+            "backend/Cargo.toml",
+            "backend/Cargo.lock",
+            "backend/wasmcloud-utils/Cargo.toml",
+            "backend/wasmcloud-utils/src/transport",
+            "backend/wasmcloud-utils/examples/write_frame_vectors.rs",
+        ],
+        outputs: &[],
+        files: &[FRAME_VECTORS],
+        tool: Tool::FrameVectors,
+    },
 ];
 
 const fn build_runner(package: &'static str, inputs: &'static [&'static str]) -> Generator {
@@ -105,6 +188,7 @@ const fn build_runner(package: &'static str, inputs: &'static [&'static str]) ->
         name: package,
         inputs,
         outputs: inputs,
+        files: &[],
         tool: Tool::BuildRunner(package),
     }
 }
@@ -161,6 +245,61 @@ impl Generator {
                 let mut build = ctx.tool(package, "dart", &["run", "build_runner", "build"]);
                 build.log_output(log)?.run()
             }
+            Tool::SdkFixtures => {
+                let _lock = HeavyLock::acquire("generate sdk-fixtures")?;
+                let mut write = ctx.tool(
+                    "services",
+                    "./gradlew",
+                    &[":typewriter-api:writeSdkFixtures"],
+                );
+                write.log_output(log)?.run()?;
+                let mut embed = ctx.tool(
+                    ".",
+                    "python3",
+                    &[
+                        "panel/testkit/tool/update_compiled_sdk_control_fixture.py",
+                        "services/sdk/typewriter-api/build/fixtures/controls",
+                    ],
+                );
+                embed.log_output(log)?.run()
+            }
+            Tool::CreationFixtures => {
+                let _lock = HeavyLock::acquire("generate creation-fixtures")?;
+                let directory = ctx.root.join(CREATION_FIXTURES);
+                let define = format!("--dart-define=CREATION_FIXTURE_DIR={}", directory.display());
+                let mut write = ctx.tool(
+                    "panel/testkit",
+                    "flutter",
+                    &["test", "tool/write_creation_fixtures.dart", &define],
+                );
+                write.log_output(log)?.run()
+            }
+            Tool::FrameVectors => {
+                let _lock = HeavyLock::acquire("generate frame-vectors")?;
+                let output = ctx.root.join(FRAME_VECTORS);
+                let output = output.to_string_lossy();
+                let mut write = ctx.tool(
+                    "backend",
+                    "cargo",
+                    &[
+                        "run",
+                        "--locked",
+                        "--quiet",
+                        "--package",
+                        "wasmcloud-utils",
+                        "--features",
+                        "frame-vectors",
+                        "--example",
+                        "write_frame_vectors",
+                        "--",
+                        &output,
+                    ],
+                );
+                write
+                    .env("CARGO_TARGET_DIR", ctx.root.join(FRAME_VECTORS_TARGET))
+                    .env("CARGO_PROFILE_DEV_DEBUG", "0");
+                write.log_output(log)?.run()
+            }
         }
     }
 
@@ -170,7 +309,7 @@ impl Generator {
         for input in self.inputs {
             for path in expand(&ctx.root, input)? {
                 walk(&ctx.root, &path, &mut |relative| {
-                    if !is_generated(relative) {
+                    if !is_generated(relative) && !is_generator_file(relative) {
                         files.push(relative.to_owned());
                     }
                 })?;
@@ -204,6 +343,12 @@ impl Generator {
                 }
             })?;
         }
+        files.extend(
+            self.files
+                .iter()
+                .filter(|file| ctx.root.join(file).is_file())
+                .map(|file| (*file).to_owned()),
+        );
         files.sort();
         files.dedup();
         Ok(files)
@@ -227,6 +372,15 @@ fn is_generated(relative: &str) -> bool {
         || [".g.dart", ".freezed.dart", ".gr.dart"]
             .iter()
             .any(|suffix| relative.ends_with(suffix))
+}
+
+/// Whether a generator writes `relative` as one of its `files`. Such a file is output, never an
+/// input: digesting it would rerun an earlier generator whose inputs contain it, such as the
+/// protocol generator reading `skir-src`, after every later generator writes there.
+fn is_generator_file(relative: &str) -> bool {
+    GENERATORS
+        .iter()
+        .any(|generator| generator.files.contains(&relative))
 }
 
 /// The existing paths `pattern` names, where a `*` component matches any one entry.
@@ -313,5 +467,94 @@ impl Digest {
 
     fn hex(&self) -> String {
         format!("{:016x}", self.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::test_support::TempRoot;
+
+    #[test]
+    fn unchanged_inputs_with_every_output_present_are_current() {
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
+        assert!(is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
+    }
+
+    #[test]
+    fn changed_inputs_are_stale() {
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
+        let mut edited = Digest::new();
+        edited.update(b"edited inputs");
+        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &edited));
+    }
+
+    #[test]
+    fn a_deleted_output_is_stale() {
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
+        fs::remove_file(root.path("panel/lib/model.g.dart")).unwrap();
+        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
+    }
+
+    #[test]
+    fn a_generator_that_never_ran_is_stale() {
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "");
+        root.write(
+            "panel.stamp",
+            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        );
+        assert!(!is_current(
+            &root.ctx,
+            &root.path("protocol.stamp"),
+            &inputs
+        ));
+    }
+
+    #[test]
+    fn generated_outputs_and_hand_written_inputs_are_told_apart() {
+        let dir = tempfile::tempdir().unwrap();
+        let ctx = Context {
+            root: dir.path().to_owned(),
+        };
+        for file in [
+            "panel/lib/model.dart",
+            "panel/lib/model.g.dart",
+            "panel/lib/skirout/types.dart",
+            "panel/build/cache.g.dart",
+        ] {
+            let path = dir.path().join(file);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(path, "").unwrap();
+        }
+        let generator = build_runner("panel", &["panel/lib"]);
+        assert_eq!(
+            generator.output_files(&ctx).unwrap(),
+            ["panel/lib/model.g.dart", "panel/lib/skirout/types.dart"]
+        );
     }
 }

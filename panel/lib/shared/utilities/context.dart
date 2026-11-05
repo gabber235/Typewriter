@@ -69,12 +69,6 @@ extension ResponsiveBreakpointsX on BuildContext {
     }
     return fourK ?? desktop ?? tablet ?? mobile;
   }
-
-  bool get debugShowCheckedModeBanner =>
-      kDebugMode &&
-      (findAncestorWidgetOfExactType<WidgetsApp>()
-              ?.debugShowCheckedModeBanner ??
-          false);
 }
 
 /// Operations on theme brightness values.

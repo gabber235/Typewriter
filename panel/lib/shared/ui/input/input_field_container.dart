@@ -186,29 +186,44 @@ class InputFieldContainer extends HookConsumerWidget {
             autofocus: autofocus,
             debugLabel: "SurroundingInputFieldContainer",
             descendantsAreTraversable: false,
+            includeSemantics: false,
             onFocusChange: (_) {
               focusType.value = FocusHighlighting.onlyPrimary(surroundingNode);
             },
-            child: Actions(
-              actions: {
-                if (inputFocusNode.hasPrimaryFocus) ...{
-                  DismissIntent: CallbackAction<DismissIntent>(
-                    onInvoke: (intent) {
-                      onDismiss?.call();
-                      modeCoordinator.end(id);
-                      return null;
-                    },
-                  ),
+            // The surrounding stop reads as focused like the Focus widget
+            // reports it, but a screen reader that focuses the field means
+            // to edit it, so its focus action reaches the inner input.
+            child: Semantics(
+              focusable: surroundingNode.canRequestFocus,
+              focused: surroundingNode.canRequestFocus
+                  ? surroundingNode.hasPrimaryFocus
+                  : null,
+              onFocus:
+                  defaultTargetPlatform != TargetPlatform.iOS &&
+                      inputFocusNode.canRequestFocus
+                  ? inputFocusNode.requestFocus
+                  : null,
+              child: Actions(
+                actions: {
+                  if (inputFocusNode.hasPrimaryFocus) ...{
+                    DismissIntent: CallbackAction<DismissIntent>(
+                      onInvoke: (intent) {
+                        onDismiss?.call();
+                        modeCoordinator.end(id);
+                        return null;
+                      },
+                    ),
+                  },
                 },
-              },
-              child: ManagedActionSet(
-                shortcuts: [
-                  if (inputFocusNode.hasPrimaryFocus) ...[
-                    ...?inputActions,
-                    ...?actions,
+                child: ManagedActionSet(
+                  shortcuts: [
+                    if (inputFocusNode.hasPrimaryFocus) ...[
+                      ...?inputActions,
+                      ...?actions,
+                    ],
                   ],
-                ],
-                child: child,
+                  child: child,
+                ),
               ),
             ),
           ),

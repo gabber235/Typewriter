@@ -2,16 +2,14 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("concrete endpoint binding replaces the ancestor at the same path", () {
-    final fixture = _fixture();
+    final fixture = LinkChoicesFixture();
     final original = fixture.catalog.snapshot;
-    final base = _definition("Node");
-    final child = _definition("NarrowNode");
+    final base = testTypeId("Node");
+    final child = testTypeId("NarrowNode");
     final node = original.types.singleWhere(
       (type) => type.definition.id == base,
     );
@@ -23,19 +21,11 @@ void main() {
     final snapshot = original.toMutable()
       ..types = [
         ...original.types,
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: child,
-            parameters: const [],
-            representation: node.definition.representation,
-            parents: [ancestor],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: node.effectiveFields,
-          ancestorTemplates: [ancestor],
+        publishedType(
+          child,
+          representation: node.definition.representation,
+          parents: [ancestor],
+          fields: node.effectiveFields,
         ),
       ]
       ..endpointBindings = [
@@ -49,7 +39,7 @@ void main() {
           valueOwner: child,
           relativePath: binding.relativePath,
           target: skir.TypeTemplate.createNamed(
-            definition: _definition("Wrapper"),
+            definition: testTypeId("Wrapper"),
             arguments: const [],
           ),
           containsCollection: false,
@@ -72,7 +62,7 @@ void main() {
   });
 
   test("a selected abstract form supplies its own reference endpoint", () {
-    final fixture = _fixture(abstractWrapper: true);
+    final fixture = LinkChoicesFixture(abstractWrapper: true);
     final source = skir.ValueLocation(
       resource: fixture.existingTarget,
       path: fixture.nestedLinkPath,
@@ -100,7 +90,7 @@ void main() {
   });
 
   test("an unselected abstract counterpart requires a form choice", () {
-    final fixture = _fixture(abstractWrapper: true);
+    final fixture = LinkChoicesFixture(abstractWrapper: true);
     final plan = (fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
@@ -123,7 +113,7 @@ void main() {
   });
 
   test("a selected abstract inverse retains its exact counterpart path", () {
-    final fixture = _fixture(abstractWrapper: true);
+    final fixture = LinkChoicesFixture(abstractWrapper: true);
     final plan = (fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
@@ -156,7 +146,10 @@ void main() {
   test(
     "an empty inverse collection in a selected form reserves an exact item",
     () {
-      final fixture = _fixture(abstractWrapper: true, nestedCollection: true);
+      final fixture = LinkChoicesFixture(
+        abstractWrapper: true,
+        nestedCollection: true,
+      );
       final plan = (fixture.draft.linkPlans(
         catalog: fixture.catalog,
         source: fixture.source,
@@ -192,72 +185,58 @@ void main() {
   testWidgets("normal link collections use the selected concrete source form", (
     tester,
   ) async {
-    final fixture = _fixture(abstractWrapper: true, nestedCollection: true);
+    final fixture = LinkChoicesFixture(
+      abstractWrapper: true,
+      nestedCollection: true,
+    );
     final source = skir.ValueLocation(
       resource: fixture.existingTarget,
       path: fixture.nestedLinkPath,
     );
-    final editing = _LinkWorkspace(fixture.draft, source.resource);
-    await tester.pumpWidget(
-      _linkControl(fixture, editing: editing, source: source),
+    final chooser = await LinkChooserDriver.show(
+      tester,
+      fixture.draft.toDocument(),
+      source: source,
     );
-    await tester.tap(find.byTooltip("Add link"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(
-        ValueKey("link.target.${fixture.source.resource.value}.automatic"),
-      ),
-    );
-    await tester.pumpAndSettle();
-    unawaited(editing.binding.save());
-    await tester.pump();
-    final connection = editing.transport.requests.single.edit.intents
-        .whereType<skir.EditIntent_connectRelationWrapper>()
-        .single
-        .value;
-    expect(connection.source.id.endpoint.value, "test.target");
-    expect(connection.source.id.location.path.segments, hasLength(3));
-    expect(
-      editing.workspace.document.links.single.first,
+    await chooser.open(tooltip: "Add link");
+    await chooser.choose(
       fixture.source.resource,
+      "Use the declared counterpart",
     );
+    final saved = await chooser.save();
+    expect(saved.links.single.first, fixture.source.resource);
+    expect(saved.links.single.second, fixture.existingTarget);
+    expect(fixture.backLinks(saved, fixture.existingTarget), [
+      fixture.source.resource,
+    ]);
   });
 
   testWidgets("normal link editing appends to an inverse in a selected form", (
     tester,
   ) async {
-    final fixture = _fixture(abstractWrapper: true, nestedCollection: true);
-    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
-    await tester.pumpWidget(_linkControl(fixture, editing: editing));
-    await tester.tap(find.byTooltip("Choose linked resource"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(
-        ValueKey(
-          "link.target.${fixture.existingTarget.value}.append.wrapper / back",
-        ),
-      ),
+    final fixture = LinkChoicesFixture(
+      abstractWrapper: true,
+      nestedCollection: true,
     );
-    await tester.pumpAndSettle();
-    unawaited(editing.binding.save());
-    await tester.pump();
-    final intents = editing.transport.requests.single.edit.intents;
-    expect(intents.whereType<skir.EditIntent_insertWrapper>(), hasLength(1));
-    final connection = intents
-        .whereType<skir.EditIntent_connectRelationWrapper>()
-        .single
-        .value;
-    final inverse =
-        (connection.counterpart! as skir.CounterpartChoice_existingWrapper)
-            .value;
-    expect(
-      editing.workspace.document.links.single.secondLocation,
-      inverse.id.location.path,
+    final chooser = await LinkChooserDriver.show(
+      tester,
+      fixture.draft.toDocument(),
+      source: fixture.source,
     );
+    await chooser.open();
+    await chooser.choose(
+      fixture.existingTarget,
+      "Add counterpart to wrapper / back",
+    );
+    final saved = await chooser.save();
+    expect(saved.links.single.second, fixture.existingTarget);
+    expect(fixture.backLinks(saved, fixture.existingTarget), [
+      fixture.source.resource,
+    ]);
   });
 
   test("opposite applied target rejects a forward compatible resource", () {
-    final fixture = _fixture(incompatibleInverse: true);
+    final fixture = LinkChoicesFixture(incompatibleInverse: true);
     final result = fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
@@ -273,11 +252,11 @@ void main() {
   });
 
   test("an unfinished direct inverse collection receives a reserved item", () {
-    final fixture = _fixture(directCollection: true);
+    final fixture = LinkChoicesFixture(directCollection: true);
     fixture.draft.set(
       skir.ValueLocation(
         resource: fixture.existingTarget,
-        path: _fieldPath("wrapper"),
+        path: editorRootPath.field("wrapper"),
       ),
       skir.DataValue.unfilled,
     );
@@ -294,12 +273,17 @@ void main() {
       target: target,
     );
     fixture.draft.applyResolvedReference(reference);
-    expect(fixture.draft.links.single.secondLocation, isNotNull);
-    expect(reference.materializations, hasLength(1));
+    final items = fixture.draft
+        .resource(fixture.existingTarget)!
+        .authoredField("wrapper")!
+        .authoredItems!;
+    expect(items.map((item) => item.value.authoredLink?.target.resource), [
+      fixture.source.resource,
+    ]);
   });
 
   test("resolved collection inverse reserves one exact occurrence", () {
-    final fixture = _fixture(directCollection: true);
+    final fixture = LinkChoicesFixture(directCollection: true);
     final plan = (fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
@@ -333,11 +317,6 @@ void main() {
       items.single.value.authoredLink!.target.resource,
       fixture.source.resource,
     );
-    final staged = fixture.draft.intents
-        .whereType<skir.EditIntent_connectRelationWrapper>()
-        .single
-        .value;
-    expect(staged.counterpart, reference.connection.counterpart);
     final repeatedPlan = (fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
@@ -361,7 +340,7 @@ void main() {
   });
 
   test("automatic counterpart resolution leaves nested identity to explicit choice", () {
-    final fixture = _fixture();
+    final fixture = LinkChoicesFixture();
     final result = fixture.catalog.resolveScalarCounterpart(
       configuration: fixture.draft.resource(fixture.emptyTarget)!.configuration,
       resource: fixture.emptyTarget,
@@ -372,7 +351,7 @@ void main() {
   });
 
   test("offers existing and new nested counterpart locations", () {
-    final fixture = _fixture();
+    final fixture = LinkChoicesFixture();
 
     final result = fixture.draft.linkPlans(
       catalog: fixture.catalog,
@@ -395,12 +374,15 @@ void main() {
     expect(creatable.automaticCounterpart, isFalse);
     expect(creatable.existing, isEmpty);
     expect(creatable.creatable, hasLength(1));
-    expect(creatable.creatable.single.containing.path, _fieldPath("wrapper"));
+    expect(
+      creatable.creatable.single.containing.path,
+      editorRootPath.field("wrapper"),
+    );
     expect(creatable.creatable.single.selection, fixture.wrapperSelection);
   });
 
   test("stages a prepared nested counterpart and its reciprocal link", () {
-    final fixture = _fixture();
+    final fixture = LinkChoicesFixture();
     final plan = (fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
@@ -437,7 +419,7 @@ void main() {
     final wrapper = switch (fixture.draft.read(
       skir.ValueLocation(
         resource: fixture.emptyTarget,
-        path: _fieldPath("wrapper"),
+        path: editorRootPath.field("wrapper"),
       ),
     )) {
       PortablePathValue(value: final value) => value,
@@ -450,56 +432,28 @@ void main() {
       fixture.source.resource,
     );
     expect(fixture.draft.links.single.secondLocation, fixture.nestedLinkPath);
-    final intent = fixture.draft.intents.single;
-    expect(intent, isA<skir.EditIntent_connectRelationWrapper>());
-    final connect = (intent as skir.EditIntent_connectRelationWrapper).value;
-    expect(connect.counterpart, isA<skir.CounterpartChoice_newWrapper>());
-    final decoded = skir.EditIntent.serializer.fromBytes(
-      skir.EditIntent.serializer.toBytes(intent),
-    );
-    final decodedConnect =
-        (decoded as skir.EditIntent_connectRelationWrapper).value;
-    final decodedCounterpart =
-        (decodedConnect.counterpart! as skir.CounterpartChoice_newWrapper)
-            .value;
-    expect(
-      [
-        decodedConnect.source.source,
-        decodedConnect.source.id.location.resource,
-        decodedConnect.source.target.resource,
-        decodedConnect.target,
-        decodedCounterpart.containing.resource,
-      ].map((resource) => resource.value),
-      everyElement(isNotEmpty),
-    );
-    expect(decodedConnect.source.target.resource, target.resource);
   });
 
   testWidgets("link input hands its location to the link field builder", (
     tester,
   ) async {
-    final fixture = _fixture();
-    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
+    final fixture = LinkChoicesFixture();
     final wrapped = <skir.ValueLocation>[];
-    await tester.pumpWidget(
-      _linkControl(
-        fixture,
-        editing: editing,
-        linkFieldBuilder: (context, location, control) {
-          wrapped.add(location);
-          return KeyedSubtree(
-            key: const ValueKey("link.field"),
-            child: control,
-          );
-        },
-      ),
+    await LinkChooserDriver.show(
+      tester,
+      fixture.draft.toDocument(),
+      source: fixture.source,
+      linkFieldBuilder: (context, location, control) {
+        wrapped.add(location);
+        return Semantics(label: "Wrapped link field", child: control);
+      },
     );
     expect(wrapped, everyElement(fixture.source));
     expect(wrapped, isNotEmpty);
     expect(
       find.descendant(
-        of: find.byKey(const ValueKey("link.field")),
-        matching: find.byTooltip("Choose linked resource"),
+        of: find.bySemanticsLabel("Wrapped link field"),
+        matching: find.tooltip("Choose linked resource"),
       ),
       findsOneWidget,
     );
@@ -508,75 +462,63 @@ void main() {
   testWidgets(
     "read only link input is never offered to the link field builder",
     (tester) async {
-      final fixture = _fixture();
-      final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
+      final fixture = LinkChoicesFixture();
       final wrapped = <skir.ValueLocation>[];
-      await tester.pumpWidget(
-        _linkControl(
-          fixture,
-          editing: editing,
-          readOnly: true,
-          linkFieldBuilder: (context, location, control) {
-            wrapped.add(location);
-            return control;
-          },
-        ),
+      await LinkChooserDriver.show(
+        tester,
+        fixture.draft.toDocument(),
+        source: fixture.source,
+        readOnly: true,
+        linkFieldBuilder: (context, location, control) {
+          wrapped.add(location);
+          return control;
+        },
       );
       expect(wrapped, isEmpty);
-      expect(find.byTooltip("Choose linked resource"), findsOneWidget);
+      expect(find.tooltip("Choose linked resource"), findsOneWidget);
     },
   );
 
-  testWidgets("link input preserves cancellation and chooses an exact location", (
-    tester,
-  ) async {
-    final fixture = _fixture();
-    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
-    await tester.pumpWidget(_linkControl(fixture, editing: editing));
+  testWidgets(
+    "link input preserves cancellation and chooses an exact location",
+    (tester) async {
+      final fixture = LinkChoicesFixture();
+      final chooser = await LinkChooserDriver.show(
+        tester,
+        fixture.draft.toDocument(),
+        source: fixture.source,
+      );
 
-    await tester.tap(find.byTooltip("Choose linked resource"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip("Close"));
-    await tester.pumpAndSettle();
-    expect(editing.workspace.state.groups, isEmpty);
+      await chooser.open();
+      await chooser.close();
+      expect(chooser.binding.dirty, isFalse);
 
-    await tester.tap(find.byTooltip("Choose linked resource"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(
-        ValueKey(
-          "link.target.${fixture.existingTarget.value}.existing.wrapper / back",
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await chooser.open();
+      await chooser.choose(fixture.existingTarget, "Use wrapper / back");
 
-    unawaited(editing.binding.save());
-    await tester.pump();
-    final intent =
-        editing.transport.requests.single.edit.intents.single
-            as skir.EditIntent_connectRelationWrapper;
-    expect(
-      intent.value.counterpart,
-      isA<skir.CounterpartChoice_existingWrapper>(),
-    );
-    final counterpart =
-        (intent.value.counterpart! as skir.CounterpartChoice_existingWrapper)
-            .value;
-    expect(intent.value.target, fixture.existingTarget);
-    expect(counterpart.id.location.resource, fixture.existingTarget);
-    expect(counterpart.id.location.path, fixture.nestedLinkPath);
-    expect(
-      editing.workspace.document.links.single.secondLocation,
-      fixture.nestedLinkPath,
-    );
-  });
+      final saved = await chooser.save();
+      expect(saved.links.single.second, fixture.existingTarget);
+      expect(saved.links.single.secondLocation, fixture.nestedLinkPath);
+      expect(
+        saved
+            .valueAt(
+              authoredFieldLocation(fixture.existingTarget, [
+                "wrapper",
+                "back",
+              ]),
+            )
+            ?.authoredLink
+            ?.target
+            .resource,
+        fixture.source.resource,
+      );
+    },
+  );
 
   testWidgets("link input prepares and chooses a new nested counterpart", (
     tester,
   ) async {
-    final fixture = _fixture();
-    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
+    final fixture = LinkChoicesFixture();
     final prepared = skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
@@ -593,535 +535,40 @@ void main() {
       findings: const [],
     );
     skir.ValuePreparationRequest? request;
-    await tester.pumpWidget(
-      _linkControl(
-        fixture,
-        editing: editing,
-        prepareValue: (value) async {
-          request = value;
-          return prepared;
-        },
-      ),
+    final chooser = await LinkChooserDriver.show(
+      tester,
+      fixture.draft.toDocument(),
+      source: fixture.source,
+      prepareValue: (value) async {
+        request = value;
+        return prepared;
+      },
     );
 
-    await tester.tap(find.byTooltip("Choose linked resource"));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(
-        ValueKey("link.target.${fixture.emptyTarget.value}.new.wrapper"),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await chooser.open();
+    await chooser.choose(fixture.emptyTarget, "Create counterpart in wrapper");
 
     expect(request?.recordSelection, fixture.wrapperSelection);
-    unawaited(editing.binding.save());
-    await tester.pump();
-    final intent = editing.transport.requests.single.edit.intents
-        .whereType<skir.EditIntent_connectRelationWrapper>()
-        .single;
-    final counterpart = intent.value.counterpart;
-    expect(counterpart, isA<skir.CounterpartChoice_existingWrapper>());
-    final created =
-        (counterpart! as skir.CounterpartChoice_existingWrapper).value;
-    expect(intent.value.target, fixture.emptyTarget);
+    final saved = await chooser.save();
+    expect(saved.links.single.second, fixture.emptyTarget);
     expect(
-      created.id.location,
-      skir.ValueLocation(
-        resource: fixture.emptyTarget,
-        path: fixture.nestedLinkPath,
-      ),
+      saved
+          .valueAt(
+            authoredFieldLocation(fixture.emptyTarget, ["wrapper", "back"]),
+          )
+          ?.authoredLink
+          ?.target
+          .resource,
+      fixture.source.resource,
     );
     expect(
-      editing.workspace.document
+      saved
           .resource(fixture.emptyTarget)!
           .authoredField("wrapper")!
           .authoredField("label")!
           .authoredString,
       "prepared",
     );
-    expect(
-      editing.workspace.document.links.single.secondLocation,
-      fixture.nestedLinkPath,
-    );
+    expect(saved.links.single.secondLocation, fixture.nestedLinkPath);
   });
-}
-
-final class _LinkWorkspace {
-  _LinkWorkspace(AuthoringEdit operation, skir.ResourceId resource) {
-    final document = operation.toDocument();
-    transport = ScriptedAuthoringTransport(AsyncData(document));
-    workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: _workSession(),
-      initial: document,
-    );
-    binding = workspace.attach(
-      resource,
-      policy: EditorCommitPolicy.applyResource,
-    );
-    addTearDown(binding.detach);
-    addTearDown(workspace.dispose);
-    addTearDown(transport.dispose);
-  }
-  late final ScriptedAuthoringTransport transport;
-  late final RealmEditing workspace;
-  late final RealmEditingBinding binding;
-}
-
-Widget _linkControl(
-  ({
-    AuthoringEdit draft,
-    CheckedEditorCatalog catalog,
-    skir.ValueLocation source,
-    skir.ResourceId existingTarget,
-    skir.ResourceId emptyTarget,
-    skir.ValuePath nestedLinkPath,
-    skir.NamedTypeUse wrapperUse,
-    skir.TypeSelection wrapperSelection,
-  })
-  fixture, {
-  required _LinkWorkspace editing,
-  skir.ValueLocation? source,
-  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
-  prepareValue,
-  Widget Function(BuildContext, skir.ValueLocation, Widget)? linkFieldBuilder,
-  bool readOnly = false,
-}) {
-  source ??= fixture.source;
-  final root = skir.ExpressionBindingId(value: "configured_value");
-  final record = fixture.draft.resource(source.resource)!;
-  final budget = skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100);
-  final host = AuthoredPresentationHost(
-    resource: source.resource,
-    source: editing.workspace.document,
-    material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.workspace,
-    budget: budget,
-    capabilities: const PortablePresentationCapabilities(),
-    prepareValue: prepareValue,
-    edit: editing.binding,
-  );
-  addTearDown(host.dispose);
-  return testApp(
-    child: Scaffold(
-      body: PortableResourcesInteractionScope(
-        itemBuilder: (context, view, member, child) => child,
-        layoutBuilder: (context, view, child) => child,
-        linkFieldBuilder: linkFieldBuilder,
-        child: PortablePresentationNodeRenderer(
-          node: skir.PresentationNode(
-            nodeId: "link",
-            properties: skir.PresentationProperties.defaultInstance,
-            element: skir.PresentationElement.wrapLinkInput(
-              skir.LinkControl(
-                control: skir.BoundControl(
-                  binding: skir.BindingRef(bindingId: root, path: source.path),
-                  label: null,
-                  description: null,
-                  prefix: null,
-                  semanticLabel: null,
-                ),
-                allowReorder: false,
-                candidatePolicy: null,
-                rejectionDisplay: skir.LinkRejectionDisplay.disabled,
-                sourceId: null,
-                appearance: null,
-                content: null,
-                inputAppearance: null,
-                inputContent: null,
-                popup: null,
-              ),
-            ),
-            header: null,
-          ),
-          scope: PortablePresentationScope(
-            operations: testPortableOperations(),
-            bindings: {
-              root: PortableExpressionBinding(
-                value: skir.DataValue.createRecord(fields: record.fields),
-                location: skir.ValueLocation(
-                  resource: source.resource,
-                  path: skir.ValuePath(segments: const []),
-                ),
-              ),
-            },
-            budget: budget,
-            catalog: fixture.catalog,
-            host: host,
-            readOnly: readOnly,
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-({
-  AuthoringEdit draft,
-  CheckedEditorCatalog catalog,
-  skir.ValueLocation source,
-  skir.ResourceId existingTarget,
-  skir.ResourceId emptyTarget,
-  skir.ValuePath nestedLinkPath,
-  skir.NamedTypeUse wrapperUse,
-  skir.TypeSelection wrapperSelection,
-})
-_fixture({
-  bool incompatibleInverse = false,
-  bool directCollection = false,
-  bool abstractWrapper = false,
-  bool nestedCollection = false,
-}) {
-  final generation = skir.CatalogGeneration(value: "catalog:links");
-  final node = _definition("Node");
-  final wrapper = _definition("Wrapper");
-  final abstractForm = _definition("AbstractWrapper");
-  final sourceLink = _definition("SourceLink");
-  final targetLink = _definition("TargetLink");
-  final links = _definition("Links");
-  final sourceEndpoint = skir.EndpointId(value: "test.source");
-  final targetEndpoint = skir.EndpointId(value: "test.target");
-  final nodeTemplate = skir.TypeTemplate.createNamed(
-    definition: node,
-    arguments: const [],
-  );
-  final nodeUse = skir.NamedTypeUse(definition: node, arguments: const []);
-  final wrapperUse = skir.NamedTypeUse(
-    definition: wrapper,
-    arguments: const [],
-  );
-  final wrapperSelection = skir.TypeSelection.wrapComplete(wrapperUse);
-  final sourceField = skir.FieldOwner(definition: node, name: "source");
-  final wrapperField = skir.FieldOwner(definition: node, name: "wrapper");
-  final backField = skir.FieldOwner(definition: wrapper, name: "back");
-  final labelField = skir.FieldOwner(definition: wrapper, name: "label");
-  skir.FieldDeclaration declaration(
-    skir.FieldOwner owner,
-    skir.TypeTemplate type,
-  ) => skir.FieldDeclaration(
-    owner: owner,
-    type: type,
-    overrides: const [],
-    hasConstructorDefault: false,
-  );
-  skir.PublishedType published(
-    skir.TypeDefinition definition,
-    List<skir.EffectiveFieldTemplate> fields,
-  ) => skir.PublishedType(
-    searchKey: null,
-    placementField: null,
-    display: defaultTypeDisplay(""),
-    definition: definition,
-    status: skir.DeclarationStatus.ready,
-    effectiveFields: fields,
-    ancestorTemplates: definition.parents,
-  );
-  final sourceLinkTemplate = skir.TypeTemplate.createNamed(
-    definition: sourceLink,
-    arguments: const [],
-  );
-  final wrapperTemplate = skir.TypeTemplate.createNamed(
-    definition: abstractWrapper ? abstractForm : wrapper,
-    arguments: const [],
-  );
-  final targetLinkTemplate = skir.TypeTemplate.createNamed(
-    definition: targetLink,
-    arguments: const [],
-  );
-  final linksTemplate = skir.TypeTemplate.createNamed(
-    definition: links,
-    arguments: const [],
-  );
-  final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
-  final snapshot = skir.EditorCatalog(
-    resourceDisplays: const [],
-    resourceOperations: const [],
-    generation: generation,
-    types: [
-      if (abstractWrapper)
-        published(
-          skir.TypeDefinition(
-            id: abstractForm,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: const [],
-              abstract_: true,
-            ),
-            parents: const [],
-          ),
-          const [],
-        ),
-      published(
-        skir.TypeDefinition(
-          id: links,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createSequence(
-            item: targetLinkTemplate,
-            kind: skir.CollectionKind.list,
-          ),
-          parents: const [],
-        ),
-        const [],
-      ),
-      published(
-        skir.TypeDefinition(
-          id: node,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              declaration(sourceField, sourceLinkTemplate),
-              declaration(
-                wrapperField,
-                directCollection ? linksTemplate : wrapperTemplate,
-              ),
-            ],
-            abstract_: false,
-          ),
-          parents: const [],
-        ),
-        [
-          skir.EffectiveFieldTemplate(
-            key: "source",
-            owner: sourceField,
-            type: sourceLinkTemplate,
-            rules: const [],
-          ),
-          skir.EffectiveFieldTemplate(
-            key: "wrapper",
-            owner: wrapperField,
-            type: directCollection ? linksTemplate : wrapperTemplate,
-            rules: const [],
-          ),
-        ],
-      ),
-      published(
-        skir.TypeDefinition(
-          id: wrapper,
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            fields: [
-              declaration(
-                backField,
-                nestedCollection ? linksTemplate : targetLinkTemplate,
-              ),
-              declaration(labelField, textTemplate),
-            ],
-            abstract_: false,
-          ),
-          parents: abstractWrapper
-              ? [
-                  skir.NamedTypeTemplate(
-                    definition: abstractForm,
-                    arguments: const [],
-                  ),
-                ]
-              : const [],
-        ),
-        [
-          skir.EffectiveFieldTemplate(
-            key: "back",
-            owner: backField,
-            type: nestedCollection ? linksTemplate : targetLinkTemplate,
-            rules: const [],
-          ),
-          skir.EffectiveFieldTemplate(
-            key: "label",
-            owner: labelField,
-            type: textTemplate,
-            rules: const [],
-          ),
-        ],
-      ),
-      for (final link in [
-        (sourceLink, sourceEndpoint),
-        (targetLink, targetEndpoint),
-      ])
-        published(
-          skir.TypeDefinition(
-            id: link.$1,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createLink(
-              endpoint: link.$2,
-              target: incompatibleInverse && link.$1 == targetLink
-                  ? wrapperTemplate
-                  : nodeTemplate,
-            ),
-            parents: const [],
-          ),
-          const [],
-        ),
-    ],
-    relations: [
-      skir.RelationContract(
-        id: skir.RelationId(value: "test.links"),
-        first: skir.EndpointDefinition(
-          id: sourceEndpoint,
-          slot: skir.EndpointSlot.first,
-          resource: skir.NamedTypeTemplate(
-            definition: node,
-            arguments: const [],
-          ),
-          cardinality: (directCollection || nestedCollection)
-              ? skir.EndpointCardinality.many
-              : skir.EndpointCardinality.one,
-          onDelete: skir.RelationDeletePolicy.clear,
-        ),
-        second: skir.EndpointDefinition(
-          id: targetEndpoint,
-          slot: skir.EndpointSlot.second,
-          resource: skir.NamedTypeTemplate(
-            definition: node,
-            arguments: const [],
-          ),
-          cardinality: (directCollection || nestedCollection)
-              ? skir.EndpointCardinality.one
-              : skir.EndpointCardinality.many,
-          onDelete: skir.RelationDeletePolicy.clear,
-        ),
-        families: const [],
-      ),
-    ],
-    realmRoot: skir.TypeDefinitionId.defaultInstance,
-    presentations: const [],
-    presentationMaterials: const [],
-    configuration: const [],
-    diagnostics: const [],
-
-    endpointBindings: [
-      skir.EndpointBindingTemplate(
-        endpoint: sourceEndpoint,
-        containingResource: skir.NamedTypeTemplate(
-          definition: node,
-          arguments: const [],
-        ),
-        valueOwner: node,
-        relativePath: skir.RelativeFieldPattern(
-          segments: [skir.FieldPatternSegment.createField(name: "source")],
-        ),
-        target: nodeTemplate,
-        containsCollection: false,
-      ),
-      if (!abstractWrapper)
-        skir.EndpointBindingTemplate(
-          endpoint: targetEndpoint,
-          containingResource: skir.NamedTypeTemplate(
-            definition: node,
-            arguments: const [],
-          ),
-          valueOwner: directCollection ? node : wrapper,
-          relativePath: skir.RelativeFieldPattern(
-            segments: [
-              skir.FieldPatternSegment.createField(name: "wrapper"),
-              if (directCollection)
-                skir.FieldPatternSegment.items
-              else
-                skir.FieldPatternSegment.createField(name: "back"),
-            ],
-          ),
-          target: incompatibleInverse ? wrapperTemplate : nodeTemplate,
-          containsCollection: directCollection,
-        ),
-    ],
-    capabilities: const [],
-    recommendations: const [],
-    roleFallbacks: const [],
-  );
-  final source = skir.ResourceId(value: "resource:source");
-  final existingTarget = skir.ResourceId(value: "resource:existing");
-  final emptyTarget = skir.ResourceId(value: "resource:empty");
-  skir.AuthoringRecord record(skir.DataValue wrapperValue) =>
-      skir.AuthoringRecord(
-        configuration: skir.TypeSelection.wrapComplete(nodeUse),
-        fields: [
-          skir.FieldValue(name: "source", value: skir.DataValue.unfilled),
-          skir.FieldValue(
-            name: "wrapper",
-            value: directCollection
-                ? skir.DataValue.createNamed(
-                    actualType: skir.NamedTypeUse(
-                      definition: links,
-                      arguments: const [],
-                    ),
-                    payload: skir.DataValue.createListValue(items: const []),
-                  )
-                : wrapperValue,
-          ),
-        ],
-      );
-  final authored = skir.AuthoringState(
-    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
-    generation: generation,
-    resources: [
-      skir.AuthoringResource(
-        id: source,
-        content: record(skir.DataValue.unfilled),
-      ),
-      skir.AuthoringResource(
-        id: existingTarget,
-        content: record(
-          skir.DataValue.createNamed(
-            actualType: wrapperUse,
-            payload: skir.DataValue.createRecord(
-              fields: [
-                skir.FieldValue(
-                  name: "back",
-                  value: nestedCollection
-                      ? skir.DataValue.createNamed(
-                          actualType: skir.NamedTypeUse(
-                            definition: links,
-                            arguments: const [],
-                          ),
-                          payload: skir.DataValue.createListValue(
-                            items: const [],
-                          ),
-                        )
-                      : skir.DataValue.unfilled,
-                ),
-                skir.FieldValue(
-                  name: "label",
-                  value: skir.DataValue.wrapStringValue("existing"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      skir.AuthoringResource(
-        id: emptyTarget,
-        content: record(skir.DataValue.unfilled),
-      ),
-    ],
-    links: const [],
-    findings: const [],
-  );
-  final checked = CheckedEditorCatalog(snapshot);
-  return (
-    draft: AuthoringEdit.fromState(authored, catalog: checked),
-    catalog: checked,
-    source: skir.ValueLocation(resource: source, path: _fieldPath("source")),
-    existingTarget: existingTarget,
-    emptyTarget: emptyTarget,
-    nestedLinkPath: skir.ValuePath(
-      segments: [
-        skir.PathSegment.createField(name: "wrapper"),
-        skir.PathSegment.createField(name: "back"),
-      ],
-    ),
-    wrapperUse: wrapperUse,
-    wrapperSelection: wrapperSelection,
-  );
-}
-
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
-  revision: 1,
-);
-
-skir.ValuePath _fieldPath(String name) =>
-    skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);
-
-ScopedWorkSession _workSession() {
-  final session = ScopedWorkSession();
-  addTearDown(session.dispose);
-  return session;
 }

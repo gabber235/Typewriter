@@ -13,16 +13,18 @@ import com.typewritermc.expression.shortcuts.gte
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
+import com.typewritermc.testkit.singleFixed
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.integer
+import com.typewritermc.types.record
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationRole
-import skirout.editor.v1.presentation.AxisChild
-import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -40,7 +42,7 @@ val GeneratedPresentationScopeTest by testSuite {
                 ).toNode()
     }
 
-    test("generated record expressions compile into symbolic presentation conditions") {
+    test("a generated condition shows the end frame only when it does not precede the start frame") {
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration(value = "generated presentation"),
@@ -62,35 +64,10 @@ val GeneratedPresentationScopeTest by testSuite {
                         TimelineSegmentPlacementPresentationScopeImpl(build).present()
                     }
                 }.layout
-        val column = (root.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper
-        val conditionalNode = (column.value.children.single() as AxisChild.FixedWrapper).value
+        val condition = (root.singleFixed().element as PresentationElement.ConditionalWrapper).value.condition
 
-        (conditionalNode.element is PresentationElement.ConditionalWrapper) shouldBe true
-    }
-}
-
-private interface ValueFieldExpressions {
-    val value: Expr<String, MayBeMissing>
-}
-
-private object ValueFieldExpressionsFactory : ExpressionFactory<ValueFieldExpressions> {
-    override val scope = ValueFieldExpressions::class
-
-    override fun create(value: Expr<*, out MissingPolicy>): ValueFieldExpressions =
-        object : ValueFieldExpressions {
-            override val value: Expr<String, MayBeMissing> = value.field("value")
-        }
-}
-
-private object ConditionalPlacementPresentation : TimelineSegmentPlacementPresentation {
-    override fun TimelineSegmentPlacementPresentationScope.present() {
-        showIf(
-            condition = { (endFrame gte startFrame).orElse(literal(false)) },
-        ) {
-            endFrame {
-                label("End frame")
-                numericInput()
-            }
-        }
+        condition.shownFor(start = 4, end = 2) shouldBe DataValue.BooleanWrapper(false)
+        condition.shownFor(start = 4, end = 4) shouldBe DataValue.BooleanWrapper(true)
+        condition.shownFor(start = 4, end = 9) shouldBe DataValue.BooleanWrapper(true)
     }
 }

@@ -4,7 +4,7 @@
 //! Dropping [`Stack`] sends SIGTERM to every group and SIGKILL after five seconds, so a failing,
 //! timed out or interrupted command never leaves a stack behind. A group whose leader exits is
 //! stopped the same way, so its descendants do not outlive it. A supervisor killed outright
-//! leaves its record in [`spec::REGISTRY`], which `cargo xtask stack gc` reads to kill what it
+//! leaves its record in the [`Registry`], which `cargo xtask stack gc` reads to kill what it
 //! left. devenv's process dependencies are not used: devenv 2.4.0 still has the bugs where an on
 //! demand process waits forever and disabled processes start their prerequisites.
 
@@ -24,8 +24,9 @@ use std::time::{Duration, Instant};
 use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use self::spec::{DynService, PortLease, Probe, Published, REGISTRY, StackContext, StackSpec};
+use self::spec::{DynService, PortLease, Probe, Published, Registry, StackContext, StackSpec};
 use crate::Context;
+use crate::e2e::failures::StackEvidence;
 use crate::lock::E2eSlot;
 use crate::process::{self, Group, POLL, STOP_GRACE, Supervisor, interrupted, kill_group};
 
@@ -44,30 +45,89 @@ impl Keep {
     }
 }
 
-/// Runs `inside` with `spec` up for this worktree. `cargo xtask stack run` and the end to end
-/// suites call this.
+/// Runs `inside` with `spec` up for this worktree. `cargo xtask stack run` calls this.
 pub fn run<T>(
     ctx: &Context,
     spec: &StackSpec,
     timeout: Duration,
     inside: impl FnOnce(&mut Stack) -> Result<T>,
 ) -> Result<T> {
+    Ok(run_then(ctx, spec, timeout, inside, |_| Ok(()))?.0)
+}
+
+/// [`run`], then, once the stack has stopped and every exporter has flushed, copies every
+/// service log and the collected spans into `keep` (cleared first), before another run of this
+/// worktree can reset the stack state. The end to end suites call this for failure folders.
+pub fn run_keeping_evidence<T>(
+    ctx: &Context,
+    spec: &StackSpec,
+    timeout: Duration,
+    keep: &Path,
+    inside: impl FnOnce(&mut Stack) -> Result<T>,
+) -> Result<(T, StackEvidence)> {
+    run_then(ctx, spec, timeout, inside, |state| {
+        StackEvidence::copy(state, keep)
+    })
+}
+
+/// Runs `inside` with `spec` up, stops the stack, and runs `after` on the stack state while the
+/// worktree's slot is still held.
+fn run_then<T, U>(
+    ctx: &Context,
+    spec: &StackSpec,
+    timeout: Duration,
+    inside: impl FnOnce(&mut Stack) -> Result<T>,
+    after: impl FnOnce(&Path) -> Result<U>,
+) -> Result<(T, U)> {
     let order = spec.ordered()?;
     process::install_interrupt_handler();
     let _slot = E2eSlot::acquire(&ctx.root)?;
-    let stack_ctx = StackContext::new(ctx, PortLease::acquire(&ctx.root)?);
+    let stack_ctx = StackContext::new(ctx, PortLease::acquire(&Registry::machine(), &ctx.root)?);
     reset_state(&stack_ctx.state(), &[Keep::BrokerKeys])?;
     let mut stack = Stack::register(&stack_ctx)?;
-    let mut published = Published::default();
     for service in order {
         stack.start(service, &stack_ctx)?;
+        let mut published = Published::default();
         service.publish(&stack_ctx, &mut published)?;
-        // Later services read the client files, like the Realm host its `realm.properties`.
-        published.write(&stack_ctx.state())?;
+        // Later services read the clients before they start: typed through
+        // `StackContext::clients`, or as files, like the Realm host its `realm.properties`.
+        stack_ctx.absorb(service, published)?;
     }
-    stack.env = published.values;
+    stack.env = stack_ctx.env();
     stack.deadline = Some(Instant::now() + timeout);
-    inside(&mut stack)
+    let inside = inside(&mut stack)?;
+    drop(stack);
+    Ok((inside, after(&stack_ctx.state())?))
+}
+
+impl StackEvidence {
+    /// Copies the service logs and the spans file of the stack `state` into `keep`.
+    fn copy(state: &Path, keep: &Path) -> Result<Self> {
+        if keep.exists() {
+            fs::remove_dir_all(keep).with_context(|| format!("cannot clear {}", keep.display()))?;
+        }
+        let logs_dir = keep.join("logs");
+        fs::create_dir_all(&logs_dir)
+            .with_context(|| format!("cannot create {}", logs_dir.display()))?;
+        let mut logs = Vec::new();
+        for entry in fs::read_dir(state.join("logs"))? {
+            let path = entry?.path();
+            if path.extension().is_some_and(|extension| extension == "log") {
+                let copy = logs_dir.join(path.file_name().context("a log without a name")?);
+                fs::copy(&path, &copy)
+                    .with_context(|| format!("cannot copy {}", path.display()))?;
+                logs.push(copy);
+            }
+        }
+        logs.sort();
+        let traces = keep.join(typewriter::TRACES);
+        let collected = state.join("telemetry").join(typewriter::TRACES);
+        if collected.exists() {
+            fs::copy(&collected, &traces)
+                .with_context(|| format!("cannot copy {}", collected.display()))?;
+        }
+        Ok(Self { logs, traces })
+    }
 }
 
 /// Clears `state` except the entries `keep` names.
@@ -261,8 +321,9 @@ pub struct StackRecord {
 }
 
 impl StackRecord {
-    pub fn all() -> Result<Vec<Self>> {
-        let Ok(entries) = fs::read_dir(REGISTRY) else {
+    /// Every record in `registry`.
+    pub fn all(registry: &Registry) -> Result<Vec<Self>> {
+        let Ok(entries) = fs::read_dir(registry.dir()) else {
             return Ok(Vec::new());
         };
         let mut records = Vec::new();
@@ -302,9 +363,9 @@ impl StackRecord {
 
 /// Kills stacks whose supervisor is gone (an agent killed with SIGKILL) and releases their port
 /// blocks.
-pub fn gc() -> Result<Vec<StackRecord>> {
+pub fn gc(registry: &Registry) -> Result<Vec<StackRecord>> {
     let mut removed = Vec::new();
-    for record in StackRecord::all()? {
+    for record in StackRecord::all(registry)? {
         if !process_alive(record.owner) {
             for group in &record.groups {
                 kill_group(*group, libc::SIGKILL);
@@ -414,7 +475,7 @@ pub fn command(ctx: &Context, command: StackCommand) -> Result<()> {
             Ok(())
         }
         StackCommand::Gc => {
-            let removed = gc()?;
+            let removed = gc(&Registry::machine())?;
             if removed.is_empty() {
                 println!("no orphaned stacks");
             }
@@ -428,5 +489,67 @@ pub fn command(ctx: &Context, command: StackCommand) -> Result<()> {
             }
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::net::TcpListener;
+    use std::os::unix::process::ExitStatusExt as _;
+
+    use super::*;
+    use crate::test_support::{answering, dead_pid, stack_record};
+
+    #[test]
+    fn gc_stops_what_a_killed_supervisor_left_and_keeps_live_stacks() {
+        let dir = tempfile::tempdir().unwrap();
+        let registry = Registry::at(dir.path());
+        let mut orphan = Command::new("sleep")
+            .arg("60")
+            .process_group(0)
+            .spawn()
+            .unwrap();
+        let orphaned = stack_record(dir.path(), "orphaned", dead_pid(), vec![orphan.id()]);
+        let live = stack_record(dir.path(), "live", std::process::id(), Vec::new());
+
+        let removed = gc(&registry).unwrap();
+
+        assert_eq!(removed.len(), 1);
+        assert_eq!(removed[0].worktree, orphaned.worktree);
+        assert!(!orphaned.path.exists());
+        assert!(live.path.exists());
+        assert_eq!(orphan.wait().unwrap().signal(), Some(libc::SIGKILL));
+    }
+
+    #[test]
+    fn an_http_service_is_ready_only_on_a_success_status() {
+        assert!(probe_passes(&Probe::http(
+            answering("204 No Content"),
+            "/health"
+        )));
+        assert!(!probe_passes(&Probe::http(
+            answering("503 Service Unavailable"),
+            "/health"
+        )));
+    }
+
+    #[test]
+    fn an_http_service_that_does_not_listen_is_not_ready() {
+        let port = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port();
+        assert!(!probe_passes(&Probe::http(port, "/health")));
+    }
+
+    #[test]
+    fn a_file_service_is_ready_once_its_file_exists() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("ready");
+        let probe = Probe::FileExists(file.clone());
+        assert!(!probe_passes(&probe));
+        fs::write(&file, "").unwrap();
+        assert!(probe_passes(&probe));
     }
 }

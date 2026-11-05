@@ -1,0 +1,75 @@
+id: rust-test-local-helper
+valid:
+  # Uses, constants, test cases with any runtime and items inside a case.
+  - |
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        use crate::test_support::{TempRoot, refusal};
+
+        const DIFF: &str = "diff --git a/src/a.rs b/src/a.rs\n";
+
+        #[test]
+        fn findings_land_on_the_lines_a_hunk_added() {
+            fn added(diff: &str) -> Vec<u32> {
+                parse_diff(diff).remove(0).added
+            }
+            assert_eq!(added(DIFF), [5]);
+        }
+
+        // Runs against the in memory store.
+        #[tokio::test]
+        #[should_panic]
+        async fn a_missing_realm_is_refused() {}
+    }
+  # The crate's shared test support module is where helpers belong.
+  - |
+    #[cfg(test)]
+    mod test_support {
+        pub fn diff(path: &str) -> String {
+            format!("diff --git a/{path} b/{path}\n")
+        }
+    }
+  # A module that is not a test module.
+  - |
+    mod parse {
+        fn hunk(line: &str) -> u32 {
+            0
+        }
+    }
+invalid:
+  # A builder in the test module.
+  - |
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        fn diff(path: &str) -> String {
+            format!("diff --git a/{path} b/{path}\n")
+        }
+
+        #[test]
+        fn findings_land_on_the_lines_a_hunk_added() {
+            assert_eq!(parse_diff(&diff("a.rs")).len(), 1);
+        }
+    }
+  # A fake with its implementation.
+  - |
+    #[cfg(all(test, unix))]
+    mod tests {
+        struct FakeRunner;
+
+        impl Runner for FakeRunner {
+            fn run(&mut self, command: &mut Command) -> Result<ExitStatus> {
+                Ok(ExitStatus::from_raw(0))
+            }
+        }
+    }
+  # A helper that only looks like a test case: the attribute is not a test attribute.
+  - |
+    #[cfg(test)]
+    mod tests {
+        #[allow(dead_code)]
+        fn seed() {}
+    }

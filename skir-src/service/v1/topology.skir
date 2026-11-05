@@ -132,7 +132,9 @@ struct HostConfigurationChange(83090017) {
 }
 
 // Applies a complete host execution configuration with optimistic concurrency. A successful result changes desired state;
-// runtime activation is reported later through host execution updates.
+// runtime activation is reported later through host execution updates. A stale expected revision returns
+// conflict_error, unless the requested assignment is already stored: then success returns the stored state unchanged,
+// so a client may resend a request whose reply was lost.
 method ConfigureServiceHost(
   struct {
     host_id: RecordId;

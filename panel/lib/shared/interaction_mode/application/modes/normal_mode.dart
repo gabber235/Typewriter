@@ -76,6 +76,12 @@ class NormalMode extends InteractionMode
 
 /// Creates the shared Escape action that returns the panel to [NormalMode].
 ///
+/// Escape first dismisses what the focused widget can dismiss below the
+/// nearest [GlobalModeShortcut], such as an input field; only when nothing
+/// there accepts it does the mode end. The action binds Escape directly
+/// instead of [DismissIntent]: a page route answers [DismissIntent] with its
+/// own disabled dismiss action, which would otherwise swallow the key.
+///
 /// [onInvoke] is invoked before the transition. Its returned value is ignored,
 /// so asynchronous work does not delay the transition. A synchronous exception
 /// prevents the transition and propagates to the action caller.
@@ -93,13 +99,14 @@ class NormalMode extends InteractionMode
 /// }
 /// ```
 ActionShortcut escapeToNormalAction({Function(WidgetRef ref)? onInvoke}) {
-  return ActionShortcut.intent(
+  return ActionShortcut(
     id: "escape_to_normal",
     label: "Normal Mode",
     description: "Return to normal mode",
-    intent: DismissIntent,
+    activators: const [SingleActivator(LogicalKeyboardKey.escape)],
     priority: 1000,
     onInvoke: (ref) {
+      if (GlobalModeShortcut.dismissFocused()) return;
       onInvoke?.call(ref);
       ref.read(currentInteractionModeProvider.notifier).normal();
     },

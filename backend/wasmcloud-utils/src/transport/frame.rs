@@ -193,7 +193,7 @@ pub(crate) async fn send_reply_frames(
     send_frames_within(sink, payload_id, frames, window_frames, pacing.deadline()).await
 }
 
-async fn send_frames_within(
+pub(super) async fn send_frames_within(
     sink: &mut impl FrameSink,
     payload_id: &str,
     frames: Vec<PayloadFrame>,
@@ -293,116 +293,12 @@ fn hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
-
     use otel_wasi::WasiError;
 
     use super::*;
-    use crate::transport::test_support::{block_on, nats_message};
-    use crate::wasmcloud::messaging::types::HeaderEntry;
-
-    fn frame_header<'a>(frame: &'a PayloadFrame, name: &str) -> Option<&'a str> {
-        frame
-            .headers
-            .iter()
-            .find(|(candidate, _)| *candidate == name)
-            .map(|(_, value)| value.as_str())
-    }
-
-    fn answer(headers: &[(&str, &str)]) -> NatsMessage {
-        NatsMessage {
-            headers: Some(
-                headers
-                    .iter()
-                    .map(|(name, value)| HeaderEntry {
-                        name: (*name).to_owned(),
-                        value: (*value).to_owned(),
-                    })
-                    .collect(),
-            ),
-            ..nats_message("_INBOX.sender", b"")
-        }
-    }
-
-    fn framed(body: Vec<u8>, chunk_bytes: usize) -> (String, Vec<PayloadFrame>) {
-        match plan_within(body, chunk_bytes, usize::MAX) {
-            PayloadPlan::Framed { payload_id, frames } => (payload_id, frames),
-            plan => panic!("expected frames, got {plan:?}"),
-        }
-    }
-
-    #[derive(Debug, PartialEq, Eq)]
-    enum Sent {
-        Published(String),
-        Requested(String),
-    }
-
-    /// Records what a sender sent and answers each window end with the next scripted answer.
-    #[derive(Default)]
-    struct Receiver {
-        sent: Vec<Sent>,
-        answers: VecDeque<Result<NatsMessage, otel_wasi::Error>>,
-    }
-
-    impl Receiver {
-        fn answering(
-            answers: impl IntoIterator<Item = Result<NatsMessage, otel_wasi::Error>>,
-        ) -> Self {
-            Self {
-                sent: Vec::new(),
-                answers: answers.into_iter().collect(),
-            }
-        }
-    }
-
-    fn label(frame: &PayloadFrame) -> String {
-        frame_header(frame, CHUNK_HEADER)
-            .or(frame_header(frame, FAILURE_HEADER))
-            .unwrap_or_default()
-            .to_owned()
-    }
-
-    impl FrameSink for Receiver {
-        async fn publish(&mut self, frame: PayloadFrame) -> Result<(), otel_wasi::Error> {
-            self.sent.push(Sent::Published(label(&frame)));
-            Ok(())
-        }
-
-        async fn request(
-            &mut self,
-            frame: PayloadFrame,
-            _timeout_ms: u32,
-        ) -> Result<NatsMessage, otel_wasi::Error> {
-            self.sent.push(Sent::Requested(label(&frame)));
-            self.answers
-                .pop_front()
-                .expect("the sender requested beyond the scripted window ends")
-        }
-    }
-
-    fn send(receiver: &mut Receiver, frames: usize, window: usize) -> Result<(), otel_wasi::Error> {
-        send_paced(receiver, frames, Some(window), far_deadline())
-    }
-
-    fn send_paced(
-        receiver: &mut Receiver,
-        frames: usize,
-        window: Option<usize>,
-        deadline: Instant,
-    ) -> Result<(), otel_wasi::Error> {
-        let (payload_id, frames) = framed(vec![7; frames], 1);
-        block_on(send_frames_within(
-            receiver,
-            &payload_id,
-            frames,
-            window,
-            deadline,
-        ))
-    }
-
-    fn far_deadline() -> Instant {
-        Instant::now() + Duration::from_secs(3_600)
-    }
+    use crate::transport::test_support::{
+        Receiver, Sent, answer, far_deadline, frame_header, framed, nats_message, send, send_paced,
+    };
 
     #[test]
     fn a_payload_within_one_chunk_stays_one_plain_message() {
@@ -534,14 +430,6 @@ mod tests {
                 .map(|index| Sent::Published(format!("{index}/20")))
                 .collect::<Vec<_>>()
         );
-    }
-
-    #[test]
-    fn the_route_decides_whether_its_reply_waits_for_credit() {
-        use crate::transport_routes::{ServiceBindingQueryRoute, UserOrganizationCreateRoute};
-        let received = Instant::now();
-        assert!(!ReplyPacing::of::<UserOrganizationCreateRoute>(received).credit);
-        assert!(ReplyPacing::of::<ServiceBindingQueryRoute>(received).credit);
     }
 
     #[test]

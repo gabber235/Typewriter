@@ -8,15 +8,16 @@ repository.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-base64.workspace = true
 component-test.workspace = true
 http.workspace = true
-jose.workspace = true
-nats-jwt-rs.workspace = true
 nkeys.workspace = true
 serde_json.workspace = true
 json-matcher.workspace = true
 tokio.workspace = true
 typewriter-component-test.workspace = true
 wasmcloud-utils.workspace = true
-surrealdb-types.workspace = true
+
+# Outside `src/bin`, which the repository ignores.
+[[bin]]
+name = "catalog"
+path = "src/catalog.rs"

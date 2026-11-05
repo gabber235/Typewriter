@@ -1,45 +1,38 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
-import "../application/selection_test_support.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("focused descendants resolve the nearest selectable identity", (
     tester,
   ) async {
-    final inside = FocusNode();
-    final outside = FocusNode();
-    addTearDown(inside.dispose);
-    addTearDown(outside.dispose);
-    await tester.pumpTestApp(
-      child: Column(
-        children: [
-          SelectableScope(
-            id: const MockSelectableIdentifier("outer"),
-            child: SelectableScope(
-              id: const MockSelectableIdentifier("inner"),
-              child: TextField(focusNode: inside),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SelectableScope(
+              id: TestSelectableIdentifier(id: "outer"),
+              child: SelectableScope(
+                id: TestSelectableIdentifier(id: "inner"),
+                child: const LabeledTextField("Inside"),
+              ),
             ),
-          ),
-          TextField(focusNode: outside),
-        ],
+            const LabeledTextField("Outside"),
+          ],
+        ),
       ),
     );
 
-    inside.requestFocus();
-    await tester.pumpAndSettle();
+    await panel.tapOn(panel.labeled("Inside"));
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("inner"),
+      TestSelectableIdentifier(id: "inner"),
     );
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(TextField).first),
-    );
-    expect(container.read(selectionProvider), isEmpty);
+    expect(panel.container.read(selectionProvider), isEmpty);
 
-    outside.requestFocus();
-    await tester.pumpAndSettle();
+    await panel.tapOn(panel.labeled("Outside"));
     expect(SelectableScope.primaryFocusedId(), isNull);
   });
 
@@ -47,38 +40,37 @@ void main() {
     tester,
   ) async {
     final id = ValueNotifier<SelectableIdentifier>(
-      const MockSelectableIdentifier("old"),
+      TestSelectableIdentifier(id: "old"),
     );
     addTearDown(id.dispose);
-    await tester.pumpTestApp(
-      child: ValueListenableBuilder(
-        valueListenable: id,
-        builder: (context, value, child) {
-          return SelectableScope(id: value, child: child!);
-        },
-        child: const TextField(),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: id,
+          builder: (context, value, child) {
+            return SelectableScope(id: value, child: child!);
+          },
+          child: const LabeledTextField("Editor"),
+        ),
       ),
     );
-    await tester.enterText(find.byType(TextField), "draft");
-    await tester.pumpAndSettle();
-    final before = tester.state<EditableTextState>(find.byType(EditableText));
+    await tester.enterText(panel.labeled("Editor"), "draft");
+    await panel.settle();
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("old"),
+      TestSelectableIdentifier(id: "old"),
     );
 
-    id.value = const MockSelectableIdentifier("new");
-    await tester.pumpAndSettle();
+    id.value = TestSelectableIdentifier(id: "new");
+    await panel.settle();
+
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("new"),
+      TestSelectableIdentifier(id: "new"),
     );
-    expect(
-      tester.state<EditableTextState>(find.byType(EditableText)),
-      same(before),
-    );
-    expect(before.widget.focusNode.hasPrimaryFocus, isTrue);
-    expect(before.widget.controller.text, "draft");
+    expect(panel.focused, "Editor");
+    expect(find.text("draft"), findsOneWidget);
   });
 
   testWidgets("global key reparenting updates enclosing focus identity", (
@@ -87,91 +79,86 @@ void main() {
     final move = ValueNotifier(false);
     final editorKey = GlobalKey();
     addTearDown(move.dispose);
-    await tester.pumpTestApp(
-      child: ValueListenableBuilder(
-        valueListenable: move,
-        builder: (context, moved, _) {
-          final editor = TextField(key: editorKey);
-          return Row(
-            children: [
-              Expanded(
-                child: SelectableScope(
-                  id: const MockSelectableIdentifier("left"),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ValueListenableBuilder(
+          valueListenable: move,
+          builder: (context, moved, _) {
+            final editor = LabeledTextField("Editor", key: editorKey);
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SelectableScope(
+                  id: TestSelectableIdentifier(id: "left"),
                   child: moved ? const SizedBox.shrink() : editor,
                 ),
-              ),
-              Expanded(
-                child: SelectableScope(
-                  id: const MockSelectableIdentifier("right"),
+                SelectableScope(
+                  id: TestSelectableIdentifier(id: "right"),
                   child: moved ? editor : const SizedBox.shrink(),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
-    await tester.enterText(find.byType(TextField), "draft");
-    await tester.pumpAndSettle();
-    final before = tester.state<EditableTextState>(find.byType(EditableText));
+    await tester.enterText(panel.labeled("Editor"), "draft");
+    await panel.settle();
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("left"),
+      TestSelectableIdentifier(id: "left"),
     );
 
     move.value = true;
-    await tester.pumpAndSettle();
+    await panel.settle();
+
     expect(tester.takeException(), isNull);
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("right"),
+      TestSelectableIdentifier(id: "right"),
     );
-    expect(
-      tester.state<EditableTextState>(find.byType(EditableText)),
-      same(before),
-    );
-    expect(before.widget.focusNode.hasPrimaryFocus, isTrue);
-    expect(before.widget.controller.text, "draft");
+    expect(panel.focused, "Editor");
+    expect(find.text("draft"), findsOneWidget);
   });
 
   testWidgets("identity boundaries do not add stops to keyboard traversal", (
     tester,
   ) async {
-    final first = FocusNode();
-    final second = FocusNode();
-    addTearDown(first.dispose);
-    addTearDown(second.dispose);
-    await tester.pumpTestApp(
-      child: Column(
-        children: [
-          SelectableScope(
-            id: const MockSelectableIdentifier("first"),
-            child: TextField(focusNode: first),
-          ),
-          SelectableScope(
-            id: const MockSelectableIdentifier("second"),
-            child: TextField(focusNode: second),
-          ),
-        ],
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SelectableScope(
+              id: TestSelectableIdentifier(id: "first"),
+              child: const LabeledTextField("First"),
+            ),
+            SelectableScope(
+              id: TestSelectableIdentifier(id: "second"),
+              child: const LabeledTextField("Second"),
+            ),
+          ],
+        ),
       ),
     );
-    first.requestFocus();
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pumpAndSettle();
-    expect(second.hasPrimaryFocus, isTrue);
+    await panel.tapOn(panel.labeled("First"));
+
+    await panel.press(LogicalKeyboardKey.tab);
+    expect(panel.focused, "Second");
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("second"),
+      TestSelectableIdentifier(id: "second"),
     );
+
     await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await panel.press(LogicalKeyboardKey.tab);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-    await tester.pumpAndSettle();
-    expect(first.hasPrimaryFocus, isTrue);
+    expect(panel.focused, "First");
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("first"),
+      TestSelectableIdentifier(id: "first"),
     );
   });
 
@@ -182,59 +169,60 @@ void main() {
     final showEditor = ValueNotifier(true);
     addTearDown(width.dispose);
     addTearDown(showEditor.dispose);
-    await tester.pumpTestApp(
-      child: AnimatedBuilder(
-        animation: Listenable.merge([width, showEditor]),
-        builder: (context, _) {
-          return Row(
-            children: [
-              SizedBox(
-                width: width.value,
-                height: 400,
-                child: Graph(
-                  data: GraphData(
-                    cellSize: 50,
-                    elements: [
-                      GraphElement(
-                        id: const GraphIdentifier("editor"),
-                        x: 0,
-                        y: 0,
-                        width: 2,
-                        height: 2,
-                        builder: (_) => const SizedBox.expand(),
-                      ),
-                    ],
-                    edges: const [],
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        AnimatedBuilder(
+          animation: Listenable.merge([width, showEditor]),
+          builder: (context, _) {
+            return Row(
+              children: [
+                SizedBox(
+                  width: width.value,
+                  height: 400,
+                  child: Graph(
+                    data: GraphData(
+                      cellSize: 50,
+                      elements: [
+                        GraphElement(
+                          id: const GraphIdentifier("editor"),
+                          x: 0,
+                          y: 0,
+                          width: 2,
+                          height: 2,
+                          builder: (_) => const SizedBox.expand(),
+                        ),
+                      ],
+                      edges: const [],
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: showEditor.value
-                    ? const SelectableScope(
-                        id: MockSelectableIdentifier("editor"),
-                        child: TextField(),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          );
-        },
+                Expanded(
+                  child: showEditor.value
+                      ? SelectableScope(
+                          id: TestSelectableIdentifier(id: "editor"),
+                          child: const LabeledTextField("Editor"),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
-    await tester.showKeyboard(find.byType(TextField));
-    await tester.pumpAndSettle();
+    await panel.tapOn(panel.labeled("Editor"));
     expect(
       SelectableScope.primaryFocusedId(),
-      const MockSelectableIdentifier("editor"),
+      TestSelectableIdentifier(id: "editor"),
     );
 
     width.value = 301;
     showEditor.value = false;
     await tester.pump();
     expect(tester.takeException(), isNull);
-    expect(find.byType(ErrorWidget), findsNothing);
-    expect(find.byType(EditableText), findsNothing);
-    await tester.pumpAndSettle();
+    expect(panel.shows("Editor"), isFalse);
+    await panel.settle();
     expect(SelectableScope.primaryFocusedId(), isNull);
   });
 }

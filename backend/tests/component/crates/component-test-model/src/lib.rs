@@ -278,19 +278,17 @@ mod tests {
         dependencies: NO_DEPS,
     };
 
-    fn test_descriptor() -> TestDescriptor {
-        TestDescriptor {
-            fixture_id: "service-identity",
-            module_path: "service_identity",
-            function: "issue_identity",
-            case: Some("empty_roles"),
-            exact_name: "service_identity::issue_identity__empty_roles",
-        }
-    }
+    const ISSUE_IDENTITY: TestDescriptor = TestDescriptor {
+        fixture_id: "service-identity",
+        module_path: "service_identity",
+        function: "issue_identity",
+        case: Some("empty_roles"),
+        exact_name: "service_identity::issue_identity__empty_roles",
+    };
 
     #[test]
     fn validates_catalog() {
-        assert_eq!(validate_catalog([&SERVICE], [&test_descriptor()]), Ok(()));
+        assert_eq!(validate_catalog([&SERVICE], [&ISSUE_IDENTITY]), Ok(()));
     }
 
     #[test]

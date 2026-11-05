@@ -2,328 +2,200 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test(
-    "keeps the workspace available during ordinary topology observations",
-    () async {
-      final organization = skir.recordId("organization:test");
-      final source =
-          StreamController<skir.OrganizationTopologySnapshot>.broadcast(
-            sync: true,
+  final library = [book("First")];
+
+  group("a Realm served by a reporting host", () {
+    testWidgets("opens from its route and turns online once checked", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel(
+        [signedIn(ada, organization: acme), realm(books: library)],
+        at: PanelLocation.route(
+          OrganizationRoute(organizationId: acme.organizationId.id),
+        ),
+      );
+      final states = panel.recordRealmConnection();
+
+      await panel.container
+          .read(appRouterProvider)
+          .navigate(
+            const RealmRouteTree().realm(panel.world.requireRealm.scope),
           );
-      final states = <RealmConnectionState>[];
-      final container = ProviderContainer.test(
-        overrides: [
-          organizationIdProvider.overrideWithValue(organization),
-          routeParamProvider("realmId").overrideWithValue("test"),
-          organizationTopologyControllerProvider(organization)
-              .overrideWith(() => _Topology(source.stream)),
-          hostConnectedProvider(skir.recordId("service_host:host"))
-              .overrideWithValue(true),
-        ],
-      );
-      addTearDown(() async {
-        container.dispose();
-        await source.close();
-      });
-      container.listen(realmInteractionProvider, (_, next) {
-        states.add(next.connectionState);
-      }, fireImmediately: true);
-      source.add(
-        skir.OrganizationTopologySnapshot(
-          hosts: [],
-          realms: [_realm()],
-          engines: [],
-        ),
-      );
-      await container.read(realmConnectionProvider.future);
-      await container.pump();
-      states.clear();
+      await panel.settle();
 
-      source.add(
-        skir.OrganizationTopologySnapshot(
-          hosts: [],
-          realms: [(_realm().toMutable()..revision = 2).toFrozen()],
-          engines: [],
-        ),
-      );
-      await container.pump();
-
-      expect(container.read(realmInteractionProvider).suspended, isFalse);
-      expect(states, isNot(contains(RealmConnectionState.checking)));
-
-      container.invalidate(
-        organizationTopologyControllerProvider(organization),
-      );
+      expect(states.last, RealmConnectionState.online);
       expect(
-        container.read(realmInteractionProvider).connectionState,
-        RealmConnectionState.checking,
+        states.skipWhile((state) => state != RealmConnectionState.online),
+        everyElement(RealmConnectionState.online),
+        reason: "an online Realm never goes back to checking on its own",
       );
-      source.add(
-        skir.OrganizationTopologySnapshot(
-          hosts: [],
-          realms: [_realm()],
-          engines: [],
+      expect(panel.shows("Realm connection lost"), isFalse);
+    });
+
+    testWidgets("stays available through ordinary topology changes", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: library),
+      ]);
+      expect(panel.realmConnection, RealmConnectionState.online);
+      final states = panel.recordRealmConnection()..clear();
+
+      panel.world.organizations.addRealm(
+        acme.organizationId,
+        id: skir.recordId("realm_instance:other"),
+        name: "Other",
+      );
+      await panel.settle();
+
+      expect(states, isNot(contains(RealmConnectionState.checking)));
+      expect(panel.realmConnection, RealmConnectionState.online);
+    });
+
+    testWidgets("is suspended once its host stops reporting", (tester) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: library),
+      ]);
+      expect(panel.realmConnection, RealmConnectionState.online);
+
+      panel.world.organizations.stopHost(
+        panel.world.requireRealm.scope.realmId,
+      );
+      await panel.settle();
+
+      expect(panel.realmConnection, RealmConnectionState.offline);
+      expect(panel.shows("Realm connection lost"), isTrue);
+    });
+
+    testWidgets("is suspended once its host's last report expires", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: library),
+      ]);
+      expect(panel.realmConnection, RealmConnectionState.online);
+
+      await tester.pump(const Duration(minutes: 5));
+      await panel.settle();
+
+      expect(panel.realmConnection, RealmConnectionState.offline);
+    });
+  });
+
+  testWidgets("each Realm of the organization is available while its own "
+      "host reports", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: library),
+    ]);
+    final main = panel.world.requireRealm.scope.realmId;
+    final other = panel.world.organizations
+        .addRealm(
+          acme.organizationId,
+          id: skir.recordId("realm_instance:other"),
+          name: "Other",
+        )
+        .realmId;
+
+    panel.world.organizations.stopHost(other);
+    await panel.settle();
+
+    expect(await panel.container.read(realmsAvailabilityProvider.future), {
+      main: true,
+      other: false,
+    });
+  });
+
+  testWidgets("without a Realm in the route nothing is selected", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([signedIn(ada, organization: acme)]);
+
+    expect(panel.realmConnection, RealmConnectionState.notSelected);
+    expect(panel.container.read(realmInteractionProvider).suspended, isFalse);
+  });
+
+  testWidgets("a Realm missing from the topology is unavailable", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: library),
+      servicesBackend(),
+    ]);
+
+    expect(panel.realmConnection, RealmConnectionState.unavailable);
+    expect(panel.shows("Realm unavailable"), isTrue);
+  });
+
+  group("a Realm whose runtime is not active", () {
+    testWidgets("is offline", (tester) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: library),
+        realmRuntime(skir.ChildRuntimeStatus.failed),
+      ]);
+
+      expect(panel.realmConnection, RealmConnectionState.offline);
+      expect(panel.shows("Realm connection lost"), isTrue);
+    });
+
+    testWidgets("resumes without checking again once its runtime is active", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: library),
+        realmRuntime(skir.ChildRuntimeStatus.failed),
+      ]);
+      final states = panel.recordRealmConnection()..clear();
+
+      panel.world.nats.announceTopology(
+        acme.organizationId,
+        skir.OrganizationTopologyChanged.wrapReplace(
+          realmRuntimeTopology(skir.ChildRuntimeStatus.active),
         ),
       );
-      await container.read(realmConnectionProvider.future);
-      expect(container.read(realmInteractionProvider).suspended, isFalse);
-    },
-  );
+      await panel.eventually(
+        () => expect(panel.realmConnection, RealmConnectionState.online),
+      );
 
-  test("opens an active topology Realm from its route identifier", () async {
-    final realm = _realm();
-    final online = Completer<void>();
-    final container =
-        ProviderContainer.test(
-          overrides: [
-            hostConnectedProvider(skir.recordId("service_host:host"))
-                .overrideWithValue(true),
-            routeParamProvider("realmId").overrideWithValue("test"),
-            organizationTopologyProvider.overrideWith(
-              (ref) async => skir.OrganizationTopologySnapshot(
-                hosts: [],
-                realms: [realm],
-                engines: [],
-              ),
-            ),
-          ],
-        )..listen(realmConnectionProvider, (_, next) {
-          if (next.value == RealmConnectionState.online &&
-              !online.isCompleted) {
-            online.complete();
-          }
-        });
+      await panel.settle();
 
-    expect(await container.read(selectedRealmProvider.future), realm);
-    await online.future.timeout(const Duration(seconds: 2));
-    expect(container.read(realmInteractionProvider).suspended, isFalse);
+      expect(states, isNot(contains(RealmConnectionState.checking)));
+      expect(panel.shows("Realm connection lost"), isFalse);
+    });
   });
 
-  test("suspends an active Realm when its host connection expires", () async {
-    var connected = true;
-    final states = <RealmConnectionState>[];
-    final provider = hostConnectedProvider(skir.recordId("service_host:host"));
-    final container =
-        ProviderContainer.test(
-          overrides: [
-            realmIdProvider.overrideWithValue(
-              skir.recordId("realm_instance:test"),
-            ),
-            selectedRealmProvider.overrideWith((ref) async => _realm()),
-            provider.overrideWith((ref) => connected),
-          ],
-        )..listen(realmConnectionProvider, (_, next) {
-          if (next.hasValue) states.add(next.requireValue);
-        });
-    await _waitForState(states, RealmConnectionState.online);
-    connected = false;
-
-    container.invalidate(provider);
-    await _waitForState(states, RealmConnectionState.offline);
-    expect(container.read(realmInteractionProvider).suspended, isTrue);
-  });
-
-  test("reports no selection without a realm route", () async {
-    final states = <RealmConnectionState>[];
-    final container = ProviderContainer(
-      overrides: [
-        hostConnectedProvider(skir.recordId("service_host:host"))
-            .overrideWithValue(true),
-        realmIdProvider.overrideWithValue(null),
-      ],
+  testWidgets("checking again a Realm whose topology cannot be read shows "
+      "it unavailable", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: library),
+      realmRuntime(skir.ChildRuntimeStatus.failed),
+    ]);
+    expect(panel.realmConnection, RealmConnectionState.offline);
+    panel.world.nats.registerHandler(
+      "cloud.to.user.${ada.id.transportIdentity}.organization."
+      "${acme.organizationId.id.transportIdentity}.topology.watch",
+      (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+        skir.WatchOrganizationTopologyResponse.createInternalError(),
+      ),
     );
-    addTearDown(container.dispose);
-    final subscription = container.listen(realmConnectionProvider, (
-      previous,
-      next,
-    ) {
-      if (next.hasValue) states.add(next.requireValue);
-    }, fireImmediately: true);
-    addTearDown(subscription.close);
 
-    await _waitForState(states, RealmConnectionState.notSelected);
+    // The veil shows progress while it checks, so the panel never settles.
+    await tester.tap(find.text("Check again"));
 
-    expect(states.last, RealmConnectionState.notSelected);
-  });
-
-  test("remains loading while checking, then resolves online", () async {
-    final states = <RealmConnectionState>[];
-    final phases = <AsyncValue<RealmConnectionState>>[];
-    final container = _containerWithRealm(_realm());
-    addTearDown(container.dispose);
-    final subscription = container.listen(realmConnectionProvider, (
-      previous,
-      next,
-    ) {
-      phases.add(next);
-      if (next.hasValue) states.add(next.requireValue);
-    }, fireImmediately: true);
-    addTearDown(subscription.close);
-
-    await _waitForState(states, RealmConnectionState.online);
-
-    expect(phases.first, isA<AsyncLoading<RealmConnectionState>>());
-    expect(states, isNot(contains(RealmConnectionState.checking)));
-    expect(states.last, RealmConnectionState.online);
-  });
-
-  test("reports explicit inactive state", () async {
-    final states = <RealmConnectionState>[];
-    final container = _containerWithRealm(
-      _realm(status: skir.ChildRuntimeStatus.failed),
+    await panel.eventually(
+      () => expect(panel.realmConnection, RealmConnectionState.unavailable),
     );
-    addTearDown(container.dispose);
-    final subscription = container.listen(realmConnectionProvider, (
-      previous,
-      next,
-    ) {
-      if (next.hasValue) states.add(next.requireValue);
-    }, fireImmediately: true);
-    addTearDown(subscription.close);
-
-    await _waitForState(states, RealmConnectionState.offline);
-
-    expect(states.last, RealmConnectionState.offline);
+    await panel.settle();
+    expect(panel.shows("Realm unavailable"), isTrue);
   });
-
-  test("reports unavailable for a missing realm", () async {
-    final states = <RealmConnectionState>[];
-    final container = _containerWithRealm(null);
-    addTearDown(container.dispose);
-    final subscription = container.listen(realmConnectionProvider, (
-      previous,
-      next,
-    ) {
-      if (next.hasValue) states.add(next.requireValue);
-    }, fireImmediately: true);
-    addTearDown(subscription.close);
-
-    await _waitForState(states, RealmConnectionState.unavailable);
-
-    expect(states.last, RealmConnectionState.unavailable);
-  });
-
-  test("reports unavailable when realm resolution fails", () async {
-    final states = <RealmConnectionState>[];
-    final id = skir.recordId("realm_instance:test");
-    final container = ProviderContainer(
-      overrides: [
-        hostConnectedProvider(skir.recordId("service_host:host"))
-            .overrideWithValue(true),
-        realmIdProvider.overrideWithValue(id),
-        selectedRealmProvider.overrideWith(
-          (ref) => Future<skir.RealmInstance?>.error(StateError("Unavailable")),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    final subscription = container.listen(realmConnectionProvider, (
-      previous,
-      next,
-    ) {
-      if (next.hasValue) states.add(next.requireValue);
-    }, fireImmediately: true);
-    addTearDown(subscription.close);
-
-    await _waitForState(states, RealmConnectionState.unavailable);
-
-    expect(states.last, RealmConnectionState.unavailable);
-  });
-
-  test("resumes when the selected Realm becomes active", () async {
-    final states = <RealmConnectionState>[];
-    final id = skir.recordId("realm_instance:test");
-    var selected = _realm(status: skir.ChildRuntimeStatus.failed);
-    final container = ProviderContainer(
-      overrides: [
-        hostConnectedProvider(skir.recordId("service_host:host"))
-            .overrideWithValue(true),
-        realmIdProvider.overrideWithValue(id),
-        selectedRealmProvider.overrideWith((ref) async => selected),
-      ],
-    );
-    addTearDown(container.dispose);
-    final subscription = container.listen(realmConnectionProvider, (
-      previous,
-      next,
-    ) {
-      if (next.hasValue) states.add(next.requireValue);
-    }, fireImmediately: true);
-
-    addTearDown(subscription.close);
-
-    await _waitForState(states, RealmConnectionState.offline);
-    states.clear();
-
-    selected = _realm();
-    container
-      ..invalidate(selectedRealmProvider)
-      ..invalidate(realmConnectionProvider);
-    expect(
-      container.read(realmInteractionProvider).connectionState,
-      RealmConnectionState.checking,
-    );
-    await _waitForState(states, RealmConnectionState.online);
-
-    expect(states, isNot(contains(RealmConnectionState.checking)));
-    expect(states.last, RealmConnectionState.online);
-  });
-}
-
-class _Topology extends OrganizationTopologyController {
-  _Topology(this.values);
-  final Stream<skir.OrganizationTopologySnapshot> values;
-
-  @override
-  Stream<skir.OrganizationTopologySnapshot> build(
-    skir.RecordId organizationId,
-  ) => values;
-}
-
-ProviderContainer _containerWithRealm(skir.RealmInstance? realm) {
-  final id = skir.recordId("realm_instance:test");
-  return ProviderContainer(
-    overrides: [
-      hostConnectedProvider(skir.recordId("service_host:host"))
-          .overrideWithValue(true),
-      realmIdProvider.overrideWithValue(id),
-      selectedRealmProvider.overrideWith((ref) async => realm),
-    ],
-  );
-}
-
-skir.RealmInstance _realm({
-  skir.ChildRuntimeStatus status = skir.ChildRuntimeStatus.active,
-}) => skir.RealmInstance(
-  realmId: skir.recordId("realm_instance:test"),
-  ownerHost: skir.OwnerHost(
-    id: skir.recordId("service_host:host"),
-    name: "test_realm",
-  ),
-  revision: 1,
-  targetEngine: skir.EngineTarget(
-    engineId: "typewritermc:paper",
-    versionConstraint: "*",
-  ),
-  state: skir.ChildRuntimeState(
-    status: status,
-    activeArtifactVersion: status == skir.ChildRuntimeStatus.active
-        ? "1.0.0"
-        : null,
-    message: null,
-    updatedAt: DateTime.now(),
-  ),
-);
-
-Future<void> _waitForState(
-  List<RealmConnectionState> states,
-  RealmConnectionState expected,
-) async {
-  for (var attempt = 0; attempt < 100; attempt++) {
-    if (states.contains(expected)) return;
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-  }
-  fail("Did not observe $expected. States: $states");
 }

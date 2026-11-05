@@ -30,6 +30,8 @@ class AuthoredResourcesInteractions extends StatelessWidget {
       prepareValue: prepareValue,
       child: layout,
     ),
+    selectableFor: (resource) =>
+        AuthoringResourceIdentifier.inScope(authoringScope, resource),
     itemBuilder: (context, view, member, content) {
       final resources = _AuthoredResourcesScope.of(context);
       if (resources == null) return content;
@@ -328,10 +330,15 @@ class AuthoredNavigatorItem extends HookWidget {
     final hovered = useState(false);
     final focused = useState(false);
     final routed = resources.isRouted(identifier);
+    // The label names the whole row; the member's own text would repeat it.
+    // Excluding that text also drops the gesture detector's tap action, so
+    // the row offers its own.
     return Semantics(
       button: true,
       selected: routed,
       label: label,
+      onTap: () => resources.open(identifier),
+      excludeSemantics: true,
       child: FocusableActionDetector(
         mouseCursor: SystemMouseCursors.click,
         onShowHoverHighlight: (value) => hovered.value = value,

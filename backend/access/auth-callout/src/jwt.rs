@@ -10,6 +10,7 @@
 //! remain owned by the callout and permission service respectively.
 
 use crate::config::IssuerConfig;
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use jose::{
     JoseHeader, JsonWebSignature, UntypedAdditionalProperties,
     format::{Compact, DecodeFormat},
@@ -42,7 +43,7 @@ pub struct Jwks {
 type FlexibleJwt = JsonWebSignature<Compact, FlexibleClaims>;
 
 #[derive(Debug, Clone, Deserialize)]
-struct FlexibleClaims {
+pub(crate) struct FlexibleClaims {
     #[serde(rename = "iss")]
     issuer: Option<String>,
     #[serde(rename = "sub")]
@@ -149,6 +150,17 @@ pub fn validate_jwt<'c>(
     configs: &'c [IssuerConfig],
     clock: &impl ValidationClock,
 ) -> Result<Option<(Claims<UntypedAdditionalProperties>, &'c IssuerConfig)>, otel_wasi::Error> {
+    validate_jwt_with(token, configs, clock, fetch_jwks)
+}
+
+/// [`validate_jwt`] reading the selected issuer's JWKS from `keys`, which production fetches over
+/// HTTP from the configured URL.
+pub(crate) fn validate_jwt_with<'c>(
+    token: &str,
+    configs: &'c [IssuerConfig],
+    clock: &impl ValidationClock,
+    keys: impl FnOnce(&url::Url) -> Result<Jwks, otel_wasi::Error>,
+) -> Result<Option<(Claims<UntypedAdditionalProperties>, &'c IssuerConfig)>, otel_wasi::Error> {
     attribute!("auth.jwt.raw.size" = token.len() as i64);
 
     let Some(unverified) = decode_jwt(token) else {
@@ -181,7 +193,7 @@ pub fn validate_jwt<'c>(
             .to_string(),
     );
 
-    let jwks = fetch_jwks(&issuer_config.jwks_url)?;
+    let jwks = keys(&issuer_config.jwks_url)?;
 
     let Some(jwk) = find_matching_jwk(jwks, key_id, algorithm) else {
         return Ok(None);
@@ -230,12 +242,45 @@ fn is_supported_asymmetric_algorithm(algorithm: &JsonWebSigningAlgorithm) -> boo
 }
 
 fn decode_jwt(token: &str) -> Option<Unverified<FlexibleJwt>> {
+    if !has_admissible_header(token) {
+        main_attribute!("auth.jwt.decode.success" = false);
+        return None;
+    }
     let compact = Compact::from_str(token).ok()?;
     let result = FlexibleJwt::decode(compact).ok();
     if result.is_none() {
         main_attribute!("auth.jwt.decode.success" = false);
     }
     result
+}
+
+/// The signing algorithms [`is_supported_asymmetric_algorithm`] accepts, by their `alg` names.
+const SUPPORTED_ALGORITHMS: &[&str] = &[
+    "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512", "ES256K",
+    "EdDSA",
+];
+
+/// Whether the token's header names a supported algorithm and embeds no key, checked before jose
+/// parses it.
+///
+/// Guard for jose 0.0.2's unknown `alg` recursion: it deserializes an unrecognized algorithm name,
+/// in `alg` or in an embedded `jwk`, by alternating between its signing and encryption algorithm
+/// types until the stack overflows, so such a header must never reach it. Keys only ever come from
+/// the issuer's JWKS. Remove this guard once a jose release with the fix is pinned.
+fn has_admissible_header(token: &str) -> bool {
+    let Some(header) = token
+        .split('.')
+        .next()
+        .and_then(|header| URL_SAFE_NO_PAD.decode(header).ok())
+        .and_then(|header| serde_json::from_slice::<serde_json::Value>(&header).ok())
+    else {
+        return false;
+    };
+    header.get("jwk").is_none()
+        && header
+            .get("alg")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|algorithm| SUPPORTED_ALGORITHMS.contains(&algorithm))
 }
 
 fn extract_key_id(unverified: &Unverified<FlexibleJwt>) -> Option<&str> {
@@ -398,11 +443,43 @@ fn parse_jwks_response(
         .read_to_end(&mut buf)
         .error_with_slug("auth-callout-jwks-response-read-failed")?;
 
-    let jwks: Jwks =
-        serde_json::from_slice(&buf).error_with_slug("auth-callout-jwks-response-parse-failed")?;
-
+    let jwks = parse_jwks(&buf)?;
     main_attribute!("auth.jwks.keys.count" = jwks.keys.len() as i64);
     Ok(jwks)
+}
+
+/// Parses a JWKS document, keeping only keys that declare a supported signing algorithm.
+///
+/// Guard for jose 0.0.2's unknown `alg` recursion: it deserializes an unrecognized algorithm name
+/// by alternating between its signing and encryption algorithm types until the stack overflows, so
+/// a key's `alg` is checked as plain JSON before jose sees the key. `alg` is the only field of a
+/// key that reaches those types. Dropped keys could never match anyway, since a token's key must
+/// declare its exact algorithm. Remove this guard once a jose release with the fix is pinned.
+///
+/// jose reads a key's `x5t` as a string borrowed from the text it parses, so each kept key is parsed
+/// from text: a `serde_json::Value` owns its strings and refuses every key that has a certificate.
+pub(crate) fn parse_jwks(body: &[u8]) -> Result<Jwks, otel_wasi::Error> {
+    #[derive(Deserialize)]
+    struct RawJwks {
+        keys: Vec<serde_json::Value>,
+    }
+
+    let raw: RawJwks =
+        serde_json::from_slice(body).error_with_slug("auth-callout-jwks-response-parse-failed")?;
+    let declared = raw.keys.len();
+    let keys = raw
+        .keys
+        .into_iter()
+        .filter(|key| {
+            key.get("alg")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|algorithm| SUPPORTED_ALGORITHMS.contains(&algorithm))
+        })
+        .map(|key| serde_json::from_str(&key.to_string()))
+        .collect::<Result<Vec<jose::Jwk>, _>>()
+        .error_with_slug("auth-callout-jwks-response-parse-failed")?;
+    main_attribute!("auth.jwks.keys.dropped" = (declared - keys.len()) as i64);
+    Ok(Jwks { keys })
 }
 
 fn find_matching_jwk(
@@ -559,45 +636,13 @@ fn check_jwt_claims(
 }
 
 #[cfg(test)]
+mod fuzz;
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::parse_issuer_configs;
+    use crate::test_support::{FixedClock, flexible_claims as claims, issuer};
     use jose::jwa::{Hmac, RsaSigning, RsassaPkcs1V1_5};
-    use std::time::Duration;
-
-    struct FixedClock(u64);
-
-    impl ValidationClock for FixedClock {
-        fn now(&self) -> SystemTime {
-            UNIX_EPOCH + Duration::from_secs(self.0)
-        }
-    }
-
-    fn issuer(require_expiration: bool, skew: u64) -> IssuerConfig {
-        let config = serde_json::json!([{
-            "id": "panel",
-            "issuer_url": "https://issuer.example/",
-            "jwks_url": "https://keys.example:8443/jwks?tenant=panel",
-            "audiences": ["panel", "shared"],
-            "require_expiration": require_expiration,
-            "clock_skew_seconds": skew,
-            "nats_account_key": "account"
-        }]);
-        parse_issuer_configs(&config.to_string())
-            .expect("issuer config is valid")
-            .remove(0)
-    }
-
-    fn claims() -> FlexibleClaims {
-        serde_json::from_value(serde_json::json!({
-            "iss": "https://issuer.example/",
-            "aud": "panel",
-            "exp": 1_100,
-            "nbf": 900,
-            "iat": 900
-        }))
-        .expect("claims are valid")
-    }
 
     #[test]
     fn accepts_claims_with_an_allowed_audience() {
@@ -605,15 +650,25 @@ mod tests {
     }
 
     #[test]
-    fn rejects_nonexact_issuer_and_unconfigured_audience() {
-        let config = issuer(true, 0);
-        let mut wrong_issuer = claims();
-        wrong_issuer.issuer = Some("https://issuer.example".into());
-        let mut wrong_audience = claims();
-        wrong_audience.audience = Some(AudienceClaim::One("other".into()));
+    fn rejects_an_issuer_that_is_not_exactly_the_configured_one() {
+        let mut claims = claims();
+        claims.issuer = Some("https://issuer.example".into());
 
-        assert!(check_jwt_claims(&wrong_issuer, &config, &FixedClock(1_000)).is_err());
-        assert!(check_jwt_claims(&wrong_audience, &config, &FixedClock(1_000)).is_err());
+        assert_eq!(
+            check_jwt_claims(&claims, &issuer(true, 0), &FixedClock(1_000)),
+            Err(ClaimValidationFailure::Issuer)
+        );
+    }
+
+    #[test]
+    fn rejects_an_audience_that_is_not_configured() {
+        let mut claims = claims();
+        claims.audience = Some(AudienceClaim::One("other".into()));
+
+        assert_eq!(
+            check_jwt_claims(&claims, &issuer(true, 0), &FixedClock(1_000)),
+            Err(ClaimValidationFailure::Audience)
+        );
     }
 
     #[test]

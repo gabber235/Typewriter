@@ -1,0 +1,15 @@
+id: dart-flutter-animated-list
+language: dart
+severity: error
+message: Flutter's animated list and grid dispose a finished row's controller twice when they leave the tree in that frame, which happens on web.
+note: Use SliverAnimatedRows with useSliverAnimatedList, or AnimatedTable. Both keep their rows in AnimatedRows.
+files:
+  - panel/lib/**
+  - panel/testkit/lib/**
+  - panel/widgetbook/lib/**
+rule:
+  # A constructor call names an identifier, a type argument a type identifier.
+  any:
+    - kind: identifier
+    - kind: type_identifier
+  regex: ^(AnimatedList|SliverAnimatedList|AnimatedGrid|SliverAnimatedGrid)(State)?$

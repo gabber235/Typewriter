@@ -160,15 +160,12 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       _ResolvedValue(:final value) => MarkdownBody(
         data: value,
         selectable: content.paragraph.selectable,
-        styleSheet:
-            MarkdownStyleSheet.fromTheme(
-              theme.copyWith(textTheme: textTheme),
-            ).copyWith(
-              p: DefaultTextStyle.of(context).style.copyWith(
-                color: foreground,
-                fontSize: resolved is ExactTextSizing ? resolved.size : null,
-              ),
-            ),
+        styleSheet: _markdownStyleSheet(context, textTheme).copyWith(
+          p: DefaultTextStyle.of(context).style.copyWith(
+            color: foreground,
+            fontSize: resolved is ExactTextSizing ? resolved.size : null,
+          ),
+        ),
       ),
       _ResolvedFailure(:final message) => _diagnostic(message),
     };
@@ -943,6 +940,83 @@ Widget _styledTimeFace(
               ? EdgeInsets.zero
               : EdgeInsets.symmetric(vertical: style.dense! ? 2 : 6)),
       child: content,
+    ),
+  );
+}
+
+/// The markdown style sheet of portable content, built from the panel's design
+/// system.
+///
+/// The markdown package still reads the deprecated Flutter material library,
+/// whose `ThemeData` is a different type than the panel's material library, so
+/// `MarkdownStyleSheet.fromTheme` cannot take the panel theme.
+MarkdownStyleSheet _markdownStyleSheet(
+  BuildContext context,
+  TextTheme textTheme,
+) {
+  final theme = Theme.of(context);
+  final colors = theme.colorScheme;
+  final spacing = context.spacing;
+  final shapes = context.shapes;
+  final body = textTheme.bodyMedium!;
+  final code = textTheme.labelMedium!.copyWith(
+    fontWeight: body.fontWeight,
+    backgroundColor: colors.surfaceContainerHighest,
+  );
+  return MarkdownStyleSheet(
+    a: body.copyWith(color: colors.primary),
+    p: body,
+    pPadding: EdgeInsets.zero,
+    code: code,
+    h1: textTheme.headlineSmall,
+    h1Padding: EdgeInsets.zero,
+    h2: textTheme.titleLarge,
+    h2Padding: EdgeInsets.zero,
+    h3: textTheme.titleMedium,
+    h3Padding: EdgeInsets.zero,
+    h4: textTheme.bodyLarge,
+    h4Padding: EdgeInsets.zero,
+    h5: textTheme.bodyLarge,
+    h5Padding: EdgeInsets.zero,
+    h6: textTheme.bodyLarge,
+    h6Padding: EdgeInsets.zero,
+    em: body.copyWith(fontStyle: FontStyle.italic),
+    strong: textTheme.titleSmall,
+    del: body.copyWith(decoration: TextDecoration.lineThrough),
+    blockquote: body,
+    img: body,
+    checkbox: body.copyWith(color: colors.primary),
+    blockSpacing: spacing.space2,
+    listIndent: spacing.space6,
+    listBullet: body,
+    listBulletPadding: EdgeInsets.only(right: spacing.space1),
+    tableHead: textTheme.titleSmall,
+    tableBody: body,
+    tableHeadAlign: TextAlign.center,
+    tablePadding: EdgeInsets.only(bottom: spacing.space1),
+    tableBorder: TableBorder.all(color: colors.outlineVariant),
+    tableColumnWidth: const FlexColumnWidth(),
+    tableCellsPadding: EdgeInsets.symmetric(
+      horizontal: spacing.space4,
+      vertical: spacing.space2,
+    ),
+    tableCellsDecoration: const BoxDecoration(),
+    blockquotePadding: EdgeInsets.symmetric(
+      horizontal: spacing.space3,
+      vertical: spacing.space1,
+    ),
+    blockquoteDecoration: BoxDecoration(
+      color: colors.surfaceContainerHighest,
+      borderRadius: shapes.smallBorderRadius,
+      border: Border(left: BorderSide(color: colors.primary, width: 3)),
+    ),
+    codeblockPadding: EdgeInsets.all(spacing.space2),
+    codeblockDecoration: BoxDecoration(
+      color: colors.surfaceContainerHighest,
+      borderRadius: shapes.smallBorderRadius,
+    ),
+    horizontalRuleDecoration: BoxDecoration(
+      border: Border(top: BorderSide(color: colors.outlineVariant)),
     ),
   );
 }

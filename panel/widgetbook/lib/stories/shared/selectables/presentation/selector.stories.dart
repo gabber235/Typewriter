@@ -1,12 +1,15 @@
-import "package:faker/faker.dart" hide Color;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 import "package:widgetbook_workspace/support/story_selectable.dart";
 
 @widgetbook.UseCase(name: "Interactive grid", type: Selector)
 Widget selectableUseCase(BuildContext context) {
-  return const FakeApp(child: _SelectorStory());
+  return Story(
+    const [],
+    at: PanelLocation.component(const SizedBox.expand(child: _SelectorStory())),
+  );
 }
 
 class _SelectableCard extends HookConsumerWidget {
@@ -21,7 +24,7 @@ class _SelectableCard extends HookConsumerWidget {
       selectableId: selectable,
       focusNode: focusNode,
       builder: (isSelected, isFocused, isHovered) {
-        return AnimatedOpacity(
+        final card = AnimatedOpacity(
           opacity: isHovered || isFocused
               ? 0.7
               : isSelected
@@ -71,6 +74,7 @@ class _SelectableCard extends HookConsumerWidget {
             ),
           ),
         );
+        return Semantics(selected: isSelected, child: card);
       },
     );
   }
@@ -81,22 +85,9 @@ class _SelectorStory extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectables = useState(<StorySelectableIdentifier>[]);
-
-    StorySelectableIdentifier generate() {
-      final id = faker.person.name().snakeCase();
-      return StorySelectableIdentifier(
-        id: id,
-        color: safeColors.randomOrNull()!,
-      );
-    }
-
-    useEffect(() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        selectables.value = List.generate(3, (index) => generate());
-      });
-      return null;
-    }, []);
+    final selectables = useState([
+      for (final (index, name) in _names.indexed) _selectable(name, index),
+    ]);
 
     return Column(
       children: [
@@ -117,7 +108,11 @@ class _SelectorStory extends HookConsumerWidget {
               child: FloatingButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
-                  selectables.value = [...selectables.value, generate()];
+                  final count = selectables.value.length;
+                  selectables.value = [
+                    ...selectables.value,
+                    _selectable("Page ${count + 1}", count),
+                  ];
                 },
                 child: Section(
                   margin: EdgeInsets.zero,
@@ -143,3 +138,13 @@ class _SelectorStory extends HookConsumerWidget {
     );
   }
 }
+
+const _names = ["Meet the Mayor", "Village Market", "Lost Lantern"];
+
+const _colors = [Colors.indigo, Colors.teal, Colors.deepOrange, Colors.purple];
+
+StorySelectableIdentifier _selectable(String name, int index) =>
+    StorySelectableIdentifier(
+      id: name.snakeCase(),
+      color: _colors[index % _colors.length],
+    );

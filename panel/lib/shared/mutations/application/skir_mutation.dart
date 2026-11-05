@@ -22,7 +22,7 @@ extension RefSkirMutation on Ref {
   }) {
     final retention = keepAlive();
     return SkirMutationClient(
-          () => read(natsProvider),
+          () => read(natsProvider.future),
           () => read(panelTelemetryProvider.future),
         )
         .prepare(
@@ -72,11 +72,12 @@ final class SkirMutationClient {
   /// Provides late access to the current transport and to telemetry owned by
   /// the originating scope. Neither dependency is retained as a mutable global.
   const SkirMutationClient(this._client, this._telemetry);
-  final NatsClient Function() _client;
+  final Future<NatsClient> Function() _client;
   final Future<PanelTelemetry> Function() _telemetry;
 
-  /// Returns the current transport for repositories that own subscriptions.
-  NatsClient get client => _client();
+  /// The current transport, once it exists, for repositories that own
+  /// subscriptions.
+  Future<NatsClient> get client => _client();
 
   /// Performs one typed Skir request without creating a mutation submission.
   ///
@@ -95,7 +96,7 @@ final class SkirMutationClient {
   }) async {
     final destination = await subject;
     final telemetry = await _telemetry();
-    final client = _client();
+    final client = await _client();
     final response = await telemetry.traceNats(
       subject: destination,
       payloadSize: bytes.length,
@@ -145,6 +146,7 @@ final class SkirMutationClient {
             await onResponse?.call(response);
           case SubmissionRejected() ||
               SubmissionNotSubmitted() ||
+              SubmissionUndelivered() ||
               SubmissionUncertain():
         }
       },
@@ -157,25 +159,36 @@ final class SkirMutationClient {
         try {
           destination = operation.subject;
           telemetry = await _telemetry();
-          client = _client();
+          client = await _client();
         } on Object catch (error) {
           return SubmissionResult.notSubmitted(
             message: "The request could not be prepared",
             cause: error,
           );
         }
-        final response = await telemetry.traceNats(
-          subject: destination,
-          payloadSize: bytes.length,
-          operationName: "request",
-          operation: (headers) => client.request(
-            destination,
-            bytes,
-            limits: operation.limits,
-            headers: headers,
-            timeout: const Duration(seconds: 10),
-          ),
-        );
+        final NatsMessage response;
+        try {
+          response = await telemetry.traceNats(
+            subject: destination,
+            payloadSize: bytes.length,
+            operationName: "request",
+            operation: (headers) => client.request(
+              destination,
+              bytes,
+              limits: operation.limits,
+              headers: headers,
+              timeout: const Duration(seconds: 10),
+            ),
+          );
+        } on NatsClientException catch (error) {
+          if (error.kind != NatsFailureKind.noResponders) rethrow;
+          // The broker found nobody listening, so nothing received the
+          // request, as while the service that owns it is away.
+          return SubmissionResult.undelivered(
+            message: "Nothing answered; the service may be away",
+            cause: error,
+          );
+        }
 
         final value = operation.responseSerializer.fromBytes(response.payload);
 

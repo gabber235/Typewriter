@@ -1,268 +1,63 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
-
-BuildContext _graphActionsContext(WidgetTester tester) {
-  final actions = find.byWidgetPredicate(
-    (w) => w is Actions && w.actions.containsKey(GraphMoveIntent),
-  );
-  final descendants = find
-      .descendant(of: actions, matching: find.byWidgetPredicate((w) => true))
-      .evaluate()
-      .toList();
-  return descendants.isNotEmpty ? descendants.first : tester.element(actions);
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("Graph move/resize intents", () {
-    testWidgets("GraphMoveIntent moves selected single element", (
-      tester,
-    ) async {
-      final movedCalls = <List<GraphMoveCommitPayload>>[];
+  // Node "a" (2 by 2 at 0, 0) and node "b" (1 by 1 at 3, 4).
+  for (final (selected, key, expected) in [
+    (["a"], LogicalKeyboardKey.arrowRight, {"a": (1, 0)}),
+    (["a", "b"], LogicalKeyboardKey.arrowUp, {"a": (0, -1), "b": (3, 3)}),
+  ]) {
+    testWidgets("move mode moves the selected ${selected.join(" and ")} with "
+        "${key.keyLabel}", (tester) async {
+      final focus = FocusNode(debugLabel: "a");
+      addTearDown(focus.dispose);
+      final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+        graphNode("a", focusNode: focus),
+        graphNode("b", x: 3, y: 4, cells: 1),
+      ], resizable: true);
+      panel.container.read(selectionProvider.notifier).selectAll([
+        for (final id in selected) TestSelectableIdentifier(id: id),
+      ]);
+      focus.requestFocus();
+      await panel.settle();
+      await panel.graph.shiftPress(LogicalKeyboardKey.keyM);
 
-      final data = GraphData(
-        cellSize: 50,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("a"),
-            x: 0,
-            y: 0,
-            width: 2,
-            height: 2,
-            builder: (context) => const SizedBox.shrink(),
-          ),
-          GraphElement(
-            id: const GraphIdentifier("b"),
-            x: 3,
-            y: 4,
-            width: 1,
-            height: 1,
-            builder: (context) => const SizedBox.shrink(),
-          ),
-        ],
-        edges: const [],
-      );
+      await panel.press(key);
 
-      final overrides = [
-        selectionProvider.overrideWithValue([
-          TestSelectableIdentifier(id: "a"),
-        ]),
-      ];
-
-      await tester.pumpTestApp(
-        overrides: overrides,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: Graph(
-            data: data,
-            onElementsMoved: movedCalls.add,
-            onElementsResized: (_) {},
-          ),
-        ),
-      );
-
-      final actionsCtx = _graphActionsContext(tester);
-      Actions.invoke(
-        actionsCtx,
-        const GraphMoveIntent(direction: TraversalDirection.right),
-      );
-      await tester.pump();
-
-      expect(movedCalls.length, 1);
-      final moved = movedCalls.single;
-      expect(moved.length, 1);
-      final change = moved.single;
-      expect(change.id.id, "a");
-      expect((change.x, change.y), (1, 0));
+      expect(moves, hasLength(1));
+      expect({
+        for (final move in moves.single) move.id.id: (move.x, move.y),
+      }, expected);
     });
+  }
 
-    testWidgets("GraphMoveIntent moves multiple selected elements", (
-      tester,
-    ) async {
-      final movedCalls = <List<GraphMoveCommitPayload>>[];
+  for (final (selected, key, expected) in [
+    (["a"], LogicalKeyboardKey.arrowRight, {"a": (3, 2)}),
+    (["a", "b"], LogicalKeyboardKey.arrowUp, {"a": (2, 1), "b": (1, 1)}),
+  ]) {
+    testWidgets("resize mode resizes the selected ${selected.join(" and ")} "
+        "with ${key.keyLabel}, never below one cell", (tester) async {
+      final focus = FocusNode(debugLabel: "a");
+      addTearDown(focus.dispose);
+      final (:panel, :resizes, moves: _) = await tester.pumpCommittingGraph([
+        graphNode("a", focusNode: focus),
+        graphNode("b", x: 3, y: 4, cells: 1),
+      ], resizable: true);
+      panel.container.read(selectionProvider.notifier).selectAll([
+        for (final id in selected) TestSelectableIdentifier(id: id),
+      ]);
+      focus.requestFocus();
+      await panel.settle();
+      await panel.graph.shiftPress(LogicalKeyboardKey.keyR);
 
-      final data = GraphData(
-        cellSize: 50,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("a"),
-            x: 0,
-            y: 0,
-            width: 2,
-            height: 2,
-            builder: (context) => const SizedBox.shrink(),
-          ),
-          GraphElement(
-            id: const GraphIdentifier("b"),
-            x: 3,
-            y: 4,
-            width: 1,
-            height: 1,
-            builder: (context) => const SizedBox.shrink(),
-          ),
-        ],
-        edges: const [],
-      );
+      await panel.press(key);
 
-      final overrides = [
-        selectionProvider.overrideWithValue([
-          TestSelectableIdentifier(id: "a"),
-          TestSelectableIdentifier(id: "b"),
-        ]),
-      ];
-
-      await tester.pumpTestApp(
-        overrides: overrides,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: Graph(
-            data: data,
-            onElementsMoved: movedCalls.add,
-            onElementsResized: (_) {},
-          ),
-        ),
-      );
-
-      final actionsCtx = _graphActionsContext(tester);
-      Actions.invoke(
-        actionsCtx,
-        const GraphMoveIntent(direction: TraversalDirection.up),
-      );
-      await tester.pump();
-
-      expect(movedCalls.length, 1);
-      final moved = movedCalls.single;
-      expect(moved.length, 2);
-
-      final sorted = [...moved]..sort((a, b) => a.id.id.compareTo(b.id.id));
-      expect(sorted[0].id.id, "a");
-      expect((sorted[0].x, sorted[0].y), (0, -1));
-      expect(sorted[1].id.id, "b");
-      expect((sorted[1].x, sorted[1].y), (3, 3));
+      expect(resizes, hasLength(1));
+      expect({
+        for (final resize in resizes.single)
+          resize.id.id: (resize.width, resize.height),
+      }, expected);
     });
-
-    testWidgets("GraphResizeIntent resizes selected single element", (
-      tester,
-    ) async {
-      final resizeCalls = <List<GraphResizeCommitPayload>>[];
-
-      final data = GraphData(
-        cellSize: 50,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("a"),
-            x: 0,
-            y: 0,
-            width: 2,
-            height: 2,
-            builder: (context) => const SizedBox.shrink(),
-          ),
-        ],
-        edges: const [],
-      );
-
-      final overrides = [
-        selectionProvider.overrideWithValue([
-          TestSelectableIdentifier(id: "a"),
-        ]),
-      ];
-
-      await tester.pumpTestApp(
-        overrides: overrides,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: Graph(
-            data: data,
-            onElementsMoved: (_) {},
-            onElementsResized: resizeCalls.add,
-          ),
-        ),
-      );
-
-      final actionsCtx = _graphActionsContext(tester);
-      Actions.invoke(
-        actionsCtx,
-        const GraphResizeIntent(direction: TraversalDirection.right),
-      );
-      await tester.pump();
-
-      expect(resizeCalls.length, 1);
-      final changes = resizeCalls.single;
-      expect(changes.length, 1);
-      final change = changes.single;
-      expect(change.id.id, "a");
-      expect((change.width, change.height), (3, 2));
-    });
-
-    testWidgets("GraphResizeIntent batches multiple and enforces min size", (
-      tester,
-    ) async {
-      final resizeCalls = <List<GraphResizeCommitPayload>>[];
-
-      final data = GraphData(
-        cellSize: 50,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("a"),
-            x: 0,
-            y: 0,
-            width: 2,
-            height: 2,
-            builder: (context) => const SizedBox.shrink(),
-          ),
-          GraphElement(
-            id: const GraphIdentifier("b"),
-            x: 3,
-            y: 4,
-            width: 1,
-            height: 1,
-            builder: (context) => const SizedBox.shrink(),
-          ),
-        ],
-        edges: const [],
-      );
-
-      final overrides = [
-        selectionProvider.overrideWithValue([
-          TestSelectableIdentifier(id: "a"),
-          TestSelectableIdentifier(id: "b"),
-        ]),
-      ];
-
-      await tester.pumpTestApp(
-        overrides: overrides,
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: Graph(
-            data: data,
-            onElementsMoved: (_) {},
-            onElementsResized: resizeCalls.add,
-          ),
-        ),
-      );
-
-      final actionsCtx = _graphActionsContext(tester);
-      Actions.invoke(
-        actionsCtx,
-        const GraphResizeIntent(direction: TraversalDirection.up),
-      );
-      await tester.pump();
-
-      expect(resizeCalls.length, 1);
-      final changes = resizeCalls.single;
-      expect(changes.length, 2);
-
-      final sorted = [...changes]..sort((a, b) => a.id.id.compareTo(b.id.id));
-      expect(sorted[0].id.id, "a");
-      expect((sorted[0].width, sorted[0].height), (2, 1));
-      expect(sorted[1].id.id, "b");
-      expect((sorted[1].width, sorted[1].height), (1, 1));
-    });
-  });
+  }
 }

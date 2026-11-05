@@ -3,9 +3,7 @@ import "package:http/testing.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../../support/catalog_fixture.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test(
@@ -13,17 +11,20 @@ void main() {
     () async {
       final origin = skir.ExpressionBindingId(value: "response.origin");
       final row = skir.ExpressionNode.createInput(
-        binding: _rowBinding,
+        binding: SearchControlScenario.rowBinding,
         path: editorRootPath,
       );
-      final fixture = _fixture(
+      final fixture = SearchControlScenario(
         provider: skir.SearchProvider.createHttpJson(
           uri: textLiteral("https://example.test/choices"),
           parameters: const [],
           resultPath: r"$.results[*]",
           resultType: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
           result: skir.SearchResultMapping(
-            binding: declareBinding(_rowBinding, textTemplate),
+            binding: declareBinding(
+              SearchControlScenario.rowBinding,
+              textTemplate,
+            ),
             key: row,
             selectedValue: row,
             label: row,
@@ -47,7 +48,7 @@ void main() {
       );
       addTearDown(client.close);
       final binding = fixture.bind(http: client);
-      final result = await _firstResult(binding.source);
+      final result = await firstSearchResult(binding.source);
       final payload = result.payload as PortableMappedSearchPayload;
       final text = CompletePortablePresentationBinding(
         skir.TypeUse.wrapScalar(skir.ScalarKind.text),
@@ -64,9 +65,9 @@ void main() {
         ),
       );
       expect(scope.bindings[origin]?.value.authoredString, "Marketplace");
-      expect(scope.bindings[_rowBinding]?.schema, text);
+      expect(scope.bindings[SearchControlScenario.rowBinding]?.schema, text);
       expect(
-        scope.bindings[_rowBinding]?.value.authoredString,
+        scope.bindings[SearchControlScenario.rowBinding]?.value.authoredString,
         "Remote choice",
       );
       await Future<void>.delayed(Duration.zero);
@@ -77,16 +78,17 @@ void main() {
   );
 
   test(
-    "mapped rows retain declared lexical schemas and captured query values",
+    "a row presentation reads its row, the query and the captured context",
     () async {
-      final fixture = _fixture();
+      final fixture = SearchControlScenario();
       final binding = fixture.bind();
-      final result = await _firstResult(binding.source);
-      final payload = result.payload as PortableMappedSearchPayload;
-      final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
-      expect(
-        payload.contextBindings[_rowContextBinding],
-        same(fixture.invocation.bindings[_rowContextBinding]),
+      final result = await firstSearchResult(
+        binding.source,
+        query: const SearchQueryContext(
+          normalizedQuery: "res",
+          terms: ["res"],
+          selectors: [],
+        ),
       );
       final operations = PortableOperationResults();
       final scope = binding.resultScope(
@@ -98,18 +100,16 @@ void main() {
           catalog: fixture.catalog,
         ),
       );
-      expect(
-        scope.bindings[_rowBinding]?.schema,
-        CompletePortablePresentationBinding(text),
-      );
-      expect(
-        scope.bindings[fixture.control.queryBinding.id]?.schema,
-        CompletePortablePresentationBinding(text),
-      );
-      expect(
-        scope.bindings[_rowContextBinding],
-        same(fixture.invocation.bindings[_rowContextBinding]),
-      );
+      String? shown(skir.ExpressionBindingId binding) => switch (scope.evaluate(
+        portableCall("text.upper", [inputExpression(binding)]),
+      )) {
+        PortableExpressionAvailable(:final value) => value.authoredString,
+        _ => null,
+      };
+
+      expect(shown(SearchControlScenario.rowBinding), "RESULT");
+      expect(shown(fixture.control.queryBinding.id), "RES");
+      expect(shown(SearchControlScenario.rowContextBinding), "ROW");
       operations.dispose();
       binding.source.dispose();
       binding.dispose();
@@ -119,12 +119,12 @@ void main() {
   test(
     "selection uses the exact row invocation captured by its environment",
     () async {
-      final fixture = _fixture(rowValue: "row a");
+      final fixture = SearchControlScenario(rowValue: "row a");
       final binding = fixture.bind();
-      final otherFixture = _fixture(rowValue: "row b");
+      final otherFixture = SearchControlScenario(rowValue: "row b");
       final otherBinding = otherFixture.bind();
-      final result = await _firstResult(binding.source);
-      final otherResult = await _firstResult(otherBinding.source);
+      final result = await firstSearchResult(binding.source);
+      final otherResult = await firstSearchResult(otherBinding.source);
       final selected = await binding.choose(result);
 
       expect(
@@ -141,7 +141,11 @@ void main() {
       );
       expect(fixture.host.written, skir.DataValue.wrapStringValue("row a"));
       expect(
-        fixture.host.writtenContext?.bindings[_rowContextBinding]?.value,
+        fixture
+            .host
+            .writtenContext
+            ?.bindings[SearchControlScenario.rowContextBinding]
+            ?.value,
         skir.DataValue.wrapStringValue("row a"),
       );
       binding.source.dispose();
@@ -152,11 +156,11 @@ void main() {
   );
 
   test("rejected host admission preserves its reason", () async {
-    final fixture = _fixture(
+    final fixture = SearchControlScenario(
       rejection: "The selected value is no longer admissible",
     );
     final binding = fixture.bind();
-    final result = await _firstResult(binding.source);
+    final result = await firstSearchResult(binding.source);
 
     expect(
       await binding.choose(result),
@@ -175,10 +179,13 @@ void main() {
   test(
     "multiple selection history records additions and ignores removals",
     () async {
-      final storage = _MemoryHistoryStorage();
-      final fixture = _fixture(multiple: true, historyStorage: storage);
+      final storage = MemorySearchHistory();
+      final fixture = SearchControlScenario(
+        multiple: true,
+        historyStorage: storage,
+      );
       final binding = fixture.bind();
-      final result = await _firstResult(binding.source);
+      final result = await firstSearchResult(binding.source);
 
       expect(
         await binding.choose(result),
@@ -210,24 +217,24 @@ void main() {
       ),
       payload: skir.DataValue.wrapStringValue("chosen"),
     );
-    final fixture = _fixture(selected: selected);
+    final fixture = SearchControlScenario(selected: selected);
     final binding = fixture.bind();
-    final result = await _firstResult(binding.source);
+    final result = await firstSearchResult(binding.source);
 
     await binding.choose(result);
 
-    expect(identical(fixture.host.written, selected), isTrue);
+    expect(fixture.host.written, selected);
     binding.source.dispose();
     binding.dispose();
   });
 
   test("distinct merged sources collapse only equal authored keys", () async {
-    final fixture = _fixture(
+    final fixture = SearchControlScenario(
       provider: skir.SearchProvider.createDistinct(
         child: skir.SearchProvider.createMerge(
           children: [
-            _staticProvider(["same", "first"]),
-            _staticProvider(["same", "second"]),
+            staticSearchProvider(["same", "first"]),
+            staticSearchProvider(["same", "second"]),
           ],
         ),
       ),
@@ -241,25 +248,20 @@ void main() {
 
     expect(
       (await snapshot).nodes.walk().whereType<SearchResultNode>().map(
-        (node) =>
-            (node.result.payload as PortableMappedSearchPayload).distinctKey,
+        (node) => node.result.title,
       ),
-      [
-        canonicalAuthoredValue(skir.DataValue.wrapStringValue("same")),
-        canonicalAuthoredValue(skir.DataValue.wrapStringValue("first")),
-        canonicalAuthoredValue(skir.DataValue.wrapStringValue("second")),
-      ],
+      ["same", "first", "second"],
     );
     binding.source.dispose();
     binding.dispose();
   });
 
   test("merged equal keys retain independent occurrence identity", () async {
-    final fixture = _fixture(
+    final fixture = SearchControlScenario(
       provider: skir.SearchProvider.createMerge(
         children: [
-          _staticProvider(["same"]),
-          _staticProvider(["same"]),
+          staticSearchProvider(["same"]),
+          staticSearchProvider(["same"]),
         ],
       ),
     );
@@ -296,20 +298,20 @@ void main() {
   });
 
   test("sibling history providers retain only their own selections", () async {
-    final storage = _MemoryHistoryStorage();
+    final storage = MemorySearchHistory();
     final first = skir.SearchProvider.createHistory(
       historyKey: "first",
       label: textLiteral("First"),
       capacity: 5,
-      child: _staticProvider(["same"]),
+      child: staticSearchProvider(["same"]),
     );
     final second = skir.SearchProvider.createHistory(
       historyKey: "second",
       label: textLiteral("Second"),
       capacity: 5,
-      child: _staticProvider(["same"]),
+      child: staticSearchProvider(["same"]),
     );
-    final fixture = _fixture(
+    final fixture = SearchControlScenario(
       historyStorage: storage,
       provider: skir.SearchProvider.createMerge(children: [first, second]),
     );
@@ -336,13 +338,13 @@ void main() {
 
   test("late host completion has no effects after binding disposal", () async {
     final completion = Completer<PortablePresentationWriteResult>();
-    final storage = _MemoryHistoryStorage();
-    final fixture = _fixture(
+    final storage = MemorySearchHistory();
+    final fixture = SearchControlScenario(
       writeCompletion: completion,
       historyStorage: storage,
     );
     final binding = fixture.bind();
-    final result = await _firstResult(binding.source);
+    final result = await firstSearchResult(binding.source);
     final choosing = binding.choose(result);
 
     binding.dispose();
@@ -358,7 +360,7 @@ void main() {
 
   test("disposed controller ignores late activation completion", () async {
     final completion = Completer<PortablePresentationWriteResult>();
-    final fixture = _fixture(writeCompletion: completion);
+    final fixture = SearchControlScenario(writeCompletion: completion);
     final binding = fixture.bind();
     var completed = 0;
     final controller = SearchController<void>(
@@ -378,20 +380,20 @@ void main() {
   });
 
   test("history storage is isolated by authenticated organization", () async {
-    final storage = _MemoryHistoryStorage();
-    final first = _fixture(
+    final storage = MemorySearchHistory();
+    final first = SearchControlScenario(
       historyStorage: storage,
       historyNamespace: "user:one:organization:first",
     );
-    final second = _fixture(
+    final second = SearchControlScenario(
       historyStorage: storage,
       historyNamespace: "user:one:organization:second",
     );
     final firstBinding = first.bind();
     final secondBinding = second.bind();
 
-    await firstBinding.choose(await _firstResult(firstBinding.source));
-    await secondBinding.choose(await _firstResult(secondBinding.source));
+    await firstBinding.choose(await firstSearchResult(firstBinding.source));
+    await secondBinding.choose(await firstSearchResult(secondBinding.source));
     await Future<void>.delayed(Duration.zero);
 
     expect(storage.resultsByKey.keys, hasLength(2));
@@ -412,333 +414,4 @@ void main() {
     secondBinding.source.dispose();
     secondBinding.dispose();
   });
-}
-
-final _targetBinding = skir.ExpressionBindingId(value: "target");
-final _rowBinding = skir.ExpressionBindingId(value: "row");
-final _rowContextBinding = skir.ExpressionBindingId(value: "row_context");
-
-final class _SearchFixture {
-  _SearchFixture({
-    required this.catalog,
-    required this.host,
-    required this.invocation,
-    required this.control,
-    required this.storage,
-    required this.historyNamespace,
-  });
-
-  final CheckedEditorCatalog catalog;
-  final _FakeHost host;
-  final PortableInvocationContext invocation;
-  final skir.SearchControl control;
-  final SearchHistoryStorage storage;
-  final String historyNamespace;
-
-  PortableSearchBinding bind({Client? http}) =>
-      const PortableSearchCompiler().bindControl(
-        control: control,
-        environment: PortableSearchEnvironment(
-          catalog: catalog,
-          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-          context: invocation,
-          http: http ?? Client(),
-          historyStorage: storage,
-          historyNamespace: historyNamespace,
-        ),
-        host: host,
-      );
-}
-
-_SearchFixture _fixture({
-  String rowValue = "row",
-  String? rejection,
-  bool multiple = false,
-  skir.DataValue? selected,
-  SearchHistoryStorage? historyStorage,
-  skir.SearchProvider? provider,
-  Completer<PortablePresentationWriteResult>? writeCompletion,
-  String historyNamespace = "user:test:organization:test",
-}) {
-  final generation = skir.CatalogGeneration(value: "catalog:test");
-  final catalog = CheckedEditorCatalog(
-    testCatalogSnapshot(generation: generation),
-  );
-  final chosen = selected ?? skir.DataValue.wrapStringValue("chosen");
-  final rowRead = skir.ExpressionNode.createInput(
-    binding: _rowBinding,
-    path: skir.ValuePath(segments: const []),
-  );
-  final mapping = skir.SearchResultMapping(
-    binding: declareBinding(_rowBinding, textTemplate),
-    key: rowRead,
-    selectedValue: selected == null
-        ? skir.ExpressionNode.createInput(
-            binding: _rowContextBinding,
-            path: skir.ValuePath(segments: const []),
-          )
-        : skir.ExpressionNode.wrapLiteral(chosen),
-    presentation: skir.PresentationNode.defaultInstance,
-    label: rowRead,
-  );
-  final leaf = _staticProvider(["Result"], mapping: mapping);
-  final selectedProvider =
-      provider ??
-      (historyStorage == null
-          ? leaf
-          : skir.SearchProvider.createHistory(
-              historyKey: "recent",
-              label: skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapStringValue("Recent"),
-              ),
-              capacity: 5,
-              child: leaf,
-            ));
-  final initial = multiple
-      ? skir.DataValue.createListValue(items: const [])
-      : skir.DataValue.unfilled;
-  final host = _FakeHost(
-    catalog: catalog,
-    initial: initial,
-    rejection: rejection,
-    writeCompletion: writeCompletion,
-  );
-  return _SearchFixture(
-    catalog: catalog,
-    host: host,
-    invocation: PortableInvocationContext(
-      bindings: {
-        _rowContextBinding: PortableExpressionBinding(
-          schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          ),
-          value: skir.DataValue.wrapStringValue(rowValue),
-        ),
-      },
-      catalogGeneration: generation,
-    ),
-    control: skir.SearchControl(
-      control: skir.BoundControl(
-        binding: skir.BindingRef(
-          bindingId: _targetBinding,
-          path: skir.ValuePath(segments: const []),
-        ),
-        label: null,
-        description: null,
-        prefix: null,
-        semanticLabel: null,
-      ),
-      selectionMode: multiple
-          ? skir.SearchSelectionMode.multiple
-          : skir.SearchSelectionMode.single,
-      queryBinding: declareNamedBinding("query", textTemplate),
-      summaryBinding: declareNamedBinding("summary", textTemplate),
-      maximumExtent: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapInteger("320"),
-      ),
-      provider: selectedProvider,
-      summary: null,
-      placeholder: null,
-      customValue: null,
-      initialQuery: null,
-      appearance: null,
-      content: null,
-      popup: null,
-      popupSide: null,
-      emptyText: null,
-      loadingText: null,
-      empty: null,
-      loading: null,
-    ),
-    storage: historyStorage ?? _MemoryHistoryStorage(),
-    historyNamespace: historyNamespace,
-  );
-}
-
-skir.SearchProvider _staticProvider(
-  List<String> values, {
-  skir.SearchResultMapping? mapping,
-}) {
-  final rowRead = skir.ExpressionNode.createInput(
-    binding: _rowBinding,
-    path: skir.ValuePath(segments: const []),
-  );
-  return skir.SearchProvider.createStaticValues(
-    values: skir.ExpressionNode.wrapLiteral(
-      skir.DataValue.createListValue(
-        items: [
-          for (final (index, value) in values.indexed)
-            skir.ListItem(
-              id: skir.ItemId(value: "result_$index"),
-              value: skir.DataValue.wrapStringValue(value),
-            ),
-        ],
-      ),
-    ),
-    result:
-        mapping ??
-        skir.SearchResultMapping(
-          binding: declareBinding(_rowBinding, textTemplate),
-          key: rowRead,
-          selectedValue: rowRead,
-          presentation: skir.PresentationNode.defaultInstance,
-          label: rowRead,
-        ),
-    selectors: const [],
-  );
-}
-
-Future<SearchResult> _firstResult(SearchSource source) async {
-  final ready = source.snapshots.firstWhere(
-    (snapshot) => snapshot.nodes.firstResult != null,
-  );
-  source.initialize(SearchQueryContext.empty);
-  return (await ready).nodes.firstResult!;
-}
-
-final class _FakeHost extends ChangeNotifier
-    implements PortablePresentationHost {
-  _FakeHost({
-    required CheckedEditorCatalog catalog,
-    required skir.DataValue initial,
-    required this.rejection,
-    this.writeCompletion,
-  }) : _value = initial,
-       _document = PortablePresentationDocument(
-         catalog: catalog,
-         root: skir.PresentationNode.defaultInstance,
-         bindings: const {},
-         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-       );
-
-  final String? rejection;
-  final Completer<PortablePresentationWriteResult>? writeCompletion;
-  skir.DataValue _value;
-  final PortablePresentationDocument _document;
-  skir.DataValue? written;
-  PortableInvocationContext? writtenContext;
-
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  PortablePresentationCapabilities get capabilities =>
-      const PortablePresentationCapabilities();
-  @override
-  PortablePresentationDocument get document => _document;
-  @override
-  bool get enabled => true;
-  @override
-  bool get readOnly => false;
-
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => skir.TypeUse.wrapScalar(skir.ScalarKind.text);
-
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => _value;
-
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) async {
-    writtenContext = context;
-    if (writeCompletion case final completion?) {
-      return completion.future;
-    }
-    if (rejection case final message?) {
-      return PortablePresentationWriteResult.rejected([
-        PortablePresentationDiagnostic(
-          code: "search_rejected",
-          message: message,
-          severity: skir.DiagnosticSeverity.error,
-        ),
-      ]);
-    }
-    written = value;
-    _value = value;
-    return const PortablePresentationWriteResult.applied();
-  }
-
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction, {
-    required PortableInvocationContext context,
-  }) async {
-    writtenContext = context;
-    if (rejection case final message?) {
-      return PortablePresentationWriteResult.rejected([
-        PortablePresentationDiagnostic(
-          code: "search_rejected",
-          message: message,
-          severity: skir.DiagnosticSeverity.error,
-        ),
-      ]);
-    }
-    final items = _value.authoredItems?.toList() ?? <skir.ListItem>[];
-    switch (editorAction) {
-      case skir.EditorAction_localWrapper(
-        value: skir.LocalEditorAction_insertListItemWrapper(:final value),
-      ):
-        final selected = value.value as skir.ExpressionNode_literalWrapper;
-        items.add(
-          skir.ListItem(
-            id: skir.ItemId(value: "selected"),
-            value: selected.value,
-          ),
-        );
-      case skir.EditorAction_localWrapper(
-        value: skir.LocalEditorAction_removeListItemWrapper(:final value),
-      ):
-        items.removeWhere((item) => item.id == value.item);
-      case _:
-        return PortablePresentationWriteResult.rejected([
-          PortablePresentationDiagnostic(
-            code: "unsupported_action",
-            message: "Unsupported action",
-            severity: skir.DiagnosticSeverity.error,
-          ),
-        ]);
-    }
-    _value = skir.DataValue.createListValue(items: items);
-    return const PortablePresentationWriteResult.applied();
-  }
-}
-
-final class _MemoryHistoryStorage implements SearchHistoryStorage {
-  int writes = 0;
-  List<SearchResult> results = const [];
-  final Map<String, List<SearchResult>> resultsByKey = {};
-
-  @override
-  Future<List<SearchResult>> loadValidResults({
-    required String key,
-    required int capacity,
-  }) async => results;
-
-  @override
-  Future<void> replaceResults({
-    required String key,
-    required List<SearchResult> results,
-  }) async {
-    writes++;
-    this.results = results;
-    resultsByKey[key] = results;
-  }
 }

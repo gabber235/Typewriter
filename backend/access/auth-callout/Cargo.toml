@@ -17,6 +17,8 @@ serde.workspace = true
 serde_json.workspace = true
 url.workspace = true
 
+nats-permissions.workspace = true
+
 wasmcloud-utils.workspace = true
 wit-bindgen.workspace = true
 
@@ -24,6 +26,9 @@ wasmcloud-component.workspace = true
 
 otel-wasi.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
 
 [lints]
 workspace = true

@@ -265,32 +265,100 @@ AuthoringDocument compiledEntryNodeDocument({
   );
 }
 
+/// The compiled entry Realm whose Village morning page shows its entries as
+/// a graph on its surface, beside the Village evening page in the rail, the
+/// way the real page workspace does. Its catalog declares [operations].
+AuthoringDocument compiledEntryGraphDocument({
+  bool narrow = false,
+  List<RealmOperation> operations = const [],
+}) {
+  final document = compiledEntryNodeDocument(narrow: narrow, graphEditor: true);
+  final page = document.resource(compiledEntryPageId)!.configuration;
+  final selected = document.catalog.selectPresentation(
+    page,
+    skir.PresentationRole.inspector,
+  ) as SelectedEditorPresentation;
+  final snapshot = document.catalog.snapshot.toMutable();
+  snapshot
+    ..resourceOperations = [
+      for (final operation in operations) operation.definition,
+    ]
+    ..presentationMaterials = [
+      ...snapshot.presentationMaterials,
+      (selected.material.toMutable()..role = skir.PresentationRole.workspace)
+          .toFrozen(),
+    ]
+    ..presentations = [
+      for (final presentation in snapshot.presentations)
+        if (presentation.id == selected.material.provider)
+          (presentation.toFrozen().toMutable()
+                ..roles = [
+                  ...presentation.roles,
+                  skir.PresentationRole.workspace,
+                ])
+              .toFrozen()
+        else
+          presentation,
+    ];
+  return document.copyWith(catalog: CheckedEditorCatalog(snapshot.toFrozen()));
+}
+
 /// A fixture page workspace using the production resources graph and bindings.
 /// [element] is the type of one member link of the page elements.
 skir.PresentationNode compiledEntryGraphLayout(skir.TypeTemplate element) =>
-    skir.PresentationNode(
-      nodeId: "entry-fixture.graph",
-      properties: skir.PresentationProperties.defaultInstance,
-      header: null,
-      element: skir.PresentationElement.createResources(
-        control: skir.BoundControl(
-          binding: skir.BindingRef(
-            bindingId: skir.ExpressionBindingId(value: "configured_value"),
-            path: editorRootPath.field("elements"),
-          ),
-          label: null,
-          description: null,
-          prefix: null,
-          semanticLabel: null,
-        ),
-        layout: skir.ResourcesLayout.createGraph(
-          direction: skir.GraphDirection.leftToRight,
-          appearance: null,
-        ),
-        order: null,
-        itemBinding: skir.BindingDeclaration(
-          id: skir.ExpressionBindingId(value: "resources.item"),
-          type: element,
-        ),
-      ),
+    elementsGraphNode("entry-fixture.graph", element);
+
+/// Compiled entry documents with other item presentations.
+extension CompiledEntryItems on AuthoringDocument {
+  /// This document, whose catalog gives its entries a concrete item presentation
+  /// reading "Concrete surface".
+  AuthoringDocument withConcreteEntryItems() {
+    final document = this;
+    final selected = document.catalog.selectPresentation(
+      document.resource(compiledEntryFirstId)!.configuration,
+      skir.PresentationRole.item,
+    ) as SelectedEditorPresentation;
+    final target = skir.PresentationTarget.createNamed(
+      definition: compiledSdkElementValue.authoredActualType!.definition,
+      arguments: const [],
     );
+    final id = skir.PresentationId(namespace: "test", name: "concrete.graph");
+    final material =
+        (selected.material.toMutable()
+              ..provider = id
+              ..target = target
+              ..layout = skir.PresentationNode(
+                nodeId: "concrete.surface",
+                properties: skir.PresentationProperties.defaultInstance,
+                header: null,
+                element: skir.PresentationElement.wrapText(
+                  (skir.TextContent.mutable()
+                        ..value = skir.ExpressionNode.wrapLiteral(
+                          skir.DataValue.wrapStringValue("Concrete surface"),
+                        ))
+                      .toFrozen(),
+                ),
+              ))
+            .toFrozen();
+    final catalog = CheckedEditorCatalog(
+      (document.catalog.snapshot.toMutable()
+            ..presentations = [
+              ...document.catalog.snapshot.presentations,
+              (selected.descriptor.toMutable()
+                    ..id = id
+                    ..target = target)
+                  .toFrozen(),
+            ]
+            ..presentationMaterials = [
+              ...document.catalog.snapshot.presentationMaterials,
+              material,
+            ])
+          .toFrozen(),
+    );
+    return AuthoringDocument(
+      catalog: catalog,
+      entries: document.entries,
+      links: document.links,
+    );
+  }
+}

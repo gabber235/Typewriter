@@ -4,257 +4,154 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/stories/features/services/presentation/topology_scenarios.dart";
+import "package:widgetbook_workspace/data/features/topology.dart";
+import "package:widgetbook_workspace/stories/features/members/membership_story.dart";
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "Default", type: ServicesPage)
 Widget servicesPageUseCase(BuildContext context) {
-  return servicesPageStory();
-}
-
-@widgetbook.UseCase(name: "Service inspector", type: ServicesPage)
-Widget serviceInspectorUseCase(BuildContext context) {
-  return serviceInspectorStory(width: _inspectorWidth(context));
-}
-
-Widget serviceInspectorStory({skir.Service? service, double width = 360}) =>
-    FakeApp(
-      child: _ServiceInspectorStory(service: service, width: width),
-    );
-
-Widget servicesPageStory() {
   final scenario = completeTopologyScenario();
-  return FakeApp(
-    overrides: [
-      organizationTopologyControllerProvider.overrideWith2(
-        (_) => _StoryTopology(scenario.topology),
-      ),
-      canonicalOrganizationServicesProvider.overrideWith2(
-        (_) => _StoryServices(scenario.services),
-      ),
-      ...organizationProviderOverrides(),
-      ...organizationsProviderOverrides(state: DisplayState.fewItems),
-      ...authProviderOverrides(),
-      ...appearanceProviderOverrides(),
-    ],
-    child: OrganizationScaffold(child: ServicesPage()),
-  );
-}
-
-class _StoryServices extends CanonicalOrganizationServices {
-  _StoryServices(this.services);
-
-  final List<skir.Service> services;
-
-  @override
-  Stream<List<skir.Service>> build(skir.RecordId organizationId) =>
-      Stream.value(services);
-}
-
-class _StoryTopology extends OrganizationTopologyController {
-  _StoryTopology(this.topology);
-
-  final skir.OrganizationTopologySnapshot topology;
-
-  @override
-  Stream<skir.OrganizationTopologySnapshot> build(
-    skir.RecordId organizationId,
-  ) => Stream.value(topology);
-}
-
-final class _ServiceInspectorStory extends StatefulWidget {
-  const _ServiceInspectorStory({required this.width, this.service});
-
-  final skir.Service? service;
-  final double width;
-
-  @override
-  State<_ServiceInspectorStory> createState() => _ServiceInspectorStoryState();
-}
-
-final class _ServiceInspectorStoryState extends State<_ServiceInspectorStory> {
-  late final skir.Service _service =
-      widget.service ?? completeTopologyScenario().services.first;
-  late final ValueEditing _source = fakeValueEditing(
-    document: _service.editorSnapshot.document,
-    snapshot: _service.editorSnapshot,
-    commitPolicy: EditorCommitPolicy.applyResource,
-  );
-  late final BoundPresentationHost _host = _service.portablePresentationHost(
-    connected: true,
-    identityOwner: _source,
-  );
-
-  @override
-  void dispose() {
-    _host.dispose();
-    _source.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: SizedBox(
-          width: widget.width,
-          child: PortablePresentationRenderer(host: _host),
+  const unreachable = "The services backend is unreachable";
+  return Story([
+    signedIn(ada, organization: acme),
+    ...context.knobs.traits("Services", {
+      "Complete": [
+        servicesService(
+          services: scenario.services,
+          topology: scenario.topology,
         ),
+      ],
+      "No services": [servicesService()],
+      "Services loading": [
+        servicesService(services: null, topology: scenario.topology),
+      ],
+      "Services failing": [
+        servicesService(
+          services: null,
+          topology: scenario.topology,
+          failure: StateError(unreachable),
+        ),
+      ],
+      "Topology loading": [
+        servicesService(services: scenario.services, topologyArrives: false),
+      ],
+      "Topology failing": [
+        servicesService(
+          services: scenario.services,
+          topologyArrives: false,
+          failure: StateError(unreachable),
+        ),
+      ],
+    }),
+    ...context.knobs.traits("Window", {
+      "Desktop": const [],
+      "Compact": const [compact],
+    }),
+  ], at: _servicesRoute);
+}
+
+/// The services page with one node of the complete topology selected, so the
+/// inspector shows it; every service, host, Realm and engine is listed by
+/// what it is and the state it is in.
+@widgetbook.UseCase(name: "Inspector", type: ServicesPage)
+Widget servicesInspectorUseCase(BuildContext context) {
+  final scenario = completeTopologyScenario();
+  final topology = scenario.topology;
+  return Story([
+    signedIn(ada, organization: acme),
+    servicesService(services: scenario.services, topology: topology),
+    ...context.knobs.traits("Selected", {
+      for (final service in scenario.services)
+        "Service ${service.name}, ${service.state?.status == skir.ServiceStatus.online ? "online" : "offline"}":
+            [
+              selected([ServiceIdentifier(service.serviceId)]),
+            ],
+      for (final host in topology.hosts)
+        hostOption(host): [
+          selected([ServiceHostIdentifier(host.hostId)]),
+        ],
+      for (final realm in topology.realms)
+        "Realm ${realm.realmId.id}, ${childRuntimeStatusLabel(realm.state.status)}":
+            [
+              selected([RealmInstanceIdentifier(realm.realmId)]),
+            ],
+      for (final engine in topology.engines)
+        "Engine ${engine.engineId.id}, ${childRuntimeStatusLabel(engine.state.status)}":
+            [
+              selected([EngineInstanceIdentifier(engine.engineId)]),
+            ],
+    }),
+  ], at: _servicesRoute);
+}
+
+/// How the inspector story names [host] among the resources it can select.
+String hostOption(skir.ServiceHost host) =>
+    "Host ${host.hostId.id}, ${hostRuntimeStatusLabel(host.state.status)}";
+
+/// The registration token input on the services page, where it binds a new
+/// service: an invalid token is refused before it is sent, a valid one
+/// (`ABCDE12345`) adds a service to the graph, slowly or with a failure.
+@widgetbook.UseCase(name: "Default", type: RegistrationTokenInput)
+Widget registrationTokenInputUseCase(BuildContext context) {
+  final answers = context.knobs.object.dropdown(
+    label: "Service answers",
+    options: const ["At once", "Slowly", "With a failure"],
+    initialOption: "At once",
+  );
+  return Story([
+    signedIn(ada, organization: acme),
+    servicesService(
+      commandFailure: answers == "With a failure"
+          ? StateError("The registration token is unknown")
+          : null,
+    ),
+    if (answers == "Slowly") latency(const Duration(seconds: 3)),
+  ], at: _servicesRoute);
+}
+
+/// The services graph on its own, over the topology it is handed.
+@widgetbook.UseCase(name: "Default", type: ServicesGraph)
+Widget servicesGraphUseCase(BuildContext context) {
+  final scenario = completeTopologyScenario();
+  final first = scenario.topology.hosts.first;
+  final graphs = {
+    "Complete": scenario,
+    "Single host": TopologyScenario(
+      topology: skir.OrganizationTopologySnapshot(
+        hosts: [first],
+        realms: [
+          for (final realm in scenario.topology.realms)
+            if (realm.ownerHost.id == first.hostId) realm,
+        ],
+        engines: [
+          for (final engine in scenario.topology.engines)
+            if (engine.ownerHost.id == first.hostId) engine,
+        ],
       ),
+      services: [
+        for (final service in scenario.services)
+          if (service.serviceId == first.serviceId) service,
+      ],
+    ),
+    "Empty": TopologyScenario(
+      topology: skir.OrganizationTopologySnapshot.defaultInstance,
+      services: const [],
+    ),
+  };
+  final graph = context.knobs.object.dropdown(
+    label: "Graph",
+    options: graphs.keys.toList(),
+    initialOption: "Complete",
+  );
+  final shown = graphs[graph]!;
+  return Story(
+    [signedIn(ada, organization: acme)],
+    at: PanelLocation.component(
+      ServicesGraph(services: shown.services, topology: shown.topology),
     ),
   );
 }
 
-final class _RuntimeInspectorStory extends StatefulWidget {
-  const _RuntimeInspectorStory({required this.host, required this.width});
-  final BoundPresentationHost host;
-  final double width;
-  @override
-  State<_RuntimeInspectorStory> createState() => _RuntimeInspectorStoryState();
-}
-
-final class _RuntimeInspectorStoryState extends State<_RuntimeInspectorStory> {
-  @override
-  void didUpdateWidget(covariant _RuntimeInspectorStory oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.host != widget.host) oldWidget.host.dispose();
-  }
-
-  @override
-  void dispose() {
-    widget.host.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: SizedBox(
-          width: widget.width,
-          child: PortablePresentationRenderer(host: widget.host),
-        ),
-      ),
-    ),
-  );
-}
-
-Widget hostInspectorStory({skir.ServiceHost? host, double width = 360}) =>
-    FakeApp(
-      child: _HostInspectorStory(
-        key: ValueKey(host?.hostId),
-        host: host,
-        width: width,
-      ),
-    );
-
-final class _HostInspectorStory extends StatefulWidget {
-  const _HostInspectorStory({required this.width, this.host, super.key});
-  final skir.ServiceHost? host;
-  final double width;
-  @override
-  State<_HostInspectorStory> createState() => _HostInspectorStoryState();
-}
-
-final class _HostInspectorStoryState extends State<_HostInspectorStory> {
-  late final _scenario = completeTopologyScenario();
-  late final _hostValue = widget.host ?? _scenario.topology.hosts.first;
-  late final _service = _scenario.services.firstWhere(
-    (service) => service.serviceId == _hostValue.serviceId,
-  );
-  late final _configurationSnapshot = HostEditorSnapshot(
-    _hostValue,
-    _scenario.topology,
-  );
-  late final _configuration = fakeValueEditing(
-    document: _configurationSnapshot.document,
-    snapshot: _configurationSnapshot,
-    commitPolicy: EditorCommitPolicy.applyResource,
-  );
-  late final _identity = fakeValueEditing(
-    document: _service.editorSnapshot.document,
-    snapshot: _service.editorSnapshot,
-  );
-  late final _host = topologyHostPortableHost(
-    host: _hostValue,
-    service: _service,
-    connected: _hostValue.state.status != skir.HostRuntimeStatus.offline,
-    configurationOwner: _configuration,
-    identityOwner: _identity,
-    realmTargets: const {
-      "paper": ["^1"],
-      "conformance": ["^1"],
-    },
-    engineTargets: {
-      for (final engine in _hostValue.supportedEngines) engine.engineId: ["^1"],
-    },
-    realms: _scenario.topology.realms
-        .where((realm) => realm.ownerHost.id != _hostValue.hostId)
-        .toList(),
-  );
-  @override
-  void dispose() {
-    _host.dispose();
-    _configuration.dispose();
-    _identity.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: SizedBox(
-          width: widget.width,
-          child: PortablePresentationRenderer(host: _host),
-        ),
-      ),
-    ),
-  );
-}
-
-@widgetbook.UseCase(name: "Realm inspector", type: ServicesPage)
-Widget realmInspectorUseCase(BuildContext context) {
-  final realms = completeTopologyScenario().topology.realms;
-  final index = context.knobs.int.slider(
-    label: "Realm scenario",
-    initialValue: 0,
-    min: 0,
-    max: realms.length - 1,
-  );
-  return runtimeInspectorStory(
-    host: realms.elementAt(index).portablePresentationHost(),
-    width: _inspectorWidth(context),
-  );
-}
-
-@widgetbook.UseCase(name: "Engine inspector", type: ServicesPage)
-Widget engineInspectorUseCase(BuildContext context) {
-  final engines = completeTopologyScenario().topology.engines;
-  final index = context.knobs.int.slider(
-    label: "Engine scenario",
-    initialValue: 0,
-    min: 0,
-    max: engines.length - 1,
-  );
-  return runtimeInspectorStory(
-    host: engines.elementAt(index).portablePresentationHost(),
-    width: _inspectorWidth(context),
-  );
-}
-
-Widget runtimeInspectorStory({
-  required BoundPresentationHost host,
-  double width = 360,
-}) => FakeApp(
-  child: _RuntimeInspectorStory(host: host, width: width),
-);
-
-double _inspectorWidth(BuildContext context) => context.knobs.double.slider(
-  label: "Inspector width",
-  initialValue: 360,
-  min: 280,
-  max: 700,
+final _servicesRoute = PanelLocation.route(
+  organizationPage(const ServicesRoute()),
 );

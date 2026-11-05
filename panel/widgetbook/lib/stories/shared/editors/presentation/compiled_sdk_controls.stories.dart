@@ -4,60 +4,79 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
+/// A Placement value rendered from the compiled SDK catalog, with its X and
+/// Y coordinates sharing one row.
 @widgetbook.UseCase(
   name: "Compiled SDK Placement",
   type: PortablePresentationRenderer,
 )
-Widget compiledPlacementUseCase(BuildContext context) => compiledPlacementStory(
-  readOnly: context.knobs.boolean(label: "Placement read only"),
-  width: context.knobs.double.slider(
-    label: "Placement width",
-    initialValue: 580,
-    min: 320,
-    max: 900,
+Widget compiledPlacementUseCase(BuildContext context) => Story(
+  const [],
+  at: PanelLocation.component(
+    SizedBox(
+      width: context.knobs.double.slider(
+        label: "Placement width",
+        initialValue: 580,
+        min: 320,
+        max: 900,
+      ),
+      child: _CompiledPlacement(
+        readOnly: context.knobs.boolean(label: "Placement read only"),
+      ),
+    ),
   ),
 );
 
-@widgetbook.UseCase(name: "Compiled SDK Tag", type: AuthoredResourceEditor)
-Widget compiledTagUseCase(BuildContext context) => compiledTagStory(
-  width: context.knobs.double.slider(
-    label: "Tag width",
-    initialValue: 580,
-    min: 320,
-    max: 900,
+/// The inspector of a Tag compiled from the SDK, with its nested Placement.
+@widgetbook.UseCase(name: "Compiled SDK Tag", type: AuthoredResourceInspection)
+Widget compiledTagUseCase(BuildContext context) => Story(
+  const [],
+  at: PanelLocation.component(
+    SizedBox(
+      width: context.knobs.double.slider(
+        label: "Tag width",
+        initialValue: 580,
+        min: 320,
+        max: 900,
+      ),
+      height: 700,
+      child: _CompiledInspector(
+        resource: compiledTagResource,
+        record: compiledSdkTagRecord,
+      ),
+    ),
   ),
 );
 
-@widgetbook.UseCase(name: "Compiled SDK Book", type: AuthoredResourceEditor)
-Widget compiledBookUseCase(BuildContext context) => compiledBookStory(
-  width: context.knobs.double.slider(
-    label: "Inspector width",
-    initialValue: 400,
-    min: 280,
-    max: 580,
-  ),
-);
-
-Widget compiledPlacementStory({
-  bool readOnly = false,
-  double width = 580,
-  ValueChanged<skir.DataValue>? onValue,
-}) => FakeApp(
-  child: Material(
-    child: Center(
-      child: SizedBox(
-        width: width,
-        child: _CompiledPlacement(readOnly: readOnly, onValue: onValue),
+/// The inspector of a Book compiled from the SDK, with its icon chosen by
+/// search or written as SVG source.
+@widgetbook.UseCase(name: "Compiled SDK Book", type: AuthoredResourceInspection)
+Widget compiledBookUseCase(BuildContext context) => Story(
+  const [],
+  at: PanelLocation.component(
+    SizedBox(
+      width: context.knobs.double.slider(
+        label: "Inspector width",
+        initialValue: 400,
+        min: 280,
+        max: 580,
+      ),
+      height: 760,
+      child: _CompiledInspector(
+        resource: compiledBookResource,
+        record: compiledSdkBookRecord,
       ),
     ),
   ),
 );
 
 class _CompiledPlacement extends HookWidget {
-  const _CompiledPlacement({required this.readOnly, this.onValue});
+  const _CompiledPlacement({required this.readOnly});
+
   final bool readOnly;
-  final ValueChanged<skir.DataValue>? onValue;
+
   @override
   Widget build(BuildContext context) {
     final value = useValueNotifier(compiledSdkPlacementValue);
@@ -93,7 +112,6 @@ class _CompiledPlacement extends HookWidget {
               final replaced = value.value.replaceAt(path, next);
               if (replaced case PortablePathValue(value: final nextValue)) {
                 value.value = nextValue;
-                onValue?.call(nextValue);
               } else {
                 return const PortablePresentationWriteRejected([]);
               }
@@ -105,7 +123,7 @@ class _CompiledPlacement extends HookWidget {
         readOnly: readOnly,
         role: skir.PresentationRole.inspector,
       );
-    }, [readOnly, value, onValue]);
+    }, [readOnly, value]);
     useEffect(() => host.dispose, [host]);
     return PortablePresentationRenderer(host: host);
   }
@@ -113,115 +131,56 @@ class _CompiledPlacement extends HookWidget {
 
 final compiledTagResource = skir.ResourceId(value: "tag:compiled.controls");
 final compiledBookResource = skir.ResourceId(value: "book:compiled.controls");
-AuthoringDocument compiledTagDocument() => _compiledDocument(
-  compiledTagResource,
-  compiledSdkTagRecord,
-  compiledSdkTagValue,
-);
-AuthoringDocument compiledBookDocument() => _compiledDocument(
-  compiledBookResource,
-  compiledSdkBookRecord,
-  compiledSdkBookValue,
-);
 
-AuthoringDocument _compiledDocument(
-  skir.ResourceId resource,
-  skir.AuthoringRecord record,
-  skir.DataValue value,
-) {
-  return AuthoringEdit(
-    generation: compiledSdkControlCatalog.generation,
-    resources: [skir.AuthoringResource(id: resource, content: record)],
-    links: const [],
-    catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
-  ).toDocument();
-}
+/// Inspects [resource] of a Realm holding only it, saving through the same
+/// [RealmEditing] path a Realm surface uses.
+class _CompiledInspector extends HookWidget {
+  const _CompiledInspector({required this.resource, required this.record});
 
-Widget compiledTagStory({
-  double width = 580,
-  ValueChanged<AuthoringDocument>? onDocument,
-}) => FakeApp(
-  child: Center(
-    child: SizedBox(
-      width: width,
-      height: 700,
-      child: _CompiledInspector(
-        resource: compiledTagResource,
-        document: compiledTagDocument,
-        onDocument: onDocument,
-      ),
-    ),
-  ),
-);
-
-Widget compiledBookStory({
-  double width = 400,
-  ValueChanged<AuthoringDocument>? onDocument,
-}) => FakeApp(
-  child: Center(
-    child: SizedBox(
-      width: width,
-      height: 760,
-      child: _CompiledInspector(
-        resource: compiledBookResource,
-        document: compiledBookDocument,
-        onDocument: onDocument,
-      ),
-    ),
-  ),
-);
-
-class _CompiledInspector extends StatefulWidget {
-  const _CompiledInspector({
-    required this.resource,
-    required this.document,
-    this.onDocument,
-  });
   final skir.ResourceId resource;
-  final AuthoringDocument Function() document;
-  final ValueChanged<AuthoringDocument>? onDocument;
-  @override
-  State<_CompiledInspector> createState() => _CompiledInspectorState();
-}
-
-class _CompiledInspectorState extends State<_CompiledInspector> {
-  late final _transport = ScriptedAuthoringTransport(
-    AsyncData(widget.document()),
-  );
-  final _submissions = ScopedWorkSession();
-  late final _workspace = RealmEditing(
-    persistence: _transport.persistence,
-    submissions: _submissions,
-    initial: widget.document(),
-  );
-  @override
-  void initState() {
-    super.initState();
-    _workspace.addListener(_changed);
-  }
-
-  void _changed() => widget.onDocument?.call(_workspace.document);
-  @override
-  void dispose() {
-    _workspace.removeListener(_changed);
-    _workspace.dispose();
-    _transport.dispose();
-    _submissions.dispose();
-    super.dispose();
-  }
+  final skir.AuthoringRecord record;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.all(context.spacing.space3),
-        child: AuthoredResourceInspection(
-          resource: widget.resource,
-          workspace: _workspace,
-          commands: fixtureAuthoringCommands(_transport),
-          commitPolicy: EditorCommitPolicy.applyResource,
+  Widget build(BuildContext context) {
+    final realm = useMemoized(
+      () => FakeRealm(
+        scope: AuthoringScope(
+          organizationId: skir.recordId("organization:story"),
+          realmId: skir.recordId("realm_instance:story"),
         ),
+        name: "Story",
+        document: AuthoringEdit(
+          generation: compiledSdkControlCatalog.generation,
+          resources: [skir.AuthoringResource(id: resource, content: record)],
+          links: const [],
+          catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
+        ).toDocument(),
       ),
-    ),
-  );
+    );
+    final submissions = useMemoized(ScopedWorkSession.new);
+    final workspace = useMemoized(
+      () => RealmEditing(
+        persistence: realm.persistence,
+        submissions: submissions,
+        initial: realm.document,
+      ),
+    );
+    useEffect(
+      () => () {
+        workspace.dispose();
+        submissions.dispose();
+        unawaited(realm.close());
+      },
+      const [],
+    );
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(context.spacing.space3),
+      child: AuthoredResourceInspection(
+        resource: resource,
+        workspace: workspace,
+        commands: realm.commands,
+        commitPolicy: EditorCommitPolicy.applyResource,
+      ),
+    );
+  }
 }

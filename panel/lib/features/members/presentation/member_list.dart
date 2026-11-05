@@ -147,17 +147,17 @@ class _MembersLoadingShimmer extends StatelessWidget {
   const _MembersLoadingShimmer();
 
   @override
-  Widget build(BuildContext context) {
-    if (context.isDesktop) {
-      return const _MembersTableShimmer(key: ValueKey("membersLoadingDesktop"));
-    }
-
-    return const _MembersListShimmer(key: ValueKey("membersLoadingMobile"));
-  }
+  Widget build(BuildContext context) => SliverSemantics(
+    label: "Loading members",
+    container: true,
+    sliver: context.isDesktop
+        ? const _MembersTableShimmer()
+        : const _MembersListShimmer(),
+  );
 }
 
 class _MembersTableShimmer extends StatelessWidget {
-  const _MembersTableShimmer({super.key});
+  const _MembersTableShimmer();
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +242,7 @@ class _MembersTableCell extends StatelessWidget {
 }
 
 class _MembersListShimmer extends StatelessWidget {
-  const _MembersListShimmer({super.key});
+  const _MembersListShimmer();
 
   @override
   Widget build(BuildContext context) {

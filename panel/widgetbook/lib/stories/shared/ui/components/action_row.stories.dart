@@ -2,101 +2,67 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
+ActionShortcut _action(
+  String label,
+  IconData icon,
+  int priority, {
+  List<ShortcutActivator> activators = const [],
+  bool slow = false,
+}) => ActionShortcut(
+  id: label.snakeCase(),
+  label: label,
+  description: label,
+  activators: activators,
+  priority: priority,
+  icon: Icon(icon),
+  onInvoke: slow
+      ? (ref) => Future<void>.delayed(const Duration(milliseconds: 800))
+      : (ref) {},
+);
+
+/// The [ActionRow] of a selected resource: its actions with their shortcuts,
+/// highest priority on the right; in a narrow window the lowest priority
+/// actions are dropped first.
 @widgetbook.UseCase(name: "Default", type: ActionRow)
 Widget actionRowUseCase(BuildContext context) {
-  final actionCount = context.knobs.int.input(
-    label: "Action count",
-    initialValue: 6,
-  );
-  final asyncDelay = context.knobs.duration(
-    label: "Async delay",
-    initialValue: const Duration(milliseconds: 800),
-  );
-  final baseLabels = List<String>.generate(
-    actionCount,
-    (i) => switch (i % 6) {
-      0 => "Save",
-      1 => "Open",
-      2 => "Duplicate",
-      3 => "Export Selection",
-      4 => "Toggle",
-      _ => "Action $i",
-    },
-  );
-
-  final shortcuts = <ActionShortcut>[];
-  for (var i = 0; i < baseLabels.length; i++) {
-    final label = baseLabels[i];
-    final id = "action_$i";
-    final priority =
-        i; // Higher index = higher priority (appears further right)
-    final isAsync = i.isOdd;
-    final activators = switch (i % 4) {
-      0 => [
-        SingleActivator(LogicalKeyboardKey.keyS, meta: true),
-        SingleActivator(LogicalKeyboardKey.keyS, control: true),
-      ],
-      1 => [SingleActivator(LogicalKeyboardKey.keyO, meta: true)],
-      2 => [
-        SingleActivator(LogicalKeyboardKey.keyD, meta: true),
-        SingleActivator(LogicalKeyboardKey.keyD, control: true),
-      ],
-      _ => <ShortcutActivator>[],
-    };
-
-    shortcuts.add(
-      ActionShortcut(
-        id: id,
-        label: label,
-        description: "Runs $label",
-        activators: activators,
-        priority: priority,
-        icon: Icon(switch (i % 5) {
-          0 => Icons.save_outlined,
-          1 => Icons.folder_open,
-          2 => Icons.copy,
-          3 => Icons.ios_share,
-          _ => Icons.flash_on,
-        }),
-        onInvoke: isAsync
-            ? (ref) async {
-                await Future.delayed(asyncDelay);
-              }
-            : (ref) {},
+  final shortcuts = [
+    _action(
+      "Save",
+      Icons.save_outlined,
+      3,
+      activators: const [SingleActivator(LogicalKeyboardKey.keyS, meta: true)],
+      slow: true,
+    ),
+    _action(
+      "Duplicate",
+      Icons.copy,
+      2,
+      activators: const [SingleActivator(LogicalKeyboardKey.keyD, meta: true)],
+    ),
+    _action("Export selection", Icons.ios_share, 1, slow: true),
+    _action(
+      "Delete",
+      Icons.delete_outline,
+      0,
+      activators: const [SingleActivator(LogicalKeyboardKey.delete)],
+    ),
+  ];
+  return Story(
+    context.knobs.traits("Window", {
+      "Desktop": const [],
+      "Compact": const [compact],
+      "Phone": [window(const Size(360, 720))],
+    }),
+    at: PanelLocation.component(
+      ActionSet(
+        shortcuts: shortcuts,
+        child: const Align(
+          alignment: Alignment.bottomCenter,
+          child: ActionRow(),
+        ),
       ),
-    );
-  }
-
-  return FakeApp(
-    child: Builder(
-      builder: (context) {
-        return ActionSet(
-          shortcuts: shortcuts,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Center(
-                  child: Text(
-                    "${shortcuts.length} registered action(s)\nResize the preview to test overflow truncation.\nHighest priority items stay on the right.",
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 12,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [const ActionRow()],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     ),
   );
 }

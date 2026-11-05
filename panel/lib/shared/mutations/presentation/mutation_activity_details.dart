@@ -162,7 +162,11 @@ class _ActivityDetails extends StatelessWidget {
                           LocalWorkSubmissionResult.rejected =>
                             submission.message ?? "Rejected",
                           LocalWorkSubmissionResult.uncertain =>
-                            "Outcome unknown. Verify before submitting again.",
+                            submission.canReplay
+                                ? "Outcome unknown. Retry sends the same "
+                                      "request, which is safe to repeat."
+                                : "Outcome unknown. Verify before submitting "
+                                      "again.",
                           LocalWorkSubmissionResult.notSubmitted =>
                             submission.message ?? "Not submitted",
                           LocalWorkSubmissionResult.ready => "Ready",

@@ -67,7 +67,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   navigation: navigation,
                   primary: primary,
                   actions: actions,
-                  debugReservation: context.debugShowCheckedModeBanner ? 40 : 0,
                 ),
               ),
             ),

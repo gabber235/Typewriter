@@ -2,6 +2,7 @@
 
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
@@ -19,9 +20,10 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.testkit.elementsOf
+import com.typewritermc.testkit.ready
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
@@ -29,6 +31,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -38,8 +41,8 @@ import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.presentation.ChoicePresentation
 import skirout.editor.v1.presentation.PresentationElement
-import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -51,14 +54,20 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
-import skirout.editor.v1.type_catalog.TypeTemplate
 
 val TypedLoweringTest by testSuite {
-    test("a generic material that holds for every argument builds once for all of them") {
+    test("a generic material that holds for every argument builds once against the open type") {
         val assembly = weightedAssembly { scope -> weighted(scope) { weight -> weight { numericInput() } } }
 
-        assembly.editorCatalog.presentationMaterials.size shouldBe 1
-        assembly.editorCatalog.diagnostics.map { it.code } shouldBe emptyList()
+        assembly.editorCatalog.presentationMaterials.map { it.target } shouldBe
+            listOf(PresentationTarget.NamedWrapper(WEIGHTED.namedTemplate(listOf(WEIGHTED_VALUE.template))))
+        assembly.editorCatalog.presentationMaterials
+            .single()
+            .layout
+            .elementsOf<PresentationElement.NumericInputWrapper>()
+            .size shouldBe 1
+        assembly.editorCatalog.diagnostics shouldBe emptyList()
+        assembly.callbackFailures shouldBe emptyList()
     }
 
     test("a generic material that puts a number control on a bare parameter is dropped and reported") {
@@ -87,38 +96,60 @@ val TypedLoweringTest by testSuite {
             .cause.message shouldContain "incompatible_expression_types"
     }
 
-    test("repeated items, aliases, rows and search bindings carry their types to the wire") {
-        val text = ScalarKind.TEXT.template
-        val rows =
-            collectionSource<String, String>("tags", text) {
-                key(row)
-            }
+    val tags = input<List<String>>(CONFIGURED_VALUE).field<List<String>>("tags").orElse(com.typewritermc.expression.emptyListExpression())
+
+    test("a repeated element binds each item with the list's item type") {
+        val layout = build { scope -> scope.repeated<String, String>(tags) { text(item.orElse(literal(""))) } }
+
+        layout.layout
+            .elementsOf<PresentationElement.RepeatedWrapper>()
+            .single()
+            .value.itemBinding.type shouldBe ScalarKind.TEXT.template
+    }
+
+    test("a scoped alias binds the type of the field it names") {
         val layout =
             build { scope ->
                 with(scope) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
-                    repeated<String, String>(
-                        input<List<String>>(
-                            CONFIGURED_VALUE,
-                        ).field<List<String>>("tags").orElse(com.typewritermc.expression.emptyListExpression()),
-                    ) {
-                        text(item.orElse(literal("")))
-                    }
                     scoped(title.input) { textInput() }
+                }
+            }
+
+        layout.layout
+            .elementsOf<PresentationElement.ScopedBindingWrapper>()
+            .single()
+            .value.scopeBinding.type shouldBe
+            ScalarKind.TEXT.template
+    }
+
+    test("a collection lookup binds its rows with the row type of its source") {
+        val rows = collectionSource<String, String>("tags", ScalarKind.TEXT.template) { key(row) }
+        val layout =
+            build { scope ->
+                with(scope) {
+                    val title: PresentedField<String, TextControl> = field("title", TextControl::class)
                     collectionLookup(rows, title.input) {
                         found { text(row.orElse(literal(""))) }
                         missing { text(literal("missing")) }
                     }
+                }
+            }
+
+        layout.dependencies.collections
+            .single()
+            .rowBinding.type shouldBe ScalarKind.TEXT.template
+    }
+
+    test("a search input binds its query, summary, results and selector values with their types") {
+        val layout =
+            build { scope ->
+                with(scope) {
+                    val title: PresentedField<String, TextControl> = field("title", TextControl::class)
                     title {
                         searchInput<String> {
                             selectors { selector("tag", "tag") }
-                            provider(
-                                sources.staticValues(
-                                    input<List<String>>(
-                                        CONFIGURED_VALUE,
-                                    ).field<List<String>>("tags").orElse(com.typewritermc.expression.emptyListExpression()),
-                                ),
-                            )
+                            provider(sources.staticValues(tags))
                             result {
                                 key(row)
                                 selectedValue(row)
@@ -128,28 +159,25 @@ val TypedLoweringTest by testSuite {
                     }
                 }
             }
-
-        val elements = layout.layout.fixedChildren().map(PresentationNode::element)
-        elements[0]
-            .shouldBeInstanceOf<PresentationElement.RepeatedWrapper>()
-            .value.itemBinding.type shouldBe text
-        elements[1]
-            .shouldBeInstanceOf<PresentationElement.ScopedBindingWrapper>()
-            .value.scopeBinding.type shouldBe text
-        layout.dependencies.collections
-            .single()
-            .rowBinding.type shouldBe text
-        val search = elements[3].shouldBeInstanceOf<PresentationElement.SearchInputWrapper>().value
-        search.queryBinding.type shouldBe text
-        search.summaryBinding.type shouldBe text
+        val search =
+            layout.layout
+                .elementsOf<PresentationElement.SearchInputWrapper>()
+                .single()
+                .value
         val provider = search.provider.shouldBeInstanceOf<skirout.editor.v1.presentation.SearchProvider.StaticValuesWrapper>().value
-        provider.result.binding.type shouldBe text
-        provider.selectors
-            .single()
-            .valueBinding.type shouldBe text
+
+        listOf(
+            search.queryBinding.type,
+            search.summaryBinding.type,
+            provider.result.binding.type,
+            provider.selectors
+                .single()
+                .valueBinding.type,
+        ) shouldBe
+            List(4) { ScalarKind.TEXT.template }
     }
 
-    test("a dropdown accepts a custom value parsed from its typed query") {
+    test("a dropdown turns the typed query into the custom value it stores") {
         val layout =
             build { scope ->
                 with(scope) {
@@ -161,27 +189,35 @@ val TypedLoweringTest by testSuite {
                     }
                 }
             }
-
         val select =
             layout.layout
-                .singleFixed()
-                .element
-                .shouldBeInstanceOf<PresentationElement.SelectInputWrapper>()
+                .elementsOf<PresentationElement.SelectInputWrapper>()
+                .single()
                 .value
+        val options = select.optionsConfig.shouldNotBeNull()
+        val query = options.queryBinding.shouldNotBeNull()
+
         select.allowCustomValue shouldBe true
-        select.optionsConfig?.presentation shouldBe ChoicePresentation.DROPDOWN
-        select.optionsConfig?.queryBinding?.type shouldBe ScalarKind.TEXT.template
+        options.presentation shouldBe ChoicePresentation.DROPDOWN
+        query.type shouldBe ScalarKind.TEXT.template
+        com.typewritermc.expression.evaluate(
+            options.customValue.shouldNotBeNull(),
+            query.id.value to DataValue.StringValueWrapper("typed"),
+        ) shouldBe
+            Availability.Available(DataValue.StringValueWrapper("typed"))
     }
 
-    test("invalid layout values cannot be constructed") {
-        shouldThrow<IllegalArgumentException> { Spacing(-1.0) }
-        shouldThrow<IllegalArgumentException> { Spacing(Double.NaN) }
-        shouldThrow<IllegalArgumentException> { Spacing(Double.POSITIVE_INFINITY) }
-        shouldThrow<IllegalArgumentException> { FontWeight(0) }
-        shouldThrow<IllegalArgumentException> { FontWeight(1001) }
-        shouldThrow<IllegalArgumentException> { DisplayDelay(-1) }
-        Spacing.NONE.pixels shouldBe 0.0
-        FontWeight(700).value shouldBe 700
+    mapOf<String, Pair<() -> Any, String>>(
+        "a negative spacing" to ({ Spacing(-1.0) } to "Spacing must be finite and nonnegative."),
+        "a spacing that is not a number" to ({ Spacing(Double.NaN) } to "Spacing must be finite and nonnegative."),
+        "an infinite spacing" to ({ Spacing(Double.POSITIVE_INFINITY) } to "Spacing must be finite and nonnegative."),
+        "a font weight of zero" to ({ FontWeight(0) } to "Font weight must be between 1 and 1000."),
+        "a font weight above 1000" to ({ FontWeight(1001) } to "Font weight must be between 1 and 1000."),
+        "a negative display delay" to ({ DisplayDelay(-1) } to "Display delays must be nonnegative."),
+    ).forEach { (case, rejection) ->
+        test("$case cannot be constructed") {
+            shouldThrow<IllegalArgumentException> { rejection.first() }.message shouldBe rejection.second
+        }
     }
 
     test("a slot rejects an expression of another type") {
@@ -190,115 +226,3 @@ val TypedLoweringTest by testSuite {
         }.message shouldContain "incompatible_expression_result_type"
     }
 }
-
-private val WEIGHTED = TypeDefinitionId.qualified("test", "Weighted")
-private val WEIGHTED_VALUE = ParameterKey(owner = WEIGHTED, index = 0)
-private val SUBJECT = TypeDefinitionId.qualified("test", "LoweringSubject")
-
-/** Presents the weight and value fields of a Weighted<T>, configuring them through [configure]. */
-private fun weighted(
-    scope: PresentationBuildScope,
-    configure: WeightedFields.(PresentedField<Double, NumberControl<Double>>) -> Unit,
-) {
-    @Suppress("UNCHECKED_CAST")
-    val weight = scope.field<Double, NumberControl<*>>("weight", NumberControl::class) as PresentedField<Double, NumberControl<Double>>
-
-    @Suppress("UNCHECKED_CAST")
-    val value = scope.field<Any?, NumberControl<*>>("value", NumberControl::class) as PresentedField<Any?, NumberControl<Any?>>
-    WeightedFields(value).configure(weight)
-}
-
-private class WeightedFields(
-    val value: PresentedField<Any?, NumberControl<Any?>>,
-)
-
-/** A text expression the DSL would not accept, to show that lowering checks the slot type itself. */
-@Suppress("UNCHECKED_CAST")
-private fun com.typewritermc.expression.Expr<Boolean, Handled>.uncheckedText(): com.typewritermc.expression.Expr<String, Handled> =
-    this as com.typewritermc.expression.Expr<String, Handled>
-
-private fun weightedAssembly(present: (PresentationBuildScope) -> Unit) =
-    CatalogContributions(
-        declarations = listOf(OwnedTypeDeclaration(ORIGIN, weightedDefinition())),
-        presentations =
-            listOf(
-                OwnedPresentation(
-                    ORIGIN,
-                    PresentationDescriptor.of(
-                        id = PresentationId(namespace = "test", name = "weighted"),
-                        owner = ORIGIN.owner,
-                        target = PresentationTarget.NamedWrapper(WEIGHTED.namedTemplate(listOf(WEIGHTED_VALUE.template))),
-                        roles = setOf(PresentationRole.INSPECTOR),
-                        priority = 0,
-                    ),
-                    object : PresentationProvider {
-                        override fun build(binding: PresentationBuildBinding) = DefaultPresentationRuntime().build(binding, present)
-                    },
-                ),
-            ),
-    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "weighted")))
-
-private fun weightedDefinition(): TypeDefinition =
-    TypeDefinition(
-        id = WEIGHTED,
-        parameters = listOf(TypeParameter(key = WEIGHTED_VALUE, name = "T", bounds = emptyList())),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = WEIGHTED, name = "value"), type = WEIGHTED_VALUE.template),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = WEIGHTED, name = "weight"),
-                            type = floatScalar(FloatWidth.SIXTY_FOUR).template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-        parents = emptyList(),
-    )
-
-/** Builds [content] for a record with a text title and a list of text tags. */
-private fun build(content: (PresentationBuildScope) -> Unit): PresentationBuildResult {
-    val subject =
-        TypeDefinition.partial(
-            id = SUBJECT,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = SUBJECT, name = "title"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = SUBJECT, name = "tags"),
-                                type = StandardTypes.list.template(listOf(ScalarKind.TEXT.template)),
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        )
-    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "lowering"), StandardTypes.definitions + subject)
-    val checked = (catalog.resolve(SUBJECT.use()) as Resolution.Ready).value
-    return DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE), content)
-}
-
-private val ORIGIN: ProviderOrigin =
-    ProviderOrigin(
-        DeclarationOwner(
-            source = contributionKey(ContributionSourceId("test"), "main", ProducerId("sdk"), ContributionName("lowering")),
-            localIdentity = "lowering",
-        ),
-        ArtifactId("test:sdk"),
-        "main",
-    )
-
-private fun PresentationNode.fixedChildren(): List<PresentationNode> =
-    (element as PresentationElement.ChildrenWrapper)
-        .value
-        .let { it as skirout.editor.v1.presentation.ChildrenElement.ColumnWrapper }
-        .value.children
-        .map { (it as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value }
-
-private fun PresentationNode.singleFixed(): PresentationNode =
-    if (element is PresentationElement.ChildrenWrapper) fixedChildren().single() else this

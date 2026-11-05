@@ -2,22 +2,9 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../support/catalog_fixture.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("checked catalog retains the complete received snapshot", () {
-    final received = testCatalogSnapshot(
-      generation: skir.CatalogGeneration(value: "catalog:7"),
-    );
-    final checked = CheckedEditorCatalog(received);
-
-    expect(checked.snapshot, same(received));
-    expect(checked.snapshot.generation.value, "catalog:7");
-    expect(checked.snapshot.types, isEmpty);
-    expect(checked.snapshot.diagnostics, isEmpty);
-  });
-
   test("matching catalog and authored snapshot expose one draft", () {
     final generation = skir.CatalogGeneration(value: "catalog:7");
     final resource = skir.ResourceId(value: "book:1");

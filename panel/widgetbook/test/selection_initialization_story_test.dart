@@ -1,19 +1,27 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:widgetbook_workspace/stories/shared/ui/components/selection_initialization.stories.dart";
+import "package:widgetbook_workspace/stories/shared/ui/components/adaptive_choice_control.stories.dart";
+
+import "support/stories.dart";
 
 void main() {
-  testWidgets(
-    "story uses the sole option then preserves it when defaults change",
-    (tester) async {
-      await tester.pumpWidget(const SelectionInitializationStory());
-      await tester.pumpAndSettle();
-      expect(find.text("Draft value: 1"), findsOneWidget);
-      await tester.pumpWidget(
-        const SelectionInitializationStory(count: 3, preferred: 2),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text("Draft value: 1"), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets("a sole choice is chosen without asking", (tester) async {
+    await tester.pumpStory(
+      adaptiveChoiceControlUseCase,
+      knobs: {"Choices": "1"},
+    );
+
+    expect(find.text("Paper"), findsOneWidget);
+  });
+
+  testWidgets("a preferred default is chosen among many choices", (
+    tester,
+  ) async {
+    await tester.pumpStory(
+      adaptiveChoiceControlUseCase,
+      knobs: {"Choices": "6", "Preferred default": "true"},
+    );
+
+    expect(find.text("Velocity"), findsOneWidget);
+    expect(find.text("Paper"), findsNothing);
+  });
 }

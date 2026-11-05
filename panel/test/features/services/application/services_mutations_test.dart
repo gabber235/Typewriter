@@ -2,322 +2,563 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
-const _bindSubject = "cloud.to.user.user1.organization.org1.services.bind";
-const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
-const _unbindSubject = "cloud.to.user.user1.organization.org1.services.unbind";
-const _watchSubject = "cloud.to.user.user1.organization.org1.services.watch";
-final _organizationId = skir.recordId("organization:org1");
+const _scope = "cloud.to.user.ada.organization.acme";
+const _bindSubject = "$_scope.services.bind";
+const _updateSubject = "$_scope.services.update";
+const _unbindSubject = "$_scope.services.unbind";
+const _watchSubject = "$_scope.services.watch";
+const _configureSubject = "$_scope.topology.configure";
+final _organization = acme.organizationId;
 
-skir.Service _service({String name = "Original", int revision = 1}) =>
-    skir.Service(
-      serviceId: skir.recordId("service:service1"),
-      revision: revision,
-      name: name,
-      role: skir.ServiceRole.createHost(version: "1"),
-      createdAt: DateTime.utc(2025),
-      organization: null,
-      registration: null,
-      state: null,
-    );
+final _service = service("service1", name: "original", status: null);
 
-class _Harness {
-  _Harness({String? userId = "user1", Object? organizationId = _default}) {
-    nats.registerHandler(
-      _watchSubject,
-      (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
-        skir.WatchOrganizationServicesResponse.wrapList([_service()]),
-      ),
-    );
-    container = ProviderContainer.test(
-      overrides: [
-        userIdProvider.overrideWith((ref) async => userId),
-        organizationIdProvider.overrideWith(
-          (ref) => organizationId == _default
-              ? _organizationId
-              : organizationId as skir.RecordId?,
-        ),
-        natsProvider.overrideWith(() => FakeNats(nats)),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
-    );
-  }
+/// [_service] as a newer observation renamed it, at revision 4.
+final _newest = service("service1", name: "newest", revision: 4, status: null);
 
-  static const _default = Object();
-  final FakeNatsClient nats = FakeNatsClient();
-  late final ProviderContainer container;
-  ProviderSubscription<AsyncValue<List<skir.Service>>>? subscription;
+final _host = paperHost(
+  "paper",
+  service: _service.serviceId,
+  engines: ["paper"],
+  state: skir.HostRuntimeState.defaultInstance,
+);
 
-  Future<void> ready() async {
-    subscription = container.listen(
-      canonicalServicesProvider,
-      (previous, next) {},
-    );
-    await container.read(canonicalServicesProvider.future);
-  }
+/// Ada signed in to Acme, whose backend lists [_service] on [_host].
+final _acme = [
+  signedIn(ada, organization: acme),
+  servicesBackend(
+    services: [_service],
+    topology: topologySnapshot(hosts: [_host]),
+  ),
+];
 
-  void respond(String subject, Uint8List Function(Uint8List data) handler) =>
-      nats.registerHandler(subject, handler);
-
-  void observe(skir.Service service) => container
-      .read(serviceResourceRepositoryProvider(_organizationId))
-      .acceptService(service);
-
-  void dispose() {
-    subscription?.close();
-    container.dispose();
-    nats.dispose();
-  }
-}
-
-Matcher _apiException(int code) =>
-    isA<ApiException>().having((error) => error.code, "code", code);
-
-extension _ServiceRepositoryCommands on ProviderContainer {
-  ServiceResourceRepository get _services =>
-      read(serviceResourceRepositoryProvider(_organizationId));
-
-  Future<void> bindService(String token) async {
-    final response = await read(localWorkControllerProvider)
-        .execute(_services.bind(token));
-    response.requireAcceptedBinding();
-  }
-
-  Future<TypedMutationResult> updateService(skir.Service service) async {
-    final response = await read(localWorkControllerProvider).execute(
-      _services.rename(service.serviceId, service.revision, service.name),
-    );
-    return switch (response) {
-      skir.UpdateOrganizationServiceResponse_successWrapper(:final value) =>
-        TypedMutationResult.success(
-          revision: value.revision,
-          value: value.requireKnown().identityValue,
-        ),
-      skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
-        :final value,
-      ) =>
-        TypedMutationResult.conflict(
-          expectedRevision: value.expectedRevision,
-          actualRevision: value.actual.revision,
-          actualValue: value.actual.requireKnown().identityValue,
-        ),
-      skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper() =>
-        unavailableMutation(
-          "The service no longer exists",
-          targetDeleted: true,
-        ),
-      skir.UpdateOrganizationServiceResponse_validationErrorWrapper() =>
-        invalidMutation("The service contains invalid values"),
-      _ => unavailableMutation("The service update was unavailable"),
-    };
-  }
-
-  Future<void> deleteService(skir.RecordId service) async {
-    final response = await read(localWorkControllerProvider)
-        .execute(_services.unbind(service));
-    response.requireAcceptedUnbinding();
-  }
-}
+/// A submission the backend answered without confirming its outcome.
+final _uncertain = isA<SubmissionException>().having(
+  (error) => error.submission.result,
+  "outcome",
+  isA<SubmissionUncertain>(),
+);
 
 void main() {
-  group("service mutations", () {
-    late _Harness harness;
+  group("rename", () {
+    test("a rename sends the name with the service's own revision and lists "
+        "the confirmed service", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      final confirmed = service(
+        "service1",
+        name: "updated",
+        revision: 2,
+        status: null,
+      );
+      skir.UpdateOrganizationServiceRequest? sent;
+      world.nats.registerHandler(_updateSubject, (data) {
+        sent = skir.UpdateOrganizationServiceRequest.serializer.fromBytes(data);
+        return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+          skir.UpdateOrganizationServiceResponse.wrapSuccess(confirmed),
+        );
+      });
 
-    setUp(() async {
-      harness = _Harness();
-      await harness.ready();
+      final result = await services.rename(_service, "updated");
+
+      expect(sent?.serviceId, _service.serviceId);
+      expect(sent?.expectedRevision, 1);
+      expect(sent?.name, "updated");
+      expect(result, isA<MutationSuccess>());
+      expect(await services.listed(), [confirmed]);
     });
 
-    tearDown(() => harness.dispose());
-
-    test("bind sends exact subject and decoded token on success", () async {
-      skir.BindServiceRequest? request;
-      harness.respond(_bindSubject, (data) {
-        request = skir.BindServiceRequest.serializer.fromBytes(data);
-        return skir.BindServiceResponse.serializer.toBytes(
-          skir.BindServiceResponse.createSuccess(
-            serviceId: "service1",
-            serviceName: "Service",
-            serviceRole: skir.ServiceRole.createHost(version: "1"),
+    test("a delayed rename reply cannot replace a newer observation", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      final newest = _newest;
+      world.nats.registerHandler(_updateSubject, (_) {
+        services.repository.acceptService(newest);
+        return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+          skir.UpdateOrganizationServiceResponse.wrapSuccess(
+            service("service1", name: "delayed", revision: 2, status: null),
           ),
         );
       });
 
-      await harness.container.bindService("registration token");
+      final result = await services.rename(_service, "requested");
+
+      expect(result, isA<MutationSuccess>());
+      expect((result as MutationSuccess).revision, 2);
+      expect(await services.listed(), [newest]);
+    });
+
+    test("renaming a deleted service reports it unavailable as deleted and "
+        "keeps the listed service", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      world.nats.registerHandler(
+        _updateSubject,
+        (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+          skir.UpdateOrganizationServiceResponse.createServiceNotFoundError(),
+        ),
+      );
+
+      final result = await services.rename(_service, "updated");
 
       expect(
-        harness.nats.requests.where(
-          (request) => request.subject == _bindSubject,
+        result,
+        isA<MutationUnavailable>().having(
+          (unavailable) => unavailable.diagnostics.single.details,
+          "details",
+          {"editor.target": "deleted"},
         ),
-        hasLength(1),
       );
-      expect(request!.registrationToken, "registration token");
+      expect(await services.listed(), [_service]);
     });
 
-    test("bind maps invalid token", () async {
-      harness.respond(
-        _bindSubject,
-        (data) => skir.BindServiceResponse.serializer.toBytes(
-          skir.BindServiceResponse.createInvalidRegistrationTokenError(),
+    test("a rejected name tells the author the naming rule on the name "
+        "field", () async {
+      final reports = captureFlutterErrors();
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      world.nats.registerHandler(
+        _updateSubject,
+        (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+          skir.UpdateOrganizationServiceResponse.wrapValidationError(
+            skir.ServiceUpdateValidationError.nameInvalid,
+          ),
         ),
       );
 
-      await expectLater(
-        harness.container.bindService("invalid"),
-        throwsA(_apiException(400)),
+      final result = await services.rename(_service, "updated");
+
+      final diagnostic = (result as MutationInvalid).diagnostics.single;
+      expect(diagnostic.path, editorRootPath.field("name"));
+      expect(
+        diagnostic.message,
+        "Use at least three lowercase letters or digits separated by "
+        "underscores",
       );
+      expect(reports, isEmpty);
     });
 
-    test(
-      "update sends complete state and applies the canonical response",
-      () async {
-        final updated = _service(name: "Updated");
-        final canonical = (updated.toMutable()..revision = updated.revision + 1)
-            .toFrozen();
-        skir.UpdateOrganizationServiceRequest? request;
-        harness.respond(_updateSubject, (data) {
-          request = skir.UpdateOrganizationServiceRequest.serializer.fromBytes(
-            data,
-          );
-          return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-            skir.UpdateOrganizationServiceResponse.wrapSuccess(canonical),
-          );
-        });
-
-        final result = await harness.container.updateService(updated);
-
-        expect(
-          harness.nats.requests.where(
-            (request) => request.subject == _updateSubject,
+    test("a rename conflict reports the actual revision and lists the actual "
+        "service without reporting an error", () async {
+      final reports = captureFlutterErrors();
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      final actual = service(
+        "service1",
+        name: "canonical",
+        revision: 3,
+        status: null,
+      );
+      world.nats.registerHandler(
+        _updateSubject,
+        (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+          skir.UpdateOrganizationServiceResponse.createConflictError(
+            expectedRevision: 1,
+            actual: actual,
           ),
-          hasLength(1),
-        );
-        expect(request!.serviceId, updated.serviceId);
-        expect(request!.expectedRevision, updated.revision);
-        expect(request!.name, "Updated");
-        expect(result, isA<MutationSuccess>());
-        await harness.container.pump();
-        expect(await harness.container.read(canonicalServicesProvider.future), [
-          canonical,
-        ]);
-      },
-    );
-
-    test(
-      "delayed update response cannot replace a newer observation",
-      () async {
-        final newest = _service(name: "Newest", revision: 4);
-        final delayed = _service(name: "Delayed", revision: 2);
-        harness.respond(_updateSubject, (data) {
-          harness.observe(newest);
-          return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-            skir.UpdateOrganizationServiceResponse.wrapSuccess(delayed),
-          );
-        });
-
-        final result = await harness.container.updateService(
-          _service(name: "Requested"),
-        );
-
-        expect(result, isA<MutationSuccess>());
-        expect((result as MutationSuccess).revision, delayed.revision);
-        await harness.container.pump();
-        expect(await harness.container.read(canonicalServicesProvider.future), [
-          newest,
-        ]);
-      },
-    );
-
-    test(
-      "update returns unavailable and rolls back service not found",
-      () async {
-        harness.respond(
-          _updateSubject,
-          (data) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-            skir.UpdateOrganizationServiceResponse.createServiceNotFoundError(),
-          ),
-        );
-
-        final result = await harness.container.updateService(
-          _service(name: "Updated"),
-        );
-
-        expect(result, isA<MutationUnavailable>());
-        await harness.container.pump();
-        expect(await harness.container.read(canonicalServicesProvider.future), [
-          _service(),
-        ]);
-      },
-    );
-
-    test(
-      "unbind sends decoded string id and keeps optimistic removal",
-      () async {
-        skir.UnbindServiceRequest? request;
-        harness.respond(_unbindSubject, (data) {
-          request = skir.UnbindServiceRequest.serializer.fromBytes(data);
-          return skir.UnbindServiceResponse.serializer.toBytes(
-            skir.UnbindServiceResponse.createSuccess(),
-          );
-        });
-
-        await harness.container.deleteService(_service().serviceId);
-
-        expect(
-          harness.nats.requests.where(
-            (request) => request.subject == _unbindSubject,
-          ),
-          hasLength(1),
-        );
-        expect(request!.serviceId, "service1");
-        await harness.container.pump();
-        expect(
-          await harness.container.read(canonicalServicesProvider.future),
-          isEmpty,
-        );
-      },
-    );
-
-    test("unbind rolls back typed service not found response", () async {
-      harness.respond(
-        _unbindSubject,
-        (data) => skir.UnbindServiceResponse.serializer.toBytes(
-          skir.UnbindServiceResponse.createServiceNotFoundError(),
         ),
       );
 
-      await expectLater(
-        harness.container.deleteService(_service().serviceId),
-        throwsA(_apiException(404)),
-      );
-      await harness.container.pump();
-      expect(await harness.container.read(canonicalServicesProvider.future), [
-        _service(),
-      ]);
+      final result = await services.rename(_service, "updated");
+
+      final conflict = result as MutationConflict;
+      expect(conflict.expectedRevision, 1);
+      expect(conflict.actualRevision, 3);
+      expect(await services.listed(), [actual]);
+      expect(reports, isEmpty);
     });
   });
 
-  for (final mutation in ["bind", "update", "unbind"]) {
-    test("$mutation checks auth before request", () async {
-      final harness = _Harness(userId: null);
-      addTearDown(harness.dispose);
-      await harness.ready();
-      final operation = switch (mutation) {
-        "bind" => harness.container.bindService("token"),
-        "update" => harness.container.updateService(_service(name: "Updated")),
-        _ => harness.container.deleteService(_service().serviceId),
-      };
-
-      await expectLater(operation, throwsA(_apiException(401)));
-      expect(
-        harness.nats.requests.where(
-          (request) => request.subject != _watchSubject,
+  group("bind", () {
+    test("binding sends the registration token and lists the services the "
+        "backend reports afterwards", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      final bound = service("bound", name: "bound", status: null);
+      skir.BindServiceRequest? sent;
+      world.nats.registerHandler(_bindSubject, (data) {
+        sent = skir.BindServiceRequest.serializer.fromBytes(data);
+        return skir.BindServiceResponse.serializer.toBytes(
+          skir.BindServiceResponse.createSuccess(
+            serviceId: "bound",
+            serviceName: "bound",
+            serviceRole: skir.ServiceRole.createHost(version: "1"),
+          ),
+        );
+      });
+      world.nats.registerHandler(
+        _watchSubject,
+        (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
+          skir.WatchOrganizationServicesResponse.wrapList([_service, bound]),
         ),
-        isEmpty,
+      );
+
+      (await services.execute(services.repository.bind("TOKEN12345")))
+          .requireAcceptedBinding();
+
+      expect(sent?.registrationToken, "TOKEN12345");
+      expect(await services.listed(), [_service, bound]);
+    });
+
+    final rejections = {
+      "an invalid token": (
+        skir.BindServiceResponse.createInvalidRegistrationTokenError(),
+        400,
+      ),
+      "an unknown organization": (
+        skir.BindServiceResponse.createOrganizationNotFoundError(),
+        404,
+      ),
+    };
+    for (final MapEntry(key: reason, value: (response, code))
+        in rejections.entries) {
+      test("a bind rejected for $reason fails with $code", () async {
+        final world = testWorld(_acme);
+        final services = await world.watchedServicesOf(_organization);
+        world.nats.registerHandler(
+          _bindSubject,
+          (_) => skir.BindServiceResponse.serializer.toBytes(response),
+        );
+
+        await expectLater(
+          services
+              .execute(services.repository.bind("TOKEN12345"))
+              .then((response) => response.requireAcceptedBinding()),
+          throwsA(
+            isA<ApiException>().having((error) => error.code, "code", code),
+          ),
+        );
+      });
+    }
+
+    test("a bind answered with an internal error stays uncertain", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      world.nats.registerHandler(
+        _bindSubject,
+        (_) => skir.BindServiceResponse.serializer.toBytes(
+          skir.BindServiceResponse.createInternalError(),
+        ),
+      );
+
+      await expectLater(
+        services.execute(services.repository.bind("TOKEN12345")),
+        throwsA(_uncertain),
       );
     });
-  }
+
+    test("an accepted bind whose refresh fails stays confirmed and reports "
+        "the failed integration", () async {
+      final reports = captureFlutterErrors();
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      world.container.listen(localWorkProvider, (_, _) {});
+      world.nats.registerHandler(
+        _bindSubject,
+        (_) => skir.BindServiceResponse.serializer.toBytes(
+          skir.BindServiceResponse.createSuccess(
+            serviceId: "bound",
+            serviceName: "bound",
+            serviceRole: skir.ServiceRole.createHost(version: "1"),
+          ),
+        ),
+      );
+      world.nats.registerHandler(
+        _watchSubject,
+        (_) => throw StateError("refresh failed"),
+      );
+
+      final response = await services.execute(
+        services.repository.bind("TOKEN12345"),
+      );
+
+      expect(response, isA<skir.BindServiceResponse_successWrapper>());
+      final submission = (await world.container.eventually(
+        localWorkProvider,
+        (work) =>
+            work.submissions.single.result != LocalWorkSubmissionResult.ready,
+        description: "the integrated bind",
+      )).submissions.single;
+      expect(submission.result, LocalWorkSubmissionResult.confirmed);
+      expect(submission.integrationFailed, isTrue);
+      expect(reports.single.exception, isA<StateError>());
+    });
+  });
+
+  group("unbind", () {
+    test("unbinding sends the service id and removes the service", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      skir.UnbindServiceRequest? sent;
+      world.nats.registerHandler(_unbindSubject, (data) {
+        sent = skir.UnbindServiceRequest.serializer.fromBytes(data);
+        return skir.UnbindServiceResponse.serializer.toBytes(
+          skir.UnbindServiceResponse.createSuccess(),
+        );
+      });
+
+      (await services.execute(services.repository.unbind(_service.serviceId)))
+          .requireAcceptedUnbinding();
+
+      expect(sent?.serviceId, "service1");
+      expect(await services.listed(), isEmpty);
+    });
+
+    final rejections = {
+      "the service is not found": (
+        skir.UnbindServiceResponse.createServiceNotFoundError(),
+        404,
+      ),
+    };
+    for (final MapEntry(key: reason, value: (response, code))
+        in rejections.entries) {
+      test("an unbind rejected because $reason fails with $code and keeps "
+          "the service", () async {
+        final world = testWorld(_acme);
+        final services = await world.watchedServicesOf(_organization);
+        world.nats.registerHandler(
+          _unbindSubject,
+          (_) => skir.UnbindServiceResponse.serializer.toBytes(response),
+        );
+
+        await expectLater(
+          services
+              .execute(services.repository.unbind(_service.serviceId))
+              .then((response) => response.requireAcceptedUnbinding()),
+          throwsA(
+            isA<ApiException>().having((error) => error.code, "code", code),
+          ),
+        );
+        expect(await services.listed(), [_service]);
+      });
+    }
+
+    test("an unbind answered with an internal error stays uncertain and keeps "
+        "the service", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      world.nats.registerHandler(
+        _unbindSubject,
+        (_) => skir.UnbindServiceResponse.serializer.toBytes(
+          skir.UnbindServiceResponse.createInternalError(),
+        ),
+      );
+
+      await expectLater(
+        services.execute(services.repository.unbind(_service.serviceId)),
+        throwsA(_uncertain),
+      );
+      expect(await services.listed(), [_service]);
+    });
+
+    test("an unbind lost in transport keeps the newer observation", () async {
+      final reports = captureFlutterErrors();
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      final newest = _newest;
+      world.nats.registerHandler(_unbindSubject, (_) {
+        services.repository.acceptService(newest);
+        throw StateError("transport failed");
+      });
+
+      await expectLater(
+        services.execute(services.repository.unbind(_service.serviceId)),
+        throwsA(isA<SubmissionException>()),
+      );
+
+      expect(await services.listed(), [newest]);
+      expect(reports, isEmpty);
+    });
+  });
+
+  group("host Apply", () {
+    test("an invalid configuration rejection shows the server's message as "
+        "an invalid draft", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      world.nats.registerHandler(
+        _configureSubject,
+        (_) => skir.ConfigureServiceHostResponse.serializer.toBytes(
+          skir.ConfigureServiceHostResponse.createInvalidConfigurationError(
+            message: "The Realm needs a primary engine",
+          ),
+        ),
+      );
+
+      final result = await services.applyHost(_host);
+
+      expect(
+        (result as MutationInvalid).diagnostics.single.message,
+        "The Realm needs a primary engine",
+      );
+    });
+
+    test("an Apply conflict reports the actual revision and the value a "
+        "refresh would show", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      final actualHost = (_host.toMutable()..revision = 3).toFrozen();
+      final actualRealm = skir.RealmInstance(
+        realmId: skir.recordId("realm_instance:paper"),
+        ownerHost: skir.OwnerHost(id: _host.hostId, name: "paper"),
+        revision: 1,
+        targetEngine: skir.EngineTarget(
+          engineId: "paper",
+          versionConstraint: "*",
+        ),
+        state: skir.ChildRuntimeState.defaultInstance,
+      );
+      world.nats.registerHandler(
+        _configureSubject,
+        (_) => skir.ConfigureServiceHostResponse.serializer.toBytes(
+          skir.ConfigureServiceHostResponse.createConflictError(
+            actual: hostConfiguration(actualHost, realm: actualRealm),
+          ),
+        ),
+      );
+
+      final conflict = await services.applyHost(_host) as MutationConflict;
+
+      expect(conflict.expectedRevision, 1);
+      expect(conflict.actualRevision, 3);
+      expect(
+        conflict.actualValue,
+        HostEditorSnapshot(
+          actualHost,
+          topologySnapshot(hosts: [actualHost], realms: [actualRealm]),
+        ).document.confirmedValue,
+      );
+    });
+
+    final unavailable = {
+      "an incompatible engine": () =>
+          skir.ConfigureServiceHostResponse.createIncompatibleEngineError(
+            target: skir.EngineTarget(
+              engineId: "fabric",
+              versionConstraint: "*",
+            ),
+          ),
+      "an unknown Realm": () =>
+          skir.ConfigureServiceHostResponse.createRealmNotFoundError(
+            realmId: skir.recordId("realm_instance:gone"),
+          ),
+    };
+    for (final MapEntry(key: reason, value: response) in unavailable.entries) {
+      test("an Apply rejected for $reason reports Apply unavailable", () async {
+        final world = testWorld(_acme);
+        final services = await world.watchedServicesOf(_organization);
+        world.nats.registerHandler(
+          _configureSubject,
+          (_) =>
+              skir.ConfigureServiceHostResponse.serializer.toBytes(response()),
+        );
+
+        expect(await services.applyHost(_host), isA<MutationUnavailable>());
+      });
+    }
+  });
+
+  group("lost reply", () {
+    final renamed = service(
+      "service1",
+      name: "requested",
+      revision: 2,
+      status: null,
+    );
+    final applied = (_host.toMutable()..revision = 2).toFrozen();
+    final saves = {
+      "a rename": (
+        subject: _updateSubject,
+        reply: skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+          skir.UpdateOrganizationServiceResponse.wrapSuccess(renamed),
+        ),
+        save: (OrganizationServices services) =>
+            services.rename(_service, "requested"),
+        saved: (OrganizationServices services) => services.listed(),
+        expected: [renamed],
+      ),
+      "a host Apply": (
+        subject: _configureSubject,
+        reply: skir.ConfigureServiceHostResponse.serializer.toBytes(
+          skir.ConfigureServiceHostResponse.wrapSuccess(
+            hostConfiguration(applied),
+          ),
+        ),
+        save: (OrganizationServices services) => services.applyHost(_host),
+        saved: (OrganizationServices services) async =>
+            (await services.watchTopology()).hosts,
+        expected: [applied],
+      ),
+    };
+    for (final MapEntry(key: name, value: save) in saves.entries) {
+      test("$name whose reply was lost settles saved from the Retry's reply "
+          "without needing attention", () async {
+        final world = testWorld(_acme);
+        final services = await world.watchedServicesOf(_organization);
+        await services.watchTopology();
+        var lost = false;
+        world.nats.registerHandler(save.subject, (_) {
+          if (lost) return save.reply;
+          lost = true;
+          throw StateError("transport failed");
+        });
+
+        await expectLater(save.save(services), throwsA(_uncertain));
+        final submission = world.container
+            .read(localWorkProvider)
+            .submissions
+            .single;
+        await world.container
+            .read(localWorkControllerProvider)
+            .retrySubmission(submission.id);
+
+        final settled = (await world.container.eventually(
+          localWorkProvider,
+          (work) =>
+              work.submissions.single.result != LocalWorkSubmissionResult.ready,
+          description: "the retried save settling",
+        )).submissions.single;
+        expect(settled.result, LocalWorkSubmissionResult.confirmed);
+        expect(settled.integrationFailed, isFalse);
+        expect(settled.message, isNull);
+        expect(await save.saved(services), save.expected);
+      });
+    }
+  });
+
+  group("signed out", () {
+    final mutations = <String, Future<Object?> Function(World world)>{
+      "a bind": (world) => world
+          .servicesOf(_organization)
+          .execute(
+            world.servicesOf(_organization).repository.bind("TOKEN12345"),
+          ),
+      "a rename": (world) =>
+          world.servicesOf(_organization).rename(_service, "updated"),
+      "an unbind": (world) => world
+          .servicesOf(_organization)
+          .execute(
+            world
+                .servicesOf(_organization)
+                .repository
+                .unbind(_service.serviceId),
+          ),
+    };
+    for (final MapEntry(key: mutation, value: run) in mutations.entries) {
+      test("$mutation is refused as unauthenticated before any request", () {
+        final world = testWorld([
+          servicesBackend(services: [_service]),
+        ]);
+
+        expect(
+          () => run(world),
+          throwsA(
+            isA<ApiException>().having((error) => error.code, "code", 401),
+          ),
+        );
+        expect(world.nats.connected, isFalse);
+      });
+    }
+  });
 }

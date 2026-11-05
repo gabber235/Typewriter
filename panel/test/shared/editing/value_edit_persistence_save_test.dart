@@ -2,72 +2,36 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/editor_fixture.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _key = EditorResourceKey(
   scope: "original organization",
   identity: "resource",
 );
 final _title = editorRootPath.field("title");
-skir.DataValue _value(String title) =>
-    recordEditorValue({"title": skir.DataValue.wrapStringValue(title)});
-
-final _fieldTypes = {
-  "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-};
-EditorSnapshot _snapshot({String title = "Original", int revision = 1}) =>
-    FakeEditorSnapshot(
-      recordEditorDocument(
-        {"title": skir.DataValue.wrapStringValue(title)},
-        _fieldTypes,
-        revision,
-      ),
-      validation: acceptTestEditorMutation,
-    );
-ValueEditing _draft(
-  ScopedWorkSession workspace,
-  ValueEditPersistence resource,
-) {
-  final source = ValueEditingRegistration(
-    targetId: resource.key.identity,
-    label: "Resource",
-    persistence: resource,
-    snapshot: _snapshot(),
-    commitPolicy: EditorCommitPolicy.applyResource,
-  ).acquire(workspace);
-  addTearDown(
-    workspace.lease(WorkDriverId(domain: "value", scope: resource.key)).release,
-  );
-  source.update(_title, skir.DataValue.wrapStringValue("Draft"));
-  return source;
-}
-
 void main() {
   test(
     "detached save waits for its reservation before reading and capturing",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       var reads = 0;
       final resource = ScriptedValuePersistence(
         key: _key,
-        current: _snapshot(),
+        current: savedTitleSnapshot(),
         load: () async {
           reads++;
-          return _snapshot(revision: 2);
+          return savedTitleSnapshot(revision: 2);
         },
         commit: (commit) async {
           expect(commit.expectedRevision, 2);
-          expect(commit.rootValue, _value("Draft"));
+          expect(commit.rootValue, titleValue("Draft"));
           return MutationSuccess(revision: 3, value: commit.rootValue);
         },
       );
       final predecessor = await workspace.coordinator.reserve(
         resource.reservations,
       );
-      final source = _draft(workspace, resource);
+      final source = titleDraft(workspace, resource);
 
       workspace.lease(WorkDriverId(domain: "value", scope: _key)).release();
       final saving = source.flush();
@@ -82,18 +46,18 @@ void main() {
   );
 
   test("refresh conflicts preserve the draft and prevent sending", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
+    final reports = captureFlutterErrors();
     var sends = 0;
     final resource = ScriptedValuePersistence(
       key: _key,
-      current: _snapshot(title: "Remote", revision: 2),
+      current: savedTitleSnapshot(title: "Remote", revision: 2),
       commit: (_) async {
         sends++;
         throw StateError("Unexpected send");
       },
     );
-    final source = _draft(workspace, resource);
+    final source = titleDraft(workspace, resource);
     expect(await source.flush(), isA<MutationUnavailable>());
 
     expect(sends, 0);
@@ -101,26 +65,26 @@ void main() {
       source.value(_title).valueOrNull,
       skir.DataValue.wrapStringValue("Draft"),
     );
-    expect(source.document.confirmedValue, _value("Remote"));
+    expect(source.document.confirmedValue, titleValue("Remote"));
+    expect(reports, isEmpty);
   });
 
   test(
     "refresh failure releases the reservation and retains a retryable draft",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       var reads = 0;
       final resource = ScriptedValuePersistence(
         key: _key,
-        current: _snapshot(),
+        current: savedTitleSnapshot(),
         load: () async {
           if (++reads == 1) throw TimeoutException("Offline");
-          return _snapshot();
+          return savedTitleSnapshot();
         },
         commit: (commit) async =>
             MutationSuccess(revision: 2, value: commit.rootValue),
       );
-      final source = _draft(workspace, resource);
+      final source = titleDraft(workspace, resource);
       expect(await source.flush(), isA<MutationUnavailable>());
 
       expect(source.hasWork, isTrue);
@@ -130,50 +94,66 @@ void main() {
   );
 
   test("confirmed deletion blocks submission", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
+    final reports = captureFlutterErrors();
+    var sends = 0;
     final resource = ScriptedValuePersistence(
       key: _key,
       current: null,
-      commit: (_) async => throw StateError("Unexpected send"),
+      commit: (_) async {
+        sends++;
+        throw StateError("Unexpected send");
+      },
     );
-    final source = _draft(workspace, resource);
+    final source = titleDraft(workspace, resource);
     expect(await source.flush(), isA<MutationUnavailable>());
     expect(
       source.saveState(editorRootPath).phase,
       EditorSavePhase.deletedElsewhere,
     );
+    expect(sends, 0);
+    expect(reports, isEmpty);
   });
 
   test("workspace disposal during refresh prevents submission", () async {
     final workspace = ScopedWorkSession();
+    final reports = captureFlutterErrors();
     final ready = Completer<EditorSnapshot?>();
     final started = Completer<void>();
+    var sends = 0;
     final resource = ScriptedValuePersistence(
       key: _key,
-      current: _snapshot(),
+      current: savedTitleSnapshot(),
       load: () {
         started.complete();
         return ready.future;
       },
-      commit: (_) async => throw StateError("Unexpected send"),
+      commit: (_) async {
+        sends++;
+        throw StateError("Unexpected send");
+      },
     );
-    final source = _draft(workspace, resource);
+    final source = titleDraft(workspace, resource);
     final saving = source.flush();
 
     await started.future;
     workspace.dispose();
-    ready.complete(_snapshot());
+    ready.complete(savedTitleSnapshot());
     expect(await saving, isA<MutationUnavailable>());
+    expect(sends, 0);
+    expect(reports, isEmpty);
   });
 
   test(
-    "uncertain delivery retains the reservation and replays without refresh",
+    "uncertain delivery retains the reservation and replays the captured "
+    "request",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
-      final resource = _UncertainResource();
-      final source = _draft(workspace, resource);
+      final workspace = testWorkSession();
+      final resource = UncertainSaveResource(
+        key: _key,
+        current: savedTitleSnapshot(),
+      );
+      final source = titleDraft(workspace, resource);
       expect(await source.flush(), isA<MutationUncertain>());
       var acquired = false;
 
@@ -187,22 +167,47 @@ void main() {
       expect(acquired, isFalse);
       expect(await source.flush(), isA<MutationSuccess>());
       (await next).release();
-      expect(resource.reads, 1);
+      // The capture read once; the replay sent the captured request without
+      // reading again. The second read follows its reply, which arrived
+      // outside the save lane, as every such reply that carries a state does.
+      expect(resource.reads, 2);
 
       expect(resource.sends, 2);
       expect(resource.requests[0], same(resource.requests[1]));
     },
   );
 
+  test("an autosave whose reply was lost reports an unknown outcome while "
+      "it is sent again, and is saved once the resend is answered", () async {
+    final workspace = testWorkSession();
+    final resource = UncertainSaveResource(
+      key: _key,
+      current: savedTitleSnapshot(),
+    );
+    final source = titleDraft(
+      workspace,
+      resource,
+      policy: EditorCommitPolicy.autosaveChanges,
+    );
+
+    expect(await source.flush(), isA<MutationUncertain>());
+    expect(source.saveState(editorRootPath).phase, EditorSavePhase.saving);
+
+    await eventually(
+      () =>
+          expect(source.saveState(editorRootPath).phase, EditorSavePhase.saved),
+    );
+    expect(source.document.confirmedValue, titleValue("Draft"));
+  });
+
   test("concurrent flushes share one refresh and submission", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     final ready = Completer<EditorSnapshot?>();
     var reads = 0;
     var sends = 0;
     final resource = ScriptedValuePersistence(
       key: _key,
-      current: _snapshot(),
+      current: savedTitleSnapshot(),
       load: () {
         reads++;
         return ready.future;
@@ -213,56 +218,14 @@ void main() {
       },
     );
 
-    final source = _draft(workspace, resource);
+    final source = titleDraft(workspace, resource);
     final first = source.flush();
     final second = source.flush();
-    ready.complete(_snapshot());
+    ready.complete(savedTitleSnapshot());
     expect(await first, isA<MutationSuccess>());
     expect(await second, isA<MutationSuccess>());
 
     expect(reads, 1);
     expect(sends, 1);
   });
-}
-
-final class _UncertainResource extends ScriptedValuePersistence {
-  _UncertainResource()
-    : super(
-        key: _key,
-        current: _snapshot(),
-        commit: (_) async => throw StateError("Use captured request"),
-      );
-  int reads = 0;
-  int sends = 0;
-  final requests = <EditorCommit>[];
-
-  @override
-  Future<EditorSnapshot?> refreshSnapshot() async {
-    reads++;
-    return current;
-  }
-
-  @override
-  PreparedCommit<TypedMutationResult> prepareValue(
-    EditorSnapshot snapshot,
-    EditorCommit changes,
-  ) => PreparedCommit(
-    id: Object(),
-    label: "Uncertain resource",
-    resources: reservations,
-    replay: SubmissionReplay.identicalRequest,
-    send: () async {
-      requests.add(changes);
-      if (++sends == 1) {
-        return SubmissionResult.uncertain(
-          message: "Lost response",
-          cause: StateError("Lost response"),
-          stackTrace: StackTrace.current,
-        );
-      }
-      return SubmissionResult.confirmed(
-        MutationSuccess(revision: 2, value: changes.rootValue),
-      );
-    },
-  );
 }

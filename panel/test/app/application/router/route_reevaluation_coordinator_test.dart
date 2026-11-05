@@ -1,32 +1,11 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   late RouteAccessCoordinator access;
   late RouteReevaluationCoordinator coordinator;
-  late List<Completer<void>> calls;
-  late int active;
-  late int maximumActive;
-
-  Future<void> reevaluate() {
-    active++;
-    maximumActive = max(maximumActive, active);
-    final call = Completer<void>();
-    calls.add(call);
-    return call.future.whenComplete(() => active--);
-  }
-
-  void notify() {
-    final decision =
-        access.authentication.decision is RouteAuthenticationAuthenticated
-        ? const RouteAuthenticationDecision.unauthenticated()
-        : const RouteAuthenticationDecision.authenticated();
-    access.authentication.setDecision(decision);
-  }
-
-  Future<void> flush() async {
-    await Future<void>.delayed(Duration.zero);
-  }
+  late HeldReevaluations reevaluations;
 
   setUp(() {
     access = RouteAccessCoordinator(
@@ -34,12 +13,10 @@ void main() {
         ..setDecision(const RouteAuthenticationDecision.authenticated()),
       organizations: OrganizationRouteAccess(),
     );
-    calls = [];
-    active = 0;
-    maximumActive = 0;
+    reevaluations = HeldReevaluations();
     coordinator = RouteReevaluationCoordinator(
       access: access,
-      reevaluateGuards: reevaluate,
+      reevaluateGuards: reevaluations.call,
     );
   });
 
@@ -65,8 +42,8 @@ void main() {
         ),
       );
 
-    await flush();
-    expect(calls, isEmpty);
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, isEmpty);
   });
 
   test("changed organization recovery causes one reevaluation", () async {
@@ -86,45 +63,45 @@ void main() {
         ),
       );
 
-    expect(calls, hasLength(1));
-    calls.single.complete();
-    await flush();
-    expect(calls, hasLength(1));
+    expect(reevaluations.calls, hasLength(1));
+    reevaluations.calls.single.complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, hasLength(1));
   });
 
   test("serializes and coalesces a notification burst", () async {
-    notify();
-    notify();
-    notify();
-    expect(calls, hasLength(1));
+    access.authentication.flip();
+    access.authentication.flip();
+    access.authentication.flip();
+    expect(reevaluations.calls, hasLength(1));
 
-    calls[0].complete();
-    await flush();
-    expect(calls, hasLength(2));
-    expect(maximumActive, 1);
+    reevaluations.calls[0].complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, hasLength(2));
+    expect(reevaluations.maximumActive, 1);
 
-    calls[1].complete();
-    await flush();
-    expect(calls, hasLength(2));
-    expect(maximumActive, 1);
+    reevaluations.calls[1].complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, hasLength(2));
+    expect(reevaluations.maximumActive, 1);
   });
 
   test("notification during a follow up schedules one later call", () async {
-    notify();
-    notify();
-    calls[0].complete();
-    await flush();
+    access.authentication.flip();
+    access.authentication.flip();
+    reevaluations.calls[0].complete();
+    await Future<void>.delayed(Duration.zero);
 
-    notify();
-    notify();
-    calls[1].complete();
-    await flush();
-    expect(calls, hasLength(3));
-    expect(maximumActive, 1);
+    access.authentication.flip();
+    access.authentication.flip();
+    reevaluations.calls[1].complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, hasLength(3));
+    expect(reevaluations.maximumActive, 1);
 
-    calls[2].complete();
-    await flush();
-    expect(calls, hasLength(3));
+    reevaluations.calls[2].complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, hasLength(3));
   });
 
   test("reports errors and continues pending and later work", () async {
@@ -133,38 +110,38 @@ void main() {
     FlutterError.onError = errors.add;
     addTearDown(() => FlutterError.onError = previousOnError);
 
-    notify();
-    notify();
-    calls[0].completeError(StateError("failed"));
-    await flush();
+    access.authentication.flip();
+    access.authentication.flip();
+    reevaluations.calls[0].completeError(StateError("failed"));
+    await Future<void>.delayed(Duration.zero);
     expect(errors, hasLength(1));
-    expect(calls, hasLength(2));
+    expect(reevaluations.calls, hasLength(2));
 
-    calls[1].complete();
-    await flush();
-    notify();
-    expect(calls, hasLength(3));
-    calls[2].complete();
+    reevaluations.calls[1].complete();
+    await Future<void>.delayed(Duration.zero);
+    access.authentication.flip();
+    expect(reevaluations.calls, hasLength(3));
+    reevaluations.calls[2].complete();
   });
 
   test("dispose during active work suppresses follow ups", () async {
-    notify();
-    notify();
+    access.authentication.flip();
+    access.authentication.flip();
     coordinator.dispose();
-    calls[0].complete();
-    await flush();
-    expect(calls, hasLength(1));
+    reevaluations.calls[0].complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, hasLength(1));
 
-    notify();
-    await flush();
-    expect(calls, hasLength(1));
+    access.authentication.flip();
+    await Future<void>.delayed(Duration.zero);
+    expect(reevaluations.calls, hasLength(1));
   });
 
   test("dispose is idempotent and post-dispose notifications do nothing", () {
     coordinator
       ..dispose()
       ..dispose();
-    notify();
-    expect(calls, isEmpty);
+    access.authentication.flip();
+    expect(reevaluations.calls, isEmpty);
   });
 }

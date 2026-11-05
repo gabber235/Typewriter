@@ -1,10 +1,6 @@
 package com.typewritermc.services.libs.registrar.runtime
 
 import com.typewritermc.services.libs.http.core.HttpHeaders
-import com.typewritermc.services.libs.http.core.HttpResponse
-import com.typewritermc.services.libs.http.core.HttpResult
-import com.typewritermc.services.libs.http.core.ServiceHttpClient
-import com.typewritermc.services.libs.http.testing.FakeHttpTransport
 import com.typewritermc.services.libs.registrar.AccessTokenFailureReason
 import com.typewritermc.services.libs.registrar.IdentityCredentials
 import com.typewritermc.services.libs.registrar.IdentityIssueError
@@ -15,53 +11,22 @@ import com.typewritermc.services.libs.registrar.SentinelFailureReason
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
-import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.access.v1.sentinel.GetSentinelCredentialsResponse
 import skirout.service.v1.identity.IssueServiceIdentityRequest
 import skirout.service.v1.identity.IssueServiceIdentityResponse
 import java.net.URI
 import skirout.service.v1.service.ServiceRole as SkirRole
 
-private val httpCredentials =
-    IdentityCredentials(
-        ServiceIdentity(ServiceId("service-id"), "Service Name", "service-user", ServiceRole.Custom("realm", "1.0")),
-        RedactedSecret.AppPassword("app-password"),
-    )
-
-private val mediaHeaders =
-    HttpHeaders.of(
-        "Content-Type" to "application/octet-stream",
-        "X-Typewriter-Format" to "skir-binary",
-    )
-
-private fun httpResponse(
-    status: Int,
-    body: ByteArray,
-    headers: HttpHeaders = mediaHeaders,
-) = HttpResult.Success(HttpResponse(status, headers, body))
-
-private data class HttpFixture(
-    val transport: FakeHttpTransport,
-    val harness: TelemetryTestHarness,
-    val client: ServiceHttpClient,
-) : AutoCloseable {
-    override fun close() = harness.close()
-}
-
-private fun httpFixture(vararg outcomes: HttpResult): HttpFixture {
-    val transport =
-        FakeHttpTransport(
-            outcomes.map { result ->
-                suspend { _: com.typewritermc.services.libs.http.core.HttpRequest -> result }
-            },
-        )
-    val harness = TelemetryTestHarness.create()
-    return HttpFixture(transport, harness, ServiceHttpClient(transport, harness.telemetry, harness.openTelemetry.propagators))
-}
-
 val HttpAdaptersTest by testSuite {
+    val httpCredentials =
+        IdentityCredentials(
+            ServiceIdentity(ServiceId("service-id"), "Service Name", "service-user", ServiceRole.Custom("realm", "1.0")),
+            RedactedSecret.AppPassword("app-password"),
+        )
+
     test("identity issuer sends canonical role headers and maps success") {
         val response =
             IssueServiceIdentityResponse.createSuccess(
@@ -101,21 +66,22 @@ val HttpAdaptersTest by testSuite {
         }
     }
 
-    test("identity issuer maps typed rejection and wrong media") {
+    test("identity issuer maps a typed rejection to its reason") {
         val rejection = IssueServiceIdentityResponse.createUnknownRoleError()
-        val fixture =
-            httpFixture(
-                httpResponse(400, IssueServiceIdentityResponse.serializer.toBytes(rejection).toByteArray()),
-                httpResponse(200, byteArrayOf(1), HttpHeaders.of("Content-Type" to "text/plain")),
-            )
-        try {
-            val issuer = TypewriterIdentityIssuer(fixture.client, URI("https://api.example.test/issue"))
-            (issuer.issue(ServiceRole.Custom("realm", "1.0")) as IdentityIssueResult.Failure).error shouldBe
-                IdentityIssueError.Rejected(IdentityRejectionReason.UNKNOWN_ROLE)
-            val protocol = issuer.issue(ServiceRole.Custom("realm", "1.0")) as IdentityIssueResult.Failure
-            protocol.error shouldBe IdentityIssueError.Protocol("unexpected_media_type", true)
-        } finally {
-            fixture.close()
+        httpFixture(httpResponse(400, IssueServiceIdentityResponse.serializer.toBytes(rejection).toByteArray())).use { fixture ->
+            TypewriterIdentityIssuer(fixture.client, URI("https://api.example.test/issue"))
+                .issue(ServiceRole.Custom("realm", "1.0"))
+                .shouldBeInstanceOf<IdentityIssueResult.Failure>()
+                .error shouldBe IdentityIssueError.Rejected(IdentityRejectionReason.UNKNOWN_ROLE)
+        }
+    }
+
+    test("identity issuer refuses an unexpected media type as an ambiguous protocol failure") {
+        httpFixture(httpResponse(200, byteArrayOf(1), HttpHeaders.of("Content-Type" to "text/plain"))).use { fixture ->
+            TypewriterIdentityIssuer(fixture.client, URI("https://api.example.test/issue"))
+                .issue(ServiceRole.Custom("realm", "1.0"))
+                .shouldBeInstanceOf<IdentityIssueResult.Failure>()
+                .error shouldBe IdentityIssueError.Protocol("unexpected_media_type", true)
         }
     }
 
@@ -150,29 +116,27 @@ val HttpAdaptersTest by testSuite {
         }
     }
 
-    test("oauth rejects malformed token type and distinguishes statuses") {
-        val fixture =
-            httpFixture(
-                httpResponse(200, """{"access_token":"token","expires_in":1,"token_type":"MAC"}""".encodeToByteArray()),
-                httpResponse(401, byteArrayOf()),
-                httpResponse(503, byteArrayOf()),
-            )
-        try {
-            val exchanger =
-                AuthentikTokenExchanger(
-                    fixture.client,
-                    URI("https://auth.example.test/token"),
-                    "client",
-                    setOf("openid"),
-                )
-            (exchanger.exchange(httpCredentials) as AccessTokenResult.Failure).failure.reason shouldBe
-                AccessTokenFailureReason.PROTOCOL
-            (exchanger.exchange(httpCredentials) as AccessTokenResult.Failure).failure.reason shouldBe
-                AccessTokenFailureReason.REJECTED
-            (exchanger.exchange(httpCredentials) as AccessTokenResult.Failure).failure.reason shouldBe
-                AccessTokenFailureReason.UNAVAILABLE
-        } finally {
-            fixture.close()
+    listOf(
+        Triple(
+            "a non bearer token type",
+            httpResponse(200, """{"access_token":"token","expires_in":1,"token_type":"MAC"}""".encodeToByteArray()),
+            AccessTokenFailureReason.PROTOCOL,
+        ),
+        Triple(
+            "a token that expires at once",
+            httpResponse(200, """{"access_token":"token","expires_in":0,"token_type":"Bearer"}""".encodeToByteArray()),
+            AccessTokenFailureReason.PROTOCOL,
+        ),
+        Triple("status 401", httpResponse(401, byteArrayOf()), AccessTokenFailureReason.REJECTED),
+        Triple("status 503", httpResponse(503, byteArrayOf()), AccessTokenFailureReason.UNAVAILABLE),
+    ).forEach { (answer, response, reason) ->
+        test("oauth maps $answer to $reason") {
+            httpFixture(response).use { fixture ->
+                AuthentikTokenExchanger(fixture.client, URI("https://auth.example.test/token"), "client", setOf("openid"))
+                    .exchange(httpCredentials)
+                    .shouldBeInstanceOf<AccessTokenResult.Failure>()
+                    .failure.reason shouldBe reason
+            }
         }
     }
 
@@ -193,19 +157,22 @@ val HttpAdaptersTest by testSuite {
         }
     }
 
-    test("sentinel internal error is recoverable and wrong media is protocol") {
+    test("sentinel internal error is recoverable unavailability") {
         val internal = GetSentinelCredentialsResponse.createInternalError()
-        val fixture =
-            httpFixture(
-                httpResponse(500, GetSentinelCredentialsResponse.serializer.toBytes(internal).toByteArray()),
-                httpResponse(200, byteArrayOf(), HttpHeaders.of("Content-Type" to "text/plain")),
-            )
-        try {
-            val provider = TypewriterSentinelProvider(fixture.client, URI("https://api.example.test/auth/sentinel"))
-            (provider.fetch() as SentinelResult.Failure).failure.reason shouldBe SentinelFailureReason.UNAVAILABLE
-            (provider.fetch() as SentinelResult.Failure).failure.reason shouldBe SentinelFailureReason.PROTOCOL
-        } finally {
-            fixture.close()
+        httpFixture(httpResponse(500, GetSentinelCredentialsResponse.serializer.toBytes(internal).toByteArray())).use { fixture ->
+            TypewriterSentinelProvider(fixture.client, URI("https://api.example.test/auth/sentinel"))
+                .fetch()
+                .shouldBeInstanceOf<SentinelResult.Failure>()
+                .failure.reason shouldBe SentinelFailureReason.UNAVAILABLE
+        }
+    }
+
+    test("sentinel answer with an unexpected media type is a protocol failure") {
+        httpFixture(httpResponse(200, byteArrayOf(), HttpHeaders.of("Content-Type" to "text/plain"))).use { fixture ->
+            TypewriterSentinelProvider(fixture.client, URI("https://api.example.test/auth/sentinel"))
+                .fetch()
+                .shouldBeInstanceOf<SentinelResult.Failure>()
+                .failure.reason shouldBe SentinelFailureReason.PROTOCOL
         }
     }
 

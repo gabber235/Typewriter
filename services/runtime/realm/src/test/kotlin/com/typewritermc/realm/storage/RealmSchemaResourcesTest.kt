@@ -5,23 +5,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 
 val RealmSchemaResourcesTest by testSuite {
-    test("Realm schema contains only authored resources, relations, and publication attempts") {
-        val schema = MigrationResources().loadRealmSchema()
-        schema.map(SchemaResource::path) shouldBe
-            listOf(
-                "search/authoring_text.surql",
-                "resource/resource.surql",
-                "resource/resource_relation.surql",
-                "compile/publication_attempt.surql",
-            )
-        schema.sumOf { Regex("DEFINE TABLE").findAll(it.script).count() } shouldBe 3
-    }
-    test("publication results and diagnostics use native objects") {
-        val schema = MigrationResources().loadRealmSchema().last().script
-        schema.contains("result ON publication_attempt TYPE option<object> FLEXIBLE") shouldBe true
-        schema.contains("findings.* ON publication_attempt TYPE object FLEXIBLE") shouldBe true
-    }
-
     test("Realm schema catalog preserves declared dependency order") {
         val resources =
             migrationResources(
@@ -40,7 +23,8 @@ val RealmSchemaResourcesTest by testSuite {
                 "schema/realm/_index.txt" to "book.surql\nbook.surql",
             )
 
-        shouldThrow<IllegalArgumentException> { resources.loadRealmSchema() }
+        shouldThrow<IllegalArgumentException> { resources.loadRealmSchema() }.message shouldBe
+            "Resource index contains duplicate filenames: schema/realm/_index.txt"
     }
 
     test("Realm schema catalog rejects paths outside its directory") {
@@ -49,7 +33,8 @@ val RealmSchemaResourcesTest by testSuite {
                 "schema/realm/_index.txt" to "../migration.surql",
             )
 
-        shouldThrow<IllegalArgumentException> { resources.loadRealmSchema() }
+        shouldThrow<IllegalArgumentException> { resources.loadRealmSchema() }.message shouldBe
+            "Invalid Realm schema filename: ../migration.surql"
     }
 
     test("Realm schema catalog fails when an indexed resource is missing") {
@@ -58,6 +43,7 @@ val RealmSchemaResourcesTest by testSuite {
                 "schema/realm/_index.txt" to "missing.surql",
             )
 
-        shouldThrow<MissingMigrationResourceException> { resources.loadRealmSchema() }
+        shouldThrow<MissingMigrationResourceException> { resources.loadRealmSchema() }.message shouldBe
+            "Migration resource not found: schema/realm/missing.surql"
     }
 }

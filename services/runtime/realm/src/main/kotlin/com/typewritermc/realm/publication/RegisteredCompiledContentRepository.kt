@@ -66,8 +66,7 @@ class SurrealRegisteredCompiledContentRepository(
                         row
                             .get("id")
                             .getRecordId()
-                            .toString()
-                            .substringAfter(':'),
+                            .id.string,
                 ),
             state = state,
             findings = findings,

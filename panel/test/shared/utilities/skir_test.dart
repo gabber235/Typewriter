@@ -2,9 +2,10 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("Color serialization", () {
+  test("Flutter colors convert to Skir colors and back without loss", () {
     for (final color in [
       Colors.blue,
       const Color(0x00000000),
@@ -12,33 +13,33 @@ void main() {
       const Color(0x80000000),
       const Color(0xffffffff),
     ]) {
-      test("preserves 0x${color.toARGB32().toRadixString(16)}", () {
-        final bytes = skir.Color.serializer.toBytes(color.toSkirColor());
-        final decoded = skir.Color.serializer.fromBytes(bytes).toFlutterColor();
-
-        expect(decoded.toARGB32(), color.toARGB32());
-      });
+      expect(
+        color.toSkirColor().toFlutterColor().toARGB32(),
+        color.toARGB32(),
+        reason: "0x${color.toARGB32().toRadixString(16)}",
+      );
     }
   });
 
   group("RecordIdExtension.toSurrealQl", () {
     test("formats unknown, number, and string keys", () {
-      expect(_id(skir.RecordIdKey.unknown), "<unknown>");
-      expect(_id(skir.RecordIdKey.wrapNumber(-42)), "-42");
-      expect(_id(skir.RecordIdKey.wrapString("quest_42")), "quest_42");
-      expect(_id(skir.RecordIdKey.wrapString("")), "``");
-      expect(_id(skir.RecordIdKey.wrapString("two words")), "`two words`");
-      expect(_id(skir.RecordIdKey.wrapString("42")), "`42`");
+      expect(skir.RecordIdKey.unknown.surrealQl, "<unknown>");
+      expect(skir.RecordIdKey.wrapNumber(-42).surrealQl, "-42");
+      expect(skir.RecordIdKey.wrapString("quest_42").surrealQl, "quest_42");
+      expect(skir.RecordIdKey.wrapString("").surrealQl, "``");
+      expect(skir.RecordIdKey.wrapString("two words").surrealQl, "`two words`");
+      expect(skir.RecordIdKey.wrapString("42").surrealQl, "`42`");
 
       expect(
-        _id(skir.RecordIdKey.wrapString("9223372036854775808")),
+        skir.RecordIdKey.wrapString("9223372036854775808").surrealQl,
         "9223372036854775808",
       );
     });
 
     test("formats UUID keys", () {
       expect(
-        _id(skir.RecordIdKey.wrapUuid("123e4567-e89b-12d3-a456-426614174000")),
+        skir.RecordIdKey.wrapUuid("123e4567-e89b-12d3-a456-426614174000")
+            .surrealQl,
         "u'123e4567-e89b-12d3-a456-426614174000'",
       );
     });
@@ -56,7 +57,7 @@ void main() {
       ]);
 
       expect(
-        _id(key),
+        key.surrealQl,
         r"[<unknown>, NONE, true, false, 7, 1.5f, 'it\'s', [2]]",
       );
     });
@@ -77,14 +78,7 @@ void main() {
         ], (item) => item.key),
       );
 
-      expect(_id(key), "{simple: {`nested key`: 'value'}, `123`: NONE}");
+      expect(key.surrealQl, "{simple: {`nested key`: 'value'}, `123`: NONE}");
     });
   });
-}
-
-String _id(skir.RecordIdKey key) {
-  return skir.RecordId(
-    table: "ignored",
-    key: key,
-  ).toSurrealQl().substring("ignored:".length);
 }

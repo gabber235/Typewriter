@@ -4,7 +4,7 @@
 //! [`Snapshot::callers_of`]), so a caller can be a false one; output says so.
 
 use std::collections::hash_map::DefaultHasher;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -125,8 +125,6 @@ pub struct SourceFile {
     pub imports: Vec<String>,
     /// The Kotlin package or the Rust crate directory, so same module references need no import.
     pub module: Option<String>,
-    /// Names used outside any entity, including every word of the imports.
-    pub mentions: HashSet<String>,
 }
 
 /// Every entity of one snapshot of the repository.
@@ -213,10 +211,6 @@ impl Snapshot {
 
     /// Whether any file names `name` outside an entity: in an import, a constant or a top level
     /// property.
-    pub fn is_mentioned(&self, name: &str) -> bool {
-        self.files.values().any(|file| file.mentions.contains(name))
-    }
-
     /// The positions in [`Self::entities`] of the entities of `file`, in source order.
     pub fn file_range(&self, file: &Path) -> std::ops::Range<usize> {
         self.by_file.get(file).map_or(0..0, Clone::clone)
@@ -433,7 +427,6 @@ fn index_file(
 ) -> (SourceFile, Vec<Entity>) {
     let mut source = SourceFile {
         imports: Vec::new(),
-        mentions: HashSet::new(),
         module: rust_crate(language, path),
         text: String::new(),
     };
@@ -453,14 +446,6 @@ fn index_file(
     };
     walker.visit(tree.root_node());
     let mut entities = walker.entities;
-    let words: Vec<String> = source
-        .imports
-        .iter()
-        .flat_map(|import| import.split(|c: char| !c.is_alphanumeric() && c != '_'))
-        .filter(|word| !word.is_empty())
-        .map(str::to_string)
-        .collect();
-    source.mentions.extend(words);
     fingerprint(&mut entities, &text);
     source.text = text;
     (source, entities)
@@ -660,8 +645,6 @@ impl<'a> Walker<'a> {
         let mut names = self.type_references(node);
         names.extend(self.value_references(node));
         let Some(&current) = self.open.last() else {
-            self.source.mentions.extend(names);
-            self.source.mentions.extend(callee);
             return;
         };
         if BRANCHES.contains(&(self.language, node.kind())) {

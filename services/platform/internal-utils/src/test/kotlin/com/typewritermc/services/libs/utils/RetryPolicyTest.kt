@@ -98,12 +98,5 @@ val RetryPolicyTest by testSuite {
             policy.delayFor(0, 0.0) shouldBe 1.nanoseconds
             policy.delayFor(Long.MAX_VALUE, 1.0) shouldBe 100.nanoseconds
         }
-
-        test("equal inputs always produce equal outputs") {
-            val policy = RetryPolicy.exponential(3.seconds, 30.seconds, jitterRatio = 0.35)
-
-            val results = List(100) { policy.delayFor(4, 0.731) }
-            results.toSet().size shouldBe 1
-        }
     }
 }

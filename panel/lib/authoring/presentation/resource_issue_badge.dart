@@ -33,6 +33,8 @@ class ResourceIssueBadge extends StatelessWidget {
       message: status,
       child: Semantics(
         label: status,
+        // The status already says the count the row repeats visually.
+        excludeSemantics: true,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

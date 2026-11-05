@@ -1,107 +1,77 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.root
-import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.TEST_TYPE
-import com.typewritermc.realm.authoring.TestCatalogLease
-import com.typewritermc.realm.authoring.location
 import com.typewritermc.realm.authoring.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import skirout.editor.v1.authoring_facts.EditExpectation
-import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
-import skirout.editor.v1.checking.CheckResult
-import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
-import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.RuleId
-import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.type_catalog.ValueLocation
-import skirout.kernel.v1.resource_id.ResourceId
 
 val CheckAdmissionTest by testSuite {
-    val id = ResourceId(value = "page")
-    val instance =
-        CheckInstanceId(
-            rule = RuleId(origin = RuleOrigin(owner = TEST_TYPE, ordinal = 0), localIndex = 0),
-            location = ValueLocation.of(id),
-        )
-    test("current admission installs evidence only while values and execution still match") {
-        val catalog = TestCatalogLease()
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to record(name = "Quest"))))
-        var ticket =
-            CheckTicket(
-                instance = instance,
-                incarnation = "catalog",
-                execution = CheckExecutionId(value = "first"),
-                catalog = catalog.generation,
-            )
-        val result =
-            CheckResult(
-                ticket = ticket,
-                outcome = CheckOutcome.FINISHED,
-                expectations =
-                    listOf(
-                        EditExpectation.createValue(at = location(id, "name"), expected = DataValue.StringValueWrapper("Quest")),
-                    ),
-                findings = emptyList(),
-            )
-        val admission =
-            DefaultCheckAdmission(
-                store,
-                object : CurrentCheckExecutions {
-                    override fun ticket(instance: CheckInstanceId) = ticket
-                },
-            )
-        var installed = 0
-        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.Published
-        store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story")))))
-        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.RetryRequired
-        store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Quest")))))
-        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.Published
-        ticket = ticket.copy(execution = CheckExecutionId(value = "replacement"))
-        admission.requireCurrentExecutionAndInputs(result) { installed++ } shouldBe AdmissionResult.Discarded
-        installed shouldBe 2
-        store.close()
-    }
-    test("captured acceptance compares with its retained view and requires finished checks") {
-        val catalog = TestCatalogLease()
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to record(name = "Quest"))))
-        store.capture().use { captured ->
-            val ticket =
-                CheckTicket(
-                    instance = instance,
-                    incarnation = "catalog",
-                    execution = CheckExecutionId(value = "first"),
-                    catalog = catalog.generation,
-                )
-            val result =
-                CheckResult(
-                    ticket = ticket,
-                    outcome = CheckOutcome.FINISHED,
-                    expectations =
-                        listOf(
-                            EditExpectation.createValue(at = location(id, "name"), expected = DataValue.StringValueWrapper("Quest")),
-                        ),
-                    findings = emptyList(),
-                )
-            val admission =
-                DefaultCheckAdmission(
-                    store,
-                    object : CurrentCheckExecutions {
-                        override fun ticket(instance: CheckInstanceId) = ticket
-                    },
-                )
-            store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story")))))
-            val target = CheckAdmissionTarget.CapturedAcceptance(captured.root)
-            admission.requireEvidenceForCapture(result, target) shouldBe AdmissionResult.Captured
-            admission.requireEvidenceForCapture(result.copy(outcome = CheckOutcome.IncompleteWrapper("interrupted")), target) shouldBe
-                AdmissionResult.RetryRequired
+    test("findings of the current execution whose inputs still match are published") {
+        admitting { _, admission ->
+            admission.publish(resultOf()) shouldBe (AdmissionResult.Published to true)
         }
-        store.close()
+    }
+
+    test("findings whose saved inputs changed since the check read them require a retry") {
+        admitting(name = "Story") { _, admission ->
+            admission.publish(resultOf(name = "Quest")) shouldBe (AdmissionResult.RetryRequired to false)
+        }
+    }
+
+    test("findings from an older catalog generation require a retry instead of publishing") {
+        val older = first.copy(catalog = CatalogGeneration(value = "older"))
+        admitting(current = older) { _, admission ->
+            admission.publish(resultOf(ticket = older)) shouldBe (AdmissionResult.RetryRequired to false)
+        }
+    }
+
+    test("findings of an execution that was replaced are discarded") {
+        admitting(current = first.copy(execution = CheckExecutionId(value = "replacement"))) { _, admission ->
+            admission.publish(resultOf()) shouldBe (AdmissionResult.Discarded to false)
+        }
+    }
+
+    test("captured acceptance reuses finished evidence matching the captured view even after a later edit") {
+        admitting { store, admission ->
+            store.capture().use { captured ->
+                store.install(store.prepare(AuthoringViewDelta(mapOf(page to record(name = "Story")))))
+                admission.requireEvidenceForCapture(resultOf(), CheckAdmissionTarget.CapturedAcceptance(captured.root)) shouldBe
+                    AdmissionResult.Captured
+            }
+        }
+    }
+
+    test("captured acceptance requires a retry for evidence of an unfinished check") {
+        admitting { store, admission ->
+            store.capture().use { captured ->
+                val interrupted = resultOf(outcome = CheckOutcome.IncompleteWrapper("interrupted"))
+                admission.requireEvidenceForCapture(interrupted, CheckAdmissionTarget.CapturedAcceptance(captured.root)) shouldBe
+                    AdmissionResult.RetryRequired
+            }
+        }
+    }
+
+    test("captured acceptance requires a retry for evidence that conflicts with the captured view") {
+        admitting { store, admission ->
+            store.capture().use { captured ->
+                val conflicting = resultOf(name = "Story")
+                admission.requireEvidenceForCapture(conflicting, CheckAdmissionTarget.CapturedAcceptance(captured.root)) shouldBe
+                    AdmissionResult.RetryRequired
+            }
+        }
+    }
+
+    test("captured acceptance discards evidence checked on another catalog") {
+        admitting { store, admission ->
+            store.capture().use { captured ->
+                val other = resultOf(ticket = first.copy(catalog = CatalogGeneration(value = "other")))
+                admission.requireEvidenceForCapture(other, CheckAdmissionTarget.CapturedAcceptance(captured.root)) shouldBe
+                    AdmissionResult.Discarded
+            }
+        }
     }
 }

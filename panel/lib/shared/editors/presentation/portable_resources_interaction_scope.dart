@@ -45,6 +45,7 @@ class PortableResourcesInteractionScope extends InheritedWidget {
     this.groupBuilder,
     this.canvasBuilder,
     this.linkFieldBuilder,
+    this.selectableFor,
     super.key,
   });
 
@@ -93,6 +94,10 @@ class PortableResourcesInteractionScope extends InheritedWidget {
   )?
   linkFieldBuilder;
 
+  /// What selecting the member [resource] selects, for layouts that render
+  /// members without [itemBuilder], such as timeline cues.
+  final SelectableIdentifier Function(skir.ResourceId resource)? selectableFor;
+
   static PortableResourcesInteractionScope? maybeOf(
     BuildContext context,
   ) => context
@@ -119,5 +124,6 @@ class PortableResourcesInteractionScope extends InheritedWidget {
       layoutBuilder != oldWidget.layoutBuilder ||
       groupBuilder != oldWidget.groupBuilder ||
       canvasBuilder != oldWidget.canvasBuilder ||
-      linkFieldBuilder != oldWidget.linkFieldBuilder;
+      linkFieldBuilder != oldWidget.linkFieldBuilder ||
+      selectableFor != oldWidget.selectableFor;
 }

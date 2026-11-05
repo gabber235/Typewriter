@@ -1,17 +1,23 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("diffSearchTreeRows", () {
     test("no changes returns no operations", () {
-      final diff = diffSearchTreeRows(previous: [_row("a")], next: [_row("a")]);
+      final diff = replayedSearchTreeDiff(
+        previous: [searchSectionRow("a")],
+        next: [searchSectionRow("a")],
+      );
 
       expect(diff.removals, isEmpty);
       expect(diff.insertions, isEmpty);
     });
 
     test("removed key returns one removal", () {
-      final diff = diffSearchTreeRows(previous: [_row("a")], next: []);
+      final diff = replayedSearchTreeDiff(
+        previous: [searchSectionRow("a")],
+        next: [],
+      );
 
       expect(diff.removals, hasLength(1));
       expect(diff.removals.single.index, 0);
@@ -20,7 +26,10 @@ void main() {
     });
 
     test("added key returns one insertion", () {
-      final diff = diffSearchTreeRows(previous: [], next: [_row("a")]);
+      final diff = replayedSearchTreeDiff(
+        previous: [],
+        next: [searchSectionRow("a")],
+      );
 
       expect(diff.removals, isEmpty);
       expect(diff.insertions, hasLength(1));
@@ -29,8 +38,12 @@ void main() {
     });
 
     test("removal indices are descending", () {
-      final diff = diffSearchTreeRows(
-        previous: [_row("a"), _row("b"), _row("c")],
+      final diff = replayedSearchTreeDiff(
+        previous: [
+          searchSectionRow("a"),
+          searchSectionRow("b"),
+          searchSectionRow("c"),
+        ],
         next: [],
       );
 
@@ -38,18 +51,31 @@ void main() {
     });
 
     test("insertion indices match the next list", () {
-      final diff = diffSearchTreeRows(
-        previous: [_row("a")],
-        next: [_row("a"), _row("b"), _row("c")],
+      final diff = replayedSearchTreeDiff(
+        previous: [searchSectionRow("a")],
+        next: [
+          searchSectionRow("a"),
+          searchSectionRow("b"),
+          searchSectionRow("c"),
+        ],
       );
 
       expect(diff.insertions.map((insertion) => insertion.index), [1, 2]);
     });
 
     test("insertion before existing rows keeps shifted stable rows", () {
-      final diff = diffSearchTreeRows(
-        previous: [_row("1"), _row("3"), _row("4")],
-        next: [_row("1"), _row("2"), _row("3"), _row("4")],
+      final diff = replayedSearchTreeDiff(
+        previous: [
+          searchSectionRow("1"),
+          searchSectionRow("3"),
+          searchSectionRow("4"),
+        ],
+        next: [
+          searchSectionRow("1"),
+          searchSectionRow("2"),
+          searchSectionRow("3"),
+          searchSectionRow("4"),
+        ],
       );
 
       expect(diff.removals, isEmpty);
@@ -57,9 +83,18 @@ void main() {
     });
 
     test("removal before existing rows keeps shifted stable rows", () {
-      final diff = diffSearchTreeRows(
-        previous: [_row("1"), _row("2"), _row("3"), _row("4")],
-        next: [_row("1"), _row("3"), _row("4")],
+      final diff = replayedSearchTreeDiff(
+        previous: [
+          searchSectionRow("1"),
+          searchSectionRow("2"),
+          searchSectionRow("3"),
+          searchSectionRow("4"),
+        ],
+        next: [
+          searchSectionRow("1"),
+          searchSectionRow("3"),
+          searchSectionRow("4"),
+        ],
       );
 
       expect(diff.removals.map((removal) => removal.row.key), ["2"]);
@@ -67,9 +102,21 @@ void main() {
     });
 
     test("middle insertions and removals keep stable rows", () {
-      final diff = diffSearchTreeRows(
-        previous: [_row("1"), _row("3"), _row("4"), _row("6"), _row("7")],
-        next: [_row("1"), _row("2"), _row("4"), _row("5"), _row("7")],
+      final diff = replayedSearchTreeDiff(
+        previous: [
+          searchSectionRow("1"),
+          searchSectionRow("3"),
+          searchSectionRow("4"),
+          searchSectionRow("6"),
+          searchSectionRow("7"),
+        ],
+        next: [
+          searchSectionRow("1"),
+          searchSectionRow("2"),
+          searchSectionRow("4"),
+          searchSectionRow("5"),
+          searchSectionRow("7"),
+        ],
       );
 
       expect(diff.removals.map((removal) => removal.row.key), ["6", "3"]);
@@ -84,27 +131,15 @@ void main() {
       );
     });
 
-    test("reordered key returns one removal and insertion", () {
-      final diff = diffSearchTreeRows(
-        previous: [_row("a"), _row("b")],
-        next: [_row("b"), _row("a")],
+    test("a reordered key moves by one removal and one insertion", () {
+      final diff = replayedSearchTreeDiff(
+        previous: [searchSectionRow("a"), searchSectionRow("b")],
+        next: [searchSectionRow("b"), searchSectionRow("a")],
       );
 
-      expect(diff.removals, hasLength(1));
-      expect(diff.insertions, hasLength(1));
+      expect(diff.removals.map((removal) => removal.row.key), ["a"]);
+      expect(diff.insertions.map((insertion) => insertion.row.key), ["a"]);
+      expect(diff.insertions.single.index, 1);
     });
   });
-}
-
-SearchTreeRow _row(String key) {
-  return SearchTreeSectionRow(
-    key: key,
-    depth: 0,
-    id: key,
-    title: key,
-    subtitle: null,
-    expanded: true,
-    resultCount: 0,
-    topLevel: false,
-  );
 }

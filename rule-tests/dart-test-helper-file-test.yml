@@ -1,0 +1,13 @@
+# The rule matches any Dart file; its `files` and `ignores` globs decide which files are test
+# support, and `ast-grep test` does not apply globs. So there is no valid case: the test proves the
+# rule loads and reports a support file such as panel/test/support/fake_clock.dart.
+id: dart-test-helper-file
+valid: []
+invalid:
+  - |
+    import "package:typewriter_panel/typewriter_panel.dart";
+
+    class FakeClock implements Clock {
+      @override
+      DateTime now() => DateTime(2026);
+    }

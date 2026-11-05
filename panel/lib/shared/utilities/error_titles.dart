@@ -1,4 +1,4 @@
-/// Pool of fallback titles sampled on each build when an error has no title.
+/// Pool of playful messages for server failures that carry no diagnostic detail.
 const funnyErrorTitles = [
   "The plot thickened too much",
   "This quest has no walkthrough",

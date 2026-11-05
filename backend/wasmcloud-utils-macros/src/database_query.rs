@@ -357,14 +357,14 @@ mod tests {
     use proc_macro2::Span;
     use syn::LitStr;
 
-    use super::{MUTATION_TOKENS, mutation_token, read_query_file, top_level_statements};
+    use super::{mutation_token, read_query_file, top_level_statements};
 
     #[test]
     fn rejects_every_read_mutation_token() {
-        for token in MUTATION_TOKENS {
+        for token in ["CREATE", "DELETE", "INSERT", "RELATE", "UPDATE", "UPSERT"] {
             assert_eq!(
                 mutation_token(&format!("{token} person:test;")),
-                Some(*token)
+                Some(token)
             );
         }
     }

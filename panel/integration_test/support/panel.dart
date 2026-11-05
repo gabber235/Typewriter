@@ -1,0 +1,878 @@
+/// The panel as a scenario's user drives it: a few general verbs over the real
+/// screens instead of one helper per journey, so every scenario reads as the
+/// user's steps.
+///
+/// Scenarios run on the live binding against the real stack, where replies
+/// take real time and animations such as the sign in character never settle.
+/// So the driver never waits for the panel to settle: every step waits until
+/// what it needs is on screen, and fails naming what the screen shows instead.
+/// Controls are found the way the testkit drivers find them: by the text and
+/// semantics labels a user reads, never by keys or widget types.
+library;
+
+import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/harness/v1/test_run.dart"
+    as results;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart"
+    show FieldDriver, SemanticsReading, visibleTextFields;
+
+import "stack.dart" as stack;
+import "wait.dart" as wait;
+
+/// How often a waiting step looks at the screen again.
+const _frame = Duration(milliseconds: 100);
+
+/// How long a clicked field may take to accept text before the click
+/// repeats.
+const _refocus = Duration(seconds: 2);
+
+/// How long a passed scenario stays on its final screen. A scenario passes on
+/// the frame that holds its result, before the browser painted it and while
+/// transitions still run, and its recording has to show that result.
+const _result = Duration(milliseconds: 1500);
+const _resultFrames = 20;
+const _resultLimit = Duration(seconds: 10);
+
+/// Platform services initialize once per run, however many panels launch.
+final Future<void> _platform = initializePanel();
+
+/// The running panel and the session store it keeps between launches.
+/// The page size a web recording keeps, set by `cargo xtask e2e` where it
+/// records; empty otherwise.
+const _recordedViewport = String.fromEnvironment("RECORDED_VIEWPORT");
+
+/// A recording keeps only the part of Chrome's window where the page should
+/// be; a page anywhere else makes every recording show the wrong thing.
+void _requireRecordedViewport(WidgetTester tester) {
+  if (_recordedViewport.isEmpty) return;
+  final size = tester.view.physicalSize;
+  final actual = "${size.width.toInt()}x${size.height.toInt()}";
+  if (actual != _recordedViewport) {
+    throw StateError(
+      "the page is $actual, but the recording keeps $_recordedViewport: "
+      "update CHROME_MARGINS in xtask/src/e2e.rs",
+    );
+  }
+}
+
+final class Panel {
+  Panel._(this.tester, this._onCapture);
+
+  /// What the scenario did and checked so far, for the captions of its
+  /// recording. Typed values stay out: a caption cannot be scrubbed later.
+  final List<results.Step> steps = [];
+
+  /// Where the scenario tapped so far, in pixels of the recorded screen.
+  final List<results.Tap> taps = [];
+
+  var _inStep = false;
+
+  /// Runs [act] as one step of the scenario, saying what a reader would call
+  /// it. What it does through other actions belongs to this step.
+  /// What the last step proved the screen shows, until another step begins.
+  ({String text, String? outside})? _proof;
+
+  Future<T> _step<T>(String says, Future<T> Function() act) async {
+    if (_inStep) return act();
+    _inStep = true;
+    _proof = null;
+    // `cargo xtask e2e` reads this line when a run stops before it reports.
+    debugPrint("scenario step: $says");
+    steps.add(
+      results.Step(
+        atMillis: DateTime.now().millisecondsSinceEpoch,
+        actor: _user,
+        says: says,
+      ),
+    );
+    try {
+      return await act();
+    } finally {
+      _inStep = false;
+    }
+  }
+
+  /// Boots the real panel with an in memory session store, so no keychain or
+  /// keyring is involved, and waits until it shows its first page.
+  static Future<Panel> launch(
+    WidgetTester tester, {
+    required void Function(String name, Uint8List png) onCapture,
+  }) async {
+    await _platform;
+    _requireRecordedViewport(tester);
+    final panel = Panel._(tester, onCapture);
+    addTearDown(() => panel._container?.dispose());
+    await panel._start();
+    return panel;
+  }
+
+  final WidgetTester tester;
+  final void Function(String name, Uint8List png) _onCapture;
+
+  /// Where the panel keeps the signed in session, as the platform store would
+  /// across restarts.
+  var _store = OidcMemoryStore();
+  ProviderContainer? _container;
+
+  /// The fixture user signed in now, or null.
+  String? _user;
+
+  /// How often the panel asked the identity provider to end its session.
+  int _providerSessionEnds = 0;
+
+  ProviderContainer get _app => _container!;
+
+  Future<void> _start() async {
+    final container = ProviderContainer(
+      retry: panelRetry,
+      overrides: [
+        ...appOverrides(),
+        oidcStoreProvider.overrideWithValue(_store),
+        // The provider's end session flow opens a browser tab; the scenario
+        // records the request instead of leaving a tab per sign out.
+        providerSessionEndProvider.overrideWithValue((_) async {
+          _providerSessionEnds++;
+        }),
+      ],
+    );
+    _container = container;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TypewriterPanel(),
+      ),
+    );
+    await until("the panel shows its first page", () => _labels.isNotEmpty);
+  }
+
+  /// Closes the panel and opens it again, the way a user quits and restarts
+  /// it; the stored session survives, everything in memory does not.
+  Future<void> restart() => _step("restart the panel", () async {
+    await close();
+    await _start();
+  });
+
+  /// Closes the panel and opens it the way another machine does: nothing
+  /// stored, nobody signed in, so a second user can take over the run.
+  Future<void> startElsewhere() => _step("open the panel elsewhere", () async {
+    await close();
+    _store = OidcMemoryStore();
+    _user = null;
+    await _start();
+  });
+
+  /// Keeps the final screen up long enough to be seen in the recording.
+  ///
+  /// It counts frames as well as time, since a transition that rasterizes
+  /// slowly, as on a runner without a GPU, is still on screen after the time.
+  Future<void> holdResult() async {
+    final watch = Stopwatch()..start();
+    var frames = 0;
+    while ((watch.elapsed < _result || frames < _resultFrames) &&
+        watch.elapsed < _resultLimit) {
+      await tester.pump(_frame);
+      frames++;
+    }
+    _expectProofOnScreen();
+  }
+
+  /// Closes the panel and lets it finish, the one way a scenario leaves it, so
+  /// what closing does happens while the scenario still owns the failure.
+  Future<void> close() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    // Focus moves in a microtask after the tree is gone; it must run before
+    // the test binding replaces its focus manager.
+    await tester.pump(_frame);
+    _container?.dispose();
+    _container = null;
+  }
+
+  /// Signs in the fixture user [username] through the real session client
+  /// with the password grant, which the target's identity provider accepts,
+  /// and waits until the panel shows them signed in.
+  ///
+  /// The provider's sign in page is no part of a scenario: on the web it
+  /// leaves the page the scenario runs in. The full suite's host driven
+  /// journey (`test_driver/sign_in_journey_test.dart`) covers it against the
+  /// CI cluster's Authentik.
+  Future<void> signIn(String username) =>
+      _step("sign in as $username", () async {
+        final user = stack.user(username);
+        final manager = await _app.read(authProvider.future);
+        if (manager == null) {
+          throw StateError("the panel has no session client");
+        }
+        await manager.loginPassword(
+          username: user.username,
+          password: user.password,
+        );
+        _app.invalidate(authProvider);
+        _user = username;
+        await expectVisible(username);
+      });
+
+  /// Signs out through the user menu, waits for the sign in page, and checks
+  /// the panel asked the identity provider to end its session once.
+  Future<void> signOut() => _step("sign out", () async {
+    final user = _user ?? (throw StateError("nobody is signed in"));
+    final ends = _providerSessionEnds;
+    await _tap(await _control(user));
+    await _tap(await _control("Logout"));
+    _user = null;
+    await expectVisible("Sign in");
+    expect(
+      _providerSessionEnds - ends,
+      1,
+      reason: "signing out asks the identity provider to end its session",
+    );
+  });
+
+  /// Opens [place] the way the user sees it on screen, then [inside] within
+  /// it when given: an organization in the list, a link in the sidebar, or a
+  /// card on the services graph by its kind, such as `open("Acme", "Realm")`.
+  Future<void> open(String place, [String? inside]) =>
+      _step("open ${inside == null ? place : "$place > $inside"}", () async {
+        await _activate(place);
+        if (inside != null) await _activate(inside);
+      });
+
+  /// Runs the command [name] through the search palette, the one path every
+  /// action has: opens Search, types [name] and activates the result that
+  /// reads it.
+  Future<void> command(String name) => search(name, choose: name);
+
+  /// Opens Search, types [query] and, when given, activates the result that
+  /// reads [choose].
+  Future<void> search(String query, {String? choose}) =>
+      _step("search for \"$query\"", () async {
+        await _tap(await _control("Search"));
+        await _typeInChooser(query);
+        if (choose == null) return;
+        final result = await _row(choose);
+        await _tap(result);
+        // A result can read what the chosen page shows too, so what comes next
+        // has to look at the page and not at the closing search.
+        await until("the search for \"$query\" closes", () => !result.attached);
+      });
+
+  /// Picks [name] in the chooser on screen, such as the one a link field
+  /// opens: types it into the chooser's search and activates the result
+  /// reading it.
+  Future<void> pick(String name) => _step("pick \"$name\"", () async {
+    await _typeInChooser(name);
+    await _tap(await _row(name));
+  });
+
+  /// A chooser opens with its search field focused; [text] goes there.
+  Future<void> _typeInChooser(String text) async {
+    SemanticsNode? focused;
+    await until("a search field holds the focus", () {
+      focused = visibleTextFields().firstWhereOrNull(
+        (field) => field.isFocused,
+      );
+      return focused != null;
+    });
+    await until(
+      "the search field takes text",
+      () => focused!.getSemanticsData().hasAction(SemanticsAction.setText),
+    );
+    tester.semantics.setText(
+      find.semantics.byPredicate((node) => identical(node, focused)),
+      text,
+    );
+    await tester.pump(_frame);
+  }
+
+  /// Opens the context menu of the item the user reads as [item], the way a
+  /// secondary click does, and chooses [entry] in it.
+  Future<void> menu(String item, String entry) =>
+      _step("open the menu of \"$item\" and choose \"$entry\"", () async {
+        SemanticsNode? target;
+        await until("\"$item\" is on screen", () {
+          target = _tappable(
+            (spoken) => spoken == item || spoken.split("\n").first == item,
+          );
+          return target != null;
+        });
+        await tester.tapAt(_centerOf(target!), buttons: kSecondaryMouseButton);
+        await tester.pump(_frame);
+        await press(entry);
+      });
+
+  /// Waits for text on screen matching [pattern] and returns the match, such
+  /// as a join code the panel generated.
+  Future<String> read(Pattern pattern) async {
+    String? match;
+    await until("the screen shows text matching $pattern", () {
+      for (final label in _labels) {
+        if (pattern.allMatches(label).firstOrNull case final found?) {
+          match = found.group(0);
+          return true;
+        }
+      }
+      return false;
+    });
+    return match!;
+  }
+
+  /// The text field the user reads as [label]: its label, or its hint while
+  /// it is empty.
+  FieldDriver _field(String label) => FieldDriver(tester, label);
+
+  /// Waits for the text field the user reads as [label] and returns the
+  /// text it shows.
+  Future<String> fieldValue(String label) async {
+    final field = _field(label);
+    await until("a text field reads \"$label\"", () => field.exists);
+    return field.value;
+  }
+
+  /// Focuses the text field the user reads as [label] and replaces its text
+  /// with [text], as typing does, without committing it.
+  Future<void> type(String label, String text) => _step(
+    "fill in \"$label\"",
+    () async {
+      final field = _field(label);
+      // A field rebuilt while its surface loads drops the focus a click gave
+      // it, so the click repeats until the field takes text. A read only field,
+      // as editing that is still resuming shows, waits until it opens.
+      var clicked = DateTime(0);
+      await until("the text field \"$label\" accepts text", () {
+        if (!field.exists || field.isReadOnly || !field.canClickInput) {
+          return false;
+        }
+        if (field.acceptsText) return true;
+        if (DateTime.now().difference(clicked) > _refocus) {
+          clicked = DateTime.now();
+          field.clickInput();
+        }
+        return false;
+      }, shows: () => field.exists ? field.describe : "no such field");
+      field.setText(text);
+      await tester.pump(_frame);
+    },
+  );
+
+  /// Types [text] into the text field the user reads as [label] and commits
+  /// it with Enter, the way a user finishes a value.
+  Future<void> submit(String label, String text) =>
+      _step("fill in \"$label\" and press Enter", () async {
+        await type(label, text);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump(_frame);
+      });
+
+  /// The row of the list on screen that shows [name], such as a member or a
+  /// join request.
+  PanelRow row(String name) => PanelRow._(this, name);
+
+  /// Presses the button [label]; with a dialog open, its button wins over one
+  /// behind it with the same label.
+  Future<void> press(String label) =>
+      _step("press \"$label\"", () async => _tap(await _control(label)));
+
+  /// Creates a resource of [kind] in the open surface the way its "New" action
+  /// does and names it [name] in the field [field].
+  Future<void> create(
+    String kind,
+    String name, {
+    String field = "Title",
+  }) async {
+    await press("New $kind");
+    await submit(field, name);
+    final named = _field(field);
+    await until(
+      "the new $kind is named \"$name\"",
+      () => named.exists && named.value == name,
+    );
+  }
+
+  /// Creates a book titled [title] holding a sequence page named [page], and
+  /// leaves the page open: a page is what the realm compiles and publishes, so
+  /// a book without one has nothing to publish.
+  Future<void> createBookWithPage(String title, {required String page}) async {
+    await create("Book", title);
+    await press("New Page");
+    await press("Sequence");
+    await submit("Name", page);
+  }
+
+  /// Publishes the realm from its inbox once [ownPage] is listed there, so the
+  /// inbox has loaded before it is read. Publishing covers every scenario's
+  /// pending content in the shared realm, so a block another scenario left
+  /// fails here under its cause instead of as a broken publish.
+  Future<void> publishRealm({required String ownPage}) async {
+    await press("Realm inbox");
+    await expectVisible(ownPage);
+    if (sees("Publish blocked")) {
+      fail(
+        "Realm content from another scenario blocks publishing; "
+        "find the scenario that left a broken book in this drive",
+      );
+    }
+    await press("Publish");
+    await expectVisible("Everything is published");
+  }
+
+  /// The resource open on screen, the way another user's session addresses
+  /// the same thing through a shared link.
+  OpenResource get openResource {
+    final scope = _app.read(selectedAuthoringScopeProvider);
+    final resource = scope == null
+        ? null
+        : _app.read(routedResourceProvider(scope));
+    if (scope == null || resource == null) {
+      throw TestFailure("no resource is open; the panel is at $address");
+    }
+    return (scope: scope, resource: resource);
+  }
+
+  /// The address the panel shows, as a user copies it to share a link.
+  String get address => _app.read(appRouterProvider).currentPath;
+
+  /// Opens [address] the way following a link or typing it in the address
+  /// bar does.
+  Future<void> visit(String address) async {
+    unawaited(
+      tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+        SystemChannels.navigation.name,
+        SystemChannels.navigation.codec.encodeMethodCall(
+          MethodCall("pushRouteInformation", {
+            "location": address,
+            "state": null,
+          }),
+        ),
+        (_) {},
+      ),
+    );
+    await tester.pump(_frame);
+  }
+
+  DateTime _lastScroll = DateTime(0);
+
+  /// Whether the panel built [text], as text or as a semantics label, on
+  /// screen or not. [expectVisible] asks whether the user can read it.
+  bool sees(String text) => _labels.any((label) => label.contains(text));
+
+  /// Waits up to [within] until the user can read [text], outside the node
+  /// labeled [outside] if given. A label a scrollable only built does not
+  /// count: it comes into view the way a screen reader user reaches it.
+  ///
+  /// A state the panel derives from a slow signal, such as a host's heartbeat,
+  /// needs longer.
+  Future<void> expectVisible(
+    String text, {
+    String? outside,
+    Duration within = wait.patience,
+  }) => _step("expect \"$text\"", () async {
+    await until(
+      "the screen shows \"$text\"${outside == null ? "" : " outside \"$outside\""}",
+      () async {
+        final nodes = _nodesSaying(text, outside: outside);
+        if (nodes.any(_onScreen)) return _bringIntoView(text);
+        if (nodes.isNotEmpty) _scrollToward();
+        return false;
+      },
+      timeout: within,
+    );
+    _proof = (text: text, outside: outside);
+  });
+
+  /// The semantics nodes that say [text], leaving out those in [outside].
+  Iterable<SemanticsNode> _nodesSaying(String text, {String? outside}) => find
+      .semantics
+      .byPredicate(
+        (node) =>
+            !node.isInvisible &&
+            [
+              node.spoken,
+              node.getSemanticsData().value,
+            ].any((label) => label.contains(text)) &&
+            !_within(node, outside),
+      )
+      .evaluate();
+
+  /// Scrolls [text] fully into view when a scrollable's edge still cuts it, as
+  /// a user reading it would, and says whether the user can now read it. Text
+  /// that already shows stays where it is.
+  Future<bool> _bringIntoView(String text) async {
+    final shown = _textOnTop(text).lastOrNull;
+    if (shown == null) return find.textContaining(text).evaluate().isEmpty;
+    // Each policy moves the scrollable only past its own edge.
+    for (final edge in const [
+      ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+    ]) {
+      await Scrollable.ensureVisible(shown, alignmentPolicy: edge);
+    }
+    await tester.pump(_frame);
+    return shown.mounted && _rendersOnScreen(shown);
+  }
+
+  /// The widgets rendering [text] on the route in front. A route that is closing
+  /// or covered still holds its text, without the user reading it.
+  Iterable<Element> _textOnTop(String text) => find
+      .textContaining(text)
+      .evaluate()
+      .where((element) => ModalRoute.of(element)?.isCurrent ?? true);
+
+  /// Whether [element] is laid out on the screen, inside every viewport that
+  /// paints it. The render tree is what gets painted: unlike semantics it cannot
+  /// describe an earlier scroll offset, and unlike the widget tree it places an
+  /// overlay where it shows rather than where it is anchored.
+  bool _rendersOnScreen(Element element) {
+    final box = element.renderObject;
+    if (box is! RenderBox || !box.hasSize) return false;
+    final center = box.localToGlobal(box.size.center(Offset.zero));
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    if (!(Offset.zero & screen).contains(center)) return false;
+    for (RenderObject? around = box; around != null; around = around.parent) {
+      if (around is! RenderBox || around is! RenderAbstractViewport) continue;
+      final bounds = around.localToGlobal(Offset.zero) & around.size;
+      if (!bounds.contains(center)) return false;
+    }
+    return true;
+  }
+
+  /// Fails when the scenario's last step proved something the screen no longer
+  /// shows, so a result frame always holds what the scenario claims.
+  void _expectProofOnScreen() {
+    final proof = _proof;
+    if (proof == null) return;
+    final texts = _textOnTop(proof.text);
+    final stillShown = texts.isEmpty
+        ? _nodesSaying(proof.text, outside: proof.outside).any(_onScreen)
+        : texts.any(_rendersOnScreen);
+    if (!stillShown) {
+      throw TestFailure(
+        "the result screen no longer shows \"${proof.text}\", "
+        "which the scenario's last step proved",
+      );
+    }
+  }
+
+  /// Whether [node] lies in the node labeled [label].
+  bool _within(SemanticsNode node, String? label) {
+    if (label == null) return false;
+    for (var parent = node.parent; parent != null;) {
+      if (parent.spoken == label) return true;
+      parent = parent.parent;
+    }
+    return false;
+  }
+
+  /// Whether the user can see [node]: inside the bounds of everything around
+  /// it, such as the scrollable that clips it.
+  ///
+  /// Scrolling moves a node without updating what lies inside the scrollable:
+  /// its hidden flag and the bounds around it keep describing the old scroll
+  /// offset. So below a scrollable only the node's own place counts, measured
+  /// against the viewport and what surrounds that.
+  bool _onScreen(SemanticsNode node) {
+    final center = node.screenRect.center;
+    var around = node.parent;
+    while (around != null && !_scrolls(around)) {
+      around = around.parent;
+    }
+    if (around == null) {
+      if (node.getSemanticsData().flagsCollection.isHidden) return false;
+      around = node.parent;
+    }
+    for (; around != null; around = around.parent) {
+      if (!around.screenRect.contains(center)) return false;
+    }
+    return true;
+  }
+
+  /// Whether [node] is a scrollable that has somewhere to scroll to.
+  bool _scrolls(SemanticsNode node) {
+    final data = node.getSemanticsData();
+    return data.hasAction(SemanticsAction.scrollUp) ||
+        data.hasAction(SemanticsAction.scrollDown);
+  }
+
+  /// Waits until the screen no longer shows [text], then checks it stays
+  /// gone for [settled], so a slow reply cannot bring it back unnoticed.
+  Future<void> expectHidden(
+    String text, {
+    Duration within = wait.patience,
+    Duration settled = const Duration(seconds: 3),
+  }) => _step("expect \"$text\" gone", () async {
+    await until(
+      "the screen hides \"$text\"",
+      () => !sees(text),
+      timeout: within,
+    );
+    final end = DateTime.now().add(settled);
+    while (DateTime.now().isBefore(end)) {
+      await tester.pump(_frame);
+      if (sees(text)) throw TestFailure("\"$text\" came back");
+    }
+  });
+
+  /// Captures the whole panel as evidence named [name].
+  Future<void> capture(String name) async {
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byType(TypewriterPanel),
+    );
+    final image = await boundary.toImage(pixelRatio: 2);
+    try {
+      final bytes = await image.toByteData(format: ImageByteFormat.png);
+      if (bytes == null) {
+        throw StateError("the panel could not be encoded as PNG");
+      }
+      _onCapture(name, bytes.buffer.asUint8List());
+    } finally {
+      image.dispose();
+    }
+  }
+
+  /// Pumps frames until [condition] holds; fails after [timeout] naming
+  /// [description], what the screen shows and, when given, what [shows]
+  /// reports about the element waited on.
+  Future<void> until(
+    String description,
+    FutureOr<bool> Function() condition, {
+    Duration timeout = wait.patience,
+    String Function()? shows,
+  }) => wait.until(
+    description,
+    condition,
+    within: timeout,
+    between: () => tester.pump(_frame),
+    shows: () => [
+      "the screen shows ${_labels.toSet().toList()}",
+      if (shows != null) shows(),
+    ].join("; "),
+  );
+
+  /// Every label and field text the screen reads out, in reading order.
+  List<String> get _labels => [
+    for (final node
+        in find.semantics.byPredicate((node) => !node.isInvisible).evaluate())
+      for (final text in [node.spoken, node.getSemanticsData().value])
+        if (text.isNotEmpty) text,
+  ];
+
+  /// Waits for the control the user activates as [label] and returns it: a
+  /// button, link or tile reading [label], or one whose first line does, or
+  /// one that reads [label] and then its state, such as
+  /// `Realm inbox. 2 issues`.
+  Future<SemanticsNode> _control(String label) async {
+    SemanticsNode? found;
+    await until("a control reads \"$label\"", () {
+      found = _tappable(
+        (spoken) =>
+            spoken == label ||
+            spoken.split("\n").first == label ||
+            spoken.startsWith("$label. "),
+      );
+      return found != null;
+    });
+    return found!;
+  }
+
+  /// Waits for the search result row reading [label] and returns it.
+  Future<SemanticsNode> _row(String label) async {
+    SemanticsNode? found;
+    await until("a search result reads \"$label\"", () {
+      found = _tappable(
+        (spoken) => spoken.split("\n").any((line) => line.trim() == label),
+      );
+      return found != null;
+    });
+    return found!;
+  }
+
+  /// The last enabled control whose name [reads] accepts. A user can only
+  /// press what they see, so a control beyond the edge of a scrollable is
+  /// scrolled to first.
+  SemanticsNode? _tappable(bool Function(String spoken) reads) {
+    final controls = find.semantics
+        .byPredicate(
+          (node) =>
+              node.isTappable &&
+              node.isEnabled &&
+              !node.isInvisible &&
+              reads(node.named),
+        )
+        .evaluate();
+    final seen = controls.where(_onScreen).lastOrNull;
+    if (seen == null && controls.isNotEmpty) _scrollToward();
+    return seen;
+  }
+
+  /// Scrolls forward at the pace a person does, so a scrollable has moved and
+  /// rebuilt before the next look.
+  void _scrollToward() {
+    final now = DateTime.now();
+    if (now.difference(_lastScroll) < _refocus) return;
+    _lastScroll = now;
+    _scrollContentForward();
+  }
+
+  /// Opens [place]: the entry reading it nearest the left edge, where the
+  /// navigation lists places, so a sidebar link wins over a breadcrumb of
+  /// the same name; a services graph card of that kind, which reads
+  /// `Kind, Name, Status`, opens with a double click once its host is
+  /// connected.
+  ///
+  /// An entry a long list has not built yet comes into view the way a screen
+  /// reader user reaches it: by scrolling the content forward.
+  Future<void> _activate(String place) async {
+    SemanticsNode? entry;
+    SemanticsNode? card;
+    var scrolled = DateTime.now();
+    await until("\"$place\" can be opened", () {
+      if (DateTime.now().difference(scrolled) > _refocus) {
+        scrolled = DateTime.now();
+        _scrollContentForward();
+      }
+      entry = find.semantics
+          .byPredicate(
+            (node) =>
+                !node.isInvisible &&
+                !node.isMergedIntoParent &&
+                node.isTappable &&
+                _onScreen(node) &&
+                (node.named == place || node.named.split("\n").first == place),
+          )
+          .evaluate()
+          .sortedBy<num>((node) => node.screenRect.left)
+          .firstOrNull;
+      card = _tappable((spoken) {
+        final parts = spoken.split(", ");
+        return parts.length == 3 &&
+            parts.first == place &&
+            parts.last != "Host offline";
+      });
+      return entry != null || card != null;
+    });
+    if (entry case final entry?) return _tap(entry);
+    final target = _centerOf(card!);
+    await tester.tapAt(target);
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.tapAt(target);
+    await tester.pump(_frame);
+  }
+
+  /// Scrolls the largest scrollable on screen one page forward through its
+  /// scroll action, as a screen reader's scroll gesture does.
+  void _scrollContentForward() {
+    final content = find.semantics
+        .byPredicate(
+          (node) =>
+              !node.isInvisible &&
+              node.getSemanticsData().hasAction(SemanticsAction.scrollUp),
+        )
+        .evaluate()
+        .sortedBy<num>((node) => -node.screenRect.size.longestSide)
+        .firstOrNull;
+    if (content == null) return;
+    tester.semantics.performAction(
+      find.semantics.byPredicate((node) => identical(node, content)),
+      SemanticsAction.scrollUp,
+    );
+  }
+
+  /// Activates [node] the way assistive technology does, through its tap
+  /// action.
+  Future<void> _tap(SemanticsNode node) async {
+    final at = _centerOf(node) * tester.view.devicePixelRatio;
+    taps.add(
+      results.Tap(
+        atMillis: DateTime.now().millisecondsSinceEpoch,
+        x: at.dx.round(),
+        y: at.dy.round(),
+      ),
+    );
+    tester.semantics.tap(
+      find.semantics.byPredicate((candidate) => identical(candidate, node)),
+    );
+    // A control that also answers double taps acts once the timeout passed.
+    await tester.pump(kDoubleTapTimeout);
+    await tester.pump(_frame);
+  }
+
+  /// The center of [node] in the logical coordinates pointer events use.
+  ///
+  /// Every transform up to the root applies, the root's included, which
+  /// gives physical pixels on the live binding; the view's pixel ratio turns
+  /// them back into logical ones.
+  Offset _centerOf(SemanticsNode node) {
+    var rect = node.rect;
+    for (SemanticsNode? current = node; current != null;) {
+      if (current.transform case final transform?) {
+        rect = MatrixUtils.transformRect(transform, rect);
+      }
+      current = current.parent;
+    }
+    return rect.center / tester.view.devicePixelRatio;
+  }
+}
+
+/// A resource of a realm, as a link to it names it.
+typedef OpenResource = ({AuthoringScope scope, skir.ResourceId resource});
+
+/// One row of a list on screen, found by the name it shows.
+final class PanelRow {
+  PanelRow._(this._panel, this.name);
+
+  final Panel _panel;
+  final String name;
+
+  /// Chooses the action [label] in the row, such as `Approve`: the control
+  /// reading [label] nearest to the name, in the smallest part of the screen
+  /// holding both.
+  Future<void> choose(String label) =>
+      _panel._step("choose \"$label\" for $name", () async {
+        SemanticsNode? action;
+        await _panel.until("the row \"$name\" offers \"$label\"", () {
+          action = _action(label);
+          return action != null;
+        });
+        await _panel._tap(action!);
+      });
+
+  /// The control reading [label] closest to a node showing [name]: the one
+  /// reached through the fewest ancestors, so a row's own action wins over
+  /// the same action of a row beside it.
+  SemanticsNode? _action(String label) {
+    bool isAction(SemanticsNode node) =>
+        node.isTappable && node.isEnabled && node.named == label;
+    bool shows(SemanticsNode node) => [
+      ...node.spoken.split("\n"),
+      node.getSemanticsData().value,
+    ].any((line) => line.trim() == name);
+    SemanticsNode? nearest;
+    var nearestDistance = 1 << 30;
+    for (final shown in find.semantics.byPredicate(shows).evaluate()) {
+      var distance = 0;
+      for (SemanticsNode? row = shown; row != null; row = row.parent) {
+        if (distance >= nearestDistance) break;
+        final action = isAction(row)
+            ? row
+            : row.descendants.firstWhereOrNull(isAction);
+        if (action != null) {
+          nearest = action;
+          nearestDistance = distance;
+          break;
+        }
+        distance++;
+      }
+    }
+    return nearest;
+  }
+}
+
+extension on SemanticsNode {
+  /// What the user knows the control by: its label, or the tooltip of an
+  /// icon button that has none.
+  String get named => switch (spoken) {
+    "" => getSemanticsData().tooltip,
+    final label => label,
+  };
+}

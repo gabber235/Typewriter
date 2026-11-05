@@ -8,7 +8,13 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.realm.checking.rename
+import com.typewritermc.realm.edit.MemoryAuthoringStorage
 import com.typewritermc.realm.operation.operationObservation
+import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.openCatalogLeases
+import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.types.actualType
 import com.typewritermc.types.integer
 import com.typewritermc.types.items
@@ -20,6 +26,8 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
+import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
@@ -30,15 +38,16 @@ import skirout.kernel.v1.resource_id.ResourceId
 import java.math.BigInteger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 val AuthoringViewStoreTest by testSuite {
     test("operation overlays require the exact saved observation and preserve saved state") {
         val id = ResourceId(value = "operation-page")
-        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Saved"))))
-        try {
+        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to record(name = "Saved"))).use { realm ->
             val token =
-                store.capture().use { saved ->
+                realm.views.capture().use { saved ->
                     val working = saved.operationObservation(saved.root.observationId, mapOf(id to record(name = "Draft")), emptySet())
                     (
                         working.resources
@@ -54,73 +63,75 @@ val AuthoringViewStoreTest by testSuite {
                     ).value shouldBe "Saved"
                     saved.root.observationId
                 }
-            store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Other panel")))))
-            store.capture().use { next ->
+            realm.commit(rename(id, "Other panel")).shouldBeCommitted()
+            realm.views.capture().use { next ->
                 (next.root.observationId != token) shouldBe true
                 shouldThrow<com.typewritermc.realm.operation.StaleOperationObservation> {
                     next.operationObservation(token, mapOf(id to record(name = "Draft")), emptySet())
                 }
             }
-        } finally {
-            store.close()
         }
     }
     test("retained views preserve original values while new reads see installed state") {
-        val catalog = TestCatalogLease()
         val id = ResourceId(value = "page")
         val original = record(name = "Quest", numbers = listOf("a" to 1, "b" to 2))
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to original)))
-        val retained = store.capture()
-        store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story", numbers = listOf("b" to 2, "a" to 1))))))
-        retained.root.resources[id] shouldBe original
-        store.capture().use {
-            CapturedAuthoringReads(it.originalView()).read(boundPath<String>(location(id, "name"), TEXT_USE)).available()
-        } shouldBe "Story"
-        CapturedAuthoringReads(retained.originalView()).members(boundCollectionPath(location(id, "numbers"))) shouldBe
-            listOf(ItemId(value = "a"), ItemId(value = "b"))
-        retained.close()
-        store.close()
-        catalog.openCount shouldBe 0
+        val realm = RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to original))
+        val openLeases = realm.openCatalogLeases()
+        realm.use {
+            val retained = realm.views.capture()
+            realm
+                .commit(
+                    rename(id, "Story"),
+                    EditIntent.createMove(at = location(id, "numbers"), item = ItemId(value = "a"), after = ItemId(value = "b")),
+                ).shouldBeCommitted()
+            retained.root.resources[id] shouldBe original
+            realm.views.capture().use {
+                CapturedAuthoringReads(it.originalView()).read(boundPath<String>(location(id, "name"), TEXT_USE)).available()
+            } shouldBe "Story"
+            CapturedAuthoringReads(retained.originalView()).members(boundCollectionPath(location(id, "numbers"))) shouldBe
+                listOf(ItemId(value = "a"), ItemId(value = "b"))
+            retained.close()
+        }
+        openLeases() shouldBe 0
     }
-    test("read contexts belong to one retained original view") {
-        val catalog = TestCatalogLease()
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(emptyMap()))
-        val original = store.capture()
-        val context = original.root.readContext
-        store.install(store.prepare(AuthoringViewDelta()))
-        store.retain(context).use { (it.root === original.root) shouldBe true }
-        original.close()
-        shouldThrow<IllegalArgumentException> { store.retain(context) }
-        store.close()
-    }
-    test("reload failure prevents serving old current state but preserves retained reads") {
+    test("a read context resumes its original view while retained and is refused once released") {
         val id = ResourceId(value = "page")
         val original = record(name = "Quest")
-        val catalog = TestCatalogLease()
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to original)))
-        val retained = store.capture()
-        var fail = true
-        var loads = 0
-        store.invalidate {
-            loads++
-            if (fail) error("storage unavailable")
-            AuthoringSeed(mapOf(id to record(name = "Story")))
+        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to original)).use { realm ->
+            val lease = realm.views.capture()
+            val context = lease.root.readContext
+            realm.commit(rename(id, "Story")).shouldBeCommitted()
+
+            realm.views.retain(context).use { it.root.resources[id] } shouldBe original
+            lease.close()
+
+            shouldThrow<IllegalArgumentException> { realm.views.retain(context) }.message shouldBe
+                "The original read view is no longer retained."
         }
-        shouldThrow<IllegalStateException> { store.capture() }
-        retained.root.resources[id] shouldBe original
-        fail = false
-        store.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
-        loads shouldBe 2
-        store.capture().close()
-        loads shouldBe 2
-        retained.close()
-        store.close()
+    }
+    test("a failed reload serves no stale current state, keeps retained reads and succeeds on the next capture") {
+        val id = ResourceId(value = "page")
+        val original = record(name = "Quest")
+        val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to original)))
+        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), storage = storage).use { realm ->
+            realm.views.capture().use { retained ->
+                // The commit saves but loses its result, so the Realm reloads saved authoring on the next read.
+                storage.failAfterWrite = true
+                shouldThrow<IllegalStateException> { realm.commit(rename(id, "Story")) }
+                storage.failAfterWrite = false
+                storage.failReads = true
+
+                shouldThrow<IllegalStateException> { realm.views.capture() }.message shouldBe "read unavailable"
+                retained.root.resources[id] shouldBe original
+                storage.failReads = false
+                realm.views.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
+            }
+        }
     }
     test("staged reads keep expectations from the original baseline") {
         val id = ResourceId(value = "page")
         val original = record(name = "Quest")
-        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to original)))
-        store.capture().use { lease ->
+        captured(mapOf(id to original)) { lease ->
             val reads = CapturedAuthoringReads(lease.stagedView(mapOf(id to record(name = "Story"))))
             reads.read(boundPath<String>(location(id, "name"), TEXT_USE)).available() shouldBe "Story"
             val expected =
@@ -130,87 +141,90 @@ val AuthoringViewStoreTest by testSuite {
                 }
             expected.value.expected shouldBe DataValue.StringValueWrapper("Quest")
         }
-        store.close()
     }
-    test("root and staged views reject caller and exposed collection mutation") {
+    test("a captured view keeps the seed it was given when the caller changes it afterwards") {
         val id = ResourceId(value = "page")
-        val rootArguments = mutableListOf<TypeUse>(INT_USE)
-        val rootItems = mutableListOf(ListItem(id = ItemId(value = "root"), value = DataValue.integer(BigInteger.ONE)))
-        val rootFields =
+        val arguments = mutableListOf<TypeUse>(INT_USE)
+        val items = mutableListOf(ListItem(id = ItemId(value = "root"), value = DataValue.integer(BigInteger.ONE)))
+        val fields =
             mutableMapOf<String, DataValue>(
                 "name" to DataValue.StringValueWrapper("Quest"),
                 "count" to DataValue.integer(BigInteger.ONE),
-                "numbers" to DataValue.named(LIST_TYPE.namedUse(rootArguments), DataValue.listValue(rootItems)),
+                "numbers" to DataValue.named(LIST_TYPE.namedUse(arguments), DataValue.listValue(items)),
             )
-        val seed = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), rootFields))
-        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(seed))
+        val seed = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), fields))
+        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), seed).use { realm ->
+            seed.clear()
+            fields["name"] = DataValue.StringValueWrapper("Changed")
+            arguments += TEXT_USE
+            items += ListItem(id = ItemId(value = "late"), value = DataValue.integer(BigInteger.TWO))
 
-        seed.clear()
-        rootFields["name"] = DataValue.StringValueWrapper("Changed")
-        rootArguments += TEXT_USE
-        rootItems += ListItem(id = ItemId(value = "late"), value = DataValue.integer(BigInteger.TWO))
-
-        store.capture().use { lease ->
-            val retained = lease.root.resources.getValue(id)
-            retained.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Quest")
-            val retainedNumbers = retained.fieldMap.getValue("numbers") as DataValue.NamedWrapper
-            retainedNumbers.actualType.arguments shouldBe listOf(INT_USE)
-            (retainedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "root"))
-            shouldThrow<UnsupportedOperationException> {
-                @Suppress("UNCHECKED_CAST")
-                (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId(value = "other")] = retained
+            realm.views.capture().use { lease ->
+                val captured = lease.root.resources.getValue(id)
+                captured.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Quest")
+                val numbers = captured.fieldMap.getValue("numbers") as DataValue.NamedWrapper
+                numbers.actualType.arguments shouldBe listOf(INT_USE)
+                (numbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "root"))
             }
-            // Skir type values are deeply immutable: their lists are not mutable lists at all.
-            (retainedNumbers.actualType.arguments is MutableList<*>) shouldBe false
-
-            val stagedItems = mutableListOf(ListItem(id = ItemId(value = "staged"), value = DataValue.integer(BigInteger.TWO)))
-            val stagedFields =
+        }
+    }
+    test("a staged view keeps the upserts it was given when the caller changes them afterwards") {
+        val id = ResourceId(value = "page")
+        captured(mapOf(id to record(name = "Quest"))) { lease ->
+            val items = mutableListOf(ListItem(id = ItemId(value = "staged"), value = DataValue.integer(BigInteger.TWO)))
+            val fields =
                 mutableMapOf<String, DataValue>(
                     "name" to DataValue.StringValueWrapper("Story"),
                     "count" to DataValue.integer(BigInteger.TWO),
-                    "numbers" to DataValue.named(LIST_USE, DataValue.listValue(stagedItems)),
+                    "numbers" to DataValue.named(LIST_USE, DataValue.listValue(items)),
                 )
-            val upserts = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), stagedFields))
+            val upserts = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), fields))
             val staged = lease.stagedView(upserts)
-            upserts.clear()
-            stagedFields["name"] = DataValue.StringValueWrapper("Changed")
-            stagedItems.clear()
 
-            val retainedStaged = staged.resources.getValue(id)
-            retainedStaged.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
-            val stagedNumbers = retainedStaged.fieldMap.getValue("numbers") as DataValue.NamedWrapper
-            (stagedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
-            // Skir data values are deeply immutable as well.
-            ((stagedNumbers.payload as DataValue.ListValueWrapper).items is MutableList<*>) shouldBe false
+            upserts.clear()
+            fields["name"] = DataValue.StringValueWrapper("Changed")
+            items.clear()
+
+            val kept = staged.resources.getValue(id)
+            kept.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
+            val numbers = kept.fieldMap.getValue("numbers") as DataValue.NamedWrapper
+            (numbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
         }
-        store.close()
     }
-    test("installation and current reads share one lock") {
+    test("an install waits until a current read in progress has finished") {
         val id = ResourceId(value = "page")
-        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Quest"))))
-        val executor = Executors.newFixedThreadPool(2)
-        val reading = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        try {
-            val read =
-                executor.submit {
-                    store.read { current ->
-                        reading.countDown()
-                        release.await()
-                        current.resources[id] shouldBe record(name = "Quest")
-                    }
+        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to record(name = "Quest"))).use { realm ->
+            val store = realm.views
+            val executor = Executors.newFixedThreadPool(2)
+            val reading = CountDownLatch(1)
+            val installing = CountDownLatch(1)
+            val installation =
+                FutureTask {
+                    installing.countDown()
+                    runBlocking { realm.commit(rename(id, "Story")) }
                 }
-            reading.await(2, TimeUnit.SECONDS) shouldBe true
-            val write = executor.submit { store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story"))))) }
-            write.isDone shouldBe false
-            release.countDown()
-            read.get(2, TimeUnit.SECONDS)
-            write.get(2, TimeUnit.SECONDS)
-            store.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
-        } finally {
-            release.countDown()
-            executor.shutdownNow()
-            store.close()
+            try {
+                val read =
+                    executor.submit<Pair<Boolean, AuthoringRecord?>> {
+                        store.read {
+                            reading.countDown()
+                            installing.await(2, TimeUnit.SECONDS)
+                            // While this read runs, the commit another thread started cannot install, so the current
+                            // state read again on this thread is still the one the read began with.
+                            val installed =
+                                runCatching { installation.get(200, TimeUnit.MILLISECONDS) }.exceptionOrNull() !is TimeoutException
+                            installed to store.read { current -> current.resources[id] }
+                        }
+                    }
+                reading.await(2, TimeUnit.SECONDS) shouldBe true
+                executor.execute(installation)
+
+                read.get(5, TimeUnit.SECONDS) shouldBe (false to record(name = "Quest"))
+                installation.get(2, TimeUnit.SECONDS).shouldBeCommitted()
+                store.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
+            } finally {
+                executor.shutdownNow()
+            }
         }
     }
 }

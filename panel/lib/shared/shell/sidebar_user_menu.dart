@@ -3,7 +3,7 @@ part of "sidebar.dart";
 /// Provides the signed in user's account, appearance, support, and logout menu.
 ///
 /// Logout failures stay at the menu boundary and become a single user visible
-/// error. Account identity and avatar data come from [authUserInfoProvider],
+/// error. Account identity and avatar data come from [authSessionProvider],
 /// while appearance changes are written through [appearanceProvider].
 class UserMenu extends HookConsumerWidget {
   const UserMenu({this.compact = false, this.expand = true, super.key});
@@ -98,7 +98,14 @@ class UserMenu extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userInfoAsync = ref.watch(authUserInfoProvider);
+    // The session is loaded before the shell shows, so the menu never passes
+    // through a loading state taller than the compact app bar.
+    final userInfoAsync = ref
+        .watch(authSessionProvider)
+        .whenData(
+          (session) =>
+              session?.user ?? (throw Exception("User not authenticated")),
+        );
     final currentThemeMode = ref.watch(appearanceProvider);
 
     final controller = useMenuController();
@@ -106,6 +113,8 @@ class UserMenu extends HookConsumerWidget {
 
     return userInfoAsync(
       name: "user info",
+      // The menu sits in the sidebar column, where only the small error fits.
+      shrink: true,
       builder: (user) {
         final name = user.name ?? user.username ?? user.sub;
         final avatarUrl = user.avatarUrl ?? "$userIconUrl&seed=${user.sub}";

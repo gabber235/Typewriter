@@ -2,157 +2,133 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("created graph resources avoid siblings and preserve dimensions", () {
-    final root = skir.TypeDefinitionId(
-      typeId: skir.TypeId.createQualified(
-        namespace: "test",
-        name: "GraphResource",
-      ),
-      revision: 1,
-    );
+  group("a created graph resource", () {
+    // Two graph resources of one type: an existing one and one just created
+    // with a refined, tinted placement of the same size.
+    final root = testTypeId("GraphResource");
+    final refined = testTypeId("TintedGraphPlacement");
     final integer = skir.TypeTemplate.wrapScalar(
       skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
     );
-    skir.PublishedType published(
-      skir.TypeDefinitionId id,
-      Map<String, skir.TypeTemplate> fields, {
-      List<skir.NamedTypeTemplate> parents = const [],
-    }) => skir.PublishedType(
-      searchKey: null,
-      placementField: fields.containsKey("placement")
-          ? editorRootPath.field("placement")
-          : null,
-      display: defaultTypeDisplay(""),
-      definition: skir.TypeDefinition(
-        id: id,
-        parameters: const [],
-        parents: parents,
-        representation: skir.RepresentationTemplate.createRecord(
-          abstract_: false,
-          fields: [
-            for (final field in fields.entries)
-              skir.FieldDeclaration(
-                owner: skir.FieldOwner(definition: id, name: field.key),
-                type: field.value,
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-          ],
+    final catalog = testCheckedCatalog(
+      types: [
+        declaredRecord(
+          root,
+          fields: {
+            "placement": skir.TypeTemplate.createNamed(
+              definition: graphPlacementTypeRef,
+              arguments: const [],
+            ),
+          },
+          placementField: editorRootPath.field("placement"),
         ),
-      ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: [
-        for (final field in fields.entries)
-          skir.EffectiveFieldTemplate(
-            key: field.key,
-            owner: skir.FieldOwner(definition: id, name: field.key),
-            type: field.value,
-            rules: const [],
-          ),
-      ],
-      ancestorTemplates: parents,
-    );
-    final refined = skir.TypeDefinitionId(
-      typeId: skir.TypeId.createQualified(
-        namespace: "test",
-        name: "TintedGraphPlacement",
-      ),
-      revision: 1,
-    );
-    final parent = skir.NamedTypeTemplate(
-      definition: graphPlacementTypeRef,
-      arguments: const [],
-    );
-    final snapshot = skir.EditorCatalog.defaultInstance.toMutable()
-      ..types = [
-        published(root, {
-          "placement": skir.TypeTemplate.createNamed(
-            definition: graphPlacementTypeRef,
-            arguments: const [],
-          ),
-        }),
-        published(graphPlacementTypeRef, {
-          for (final key in ["x", "y", "width", "height"]) key: integer,
-        }),
-        published(
+        declaredRecord(
+          graphPlacementTypeRef,
+          fields: {
+            for (final key in ["x", "y", "width", "height"]) key: integer,
+          },
+        ),
+        declaredRecord(
           refined,
-          {
+          fields: {
             for (final key in ["x", "y", "width", "height"]) key: integer,
             "tint": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
           },
-          parents: [parent],
+          parents: [
+            skir.NamedTypeTemplate(
+              definition: graphPlacementTypeRef,
+              arguments: const [],
+            ),
+          ],
         ),
-      ];
-    final catalog = CheckedEditorCatalog(snapshot.toFrozen());
+      ],
+    );
     final configuration = catalog.beginSelection(root);
     final existing = skir.ResourceId(value: "tag:existing");
     final created = skir.ResourceId(value: "tag:created");
     final placement = GraphPlacement(x: 0, y: 0, width: 3, height: 2);
-    final draft =
-        AuthoringEdit(
-          generation: catalog.snapshot.generation,
-          catalog: catalog,
-          resources: [
-            for (final id in [existing, created])
-              skir.AuthoringResource(
-                id: id,
-                content: skir.AuthoringRecord(
-                  configuration: configuration,
-                  fields: [
-                    skir.FieldValue(
-                      name: "placement",
-                      value: id == existing
-                          ? placement.toAuthoredValue()
-                          : skir.DataValue.createNamed(
-                              actualType: skir.NamedTypeUse(
-                                definition: refined,
-                                arguments: const [],
-                              ),
-                              payload: skir.DataValue.createRecord(
-                                fields: [
-                                  ...placement
-                                      .toAuthoredValue()
-                                      .authoredRecord!
-                                      .fields,
-                                  skir.FieldValue(
-                                    name: "tint",
-                                    value: skir.DataValue.wrapStringValue(
-                                      "blue",
+    late AuthoringEdit draft;
+    setUp(() {
+      draft =
+          AuthoringEdit(
+            generation: catalog.snapshot.generation,
+            catalog: catalog,
+            resources: [
+              for (final id in [existing, created])
+                skir.AuthoringResource(
+                  id: id,
+                  content: skir.AuthoringRecord(
+                    configuration: configuration,
+                    fields: [
+                      skir.FieldValue(
+                        name: "placement",
+                        value: id == existing
+                            ? placement.toAuthoredValue()
+                            : skir.DataValue.createNamed(
+                                actualType: skir.NamedTypeUse(
+                                  definition: refined,
+                                  arguments: const [],
+                                ),
+                                payload: skir.DataValue.createRecord(
+                                  fields: [
+                                    ...placement
+                                        .toAuthoredValue()
+                                        .authoredRecord!
+                                        .fields,
+                                    skir.FieldValue(
+                                      name: "tint",
+                                      value: skir.DataValue.wrapStringValue(
+                                        "blue",
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
-          links: const [],
-        )..placeCreatedResource(
-          ResourceCreationRequest(
-            id: created,
-            type: root,
-            configuration: configuration,
-          ),
-        );
-    final before = draft.resource(existing)!.graphRect(catalog)!;
-    final after = draft.resource(created)!.graphRect(catalog)!;
-    expect(before, placement.gridRect);
-    expect(after.overlaps(before, gap: 1), isFalse);
-    expect(after.width, placement.width);
-    expect(after.height, placement.height);
-    final createdPlacement = draft
-        .resource(created)!
-        .authoredField("placement")!;
-    expect(createdPlacement.authoredActualType!.definition, refined);
-    expect(createdPlacement.authoredField("tint")!.authoredString, "blue");
-    final count = draft.operationCount;
-    expect(() => draft.resizeGraphPlacement(created, 0, 4), throwsStateError);
-    expect(draft.operationCount, count);
-    expect(draft.resource(created)!.graphRect(catalog), after);
+            ],
+            links: const [],
+          )..placeCreatedResource(
+            ResourceCreationRequest(
+              id: created,
+              type: root,
+              configuration: configuration,
+            ),
+          );
+    });
+
+    test("is placed clear of its siblings at its own size", () {
+      final before = draft.resource(existing)!.graphRect(catalog)!;
+      final after = draft.resource(created)!.graphRect(catalog)!;
+
+      expect(before, placement.gridRect);
+      expect(after.overlaps(before, gap: 1), isFalse);
+      expect(after.width, placement.width);
+      expect(after.height, placement.height);
+    });
+
+    test("keeps the refined placement type it was prepared with", () {
+      final placement = draft.resource(created)!.authoredField("placement")!;
+
+      expect(placement.authoredActualType!.definition, refined);
+      expect(placement.authoredField("tint")!.authoredString, "blue");
+    });
+
+    test("refuses a resize to no width and keeps its rectangle", () {
+      final placed = draft.resource(created)!.graphRect(catalog);
+
+      expect(() => draft.resizeGraphPlacement(created, 0, 4), throwsStateError);
+
+      expect(draft.resource(created)!.graphRect(catalog), placed);
+    });
+  });
+
+  test("a placement with an unfilled coordinate reads as unfinished at it", () {
     final unfinished = skir.DataValue.createNamed(
       actualType: skir.NamedTypeUse(
         definition: graphPlacementTypeRef,
@@ -161,19 +137,21 @@ void main() {
       payload: skir.DataValue.createRecord(
         fields: [
           skir.FieldValue(name: "x", value: skir.DataValue.unfilled),
-          for (final key in ["y", "width", "height"]) _integerField(key, 1),
+          for (final key in ["y", "width", "height"])
+            skir.FieldValue(name: key, value: skir.DataValue.wrapInteger("1")),
         ],
       ),
-    ).readPlacement(catalog);
+    ).readPlacement(CheckedEditorCatalog(skir.EditorCatalog.defaultInstance));
+
     expect(unfinished, PlacementReading.unfinished(editorRootPath.field("x")));
   });
 
   final graphValue = skir.DataValue.createRecord(
     fields: [
-      _integerField("x", 1),
-      _integerField("y", 2),
-      _integerField("width", 3),
-      _integerField("height", 4),
+      skir.FieldValue(name: "x", value: skir.DataValue.wrapInteger("1")),
+      skir.FieldValue(name: "y", value: skir.DataValue.wrapInteger("2")),
+      skir.FieldValue(name: "width", value: skir.DataValue.wrapInteger("3")),
+      skir.FieldValue(name: "height", value: skir.DataValue.wrapInteger("4")),
     ],
   );
 
@@ -210,8 +188,3 @@ void main() {
     );
   });
 }
-
-skir.FieldValue _integerField(String name, int value) => skir.FieldValue(
-  name: name,
-  value: skir.DataValue.wrapInteger(value.toString()),
-);

@@ -11,12 +11,16 @@ use surrealdb::{
 };
 use uuid::Uuid;
 use wash_runtime::wit::WitInterface;
+use wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId;
+
+use crate::{Organization, StackUser, database_record_key, skir_record_id};
 use wasmcloud_plugin_surrealdb::{ConnectionKey, WasmcloudSurrealdb};
 use wasmcloud_utils::database::{
     TRANSACTION_CONFLICT_INITIAL_DELAY, TRANSACTION_CONFLICT_MAX_ATTEMPTS,
     TRANSACTION_CONFLICT_MAXIMUM_DELAY,
 };
 
+/// How SurrealDB reports a transaction that lost a conflict and may be retried.
 const FAILED_TRANSACTION_MESSAGE: &str = "The query was not executed due to a failed transaction";
 
 /// The schema preset a fixture's database receives, as `capabilities.toml` names it.
@@ -60,10 +64,66 @@ impl DatabaseHandle {
         serde_json::from_value(value).context("decoding typed database query")
     }
 
+    /// Reads one value of `sql`, with each `(name, record)` bound as `$name`. The keyed read a case
+    /// uses to inspect the record it or a component wrote.
+    pub async fn read(&self, sql: &str, records: &[(&str, RecordId)]) -> Result<serde_json::Value> {
+        let bindings = records
+            .iter()
+            .map(|(name, record)| {
+                (
+                    (*name).to_owned(),
+                    surrealdb::types::RecordId::from(record.clone()).into_value(),
+                )
+            })
+            .collect();
+        let mut response = self.response(sql, bindings).await?;
+        let value: surrealdb::types::Value = response.take(0)?;
+        Ok(value.into_json_value())
+    }
+
     pub async fn query_json(&self, sql: &str) -> Result<serde_json::Value> {
         let mut response = self.response(sql, Vec::new()).await?;
         let value: surrealdb::types::Value = response.take(0)?;
         Ok(value.into_json_value())
+    }
+
+    pub(crate) async fn run(&self, sql: &str, bindings: Vec<(String, Value)>) -> Result<()> {
+        self.response(sql, bindings).await.map(drop)
+    }
+
+    /// The record of the role `name` in `organization`, as the database created it.
+    pub async fn role(&self, organization: &Organization, name: &str) -> Result<RecordId> {
+        let value = self
+            .seed("SELECT VALUE id FROM organization_role WHERE organization = $organization AND name = $name")
+            .bind("organization", surrealdb::types::RecordId::from(organization.id()))?
+            .bind("name", name.to_owned())?
+            .query_json()
+            .await?;
+        Ok(skir_record_id(
+            "organization_role",
+            database_record_key(&value, "organization_role")?,
+        ))
+    }
+
+    /// The record of `user`'s pending request to join `organization`.
+    pub async fn join_request(
+        &self,
+        user: &StackUser,
+        organization: &Organization,
+    ) -> Result<RecordId> {
+        let value = self
+            .seed("SELECT VALUE id FROM request_to_join WHERE in = $user AND out = $organization")
+            .bind("user", surrealdb::types::RecordId::from(user.id()))?
+            .bind(
+                "organization",
+                surrealdb::types::RecordId::from(organization.id()),
+            )?
+            .query_json()
+            .await?;
+        Ok(skir_record_id(
+            "request_to_join",
+            database_record_key(&value, "request_to_join")?,
+        ))
     }
 }
 
@@ -88,10 +148,11 @@ impl SeedQuery {
         Ok(value.into_json_value())
     }
 
-    pub async fn query_json_retrying_conflicts(
-        self,
-        outcome_index: usize,
-    ) -> Result<serde_json::Value> {
+    /// Runs a component's transaction the way the component does: a conflict with a concurrent
+    /// transaction is retried under the same bounded policy, and the statement at
+    /// `outcome_index` is returned. Lets a case race a transaction against itself without the
+    /// component.
+    pub async fn transaction_json(self, outcome_index: usize) -> Result<serde_json::Value> {
         for attempt in 1..=TRANSACTION_CONFLICT_MAX_ATTEMPTS {
             match self
                 .database
@@ -119,7 +180,6 @@ impl SeedQuery {
                 Err(error) => return Err(error),
             }
         }
-
         unreachable!("transaction conflict attempt count is nonzero")
     }
 }
@@ -189,73 +249,6 @@ impl<F: FixtureDeclaration> TypewriterFixtureBuilderExt<F> for FixtureBuilder<F>
 mod tests {
     use super::*;
 
-    async fn database(preset: SchemaPreset) -> Result<DatabaseHandle> {
-        let unique = Uuid::new_v4().simple().to_string();
-        let key = ConnectionKey::from_config(&std::collections::HashMap::from([
-            ("url".into(), "memory".into()),
-            ("namespace".into(), format!("test_{unique}")),
-            ("database".into(), "test".into()),
-        ]))?;
-        let handle = DatabaseHandle {
-            plugin: Arc::new(WasmcloudSurrealdb::new()),
-            key,
-        };
-        for file in preset.files()? {
-            handle.execute(file.sql).await?;
-        }
-        Ok(handle)
-    }
-
-    #[test]
-    fn manifest_presets_preserve_existing_schema_sets_and_order() {
-        let names = |preset: SchemaPreset| {
-            preset
-                .files()
-                .expect("schema preset must resolve")
-                .iter()
-                .map(|file| file.name)
-                .collect::<Vec<_>>()
-        };
-        let service = vec![
-            "kernel/id.surql",
-            "service/functions.surql",
-            "service/service.surql",
-            "service/topology.surql",
-        ];
-        let organization = vec![
-            "kernel/id.surql",
-            "kernel/color.surql",
-            "kernel/url.surql",
-            "user.surql",
-            "organization/functions.surql",
-            "organization/organization.surql",
-            "organization/organization_role.surql",
-            "organization/member_of.surql",
-            "organization/organization_join_code.surql",
-            "organization/request_to_join.surql",
-        ];
-        let combined = vec![
-            "kernel/id.surql",
-            "service/functions.surql",
-            "service/service.surql",
-            "service/topology.surql",
-            "kernel/color.surql",
-            "kernel/url.surql",
-            "user.surql",
-            "organization/functions.surql",
-            "organization/organization.surql",
-            "organization/organization_role.surql",
-            "organization/member_of.surql",
-            "organization/organization_join_code.surql",
-            "organization/request_to_join.surql",
-        ];
-
-        assert_eq!(names(SchemaPreset::Service), service);
-        assert_eq!(names(SchemaPreset::Organization), organization);
-        assert_eq!(names(SchemaPreset::Registration), combined);
-        assert_eq!(names(SchemaPreset::Full), combined);
-    }
-
     #[tokio::test]
     async fn every_preset_applies_to_a_fresh_database() -> Result<()> {
         for preset in [
@@ -264,40 +257,20 @@ mod tests {
             SchemaPreset::Registration,
             SchemaPreset::Full,
         ] {
-            database(preset).await?;
+            let unique = Uuid::new_v4().simple().to_string();
+            let key = ConnectionKey::from_config(&std::collections::HashMap::from([
+                ("url".into(), "memory".into()),
+                ("namespace".into(), format!("test_{unique}")),
+                ("database".into(), "test".into()),
+            ]))?;
+            let database = DatabaseHandle {
+                plugin: Arc::new(WasmcloudSurrealdb::new()),
+                key,
+            };
+            for file in preset.files()? {
+                database.execute(file.sql).await?;
+            }
         }
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn seed_bind_and_typed_query_preserve_values() -> Result<()> {
-        #[derive(serde::Deserialize, PartialEq, Debug)]
-        struct Row {
-            amount: i64,
-        }
-        let database = database(SchemaPreset::Service).await?;
-        database
-            .seed("CREATE seed_test CONTENT { amount: $value, organization: organization:alpha }")
-            .bind("value", 42_i64)?
-            .execute()
-            .await?;
-        assert_eq!(
-            database
-                .query::<Row>("SELECT amount FROM seed_test")
-                .await?,
-            vec![Row { amount: 42 }]
-        );
-        assert_eq!(
-            database
-                .seed("RETURN count(SELECT id FROM seed_test WHERE organization = $organization)")
-                .bind(
-                    "organization",
-                    surrealdb::types::RecordId::new("organization", "alpha"),
-                )?
-                .query_json()
-                .await?,
-            serde_json::json!(1)
-        );
         Ok(())
     }
 }

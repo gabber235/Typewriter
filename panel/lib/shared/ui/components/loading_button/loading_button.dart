@@ -370,6 +370,7 @@ class _Spinner extends StatelessWidget {
         buttonStyle?.iconSize?.resolve({});
 
     final indicator = CircularProgressIndicator(
+      semanticsLabel: "Loading",
       strokeWidth: 3,
       valueColor: AlwaysStoppedAnimation(color),
     );

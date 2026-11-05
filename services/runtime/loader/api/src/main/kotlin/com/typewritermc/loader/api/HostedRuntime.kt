@@ -146,18 +146,14 @@ data class HostedRuntimeDirectories(
 /**
  * Separates executable artifacts from the complete manifest catalog.
  *
- * [executableArtifacts] includes the runtime plus extensions with at least one eligible source part. Consumers
- * must still apply domain and placement rules when loading generated contributions. Every artifact carries the
- * manifest decoded from its materialized bytes.
+ * Consumers must still apply domain and placement rules when loading generated contributions. Every artifact carries
+ * the manifest decoded from its materialized bytes.
  */
 data class HostedArtifactPackage(
     val runtimeArtifact: HostedArtifact<HostedArtifactManifest>,
     val extensions: List<HostedExtensionArtifact>,
     val catalogArtifacts: List<HostedArtifact<ImprintManifest>>,
-) {
-    val executableArtifacts: List<Path>
-        get() = listOf(runtimeArtifact.path) + extensions.filter(HostedExtensionArtifact::hasEligibleSourcePart).map { it.path }
-}
+)
 
 /** A materialized artifact path paired with the manifest read from those exact bytes. */
 data class HostedArtifact<out Manifest : ImprintManifest>(
@@ -168,8 +164,7 @@ data class HostedArtifact<out Manifest : ImprintManifest>(
 /**
  * Carries one extension artifact and the loader resolved source part dispositions.
  *
- * Eligibility belongs to source parts rather than the entire JAR. [hasEligibleSourcePart] only tests whether any
- * source part is eligible.
+ * Eligibility belongs to source parts rather than the entire JAR.
  */
 data class HostedExtensionArtifact(
     val id: ArtifactId,
@@ -182,9 +177,6 @@ data class HostedExtensionArtifact(
             "Hosted extension $id does not match its manifest identity ${manifest.id}."
         }
     }
-
-    val hasEligibleSourcePart: Boolean
-        get() = sourceParts.any { it.disposition is SourcePartDisposition.Eligible }
 }
 
 data class HostedSourcePart(

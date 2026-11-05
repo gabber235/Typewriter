@@ -69,6 +69,16 @@ impl ComponentConfiguration {
     }
 }
 
+/// A JetStream stream created in the fixture's broker account before the workload starts.
+///
+/// Components may persist only into declared streams; a publish to a subject no stream captures
+/// is not acknowledged.
+#[derive(Clone, Debug)]
+pub struct Stream {
+    pub name: String,
+    pub subjects: Vec<String>,
+}
+
 /// Fixture specific configuration hook generated or declared by a component test crate.
 pub trait FixtureSpec: FixtureDeclaration + Sized {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self>;
@@ -84,6 +94,7 @@ pub struct FixtureBuilder<F> {
     pub(crate) volumes: Vec<Volume>,
     pub(crate) http_host: Option<String>,
     pub(crate) messaging: bool,
+    pub(crate) streams: Vec<Stream>,
     pub(crate) messaging_mock: MessagingMock,
     pub(crate) plugins: Vec<Arc<dyn HostPlugin>>,
     pub(crate) interfaces: Vec<WitInterface>,
@@ -111,6 +122,7 @@ impl<F: FixtureDeclaration> FixtureBuilder<F> {
             volumes: Vec::new(),
             http_host: None,
             messaging: false,
+            streams: Vec::new(),
             messaging_mock: MessagingMock::new(Vec::new()),
             plugins: Vec::new(),
             interfaces: Vec::new(),
@@ -226,6 +238,19 @@ impl<F: FixtureDeclaration> FixtureBuilder<F> {
     pub fn messaging_subscriptions(self, subjects: &[&str]) -> Self {
         self.messaging()
             .primary(|component| component.subscriptions(subjects))
+    }
+    /// Declares a JetStream stream the fixture's components persist into.
+    pub fn stream(
+        mut self,
+        name: impl Into<String>,
+        subjects: impl IntoIterator<Item = impl Into<String>>,
+    ) -> Self {
+        self.messaging = true;
+        self.streams.push(Stream {
+            name: name.into(),
+            subjects: subjects.into_iter().map(Into::into).collect(),
+        });
+        self
     }
     pub fn interface(mut self, interface: WitInterface) -> Self {
         self.interfaces.push(interface);
@@ -414,29 +439,7 @@ impl<E: FixtureExtension> ErasedExtension for ExtensionAdapter<E> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use component_test_model::{ComponentBuild, FixtureDescriptor};
-
-    struct Fixture;
-    impl FixtureDeclaration for Fixture {
-        const DESCRIPTOR: FixtureDescriptor = FixtureDescriptor {
-            id: "fixture",
-            primary: ComponentBuild::primary("component", "component"),
-            dependencies: &[],
-        };
-    }
-    struct Endpoint;
-
-    struct MessagingFixture;
-    impl FixtureDeclaration for MessagingFixture {
-        const DESCRIPTOR: FixtureDescriptor = FixtureDescriptor {
-            id: "messaging-fixture",
-            primary: ComponentBuild::primary("http-component", "http_component"),
-            dependencies: &[ComponentBuild::dependency(
-                "messaging-component",
-                "messaging_component",
-            )],
-        };
-    }
+    use crate::test_support::{Endpoint, Fixture, MessagingFixture};
 
     #[test]
     fn outgoing_http_preserves_https_policy() {
@@ -452,7 +455,7 @@ mod tests {
         let builder = FixtureBuilder::<MessagingFixture>::new()
             .messaging()
             .dependency("messaging-component", |component| {
-                component.subscription("typewriter.from.service.*.binding.query")
+                component.subscription("dependency.*.lookup")
             });
 
         assert!(builder.validate().is_ok());
@@ -477,8 +480,8 @@ mod tests {
             .messaging()
             .dependency("messaging-component", |component| {
                 component
-                    .subscription("typewriter.from.service.*.binding.query")
-                    .subscription("typewriter.from.service.*.binding.query")
+                    .subscription("dependency.*.lookup")
+                    .subscription("dependency.*.lookup")
             });
 
         let error = builder.validate().unwrap_err();

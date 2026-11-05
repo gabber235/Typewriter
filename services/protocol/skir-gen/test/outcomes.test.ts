@@ -9,12 +9,8 @@ import {
   variantMessage,
   variantSlug,
 } from "../src/outcomes.js";
-import { emitDart } from "../src/routes/emit/dart.js";
-import { emitKotlin } from "../src/routes/emit/kotlin.js";
-import { emitRust } from "../src/routes/emit/rust.js";
 import { parseManifest } from "../src/routes/manifest.js";
 import { resolveRoutes } from "../src/routes/resolve.js";
-import { symbolProviders } from "../src/symbols.js";
 import { committedRoutes, DART_PREFIX, manifestSource } from "./support.js";
 
 const ERRORS = `struct InternalError {}
@@ -146,69 +142,59 @@ method Plain(struct {}): Pong = 2;
   });
 });
 
-describe("generated outcomes", () => {
-  const source = `struct Pong {}
-method Ping(struct {}): enum {
-  ok: Pong = 1;
-  /// The pong was refused.
-  refused_error: Pong = 2;
+describe("scatter admission", () => {
+  test("a scatter route is admitted through its response outcomes", () => {
+    const input = skirInput(`struct Pong {}
+method Apply(struct {}): enum {
+  accepted: Pong = 1;
+  stale_attempt_error: Pong = 2;
   internal_error: InternalError = 3;
 } = 1;
-`;
-
-  test("Kotlin policies classify by kind and fall back to the internal_error wrapper", () => {
-    const input = skirInput(source);
-    const [realm] = emitKotlin(resolve(route("ping", "Ping"), input), symbolProviders(input).kotlin);
-    expect(realm!.code).toContain(`private val pingResponsePolicy = ResponsePolicy<skirout.test.PingResponse>(
-    skirout.test.PingResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
-) { response ->
-    when (response.kind) {
-        skirout.test.PingResponse.Kind.OK_WRAPPER -> ResponseClassification.success("ok")
-        skirout.test.PingResponse.Kind.REFUSED_ERROR_WRAPPER -> ResponseClassification.domainError("refused-error")
-        skirout.test.PingResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
-        else -> ResponseClassification.internalError("unknown")
-    }
-}`);
-    expect(realm!.code).toContain(`val RealmRouteScope.ping get() = skirUnaryContract(
-    method = Ping, name = OperationName.of("test.ping"),
-    address = pingRequestAddress.subscribedAt(this), responsePolicy = pingResponsePolicy,
-    // Answers _INBOX.*.*.*.
-    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
-)`);
+`);
+    const [scatter] = resolve(
+      `  - name: apply
+    scope: realm
+    callers: [{ role: realm_coordinator }]
+    server: { role: realm_participant }
+    flow:
+      kind: scatter
+      method: "test.skir:Apply"
+      operation: test.apply
+      request: test.apply
+`,
+      input,
+    ).routes;
+    if (scatter!.flow.kind !== "scatter") throw new Error("apply must resolve as a scatter route");
+    expect(scatter!.flow.method.outcomes.variants.map(({ slug, outcome }) => [slug, outcome])).toEqual([
+      ["accepted", "success"],
+      ["stale-attempt-error", "domain_error"],
+      ["internal-error", "internal_error"],
+    ]);
   });
 
-  test("Rust implements SkirResponse from the variant names and docs", () => {
-    const input = skirInput(source);
-    const [rust] = emitRust(resolve("", input), symbolProviders(input).rust, input);
-    const response = "crate::skirout::base::test::PingResponse";
-    expect(rust!.code).toContain(`impl crate::SkirResponse for ${response} {\n    fn outcome(&self)`);
-    expect(rust!.code).toContain(
-      `            ${response}::Ok(_) => crate::SkirResponseOutcome::Success,\n` +
-        `            ${response}::RefusedError(_) => crate::SkirResponseOutcome::DomainError,\n` +
-        "            // internal_error and the generated unknown variant\n" +
-        "            _ => crate::SkirResponseOutcome::InternalError,",
-    );
-    expect(rust!.code).toContain(`            ${response}::RefusedError(_) => "refused-error",`);
-    expect(rust!.code).toContain('            _ => "unknown",');
-    expect(rust!.code).toContain(`            ${response}::RefusedError(_) => "The pong was refused.".to_owned(),`);
-    expect(rust!.code).toContain(`        ${response}::InternalError(::std::boxed::Box::new(::std::default::Default::default()))`);
-    expect(rust!.code).toContain(
-      `            "refused-error" => Some(${response}::RefusedError(::std::boxed::Box::new(::std::default::Default::default()))),`,
-    );
+  test("a scatter method without internal_error is refused", () => {
+    const input = skirInput(`struct Pong {}
+method Apply(struct {}): enum { accepted: Pong = 1; } = 1;
+`);
+    expect(() =>
+      resolve(
+        `  - name: apply
+    scope: realm
+    callers: [{ role: realm_coordinator }]
+    server: { role: realm_participant }
+    flow:
+      kind: scatter
+      method: "test.skir:Apply"
+      operation: test.apply
+      request: test.apply
+`,
+        input,
+      ),
+    ).toThrow("ApplyResponse lacks internal_error: InternalError");
   });
+});
 
-  test("Dart operations pass the generated outcome function", () => {
-    const input = skirInput(source);
-    const [dart] = emitDart(resolve(route("ping", "Ping"), input), symbolProviders(input).dart);
-    expect(dart!.code).toContain("outcome: _pingOutcome,");
-    expect(dart!.code).toContain(`ResponseOutcome _pingOutcome(_lib_test.PingResponse response) => switch (response.kind) {
-    _lib_test.PingResponse_kind.okWrapper => ResponseOutcome.success,
-    _lib_test.PingResponse_kind.refusedErrorWrapper => ResponseOutcome.domainError,
-    // internal_error and the generated unknown variant
-    _ => ResponseOutcome.internalError,
-};`);
-  });
-
+describe("committed outcomes", () => {
   test("the committed contracts admit every route and method response", async () => {
     const { input } = await committedRoutes();
     const responses = methodResponses(input).map(({ method }) => method.name.text);

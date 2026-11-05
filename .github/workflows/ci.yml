@@ -1,9 +1,13 @@
 # The pull request workflow. Every job is one `cargo xtask` line inside the devenv shell, so CI
-# runs exactly what a developer runs; `gate` is the one required check.
+# runs exactly what a developer runs; `gate` is the one required check. Pushes to the long lived
+# branches run it too: they check what each push changed and save the tool caches every pull
+# request into them restores (.github/actions/devenv).
 name: CI
 
 on:
   pull_request:
+  push:
+    branches: [develop, features/v1]
   # The Flutter bump dispatches this on its branch: a pull request opened with the workflow token
   # starts no workflows.
   workflow_dispatch:
@@ -15,9 +19,13 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# A dispatched run has no pull request: it compares with develop, where the Flutter bump starts.
+# A push compares with the commit before it. A dispatched run, or a push that creates its branch,
+# has nothing before it: it compares with develop, where the Flutter bump starts.
 env:
-  BASE_SHA: ${{ github.event.pull_request.base.sha || 'origin/develop' }}
+  BASE_SHA: >-
+    ${{ github.event.pull_request.base.sha
+    || (github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000' && github.event.before)
+    || 'origin/develop' }}
   HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
@@ -32,7 +40,11 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      # Every other job waits for this one, so the shell it pushes to the Nix cache is theirs to
+      # pull.
       - uses: ./.github/actions/devenv
+        with:
+          op-service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       # The last line only: the shell may print its own messages before the JSON.
       - id: plan
         run: echo "areas=$(devenv shell -- cargo xtask check --list --base "$BASE_SHA" | tail -n 1)" >> "$GITHUB_OUTPUT"
@@ -50,25 +62,35 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      # Generation runs Gradle and build_runner whatever the area; only the services area builds
+      # enough to be worth keeping Gradle's build outputs for.
       - uses: ./.github/actions/devenv
+        with:
+          caches: gradle flutter frame-vectors ${{ matrix.area.area == 'services' && 'gradle-outputs' || '' }}
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
       - if: matrix.area.area != 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
         run: devenv shell -- cargo xtask check ${{ matrix.area.area }}
-      # The review's default base, origin/HEAD, does not exist in a CI checkout.
+      # A CI checkout has no local branches to infer a base from; pass the event's base.
       - if: matrix.area.area == 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
         run: devenv shell -- cargo xtask review gate --base "$BASE_SHA"
+      # Artifacts of this public repository are downloadable, so only the staged public folder
+      # is uploaded.
+      - if: always()
+        run: devenv shell -- cargo xtask evidence stage
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: results-check-${{ matrix.area.area }}
-          path: .xtask/results/
+          path: .xtask/public/
           if-no-files-found: ignore
 
+  # full.yml checks the commits of pushes.
   commits:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -77,7 +99,7 @@ jobs:
       - uses: ./.github/actions/devenv
       - run: devenv shell -- cargo xtask hook commit-msg --range "$BASE_SHA..$HEAD_SHA"
 
-  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv shell, not apt.
+  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt.
   e2e:
     name: e2e (${{ matrix.suite }})
     needs: plan
@@ -91,22 +113,29 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/devenv
-      - run: devenv shell -- cargo xtask e2e ${{ matrix.suite }}
+        with:
+          caches: gradle flutter frame-vectors
+          profile: e2e
+      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
+      # Artifacts of this public repository are downloadable, so only the staged public folder
+      # is uploaded.
+      - if: always()
+        run: devenv --profile e2e shell -- cargo xtask evidence stage
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: results-e2e-${{ matrix.suite }}
-          path: .xtask/results/${{ matrix.suite }}/
+          path: .xtask/public/
           if-no-files-found: ignore
 
   # Runs when checks or suites fail too, since a failure is what the description must show. Jobs
-  # of other pull requests and the prune write the evidence branch at the same time; the publish
+  # of other pull requests and the prune write the media branches at the same time; the publish
   # retries its push onto their commits instead of queueing behind them.
   report:
     needs: [plan, check, e2e]
     if: always() && needs.plan.outputs.areas != '[]'
     runs-on: ubuntu-latest
-    # The evidence branch, the description and code scanning. Fork pull requests get a read
+    # The media branches, the description and code scanning. Fork pull requests get a read
     # only token whatever is asked here, so they get the job summary instead.
     permissions:
       contents: write
@@ -128,14 +157,14 @@ jobs:
           sarif_file: .xtask/review/review.sarif
           category: typewriter
       - if: github.event.pull_request.head.repo.full_name == github.repository
-        run: devenv shell -- cargo xtask evidence publish --pr ${{ github.event.number }} --sha "$HEAD_SHA"
+        run: devenv shell -- cargo xtask evidence publish --pr ${{ github.event.number }} --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != 'success') && '--jobs-failed' || '' }}
         env:
           GH_TOKEN: ${{ github.token }}
-      # Fork pull requests and dispatched runs, which have no description to write.
+      # Fork pull requests, pushes and dispatched runs, which have no description to write.
       - if: github.event.pull_request.head.repo.full_name != github.repository
-        run: devenv shell -- cargo xtask evidence summary --sha "$HEAD_SHA" >> "$GITHUB_STEP_SUMMARY"
+        run: devenv shell -- cargo xtask evidence summary --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != 'success') && '--jobs-failed' || '' }} >> "$GITHUB_STEP_SUMMARY"
 
-  # Skipped jobs pass only when the plan found nothing to check.
+  # Skipped jobs pass only when the plan found nothing to check, or for the commits, on a push.
   gate:
     needs: [plan, check, commits, e2e, report]
     if: always()
@@ -144,10 +173,11 @@ jobs:
       - env:
           PLAN: ${{ needs.plan.result }}
           COMMITS: ${{ needs.commits.result }}
+          COMMITS_EXPECTED: ${{ github.event_name == 'push' && 'skipped' || 'success' }}
           SUITES: ${{ needs.plan.outputs.areas == '[]' && 'skipped' || 'success' }}
           CHECK: ${{ needs.check.result }}
           E2E: ${{ needs.e2e.result }}
           REPORT: ${{ needs.report.result }}
         run: >-
-          test "$PLAN" = success && test "$COMMITS" = success
+          test "$PLAN" = success && test "$COMMITS" = "$COMMITS_EXPECTED"
           && test "$CHECK" = "$SUITES" && test "$E2E" = "$SUITES" && test "$REPORT" = "$SUITES"

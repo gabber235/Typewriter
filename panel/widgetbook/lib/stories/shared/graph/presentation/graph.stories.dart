@@ -1,6 +1,8 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 class SimpleDragData extends GraphDragData {
   const SimpleDragData({required this.graphId});
@@ -9,107 +11,84 @@ class SimpleDragData extends GraphDragData {
   final GraphIdentifier graphId;
 }
 
-@widgetbook.UseCase(name: "Drag lifecycle", type: Graph)
-Widget graphDragLifecycleUseCase(BuildContext context) {
-  return FakeApp(
-    child: HookBuilder(
-      builder: (context) {
-        final width = useState(500.0);
-        final visible = useState(true);
-        final generation = useState(0);
-        final accepted = useState(0);
-        return Column(
-          children: [
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: 200,
-                  child: Slider(
-                    value: width.value,
-                    min: 250,
-                    max: 600,
-                    label: "Viewport width",
-                    onChanged: (value) => width.value = value,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => visible.value = !visible.value,
-                  child: Text(
-                    visible.value ? "Remove source" : "Restore source",
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => generation.value++,
-                  child: const Text("Replace source"),
-                ),
-              ],
-            ),
-            Expanded(
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: width.value,
-                    child: Graph(
-                      data: GraphData(
-                        cellSize: 50,
-                        edges: const [],
-                        elements: [
-                          GraphElement(
-                            id: const GraphIdentifier("source"),
-                            x: 0,
-                            y: 0,
-                            width: 3,
-                            height: 2,
-                            builder: (_) => visible.value
-                                ? _SimpleNode(
-                                    key: ValueKey(generation.value),
-                                    text: "Drag me",
-                                    color: Colors.blue,
-                                    data: const SimpleDragData(
-                                      graphId: GraphIdentifier("source"),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                        ],
-                      ),
-                      onElementsMoved: (_) {},
-                    ),
-                  ),
-                  Expanded(
-                    child: DragTarget<GraphDragPayload<GraphDragData>>(
-                      onWillAcceptWithDetails: (details) =>
-                          details.data.canHover,
-                      onAcceptWithDetails: (details) {
-                        if (details.data.claim()) accepted.value++;
-                      },
-                      builder: (context, candidates, rejected) => HookBuilder(
-                        builder: (context) {
-                          useListenable(Listenable.merge(candidates));
-                          final hovering = candidates.nonNulls.any(
-                            (payload) => payload.canHover,
-                          );
-                          return ColoredBox(
-                            color: hovering ? Colors.green : Colors.grey,
-                            child: Center(
-                              child: Text(
-                                "Drop outside graph. Accepted: ${accepted.value}",
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+@widgetbook.UseCase(name: "Default", type: Graph)
+Widget graphUseCase(BuildContext context) {
+  final content = context.knobs.object.dropdown(
+    label: "Content",
+    options: const [
+      "Simple",
+      "Complex flow",
+      "Groups",
+      "Edge sides",
+      "Rich nodes",
+      "Grid",
+    ],
+    initialOption: "Complex flow",
+  );
+  final size = context.knobs.int.slider(
+    label: "Grid size",
+    description: "Nodes per row and column of the Grid content",
+    initialValue: 8,
+    min: 2,
+    max: 40,
+  );
+  final data = switch (content) {
+    "Simple" => _simpleGraph(),
+    "Groups" => _nestedGroups(),
+    "Edge sides" => _edgeOrientation(),
+    "Rich nodes" => _richContent(),
+    "Grid" => _largeGrid(size),
+    _ => _complexFlow(),
+  };
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      _EditableGraph(key: ValueKey((content, size)), data: data),
     ),
   );
+}
+
+/// A graph whose nodes keep where they are moved and how they are resized.
+class _EditableGraph extends HookWidget {
+  const _EditableGraph({required this.data, super.key});
+
+  final GraphData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final elements = useState(data.elements);
+    void place(GraphIdentifier id, GraphElement Function(GraphElement) change) {
+      elements.value = [
+        for (final element in elements.value)
+          if (element.id == id) change(element) else element,
+      ];
+    }
+
+    return SizedBox(
+      width: 1100,
+      height: 700,
+      child: Graph(
+        data: GraphData(
+          cellSize: data.cellSize,
+          elements: elements.value,
+          edges: data.edges,
+        ),
+        onElementsMoved: (changes) {
+          for (final change in changes) {
+            place(change.id, (it) => it.copyWith(x: change.x, y: change.y));
+          }
+        },
+        onElementsResized: (changes) {
+          for (final change in changes) {
+            place(
+              change.id,
+              (it) => it.copyWith(width: change.width, height: change.height),
+            );
+          }
+        },
+      ),
+    );
+  }
 }
 
 class _SimpleNode<D extends GraphDragData> extends HookWidget {
@@ -200,8 +179,7 @@ class _SimpleNode<D extends GraphDragData> extends HookWidget {
   }
 }
 
-@widgetbook.UseCase(name: "Simple Graph", type: Graph)
-Widget simpleGraphUseCase(BuildContext context) {
+GraphData _simpleGraph() {
   final data = GraphData(
     cellSize: 40.0,
     elements: [
@@ -244,20 +222,10 @@ Widget simpleGraphUseCase(BuildContext context) {
     ],
   );
 
-  return FakeApp(
-    child: SizedBox(
-      height: 400,
-      child: Graph(
-        onElementsMoved: (changes) {},
-        onElementsResized: (changes) {},
-        data: data,
-      ),
-    ),
-  );
+  return data;
 }
 
-@widgetbook.UseCase(name: "Complex Flow", type: Graph)
-Widget complexFlowGraphUseCase(BuildContext context) {
+GraphData _complexFlow() {
   final data = GraphData(
     cellSize: 50.0,
     elements: [
@@ -371,20 +339,10 @@ Widget complexFlowGraphUseCase(BuildContext context) {
     ],
   );
 
-  return FakeApp(
-    child: SizedBox(
-      height: 600,
-      child: Graph(
-        onElementsMoved: (changes) {},
-        onElementsResized: (changes) {},
-        data: data,
-      ),
-    ),
-  );
+  return data;
 }
 
-@widgetbook.UseCase(name: "Nested Groups", type: Graph)
-Widget nestedGroupsGraphUseCase(BuildContext context) {
+GraphData _nestedGroups() {
   final data = GraphData(
     cellSize: 40.0,
     elements: [
@@ -490,21 +448,14 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
     ],
   );
 
-  return FakeApp(
-    child: Graph(
-      onElementsMoved: (changes) {},
-      onElementsResized: (changes) {},
-      data: data,
-    ),
-  );
+  return data;
 }
 
-@widgetbook.UseCase(name: "Large Grid", type: Graph)
-Widget largeGridGraphUseCase(BuildContext context) {
+GraphData _largeGrid(int size) {
   final elements = <GraphElement>[];
   final edges = <GraphEdge>[];
 
-  final max = 100;
+  final max = size;
 
   for (var i = 0; i < max; i++) {
     for (var j = 0; j < max; j++) {
@@ -556,13 +507,10 @@ Widget largeGridGraphUseCase(BuildContext context) {
 
   final data = GraphData(cellSize: 25.0, elements: elements, edges: edges);
 
-  return FakeApp(
-    child: SizedBox(height: 600, child: Graph(data: data)),
-  );
+  return data;
 }
 
-@widgetbook.UseCase(name: "Edge Orientation Test", type: Graph)
-Widget edgeOrientationTestUseCase(BuildContext context) {
+GraphData _edgeOrientation() {
   final data = GraphData(
     cellSize: 60.0,
     elements: [
@@ -668,20 +616,10 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
     ],
   );
 
-  return FakeApp(
-    child: SizedBox(
-      height: 500,
-      child: Graph(
-        onElementsMoved: (changes) {},
-        onElementsResized: (changes) {},
-        data: data,
-      ),
-    ),
-  );
+  return data;
 }
 
-@widgetbook.UseCase(name: "Rich Content Nodes", type: Graph)
-Widget richContentGraphUseCase(BuildContext context) {
+GraphData _richContent() {
   final data = GraphData(
     cellSize: 60.0,
     elements: [
@@ -842,14 +780,5 @@ Widget richContentGraphUseCase(BuildContext context) {
     ],
   );
 
-  return FakeApp(
-    child: SizedBox(
-      height: 700,
-      child: Graph(
-        onElementsMoved: (changes) {},
-        onElementsResized: (changes) {},
-        data: data,
-      ),
-    ),
-  );
+  return data;
 }

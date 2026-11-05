@@ -67,6 +67,7 @@ extension on _ResourceCreationOperation {
     required String searchHint,
     required AuthoringDocument presentationDocument,
     required ResourceIssues presentationIssues,
+    bool choosesOwner = false,
   }) {
     // Capture before the popup route crosses the inherited widget boundary.
     final surfaceContext = PresentationEnvironment.hostOf(context);
@@ -83,7 +84,12 @@ extension on _ResourceCreationOperation {
         rowBuilder: (row) {
           final candidate = byId[row.result.id]!;
           final resource = switch (candidate.value) {
-            ExistingReference(:final reference) => reference.connection.target,
+            // An owner choice links the owner to the created resource, so
+            // its row shows the owner it would join.
+            ExistingReference(:final reference) =>
+              choosesOwner
+                  ? reference.connection.source.source
+                  : reference.connection.target,
             NewEmbeddedCounterpart(:final slot) => slot.containing.resource,
             NewResourceReference() => null,
           };

@@ -192,3 +192,34 @@ fn piped(command: &mut Command, input: Vec<u8>) -> Result<std::process::Output> 
         .with_context(|| format!("cannot write to {}", display(command)))?;
     Ok(output)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::test_support::{TempRoot, refusal};
+
+    #[test]
+    fn a_staged_generated_file_is_refused_by_name() {
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "*.g.dart\n");
+        root.write("notes.txt", "text\n");
+        root.write("model.g.dart", "text\n");
+        root.git(&["add", "--force", ".gitignore", "notes.txt", "model.g.dart"]);
+        let error = refusal(check(&root.ctx));
+        assert!(error.contains("ignored files are staged"));
+        assert!(error.contains("model.g.dart"));
+        assert!(!error.contains("notes.txt"));
+    }
+
+    #[test]
+    fn staged_files_nothing_ignores_pass() {
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "*.g.dart\n");
+        root.write("notes.txt", "text\n");
+        root.git(&["add", "--force", ".gitignore", "notes.txt"]);
+        assert!(check(&root.ctx).is_ok());
+    }
+}

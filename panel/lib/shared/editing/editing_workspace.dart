@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "editing_workspace.freezed.dart";
+
 enum EditGroupLifetime { reusable, operation }
 
 /// Owns the ordered local edit journal for one persistence boundary.
@@ -25,7 +27,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     EditorJitterSource? jitter,
     this.debounce = const Duration(milliseconds: 250),
   }) : jitter = jitter ?? RandomEditorJitterSource(),
-       _state = EditingState<S>(confirmed: initial, working: initial);
+       _state = EditingState<S>(confirmed: initial, working: initial) {
+    _inputs = _inbox.stream.listen(_receive);
+  }
 
   final EditModel<S, E> model;
   EditPersistence<S, E> persistence;
@@ -53,6 +57,17 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   var _notificationPending = false;
   Future<void>? _saving;
   S? _deferredConfirmed;
+  final _reviews = <EditGroupId, EditReview<EditGroupReview<S, E>>>{};
+
+  /// The latest read of each review; an older read finishing later is dropped.
+  final _reviewRuns = <EditGroupId, Object>{};
+
+  /// Inputs wait here for a later microtask, in arrival order: a caller may
+  /// be inside the provider notification that produced one, and what the
+  /// workspace starts in response (a save, a refresh) must not change that
+  /// provider again in the same frame.
+  final _inbox = StreamController<_Input<S>>();
+  late final StreamSubscription<_Input<S>> _inputs;
   bool get isPreparing => _preparations != 0;
   bool get hasPendingWork => isPreparing || _operations.isNotEmpty;
   int get revision => _revision;
@@ -187,7 +202,6 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         model.sameContract(confirmed, document) &&
         group != null &&
         (!group.phase.blocked ||
-            group.phase is EditGroupCommittedAwaitingRefresh<S> ||
             group.admission == EditWriteAdmission.allowWhileSubmitted &&
                 group.phase.submitted ||
             group.repair == EditRepairAdmission.acceptCorrections &&
@@ -395,10 +409,40 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     return result;
   }
 
+  /// Hands over what a saved state provider holds now: its value is an
+  /// observation, its error a failure, and loading changes nothing. Read the
+  /// workspace once it has admitted the input, not right after this call.
+  void observe(AsyncValue<S> next) {
+    if (next.value case final observation?) {
+      acceptConfirmed(observation);
+    } else if (next.error case final error?) {
+      acceptFailure(error);
+    }
+  }
+
+  /// Hands over a saved state observation; see [observe].
+  void acceptConfirmed(S observation) => _add(_Input.observed(observation));
+
+  /// Hands over a failure to read the saved values; see [observe].
+  void acceptFailure(Object error) => _add(_Input.failed(error));
+
+  /// Hands over that the editor contract is unavailable; see [observe].
+  void acceptUnavailable(Object error) => _add(_Input.unavailable(error));
+
+  void _add(_Input<S> input) {
+    if (!_closed) _inbox.add(input);
+  }
+
+  void _receive(_Input<S> input) => switch (input) {
+    _Observed(:final observation) => _admitConfirmed(observation),
+    _Failed(:final error) => _fail(error),
+    _Unavailable(:final error) => _markUnavailable(error),
+  };
+
   /// Admits a canonical observation and rebases pending local intent.
   /// Available observations received during a save are deferred until the
   /// active lane settles, preventing them from replacing its captured baseline.
-  void acceptConfirmed(S observation) {
+  void _admitConfirmed(S observation) {
     if (_closed) return;
     if (_saving != null && model.isAvailable(observation)) {
       _deferredConfirmed = observation;
@@ -419,7 +463,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       if (admission.kind == EditObservationKind.stale) return;
       if (admission.kind == EditObservationKind.inconsistent) {
         _state = _state.copyWith(confirmed: observation);
-        acceptFailure(
+        _fail(
           StateError(admission.message ?? "Inconsistent confirmed observation"),
         );
         for (final group in _groups.values) {
@@ -444,13 +488,13 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     _rebuild();
   }
 
-  void acceptUnavailable(Object error) {
+  void _markUnavailable(Object error) {
     if (_closed) return;
     _state = _state.copyWith(available: false, failure: error);
     _notify();
   }
 
-  void acceptFailure(Object error) {
+  void _fail(Object error) {
     if (_closed) return;
     _state = _state.copyWith(failure: error);
     _notify();
@@ -606,12 +650,18 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _saving = null;
       final deferred = _deferredConfirmed;
       _deferredConfirmed = null;
-      if (deferred != null) acceptConfirmed(deferred);
+      if (deferred != null) _admitConfirmed(deferred);
+      _readIfPending();
       retireIdleGroups();
     });
   }
 
   Future<void> _drain() async {
+    // Choose after the turn that started this drain, so every save
+    // requested in that turn joins it. [save] stores this drain in [_saving]
+    // only once _drain returns; a drain that chose at once and found
+    // nothing would leave its loop while a later save in the same turn
+    // joined it and was never sent.
     await Future<void>.value();
     while (!_closed) {
       final id = _requested.firstWhereOrNull(
@@ -640,7 +690,8 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         _saving = null;
         final deferred = _deferredConfirmed;
         _deferredConfirmed = null;
-        if (deferred != null) acceptConfirmed(deferred);
+        if (deferred != null) _admitConfirmed(deferred);
+        _readIfPending();
         final ready = _requested.firstWhereOrNull(
           (id) => _groups[id]?.phase is EditGroupDirty<S>,
         );
@@ -711,11 +762,40 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _ => null,
     };
     if (settlement == null) {
-      if (result case SubmissionNotSubmitted(:final message)) {
+      final submission = group.submission;
+      if (submission != null && submission.delivering) {
+        // Nothing answered yet, and the submission sends the same request
+        // again under the same key: the save is still on its way.
+        group.phase = const EditGroupPhase.saving();
+        _rebuild();
+        return;
+      }
+      if (result case SubmissionUndelivered()
+          when group.policy == EditorCommitPolicy.autosaveChanges) {
+        // Nothing received the first attempt, as while its Realm is away.
+        // The edit stays pending and is captured again, under a new key,
+        // until the Realm takes it.
+        group
+          ..frozen = {}
+          ..phase = const EditGroupPhase.dirty()
+          ..undelivered += 1
+          ..submission = null;
+        _rebuild();
+        _schedule(
+          group.id,
+          delay: MutationSubmission.redeliveryDelay(group.undelivered),
+        );
+        return;
+      } else if (result
+          case SubmissionNotSubmitted(:final message) ||
+              SubmissionUndelivered(:final message)) {
         group
           ..frozen = {}
           ..phase = EditGroupPhase.rejected(message, result);
       } else {
+        // An unknown outcome nothing resends on its own keeps its work and
+        // its evidence; an Apply offers Retry when the submission can
+        // replay, and nothing reads to guess whether it landed.
         group.phase = EditGroupPhase.uncertain(result);
       }
       if (!group.phase.submitted && group.submission?.sending != true) {
@@ -727,17 +807,6 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     switch (settlement) {
       case EditConfirmed(:final observation):
         _finishCommitted(group, observation);
-      case EditAccepted():
-        group.phase = const EditGroupPhase.committedAwaitingRefresh(null);
-        _rebuild();
-        try {
-          final observation = await persistence.refresh();
-          if (!_closed) _finishCommitted(group, observation);
-        } on Object catch (error) {
-          if (!_closed) {
-            group.phase = EditGroupPhase.committedAwaitingRefresh(error);
-          }
-        }
       case EditConflict(:final observation, :final evidence):
         group
           ..frozen = {}
@@ -808,12 +877,21 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     }
   }
 
-  void _finishCommitted(_LiveEditGroup<S> group, S observation) {
-    final latest = _deferredConfirmed ?? confirmed;
-    final admission = model.acceptObservation(latest, observation);
-    _deferredConfirmed = null;
-    if (admission.kind == EditObservationKind.inconsistent) {
-      final message = admission.message ?? "Inconsistent confirmed observation";
+  /// Retires [group]'s saved work and installs [observation], the state its
+  /// reply carried. Without one, that state is under a contract the request
+  /// could not read; the persistence's next observation brings it, and an
+  /// observation deferred during the save stays deferred for the lane's
+  /// release.
+  void _finishCommitted(_LiveEditGroup<S> group, S? observation) {
+    final deferred = _deferredConfirmed;
+    final latest = deferred ?? confirmed;
+    final admission = observation == null
+        ? null
+        : model.acceptObservation(latest, observation);
+    if (admission != null) _deferredConfirmed = null;
+    if (admission?.kind == EditObservationKind.inconsistent) {
+      final message =
+          admission?.message ?? "Inconsistent confirmed observation";
       final failure = EditPreparationFailure(message, [
         EditorDiagnostic(
           code: EditorDiagnosticCode.invalidValue,
@@ -832,41 +910,41 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       ..frozen = {}
       ..phase = const EditGroupPhase.dirty()
       ..attempts = 0
+      ..undelivered = 0
       ..submission = null;
-    _install(admission.observation);
+    if (admission != null) _install(admission.observation);
     _rebuild();
+    // Patch for unordered Realm observations: an observation deferred during
+    // this save may be newer than the reply the model took over it, so read
+    // once more after the lane frees. The save itself is settled.
+    if (deferred != null && admission?.kind == EditObservationKind.accepted) {
+      _readPending = true;
+    }
   }
 
-  /// Refreshes acknowledged state without replaying a submitted request.
-  /// Groups awaiting refresh release only their frozen operations after the
-  /// refresh succeeds. Later edits remain in the journal.
+  /// Set when a baseline read should run once the save lane frees; a patch
+  /// until Realm observations carry an order (Realm observation ids are
+  /// random, so the model cannot order a reply against an observation).
+  var _readPending = false;
+
+  /// Runs the baseline read [_readPending] asked for, as the lane frees.
+  void _readIfPending() {
+    if (!_readPending) return;
+    _readPending = false;
+    unawaited(refreshConfirmed());
+  }
+
+  /// Reads the saved values and admits them as the baseline. Settles no
+  /// save: only a reply does.
   Future<void> refreshConfirmed() async {
     if (_closed || _saving != null) return;
     try {
       final observation = await persistence.refresh();
-      if (_closed) return;
-      for (final group in _groups.values) {
-        if (group.phase is EditGroupCommittedAwaitingRefresh<S>) {
-          _operations.removeWhere(
-            (operation) => group.frozen.contains(operation.id),
-          );
-          group
-            ..frozen = {}
-            ..phase = const EditGroupPhase.dirty()
-            ..submission = null;
-        }
-      }
-      _install(observation);
-      for (final group in _groups.values) {
-        if (group.phase is EditGroupDirty<S> &&
-            !_requested.contains(group.id) &&
-            group.policy == EditorCommitPolicy.autosaveChanges &&
-            _operations.any((operation) => operation.group == group.id)) {
-          _schedule(group.id);
-        }
-      }
+      // A save may have claimed the lane while the read ran; then the read
+      // waits for it like any observation.
+      _admitConfirmed(observation);
     } on Object catch (error) {
-      acceptFailure(error);
+      _fail(error);
     }
   }
 
@@ -921,17 +999,16 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       !_closed &&
       (_groups[id]?.phase is EditGroupRejected<S> ||
           _groups[id]?.phase is EditGroupRepeatedContention<S> ||
-          _groups[id]?.phase is EditGroupCommittedAwaitingRefresh<S> ||
           (_groups[id]?.phase is EditGroupUncertain<S> &&
               (_groups[id]?.submission?.canReplay ?? false)));
   Future<void> retry(EditGroupId id) async {
     if (!canRetry(id)) throw StateError("This work cannot be retried");
     final group = _groups[id]!;
-    if (group.phase is EditGroupCommittedAwaitingRefresh<S>) {
-      return refreshConfirmed();
-    }
     if (group.phase is EditGroupUncertain<S>) {
-      await _settle(group, await group.submission!.run());
+      // Retry sends the same request, like every other Retry; the listener
+      // settles its result in the lane, and Retry returns once it has.
+      await group.submission!.run();
+      await group.settling;
       return;
     }
     group
@@ -939,6 +1016,152 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       ..attempts = 0;
     _rebuild();
     if (canSave(id)) await save(id);
+  }
+
+  /// The listener on each submission a group started, until the group moves
+  /// on from it or the workspace closes.
+  final _listened = <MutationSubmission<EditSettlement<S>>, VoidCallback>{};
+
+  /// Settles every result of [submission], whoever ran the attempt: a resend
+  /// the submission scheduled, the group's Retry, or Retry in the activity
+  /// journal or the Realm inbox.
+  void _listen(
+    _LiveEditGroup<S> group,
+    MutationSubmission<EditSettlement<S>> submission,
+  ) {
+    void received() {
+      if (_closed) return;
+      if (!identical(group.submission, submission)) {
+        _unlisten(submission);
+        return;
+      }
+      final result = submission.result;
+      if (submission.sending ||
+          result == null ||
+          identical(group.settled, result)) {
+        return;
+      }
+      group.settling = _settleInLane(group, submission, result);
+      unawaited(group.settling);
+    }
+
+    _listened[submission] = received;
+    submission.addListener(received);
+  }
+
+  void _unlisten(MutationSubmission<EditSettlement<S>> submission) {
+    if (_listened.remove(submission) case final listener?) {
+      submission.removeListener(listener);
+    }
+  }
+
+  /// Settles [result] once, then stops listening to [submission] when the
+  /// group moved on from it.
+  Future<void> _settleResult(
+    _LiveEditGroup<S> group,
+    MutationSubmission<EditSettlement<S>> submission,
+    SubmissionResult<EditSettlement<S>> result,
+  ) async {
+    group.settled = result;
+    await _settle(group, result);
+    if (!identical(group.submission, submission)) _unlisten(submission);
+  }
+
+  /// Settles a result the lane did not cover once the lane is free, so it
+  /// never installs a baseline or takes the observation deferred for another
+  /// group's save (see [_admitConfirmed]).
+  Future<void> _settleInLane(
+    _LiveEditGroup<S> group,
+    MutationSubmission<EditSettlement<S>> submission,
+    SubmissionResult<EditSettlement<S>> result,
+  ) async {
+    var lane = _claimLane();
+    while (lane == null) {
+      await _saving?.then((_) {}, onError: (Object _) {});
+      if (_closed) return;
+      lane = _claimLane();
+    }
+    try {
+      // While this waited, the group's own start may have settled the
+      // result, or a newer attempt may have begun or answered.
+      if (_closed ||
+          !identical(group.submission, submission) ||
+          submission.sending ||
+          !identical(submission.result, result) ||
+          identical(group.settled, result)) {
+        return;
+      }
+      await _settleResult(group, submission, result);
+      // Patch for unordered Realm observations (see [_finishCommitted]): this
+      // attempt was sent outside the lane, so an observation installed before
+      // its reply may be newer than the state the reply installed. Read once
+      // more when the lane frees.
+      if (result case SubmissionConfirmed(
+        value: EditConfirmed(observation: _?),
+      )) {
+        _readPending = true;
+      }
+    } finally {
+      lane.release();
+    }
+  }
+
+  /// The review of [id] while its group [EditGroupPhase.needsReview]. The
+  /// workspace starts it when the group enters such a phase; null otherwise.
+  EditReview<EditGroupReview<S, E>>? reviewOf(EditGroupId id) => _reviews[id];
+
+  /// Reads the saved values again for the review of [id]; the result shows
+  /// through [reviewOf].
+  Future<void> refreshReview(EditGroupId id) => _review(id);
+
+  /// Reviews every group that newly needs one and forgets the reviews of
+  /// groups that no longer do.
+  void _startReviews() {
+    _reviews.removeWhere(
+      (id, _) => !(_state.groups[id]?.phase.needsReview ?? false),
+    );
+    _reviewRuns.removeWhere((id, _) => !_reviews.containsKey(id));
+    for (final group in _state.groups.values) {
+      if (group.phase.needsReview && !_reviews.containsKey(group.id)) {
+        unawaited(_review(group.id, notify: false));
+      }
+    }
+  }
+
+  Future<void> _review(EditGroupId id, {bool notify = true}) async {
+    final run = Object();
+    if (_state.groups[id]?.phase.needsReview ?? false) {
+      _reviewRuns[id] = run;
+      _reviews[id] = EditReview.reading(_reviews[id]?.comparison);
+      if (notify) _notify();
+    }
+    EditReview<EditGroupReview<S, E>> result;
+    try {
+      inspectUnsubmitted(id);
+      late S observation;
+      for (var current = false; !current;) {
+        if (_saving case final saving?) {
+          await saving.then((_) {}, onError: (Object _) {});
+          continue;
+        }
+        observation = await persistence.refresh();
+        if (_closed) {
+          throw const EditPreparationFailure("The editing workspace closed");
+        }
+        // A save that started meanwhile moves the saved values again.
+        current = _saving == null;
+      }
+      _admitConfirmed(observation);
+      result = EditReview.ready(inspectUnsubmitted(id));
+    } on Object catch (error, stackTrace) {
+      result = EditReview.failed(error, stackTrace);
+    }
+    if (!_closed &&
+        _reviews.containsKey(id) &&
+        identical(_reviewRuns[id], run)) {
+      _reviews[id] = result;
+      _notify();
+    }
   }
 
   /// Captures only unsent work. Refresh externally before taking this snapshot.
@@ -1281,6 +1504,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _notificationPending = true;
       return;
     }
+    _startReviews();
     notifyListeners();
   }
 
@@ -1288,13 +1512,23 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   void dispose() {
     if (_closed) return;
     _closed = true;
+    // Inputs still queued are dropped; the workspace is gone.
+    unawaited(_inputs.cancel());
+    unawaited(_inbox.close());
     for (final task in _tasks.values) {
       task.cancel();
     }
     for (final interaction in _interactions.values.toList()) {
       interaction.close();
     }
+    for (final MapEntry(key: submission, value: listener)
+        in _listened.entries) {
+      submission.removeListener(listener);
+    }
+    _listened.clear();
     _tasks.clear();
+    _reviews.clear();
+    _reviewRuns.clear();
     super.dispose();
   }
 }
@@ -1320,10 +1554,23 @@ final class _LiveEditGroup<S> {
   final EditObservationAdmission observations;
   final EditCommitAdmission commits;
   int attempts = 0;
+
+  /// Consecutive saves nothing received; paces capturing the edit again.
+  int undelivered = 0;
   String label;
   EditGroupPhase<S> phase = const EditGroupPhase.dirty();
   Set<int> frozen = {};
   MutationSubmission<EditSettlement<S>>? submission;
+
+  /// The result of [submission] this group settled last. The group's own
+  /// start and its submission listener can both see one result; it settles
+  /// once.
+  SubmissionResult<EditSettlement<S>>? settled;
+
+  /// The submission listener's settling of the latest result it received.
+  /// It begins before the attempt's `run()` future completes, so
+  /// [EditingWorkspace.retry] awaits it after the attempt.
+  Future<void> settling = Future.value();
 }
 
 final class _EditOperation<S, E> {
@@ -1483,6 +1730,11 @@ final class _WorkspacePreparedApply<S, E> implements EditPreparedApply {
       submission = workspace.submissions.start(
         prepared,
         reservation: reservation,
+        // An autosave sends an unanswered save again on its own; an Apply
+        // waits for the user's Retry.
+        redelivery: group.policy == EditorCommitPolicy.autosaveChanges
+            ? workspace.scheduler
+            : null,
       );
     } on Object catch (error) {
       reservation.release();
@@ -1500,7 +1752,26 @@ final class _WorkspacePreparedApply<S, E> implements EditPreparedApply {
     group
       ..submission = submission
       ..lastSubmissionId = submission.id;
+    workspace._listen(group, submission);
+    // The lane covers this attempt from send to reply, so its result settles
+    // here, before the lane admits what it deferred; the listener would wait
+    // for this lane and then find the result settled. The results of later
+    // attempts reach the listener.
     final result = await submission.run();
-    if (!workspace._closed) await workspace._settle(group, result);
+    if (!workspace._closed) {
+      await workspace._settleResult(group, submission, result);
+    }
   }
+}
+
+/// One input from outside the workspace.
+@freezed
+sealed class _Input<S> with _$Input<S> {
+  const factory _Input.observed(S observation) = _Observed<S>;
+
+  /// The saved values could not be read.
+  const factory _Input.failed(Object error) = _Failed<S>;
+
+  /// The editor contract is unavailable, not only the saved values.
+  const factory _Input.unavailable(Object error) = _Unavailable<S>;
 }

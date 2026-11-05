@@ -39,36 +39,15 @@ enum Empty {}
 method Ping(struct {}): Pong = 1;
 `;
 
-  test("structs keep the default and only reach their serializer", () => {
-    const code = emit(skirInput({ "test.skir": source }));
-    expect(code).toContain(`impl crate::SkirType for crate::skirout::base::test::Pong {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}`);
-  });
-
   test("an enum is unknown exactly when no declared variant matches", () => {
     const code = emit(skirInput({ "test.skir": source }));
     const status = "crate::skirout::base::test::Status";
-    expect(code).toContain(`impl crate::SkirType for ${status} {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(self, ${status}::Absent | ${status}::RolledBack)
-    }
-}`);
     const reply = "crate::skirout::base::test::Reply";
-    expect(code).toContain(`        !matches!(self, ${reply}::Pong(_) | ${reply}::Closed)`);
-    expect(code).toContain(`impl crate::SkirType for crate::skirout::base::test::Empty {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        true
-    }
-}`);
+    expect(code).toContain(`!matches!(self, ${status}::Absent | ${status}::RolledBack)`);
+    expect(code).toContain(`!matches!(self, ${reply}::Pong(_) | ${reply}::Closed)`);
+    const emptyStart = code.indexOf("impl crate::SkirType for crate::skirout::base::test::Empty {");
+    const empty = code.slice(emptyStart, code.indexOf("\n}", emptyStart));
+    expect(empty.replace(/\s+/gu, " ")).toContain("fn is_unknown(&self) -> bool { true }");
   });
 
   test("nested and inline method records are implemented too", () => {

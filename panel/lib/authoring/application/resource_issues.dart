@@ -196,6 +196,13 @@ abstract class ResourceIssues with _$ResourceIssues {
       unavailable: publication is UnavailableRealmPublication,
     );
   }
+
+  /// The findings located on [resource], in the draft or saved.
+  List<ResourceIssue> about(skir.ResourceId resource) => findings
+      .where(
+        (finding) => finding.locations.any((at) => at.resource == resource),
+      )
+      .toList();
   List<ResourceIssue> currentFor(skir.ResourceId resource) => findings
       .where(
         (finding) =>

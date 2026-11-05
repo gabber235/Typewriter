@@ -12,6 +12,8 @@ final _orOperatorParser = [
   string("||"),
 ].toChoiceParser();
 
+final _whitespaceRun = RegExp(r"\s+");
+
 final _notOperatorParser = [
   string("NOT", ignoreCase: true),
   string("!"),
@@ -27,7 +29,7 @@ class QueryLexer {
   QueryLexer(List<QuerySelectorDefinition> selectors) {
     if (selectors.isEmpty) {
       parser = anyCharacter().star().flatten().map((input) {
-        final query = input.trim();
+        final query = input.trim().replaceAll(_whitespaceRun, " ");
         return QueryLexerResult(
           query: query,
           queryBefore: query,
@@ -99,7 +101,10 @@ class QueryLexer {
       );
     });
 
-    builder.group().postfix(builder.build().trim(), (first, second) {
+    // Adjacent operands form an implicit AND with the lowest precedence. The
+    // operator is the whitespace between them, so groups and negations reach
+    // the complete grammar through the builder's loopback.
+    builder.group().left(whitespace().star(), (first, _, second) {
       final range = first.range.expandTo(second.range);
       final raw = "${first.raw} ${second.raw}";
       return QueryLexerOperatorToken(
@@ -123,7 +128,10 @@ class QueryLexer {
                   list;
               final queryBefore = left?.trim() ?? "";
               final queryAfter = right?.trim() ?? "";
-              final query = [queryBefore, queryAfter].join(" ").trim();
+              final query = [
+                queryBefore,
+                queryAfter,
+              ].join(" ").trim().replaceAll(_whitespaceRun, " ");
               return QueryLexerResult(
                 query: query,
                 queryBefore: expression == null ? query : queryBefore,
@@ -170,7 +178,8 @@ class QueryLexerResult {
     this.expression,
   });
 
-  /// Non selector text remainder, normalized from queryBefore and queryAfter.
+  /// Non selector text remainder joined from queryBefore and queryAfter, with
+  /// every run of whitespace collapsed to one space.
   final String query;
 
   /// Non selector text that appears before the parsed expression.

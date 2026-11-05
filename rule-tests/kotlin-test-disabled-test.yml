@@ -1,0 +1,23 @@
+id: kotlin-test-disabled
+valid:
+  # Configuring a property run is not disabling it.
+  - |
+    val PayloadFramingPropertyTest by testSuite {
+        val config = PropTestConfig(seed = 5_235_178_041L, iterations = 300)
+        test("frames round trip") { checkAll(config, payloads) { it.roundTrips() } }
+    }
+  - |
+    @DisplayName("frames round trip")
+    fun framesRoundTrip() {}
+invalid:
+  - |
+    val NatsTransportOnBrokerTest by testSuite(testConfig = TestConfig.disable()) {
+        test("publishes") {}
+    }
+  - |
+    val NatsTransportOnBrokerTest by testSuite {
+        test("publishes", testConfig = TestConfig.disable()) {}
+    }
+  - |
+    @Disabled("flaky on CI")
+    fun publishes() {}

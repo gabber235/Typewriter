@@ -1,0 +1,124 @@
+id: dart-test-local-helper
+language: dart
+severity: error
+# Requirement: a panel test file holds only `main()` and its test cases, so every test reads as
+# its requirement and shared setup grows in one place.
+message: A test file declares a helper outside its test cases.
+note: Move the pump, setup, fake, driver action, finder, assertion or builder into panel/testkit/lib/src/ (core, doubles, traits, drivers, generators, support) or, for story tests only, panel/widgetbook/test/support/, for scenarios only, the Panel driver in panel/integration_test/support/, for host driven journeys only, panel/test_driver/support/, or inline test data as a value.
+files:
+  - panel/test/**
+  - panel/testkit/test/**
+  - panel/widgetbook/test/**
+  - panel/integration_test/**
+  - panel/test_driver/**
+ignores:
+  # Widgetbook's story test support is its test kit.
+  - panel/widgetbook/test/support/**
+  # The scenario runner and the Panel driver every scenario shares.
+  - panel/integration_test/support/**
+  # The journey runner, its page objects and its wait, which host driven journeys share.
+  - panel/test_driver/support/**
+utils:
+  # A function value. tree-sitter-dart reads an arrow body that ends in a call or member access,
+  # `(tester) => tester.pumpPanel([])`, as `((tester) => tester).pumpPanel([])`, so the function
+  # expression sits at the start of the receiver chain instead of at the top.
+  function-value:
+    any:
+      - kind: function_expression
+      - all:
+          - kind: call_expression
+          - has:
+              field: function
+              matches: function-value
+      - all:
+          - kind: member_expression
+          - has:
+              field: object
+              matches: function-value
+  # A test case: a call that names what it proves with a string and runs a body, the shape of
+  # test, testWidgets, scenario, faultScenario and journey. The string and the body are the call's
+  # own arguments, so a call that only wraps a case (`forEach`, `withClock`) is not a case itself.
+  # `group` has that shape too but only collects cases, so a helper inside it stays outside every
+  # case.
+  test-case:
+    all:
+      - kind: call_expression
+      - has:
+          field: arguments
+          all:
+            - has: { kind: string_literal }
+            - has: { matches: function-value }
+      - not:
+          has:
+            field: function
+            regex: ^group$
+rule:
+  any:
+    # Named types: fakes, fixtures, widgets, extensions.
+    - kind: class_declaration
+    - kind: mixin_declaration
+    - kind: enum_declaration
+    - kind: extension_declaration
+    - kind: extension_type_declaration
+    - kind: type_alias
+    # Top level getters and setters compute values the way a function does.
+    - kind: getter_declaration
+    - kind: setter_declaration
+    # Top level functions other than the entry point.
+    - all:
+        - kind: function_declaration
+        - not:
+            has:
+              field: signature
+              has:
+                field: name
+                regex: ^main$
+    # A top level value holding a function is a helper under another name.
+    - all:
+        - kind: top_level_variable_declaration
+        - has:
+            stopBy: end
+            kind: static_final_declaration
+            has:
+              field: value
+              matches: function-value
+    # Named local functions and function values in `main` or a group, outside every test case.
+    - all:
+        - any:
+            - kind: local_function_declaration
+            - all:
+                - kind: local_variable_declaration
+                - has:
+                    stopBy: end
+                    kind: initialized_variable_definition
+                    has:
+                      field: value
+                      matches: function-value
+        - not:
+            inside:
+              stopBy: end
+              matches: test-case
+---
+id: dart-test-helper-file
+language: dart
+severity: error
+# Requirement: shared test code lives in the panel test kit, where every test can find and reuse
+# it; a test folder holds only test files.
+message: A file in a test folder is not a test file.
+note: Move it into panel/testkit/lib/src/ and import it through package:typewriter_testkit/testing.dart.
+files:
+  - panel/test/**
+  - panel/testkit/test/**
+  - panel/widgetbook/test/**
+  - panel/integration_test/**
+ignores:
+  - panel/test/**/*_test.dart
+  - panel/testkit/test/**/*_test.dart
+  - panel/widgetbook/test/**/*_test.dart
+  - panel/integration_test/**/*_test.dart
+  # Widgetbook's story test support is its test kit.
+  - panel/widgetbook/test/support/**
+  # The scenario runner and the Panel driver every scenario shares.
+  - panel/integration_test/support/**
+rule:
+  kind: source_file

@@ -1,0 +1,38 @@
+id: rust-silent-fallback
+valid:
+  # The absent case kept in the type.
+  - |
+    fn committed(ctx: &Context, file: &Path) -> Option<String> {
+        let committed = committed_snapshot(ctx, file).ok();
+        committed
+    }
+  # The error propagated with context.
+  - |
+    fn token(headers: &HeaderMap) -> Result<String> {
+        let value = headers.get(AUTHORIZATION).context("no authorization header")?;
+        Ok(value.to_str()?.to_owned())
+    }
+  # A named binding keeps the value.
+  - |
+    fn hold(lock: &Path) -> Result<()> {
+        let _guard = HeavyLock::acquire(lock)?;
+        Ok(())
+    }
+invalid:
+  - |
+    fn bearer(headers: &HeaderMap) -> String {
+        headers
+            .get(AUTHORIZATION)
+            .and_then(|value| value.to_str().ok())
+            .map(str::to_owned)
+            .unwrap_or_default()
+    }
+  - |
+    fn stop(name: &str) {
+        Command::new("k3d").args(["cluster", "delete", name]).status().ok();
+    }
+  - |
+    fn clean(path: &Path) -> Result<()> {
+        let _ = fs::remove_file(path)?;
+        Ok(())
+    }

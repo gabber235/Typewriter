@@ -1,83 +1,30 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("does not register realm mode shortcuts while suspended", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      overrides: [
-        realmIdProvider.overrideWithValue(skir.recordId("service:test")),
-        realmConnectionProvider.overrideWith(
-          (ref) => Future.value(RealmConnectionState.offline),
-        ),
-      ],
-      child: const SizedBox(
-        width: 200,
-        height: 100,
-        child: TextField(autofocus: true),
-      ),
-    );
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(TextField)),
-    );
-    container
-        .read(currentInteractionModeProvider.notifier)
-        .setMode(_ShortcutMode());
-    await tester.pumpAndSettle();
+  final first = book("First");
 
-    expect(
-      container.read(actionShortcutsProvider),
-      isNot(contains("realm_test_action")),
-    );
-  });
+  for (final (state, traits, runs) in [
+    ("online", <Trait>[], 1),
+    ("offline", [realmHostStopped], 0),
+  ]) {
+    testWidgets("a mode shortcut ${runs == 0 ? "does nothing" : "runs"} "
+        "while the Realm is $state", (tester) async {
+      final mode = CountingMode();
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        realm(books: [first]),
+        ...traits,
+      ]);
+      panel.container
+          .read(currentInteractionModeProvider.notifier)
+          .setMode(mode);
+      await panel.settle();
 
-  testWidgets("registers realm mode shortcuts while online", (tester) async {
-    await tester.pumpTestApp(
-      overrides: [
-        realmIdProvider.overrideWithValue(skir.recordId("service:test")),
-        realmConnectionProvider.overrideWith(
-          (ref) => Future.value(RealmConnectionState.online),
-        ),
-      ],
-      child: const SizedBox(
-        width: 200,
-        height: 100,
-        child: TextField(autofocus: true),
-      ),
-    );
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(TextField)),
-    );
-    container
-        .read(currentInteractionModeProvider.notifier)
-        .setMode(_ShortcutMode());
-    await tester.pumpAndSettle();
+      await panel.press(LogicalKeyboardKey.keyR);
 
-    expect(
-      container.read(actionShortcutsProvider),
-      contains("realm_test_action"),
-    );
-  });
-}
-
-class _ShortcutMode extends InteractionMode with ModeShortcut {
-  @override
-  String get name => "Realm test";
-
-  @override
-  List<ActionShortcut> getShortcuts() => [
-    ActionShortcut(
-      id: "realm_test_action",
-      label: "Realm test action",
-      description: "Test realm shortcut suspension",
-      activators: [SingleActivator(LogicalKeyboardKey.keyR)],
-      priority: 0,
-      onInvoke: (_) {},
-    ),
-  ];
+      expect(mode.runs, runs);
+    });
+  }
 }

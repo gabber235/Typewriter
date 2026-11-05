@@ -1,0 +1,304 @@
+package com.typewritermc.services.libs.communicator.testing
+
+import com.typewritermc.services.libs.communicator.address.AddressPattern
+import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.contract.UnaryContract
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
+import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.MessageTransport
+import com.typewritermc.services.libs.communicator.transport.MessagingSystem
+import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
+import com.typewritermc.services.libs.communicator.transport.ReplyChannel
+import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
+import com.typewritermc.services.libs.communicator.transport.TransportSubscription
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Deterministic in memory transport for communicator and downstream tests.
+ *
+ * It records requests, publications, subscriptions, and closures, while configured failures and responders are
+ * consumed once. [deliver] broadcasts terminal deliveries to matching active subscriptions.
+ */
+class FakeMessageTransport(
+    override val system: MessagingSystem = MessagingSystem.of("fake"),
+    private val deliveryBufferCapacity: Int = Channel.UNLIMITED,
+) : MessageTransport,
+    AutoCloseable {
+    private val lock = Any()
+    private val recorded = mutableListOf<Action>()
+    private val subscriptions = mutableSetOf<FakeSubscription>()
+    private val responders = ArrayDeque<suspend (OutboundMessage, Duration) -> TransportResult<InboundMessage>>()
+    private val requestFailures = ArrayDeque<TransportError>()
+    private val publishFailures = ArrayDeque<TransportError>()
+    private val subscribeFailures = ArrayDeque<TransportError>()
+    private var closed = false
+    private val nextReplyChannel = AtomicLong()
+    private var subscriptionAttempts = 0
+    private val subscriptionFailuresAt = mutableMapOf<Int, TransportError>()
+    private val subscriptionCloseBehaviorsAt = mutableMapOf<Int, suspend () -> Unit>()
+    private val subscriptionOpenBehaviorsAt = mutableMapOf<Int, suspend () -> Unit>()
+
+    /** Immutable ordered snapshot of recorded actions. */
+    val actions: List<Action> get() = synchronized(lock) { recorded.toList() }
+
+    /** The messages published so far, in order. */
+    val publications: List<OutboundMessage> get() = actions.filterIsInstance<Action.Publish>().map { it.message }
+
+    /** The requests sent so far, in order. */
+    val requests: List<OutboundMessage> get() = actions.filterIsInstance<Action.Request>().map { it.message }
+
+    /** Number of subscriptions that have not been closed. */
+    val activeSubscriptionCount: Int get() = synchronized(lock) { subscriptions.size }
+
+    /** Configures a one-shot subscription failure at the one-based [attempt]. */
+    fun failSubscribeAt(
+        attempt: Int,
+        error: TransportError,
+    ) = synchronized(lock) {
+        require(attempt > 0) { "attempt must be positive" }
+        subscriptionFailuresAt[attempt] = error
+    }
+
+    /** Configures close behavior for the subscription created by the one-based [attempt]. */
+    fun closeSubscriptionWith(
+        attempt: Int,
+        behavior: suspend () -> Unit,
+    ) = synchronized(lock) {
+        require(attempt > 0) { "attempt must be positive" }
+        subscriptionCloseBehaviorsAt[attempt] = behavior
+    }
+
+    /**
+     * Runs [behavior] before the subscription of the one-based [attempt] is made, so a test can act while that
+     * subscription is still pending; a failure configured for the attempt applies once [behavior] returns.
+     */
+    fun openSubscriptionWith(
+        attempt: Int,
+        behavior: suspend () -> Unit,
+    ) = synchronized(lock) {
+        require(attempt > 0) { "attempt must be positive" }
+        subscriptionOpenBehaviorsAt[attempt] = behavior
+    }
+
+    /** Adds a one-shot request responder. */
+    fun respondWith(responder: suspend (OutboundMessage, Duration) -> TransportResult<InboundMessage>) =
+        synchronized(lock) {
+            responders.addLast(responder)
+        }
+
+    /** Answers the next request with [response], encoded as [contract] replies. */
+    fun <Response : Any> answer(
+        contract: UnaryContract<*, *, Response>,
+        response: Response,
+    ) = respondWith { request, _ -> TransportResult.Success(InboundMessage(request.address, contract.responseCodec.encode(response))) }
+
+    /** Configures the next request to return [error]. */
+    fun failNextRequest(error: TransportError) = synchronized(lock) { requestFailures.addLast(error) }
+
+    /** Configures the next publish to return [error]. */
+    fun failNextPublish(error: TransportError) = synchronized(lock) { publishFailures.addLast(error) }
+
+    /** Configures the next subscription to return [error]. */
+    fun failNextSubscribe(error: TransportError) = synchronized(lock) { subscribeFailures.addLast(error) }
+
+    /**
+     * Delivers [delivery] to every currently matching active subscription. Terminal deliveries close those
+     * subscriptions; a responder failure does not, as on a reply channel.
+     */
+    fun deliver(delivery: TransportDelivery) {
+        val targets =
+            synchronized(lock) {
+                subscriptions.filter { delivery !is TransportDelivery.Message || it.matches(delivery.message) }
+            }
+        targets.forEach { it.deliver(delivery) }
+    }
+
+    /**
+     * Delivers [payload] to [to] as a request that expects its reply on [replyTo], as a remote caller does, and returns
+     * the payload a route publishes to [replyTo]; fails when no reply arrives within [timeout].
+     */
+    suspend fun exchange(
+        to: MessageAddress,
+        payload: ByteArray,
+        replyTo: MessageAddress,
+        timeout: Duration = 2.seconds,
+    ): Payload {
+        deliver(TransportDelivery.Message(InboundMessage(address = to, payload = payload, replyTo = replyTo)))
+        return withTimeout(timeout) {
+            while (true) {
+                actions
+                    .filterIsInstance<Action.Publish>()
+                    .lastOrNull { it.message.address == replyTo }
+                    ?.let { return@withTimeout it.message.payload }
+                yield()
+            }
+            error("Reply wait ended unexpectedly")
+        }
+    }
+
+    override suspend fun openReplyChannel(): TransportResult<ReplyChannel> {
+        val address = MessageAddress.of("_FAKE_INBOX.${nextReplyChannel.incrementAndGet()}")
+        return when (val result = subscribe(AddressPattern.of(address.value))) {
+            is TransportResult.Failure -> result
+            is TransportResult.Success -> TransportResult.Success(FakeReplyChannel(address, result.value))
+        }
+    }
+
+    override suspend fun publish(message: OutboundMessage): TransportResult<Unit> =
+        synchronized(lock) {
+            ensureOpen()
+            recorded += Action.Publish(message.snapshot())
+            publishFailures.removeFirstOrNull()?.let { return TransportResult.Failure(it) }
+            TransportResult.Success(Unit)
+        }
+
+    override suspend fun request(
+        message: OutboundMessage,
+        timeout: Duration,
+        limits: TransportLimits?,
+    ): TransportResult<InboundMessage> {
+        val responder =
+            synchronized(lock) {
+                ensureOpen()
+                recorded += Action.Request(message.snapshot(), timeout)
+                requestFailures.removeFirstOrNull()?.let { return TransportResult.Failure(it) }
+                responders.removeFirstOrNull()
+            } ?: return TransportResult.Failure(TransportError.NoResponders())
+        return responder(message.snapshot(), timeout)
+    }
+
+    override suspend fun subscribe(
+        pattern: AddressPattern,
+        options: SubscriptionOptions,
+    ): TransportResult<TransportSubscription> {
+        synchronized(lock) { subscriptionOpenBehaviorsAt.remove(subscriptionAttempts + 1) }?.invoke()
+        return synchronized(lock) {
+            ensureOpen()
+            recorded += Action.Subscribe(pattern, options)
+            subscriptionAttempts++
+            subscriptionFailuresAt.remove(subscriptionAttempts)?.let { return TransportResult.Failure(it) }
+            subscribeFailures.removeFirstOrNull()?.let { return TransportResult.Failure(it) }
+            TransportResult.Success(
+                FakeSubscription(
+                    pattern,
+                    subscriptionCloseBehaviorsAt.remove(subscriptionAttempts),
+                ).also(subscriptions::add),
+            )
+        }
+    }
+
+    override fun close() {
+        val active =
+            synchronized(lock) {
+                if (closed) return
+                closed = true
+                recorded += Action.Close
+                subscriptions.toList()
+            }
+        active.forEach(FakeSubscription::closeImmediately)
+    }
+
+    private fun deregister(subscription: FakeSubscription) =
+        synchronized(lock) {
+            if (subscriptions.remove(subscription)) recorded += Action.SubscriptionClose(subscription.pattern)
+        }
+
+    private fun ensureOpen() = check(!closed) { "Fake transport is closed" }
+
+    /** An operation observed by the fake transport in the order it occurred. */
+    sealed interface Action {
+        data class Subscribe(
+            val pattern: AddressPattern,
+            val options: SubscriptionOptions,
+        ) : Action
+
+        data class Publish(
+            val message: OutboundMessage,
+        ) : Action
+
+        data class Request(
+            val message: OutboundMessage,
+            val timeout: Duration,
+        ) : Action
+
+        data class SubscriptionClose(
+            val pattern: AddressPattern,
+        ) : Action
+
+        data object Close : Action
+    }
+
+    private inner class FakeSubscription(
+        val pattern: AddressPattern,
+        private val closeBehavior: (suspend () -> Unit)?,
+    ) : TransportSubscription {
+        private val channel = Channel<TransportDelivery>(deliveryBufferCapacity)
+        private var closed = false
+        override val deliveries: Flow<TransportDelivery> = channel.receiveAsFlow()
+
+        fun deliver(delivery: TransportDelivery) {
+            val accepted =
+                synchronized(lock) {
+                    if (closed) {
+                        false
+                    } else {
+                        channel.trySend(delivery)
+                        if (delivery !is TransportDelivery.Message &&
+                            !(delivery is TransportDelivery.Failure && delivery.isResponderFailure)
+                        ) {
+                            closed = true
+                            channel.close()
+                            subscriptions.remove(this).also { if (it) recorded += Action.SubscriptionClose(pattern) }
+                        }
+                        true
+                    }
+                }
+            if (!accepted) return
+        }
+
+        fun matches(message: InboundMessage): Boolean {
+            val expected = pattern.value.split('.')
+            val actual = message.address.value.split('.')
+            return expected.size == actual.size &&
+                expected
+                    .zip(actual)
+                    .all { (left, right) -> left == "*" || left == right }
+        }
+
+        override suspend fun close() {
+            closeBehavior?.invoke()
+            closeImmediately()
+        }
+
+        fun closeImmediately() {
+            synchronized(lock) {
+                if (closed) return
+                closed = true
+                channel.close()
+            }
+            deregister(this)
+        }
+    }
+}
+
+private class FakeReplyChannel(
+    override val address: MessageAddress,
+    private val subscription: TransportSubscription,
+) : ReplyChannel {
+    override val deliveries: Flow<TransportDelivery> = subscription.deliveries
+
+    override suspend fun close() = subscription.close()
+}
+
+private fun OutboundMessage.snapshot() = copy()

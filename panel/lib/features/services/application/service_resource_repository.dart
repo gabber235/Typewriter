@@ -168,9 +168,12 @@ final class ServiceResourceRepository {
 
   /// Prepares a host configuration mutation against [revision].
   ///
-  /// The expected revision is an optimistic concurrency check. The prepared
-  /// commit declares the organization and host for mutation tracking. Callers
-  /// reconcile accepted configuration through the topology provider flow.
+  /// The expected revision is an optimistic concurrency check. The backend
+  /// answers a repeat whose configuration is already stored with the stored
+  /// state, so an unanswered send may be sent again byte for byte. The
+  /// prepared commit declares the organization and host for mutation
+  /// tracking. Callers reconcile accepted configuration through the topology
+  /// provider flow.
   PreparedCommit<skir.ConfigureServiceHostResponse> configure(
     skir.RecordId host,
     int revision,
@@ -188,6 +191,7 @@ final class ServiceResourceRepository {
         organizationId: organization,
       ),
       resources: {(organization, host)},
+      replay: SubmissionReplay.identicalRequest,
       label: "Apply Host configuration: ${host.id}",
       onResponse: _integrateConfiguration,
     );
@@ -213,7 +217,9 @@ final class ServiceResourceRepository {
   /// Prepares a service identity rename against [revision].
   ///
   /// The service revision protects identity edits from overwriting a newer
-  /// canonical value. Runtime topology is not changed by this operation.
+  /// canonical value. The backend answers a repeat whose name is already
+  /// stored with the stored service, so an unanswered send may be sent again
+  /// byte for byte. Runtime topology is not changed by this operation.
   PreparedCommit<skir.UpdateOrganizationServiceResponse> rename(
     skir.RecordId service,
     int revision,
@@ -231,6 +237,7 @@ final class ServiceResourceRepository {
         organizationId: organization,
       ),
       resources: {(organization, service)},
+      replay: SubmissionReplay.identicalRequest,
       label: "Update service: ${service.id}",
       onResponse: _integrateRename,
     );

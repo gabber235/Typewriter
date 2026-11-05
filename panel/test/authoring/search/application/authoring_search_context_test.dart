@@ -2,28 +2,28 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("owner routes", () {
     test("walk every owner above a type, nearest first", () {
-      final catalog = _document().catalog;
+      final catalog = _document.catalog;
 
       final routes = catalog
           .ownerRoutes(catalog.beginSelection(_element))
           .toList();
 
       expect(routes.map((route) => route.ownerRoot), [
-        fixtureResourceType("page"),
-        fixtureResourceType("book"),
-        fixtureResourceType("library"),
-        fixtureResourceType("realm"),
+        libraryType("page"),
+        libraryType("book"),
+        libraryType("library"),
+        libraryType("realm"),
       ]);
-      expect(routes[1].endpoints, [_elementPage, _pageBook(catalog)]);
+      expect(routes[1].endpoints, [_elementPage, _pageBook]);
     });
 
     test("a type owning its own type is reached once and the walk ends", () {
-      final catalog = _document().catalog;
+      final catalog = _document.catalog;
 
       final routes = catalog
           .ownerRoutes(catalog.beginSelection(_folder))
@@ -31,8 +31,8 @@ void main() {
 
       expect(routes.map((route) => route.ownerRoot).toSet(), {
         _folder,
-        fixtureResourceType("library"),
-        fixtureResourceType("realm"),
+        libraryType("library"),
+        libraryType("realm"),
       });
       expect(routes.where((route) => route.ownerRoot == _folder), hasLength(1));
       expect(
@@ -46,21 +46,16 @@ void main() {
 
   group("scope selectors", () {
     test("come from owner search keys, skipping the root and sections", () {
-      final catalog = _document().catalog;
+      final catalog = _document.catalog;
 
       final selectors = catalog
           .scopeSelectors(catalog.beginSelection(_element))
           .toList();
 
       expect(selectors.map((selector) => selector.key), ["page", "book"]);
-      expect(selectors.last.route.endpoints, [
-        _elementPage,
-        _pageBook(catalog),
-      ]);
+      expect(selectors.last.route.endpoints, [_elementPage, _pageBook]);
       expect(
-        catalog.scopeSelectors(
-          catalog.beginSelection(fixtureResourceType("book")),
-        ),
+        catalog.scopeSelectors(catalog.beginSelection(libraryType("book"))),
         isEmpty,
       );
     });
@@ -85,7 +80,7 @@ void main() {
     });
 
     test("an extension owner type gets its selector from its search key", () {
-      final catalog = _document().catalog;
+      final catalog = _document.catalog;
 
       final selectors = catalog
           .scopeSelectors(catalog.beginSelection(_scene))
@@ -104,7 +99,7 @@ void main() {
 
   group("creation context", () {
     test("scope values constrain the new resource to the named owners", () {
-      final document = _document();
+      final document = _document;
       final element = document.catalog.beginSelection(_element);
 
       final outcome = document.creationContext(element, {
@@ -119,7 +114,7 @@ void main() {
           targets: {_mainIntro.pageId},
         ),
         CreationReferenceConstraint(
-          route: [_elementPage, _pageBook(document.catalog)],
+          route: [_elementPage, _pageBook],
           targets: {_mainStory.bookId},
         ),
       ]);
@@ -127,8 +122,8 @@ void main() {
     });
 
     test("a value naming several resources leaves a choice among them", () {
-      final document = _document();
-      final page = document.catalog.beginSelection(fixtureResourceType("page"));
+      final document = _document;
+      final page = document.catalog.beginSelection(libraryType("page"));
 
       final resolutions = document.resolveScopes(page, {"book": "Intro"});
       final outcome = document.creationContext(page, {"book": "Intro"});
@@ -138,16 +133,14 @@ void main() {
         _introOne.bookId,
         _introTwo.bookId,
       });
-      expect(
-        (outcome as CreationScoped).context.allowedTargets(
-          _pageBook(document.catalog),
-        ),
-        {_introOne.bookId, _introTwo.bookId},
-      );
+      expect((outcome as CreationScoped).context.allowedTargets(_pageBook), {
+        _introOne.bookId,
+        _introTwo.bookId,
+      });
     });
 
     test("a value naming no resource is reported, not thrown", () {
-      final document = _document();
+      final document = _document;
       final element = document.catalog.beginSelection(_element);
 
       final outcome = document.creationContext(element, {
@@ -161,7 +154,7 @@ void main() {
     });
 
     test("a page value narrows to pages inside the named Book", () {
-      final document = _document();
+      final document = _document;
       final element = document.catalog.beginSelection(_element);
 
       expect(
@@ -191,7 +184,8 @@ void main() {
     });
   });
 
-  test("the query's selector values feed the creation context", () {
+  test("a selector given twice is ambiguous and leaves the creation context "
+      "unscoped by it", () {
     final query = SearchQueryContext(
       normalizedQuery: "",
       selectors: const [
@@ -202,25 +196,21 @@ void main() {
     );
 
     expect(query.selectorValues, {"book": "Main"});
+    expect(query.selectorValues.containsKey("page"), isFalse);
   });
 }
 
-final _element = _typeId("Element");
-final _folder = _typeId("Folder");
-final _act = _typeId("Act");
-final _scene = _typeId("Scene");
+final _element = testTypeId("Element");
+final _folder = testTypeId("Folder");
+final _act = testTypeId("Act");
+final _scene = testTypeId("Scene");
 final _elementPage = skir.EndpointId(value: "test.page.elements:second");
 
-skir.TypeDefinitionId _typeId(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
-  revision: 1,
-);
-
-skir.EndpointId _pageBook(CheckedEditorCatalog catalog) => catalog
-    .ownershipRelations
+/// The endpoint through which a Page reaches the Book that owns it.
+final _pageBook = _document.catalog.ownershipRelations
     .singleWhere(
       (ownership) =>
-          ownership.member.resource.definition == fixtureResourceType("page"),
+          ownership.member.resource.definition == libraryType("page"),
     )
     .member
     .id;
@@ -262,70 +252,54 @@ final _otherIntro = Page(
 
 /// The fixture library extended with types an extension could add: elements
 /// owned by pages, Folders holding Folders, and Acts holding Scenes.
-AuthoringDocument _document() {
-  final document = fixtureAuthoringDocument(
-    realm: true,
-    books: [_mainStory, _otherBook, _introOne, _introTwo],
-    pages: [_mainIntro, _otherIntro],
-  );
-  final library = fixtureResourceType("library");
-  final snapshot = document.catalog.snapshot.toMutable()
-    ..types = [
-      ...document.catalog.snapshot.types,
-      _published(_element, "element"),
-      _published(_folder, "folder"),
-      _published(_act, "act"),
-      _published(_scene, "scene"),
-    ]
-    ..relations = [
-      ...document.catalog.snapshot.relations,
-      _ownership("test.page.elements", fixtureResourceType("page"), _element),
-      _ownership("test.library.folders", library, _folder),
-      _ownership("test.folder.folders", _folder, _folder),
-      _ownership("test.library.acts", library, _act),
-      _ownership("test.act.scenes", _act, _scene),
-    ];
-  return document.copyWith(catalog: CheckedEditorCatalog(snapshot.toFrozen()));
-}
-
-skir.PublishedType _published(skir.TypeDefinitionId id, String searchKey) =>
-    skir.PublishedType(
-      definition: skir.TypeDefinition(
-        id: id,
-        parameters: const [],
-        representation: skir.RepresentationTemplate.createRecord(
-          abstract_: false,
-          fields: const [],
+final _document =
+    realmDocument(
+      books: [_mainStory, _otherBook, _introOne, _introTwo],
+      pages: [_mainIntro, _otherIntro],
+    ).withCatalogEntries(
+      types: [
+        declaredRecord(
+          _element,
+          searchKey: "element",
+          display: defaultTypeDisplay("element"),
         ),
-        parents: const [],
-      ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: const [],
-      ancestorTemplates: const [],
-      display: defaultTypeDisplay(searchKey),
-      searchKey: searchKey,
-      placementField: null,
+        declaredRecord(
+          _folder,
+          searchKey: "folder",
+          display: defaultTypeDisplay("folder"),
+        ),
+        declaredRecord(
+          _act,
+          searchKey: "act",
+          display: defaultTypeDisplay("act"),
+        ),
+        declaredRecord(
+          _scene,
+          searchKey: "scene",
+          display: defaultTypeDisplay("scene"),
+        ),
+      ],
+      relations: [
+        testOwnershipRelation(
+          "test.page.elements",
+          owner: libraryType("page"),
+          member: _element,
+        ),
+        testOwnershipRelation(
+          "test.library.folders",
+          owner: libraryType("library"),
+          member: _folder,
+        ),
+        testOwnershipRelation(
+          "test.folder.folders",
+          owner: _folder,
+          member: _folder,
+        ),
+        testOwnershipRelation(
+          "test.library.acts",
+          owner: libraryType("library"),
+          member: _act,
+        ),
+        testOwnershipRelation("test.act.scenes", owner: _act, member: _scene),
+      ],
     );
-
-skir.RelationContract _ownership(
-  String id,
-  skir.TypeDefinitionId owner,
-  skir.TypeDefinitionId member,
-) => skir.RelationContract(
-  id: skir.RelationId(value: id),
-  first: skir.EndpointDefinition(
-    id: skir.EndpointId(value: "$id:first"),
-    slot: skir.EndpointSlot.first,
-    resource: skir.NamedTypeTemplate(definition: owner, arguments: const []),
-    cardinality: skir.EndpointCardinality.one,
-    onDelete: skir.RelationDeletePolicy.cascade,
-  ),
-  second: skir.EndpointDefinition(
-    id: skir.EndpointId(value: "$id:second"),
-    slot: skir.EndpointSlot.second,
-    resource: skir.NamedTypeTemplate(definition: member, arguments: const []),
-    cardinality: skir.EndpointCardinality.many,
-    onDelete: skir.RelationDeletePolicy.clear,
-  ),
-  families: [skir.resourceOwnershipFamily],
-);

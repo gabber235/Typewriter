@@ -33,7 +33,7 @@ Set<(MembershipRemovalKind, skir.RecordId)> pendingMembershipRemovals(Ref ref) {
 /// presentation; server commands still decide whether a request or code is valid.
 @riverpod
 DateTime membershipDisplayTime(Ref ref) {
-  return DateTime.now();
+  return clock.now();
 }
 
 @riverpod

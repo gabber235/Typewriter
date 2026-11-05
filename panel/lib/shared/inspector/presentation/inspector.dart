@@ -37,6 +37,9 @@ class InspectorScaffold extends HookConsumerWidget {
     super.key,
   });
 
+  /// The label assistive technology reads for the inspector pane.
+  static const semanticsLabel = "Inspector";
+
   final EdgeInsets margin;
 
   final Widget child;
@@ -85,10 +88,13 @@ class MobileInspector extends HookConsumerWidget {
     final hasSelection = ref.watch(hasInspectableSelectionProvider);
     final controller = useDraggableScrollableController();
 
-    // Ensure that after a resize the modal will show up.
+    // Ensure that after a resize the modal will show up. Reads the selection
+    // when it fires: one captured at mount would close a sheet the user
+    // opened in the meantime, and closing clears the selection.
     useTimer(
       200.ms,
-      (timer) => _runAnimation(hasSelection, controller),
+      (timer) =>
+          _runAnimation(ref.read(hasInspectableSelectionProvider), controller),
       repeat: false,
     );
 
@@ -145,32 +151,37 @@ class MobileInspector extends HookConsumerWidget {
             builder: (context, scrollController) {
               final surfaceColor = Theme.of(context).colorScheme.surface;
 
-              return Surface(
-                color: surfaceColor,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: context.shapes.mediumBorderRadius,
-                  ),
-                  child: Section(
-                    child: CustomScrollView(
-                      controller: scrollController,
-                      slivers: [
-                        const SliverPersistentHeader(
-                          pinned: true,
-                          delegate: DraggableSheetHandleDelegate(),
-                        ),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              left: context.spacing.space3,
-                              right: context.spacing.space3,
-                              bottom: context.spacing.space3,
-                            ),
-                            child: _InspectorContent(),
+              return Semantics(
+                label: InspectorScaffold.semanticsLabel,
+                container: true,
+                explicitChildNodes: true,
+                child: Surface(
+                  color: surfaceColor,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: context.shapes.mediumBorderRadius,
+                    ),
+                    child: Section(
+                      child: CustomScrollView(
+                        controller: scrollController,
+                        slivers: [
+                          const SliverPersistentHeader(
+                            pinned: true,
+                            delegate: DraggableSheetHandleDelegate(),
                           ),
-                        ),
-                      ],
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                left: context.spacing.space3,
+                                right: context.spacing.space3,
+                                bottom: context.spacing.space3,
+                              ),
+                              child: _InspectorContent(),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -326,33 +337,40 @@ class DesktopInspector extends HookConsumerWidget {
                   padding: hasSelection
                       ? EdgeInsets.only(left: margin.left, right: margin.right)
                       : EdgeInsets.zero,
-                  child: Pane(
-                    id: "inspector",
-                    borderRadius: context.shapes.largeBorderRadius,
-                    enabled: hasSelection,
-                    margin: null,
-                    child: Section(
-                      margin: EdgeInsets.zero,
-                      child: AnimatedContainer(
-                        duration: isDragging.value
-                            ? 0.ms
-                            : hasSelection
-                            ? 1000.ms
-                            : 750.ms,
-                        curve: hasSelection
-                            ? ElasticOutCurve(0.9)
-                            : Curves.fastEaseInToSlowEaseOut,
-                        width: hasSelection ? effectiveSize : 0,
-                        height: double.infinity,
-                        child: ClipRect(
-                          child: OverflowBox(
-                            alignment: Alignment.centerLeft,
-                            minWidth: effectiveSize,
-                            maxWidth: effectiveSize,
-                            child: SingleChildScrollView(
-                              child: Padding(
-                                padding: EdgeInsets.all(context.spacing.space3),
-                                child: _InspectorContent(),
+                  child: Semantics(
+                    label: InspectorScaffold.semanticsLabel,
+                    container: true,
+                    explicitChildNodes: true,
+                    child: Pane(
+                      id: "inspector",
+                      borderRadius: context.shapes.largeBorderRadius,
+                      enabled: hasSelection,
+                      margin: null,
+                      child: Section(
+                        margin: EdgeInsets.zero,
+                        child: AnimatedContainer(
+                          duration: isDragging.value
+                              ? 0.ms
+                              : hasSelection
+                              ? 1000.ms
+                              : 750.ms,
+                          curve: hasSelection
+                              ? ElasticOutCurve(0.9)
+                              : Curves.fastEaseInToSlowEaseOut,
+                          width: hasSelection ? effectiveSize : 0,
+                          height: double.infinity,
+                          child: ClipRect(
+                            child: OverflowBox(
+                              alignment: Alignment.centerLeft,
+                              minWidth: effectiveSize,
+                              maxWidth: effectiveSize,
+                              child: SingleChildScrollView(
+                                child: Padding(
+                                  padding: EdgeInsets.all(
+                                    context.spacing.space3,
+                                  ),
+                                  child: _InspectorContent(),
+                                ),
                               ),
                             ),
                           ),

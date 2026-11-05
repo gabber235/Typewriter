@@ -153,26 +153,20 @@ final class ResourceCreationFixture {
     String? parent,
   }) {
     _types.add(
-      skir.PublishedType(
-        searchKey: null,
-        placementField: fields.any((field) => field.key == "placement")
-            ? editorRootPath.field("placement")
-            : null,
-        definition: skir.TypeDefinition(
-          id: _id(name),
-          parameters: const [],
-          representation: representation,
-          parents: [if (parent != null) _template(parent)],
-        ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: fields,
-        ancestorTemplates: [if (parent != null) _template(parent)],
+      publishedType(
+        _id(name),
+        representation: representation,
+        parents: [if (parent != null) _template(parent)],
+        fields: fields,
         display: skir.TypeDisplay(
           name: name,
           description: "",
           icon: skir.Icon.wrapIconify(""),
           color: skir.Color(argb: 0xff607d8b.toSigned(32)),
         ),
+        placementField: fields.any((field) => field.key == "placement")
+            ? editorRootPath.field("placement")
+            : null,
       ),
     );
   }
@@ -313,45 +307,27 @@ final class ResourceCreationFixture {
     if (!_store) return (types: types, relations: const [], bindings: const []);
     final relations = <skir.RelationContract>[];
     final bindings = <skir.EndpointBindingTemplate>[];
-    final fields = <String, skir.TypeTemplate>{};
+    final fields = <String, skir.TypeTemplate>{"name": _text};
     for (final name in _resources) {
       final owner = skir.EndpointId(value: "owns$name:first");
       types
         ..add(
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            definition: skir.TypeDefinition(
-              id: _id("Owned$name"),
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createLink(
-                endpoint: owner,
-                target: _named(name),
-              ),
-              parents: const [],
+          publishedType(
+            _id("Owned$name"),
+            representation: skir.RepresentationTemplate.createLink(
+              endpoint: owner,
+              target: _named(name),
             ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: const [],
             display: defaultTypeDisplay("Owned $name"),
           ),
         )
         ..add(
-          skir.PublishedType(
-            searchKey: null,
-            placementField: null,
-            definition: skir.TypeDefinition(
-              id: _id("Owned${name}List"),
-              parameters: const [],
-              representation: skir.RepresentationTemplate.createSequence(
-                item: _named("Owned$name"),
-                kind: skir.CollectionKind.list,
-              ),
-              parents: const [],
+          publishedType(
+            _id("Owned${name}List"),
+            representation: skir.RepresentationTemplate.createSequence(
+              item: _named("Owned$name"),
+              kind: skir.CollectionKind.list,
             ),
-            status: skir.DeclarationStatus.ready,
-            effectiveFields: const [],
-            ancestorTemplates: const [],
             display: defaultTypeDisplay("Owned $name list"),
           ),
         );
@@ -393,31 +369,24 @@ final class ResourceCreationFixture {
       );
     }
     types.add(
-      skir.PublishedType(
-        searchKey: null,
-        placementField: null,
-        definition: skir.TypeDefinition(
-          id: _id("Store"),
-          parameters: const [],
-          representation: skir.RepresentationTemplate.createRecord(
-            abstract_: false,
-            fields: [
-              for (final field in fields.entries)
-                skir.FieldDeclaration(
-                  owner: skir.FieldOwner(
-                    definition: _id("Store"),
-                    name: field.key,
-                  ),
-                  type: field.value,
-                  overrides: const [],
-                  hasConstructorDefault: false,
+      publishedType(
+        _id("Store"),
+        representation: skir.RepresentationTemplate.createRecord(
+          abstract_: false,
+          fields: [
+            for (final field in fields.entries)
+              skir.FieldDeclaration(
+                owner: skir.FieldOwner(
+                  definition: _id("Store"),
+                  name: field.key,
                 ),
-            ],
-          ),
-          parents: const [],
+                type: field.value,
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+          ],
         ),
-        status: skir.DeclarationStatus.ready,
-        effectiveFields: [
+        fields: [
           for (final field in fields.entries)
             skir.EffectiveFieldTemplate(
               key: field.key,
@@ -426,7 +395,6 @@ final class ResourceCreationFixture {
               rules: const [],
             ),
         ],
-        ancestorTemplates: const [],
         display: defaultTypeDisplay("Store"),
       ),
     );
@@ -435,8 +403,7 @@ final class ResourceCreationFixture {
 
   /// The record [name] starts with, prepared like any creation.
   skir.AuthoringRecord _prepared(AuthoringDocument document, String name) {
-    final step = fixturePreparationStep(
-      document,
+    final step = document.prepareStep(
       skir.PreparationOperation.createStart(
         catalog: generation,
         target: skir.PreparationTarget.wrapRecord(_selection(name)),
@@ -464,7 +431,24 @@ final class ResourceCreationFixture {
     final realm = _realm();
     final catalog = CheckedEditorCatalog(
       skir.EditorCatalog(
-        resourceDisplays: const [],
+        // Resources read their name, so a test tells them apart as their
+        // user does.
+        resourceDisplays: [
+          for (final (type, field) in [
+            if (_store) ("Store", "name"),
+            ("Book", "title"),
+            ("Page", "name"),
+          ])
+            skir.ResourceDisplayFormulas(
+              target: skir.ResourceTarget.wrapType(_named(type)),
+              label: skir.ExpressionNode.createInput(
+                binding: configuredValueBindingId,
+                path: editorRootPath.field(field),
+              ),
+              accent: skir.ExpressionNode.wrapLiteral(skir.DataValue.null_),
+              icon: skir.ExpressionNode.wrapLiteral(skir.DataValue.null_),
+            ),
+        ],
         resourceOperations: const [],
         generation: generation,
         types: [..._types, ...realm.types],
@@ -490,13 +474,12 @@ final class ResourceCreationFixture {
     if (_store) {
       document = (AuthoringEdit.fromDocument(
         document,
-      )..create(store, _prepared(document, "Store"))).toDocument();
+      )..create(store, _namedStore(document, store))).toDocument();
     }
     if (existing) {
       final edit = AuthoringEdit.fromDocument(document);
       for (final (id, name) in [(book, "Book"), (page, "Page")]) {
-        final step = fixturePreparationStep(
-          document,
+        final step = document.prepareStep(
           skir.PreparationOperation.createStart(
             catalog: generation,
             target: skir.PreparationTarget.wrapRecord(_selection(name)),
@@ -509,7 +492,13 @@ final class ResourceCreationFixture {
             value.content,
           _ => throw StateError("Fixture cannot initialize $name"),
         };
-        edit.create(id, (content as skir.PreparedContent_recordWrapper).value);
+        edit.create(
+          id,
+          (content as skir.PreparedContent_recordWrapper).value.named(
+            name == "Book" ? "title" : "name",
+            id,
+          ),
+        );
       }
       final source = skir.ValueLocation(
         resource: page,
@@ -533,17 +522,24 @@ final class ResourceCreationFixture {
     return document;
   }
 
-  /// [document] with another empty store for each of [stores].
+  /// [document] with another empty store for each of [stores], each named
+  /// by its id.
   AuthoringDocument withStores(
     AuthoringDocument document,
     Iterable<skir.ResourceId> stores,
   ) {
     final edit = AuthoringEdit.fromDocument(document);
     for (final id in stores) {
-      edit.create(id, _prepared(document, "Store"));
+      edit.create(id, _namedStore(document, id));
     }
     return edit.toDocument();
   }
+
+  /// An empty store named by its [id].
+  skir.AuthoringRecord _namedStore(
+    AuthoringDocument document,
+    skir.ResourceId id,
+  ) => _prepared(document, "Store").named("name", id);
 
   /// [document] with an unlinked Book for each of [books].
   AuthoringDocument withBooks(
@@ -552,8 +548,31 @@ final class ResourceCreationFixture {
   ) {
     final edit = AuthoringEdit.fromDocument(document);
     for (final id in books) {
-      edit.create(id, _prepared(document, "Book"));
+      edit.create(id, _prepared(document, "Book").named("title", id));
     }
     return edit.toDocument();
   }
+
+  /// The links of [document] besides the store ownership every creation of
+  /// this fixture adds.
+  Iterable<skir.LinkProjection> authoredLinks(AuthoringDocument document) =>
+      document.links.where((link) => !link.contract.value.startsWith("owns"));
+}
+
+extension on skir.AuthoringRecord {
+  /// This record with its [field] reading the value of [id], the label a
+  /// fixture resource shows.
+  skir.AuthoringRecord named(String field, skir.ResourceId id) =>
+      skir.AuthoringRecord(
+        configuration: configuration,
+        fields: [
+          for (final value in fields)
+            value.name == field
+                ? skir.FieldValue(
+                    name: field,
+                    value: skir.DataValue.wrapStringValue(id.value),
+                  )
+                : value,
+        ],
+      );
 }

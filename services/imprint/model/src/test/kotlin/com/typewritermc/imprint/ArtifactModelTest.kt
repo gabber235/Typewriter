@@ -1,5 +1,6 @@
 package com.typewritermc.imprint
 
+import com.typewritermc.imprint.testing.sampleManifests
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -11,7 +12,11 @@ val ArtifactModelTest by testSuite {
 
         constraint.accepts(ArtifactVersion("1.14.8")) shouldBe true
         constraint.accepts(ArtifactVersion("1.0.3")) shouldBe false
-        constraint.mavenRange shouldBe "[1.3.0,2.0.0-0)"
+    }
+
+    test("a caret constraint resolves Gradle dependencies up to, not including, the next major prerelease") {
+        // The Gradle plugin hands this range to dependency resolution, so it is a contract with Gradle.
+        VersionConstraint("^1.3").mavenRange shouldBe "[1.3.0,2.0.0-0)"
     }
 
     test("tilde and partial constraints stay within one minor line") {
@@ -33,17 +38,14 @@ val ArtifactModelTest by testSuite {
         VersionConstraint("^1.3").intersect(VersionConstraint(">=1.14")) shouldNotBe null
     }
 
-    test("canonical manifest codec preserves sealed artifact variants") {
-        val manifest =
-            CapabilityManifest(
-                id = ArtifactId("typewritermc:items"),
-                version = ArtifactVersion("1.2.3"),
-                directRequirements = emptyList(),
-                resolvedCapabilities = emptyList(),
-                contributions = emptyList(),
-            )
+    sampleManifests().forEach { manifest ->
+        test("the manifest codec preserves every field of a populated ${manifest::class.simpleName}") {
+            val decoded = ImprintManifestCodec.decode(ImprintManifestCodec.encode(manifest))
 
-        ImprintManifestCodec.decode(ImprintManifestCodec.encode(manifest)) shouldBe manifest
+            decoded::class shouldBe manifest::class
+            // Contribution payloads are byte arrays, so equal manifests are compared by their canonical encoding.
+            ImprintManifestCodec.encode(decoded).toList() shouldBe ImprintManifestCodec.encode(manifest).toList()
+        }
     }
 
     test("hyphenated contribution identities survive the manifest codec") {
@@ -76,25 +78,6 @@ val ArtifactModelTest by testSuite {
             shouldThrow<IllegalArgumentException> { ContributionName(name) }
         }
         shouldThrow<IllegalArgumentException> { ProducerId("core/types") }
-    }
-
-    test("hosted manifest codec preserves its runtime entrypoint") {
-        val manifest =
-            RealmManifest(
-                id = ArtifactId("typewritermc:realm"),
-                version = ArtifactVersion("1.0.0"),
-                hostApi = VersionConstraint("^1"),
-                runtimeEntrypointClass = "example.RealmEntrypoint",
-                contributions = emptyList(),
-            )
-
-        ImprintManifestCodec.decode(ImprintManifestCodec.encode(manifest)) shouldBe manifest
-    }
-
-    test("runtime entrypoint metadata codec preserves all generated classes") {
-        val metadata = HostedRuntimeEntrypointMetadata(listOf("example.First", "example.Second"))
-
-        HostedRuntimeEntrypointMetadataCodec.decode(HostedRuntimeEntrypointMetadataCodec.encode(metadata)) shouldBe metadata
     }
 
     test("hosted manifests require a runtime entrypoint") {

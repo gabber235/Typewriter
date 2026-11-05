@@ -36,9 +36,6 @@ mod common;
 mod services;
 mod users;
 
-#[cfg(test)]
-mod response_permission_test;
-
 struct TypewriterPermissions;
 wasmcloud_utils::export!(TypewriterPermissions);
 

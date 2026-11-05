@@ -7,14 +7,14 @@ environment:
   sdk: ">=3.13.0 <4.0.0"
 
 dependencies:
+  analyzer: ^14.0.0
   flutter:
     sdk: flutter
   typewriter_panel:
     path: ../
-  faker:
-dev_dependencies:
   flutter_test:
     sdk: flutter
+dev_dependencies:
   build_runner:
   flutter_lints:
   riverpod_generator:

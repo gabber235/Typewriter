@@ -41,7 +41,7 @@ class SelectorPopup<T> extends ConsumerWidget {
           selected: null,
         );
       },
-      loading: (_) => ShimmerBox.rectangle(width: 200, height: 40),
+      loading: (_) => _SelectorLoading(name: name),
       error: (title, error) => Text(error),
     );
   }
@@ -80,12 +80,29 @@ class SelectorPopupWithSelection<T> extends ConsumerWidget {
               selected: selected,
             );
           },
-          loading: (_) => ShimmerBox.rectangle(width: 200, height: 40),
+          loading: (_) => _SelectorLoading(name: name),
           error: (title, error) => Text(error),
         );
       },
-      loading: (_) => ShimmerBox.rectangle(width: 200, height: 40),
+      loading: (_) => _SelectorLoading(name: name),
       error: (title, error) => Text(error),
+    );
+  }
+}
+
+/// Placeholder shown while selector choices load. The shimmer has no text,
+/// so assistive technology hears what is loading instead.
+class _SelectorLoading extends StatelessWidget {
+  const _SelectorLoading({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      label: "Loading $name",
+      child: ShimmerBox.rectangle(width: 200, height: 40),
     );
   }
 }

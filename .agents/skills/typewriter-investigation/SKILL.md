@@ -5,6 +5,8 @@ description: Investigate local Typewriter failures using Greptime traces, logs, 
 
 Use the project MCP for local telemetry. Bootstrap and endpoint settings: [adapter README](../../../tools/typewriter-mcp/README.md).
 
+The worktree agent stack exports to no Greptime: its spans are in `traces.jsonl` (`.xtask/state/stack/telemetry/` for `stack run`, `.xtask/state/e2e/<suite>/` for e2e), and a failed e2e attempt keeps its own traces in the failure folder's `spans.otlp.jsonl`.
+
 Do not ask for a time window or instance. Unless the user names them, use the last 30 minutes UTC and the single local Realm, and investigate the newest failure in that window.
 
 Start with the incident's UTC window, entity identity, and expected transition. Use `telemetry_health` to check connectivity, then `telemetry_schema` with a table and column substring. Discover actual columns before constructing filters. Widen time or scope only when evidence warrants it.

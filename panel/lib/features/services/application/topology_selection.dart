@@ -66,21 +66,21 @@ class ServiceHostIdentifier extends SelectableIdentifier {
           observe: (workspace) => work.observe(
             organizationTopologyControllerProvider(organization),
             (next) {
-              if (next.value case final topology?) {
-                final current = topology.hosts.firstWhereOrNull(
-                  (value) => value.hostId == hostId,
-                );
-                workspace.acceptConfirmed(
-                  current == null
-                      ? workspace.confirmed.copyWith(exists: false)
-                      : ValueEditDocument.fromSnapshot(
-                          HostEditorSnapshot(current, topology),
-                          identity: workspace.confirmed.identity,
-                        ),
-                );
-              } else if (next.error case final error?) {
-                workspace.acceptFailure(error);
+              if (next.mapUnready<ValueEditDocument>() case final unready?) {
+                return workspace.observe(unready);
               }
+              final topology = next.requireValue;
+              final current = topology.hosts.firstWhereOrNull(
+                (value) => value.hostId == hostId,
+              );
+              workspace.acceptConfirmed(
+                current == null
+                    ? workspace.confirmed.copyWith(exists: false)
+                    : ValueEditDocument.fromSnapshot(
+                        HostEditorSnapshot(current, topology),
+                        identity: workspace.confirmed.identity,
+                      ),
+              );
             },
           ),
           commitPolicy: EditorCommitPolicy.applyResource,

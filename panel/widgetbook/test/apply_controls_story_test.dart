@@ -1,60 +1,53 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/editing/apply_controls.stories.dart";
+
+import "support/stories.dart";
 
 void main() {
   testWidgets("Apply and Discard reconcile the field across repeated edits", (
     tester,
   ) async {
-    await tester.pumpWidget(applyControlsStory());
-    await tester.pumpAndSettle();
-    final field = find.byType(TextField);
-    expect(find.text("Apply"), findsNothing);
-    await tester.enterText(field, "Draft");
-    await tester.pump();
-    expect(find.text("Apply"), findsOneWidget);
-    await tester.tap(find.text("Discard"));
-    await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(field).controller!.text, "Saved value");
-    expect(find.text("Apply"), findsNothing);
-    await tester.enterText(field, "Accepted");
-    await tester.pump();
-    await tester.tap(find.text("Apply"));
-    await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(field).controller!.text, "Accepted");
-    expect(find.text("Apply"), findsNothing);
-    await tester.enterText(field, "Later");
-    await tester.pump();
-    expect(find.text("Apply"), findsOneWidget);
-    await tester.tap(find.text("Discard"));
-    await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(field).controller!.text, "Accepted");
-    expect(find.text("Apply"), findsNothing);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
+    final panel = await tester.pumpStory(applyControlsUseCase);
+    final field = panel.fieldAt(0);
+    expect(panel.applyControls.actions, isEmpty);
+
+    await field.type("Draft");
+    expect(panel.applyControls.actions, containsAll(["Apply", "Discard"]));
+    await panel.applyControls.press("Discard");
+    expect(field.value, "Saved value");
+    expect(panel.applyControls.actions, isEmpty);
+
+    await field.type("Accepted");
+    await panel.applyControls.press("Apply");
+    expect(field.value, "Accepted");
+    expect(panel.applyControls.actions, isEmpty);
+
+    await field.type("Later");
+    await panel.applyControls.press("Discard");
+    expect(field.value, "Accepted");
+    expect(panel.applyControls.actions, isEmpty);
   });
-  testWidgets(
-    "unknown delivery retains the field and allowed recovery actions",
-    (tester) async {
-      await tester.pumpWidget(applyControlsStory(uncertain: true));
-      await tester.pumpAndSettle();
-      final field = find.byType(TextField);
-      await tester.enterText(field, "Pending");
-      await tester.pump();
-      await tester.tap(find.text("Apply"));
-      await tester.pumpAndSettle();
-      expect(tester.widget<TextField>(field).controller!.text, "Pending");
-      expect(
-        tester
-            .widget<FilledButton>(find.widgetWithText(FilledButton, "Apply"))
-            .onPressed,
-        isNull,
-      );
-      expect(find.text("Refresh"), findsOneWidget);
-      expect(find.text("Retry"), findsNothing);
-      expect(find.text("Discard"), findsNothing);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
+
+  testWidgets("a lost save reply keeps the edit, reports its outcome "
+      "unknown, and offers no request it cannot safely send again", (
+    tester,
+  ) async {
+    final panel = await tester.pumpStory(
+      applyControlsUseCase,
+      knobs: {"Save reply": "Lost"},
+    );
+    final field = panel.fieldAt(0);
+
+    await field.type("Pending");
+    await panel.applyControls.press("Apply");
+
+    expect(field.value, "Pending");
+    expect(
+      panel.shows("The outcome is unknown. Local work is retained"),
+      isTrue,
+    );
+    expect(panel.applyControls.isEnabled("Apply"), isFalse);
+    expect(panel.applyControls.actions, isNot(contains("Retry")));
+  });
 }

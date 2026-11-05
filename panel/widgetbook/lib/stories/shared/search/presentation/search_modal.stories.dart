@@ -1,11 +1,11 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/data/shared/search.dart";
+import "package:widgetbook_workspace/support/story.dart";
 
-@widgetbook.UseCase(name: "Direct", type: SearchModal)
+@widgetbook.UseCase(name: "Default", type: SearchModal)
 Widget searchModalDirectUseCase(BuildContext context) {
   final config = _configFromKnobs(context);
   final initialQuery = context.knobs.string(
@@ -13,9 +13,10 @@ Widget searchModalDirectUseCase(BuildContext context) {
     initialValue: "",
   );
 
-  return FakeApp(
-    child: SizedBox.expand(
-      child: Center(
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox.expand(
         child: SearchModal(
           contributionBuilder: (ref, context) => SearchContribution(
             session: mockSearchSession(_sourceFromConfig(config))
@@ -24,55 +25,6 @@ Widget searchModalDirectUseCase(BuildContext context) {
           searchHint: "Search entries, pages, books, organizations",
           rowRenderers: _mockRowRenderers,
           previewRenderers: _mockPreviewRenderers,
-        ),
-      ),
-    ),
-  );
-}
-
-@widgetbook.UseCase(name: "Route", type: SearchModal)
-Widget searchModalRouteUseCase(BuildContext context) {
-  final config = _configFromKnobs(context);
-  final initialQuery = context.knobs.string(
-    label: "Initial query",
-    initialValue: "",
-  );
-
-  return AuthoringFixtureApp(
-    createDocument: () => fixtureAuthoringDocument(
-      books: [_storyBook],
-      pages: List.generate(
-        8,
-        (_) => generateRandomPage(bookId: _storyBook.bookId),
-      ),
-    ),
-    overrides: [
-      ...organizationProviderOverrides(),
-      ...organizationsProviderOverrides(state: DisplayState.manyItems),
-      ...authProviderOverrides(),
-      ...appearanceProviderOverrides(),
-    ],
-    child: OrganizationScaffold(
-      child: Section(
-        child: Center(
-          child: Builder(
-            builder: (context) {
-              return FilledButton.icon(
-                onPressed: () => showSearchModal(
-                  context,
-                  (ref, context) => SearchContribution(
-                    session: mockSearchSession(_sourceFromConfig(config))
-                        .copyWith(initialQuery: initialQuery),
-                  ),
-                  searchHint: "Search entries, pages, books, organizations",
-                  rowRenderers: _mockRowRenderers,
-                  previewRenderers: _mockPreviewRenderers,
-                ),
-                icon: const Icon(Icons.search),
-                label: const Text("Open search modal"),
-              );
-            },
-          ),
         ),
       ),
     ),
@@ -91,12 +43,6 @@ _SearchStoryConfig _configFromKnobs(BuildContext context) {
     label: "Include guidance",
     initialValue: false,
   );
-  final cache = context.knobs.boolean(label: "Cache", initialValue: true);
-  final debounce = context.knobs.boolean(label: "Debounce", initialValue: true);
-  final debounceDuration = context.knobs.duration(
-    label: "Debounce duration",
-    initialValue: 250.ms,
-  );
 
   final searchDelay = context.knobs.duration(
     label: "Search delay",
@@ -107,9 +53,6 @@ _SearchStoryConfig _configFromKnobs(BuildContext context) {
     state: state,
     hasData: hasData,
     includeGuidance: includeGuidance,
-    cache: cache,
-    debounce: debounce,
-    debounceDuration: debounceDuration,
     searchDelay: searchDelay,
   );
 }
@@ -167,20 +110,14 @@ class _MockResultRow extends StatelessWidget {
 }
 
 SearchSource _sourceFromConfig(_SearchStoryConfig config) {
-  var source = mockMixedGlobalSearchSource(
+  final source = mockMixedGlobalSearchSource(
     state: config.state,
     hasData: config.hasData,
     includeGuidance: config.includeGuidance,
     selectors: [],
     searchDelay: config.searchDelay,
   );
-  if (config.debounce) {
-    source = source.debounced(config.debounceDuration);
-  }
-  if (config.cache) {
-    source = source.cached();
-  }
-  return source;
+  return source.debounced(250.ms).cached();
 }
 
 class _SearchStoryConfig {
@@ -188,25 +125,11 @@ class _SearchStoryConfig {
     required this.state,
     required this.hasData,
     required this.includeGuidance,
-    required this.cache,
-    required this.debounce,
-    required this.debounceDuration,
     required this.searchDelay,
   });
 
   final MockSearchDisplayState state;
   final bool hasData;
   final bool includeGuidance;
-  final bool cache;
-  final bool debounce;
-  final Duration debounceDuration;
   final Duration searchDelay;
 }
-
-final _storyBook = Book(
-  bookId: skir.ResourceId(value: "example-book-id"),
-  title: "Example Book",
-  icon: "mdi:book",
-  color: Colors.blue,
-  tagIds: const [],
-);

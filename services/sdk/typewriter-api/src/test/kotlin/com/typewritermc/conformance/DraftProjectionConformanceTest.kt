@@ -63,6 +63,12 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
 
 val DraftProjectionConformanceTest by testSuite {
+    val intUse = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+
+    val textUse = ScalarKind.TEXT.use
+
+    val fixtureKeyId = TypeDefinitionId.qualified("test", "DraftKey")
+
     test("generated nested drafts preserve partial fields and reject another immutable read view") {
         val resource = ResourceId("draft:tag")
         val root = ValueLocation.of(resource)
@@ -115,7 +121,7 @@ val DraftProjectionConformanceTest by testSuite {
     test("collection projections retain item identity and their captured read view") {
         val root = ValueLocation.of(ResourceId("draft:list"))
         val first = ItemId(value = "first")
-        val listUse = StandardTypes.list.namedUse(listOf(INT_USE))
+        val listUse = StandardTypes.list.namedUse(listOf(intUse))
         val reads =
             FixtureDraftReads(
                 CatalogGeneration(value = "list catalog"),
@@ -129,7 +135,7 @@ val DraftProjectionConformanceTest by testSuite {
                 ),
                 mapOf(root to listOf(first)),
             )
-        val projection = listDraftProjection(listUse, nativeReadProjection<Int>(INT_USE))
+        val projection = listDraftProjection(listUse, nativeReadProjection<Int>(intUse))
         val draft = with(reads) { (projection.read(root) as Availability.Available).value }
 
         with(reads) {
@@ -149,8 +155,8 @@ val DraftProjectionConformanceTest by testSuite {
         val duplicate = ItemId(value = "duplicate")
         val unique = ItemId(value = "unique")
         val unfinished = ItemId(value = "unfinished")
-        val keyUse = FIXTURE_KEY_ID.namedUse(emptyList())
-        val mapUse = StandardTypes.map.namedUse(listOf(keyUse.use, TEXT_USE))
+        val keyUse = fixtureKeyId.namedUse(emptyList())
+        val mapUse = StandardTypes.map.namedUse(listOf(keyUse.use, textUse))
         val meaningfulKey = DataValue.named(keyUse, DataValue.record(mapOf("code" to DataValue.StringValueWrapper("same"))))
         val uniqueKey = DataValue.named(keyUse, DataValue.record(mapOf("code" to DataValue.StringValueWrapper("unique"))))
         val reads =
@@ -186,7 +192,7 @@ val DraftProjectionConformanceTest by testSuite {
             )
         val keyProjection = draftViewProjection(keyUse, ::FixtureKeyDraft)
         val projection: com.typewritermc.authoring.ReadProjection<MapDraft<FixtureKeyDraft, String>> =
-            mapDraftProjection(mapUse, keyProjection, nativeReadProjection(TEXT_USE))
+            mapDraftProjection(mapUse, keyProjection, nativeReadProjection(textUse))
         val draft = with(reads) { (projection.read(root) as Availability.Available).value }
         val rows = with(reads) { (draft.rows() as Availability.Available).value }
         val key = with(reads) { (rows.first().key as Availability.Available).value }
@@ -204,94 +210,3 @@ val DraftProjectionConformanceTest by testSuite {
         }
     }
 }
-
-private class FixtureKeyDraft(
-    private val binding: DraftBinding,
-) : DraftView {
-    override val catalog = binding.catalog
-    override val readContext = binding.readContext
-    override val location = binding.location
-    override val actualType = Availability.Available((binding.actual as TypeSelection.CompleteWrapper).use)
-}
-
-private class FixtureDraftReads(
-    override val catalog: CatalogGeneration,
-    val values: Map<ValueLocation, DataValue>,
-    private val collectionMembers: Map<ValueLocation, List<ItemId>> = emptyMap(),
-) : AuthoredReads {
-    override val readContext = ReadContext(catalog)
-
-    override fun <T> read(path: BoundPath<T>): Availability<T> {
-        val value = values[path.location] ?: return Availability.Unavailable(listOf(path.location))
-        if (value == DataValue.UNFILLED || value == DataValue.NULL) return Availability.Unavailable(listOf(path.location))
-        val native: Any =
-            when (val payload = value.unwrapNamed()) {
-                is DataValue.IntegerWrapper -> payload.bigInteger.intValueExact()
-                is DataValue.StringValueWrapper -> payload.value
-                is DataValue.BooleanWrapper -> payload.value
-                else -> return failed("unsupported_fixture_read", path.location)
-            }
-        @Suppress("UNCHECKED_CAST")
-        return Availability.Available(native as T)
-    }
-
-    override fun <T> readRepresentation(
-        path: BoundPath<*>,
-        representation: TypeUse,
-    ): Availability<T> {
-        @Suppress("UNCHECKED_CAST")
-        return read(path as BoundPath<T>)
-    }
-
-    override fun presence(path: BoundPath<*>): Availability<Boolean> =
-        when (values[path.location]) {
-            null, DataValue.UNFILLED -> Availability.Unavailable(listOf(path.location))
-            DataValue.NULL -> Availability.Available(false)
-            else -> Availability.Available(true)
-        }
-
-    override fun binding(path: BoundPath<*>): Availability<DraftBinding> {
-        val value = values[path.location] ?: return Availability.Unavailable(listOf(path.location))
-        if (value == DataValue.UNFILLED || value == DataValue.NULL) return Availability.Unavailable(listOf(path.location))
-        val named = value as? DataValue.NamedWrapper ?: return failed("expected_named_binding", path.location)
-        return Availability.Available(
-            DraftBinding(
-                catalog,
-                readContext,
-                path.location,
-                DraftExpectation.PartialRoot(
-                    PartialSchema(knownFields = emptyList(), dependentFields = emptyList(), pendingArguments = emptyList()),
-                ),
-                TypeSelection.CompleteWrapper(named.actualType),
-            ),
-        )
-    }
-
-    override fun canonicalValueKey(path: BoundPath<*>): Availability<String> {
-        val value = values[path.location] ?: return Availability.Unavailable(listOf(path.location))
-        if (value == DataValue.UNFILLED || value == DataValue.NULL) return Availability.Unavailable(listOf(path.location))
-        return Availability.Available(value.canonicalValueKey())
-    }
-
-    override fun members(path: BoundCollectionPath): List<ItemId> = collectionMembers[path.location].orEmpty()
-
-    override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Selections are outside this fixture.")
-}
-
-private fun <T> failed(
-    code: String,
-    location: ValueLocation,
-): Availability<T> =
-    Availability.Failed(
-        EvaluationDiagnostic(
-            failure =
-                skirout.editor.v1.expression
-                    .FailureId(value = code),
-            message = code,
-            locations = listOf(location),
-        ),
-    )
-
-private val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
-private val TEXT_USE = ScalarKind.TEXT.use
-private val FIXTURE_KEY_ID = TypeDefinitionId.qualified("test", "DraftKey")

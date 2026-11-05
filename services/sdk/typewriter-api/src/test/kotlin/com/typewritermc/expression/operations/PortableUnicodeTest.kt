@@ -35,16 +35,6 @@ val PortableUnicodeTest by testSuite {
         PortableUnicode.foldCase("ẞ") shouldBe "ss"
     }
 
-    test("normalization produces the four UAX 15 forms") {
-        PortableUnicode.normalize("Å", compatibility = false, compose = true) shouldBe "Å"
-        PortableUnicode.normalize("Å", compatibility = false, compose = false) shouldBe "Å"
-        PortableUnicode.normalize("ﬁ", compatibility = true, compose = true) shouldBe "fi"
-        PortableUnicode.normalize("ﬁ", compatibility = false, compose = true) shouldBe "ﬁ"
-        PortableUnicode.normalize("가", compatibility = false, compose = false) shouldBe "가"
-        PortableUnicode.normalize("각", compatibility = false, compose = true) shouldBe "각"
-        PortableUnicode.normalize("", compatibility = false, compose = true) shouldBe ""
-    }
-
     test("white space is the pinned White_Space property plus U+FEFF") {
         PortableUnicode.trimStart("　﻿x") shouldBe "x"
         PortableUnicode.trimEnd("x\u0085") shouldBe "x"
@@ -120,46 +110,3 @@ val PortableUnicodeTest by testSuite {
         failures.take(20).shouldBeEmpty()
     }
 }
-
-private fun checkForms(
-    label: String,
-    sources: List<String>,
-    nfc: String,
-    nfd: String,
-    nfkc: String,
-    nfkd: String,
-    failures: MutableList<String>,
-) {
-    for (source in sources) {
-        val forms =
-            listOf(
-                "NFC" to (PortableUnicode.normalize(source, compatibility = false, compose = true) to nfc),
-                "NFD" to (PortableUnicode.normalize(source, compatibility = false, compose = false) to nfd),
-                "NFKC" to (PortableUnicode.normalize(source, compatibility = true, compose = true) to nfkc),
-                "NFKD" to (PortableUnicode.normalize(source, compatibility = true, compose = false) to nfkd),
-            )
-        for ((form, outcome) in forms) {
-            if (outcome.first != outcome.second) failures += "$label: $form(${source.hex()}) was ${outcome.first.hex()}"
-        }
-    }
-}
-
-private fun codePoints(field: String): String =
-    buildString {
-        field.trim().split(' ').forEach { appendCodePoint(it.toInt(16)) }
-    }
-
-private fun String.hex(): String = codePoints().toArray().joinToString(" ") { "%04X".format(it) }
-
-/** The data lines of a semicolon separated Unicode data file, with comments removed and fields trimmed. */
-private fun unicodeRecords(file: String): List<List<String>> =
-    Files
-        .readAllLines(unicodeFile(file))
-        .map { it.substringBefore('#').trim() }
-        .filter(String::isNotEmpty)
-        .map { line -> line.split(';').map(String::trim) }
-
-private fun unicodeFile(name: String): Path =
-    generateSequence(Path.of("").toAbsolutePath()) { it.parent }
-        .map { it.resolve("services/protocol/unicode/${PortableUnicodeTables.RELEASE}/$name") }
-        .first(Files::exists)

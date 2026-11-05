@@ -13,6 +13,30 @@ class TypewriterPanel extends HookConsumerWidget {
   /// The boundary around the whole app that end to end screenshots capture.
   static const screenshotKey = ValueKey("typewriter-panel");
 
+  /// Wraps the app's content in the interaction widgets, responsive
+  /// breakpoints and NATS connection boundary every page needs.
+  ///
+  /// The [MaterialApp] builder of the panel; test stages that render one
+  /// component instead of the router reuse it.
+  static Widget shell(BuildContext context, Widget? child) {
+    return Surface(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      foreground: context.colors.contentPrimary,
+      secondaryForeground: context.colors.contentSecondary,
+      child: AppOverlay(
+        child: Scaffold(
+          body: AppRequiredWidgets(
+            child: Responsive(
+              child: RequiredNatsConnection(
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
@@ -26,6 +50,7 @@ class TypewriterPanel extends HookConsumerWidget {
             access: router.access,
             builder: (context) => MaterialApp.router(
               title: "Typewriter",
+              debugShowCheckedModeBanner: false,
               theme: buildTheme(Brightness.light),
               darkTheme: buildTheme(Brightness.dark),
               themeMode: themeMode,
@@ -39,28 +64,12 @@ class TypewriterPanel extends HookConsumerWidget {
                       ..invalidate(currentRouteProvider);
                   }),
                   LoggerNavigatorObserver(),
+                  RouteSettlingObserver(ref.read(routeSettlingProvider)),
                 ],
               ),
               shortcuts: typewriterShortcuts,
               scrollBehavior: GlobalCustomScrollBehavior(),
-              builder: (context, child) {
-                return Surface(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  foreground: context.colors.contentPrimary,
-                  secondaryForeground: context.colors.contentSecondary,
-                  child: AppOverlay(
-                    child: Scaffold(
-                      body: AppRequiredWidgets(
-                        child: Responsive(
-                          child: RequiredNatsConnection(
-                            child: child ?? const SizedBox.shrink(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+              builder: shell,
             ),
           ),
         ),

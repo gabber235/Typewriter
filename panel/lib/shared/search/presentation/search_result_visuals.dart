@@ -1,5 +1,8 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// What assistive technology reads while a command runs on a result.
+const searchResultWorkingSemanticLabel = "Working";
+
 /// Shows the icon or loading state that identifies a search result.
 ///
 /// [icon] is supplied by the result renderer. [focused] changes contrast for the
@@ -48,6 +51,7 @@ class SearchResultIconTile extends StatelessWidget {
       child: ElasticSwitcher(
         child: loading
             ? CircularProgressIndicator(
+                semanticsLabel: searchResultWorkingSemanticLabel,
                 color: focused ? color : onColor,
                 padding: EdgeInsets.all(context.spacing.space1),
               )

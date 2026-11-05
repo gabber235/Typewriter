@@ -20,7 +20,12 @@ final class _IndexRedirectCoordinator {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        if (!shouldRedirect()) return;
+        // A refused navigation can leave the index alone on the stack, its
+        // address still the refused one; that user still needs the index
+        // address and the reason.
+        final onIndex =
+            router.stack.length == 1 && router.topRoute.name == IndexRoute.name;
+        if (!shouldRedirect() && !onIndex) return;
         await router.root.replaceAll([
           const IndexRoute(),
         ], updateExistingRoutes: false);

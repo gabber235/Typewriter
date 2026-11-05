@@ -98,7 +98,8 @@ private fun Throwable.isSurrealKvLockReleasePending(endpoint: DatabaseEndpoint):
 private const val MAXIMUM_CONNECT_ATTEMPTS = 100
 private const val LOCK_RELEASE_RETRY_MILLIS = 20L
 
-private fun Surreal.authenticate(configuration: RealmDatabaseConfiguration) {
+/** Signs this connection in with the configured credentials; [DatabaseAuthentication.None] keeps it anonymous. */
+internal fun Surreal.authenticate(configuration: RealmDatabaseConfiguration) {
     val authentication = configuration.authentication
     when (authentication) {
         DatabaseAuthentication.None -> {

@@ -9,7 +9,7 @@ use nats_broker::{Account, Broker, Credentials};
 use tokio::sync::{Mutex, mpsc, oneshot};
 use wash_runtime::plugin::wasmcloud_nats::WasmcloudNats;
 
-use crate::MessagingMock;
+use crate::{MessagingMock, Stream};
 
 pub(crate) struct HostMessage {
     pub subject: String,
@@ -55,27 +55,25 @@ impl Drop for Observer {
 }
 
 impl NatsDriver {
-    pub async fn start(workload_id: &str) -> Result<Self> {
+    pub async fn start(workload_id: &str, streams: &[Stream]) -> Result<Self> {
         let account = Broker::shared().await?.account().await?;
         let credentials = account.admin()?;
         let client = credentials
             .connect(account.endpoint())
             .await
             .context("connecting fixture client")?;
-        async_nats::jetstream::new(client.clone())
-            .create_stream(async_nats::jetstream::stream::Config {
-                name: "TYPEWRITER_MEMBERSHIP".into(),
-                subjects: vec![
-                    "typewriter.to.organization.*.members.changed".into(),
-                    "typewriter.to.organization.*.join_requests.changed".into(),
-                    "typewriter.to.organization.*.join_codes.changed".into(),
-                    "typewriter.to.user.*.join_requests.changed".into(),
-                    "typewriter.to.user.*.organizations.changed".into(),
-                ],
-                storage: async_nats::jetstream::stream::StorageType::Memory,
-                ..Default::default()
-            })
-            .await?;
+        let jetstream = async_nats::jetstream::new(client.clone());
+        for stream in streams {
+            jetstream
+                .create_stream(async_nats::jetstream::stream::Config {
+                    name: stream.name.clone(),
+                    subjects: stream.subjects.clone(),
+                    storage: async_nats::jetstream::stream::StorageType::Memory,
+                    ..Default::default()
+                })
+                .await
+                .with_context(|| format!("creating stream `{}`", stream.name))?;
+        }
         Ok(Self {
             account,
             credentials,
@@ -94,11 +92,18 @@ impl NatsDriver {
         Ok(())
     }
 
+    /// Sends `message` and waits up to `timeout` for the reply. The client's own request
+    /// timeout (ten seconds by default) is bypassed so that `timeout` is the only bound.
     pub async fn request(&self, message: HostMessage, timeout: Duration) -> Result<HostMessage> {
         let response = tokio::time::timeout(
             timeout,
-            self.client
-                .request_with_headers(message.subject, input_headers(), message.body.into()),
+            self.client.send_request(
+                message.subject,
+                async_nats::Request::new()
+                    .headers(input_headers())
+                    .payload(message.body.into())
+                    .timeout(None),
+            ),
         )
         .await??;
         Ok(HostMessage {
@@ -121,7 +126,7 @@ impl NatsDriver {
                     result = replies.join_next(), if !replies.is_empty() => { result.context("reply task missing")???; },
                     message = messages.next() => {
                         let Some(message) = message else { bail!("NATS observer disconnected"); };
-                        if message.subject.starts_with("$JS.") || message.subject.starts_with("_INBOX.") || message.subject.starts_with("_INBOX_") || message.headers.as_ref().is_some_and(|h| h.get("Typewriter-Test-Input").is_some()) { continue; }
+                        if message.subject.starts_with("$JS.") || message.subject.starts_with("_INBOX.") || message.subject.starts_with("_INBOX_") || message.headers.as_ref().is_some_and(|h| h.get(INPUT_HEADER).is_some()) { continue; }
                         let message = HostMessage {
                             subject: message.subject.to_string(), reply_to: message.reply.map(|s| s.to_string()),
                             body: message.payload.to_vec(),
@@ -172,8 +177,11 @@ impl NatsDriver {
     }
 }
 
+/// Marks a message the test injected, so the observer never records it as component output.
+const INPUT_HEADER: &str = "Component-Test-Input";
+
 fn input_headers() -> async_nats::HeaderMap {
     let mut headers = async_nats::HeaderMap::new();
-    headers.insert("Typewriter-Test-Input", "true");
+    headers.insert(INPUT_HEADER, "true");
     headers
 }

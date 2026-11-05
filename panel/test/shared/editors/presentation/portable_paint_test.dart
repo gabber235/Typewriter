@@ -2,13 +2,16 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 /// The stack around the authored cover text, not one the test app adds.
 final coverStack = find
     .ancestor(of: find.text("Cover"), matching: find.byType(Stack))
+    .first;
+
+/// The surface the authored container paints around the cover text.
+final _surface = find
+    .ancestor(of: find.text("Cover"), matching: find.byType(SurfaceContainer))
     .first;
 
 /// The nearest transform above the authored cover text.
@@ -19,11 +22,7 @@ final coverTransform = find
 void main() {
   late PortablePresentationScope scope;
   setUp(() {
-    scope = PortablePresentationScope(
-      operations: testPortableOperations(),
-      bindings: const {},
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-    );
+    scope = unboundPresentationScope();
   });
 
   final selected = skir.PresentationStateMatch(
@@ -49,50 +48,7 @@ void main() {
       curve: skir.PresentationCurve.emphasized,
     ),
   );
-  skir.PresentationNumber number(double value) =>
-      skir.PresentationNumber.wrapValue(numberLiteral(value));
-  skir.PresentationNumber whenSelected(double rest, double raised) =>
-      skir.PresentationNumber.createStates(
-        rules: [
-          skir.PresentationStateNumberRule(
-            match: selected,
-            value: numberLiteral(raised),
-          ),
-        ],
-        fallback: numberLiteral(rest),
-      );
   final label = presentationText("label", textLiteral("Cover"));
-
-  /// Pumps [root] under an interaction owner that [update] changes.
-  Future<void Function(PresentationInteraction)> pumpInteractive(
-    WidgetTester tester,
-    skir.PresentationNode root, {
-    Size size = const Size(200, 260),
-  }) async {
-    var interaction = const PresentationInteraction();
-    late StateSetter update;
-    await tester.pumpTestApp(
-      child: Center(
-        child: SizedBox.fromSize(
-          size: size,
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              update = setState;
-              return PresentationInteractionScope(
-                value: interaction,
-                child: PortablePresentationNodeRenderer(
-                  node: root,
-                  scope: scope,
-                  fillAvailableSpace: true,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-    return (next) => update(() => interaction = next);
-  }
 
   testWidgets(
     "positioned stack children follow state and animate with the entered state's transition",
@@ -106,11 +62,11 @@ void main() {
               skir.StackChild.wrapFlow(label),
               skir.StackChild.createPositioned(
                 child: presentationText("spine", textLiteral("Spine")),
-                top: whenSelected(10, 15),
+                top: stateNumber(10, match: selected, value: 15),
                 start: null,
-                end: whenSelected(0, 14),
-                bottom: whenSelected(10, 15),
-                width: number(30),
+                end: stateNumber(0, match: selected, value: 14),
+                bottom: stateNumber(10, match: selected, value: 15),
+                width: presentationNumber(30),
                 height: null,
                 transition: selectMotion,
               ),
@@ -118,35 +74,45 @@ void main() {
           ),
         ),
       );
-      final interact = await pumpInteractive(tester, root);
-      AnimatedPositionedDirectional positioned() =>
-          tester.widget(find.byType(AnimatedPositionedDirectional));
+      final interact = await tester.showInteractiveNode(root, scope: scope);
+      // Where the spine sits inside the authored stack: its distance to the
+      // stack's top and end edges.
+      (double, double) inset() {
+        final spine = tester.getRect(find.text("Spine"));
+        final stack = tester.getRect(coverStack);
+        return (spine.top - stack.top, stack.right - spine.right);
+      }
 
+      // The flow child sits at the center of the stack.
       expect(
-        tester.widget<Stack>(coverStack).alignment,
-        AlignmentDirectional.center,
+        tester.getCenter(find.text("Cover")),
+        offsetMoreOrLessEquals(tester.getCenter(coverStack)),
       );
-      expect(
-        [positioned().top, positioned().end, positioned().width],
-        [10, 0, 30],
-      );
-      expect(positioned().duration, const Duration(milliseconds: 300));
+      expect(inset(), (10, 0));
+      expect(tester.getSize(find.text("Spine")).width, 30);
 
+      // Entering the selected state moves with its own elastic transition:
+      // 750 ms that overshoots the target before settling.
       interact(const PresentationInteraction(selected: true));
       await tester.pump();
-      expect([positioned().top, positioned().end], [15, 14]);
-      expect(positioned().duration, const Duration(milliseconds: 750));
-      expect(positioned().curve, isA<ElasticOutCurve>());
+      var overshoot = false;
+      for (var elapsed = 0; elapsed < 750; elapsed += 25) {
+        await tester.pump(const Duration(milliseconds: 25));
+        if (inset().$1 > 15.01) overshoot = true;
+      }
+      expect(overshoot, isTrue);
       await tester.pumpAndSettle();
-      final spine = tester.getRect(find.text("Spine"));
-      final stack = tester.getRect(coverStack);
-      expect(stack.right - spine.right, closeTo(14, 0.01));
-      expect(spine.top - stack.top, closeTo(15, 0.01));
+      expect(inset().$1, closeTo(15, 0.01));
+      expect(inset().$2, closeTo(14, 0.01));
 
+      // Leaving it uses the 300 ms fallback, which lands without overshoot.
       interact(const PresentationInteraction());
       await tester.pump();
-      expect(positioned().duration, const Duration(milliseconds: 300));
-      expect(positioned().curve, Curves.fastEaseInToSlowEaseOut);
+      await tester.pump(const Duration(milliseconds: 150));
+      final halfway = inset().$1;
+      expect(halfway, inExclusiveRange(10, 15));
+      await tester.pump(const Duration(milliseconds: 160));
+      expect(inset().$1, closeTo(10, 0.01));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     },
@@ -165,10 +131,10 @@ void main() {
             skir.StackChild.createPositioned(
               child: presentationText("edge", textLiteral("Edge")),
               top: null,
-              start: number(0),
-              end: number(0),
+              start: presentationNumber(0),
+              end: presentationNumber(0),
               bottom: null,
-              width: number(10),
+              width: presentationNumber(10),
               height: null,
               transition: null,
             ),
@@ -176,7 +142,7 @@ void main() {
         ),
       ),
     );
-    await pumpInteractive(tester, root);
+    await tester.showInteractiveNode(root, scope: scope);
     expect(
       find.text("A positioned child declares at most two bounds per axis"),
       findsOneWidget,
@@ -205,17 +171,7 @@ void main() {
                 radius: skir.PresentationRadius.large,
                 foregroundColor: null,
                 transition: null,
-                shadows: [
-                  skir.PresentationShadow(
-                    color: skir.PresentationColor.wrapValue(
-                      const Color(0x66000000).portableExpression,
-                    ),
-                    blur: 8,
-                    spread: 1,
-                    offsetX: 0,
-                    offsetY: 2,
-                  ),
-                ],
+                shadows: const [],
               ),
             ),
             width: numberLiteral(175),
@@ -228,11 +184,42 @@ void main() {
         ),
       ),
     );
-    await pumpInteractive(tester, root, size: const Size(240, 333));
-    final surface = find.byType(SurfaceContainer);
-    expect(tester.getSize(surface), const Size(175, 230));
+    await tester.showInteractiveNode(
+      root,
+      scope: scope,
+      size: const Size(240, 333),
+    );
+    expect(tester.getSize(_surface), const Size(175, 230));
+  });
+
+  testWidgets("a container paints its authored shadow", (tester) async {
+    final root = presentationNode(
+      "surface",
+      skir.PresentationElement.createContainer(
+        child: label,
+        border: null,
+        backgroundColor: null,
+        radius: skir.PresentationRadius.large,
+        foregroundColor: null,
+        transition: null,
+        shadows: [
+          skir.PresentationShadow(
+            color: skir.PresentationColor.wrapValue(
+              const Color(0x66000000).portableExpression,
+            ),
+            blur: 8,
+            spread: 1,
+            offsetX: 0,
+            offsetY: 2,
+          ),
+        ],
+      ),
+    );
+    await tester.showInteractiveNode(root, scope: scope);
+    // A shadow has no semantics; the painted decoration is what the user
+    // sees.
     final shadow = tester
-        .widget<SurfaceContainer>(surface)
+        .widget<SurfaceContainer>(_surface)
         .decoration
         .boxShadow!
         .single;
@@ -263,7 +250,7 @@ void main() {
             fallback: numberLiteral(1),
           ),
           rotateX: null,
-          rotateY: whenSelected(0, 0.05),
+          rotateY: stateNumber(0, match: selected, value: 0.05),
           rotateZ: null,
           translateX: skir.PresentationNumber.createStates(
             rules: [
@@ -280,8 +267,8 @@ void main() {
       );
       var interaction = const PresentationInteraction();
       late StateSetter update;
-      await tester.pumpTestApp(
-        child: Center(
+      await tester.showComponent(
+        Center(
           child: StatefulBuilder(
             builder: (context, setState) {
               update = setState;
@@ -333,19 +320,27 @@ void main() {
     final accent = skir.PresentationColor.wrapValue(
       const Color(0xff3f51b5).portableExpression,
     );
-    PresentationValueEnvironment environment(Brightness brightness) =>
-        PresentationValueEnvironment(
-          theme: ThemeData(brightness: brightness),
-          appearance: SurfaceAppearance(
-            color: Colors.black,
-            foreground: Colors.white,
-            secondaryForeground: Colors.grey,
-          ),
-          interaction: const PresentationInteraction(),
-        );
+    final light = PresentationValueEnvironment(
+      theme: ThemeData(brightness: Brightness.light),
+      appearance: SurfaceAppearance(
+        color: Colors.black,
+        foreground: Colors.white,
+        secondaryForeground: Colors.grey,
+      ),
+      interaction: const PresentationInteraction(),
+    );
+    final dark = PresentationValueEnvironment(
+      theme: ThemeData(brightness: Brightness.dark),
+      appearance: SurfaceAppearance(
+        color: Colors.black,
+        foreground: Colors.white,
+        secondaryForeground: Colors.grey,
+      ),
+      interaction: const PresentationInteraction(),
+    );
 
     test("adjusted colors move lightness and chroma in OkLch", () {
-      final colors = environment(Brightness.light);
+      final colors = light;
       double lightness(Color color) => color.toOkLch().l;
       double chroma(Color color) => color.toOkLch().c;
       final source = colors.resolve(accent, scope);
@@ -388,22 +383,16 @@ void main() {
         ),
         dark: skir.PresentationColor.wrapValue(Colors.black.portableExpression),
       );
-      expect(
-        environment(Brightness.light).resolve(color, scope).toARGB32(),
-        Colors.white.toARGB32(),
-      );
-      expect(
-        environment(Brightness.dark).resolve(color, scope).toARGB32(),
-        Colors.black.toARGB32(),
-      );
+      expect(light.resolve(color, scope).toARGB32(), Colors.white.toARGB32());
+      expect(dark.resolve(color, scope).toARGB32(), Colors.black.toARGB32());
     });
 
     test("numbers and motions use the first matching state rule", () {
-      final idle = environment(Brightness.light);
+      final idle = light;
       final picked = idle.copyWith(
         interaction: const PresentationInteraction(selected: true),
       );
-      final value = whenSelected(1, 0.9);
+      final value = stateNumber(1, match: selected, value: 0.9);
       expect(idle.number(value, scope), 1);
       expect(picked.number(value, scope), 0.9);
       expect(

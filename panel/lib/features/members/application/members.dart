@@ -19,43 +19,36 @@ class OrganizationMembers extends _$OrganizationMembers {
       SequencedCollection<List<skir.OrganizationMember>>();
 
   @override
-  Stream<List<skir.OrganizationMember>> build() async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (!ref.mounted) return;
-
-    if (userId == null) {
-      yield [];
-      return;
-    }
+  Stream<List<skir.OrganizationMember>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) {
-      yield [];
-      return;
-    }
-
-    final repository = ref.watch(
-      membershipResourceRepositoryProvider(organizationId),
-    );
-    final request = skir.WatchOrganizationMembersRequest();
-    yield* request.watch<List<skir.OrganizationMember>>(
-      ref,
-      userId: userId,
-      organizationId: organizationId,
-      snapshot: (response) => switch (response) {
-        skir.WatchOrganizationMembersResponse_unknown() =>
-          throw ApiException.unknownResponseMessage(),
-        skir.WatchOrganizationMembersResponse_internalErrorWrapper() =>
-          throw ApiException.internalServerError(),
-        skir.WatchOrganizationMembersResponse_snapshotWrapper(:final value) =>
-          value.values.toList(),
-      },
-      reduce: _reduceMembers,
-      confirmedEvents: repository.members,
-      reconciliation: ProjectionReconciliation.sequenced(
-        snapshotSequence: (response) => response.readSnapshot().sequence,
-        eventSequence: (event) => event.sequence,
-        sequenceState: sequencedCollection,
-      ),
+    if (organizationId == null) return Stream.value(const []);
+    return ref.watchSignedIn(
+      signedOut: const [],
+      (userId) => skir.WatchOrganizationMembersRequest()
+          .watch<List<skir.OrganizationMember>>(
+            ref,
+            userId: userId,
+            organizationId: organizationId,
+            snapshot: (response) => switch (response) {
+              skir.WatchOrganizationMembersResponse_unknown() =>
+                throw ApiException.unknownResponseMessage(),
+              skir.WatchOrganizationMembersResponse_internalErrorWrapper() =>
+                throw ApiException.internalServerError(),
+              skir.WatchOrganizationMembersResponse_snapshotWrapper(
+                :final value,
+              ) =>
+                value.values.toList(),
+            },
+            reduce: _reduceMembers,
+            confirmedEvents: ref
+                .watch(membershipResourceRepositoryProvider(organizationId))
+                .members,
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) => response.readSnapshot().sequence,
+              eventSequence: (event) => event.sequence,
+              sequenceState: sequencedCollection,
+            ),
+          ),
     );
   }
 

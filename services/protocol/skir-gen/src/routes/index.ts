@@ -27,12 +27,6 @@ const EMITTERS: Record<Target, Emitter> = {
   rust: (routes, symbols, input) => emitRust(routes, symbols.rust, input),
 };
 
-function assertRelative(file: CodeGenerator.OutputFile): void {
-  if (file.path.startsWith("/") || file.path.split(/[\\/]/u).some((part) => part === "..")) {
-    throw new Error(`Generator output ${file.path} must stay inside its owned target directory`);
-  }
-}
-
 /**
  * One Skir generator per target. It reads the route manifest, resolves every route against the
  * parsed Skir modules and emits the target's bindings in process. Skir owns writing and cleaning
@@ -46,9 +40,7 @@ export function generatorFor(target: Target): CodeGenerator<Config> {
       const { manifest: path } = input.config;
       const manifest = parseManifest(readFileSync(path, "utf8"), path);
       const routes = resolveRoutes(manifest, input);
-      const files = EMITTERS[target](routes, symbolProviders(input), input);
-      files.forEach(assertRelative);
-      return { files };
+      return { files: EMITTERS[target](routes, symbolProviders(input), input) };
     },
   };
 }

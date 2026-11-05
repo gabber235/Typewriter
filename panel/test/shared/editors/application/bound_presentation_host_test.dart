@@ -2,8 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/catalog_fixture.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("document freezes caller owned containers", () {
@@ -37,12 +36,19 @@ void main() {
   });
 
   test("rejects duplicate binding identities", () {
-    final bindingValue = _binding(
+    final bindingValue = BoundPresentationBinding(
+      id: _bindingId,
+      use: _textType,
       read: (_) => skir.DataValue.wrapStringValue("value"),
     );
 
     expect(
-      () => _host(bindings: [bindingValue, bindingValue]),
+      () => BoundPresentationHost(
+        catalog: testCheckedCatalog(),
+        root: () => skir.PresentationNode.defaultInstance,
+        bindings: [bindingValue, bindingValue],
+        budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+      ),
       throwsArgumentError,
     );
   });
@@ -50,20 +56,19 @@ void main() {
   test("validates scalar writes before the backend decoder", () async {
     var value = skir.DataValue.wrapInteger("1");
     var writes = 0;
-    final host = _host(
-      bindings: [
-        _binding(
-          use: skir.TypeUse.wrapScalar(
-            skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedEight),
-          ),
-          read: (_) => value,
-          write: (_, next) {
-            writes++;
-            value = next;
-            return const PortablePresentationWriteResult.applied();
-          },
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: skir.TypeUse.wrapScalar(
+          skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedEight),
         ),
-      ],
+        read: (_) => value,
+        write: (_, next) {
+          writes++;
+          value = next;
+          return const PortablePresentationWriteResult.applied();
+        },
+      ),
     );
     addTearDown(host.dispose);
 
@@ -72,7 +77,10 @@ void main() {
       skir.DataValue.wrapInteger("128"),
       context: host.rootInvocation,
     );
-    expect(rejected, isA<PortablePresentationWriteRejected>());
+    expect(
+      rejected,
+      writeRejectedBecause("The value does not match the binding type"),
+    );
     expect(writes, 0);
 
     final accepted = await host.write(
@@ -93,17 +101,17 @@ void main() {
     () async {
       var value = skir.DataValue.wrapStringValue("first");
       var writes = 0;
-      final host = _host(
-        bindings: [
-          _binding(
-            read: (_) => value,
-            write: (_, next) {
-              writes++;
-              value = next;
-              return const PortablePresentationWriteApplied();
-            },
-          ),
-        ],
+      final host = singleBindingHost(
+        BoundPresentationBinding(
+          id: _bindingId,
+          use: _textType,
+          read: (_) => value,
+          write: (_, next) {
+            writes++;
+            value = next;
+            return const PortablePresentationWriteApplied();
+          },
+        ),
       );
       addTearDown(host.dispose);
       final uppercase = skir.EditorAction.wrapLocal(
@@ -136,17 +144,19 @@ void main() {
       );
       expect(
         await host.execute(invalid, context: host.rootInvocation),
-        isA<PortablePresentationWriteRejected>(),
+        writeRejectedBecause("The value does not match the binding type"),
       );
       expect(writes, 1);
     },
   );
 
   test("local value actions cannot mutate observational bindings", () async {
-    final host = _host(
-      bindings: [
-        _binding(read: (_) => skir.DataValue.wrapStringValue("original")),
-      ],
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("original"),
+      ),
     );
     addTearDown(host.dispose);
     final result = await host.execute(
@@ -160,7 +170,10 @@ void main() {
       ),
       context: host.rootInvocation,
     );
-    expect(result, isA<PortablePresentationWriteRejected>());
+    expect(
+      result,
+      writeRejectedBecause("This presentation binding is read only"),
+    );
     expect(
       host.read(_rootReference, context: host.rootInvocation),
       skir.DataValue.wrapStringValue("original"),
@@ -169,17 +182,16 @@ void main() {
 
   test("accepts nullable scalar roots without a named wrapper", () async {
     var value = skir.DataValue.wrapStringValue("value");
-    final host = _host(
-      bindings: [
-        _binding(
-          use: skir.TypeUse.createNullable(value: _textType),
-          read: (_) => value,
-          write: (_, next) {
-            value = next;
-            return const PortablePresentationWriteResult.applied();
-          },
-        ),
-      ],
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: skir.TypeUse.createNullable(value: _textType),
+        read: (_) => value,
+        write: (_, next) {
+          value = next;
+          return const PortablePresentationWriteResult.applied();
+        },
+      ),
     );
     addTearDown(host.dispose);
 
@@ -199,8 +211,13 @@ void main() {
 
   test("refreshes from its owner and detaches when disposed", () {
     final owner = ValueNotifier(skir.DataValue.wrapStringValue("first"));
-    final host = _host(
-      bindings: [_binding(read: (_) => owner.value, owner: owner)],
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => owner.value,
+        owner: owner,
+      ),
     );
 
     expect(
@@ -223,10 +240,12 @@ void main() {
   });
 
   test("rejects writes to a read only backend binding", () async {
-    final host = _host(
-      bindings: [
-        _binding(read: (_) => skir.DataValue.wrapStringValue("value")),
-      ],
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("value"),
+      ),
     );
     addTearDown(host.dispose);
 
@@ -236,26 +255,25 @@ void main() {
         skir.DataValue.wrapStringValue("changed"),
         context: host.rootInvocation,
       ),
-      isA<PortablePresentationWriteRejected>(),
+      writeRejectedBecause("This presentation binding is read only"),
     );
   });
 
   test("uses the concrete named value while resolving nested fields", () {
-    final message = _definition("Message");
-    final textMessage = _definition("TextMessage");
+    final message = typeDefinition("Message", namespace: "host.test");
+    final textMessage = typeDefinition("TextMessage", namespace: "host.test");
     final textOwner = skir.FieldOwner(definition: textMessage, name: "text");
     final catalog = testCheckedCatalog(
       generation: _hostCatalogGeneration,
       types: [
-        _publishedType(message, abstract: true),
-        _publishedType(
+        declaredRecord(message, abstract: true),
+        declaredRecord(
           textMessage,
-          parents: [_namedTemplate(message)],
-          fields: [
-            _field(
-              textOwner,
-              skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-            ),
+          fields: {
+            textOwner.name: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+          },
+          parents: [
+            skir.NamedTypeTemplate(definition: message, arguments: const []),
           ],
         ),
       ],
@@ -268,10 +286,12 @@ void main() {
       definition: textMessage,
       arguments: const [],
     );
-    final host = _host(
+    final host = BoundPresentationHost(
       catalog: catalog,
+      root: () => skir.PresentationNode.defaultInstance,
       bindings: [
-        _binding(
+        BoundPresentationBinding(
+          id: _bindingId,
           use: skir.TypeUse.wrapNamed(declared),
           read: (_) => skir.DataValue.createNamed(
             actualType: actual,
@@ -286,6 +306,7 @@ void main() {
           ),
         ),
       ],
+      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
     );
     addTearDown(host.dispose);
 
@@ -304,30 +325,34 @@ void main() {
   });
 
   test("uses the actual generic argument for nested write admission", () async {
-    final reward = _definition("Reward");
-    final coin = _definition("CoinReward");
-    final item = _definition("ItemReward");
-    final variable = _definition("Variable");
+    final reward = typeDefinition("Reward", namespace: "host.test");
+    final coin = typeDefinition("CoinReward", namespace: "host.test");
+    final item = typeDefinition("ItemReward", namespace: "host.test");
+    final variable = typeDefinition("Variable", namespace: "host.test");
     final parameter = skir.ParameterKey(owner: variable, index: 0);
     final valueOwner = skir.FieldOwner(definition: variable, name: "value");
     final catalog = testCheckedCatalog(
       generation: _hostCatalogGeneration,
       types: [
-        _publishedType(reward, abstract: true),
-        _publishedType(coin, parents: [_namedTemplate(reward)]),
-        _publishedType(item, parents: [_namedTemplate(reward)]),
-        _publishedType(
+        declaredRecord(reward, abstract: true),
+        declaredRecord(
+          coin,
+          parents: [
+            skir.NamedTypeTemplate(definition: reward, arguments: const []),
+          ],
+        ),
+        declaredRecord(
+          item,
+          parents: [
+            skir.NamedTypeTemplate(definition: reward, arguments: const []),
+          ],
+        ),
+        declaredRecord(
           variable,
-          parameters: [
-            skir.TypeParameter(
-              key: parameter,
-              name: "T",
-              bounds: [skir.TypeTemplate.wrapNamed(_namedTemplate(reward))],
-            ),
-          ],
-          fields: [
-            _field(valueOwner, skir.TypeTemplate.wrapParameter(parameter)),
-          ],
+          fields: {valueOwner.name: skir.TypeTemplate.wrapParameter(parameter)},
+          parameters: {
+            "T": [reward],
+          },
         ),
       ],
     );
@@ -346,14 +371,27 @@ void main() {
     final current = skir.DataValue.createNamed(
       actualType: actual,
       payload: skir.DataValue.createRecord(
-        fields: [skir.FieldValue(name: "value", value: _namedValue(coin))],
+        fields: [
+          skir.FieldValue(
+            name: "value",
+            value: skir.DataValue.createNamed(
+              actualType: skir.NamedTypeUse(
+                definition: coin,
+                arguments: const [],
+              ),
+              payload: skir.DataValue.createRecord(fields: const []),
+            ),
+          ),
+        ],
       ),
     );
     var writes = 0;
-    final host = _host(
+    final host = BoundPresentationHost(
       catalog: catalog,
+      root: () => skir.PresentationNode.defaultInstance,
       bindings: [
-        _binding(
+        BoundPresentationBinding(
+          id: _bindingId,
           use: skir.TypeUse.wrapNamed(declared),
           read: (_) => current,
           write: (_, _) {
@@ -362,6 +400,7 @@ void main() {
           },
         ),
       ],
+      budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
     );
     addTearDown(host.dispose);
     final valueReference = skir.BindingRef(
@@ -378,16 +417,22 @@ void main() {
     expect(
       await host.write(
         valueReference,
-        _namedValue(item),
+        skir.DataValue.createNamed(
+          actualType: skir.NamedTypeUse(definition: item, arguments: const []),
+          payload: skir.DataValue.createRecord(fields: const []),
+        ),
         context: host.rootInvocation,
       ),
-      isA<PortablePresentationWriteRejected>(),
+      writeRejectedBecause("The value does not match the binding type"),
     );
     expect(writes, 0);
     expect(
       await host.write(
         valueReference,
-        _namedValue(coin),
+        skir.DataValue.createNamed(
+          actualType: skir.NamedTypeUse(definition: coin, arguments: const []),
+          payload: skir.DataValue.createRecord(fields: const []),
+        ),
         context: host.rootInvocation,
       ),
       isA<PortablePresentationWriteApplied>(),
@@ -397,13 +442,13 @@ void main() {
 
   test("a delayed write may finish after the host is disposed", () async {
     final completion = Completer<PortablePresentationWriteResult>();
-    final host = _host(
-      bindings: [
-        _binding(
-          read: (_) => skir.DataValue.wrapStringValue("value"),
-          write: (_, _) => completion.future,
-        ),
-      ],
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("value"),
+        write: (_, _) => completion.future,
+      ),
     );
 
     final pending = host.write(
@@ -419,16 +464,16 @@ void main() {
 
   test("disposed hosts reject fresh writes and actions", () async {
     var writes = 0;
-    final host = _host(
-      bindings: [
-        _binding(
-          read: (_) => skir.DataValue.wrapStringValue("value"),
-          write: (_, _) {
-            writes++;
-            return const PortablePresentationWriteResult.applied();
-          },
-        ),
-      ],
+    final host = singleBindingHost(
+      BoundPresentationBinding(
+        id: _bindingId,
+        use: _textType,
+        read: (_) => skir.DataValue.wrapStringValue("value"),
+        write: (_, _) {
+          writes++;
+          return const PortablePresentationWriteResult.applied();
+        },
+      ),
     );
     final disposedHost = host..dispose();
 
@@ -438,110 +483,31 @@ void main() {
         skir.DataValue.wrapStringValue("changed"),
         context: disposedHost.rootInvocation,
       ),
-      isA<PortablePresentationWriteRejected>(),
+      writeRejectedBecause("This presentation is read only"),
     );
     expect(
       await disposedHost.execute(
         skir.EditorAction.unknown,
         context: disposedHost.rootInvocation,
       ),
-      isA<PortablePresentationWriteRejected>(),
+      writeRejectedBecause("This presentation is read only"),
     );
     expect(writes, 0);
   });
 }
 
-BoundPresentationHost _host({
-  required Iterable<BoundPresentationBinding> bindings,
-  CheckedEditorCatalog? catalog,
-}) => BoundPresentationHost(
-  catalog: catalog ?? testCheckedCatalog(),
-  root: () => skir.PresentationNode.defaultInstance,
-  bindings: bindings,
-  budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
-);
-
-BoundPresentationBinding _binding({
-  required PortableBindingReader read,
-  skir.TypeUse? use,
-  PortableBindingWriter? write,
-  Listenable? owner,
-}) => BoundPresentationBinding(
-  id: _bindingId,
-  use: use ?? _textType,
-  read: read,
-  write: write,
-  owner: owner,
-);
-
 final _bindingId = skir.ExpressionBindingId(value: "value");
+
 final _presentationId = skir.PresentationId(
   namespace: "test",
   name: "presentation",
 );
+
 final _textType = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+
 final _rootReference = skir.BindingRef(
   bindingId: _bindingId,
   path: skir.ValuePath(segments: const []),
 );
 
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "host.test", name: name),
-  revision: 1,
-);
-
-skir.NamedTypeTemplate _namedTemplate(skir.TypeDefinitionId definition) =>
-    skir.NamedTypeTemplate(definition: definition, arguments: const []);
-
-skir.EffectiveFieldTemplate _field(
-  skir.FieldOwner owner,
-  skir.TypeTemplate type,
-) => skir.EffectiveFieldTemplate(
-  key: owner.name,
-  owner: owner,
-  type: type,
-  rules: const [],
-);
-
-skir.PublishedType _publishedType(
-  skir.TypeDefinitionId definition, {
-  bool abstract = false,
-  List<skir.TypeParameter> parameters = const [],
-  List<skir.NamedTypeTemplate> parents = const [],
-  List<skir.EffectiveFieldTemplate> fields = const [],
-}) => skir.PublishedType(
-  searchKey: null,
-  placementField: null,
-  display: defaultTypeDisplay(""),
-  definition: skir.TypeDefinition(
-    id: definition,
-    parameters: parameters,
-    representation: skir.RepresentationTemplate.createRecord(
-      fields: [
-        for (final field in fields)
-          skir.FieldDeclaration(
-            owner: field.owner,
-            type: field.type,
-            overrides: const [],
-            hasConstructorDefault: false,
-          ),
-      ],
-      abstract_: abstract,
-    ),
-    parents: parents,
-  ),
-  status: skir.DeclarationStatus.ready,
-  effectiveFields: fields,
-  ancestorTemplates: parents,
-);
-
 final _hostCatalogGeneration = skir.CatalogGeneration(value: "host:test");
-
-skir.DataValue _namedValue(skir.TypeDefinitionId definition) =>
-    skir.DataValue.createNamed(
-      actualType: skir.NamedTypeUse(
-        definition: definition,
-        arguments: const [],
-      ),
-      payload: skir.DataValue.createRecord(fields: const []),
-    );

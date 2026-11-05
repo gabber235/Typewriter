@@ -1,38 +1,46 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("skir.OrganizationJoinRequest", () {
-    test("isExpired returns true when expiresAt is in the past", () {
-      final request = skir.OrganizationJoinRequest(
-        requestId: skir.recordId("request_to_join:req-1"),
-        userId: skir.recordId("user:user1"),
-        userName: "Test",
-        userEmail: "test@example.com",
-        userAvatarUrl: "https://example.com/avatar.png",
-        requestedAt: DateTime.now().subtract(const Duration(hours: 2)),
-        expiresAt: DateTime.now().subtract(const Duration(hours: 1)),
+  final now = DateTime.utc(2026, 10, 27, 12);
+
+  test("a join request past its expiry is expired with no time left", () {
+    withClock(Clock.fixed(now), () {
+      final expired = joinRequest(
+        "req-1",
+        requestedAt: now.subtract(const Duration(hours: 2)),
+        expiresAt: now.subtract(const Duration(hours: 1)),
       );
 
-      expect(request.isExpired, true);
-      expect(request.remainingDuration, Duration.zero);
+      expect(expired.isExpired, isTrue);
+      expect(expired.remainingDuration, Duration.zero);
     });
+  });
 
-    test("isExpired returns false when expiresAt is in the future", () {
-      final request = skir.OrganizationJoinRequest(
-        requestId: skir.recordId("request_to_join:req-1"),
-        userId: skir.recordId("user:user1"),
-        userName: "Test",
-        userEmail: "test@example.com",
-        userAvatarUrl: "https://example.com/avatar.png",
-        requestedAt: DateTime.now(),
-        expiresAt: DateTime.now().add(const Duration(hours: 1)),
+  test("a join request before its expiry has the time until it left", () {
+    withClock(Clock.fixed(now), () {
+      final active = joinRequest(
+        "req-1",
+        requestedAt: now.subtract(const Duration(hours: 2)),
+        expiresAt: now.add(const Duration(hours: 1)),
       );
 
-      expect(request.isExpired, false);
-      expect(request.remainingDuration.inMinutes, greaterThan(50));
+      expect(active.isExpired, isFalse);
+      expect(active.remainingDuration, const Duration(hours: 1));
+    });
+  });
+
+  test("a join request expiring this instant is expired", () {
+    withClock(Clock.fixed(now), () {
+      expect(
+        joinRequest(
+          "req-1",
+          requestedAt: now.subtract(const Duration(hours: 2)),
+          expiresAt: now,
+        ).isExpired,
+        isTrue,
+      );
     });
   });
 }

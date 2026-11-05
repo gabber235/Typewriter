@@ -2,16 +2,59 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/catalog_fixture.dart";
+/// The inspector of the base type, named base.
+final _baseInspector = inspectorDescriptor(
+  "base",
+  _base,
+  namespace: "field_test",
+);
+
+/// The inspector of the base type, named family.
+final _familyInspector = inspectorDescriptor(
+  "family",
+  _base,
+  namespace: "field_test",
+);
+
+/// The inspector of the child type.
+final _childInspector = inspectorDescriptor(
+  "child",
+  _child,
+  namespace: "field_test",
+);
+
+/// An inspector of the base type at priority 1.
+final _lowInspector = inspectorDescriptor(
+  "low",
+  _base,
+  namespace: "field_test",
+  priority: 1,
+);
+
+/// The inspector of the left parent at priority 100.
+final _leftInspector = inspectorDescriptor(
+  "left",
+  _left,
+  namespace: "field_test",
+  priority: 100,
+);
+
+/// The inspector of the right parent at priority 1.
+final _rightInspector = inspectorDescriptor(
+  "right",
+  _right,
+  namespace: "field_test",
+  priority: 1,
+);
 
 void main() {
   test(
     "equal canonical nodes reused in local decoration remain unambiguous",
     () {
-      final descriptor = _descriptor("base", _base);
-      final source = _text("name");
+      final descriptor = _baseInspector;
+      final source = textFieldNode("name");
       final display = presentationNode(
         "display",
         skir.PresentationElement.wrapBadge(
@@ -26,18 +69,19 @@ void main() {
               .toFrozen(),
         ),
       );
-      final catalog = _catalog(
-        [descriptor],
-        [
-          _material(descriptor, [source, display], references: ["name"]),
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [descriptor],
+        presentationMaterials: [
+          inspectorMaterial(
+            descriptor,
+            [source, display],
+            references: ["name"],
+          ),
         ],
       );
       expect(
-        catalog.fieldPresentation(
-          _selection(_child),
-          "name",
-          skir.PresentationRole.inspector,
-        ),
+        catalog.inspectorField(_child, "name"),
         isA<SelectedEditorFieldPresentation>(),
       );
     },
@@ -49,25 +93,26 @@ void main() {
       () {
         final outer = skir.PresentationPartId(owner: _base, name: "outer");
         final inner = skir.PresentationPartId(owner: _base, name: "inner");
-        final descriptor = _descriptor("base", _base);
-        final call = _part("inner.call", inner, null);
-        final direct = _text("direct");
+        final descriptor = _baseInspector;
+        final call = presentationPart("inner.call", inner, null);
+        final direct = textFieldNode("direct");
         final body = presentationColumn(
           "outer.body",
           nestedFirst ? [call, direct] : [direct, call],
         );
-        final catalog = _catalog(
-          [descriptor],
-          [
-            _material(descriptor, [
-              _part("outer", outer, body),
-              _part("inner", inner, _text("inner.name")),
+        final catalog = testCheckedCatalog(
+          types: _types,
+          presentations: [descriptor],
+          presentationMaterials: [
+            inspectorMaterial(descriptor, [
+              presentationPart("outer", outer, body),
+              presentationPart("inner", inner, textFieldNode("inner.name")),
             ]),
           ],
         );
         expect(
           catalog.partPresentation(
-            _selection(_child),
+            completeSelection(_child),
             outer,
             skir.PresentationRole.inspector,
           ),
@@ -79,28 +124,31 @@ void main() {
 
   test("an unpublished conditional part declaration stays invalid instead of falling back", () {
     final key = skir.PresentationPartId(owner: _base, name: "heading");
-    final base = _descriptor("base", _base);
-    final child = _descriptor("child", _child);
+    final base = _baseInspector;
+    final child = _childInspector;
     final hidden = presentationNode(
       "conditional",
       skir.PresentationElement.createConditional(
         condition: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapBoolean(false),
         ),
-        whenTrue: _part("hidden", key, _text("name")),
+        whenTrue: presentationPart("hidden", key, textFieldNode("name")),
         whenFalse: null,
       ),
     );
-    final catalog = _catalog(
-      [base, child],
-      [
-        _material(base, [_part("base.heading", key, _text("base.name"))]),
-        _material(child, [hidden], references: const []),
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [base, child],
+      presentationMaterials: [
+        inspectorMaterial(base, [
+          presentationPart("base.heading", key, textFieldNode("base.name")),
+        ]),
+        inspectorMaterial(child, [hidden], references: const []),
       ],
     );
     expect(
       catalog.partPresentation(
-        _selection(_child),
+        completeSelection(_child),
         key,
         skir.PresentationRole.inspector,
       ),
@@ -109,35 +157,31 @@ void main() {
   });
 
   test("a malformed name member leaves a valid sibling member available", () {
-    final descriptor = _descriptor("base", _base);
+    final descriptor = _baseInspector;
     final invalid = presentationNode(
       "name",
       skir.PresentationElement.wrapToggleInput(
         (skir.ToggleControl.defaultInstance.toMutable()
-              ..control = _control("name"))
+              ..control = fieldControl("name"))
             .toFrozen(),
       ),
     );
-    final catalog = _catalog(
-      [descriptor],
-      [
-        _material(descriptor, [invalid, _text("sibling", field: "sibling")]),
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [descriptor],
+      presentationMaterials: [
+        inspectorMaterial(descriptor, [
+          invalid,
+          textFieldNode("sibling", field: "sibling"),
+        ]),
       ],
     );
     expect(
-      catalog.fieldPresentation(
-        _selection(_child),
-        "name",
-        skir.PresentationRole.inspector,
-      ),
+      catalog.inspectorField(_child, "name"),
       isA<InvalidEditorFieldPresentation>(),
     );
     expect(
-      catalog.fieldPresentation(
-        _selection(_child),
-        "sibling",
-        skir.PresentationRole.inspector,
-      ),
+      catalog.inspectorField(_child, "sibling"),
       isA<SelectedEditorFieldPresentation>(),
     );
   });
@@ -145,40 +189,37 @@ void main() {
   test(
     "an invalid field only source never becomes an inspector continuation",
     () {
-      final family = _descriptor("family", _base);
-      final child = _descriptor("child", _child);
+      final family = _familyInspector;
+      final child = _childInspector;
       final source = presentationNode(
         "wrong",
         skir.PresentationElement.wrapToggleInput(
           (skir.ToggleControl.defaultInstance.toMutable()
-                ..control = _control("name"))
+                ..control = fieldControl("name"))
               .toFrozen(),
         ),
       );
-      final catalog = _catalog(
-        [family],
-        [
-          _material(family, [source]),
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [family],
+        presentationMaterials: [
+          inspectorMaterial(family, [source]),
         ],
       );
       expect(
         catalog.nextInspectorLayout(
-          actualOwner: _selection(_child),
+          actualOwner: completeSelection(_child),
           below: child.target,
         ),
         isA<MissingEditorInspectorLayout>(),
       );
       expect(
-        catalog.fieldPresentation(
-          _selection(_child),
-          "name",
-          skir.PresentationRole.inspector,
-        ),
+        catalog.inspectorField(_child, "name"),
         isA<InvalidEditorFieldPresentation>(),
       );
       expect(
         catalog.partPresentation(
-          _selection(_child),
+          completeSelection(_child),
           skir.PresentationPartId(owner: _base, name: "heading"),
           skir.PresentationRole.inspector,
         ),
@@ -188,8 +229,8 @@ void main() {
   );
 
   test("a structural source cannot omit the canonical neutral root", () {
-    final family = _descriptor("family", _base);
-    final child = _descriptor("child", _child);
+    final family = _familyInspector;
+    final child = _childInspector;
     final remainder = presentationNode(
       "remaining",
       skir.PresentationElement.createRemainingFields(
@@ -197,19 +238,20 @@ void main() {
         excludedParts: const [],
       ),
     );
-    final catalog = _catalog(
-      [family],
-      [
-        _material(
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [family],
+      presentationMaterials: [
+        inspectorMaterial(
           family,
-          [_text("name"), remainder],
+          [textFieldNode("name"), remainder],
           references: ["name", "remaining"],
         ),
       ],
     );
     expect(
       (catalog.nextInspectorLayout(
-        actualOwner: _selection(_child),
+        actualOwner: completeSelection(_child),
         below: child.target,
       ) as InvalidEditorInspectorLayout).diagnostic,
       contains("neutral ancestor"),
@@ -218,39 +260,58 @@ void main() {
 
   test("part alternatives rank independently and losing bodies add no fallback fields", () {
     final key = skir.PresentationPartId(owner: _base, name: "details");
-    final low = _descriptor("low", _base, priority: 1);
-    final high = _descriptor("high", _base, priority: 10);
-    final catalog = _catalog(
-      [low, high],
-      [
-        _material(low, [_part("low", key, _text("name"))]),
-        _material(high, [
-          _part("high", key, _text("sibling", field: "sibling")),
+    final low = _lowInspector;
+    final high = inspectorDescriptor(
+      "high",
+      _base,
+      namespace: "field_test",
+      priority: 10,
+    );
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [low, high],
+      presentationMaterials: [
+        inspectorMaterial(low, [
+          presentationPart("low", key, textFieldNode("name")),
+        ]),
+        inspectorMaterial(high, [
+          presentationPart(
+            "high",
+            key,
+            textFieldNode("sibling", field: "sibling"),
+          ),
         ]),
       ],
     );
     final selected = catalog.partPresentation(
-      _selection(_child),
+      completeSelection(_child),
       key,
       skir.PresentationRole.inspector,
     ) as SelectedEditorPartPresentation;
     expect(selected.material.provider, high.id);
     expect(selected.editedFields, {"sibling"});
     expect(selected.fallbackFields, {"sibling"});
-    final left = _descriptor("left", _left, priority: 100);
-    final right = _descriptor("right", _right, priority: 1);
-    final conflict = _catalog(
-      [left, right],
-      [
-        _material(left, [_part("left", key, _text("name"))]),
-        _material(right, [
-          _part("right", key, _text("sibling", field: "sibling")),
+    final left = _leftInspector;
+    final right = _rightInspector;
+    final conflict = testCheckedCatalog(
+      types: _types,
+      presentations: [left, right],
+      presentationMaterials: [
+        inspectorMaterial(left, [
+          presentationPart("left", key, textFieldNode("name")),
+        ]),
+        inspectorMaterial(right, [
+          presentationPart(
+            "right",
+            key,
+            textFieldNode("sibling", field: "sibling"),
+          ),
         ]),
       ],
     );
     expect(
       conflict.partPresentation(
-        _selection(_child),
+        completeSelection(_child),
         key,
         skir.PresentationRole.inspector,
       ),
@@ -260,7 +321,7 @@ void main() {
 
   test("part footprints reject owner remainders and accept scoped descendant remainders", () {
     final key = skir.PresentationPartId(owner: _base, name: "details");
-    final descriptor = _descriptor("base", _base);
+    final descriptor = _baseInspector;
     final remainder = presentationNode(
       "remaining",
       skir.PresentationElement.createRemainingFields(
@@ -268,32 +329,31 @@ void main() {
         excludedParts: const [],
       ),
     );
-    final invalid = _catalog(
-      [descriptor],
-      [
-        _material(descriptor, [_part("details", key, remainder)]),
+    final invalid = testCheckedCatalog(
+      types: _types,
+      presentations: [descriptor],
+      presentationMaterials: [
+        inspectorMaterial(descriptor, [
+          presentationPart("details", key, remainder),
+        ]),
       ],
     );
     expect(
       invalid.partPresentation(
-        _selection(_child),
+        completeSelection(_child),
         key,
         skir.PresentationRole.inspector,
       ),
       isA<InvalidEditorPartPresentation>(),
     );
     expect(
-      invalid.fieldPresentation(
-        _selection(_child),
-        "name",
-        skir.PresentationRole.inspector,
-      ),
+      invalid.inspectorField(_child, "name"),
       isA<MissingEditorFieldPresentation>(),
     );
     final scoped = presentationNode(
       "scope",
       skir.PresentationElement.createScopedBinding(
-        binding: _control("nested").binding,
+        binding: fieldControl("nested").binding,
         scopeBinding: declareNamedBinding(
           "configured_value",
           skir.TypeTemplate.createNamed(
@@ -304,15 +364,18 @@ void main() {
         child: remainder,
       ),
     );
-    final valid = _catalog(
-      [descriptor],
-      [
-        _material(descriptor, [_part("details", key, scoped)]),
+    final valid = testCheckedCatalog(
+      types: _types,
+      presentations: [descriptor],
+      presentationMaterials: [
+        inspectorMaterial(descriptor, [
+          presentationPart("details", key, scoped),
+        ]),
       ],
     );
     expect(
       (valid.partPresentation(
-        _selection(_child),
+        completeSelection(_child),
         key,
         skir.PresentationRole.inspector,
       ) as SelectedEditorPartPresentation).editedFields,
@@ -324,11 +387,11 @@ void main() {
     "nested record reuse reserves its containing field without a false cycle",
     () {
       final key = skir.PresentationPartId(owner: _base, name: "details");
-      final descriptor = _descriptor("base", _base);
+      final descriptor = _baseInspector;
       final body = presentationNode(
         "nested.scope",
         skir.PresentationElement.createScopedBinding(
-          binding: _control("nested").binding,
+          binding: fieldControl("nested").binding,
           scopeBinding: declareNamedBinding(
             "configured_value",
             skir.TypeTemplate.createNamed(
@@ -336,17 +399,20 @@ void main() {
               arguments: const [],
             ),
           ),
-          child: _part("nested.call", key, null),
+          child: presentationPart("nested.call", key, null),
         ),
       );
-      final catalog = _catalog(
-        [descriptor],
-        [
-          _material(descriptor, [_part("details", key, body)]),
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [descriptor],
+        presentationMaterials: [
+          inspectorMaterial(descriptor, [
+            presentationPart("details", key, body),
+          ]),
         ],
       );
       final selected = catalog.partPresentation(
-        _selection(_child),
+        completeSelection(_child),
         key,
         skir.PresentationRole.inspector,
       ) as SelectedEditorPartPresentation;
@@ -356,8 +422,13 @@ void main() {
   );
 
   test("ancestor layout skips equivalent target alternatives and preserves members", () {
-    final family = _descriptor("family", _base);
-    final alternative = _descriptor("alternative", _child, priority: -1);
+    final family = _familyInspector;
+    final alternative = inspectorDescriptor(
+      "alternative",
+      _child,
+      namespace: "field_test",
+      priority: -1,
+    );
     final remainder = presentationNode(
       "remainder",
       skir.PresentationElement.createRemainingFields(
@@ -365,19 +436,24 @@ void main() {
         excludedParts: const [],
       ),
     );
-    final catalog = _catalog(
-      [family, alternative],
-      [
-        _material(
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [family, alternative],
+      presentationMaterials: [
+        inspectorMaterial(
           family,
-          [_text("name"), remainder],
+          [textFieldNode("name"), remainder],
           references: ["root", "name", "remainder"],
         ),
-        _material(alternative, [remainder], references: ["root", "remainder"]),
+        inspectorMaterial(
+          alternative,
+          [remainder],
+          references: ["root", "remainder"],
+        ),
       ],
     );
     final selected = catalog.nextInspectorLayout(
-      actualOwner: _selection(_child),
+      actualOwner: completeSelection(_child),
       below: alternative.target,
     ) as SelectedEditorInspectorLayout;
     expect(selected.descriptor.id, family.id);
@@ -388,10 +464,10 @@ void main() {
     test(
       "a source with $count remainders still contributes field behavior",
       () {
-        final family = _descriptor("family", _base);
-        final child = _descriptor("child", _child);
+        final family = _familyInspector;
+        final child = _childInspector;
         final nodes = [
-          _text("name"),
+          textFieldNode("name"),
           for (var i = 0; i < count; i++)
             presentationNode(
               "remaining.$i",
@@ -401,20 +477,20 @@ void main() {
               ),
             ),
         ];
-        final catalog = _catalog([family], [_material(family, nodes)]);
+        final catalog = testCheckedCatalog(
+          types: _types,
+          presentations: [family],
+          presentationMaterials: [inspectorMaterial(family, nodes)],
+        );
         expect(
           catalog.nextInspectorLayout(
-            actualOwner: _selection(_child),
+            actualOwner: completeSelection(_child),
             below: child.target,
           ),
           isA<MissingEditorInspectorLayout>(),
         );
         expect(
-          catalog.fieldPresentation(
-            _selection(_child),
-            "name",
-            skir.PresentationRole.inspector,
-          ),
+          catalog.inspectorField(_child, "name"),
           isA<SelectedEditorFieldPresentation>(),
         );
       },
@@ -422,46 +498,52 @@ void main() {
   }
 
   test("placeholder positions do not compete with concrete field behavior", () {
-    final base = _descriptor("base", _base);
-    final child = _descriptor("child", _child);
+    final base = _baseInspector;
+    final child = _childInspector;
     final request = presentationNode(
       "request",
       skir.PresentationElement.createDefaultPresentation(
-        control: _control("name"),
+        control: fieldControl("name"),
         presentationId: null,
       ),
     );
-    final catalog = _catalog(
-      [base, child],
-      [
-        _material(base, [_text("name")]),
-        _material(child, [request]),
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [base, child],
+      presentationMaterials: [
+        inspectorMaterial(base, [textFieldNode("name")]),
+        inspectorMaterial(child, [request]),
       ],
     );
-    final selected = catalog.fieldPresentation(
-      _selection(_child),
+    final selected = catalog.inspectorField(
+      _child,
       "name",
-      skir.PresentationRole.inspector,
     ) as SelectedEditorFieldPresentation;
     expect(selected.identity.provider, base.id);
   });
 
   test("part replacement keeps ancestor fallback suppression separate from live editors", () {
     final key = skir.PresentationPartId(owner: _base, name: "details");
-    final base = _descriptor("base", _base);
-    final child = _descriptor("child", _child);
-    final baseBody = _text("name");
+    final base = _baseInspector;
+    final child = _childInspector;
+    final baseBody = textFieldNode("name");
     final childBody = presentationNode(
       "display",
       skir.PresentationElement.createSpacer(width: null, height: null),
     );
-    final baseMaterial = _material(base, [_part("base.part", key, baseBody)]);
-    final childMaterial = _material(child, [
-      _part("child.part", key, childBody),
+    final baseMaterial = inspectorMaterial(base, [
+      presentationPart("base.part", key, baseBody),
     ]);
-    final catalog = _catalog([base, child], [baseMaterial, childMaterial]);
+    final childMaterial = inspectorMaterial(child, [
+      presentationPart("child.part", key, childBody),
+    ]);
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [base, child],
+      presentationMaterials: [baseMaterial, childMaterial],
+    );
     final selected = catalog.partPresentation(
-      _selection(_child),
+      completeSelection(_child),
       key,
       skir.PresentationRole.inspector,
     ) as SelectedEditorPartPresentation;
@@ -469,12 +551,12 @@ void main() {
     expect(selected.editedFields, isEmpty);
     expect(selected.fallbackFields, {"name"});
     final local = catalog.partPresentation(
-      _selection(_child),
+      completeSelection(_child),
       key,
       skir.PresentationRole.inspector,
       local: EditorPartDeclaration(
         material: childMaterial,
-        body: _text("sibling", field: "sibling"),
+        body: textFieldNode("sibling", field: "sibling"),
       ),
     ) as SelectedEditorPartPresentation;
     expect(local.editedFields, {"sibling"});
@@ -486,34 +568,60 @@ void main() {
     () {
       final first = skir.PresentationPartId(owner: _base, name: "first");
       final second = skir.PresentationPartId(owner: _base, name: "second");
-      final descriptor = _descriptor("parts", _base);
-      final material = _material(descriptor, [
-        _part("first", first, _part("second.call", second, null)),
-        _part("second", second, _text("name")),
+      final descriptor = inspectorDescriptor(
+        "parts",
+        _base,
+        namespace: "field_test",
+      );
+      final material = inspectorMaterial(descriptor, [
+        presentationPart(
+          "first",
+          first,
+          presentationPart("second.call", second, null),
+        ),
+        presentationPart("second", second, textFieldNode("name")),
       ]);
-      final catalog = _catalog([descriptor], [material]);
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [descriptor],
+        presentationMaterials: [material],
+      );
       final selected = catalog.partPresentation(
-        _selection(_child),
+        completeSelection(_child),
         first,
         skir.PresentationRole.inspector,
       ) as SelectedEditorPartPresentation;
       expect(selected.editedFields, {"name"});
       expect(selected.claimedParts, {first, second});
-      final cycle = _material(descriptor, [
-        _part("first", first, _part("second.call", second, null)),
-        _part("second", second, _part("first.call", first, null)),
+      final cycle = inspectorMaterial(descriptor, [
+        presentationPart(
+          "first",
+          first,
+          presentationPart("second.call", second, null),
+        ),
+        presentationPart(
+          "second",
+          second,
+          presentationPart("first.call", first, null),
+        ),
       ]);
       expect(
-        (_catalog([descriptor], [cycle]).partPresentation(
-          _selection(_child),
-          first,
-          skir.PresentationRole.inspector,
-        ) as InvalidEditorPartPresentation).diagnostic,
+        (testCheckedCatalog(
+                  types: _types,
+                  presentations: [descriptor],
+                  presentationMaterials: [cycle],
+                ).partPresentation(
+                  completeSelection(_child),
+                  first,
+                  skir.PresentationRole.inspector,
+                )
+                as InvalidEditorPartPresentation)
+            .diagnostic,
         contains("recursive"),
       );
       expect(
         catalog.partPresentation(
-          _selection(_child),
+          completeSelection(_child),
           skir.PresentationPartId(owner: _base, name: "missing"),
           skir.PresentationRole.inspector,
         ),
@@ -523,7 +631,7 @@ void main() {
   );
 
   test("sibling expression reads and scoped editors of the same field are reusable", () {
-    final descriptor = _descriptor("child", _child);
+    final descriptor = _childInspector;
     final alias = skir.ExpressionBindingId(value: "owned");
     final nested = presentationNode(
       "nested",
@@ -538,15 +646,15 @@ void main() {
       ),
     );
     final control =
-        (_control("name").toMutable()
+        (fieldControl("name").toMutable()
               ..label = skir.ExpressionNode.createInput(
                 binding: skir.ExpressionBindingId(value: "configured_value"),
-                path: _control("sibling").binding.path,
+                path: fieldControl("sibling").binding.path,
               )
               ..prefix = presentationNode(
                 "scope",
                 skir.PresentationElement.createScopedBinding(
-                  binding: _control("name").binding,
+                  binding: fieldControl("name").binding,
                   scopeBinding: declareBinding(alias, textTemplate),
                   child: nested,
                 ),
@@ -559,20 +667,20 @@ void main() {
             .toFrozen(),
       ),
     );
-    final catalog = _catalog(
-      [descriptor],
-      [
-        _material(descriptor, [source]),
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [descriptor],
+      presentationMaterials: [
+        inspectorMaterial(descriptor, [source]),
       ],
     );
-    expect(
-      catalog.fieldPresentation(
-        _selection(_child),
-        "name",
-        skir.PresentationRole.inspector,
-      ),
-      isA<SelectedEditorFieldPresentation>(),
-    );
+    final selected = catalog.inspectorField(
+      _child,
+      "name",
+    ) as SelectedEditorFieldPresentation;
+    expect(selected.identity.provider, descriptor.id);
+    expect(selected.identity.field, "name");
+    expect(selected.node, source);
   });
 
   for (final placement in [
@@ -591,8 +699,8 @@ void main() {
     test(
       "a source with $placement sibling editors is not an inherited field",
       () {
-        final descriptor = _descriptor("child", _child);
-        final sibling = _text("foreign", field: "sibling");
+        final descriptor = _childInspector;
+        final sibling = textFieldNode("foreign", field: "sibling");
         final alias = skir.ExpressionBindingId(value: "local");
         final local = presentationNode(
           "local",
@@ -607,10 +715,10 @@ void main() {
           ),
         );
         final decoration = switch (placement) {
-          "part_request" || "part_definition" => _part(
+          "part_request" || "part_definition" => presentationPart(
             "part",
             skir.PresentationPartId(owner: _base, name: "heading"),
-            placement == "part_definition" ? _text("owned") : null,
+            placement == "part_definition" ? textFieldNode("owned") : null,
           ),
           "hidden" => presentationNode(
             "hidden",
@@ -626,7 +734,7 @@ void main() {
             "scope",
             skir.PresentationElement.createScopedBinding(
               binding: placement == "foreign_scope"
-                  ? _control("sibling").binding
+                  ? fieldControl("sibling").binding
                   : skir.BindingRef(
                       bindingId: skir.ExpressionBindingId(value: "unknown"),
                       path: skir.ValuePath.defaultInstance,
@@ -650,7 +758,7 @@ void main() {
                 arguments: [
                   skir.PresentationArgument(
                     input: alias,
-                    binding: _control(
+                    binding: fieldControl(
                       placement == "custom_invocation" ? "name" : "sibling",
                     ).binding,
                   ),
@@ -660,7 +768,7 @@ void main() {
           ),
           _ => sibling,
         };
-        final source = _text("name").toMutable();
+        final source = textFieldNode("name").toMutable();
         if (placement == "header") {
           source.header =
               (skir.PresentationHeader.defaultInstance.toMutable()
@@ -687,16 +795,16 @@ void main() {
             input.toFrozen(),
           );
         }
-        final catalog = _catalog(
-          [descriptor],
-          [
-            _material(descriptor, [source.toFrozen()]),
+        final catalog = testCheckedCatalog(
+          types: _types,
+          presentations: [descriptor],
+          presentationMaterials: [
+            inspectorMaterial(descriptor, [source.toFrozen()]),
           ],
         );
-        final selected = catalog.fieldPresentation(
-          _selection(_child),
+        final selected = catalog.inspectorField(
+          _child,
           "name",
-          skir.PresentationRole.inspector,
         ) as InvalidEditorFieldPresentation;
         expect(
           selected.diagnostic,
@@ -718,31 +826,35 @@ void main() {
     "representation providers use only the exact owner's compiled subject",
     () {
       final descriptor =
-          (_descriptor("record", _base).toMutable()
+          (inspectorDescriptor(
+                  "record",
+                  _base,
+                  namespace: "field_test",
+                ).toMutable()
                 ..target = skir.PresentationTarget.wrapRepresentation(
                   skir.RepresentationKind.record,
                 ))
               .toFrozen();
       skir.PresentationMaterial material(skir.TypeDefinitionId subject) =>
-          (_material(_descriptor("record", subject), [
-            _text("name"),
-          ]).toMutable()..target = descriptor.target).toFrozen();
+          (inspectorMaterial(
+            inspectorDescriptor("record", subject, namespace: "field_test"),
+            [textFieldNode("name")],
+          ).toMutable()..target = descriptor.target).toFrozen();
       final baseMaterial = material(_base);
       final childMaterial = material(_child);
-      final catalog = _catalog([descriptor], [baseMaterial, childMaterial]);
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [descriptor],
+        presentationMaterials: [baseMaterial, childMaterial],
+      );
 
-      final selected = catalog.fieldPresentation(
-        _selection(_child),
+      final selected = catalog.inspectorField(
+        _child,
         "name",
-        skir.PresentationRole.inspector,
       ) as SelectedEditorFieldPresentation;
       expect(selected.material, same(childMaterial));
       expect(
-        catalog.fieldPresentation(
-          _selection(_left),
-          "name",
-          skir.PresentationRole.inspector,
-        ),
+        catalog.inspectorField(_left, "name"),
         isA<MissingEditorFieldPresentation>(),
       );
     },
@@ -751,14 +863,22 @@ void main() {
   test(
     "an inherited field retains its source node and material dependencies",
     () {
-      final base = _descriptor("base", _base, priority: 100);
-      final material = _material(base, [_text("base.name")]);
-      final catalog = _catalog([base], [material]);
+      final base = inspectorDescriptor(
+        "base",
+        _base,
+        namespace: "field_test",
+        priority: 100,
+      );
+      final material = inspectorMaterial(base, [textFieldNode("base.name")]);
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [base],
+        presentationMaterials: [material],
+      );
 
-      final selected = catalog.fieldPresentation(
-        _selection(_child),
+      final selected = catalog.inspectorField(
+        _child,
         "name",
-        skir.PresentationRole.inspector,
       ) as SelectedEditorFieldPresentation;
 
       expect(selected.material, same(material));
@@ -766,16 +886,12 @@ void main() {
       expect(selected.identity.provider, base.id);
       expect(selected.identity.subject, material.subject);
       expect(
-        catalog.fieldPresentation(
-          _selection(_child),
-          "other",
-          skir.PresentationRole.inspector,
-        ),
+        catalog.inspectorField(_child, "other"),
         isA<MissingEditorFieldPresentation>(),
       );
       expect(
         catalog.fieldPresentation(
-          _selection(_child),
+          completeSelection(_child),
           "name",
           skir.PresentationRole.workspace,
         ),
@@ -787,24 +903,31 @@ void main() {
   test(
     "specificity precedes priority and a child resolves competing parents",
     () {
-      final base = _descriptor("base", _base, priority: 1000);
-      final left = _descriptor("left", _left, priority: 100);
-      final right = _descriptor("right", _right, priority: 1);
-      final child = _descriptor("child", _child);
+      final base = inspectorDescriptor(
+        "base",
+        _base,
+        namespace: "field_test",
+        priority: 1000,
+      );
+      final left = _leftInspector;
+      final right = _rightInspector;
+      final child = _childInspector;
       final descriptors = [base, left, right, child];
       final materials = [
         for (final descriptor in descriptors)
-          _material(descriptor, [_text("${descriptor.id.name}.name")]),
+          inspectorMaterial(descriptor, [
+            textFieldNode("${descriptor.id.name}.name"),
+          ]),
       ];
 
-      final parents = _catalog(
-        descriptors.take(3).toList(),
-        materials.take(3).toList(),
+      final parents = testCheckedCatalog(
+        types: _types,
+        presentations: descriptors.take(3).toList(),
+        presentationMaterials: materials.take(3).toList(),
       );
-      final conflict = parents.fieldPresentation(
-        _selection(_child),
+      final conflict = parents.inspectorField(
+        _child,
         "name",
-        skir.PresentationRole.inspector,
       ) as ConflictingEditorFieldPresentation;
       expect(
         conflict.candidates.map((candidate) => candidate.provider),
@@ -812,29 +935,43 @@ void main() {
       );
       expect(conflict.candidates.length, 2);
 
-      final resolved = _catalog(descriptors, materials).fieldPresentation(
-        _selection(_child),
-        "name",
-        skir.PresentationRole.inspector,
-      ) as SelectedEditorFieldPresentation;
+      final resolved =
+          testCheckedCatalog(
+                types: _types,
+                presentations: descriptors,
+                presentationMaterials: materials,
+              ).fieldPresentation(
+                completeSelection(_child),
+                "name",
+                skir.PresentationRole.inspector,
+              )
+              as SelectedEditorFieldPresentation;
       expect(resolved.identity.provider, child.id);
     },
   );
 
   test("equivalent target priority chooses a provider without collapsing its nodes", () {
-    final low = _descriptor("low", _base, priority: 1);
-    final high = _descriptor("high", _base, priority: 2);
-    final lowMaterial = _material(low, [_text("low.name")]);
-    final highMaterial = _material(high, [
-      _text("high.first"),
-      _text("high.second"),
+    final low = _lowInspector;
+    final high = inspectorDescriptor(
+      "high",
+      _base,
+      namespace: "field_test",
+      priority: 2,
+    );
+    final lowMaterial = inspectorMaterial(low, [textFieldNode("low.name")]);
+    final highMaterial = inspectorMaterial(high, [
+      textFieldNode("high.first"),
+      textFieldNode("high.second"),
     ]);
-    final catalog = _catalog([low, high], [lowMaterial, highMaterial]);
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [low, high],
+      presentationMaterials: [lowMaterial, highMaterial],
+    );
 
-    final conflict = catalog.fieldPresentation(
-      _selection(_child),
+    final conflict = catalog.inspectorField(
+      _child,
       "name",
-      skir.PresentationRole.inspector,
     ) as ConflictingEditorFieldPresentation;
     expect(conflict.candidates.map((candidate) => candidate.nodeId), [
       "high.first",
@@ -842,14 +979,15 @@ void main() {
     ]);
 
     final single =
-        _catalog(
-              [low, high],
-              [
+        testCheckedCatalog(
+              types: _types,
+              presentations: [low, high],
+              presentationMaterials: [
                 lowMaterial,
-                _material(high, [_text("high.only")]),
+                inspectorMaterial(high, [textFieldNode("high.only")]),
               ],
             ).fieldPresentation(
-              _selection(_child),
+              completeSelection(_child),
               "name",
               skir.PresentationRole.inspector,
             )
@@ -858,27 +996,32 @@ void main() {
   });
 
   test("a more specific placeholder contributes no candidate and keeps inheritance", () {
-    final base = _descriptor("base", _base);
-    final child = _descriptor("child", _child, priority: 100);
-    final catalog = _catalog(
-      [base, child],
-      [
-        _material(base, [_text("base.name")]),
-        _material(child, [
+    final base = _baseInspector;
+    final child = inspectorDescriptor(
+      "child",
+      _child,
+      namespace: "field_test",
+      priority: 100,
+    );
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [base, child],
+      presentationMaterials: [
+        inspectorMaterial(base, [textFieldNode("base.name")]),
+        inspectorMaterial(child, [
           presentationNode(
             "child.name",
             skir.PresentationElement.createDefaultPresentation(
-              control: _control("name"),
+              control: fieldControl("name"),
               presentationId: null,
             ),
           ),
         ], references: const []),
       ],
     );
-    final selected = catalog.fieldPresentation(
-      _selection(_child),
+    final selected = catalog.inspectorField(
+      _child,
       "name",
-      skir.PresentationRole.inspector,
     ) as SelectedEditorFieldPresentation;
     expect(selected.identity.provider, base.id);
   });
@@ -892,34 +1035,35 @@ void main() {
     test(
       "a malformed $problem reference diagnoses instead of falling back",
       () {
-        final base = _descriptor("base", _base);
-        final child = _descriptor("child", _child);
+        final base = _baseInspector;
+        final child = _childInspector;
         final nodes = switch (problem) {
-          "missing" => [_text("other")],
-          "duplicate" => [_text("bad"), _text("bad")],
-          "unknown_field" => [_text("bad", field: "other")],
+          "missing" => [textFieldNode("other")],
+          "duplicate" => [textFieldNode("bad"), textFieldNode("bad")],
+          "unknown_field" => [textFieldNode("bad", field: "other")],
           "wrong_type" => [
             presentationNode(
               "bad",
               skir.PresentationElement.wrapToggleInput(
                 (skir.ToggleControl.defaultInstance.toMutable()
-                      ..control = _control("name"))
+                      ..control = fieldControl("name"))
                     .toFrozen(),
               ),
             ),
           ],
           _ => throw StateError(problem),
         };
-        final material = _material(child, nodes, references: ["bad"]);
-        final catalog = _catalog(
-          [base, child],
-          [
-            _material(base, [_text("base.name")]),
+        final material = inspectorMaterial(child, nodes, references: ["bad"]);
+        final catalog = testCheckedCatalog(
+          types: _types,
+          presentations: [base, child],
+          presentationMaterials: [
+            inspectorMaterial(base, [textFieldNode("base.name")]),
             material,
           ],
         );
         final selection = catalog.fieldPresentation(
-          _selection(_child),
+          completeSelection(_child),
           problem == "unknown_field" ? "other" : "name",
           skir.PresentationRole.inspector,
         );
@@ -935,24 +1079,27 @@ void main() {
   test(
     "equal node ids in different materials retain independent identities",
     () {
-      final left = _descriptor("left", _left);
-      final right = _descriptor("right", _right);
-      final catalog = _catalog(
-        [left, right],
-        [
-          _material(left, [_text("same")]),
-          _material(right, [_text("same")]),
+      final left = inspectorDescriptor("left", _left, namespace: "field_test");
+      final right = inspectorDescriptor(
+        "right",
+        _right,
+        namespace: "field_test",
+      );
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [left, right],
+        presentationMaterials: [
+          inspectorMaterial(left, [textFieldNode("same")]),
+          inspectorMaterial(right, [textFieldNode("same")]),
         ],
       );
-      final leftChoice = catalog.fieldPresentation(
-        _selection(_left),
+      final leftChoice = catalog.inspectorField(
+        _left,
         "name",
-        skir.PresentationRole.inspector,
       ) as SelectedEditorFieldPresentation;
-      final rightChoice = catalog.fieldPresentation(
-        _selection(_right),
+      final rightChoice = catalog.inspectorField(
+        _right,
         "name",
-        skir.PresentationRole.inspector,
       ) as SelectedEditorFieldPresentation;
       expect(leftChoice.identity, isNot(rightChoice.identity));
       expect(leftChoice.node.nodeId, rightChoice.node.nodeId);
@@ -962,13 +1109,13 @@ void main() {
   test(
     "structural indexing visits control prefixes once alongside choice content",
     () {
-      final prefix = _text("prefix");
-      final option = _text("option");
+      final prefix = textFieldNode("prefix");
+      final option = textFieldNode("option");
       final node = presentationNode(
         "choice",
         skir.PresentationElement.wrapSelectInput(
           (skir.SelectControl.defaultInstance.toMutable()
-                ..control = (_control("name").toMutable()..prefix = prefix)
+                ..control = (fieldControl("name").toMutable()..prefix = prefix)
                 ..options = [
                   (skir.SelectOption.defaultInstance.toMutable()
                         ..content = option)
@@ -985,17 +1132,18 @@ void main() {
   );
 
   test("whole selection still reports an unavailable winning material", () {
-    final base = _descriptor("base", _base);
-    final child = _descriptor("child", _child);
-    final catalog = _catalog(
-      [base, child],
-      [
-        _material(base, [_text("base.name")]),
+    final base = _baseInspector;
+    final child = _childInspector;
+    final catalog = testCheckedCatalog(
+      types: _types,
+      presentations: [base, child],
+      presentationMaterials: [
+        inspectorMaterial(base, [textFieldNode("base.name")]),
       ],
     );
     expect(
       catalog.selectPresentation(
-        _selection(_child),
+        completeSelection(_child),
         skir.PresentationRole.inspector,
       ),
       isA<UnavailableEditorPresentation>(),
@@ -1003,11 +1151,11 @@ void main() {
   });
 
   test("display icon descendants participate in source node uniqueness", () {
-    final descriptor = _descriptor("child", _child);
+    final descriptor = _childInspector;
     final appearance =
         (skir.DisplayAppearance.defaultInstance.toMutable()
               ..icon = skir.InputAdornment.wrapContent(
-                _text("name", field: "sibling"),
+                textFieldNode("name", field: "sibling"),
               ))
             .toFrozen();
     final statusAppearance =
@@ -1048,20 +1196,20 @@ void main() {
       ),
     ];
     for (final display in displays) {
-      final catalog = _catalog(
-        [descriptor],
-        [
-          _material(
+      final catalog = testCheckedCatalog(
+        types: _types,
+        presentations: [descriptor],
+        presentationMaterials: [
+          inspectorMaterial(
             descriptor,
-            [_text("name"), presentationNode("display", display)],
+            [textFieldNode("name"), presentationNode("display", display)],
             references: ["name"],
           ),
         ],
       );
-      final invalid = catalog.fieldPresentation(
-        _selection(_child),
+      final invalid = catalog.inspectorField(
+        _child,
         "name",
-        skir.PresentationRole.inspector,
       ) as InvalidEditorFieldPresentation;
       expect(
         invalid.diagnostic,
@@ -1072,141 +1220,33 @@ void main() {
   });
 }
 
-final _base = _definition("Base");
-final _left = _definition("Left");
-final _right = _definition("Right");
-final _child = _definition("Child");
+final _base = typeDefinition("Base", namespace: "field_test");
+final _left = typeDefinition("Left", namespace: "field_test");
+final _right = typeDefinition("Right", namespace: "field_test");
+final _child = typeDefinition("Child", namespace: "field_test");
 
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "field_test", name: name),
-  revision: 1,
-);
-
-skir.TypeSelection _selection(skir.TypeDefinitionId definition) =>
-    skir.TypeSelection.createComplete(
-      definition: definition,
-      arguments: const [],
-    );
-
-skir.PresentationDescriptor _descriptor(
-  String name,
-  skir.TypeDefinitionId owner, {
-  int priority = 0,
-}) => skir.PresentationDescriptor(
-  id: skir.PresentationId(namespace: "field_test", name: name),
-  owner: skir.DeclarationOwner.defaultInstance,
-  target: skir.PresentationTarget.createNamed(
-    definition: owner,
+final _fields = {
+  "nested": skir.TypeTemplate.createNamed(
+    definition: _child,
     arguments: const [],
   ),
-  roles: [skir.PresentationRole.inspector],
-  priority: priority,
-);
+  "name": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+  "sibling": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+};
 
-skir.PresentationMaterial _material(
-  skir.PresentationDescriptor descriptor,
-  List<skir.PresentationNode> nodes, {
-  List<String>? references,
-}) => skir.PresentationMaterial(
-  provider: descriptor.id,
-  target: descriptor.target,
-  role: skir.PresentationRole.inspector,
-  subject: skir.TypeTemplate.wrapNamed(
-    (descriptor.target as skir.PresentationTarget_namedWrapper).value,
-  ),
-  layout: presentationColumn("root", nodes),
-  dependencies: skir.PresentationDependencies.defaultInstance,
-  inheritableNodes: references ?? [for (final node in nodes) node.nodeId],
-);
-
-CheckedEditorCatalog _catalog(
-  List<skir.PresentationDescriptor> descriptors,
-  List<skir.PresentationMaterial> materials,
-) => testCheckedCatalog(
-  types: [
-    _type(_base, const []),
-    _type(_left, [_base]),
-    _type(_right, [_base]),
-    _type(_child, [_left, _right, _base]),
-  ],
-  presentations: descriptors,
-  presentationMaterials: materials,
-);
-
-skir.PublishedType _type(
-  skir.TypeDefinitionId definition,
-  List<skir.TypeDefinitionId> ancestors,
-) => skir.PublishedType(
-  searchKey: null,
-  placementField: null,
-  definition: skir.TypeDefinition(
-    id: definition,
-    parameters: const [],
-    representation: skir.RepresentationTemplate.createRecord(
-      fields: const [],
-      abstract_: false,
+/// A diamond: Left and Right refine Base, Child refines all three; every
+/// type has Base's fields.
+final _types = [
+  for (final (definition, ancestors) in [
+    (_base, <skir.TypeDefinitionId>[]),
+    (_left, [_base]),
+    (_right, [_base]),
+    (_child, [_left, _right, _base]),
+  ])
+    declaredRecord(
+      definition,
+      fields: _fields,
+      inheritedFrom: definition == _base ? null : _base,
+      parents: ancestors,
     ),
-    parents: [
-      for (final ancestor in ancestors)
-        skir.NamedTypeTemplate(definition: ancestor, arguments: const []),
-    ],
-  ),
-  status: skir.DeclarationStatus.ready,
-  effectiveFields: [
-    skir.EffectiveFieldTemplate(
-      key: "nested",
-      owner: skir.FieldOwner(definition: _base, name: "nested"),
-      type: skir.TypeTemplate.createNamed(
-        definition: _child,
-        arguments: const [],
-      ),
-      rules: const [],
-    ),
-    skir.EffectiveFieldTemplate(
-      key: "name",
-      owner: skir.FieldOwner(definition: _base, name: "name"),
-      type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      rules: const [],
-    ),
-    skir.EffectiveFieldTemplate(
-      key: "sibling",
-      owner: skir.FieldOwner(definition: _base, name: "sibling"),
-      type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      rules: const [],
-    ),
-  ],
-  ancestorTemplates: [
-    for (final ancestor in ancestors)
-      skir.NamedTypeTemplate(definition: ancestor, arguments: const []),
-  ],
-  display: defaultTypeDisplay(""),
-);
-
-skir.BoundControl _control(String field) =>
-    (skir.BoundControl.defaultInstance.toMutable()
-          ..binding = skir.BindingRef(
-            bindingId: skir.ExpressionBindingId(value: "configured_value"),
-            path: skir.ValuePath(
-              segments: [skir.PathSegment.createField(name: field)],
-            ),
-          ))
-        .toFrozen();
-
-skir.PresentationNode _text(String id, {String field = "name"}) =>
-    presentationNode(
-      id,
-      skir.PresentationElement.wrapTextInput(
-        (skir.TextControl.defaultInstance.toMutable()
-              ..control = _control(field))
-            .toFrozen(),
-      ),
-    );
-
-skir.PresentationNode _part(
-  String id,
-  skir.PresentationPartId key,
-  skir.PresentationNode? body,
-) => presentationNode(
-  id,
-  skir.PresentationElement.createPart(key: key, body: body),
-);
+];

@@ -5,7 +5,6 @@ abstract class AuthoringSessionState with _$AuthoringSessionState {
   const factory AuthoringSessionState({
     skir.AuthoringState? snapshot,
     CheckedEditorCatalog? catalog,
-    @Default(false) bool refreshing,
     Object? failure,
   }) = _AuthoringSessionState;
 }

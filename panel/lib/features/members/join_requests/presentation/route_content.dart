@@ -34,28 +34,32 @@ class _JoinRequestsShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 76,
-            child: Row(
-              children: [
-                ShimmerBox.rectangle(width: 24, height: 24),
-                SizedBox(width: context.spacing.space3),
-                ShimmerBox.rectangle(width: 76, height: 16),
-              ],
+    return SliverSemantics(
+      label: "Loading join requests",
+      container: true,
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 76,
+              child: Row(
+                children: [
+                  ShimmerBox.rectangle(width: 24, height: 24),
+                  SizedBox(width: context.spacing.space3),
+                  ShimmerBox.rectangle(width: 76, height: 16),
+                ],
+              ),
             ),
           ),
-        ),
-        SliverList.builder(
-          itemCount: context.responsive(mobile: 3, tablet: 4, desktop: 7),
-          itemBuilder: (context, index) => Padding(
-            padding: EdgeInsets.only(bottom: context.spacing.space3),
-            child: _JoinRequestCardShimmer(),
+          SliverList.builder(
+            itemCount: context.responsive(mobile: 3, tablet: 4, desktop: 7),
+            itemBuilder: (context, index) => Padding(
+              padding: EdgeInsets.only(bottom: context.spacing.space3),
+              child: _JoinRequestCardShimmer(),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

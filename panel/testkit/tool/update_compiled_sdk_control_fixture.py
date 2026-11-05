@@ -13,7 +13,7 @@ lines = [
     'import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;',
     '',
     '/// Actual SDK material emitted by FrameworkCatalogCreationTest and DefaultPresentationRuntimeTest.',
-    '/// Regenerate with TYPEWRITER_CONTROL_FIXTURE_DIR and this fixture tool.',
+    '/// Written by `cargo xtask generate` (generator sdk-fixtures); never edit or commit it.',
 ]
 for name, wire_type, file_name in [
     ("compiledSdkControlCatalog", "EditorCatalog", "catalog.bin"),

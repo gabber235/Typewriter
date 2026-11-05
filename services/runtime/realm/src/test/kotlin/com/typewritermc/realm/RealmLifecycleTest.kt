@@ -34,12 +34,14 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
+import com.typewritermc.realm.catalog.testCatalogIncarnation
 import com.typewritermc.realm.edit.AuthoringMutationPlan
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.operation.PreparationEvaluator
 import com.typewritermc.realm.publication.StagedEngineImplementationSource
 import com.typewritermc.realm.storage.RealmDatabaseProvider
 import com.typewritermc.realm.storage.SchemaMigrator
+import com.typewritermc.realm.testing.RealmCatalog
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
@@ -54,8 +56,11 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.services.libs.utils.DelayScheduler
+import com.typewritermc.services.libs.utils.FakeDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.testkit.fieldDeclaration
+import com.typewritermc.testkit.origin
+import com.typewritermc.testkit.recordType
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
@@ -93,11 +98,35 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.kernel.v1.resource_id.ResourceId
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmLifecycleTest by testSuite {
+    /** Every editor request subject a started Realm answers for the fixture organization and Realm. */
+    val realmRoutes =
+        listOf(
+            "editor.catalog.fetch",
+            "editor.catalog.invalidate",
+            "editor.creation.prepare",
+            "editor.presentation.search",
+            "editor.presentation.search.cancel",
+            "editor.capability.computation.invoke",
+            "editor.capability.command.invoke",
+            "editor.resources.operations.resolve",
+            "editor.resources.drops.resolve",
+            "editor.resources.actions.prepare",
+            "editor.authoring.state.query",
+            "editor.authoring.edit.commit",
+            "editor.authoring.type.preview",
+            "editor.authoring.type.commit",
+            "editor.authoring.search",
+            "editor.authoring.compiled.query",
+            "editor.authoring.compiled.status.query",
+            "editor.authoring.publish",
+            "editor.authoring.publication.query",
+            "editor.authoring.publication.watch",
+        ).map { "service.to.realm.organization.organization.realm.$it" }.toSet()
+
     test("catalog activation completes before Realm routes are exposed") {
         runTest {
             val activationStarted = CompletableDeferred<Unit>()
@@ -141,7 +170,27 @@ val RealmLifecycleTest by testSuite {
                 runCurrent()
 
                 startup.await()
-                session.transport.activeSubscriptionCount shouldBeGreaterThan 0
+                session.transport.activeRealmRoutes() shouldBe realmRoutes
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
+    test("a stopped Realm stops its routes and serves them again when started on the same staging") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                val session = fixture.session(1)
+                fixture.messaging.value = session.session
+                fixture.start()
+
+                fixture.stop()
+                session.transport.activeRealmRoutes() shouldBe emptySet()
+                fixture.databaseOpen shouldBe false
+
+                fixture.start()
+                session.transport.activeRealmRoutes() shouldBe realmRoutes
             } finally {
                 fixture.close()
             }
@@ -189,7 +238,7 @@ val RealmLifecycleTest by testSuite {
 
                 first.transport.activeSubscriptionCount shouldBe 0
                 second.transport.activeSubscriptionCount shouldBe 0
-                fixture.delayScheduler.awaitRequest()
+                fixture.delayScheduler.awaitRequest() shouldBe 1.seconds
                 fixture.delayScheduler.resume()
                 runCurrent()
 
@@ -218,7 +267,7 @@ val RealmLifecycleTest by testSuite {
                 runCurrent()
 
                 session.transport.activeSubscriptionCount shouldBe 0
-                fixture.delayScheduler.awaitRequest()
+                fixture.delayScheduler.awaitRequest() shouldBe 1.seconds
                 fixture.delayScheduler.resume()
                 runCurrent()
 
@@ -307,7 +356,7 @@ val RealmLifecycleTest by testSuite {
 
     test("Realm start provisions the realm root and one instance of every section") {
         runTest {
-            val incarnation = coreRealmCatalog("lifecycle-structure")
+            val incarnation = RealmCatalog().incarnation("lifecycle-structure")
             val fixture = RealmLifecycleFixture(this, catalog = incarnation)
             try {
                 val session = fixture.session(1)
@@ -356,7 +405,22 @@ val RealmLifecycleTest by testSuite {
                     mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(availableResource to availableRecord, unavailableResource to unavailableRecord)
-            val incarnation = lifecycleIsolationCatalog(valid, unavailable)
+            val unavailableDefinition = recordType(unavailable, fieldDeclaration(unavailable, "legacy", ScalarKind.TEXT.template))
+            val incarnation =
+                testCatalogIncarnation(
+                    "lifecycle_isolation",
+                    CatalogContributions(
+                        declarations =
+                            listOf(
+                                OwnedTypeDeclaration(
+                                    origin("valid"),
+                                    recordType(valid, fieldDeclaration(valid, "name", ScalarKind.TEXT.template)),
+                                ),
+                                OwnedTypeDeclaration(origin("unavailable_first"), unavailableDefinition),
+                                OwnedTypeDeclaration(origin("unavailable_second"), unavailableDefinition),
+                            ),
+                    ),
+                )
             val fixture =
                 RealmLifecycleFixture(
                     this,
@@ -405,273 +469,5 @@ val RealmLifecycleTest by testSuite {
                 fixture.close()
             }
         }
-    }
-}
-
-private fun lifecycleIsolationCatalog(
-    valid: TypeDefinitionId,
-    unavailable: TypeDefinitionId,
-): RealmCatalogIncarnation {
-    fun origin(name: String): ProviderOrigin {
-        val key = contributionKey(ContributionSourceId("lifecycle"), "main", ProducerId("test"), ContributionName(name))
-        return ProviderOrigin(DeclarationOwner(source = key, localIdentity = name), ArtifactId("test:lifecycle"), "main")
-    }
-
-    val validDefinition =
-        TypeDefinition.partial(
-            id = valid,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = valid, name = "name"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        )
-    val unavailableDefinition =
-        TypeDefinition.partial(
-            id = unavailable,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = unavailable, name = "legacy"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        )
-    val contributions =
-        CatalogContributions(
-            declarations =
-                listOf(
-                    OwnedTypeDeclaration(origin("valid"), validDefinition),
-                    OwnedTypeDeclaration(origin("unavailable_first"), unavailableDefinition),
-                    OwnedTypeDeclaration(origin("unavailable_second"), unavailableDefinition),
-                ),
-        )
-    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(), DiscoveryDomains.Realm)
-    val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "lifecycle_isolation")))
-    return RealmCatalogIncarnation(assembly, deployment)
-}
-
-/** The session reply inbox prefix of the panel member whose requests the fixture delivers. */
-private const val PANEL_REPLY_INBOX = "_INBOX.member.0123456789abcdef0123456789abcdef"
-
-private class RealmLifecycleFixture(
-    scope: kotlinx.coroutines.CoroutineScope,
-    catalog: RealmCatalogIncarnation? = null,
-    initialSeed: AuthoringSeed? = null,
-    catalogActivator: RealmCatalogActivator? = null,
-) {
-    private val telemetry = TelemetryTestHarness.create()
-    private val sharedArtifacts = InMemorySharedArtifacts()
-    private val catalogs =
-        RealmCatalogStore().also { store ->
-            if (catalog == null) store.installTestCatalog("lifecycle_catalog") else store.replace(catalog)
-        }
-    val messaging = MutableStateFlow<HostedMessagingSession?>(null)
-    val delayScheduler = FakeDelayScheduler()
-    var databaseOpen = false
-        private set
-    val artifactWrites: Int
-        get() = sharedArtifacts.completedWrites
-    private val host =
-        object : HostedRuntimeHost {
-            override val publicationRetention =
-                com.typewritermc.realm.publication
-                    .TestPublicationRetention()
-            override val messaging = this@RealmLifecycleFixture.messaging
-            override val openTelemetry = telemetry.openTelemetry
-            override val sharedArtifacts = this@RealmLifecycleFixture.sharedArtifacts
-        }
-    private val realm =
-        Realm(
-            databaseProvider =
-                TestDatabaseProvider(
-                    onConnect = { databaseOpen = true },
-                    onClose = { databaseOpen = false },
-                    initialize = { database ->
-                        if (initialSeed != null) {
-                            SurrealAuthoringStorage(database).persistAtomic(
-                                AuthoringMutationPlan(
-                                    initialSeed.resources,
-                                    emptySet(),
-                                    RelationProjectionDelta(removals = emptyList(), created = emptyList(), metadataChanged = emptyList()),
-                                ),
-                            )
-                        }
-                    },
-                ),
-            catalogs = catalogs,
-            scope = scope,
-            telemetry = telemetry.telemetry,
-            retryPolicy = RetryPolicy.fixed(1.seconds),
-            delayScheduler = delayScheduler,
-            host = host,
-            registrars = emptyList(),
-            facts = DeploymentFacts(),
-            preparationEvaluator = PreparationEvaluator { _, _ -> error("Preparation is not used by lifecycle tests.") },
-            engine =
-                StagedEngineImplementationSource(
-                    EngineImplementationInputs(
-                        token =
-                            skirout.editor.v1.type_catalog
-                                .InputToken(value = "engine"),
-                    ),
-                ),
-            catalogActivator =
-                catalogActivator ?: RealmCatalogActivator { repository, catalog ->
-                    repository.activateCatalog(catalog, install = {}, publish = {})
-                },
-        )
-
-    fun session(id: Long): TestSession {
-        val transport = FakeMessageTransport()
-        val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
-        return TestSession(HostedMessagingSession(id, "organization", communicator), transport)
-    }
-
-    suspend fun <Request : Any, Response : Any> request(
-        session: TestSession,
-        suffix: String,
-        request: Request,
-        requestSerializer: Serializer<Request>,
-        responseSerializer: Serializer<Response>,
-    ): Response {
-        val reply = MessageAddress.of("$PANEL_REPLY_INBOX.${replySequence++}")
-        session.transport.deliver(
-            TransportDelivery.Message(
-                InboundMessage(
-                    address = MessageAddress.of("service.to.realm.organization.organization.realm.$suffix"),
-                    payload = requestSerializer.toBytes(request).toByteArray(),
-                    replyTo = reply,
-                ),
-            ),
-        )
-        val publication =
-            withTimeout(2.seconds) {
-                while (true) {
-                    session.transport.actions
-                        .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                        .lastOrNull { it.message.address == reply }
-                        ?.let { return@withTimeout it }
-                    yield()
-                }
-                error("Reply wait ended unexpectedly")
-            }
-        return responseSerializer.fromBytes(publication.message.payload.toByteArray())
-    }
-
-    suspend fun start() {
-        telemetry.telemetry.mainSpan(
-            name = "test.realm.start",
-            unhandledFailureSlug = ErrorSlug.of("test-realm-start-failed"),
-        ) {
-            realm.start("realm")
-        }
-        databaseOpen shouldBe true
-    }
-
-    suspend fun close() {
-        try {
-            realm.shutdown()
-            databaseOpen shouldBe false
-        } finally {
-            catalogs.close()
-            telemetry.close()
-        }
-    }
-
-    private var replySequence = 0
-}
-
-private class InMemorySharedArtifacts : SharedArtifactAccess {
-    private val artifacts = mutableMapOf<ArtifactDigest, ByteArray>()
-    var completedWrites = 0
-        private set
-
-    override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
-        artifacts[digest]
-            ?.let { BlobResult.Success(BlobMetadata(digest, it.size.toLong())) }
-            ?: BlobResult.NotFound
-
-    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
-        artifacts[digest]?.let { BlobResult.Success(it.copyOf()) } ?: BlobResult.NotFound
-
-    override suspend fun store(
-        expected: BlobMetadata,
-        content: ByteArray,
-    ): StoreResult {
-        if (content.size.toLong() != expected.size || ArtifactDigest.sha256(content) != expected.digest) {
-            return StoreResult.Invalid("Content does not match its metadata.")
-        }
-        artifacts[expected.digest] = content.copyOf()
-        completedWrites++
-        return StoreResult.Stored(expected)
-    }
-
-    override suspend fun publish(command: PublishSharedArtifact): PublishResult = error("Catalog writes are not used.")
-
-    override suspend fun delete(
-        id: SharedArtifactId,
-        expectedRevision: SharedArtifactRevision,
-        provenance: SharedArtifactProvenance,
-    ): PublishResult = error("Catalog deletes are not used.")
-
-    override suspend fun catalog() = SharedArtifactCatalog(SharedCatalogRevision(0), emptyList())
-}
-
-private data class TestSession(
-    val session: HostedMessagingSession,
-    val transport: FakeMessageTransport,
-)
-
-private class TestDatabaseProvider(
-    private val onConnect: () -> Unit,
-    private val onClose: () -> Unit,
-    private val initialize: (Surreal) -> Unit = {},
-) : RealmDatabaseProvider {
-    context(_: MainSpanScope)
-    override fun connect(): Surreal {
-        onConnect()
-        return Surreal().apply {
-            connect("memory")
-            useNs("realm_lifecycle_test").useDb("realm_lifecycle_test")
-            SchemaMigrator(this).migrate()
-            initialize(this)
-        }
-    }
-
-    override fun close(database: Surreal) {
-        try {
-            onClose()
-        } finally {
-            database.close()
-        }
-    }
-}
-
-private class FakeDelayScheduler : DelayScheduler {
-    private val requested = Channel<Duration>(Channel.UNLIMITED)
-    private val resumed = Channel<Unit>(Channel.UNLIMITED)
-
-    override suspend fun delay(duration: Duration) {
-        requested.send(duration)
-        resumed.receive()
-    }
-
-    suspend fun awaitRequest() {
-        requested.receive() shouldBe 1.seconds
-    }
-
-    fun resume() {
-        check(resumed.trySend(Unit).isSuccess)
     }
 }

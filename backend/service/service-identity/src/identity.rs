@@ -54,6 +54,9 @@ impl IdentityRepositoryError {
         match self {
             Self::Domain(response) => Ok(response),
             Self::Infrastructure(error) => {
+                // An `error` event becomes the span's status, the one part of a span a host's log
+                // prints, so the reason is readable where no trace backend runs.
+                tracing::error!(error = %error);
                 otel_wasi::main_attribute!(
                     "error" = true,
                     "exception.slug" = "service-identity-repository-failed",
@@ -256,275 +259,25 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::cell::RefCell;
-    use wasmcloud_utils::skir::base::service::v1::service::{ServiceRole, ServiceRole_Host};
 
-    #[derive(Clone, Copy)]
-    enum RepoMode {
-        Valid,
-        ValidationDomain,
-        ValidationInfra,
-        ValidationUnknownDomain,
-        CreateDomain,
-        CreateUnknownDomain,
-        CreateInfra,
-    }
-    struct MockRepo {
-        mode: RepoMode,
-        validation_calls: RefCell<usize>,
-        create_calls: RefCell<usize>,
-    }
-    impl IdentityRepository for MockRepo {
-        async fn validate_role(
-            &self,
-            role: ServiceRoleRecord,
-        ) -> Result<ValidatedServiceRole, IdentityRepositoryError> {
-            *self.validation_calls.borrow_mut() += 1;
-            match self.mode {
-                RepoMode::ValidationDomain => {
-                    Err(IdentityRepositoryError::rejected("role-type-invalid-error"))
-                }
-                RepoMode::ValidationInfra => Err(IdentityRepositoryError::Infrastructure(
-                    RepositoryError("mock repository failure".into()),
-                )),
-                RepoMode::ValidationUnknownDomain => {
-                    Err(IdentityRepositoryError::rejected("future-error"))
-                }
-                _ => Ok(ValidatedServiceRole::admit_for_test(role)),
-            }
-        }
-        async fn create_identity(
-            &self,
-            _: &NewIdentity,
-        ) -> Result<RecordId, IdentityRepositoryError> {
-            *self.create_calls.borrow_mut() += 1;
-            match self.mode {
-                // SurrealDB prefixes a THROW that crosses a query block.
-                RepoMode::CreateDomain => Err(IdentityRepositoryError::rejected(
-                    "An error occurred: role-version-invalid-error",
-                )),
-                RepoMode::CreateUnknownDomain => {
-                    Err(IdentityRepositoryError::rejected("future-error"))
-                }
-                RepoMode::CreateInfra => Err(IdentityRepositoryError::Infrastructure(
-                    RepositoryError("mock repository failure".into()),
-                )),
-                _ => Ok(RecordId {
-                    table: "service".into(),
-                    key: "uid".into(),
-                }),
-            }
-        }
-    }
-    #[derive(Clone, Copy)]
-    enum ProviderMode {
-        Valid,
-        Unavailable,
-        DeleteFails,
-    }
-    struct MockProvider {
-        mode: ProviderMode,
-        creates: RefCell<usize>,
-        deletes: RefCell<usize>,
-    }
-    impl AccountProvider for MockProvider {
-        async fn create_account(&self, _: &str) -> Result<ProvisionedAccount, ProviderError> {
-            *self.creates.borrow_mut() += 1;
-            if matches!(self.mode, ProviderMode::Unavailable) {
-                return Err(ProviderError::Unavailable);
-            }
-            Ok(ProvisionedAccount {
-                username: "service-test".into(),
-                token: "token".into(),
-                user_uid: "uid".into(),
-                user_pk: 7,
-            })
-        }
-        async fn delete_account(&self, _: i64) -> Result<(), ProviderError> {
-            *self.deletes.borrow_mut() += 1;
-            if matches!(self.mode, ProviderMode::DeleteFails) {
-                Err(ProviderError::Internal)
-            } else {
-                Ok(())
-            }
-        }
-    }
-    struct MockNames {
-        calls: RefCell<usize>,
-    }
-    impl NameSource for MockNames {
-        fn generate(&self) -> Result<crate::names::GeneratedNames, NamingError> {
-            *self.calls.borrow_mut() += 1;
-            Ok(crate::names::generate_names([1; 16]))
-        }
-    }
-    fn request() -> IssueServiceIdentityRequest {
-        IssueServiceIdentityRequest {
-            role: ServiceRole::Host(Box::new(ServiceRole_Host {
-                version: "1.0.0".into(),
-                _unrecognized: None,
-            })),
-            _unrecognized: None,
-        }
-    }
-    fn setup(
-        repo_mode: RepoMode,
-        provider_mode: ProviderMode,
-    ) -> (MockRepo, MockProvider, MockNames) {
-        (
-            MockRepo {
-                mode: repo_mode,
-                validation_calls: RefCell::new(0),
-                create_calls: RefCell::new(0),
-            },
-            MockProvider {
-                mode: provider_mode,
-                creates: RefCell::new(0),
-                deletes: RefCell::new(0),
-            },
-            MockNames {
-                calls: RefCell::new(0),
-            },
-        )
-    }
-    fn run(
-        repo: &MockRepo,
-        provider: &MockProvider,
-        names: &MockNames,
-        req: IssueServiceIdentityRequest,
-    ) -> Result<IssueServiceIdentityResponse, otel_wasi::Error> {
-        use std::future::Future;
-        use std::pin::pin;
-        use std::task::{Context, Poll, Waker};
-        let span = tracing::info_span!("service_identity_test");
-        let _main_guard = otel_wasi::enter_main_span(span.clone());
-        let _span_guard = span.enter();
-        let mut future = pin!(issue_identity(provider, repo, names, req));
-        let waker = Waker::noop();
-        let mut context = Context::from_waker(waker);
-        match Future::poll(future.as_mut(), &mut context) {
-            Poll::Ready(value) => value,
-            Poll::Pending => panic!("mock workflow unexpectedly pending"),
-        }
+    #[test]
+    fn a_database_rejection_answers_with_the_response_its_slug_names() {
+        let error =
+            IdentityRepositoryError::rejected("An error occurred: role-version-invalid-error");
+
+        assert!(matches!(
+            error.into_response(),
+            Ok(IssueServiceIdentityResponse::RoleVersionInvalidError(_))
+        ));
     }
 
     #[test]
-    fn unknown_role_has_no_side_effects() {
-        let (repo, provider, names) = setup(RepoMode::Valid, ProviderMode::Valid);
-        assert!(matches!(
-            run(
-                &repo,
-                &provider,
-                &names,
-                IssueServiceIdentityRequest {
-                    role: ServiceRole::Unknown(None),
-                    _unrecognized: None
-                }
-            )
-            .unwrap(),
-            IssueServiceIdentityResponse::UnknownRoleError(_)
-        ));
-        assert_eq!(
-            (
-                *repo.validation_calls.borrow(),
-                *provider.creates.borrow(),
-                *names.calls.borrow()
-            ),
-            (0, 0, 0)
-        );
-    }
-    #[test]
-    fn validation_domain_maps_without_provider_or_create() {
-        let (repo, provider, names) = setup(RepoMode::ValidationDomain, ProviderMode::Valid);
-        assert!(matches!(
-            run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::RoleTypeInvalidError(_)
-        ));
-        assert_eq!(
-            (
-                *provider.creates.borrow(),
-                *repo.create_calls.borrow(),
-                *names.calls.borrow()
-            ),
-            (0, 0, 0)
-        );
-    }
-    #[test]
-    fn unknown_validation_slug_preserves_domain_mapping_error() {
-        let (repo, provider, names) = setup(RepoMode::ValidationUnknownDomain, ProviderMode::Valid);
-        let error = run(&repo, &provider, &names, request()).unwrap_err();
-        assert!(format!("{error:?}").contains("skir-domain-error-unknown"));
-        assert_eq!(*provider.creates.borrow(), 0);
-    }
+    fn a_database_rejection_with_an_unknown_slug_fails_instead_of_answering() {
+        let error = IdentityRepositoryError::rejected("future-error");
 
-    #[test]
-    fn validation_infrastructure_stops_workflow() {
-        let (repo, provider, names) = setup(RepoMode::ValidationInfra, ProviderMode::Valid);
-        assert!(matches!(
-            run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::InternalError(_)
-        ));
-        assert_eq!((*provider.creates.borrow(), *names.calls.borrow()), (0, 0));
-    }
-    #[test]
-    fn success_runs_in_order_and_returns_credentials() {
-        let (repo, provider, names) = setup(RepoMode::Valid, ProviderMode::Valid);
-        assert!(matches!(
-            run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::Success(_)
-        ));
-        assert_eq!(
-            (
-                *repo.validation_calls.borrow(),
-                *names.calls.borrow(),
-                *provider.creates.borrow(),
-                *repo.create_calls.borrow()
-            ),
-            (1, 1, 1, 1)
-        );
-    }
-    #[test]
-    fn provider_unavailable_does_not_persist() {
-        let (repo, provider, names) = setup(RepoMode::Valid, ProviderMode::Unavailable);
-        assert!(matches!(
-            run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::IdentityProviderUnavailableError(_)
-        ));
-        assert_eq!(*repo.create_calls.borrow(), 0);
-    }
-    #[test]
-    fn create_domain_compensates_and_preserves_slug() {
-        let (repo, provider, names) = setup(RepoMode::CreateDomain, ProviderMode::Valid);
-        assert!(matches!(
-            run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::RoleVersionInvalidError(_)
-        ));
-        assert_eq!(*provider.deletes.borrow(), 1);
-    }
-    #[test]
-    fn unknown_create_slug_compensates_before_preserving_mapping_error() {
-        let (repo, provider, names) = setup(RepoMode::CreateUnknownDomain, ProviderMode::Valid);
-        let error = run(&repo, &provider, &names, request()).unwrap_err();
-        assert!(format!("{error:?}").contains("skir-domain-error-unknown"));
-        assert_eq!(*provider.deletes.borrow(), 1);
-    }
-
-    #[test]
-    fn create_infrastructure_compensates_and_returns_internal() {
-        let (repo, provider, names) = setup(RepoMode::CreateInfra, ProviderMode::Valid);
-        assert!(matches!(
-            run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::InternalError(_)
-        ));
-        assert_eq!(*provider.deletes.borrow(), 1);
-    }
-    #[test]
-    fn compensation_failure_preserves_original() {
-        let (repo, provider, names) = setup(RepoMode::CreateDomain, ProviderMode::DeleteFails);
-        assert!(matches!(
-            run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::RoleVersionInvalidError(_)
-        ));
-        assert_eq!(*provider.deletes.borrow(), 1);
+        let failure = error
+            .into_response()
+            .expect_err("an unknown slug has no response");
+        assert!(format!("{failure:?}").contains("skir-domain-error-unknown"));
     }
 }

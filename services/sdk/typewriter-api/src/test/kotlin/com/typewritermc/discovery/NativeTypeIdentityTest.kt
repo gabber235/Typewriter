@@ -14,6 +14,7 @@ import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.of
 import com.typewritermc.presentation.resource
+import com.typewritermc.testkit.elementsOf
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
@@ -21,6 +22,7 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
@@ -35,8 +37,20 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 val NativeTypeIdentityTest by testSuite {
     test("abstract resource identity builds queries without a native codec") {
         val assembly = nativeIdentityAssembly(ambiguous = false)
-        assembly.editorCatalog.presentationMaterials.size shouldBe 1
-        assembly.editorCatalog.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe false
+        assembly.editorCatalog.diagnostics.map { it.code } shouldNotContain "presentation_material_build_failed"
+        val label =
+            assembly.editorCatalog.presentationMaterials
+                .single()
+                .layout
+                .elementsOf<skirout.editor.v1.presentation.PresentationElement.TextWrapper>()
+                .single()
+                .value.value
+        com.typewritermc.expression.evaluate(label) shouldBe
+            com.typewritermc.authoring.Availability
+                .Available(
+                    skirout.editor.v1.type_catalog.DataValue
+                        .StringValueWrapper("observed"),
+                )
     }
 
     test("conflicting declarations cannot choose an arbitrary native class identity") {
@@ -44,65 +58,4 @@ val NativeTypeIdentityTest by testSuite {
         assembly.editorCatalog.presentationMaterials shouldBe emptyList()
         assembly.editorCatalog.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe true
     }
-}
-
-private interface AbstractQueryResource : Resource
-
-private fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
-    val origin =
-        ProviderOrigin(
-            owner =
-                DeclarationOwner(
-                    source =
-                        contributionKey(
-                            ContributionSourceId("test"),
-                            "main",
-                            ProducerId("query"),
-                            ContributionName("native_identity"),
-                        ),
-                    localIdentity = "native identity",
-                ),
-            artifact = ArtifactId("test:native_identity"),
-            sourcePart = "main",
-        )
-    val id = TypeDefinitionId.qualified("query.test", "Abstract")
-    val definition =
-        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true))
-    val descriptor =
-        PresentationDescriptor.of(
-            PresentationId(namespace = "test", name = "native_identity"),
-            origin.owner,
-            PresentationTarget.NamedWrapper(id.namedTemplate()),
-            setOf(PresentationRole.INSPECTOR),
-            0,
-        )
-    val provider =
-        object : PresentationProvider {
-            override fun build(binding: PresentationBuildBinding) =
-                DefaultPresentationRuntime().build(binding) { scope ->
-                    with(scope) {
-                        val observed = resource<AbstractQueryResource>(literal(ResourceId("observed")))
-                        text(observed.id.text.orElse(literal("")))
-                    }
-                }
-        }
-    return CatalogContributions(
-        declarations =
-            listOf(
-                OwnedTypeDeclaration(origin, definition, nativeClass = AbstractQueryResource::class),
-                OwnedTypeDeclaration(origin, ResourceIdDefinition.declaration, nativeClass = ResourceId::class),
-            ) +
-                if (ambiguous) {
-                    listOf(
-                        OwnedTypeDeclaration(
-                            origin,
-                            definition.copy(id = TypeDefinitionId.qualified("query.test", "Conflicting")),
-                            nativeClass = AbstractQueryResource::class,
-                        ),
-                    )
-                } else {
-                    emptyList()
-                },
-        presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
-    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "native identity")))
 }

@@ -18,33 +18,26 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
   @override
   Stream<skir.OrganizationTopologySnapshot> build(
     skir.RecordId organizationId,
-  ) async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (!ref.mounted) return;
-    if (userId == null) {
-      yield skir.OrganizationTopologySnapshot.defaultInstance;
-      return;
-    }
-    final projection = skir.WatchOrganizationTopologyRequest()
-        .watch<skir.OrganizationTopologySnapshot>(
-          ref,
-          userId: userId,
-          organizationId: organizationId,
-          snapshot: (response) => response.readSnapshot(),
-          reduce: (current, event) => event.applyTo(current),
-          confirmedEvents: ref
-              .watch(serviceResourceRepositoryProvider(organizationId))
-              .configurations
-              .map(skir.OrganizationTopologyChanged.wrapConfigurationChanged),
-          reconcileSnapshot: (current, incoming) =>
-              incoming.reconcileSnapshot(current),
-          initialValue: skir.OrganizationTopologySnapshot.defaultInstance,
-          reconciliation: const ProjectionReconciliation.latest(),
-        );
-    await for (final topology in projection) {
-      if (!ref.mounted) return;
-      yield topology;
-    }
+  ) {
+    return ref.watchSignedIn(
+      signedOut: skir.OrganizationTopologySnapshot.defaultInstance,
+      (userId) => skir.WatchOrganizationTopologyRequest()
+          .watch<skir.OrganizationTopologySnapshot>(
+            ref,
+            userId: userId,
+            organizationId: organizationId,
+            snapshot: (response) => response.readSnapshot(),
+            reduce: (current, event) => event.applyTo(current),
+            confirmedEvents: ref
+                .watch(serviceResourceRepositoryProvider(organizationId))
+                .configurations
+                .map(skir.OrganizationTopologyChanged.wrapConfigurationChanged),
+            reconcileSnapshot: (current, incoming) =>
+                incoming.reconcileSnapshot(current),
+            initialValue: skir.OrganizationTopologySnapshot.defaultInstance,
+            reconciliation: const ProjectionReconciliation.latest(),
+          ),
+    );
   }
 
   /// Reloads the authoritative snapshot and replaces the owned subscription.

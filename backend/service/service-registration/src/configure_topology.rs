@@ -62,7 +62,9 @@ enum ConfigureTopologyOutcome {
 ///
 /// `expected_revision` protects concurrent host edits. A successful response describes desired
 /// resources, not runtime readiness. Invalid assignments and stale revisions return domain
-/// responses without publishing a topology change.
+/// responses without publishing a topology change. A stale request whose assignment is already
+/// stored, as when a resend follows a send that landed, succeeds with the stored state and
+/// publishes it again, so a resend delivers a change whose first publish failed.
 pub async fn handle_configure(
     scope: wasmcloud_utils::transport::OrganizationActorScope,
     request: ConfigureServiceHostRequest,

@@ -2,6 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
+import com.typewritermc.realm.catalog.testCatalogIncarnation
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -12,21 +13,16 @@ import skirout.editor.v1.catalog.WatchEditorCatalogRequest
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
 val RetainedRealmEditorCatalogSourceTest by testSuite {
-    test("fetch returns one coherent full catalog") {
+    test("fetch returns the installed catalog in full") {
         runTest {
-            val catalogs = RealmCatalogStore()
-            catalogs.installTestCatalog("catalog_a")
-            try {
-                val catalog =
-                    RetainedRealmEditorCatalogSource(catalogs)
-                        .fetch(CatalogFetchRequest(expectedGeneration = null))
-                        .shouldBeInstanceOf<CatalogFetchResult.CatalogWrapper>()
-                        .value
+            val installed = testCatalogIncarnation("catalog_a")
+            RealmCatalogStore().use { catalogs ->
+                catalogs.replace(installed)
 
-                catalog.generation.value shouldBe "catalog_a"
-                catalog.types.isNotEmpty() shouldBe true
-            } finally {
-                catalogs.close()
+                RetainedRealmEditorCatalogSource(catalogs)
+                    .fetch(CatalogFetchRequest(expectedGeneration = null))
+                    .shouldBeInstanceOf<CatalogFetchResult.CatalogWrapper>()
+                    .value shouldBe installed.assembly.editorCatalog
             }
         }
     }

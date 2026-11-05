@@ -1,0 +1,13 @@
+id: dart-test-reads-environment
+language: dart
+severity: error
+message: A test reads the process environment, so it behaves differently per machine.
+note: Ask the harness for what the test needs (the stack, a fixture, a compile time define), or delete the test.
+files:
+  - panel/test/**
+  - panel/testkit/test/**
+  - panel/widgetbook/test/**
+rule:
+  # Dart patterns cannot start inside an expression, so match the member access by kind.
+  kind: member_expression
+  regex: ^Platform\.environment$

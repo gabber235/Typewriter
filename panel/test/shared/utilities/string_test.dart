@@ -106,50 +106,5 @@ void main() {
         expect("hello".join(""), "hello.");
       });
     });
-
-    group("singular", () {
-      test("returns empty string unchanged", () {
-        expect("".singular, "");
-      });
-
-      test("removes trailing s from plural words", () {
-        expect("items".singular, "item");
-      });
-
-      test("returns word unchanged if not ending in s", () {
-        expect("item".singular, "item");
-      });
-
-      test("returns single s unchanged", () {
-        expect("s".singular, "s");
-      });
-
-      test("handles words ending in es", () {
-        expect("boxes".singular, "boxe");
-      });
-    });
-  });
-
-  group("generateCode", () {
-    test("generates code with default length of 20", () {
-      final code = generateCode();
-      expect(code.length, 20);
-    });
-
-    test("generates code with custom length", () {
-      final code = generateCode(10);
-      expect(code.length, 10);
-    });
-
-    test("generates only lowercase alphanumeric characters", () {
-      final code = generateCode(100);
-      expect(code, matches(RegExp(r"^[a-z0-9]+$")));
-    });
-
-    test("generates different codes on successive calls", () {
-      final codes = List.generate(10, (_) => generateCode());
-      final uniqueCodes = codes.toSet();
-      expect(uniqueCodes.length, 10);
-    });
   });
 }

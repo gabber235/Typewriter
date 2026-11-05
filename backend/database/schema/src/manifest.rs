@@ -207,6 +207,7 @@ fn reject_duplicates(values: &[String], label: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::known_file;
 
     const VALID: &str = r#"
 [schema.kernel]
@@ -223,12 +224,6 @@ capabilities = ["application"]
 capabilities = ["application"]
 "#;
 
-    fn parse(contents: &str) -> Result<Manifest, String> {
-        Manifest::parse(contents, |file| {
-            matches!(file, "kernel.surql" | "application.surql")
-        })
-    }
-
     #[test]
     fn rejects_unknown_capability() {
         let contents = VALID.replacen(
@@ -236,7 +231,11 @@ capabilities = ["application"]
             "capabilities = [\"missing\"]",
             1,
         );
-        assert!(parse(&contents).unwrap_err().contains("unknown capability"));
+        assert!(
+            Manifest::parse(&contents, known_file)
+                .unwrap_err()
+                .contains("unknown capability")
+        );
     }
 
     #[test]
@@ -246,7 +245,11 @@ capabilities = ["application"]
             "[schema.kernel]\ndepends_on = [\"application\"]\nfiles",
             1,
         );
-        assert!(parse(&contents).unwrap_err().contains("dependency cycle"));
+        assert!(
+            Manifest::parse(&contents, known_file)
+                .unwrap_err()
+                .contains("dependency cycle")
+        );
     }
 
     #[test]
@@ -256,7 +259,11 @@ capabilities = ["application"]
             "files = [\"kernel.surql\"]",
             1,
         );
-        assert!(parse(&contents).unwrap_err().contains("declared by both"));
+        assert!(
+            Manifest::parse(&contents, known_file)
+                .unwrap_err()
+                .contains("declared by both")
+        );
     }
 
     #[test]
@@ -268,7 +275,10 @@ capabilities = ["application"]
     #[test]
     fn preserves_dependency_and_declaration_order() {
         assert_eq!(
-            parse(VALID).unwrap().preset_files("full").unwrap(),
+            Manifest::parse(VALID, known_file)
+                .unwrap()
+                .preset_files("full")
+                .unwrap(),
             ["kernel.surql", "application.surql"]
         );
     }
@@ -280,6 +290,10 @@ capabilities = ["application"]
             "[deployment]\ncapabilities = [\"kernel\"]",
             1,
         );
-        assert!(parse(&contents).unwrap_err().contains("same schema files"));
+        assert!(
+            Manifest::parse(&contents, known_file)
+                .unwrap_err()
+                .contains("same schema files")
+        );
     }
 }

@@ -1,35 +1,26 @@
 package com.typewritermc.loader
 
-import com.typewritermc.services.libs.registrar.ServiceRole
+import com.typewritermc.loader.testing.shippedProfiles
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.net.URI
-import java.nio.file.Path
 
 val LoaderSettingsTest by testSuite {
-    test("local profile supplies registration and NATS settings") {
-        val configuration = LoaderSettings.fromFile(profile("local")).registrarConfiguration()
+    val requiredProfileSettings = listOf("API_BASE_URL", "AUTH_BASE_URL", "NATS_URL", "OTEL_EXPORTER_OTLP_ENDPOINT")
 
-        configuration.identityIssueUri shouldBe URI("https://api.tw.seamlezz.net/service/identity/issue")
-        configuration.sentinelCredentialsUri shouldBe URI("https://api.tw.seamlezz.net/auth/sentinel")
-        configuration.oauthTokenUri shouldBe URI("https://auth.tw.seamlezz.net/application/o/token/")
-        configuration.oauthClientId shouldBe "typewriter-services"
-        configuration.oauthScopes shouldBe setOf("openid", "profile", "entitlements")
-        configuration.natsServerUri shouldBe URI("tls://nats.local.seamlezz.net:4222")
-        configuration.role shouldBe ServiceRole.Host(LOADER_VERSION)
-        LoaderSettings.fromFile(profile("local")).telemetryConfiguration() shouldBe
-            LoaderTelemetryConfiguration(
-                "https://otlp.local.seamlezz.net",
-                LoaderSamplerConfiguration.AlwaysOn,
-            )
-    }
+    shippedProfiles().forEach { profile ->
+        test("the shipped ${profile.fileName} profile names its own backend, broker and telemetry endpoint") {
+            val settings = LoaderSettings.fromFile(profile)
+            val configuration = settings.registrarConfiguration()
 
-    test("production profile supplies registration and NATS settings") {
-        val configuration = LoaderSettings.fromFile(profile("production")).registrarConfiguration()
-
-        configuration.identityIssueUri shouldBe URI("https://api.typewritermc.com/service/identity/issue")
-        configuration.oauthTokenUri shouldBe URI("https://auth.typewritermc.com/application/o/token/")
-        configuration.natsServerUri shouldBe URI("nats://nats.seamlezz.com:4222")
+            // A shipped profile must never fall back to the production defaults for a value it leaves out.
+            requiredProfileSettings.forEach { name -> settings.getOrNull(name).shouldNotBeNull() }
+            configuration.identityIssueUri.host shouldBe URI(settings.get("API_BASE_URL", "")).host
+            configuration.oauthTokenUri.host shouldBe URI(settings.get("AUTH_BASE_URL", "")).host
+            configuration.natsServerUri shouldBe URI(settings.get("NATS_URL", ""))
+            settings.telemetryConfiguration().otlpEndpoint.shouldNotBeNull()
+        }
     }
 
     test("process settings override the loader profile") {
@@ -46,19 +37,25 @@ val LoaderSettingsTest by testSuite {
         configuration.natsServerUri shouldBe URI("nats://profile.example.test:4222")
     }
 
-    test("telemetry sampler preserves fallback and ratio bounds") {
-        LoaderSettings(
-            configuration =
-                mapOf(
-                    "OTEL_TRACES_SAMPLER" to "traceidratio",
-                    "OTEL_TRACES_SAMPLER_ARG" to "2.0",
-                ),
-        ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.TraceIdRatio(1.0)
+    listOf(
+        Triple("a configured sampler ratio is honoured", "0.25", 0.25),
+        Triple("an unparsable sampler ratio samples everything", "abc", 1.0),
+        Triple("a sampler ratio above one clamps to one", "2.0", 1.0),
+    ).forEach { (name, configured, ratio) ->
+        test(name) {
+            LoaderSettings(
+                configuration =
+                    mapOf(
+                        "OTEL_TRACES_SAMPLER" to "traceidratio",
+                        "OTEL_TRACES_SAMPLER_ARG" to configured,
+                    ),
+            ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.TraceIdRatio(ratio)
+        }
+    }
 
+    test("an unsupported sampler falls back to always on") {
         LoaderSettings(
             configuration = mapOf("OTEL_TRACES_SAMPLER" to "unsupported"),
         ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.AlwaysOn
     }
 }
-
-private fun profile(name: String): Path = Path.of("..", "..", "config", "$name.properties")

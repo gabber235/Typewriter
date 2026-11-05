@@ -29,7 +29,7 @@ use jose::UntypedAdditionalProperties;
 use nats_jwt_rs::{
     Claim, Claims,
     authorization::{AuthRequest, AuthResponse, ClientInfo, ConnectOpts, ServerID},
-    types::{GenericFields, Permissions as NatsPermissions},
+    types::GenericFields,
     user::User,
 };
 use nkeys::KeyPair;
@@ -38,7 +38,6 @@ use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
     skir::base::access::v1::permission::{
         EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
-        Permissions,
     },
     skir_client::UnrecognizedValues::Drop,
     transport::{InternalComponentScope, ReplyPacing, request_route},
@@ -50,6 +49,9 @@ use wasmcloud_utils::{
 pub mod config;
 /// JWT parsing, JWKS retrieval, signature verification, and claim validation.
 pub mod jwt;
+
+#[cfg(test)]
+mod test_support;
 
 struct AuthCallout;
 wasmcloud_utils::export!(AuthCallout);
@@ -377,7 +379,7 @@ async fn create_user_claims(
         main_attribute!("auth.permissions.response.ttl_ms" = ttl.milliseconds);
     }
 
-    let nats_permissions = convert_permissions(response.permissions);
+    let nats_permissions = nats_permissions::convert_permissions(response.permissions);
     claims.payload_mut().permissions.permissions = nats_permissions;
     main_attribute!("auth.permissions.converted" = true);
 
@@ -423,38 +425,6 @@ async fn request_permissions(
     main_attribute!("auth.permissions.response.decode.success" = true);
 
     Ok(permission_response)
-}
-
-fn convert_permissions(permissions: Permissions) -> NatsPermissions {
-    use nats_jwt_rs::types::{
-        Permission as NatsPermission, ResponsePermission as NatsResponsePermission,
-    };
-    use std::time::Duration;
-
-    let publish = NatsPermission {
-        allow: permissions.publish.allow,
-        deny: permissions.publish.deny,
-    };
-
-    let subscribe = NatsPermission {
-        allow: permissions.subscribe.allow,
-        deny: permissions.subscribe.deny,
-    };
-
-    let resp = permissions.response.map(|r| NatsResponsePermission {
-        max_messages: r.max_messages.map(|m| m as i64).unwrap_or(1),
-        ttl: r
-            .ttl
-            .as_ref()
-            .map(|d| Duration::from_millis(d.milliseconds as u64))
-            .unwrap_or_default(),
-    });
-
-    NatsPermissions {
-        publish,
-        subscribe,
-        resp,
-    }
 }
 
 fn decode_auth_request(body: &[u8]) -> Result<Claims<AuthRequest>, otel_wasi::Error> {

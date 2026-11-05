@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/query_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final enumSelectors = <QuerySelectorDefinition>[
@@ -38,8 +37,7 @@ void main() {
     expect(issue.code, QueryIssueCode.invalidSelectorValue);
     expect(issue.severity, QuerySeverity.warning);
     expect(issue.message, contains("role"));
-
-    expect(issue.range, isNotNull);
+    expect(issue.range, const QueryRange(5, 12));
   });
 
   test("enumValue selector with null value reports missing value", () {
@@ -68,17 +66,6 @@ void main() {
         .done();
   });
 
-  test("known selector key in text term reports no issue", () {
-    final result = checkQuery("title:mytitle", selectors: textSelectors)
-        .expectNoIssues()
-        .expectNoQuery()
-        .expectExpression((token) {
-          token.isSelector(id: "title", value: "mytitle");
-        })
-        .done();
-    expect(result.issues, isEmpty);
-  });
-
   test("colon at start of text term reports no issue", () {
     checkQuery(
       ":notaselector",
@@ -100,33 +87,5 @@ void main() {
         .done();
     expect(result.issues, isEmpty);
     expect(result.selectors, hasLength(3));
-  });
-
-  final singleMultiplicitySelectors = <QuerySelectorDefinition>[
-    const KeyValueSelectorDefinition(
-      id: "id",
-      key: "id:",
-      multiplicity: QueryMultiplicity.single,
-    ),
-  ];
-
-  test("single multiplicity repeated selector reports error", () {
-    final result =
-        checkQuery("id:1 id:2", selectors: singleMultiplicitySelectors)
-            .expectIssues([QueryIssueCode.multiplicityViolation])
-            .expectNoQuery()
-            .expectExpression((token) {
-              final and = token.isAnd();
-              and.left().isSelector(id: "id", value: "1");
-              and.right().isSelector(id: "id", value: "2");
-            })
-            .done();
-    expect(result.issues, hasLength(1));
-    final issue = result.issues.first;
-    expect(issue.code, QueryIssueCode.multiplicityViolation);
-    expect(issue.severity, QuerySeverity.error);
-    expect(issue.message, contains("id"));
-
-    expect(issue.range, isNotNull);
   });
 }

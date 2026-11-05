@@ -920,6 +920,7 @@ final class _ResourceCreationOperation {
         document: presentationDocument,
       ),
       searchHint: "Select the owner",
+      choosesOwner: true,
     );
     _checkCurrent();
     return switch (choice) {

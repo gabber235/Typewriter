@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("Selected provider", () {
@@ -31,7 +31,7 @@ void main() {
     test("returns loading state when identifier returns loading", () {
       final container = ProviderContainer.test();
       final idA = TestSelectableIdentifier(id: "A");
-      const loadingId = _LoadingSelectableIdentifier("loading");
+      const loadingId = LoadingSelectableIdentifier("loading");
 
       container.read(selectionProvider.notifier).selectAll([idA, loadingId]);
 
@@ -40,14 +40,4 @@ void main() {
       expect(selected.isLoading, isTrue);
     });
   });
-}
-
-final class _LoadingSelectableIdentifier extends SelectableIdentifier {
-  const _LoadingSelectableIdentifier(this.id);
-
-  @override
-  final String id;
-
-  @override
-  AsyncValue<Selectable> create(Ref ref) => const AsyncLoading();
 }

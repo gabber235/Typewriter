@@ -28,7 +28,7 @@ pub(crate) struct DiagnosticReport {
     events: VecDeque<String>,
     failures: Vec<String>,
     redactions: Vec<String>,
-    live: bool,
+    pub(crate) live: bool,
     sink: LiveSink,
     artifacts: Vec<String>,
     otel: Vec<String>,
@@ -50,7 +50,7 @@ impl DiagnosticReport {
         )
     }
 
-    fn with_sink(
+    pub(crate) fn with_sink(
         fixture: &str,
         test: &str,
         case: Option<&str>,
@@ -186,39 +186,56 @@ impl DiagnosticReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
+    use crate::test_support::diagnostic_report;
 
     #[test]
-    fn ordering_eviction_live_and_redaction_are_deterministic() {
-        let output = Arc::new(Mutex::new(Vec::<String>::new()));
-        let captured = output.clone();
-        let mut report = DiagnosticReport::with_sink(
-            "fixture",
-            "test",
-            Some("case"),
-            vec!["secret".into()],
-            Arc::new(move |line| captured.lock().unwrap().push(line.into())),
-        );
-        report.live = true;
+    fn phases_and_failures_render_in_the_order_they_happened() {
+        let (mut report, _) = diagnostic_report(false);
         report.phase("validated");
-        for index in 0..=EVENT_LIMIT {
-            report.event(format!("event {index} secret"));
-        }
-        report.fail("body secret");
+        report.fail("body failed");
         report.phase("cleaning extensions");
-        report.fail("cleanup secret");
+        report.fail("cleanup failed");
+
         let rendered = report.finish();
         assert!(rendered.find("admitted:").unwrap() < rendered.find("validated:").unwrap());
-        assert!(!rendered.contains("event 0 "));
+        assert!(rendered.find("body failed").unwrap() < rendered.find("cleanup failed").unwrap());
+    }
+
+    #[test]
+    fn only_the_newest_events_are_kept() {
+        let (mut report, _) = diagnostic_report(false);
+        for index in 0..=EVENT_LIMIT {
+            report.event(format!("event {index}"));
+        }
+        report.fail("failed");
+
+        let rendered = report.finish();
+        assert!(!rendered.contains("event 0\n"));
+        assert!(rendered.contains(&format!("event {EVENT_LIMIT}")));
+    }
+
+    #[test]
+    fn secrets_never_reach_the_report() {
+        let (mut report, _) = diagnostic_report(false);
+        report.event("event secret");
+        report.fail("body secret");
+
+        let rendered = report.finish();
         assert!(!rendered.contains("secret"));
+        assert!(rendered.contains("body [REDACTED]"));
+    }
+
+    #[test]
+    fn live_output_names_the_case_and_hides_secrets() {
+        let (mut report, output) = diagnostic_report(true);
+        report.event("event secret");
+        report.fail("body secret");
+        report.finish();
+
+        let lines = output.lock().unwrap();
+        assert!(!lines.is_empty());
         assert!(
-            rendered.find("body [REDACTED]").unwrap()
-                < rendered.find("cleanup [REDACTED]").unwrap()
-        );
-        assert!(
-            output
-                .lock()
-                .unwrap()
+            lines
                 .iter()
                 .all(|line| line.starts_with("[fixture / test] ") && !line.contains("secret"))
         );

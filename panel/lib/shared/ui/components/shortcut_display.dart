@@ -311,14 +311,23 @@ class _KeyDisplay extends StatelessWidget {
     );
   }
 
+  /// The theme's text or surface color, whichever contrasts more with
+  /// [backgroundColor]; black or white when neither reaches the WCAG AA
+  /// ratio for text, so a key label stays readable on any key color.
   Color _foregroundColorFor(BuildContext context, Color backgroundColor) {
-    final theme = Theme.of(context);
-    final backgroundBrightness = ThemeData.estimateBrightnessForColor(
-      backgroundColor,
-    );
-    return backgroundBrightness == theme.brightness
-        ? theme.colorScheme.onSurface
-        : theme.colorScheme.surface;
+    final colors = Theme.of(context).colorScheme;
+    final background = backgroundColor.computeLuminance();
+    double contrast(Color color) {
+      final luminance = color.computeLuminance();
+      return (max(luminance, background) + 0.05) /
+          (min(luminance, background) + 0.05);
+    }
+
+    Color better(Color a, Color b) => contrast(a) >= contrast(b) ? a : b;
+
+    final themed = better(colors.onSurface, colors.surface);
+    if (contrast(themed) >= 4.5) return themed;
+    return backgroundColor.onBrightness(colors.brightness);
   }
 }
 

@@ -27,7 +27,7 @@ class StatusIndicator extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = clock.now();
     final description = lastSeen?.describeRelativeTo(now: now);
     final effectiveDotColor =
         dotColor ?? (isOnline ? context.colors.online : context.colors.offline);

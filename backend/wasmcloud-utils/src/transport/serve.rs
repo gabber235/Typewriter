@@ -27,8 +27,24 @@ where
     Route::Response: SkirResponse,
 {
     let pacing = ReplyPacing::of::<Route>(Instant::now());
+    serve_request_with::<Route>(msg, scope, handler, async move |msg, body| {
+        messaging::reply(msg, body, pacing).await
+    })
+    .await
+}
+
+/// Serves one matched request like [`serve_request`] and hands the encoded reply to `send`.
+async fn serve_request_with<Route: RequestRoute>(
+    msg: NatsMessage,
+    scope: Result<Route::Scope, Error>,
+    handler: impl AsyncFnOnce(Route::Scope, Route::Request) -> Result<Route::Response, Error>,
+    send: impl AsyncFnOnce(NatsMessage, Vec<u8>) -> Result<(), Error>,
+) -> Result<(), Error>
+where
+    Route::Response: SkirResponse,
+{
     let result = handle::<Route>(&msg.body, scope, handler).await;
-    messaging::reply_handler_result(msg, result, pacing).await
+    messaging::reply_handler_result_with(msg, result, send).await
 }
 
 /// Decodes a matched request and runs its handler, skipping it on an invalid scope or request.
@@ -72,46 +88,15 @@ mod tests {
     use otel_wasi::WasiError as _;
 
     use super::*;
-    use crate::skir_client::{Method, Serializer};
     use crate::skirout::base::access::v1::permission::{
         EntityPermissionGrant, GetEntityPermissionRequest, GetEntityPermissionResponse,
-        get_entity_permission_method,
     };
     use crate::skirout::base::service::v1::lifecycle::ServiceHeartbeatNotification;
-    use crate::transport::test_support::{block_on, nats_message};
+    use crate::transport::test_support::{
+        HeartbeatRoute, PermissionRoute, block_on, nats_message,
+        permission_request_body as request_body,
+    };
     use crate::transport::{ServiceScope, SubjectToken};
-
-    struct PermissionRoute;
-
-    impl RequestRoute for PermissionRoute {
-        const REPLY_CREDIT: bool = false;
-
-        type Scope = ServiceScope;
-        type Request = GetEntityPermissionRequest;
-        type Response = GetEntityPermissionResponse;
-
-        fn method() -> &'static Method<Self::Request, Self::Response> {
-            get_entity_permission_method()
-        }
-    }
-
-    struct HeartbeatRoute;
-
-    impl EventRoute for HeartbeatRoute {
-        type Scope = ServiceScope;
-        type Event = ServiceHeartbeatNotification;
-
-        fn serializer() -> Serializer<Self::Event> {
-            ServiceHeartbeatNotification::serializer()
-        }
-    }
-
-    fn request_body() -> Vec<u8> {
-        GetEntityPermissionRequest::serializer().to_bytes(&GetEntityPermissionRequest {
-            jwt_claims: b"claims".to_vec(),
-            ..Default::default()
-        })
-    }
 
     #[test]
     fn handle_passes_scope_and_request_to_the_handler() {
@@ -156,13 +141,29 @@ mod tests {
     }
 
     #[test]
-    fn a_failed_request_falls_back_to_the_internal_error_variant() {
-        let fallback = GetEntityPermissionResponse::internal_error();
+    fn a_failed_request_replies_with_the_internal_error_variant() {
+        let mut replied = None;
+        let error = block_on(serve_request_with::<PermissionRoute>(
+            nats_message("service.s1.permission", &request_body()),
+            ServiceScope::from_tokens("s1"),
+            async |_, _| Err(Error::new("permission-lookup-failed", "lookup failed")),
+            async |_, body| {
+                replied = Some(body);
+                Ok(())
+            },
+        ))
+        .unwrap_err();
+
+        assert_eq!(error.slug(), "permission-lookup-failed");
+        let reply = decode(
+            &GetEntityPermissionResponse::serializer(),
+            &replied.expect("the requester receives a reply"),
+        )
+        .unwrap();
         assert!(matches!(
-            fallback,
+            reply,
             GetEntityPermissionResponse::InternalError(_)
         ));
-        assert_eq!(fallback.variant_slug(), "internal-error");
     }
 
     #[test]

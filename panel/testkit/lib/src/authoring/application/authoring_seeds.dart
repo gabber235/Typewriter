@@ -1,10 +1,6 @@
-import "package:faker/faker.dart" hide Color, random;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-part "authoring_seed_layout.dart";
 
 /// A Book a fixture document starts with. Seeds describe fixture content; the
 /// panel reads it back through the working document like any resource.
@@ -100,123 +96,44 @@ final class Page {
   );
 }
 
-Book Function() generateRandomBook(List<Tag> tags) {
-  return () {
-    final possibleTagIds = tags.map((tag) => tag.tagId).toList();
-    final tagIds = <skir.ResourceId>[];
-    var chance = 0.9;
-    while (faker.randomGenerator.decimal() < chance &&
-        tagIds.length < tags.length) {
-      chance *= 0.7;
-      final tag = possibleTagIds.randomElement();
-      tagIds.add(tag);
-      possibleTagIds.remove(tag);
-    }
-    final title = faker.lorem
-        .words(faker.randomGenerator.integer(4, min: 1))
-        .join(" ")
-        .snakeCase();
+/// A scene a fixture document starts with: a section of the realm whose
+/// workspace lays its [tracks] out on a timeline.
+final class Scene {
+  const Scene({
+    required this.sceneId,
+    required this.name,
+    this.tracks = const [],
+  });
 
-    return Book(
-      bookId: skir.ResourceId(value: "book:$title"),
-      title: title,
-      icon: "book",
-      color: safeColors.randomElement(),
-      tagIds: tagIds,
-    );
-  };
+  final skir.ResourceId sceneId;
+  final String name;
+  final List<Track> tracks;
 }
 
-Page generateRandomPage({skir.ResourceId? bookId}) {
-  final pageName = faker.lorem
-      .words(faker.randomGenerator.integer(3, min: 1))
-      .join("_")
-      .snakeCase();
-  final chapters = [
-    "",
-    "intro",
-    "example.test",
-    "main",
-    "main.side_quests",
-    "main.epilogue",
-  ];
-  return Page(
-    pageId: skir.ResourceId(value: "page:${faker.guid.guid()}"),
-    bookId: bookId,
-    name: pageName,
-    chapter: chapters.randomOrNull() ?? "",
-    priority: faker.randomGenerator.integer(100, min: -10),
-  );
+/// One track of a [Scene], owning the [cues] the timeline shows on its row.
+final class Track {
+  const Track({
+    required this.trackId,
+    required this.name,
+    this.cues = const [],
+  });
+
+  final skir.ResourceId trackId;
+  final String name;
+  final List<Cue> cues;
 }
 
-/// The Book of [fixtureRealmShowcase].
-final fixtureShowcaseBook = skir.ResourceId(value: "book:showcase");
+/// A cue placed on a [Track] from [startFrame] to [endFrame].
+final class Cue {
+  const Cue({
+    required this.cueId,
+    required this.name,
+    required this.startFrame,
+    required this.endFrame,
+  });
 
-/// A page of [fixtureRealmShowcase] inside the chapter `act1.arrival`.
-final fixtureShowcasePage = skir.ResourceId(value: "page:showcase:arrival");
-
-/// A provisioned realm with a few Books, a chaptered Book, and placed tags:
-/// enough to show every place of the realm shell.
-AuthoringDocument fixtureRealmShowcase() {
-  final tags = [
-    Tag(
-      tagId: _questTag,
-      name: "Quest",
-      color: Color(0xff3f51b5),
-      placement: GraphPlacement(x: 0, y: 0, width: 4, height: 1),
-    ),
-    Tag(
-      tagId: skir.ResourceId(value: "tag:showcase:main"),
-      name: "Main story",
-      color: const Color(0xff009688),
-      parentIds: [_questTag],
-      placement: const GraphPlacement(x: 0, y: 3, width: 4, height: 1),
-    ),
-  ];
-  return fixtureAuthoringDocument(
-    realm: true,
-    tags: tags,
-    books: [
-      Book(
-        bookId: fixtureShowcaseBook,
-        title: "The Lost Village",
-        icon: "material-symbols:book",
-        color: const Color(0xff3f51b5),
-        tagIds: [tags.first.tagId],
-      ),
-      Book(
-        bookId: skir.ResourceId(value: "book:showcase:atlas"),
-        title: "Atlas of Echoes",
-        icon: "material-symbols:map",
-        color: const Color(0xff795548),
-      ),
-    ],
-    pages: [
-      Page(
-        pageId: skir.ResourceId(value: "page:showcase:prologue"),
-        bookId: fixtureShowcaseBook,
-        name: "Prologue",
-      ),
-      Page(
-        pageId: fixtureShowcasePage,
-        bookId: fixtureShowcaseBook,
-        name: "Arrival",
-        chapter: "act1.arrival",
-      ),
-      Page(
-        pageId: skir.ResourceId(value: "page:showcase:market"),
-        bookId: fixtureShowcaseBook,
-        name: "Market",
-        chapter: "act1",
-      ),
-      Page(
-        pageId: skir.ResourceId(value: "page:showcase:finale"),
-        bookId: fixtureShowcaseBook,
-        name: "Finale",
-        chapter: "act2",
-      ),
-    ],
-  );
+  final skir.ResourceId cueId;
+  final String name;
+  final int startFrame;
+  final int endFrame;
 }
-
-final _questTag = skir.ResourceId(value: "tag:showcase:quest");

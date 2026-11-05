@@ -2,13 +2,14 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("replaces a stable list item and preserves its actual type", () {
     final first = skir.ItemId(value: "first");
     final second = skir.ItemId(value: "second");
     final actual = skir.NamedTypeUse(
-      definition: _definition("List"),
+      definition: typeDefinition("List", namespace: "typewriter"),
       arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
     );
     final original = skir.DataValue.createNamed(
@@ -186,7 +187,7 @@ void main() {
 
   test("deep named values return a bounded path failure", () {
     final actualType = skir.NamedTypeUse(
-      definition: _definition("Nested"),
+      definition: typeDefinition("Nested", namespace: "typewriter"),
       arguments: const [],
     );
     var value = skir.DataValue.createRecord(
@@ -214,7 +215,7 @@ void main() {
 
   test("deep collection diagnostics return a bounded failure", () {
     final actualType = skir.NamedTypeUse(
-      definition: _definition("Nested"),
+      definition: typeDefinition("Nested", namespace: "typewriter"),
       arguments: const [],
     );
     var value = skir.DataValue.createSetValue(items: const []);
@@ -234,8 +235,3 @@ void main() {
     );
   });
 }
-
-skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "typewriter", name: name),
-  revision: 1,
-);

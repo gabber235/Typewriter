@@ -77,6 +77,8 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.validationIdentity,
     this.showValidationMessage = true,
     this.showDefaultIcon = true,
+    this.semanticLabel,
+    this.semanticHint,
     super.key,
   }) : assert(!mixed || value == null);
   final T? value;
@@ -148,6 +150,12 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   /// Shared presentation frames can render the message beside the whole control.
   final bool showValidationMessage;
   final bool showDefaultIcon;
+
+  /// The name assistive technology reads for the text input itself.
+  final String? semanticLabel;
+
+  /// What assistive technology reads after [semanticLabel].
+  final String? semanticHint;
 
   _State _parse(String value) {
     if (_clears(value)) return _initial;
@@ -326,6 +334,8 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           },
           onInputFocus: onInputFocus,
           onDismiss: onDismiss,
+          semanticLabel: semanticLabel,
+          semanticHint: semanticHint,
         ),
         _StateText(
           name: name,

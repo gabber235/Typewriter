@@ -6,6 +6,7 @@ Widget _controlFrame(
   Widget child, {
   skir.InputAppearance? appearance,
   bool renderPrefix = false,
+  bool labelsInput = false,
 }) {
   final association = childScope.associationFor(control);
   final resolvedLabel = association.label;
@@ -14,7 +15,6 @@ Widget _controlFrame(
   final content = renderPrefix
       ? _compositeControlContent(control, childScope, child)
       : child;
-  final semanticChild = Semantics(label: semanticLabel ?? "", child: content);
   return _PortableControlFrameState(
     scope: childScope,
     child: Builder(
@@ -24,6 +24,20 @@ Widget _controlFrame(
         final label = resolvedLabel?.trim() == enclosingTitle?.trim()
             ? null
             : resolvedLabel;
+        // The visible label stays out of the semantics tree, so the field is
+        // announced once: by its native input when [labelsInput] (see
+        // [_inputSemanticLabel]), otherwise by this frame unless the
+        // enclosing header already reads the same title.
+        final frameLabel = semanticLabel?.trim() == enclosingTitle?.trim()
+            ? null
+            : semanticLabel;
+        final semanticChild = labelsInput
+            ? content
+            : Semantics(
+                label: frameLabel ?? "",
+                hint: description,
+                child: content,
+              );
         return PortableLocationTarget(
           location: childScope.location(control.binding),
           onFocusChange: (focused) =>
@@ -138,18 +152,32 @@ Widget _controlAssociation(
   );
 }
 
+/// The name assistive technology reads for the native input of [control]:
+/// its own semantic label, or else the title of the enclosing header that
+/// visibly names it.
+String? _inputSemanticLabel(
+  BuildContext context,
+  skir.BoundControl control,
+  PortablePresentationScope scope,
+) =>
+    scope.associationFor(control).semanticLabel ??
+    _PortableHeaderTitle.maybeOf(context);
+
 /// Labels one native editor whose decoration contains only display content.
 /// Authored actions and other editable controls remain siblings of this child.
 Widget _semanticInput(
   skir.BoundControl control,
   PortablePresentationScope scope,
   Widget child,
-) {
-  final label = scope.associationFor(control).semanticLabel;
-  return MergeSemantics(
-    child: Semantics(label: label ?? "", child: child),
-  );
-}
+) => Builder(
+  builder: (context) => MergeSemantics(
+    child: Semantics(
+      label: _inputSemanticLabel(context, control, scope) ?? "",
+      hint: scope.associationFor(control).description,
+      child: child,
+    ),
+  ),
+);
 
 Widget? _fieldLabel(
   skir.BoundControl control,

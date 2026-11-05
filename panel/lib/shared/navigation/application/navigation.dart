@@ -42,7 +42,18 @@ class CurrentRoute extends _$CurrentRoute {
   }
 }
 
-/// Reads an inherited path parameter from the router's active top route.
+/// Reads a path parameter from the router's active route chain, the nearest
+/// route that declares it winning.
+///
+/// The chain is read instead of the top route's inherited parameters: when a
+/// navigation updates an existing parent route in place, such as switching
+/// organization, the child route keeps the parameters it inherited before.
+/// Until the child router applies them, the parent's pending children stand in
+/// for the shown ones, so parameters never pair two scopes.
+///
+/// Such an in place update pushes no page, so the navigator observers that
+/// invalidate route state never hear of it; the provider follows the router
+/// itself and rebuilds once the parameter changed.
 ///
 /// A missing parameter returns null. Consumers use this provider for route
 /// scoped resource lookup and should handle that absence before constructing an
@@ -50,6 +61,32 @@ class CurrentRoute extends _$CurrentRoute {
 @Riverpod(keepAlive: true)
 String? routeParam(Ref ref, String id) {
   final router = ref.watch(navigationRouterProvider);
-  final params = router.topRoute.inheritedPathParams;
-  return params.optString(id);
+  String? read() {
+    final params = <String, dynamic>{};
+    RoutingController? controller = router;
+    while (controller != null) {
+      final route = controller.currentChild;
+      if (route == null) break;
+      params.addAll(route.params.rawMap);
+      // Children an in place update has yet to apply replace the ones still
+      // shown, whose parameters belong to the previous parent.
+      if (route.hasPendingChildren) {
+        for (final pending in route.pendingChildren.last.flattened) {
+          params.addAll(pending.params.rawMap);
+        }
+        break;
+      }
+      controller = controller.innerRouterOf<RoutingController>(route.name);
+    }
+    return Parameters(params).optString(id);
+  }
+
+  final value = read();
+  void follow() {
+    if (read() != value) ref.invalidateSelf();
+  }
+
+  router.addListener(follow);
+  ref.onDispose(() => router.removeListener(follow));
+  return value;
 }

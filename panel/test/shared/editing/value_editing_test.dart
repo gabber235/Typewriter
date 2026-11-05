@@ -4,9 +4,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/editor_fixture.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final title = editorRootPath.field("title");
@@ -24,7 +22,7 @@ void main() {
 
   test("draft changes persist only when flushed", () async {
     final commits = <EditorCommit>[];
-    final source = _source(
+    final source = titleAndColorSource(
       commit: (commit) async {
         commits.add(commit);
         return TypedMutationResult.success(
@@ -60,19 +58,19 @@ void main() {
   test(
     "different remote fields rebase and retry with injected jitter",
     () async {
-      final scheduler = _Scheduler();
+      final scheduler = RecordingScheduler();
       final sent = <EditorCommit>[];
       var calls = 0;
-      final source = _source(
+      final source = titleAndColorSource(
         scheduler: scheduler,
-        jitter: const _Jitter(Duration(milliseconds: 10)),
+        jitter: const FixedJitter(Duration(milliseconds: 10)),
         commit: (commit) async {
           sent.add(commit);
           if (calls++ == 0) {
             return TypedMutationResult.conflict(
               expectedRevision: commit.expectedRevision,
               actualRevision: 2,
-              actualValue: _value(title: "Old", color: "Blue"),
+              actualValue: titleAndColorValue(title: "Old", color: "Blue"),
             );
           }
           return TypedMutationResult.success(
@@ -89,7 +87,10 @@ void main() {
         Duration(milliseconds: 250),
         Duration(milliseconds: 60),
       ]);
-      expect(sent.last.rootValue, _value(title: "New", color: "Blue"));
+      expect(
+        sent.last.rootValue,
+        titleAndColorValue(title: "New", color: "Blue"),
+      );
       expect(source.document.revision, 3);
       source.dispose();
     },
@@ -97,13 +98,13 @@ void main() {
 
   test("same field changes pause with an inline conflict", () async {
     var calls = 0;
-    final source = _source(
+    final source = titleAndColorSource(
       commit: (commit) async {
         calls++;
         return TypedMutationResult.conflict(
           expectedRevision: commit.expectedRevision,
           actualRevision: 2,
-          actualValue: _value(title: "Theirs", color: "Red"),
+          actualValue: titleAndColorValue(title: "Theirs", color: "Red"),
         );
       },
     );
@@ -128,16 +129,16 @@ void main() {
 
   test("conflicting paths do not pause clean rebased paths", () async {
     final commits = <EditorCommit>[];
-    final source = _source(
-      scheduler: _Scheduler(),
-      jitter: const _Jitter(Duration.zero),
+    final source = titleAndColorSource(
+      scheduler: RecordingScheduler(),
+      jitter: const FixedJitter(Duration.zero),
       commit: (commit) async {
         commits.add(commit);
         if (commits.length == 1) {
           return TypedMutationResult.conflict(
             expectedRevision: commit.expectedRevision,
             actualRevision: 2,
-            actualValue: _value(title: "Theirs", color: "Red"),
+            actualValue: titleAndColorValue(title: "Theirs", color: "Red"),
           );
         }
         return TypedMutationResult.success(
@@ -153,7 +154,10 @@ void main() {
 
     expect(commits, hasLength(2));
     expect(commits.last.changedPaths, {color});
-    expect(commits.last.rootValue, _value(title: "Theirs", color: "Blue"));
+    expect(
+      commits.last.rootValue,
+      titleAndColorValue(title: "Theirs", color: "Blue"),
+    );
     expect(
       source.value(title).valueOrNull,
       skir.DataValue.wrapStringValue("Yours"),
@@ -163,7 +167,7 @@ void main() {
 
     expect(
       source.document.confirmedValue,
-      _value(title: "Theirs", color: "Blue"),
+      titleAndColorValue(title: "Theirs", color: "Blue"),
     );
     source.dispose();
   });
@@ -173,9 +177,9 @@ void main() {
     () async {
       final first = Completer<TypedMutationResult>();
       final commits = <EditorCommit>[];
-      final source = _source(
-        scheduler: _Scheduler(),
-        jitter: const _Jitter(Duration.zero),
+      final source = titleAndColorSource(
+        scheduler: RecordingScheduler(),
+        jitter: const FixedJitter(Duration.zero),
         commit: (commit) async {
           commits.add(commit);
           if (commits.length == 1) return first.future;
@@ -190,12 +194,12 @@ void main() {
       final flush = source.flush();
       source.acceptRemote(
         revision: 3,
-        value: _value(title: "Old", color: "Blue"),
+        value: titleAndColorValue(title: "Old", color: "Blue"),
       );
       first.complete(
         TypedMutationResult.success(
           revision: 2,
-          value: _value(title: "New", color: "Red"),
+          value: titleAndColorValue(title: "New", color: "Red"),
         ),
       );
       await flush;
@@ -204,11 +208,11 @@ void main() {
       expect(source.document.revision, 3);
       expect(
         source.document.confirmedValue,
-        _value(title: "Old", color: "Blue"),
+        titleAndColorValue(title: "Old", color: "Blue"),
       );
       expect(
         source.value(editorRootPath).valueOrNull,
-        _value(title: "Old", color: "Blue"),
+        titleAndColorValue(title: "Old", color: "Blue"),
       );
       expect(source.saveState(title).phase, EditorSavePhase.saved);
       source.dispose();
@@ -217,18 +221,18 @@ void main() {
 
   test("same revision matching success confirms the pending commit", () async {
     final pending = Completer<TypedMutationResult>();
-    final source = _source(commit: (_) => pending.future);
+    final source = titleAndColorSource(commit: (_) => pending.future);
 
     source.update(title, skir.DataValue.wrapStringValue("New"));
     final flush = source.flush();
     source.acceptRemote(
       revision: 2,
-      value: _value(title: "New", color: "Red"),
+      value: titleAndColorValue(title: "New", color: "Red"),
     );
     pending.complete(
       TypedMutationResult.success(
         revision: 2,
-        value: _value(title: "New", color: "Red"),
+        value: titleAndColorValue(title: "New", color: "Red"),
       ),
     );
     await flush;
@@ -242,18 +246,18 @@ void main() {
     "same revision divergent success is diagnosed without overwrite",
     () async {
       final pending = Completer<TypedMutationResult>();
-      final source = _source(commit: (_) => pending.future);
+      final source = titleAndColorSource(commit: (_) => pending.future);
 
       source.update(title, skir.DataValue.wrapStringValue("New"));
       final flush = source.flush();
       source.acceptRemote(
         revision: 2,
-        value: _value(title: "Old", color: "Blue"),
+        value: titleAndColorValue(title: "Old", color: "Blue"),
       );
       pending.complete(
         TypedMutationResult.success(
           revision: 2,
-          value: _value(title: "New", color: "Red"),
+          value: titleAndColorValue(title: "New", color: "Red"),
         ),
       );
       await flush;
@@ -261,7 +265,7 @@ void main() {
       expect(source.document.revision, 2);
       expect(
         source.document.confirmedValue,
-        _value(title: "Old", color: "Blue"),
+        titleAndColorValue(title: "Old", color: "Blue"),
       );
       expect(
         source.value(title).valueOrNull,
@@ -277,10 +281,10 @@ void main() {
   );
 
   test("a focused field does not block other fields from saving", () async {
-    final scheduler = _ControlledScheduler();
+    final scheduler = ControlledScheduler();
     final committed = Completer<void>();
     final commits = <EditorCommit>[];
-    final source = _source(
+    final source = titleAndColorSource(
       scheduler: scheduler,
       commit: (commit) async {
         commits.add(commit);
@@ -307,7 +311,7 @@ void main() {
 
   test("editing after a failure returns the field to pending", () async {
     var fail = true;
-    final source = _source(
+    final source = titleAndColorSource(
       commit: (commit) async => fail
           ? TypedMutationResult.unavailable([
               const EditorDiagnostic(
@@ -337,10 +341,10 @@ void main() {
   });
 
   test("failed saves wait for an explicit retry", () async {
-    final scheduler = _ControlledScheduler();
+    final scheduler = ControlledScheduler();
     final firstCommit = Completer<void>();
     var calls = 0;
-    final source = _source(
+    final source = titleAndColorSource(
       scheduler: scheduler,
       commit: (commit) async {
         calls++;
@@ -368,10 +372,10 @@ void main() {
   });
 
   test("debounce rescheduling cancels and coalesces pending commits", () async {
-    final scheduler = _ControlledScheduler();
+    final scheduler = ControlledScheduler();
     final committed = Completer<void>();
     final commits = <EditorCommit>[];
-    final source = _source(
+    final source = titleAndColorSource(
       scheduler: scheduler,
       commit: (commit) async {
         commits.add(commit);
@@ -398,69 +402,46 @@ void main() {
     await source.flush();
 
     expect(commits, hasLength(1));
-    expect(commits.single.rootValue, _value(title: "Second", color: "Red"));
+    expect(
+      commits.single.rootValue,
+      titleAndColorValue(title: "Second", color: "Red"),
+    );
     source.dispose();
   });
 
   test("deletion cancels debounce and prevents its commit", () async {
-    final scheduler = _ControlledScheduler();
-    var commits = 0;
-    final source = _source(
-      scheduler: scheduler,
-      commit: (_) async {
-        commits++;
-        return TypedMutationResult.success(
-          revision: 2,
-          value: _value(title: "New", color: "Red"),
-        );
-      },
-    );
-
-    source.update(title, skir.DataValue.wrapStringValue("New"));
-    final task = scheduler.tasks.single;
+    final commits = <EditorCommit>[];
+    final (:source, :task) = debouncedTitleEdit(commits);
     source.acceptRemoteDeletion();
 
-    expect(task.cancelled, isTrue);
+    await eventually(() => expect(task.cancelled, isTrue));
     expect(await task.completed, EditorTaskCompletion.cancelled);
-    expect(commits, 0);
+    expect(commits.length, 0);
     source.dispose();
   });
 
   test("dispose cancels debounce and prevents its commit", () async {
-    final scheduler = _ControlledScheduler();
-    var commits = 0;
-    final source = _source(
-      scheduler: scheduler,
-      commit: (_) async {
-        commits++;
-        return TypedMutationResult.success(
-          revision: 2,
-          value: _value(title: "New", color: "Red"),
-        );
-      },
-    );
-
-    source.update(title, skir.DataValue.wrapStringValue("New"));
-    final task = scheduler.tasks.single;
+    final commits = <EditorCommit>[];
+    final (:source, :task) = debouncedTitleEdit(commits);
     source.dispose();
 
     expect(task.cancelled, isTrue);
     expect(await task.completed, EditorTaskCompletion.cancelled);
-    expect(commits, 0);
+    expect(commits.length, 0);
   });
 
   test("deletion cancels a retry without another commit", () async {
-    final scheduler = _ControlledScheduler();
+    final scheduler = ControlledScheduler();
     var calls = 0;
-    final source = _source(
+    final source = titleAndColorSource(
       scheduler: scheduler,
-      jitter: const _Jitter(Duration.zero),
+      jitter: const FixedJitter(Duration.zero),
       commit: (commit) async {
         calls++;
         return TypedMutationResult.conflict(
           expectedRevision: commit.expectedRevision,
           actualRevision: 2,
-          actualValue: _value(title: "Old", color: "Blue"),
+          actualValue: titleAndColorValue(title: "Old", color: "Blue"),
         );
       },
     );
@@ -470,27 +451,33 @@ void main() {
     final retry = await scheduler.scheduledAt(1);
     source.acceptRemoteDeletion();
 
-    expect(retry.cancelled, isTrue);
+    await eventually(() => expect(retry.cancelled, isTrue));
     expect(await flush, isA<MutationUnavailable>());
     expect(calls, 1);
     source.dispose();
   });
 
   test("a committed interaction cannot be reused", () async {
-    final source = _source(
-      commit: (commit) async => TypedMutationResult.success(
-        revision: commit.expectedRevision + 1,
-        value: commit.rootValue,
-      ),
+    var calls = 0;
+    final source = titleAndColorSource(
+      commit: (commit) async {
+        calls++;
+        return TypedMutationResult.success(
+          revision: commit.expectedRevision + 1,
+          value: commit.rootValue,
+        );
+      },
     );
 
     final interaction = source.beginInteraction(title);
     source.update(title, skir.DataValue.wrapStringValue("New"));
     await interaction.commit();
-    expect(interaction.active, isFalse);
     await interaction.commit();
-    expect(interaction.active, isFalse);
+    await source.flush();
 
+    expect(interaction.active, isFalse);
+    expect(calls, 1);
+    expect(source.hasWork, isFalse);
     source.dispose();
   });
 
@@ -498,7 +485,7 @@ void main() {
     "interaction cancel restores its origin and commit flushes once",
     () async {
       var calls = 0;
-      final source = _source(
+      final source = titleAndColorSource(
         commit: (commit) async {
           calls++;
           return TypedMutationResult.success(
@@ -526,19 +513,22 @@ void main() {
   );
 
   test("repeated contention pauses after three jittered retries", () async {
-    final scheduler = _Scheduler();
+    final scheduler = RecordingScheduler();
     var calls = 0;
     var revision = 1;
-    final source = _source(
+    final source = titleAndColorSource(
       scheduler: scheduler,
-      jitter: const _Jitter(Duration.zero),
+      jitter: const FixedJitter(Duration.zero),
       commit: (commit) async {
         calls++;
         revision++;
         return TypedMutationResult.conflict(
           expectedRevision: commit.expectedRevision,
           actualRevision: revision,
-          actualValue: _value(title: "Old", color: "Remote $revision"),
+          actualValue: titleAndColorValue(
+            title: "Old",
+            color: "Remote $revision",
+          ),
         );
       },
     );
@@ -571,7 +561,7 @@ void main() {
   test("deletion invalidates pending request results", () async {
     final pending = Completer<TypedMutationResult>();
 
-    final source = _source(commit: (_) => pending.future);
+    final source = titleAndColorSource(commit: (_) => pending.future);
     source.update(title, skir.DataValue.wrapStringValue("New"));
     final flush = source.flush();
     source.acceptRemoteDeletion();
@@ -579,7 +569,7 @@ void main() {
     pending.complete(
       TypedMutationResult.success(
         revision: 2,
-        value: _value(title: "New", color: "Red"),
+        value: titleAndColorValue(title: "New", color: "Red"),
       ),
     );
 
@@ -593,7 +583,7 @@ void main() {
     final pending = Completer<TypedMutationResult>();
     var commits = 0;
     var notifications = 0;
-    final source = _source(
+    final source = titleAndColorSource(
       commit: (_) {
         commits++;
         return pending.future;
@@ -609,7 +599,7 @@ void main() {
     pending.complete(
       TypedMutationResult.success(
         revision: 2,
-        value: _value(title: "New", color: "Red"),
+        value: titleAndColorValue(title: "New", color: "Red"),
       ),
     );
 
@@ -617,11 +607,14 @@ void main() {
     expect(commits, 1);
     expect(notifications, notificationsAtDispose);
     expect(source.document.revision, 1);
-    expect(source.document.confirmedValue, _value(title: "Old", color: "Red"));
+    expect(
+      source.document.confirmedValue,
+      titleAndColorValue(title: "Old", color: "Red"),
+    );
   });
 
-  test("clean remote deletion remains visible at the root", () {
-    final source = _source(
+  test("clean remote deletion remains visible at the root", () async {
+    final source = titleAndColorSource(
       commit: (commit) async => TypedMutationResult.success(
         revision: commit.expectedRevision + 1,
         value: commit.rootValue,
@@ -630,15 +623,17 @@ void main() {
 
     source.acceptRemoteDeletion();
 
-    expect(
-      source.saveState(editorRootPath).phase,
-      EditorSavePhase.deletedElsewhere,
+    await eventually(
+      () => expect(
+        source.saveState(editorRootPath).phase,
+        EditorSavePhase.deletedElsewhere,
+      ),
     );
     source.dispose();
   });
 
-  test("metadata refresh preserves a rebased local draft", () {
-    final source = _source(
+  test("metadata refresh preserves a rebased local draft", () async {
+    final source = titleAndColorSource(
       commit: (commit) async => TypedMutationResult.success(
         revision: commit.expectedRevision + 1,
         value: commit.rootValue,
@@ -650,19 +645,21 @@ void main() {
     final notificationsBeforeRefresh = notifications;
 
     final refreshed = source.document.copyWith(
-      confirmedValue: _value(title: "Old", color: "Remote"),
+      confirmedValue: titleAndColorValue(title: "Old", color: "Remote"),
       revision: 2,
       readOnly: true,
     );
     source.refreshDocument(refreshed);
 
+    await eventually(
+      () => expect(
+        source.value(editorRootPath.field("color")).valueOrNull,
+        skir.DataValue.wrapStringValue("Remote"),
+      ),
+    );
     expect(
       source.value(title).valueOrNull,
       skir.DataValue.wrapStringValue("Local"),
-    );
-    expect(
-      source.value(editorRootPath.field("color")).valueOrNull,
-      skir.DataValue.wrapStringValue("Remote"),
     );
     expect(source.document.readOnly, isTrue);
     expect(notifications, greaterThan(notificationsBeforeRefresh));
@@ -672,115 +669,4 @@ void main() {
     expect(notifications, notificationsAfterRefresh);
     source.dispose();
   });
-}
-
-ValueEditing _source({
-  required EditorCommitter commit,
-  EditorDelayScheduler? scheduler,
-  EditorJitterSource? jitter,
-  Duration debounce = const Duration(milliseconds: 250),
-}) {
-  return fakeValueEditing(
-    document: recordEditorDocument(
-      {
-        "title": skir.DataValue.wrapStringValue("Old"),
-        "color": skir.DataValue.wrapStringValue("Red"),
-      },
-      {
-        "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-        "color": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      },
-      1,
-    ),
-    validation: (path, value) => EditorMutationResult.applied(value),
-    debounce: debounce,
-    commit: commit,
-    scheduler: scheduler ?? _ControlledScheduler(),
-    jitter: jitter,
-  );
-}
-
-skir.DataValue _value({required String title, required String color}) =>
-    recordEditorValue({
-      "title": skir.DataValue.wrapStringValue(title),
-      "color": skir.DataValue.wrapStringValue(color),
-    });
-
-final class _Scheduler implements EditorDelayScheduler {
-  final delays = <Duration>[];
-
-  @override
-  EditorScheduledTask schedule(Duration delay) {
-    delays.add(delay);
-    if (delay == const Duration(milliseconds: 250)) {
-      return _ControlledScheduledTask();
-    }
-    return const _CompletedScheduledTask();
-  }
-}
-
-final class _CompletedScheduledTask implements EditorScheduledTask {
-  const _CompletedScheduledTask();
-
-  @override
-  Future<EditorTaskCompletion> get completed =>
-      Future<EditorTaskCompletion>.value(EditorTaskCompletion.executed);
-
-  @override
-  void cancel() {}
-}
-
-final class _ControlledScheduler implements EditorDelayScheduler {
-  final delays = <Duration>[];
-  final tasks = <_ControlledScheduledTask>[];
-  final _waiters = <int, Completer<_ControlledScheduledTask>>{};
-
-  @override
-  EditorScheduledTask schedule(Duration delay) {
-    delays.add(delay);
-    final task = _ControlledScheduledTask();
-    tasks.add(task);
-    _waiters.remove(tasks.length - 1)?.complete(task);
-    return task;
-  }
-
-  Future<_ControlledScheduledTask> scheduledAt(int index) {
-    if (tasks.length > index) return Future.value(tasks[index]);
-    return _waiters
-        .putIfAbsent(index, Completer<_ControlledScheduledTask>.new)
-        .future;
-  }
-}
-
-final class _ControlledScheduledTask implements EditorScheduledTask {
-  final Completer<EditorTaskCompletion> _completion =
-      Completer<EditorTaskCompletion>();
-  bool cancelled = false;
-
-  @override
-  Future<EditorTaskCompletion> get completed => _completion.future;
-
-  void execute() {
-    if (_completion.isCompleted) return;
-    _completion.complete(EditorTaskCompletion.executed);
-  }
-
-  @override
-  void cancel() {
-    if (_completion.isCompleted) return;
-    cancelled = true;
-    _completion.complete(EditorTaskCompletion.cancelled);
-  }
-}
-
-final class _Jitter implements EditorJitterSource {
-  const _Jitter(this.value);
-
-  final Duration value;
-
-  @override
-  Duration next(Duration maximum) {
-    assert(value <= maximum, "Test jitter must not exceed its maximum.");
-    return value;
-  }
 }

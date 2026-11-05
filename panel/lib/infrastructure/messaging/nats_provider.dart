@@ -66,50 +66,98 @@ Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
   };
 }
 
+/// What one connection input holds: its value once it loaded, its failure
+/// when it never loaded, or neither while it first loads. A reload keeps the
+/// loaded value, so it does not replace the connection.
+typedef _ConnectionInput<T> = ({
+  T? value,
+  Object? error,
+  StackTrace? stackTrace,
+});
+
+_ConnectionInput<T> _connectionInput<T>(AsyncValue<T> state) => (
+  value: state.value,
+  error: state.hasValue ? null : state.error,
+  stackTrace: state.hasValue ? null : state.stackTrace,
+);
+
 /// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential and organization changes dispose the entire previous connection.
-/// [retry] publishes a fresh session of the same scope.
+/// The connection opens once its inputs exist: the identity provider session
+/// and the sentinel credentials. Until then, and while nobody is signed in,
+/// it stays pending, so a consumer waiting for it opens nothing and resumes
+/// once the inputs arrive. Only a changed session, credentials or
+/// organization disposes the previous connection. [retry] publishes a fresh
+/// session of the same scope.
 @Riverpod(keepAlive: true)
 class Nats extends _$Nats {
   late NatsConnectionOwner _connection;
 
   @override
-  NatsClient build() {
-    final token = ref.watch(accessTokenProvider).value?.token;
-    if (token == null) {
-      throw StateError("User must be authenticated before connecting to NATS");
+  FutureOr<NatsClient> build() {
+    final organization = ref.watch(organizationIdProvider);
+    final clientFactory = ref.watch(natsClientFactoryProvider);
+    final sessionFactory = ref.watch(natsConnectionSessionFactoryProvider);
+    final session = ref.watch(authSessionProvider.select(_connectionInput));
+    final sentinel = ref.watch(
+      sentinelCredentialsProvider.select(_connectionInput),
+    );
+    for (final input in [session, sentinel]) {
+      if (input.error case final error?) {
+        Error.throwWithStackTrace(error, input.stackTrace!);
+      }
+    }
+    final (signedIn, credentials) = (session.value, sentinel.value);
+    if (signedIn == null || credentials == null) {
+      // The change that brings the missing input rebuilds this provider.
+      return Completer<NatsClient>().future;
     }
     final connection = NatsConnectionOwner(
       settings: NatsConnectionSettings(
         url: AppConfig.nats.url,
-        token: token,
-        user: ref.watch(authUserInfoProvider).requireValue,
-        sentinel: ref.watch(sentinelCredentialsProvider).requireValue,
-        organization: ref.watch(organizationIdProvider),
+        token: signedIn.token.token,
+        user: signedIn.user,
+        sentinel: credentials,
+        organization: organization,
       ),
-      clientFactory: ref.watch(natsClientFactoryProvider),
-      sessionFactory: ref.watch(natsConnectionSessionFactoryProvider),
-      onReplacement: (client) => state = client,
+      clientFactory: clientFactory,
+      sessionFactory: sessionFactory,
+      onReplacement: (client) => state = AsyncData(client),
     );
     _connection = connection;
     ref.onDispose(() => unawaited(connection.close()));
     return connection.client;
   }
 
-  Future<void> retry() => _connection.retry();
+  /// Opens a fresh session of the current connection, once it exists.
+  ///
+  /// An open connection is replaced at once, so a request that follows
+  /// already reads the replacement instead of the session being closed.
+  Future<void> retry() async {
+    if (!state.hasValue) await future;
+    await _connection.retry();
+  }
 }
 
 /// Projects transport lifecycle into Riverpod for connection status UI.
 ///
-/// The synchronous client state is emitted first, then later transport events
-/// update the provider. This provider observes lifecycle only and does not own
-/// the client or decide whether a failure is recoverable.
+/// The connection reads as connecting until it opens. Its synchronous client
+/// state is emitted first, then later transport events update the provider.
+/// This provider observes lifecycle only and does not own the client or
+/// decide whether a failure is recoverable.
 @riverpod
 class NatsLifecycle extends _$NatsLifecycle {
   @override
   NatsConnectionState build() {
-    final client = ref.watch(natsProvider);
+    final client = switch (ref.watch(natsProvider)) {
+      AsyncData(:final value) => value,
+      AsyncError(:final error, :final stackTrace) => Error.throwWithStackTrace(
+        error,
+        stackTrace,
+      ),
+      AsyncLoading() => null,
+    };
+    if (client == null) return const NatsConnecting();
     final subscription = client.connectionStateChanges.listen((connection) {
       _logConnectionState(connection);
       state = connection;

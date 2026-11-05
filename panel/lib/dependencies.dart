@@ -46,16 +46,16 @@ export "package:clock/clock.dart";
 export "package:collection/collection.dart"
     hide UnmodifiableSetView, binarySearch, mergeSort;
 export "package:crypto/crypto.dart";
+export "package:cupertino_ui/cupertino_ui.dart"
+    hide Page, RefreshCallback, Title;
 export "package:dart_casing/dart_casing.dart";
 export "package:dartastic_opentelemetry/dartastic_opentelemetry.dart"
     hide Client, Service, View;
 export "package:dotted_border/dotted_border.dart";
 export "package:duration/duration.dart";
 export "package:expandable_page_view/expandable_page_view.dart";
-export "package:flutter/cupertino.dart" hide Page, RefreshCallback, Title;
 export "package:flutter/foundation.dart";
 export "package:flutter/gestures.dart";
-export "package:flutter/material.dart" hide Page, SearchController, Title;
 export "package:flutter/rendering.dart" hide Selectable;
 export "package:flutter/scheduler.dart";
 export "package:flutter/semantics.dart";
@@ -88,6 +88,8 @@ export "package:json_path/json_path.dart";
 export "package:localstorage/localstorage.dart";
 export "package:material_color_utilities/material_color_utilities.dart"
     hide Direction;
+export "package:material_ui/material_ui.dart"
+    hide Page, SearchController, Title;
 export "package:nats_core/nats_core.dart"
     hide
         NatsClosed,

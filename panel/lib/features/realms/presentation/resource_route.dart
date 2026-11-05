@@ -47,8 +47,9 @@ class ResourcePage extends ConsumerWidget {
 /// Shows [resource] as the routed resource of [scope]: the rail with the
 /// nearest navigator, then a heading from the resource's appearance and owning
 /// link fields above its workspace or, without one, its inspector. On narrow
-/// layouts the rail opens from a menu button in the heading. The creation
-/// shortcut works anywhere in the heading and body.
+/// layouts the rail opens from a menu button in the heading. The first
+/// creation is the surface's main action: a floating button over the body and
+/// a shortcut that works anywhere in the heading and body.
 class ResourceSurface extends ConsumerWidget {
   const ResourceSurface({
     required this.scope,
@@ -87,6 +88,10 @@ class ResourceSurface extends ConsumerWidget {
           : skir.PresentationRole.inspector,
       routedResource: resource,
       openResource: open,
+    );
+    final content = Padding(
+      padding: EdgeInsets.all(context.spacing.space2),
+      child: workspace ? body : SingleChildScrollView(child: body),
     );
     final main = Pane(
       id: "resource",
@@ -134,10 +139,19 @@ class ResourceSurface extends ConsumerWidget {
                     : null,
               ),
               Expanded(
-                child: Padding(
-                  padding: EdgeInsets.all(context.spacing.space2),
-                  child: workspace ? body : SingleChildScrollView(child: body),
-                ),
+                child: switch (creation) {
+                  final creation? => FloatingButton(
+                    icon: const Icon(Icons.add),
+                    label: creation.label,
+                    onPressed: () => ref.createSelectedResource(
+                      context: context,
+                      type: creation.type,
+                      owner: creation.owner,
+                    ),
+                    child: content,
+                  ),
+                  null => content,
+                },
               ),
             ],
           ),
@@ -228,18 +242,24 @@ class _SurfaceState extends ConsumerWidget {
   final String missing;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Center(
-    child: switch (ref.watch(workingAuthoringDocumentProvider(scope))) {
-      AsyncValue(:final error?) => Text("Authoring is unavailable: $error"),
-      AsyncValue(hasValue: false) => const CircularProgressIndicator(),
-      _ => Text(missing),
-    },
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    return switch (ref.watch(workingAuthoringDocumentProvider(scope))) {
+      AsyncValue(:final error?) => Center(
+        child: Text("Authoring is unavailable: $error"),
+      ),
+      AsyncValue(hasValue: false) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      _ => EmptyScreen(title: missing),
+    };
+  }
 }
 
-/// The routed resource's name, icon and accent from its appearance, with one
-/// creation button per owning link field whose members a person may create.
-/// [leading] precedes the icon, such as the rail menu of a narrow surface.
+/// The routed resource's name, icon and accent from its appearance, the
+/// issues found on it, and one creation button per owning link field whose
+/// members a person may create beyond the first, which the surface offers as
+/// its main action. [leading] precedes the icon, such as the rail menu of a
+/// narrow surface.
 class ResourceHeading extends ConsumerWidget {
   const ResourceHeading({
     required this.scope,
@@ -265,6 +285,7 @@ class ResourceHeading extends ConsumerWidget {
     final creations = ref.watch(
       resourceCreationFieldsProvider(scope, resource),
     );
+    final issues = ref.watch(resourceIssuesProvider(scope)).value;
     if (appearance == null || configuration == null || catalog == null) {
       return const SizedBox.shrink();
     }
@@ -316,7 +337,12 @@ class ResourceHeading extends ConsumerWidget {
                   ],
                 ),
               ),
-              for (final creation in creations)
+              ResourceIssueBadge(
+                issues: issues?.about(resource) ?? const [],
+                checking: issues?.checking ?? true,
+                unavailable: issues?.unavailable ?? false,
+              ),
+              for (final creation in creations.skip(1))
                 FilledButton.tonalIcon(
                   onPressed: () => ref.createSelectedResource(
                     context: context,

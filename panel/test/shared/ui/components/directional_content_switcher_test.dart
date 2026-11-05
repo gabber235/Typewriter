@@ -1,138 +1,163 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("slides forward and backward according to the index", (
+  testWidgets("a higher index enters from the right, a lower from the left", (
     tester,
   ) async {
-    var index = 0;
-    late StateSetter setState;
-
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
-        builder: (context, update) {
-          setState = update;
-          return DirectionalContentSwitcher(
-            index: index,
-            child: SizedBox(key: ValueKey(index), width: 200, height: 80),
-          );
-        },
+    final panel = await tester.showComponent(
+      const DirectionalContentSwitcher(
+        index: 0,
+        child: SizedBox(
+          key: ValueKey(0),
+          width: 200,
+          height: 80,
+          child: Text("Page 0"),
+        ),
       ),
     );
+    double left(String page) => tester.getTopLeft(find.text(page)).dx;
+    final rest = left("Page 0");
 
-    setState(() => index = 1);
-    await tester.pump();
+    await tester.showComponent(
+      const DirectionalContentSwitcher(
+        index: 1,
+        child: SizedBox(
+          key: ValueKey(1),
+          width: 200,
+          height: 80,
+          child: Text("Page 1"),
+        ),
+      ),
+      settle: false,
+    );
     await tester.pump(const Duration(milliseconds: 80));
+    expect(left("Page 1"), greaterThan(rest));
+    expect(left("Page 0"), lessThan(rest));
 
-    expect(_horizontalOffsets(tester).any((offset) => offset > 0), isTrue);
-    expect(_horizontalOffsets(tester).any((offset) => offset < 0), isTrue);
-
-    await tester.pumpAndSettle();
-    setState(() => index = 0);
-    await tester.pump();
+    await panel.settle();
+    await tester.showComponent(
+      const DirectionalContentSwitcher(
+        index: 0,
+        child: SizedBox(
+          key: ValueKey(0),
+          width: 200,
+          height: 80,
+          child: Text("Page 0"),
+        ),
+      ),
+      settle: false,
+    );
     await tester.pump(const Duration(milliseconds: 80));
-
-    expect(_horizontalOffsets(tester).any((offset) => offset > 0), isTrue);
-    expect(_horizontalOffsets(tester).any((offset) => offset < 0), isTrue);
+    expect(left("Page 0"), lessThan(rest));
+    expect(left("Page 1"), greaterThan(rest));
   });
 
-  testWidgets("animates its height to match the current child", (tester) async {
-    var index = 0;
-    late StateSetter setState;
-
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
-        builder: (context, update) {
-          setState = update;
-          return DirectionalContentSwitcher(
-            index: index,
-            child: SizedBox(
-              key: ValueKey(index),
-              width: 200,
-              height: index == 0 ? 40 : 120,
-            ),
-          );
-        },
+  testWidgets("animates its height to match the current page", (tester) async {
+    final panel = await tester.showComponent(
+      const DirectionalContentSwitcher(
+        index: 0,
+        child: SizedBox(
+          key: ValueKey(0),
+          width: 200,
+          height: 40,
+          child: Text("Page 0"),
+        ),
       ),
     );
+    double height() =>
+        tester.getSize(find.byType(DirectionalContentSwitcher)).height;
+    expect(height(), 40);
 
-    expect(tester.getSize(find.byType(AnimatedSize)).height, 40);
-
-    setState(() => index = 1);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 150));
-
-    final animatedHeight = tester.getSize(find.byType(AnimatedSize)).height;
-    expect(animatedHeight, greaterThan(40));
-    expect(animatedHeight, lessThan(120));
-
-    await tester.pumpAndSettle();
-    expect(tester.getSize(find.byType(AnimatedSize)).height, 120);
-  });
-
-  testWidgets("keeps both contents during the transition", (tester) async {
-    var index = 0;
-    late StateSetter setState;
-
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
-        builder: (context, update) {
-          setState = update;
-          return DirectionalContentSwitcher(
-            index: index,
-            child: SizedBox(
-              key: ValueKey(index),
-              height: index == 0 ? 120 : 40,
-              child: Text(index == 0 ? "Outgoing" : "Destination"),
-            ),
-          );
-        },
+    await tester.showComponent(
+      const DirectionalContentSwitcher(
+        index: 1,
+        child: SizedBox(
+          key: ValueKey(1),
+          width: 200,
+          height: 120,
+          child: Text("Page 1"),
+        ),
       ),
+      settle: false,
     );
-
-    setState(() => index = 1);
-    await tester.pump();
     await tester.pump(const Duration(milliseconds: 150));
+    expect(height(), allOf(greaterThan(40), lessThan(120)));
 
-    expect(find.text("Outgoing"), findsOneWidget);
-    expect(find.text("Destination"), findsOneWidget);
-
-    await tester.pumpAndSettle();
-
-    expect(find.text("Outgoing"), findsNothing);
-    expect(find.text("Destination"), findsOneWidget);
+    await panel.settle();
+    expect(height(), 120);
   });
 
-  testWidgets("removes motion when animations are disabled", (tester) async {
-    await tester.pumpTestApp(
-      child: const MediaQuery(
-        data: MediaQueryData(disableAnimations: true),
-        child: DirectionalContentSwitcher(
-          index: 0,
-          child: SizedBox(key: ValueKey(0), height: 40),
+  testWidgets("keeps both pages during the transition", (tester) async {
+    final panel = await tester.showComponent(
+      const DirectionalContentSwitcher(
+        index: 0,
+        child: SizedBox(
+          key: ValueKey(0),
+          width: 200,
+          height: 120,
+          child: Text("Page 0"),
         ),
       ),
     );
 
-    expect(
-      tester.widget<AnimatedSize>(find.byType(AnimatedSize)).duration,
-      Duration.zero,
+    await tester.showComponent(
+      const DirectionalContentSwitcher(
+        index: 1,
+        child: SizedBox(
+          key: ValueKey(1),
+          width: 200,
+          height: 40,
+          child: Text("Page 1"),
+        ),
+      ),
+      settle: false,
     );
-    expect(
-      tester.widget<AnimatedSwitcher>(find.byType(AnimatedSwitcher)).duration,
-      Duration.zero,
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(panel.shows("Page 0"), isTrue);
+    expect(panel.shows("Page 1"), isTrue);
+
+    await panel.settle();
+    expect(panel.shows("Page 0"), isFalse);
+    expect(panel.shows("Page 1"), isTrue);
+  });
+
+  testWidgets("with reduced motion the destination replaces the page at once", (
+    tester,
+  ) async {
+    final panel = await tester.showComponent(
+      const ReducedMotion(
+        child: DirectionalContentSwitcher(
+          index: 0,
+          child: SizedBox(
+            key: ValueKey(0),
+            width: 200,
+            height: 40,
+            child: Text("Page 0"),
+          ),
+        ),
+      ),
     );
+
+    await tester.showComponent(
+      const ReducedMotion(
+        child: DirectionalContentSwitcher(
+          index: 1,
+          child: SizedBox(
+            key: ValueKey(1),
+            width: 200,
+            height: 120,
+            child: Text("Page 1"),
+          ),
+        ),
+      ),
+      settle: false,
+    );
+    await tester.pump();
+
+    expect(panel.shows("Page 0"), isFalse);
+    expect(panel.shows("Page 1"), isTrue);
+    expect(tester.getSize(find.byType(DirectionalContentSwitcher)).height, 120);
   });
 }
-
-List<double> _horizontalOffsets(WidgetTester tester) => tester
-    .widgetList<SlideTransition>(
-      find.descendant(
-        of: find.byType(DirectionalContentSwitcher),
-        matching: find.byType(SlideTransition),
-      ),
-    )
-    .map((transition) => transition.position.value.dx)
-    .toList();

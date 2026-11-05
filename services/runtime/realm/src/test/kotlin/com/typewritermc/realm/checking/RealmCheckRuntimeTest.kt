@@ -2,12 +2,13 @@
 
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.ResourceTypeMatch
@@ -15,44 +16,30 @@ import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.configuration.field
 import com.typewritermc.discovery.OwnedCheck
-import com.typewritermc.discovery.OwnedConfiguration
-import com.typewritermc.discovery.OwnedNativeBinding
-import com.typewritermc.discovery.OwnedPresentation
-import com.typewritermc.discovery.OwnedProviderRegistry
-import com.typewritermc.discovery.ProviderLease
-import com.typewritermc.discovery.ProviderOrigin
-import com.typewritermc.discovery.contributionKey
-import com.typewritermc.expression.eq
-import com.typewritermc.expression.isInstance
-import com.typewritermc.expression.length
-import com.typewritermc.expression.literal
-import com.typewritermc.expression.not
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.imprint.ContributionName
-import com.typewritermc.imprint.ContributionSourceId
-import com.typewritermc.imprint.ProducerId
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
-import com.typewritermc.realm.authoring.INT_USE
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.LIST_USE
 import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
+import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.TEXT_USE
-import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.TestDraft
 import com.typewritermc.realm.authoring.TestDraftType
 import com.typewritermc.realm.authoring.ViewReadLimits
 import com.typewritermc.realm.authoring.conflicts
 import com.typewritermc.realm.authoring.location
 import com.typewritermc.realm.authoring.record
-import com.typewritermc.realm.authoring.tokensFor
-import com.typewritermc.realm.publication.AuthoringAcceptance
-import com.typewritermc.realm.publication.CapturedAssessment
-import com.typewritermc.types.GeneratedNativeField
-import com.typewritermc.types.GeneratedRecordNativeBinding
-import com.typewritermc.types.NativeBinding
-import com.typewritermc.types.NativeBindingFactory
+import com.typewritermc.realm.publication.ResourceReadiness
+import com.typewritermc.realm.testing.CHECK_PROVIDER_ORIGIN
+import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.TestCheckProviders
+import com.typewritermc.realm.testing.checksOf
+import com.typewritermc.realm.testing.openCatalogLeases
+import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.testkit.definitions
+import com.typewritermc.types.integerScalar
 import com.typewritermc.types.mapValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
@@ -67,37 +54,28 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import skirout.editor.v1.catalog.ConfigurationRecipe
-import skirout.editor.v1.catalog.OwnedRule
-import skirout.editor.v1.catalog.RepresentationKind
-import skirout.editor.v1.catalog.RuleDescriptor
-import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.checking.CheckOutcome
-import skirout.editor.v1.diagnostic.DiagnosticSeverity
-import skirout.editor.v1.diagnostic.DiagnosticTemplate
+import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.DeclarationOwner
-import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
-import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -107,42 +85,125 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmCheckRuntimeTest by testSuite {
-    test("capturedSetupFailureReleasesTheRetainedSnapshot") {
-        val catalog = TestCatalogLease()
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(emptyMap()),
-            )
-        val runtime = RealmCheckRuntime(store)
+    val firstResource = ResourceId(value = "first")
 
-        shouldThrow<IllegalArgumentException> {
-            kotlinx.coroutines.runBlocking {
-                runtime.evaluateCapture(
-                    CheckAdmissionTarget.CapturedAcceptance(
-                        store.capture().use {
-                            it.root.copy(catalog = TestCatalogLease(generation = CatalogGeneration(value = "wrong")))
-                        },
+    val secondResource = ResourceId(value = "second")
+
+    val duplicateValueType = TypeDefinitionId.qualified("test", "canonical_value")
+
+    val duplicateSetType = TypeDefinitionId.qualified("test", "canonical_set")
+
+    val duplicateMapType = TypeDefinitionId.qualified("test", "canonical_map")
+
+    val duplicateSetParameter = ParameterKey(owner = duplicateSetType, index = 0)
+
+    val duplicateMapKeyParameter = ParameterKey(owner = duplicateMapType, index = 0)
+
+    val duplicateMapValueParameter = ParameterKey(owner = duplicateMapType, index = 1)
+
+    val duplicateValueUse = duplicateValueType.namedUse()
+
+    val duplicateSetUse = duplicateSetType.namedUse(listOf(duplicateValueUse.use))
+
+    val duplicateMapUse =
+        duplicateMapType.namedUse(listOf(duplicateValueUse.use, ScalarKind.TEXT.use))
+
+    val duplicateDefinitions =
+        listOf(
+            TypeDefinition.partial(
+                id = TEST_TYPE,
+                representation =
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = TEST_TYPE, name = "values"),
+                                    type = duplicateSetType.template(listOf(duplicateValueType.template())),
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = TEST_TYPE, name = "mapping"),
+                                    type = duplicateMapType.template(listOf(duplicateValueType.template(), ScalarKind.TEXT.template)),
+                                ),
+                            ),
+                        abstract_ = false,
                     ),
-                )
+            ),
+            TypeDefinition.partial(
+                id = duplicateValueType,
+                representation =
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = duplicateValueType, name = "first"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = duplicateValueType, name = "second"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
+                            ),
+                        abstract_ = false,
+                    ),
+            ),
+            TypeDefinition.partial(
+                id = duplicateSetType,
+                parameters = listOf(TypeParameter.partial(key = duplicateSetParameter, name = "T")),
+                representation = RepresentationTemplate.createSequence(item = duplicateSetParameter.template, kind = CollectionKind.SET),
+            ),
+            TypeDefinition.partial(
+                id = duplicateMapType,
+                parameters =
+                    listOf(
+                        TypeParameter.partial(key = duplicateMapKeyParameter, name = "K"),
+                        TypeParameter.partial(key = duplicateMapValueParameter, name = "V"),
+                    ),
+                representation =
+                    RepresentationTemplate.createMapping(
+                        key = duplicateMapKeyParameter.template,
+                        value = duplicateMapValueParameter.template,
+                    ),
+            ),
+        )
+
+    val discoveryLocationForTest =
+        ValueLocation.of(
+            ResourceId(value = "typewriter.discovery"),
+            ValuePath(
+                segments =
+                    listOf(
+                        PathSegment.createField(name = "subjects"),
+                    ),
+            ),
+        )
+
+    test("a capture against another catalog generation is refused and releases its retained snapshot") {
+        val realm = RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS))
+        val openLeases = realm.openCatalogLeases()
+        val wrong = DefinitionCatalog(TEST_DEFINITIONS).lease(CatalogGeneration(value = "wrong"))
+        realm.use {
+            RealmCheckRuntime(realm.views).use { runtime ->
+                shouldThrow<IllegalArgumentException> {
+                    runtime.evaluateCapture(
+                        CheckAdmissionTarget.CapturedAcceptance(realm.views.capture().use { it.root.copy(catalog = wrong) }),
+                    )
+                }
             }
         }
-
-        runtime.close()
-        store.close()
-        catalog.openCount shouldBe 0
+        openLeases() shouldBe 0
     }
 
-    test("partialCatalogCollectionReleasesEveryAcquiredProviderLease") {
+    test("a catalog reload that fails to retain a provider releases every provider lease it took") {
         val provider =
             object : RealmCheckProvider {
                 override fun RealmChecks.register() {
@@ -151,205 +212,288 @@ val RealmCheckRuntimeTest by testSuite {
             }
         val owned =
             listOf(
-                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 8), provider),
-                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 9), provider),
+                OwnedCheck(CHECK_PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 8), provider),
+                OwnedCheck(CHECK_PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 9), provider),
             )
         val providers = TestCheckProviders(owned, failOnRetain = 2)
-        val catalog = TestCatalogLease(providers = providers)
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(emptyMap()),
-            )
-        val runtime = RealmCheckRuntime(store)
+        val realm = RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS, providers = providers))
+        val openLeases = realm.openCatalogLeases()
+        realm.use {
+            RealmCheckRuntime(realm.views).use { runtime ->
+                shouldThrow<IllegalStateException> { runtime.reloadCatalog() }
 
-        shouldThrow<IllegalStateException> {
-            kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
-        }
-
-        providers.openLeases.get() shouldBe 0
-        runtime.close()
-        store.close()
-        catalog.openCount shouldBe 0
-    }
-
-    test("concurrentReloadRetainsTheCatalogUsedBySubjectDiscovery") {
-        val provider =
-            object : RealmCheckProvider {
-                override fun RealmChecks.register() {
-                    realm { }
-                }
+                providers.openLeases.get() shouldBe 0
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 10), provider)))
-        val catalog = TestCatalogLease(providers = providers)
-        val base =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(emptyMap()),
-            )
-        val store = BlockingCaptureStore(base, blockedCall = 2)
-        val runtime = RealmCheckRuntime(store)
-        val executor = Executors.newFixedThreadPool(2)
-        val first = executor.submit { kotlinx.coroutines.runBlocking { runtime.reloadCatalog() } }
-        store.entered.await(5, TimeUnit.SECONDS) shouldBe true
-
-        val second = executor.submit { kotlinx.coroutines.runBlocking { runtime.reloadCatalog() } }
-        second.get(5, TimeUnit.SECONDS)
-        providers.openLeases.get() shouldBe 2
-
-        store.release.countDown()
-        first.get(5, TimeUnit.SECONDS)
-        providers.openLeases.get() shouldBe 1
-
-        runtime.close()
-        providers.openLeases.get() shouldBe 0
-        executor.shutdownNow()
-        base.close()
+        }
+        openLeases() shouldBe 0
     }
 
-    test("eachSubjectsFollowMembershipAndRegistrationsKeepDistinctRuleIds") {
+    test("a reload racing another reload publishes findings of the latest catalog and releases every provider lease on close") {
+        val providers = checksOf(10, InvalidRealm)
+        val latest = CatalogGeneration(value = "latest")
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = providers)
+        RealmFixture.of(catalog).use { realm ->
+            // The first reload stops while it discovers subjects, after it retained its catalog.
+            val store = BlockingCaptureStore(realm.views, blockedCall = 2)
+            val runtime = RealmCheckRuntime(store)
+            val executor = Executors.newSingleThreadExecutor()
+            val first = executor.submit { runBlocking { runtime.reloadCatalog() } }
+            store.entered.await(5, TimeUnit.SECONDS) shouldBe true
+
+            realm.owner.activateCatalog(catalog.lease(latest), {}, {})
+            runtime.reloadCatalog()
+            store.release.countDown()
+            first.get(5, TimeUnit.SECONDS)
+            runtime.drain()
+
+            runtime.findings().map { it.ticket.catalog } shouldBe listOf(latest)
+            runtime.reported() shouldBe setOf(REALM to "Realm is invalid.")
+            runtime.close()
+            providers.openLeases.get() shouldBe 0
+            executor.shutdownNow()
+        }
+    }
+
+    test("checks of one provider publish under distinct rule ids, an each check once per resource of its type") {
         runTest {
-            val executions = ConcurrentHashMap<ResourceId, AtomicInteger>()
+            membership(
+                mapOf(firstResource to record(name = "bad")),
+            ) { _, runtime ->
+                runtime.reported() shouldBe setOf(firstResource to "Name is invalid.", REALM to "Realm is invalid.")
+                runtime
+                    .findings()
+                    .map { it.ticket.instance.rule }
+                    .distinct()
+                    .size shouldBe 2
+            }
+        }
+    }
+
+    test("an each check reports a resource added after the catalog loaded") {
+        runTest {
+            membership(mapOf(firstResource to record(name = "bad"))) { realm, runtime ->
+                realm.commitChecked(runtime, EditIntent.createCreateResource(id = secondResource, record = record(name = "bad")))
+                runtime.settle()
+
+                runtime.reported() shouldBe
+                    setOf(firstResource to "Name is invalid.", secondResource to "Name is invalid.", REALM to "Realm is invalid.")
+            }
+        }
+    }
+
+    test("an each check clears the finding of a resource once it is fixed") {
+        runTest {
+            membership(
+                mapOf(
+                    firstResource to record(name = "bad"),
+                    secondResource to record(name = "bad"),
+                ),
+            ) { realm, runtime ->
+                realm.commitChecked(runtime, rename(secondResource, "valid"))
+                runtime.settle()
+
+                runtime.reported() shouldBe setOf(firstResource to "Name is invalid.", REALM to "Realm is invalid.")
+            }
+        }
+    }
+
+    test("an each check drops the finding of a deleted resource") {
+        runTest {
+            membership(
+                mapOf(
+                    firstResource to record(name = "bad"),
+                    secondResource to record(name = "bad"),
+                ),
+            ) { realm, runtime ->
+                realm.commitChecked(runtime, EditIntent.createDeleteResource(id = secondResource))
+                runtime.settle()
+
+                runtime.reported() shouldBe setOf(firstResource to "Name is invalid.", REALM to "Realm is invalid.")
+            }
+        }
+    }
+
+    test("a throwing check callback fails its check with check_callback_failed at the subject") {
+        runTest {
             val provider =
                 object : RealmCheckProvider {
                     override fun RealmChecks.register() {
-                        each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
-                            executions
-                                .computeIfAbsent(
-                                    draft.binding.location.resource,
-                                ) { AtomicInteger() }
-                                .incrementAndGet()
-                            check(
-                                read(
-                                    boundPath<String>(
-                                        location(
-                                            draft.binding.location.resource,
-                                            "name",
-                                        ),
-                                        TEXT_USE,
-                                    ),
-                                ),
-                            ) {
-                                it ==
-                                    "valid"
-                            }.error("Name is invalid.", draft.binding.location)
-                        }
-                        realm {
-                            check(Availability.Available(false)) { it }
-                                .error("Realm is invalid.", ValueLocation.of(ResourceId(value = "realm")))
-                        }
+                        each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { error("Callback exploded.") }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 5), provider)))
-            val catalog = TestCatalogLease(providers = providers)
-            val first = ResourceId(value = "first")
-            val initial = record(name = "bad")
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(first to initial)),
-                )
-            val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
-            runtime.reloadCatalog()
-            advanceUntilIdle()
-            runtime.drain()
+            val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(14, provider))
+            checking(catalog, mapOf(firstResource to record()), StandardTestDispatcher(testScheduler)) { _, runtime ->
+                runtime.settle()
 
-            runtime.findings().size shouldBe 2
-            runtime.findings().map { it.ticket.instance.rule.localIndex }.toSet() shouldBe setOf(0, 1)
-            executions.getValue(first).get() shouldBe 1
-
-            val second = ResourceId(value = "second")
-            val added = record(name = "bad")
-            val addedTokens =
-                tokensFor(mapOf(second to added), catalog.generation, "added")
-                    .filterKeys { it !is com.typewritermc.checking.InputIdentity.Catalog }
-            val addition =
-                store.install(
-                    store.prepare(
-                        AuthoringViewDelta(upsertedResources = mapOf(second to added)),
-                    ),
-                )
-            runtime.invalidateCurrent()
-            advanceUntilIdle()
-            runtime.drain()
-            runtime.findings().size shouldBe 3
-            executions.getValue(first).get() shouldBe 1
-            executions.getValue(second).get() shouldBe 1
-
-            val edited = record(name = "valid")
-            val edit =
-                store.install(
-                    store.prepare(
-                        AuthoringViewDelta(upsertedResources = mapOf(second to edited)),
-                    ),
-                )
-            runtime.invalidateCurrent()
-            advanceUntilIdle()
-            runtime.drain()
-            runtime.findings().size shouldBe 3
-            executions.getValue(first).get() shouldBe 1
-            executions.getValue(second).get() shouldBe 2
-
-            val secondRoot = ValueLocation.of(second)
-            val removal =
-                store.install(
-                    store.prepare(
-                        AuthoringViewDelta(removedResources = setOf(second)),
-                    ),
-                )
-            runtime.invalidateCurrent()
-            advanceUntilIdle()
-            runtime.drain()
-            runtime.findings().size shouldBe 2
-
-            runtime.close()
-            providers.openLeases.get() shouldBe 0
-            store.close()
+                val failed = runtime.findings().single()
+                val outcome = failed.outcome.shouldBeInstanceOf<CheckOutcome.FailedWrapper>()
+                outcome.value.map { it.code to it.primary } shouldBe listOf("check_callback_failed" to ValueLocation.of(firstResource))
+            }
         }
     }
 
-    test("providerLeaseStaysOpenUntilCancelledWorkerActuallyStops") {
-        val started = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        val provider =
-            object : RealmCheckProvider {
-                override fun RealmChecks.register() {
-                    realm {
-                        started.countDown()
-                        release.await()
+    // A worker runs provider code that ignores cancellation, so whoever stops the runtime has to wait for it.
+    listOf(
+        WorkerCancellation("closing the runtime", seed = "blocked", cancel = { _, _ -> }, stop = { it.close() }),
+        WorkerCancellation(
+            "deleting its subject",
+            seed = "blocked",
+            cancel = { realm, runtime -> realm.commitChecked(runtime, EditIntent.createDeleteResource(id = firstResource)) },
+        ),
+        WorkerCancellation(
+            "editing its subject again",
+            seed = "ready",
+            cancel = { realm, runtime ->
+                runtime.drain()
+                realm.commitChecked(runtime, rename(firstResource, "blocked"))
+            },
+            afterStart = { realm, runtime ->
+                realm.commitChecked(runtime, rename(firstResource, "after"))
+            },
+        ),
+    ).forEach { case ->
+        test("a worker cancelled by ${case.name} keeps the runtime waiting and its provider lease open until it stops") {
+            val check = BlockingCheck()
+            val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = check.providers)
+            Executors.newFixedThreadPool(2).asCoroutineDispatcher().use { worker ->
+                runBlocking {
+                    checking(catalog, mapOf(firstResource to record(name = case.seed)), worker) { realm, runtime ->
+                        runtime.reloadCatalog()
+                        case.cancel(realm, runtime)
+                        check.started.await(5, TimeUnit.SECONDS) shouldBe true
+                        case.afterStart(realm, runtime)
+
+                        val stopped = AtomicBoolean()
+                        val stopper = waitingOn { case.stop(runtime).also { stopped.set(true) } }
+
+                        stopped.get() shouldBe false
+                        check.providers.openLeases.get() shouldBe 1
+                        check.release.countDown()
+                        stopper()
+                        check.providers.openLeases.get() shouldBe 0
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 6), provider)))
-        val catalog = TestCatalogLease(providers = providers)
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(emptyMap()),
-            )
-        val worker = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        val closer = Executors.newSingleThreadExecutor()
-        val runtime = RealmCheckRuntime(store, worker)
-        kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
-        started.await(5, TimeUnit.SECONDS) shouldBe true
-        providers.openLeases.get() shouldBe 1
-
-        val closed = closer.submit { runtime.close() }
-        Thread.sleep(50)
-        closed.isDone shouldBe false
-        providers.openLeases.get() shouldBe 1
-
-        release.countDown()
-        closed.get(5, TimeUnit.SECONDS)
-        providers.openLeases.get() shouldBe 0
-        worker.close()
-        closer.shutdownNow()
-        store.close()
+        }
     }
 
-    test("currentIncompleteResultPublishesPartialFindingsAndDrainCompletes") {
+    test("an edit committed while a check runs is reflected in the findings it settles on") {
+        val running = CountDownLatch(1)
+        val edited = CountDownLatch(1)
+        val first = AtomicBoolean(true)
+        val provider =
+            object : RealmCheckProvider {
+                override fun RealmChecks.register() {
+                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                        val name = read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
+                        if (first.compareAndSet(true, false)) {
+                            running.countDown()
+                            edited.await(5, TimeUnit.SECONDS)
+                        }
+                        check(name) { it == "valid" }.error("Name is invalid.", draft.binding.location)
+                    }
+                }
+            }
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(7, provider))
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher().use { worker ->
+            runBlocking {
+                checking(catalog, mapOf(firstResource to record(name = "invalid")), worker) { realm, runtime ->
+                    runtime.reloadCatalog()
+                    running.await(5, TimeUnit.SECONDS) shouldBe true
+
+                    realm.commitChecked(runtime, rename(firstResource, "valid"))
+                    edited.countDown()
+                    runtime.drain()
+
+                    runtime.findings().map { it.status } shouldBe listOf(FindingStatus.CURRENT)
+                    runtime.reported() shouldBe emptySet()
+                }
+            }
+        }
+    }
+
+    test("commits keep answering while checks reschedule for the commits before them") {
+        val provider =
+            object : RealmCheckProvider {
+                override fun RealmChecks.register() {
+                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                        val name = read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
+                        check(name) { it == "valid" }.error("Name is invalid.", draft.binding.location)
+                    }
+                }
+            }
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(13, provider))
+        val seed = mapOf(firstResource to record(name = "a"), secondResource to record(name = "a"))
+        val daemons = ThreadFactory { task -> Thread(task).apply { isDaemon = true } }
+        Executors.newFixedThreadPool(4, daemons).asCoroutineDispatcher().use { worker ->
+            // Runs apart from the test thread, so commits that deadlock against the check runtime fail by timeout.
+            val answered = CompletableFuture<Unit>()
+            thread(isDaemon = true) {
+                runCatching {
+                    runBlocking {
+                        checking(catalog, seed, worker) { realm, runtime ->
+                            runtime.reloadCatalog()
+                            coroutineScope {
+                                seed.keys.forEach { resource ->
+                                    launch(worker) { repeat(200) { realm.commitChecked(runtime, rename(resource, "name $it")) } }
+                                }
+                            }
+                            runtime.drain()
+                        }
+                    }
+                }.fold(answered::complete, answered::completeExceptionally)
+            }
+            answered.get(60, TimeUnit.SECONDS)
+        }
+    }
+
+    test("closing waits for a rediscovery in progress, so none of it outlives the view store") {
+        val rediscovering = AtomicBoolean()
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val blockedInRediscovery =
+            object : DraftType<TestDraft> {
+                override val match: ResourceTypeMatch
+                    get() {
+                        if (rediscovering.get()) {
+                            entered.countDown()
+                            release.await(30, TimeUnit.SECONDS)
+                        }
+                        return ResourceTypeMatch.Definition(TEST_TYPE)
+                    }
+
+                override fun bind(binding: DraftBinding) = TestDraft(binding)
+            }
+        val provider =
+            object : RealmCheckProvider {
+                override fun RealmChecks.register() {
+                    each(blockedInRediscovery) {}
+                }
+            }
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(14, provider))
+        val daemons = ThreadFactory { task -> Thread(task).apply { isDaemon = true } }
+        Executors.newFixedThreadPool(2, daemons).asCoroutineDispatcher().use { worker ->
+            checking(catalog, mapOf(firstResource to record(name = "a")), worker) { _, runtime ->
+                runtime.reloadCatalog()
+                runtime.drain()
+                rediscovering.set(true)
+                runtime.invalidateCurrent()
+                entered.await(30, TimeUnit.SECONDS) shouldBe true
+
+                val closing = thread(isDaemon = true) { runtime.close() }
+                closing.join(500)
+                val closedDuringRediscovery = !closing.isAlive
+                release.countDown()
+                closing.join(30_000)
+
+                closedDuringRediscovery shouldBe false
+                closing.isAlive shouldBe false
+            }
+        }
+    }
+
+    test("an incomplete current result publishes its partial findings and drain completes") {
         runTest {
-            val resource = ResourceId(value = "page")
             val provider =
                 object : RealmCheckProvider {
                     override fun RealmChecks.register() {
@@ -357,59 +501,83 @@ val RealmCheckRuntimeTest by testSuite {
                             select(
                                 TypedSelection(
                                     TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)),
-                                    ExpressionNode.LiteralWrapper(
-                                        skirout.editor.v1.type_catalog.DataValue
-                                            .BooleanWrapper(true),
-                                    ),
+                                    ExpressionNode.LiteralWrapper(DataValue.BooleanWrapper(true)),
                                 ),
                             )
                             check(Availability.Available(false)) { it }
-                                .error("Partial finding.", ValueLocation.of(resource))
+                                .error("Partial finding.", ValueLocation.of(firstResource))
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 11), provider)))
-            val catalog = TestCatalogLease(providers = providers)
-            val authored = record(name = "valid")
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to authored)),
-                )
+            val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(11, provider))
             val evaluator =
                 SelectionPredicateEvaluator { _, _, reads ->
                     (reads as CapturedAuthoringReads).recordIncomplete("graph traversal limit exceeded")
                     Availability.Available(true)
                 }
-            val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler), selectionPredicates = evaluator)
+            checking(
+                catalog,
+                mapOf(firstResource to record(name = "valid")),
+                StandardTestDispatcher(testScheduler),
+                selectionPredicates = evaluator,
+            ) { _, runtime ->
+                runtime.settle()
 
-            runtime.reloadCatalog()
-            advanceUntilIdle()
-            runtime.drain()
-
-            val finding = runtime.findings().single()
-            finding.outcome shouldBe
-                CheckOutcome.IncompleteWrapper("graph traversal limit exceeded")
-            finding.status shouldBe skirout.editor.v1.checking.FindingStatus.CURRENT
-            finding.findings.map { it.message } shouldBe listOf("Partial finding.")
-
-            runtime.close()
-            store.close()
+                val finding = runtime.findings().single()
+                finding.outcome shouldBe CheckOutcome.IncompleteWrapper("graph traversal limit exceeded")
+                finding.status shouldBe FindingStatus.CURRENT
+                finding.findings.map { it.message } shouldBe listOf("Partial finding.")
+            }
         }
     }
 
-    test("portableConfigurationRuleRunsForCurrentAndCapturedChecks") {
-        runTest { assertPortableRuleReportsAnEmptyName(nameIsNotEmpty()) }
-    }
-
-    test("portableRuleEvaluatesTypedOperationsAgainstTheSnapshotCatalog") {
-        runTest { assertPortableRuleReportsAnEmptyName(nameIsNotText()) }
-    }
-
-    test("capturedNeedsInputBlocksOtherwiseCompleteAndNativeConstructibleResource") {
+    test("a portable configuration rule reports an empty name in current and captured checks") {
         runTest {
-            val resource = ResourceId(value = "complete")
-            val unavailable = location(resource, "computed")
+            val catalog = DefinitionCatalog(TEST_DEFINITIONS, configuration = portableNameRule(nameIsNotEmpty()))
+            checking(catalog, mapOf(firstResource to record(name = "")), StandardTestDispatcher(testScheduler)) { realm, runtime ->
+                runtime.settle()
+
+                val current = runtime.findings().single()
+                current.ticket.instance.location shouldBe location(firstResource, "name")
+                current.findings.map { it.code } shouldBe listOf("name_rule")
+
+                val captured = realm.views.capture().use { runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(it.root)) }
+                captured.complete shouldBe true
+                captured.results.flatMap { result -> result.findings.map { it.code } } shouldBe listOf("name_rule")
+            }
+        }
+    }
+
+    test("a captured portable rule evaluates type facts with the snapshot catalog after the catalog is replaced") {
+        runTest {
+            val rule = portableNameRule(nameIsNotText())
+            val snapshot = DefinitionCatalog(TEST_DEFINITIONS, configuration = rule).lease(CatalogGeneration(value = "snapshot"))
+            // The replacement declares the name as a number, so the same rule no longer reports a text name.
+            val replacement =
+                DefinitionCatalog(
+                    definitions { record(TEST_TYPE) { field("name", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template) } },
+                    configuration = rule,
+                ).lease(CatalogGeneration(value = "replacement"))
+            InMemoryAuthoringViewStore(snapshot, AuthoringSeed(mapOf(firstResource to record(name = "")))).use { store ->
+                val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
+                store.capture().use { captured ->
+                    store.install(store.prepare(AuthoringViewDelta(catalog = replacement)))
+
+                    val report = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(captured.root))
+                    val current = store.capture().use { runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(it.root)) }
+
+                    report.catalog shouldBe CatalogGeneration(value = "snapshot")
+                    report.results.flatMap { result -> result.findings.map { it.code } } shouldBe listOf("name_rule")
+                    current.results.flatMap { result -> result.findings.map { it.code } } shouldBe emptyList()
+                }
+                runtime.close()
+            }
+        }
+    }
+
+    test("a captured check input that is unavailable blocks publication of an otherwise complete, constructible resource") {
+        runTest {
+            val unavailable = location(firstResource, "computed")
             val provider =
                 object : RealmCheckProvider {
                     override fun RealmChecks.register() {
@@ -419,39 +587,26 @@ val RealmCheckRuntimeTest by testSuite {
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 21), provider)))
-            val catalog = TestCatalogLease(providers = providers, nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
-            val authored = record(name = "ready")
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to authored)),
+            val catalog =
+                DefinitionCatalog(
+                    TEST_DEFINITIONS,
+                    providers = checksOf(21, provider),
+                    nativeBindingFactories = listOf(TestResourceNativeBindingFactory),
                 )
-            val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
+            checking(catalog, mapOf(firstResource to record(name = "ready")), StandardTestDispatcher(testScheduler)) { realm, runtime ->
+                val assessment = capturedAcceptance(realm.views, runtime)
 
-            val blocked = capturedAcceptance(store, runtime, catalog.generation)
-
-            blocked.evidence.getValue(blocked.findings.single().id).catalog shouldBe catalog.generation
-            blocked.evidence.getValue(blocked.findings.single().id).expectations shouldBe
-                blocked.checks.results
-                    .single()
-                    .expectations
-            blocked.findings
-                .map { it.code } shouldBe listOf("check_needs_input")
-            blocked.findings
-                .map { it.primary } shouldBe listOf(unavailable)
-
-            runtime.close()
-            store.close()
+                assessment.resources.getValue(firstResource).shouldBeInstanceOf<ResourceReadiness.Ready>()
+                assessment.findings.map { it.code to it.primary } shouldBe listOf("check_needs_input" to unavailable)
+            }
         }
     }
 
-    test("capturedAcceptanceRejectsCanonicalDuplicateSetValuesAndMapKeysAtExactItems") {
+    test("captured acceptance rejects canonically duplicate set values and map keys at the exact items") {
         runTest {
-            val resource = ResourceId(value = "duplicates")
             val repeated =
                 DataValue.named(
-                    DUPLICATE_VALUE_USE,
+                    duplicateValueUse,
                     DataValue.record(
                         linkedMapOf(
                             "first" to DataValue.StringValueWrapper("same"),
@@ -461,7 +616,7 @@ val RealmCheckRuntimeTest by testSuite {
                 )
             val equivalent =
                 DataValue.named(
-                    DUPLICATE_VALUE_USE,
+                    duplicateValueUse,
                     DataValue.record(
                         linkedMapOf(
                             "second" to DataValue.StringValueWrapper("value"),
@@ -475,7 +630,7 @@ val RealmCheckRuntimeTest by testSuite {
                     mapOf(
                         "values" to
                             DataValue.named(
-                                DUPLICATE_SET_USE,
+                                duplicateSetUse,
                                 DataValue.setValue(
                                     listOf(
                                         ListItem(id = ItemId(value = "set_first"), value = repeated),
@@ -485,7 +640,7 @@ val RealmCheckRuntimeTest by testSuite {
                             ),
                         "mapping" to
                             DataValue.named(
-                                DUPLICATE_MAP_USE,
+                                duplicateMapUse,
                                 DataValue.mapValue(
                                     listOf(
                                         MapRow(
@@ -503,649 +658,84 @@ val RealmCheckRuntimeTest by testSuite {
                             ),
                     ),
                 )
-            val catalog = TestCatalogLease(definitions = DUPLICATE_DEFINITIONS)
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to authored)),
-                )
-            val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
+            val catalog = DefinitionCatalog(duplicateDefinitions)
+            checking(catalog, mapOf(firstResource to authored), StandardTestDispatcher(testScheduler)) { realm, runtime ->
+                val assessment = capturedAcceptance(realm.views, runtime)
 
-            val blocked = capturedAcceptance(store, runtime, catalog.generation)
-            val intrinsic =
-                blocked.findings.filter {
-                    it.code in
-                        setOf(
-                            "duplicate_set_value",
-                            "duplicate_map_key",
-                        )
-                }
-
-            intrinsic.map { it.code } shouldBe listOf("duplicate_map_key", "duplicate_set_value")
-            intrinsic.map { it.primary } shouldBe
-                listOf(
-                    ValueLocation.of(
-                        resource,
-                        ValuePath(
-                            segments =
-                                listOf(
-                                    PathSegment.createField(name = "mapping"),
-                                    PathSegment.createItem(id = ItemId(value = "map_duplicate")),
-                                    PathSegment.MAP_KEY,
+                assessment.findings
+                    .filter { it.code in setOf("duplicate_set_value", "duplicate_map_key") }
+                    .map { it.code to it.primary } shouldBe
+                    listOf(
+                        "duplicate_map_key" to
+                            ValueLocation.of(
+                                firstResource,
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createField(name = "mapping"),
+                                            PathSegment.createItem(id = ItemId(value = "map_duplicate")),
+                                            PathSegment.MAP_KEY,
+                                        ),
                                 ),
-                        ),
-                    ),
-                    ValueLocation.of(
-                        resource,
-                        ValuePath(
-                            segments =
-                                listOf(
-                                    PathSegment.createField(name = "values"),
-                                    PathSegment.createItem(id = ItemId(value = "set_duplicate")),
+                            ),
+                        "duplicate_set_value" to
+                            ValueLocation.of(
+                                firstResource,
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createField(name = "values"),
+                                            PathSegment.createItem(id = ItemId(value = "set_duplicate")),
+                                        ),
                                 ),
-                        ),
-                    ),
-                )
-
-            runtime.close()
-            store.close()
+                            ),
+                    )
+            }
         }
     }
 
-    test("capturedAcceptanceBlocksAnOtherwiseValidResourceWithPendingConfiguration") {
+    test("a resource with a pending type selection blocks captured acceptance until it is edited") {
         runTest {
-            val resource = ResourceId(value = "pending")
-            val catalog = TestCatalogLease(nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
-            val authored =
-                record(name = "ready").copy(
-                    configuration = TypeSelection.createPending(definition = TEST_TYPE, arguments = emptyList()),
-                )
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to authored)),
-                )
-            val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
+            val pending =
+                record(name = "ready").copy(configuration = TypeSelection.createPending(definition = TEST_TYPE, arguments = emptyList()))
+            val catalog = DefinitionCatalog(TEST_DEFINITIONS, nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
+            checking(catalog, mapOf(firstResource to pending), StandardTestDispatcher(testScheduler)) { realm, runtime ->
+                val assessment = capturedAcceptance(realm.views, runtime)
+                val blocker = assessment.findings.single()
 
-            val blocked = capturedAcceptance(store, runtime, catalog.generation)
-
-            blocked.evidence.getValue(blocked.findings.single().id).expectations shouldBe
-                listOf(
-                    skirout.editor.v1.authoring_facts.EditExpectation
-                        .createResource(id = resource, expected = authored),
-                )
-            blocked.findings
-                .map { it.code } shouldBe listOf("pending_type")
-            blocked.findings
-                .map { it.primary } shouldBe listOf(ValueLocation.of(resource))
-
-            runtime.close()
-            store.close()
+                (blocker.code to blocker.primary) shouldBe ("pending_type" to ValueLocation.of(firstResource))
+                val evidence = assessment.evidence.getValue(blocker.id).expectations
+                realm.views.read { it.values.conflicts(evidence) }.isEmpty() shouldBe true
+                realm.commit(rename(firstResource, "renamed")).shouldBeCommitted()
+                realm.views.read { it.values.conflicts(evidence) }.isNotEmpty() shouldBe true
+            }
         }
     }
 
-    test("boundedSubjectDiscoveryPublishesFailureAndBlocksCapturedCoverageWithoutDroppingPartialSubjects") {
+    test("bounded subject discovery publishes a failure and blocks captured coverage without dropping partial subjects") {
         runTest {
-            val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 22)
-            val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
-            val rule =
-                OwnedRule(
-                    id = RuleId(origin = origin, localIndex = 0),
-                    descriptor =
-                        RuleDescriptor(
-                            predicate =
-                                nameIsNotEmpty(),
-                        ),
-                    diagnostic =
-                        DiagnosticTemplate(
-                            code = "name_empty",
-                            message = "Name must not be empty.",
-                            severity = DiagnosticSeverity.ERROR,
-                            targets = listOf(path),
-                        ),
-                )
-            val catalog =
-                TestCatalogLease(
-                    configuration =
-                        listOf(
-                            ConfigurationRecipe(
-                                origin = origin,
-                                relativePath = path,
-                                representationCondition = RepresentationKind.TEXT,
-                                rules = listOf(rule),
-                            ),
-                        ),
-                )
-            val resource = ResourceId(value = "element")
-            val authored = record(name = "valid")
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to authored)),
-                )
-            val runtime =
-                RealmCheckRuntime(
-                    store,
-                    StandardTestDispatcher(testScheduler),
-                    readLimits = ViewReadLimits(maxOccurrenceValues = 1),
-                )
-
-            runtime.reloadCatalog()
-            advanceUntilIdle()
-            runtime.drain()
-
-            val current = runtime.findings()
-            current.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
-            val discovery = current.single { it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST }
-            discovery.outcome.shouldBeInstanceOf<CheckOutcome.IncompleteWrapper>()
-            discovery.findings.map { it.code } shouldBe listOf("check_discovery_incomplete")
-
-            val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
-            captured.complete shouldBe false
-            captured.results.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
-            captured.results.any {
-                it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST &&
-                    it.outcome is CheckOutcome.IncompleteWrapper
-            } shouldBe true
-
-            runtime.close()
-            store.close()
-        }
-    }
-
-    test("removedEachSubjectKeepsWorkerAndProviderLeaseUntilWorkerStops") {
-        val started = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        val resource = ResourceId(value = "page")
-        val provider =
-            object : RealmCheckProvider {
-                override fun RealmChecks.register() {
-                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) {
-                        started.countDown()
-                        while (release.count > 0) {
-                            try {
-                                release.await()
-                            } catch (_: InterruptedException) {
-                                Unit
-                            }
-                        }
-                    }
-                }
-            }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 12), provider)))
-        val catalog = TestCatalogLease(providers = providers)
-        val authored = record(name = "valid")
-        val store =
-            InMemoryAuthoringViewStore(
+            val catalog = DefinitionCatalog(TEST_DEFINITIONS, configuration = portableNameRule(nameIsNotEmpty()))
+            checking(
                 catalog,
-                AuthoringSeed(mapOf(resource to authored)),
-            )
-        val worker = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        val waiter = Executors.newSingleThreadExecutor()
-        val runtime = RealmCheckRuntime(store, worker)
-        kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
-        started.await(5, TimeUnit.SECONDS) shouldBe true
+                mapOf(firstResource to record(name = "valid")),
+                StandardTestDispatcher(testScheduler),
+                readLimits = ViewReadLimits(maxOccurrenceValues = 1),
+            ) { realm, runtime ->
+                runtime.settle()
 
-        val removal =
-            store.install(
-                store.prepare(
-                    AuthoringViewDelta(removedResources = setOf(resource)),
-                ),
-            )
-        runtime.invalidateCurrent()
-        val drained = waiter.submit { kotlinx.coroutines.runBlocking { runtime.drain() } }
-        Thread.sleep(50)
+                val current = runtime.findings()
+                current.any { it.ticket.instance.location == location(firstResource, "name") } shouldBe true
+                val discovery = current.single { it.ticket.instance.location == discoveryLocationForTest }
+                discovery.outcome.shouldBeInstanceOf<CheckOutcome.IncompleteWrapper>()
+                discovery.findings.map { it.code } shouldBe listOf("check_discovery_incomplete")
 
-        drained.isDone shouldBe false
-        providers.openLeases.get() shouldBe 1
-
-        release.countDown()
-        drained.get(5, TimeUnit.SECONDS)
-        runtime.close()
-        providers.openLeases.get() shouldBe 0
-        worker.close()
-        waiter.shutdownNow()
-        store.close()
-    }
-
-    test("invalidatedReplacementKeepsTheCancelledWorkerTrackedUntilItStops") {
-        val executions = AtomicInteger()
-        val blocked = CountDownLatch(1)
-        val replacement = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        val resource = ResourceId(value = "page")
-        val provider =
-            object : RealmCheckProvider {
-                override fun RealmChecks.register() {
-                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
-                        val execution = executions.incrementAndGet()
-                        read(
-                            boundPath<String>(
-                                location(
-                                    draft.binding.location.resource,
-                                    "name",
-                                ),
-                                TEXT_USE,
-                            ),
-                        )
-                        if (execution == 2) {
-                            blocked.countDown()
-                            while (release.count > 0) {
-                                try {
-                                    release.await()
-                                } catch (_: InterruptedException) {
-                                    Unit
-                                }
-                            }
-                        } else if (execution >= 3) {
-                            replacement.countDown()
-                        }
-                    }
-                }
-            }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 13), provider)))
-        val catalog = TestCatalogLease(providers = providers)
-        val initial = record(name = "first")
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(mapOf(resource to initial)),
-            )
-        val worker = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
-        val waiter = Executors.newSingleThreadExecutor()
-        val runtime = RealmCheckRuntime(store, worker)
-        kotlinx.coroutines.runBlocking {
-            runtime.reloadCatalog()
-            runtime.drain()
-        }
-
-        val firstEdit = record(name = "second")
-        val firstChange =
-            store.install(
-                store.prepare(
-                    AuthoringViewDelta(upsertedResources = mapOf(resource to firstEdit)),
-                ),
-            )
-        runtime.invalidateCurrent()
-        blocked.await(5, TimeUnit.SECONDS) shouldBe true
-
-        val secondEdit = record(name = "third")
-        val secondChange =
-            store.install(
-                store.prepare(
-                    AuthoringViewDelta(upsertedResources = mapOf(resource to secondEdit)),
-                ),
-            )
-        runtime.invalidateCurrent()
-        replacement.await(5, TimeUnit.SECONDS) shouldBe true
-        val drained = waiter.submit { kotlinx.coroutines.runBlocking { runtime.drain() } }
-        Thread.sleep(50)
-
-        drained.isDone shouldBe false
-        providers.openLeases.get() shouldBe 1
-
-        release.countDown()
-        drained.get(5, TimeUnit.SECONDS)
-        runtime.close()
-        providers.openLeases.get() shouldBe 0
-        worker.close()
-        waiter.shutdownNow()
-        store.close()
-    }
-
-    test("invalidationWaitsForFirstDependencyInsertionBeforeLookingUpAffectedChecks") {
-        val executions = AtomicInteger()
-        val provider =
-            object : RealmCheckProvider {
-                override fun RealmChecks.register() {
-                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
-                        executions.incrementAndGet()
-                        read(
-                            boundPath<String>(
-                                location(
-                                    draft.binding.location.resource,
-                                    "name",
-                                ),
-                                TEXT_USE,
-                            ),
-                        )
-                    }
-                }
-            }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 7), provider)))
-        val catalog = TestCatalogLease(providers = providers)
-        val resource = ResourceId(value = "page")
-        val initial = record(name = "old")
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(mapOf(resource to initial)),
-            )
-        val dependencies = BlockingFirstReplaceIndex()
-        val worker = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        val invalidator = Executors.newSingleThreadExecutor()
-        val runtime = RealmCheckRuntime(store, worker, dependencies)
-        kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
-        dependencies.entered.await(5, TimeUnit.SECONDS) shouldBe true
-
-        val invalidated =
-            invalidator.submit {
-                store.install(store.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to record(name = "new")))))
-                runtime.invalidateCurrent()
-            }
-        invalidated.isDone shouldBe false
-
-        dependencies.release.countDown()
-        invalidated.get(5, TimeUnit.SECONDS)
-        kotlinx.coroutines.runBlocking { runtime.drain() }
-
-        (executions.get() >= 2) shouldBe true
-        runtime.findings().all { finding ->
-            store.capture().use {
-                it.root.values
-                    .conflicts(finding.expectations)
-                    .isEmpty()
-            }
-        } shouldBe true
-        runtime.close()
-        worker.close()
-        invalidator.shutdownNow()
-        store.close()
-    }
-}
-
-private data class TestNativeResource(
-    val name: String,
-    val count: Int,
-    val numbers: List<*>,
-)
-
-private val DUPLICATE_VALUE_TYPE = TypeDefinitionId.qualified("test", "canonical_value")
-private val DUPLICATE_SET_TYPE = TypeDefinitionId.qualified("test", "canonical_set")
-private val DUPLICATE_MAP_TYPE = TypeDefinitionId.qualified("test", "canonical_map")
-private val DUPLICATE_SET_PARAMETER = ParameterKey(owner = DUPLICATE_SET_TYPE, index = 0)
-private val DUPLICATE_MAP_KEY_PARAMETER = ParameterKey(owner = DUPLICATE_MAP_TYPE, index = 0)
-private val DUPLICATE_MAP_VALUE_PARAMETER = ParameterKey(owner = DUPLICATE_MAP_TYPE, index = 1)
-private val DUPLICATE_VALUE_USE = DUPLICATE_VALUE_TYPE.namedUse()
-private val DUPLICATE_SET_USE = DUPLICATE_SET_TYPE.namedUse(listOf(DUPLICATE_VALUE_USE.use))
-private val DUPLICATE_MAP_USE =
-    DUPLICATE_MAP_TYPE.namedUse(listOf(DUPLICATE_VALUE_USE.use, ScalarKind.TEXT.use))
-private val DUPLICATE_DEFINITIONS =
-    listOf(
-        TypeDefinition.partial(
-            id = TEST_TYPE,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = TEST_TYPE, name = "values"),
-                                type = DUPLICATE_SET_TYPE.template(listOf(DUPLICATE_VALUE_TYPE.template())),
-                            ),
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = TEST_TYPE, name = "mapping"),
-                                type = DUPLICATE_MAP_TYPE.template(listOf(DUPLICATE_VALUE_TYPE.template(), ScalarKind.TEXT.template)),
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        ),
-        TypeDefinition.partial(
-            id = DUPLICATE_VALUE_TYPE,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = DUPLICATE_VALUE_TYPE, name = "first"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = DUPLICATE_VALUE_TYPE, name = "second"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        ),
-        TypeDefinition.partial(
-            id = DUPLICATE_SET_TYPE,
-            parameters = listOf(TypeParameter.partial(key = DUPLICATE_SET_PARAMETER, name = "T")),
-            representation = RepresentationTemplate.createSequence(item = DUPLICATE_SET_PARAMETER.template, kind = CollectionKind.SET),
-        ),
-        TypeDefinition.partial(
-            id = DUPLICATE_MAP_TYPE,
-            parameters =
-                listOf(
-                    TypeParameter.partial(key = DUPLICATE_MAP_KEY_PARAMETER, name = "K"),
-                    TypeParameter.partial(key = DUPLICATE_MAP_VALUE_PARAMETER, name = "V"),
-                ),
-            representation =
-                RepresentationTemplate.createMapping(
-                    key = DUPLICATE_MAP_KEY_PARAMETER.template,
-                    value = DUPLICATE_MAP_VALUE_PARAMETER.template,
-                ),
-        ),
-    )
-
-private object TestResourceNativeBindingFactory : NativeBindingFactory {
-    override val definition = TEST_TYPE
-    override val provider = NativeBindingId(value = "test.resource")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> =
-        GeneratedRecordNativeBinding(
-            checked = actual,
-            provider = provider,
-            signature = "test.resource",
-            nativeClass = TestNativeResource::class,
-            fields =
-                listOf(
-                    GeneratedNativeField("name", { arguments.resolver.bind(TEXT_USE) }, TestNativeResource::name),
-                    GeneratedNativeField("count", { arguments.resolver.bind(INT_USE) }, TestNativeResource::count),
-                    GeneratedNativeField("numbers", { arguments.resolver.bind(LIST_USE.use) }, TestNativeResource::numbers),
-                ),
-            construct = { fields ->
-                TestNativeResource(
-                    name = fields.getValue("name") as String,
-                    count = fields.getValue("count") as Int,
-                    numbers = fields.getValue("numbers") as List<*>,
-                )
-            },
-        )
-}
-
-private class BlockingFirstReplaceIndex : ReverseDependencyIndex {
-    private val delegate = DefaultReverseDependencyIndex()
-    private val first = AtomicBoolean(true)
-    val entered = CountDownLatch(1)
-    val release = CountDownLatch(1)
-
-    override fun replace(
-        instance: CheckInstanceId,
-        observations: List<skirout.editor.v1.authoring_facts.EditExpectation>,
-    ) {
-        if (first.compareAndSet(true, false)) {
-            entered.countDown()
-            release.await()
-        }
-        delegate.replace(instance, observations)
-    }
-
-    override fun affectedBy(changed: Set<com.typewritermc.checking.InputIdentity>): Set<CheckInstanceId> = delegate.affectedBy(changed)
-
-    override fun retire(instance: CheckInstanceId) = delegate.retire(instance)
-}
-
-private class BlockingCaptureStore(
-    private val delegate: com.typewritermc.realm.authoring.AuthoringViewStore,
-    private val blockedCall: Int,
-) : com.typewritermc.realm.authoring.AuthoringViewStore by delegate {
-    private val calls = AtomicInteger()
-    val entered = CountDownLatch(1)
-    val release = CountDownLatch(1)
-
-    override fun capture(): com.typewritermc.realm.authoring.AuthoringLease {
-        if (calls.incrementAndGet() == blockedCall) {
-            entered.countDown()
-            release.await()
-        }
-        return delegate.capture()
-    }
-}
-
-private class TestCheckProviders(
-    private val ownedChecks: List<OwnedCheck>,
-    private val failOnRetain: Int? = null,
-) : OwnedProviderRegistry {
-    val openLeases = AtomicInteger()
-    private val retainCalls = AtomicInteger()
-
-    override fun retain(origin: ProviderOrigin): ProviderLease {
-        check(retainCalls.incrementAndGet() != failOnRetain) { "provider retain failed" }
-        openLeases.incrementAndGet()
-        return object : ProviderLease {
-            private var open = true
-
-            override fun close() {
-                if (open) {
-                    open = false
-                    openLeases.decrementAndGet()
-                }
+                val captured = realm.views.capture().use { runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(it.root)) }
+                captured.complete shouldBe false
+                captured.results.any { it.ticket.instance.location == location(firstResource, "name") } shouldBe true
+                captured.results.any {
+                    it.ticket.instance.location == discoveryLocationForTest && it.outcome is CheckOutcome.IncompleteWrapper
+                } shouldBe true
             }
         }
     }
-
-    override fun configurations(): List<OwnedConfiguration> = emptyList()
-
-    override fun presentations(): List<OwnedPresentation> = emptyList()
-
-    override fun nativeBindings(): List<OwnedNativeBinding> = emptyList()
-
-    override fun checks(): List<OwnedCheck> = ownedChecks
 }
-
-private suspend fun capturedAcceptance(
-    store: com.typewritermc.realm.authoring.AuthoringViewStore,
-    runtime: RealmCheckRuntime,
-    generation: CatalogGeneration,
-): CapturedAssessment {
-    val acceptance = AuthoringAcceptance(store, runtime)
-    val capture = acceptance.capture()
-    return try {
-        acceptance.evaluate(capture)
-    } finally {
-        capture.close()
-    }
-}
-
-private val PROVIDER_ORIGIN =
-    ProviderOrigin(
-        owner =
-            DeclarationOwner(
-                source =
-                    contributionKey(
-                        source = ContributionSourceId("test:checks"),
-                        sourcePart = "checks",
-                        producer = ProducerId("tests"),
-                        name = ContributionName("realm"),
-                    ),
-                localIdentity = "checks",
-            ),
-        artifact = ArtifactId("test:checks"),
-        sourcePart = "checks",
-    )
-
-private val DISCOVERY_LOCATION_FOR_TEST =
-    ValueLocation.of(
-        ResourceId(value = "typewriter.discovery"),
-        ValuePath(
-            segments =
-                listOf(
-                    PathSegment.createField(name = "subjects"),
-                ),
-        ),
-    )
-
-/**
- * Runs a portable configuration rule over an authored record whose name is empty and expects the current and captured
- * checks to report the rule's finding, so the rule evaluated to false on Realm.
- */
-@OptIn(ExperimentalCoroutinesApi::class)
-private suspend fun TestScope.assertPortableRuleReportsAnEmptyName(predicate: ExpressionNode) {
-    val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 20)
-    val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
-    val rule =
-        OwnedRule(
-            id = RuleId(origin = origin, localIndex = 0),
-            descriptor =
-                RuleDescriptor(
-                    predicate =
-                    predicate,
-                ),
-            diagnostic =
-                DiagnosticTemplate(
-                    code = "name_empty",
-                    message = "Name must not be empty.",
-                    severity = DiagnosticSeverity.ERROR,
-                    targets = listOf(path),
-                ),
-        )
-    val catalog =
-        TestCatalogLease(
-            configuration =
-                listOf(
-                    ConfigurationRecipe(
-                        origin = origin,
-                        relativePath = path,
-                        representationCondition = RepresentationKind.TEXT,
-                        rules = listOf(rule),
-                    ),
-                ),
-        )
-    val resource = ResourceId(value = "element")
-    val authored = record(name = "")
-    val store =
-        InMemoryAuthoringViewStore(
-            catalog,
-            AuthoringSeed(mapOf(resource to authored)),
-        )
-    val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
-
-    runtime.reloadCatalog()
-    advanceUntilIdle()
-    runtime.drain()
-
-    val current = runtime.findings().single()
-    current.ticket.instance.rule shouldBe RuleId(origin = origin, localIndex = 0)
-    current.ticket.instance.location shouldBe location(resource, "name")
-    current.findings.map { it.code } shouldBe listOf("name_empty")
-
-    val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
-    captured.complete shouldBe true
-    captured.results
-        .single()
-        .findings
-        .map { it.code } shouldBe listOf("name_empty")
-
-    runtime.close()
-    store.close()
-}
-
-/** The rule predicate "the configured text is not empty", built from portable primitives. */
-private fun nameIsNotEmpty(): ExpressionNode =
-    (
-        com.typewritermc.expression
-            .input<String>(ExpressionBindingId(value = "configured_value"))
-            .length eq literal(0)
-    ).not().toNode()
-
-/** The rule predicate "the configured value is not text", which needs the catalog's type facts to evaluate. */
-private fun nameIsNotText(): ExpressionNode =
-    com.typewritermc.expression
-        .input<String>(ExpressionBindingId(value = "configured_value"))
-        .isInstance(ScalarKind.TEXT.use)
-        .not()
-        .toNode()

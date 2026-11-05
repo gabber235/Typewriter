@@ -1,45 +1,61 @@
 package com.typewritermc.realm
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Properties
+import kotlin.io.path.extension
+import kotlin.io.path.name
+import kotlin.io.path.nameWithoutExtension
 
 val RealmSettingsTest by testSuite {
-    test("local profile supplies Realm settings") {
-        val settings = RealmSettings.fromFile(profile("local"))
+    val databaseSecrets = listOf("REALM_DB_USERNAME", "REALM_DB_PASSWORD", "REALM_DB_TOKEN")
 
-        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "embedded"
-        settings.get("REALM_DB_ENGINE") shouldBe "surrealkv"
-        settings.get("REALM_DB_PATH") shouldBe "database/realm"
-        settings.get("REALM_DB_NAMESPACE") shouldBe "typewriter"
-        settings.get("REALM_DB_DATABASE") shouldBe "realm"
-        settings.get("REALM_DB_AUTHENTICATION") shouldBe "none"
+    test("no shipped profile contains database secrets") {
+        val leaks =
+            shippedProfiles().flatMap { profile ->
+                val settings = RealmSettings.fromFile(profile)
+                databaseSecrets.filter { settings.get(it) != null }.map { "${profile.name}: $it" }
+            }
+
+        leaks.shouldBeEmpty()
     }
 
-    test("local Kubernetes profile supplies remote Realm settings without secrets") {
-        val settings = RealmSettings.fromFile(profile("local-kubernetes"))
+    test("every shipped profile parses into a database configuration once the process supplies its secrets") {
+        val failures =
+            shippedProfiles().mapNotNull { profile ->
+                val settings =
+                    RealmSettings(
+                        environment = databaseSecrets.associateWith { "supplied" },
+                        configuration = readConfiguration(profile),
+                    )
+                runCatching { settings.databaseConfiguration() }
+                    .exceptionOrNull()
+                    ?.let { "${profile.nameWithoutExtension}: ${it.message}" }
+            }
 
-        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "remote"
-        settings.get("REALM_DB_URL") shouldBe "wss://surrealdb.local.seamlezz.net"
-        settings.get("REALM_DB_NAMESPACE") shouldBe "typewriter"
-        settings.get("REALM_DB_DATABASE") shouldBe "realm"
-        settings.get("REALM_DB_AUTHENTICATION") shouldBe "database"
-        settings.get("REALM_DB_USERNAME") shouldBe null
-        settings.get("REALM_DB_PASSWORD") shouldBe null
+        failures.shouldBeEmpty()
     }
 
-    test("application configuration parses typed slices") {
-        val configuration = RealmSettings.fromFile(profile("local")).applicationConfiguration()
-
-        configuration.diagnosticLevel shouldBe RealmDiagnosticLevel.WARN
+    test("the diagnostic level setting parses regardless of case") {
+        RealmSettings(configuration = mapOf("TYPEWRITER_DIAGNOSTIC_LEVEL" to "error"))
+            .applicationConfiguration()
+            .diagnosticLevel shouldBe RealmDiagnosticLevel.ERROR
     }
 
-    test("production profile supplies Realm settings") {
-        val settings = RealmSettings.fromFile(profile("production"))
+    test("an unknown diagnostic level fails startup naming the setting and the value") {
+        shouldThrow<IllegalStateException> {
+            RealmSettings(configuration = mapOf("TYPEWRITER_DIAGNOSTIC_LEVEL" to "verbose")).applicationConfiguration()
+        }.message shouldBe "Realm setting TYPEWRITER_DIAGNOSTIC_LEVEL has unknown value: verbose"
+    }
 
-        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "embedded"
-        settings.get("REALM_DB_ENGINE") shouldBe "surrealkv"
-        settings.get("REALM_DB_PATH") shouldBe "database/realm"
+    test("an absent diagnostic level means WARN") {
+        RealmSettings()
+            .applicationConfiguration()
+            .diagnosticLevel shouldBe RealmDiagnosticLevel.WARN
     }
 
     test("process settings override the selected profile") {
@@ -69,5 +85,3 @@ val RealmSettingsTest by testSuite {
         settings.get("REALM_DB_NAMESPACE") shouldBe "profile"
     }
 }
-
-private fun profile(name: String): Path = Path.of("..", "config", "$name.properties")

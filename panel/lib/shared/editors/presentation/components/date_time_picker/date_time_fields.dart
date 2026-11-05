@@ -198,53 +198,57 @@ class _TimeNumberField extends HookWidget {
       });
     }
 
-    return Semantics(
-      label: label,
-      value: value.toString().padLeft(2, "0"),
-      readOnly: !enabled,
-      increasedValue: value < maximum ? "${value + 1}" : null,
-      decreasedValue: value > 0 ? "${value - 1}" : null,
-      onIncrease: enabled && value < maximum ? () => update(value + 1) : null,
-      onDecrease: enabled && value > 0 ? () => update(value - 1) : null,
-      child: CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
-              update(value + 1),
-          const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
-              update(value - 1),
-          const SingleActivator(LogicalKeyboardKey.home): () => update(0),
-          const SingleActivator(LogicalKeyboardKey.end): () => update(maximum),
-          const SingleActivator(LogicalKeyboardKey.pageUp): () =>
-              update(value + pageStep),
-          const SingleActivator(LogicalKeyboardKey.pageDown): () =>
-              update(value - pageStep),
-        },
-        child: ValidatedTextField<int>(
-          key: ValueKey("date_time_${label.toLowerCase()}"),
-          value: value,
-          controller: controller,
-          inputFieldController: inputFieldController,
-          name: label.toLowerCase(),
-          readOnly: !enabled,
-          selectAllOnFocus: true,
-          deserialize: (value) => value.toString().padLeft(2, "0"),
-          serialize: (draft) {
-            final parsed = int.tryParse(draft);
-            if (parsed == null || parsed < 0 || parsed > maximum) {
-              throw FormatException("Enter a value from 0 to $maximum");
-            }
-            return parsed;
+    // Merged so the text field itself carries the external label.
+    return MergeSemantics(
+      child: Semantics(
+        label: label,
+        value: value.toString().padLeft(2, "0"),
+        readOnly: !enabled,
+        increasedValue: value < maximum ? "${value + 1}" : null,
+        decreasedValue: value > 0 ? "${value - 1}" : null,
+        onIncrease: enabled && value < maximum ? () => update(value + 1) : null,
+        onDecrease: enabled && value > 0 ? () => update(value - 1) : null,
+        child: CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+                update(value + 1),
+            const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                update(value - 1),
+            const SingleActivator(LogicalKeyboardKey.home): () => update(0),
+            const SingleActivator(LogicalKeyboardKey.end): () =>
+                update(maximum),
+            const SingleActivator(LogicalKeyboardKey.pageUp): () =>
+                update(value + pageStep),
+            const SingleActivator(LogicalKeyboardKey.pageDown): () =>
+                update(value - pageStep),
           },
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(2),
-          ],
-          textAlign: TextAlign.center,
-          onChanged: updateDraft,
-          decoration: const InputDecoration(
-            hintText: "00",
-            prefixIcon: SizedBox.shrink(),
-            prefixIconConstraints: BoxConstraints(),
+          child: ValidatedTextField<int>(
+            key: ValueKey("date_time_${label.toLowerCase()}"),
+            value: value,
+            controller: controller,
+            inputFieldController: inputFieldController,
+            name: label.toLowerCase(),
+            readOnly: !enabled,
+            selectAllOnFocus: true,
+            deserialize: (value) => value.toString().padLeft(2, "0"),
+            serialize: (draft) {
+              final parsed = int.tryParse(draft);
+              if (parsed == null || parsed < 0 || parsed > maximum) {
+                throw FormatException("Enter a value from 0 to $maximum");
+              }
+              return parsed;
+            },
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(2),
+            ],
+            textAlign: TextAlign.center,
+            onChanged: updateDraft,
+            decoration: const InputDecoration(
+              hintText: "00",
+              prefixIcon: SizedBox.shrink(),
+              prefixIconConstraints: BoxConstraints(),
+            ),
           ),
         ),
       ),

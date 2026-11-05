@@ -1,225 +1,245 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/publication.dart";
-import "../../../support/test_utils.dart";
+/// How long an edit waits before the panel saves it.
+const _autosave = Duration(milliseconds: 250);
 
 void main() {
-  testWidgets(
-    "successful autosaves never become inbox issues while saved values refresh",
-    (tester) async {
-      final boundary = _SaveBoundary();
-      final container = await _mount(tester, boundary);
-      final issues = <int>[];
-      final subscription = container.listen(
-        realmInboxProvider(_scope),
-        (_, next) => issues.add(next.issues.length),
-        fireImmediately: true,
+  final original = book("Original");
+
+  testWidgets("a successful save never shows as an inbox issue while its "
+      "reply is pending", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+      heldSaves,
+    ]);
+    await panel.openSurface(original.bookId);
+    final issues = <int>[];
+    final subscription = panel.container.listen(
+      realmInboxProvider(panel.world.requireRealm.scope),
+      (_, next) => issues.add(next.issues.length),
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+
+    await panel.field("title").enter("Draft");
+    await tester.pump(_autosave);
+    await panel.settle();
+    await panel.settleInbox();
+    expect(panel.inboxShowsIssues, isFalse);
+
+    panel.world.requireRealm.saves.single.confirm();
+    await panel.settleInbox();
+
+    expect(panel.inboxShowsIssues, isFalse);
+    expect(issues, everyElement(0));
+  });
+
+  testWidgets("an edit made while a save is in flight is saved next", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+      heldSaves,
+    ]);
+    await panel.openSurface(original.bookId);
+    List<RealmSave> saves() => panel.world.requireRealm.saves;
+    await panel.field("title").enter("Draft");
+    await tester.pump(_autosave);
+    await panel.settle();
+
+    await panel.field("title").enter("Later");
+    await tester.pump(_autosave);
+    await panel.settle();
+    await tester.pump(_autosave);
+    expect(saves(), hasLength(1));
+
+    saves().single.confirm();
+    await panel.settle();
+    expect(panel.field("title").value, "Later");
+
+    await tester.pump(_autosave);
+    await panel.settle();
+    expect(saves(), hasLength(2));
+  });
+
+  testWidgets("an edit made while the Realm is away is saved once it "
+      "returns, while the panel stays connected", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+    ]);
+    final saved = panel.world.requireRealm;
+    await panel.openSurface(original.bookId);
+
+    saved.goAway();
+    await panel.field("title").enter("After the outage");
+    await tester.pump(_autosave);
+    await panel.settle();
+    expect(saved.saves, isEmpty);
+
+    saved.returns();
+    await tester.pump(const Duration(seconds: 10));
+    await panel.settle();
+
+    expect(
+      saved.document
+          .resource(original.bookId)
+          ?.authoredField("title")
+          ?.authoredString,
+      "After the outage",
+    );
+    expect(panel.shows("Needs attention"), isFalse);
+  });
+
+  testWidgets("a save that could not be prepared shows why and is not sent "
+      "again on its own", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+    ]);
+    final saved = panel.world.requireRealm
+      ..unpreparable = "The request could not be prepared";
+    await panel.openSurface(original.bookId);
+
+    await panel.field("title").enter("Draft");
+    await tester.pump(_autosave);
+    await panel.settle();
+    saved.unpreparable = null;
+    await tester.pump(const Duration(seconds: 30));
+    await panel.settle();
+
+    expect(saved.saves, isEmpty);
+    expect(
+      find.textContaining("The request could not be prepared"),
+      findsWidgets,
+    );
+  });
+
+  testWidgets("a save whose reply was lost is resent without showing an "
+      "inbox issue", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+      heldSaves,
+    ]);
+    final saved = panel.world.requireRealm;
+    await panel.openSurface(original.bookId);
+    final issues = <int>[];
+    final subscription = panel.container.listen(
+      realmInboxProvider(saved.scope),
+      (_, next) => issues.add(next.issues.length),
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+    await panel.field("title").enter("Draft");
+    await tester.pump(_autosave);
+    await panel.settle();
+
+    saved.saves.single.loseReply(TimeoutException("No answer in time"));
+    await panel.settleInbox();
+    expect(panel.inboxShowsIssues, isFalse);
+
+    await tester.pump(const Duration(seconds: 1));
+    await tester.eventually(() => expect(saved.saves, hasLength(2)));
+    saved.saves.last.confirm();
+    await panel.settleInbox();
+
+    expect(panel.field("title").value, "Draft");
+    expect(
+      saved.document
+          .resource(original.bookId)
+          ?.authoredField("title")
+          ?.authoredString,
+      "Draft",
+    );
+    expect(issues, everyElement(0));
+  });
+
+  testWidgets("Retry request on an unanswered Apply settles it from the "
+      "reply", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+      heldSaves,
+    ]);
+    final saved = panel.world.requireRealm;
+    final form = (await panel.openEditing()).form(original.bookId)
+      ..setText(
+        "Title",
+        authoredFieldLocation(original.bookId, ["title"]),
+        "Applied",
       );
-      addTearDown(subscription.close);
-      final editing = container.read(realmEditingProvider(_scope));
-      final form = editing.attach(_tag);
-      addTearDown(form.detach);
+    unawaited(form.save());
+    await tester.eventually(() => expect(saved.saves, hasLength(1)));
 
-      _rename(form, "Draft");
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(boundary.requests, hasLength(1));
-      expect(form.phase, isA<EditGroupSaving>());
-      expect(container.read(realmInboxProvider(_scope)).issues, isEmpty);
+    saved.saves.single.loseReply(TimeoutException("No answer in time"));
+    await panel.settleInbox();
+    await tester.tap(find.textContaining(RegExp(r"^\d+ issues?$")));
+    await panel.settle();
+    await panel.tapOn(find.text("Retry request").first);
+    await tester.eventually(() => expect(saved.saves, hasLength(2)));
+    saved.saves.last.confirm();
+    await panel.settleInbox();
 
-      boundary.accept(0);
-      await tester.pump();
-      await tester.pump();
-      expect(boundary.observations, hasLength(1));
-      final awaiting = form.phase! as EditGroupCommittedAwaitingRefresh;
-      expect(awaiting.cause, isNull);
-      expect(awaiting.submitted, isTrue);
-      expect(form.saving, isTrue);
-      expect(editing.canSave(form.editingGroup), isFalse);
-      final pending = container.read(realmInboxProvider(_scope));
-      final issueLabelWasVisible = find.text("1 issue").evaluate().isNotEmpty;
+    expect(panel.inboxShowsIssues, isFalse);
+    expect(form.hasSubmittedWork, isFalse);
+    expect(form.dirty, isFalse);
+  });
 
-      _rename(form, "Later");
-      await tester.pump(const Duration(milliseconds: 500));
-      expect(boundary.requests, hasLength(1));
-      expect(
-        form.document.resource(_tag)!.authoredField("name"),
-        _text("Later"),
-      );
-      boundary.observations[0].complete(_document("Draft"));
-      await tester.pump();
-      expect(
-        editing.workspace.confirmed.resource(_tag)!.authoredField("name"),
-        _text("Draft"),
-      );
-      expect(
-        form.document.resource(_tag)!.authoredField("name"),
-        _text("Later"),
-      );
+  testWidgets("an unanswered Apply shows that Retry is safe, and Retry "
+      "captured request in the activity settles it from the reply", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+      heldSaves,
+    ]);
+    final saved = panel.world.requireRealm;
+    await panel.openSurface(original.bookId);
+    final editing = await panel.openEditing();
+    final applied = editing.setText(
+      "Title",
+      authoredFieldLocation(original.bookId, ["title"]),
+      "Applied",
+      policy: EditorCommitPolicy.applyResource,
+    ) as EditStaged;
+    unawaited(editing.workspace.save(applied.group));
+    await tester.eventually(() => expect(saved.saves, hasLength(1)));
 
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(boundary.requests, hasLength(2));
-      boundary.accept(1);
-      await tester.pump();
-      boundary.observations[1].complete(_document("Later"));
-      await tester.pump();
-      expect(editing.hasPendingWork, isFalse);
-      expect(container.read(realmInboxProvider(_scope)).issues, isEmpty);
-
-      expect(
-        issueLabelWasVisible,
-        isFalse,
-        reason: "The inbox must not report an issue during a successful save",
-      );
-      expect(
-        pending.issues,
-        isEmpty,
-        reason: "An accepted save awaiting its observation is normal progress",
-      );
-      expect(pending.localWork.single.needsAttention, isFalse);
-      expect(pending.localWork.single.saving, isTrue);
-      expect(
-        pending.localWork.single.phase,
-        "Changes were applied. Refreshing saved values",
-      );
-      expect(issues, everyElement(0));
-    },
-  );
-
-  testWidgets(
-    "a failed refresh remains an inbox issue until observation recovers without resubmitting",
-    (tester) async {
-      final boundary = _SaveBoundary();
-      final container = await _mount(tester, boundary);
-      final editing = container.read(realmEditingProvider(_scope));
-      final form = editing.attach(_tag);
-      addTearDown(form.detach);
-      _rename(form, "Draft");
-      await tester.pump(const Duration(milliseconds: 250));
-      boundary.accept(0);
-      await tester.pump();
-
-      final failure = StateError("Saved values could not be refreshed");
-      boundary.observations.single.completeError(failure);
-      await tester.pump();
-      await tester.pump();
-      expect(
-        (form.phase! as EditGroupCommittedAwaitingRefresh).cause,
-        same(failure),
-      );
-      final failed = container.read(realmInboxProvider(_scope));
-      expect(failed.issues, hasLength(1));
-      expect(failed.localWork.single.needsAttention, isTrue);
-      expect(failed.localWork.single.saving, isFalse);
-      expect(form.saving, isFalse);
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle();
-      expect(find.text("1 issue"), findsOneWidget);
-      expect(editing.canSave(form.editingGroup), isFalse);
-      expect(editing.canDiscard(form.editingGroup), isFalse);
-      expect(editing.canRetry(form.editingGroup), isTrue);
-
-      final recovering = editing.retry(form.editingGroup);
-      await tester.pump();
-      expect(boundary.requests, hasLength(1));
-      expect(boundary.observations, hasLength(2));
-      boundary.observations[1].complete(_document("Draft"));
-      await recovering;
-      await tester.pump();
-      await tester.pump();
-      expect(boundary.requests, hasLength(1));
-      expect(editing.hasPendingWork, isFalse);
-      expect(container.read(realmInboxProvider(_scope)).issues, isEmpty);
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle();
-      expect(find.text("1 issue"), findsNothing);
-    },
-  );
-}
-
-final _scope = AuthoringScope(
-  organizationId: skir.recordId("organization:inbox"),
-  realmId: skir.recordId("service:inbox"),
-);
-final _tag = skir.ResourceId(value: "tag:inbox");
-final _name = skir.ValueLocation(
-  resource: _tag,
-  path: editorRootPath.field("name"),
-);
-skir.DataValue _text(String value) => skir.DataValue.wrapStringValue(value);
-AuthoringDocument _document(String name) => fixtureAuthoringDocument(
-  realm: true,
-  tags: [
-    Tag(
-      tagId: _tag,
-      name: name,
-      color: Colors.grey,
-      parentIds: const [],
-      placement: const GraphPlacement(x: 0, y: 0, width: 7, height: 1),
-    ),
-  ],
-);
-
-void _rename(RealmEditingBinding form, String name) => form
-    .edit(label: "Rename tag", apply: (edit) => edit.set(_name, _text(name)))
-    .requireAccepted();
-
-Future<ProviderContainer> _mount(
-  WidgetTester tester,
-  _SaveBoundary boundary,
-) async {
-  final publication = TestPublicationRepository(
-    _scope,
-    initial: publicationObservation(readyPublicationStatus()),
-  );
-  addTearDown(publication.close);
-  await tester.pumpTestApp(
-    child: Scaffold(body: RealmInboxButton(scope: _scope)),
-    overrides: [
-      ...authoringFixtureOverrides(
-        scope: _scope,
-        document: _document("Original"),
-        publication: publication,
+    saved.saves.single.loseReply(TimeoutException("No answer in time"));
+    await panel.settle();
+    // Outside a Realm the app bar shows the save activity instead of the inbox.
+    await panel.follow(
+      OrganizationRoute(organizationId: acme.organizationId.id),
+    );
+    await panel.activity.open("Needs attention");
+    // A Realm save is safe to repeat, so the activity offers Retry instead of
+    // asking to verify first.
+    expect(
+      panel.shows(
+        "Outcome unknown. Retry sends the same request, which is safe to "
+        "repeat.",
       ),
-      realmEditPersistenceProvider(_scope).overrideWithValue(
-        fixtureRealmPersistence(
-          commit: boundary.commit,
-          confirmed: boundary.observe,
-        ),
-      ),
-      authoringSessionProvider(
-        _scope.organizationId,
-        _scope.realmId,
-      ).overrideWithValue(const AuthoringSessionState()),
-    ],
-  );
-  return ProviderScope.containerOf(
-    tester.element(find.byType(RealmInboxButton)),
-  );
-}
+      isTrue,
+    );
+    // The resend shows progress until the held Realm answers, so the panel
+    // cannot settle before then.
+    await tester.tap(find.text("Retry captured request"));
+    await tester.eventually(() => expect(saved.saves, hasLength(2)));
+    saved.saves.last.confirm();
+    await panel.settle();
 
-/// Holds external acknowledgments and observations independently.
-/// The production workspace, driver, inbox provider, and button remain active.
-final class _SaveBoundary {
-  final requests = <ScriptedAuthoringRequest>[];
-  final observations = <Completer<AuthoringDocument>>[];
-
-  Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) {
-    final request = ScriptedAuthoringRequest(edit);
-    requests.add(request);
-    return request.response.future;
-  }
-
-  Future<AuthoringDocument> observe() {
-    final observation = Completer<AuthoringDocument>();
-    observations.add(observation);
-    return observation.future;
-  }
-
-  void accept(int index) => requests[index].response.complete(
-    skir.CommitPreparedEditResponse.committed,
-  );
+    expect(panel.shows("Needs attention"), isFalse);
+    expect(editing.workspace.hasSubmittedWork(applied.group), isFalse);
+    expect(
+      saved.document
+          .resource(original.bookId)
+          ?.authoredField("title")
+          ?.authoredString,
+      "Applied",
+    );
+  });
 }

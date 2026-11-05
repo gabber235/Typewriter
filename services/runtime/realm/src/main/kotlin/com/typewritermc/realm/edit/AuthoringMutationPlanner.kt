@@ -86,7 +86,6 @@ internal class AuthoringMutationPlanner(
             RelationProjectionDelta(
                 removals = (beforeSet - afterSet).sortedBy(::projectionKey),
                 created = (afterSet - beforeSet).sortedBy(::projectionKey),
-                metadataChanged = emptyList(),
             )
         return MutationPlanningResult.Accepted(
             AuthoringMutationPlan(

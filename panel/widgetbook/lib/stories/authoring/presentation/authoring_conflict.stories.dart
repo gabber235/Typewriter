@@ -1,216 +1,100 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/stories/authoring/presentation/retained_rename.dart";
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "Retained conflict", type: AuthoringConflictNotice)
-Widget authoringConflictNoticeUseCase(BuildContext context) =>
-    authoringConflictStory(
-      comparison: false,
-      unavailable: context.knobs.boolean(
-        label: "Saved observation unavailable",
+Widget authoringConflictNoticeUseCase(BuildContext context) {
+  return Story(
+    [
+      ...retainedRenameWorld(_savedKnob(context)),
+      ...context.knobs.traits("Saved values", {
+        "Readable": const [],
+        "Unreadable": const [savedDocumentUnreadable],
+      }),
+    ],
+    at: PanelLocation.component(
+      SizedBox(
+        width: _width(context, 420),
+        child: RetainedRename(
+          builder: (context, workspace, group) =>
+              AuthoringConflictNotice(workspace: workspace, group: group),
+        ),
       ),
-      removed: context.knobs.boolean(label: "Resource removed"),
-      unfilled: context.knobs.boolean(label: "Saved name Unfilled"),
-      width: context.knobs.double.slider(
-        label: "Width",
-        initialValue: 420,
-        min: 320,
-        max: 800,
-      ),
-    );
+    ),
+  );
+}
 
 @widgetbook.UseCase(
   name: "Complete group comparison",
   type: AuthoringConflictComparison,
 )
-Widget authoringConflictComparisonUseCase(BuildContext context) =>
-    authoringConflictStory(
-      comparison: true,
-      removed: context.knobs.boolean(label: "Resource removed"),
-      unfilled: context.knobs.boolean(label: "Saved name Unfilled"),
-      connections: context.knobs.boolean(label: "Relation conflict"),
-      stale: context.knobs.boolean(label: "Review changed again"),
-      width: context.knobs.double.slider(
-        label: "Width",
-        initialValue: 700,
-        min: 320,
-        max: 900,
+Widget authoringConflictComparisonUseCase(BuildContext context) {
+  return Story(
+    retainedRenameWorld(_savedKnob(context)),
+    at: PanelLocation.component(
+      SizedBox(
+        width: _width(context, 700),
+        child: RetainedRename(
+          builder: (context, workspace, group) =>
+              _Comparison(workspace: workspace, group: group),
+        ),
       ),
-    );
-
-Widget authoringConflictStory({
-  required bool comparison,
-  double width = 700,
-  bool removed = false,
-  bool unfilled = false,
-  bool unavailable = false,
-  bool connections = false,
-  bool stale = false,
-}) => FakeApp(
-  child: SizedBox(
-    width: width,
-    child: _ConflictScenario(
-      comparison: comparison,
-      removed: removed,
-      unfilled: unfilled,
-      unavailable: unavailable,
-      connections: connections,
-      stale: stale,
     ),
-  ),
-);
+  );
+}
 
-final class _ConflictScenario extends HookWidget {
-  const _ConflictScenario({
-    required this.comparison,
-    required this.removed,
-    required this.unfilled,
-    required this.unavailable,
-    required this.connections,
-    required this.stale,
-  });
-  final bool comparison;
-  final bool removed;
-  final bool unfilled;
-  final bool unavailable;
-  final bool connections;
-  final bool stale;
+List<void Function(AuthoringEdit edit)> _savedKnob(BuildContext context) {
+  final saved = context.knobs.object.dropdown(
+    label: "Saved Realm",
+    options: savedChanges.keys.skip(1).toList(),
+  );
+  return savedChanges[saved]!;
+}
+
+double _width(BuildContext context, double initial) => context.knobs.double
+    .slider(label: "Width", initialValue: initial, min: 320, max: 900);
+
+/// The comparison of the retained rename against the saved Realm, reviewed
+/// once when the conflict arrives; later saves elsewhere leave that review
+/// behind, as they do for a user still reading it.
+class _Comparison extends HookWidget {
+  const _Comparison({required this.workspace, required this.group});
+
+  final RealmEditing workspace;
+  final EditGroupId group;
+
   @override
   Widget build(BuildContext context) {
-    final scenario = useMemoized(() {
-      final tag = skir.ResourceId(value: "tag:quest");
-      final original = fixtureAuthoringDocument(
-        tags: [
-          Tag(
-            tagId: tag,
-            name: "Quest",
-            color: Colors.grey,
-            parentIds: const [],
-            placement: GraphPlacement(x: 0, y: 0, width: 7, height: 1),
-          ),
-        ],
+    final phase = workspace.state.groups[group]?.phase;
+    final review = useRef<AuthoringConflictReview?>(null);
+    if (phase == null || !phase.blocked) review.value = null;
+    if (review.value == null && phase != null && phase.blocked) {
+      review.value = const RealmEditModel().review(
+        group,
+        workspace.workspace.inspectUnsubmitted(group),
       );
-      final transport = ScriptedAuthoringTransport(AsyncData(original));
-      final work = ScopedWorkSession();
-      final editing = RealmEditing(
-        persistence: transport.persistence,
-        submissions: work,
-        initial: original,
-      );
-      final form = editing.attach(
-        tag,
-        policy: EditorCommitPolicy.applyResource,
-      );
-      final name = authoredFieldLocation(tag, ["name"]);
-      form.edit(
-        label: "Rename quest",
-        apply: (edit) {
-          edit.set(name, skir.DataValue.wrapStringValue("Main quest"));
-          if (connections) {
-            edit.applyPrepared(
-              skir.PreparedEdit(
-                catalog: original.generation,
-                expectations: [
-                  skir.EditExpectation.createLinks(
-                    resource: tag,
-                    contract: skir.RelationId(value: "tag.parents"),
-                    direction: skir.TraversalDirection.both,
-                    expected: const [],
-                  ),
-                ],
-                intents: const [],
-              ),
-            );
-          }
-        },
-      );
-      final remote = AuthoringEdit.fromDocument(original)
-        ..set(
-          name,
-          unfilled
-              ? skir.DataValue.unfilled
-              : skir.DataValue.wrapStringValue("Side quest"),
-        );
-      final saved = removed
-          ? original.copyWith(entries: {})
-          : remote.toDocument().copyWith(
-              links: connections
-                  ? [
-                      skir.LinkProjection(
-                        contract: skir.RelationId(value: "tag.parents"),
-                        first: tag,
-                        second: skir.ResourceId(value: "tag:location"),
-                        firstLocation: null,
-                        secondLocation: null,
-                      ),
-                    ]
-                  : const [],
-            );
-      transport.publish(AsyncData(saved));
-      editing.acceptConfirmed(saved);
-      if (unavailable) {
-        transport.refreshFailure = StateError("Saved observation unavailable");
-      }
-      final review = const RealmEditModel().review(
-        form.editingGroup,
-        editing.workspace.inspectUnsubmitted(form.editingGroup),
-      );
-      if (stale && !removed) {
-        editing.acceptConfirmed(
-          (AuthoringEdit.fromDocument(saved)
-                ..set(name, skir.DataValue.wrapStringValue("Changed again")))
-              .toDocument(),
-        );
-      }
-      return (
-        editing: editing,
-        form: form,
-        transport: transport,
-        work: work,
-        review: review,
-      );
-    }, [comparison, removed, unfilled, unavailable, connections, stale]);
-    useEffect(
-      () => () {
-        scenario.form.detach();
-        scenario.editing.dispose();
-        scenario.transport.dispose();
-        scenario.work.dispose();
-      },
-      [scenario],
-    );
-    useListenable(scenario.editing);
-    if (scenario.editing.state.groups.isEmpty) {
-      return const Text("Changes are settled");
     }
-    if (scenario.editing.state.groups[scenario.form.editingGroup]?.phase
-        is EditGroupDirty) {
-      return const Text("Your changes are ready to save");
-    }
+    final current = review.value;
+    if (current == null) return const SizedBox.shrink();
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.all(context.spacing.space3),
-        child: comparison
-            ? AuthoringConflictComparison(
-                review: scenario.review,
-                onKeepMine: scenario.review.canKeepMine
-                    ? () => scenario.editing.resolveConflict(
-                        scenario.review,
-                        AuthoringConflictChoice.keepMine,
-                      )
-                    : null,
-                onUseSaved: () => scenario.editing.resolveConflict(
-                  scenario.review,
-                  AuthoringConflictChoice.useSaved,
-                ),
-              )
-            : AuthoringConflictNotice(
-                workspace: scenario.editing,
-                group: scenario.form.editingGroup,
-              ),
+        child: AuthoringConflictComparison(
+          review: current,
+          onKeepMine: current.canKeepMine
+              ? () => workspace.resolveConflict(
+                  current,
+                  AuthoringConflictChoice.keepMine,
+                )
+              : null,
+          onUseSaved: () => workspace.resolveConflict(
+            current,
+            AuthoringConflictChoice.useSaved,
+          ),
+        ),
       ),
     );
   }

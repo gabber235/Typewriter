@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/query_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final selectors = selectorsTagAndTitle();
@@ -104,19 +103,31 @@ void main() {
     }).done();
   });
 
-  test("empty token list returns empty", () {
+  // Found by query_properties_test: inside parentheses adjacent selectors
+  // fell back to free text, so "(#a #b) AND #c" dropped "#c" from the search.
+  test("adjacent terms inside parentheses form an implicit AND", () {
     checkQuery(
-      "",
-      selectors: selectors,
-    ).expectNoIssues().expectNoQuery().expectNoExpression().done();
-  });
-
-  test("single token returns single term", () {
-    checkQuery(
-      "#a",
+      "(#a #b) AND #c",
       selectors: selectors,
     ).expectNoIssues().expectNoQuery().expectExpression((expression) {
-      expression.isSelector(id: "tag", value: "a");
+      final and = expression.isAnd()..operatorRange(const QueryRange(8, 11));
+      final implicit = and.left().isAnd()..operatorRange(null);
+      implicit.left().isSelector(id: "tag", value: "a");
+      implicit.right().isSelector(id: "tag", value: "b");
+      and.right().isSelector(id: "tag", value: "c");
+    }).done();
+  });
+
+  test("implicit AND binds looser than OR", () {
+    checkQuery(
+      "#a #b || #c",
+      selectors: selectors,
+    ).expectNoIssues().expectNoQuery().expectExpression((expression) {
+      final implicit = expression.isAnd()..operatorRange(null);
+      implicit.left().isSelector(id: "tag", value: "a");
+      final or = implicit.right().isOr();
+      or.left().isSelector(id: "tag", value: "b");
+      or.right().isSelector(id: "tag", value: "c");
     }).done();
   });
 }

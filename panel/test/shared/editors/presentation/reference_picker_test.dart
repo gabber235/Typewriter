@@ -1,87 +1,64 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("reference picker completes with Enter and cancels with Escape", (
-    tester,
-  ) async {
-    String? result;
-    var completed = false;
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (context) => FilledButton(
-          onPressed: () async {
-            result = await showReferencePicker<String>(
-              context,
-              candidates: const [
-                ReferencePickerCandidate(
-                  id: "welcome",
-                  value: "selected",
-                  label: "Welcome",
-                ),
-              ],
-            );
-            completed = true;
-          },
-          child: const Text("Choose"),
-        ),
-      ),
-    );
-    await tester.tap(find.text("Choose"));
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    expect(completed, isTrue);
-    expect(result, "selected");
+  const welcome = ReferencePickerCandidate(
+    id: "welcome",
+    value: "selected",
+    label: "Welcome",
+  );
+  const locked = ReferencePickerCandidate(
+    id: "locked",
+    value: "locked",
+    label: "Locked",
+    disabledReason: "The opposite endpoint rejects this type",
+  );
 
-    completed = false;
-    await tester.tap(find.text("Choose"));
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    expect(completed, isTrue);
-    expect(result, isNull);
+  testWidgets("Enter picks the focused candidate", (tester) async {
+    final (panel, outcome) = await tester.openFromButton<String>(
+      (context) =>
+          showReferencePicker<String>(context, candidates: const [welcome]),
+    );
+
+    await panel.press(LogicalKeyboardKey.enter);
+
+    expect(outcome.completed, isTrue);
+    expect(outcome.result, "selected");
   });
 
-  testWidgets("unavailable reference remains explained and cannot activate", (
+  testWidgets("Escape cancels the picker without a result", (tester) async {
+    final (panel, outcome) = await tester.openFromButton<String>(
+      (context) =>
+          showReferencePicker<String>(context, candidates: const [welcome]),
+    );
+
+    // The first Escape dismisses the query suggestions the focused field
+    // shows; the second closes the picker.
+    await panel.press(LogicalKeyboardKey.escape);
+    await panel.press(LogicalKeyboardKey.escape);
+
+    expect(outcome.completed, isTrue);
+    expect(outcome.result, isNull);
+  });
+
+  testWidgets("an unavailable reference stays explained and cannot be picked", (
     tester,
   ) async {
-    var completed = false;
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (context) => FilledButton(
-          onPressed: () async {
-            await showReferencePicker<String>(
-              context,
-              candidates: const [
-                ReferencePickerCandidate(
-                  id: "locked",
-                  value: "locked",
-                  label: "Locked",
-                  disabledReason: "The opposite endpoint rejects this type",
-                ),
-              ],
-            );
-            completed = true;
-          },
-          child: const Text("Choose"),
-        ),
-      ),
+    final (panel, outcome) = await tester.openFromButton<String>(
+      (context) =>
+          showReferencePicker<String>(context, candidates: const [locked]),
     );
-    await tester.tap(find.text("Choose"));
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    expect(completed, isFalse);
-    expect(find.text("The opposite endpoint rejects this type"), findsWidgets);
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    expect(completed, isTrue);
+
+    await panel.press(LogicalKeyboardKey.enter);
+
+    expect(outcome.completed, isFalse);
+    expect(panel.shows("The opposite endpoint rejects this type"), isTrue);
+    // The first Escape dismisses the query suggestions the focused field
+    // shows; the second closes the picker.
+    await panel.press(LogicalKeyboardKey.escape);
+    await panel.press(LogicalKeyboardKey.escape);
+    expect(outcome.completed, isTrue);
+    expect(outcome.result, isNull);
   });
 }

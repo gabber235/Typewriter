@@ -2,6 +2,7 @@ plugins {
     id("com.typewritermc.basic-conventions")
     alias(libs.plugins.kotlin.serialize)
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {

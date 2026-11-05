@@ -11,6 +11,12 @@ typedef SizeResolver = double Function(double startSize, double delta);
 
 /// Resizes an owner supplied dimension through dragging and keyboard actions.
 ///
+/// Arrow keys on a focused handle move focus like anywhere else, so a handle
+/// never traps directional navigation. Enter or Space starts keyboard
+/// resizing: the arrows along [axis] then resize, Home and End jump to the
+/// bounds, and Escape, Enter or leaving the handle ends it. Assistive
+/// technology hears whether the handle is resizing through its hint.
+///
 /// The handle owns only the gesture session and cursor override. The caller
 /// remains authoritative for the resized value through [getSize] and
 /// [onSizeChange]. Bounds are applied before each size update, and the cursor
@@ -112,6 +118,15 @@ class DragHandle extends HookConsumerWidget {
     final hovering = useState(false);
     final focused = useState(false);
     final focusNode = useFocusNode();
+    final resizing = useState(false);
+    useEffect(() {
+      void endOnBlur() {
+        if (!focusNode.hasFocus) resizing.value = false;
+      }
+
+      focusNode.addListener(endOnBlur);
+      return () => focusNode.removeListener(endOnBlur);
+    }, [focusNode]);
     final startSize = useState(0.0);
     final startPosition = useState(Offset.zero);
     final isDragging = useState(false);
@@ -196,28 +211,55 @@ class DragHandle extends HookConsumerWidget {
       enabled: enabled,
       onShowFocusHighlight: (value) => focused.value = value,
       shortcuts: {
-        SingleActivator(
-          axis == Axis.horizontal
-              ? LogicalKeyboardKey.arrowLeft
-              : LogicalKeyboardKey.arrowUp,
-        ): ResizeDimensionIntent(
-          delta: -keyboardStep,
-        ),
-        SingleActivator(
-          axis == Axis.horizontal
-              ? LogicalKeyboardKey.arrowRight
-              : LogicalKeyboardKey.arrowDown,
-        ): ResizeDimensionIntent(
-          delta: keyboardStep,
-        ),
-        if (minSize != null)
-          const SingleActivator(LogicalKeyboardKey.home):
-              const ResizeDimensionToBoundIntent(DimensionResizeBound.minimum),
-        if (maxSize != null)
-          const SingleActivator(LogicalKeyboardKey.end):
-              const ResizeDimensionToBoundIntent(DimensionResizeBound.maximum),
+        const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
+        const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
+        if (resizing.value) ...{
+          const SingleActivator(LogicalKeyboardKey.escape):
+              const DismissIntent(),
+          SingleActivator(
+            axis == Axis.horizontal
+                ? LogicalKeyboardKey.arrowLeft
+                : LogicalKeyboardKey.arrowUp,
+          ): ResizeDimensionIntent(
+            delta: -keyboardStep,
+          ),
+          SingleActivator(
+            axis == Axis.horizontal
+                ? LogicalKeyboardKey.arrowRight
+                : LogicalKeyboardKey.arrowDown,
+          ): ResizeDimensionIntent(
+            delta: keyboardStep,
+          ),
+          if (minSize != null)
+            const SingleActivator(
+              LogicalKeyboardKey.home,
+            ): const ResizeDimensionToBoundIntent(
+              DimensionResizeBound.minimum,
+            ),
+          if (maxSize != null)
+            const SingleActivator(
+              LogicalKeyboardKey.end,
+            ): const ResizeDimensionToBoundIntent(
+              DimensionResizeBound.maximum,
+            ),
+        },
       },
       actions: {
+        // Enter and Space activate: they start or end keyboard resizing.
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            resizing.value = !resizing.value;
+            return null;
+          },
+        ),
+        // Escape ends resizing; otherwise it stays with the panel.
+        if (resizing.value)
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (_) {
+              resizing.value = false;
+              return null;
+            },
+          ),
         ResizeDimensionIntent: CallbackAction<ResizeDimensionIntent>(
           onInvoke: (intent) {
             if (enabled) resize.by(intent.delta);
@@ -234,6 +276,9 @@ class DragHandle extends HookConsumerWidget {
       },
       child: Semantics(
         label: semanticLabel,
+        hint: resizing.value
+            ? "Resizing. Arrows change the size, Escape ends"
+            : "Press Enter to resize",
         value: getSize().round().toString(),
         increasedValue: resize
             .resolve(getSize(), keyboardStep)

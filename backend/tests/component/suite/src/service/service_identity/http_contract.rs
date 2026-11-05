@@ -1,5 +1,8 @@
-use component_test::{TestContext, TestResult, component_test};
-use wasmcloud_utils::skir::base::service::v1::identity::IssueServiceIdentityResponse;
+use typewriter_component_test::prelude::*;
+use wasmcloud_utils::{
+    skir::base::service::v1::identity::IssueServiceIdentityResponse,
+    skir_client::UnrecognizedValues,
+};
 
 use super::ServiceIdentity;
 
@@ -50,10 +53,8 @@ async fn unsupported_media_type_returns_typed_error(
     let status = response.status();
     let headers = response.headers().clone();
     let body = response.bytes().await?;
-    let decoded = IssueServiceIdentityResponse::serializer().from_bytes(
-        &body,
-        wasmcloud_utils::skir_client::UnrecognizedValues::Drop,
-    )?;
+    let decoded =
+        IssueServiceIdentityResponse::serializer().from_bytes(&body, UnrecognizedValues::Drop)?;
 
     assert_eq!(status, http::StatusCode::UNSUPPORTED_MEDIA_TYPE);
     assert_eq!(
@@ -81,10 +82,8 @@ async fn malformed_skir_body_returns_bad_request(
         .await?;
     let status = response.status();
     let body = response.bytes().await?;
-    let decoded = IssueServiceIdentityResponse::serializer().from_bytes(
-        &body,
-        wasmcloud_utils::skir_client::UnrecognizedValues::Drop,
-    )?;
+    let decoded =
+        IssueServiceIdentityResponse::serializer().from_bytes(&body, UnrecognizedValues::Drop)?;
 
     assert_eq!(status, http::StatusCode::BAD_REQUEST);
     assert!(matches!(

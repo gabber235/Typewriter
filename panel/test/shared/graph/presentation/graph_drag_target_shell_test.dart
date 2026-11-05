@@ -1,212 +1,95 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/graph.dart";
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("Graph drag target shell (layout & hit testing)", () {
-    testWidgets("drag target covers the viewport and accepts drags anywhere", (
-      tester,
-    ) async {
-      const cell = 50.0;
-      final dragInside = ValueNotifier<bool>(false);
-      var acceptedCalls = 0;
-
-      final data = GraphData(
-        cellSize: cell,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("a"),
-            x: 1,
-            y: 1,
-            width: 2,
-            height: 2,
-            builder: (_) => GraphDragStateProbe(
-              sink: dragInside,
-              child: _draggableNode("a", color: Colors.blue),
-            ),
-          ),
-        ],
-        edges: const [],
-      );
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 600,
-            child: Graph(data: data, onElementsMoved: (_) => acceptedCalls++),
-          ),
-        ),
-        settle: true,
-      );
-
-      final aFinder = find.byKey(const ValueKey("el-a"));
-      expect(aFinder, findsOneWidget);
-
-      final start = tester.getCenter(aFinder);
-      final moveTarget = tester.getTopLeft(aFinder) + const Offset(160, 120);
-
-      final g = await tester.startGesture(start);
-      await tester.pump();
-      await g.moveTo(moveTarget);
-      await tester.pump();
-
-      expect(dragInside.value, isTrue);
-
-      await g.up();
-      await tester.pumpAndSettle();
-
-      expect(acceptedCalls, greaterThanOrEqualTo(1));
-      expect(dragInside.value, isFalse);
-    });
-
-    testWidgets("graph child still receives taps when drag layer is mounted", (
-      tester,
-    ) async {
-      const cell = 50.0;
-      final focusNode = FocusNode(debugLabel: "focusable");
-
-      final data = GraphData(
-        cellSize: cell,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("tap"),
-            x: 2,
-            y: 2,
-            width: 3,
-            height: 2,
-            builder: (_) => _FocusableTapBox(
-              key: const ValueKey("el-tap"),
-              focusNode: focusNode,
-            ),
-          ),
-        ],
-        edges: const [],
-      );
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 600,
-
-            child: Graph(data: data, onElementsMoved: (_) {}),
-          ),
-        ),
-        settle: true,
-      );
-
-      expect(focusNode.hasFocus, isFalse);
-
-      await tester.tap(find.byKey(const ValueKey("el-tap")));
-      await tester.pumpAndSettle();
-
-      expect(focusNode.hasFocus, isTrue);
-    });
-
-    testWidgets(
-      "when drag support is disabled, drag state remains false and no accept",
-      (tester) async {
-        const cell = 50.0;
-        final dragInside = ValueNotifier<bool>(false);
-
-        final data = GraphData(
-          cellSize: cell,
+  testWidgets("the graph previews a drag anywhere in its viewport", (
+    tester,
+  ) async {
+    var commits = 0;
+    final panel = await tester.pumpGraph(
+      Graph(
+        data: GraphData(
+          cellSize: 50,
           elements: [
-            GraphElement(
-              id: const GraphIdentifier("x"),
-              x: 0,
-              y: 0,
-              width: 2,
+            graphNode("A", x: 1, y: 1, body: const DraggableGraphNode("A")),
+          ],
+          edges: const [],
+        ),
+        onElementsMoved: (_) => commits++,
+      ),
+    );
+
+    final gesture = await panel.graph.grab("A");
+    await gesture.moveBy(const Offset(160, 120));
+    await tester.pump();
+
+    expect(panel.shows("Dragging A"), isFalse);
+
+    await gesture.up();
+    await panel.settle();
+
+    expect(commits, 1);
+  });
+
+  testWidgets("a graph node still takes a tap while dragging is enabled", (
+    tester,
+  ) async {
+    final focusNode = FocusNode(debugLabel: "Tap");
+    addTearDown(focusNode.dispose);
+    final panel = await tester.pumpGraph(
+      Graph(
+        data: GraphData(
+          cellSize: 50,
+          elements: [
+            graphElement(
+              "Tap",
+              x: 2,
+              y: 2,
+              width: 3,
               height: 2,
-              builder: (_) => GraphDragStateProbe(
-                sink: dragInside,
-                child: _draggableNode("x", color: Colors.red),
+              body: GestureDetector(
+                onTap: focusNode.requestFocus,
+                child: GraphNode("Tap", focusNode: focusNode),
               ),
             ),
           ],
           edges: const [],
-        );
-
-        await tester.pumpTestApp(
-          child: Center(
-            child: SizedBox(width: 600, height: 400, child: Graph(data: data)),
-          ),
-          settle: true,
-        );
-
-        final finder = find.byKey(const ValueKey("el-x"));
-        expect(finder, findsOneWidget);
-
-        final g = await tester.startGesture(tester.getCenter(finder));
-        await tester.pump();
-        await g.moveBy(const Offset(120, 60));
-        await tester.pump();
-        await g.up();
-        await tester.pumpAndSettle();
-
-        expect(dragInside.value, isFalse);
-      },
-    );
-  });
-}
-
-class _TestDragData extends GraphDragData {
-  const _TestDragData(this.graphId);
-
-  @override
-  final GraphIdentifier graphId;
-}
-
-Widget _draggableNode(String id, {Color? color}) {
-  return HookBuilder(
-    builder: (context) {
-      final data = _TestDragData(GraphIdentifier(id));
-      final source = useGraphDragSource(context, data);
-      final offered = source.payload;
-      return Draggable<GraphDragPayload<GraphDragData>>(
-        data: offered,
-        key: ObjectKey(offered),
-        maxSimultaneousDrags: 1,
-        dragAnchorStrategy: (widget, context, position) =>
-            source.anchor(offered, widget, context, position),
-        onDragStarted: () => source.begin(offered),
-        onDragUpdate: (details) => source.update(offered, details),
-        onDragEnd: (_) => source.end(offered),
-        feedback: Material(
-          elevation: 2,
-          color: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-            child: ColoredBox(
-              color: (color ?? Colors.blue).withValues(alpha: 0.8),
-            ),
-          ),
         ),
-        child: RepaintBoundary(
-          key: ValueKey("el-$id"),
-          child: ColoredBox(color: color ?? Colors.blue),
-        ),
-      );
-    },
-  );
-}
-
-class _FocusableTapBox extends StatelessWidget {
-  const _FocusableTapBox({required this.focusNode, super.key});
-
-  final FocusNode focusNode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Focus(
-      focusNode: focusNode,
-      child: GestureDetector(
-        onTap: focusNode.requestFocus,
-        child: const ColoredBox(color: Colors.amber),
+        onElementsMoved: (_) {},
       ),
     );
-  }
+    expect(focusNode.hasFocus, isFalse);
+
+    await panel.tapOn(panel.labeled("Tap"));
+
+    expect(focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets("a graph without a move handler leaves a dragged node alone", (
+    tester,
+  ) async {
+    final panel = await tester.pumpGraph(
+      Graph(
+        data: GraphData(
+          cellSize: 50,
+          elements: [
+            graphNode("X", x: 1, y: 1, body: const DraggableGraphNode("X")),
+          ],
+          edges: const [],
+        ),
+      ),
+    );
+    final before = panel.graph.rectOf("X");
+
+    final gesture = await panel.graph.grab("X");
+    await gesture.moveBy(const Offset(120, 60));
+    await tester.pump();
+
+    expect(panel.graph.rectOf("X"), before);
+
+    await gesture.up();
+    await panel.settle();
+    expect(panel.graph.rectOf("X"), before);
+  });
 }

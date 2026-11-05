@@ -2,202 +2,83 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-final _organization = skir.recordId("organization:route");
+final _organization = acme.organizationId;
+
+final _service = service("one", status: null);
+
+final _host = paperHost("one", service: _service.serviceId);
+
+final _topology = topologySnapshot(hosts: [_host]);
 
 void main() {
-  _routeProjectionTests<List<skir.Service>>(
-    name: "services",
-    provider: canonicalServicesProvider,
-    result: canonicalServicesProvider.future,
-    sourceOverride: (values) =>
-        canonicalOrganizationServicesProvider(_organization)
-            .overrideWith(() => _Services(values)),
-    first: const [],
-    second: [
-      skir.Service(
-        serviceId: skir.recordId("service:one"),
-        revision: 1,
-        name: "One",
-        role: skir.ServiceRole.createHost(version: "1"),
-        createdAt: DateTime.utc(2026),
-        organization: null,
-        registration: null,
-        state: null,
-      ),
-    ],
-  );
-  _routeProjectionTests<skir.OrganizationTopologySnapshot>(
-    name: "topology",
-    provider: organizationTopologyProvider,
-    result: organizationTopologyProvider.future,
-    sourceOverride: (values) =>
-        organizationTopologyControllerProvider(_organization)
-            .overrideWith(() => _Topology(values)),
-    first: skir.OrganizationTopologySnapshot.defaultInstance,
-    second: skir.OrganizationTopologySnapshot(
-      hosts: [
-        skir.ServiceHost(
-          hostId: skir.recordId("service_host:one"),
-          serviceId: skir.recordId("service:one"),
-          revision: 1,
-          entrypoint: "PAPER",
-          canHostRealm: true,
-          supportedEngines: [],
-          topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
-          state: skir.HostRuntimeState(
-            status: skir.HostRuntimeStatus.active,
-            message: null,
-            updatedAt: DateTime.utc(2026),
-          ),
-        ),
-      ],
-      realms: [],
-      engines: [],
-    ),
-  );
-}
+  testWidgets("the open organization's services follow its backend", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(),
+    ]);
+    expect(panel.container.read(canonicalServicesProvider).value, isEmpty);
 
-void _routeProjectionTests<T>({
-  required String name,
-  required ProviderListenable<AsyncValue<T>> provider,
-  required ProviderListenable<Future<T>> result,
-  required Override Function(Stream<T>) sourceOverride,
-  required T first,
-  required T second,
-}) {
-  group("$name route projection", () {
-    test("disposes safely before the canonical stream emits", () async {
-      final started = Completer<void>();
-      final cancelled = Completer<void>();
-      final source = StreamController<T>(
-        onListen: started.complete,
-        onCancel: cancelled.complete,
-      );
-      final container = ProviderContainer.test(
-        overrides: [
-          organizationIdProvider.overrideWithValue(_organization),
-          sourceOverride(source.stream),
-        ],
-      );
-      addTearDown(() async {
-        container.dispose();
-        await source.close();
-      });
-      final subscription = container.listen(provider, (_, next) {});
-      await started.future.timeout(const Duration(seconds: 2));
-      expect(container.read(provider).isLoading, isTrue);
+    panel.world.nats.announceServices(
+      _organization,
+      skir.OrganizationServicesChanged.wrapReplace([_service]),
+    );
 
-      subscription.close();
-      await container.pump();
-      await cancelled.future.timeout(const Duration(seconds: 2));
-      await pumpEventQueue();
-    });
-
-    test("follows canonical values through the watched future", () async {
-      final source = StreamController<T>(sync: true);
-      final container = ProviderContainer.test(
-        overrides: [
-          organizationIdProvider.overrideWithValue(_organization),
-          sourceOverride(source.stream),
-        ],
-      );
-      addTearDown(() async {
-        container.dispose();
-        await source.close();
-      });
-      final subscription = container.listen(provider, (_, next) {});
-      addTearDown(subscription.close);
-
-      source.add(first);
-      expect(await container.read(result), first);
-      source.add(second);
-      expect(await container.read(result), second);
-    });
-
-    test("forwards terminal canonical errors", () async {
-      final source = StreamController<T>(sync: true);
-      final reported = Completer<Object>();
-      final container = ProviderContainer.test(
-        retry: (_, _) => null,
-        overrides: [
-          organizationIdProvider.overrideWithValue(_organization),
-          sourceOverride(source.stream),
-        ],
-      );
-      addTearDown(() async {
-        container.dispose();
-        await source.close();
-      });
-      final subscription = container.listen(provider, (_, next) {
-        if (next.hasError && !reported.isCompleted) {
-          reported.complete(next.error!);
-        }
-      });
-      addTearDown(subscription.close);
-      source.add(first);
-      await container.read(result);
-
-      final error = ApiException.unknownResponseMessage();
-      source.addError(error, StackTrace.current);
-      await container.pump();
-      expect(
-        await reported.future.timeout(const Duration(seconds: 2)),
-        same(error),
-      );
-    });
-
-    test("follows recovery owned by the canonical provider", () async {
-      final listening = Completer<void>();
-      var attempts = 0;
-      final source = StreamController<T>.broadcast(
-        sync: true,
-        onListen: () {
-          if (++attempts == 2) listening.complete();
-        },
-      );
-      final container = ProviderContainer.test(
-        retry: (count, _) => count == 0 ? Duration.zero : null,
-        overrides: [
-          organizationIdProvider.overrideWithValue(_organization),
-          sourceOverride(source.stream),
-        ],
-      );
-      addTearDown(() async {
-        container.dispose();
-        await source.close();
-      });
-      final subscription = container.listen(provider, (_, next) {});
-      addTearDown(subscription.close);
-      source.add(first);
-      expect(await container.read(result), first);
-
-      source.addError(
-        ApiException.unknownResponseMessage(),
-        StackTrace.current,
-      );
-      await listening.future.timeout(const Duration(seconds: 2));
-      source.add(second);
-      expect(await container.read(result), second);
-      expect(attempts, 2);
-    });
+    await panel.eventually(
+      () => expect(panel.container.read(canonicalServicesProvider).value, [
+        _service,
+      ]),
+    );
+    await panel.settle();
   });
-}
 
-class _Services extends CanonicalOrganizationServices {
-  _Services(this.values);
-  final Stream<List<skir.Service>> values;
+  testWidgets("the open organization's topology follows its backend", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(),
+    ]);
+    expect(
+      panel.container.read(organizationTopologyProvider).value,
+      skir.OrganizationTopologySnapshot.defaultInstance,
+    );
 
-  @override
-  Stream<List<skir.Service>> build(skir.RecordId organizationId) => values;
-}
+    panel.world.nats.announceTopology(
+      _organization,
+      skir.OrganizationTopologyChanged.wrapReplace(_topology),
+    );
 
-class _Topology extends OrganizationTopologyController {
-  _Topology(this.values);
-  final Stream<skir.OrganizationTopologySnapshot> values;
+    await panel.eventually(
+      () => expect(
+        panel.container.read(organizationTopologyProvider).value,
+        _topology,
+      ),
+    );
+    await panel.settle();
+  });
 
-  @override
-  Stream<skir.OrganizationTopologySnapshot> build(
-    skir.RecordId organizationId,
-  ) => values;
+  testWidgets("a failed services watch fails the open organization's "
+      "services", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(),
+    ]);
+
+    panel.world.nats.announceServices(
+      _organization,
+      skir.OrganizationServicesChanged.unknown,
+    );
+
+    await panel.eventually(
+      () => expect(
+        panel.container.read(canonicalServicesProvider).error,
+        isA<ApiException>().having((error) => error.code, "code", 422),
+      ),
+    );
+    await panel.settle();
+  });
 }

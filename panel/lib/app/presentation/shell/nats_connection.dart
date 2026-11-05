@@ -14,9 +14,11 @@ class RequiredNatsConnection extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final token = ref.watch(accessTokenProvider).value;
+    final session = ref.watch(
+      authSessionProvider.select((session) => session.value),
+    );
     // Unauthenticated content must remain reachable so the user can sign in.
-    if (token == null) {
+    if (session == null) {
       return child;
     }
 

@@ -2,191 +2,142 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/provider_test_utils.dart";
-
-const _ownSubject =
-    "typewriter.presence.organization.org1.user.authenticated-user";
-const _wildcardSubject = "typewriter.presence.organization.org1.user.*";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("generated route owns presence subjects and actor capture", () {
-    final organizationId = skir.recordId("organization:org1");
+  testWidgets("the panel tells the organization which resource the user has "
+      "open, and that they left once it closes", (tester) async {
+    final first = book("First");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+    ]);
 
+    await panel.resources.row("First").open();
+
+    await panel.eventually(() {
+      final event = panel.world.nats
+          .presencePublished(ada.id, acme.organizationId)
+          .last;
+      expect(event, isA<skir.PresenceEvent_activeWrapper>());
+      final location =
+          (event as skir.PresenceEvent_activeWrapper).value.location;
+      expect(
+        location,
+        skir.PresenceLocation.createResource(
+          realmId: skir.recordId("service:main"),
+          resourceId: first.bookId,
+        ),
+      );
+    });
+
+    await tester.pumpWidget(const SizedBox.shrink());
     expect(
-      OrganizationPresenceRouteEvent.subject(
-        userId: "authenticated-user",
-        organizationId: organizationId,
-      ),
-      _ownSubject,
-    );
-    expect(
-      OrganizationPresenceRouteEvent.subscriptionPattern(
-        organizationId: organizationId,
-      ),
-      _wildcardSubject,
-    );
-    expect(
-      OrganizationPresenceRouteEvent.userIdFromSubject(
-        "typewriter.presence.organization.org1.user.remote-user",
-        organizationId: organizationId,
-      ),
-      "remote-user",
-    );
-    expect(
-      OrganizationPresenceRouteEvent.userIdFromSubject(
-        "typewriter.presence.organization.org2.user.remote-user",
-        organizationId: organizationId,
-      ),
-      isNull,
-    );
-    expect(
-      OrganizationPresenceRouteEvent.userIdFromSubject(
-        "typewriter.presence.organization.org1.user.bad user",
-        organizationId: organizationId,
-      ),
-      isNull,
-    );
-    expect(
-      OrganizationPresenceRouteEvent.userIdFromSubject(
-        "typewriter.presence.organization.org1.remote-user",
-        organizationId: organizationId,
-      ),
-      isNull,
+      panel.world.nats.presencePublished(ada.id, acme.organizationId).last,
+      isA<skir.PresenceEvent_leftWrapper>(),
     );
   });
 
-  test("publishes route presence on the authenticated user subject", () async {
-    final harness = _Harness(
-      route: "/organization/org1/realm/realm1/resource/page1",
-    );
-    final subscription = harness.container.listen(
-      organizationPresenceProvider,
-      (_, _) {},
-    );
+  testWidgets("another member's newest location shows until they leave", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([signedIn(ada, organization: acme)]);
 
-    await harness.container.read(organizationPresenceProvider.future);
-
-    expect(harness.nats.subscriptionSubjects, [_wildcardSubject]);
-    expect(harness.nats.publications, hasLength(1));
-    expect(harness.nats.publications.single.subject, _ownSubject);
-    final event = OrganizationPresenceRouteEvent.serializer.fromBytes(
-      harness.nats.publications.single.payload,
-    );
-    final active = switch (event) {
-      skir.PresenceEvent_activeWrapper(:final value) => value,
-      _ => throw StateError("Expected active presence"),
-    };
-    expect(active.sequence, 1);
-
-    final resource = switch (active.location) {
-      skir.PresenceLocation_resourceWrapper(:final value) => value,
-      _ => throw StateError("Expected resource presence"),
-    };
-    expect(resource.realmId, skir.recordId("service:realm1"));
-    expect(resource.resourceId, skir.ResourceId(value: "page1"));
-
-    subscription.close();
-    harness.container.dispose();
-    await Future<void>.delayed(Duration.zero);
-    final left = OrganizationPresenceRouteEvent.serializer.fromBytes(
-      harness.nats.publications.last.payload,
-    );
-    expect(left, isA<skir.PresenceEvent_leftWrapper>());
-    await harness.nats.dispose();
-  });
-
-  test("trusts subject identity and ignores stale session messages", () async {
-    final harness = _Harness();
-    final subscription = harness.container.listen(
-      organizationPresenceProvider,
-      (_, _) {},
-    );
-    await harness.container.read(organizationPresenceProvider.future);
-
-    harness.emit(
-      "remote-user",
+    panel.world.nats.announcePresence(
+      grace.id,
       skir.PresenceEvent.createActive(
-        sessionId: "remote-session",
+        sessionId: "grace-tab",
         sequence: 2,
         location: skir.PresenceLocation.createServices(),
       ),
+      organization: acme.organizationId,
     );
-    await waitForProvider(
-      harness.container,
-      organizationPresenceProvider,
-      (state) => state.value?.length == 1,
-      description: "remote presence",
-    );
-    final key = const PresenceSessionKey("remote-user", "remote-session");
-    expect(
-      harness.container
-          .read(organizationPresenceProvider)
-          .requireValue[key]
-          ?.userId,
-      "remote-user",
+    await panel.eventually(
+      () => expect(panel.world.othersPresent, {
+        grace.id: skir.PresenceLocation.createServices(),
+      }),
     );
 
-    harness.emit(
-      "remote-user",
+    // A heartbeat that arrives late carries an older sequence.
+    panel.world.nats.announcePresence(
+      grace.id,
       skir.PresenceEvent.createActive(
-        sessionId: "remote-session",
+        sessionId: "grace-tab",
         sequence: 1,
         location: skir.PresenceLocation.createMembers(),
       ),
+      organization: acme.organizationId,
     );
-    await Future<void>.delayed(Duration.zero);
-    final retained = harness.container
-        .read(organizationPresenceProvider)
-        .requireValue[key]!;
-    expect(retained.presence.sequence, 2);
-    expect(
-      retained.presence.location,
-      isA<skir.PresenceLocation_servicesWrapper>(),
-    );
+    await panel.settle();
+    expect(panel.world.othersPresent, {
+      grace.id: skir.PresenceLocation.createServices(),
+    });
 
-    harness.emit(
-      "remote-user",
-      skir.PresenceEvent.createLeft(sessionId: "remote-session"),
+    panel.world.nats.announcePresence(
+      grace.id,
+      skir.PresenceEvent.createLeft(sessionId: "grace-tab"),
+      organization: acme.organizationId,
     );
-    await waitForProvider(
-      harness.container,
-      organizationPresenceProvider,
-      (state) => state.value?.isEmpty ?? false,
-      description: "departed remote presence",
-    );
-
-    subscription.close();
-    harness.container.dispose();
-    await harness.nats.dispose();
+    await panel.eventually(() => expect(panel.world.othersPresent, isEmpty));
   });
-}
 
-final class _Harness {
-  _Harness({String route = "/organization/org1/services"}) {
-    container = ProviderContainer.test(
-      overrides: [
-        userIdProvider.overrideWith((ref) async => "authenticated-user"),
-        organizationIdProvider.overrideWithValue(
-          skir.recordId("organization:org1"),
-        ),
-        currentRouteProvider.overrideWithValue(route),
-        natsProvider.overrideWithValue(nats),
-      ],
-    );
-  }
-
-  final FakeNatsClient nats = FakeNatsClient();
-  late final ProviderContainer container;
-
-  void emit(String userId, skir.PresenceEvent event) {
-    nats.emitMessageOnSubject(
-      OrganizationPresenceRouteEvent.subject(
-        userId: userId,
-        organizationId: skir.recordId("organization:org1"),
+  testWidgets("a member who stops sending heartbeats disappears after 45 "
+      "seconds", (tester) async {
+    final panel = await tester.pumpPanel([signedIn(ada, organization: acme)]);
+    panel.world.nats.announcePresence(
+      grace.id,
+      skir.PresenceEvent.createActive(
+        sessionId: "grace-tab",
+        sequence: 1,
+        location: skir.PresenceLocation.createServices(),
       ),
-      OrganizationPresenceRouteEvent.serializer.toBytes(event),
+      organization: acme.organizationId,
     );
-  }
+    await panel.eventually(
+      () => expect(panel.world.othersPresent, contains(grace.id)),
+    );
+
+    await tester.pump(const Duration(seconds: 30));
+    expect(panel.world.othersPresent, contains(grace.id));
+
+    await tester.pump(const Duration(seconds: 30));
+    expect(panel.world.othersPresent, isEmpty);
+  });
+
+  testWidgets("the user's own session never shows as someone else, and "
+      "presence in another organization never shows", (tester) async {
+    final panel = await tester.pumpPanel([signedIn(ada, organization: acme)]);
+    await panel.eventually(
+      () => expect(
+        panel.world.nats.presencePublished(ada.id, acme.organizationId),
+        isNotEmpty,
+      ),
+    );
+    final own =
+        (panel.world.nats.presencePublished(ada.id, acme.organizationId).last
+                as skir.PresenceEvent_activeWrapper)
+            .value;
+
+    panel.world.nats.announcePresence(
+      ada.id,
+      skir.PresenceEvent.createActive(
+        sessionId: own.sessionId,
+        sequence: own.sequence + 1,
+        location: own.location,
+      ),
+      organization: acme.organizationId,
+    );
+    panel.world.nats.announcePresence(
+      grace.id,
+      skir.PresenceEvent.createActive(
+        sessionId: "grace-tab",
+        sequence: 1,
+        location: skir.PresenceLocation.createServices(),
+      ),
+      organization: organization("Globex").organizationId,
+    );
+    await panel.settle();
+
+    expect(panel.world.othersPresent, isEmpty);
+  });
 }

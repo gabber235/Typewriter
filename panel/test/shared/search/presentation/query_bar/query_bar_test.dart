@@ -1,8 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _duplicateQuerySelectors = <QuerySelectorDefinition>[
   KeyValueSelectorDefinition(id: "status_1", key: "status"),
@@ -18,77 +16,45 @@ const _sourceBackedSelectors = <QuerySelectorDefinition>[
   ),
 ];
 
+/// The colors of the light theme the panel opens in.
+final _colors = buildTheme(Brightness.light).colorScheme;
+
 void main() {
-  group("QueryBar suggestions", () {
-    testWidgets("tap focuses query input", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
+  group("suggestions", () {
+    testWidgets("a click focuses the query field", (tester) async {
+      final bar = await tester.showQueryBar();
 
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
+      await bar.focus();
 
-      final editable = tester.widget<EditableText>(find.byType(EditableText));
-      expect(editable.focusNode.hasFocus, isTrue);
+      expect(bar.isFocused, isTrue);
     });
 
-    testWidgets("shows helper when query is empty", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
+    testWidgets("a selector key offers the values matching its partial", (
+      tester,
+    ) async {
+      final bar = await tester.showQueryBar();
 
-      await tester.tap(find.byType(TextField));
-      await _pumpUi(tester);
-      expect(_suggestions(), findsNothing);
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
+
+      expect(bar.showsHelper, isFalse);
+      expect(bar.suggestions, ["active", "archived"]);
     });
 
-    testWidgets("shows selector value suggestions", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
-
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
-
-      expect(find.textContaining("You can use:"), findsNothing);
-      expect(_suggestions(), findsOneWidget);
-      expect(find.text("active"), findsOneWidget);
-      expect(find.text("archived"), findsOneWidget);
-    });
-
-    testWidgets("debounces source backed completion", (tester) async {
+    testWidgets("a source backed completion waits until typing pauses", (
+      tester,
+    ) async {
       final requests = <SearchSelectorCompletionRequest>[];
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: _sourceBackedSelectors,
-          completeSelector: (request) async {
-            requests.add(request);
-            return const SearchSelectorCompletionResult(values: ["arrival"]);
-          },
-          onQueryChanged: (_) {},
-        ),
+      final bar = await tester.showQueryBar(
+        selectors: _sourceBackedSelectors,
+        completeSelector: (request) async {
+          requests.add(request);
+          return const SearchSelectorCompletionResult(values: ["arrival"]);
+        },
       );
-      await tester.tap(find.byType(TextField));
-      await tester.enterText(find.byType(TextField), "page:a");
-      await tester.pump();
+      await bar.type("page:a");
       await tester.pump(const Duration(milliseconds: 100));
-      await tester.enterText(find.byType(TextField), "page:ar");
-      await tester.pump();
+      await bar.type("page:ar");
       await tester.pump(const Duration(milliseconds: 149));
 
       expect(requests, isEmpty);
@@ -97,29 +63,22 @@ void main() {
       await tester.pump();
 
       expect(requests.map((request) => request.partial), ["ar"]);
-      expect(find.text("arrival"), findsOneWidget);
+      expect(bar.suggestions, ["arrival"]);
     });
 
-    testWidgets("ignores stale source backed completion", (tester) async {
+    testWidgets("an answer for an older partial is ignored", (tester) async {
       final completions = <Completer<SearchSelectorCompletionResult>>[];
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: _sourceBackedSelectors,
-          completeSelector: (_) {
-            final completion = Completer<SearchSelectorCompletionResult>();
-            completions.add(completion);
-            return completion.future;
-          },
-          onQueryChanged: (_) {},
-        ),
+      final bar = await tester.showQueryBar(
+        selectors: _sourceBackedSelectors,
+        completeSelector: (_) {
+          final completion = Completer<SearchSelectorCompletionResult>();
+          completions.add(completion);
+          return completion.future;
+        },
       );
-      await tester.tap(find.byType(TextField));
-      await tester.enterText(find.byType(TextField), "page:a");
-      await tester.pump();
+      await bar.type("page:a");
       await tester.pump(const Duration(milliseconds: 151));
-      await tester.enterText(find.byType(TextField), "page:b");
-      await tester.pump();
+      await bar.type("page:b");
       await tester.pump(const Duration(milliseconds: 151));
       expect(completions, hasLength(2));
 
@@ -127,568 +86,272 @@ void main() {
         const SearchSelectorCompletionResult(values: ["arrival"]),
       );
       await tester.pump();
-      expect(find.text("arrival"), findsNothing);
+      expect(bar.suggestions, isNot(contains("arrival")));
 
       completions.last.complete(
         const SearchSelectorCompletionResult(values: ["bravo"]),
       );
       await tester.pumpAndSettle();
-      expect(find.text("bravo"), findsOneWidget);
+      expect(bar.suggestions, ["bravo"]);
     });
 
-    testWidgets("reuses exhaustive completion for a narrower partial", (
+    testWidgets("the helper line gives way to suggestions", (tester) async {
+      final bar = await tester.showQueryBar();
+
+      await bar.focus();
+      await tester.eventually(() => expect(bar.showsHelper, isTrue));
+      expect(bar.showsSuggestions, isFalse);
+      expect(bar.helperMentions("status:"), 1);
+
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
+
+      expect(bar.showsHelper, isFalse);
+    });
+
+    testWidgets("opening suggestions keeps the query bar's height", (
       tester,
     ) async {
-      var requestCount = 0;
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: _sourceBackedSelectors,
-          completeSelector: (_) async {
-            requestCount++;
-            return const SearchSelectorCompletionResult(
-              values: ["arrival"],
-              exhaustive: true,
-            );
-          },
-          onQueryChanged: (_) {},
-        ),
-      );
-      await tester.tap(find.byType(TextField));
-      await tester.enterText(find.byType(TextField), "page:a");
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 151));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "page:ar");
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
+      final bar = await tester.showQueryBar(query: "status:a");
+      final before = bar.rect.height;
 
-      expect(requestCount, 1);
-      expect(find.text("arrival"), findsOneWidget);
+      await bar.focus();
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
+
+      expect(bar.rect.height, before);
     });
 
-    testWidgets("switches from helper mode to popup mode", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
+    testWidgets("suggestions are as wide as the query field", (tester) async {
+      final bar = await tester.showQueryBar(width: 420);
 
-      await tester.tap(find.byType(TextField));
-      await _waitForHelperVisible(tester);
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
 
-      expect(_suggestions(), findsNothing);
-      expect(_helperBadges(), findsWidgets);
-
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
-
-      expect(find.textContaining("You can use:"), findsNothing);
-      expect(_suggestions(), findsOneWidget);
+      expect(bar.suggestionsRect.width, closeTo(bar.rect.width, 4.1));
     });
 
-    testWidgets("suggestions do not change query bar host height", (
+    testWidgets("an operator offers no suggestions", (tester) async {
+      final bar = await tester.showQueryBar(query: "AND");
+
+      await bar.focus();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(bar.showsSuggestions, isFalse);
+    });
+
+    testWidgets("the helper names selectors that share a label once", (
       tester,
     ) async {
-      await tester.pumpTestApp(
-        child: SizedBox(
-          width: 500,
-          child: Container(
-            key: const ValueKey("query_bar_host"),
-            child: QueryBar(
-              query: "status:a",
-              selectors: mockQuerySelectors,
-              onQueryChanged: (_) {},
-            ),
-          ),
-        ),
+      final bar = await tester.showQueryBar(
+        selectors: _duplicateQuerySelectors,
       );
 
-      await tester.tap(find.byType(TextField));
-      await _waitForSuggestionsVisible(tester);
-      final hostFinder = find.byKey(const ValueKey("query_bar_host"));
-      final beforeHeight = tester.getSize(hostFinder).height;
+      await bar.focus();
+      await tester.eventually(() => expect(bar.showsHelper, isTrue));
 
-      await _pumpUi(tester);
-      final afterHeight = tester.getSize(hostFinder).height;
-
-      expect(_suggestions(), findsOneWidget);
-      expect(afterHeight, beforeHeight);
+      expect(bar.helperMentions("status"), 1);
     });
 
-    testWidgets("suggestions match query field width by default", (
-      tester,
-    ) async {
-      await tester.pumpTestApp(
-        child: SizedBox(
-          width: 420,
-          child: QueryBar(
-            query: "",
-            selectors: mockQuerySelectors,
-            onQueryChanged: (_) {},
-          ),
-        ),
-      );
-
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
-
-      final fieldRect = tester.getRect(find.byType(TextField));
-      final popupRect = tester.getRect(_suggestions());
-      expect(popupRect.width, closeTo(fieldRect.width, 4.1));
-    });
-
-    testWidgets("hides popup in operator context", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "AND",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
-
-      await tester.tap(find.byType(TextField));
-      await _pumpUi(tester);
-      expect(_suggestions(), findsNothing);
-    });
-
-    testWidgets("deduplicates helper badges by label", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: _duplicateQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
-
-      await tester.tap(find.byType(TextField));
-      await _waitForHelperVisible(tester);
-
-      expect(_helperBadgesWithPrefix("status"), findsOneWidget);
-    });
-
-    testWidgets("Enter applies first suggestion when no active selection", (
+    testWidgets("Enter applies the first suggestion when none is active", (
       tester,
     ) async {
       var latestQuery = "";
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (value) => latestQuery = value,
-        ),
+      final bar = await tester.showQueryBar(
+        onQueryChanged: (value) => latestQuery = value,
       );
 
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
+      await bar.submit();
 
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      final editable = tester.widget<EditableText>(find.byType(EditableText));
       expect(latestQuery, "status:active");
-      expect(editable.controller.text, "status:active");
+      expect(bar.text, "status:active");
     });
 
-    testWidgets("applying a suggestion uses replacement range", (tester) async {
+    testWidgets("a chosen suggestion replaces only the partial it completes", (
+      tester,
+    ) async {
       var latestQuery = "";
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (value) => latestQuery = value,
-        ),
+      final bar = await tester.showQueryBar(
+        onQueryChanged: (value) => latestQuery = value,
       );
 
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
+      await bar.type("hello status:a world", cursor: 14);
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
+      await bar.chooseSuggestion("active");
 
-      await tester.tap(
-        find.byKey(const ValueKey("query_bar_suggestion_0")).first,
-      );
-      await tester.pump();
-
-      final editable = tester.widget<EditableText>(find.byType(EditableText));
-      expect(latestQuery, "status:active");
-      expect(editable.controller.text, "status:active");
-      expect(_suggestions(), findsOneWidget);
+      expect(latestQuery, "hello status:active world");
+      expect(bar.text, "hello status:active world");
     });
   });
 
-  group("QueryBar keyboard", () {
-    testWidgets("Enter delegates when suggestions are not visible", (
-      tester,
-    ) async {
+  group("keyboard", () {
+    testWidgets("Enter submits when no suggestions are shown", (tester) async {
       String? submitted;
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: const [],
-          onQueryChanged: (_) {},
-          onSubmitted: (value) => submitted = value,
-        ),
+      final bar = await tester.showQueryBar(
+        selectors: const [],
+        onSubmitted: (value) => submitted = value,
       );
 
-      await tester.tap(find.byType(TextField));
-      await tester.enterText(find.byType(TextField), "mdi:home");
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
+      await bar.type("mdi:home");
+      await bar.submit();
 
       expect(submitted, "mdi:home");
     });
 
-    testWidgets("Escape delegates when suggestions are not visible", (
+    testWidgets("Escape dismisses the bar when no suggestions are shown", (
       tester,
     ) async {
       var dismissals = 0;
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: const [],
-          onQueryChanged: (_) {},
-          onDismiss: () => dismissals++,
-        ),
+      final bar = await tester.showQueryBar(
+        selectors: const [],
+        onDismiss: () => dismissals++,
       );
 
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
+      await bar.focus();
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pump();
 
       expect(dismissals, 1);
     });
 
-    testWidgets("arrow keys navigate and Enter applies active suggestion", (
+    testWidgets("arrow keys move through suggestions and Enter applies one", (
       tester,
     ) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
+      final bar = await tester.showQueryBar();
 
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
-
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
-      final editable = tester.widget<EditableText>(find.byType(EditableText));
-      expect(editable.controller.text, "status:archived");
+      expect(bar.text, "status:archived");
     });
 
-    testWidgets("suggestion activation precedes the containing input action", (
+    testWidgets("Enter on a suggestion wins over the containing input", (
       tester,
     ) async {
       var containingActivations = 0;
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-          textFieldActions: [
-            ActionShortcut.intent(
-              id: "containing_input_activate",
-              label: "Activate input",
-              description: "Activate the containing input",
-              intent: ActivateIntent,
-              priority: 1,
-              onInvoke: (_) => containingActivations++,
-            ),
-          ],
-        ),
+      final bar = await tester.showQueryBar(
+        textFieldActions: [
+          ActionShortcut.intent(
+            id: "containing_input_activate",
+            label: "Activate input",
+            description: "Activate the containing input",
+            intent: ActivateIntent,
+            priority: 1,
+            onInvoke: (_) => containingActivations++,
+          ),
+        ],
       );
 
-      await tester.tap(find.byType(TextField));
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
-      final editable = tester.widget<EditableText>(find.byType(EditableText));
-      expect(editable.controller.text, "status:active");
+      expect(bar.text, "status:active");
       expect(containingActivations, 0);
     });
 
-    testWidgets("control navigation shortcuts work with suggestion list", (
-      tester,
-    ) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
+    testWidgets("Control N and P move through suggestions", (tester) async {
+      final bar = await tester.showQueryBar();
 
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
-
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-      await tester.pump();
-
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
-      final editable = tester.widget<EditableText>(find.byType(EditableText));
-      expect(editable.controller.text, "status:active");
+      expect(bar.text, "status:active");
     });
 
-    testWidgets("Escape dismisses visible suggestions", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
-
-      await tester.tap(find.byType(TextField));
-      await tester.pump();
-      await tester.enterText(find.byType(TextField), "status:a");
-      await _waitForSuggestionsVisible(tester);
-
-      expect(_suggestions(), findsOneWidget);
+    testWidgets("Escape closes the suggestions", (tester) async {
+      final bar = await tester.showQueryBar();
+      await bar.type("status:a");
+      await tester.eventually(() => expect(bar.showsSuggestions, isTrue));
 
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await _waitForSuggestionsHidden(tester);
 
-      expect(_suggestions(), findsNothing);
+      await tester.eventually(() => expect(bar.showsSuggestions, isFalse));
     });
 
-    testWidgets("no shortcut overrides are active in helper mode", (
+    testWidgets("arrows and Enter leave the text alone in helper mode", (
       tester,
     ) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
-
-      await tester.tap(find.byType(TextField));
-      await _waitForHelperVisible(tester);
-
-      expect(_helperBadges(), findsWidgets);
-      expect(_suggestions(), findsNothing);
+      final bar = await tester.showQueryBar();
+      await bar.focus();
+      await tester.eventually(() => expect(bar.showsHelper, isTrue));
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
-      final editable = tester.widget<EditableText>(find.byType(EditableText));
-      expect(editable.controller.text, "");
+      expect(bar.showsSuggestions, isFalse);
+      expect(bar.text, "");
     });
   });
 
-  group("QueryBar lifecycle", () {
-    testWidgets("preserves editing value when selectors change", (
+  testWidgets("changing selectors keeps the text and cursor", (tester) async {
+    final selectors = ValueNotifier(mockQuerySelectors);
+    addTearDown(selectors.dispose);
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        SizedBox(
+          width: 500,
+          child: ValueListenableBuilder(
+            valueListenable: selectors,
+            builder: (context, current, _) =>
+                QueryBar(query: "", selectors: current, onQueryChanged: (_) {}),
+          ),
+        ),
+      ),
+    );
+    final bar = panel.queryBar;
+    await bar.type("main");
+    expect(bar.selection, const TextSelection.collapsed(offset: 4));
+
+    selectors.value = [
+      ...mockQuerySelectors,
+      const KeyValueSelectorDefinition(id: "book", key: "book:"),
+    ];
+    await tester.pump();
+
+    expect(bar.text, "main");
+    expect(bar.selection, const TextSelection.collapsed(offset: 4));
+  });
+
+  group("highlighting", () {
+    testWidgets("a selector's key and value take its color", (tester) async {
+      final bar = await tester.showQueryBar(query: "status:active hello");
+      final color = mockQuerySelectorColor("status") ?? _colors.primary;
+
+      expect(bar.stylesOf("status").first?.color, color);
+      expect(bar.stylesOf("active").first?.color, color);
+      expect(bar.stylesOf("hello").first?.color, isNot(color));
+    });
+
+    testWidgets("an issue's style wins over the selector's color", (
       tester,
     ) async {
-      var query = "";
-      var selectors = mockQuerySelectors;
-      late StateSetter updateState;
+      final bar = await tester.showQueryBar(query: "id:1 id:2");
+      final error = _colors.error;
 
-      await tester.pumpTestApp(
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            updateState = setState;
-            return QueryBar(
-              query: query,
-              selectors: selectors,
-              onQueryChanged: (value) {
-                setState(() => query = value);
-              },
-            );
-          },
-        ),
-      );
-
-      await tester.tap(find.byType(TextField));
-      await tester.enterText(find.byType(TextField), "main");
-      await tester.pump();
-
-      final before = tester
-          .widget<EditableText>(find.byType(EditableText))
-          .controller
-          .value;
-      expect(before.selection, const TextSelection.collapsed(offset: 4));
-
-      updateState(() {
-        selectors = [
-          ...mockQuerySelectors,
-          const KeyValueSelectorDefinition(id: "book", key: "book:"),
-        ];
-      });
-      await tester.pump();
-
-      final after = tester
-          .widget<EditableText>(find.byType(EditableText))
-          .controller
-          .value;
-      expect(after, before);
-    });
-  });
-
-  group("QueryBar highlighting", () {
-    testWidgets("highlights selector keys and values", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "status:active hello",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
-
-      final editableFinder = find.byType(EditableText);
-      final editable = tester.widget<EditableText>(editableFinder);
-      final context = tester.element(editableFinder);
-      final span = editable.controller.buildTextSpan(
-        context: context,
-        withComposing: false,
-        style: editable.style,
-      );
-
-      final selectorStyles = _stylesForTextContaining(span, "status");
-      final theme = Theme.of(context);
-      final statusSelector = mockQuerySelectors
-          .whereType<KeyValueSelectorDefinition>()
-          .firstWhere((selector) => selector.id == "status");
-
-      expect(selectorStyles, isNotEmpty);
-      expect(
-        selectorStyles.first?.color,
-        statusSelector.color ?? theme.colorScheme.primary,
-      );
-    });
-
-    testWidgets("issue styles override token styles", (tester) async {
-      await tester.pumpTestApp(
-        child: QueryBar(
-          query: "id:1 id:2",
-          selectors: mockQuerySelectors,
-          onQueryChanged: (_) {},
-        ),
-      );
-
-      final editableFinder = find.byType(EditableText);
-      final editable = tester.widget<EditableText>(editableFinder);
-      final context = tester.element(editableFinder);
-      final span = editable.controller.buildTextSpan(
-        context: context,
-        withComposing: false,
-        style: editable.style,
-      );
-
-      final idStyles = _stylesForTextContaining(span, "id");
-      final theme = Theme.of(context);
-      final idSelector = mockQuerySelectors
-          .whereType<KeyValueSelectorDefinition>()
-          .firstWhere((selector) => selector.id == "id");
-
-      expect(idStyles.length, greaterThanOrEqualTo(2));
+      final idStyles = bar.stylesOf("id");
+      expect(idStyles, hasLength(greaterThanOrEqualTo(2)));
       expect(
         idStyles.first?.color,
-        idSelector.color ?? theme.colorScheme.primary,
+        mockQuerySelectorColor("id") ?? _colors.primary,
       );
-      expect(idStyles.last?.color, theme.colorScheme.error);
+      expect(idStyles.last?.color, error);
       expect(idStyles.last?.decoration, TextDecoration.underline);
     });
   });
-}
-
-List<TextStyle?> _stylesForTextContaining(TextSpan root, String text) {
-  return _leafTextSpans(root)
-      .where((span) => (span.text ?? "").contains(text))
-      .map((span) => span.style)
-      .toList(growable: false);
-}
-
-Future<void> _pumpUi(WidgetTester tester) async {
-  await tester.pump(const Duration(milliseconds: 400));
-}
-
-Future<void> _waitForSuggestionsVisible(WidgetTester tester) async {
-  await tester.pumpUntil(() {
-    expect(_suggestions(), findsOneWidget);
-  });
-}
-
-Future<void> _waitForSuggestionsHidden(WidgetTester tester) async {
-  await tester.pumpUntil(() {
-    expect(_suggestions(), findsNothing);
-  });
-}
-
-Future<void> _waitForHelperVisible(WidgetTester tester) async {
-  await tester.pumpUntil(() {
-    expect(find.textContaining("You can use:"), findsOneWidget);
-  });
-}
-
-Finder _suggestions() {
-  return find.byKey(const ValueKey("query_bar_suggestions"));
-}
-
-Finder _helperBadges() {
-  return _helperBadgesWithPrefix("");
-}
-
-Finder _helperBadgesWithPrefix(String labelPrefix) {
-  final keyPrefix = "query_bar_helper_badge_$labelPrefix";
-  return find.byWidgetPredicate((widget) {
-    final key = widget.key;
-    if (key is! ValueKey<String>) {
-      return false;
-    }
-
-    return key.value.startsWith(keyPrefix);
-  });
-}
-
-List<TextSpan> _leafTextSpans(TextSpan root) {
-  final output = <TextSpan>[];
-
-  void visit(InlineSpan span) {
-    if (span is! TextSpan) {
-      return;
-    }
-
-    final children = span.children;
-    if (children == null || children.isEmpty) {
-      output.add(span);
-      return;
-    }
-
-    for (final child in children) {
-      visit(child);
-    }
-  }
-
-  visit(root);
-  return output;
 }

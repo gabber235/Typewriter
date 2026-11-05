@@ -13,9 +13,6 @@ use serde::Serialize;
 
 use crate::{CommandExt, Context};
 
-/// The ref a change is compared with when no `--base` is given: the repository's default branch.
-const DEFAULT_BASE: &str = "origin/HEAD";
-
 /// Legacy references that are read, never changed (AGENTS.md), so neither indexed nor reviewed.
 const LEGACY: &[&str] = &["engine/", "extensions/", "module-plugin/", "app/"];
 
@@ -53,8 +50,8 @@ pub struct Change {
 }
 
 impl Change {
-    /// The change from the merge base of `HEAD` and `base` (default [`DEFAULT_BASE`]) to the
-    /// working tree, including untracked files that are not ignored.
+    /// The change from the merge base of `HEAD` and `base` (by default the base CI uses, see
+    /// [`base`]) to the working tree, including untracked files that are not ignored.
     pub fn load(ctx: &Context, base: Option<&str>) -> Result<Self> {
         let base = self::base(ctx, base)?;
         let output = git(
@@ -179,10 +176,79 @@ pub fn git(ctx: &Context, args: &[&str]) -> Command {
     command
 }
 
-/// The commit a change is compared with: the merge base of `HEAD` and `base`, by default
-/// [`DEFAULT_BASE`].
+/// The commit a change is compared with: the merge base of `HEAD` and `base`, by default the
+/// base CI uses for this branch.
 pub fn base(ctx: &Context, base: Option<&str>) -> Result<String> {
-    merge_base(ctx, base.unwrap_or(DEFAULT_BASE))
+    match base {
+        Some(reference) => merge_base(ctx, reference),
+        None => merge_base(ctx, &default_base(ctx)?),
+    }
+}
+
+/// The base branch of this branch's pull request, which is what CI compares with; before a pull
+/// request exists, the remote branch `HEAD` grew from most recently.
+fn default_base(ctx: &Context) -> Result<String> {
+    let pull_request = ctx
+        .tool(
+            ".",
+            "gh",
+            &["pr", "view", "--json", "baseRefOid", "--jq", ".baseRefOid"],
+        )
+        .output_text();
+    match pull_request {
+        Ok(commit) if !commit.trim().is_empty() => {
+            let commit = commit.trim();
+            // The local remote branch can be behind the pull request's base, and then shows
+            // the base's own commits as part of this change.
+            let known = git(ctx, &["cat-file", "-e", &format!("{commit}^{{commit}}")])
+                .stderr(Stdio::null())
+                .status()
+                .is_ok_and(|status| status.success());
+            if !known {
+                git(ctx, &["fetch", "--quiet", "origin", commit])
+                    .status()
+                    .context("fetching the pull request's base")?;
+            }
+            Ok(commit.to_owned())
+        }
+        _ => nearest_base(ctx),
+    }
+}
+
+/// Among remote branches that do not already contain `HEAD` (which excludes branches stacked on
+/// it and branches that merged it), the one missing the fewest of `HEAD`'s commits. The remote
+/// copy of the current branch is skipped too, since it lacks only the commits not pushed yet.
+/// `ahead-behind` counts both sides for every ref in one git call.
+fn nearest_base(ctx: &Context) -> Result<String> {
+    let branch = git(ctx, &["symbolic-ref", "--quiet", "--short", "HEAD"])
+        .output_text()
+        .map(|branch| branch.trim().to_owned())
+        .ok();
+    let refs = git(
+        ctx,
+        &[
+            "for-each-ref",
+            "--format=%(refname) %(ahead-behind:HEAD)",
+            "refs/remotes/",
+        ],
+    )
+    .output_text()?;
+    refs.lines()
+        .filter_map(|line| {
+            let mut fields = line.split_whitespace();
+            let (name, _ahead, behind) = (fields.next()?, fields.next()?, fields.next()?);
+            // `behind` is how many of HEAD's commits the ref lacks; 0 means it contains HEAD.
+            let behind: u32 = behind.parse().ok()?;
+            // A remote's `HEAD` only repeats the branch it points at.
+            let name = name.strip_prefix("refs/remotes/")?;
+            let own = name
+                .split_once('/')
+                .is_some_and(|(_, name)| branch.as_deref() == Some(name));
+            (behind > 0 && !own && !name.ends_with("/HEAD")).then(|| (behind, name.to_owned()))
+        })
+        .min()
+        .map(|(_, name)| name)
+        .ok_or_else(|| anyhow!("no remote branch to compare with; pass --base"))
 }
 
 /// The full hash of the merge base of `HEAD` and `reference`.
@@ -454,4 +520,80 @@ fn parse_diff(diff: &str) -> Vec<FileChange> {
 fn parse_range(range: &str) -> (u32, u32) {
     let (start, count) = range.split_once(',').unwrap_or((range, "1"));
     (start.parse().unwrap_or(0), count.parse().unwrap_or(0))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::test_support::{TempRoot, refusal};
+
+    #[test]
+    fn findings_land_on_the_lines_a_hunk_added() {
+        let diff = "diff --git a/src/a.rs b/src/a.rs\n\
+                    @@ -1 +5,3 @@ fn a()\n\
+                    @@ -20,2 +30,0 @@\n\
+                    @@ -40 +41 @@\n";
+        let lines: Vec<(String, Vec<u32>)> = parse_diff(diff)
+            .into_iter()
+            .map(|file| (file.path.display().to_string(), file.added))
+            .collect();
+        assert_eq!(lines, [("src/a.rs".to_owned(), vec![5, 6, 7, 41])]);
+    }
+
+    #[test]
+    fn a_moved_file_keeps_its_base_path() {
+        let diff = "diff --git a/old/a.rs b/new/a.rs\n\
+                    similarity index 90%\n\
+                    rename from old/a.rs\n\
+                    rename to new/a.rs\n\
+                    @@ -3 +3 @@\n\
+                    diff --git a/gone.rs b/gone.rs\n\
+                    deleted file mode 100644\n\
+                    @@ -1,2 +0,0 @@\n";
+        let files = parse_diff(diff);
+        assert_eq!(files[0].path, Path::new("new/a.rs"));
+        assert_eq!(files[0].from.as_deref(), Some(Path::new("old/a.rs")));
+        assert_eq!(files[0].added, [3]);
+        assert!(files[1].status == Status::Deleted && files[1].added.is_empty());
+    }
+
+    #[test]
+    fn a_stacked_branch_compares_with_the_branch_it_grew_from() {
+        // The remote has `develop` with one commit and `features/v1` one commit further; `HEAD`
+        // is the branch `features/x`, two commits beyond `features/v1`.
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet", "--initial-branch=develop"]);
+        root.commit("develop");
+        root.git(&["update-ref", "refs/remotes/origin/develop", "HEAD"]);
+        root.git(&[
+            "symbolic-ref",
+            "refs/remotes/origin/HEAD",
+            "refs/remotes/origin/develop",
+        ]);
+        root.commit("features/v1");
+        root.git(&["update-ref", "refs/remotes/origin/features/v1", "HEAD"]);
+        root.git(&["checkout", "--quiet", "-b", "features/x"]);
+        root.commit("one");
+        // Pushed after its first commit; the second is not pushed yet.
+        root.git(&["update-ref", "refs/remotes/origin/features/x", "HEAD"]);
+        root.commit("two");
+        // A branch stacked on this one, which already contains HEAD.
+        root.git(&["update-ref", "refs/remotes/origin/features/y", "HEAD"]);
+        assert_eq!(nearest_base(&root.ctx).unwrap(), "origin/features/v1");
+    }
+
+    #[test]
+    fn without_a_remote_branch_to_compare_with_the_base_must_be_passed() {
+        // The only remote branches are the checked out branch itself and one that already
+        // contains `HEAD`; neither is a base.
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet", "--initial-branch=features/x"]);
+        root.commit("one");
+        root.git(&["update-ref", "refs/remotes/origin/features/x", "HEAD"]);
+        root.commit("two");
+        root.git(&["update-ref", "refs/remotes/origin/features/y", "HEAD"]);
+        let error = refusal(nearest_base(&root.ctx));
+        assert_eq!(error, "no remote branch to compare with; pass --base");
+    }
 }

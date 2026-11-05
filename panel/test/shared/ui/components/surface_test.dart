@@ -1,18 +1,20 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("transparent sections derive contrast from their actual canvas", (
     tester,
   ) async {
-    await tester.pumpTestApp(
-      child: const Surface(
-        color: Colors.white,
-        child: Section(
-          backgroundColor: Colors.transparent,
-          child: Text("Transparent"),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Surface(
+          color: Colors.white,
+          child: Section(
+            backgroundColor: Colors.transparent,
+            child: Text("Transparent"),
+          ),
         ),
       ),
     );
@@ -27,18 +29,21 @@ void main() {
       const parent = Color(0xff102030);
       const foreground = Color(0xfff0e0d0);
       const overlay = Color(0x80773322);
-      await tester.pumpTestApp(
-        child: Surface(
-          color: parent,
-          foreground: foreground,
-          secondaryForeground: Colors.orange,
-          child: Surface(
-            color: overlay,
-            child: Builder(
-              builder: (context) {
-                observed = Surface.appearanceOf(context);
-                return const Text("Tag");
-              },
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Surface(
+            color: parent,
+            foreground: foreground,
+            secondaryForeground: Colors.orange,
+            child: Surface(
+              color: overlay,
+              child: Builder(
+                builder: (context) {
+                  observed = Surface.appearanceOf(context);
+                  return const Text("Tag");
+                },
+              ),
             ),
           ),
         ),
@@ -59,23 +64,29 @@ void main() {
       late SurfaceAppearance observed;
       late ThemeData theme;
       const foreground = Colors.yellow;
-      await tester.pumpTestApp(
-        child: Surface(
-          color: Colors.black,
-          foreground: foreground,
-          child: Builder(
-            builder: (context) {
-              observed = Surface.appearanceOf(context);
-              theme = Theme.of(context);
-              return Column(
-                children: [
-                  Text("Inherited", style: theme.textTheme.titleMedium),
-                  const Icon(Icons.label),
-                  const Text("Explicit", style: TextStyle(color: Colors.green)),
-                  const Icon(Icons.book, color: Colors.red),
-                ],
-              );
-            },
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Surface(
+            color: Colors.black,
+            foreground: foreground,
+            child: Builder(
+              builder: (context) {
+                observed = Surface.appearanceOf(context);
+                theme = Theme.of(context);
+                return Column(
+                  children: [
+                    Text("Inherited", style: theme.textTheme.titleMedium),
+                    const Icon(Icons.label),
+                    const Text(
+                      "Explicit",
+                      style: TextStyle(color: Colors.green),
+                    ),
+                    const Icon(Icons.book, color: Colors.red),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       );
@@ -106,29 +117,35 @@ void main() {
       CapturedThemes? captured;
       late SurfaceAppearance source;
       late SurfaceAppearance destination;
-      await tester.pumpTestApp(
-        child: Surface(
-          color: Colors.blue,
-          foreground: Colors.yellow,
-          child: Builder(
-            builder: (context) {
-              source = Surface.appearanceOf(context);
-              captured = InheritedTheme.capture(from: context, to: null);
-              return const SizedBox();
-            },
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Surface(
+            color: Colors.blue,
+            foreground: Colors.yellow,
+            child: Builder(
+              builder: (context) {
+                source = Surface.appearanceOf(context);
+                captured = InheritedTheme.capture(from: context, to: null);
+                return const SizedBox();
+              },
+            ),
           ),
         ),
       );
-      await tester.pumpTestApp(
-        child: Surface(
-          color: Colors.red,
-          foreground: Colors.green,
-          child: captured!.wrap(
-            Builder(
-              builder: (context) {
-                destination = Surface.appearanceOf(context);
-                return const Text("Captured");
-              },
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Surface(
+            color: Colors.red,
+            foreground: Colors.green,
+            child: captured!.wrap(
+              Builder(
+                builder: (context) {
+                  destination = Surface.appearanceOf(context);
+                  return const Text("Captured");
+                },
+              ),
             ),
           ),
         ),
@@ -149,27 +166,30 @@ void main() {
       late SurfaceAppearance observed;
       late Brightness brightness;
       const parent = Color(0xff203040);
-      await tester.pumpTestApp(
-        child: Surface(
-          color: parent,
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              update = setState;
-              brightness = Theme.brightnessOf(context);
-              return SurfaceContainer(
-                duration: const Duration(milliseconds: 100),
-                decoration: BoxDecoration(color: fill),
-                foregroundFor: (context, displayed) => displayed.on(context),
-                child: Builder(
-                  builder: (context) {
-                    observed = Surface.appearanceOf(context);
-                    return const Row(
-                      children: [Icon(Icons.label), Text("Tag")],
-                    );
-                  },
-                ),
-              );
-            },
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Surface(
+            color: parent,
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                update = setState;
+                brightness = Theme.brightnessOf(context);
+                return SurfaceContainer(
+                  duration: const Duration(milliseconds: 100),
+                  decoration: BoxDecoration(color: fill),
+                  foregroundFor: (context, displayed) => displayed.on(context),
+                  child: Builder(
+                    builder: (context) {
+                      observed = Surface.appearanceOf(context);
+                      return const Row(
+                        children: [Icon(Icons.label), Text("Tag")],
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ),
       );

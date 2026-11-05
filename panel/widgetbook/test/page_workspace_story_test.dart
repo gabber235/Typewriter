@@ -1,168 +1,100 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_resources.stories.dart";
 
+import "support/stories.dart";
+
 void main() {
-  testWidgets("graph workspace selects an entry and commits its placement", (
+  testWidgets("opening a graph element shows its fields in the inspector", (
     tester,
   ) async {
-    final transport = ScriptedAuthoringTransport(
-      AsyncData(resourcesWorkspaceStoryDocument()),
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Graph"},
     );
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: ScopedWorkSession(),
-      initial: transport.observation.requireValue,
+
+    await panel.tapOn(find.text("Reward").first);
+
+    expect(visibleFieldValues(), containsAllInOrder(["Reward", "7", "4"]));
+  });
+
+  testWidgets("dragging an element on the graph stores its new placement", (
+    tester,
+  ) async {
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Graph"},
     );
-    addTearDown(workspace.dispose);
-    addTearDown(transport.dispose);
-    skir.ResourceId? selected;
-    await tester.binding.setSurfaceSize(const Size(1280, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      FakeApp(
-        child: ResourcesWorkspaceStory(
-          timeline: false,
-          workspace: workspace,
-          onResourceSelected: (resource) => selected = resource,
-        ),
+    await panel.item("Reward").select();
+    expect(visibleFieldValues(), containsAllInOrder(["Reward", "7", "4"]));
+
+    // Two cells right and one down, at 50 pixels a cell.
+    await panel.graph.drag("Reward", const Offset(100, 50));
+    // Reopening the element reads its placement back from the page.
+    await panel.item("Introduction").select();
+    await panel.item("Reward").select();
+
+    expect(visibleFieldValues(), containsAllInOrder(["Reward", "9", "5"]));
+  });
+
+  testWidgets("editing a name in the inspector renames the element on the "
+      "page", (tester) async {
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Graph"},
+    );
+    await panel.tapOn(find.text("Reward").first);
+
+    await panel.fieldAt(0).enter("Treasure");
+
+    expect(panel.shows("Treasure"), isTrue);
+    expect(panel.shows("Reward"), isFalse);
+  });
+
+  testWidgets("opening a timeline cue shows its frames in the inspector", (
+    tester,
+  ) async {
+    await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Timeline"},
+    );
+
+    // The cue's label lets taps through to the cue beneath it.
+    await tester.tap(find.text("Welcome dialogue").first, warnIfMissed: false);
+    await tester.runStory();
+
+    expect(
+      visibleFieldValues(),
+      containsAllInOrder(["Welcome dialogue", "12", "72"]),
+    );
+  });
+
+  testWidgets("a timeline track menu offers to disconnect or delete", (
+    tester,
+  ) async {
+    final panel = await tester.pumpStory(
+      resourcesWorkspaceUseCase,
+      knobs: {"Layout": "Timeline"},
+    );
+
+    await panel.tapOn(find.byTooltip("Show menu").first);
+
+    expect(panel.shows("Disconnect"), isTrue);
+    expect(panel.shows("Delete resource"), isTrue);
+  });
+
+  testWidgets("a narrow canvas still shows the graph and the inspector", (
+    tester,
+  ) async {
+    await tester.pumpPanel(
+      [window(const Size(550, 720))],
+      at: const PanelLocation.component(
+        ResourcesWorkspaceStory(timeline: false),
       ),
     );
-    await tester.pumpAndSettle();
 
-    final graph = tester.widget<Graph>(find.byType(Graph));
-    graph.onElementsMoved!([
-      GraphMoveCommitPayload(
-        id: const GraphIdentifier("entry:reward"),
-        x: 9,
-        y: 6,
-      ),
-    ]);
-    await tester.pump();
-
-    final reward = workspace.document.resource(
-      skir.ResourceId(value: "entry:reward"),
-    )!;
-    expect(
-      reward.authoredField("placement")!.authoredField("x")!.authoredInteger,
-      BigInt.from(9),
-    );
-    expect(
-      reward.authoredField("placement")!.authoredField("y")!.authoredInteger,
-      BigInt.from(6),
-    );
-
-    await tester.tap(find.text("Reward").first);
-    await tester.pumpAndSettle();
-    expect(selected?.value, "entry:reward");
     expect(find.text("Reward"), findsWidgets);
-    expect(tester.takeException(), isNull);
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.pumpAndSettle();
-  });
-
-  testWidgets("timeline workspace commits cue frames through shared work", (
-    tester,
-  ) async {
-    final transport = ScriptedAuthoringTransport(
-      AsyncData(resourcesWorkspaceStoryDocument()),
-    );
-    final workspace = RealmEditing(
-      persistence: transport.persistence,
-      submissions: ScopedWorkSession(),
-      initial: transport.observation.requireValue,
-    );
-    addTearDown(workspace.dispose);
-    addTearDown(transport.dispose);
-    await tester.binding.setSurfaceSize(const Size(1280, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      FakeApp(
-        child: ResourcesWorkspaceStory(timeline: true, workspace: workspace),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final timeline = tester.widget<Timeline>(find.byType(Timeline));
-    final headers = find.descendant(
-      of: find.byType(Timeline),
-      matching: find.byType(Card),
-    );
-    expect(headers, findsNWidgets(2));
-    expect(find.byType(AdaptiveLeadingLayout), findsNothing);
-    expect(tester.getSize(headers.first).height, lessThanOrEqualTo(60));
-    final menus = find.descendant(
-      of: headers,
-      matching: find.byWidgetPredicate((widget) => widget is PopupMenuButton),
-    );
-    await tester.tap(menus.first);
-    await tester.pumpAndSettle();
-    expect(find.text("Disconnect"), findsOneWidget);
-    expect(find.text("Delete resource"), findsOneWidget);
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    await timeline.onElementsCommited!([
-      TimelineCommitPayload(
-        id: const TimelineIdentifier("cue:dialogue"),
-        startFrame: 24,
-        endFrame: 96,
-      ),
-    ]);
-    await tester.pump();
-
-    final cue = workspace.document.resource(
-      skir.ResourceId(value: "cue:dialogue"),
-    )!;
-    expect(
-      cue
-          .authoredField("placement")!
-          .authoredField("startFrame")!
-          .authoredInteger,
-      BigInt.from(24),
-    );
-    expect(
-      cue
-          .authoredField("placement")!
-          .authoredField("endFrame")!
-          .authoredInteger,
-      BigInt.from(96),
-    );
-    expect(tester.takeException(), isNull);
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.pumpAndSettle();
-  });
-
-  testWidgets("timeline track headers go through the member interaction", (
-    tester,
-  ) async {
-    final wrapped = <skir.ResourceId>[];
-    await tester.binding.setSurfaceSize(const Size(1280, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      FakeApp(
-        child: PortableResourcesInteractionScope(
-          itemBuilder: (context, view, member, child) {
-            wrapped.add(member.resource);
-            return child;
-          },
-          layoutBuilder: (context, view, child) => child,
-          child: const ResourcesWorkspaceStory(timeline: true),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final headers = find.descendant(
-      of: find.byType(Timeline),
-      matching: find.byType(Card),
-    );
-    expect(headers, findsNWidgets(2));
-    expect(wrapped.toSet(), hasLength(2));
-    expect(tester.takeException(), isNull);
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.pumpAndSettle();
+    expect(visibleFieldValues(), contains("Introduction"));
   });
 }

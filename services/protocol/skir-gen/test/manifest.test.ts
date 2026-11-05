@@ -9,14 +9,6 @@ import { committedManifest, MANIFEST_PATH, manifestSource } from "./support.js";
 
 /** The committed manifest as plain YAML data, the independent view admission must preserve. */
 const RAW = parseYaml(readFileSync(MANIFEST_PATH, "utf8")) as {
-  limits: {
-    chunk_bytes: number;
-    window_frames: number;
-    request_max_bytes: number;
-    reply_max_bytes: number;
-    frame_inactivity_ms: number;
-    reply_ttl_ms: number;
-  };
   routes: Array<{ flow: { kind: string; method?: string; payload?: string; updates?: { payload: string } } }>;
 };
 
@@ -57,63 +49,18 @@ describe("manifest admission", () => {
     );
   });
 
-  test("declares the payload framing limits once", () => {
-    expect(committedManifest().limits).toEqual({
-      chunkBytes: RAW.limits.chunk_bytes,
-      windowFrames: RAW.limits.window_frames,
-      requestMaxBytes: RAW.limits.request_max_bytes,
-      replyMaxBytes: RAW.limits.reply_max_bytes,
-      frameInactivityMs: RAW.limits.frame_inactivity_ms,
-      replyTtlMs: RAW.limits.reply_ttl_ms,
-      replyCredit: false,
-    });
-    const source = manifestSource(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"), [
-      "user-organization",
-    ]);
-    expect(() => parseManifest(source.replace(/window_frames: \d+/u, "window_frames: 0"), "routes.yaml")).toThrow(
-      "limits.window_frames",
-    );
-    expect(() => parseManifest(source.replace(/reply_max_bytes: \d+/u, "reply_max_bytes: 1024"), "routes.yaml")).toThrow(
-      "reply_max_bytes must hold at least one chunk",
-    );
-    expect(() => parseManifest(source.replace(/chunk_bytes: \d+/u, "chunk_bytes: 1.5"), "routes.yaml")).toThrow(
-      "limits.chunk_bytes",
-    );
-    expect(() => parseManifest(source.replace(/, reply_ttl_ms: \d+/u, ""), "routes.yaml")).toThrow(
-      "limits.reply_ttl_ms",
-    );
-    expect(() => parseManifest(source.replace(/, frame_inactivity_ms: \d+/u, ""), "routes.yaml")).toThrow(
-      "limits.frame_inactivity_ms",
-    );
-  });
+  const sampleSource = manifestSource(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"), [
+    "user-organization",
+  ]);
 
-  test("declares every backend component that serves or calls a route", () => {
-    const { components } = committedManifest();
-    expect(Object.fromEntries(components)).toEqual({
-      "auth-callout": "backend/access/auth-callout/deploy/base",
-      "auth-typewriter-permissions": "backend/access/auth-typewriter-permissions/deploy/base",
-      "organization-members": "backend/organization/organization-members/deploy/base",
-      "organization-roles": "backend/organization/organization-roles/deploy/base",
-      "service-registration": "backend/service/service-registration/deploy/base",
-      "user-organization": "backend/organization/user-organization/deploy/base",
-    });
-  });
-
-  test("names roles, components and one logical address per channel", () => {
-    const manifest = parse(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"));
-    expect(manifest.roles.get("organization_member")).toEqual({
-      name: "organization_member",
-      side: "panel",
-      tenant: ["organization"],
-      personal: "user",
-    });
-    expect(manifest.roles.get("realm_coordinator")?.personal).toBeUndefined();
-    const [route] = manifest.routes;
-    expect(route).toMatchObject({
-      callers: [{ role: "authenticated_user" }],
-      server: { component: "user-organization" },
-    });
-    expect(route!.flow.kind === "unary" && route!.flow.request.toString()).toBe("user.{user}.sample");
+  test.each([
+    ["a window of no frames", /window_frames: \d+/u, "window_frames: 0", "limits.window_frames"],
+    ["a reply ceiling below one chunk", /reply_max_bytes: \d+/u, "reply_max_bytes: 1024", "reply_max_bytes must hold at least one chunk"],
+    ["a fractional chunk size", /chunk_bytes: \d+/u, "chunk_bytes: 1.5", "limits.chunk_bytes"],
+    ["a missing reply lifetime", /, reply_ttl_ms: \d+/u, "", "limits.reply_ttl_ms"],
+    ["a missing frame inactivity timeout", /, frame_inactivity_ms: \d+/u, "", "limits.frame_inactivity_ms"],
+  ])("rejects %s in the payload framing limits", (_, pattern, replacement, error) => {
+    expect(() => parseManifest(sampleSource.replace(pattern, replacement), "routes.yaml")).toThrow(error);
   });
 
   test("rejects a party naming an undeclared role", () => {

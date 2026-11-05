@@ -2,6 +2,7 @@ library;
 
 export "components/components.dart";
 export "connections/portable_connections.dart";
+export "portable_duration_text.dart";
 export "portable_location_reveal.dart";
 export "portable_named_control.dart";
 export "portable_presentation_expressions.dart";

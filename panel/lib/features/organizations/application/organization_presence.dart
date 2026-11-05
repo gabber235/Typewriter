@@ -64,7 +64,7 @@ class OrganizationPresence extends _$OrganizationPresence {
       userId: userId,
       organizationId: organizationId,
     );
-    _client = ref.watch(natsProvider);
+    _client = await ref.watch(natsProvider.future);
     _subscription = await _client.subscribe(
       OrganizationPresenceRouteEvent.subscriptionPattern(
         organizationId: organizationId,
@@ -138,7 +138,7 @@ class OrganizationPresence extends _$OrganizationPresence {
           key: ActivePanelPresence(
             userId: userId,
             presence: value,
-            observedAt: DateTime.now(),
+            observedAt: clock.now(),
           ),
         });
       case skir.PresenceEvent_leftWrapper(:final value):
@@ -150,7 +150,7 @@ class OrganizationPresence extends _$OrganizationPresence {
 
   void _expire() {
     if (!state.hasValue) return;
-    final oldest = DateTime.now().subtract(_presenceExpiry);
+    final oldest = clock.now().subtract(_presenceExpiry);
     state = AsyncData({
       for (final entry in state.requireValue.entries)
         if (entry.value.observedAt.isAfter(oldest)) entry.key: entry.value,

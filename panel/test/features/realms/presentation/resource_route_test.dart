@@ -2,150 +2,143 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
+  final route = skir.ResourceId(value: "book:route");
+  final intro = skir.ResourceId(value: "page:route");
+
+  /// The Book "Route" holding the page "Intro".
+  final library = [
+    signedIn(ada, organization: acme),
+    realm(
+      books: [
+        Book(
+          bookId: route,
+          title: "Route",
+          icon: "mdi:book",
+          color: Colors.blue,
+        ),
+      ],
+      pages: [Page(pageId: intro, bookId: route, name: "Intro")],
+    ),
+  ];
+
   testWidgets("a page shows its workspace beside its Book's outline", (
     tester,
   ) async {
-    await _pump(tester, _page);
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(1600, 1000)),
+    ]);
+    await panel.openSurface(intro);
 
-    final rail = tester.widget<AuthoredResourceNavigator>(
-      find.byType(AuthoredResourceNavigator),
+    expect(semanticsButtons("Route").isNotEmpty, isTrue);
+    expect(semanticsButtons("Intro").isNotEmpty, isTrue);
+    expect(panel.field("name").value, "Intro");
+    expect(
+      panel.item("Route").rect.right,
+      lessThanOrEqualTo(panel.field("name").rect.left),
+      reason: "the outline sits beside the page's workspace",
     );
-    expect(rail.resource, _book);
-    expect(rail.routedResource, _page);
-    final main = tester.widget<AuthoredResourceInspection>(
-      find.byType(AuthoredResourceInspection),
-    );
-    expect(main.role, skir.PresentationRole.workspace);
-    expect(_container(tester).read(showsSideInspectorProvider(_scope)), isTrue);
   });
 
   testWidgets(
     "a Book without a workspace shows its inspector in the main area",
     (tester) async {
-      await _pump(tester, _book);
+      final panel = await tester.pumpPanel([
+        ...library,
+        window(const Size(1600, 1000)),
+      ]);
+      await panel.openSurface(route);
 
-      final main = tester.widget<AuthoredResourceInspection>(
-        find.byType(AuthoredResourceInspection),
-      );
-      expect(main.role, skir.PresentationRole.inspector);
-      expect(
-        tester
-            .widget<AuthoredResourceNavigator>(
-              find.byType(AuthoredResourceNavigator),
-            )
-            .resource,
-        _book,
-      );
-      expect(find.text("New page"), findsOneWidget);
-      expect(
-        _container(tester).read(showsSideInspectorProvider(_scope)),
-        isFalse,
-      );
+      expect(semanticsButtons("Route").isNotEmpty, isTrue);
+      expect(panel.field("title").value, "Route");
+      expect(panel.shows("New page"), isTrue);
+      expect(panel.inspector.isOpen, isFalse);
     },
   );
 
-  testWidgets("a narrow surface opens its rail from a menu in the heading", (
+  testWidgets("a narrow surface opens its outline from a menu in the heading", (
     tester,
   ) async {
-    await _pump(tester, _page, size: const Size(420, 900));
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(420, 900)),
+    ]);
+    await panel.openSurface(intro);
+    expect(semanticsButtons("Route").isNotEmpty, isFalse);
 
-    expect(find.byType(AuthoredResourceNavigator), findsNothing);
-    expect(find.byTooltip("Open Route"), findsOneWidget);
-    final menu = Focus.of(tester.element(find.byIcon(Icons.menu_open)))
-      ..requestFocus();
-    await tester.pump();
-    expect(menu.hasFocus, isTrue);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
+    await panel.tapOn(find.tooltip("Open Route"));
 
-    final rail = tester.widget<AuthoredResourceNavigator>(
-      find.byType(AuthoredResourceNavigator),
-    );
-    expect(rail.resource, _book);
-    expect(rail.routedResource, _page);
+    expect(semanticsButtons("Route").isNotEmpty, isTrue);
+    expect(semanticsButtons("Intro").isNotEmpty, isTrue);
   });
 
   testWidgets("the creation shortcut works with focus in the surface body", (
     tester,
   ) async {
-    await _pump(tester, _book);
-    expect(_container(tester).read(_bookPages), hasLength(1));
-    final body = find.byType(AuthoredResourceInspection);
-    tester
-        .widgetList<Focus>(
-          find.descendant(of: body, matching: find.byType(Focus)),
-        )
-        .firstWhere((focus) => focus.focusNode?.canRequestFocus ?? false)
-        .focusNode!
-        .requestFocus();
-    await tester.pumpAndSettle();
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(1600, 1000)),
+    ]);
+    await panel.openSurface(route);
+    await panel.tapOn(find.text("Route").last);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
-    await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.keyN);
 
-    expect(_container(tester).read(_bookPages), hasLength(2));
+    expect(panel.working.relations.children[route], hasLength(2));
   });
 
-  testWidgets("a section has no rail and offers to create its members", (
+  testWidgets("a section has no outline and offers to create its members", (
     tester,
   ) async {
-    await _pump(tester, fixtureLibraryId);
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(1600, 1000)),
+    ]);
+    await panel.openSurface(libraryId);
 
-    expect(find.byType(AuthoredResourceNavigator), findsNothing);
-    expect(find.text("New book"), findsOneWidget);
+    expect(panel.shows("New book"), isTrue);
+    expect(semanticsButtons("Intro").isNotEmpty, isFalse);
   });
-}
 
-final _scope = AuthoringScope(
-  organizationId: skir.recordId("organization:route"),
-  realmId: skir.recordId("realm:route"),
-);
-final _book = skir.ResourceId(value: "book:route");
-final _page = skir.ResourceId(value: "page:route");
+  for (final (section, id) in [("Library", libraryId), ("Tags", taxonomyId)]) {
+    testWidgets("a screen reader opens $section from the realm sidebar", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel([
+        ...library,
+        window(const Size(1600, 1000)),
+      ]);
 
-/// The resources the routed Book owns.
-final _bookPages = Provider(
-  (ref) =>
-      ref
-          .watch(workingAuthoringDocumentProvider(_scope))
-          .requireValue
-          .relations
-          .children[_book] ??
-      const <skir.ResourceId>[],
-);
+      await panel.activateWithScreenReader(section);
 
-ProviderContainer _container(WidgetTester tester) =>
-    ProviderScope.containerOf(tester.element(find.byType(ResourceSurface)));
+      await panel.eventually(
+        () => expect(
+          panel.path,
+          "/organization/acme/realm/main/resource/${id.value}",
+        ),
+      );
+    });
+  }
 
-Future<void> _pump(
-  WidgetTester tester,
-  skir.ResourceId resource, {
-  Size size = const Size(1600, 1000),
-}) async {
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  final document = fixtureAuthoringDocument(
-    realm: true,
-    books: [
-      Book(bookId: _book, title: "Route", icon: "mdi:book", color: Colors.blue),
-    ],
-    pages: [Page(pageId: _page, bookId: _book, name: "Intro")],
-  );
-  await tester.pumpTestApp(
-    overrides: [
-      organizationIdProvider.overrideWith((_) => _scope.organizationId),
-      realmIdProvider.overrideWith((_) => _scope.realmId),
-      routedResourceIdProvider.overrideWithValue(resource),
-      ...authoringFixtureOverrides(scope: _scope, document: document),
-    ],
-    child: Scaffold(
-      body: ResourceSurface(scope: _scope, resource: resource),
-    ),
-  );
+  testWidgets("a surface that opens behind search leaves typing in search", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(1600, 1000)),
+    ]);
+    await panel.openSurface(route);
+    // Search opens before the realm's new navigator pushes Library, which it
+    // does a frame later, once its guards ran.
+    await panel.activateWithScreenReader("Library", settle: false);
+    await panel.activateWithScreenReader("Search");
+
+    expect(panel.routedResource, libraryId.value);
+    expect(panel.queryBar.isFocused, isTrue, reason: "search keeps focus");
+    await panel.queryBar.type("Route");
+    expect(panel.queryBar.text, "Route");
+  });
 }

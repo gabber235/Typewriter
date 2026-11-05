@@ -60,11 +60,9 @@ val PortableExpressionCheckingTest by testSuite {
     val int32 = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
     val mode = checkLiteral(RoundingMode.Floor.toDataValue())
 
-    fun read(id: ExpressionBindingId) = checkInput(id)
-
     test("rounding keeps the declared unsigned width and the missing increment") {
         val unsigned = integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR).use
-        val expression = checkCall("number.round", read(candidate), read(parent), mode)
+        val expression = checkCall("number.round", checkInput(candidate), checkInput(parent), mode)
         val inputs = mapOf(candidate to nominalExpressionType(unsigned), parent to nominalExpressionType(unsigned, true))
         checker.checkExpressionCodes(expression, inputs, nominalExpressionType(unsigned, true)) shouldBe emptyList()
         checker.checkExpressionCodes(expression, inputs, nominalExpressionType(unsigned)) shouldBe
@@ -73,7 +71,7 @@ val PortableExpressionCheckingTest by testSuite {
 
     test("a literal increment adopts the decimal family of the candidate") {
         checker.checkExpressionCodes(
-            checkCall("number.round", read(candidate), checkLiteral(DataValue.DecimalWrapper("0.01")), mode),
+            checkCall("number.round", checkInput(candidate), checkLiteral(DataValue.DecimalWrapper("0.01")), mode),
             mapOf(candidate to nominalExpressionType(decimal)),
             nominalExpressionType(decimal),
         ) shouldBe emptyList()
@@ -81,7 +79,7 @@ val PortableExpressionCheckingTest by testSuite {
 
     test("a literal increment adopts the narrow float width of the candidate") {
         checker.checkExpressionCodes(
-            checkCall("number.round", read(candidate), checkLiteral(DataValue.FloatWrapper(0.5)), mode),
+            checkCall("number.round", checkInput(candidate), checkLiteral(DataValue.FloatWrapper(0.5)), mode),
             mapOf(candidate to nominalExpressionType(floating)),
             nominalExpressionType(floating),
         ) shouldBe emptyList()
@@ -89,7 +87,7 @@ val PortableExpressionCheckingTest by testSuite {
 
     test("numbers of different families do not mix") {
         checker.checkExpressionCodes(
-            checkCall("number.round", read(candidate), checkLiteral(DataValue.DecimalWrapper("0.5")), mode),
+            checkCall("number.round", checkInput(candidate), checkLiteral(DataValue.DecimalWrapper("0.5")), mode),
             mapOf(candidate to nominalExpressionType(floating)),
             nominalExpressionType(floating),
         ) shouldBe listOf(CheckFailure.NumericFamilyMismatch)
@@ -98,7 +96,7 @@ val PortableExpressionCheckingTest by testSuite {
     test("the widest operand decides the width of a numeric result") {
         val narrow = integerScalar(IntegerWidth.SIGNED_EIGHT).use
         val bindings = mapOf(candidate to nominalExpressionType(narrow), parent to nominalExpressionType(int32))
-        val sum = checkCall("number.add", read(candidate), read(parent))
+        val sum = checkCall("number.add", checkInput(candidate), checkInput(parent))
         checker.checkExpressionCodes(sum, bindings, nominalExpressionType(int32)) shouldBe emptyList()
         checker.checkExpressionCodes(sum, bindings, nominalExpressionType(narrow)) shouldBe
             listOf(CheckFailure.IncompatibleExpressionResultType)
@@ -106,7 +104,7 @@ val PortableExpressionCheckingTest by testSuite {
 
     test("a wider declared source does not narrow implicitly") {
         checker.checkExpressionCodes(
-            read(parent),
+            checkInput(parent),
             mapOf(parent to nominalExpressionType(floatScalar(FloatWidth.SIXTY_FOUR).use)),
             nominalExpressionType(floating),
         ) shouldBe listOf(CheckFailure.IncompatibleExpressionResultType)
@@ -114,17 +112,17 @@ val PortableExpressionCheckingTest by testSuite {
 
     test("a fallback handles a missing parent explicitly") {
         val bindings = mapOf(candidate to nominalExpressionType(text), parent to nominalExpressionType(text, true))
-        checker.checkExpressionCodes(read(parent), bindings, nominalExpressionType(text)) shouldBe
+        checker.checkExpressionCodes(checkInput(parent), bindings, nominalExpressionType(text)) shouldBe
             listOf(CheckFailure.ExpressionResultMayBeMissing)
         checker.checkExpressionCodes(
-            ExpressionNode.createOrElse(value = read(parent), fallback = read(candidate)),
+            ExpressionNode.createOrElse(value = checkInput(parent), fallback = checkInput(candidate)),
             bindings,
             nominalExpressionType(text),
         ) shouldBe emptyList()
     }
 
     test("an unknown binding is reported") {
-        checker.checkExpressionCodes(read(candidate), emptyMap(), nominalExpressionType(text)) shouldBe
+        checker.checkExpressionCodes(checkInput(candidate), emptyMap(), nominalExpressionType(text)) shouldBe
             listOf(CheckFailure.UnknownExpressionBinding)
     }
 
@@ -158,7 +156,7 @@ val PortableExpressionCheckingTest by testSuite {
     }
 
     test("explicit type arguments are closed resolvable types of the declared count") {
-        fun convert(arguments: List<TypeTemplate>) = checkCall("number.convert", read(candidate), typeArguments = arguments)
+        fun convert(arguments: List<TypeTemplate>) = checkCall("number.convert", checkInput(candidate), typeArguments = arguments)
         val narrow = integerScalar(IntegerWidth.SIGNED_EIGHT)
         val bindings = mapOf(candidate to nominalExpressionType(int32))
         checker.checkExpressionCodes(convert(listOf(narrow.template)), bindings, nominalExpressionType(narrow.use)) shouldBe emptyList()
@@ -175,17 +173,17 @@ val PortableExpressionCheckingTest by testSuite {
         val bindings = mapOf(candidate to nominalExpressionType(profileId.use()), parent to nominalExpressionType(text))
         val title = checkLiteral(DataValue.StringValueWrapper("title"))
         checker.checkExpressionCodes(
-            checkCall("record.with_field", read(candidate), title, read(parent)),
+            checkCall("record.with_field", checkInput(candidate), title, checkInput(parent)),
             bindings,
             nominalExpressionType(profileId.use()),
         ) shouldBe emptyList()
         checker.checkExpressionCodes(
-            checkCall("record.with_field", read(candidate), read(parent), read(parent)),
+            checkCall("record.with_field", checkInput(candidate), checkInput(parent), checkInput(parent)),
             bindings,
             nominalExpressionType(profileId.use()),
         ) shouldBe listOf(CheckFailure.LiteralRequired)
         checker.checkExpressionCodes(
-            checkCall("record.with_field", read(candidate), title, checkLiteral(DataValue.BooleanWrapper(true))),
+            checkCall("record.with_field", checkInput(candidate), title, checkLiteral(DataValue.BooleanWrapper(true))),
             bindings,
             nominalExpressionType(profileId.use()),
         ) shouldBe listOf(CheckFailure.InvalidOperandType)
@@ -195,36 +193,12 @@ val PortableExpressionCheckingTest by testSuite {
         val formatted =
             checkCall(
                 "number.format",
-                read(candidate),
+                checkInput(candidate),
                 checkLiteral(DataValue.integer(java.math.BigInteger.TWO)),
                 checkLiteral(DataValue.StringValueWrapper("en")),
             )
-        ExpressionNode.createAnd(left = checkCall("boolean.not", read(parent)), right = formatted).ruleProfileViolations() shouldBe
+        ExpressionNode.createAnd(left = checkCall("boolean.not", checkInput(parent)), right = formatted).ruleProfileViolations() shouldBe
             listOf(CheckFailure.OutsideRuleProfile)
-        checkCall("text.trim_end", read(candidate)).ruleProfileViolations() shouldBe emptyList()
+        checkCall("text.trim_end", checkInput(candidate)).ruleProfileViolations() shouldBe emptyList()
     }
 }
-
-internal fun checkInput(
-    binding: ExpressionBindingId,
-    path: ValuePath = ValuePath.root,
-): ExpressionNode = ExpressionNode.createInput(binding = binding, path = path)
-
-internal fun checkLiteral(value: DataValue): ExpressionNode = ExpressionNode.LiteralWrapper(value)
-
-internal fun checkCall(
-    operation: String,
-    vararg arguments: ExpressionNode,
-    typeArguments: List<TypeTemplate> = emptyList(),
-): ExpressionNode =
-    ExpressionNode.createCall(operation = OperationId(value = operation), typeArguments = typeArguments, arguments = arguments.toList())
-
-internal fun checkLambda(
-    arity: Int,
-    body: ExpressionNode,
-): ExpressionNode = ExpressionNode.createLambda(arity = arity, body = body)
-
-internal fun checkLocal(
-    slot: Int,
-    depth: Int = 0,
-): ExpressionNode = ExpressionNode.createLocal(depth = depth, slot = slot, path = ValuePath.root)

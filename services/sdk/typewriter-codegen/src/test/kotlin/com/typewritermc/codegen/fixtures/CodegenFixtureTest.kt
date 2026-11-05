@@ -39,18 +39,3 @@ val CodegenFixtureTest by testSuite {
         }
     }
 }
-
-/**
- * Pairs each expected error with one distinct reported error, so a marker accepts exactly one report and a diagnostic
- * reported twice at the same position fails. Returns the expected errors left unpaired and the reports left unpaired.
- */
-private fun List<ExpectedError>.pairWith(reported: List<ReportedError>): Pair<List<ExpectedError>, List<ReportedError>> {
-    val unpaired = reported.toMutableList()
-    val missing =
-        filter { expected ->
-            val match = unpaired.firstOrNull { it.matches(expected) } ?: return@filter true
-            unpaired.remove(match)
-            false
-        }
-    return missing to unpaired
-}

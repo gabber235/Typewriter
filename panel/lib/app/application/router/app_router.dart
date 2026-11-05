@@ -54,7 +54,7 @@ class AppRouter extends NavigationRouter {
   AppRouter(
     this.access,
     this.workSessionLoss, {
-    WorkSessionLossRouteConfirmation? confirmWorkSessionLoss,
+    this.confirmWorkSessionLoss,
     this.confirmWorkSessionPop,
   }) : _authGuard = _AuthGuard(access.authentication),
        _unAuthGuard = _UnAuthGuard(
@@ -64,12 +64,6 @@ class AppRouter extends NavigationRouter {
        _organizationGuard = _OrganizationGuard(
          access.organizations,
          _IndexRedirectCoordinator(),
-       ),
-       _workSessionLossGuard = _WorkSessionLossGuard(
-         access,
-         workSessionLoss,
-         confirmWorkSessionLoss ??
-             (resolver) => showWorkSessionLossConfirmation(resolver.context),
        );
 
   final RouteAccessCoordinator access;
@@ -77,8 +71,17 @@ class AppRouter extends NavigationRouter {
   final _AuthGuard _authGuard;
   final _UnAuthGuard _unAuthGuard;
   final _OrganizationGuard _organizationGuard;
-  final _WorkSessionLossGuard _workSessionLossGuard;
+  final WorkSessionLossRouteConfirmation? confirmWorkSessionLoss;
   final WorkSessionLossPopConfirmation? confirmWorkSessionPop;
+
+  /// Asks before navigation drops protected work. The dialog needs the
+  /// navigator's own context: a guard's resolver context sits above it.
+  late final _WorkSessionLossGuard _workSessionLossGuard =
+      _WorkSessionLossGuard(
+        access,
+        workSessionLoss,
+        confirmWorkSessionLoss ?? (_) => _confirmWithDialog(),
+      );
 
   @override
   int get navigationRevision => _navigationRevision;
@@ -122,6 +125,10 @@ class AppRouter extends NavigationRouter {
   Future<bool> _confirmPop() {
     final supplied = confirmWorkSessionPop;
     if (supplied != null) return supplied();
+    return _confirmWithDialog();
+  }
+
+  Future<bool> _confirmWithDialog() {
     final context = navigatorKey.currentContext;
     if (context == null) return Future.value(false);
     return showWorkSessionLossConfirmation(context);

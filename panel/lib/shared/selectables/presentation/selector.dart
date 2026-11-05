@@ -122,6 +122,21 @@ class Selector extends HookConsumerWidget {
       pendingContextPosition.value = globalPosition;
     }
 
+    void activate({bool? isMultiSelect}) {
+      Actions.maybeInvoke(
+        context,
+        SelectedSelectorIntent(
+          selectableId: selectableId,
+          focusNode: focusNode,
+          throughTap: false,
+          throughActivateIntent: true,
+        ),
+      );
+      ref
+          .read(selectionProvider.notifier)
+          .select(selectableId, isMultiSelect: isMultiSelect);
+    }
+
     useEffect(() {
       final position = pendingContextPosition.value;
       if (position == null) return null;
@@ -155,125 +170,108 @@ class Selector extends HookConsumerWidget {
       return null;
     }, [isFocused.value]);
 
+    // The item is one control for assistive technology: its selection,
+    // focus and tap merge with the text it shows, so a screen reader names
+    // and activates it by what a sighted user reads, however deep the item
+    // nests that text. Activating it selects, as a tap does.
     return KeyedSubtree(
       key: Key(selectableId.id),
-      child: ContextMenuRegion(
-        key: anchorKey,
-        childFocusNode: focusNode,
-        onClose: () => contextTargets.value = null,
-        items: selectionOperationMenuItems(operations, ref),
-        enableGestures: false,
-        controller: controller,
-        child: GestureDetector(
-          onSecondaryTapUp: (details) =>
-              activateContext(details.globalPosition),
-          onLongPressStart: (details) =>
-              activateContext(details.globalPosition),
-          onDoubleTap: onDoubleTap,
-          onTapUp: ContextMenuRegion.onTapUp(
-            controller,
-            onContextTap: (details) => activateContext(details.globalPosition),
-            orElse: (_) {
-              Actions.maybeInvoke(
-                context,
-                SelectedSelectorIntent(
-                  selectableId: selectableId,
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          selected: isSelected,
+          child: ContextMenuRegion(
+            key: anchorKey,
+            childFocusNode: focusNode,
+            onClose: () => contextTargets.value = null,
+            items: selectionOperationMenuItems(operations, ref),
+            enableGestures: false,
+            controller: controller,
+            child: GestureDetector(
+              onSecondaryTapUp: (details) =>
+                  activateContext(details.globalPosition),
+              onLongPressStart: (details) =>
+                  activateContext(details.globalPosition),
+              onDoubleTap: onDoubleTap,
+              onTapUp: ContextMenuRegion.onTapUp(
+                controller,
+                onContextTap: (details) =>
+                    activateContext(details.globalPosition),
+                orElse: (_) {
+                  Actions.maybeInvoke(
+                    context,
+                    SelectedSelectorIntent(
+                      selectableId: selectableId,
+                      focusNode: focusNode,
+                      throughTap: true,
+                      throughActivateIntent: false,
+                    ),
+                  );
+                  ref.read(selectionProvider.notifier).select(selectableId);
+                  focusNode.requestFocus();
+                },
+              ),
+              child: SelectableScope(
+                id: selectableId,
+                child: FocusableActionDetector(
                   focusNode: focusNode,
-                  throughTap: true,
-                  throughActivateIntent: false,
-                ),
-              );
-              ref.read(selectionProvider.notifier).select(selectableId);
-              focusNode.requestFocus();
-            },
-          ),
-          child: SelectableScope(
-            id: selectableId,
-            child: FocusableActionDetector(
-              focusNode: focusNode,
-              shortcuts: {
-                ...shortcuts,
-                const SingleActivator(LogicalKeyboardKey.contextMenu):
-                    const SelectorContextMenuIntent(),
-                const SingleActivator(LogicalKeyboardKey.f10, shift: true):
-                    const SelectorContextMenuIntent(),
-              },
-              onShowHoverHighlight: (hover) => isHovered.value = hover,
-              mouseCursor: SystemMouseCursors.click,
-              actions: {
-                SelectorContextMenuIntent:
-                    CallbackAction<SelectorContextMenuIntent>(
-                      onInvoke: (_) {
-                        final anchor = anchorKey.currentContext
-                            ?.findRenderObject();
-                        if (anchor is RenderBox && anchor.attached) {
-                          activateContext(
-                            anchor.localToGlobal(
-                              anchor.size.center(Offset.zero),
-                            ),
-                          );
-                        }
-                        return null;
+                  shortcuts: {
+                    ...shortcuts,
+                    const SingleActivator(LogicalKeyboardKey.contextMenu):
+                        const SelectorContextMenuIntent(),
+                    const SingleActivator(LogicalKeyboardKey.f10, shift: true):
+                        const SelectorContextMenuIntent(),
+                  },
+                  onShowHoverHighlight: (hover) => isHovered.value = hover,
+                  mouseCursor: SystemMouseCursors.click,
+                  actions: {
+                    SelectorContextMenuIntent:
+                        CallbackAction<SelectorContextMenuIntent>(
+                          onInvoke: (_) {
+                            final anchor = anchorKey.currentContext
+                                ?.findRenderObject();
+                            if (anchor is RenderBox && anchor.attached) {
+                              activateContext(
+                                anchor.localToGlobal(
+                                  anchor.size.center(Offset.zero),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                        ),
+                    ActivateIntent: CallbackAction(onInvoke: (_) => activate()),
+                    ActivateAllIntent: CallbackAction(
+                      onInvoke: (_) => activate(isMultiSelect: true),
+                    ),
+                  },
+                  child: PixelScaleTransition(
+                    pixelScale: TweenSequence<double>([
+                      TweenSequenceItem<double>(
+                        tween: Tween<double>(
+                          begin: 0,
+                          end: 15,
+                        ).curved(Curves.easeInOutCubicEmphasized),
+                        weight: .5,
+                      ),
+                      TweenSequenceItem<double>(
+                        tween: Tween<double>(
+                          begin: 15,
+                          end: 0,
+                        ).curved(Curves.easeInOut),
+                        weight: .5,
+                      ),
+                    ]).animate(focusAnimation),
+                    child: HookBuilder(
+                      builder: (context) {
+                        return builder(
+                          isSelected,
+                          isFocused.value,
+                          isHovered.value,
+                        );
                       },
                     ),
-                ActivateIntent: CallbackAction(
-                  onInvoke: (_) {
-                    Actions.maybeInvoke(
-                      context,
-                      SelectedSelectorIntent(
-                        selectableId: selectableId,
-                        focusNode: focusNode,
-                        throughTap: false,
-                        throughActivateIntent: true,
-                      ),
-                    );
-                    return ref
-                        .read(selectionProvider.notifier)
-                        .select(selectableId);
-                  },
-                ),
-                ActivateAllIntent: CallbackAction(
-                  onInvoke: (_) {
-                    Actions.maybeInvoke(
-                      context,
-                      SelectedSelectorIntent(
-                        selectableId: selectableId,
-                        focusNode: focusNode,
-                        throughTap: false,
-                        throughActivateIntent: true,
-                      ),
-                    );
-                    return ref
-                        .read(selectionProvider.notifier)
-                        .select(selectableId, isMultiSelect: true);
-                  },
-                ),
-              },
-              child: PixelScaleTransition(
-                pixelScale: TweenSequence<double>([
-                  TweenSequenceItem<double>(
-                    tween: Tween<double>(
-                      begin: 0,
-                      end: 15,
-                    ).curved(Curves.easeInOutCubicEmphasized),
-                    weight: .5,
                   ),
-                  TweenSequenceItem<double>(
-                    tween: Tween<double>(
-                      begin: 15,
-                      end: 0,
-                    ).curved(Curves.easeInOut),
-                    weight: .5,
-                  ),
-                ]).animate(focusAnimation),
-                child: HookBuilder(
-                  builder: (context) {
-                    return builder(
-                      isSelected,
-                      isFocused.value,
-                      isHovered.value,
-                    );
-                  },
                 ),
               ),
             ),

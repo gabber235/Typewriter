@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final id = skir.ResourceId(value: "book:issues");
@@ -12,8 +12,7 @@ void main() {
       segments: [skir.PathSegment.createField(name: "title")],
     ),
   );
-  final base = fixtureAuthoringDocument(
-    realm: true,
+  final base = realmDocument(
     books: [
       Book(
         bookId: id,
@@ -24,80 +23,31 @@ void main() {
       ),
     ],
   );
-  AuthoringDocument title(skir.DataValue value) {
-    final entry = base.entry(id)!;
-    return base.copyWith(
-      entries: {
-        ...base.entries,
-        id: skir.AuthoringResource(
-          id: id,
-          content: skir.AuthoringRecord(
-            configuration: entry.content.configuration,
-            fields: [
-              for (final field in entry.content.fields)
-                if (field.name == "title")
-                  skir.FieldValue(name: field.name, value: value)
-                else
-                  field,
-            ],
-          ),
-        ),
-      },
-    );
-  }
-
-  RealmPublicationView saved(
-    AuthoringDocument document, {
-    bool evidence = true,
-  }) => RealmPublicationView.blocked(
-    skir.PublicationStatus_Blocked(
-      baseline: skir.PublicationBaseline.initial,
-      blockers: skir.PublicationBlockers(
-        first: skir.PublicationBlocker(
-          details: skir.PublicationDiagnosticDetails(
-            id: skir.DiagnosticId(value: "original"),
-            origin: skir.RuleOrigin(
-              owner: skir.TypeDefinitionId(
-                typeId: skir.TypeId.createQualified(
-                  namespace: "typewriter",
-                  name: "publication",
-                ),
-                revision: 1,
-              ),
-              ordinal: 0,
-            ),
-            code: "unfinished_value",
-            message: "A required value is unfinished.",
-            primary: at,
-            related: const [],
-            evidence: evidence
-                ? skir.DiagnosticEvidence(
-                    catalog: document.generation,
-                    expectations: [
-                      skir.EditExpectation.createResource(
-                        id: id,
-                        expected: document.resource(id),
-                      ),
-                    ],
-                  )
-                : null,
-          ),
-        ),
-        additional: const [],
+  final unfilled = base.changedRemotely(
+    (edit) => edit.set(at, skir.DataValue.unfilled),
+  );
+  final origin = skir.RuleOrigin(
+    owner: skir.TypeDefinitionId(
+      typeId: skir.TypeId.createQualified(
+        namespace: "typewriter",
+        name: "publication",
       ),
-      notices: const [],
-      confirmedChanges: const [],
-      pendingRoots: const [],
+      revision: 1,
     ),
+    ordinal: 0,
   );
 
   test(
     "local and witnessed saved causes share one issue and original identity",
     () {
-      final document = title(skir.DataValue.unfilled);
+      final document = unfilled;
       final issues = ResourceIssues.evaluate(
         document: document,
-        publication: saved(document),
+        publication: unfinishedValueBlocking(
+          at,
+          origin: origin,
+          evidence: document.evidenceOf(id),
+        ),
       );
       final unfinished = issues.findings
           .where((f) => f.diagnostic.code == "unfinished_value")
@@ -111,10 +61,14 @@ void main() {
   );
 
   test("fixing an unsaved value clears current red state but preserves saved blocker", () {
-    final previous = title(skir.DataValue.unfilled);
+    final previous = unfilled;
     final issues = ResourceIssues.evaluate(
       document: base,
-      publication: saved(previous),
+      publication: unfinishedValueBlocking(
+        at,
+        origin: origin,
+        evidence: previous.evidenceOf(id),
+      ),
     );
     expect(
       issues
@@ -129,7 +83,11 @@ void main() {
   test(
     "retained publication reviews cannot refresh external runtime evidence",
     () {
-      final review = saved(base);
+      final review = unfinishedValueBlocking(
+        at,
+        origin: origin,
+        evidence: base.evidenceOf(id),
+      );
       expect(review.projectSavedIssues(base).single.current, isTrue);
       for (final retained in [
         RealmPublicationView.checking(display: review.review),
@@ -152,7 +110,7 @@ void main() {
   test("missing witnesses never make saved findings current", () {
     final issues = ResourceIssues.evaluate(
       document: base,
-      publication: saved(base, evidence: false),
+      publication: unfinishedValueBlocking(at, origin: origin),
     );
     expect(issues.savedFor(id).single.current, isFalse);
   });
@@ -165,7 +123,11 @@ void main() {
     );
     final issues = ResourceIssues.evaluate(
       document: changed,
-      publication: saved(base),
+      publication: unfinishedValueBlocking(
+        at,
+        origin: origin,
+        evidence: base.evidenceOf(id),
+      ),
     );
     expect(issues.savedFor(id).single.current, isFalse);
   });

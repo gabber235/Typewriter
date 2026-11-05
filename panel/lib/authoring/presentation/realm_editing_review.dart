@@ -2,7 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Domain comparison content. Actions and retention belong to the shared owner.
+/// Domain comparison content. Actions and retention belong to the shared owner;
+/// the review of a conflict is the one the editing keeps for the group.
 final class RealmEditingReview extends HookWidget {
   const RealmEditingReview({
     required this.workspace,
@@ -18,25 +19,17 @@ final class RealmEditingReview extends HookWidget {
     useListenable(workspace);
     final group = workspace.state.groups[id];
     final phase = group?.phase;
-    final refresh = useState(0);
-    final needsReview =
-        phase is EditGroupConflict ||
-        phase is EditGroupResourceMissing ||
-        phase is EditGroupRepeatedContention;
-    final pending = useMemoized(
-      () => needsReview ? workspace.reviewConflict(id) : null,
-      [workspace, id, needsReview, refresh.value],
-    );
-    final reviewed = useFuture(pending);
-    if (needsReview) {
-      final review = reviewed.data;
+    if (phase != null && phase.needsReview) {
+      final reviewed =
+          workspace.conflictReview(id) ?? const EditReview.reading();
+      final review = reviewed.comparison;
+      final reading = reviewed is EditReviewReading;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (reviewed.connectionState != ConnectionState.done)
-            const Text("Loading current saved values"),
-          if (reviewed.error != null)
+          if (reading) const Text("Loading current saved values"),
+          if (reviewed is EditReviewFailed)
             const Text(
               "Current saved values are unavailable. Your edits are retained.",
             ),
@@ -44,9 +37,7 @@ final class RealmEditingReview extends HookWidget {
             AuthoringConflictComparison(
               key: ValueKey(review),
               review: review,
-              enabled:
-                  reviewed.connectionState == ConnectionState.done &&
-                  reviewed.error == null,
+              enabled: !reading,
               onKeepMine: review.canKeepMine
                   ? () => workspace.resolveConflict(
                       review,
@@ -60,7 +51,7 @@ final class RealmEditingReview extends HookWidget {
               onResolved: onResolved,
             ),
           TextButton(
-            onPressed: () => refresh.value++,
+            onPressed: () => workspace.refreshConflictReview(id),
             child: const Text("Refresh review"),
           ),
         ],

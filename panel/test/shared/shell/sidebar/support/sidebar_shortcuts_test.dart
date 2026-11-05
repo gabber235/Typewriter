@@ -1,106 +1,57 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../../support/test_utils.dart";
-
-Widget _focusableChild(FocusNode node) =>
-    Focus(focusNode: node, child: const SizedBox.shrink());
+/// The sidebar with focus inside its navigation, where its resize keys act.
+final _sidebar = SizedBox.fromSize(
+  size: desktopWindow,
+  child: Align(
+    alignment: Alignment.centerLeft,
+    child: Sidebar(
+      child: Focus(
+        autofocus: true,
+        child: Semantics(
+          label: "Navigation",
+          container: true,
+          child: const SizedBox.expand(),
+        ),
+      ),
+    ),
+  ),
+);
 
 void main() {
-  group("Sidebar shortcuts", () {
-    testWidgets("comma shrinks and period expands (small step)", (
-      tester,
-    ) async {
-      final focusNode = FocusNode(debugLabel: "sidebar_focus");
+  testWidgets("comma shrinks the sidebar and period restores it", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(_sidebar),
+    );
+    final initial = panel.boundsOf("Navigation").width;
 
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 1200,
-            height: 800,
-            child: Sidebar(child: _focusableChild(focusNode)),
-          ),
-        ),
-        settle: true,
-      );
+    await panel.press(LogicalKeyboardKey.comma);
+    expect(panel.boundsOf("Navigation").width, lessThan(initial));
 
-      focusNode.requestFocus();
-      await tester.pumpAndSettle();
+    await panel.press(LogicalKeyboardKey.period);
+    expect(panel.boundsOf("Navigation").width, initial);
+  });
 
-      final container = tester.container();
-      final initial = container.read(sidebarSizeProvider);
-      expect(initial, equals(kSidebarDefaultSize));
+  testWidgets("shift resizes the sidebar in larger steps", (tester) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(_sidebar),
+    );
+    final initial = panel.boundsOf("Navigation").width;
+    await panel.press(LogicalKeyboardKey.comma);
+    final smallStep = initial - panel.boundsOf("Navigation").width;
+    await panel.press(LogicalKeyboardKey.period);
 
-      final sidebarWidth = MediaQuery.of(tester.element(find.byType(Sidebar)))
-          .size
-          .width;
-      final sidebarMax =
-          (sidebarWidth * kSidebarMaxFactor).floorToDouble() - 1.0;
-      final sidebarMin = min(kSidebarMinSize, sidebarMax);
-      final effectiveBefore = initial.clamp(max(0.0, sidebarMin), sidebarMax);
+    await panel.pressShifted(LogicalKeyboardKey.comma);
+    final largeStep = initial - panel.boundsOf("Navigation").width;
+    expect(largeStep, greaterThan(smallStep));
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.comma);
-      await tester.pump();
-
-      final afterShrink = container.read(sidebarSizeProvider);
-      expect(afterShrink, equals(effectiveBefore - kSidebarResizeSmallStep));
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.period);
-      await tester.pump();
-
-      final afterExpand = container.read(sidebarSizeProvider);
-      expect(afterExpand, equals(effectiveBefore));
-    });
-
-    testWidgets("shift+comma shrinks and shift+period expands (large step)", (
-      tester,
-    ) async {
-      final focusNode = FocusNode(debugLabel: "sidebar_focus");
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 1200,
-            height: 800,
-            child: Sidebar(child: _focusableChild(focusNode)),
-          ),
-        ),
-        settle: true,
-      );
-
-      focusNode.requestFocus();
-      await tester.pumpAndSettle();
-
-      final container = tester.container();
-      final initial = container.read(sidebarSizeProvider);
-
-      final sidebarWidth = MediaQuery.of(tester.element(find.byType(Sidebar)))
-          .size
-          .width;
-      final sidebarMax =
-          (sidebarWidth * kSidebarMaxFactor).floorToDouble() - 1.0;
-      final sidebarMin = min(kSidebarMinSize, sidebarMax);
-      final effectiveBefore = initial.clamp(max(0.0, sidebarMin), sidebarMax);
-
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.comma);
-      await tester.pump();
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.comma);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.pump();
-
-      final afterShrink = container.read(sidebarSizeProvider);
-      expect(afterShrink, equals(effectiveBefore - kSidebarResizeLargeStep));
-
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.period);
-      await tester.pump();
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.period);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.pump();
-
-      final afterExpand = container.read(sidebarSizeProvider);
-      expect(afterExpand, equals(effectiveBefore));
-    });
+    await panel.pressShifted(LogicalKeyboardKey.period);
+    expect(panel.boundsOf("Navigation").width, initial);
   });
 }

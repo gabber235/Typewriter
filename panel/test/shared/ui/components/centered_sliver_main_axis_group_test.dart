@@ -1,108 +1,78 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/test_utils.dart";
+const viewport = "Viewport";
 
 void main() {
-  Widget scrollView(List<Widget> slivers) {
-    return testApp(child: CustomScrollView(slivers: slivers));
-  }
-
   testWidgets("centers a short group as one block without scrolling", (
     tester,
   ) async {
-    await tester.pumpWidget(
-      scrollView([
-        CenteredSliverMainAxisGroup(
-          slivers: const [
-            SliverToBoxAdapter(child: SizedBox(key: Key("first"), height: 40)),
-            SliverToBoxAdapter(child: SizedBox(key: Key("second"), height: 60)),
-          ],
-        ),
-      ]),
+    final panel = await tester.showComponent(
+      CenteredScrollStage(
+        slivers: [
+          SliverToBoxAdapter(child: LabeledBox("First", height: 40)),
+          SliverToBoxAdapter(child: LabeledBox("Second", height: 60)),
+        ],
+      ),
     );
 
-    expect(tester.getTopLeft(find.byKey(const Key("first"))).dy, 250);
-    expect(tester.getTopLeft(find.byKey(const Key("second"))).dy, 290);
-    expect(
-      tester
-          .state<ScrollableState>(find.byType(Scrollable))
-          .position
-          .maxScrollExtent,
-      0,
-    );
+    expect(panel.positionIn("First", viewport).dy, 250);
+    expect(panel.positionIn("Second", viewport).dy, 290);
+    expect(panel.scrollPosition.maxScrollExtent, 0);
   });
 
   testWidgets("overflow scrolls normally and fixed extent children stay lazy", (
     tester,
   ) async {
     var builds = 0;
-    await tester.pumpWidget(
-      scrollView([
-        CenteredSliverMainAxisGroup(
-          slivers: [
-            SliverFixedExtentList.builder(
-              itemExtent: 100,
-              itemCount: 20,
-              itemBuilder: (context, index) {
-                builds++;
-                return Text("item $index");
-              },
-            ),
-          ],
-        ),
-      ]),
+    final panel = await tester.showComponent(
+      CenteredScrollStage(
+        slivers: [
+          SliverFixedExtentList.builder(
+            itemExtent: 100,
+            itemCount: 20,
+            itemBuilder: (context, index) {
+              builds++;
+              return Text("item $index");
+            },
+          ),
+        ],
+      ),
     );
 
     expect(builds, lessThan(20));
-    expect(
-      tester
-          .state<ScrollableState>(find.byType(Scrollable))
-          .position
-          .maxScrollExtent,
-      1400,
-    );
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+    expect(panel.scrollPosition.maxScrollExtent, 1400);
+    await tester.drag(find.text("item 2"), const Offset(0, -300));
     await tester.pumpAndSettle();
-    expect(
-      tester.state<ScrollableState>(find.byType(Scrollable)).position.pixels,
-      closeTo(300, 0.1),
-    );
+    expect(panel.scrollPosition.pixels, closeTo(300, 0.1));
   });
 
   testWidgets(
     "trailing sliver scrolls through centered leading space before content",
     (tester) async {
       var taps = 0;
-      await tester.pumpWidget(
-        scrollView([
-          CenteredSliverMainAxisGroup(
-            slivers: [
-              SliverToBoxAdapter(
-                child: GestureDetector(
-                  key: const Key("centered"),
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => taps++,
-                  child: const SizedBox(height: 100),
-                ),
-              ),
-            ],
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 1000)),
-        ]),
+      final panel = await tester.showComponent(
+        CenteredScrollStage(
+          slivers: [
+            SliverToBoxAdapter(
+              child: LabeledBox("Centered", height: 100, onTap: () => taps++),
+            ),
+          ],
+          trailing: [const SliverToBoxAdapter(child: SizedBox(height: 1000))],
+        ),
       );
 
-      final position = tester
-          .state<ScrollableState>(find.byType(Scrollable))
-          .position;
-      expect(tester.getTopLeft(find.byKey(const Key("centered"))).dy, 250);
-      expect(position.maxScrollExtent, 1000);
+      expect(panel.positionIn("Centered", viewport).dy, 250);
+      expect(panel.scrollPosition.maxScrollExtent, 1000);
 
-      position.jumpTo(300);
+      panel.scrollPosition.jumpTo(300);
       await tester.pump();
 
-      expect(tester.getTopLeft(find.byKey(const Key("centered"))).dy, -50);
-      await tester.tapAt(const Offset(400, 25));
+      expect(panel.positionIn("Centered", viewport).dy, -50);
+      await tester.tapAt(
+        panel.boundsOf(viewport).topLeft + const Offset(400, 25),
+      );
       expect(taps, 1);
     },
   );
@@ -111,30 +81,19 @@ void main() {
     tester,
   ) async {
     var taps = 0;
-    await tester.pumpWidget(
-      testApp(
-        child: CustomScrollView(
-          reverse: true,
-          slivers: [
-            CenteredSliverMainAxisGroup(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: GestureDetector(
-                    key: const Key("reversed"),
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => taps++,
-                    child: const SizedBox(height: 100),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+    final panel = await tester.showComponent(
+      CenteredScrollStage(
+        slivers: [
+          SliverToBoxAdapter(
+            child: LabeledBox("Reversed", height: 100, onTap: () => taps++),
+          ),
+        ],
+        reverse: true,
       ),
     );
 
-    expect(tester.getTopLeft(find.byKey(const Key("reversed"))).dy, 250);
-    await tester.tapAt(tester.getCenter(find.byKey(const Key("reversed"))));
+    expect(panel.positionIn("Reversed", viewport).dy, 250);
+    await tester.tapAt(panel.boundsOf("Reversed").center);
     expect(taps, 1);
   });
 
@@ -142,117 +101,119 @@ void main() {
     tester,
   ) async {
     final height = ValueNotifier<double>(100);
-    await tester.pumpWidget(
-      ValueListenableBuilder<double>(
-        valueListenable: height,
-        builder: (context, value, child) => scrollView([
-          CenteredSliverMainAxisGroup(
+    addTearDown(height.dispose);
+    final panel = await tester.showComponent(
+      LabeledBox(
+        viewport,
+        width: 800,
+        height: 600,
+        child: ListenableBuilder(
+          listenable: height,
+          builder: (context, _) => CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(
-                child: SizedBox(key: const Key("content"), height: value),
+              CenteredSliverMainAxisGroup(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: LabeledBox("Content", height: height.value),
+                  ),
+                ],
               ),
             ],
           ),
-        ]),
+        ),
       ),
     );
 
-    expect(tester.getTopLeft(find.byKey(const Key("content"))).dy, 250);
+    expect(panel.positionIn("Content", viewport).dy, 250);
     height.value = 1000;
     await tester.pump();
-    expect(tester.getTopLeft(find.byKey(const Key("content"))).dy, 0);
+    expect(panel.positionIn("Content", viewport).dy, 0);
     height.value = 200;
     await tester.pump();
 
-    expect(tester.getTopLeft(find.byKey(const Key("content"))).dy, 200);
+    expect(panel.positionIn("Content", viewport).dy, 200);
   });
 
   testWidgets("removes centering for a fill remaining sliver", (tester) async {
     final fillRemaining = ValueNotifier(false);
-    await tester.pumpWidget(
-      ValueListenableBuilder<bool>(
-        valueListenable: fillRemaining,
-        builder: (context, fillsViewport, child) => scrollView([
-          CenteredSliverMainAxisGroup(
+    addTearDown(fillRemaining.dispose);
+    final panel = await tester.showComponent(
+      LabeledBox(
+        viewport,
+        width: 800,
+        height: 600,
+        child: ListenableBuilder(
+          listenable: fillRemaining,
+          builder: (context, _) => CustomScrollView(
             slivers: [
-              if (fillsViewport)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: SizedBox(key: Key("content")),
-                )
-              else
-                const SliverToBoxAdapter(
-                  child: SizedBox(key: Key("content"), height: 100),
-                ),
+              CenteredSliverMainAxisGroup(
+                slivers: [
+                  if (fillRemaining.value)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: LabeledBox("Content"),
+                    )
+                  else
+                    SliverToBoxAdapter(
+                      child: LabeledBox("Content", height: 100),
+                    ),
+                ],
+              ),
             ],
           ),
-        ]),
+        ),
       ),
     );
 
-    expect(tester.getTopLeft(find.byKey(const Key("content"))).dy, 250);
+    expect(panel.positionIn("Content", viewport).dy, 250);
     fillRemaining.value = true;
     await tester.pump();
 
-    expect(tester.getTopLeft(find.byKey(const Key("content"))).dy, 0);
-    expect(tester.getSize(find.byKey(const Key("content"))).height, 600);
-    expect(
-      tester
-          .state<ScrollableState>(find.byType(Scrollable))
-          .position
-          .maxScrollExtent,
-      0,
-    );
+    expect(panel.positionIn("Content", viewport).dy, 0);
+    expect(panel.boundsOf("Content").height, 600);
+    expect(panel.scrollPosition.maxScrollExtent, 0);
   });
 
   testWidgets("hit tests content at its centered painted position", (
     tester,
   ) async {
     var taps = 0;
-    await tester.pumpWidget(
-      scrollView([
-        CenteredSliverMainAxisGroup(
-          slivers: [
-            SliverToBoxAdapter(
-              child: GestureDetector(
-                key: const Key("target"),
-                behavior: HitTestBehavior.opaque,
-                onTap: () => taps++,
-                child: const SizedBox(height: 100),
-              ),
-            ),
-          ],
-        ),
-      ]),
+    final panel = await tester.showComponent(
+      CenteredScrollStage(
+        slivers: [
+          SliverToBoxAdapter(
+            child: LabeledBox("Target", height: 100, onTap: () => taps++),
+          ),
+        ],
+      ),
     );
 
-    await tester.tapAt(tester.getCenter(find.byKey(const Key("target"))));
+    await tester.tapAt(panel.boundsOf("Target").center);
     expect(taps, 1);
   });
 
   testWidgets("centers within viewport space after a preceding sliver", (
     tester,
   ) async {
-    await tester.pumpWidget(
-      scrollView([
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        CenteredSliverMainAxisGroup(
-          slivers: const [
-            SliverToBoxAdapter(
-              child: SizedBox(key: Key("content"), height: 100),
+    final panel = await tester.showComponent(
+      LabeledBox(
+        viewport,
+        width: 800,
+        height: 600,
+        child: CustomScrollView(
+          slivers: [
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            CenteredSliverMainAxisGroup(
+              slivers: [
+                SliverToBoxAdapter(child: LabeledBox("Content", height: 100)),
+              ],
             ),
           ],
         ),
-      ]),
+      ),
     );
 
-    expect(tester.getTopLeft(find.byKey(const Key("content"))).dy, 300);
-    expect(
-      tester
-          .state<ScrollableState>(find.byType(Scrollable))
-          .position
-          .maxScrollExtent,
-      0,
-    );
+    expect(panel.positionIn("Content", viewport).dy, 300);
+    expect(panel.scrollPosition.maxScrollExtent, 0);
   });
 }

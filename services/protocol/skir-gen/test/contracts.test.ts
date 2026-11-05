@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { cpSync, globSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, globSync, mkdirSync, mkdtempSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -94,10 +94,12 @@ describe("normalizeContracts numbers every declaration and method from where it 
 
   test("files that already hold their derived numbers are not rewritten", async () => {
     const directory = skirTree({ "kernel/v1/color.skir": "struct Color(80010001) {}" });
-    const before = Bun.file(join(directory, "kernel/v1/color.skir")).lastModified;
-    await Bun.sleep(5);
+    const path = join(directory, "kernel/v1/color.skir");
+    // A write would move the modification time from this past instant to now.
+    const past = new Date("2000-01-01T00:00:00Z");
+    utimesSync(path, past, past);
     await normalizeContracts(directory);
-    expect(Bun.file(join(directory, "kernel/v1/color.skir")).lastModified).toBe(before);
+    expect(statSync(path).mtime).toEqual(past);
   });
 });
 

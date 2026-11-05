@@ -275,7 +275,11 @@ class _LoadingIconButtonSpinner extends StatelessWidget {
 
     return SizedBox.square(
       dimension: iconTheme.size,
-      child: CircularProgressIndicator(strokeWidth: 3, color: iconTheme.color),
+      child: CircularProgressIndicator(
+        semanticsLabel: "Loading",
+        strokeWidth: 3,
+        color: iconTheme.color,
+      ),
     );
   }
 }

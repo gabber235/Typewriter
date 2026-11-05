@@ -21,6 +21,22 @@ class JoinCodesTab extends HookConsumerWidget {
 
     final isRevokingSelection = useRef(false);
 
+    // The card reveals the code it generated until the code leaves the
+    // authoritative list, by revocation or by its single use; a new key then
+    // resets the card so it never offers a code that no longer works.
+    final generatedCode = useRef<String?>(null);
+    final generatedCodeCard = useState(0);
+    ref.listen(organizationJoinCodesProvider, (previous, next) {
+      bool lists(AsyncValue<List<skir.JoinCode>>? codes) =>
+          codes?.value?.any((code) => code.code.id == generatedCode.value) ??
+          false;
+      if (generatedCode.value == null || !lists(previous) || lists(next)) {
+        return;
+      }
+      generatedCode.value = null;
+      generatedCodeCard.value++;
+    });
+
     useEffect(() {
       final codeIds = liveCodes.value.map((code) => code.code).toSet();
       final validSelection = selectedCodes.value.intersection(codeIds);
@@ -73,15 +89,20 @@ class JoinCodesTab extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SecretField(
+                    key: ValueKey(generatedCodeCard.value),
                     title: "Join Code",
                     description: "Generate a unique join code to invite new members to your organization.",
                     prefix: joinCodeUrlPrefix,
-                    onGenerate: () => ref.executeMembership(
-                      ref.membershipCommands.generate(
-                        options: joinCodeOptions.value,
-                      ),
-                      (response) => response.requireAccepted(),
-                    ),
+                    onGenerate: () async {
+                      final revealed = await ref.executeMembership(
+                        ref.membershipCommands.generate(
+                          options: joinCodeOptions.value,
+                        ),
+                        (response) => response.requireAccepted(),
+                      );
+                      generatedCode.value = revealed.value;
+                      return revealed;
+                    },
                     generateButtonText: "Generate Join Code",
                     regenerateButtonText: "New Join Code",
                     copyButtonText: "Copy Join Code",
@@ -173,13 +194,17 @@ class _JoinCodesLoadingShimmer extends StatelessWidget {
   const _JoinCodesLoadingShimmer();
 
   @override
-  Widget build(BuildContext context) => context.isDesktop
-      ? const _JoinCodesTableShimmer(key: ValueKey("joinCodesLoadingDesktop"))
-      : const _JoinCodesListShimmer(key: ValueKey("joinCodesLoadingMobile"));
+  Widget build(BuildContext context) => SliverSemantics(
+    label: "Loading join codes",
+    container: true,
+    sliver: context.isDesktop
+        ? const _JoinCodesTableShimmer()
+        : const _JoinCodesListShimmer(),
+  );
 }
 
 class _JoinCodesTableShimmer extends StatelessWidget {
-  const _JoinCodesTableShimmer({super.key});
+  const _JoinCodesTableShimmer();
 
   @override
   Widget build(BuildContext context) => SliverFillRemaining(
@@ -237,7 +262,7 @@ class _ShimmerCell extends StatelessWidget {
 }
 
 class _JoinCodesListShimmer extends StatelessWidget {
-  const _JoinCodesListShimmer({super.key});
+  const _JoinCodesListShimmer();
 
   @override
   Widget build(BuildContext context) => SliverMainAxisGroup(

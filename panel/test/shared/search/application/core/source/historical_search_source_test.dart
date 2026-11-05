@@ -2,19 +2,16 @@
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("HistoricalSearchSource", () {
-    test("shows validated persisted results for an empty query", () async {
+    test("shows persisted results for an empty query", () async {
       final inner = FakeSearchSource();
       final selections = StreamController<SearchResult>.broadcast(sync: true);
-      final storage = FakeHistoryStorage([
-        searchResult("recent"),
-        "invalid",
-        searchResult("older"),
-      ]);
+      final storage = MemorySearchHistory(
+        results: [searchResult("recent"), searchResult("older")],
+      );
       final source = inner.withHistory(
         key: "icons",
         label: "Recent",
@@ -30,7 +27,7 @@ void main() {
       addTearDown(subscription.cancel);
 
       source.initialize(SearchQueryContext.empty);
-      await flushEvents();
+      await pumpEventQueue();
       source.search(queryContext(""));
       inner.emitSnapshot(SearchSourceSnapshot.idle());
 
@@ -43,16 +40,26 @@ void main() {
     });
 
     test("records committed child results with newest first", () async {
-      final harness = HistoryHarness(capacity: 2);
-      addTearDown(harness.dispose);
-      harness.source.initialize(SearchQueryContext.empty);
-      await flushEvents();
-      harness.source.search(queryContext("query"));
+      final inner = FakeSearchSource();
+      final selections = StreamController<SearchResult>.broadcast(sync: true);
+      final storage = MemorySearchHistory();
+      final source = inner.withHistory(
+        key: "test",
+        label: "Recent",
+        capacity: 2,
+        storage: storage,
+        committedSelections: selections.stream,
+      );
+      addTearDown(source.dispose);
+      addTearDown(selections.close);
+      source.initialize(SearchQueryContext.empty);
+      await pumpEventQueue();
+      source.search(queryContext("query"));
       final one = searchResult("one");
 
       final two = searchResult("two");
       final three = searchResult("three");
-      harness.inner.emitSnapshot(
+      inner.emitSnapshot(
         readySnapshot(
           nodes: [
             SearchNode.result(result: one),
@@ -62,33 +69,42 @@ void main() {
         ),
       );
 
-      harness.selections.add(one);
-      harness.selections.add(two);
-      harness.selections.add(three);
-      harness.selections.add(two);
-      await flushEvents();
+      selections.add(one);
+      selections.add(two);
+      selections.add(three);
+      selections.add(two);
+      await pumpEventQueue();
 
-      expect(harness.storage.storedIds, ["two", "three"]);
-      expect(harness.storage.replaceCount, 4);
+      expect(storage.resultIds, ["two", "three"]);
     });
 
     test("ignores committed results that do not belong to its child", () async {
-      final harness = HistoryHarness();
-      addTearDown(harness.dispose);
-      harness.source.initialize(SearchQueryContext.empty);
-      await flushEvents();
-      harness.source.search(queryContext("query"));
-      harness.inner.emitSnapshot(readySnapshot(nodes: [resultNode("owned")]));
+      final inner = FakeSearchSource();
+      final selections = StreamController<SearchResult>.broadcast(sync: true);
+      final storage = MemorySearchHistory();
+      final source = inner.withHistory(
+        key: "test",
+        label: "Recent",
+        capacity: 5,
+        storage: storage,
+        committedSelections: selections.stream,
+      );
+      addTearDown(source.dispose);
+      addTearDown(selections.close);
+      source.initialize(SearchQueryContext.empty);
+      await pumpEventQueue();
+      source.search(queryContext("query"));
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("owned")]));
 
-      harness.selections.add(searchResult("foreign"));
-      await flushEvents();
+      selections.add(searchResult("foreign"));
+      await pumpEventQueue();
 
-      expect(harness.storage.replaceCount, 0);
+      expect(storage.writes, 0);
     });
 
     test("merges selections committed while storage is loading", () async {
       final load = Completer<List<SearchResult>>();
-      final storage = ControlledHistoryStorage(load.future);
+      final storage = MemorySearchHistory(pendingLoad: load.future);
       final inner = FakeSearchSource();
       final selections = StreamController<SearchResult>.broadcast(sync: true);
       final source = inner.withHistory(
@@ -110,16 +126,16 @@ void main() {
       selections.add(selected);
 
       load.complete([searchResult("stored")]);
-      await flushEvents();
+      await pumpEventQueue();
 
-      expect(storage.storedIds, ["selected", "stored"]);
+      expect(storage.resultIds, ["selected", "stored"]);
     });
 
     test("shows history outside a closed gate", () async {
       final inner = FakeSearchSource();
       final gated = inner.gated((context) => false);
       final selections = StreamController<SearchResult>.broadcast(sync: true);
-      final storage = FakeHistoryStorage([searchResult("recent")]);
+      final storage = MemorySearchHistory(results: [searchResult("recent")]);
       final source = gated.withHistory(
         key: "icons",
         label: "Recent",
@@ -134,7 +150,7 @@ void main() {
       final subscription = source.snapshots.listen(snapshots.add);
       addTearDown(subscription.cancel);
       source.initialize(SearchQueryContext.empty);
-      await flushEvents();
+      await pumpEventQueue();
 
       source.search(queryContext(""));
 
@@ -145,7 +161,7 @@ void main() {
 
     test("disposal cancels loading and selection events", () async {
       final load = Completer<List<SearchResult>>();
-      final storage = ControlledHistoryStorage(load.future);
+      final storage = MemorySearchHistory(pendingLoad: load.future);
       final inner = FakeSearchSource();
       final selections = StreamController<SearchResult>.broadcast(sync: true);
       final source = inner.withHistory(
@@ -166,89 +182,11 @@ void main() {
       source.dispose();
       load.complete([searchResult("late")]);
       selections.add(searchResult("late"));
-      await flushEvents();
+      await pumpEventQueue();
 
       expect(snapshots, isEmpty);
-      expect(storage.replaceCount, 0);
+      expect(storage.writes, 0);
       expect(inner.disposeCount, 1);
     });
   });
 }
-
-final class HistoryHarness {
-  HistoryHarness({this.capacity = 5}) : storage = FakeHistoryStorage(const []) {
-    source = inner.withHistory(
-      key: "test",
-      label: "Recent",
-      capacity: capacity,
-      storage: storage,
-      committedSelections: selections.stream,
-    );
-  }
-
-  final int capacity;
-  final inner = FakeSearchSource();
-  final selections = StreamController<SearchResult>.broadcast(sync: true);
-  final FakeHistoryStorage storage;
-  late final SearchSource source;
-
-  void dispose() {
-    source.dispose();
-    unawaited(selections.close());
-  }
-}
-
-class FakeHistoryStorage implements SearchHistoryStorage {
-  FakeHistoryStorage(this.rawResults);
-
-  final List<Object> rawResults;
-  final loadKeys = <String>[];
-  List<SearchResult> stored = const [];
-  int replaceCount = 0;
-
-  List<String> get storedIds => stored.map((result) => result.id).toList();
-
-  @override
-  Future<List<SearchResult>> loadValidResults({
-    required String key,
-    required int capacity,
-  }) async {
-    loadKeys.add(key);
-    return rawResults.whereType<SearchResult>().take(capacity).toList();
-  }
-
-  @override
-  Future<void> replaceResults({
-    required String key,
-    required List<SearchResult> results,
-  }) async {
-    replaceCount++;
-    stored = results;
-  }
-}
-
-final class ControlledHistoryStorage extends FakeHistoryStorage {
-  ControlledHistoryStorage(this.load) : super(const []);
-
-  final Future<List<SearchResult>> load;
-
-  @override
-  Future<List<SearchResult>> loadValidResults({
-    required String key,
-    required int capacity,
-  }) => load;
-}
-
-SearchQueryContext queryContext(String query) {
-  return SearchQueryContext(normalizedQuery: query, selectors: const []);
-}
-
-List<String> resultIds(SearchSourceSnapshot snapshot) {
-  return snapshot.nodes
-      .walk()
-      .whereType<SearchResultNode>()
-      .map((node) => node.result.id)
-      .toList();
-}
-
-Future<void> flushEvents() => Future<void>.delayed(Duration.zero);

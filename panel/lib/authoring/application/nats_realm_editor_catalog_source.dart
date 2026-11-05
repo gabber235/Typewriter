@@ -42,7 +42,7 @@ final class NatsRealmEditorCatalogSource {
       if (!disposed.isCompleted) disposed.complete();
     });
     final transport = SkirMutationClient(
-      () => ref.read(natsProvider),
+      () => ref.read(natsProvider.future),
       () => ref.read(panelTelemetryProvider.future),
     );
     final operation = skir.CatalogFetchRequest(

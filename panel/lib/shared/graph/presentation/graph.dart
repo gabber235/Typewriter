@@ -135,6 +135,22 @@ class Graph extends HookConsumerWidget {
                 ..translateByDouble(centerOffset.dx, centerOffset.dy, 0, 1),
             );
 
+            final viewportSize = useRef(constraints.biggest);
+            if (viewportSize.value != constraints.biggest) {
+              final change = Offset(
+                constraints.maxWidth - viewportSize.value.width,
+                constraints.maxHeight - viewportSize.value.height,
+              );
+              viewportSize.value = constraints.biggest;
+              // The controller notifies the viewer, which cannot rebuild during
+              // this layout.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  viewportController.keepCenter(sizeChange: change);
+                }
+              });
+            }
+
             final interactionController = useGraphInteractionController();
 
             final viewportCenterCallback = useRef(onViewportCenterChanged)
@@ -432,16 +448,6 @@ class Graph extends HookConsumerWidget {
 
                                     onElementsResized!(changes);
                                     _scheduleCenterFocused(
-                                      controller: viewportController,
-                                      viewerKey: viewerKey,
-                                    );
-                                    return null;
-                                  },
-                                ),
-                            GraphCenterFocusedIntent:
-                                CallbackAction<GraphCenterFocusedIntent>(
-                                  onInvoke: (_) {
-                                    _centerFocusedChild(
                                       controller: viewportController,
                                       viewerKey: viewerKey,
                                     );

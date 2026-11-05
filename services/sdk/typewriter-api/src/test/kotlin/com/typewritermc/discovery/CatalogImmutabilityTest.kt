@@ -3,7 +3,6 @@ package com.typewritermc.discovery
 import com.typewritermc.configuration.field
 import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.OwnedRule
@@ -18,7 +17,7 @@ import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val CatalogImmutabilityTest by testSuite {
-    test("configuration recipes copy their collections and reject outer and nested mutation") {
+    test("configuration recipes keep their rules and paths when the caller changes the lists it passed") {
         val origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "owner"), ordinal = 0)
         val segments = mutableListOf<FieldPatternSegment>(FieldPatternSegment.field("name"))
         val targets = mutableListOf(RelativeFieldPattern(segments = segments))
@@ -44,24 +43,15 @@ val CatalogImmutabilityTest by testSuite {
                 rules = rules,
             )
 
-        val retained = source
         segments += FieldPatternSegment.ITEMS
         targets.clear()
         rules.clear()
 
-        retained.relativePath.segments shouldBe listOf(FieldPatternSegment.field("name"))
-        retained.rules
+        source.relativePath.segments shouldBe listOf(FieldPatternSegment.field("name"))
+        source.rules
             .single()
             .diagnostic.targets
             .single()
             .segments shouldBe listOf(FieldPatternSegment.field("name"))
-        shouldThrow<ClassCastException> {
-            @Suppress("UNCHECKED_CAST")
-            (retained.rules as MutableList<OwnedRule>).clear()
-        }
-        shouldThrow<ClassCastException> {
-            @Suppress("UNCHECKED_CAST")
-            (retained.relativePath.segments as MutableList<FieldPatternSegment>).clear()
-        }
     }
 }

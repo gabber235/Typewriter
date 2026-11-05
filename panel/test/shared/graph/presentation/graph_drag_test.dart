@@ -1,315 +1,88 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/graph.dart";
-import "../../../support/test_utils.dart";
+const _cell = 50.0;
 
 void main() {
-  group("Graph drag and drop", () {
-    testWidgets("accepts drag and commits snapped grid delta", (tester) async {
-      const cell = 50.0;
+  testWidgets("dropping a node commits its snapped grid position", (
+    tester,
+  ) async {
+    final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+      graphNode("A", x: 2, y: 3, body: const DraggableGraphNode("A")),
+    ]);
 
-      final updates = <List<GraphMoveCommitPayload>>[];
-      final data = GraphData(
-        cellSize: cell,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("a"),
-            x: 2,
-            y: 3,
-            width: 2,
-            height: 2,
-            builder: (_) => _draggableNode("a", color: Colors.blue),
-          ),
-        ],
-        edges: const [],
-      );
+    await panel.graph.drag("A", const Offset(_cell * 1, _cell * 2));
 
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 600,
-            child: Graph(data: data, onElementsMoved: updates.add),
-          ),
-        ),
-        settle: true,
-      );
-
-      final aFinder = find.byKey(const ValueKey("el-a"));
-      expect(aFinder, findsOneWidget);
-
-      final start = tester.getCenter(aFinder);
-      final target =
-          tester.getTopLeft(aFinder) + const Offset(cell * 1, cell * 2);
-
-      final g = await tester.startGesture(start);
-      await tester.pump();
-      await g.moveTo(target);
-      await tester.pump();
-      await g.up();
-      await tester.pumpAndSettle();
-
-      expect(updates, isNotEmpty);
-      final last = updates.last;
-      expect(last, hasLength(1));
-      expect(last.first.id, const GraphIdentifier("a"));
-      expect(last.first.x, 2 + 1);
-      expect(last.first.y, 3 + 2);
-    });
-
-    testWidgets("snaps using .round(): <0.5 cell -> 0, >=0.5 cell -> 1", (
-      tester,
-    ) async {
-      const cell = 50.0;
-      final dragInside = ValueNotifier<bool>(false);
-      var accepted = 0;
-
-      GraphMoveCommitPayload? lastCall;
-      void onDragged(List<GraphMoveCommitPayload> u) {
-        lastCall = u.single;
-      }
-
-      GraphElement elementBuilder(String id) => GraphElement(
-        id: GraphIdentifier(id),
-        x: 0,
-        y: 0,
-        width: 2,
-        height: 2,
-        builder: (_) => GraphDragStateProbe(
-          sink: dragInside,
-          child: _draggableNode(id, color: Colors.green),
-        ),
-      );
-
-      Future<void> pumpGraph() async {
-        lastCall = null;
-        await tester.pumpTestApp(
-          child: Center(
-            child: SizedBox(
-              width: 600,
-              height: 400,
-              child: Graph(
-                data: GraphData(
-                  cellSize: cell,
-                  elements: [elementBuilder("snap")],
-                  edges: const [],
-                ),
-                onElementsMoved: (u) {
-                  accepted++;
-                  onDragged(u);
-                },
-              ),
-            ),
-          ),
-          settle: true,
-        );
-      }
-
-      await pumpGraph();
-      final snapFinder = find.byKey(const ValueKey("el-snap"));
-      expect(snapFinder, findsOneWidget);
-
-      final startTopLeft = tester.getTopLeft(snapFinder);
-      var g = await tester.startGesture(startTopLeft);
-      await tester.pump();
-      await g.moveTo(startTopLeft + const Offset(24, 0));
-      await tester.pump();
-      expect(dragInside.value, isTrue);
-
-      await g.up();
-      await tester.pumpAndSettle();
-
-      expect(accepted, greaterThanOrEqualTo(1));
-      expect(lastCall, isNotNull);
-      expect(lastCall!.id, const GraphIdentifier("snap"));
-      expect(lastCall!.x, 0);
-      expect(lastCall!.y, 0);
-
-      await pumpGraph();
-
-      g = await tester.startGesture(startTopLeft);
-      await tester.pump();
-      await g.moveTo(startTopLeft + const Offset(25, 0));
-      await tester.pump();
-      expect(dragInside.value, isTrue);
-      await g.up();
-
-      await tester.pumpAndSettle();
-
-      expect(accepted, greaterThanOrEqualTo(2));
-      expect(lastCall, isNotNull);
-      expect(lastCall!.id, const GraphIdentifier("snap"));
-      expect(lastCall!.x, 1);
-      expect(lastCall!.y, 0);
-    });
-
-    testWidgets("dragging a container moves elements fully inside it", (
-      tester,
-    ) async {
-      const cell = 50.0;
-
-      List<GraphMoveCommitPayload>? a;
-      List<GraphMoveCommitPayload>? b;
-
-      final data = GraphData(
-        cellSize: cell,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("parent"),
-            x: 1,
-            y: 1,
-            width: 4,
-            height: 4,
-            builder: (_) => _draggableNode("parent", color: Colors.orange),
-          ),
-          GraphElement(
-            id: const GraphIdentifier("child"),
-            x: 2,
-            y: 2,
-            width: 1,
-            height: 1,
-            builder: (_) => _draggableNode("child", color: Colors.purple),
-          ),
-        ],
-        edges: const [],
-      );
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 1000,
-            height: 700,
-            child: Graph(
-              data: data,
-              onElementsMoved: (u) {
-                for (final entry in u) {
-                  if (entry.id == const GraphIdentifier("parent")) {
-                    a = u;
-                  }
-                  if (entry.id == const GraphIdentifier("child")) {
-                    b = u;
-                  }
-                }
-              },
-            ),
-          ),
-        ),
-        settle: true,
-      );
-
-      final parentFinder = find.byKey(const ValueKey("el-parent"));
-      expect(parentFinder, findsOneWidget);
-      expect(find.byKey(const ValueKey("el-child")), findsOneWidget);
-
-      final start = tester.getCenter(parentFinder);
-      final target =
-          tester.getTopLeft(parentFinder) + const Offset(cell * 2, cell * 1);
-
-      final g = await tester.startGesture(start);
-      await tester.pump();
-      await g.moveTo(target);
-      await tester.pump();
-      await g.up();
-      await tester.pumpAndSettle();
-
-      expect(a, isNotNull);
-      final moved = a!;
-      expect(moved.length, 2);
-
-      final movedMap = {for (final e in moved) e.id: (e.x, e.y)};
-
-      expect(movedMap[const GraphIdentifier("parent")], (1 + 2, 1 + 1));
-      expect(movedMap[const GraphIdentifier("child")], (2 + 2, 2 + 1));
-
-      expect(b, isNotNull);
-      expect(b, moved);
-    });
-
-    testWidgets("rejects drags with unknown graphId (no commit)", (
-      tester,
-    ) async {
-      const cell = 50.0;
-
-      var calls = 0;
-      final data = GraphData(
-        cellSize: cell,
-        elements: [
-          GraphElement(
-            id: const GraphIdentifier("a"),
-            x: 0,
-            y: 0,
-            width: 2,
-            height: 2,
-            builder: (_) => _draggableNode("unknown", color: Colors.teal),
-          ),
-        ],
-        edges: const [],
-      );
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 800,
-            height: 600,
-            child: Graph(data: data, onElementsMoved: (_) => calls++),
-          ),
-        ),
-        settle: true,
-      );
-
-      final finder = find.byKey(const ValueKey("el-unknown"));
-      expect(finder, findsOneWidget);
-
-      final g = await tester.startGesture(tester.getCenter(finder));
-      await tester.pump();
-      await g.moveBy(const Offset(80, 40));
-      await tester.pump();
-      await g.up();
-      await tester.pumpAndSettle();
-
-      expect(calls, 0);
-    });
+    expect(moves, hasLength(1));
+    expect(moves.single.single.id, const GraphIdentifier("A"));
+    expect((moves.single.single.x, moves.single.single.y), (3, 5));
   });
-}
 
-class _TestDragData extends GraphDragData {
-  const _TestDragData(this.graphId);
+  for (final (distance, cells) in [(24.0, 0), (25.0, 1)]) {
+    testWidgets("a drag of $distance pixels rounds to $cells cells", (
+      tester,
+    ) async {
+      final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+        graphNode("Snap", body: const DraggableGraphNode("Snap")),
+      ]);
 
-  @override
-  final GraphIdentifier graphId;
-}
-
-Widget _draggableNode(String id, {Color? color}) {
-  return HookBuilder(
-    builder: (context) {
-      final data = _TestDragData(GraphIdentifier(id));
-      final source = useGraphDragSource(context, data);
-      final offered = source.payload;
-      return Draggable<GraphDragPayload<GraphDragData>>(
-        data: offered,
-        key: ObjectKey(offered),
-        maxSimultaneousDrags: 1,
-        dragAnchorStrategy: (widget, context, position) =>
-            source.anchor(offered, widget, context, position),
-        onDragStarted: () => source.begin(offered),
-        onDragUpdate: (details) => source.update(offered, details),
-        onDragEnd: (_) => source.end(offered),
-        feedback: Material(
-          elevation: 2,
-          color: Colors.transparent,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-            child: ColoredBox(
-              color: (color ?? Colors.red).withValues(alpha: 0.8),
-            ),
-          ),
-        ),
-        child: RepaintBoundary(
-          key: ValueKey("el-$id"),
-          child: ColoredBox(color: color ?? Colors.red),
-        ),
+      await panel.graph.drag(
+        "Snap",
+        Offset(distance, 0),
+        at: const Offset(1, 1),
       );
-    },
-  );
+
+      expect(moves, hasLength(1));
+      expect((moves.single.single.x, moves.single.single.y), (cells, 0));
+    });
+  }
+
+  testWidgets("dragging a container moves elements fully inside it", (
+    tester,
+  ) async {
+    final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+      graphNode(
+        "Parent",
+        x: 1,
+        y: 1,
+        cells: 4,
+        body: const DraggableGraphNode("Parent"),
+      ),
+      graphNode(
+        "Child",
+        x: 2,
+        y: 2,
+        cells: 1,
+        body: const DraggableGraphNode("Child"),
+      ),
+    ]);
+
+    await panel.graph.drag(
+      "Parent",
+      const Offset(_cell * 2, _cell * 1),
+      at: const Offset(_cell * 3.5, _cell * 3.5),
+    );
+
+    expect(moves, hasLength(1));
+    expect(
+      {for (final move in moves.single) move.id.id: (move.x, move.y)},
+      {"Parent": (3, 2), "Child": (4, 3)},
+    );
+  });
+
+  testWidgets("dropping an element the graph does not know commits nothing", (
+    tester,
+  ) async {
+    final (:panel, :moves, resizes: _) = await tester.pumpCommittingGraph([
+      graphNode(
+        "Stranger",
+        body: const DraggableGraphNode("Stranger", id: "unknown"),
+      ),
+    ]);
+
+    await panel.graph.drag("Stranger", const Offset(80, 40));
+
+    expect(moves, isEmpty);
+  });
 }

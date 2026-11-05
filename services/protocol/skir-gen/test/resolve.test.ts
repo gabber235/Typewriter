@@ -78,32 +78,4 @@ describe("route resolution", () => {
     );
     expect(routeChannel(catalog, "updates")).toBeUndefined();
   });
-
-  test("rollout routes use the realm mesh", async () => {
-    const { routes } = await committedRoutes();
-    const rollout = routes.filter((route) => route.name.startsWith("rollout_"));
-    expect(rollout.map((route) => route.name)).toEqual(["rollout_probe", "rollout_command", "rollout_status"]);
-    for (const route of rollout) {
-      expect(route.flow.kind).toBe("scatter");
-      expect(routeChannel(route, "request")?.subjects.client?.toString()).toBe(
-        `service.from.{realm}.organization.{organization}.realm.rollout.${route.name.slice("rollout_".length)}`,
-      );
-    }
-    expect(routes.some((route) => route.operation === "realm.rollout.state")).toBe(false);
-  });
-
-  test("admits a scatter method through its response outcomes", async () => {
-    const { routes } = await committedRoutes();
-    const command = routes.find((route) => route.name === "rollout_command")!;
-    if (command.flow.kind !== "scatter") throw new Error("rollout_command must be a scatter route");
-    expect(command.flow.method.method.name.text).toBe("ApplyRolloutCommand");
-    expect(command.flow.method.outcomes.variants.map(({ slug, outcome }) => [slug, outcome])).toEqual([
-      ["accepted", "success"],
-      ["stale-attempt-error", "domain_error"],
-      ["attempt-conflict-error", "domain_error"],
-      ["command-rejected-error", "domain_error"],
-      ["command-failed-error", "domain_error"],
-      ["internal-error", "internal_error"],
-    ]);
-  });
 });

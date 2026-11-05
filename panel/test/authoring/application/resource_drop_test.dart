@@ -2,16 +2,17 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("offersFor", () {
     test("uses the most specific destination that has offers", () {
-      final document = _document();
-      final index = _index(
+      final document = _document;
+      final index = dropCandidateIndex(
+        _scope,
         [_page1],
-        {
-          "MoveToOwner": [_bookB],
+        destinations: {
+          fixtureOperationId("MoveToOwner"): [_bookB],
         },
       );
       expect(
@@ -33,13 +34,14 @@ void main() {
     });
 
     test("sorts offers by group, then order", () {
-      final document = _document();
-      final index = _index(
+      final document = _document;
+      final index = dropCandidateIndex(
+        _scope,
         [_bookB],
-        {
-          "LinkWith": [_bookA],
-          "MoveToOwner": [_bookA],
-          "Annotate": [_bookA],
+        destinations: {
+          fixtureOperationId("LinkWith"): [_bookA],
+          fixtureOperationId("MoveToOwner"): [_bookA],
+          fixtureOperationId("Annotate"): [_bookA],
         },
       );
       expect(
@@ -51,11 +53,12 @@ void main() {
     });
 
     test("never offers a dragged resource as its own destination", () {
-      final document = _document();
-      final index = _index(
+      final document = _document;
+      final index = dropCandidateIndex(
+        _scope,
         [_bookA],
-        {
-          "LinkWith": [_bookA],
+        destinations: {
+          fixtureOperationId("LinkWith"): [_bookA],
         },
       );
       expect(
@@ -65,12 +68,13 @@ void main() {
     });
 
     test("writes the drop destination and anchor into the operation input", () {
-      final document = _document();
+      final document = _document;
       final offer =
-          _index(
+          dropCandidateIndex(
+                _scope,
                 [_page1],
-                {
-                  "MoveToOwner": [_bookB],
+                destinations: {
+                  fixtureOperationId("MoveToOwner"): [_bookB],
                 },
               ).offersFor([
                 DropDestination.resource(_bookB, anchor: const Offset(3, 4)),
@@ -94,8 +98,8 @@ void main() {
 
   group("regroup", () {
     test("offers a group only when a dragged value changes", () {
-      final document = _document();
-      final index = _index([_page1], const {});
+      final document = _document;
+      final index = dropCandidateIndex(_scope, [_page1]);
       expect(
         index.offersFor([DropDestination.regroup(_chapter, "act1")], document),
         isEmpty,
@@ -111,7 +115,7 @@ void main() {
     test(
       "a dragged group keeps the paths below it and never enters itself",
       () {
-        final document = _document();
+        final document = _document;
         final drag = ResourceDrag(
           scope: _scope,
           primary: AuthoringResourceIdentifier.inScope(_scope, _page1),
@@ -130,38 +134,40 @@ void main() {
 
   group("link fields", () {
     test("a collection takes every dragged resource", () {
-      final document = _document();
+      final document = _document;
       expect(
-        _index([_tag1, _tag2], const {}).offersFor([
-          DropDestination.linkField(_field(_bookA, "tags")),
+        dropCandidateIndex(_scope, [_tag1, _tag2]).offersFor([
+          DropDestination.linkField(authoredFieldLocation(_bookA, ["tags"])),
         ], document),
-        [DropOffer.link(location: _field(_bookA, "tags"))],
+        [
+          DropOffer.link(location: authoredFieldLocation(_bookA, ["tags"])),
+        ],
       );
     });
 
     test("a single value field rejects several dragged resources", () {
-      final document = _document();
-      final book = _field(_page1, "book");
+      final document = _document;
+      final book = authoredFieldLocation(_page1, ["book"]);
       expect(
-        _index([
+        dropCandidateIndex(_scope, [
           _bookB,
-        ], const {}).offersFor([DropDestination.linkField(book)], document),
+        ]).offersFor([DropDestination.linkField(book)], document),
         hasLength(1),
       );
       expect(
-        _index([
+        dropCandidateIndex(_scope, [
           _bookA,
           _bookB,
-        ], const {}).offersFor([DropDestination.linkField(book)], document),
+        ]).offersFor([DropDestination.linkField(book)], document),
         isEmpty,
       );
     });
 
     test("an already linked resource is not linked again", () {
-      final document = _document();
+      final document = _document;
       expect(
-        _index([_tag3], const {}).offersFor([
-          DropDestination.linkField(_field(_bookA, "tags")),
+        dropCandidateIndex(_scope, [_tag3]).offersFor([
+          DropDestination.linkField(authoredFieldLocation(_bookA, ["tags"])),
         ], document),
         isEmpty,
       );
@@ -170,25 +176,30 @@ void main() {
     test(
       "a resource owned elsewhere falls through to the owner's operations",
       () {
-        final document = _document();
+        final document = _document;
         final offers =
-            _index(
+            dropCandidateIndex(
+              _scope,
               [_page1],
-              {
-                "MoveToOwner": [_bookB],
+              destinations: {
+                fixtureOperationId("MoveToOwner"): [_bookB],
               },
             ).offersFor([
-              DropDestination.linkField(_field(_bookB, "pages")),
+              DropDestination.linkField(
+                authoredFieldLocation(_bookB, ["pages"]),
+              ),
               DropDestination.resource(_bookB),
             ], document);
-        expect(offers.single, isA<OperationDropOffer>());
+        final offer = offers.single as OperationDropOffer;
+        expect(offer.label, "Move to");
+        expect(offer.destination, _bookB);
       },
     );
 
-    test("a link drop writes every link and places graph members", () {
-      final owned = _document();
+    test("a member dropped on a graph joins it centred on the drop point", () {
+      final owned = _document;
       final taxonomyLink = owned.links.singleWhere(
-        (link) => link.first == fixtureTaxonomyId && link.second == _tag3,
+        (link) => link.first == taxonomyId && link.second == _tag3,
       );
       final detached = AuthoringEdit.fromDocument(owned)
         ..disconnect(
@@ -199,11 +210,11 @@ void main() {
                   .first
                   .id,
               location: skir.ValueLocation(
-                resource: fixtureTaxonomyId,
+                resource: taxonomyId,
                 path: taxonomyLink.firstLocation!,
               ),
             ),
-            source: fixtureTaxonomyId,
+            source: taxonomyId,
             target: skir.LinkTarget(
               resource: _tag3,
               opposite: taxonomyLink.secondLocation,
@@ -211,21 +222,35 @@ void main() {
           ),
         );
       final document = detached.toDocument();
-      final tags = _field(fixtureTaxonomyId, "tags");
+      final tags = authoredFieldLocation(taxonomyId, ["tags"]);
+      const anchor = Offset(20, 10);
       expect(document.canLinkAll(tags, [_tag3]), isTrue);
-      final edit = AuthoringEdit.fromDocument(document)
-        ..linkDropped(tags, [_tag3], anchor: const Offset(20, 10));
-      final linked = edit.toDocument();
-      expect(linked.relations.parents[_tag3], [fixtureTaxonomyId]);
-      final rect = linked.resource(_tag3)!.graphRect(linked.catalog)!;
-      expect((rect.x - 18).abs() <= 1 && (rect.y - 10).abs() <= 1, isTrue);
 
-      final books = AuthoringEdit.fromDocument(document)
-        ..linkDropped(_field(_bookB, "tags"), [_tag1, _tag2]);
-      expect(books.toDocument().linkedAt(_field(_bookB, "tags")), {
-        _tag1,
-        _tag2,
-      });
+      final linked = (AuthoringEdit.fromDocument(
+        document,
+      )..linkDropped(tags, [_tag3], anchor: anchor)).toDocument();
+
+      expect(linked.relations.parents[_tag3], [taxonomyId]);
+      final rect = linked.resource(_tag3)!.graphRect(linked.catalog)!;
+      // Cells are whole, so the centre lands within half a cell.
+      expect(
+        (rect.x + rect.width / 2 - anchor.dx).abs(),
+        lessThanOrEqualTo(0.5),
+      );
+      expect(
+        (rect.y + rect.height / 2 - anchor.dy).abs(),
+        lessThanOrEqualTo(0.5),
+      );
+    });
+
+    test("a link drop of several resources links every one of them", () {
+      final books = AuthoringEdit.fromDocument(_document)
+        ..linkDropped(authoredFieldLocation(_bookB, ["tags"]), [_tag1, _tag2]);
+
+      expect(
+        books.toDocument().linkedAt(authoredFieldLocation(_bookB, ["tags"])),
+        {_tag1, _tag2},
+      );
     });
   });
 }
@@ -243,161 +268,125 @@ final _tag2 = skir.ResourceId(value: "tag:two");
 final _tag3 = skir.ResourceId(value: "tag:three");
 final _chapter = editorRootPath.field("chapter");
 
-skir.ValueLocation _field(skir.ResourceId resource, String field) =>
-    skir.ValueLocation(resource: resource, path: editorRootPath.field(field));
-
-skir.ResourceOperationId _id(String name) => skir.ResourceOperationId(
-  artifact: "typewriter",
-  sourcePart: "main",
-  declaration: "com.typewritermc.operations.$name",
-);
-
-DropCandidateIndex _index(
-  List<skir.ResourceId> subjects,
-  Map<String, List<skir.ResourceId>> destinations,
-) => DropCandidateIndex(
-  drag: ResourceDrag(
-    scope: _scope,
-    primary: AuthoringResourceIdentifier.inScope(_scope, subjects.first),
-    subjects: subjects,
-  ),
-  byOperation: {
-    for (final entry in destinations.entries)
-      _id(entry.key): skir.DropCandidates(
-        operation: _id(entry.key),
-        destinations: entry.value,
-        complete: true,
-      ),
-  },
-);
-
 final _inputType = skir.TypeDefinitionId(
   typeId: skir.TypeId.createQualified(namespace: "drop-test", name: "Input"),
   revision: 1,
 );
 
+final _destination = skir.FieldOwner(
+  definition: _inputType,
+  name: "destination",
+);
+final _anchor = skir.FieldOwner(definition: _inputType, name: "anchor");
+final _inputFields = [
+  (_destination, skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)),
+  (
+    _anchor,
+    skir.TypeTemplate.createNullable(
+      value: skir.TypeTemplate.createNamed(
+        definition: placementAnchorTypeRef,
+        arguments: const [],
+      ),
+    ),
+  ),
+];
+final _dropOperations = [
+  ("MoveToOwner", "Move to", skir.OperationGroup.organize, 10),
+  ("LinkWith", "Link with", skir.OperationGroup.organize, 20),
+  ("Annotate", "Annotate", skir.OperationGroup.edit, 50),
+];
+
 /// Books A and B; A tags tag three and owns two pages in chapter act1. The
 /// catalog declares three drop operations with one destination input.
-AuthoringDocument _document() {
-  final base = authoringFixtureCatalog();
-  final snapshot = base.snapshot.toMutable();
-  final destination = skir.FieldOwner(
-    definition: _inputType,
-    name: "destination",
-  );
-  final anchor = skir.FieldOwner(definition: _inputType, name: "anchor");
-  final text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
-  final anchorType = skir.TypeTemplate.createNullable(
-    value: skir.TypeTemplate.createNamed(
-      definition: placementAnchorTypeRef,
-      arguments: const [],
-    ),
-  );
-  snapshot.types = [
-    ...snapshot.types,
-    skir.PublishedType(
-      searchKey: null,
-      placementField: null,
-      display: defaultTypeDisplay(""),
-      status: skir.DeclarationStatus.ready,
-      definition: skir.TypeDefinition(
-        id: _inputType,
-        parameters: const [],
-        parents: const [],
-        representation: skir.RepresentationTemplate.createRecord(
-          abstract_: false,
-          fields: [
-            for (final (owner, type) in [
-              (destination, text),
-              (anchor, anchorType),
-            ])
-              skir.FieldDeclaration(
-                owner: owner,
-                type: type,
-                overrides: const [],
-                hasConstructorDefault: false,
+final _document = realmDocument(
+  catalog: CheckedEditorCatalog(
+    (libraryCatalog().snapshot.toMutable()
+          ..types = [
+            ...libraryCatalog().snapshot.types,
+            publishedType(
+              _inputType,
+              representation: skir.RepresentationTemplate.createRecord(
+                abstract_: false,
+                fields: [
+                  for (final (owner, type) in _inputFields)
+                    skir.FieldDeclaration(
+                      owner: owner,
+                      type: type,
+                      overrides: const [],
+                      hasConstructorDefault: false,
+                    ),
+                ],
               ),
-          ],
-        ),
-      ),
-      effectiveFields: [
-        for (final (owner, type) in [(destination, text), (anchor, anchorType)])
-          skir.EffectiveFieldTemplate(
-            key: owner.name,
-            owner: owner,
-            type: type,
-            rules: const [],
-          ),
-      ],
-      ancestorTemplates: const [],
+              fields: [
+                for (final (owner, type) in _inputFields)
+                  skir.EffectiveFieldTemplate(
+                    key: owner.name,
+                    owner: owner,
+                    type: type,
+                    rules: const [],
+                  ),
+              ],
+            ),
+          ]
+          ..capabilities = [
+            ...libraryCatalog().snapshot.capabilities,
+            for (final (name, _, _, _) in _dropOperations)
+              skir.CapabilityDefinition.createAuthoring(
+                capabilityId: skir.CapabilityId(value: "drop-test:$name"),
+                targets: _targets,
+                input: skir.OperationInputDefinition(
+                  type: skir.TypeUse.createNamed(
+                    definition: _inputType,
+                    arguments: const [],
+                  ),
+                  presentation: null,
+                ),
+              ),
+          ]
+          ..resourceOperations = [
+            for (final (name, label, group, order) in _dropOperations)
+              skir.ResourceOperationDefinition(
+                id: fixtureOperationId(name),
+                targets: _targets,
+                capability: skir.CapabilityId(value: "drop-test:$name"),
+                drop: skir.OperationDrop(
+                  input: editorRootPath.field("destination"),
+                  hint: label,
+                ),
+                presentation: skir.OperationPresentation(
+                  label: label,
+                  description: "",
+                  icon: "",
+                  group: group,
+                  order: order,
+                  tone: skir.HeaderActionTone.neutral,
+                  confirmation: null,
+                  inspector: skir.OperationInspector.hidden,
+                  shortcut: null,
+                ),
+              ),
+          ])
+        .toFrozen(),
+  ),
+  books: [
+    Book(
+      bookId: _bookA,
+      title: "A",
+      icon: "mdi:book",
+      color: Colors.blue,
+      tagIds: [_tag3],
     ),
-  ];
-  final operations = [
-    ("MoveToOwner", "Move to", skir.OperationGroup.organize, 10),
-    ("LinkWith", "Link with", skir.OperationGroup.organize, 20),
-    ("Annotate", "Annotate", skir.OperationGroup.edit, 50),
-  ];
-  snapshot.capabilities = [
-    ...snapshot.capabilities,
-    for (final (name, _, _, _) in operations)
-      skir.CapabilityDefinition.createAuthoring(
-        capabilityId: skir.CapabilityId(value: "drop-test:$name"),
-        targets: _targets,
-        input: skir.OperationInputDefinition(
-          type: skir.TypeUse.createNamed(
-            definition: _inputType,
-            arguments: const [],
-          ),
-          presentation: null,
-        ),
-      ),
-  ];
-  snapshot.resourceOperations = [
-    for (final (name, label, group, order) in operations)
-      skir.ResourceOperationDefinition(
-        id: _id(name),
-        targets: _targets,
-        capability: skir.CapabilityId(value: "drop-test:$name"),
-        drop: skir.OperationDrop(
-          input: editorRootPath.field("destination"),
-          hint: label,
-        ),
-        presentation: skir.OperationPresentation(
-          label: label,
-          description: "",
-          icon: "",
-          group: group,
-          order: order,
-          tone: skir.HeaderActionTone.neutral,
-          confirmation: null,
-          inspector: skir.OperationInspector.hidden,
-          shortcut: null,
-        ),
-      ),
-  ];
-  return fixtureAuthoringDocument(
-    realm: true,
-    catalog: CheckedEditorCatalog(snapshot.toFrozen()),
-    books: [
-      Book(
-        bookId: _bookA,
-        title: "A",
-        icon: "mdi:book",
-        color: Colors.blue,
-        tagIds: [_tag3],
-      ),
-      Book(bookId: _bookB, title: "B", icon: "mdi:book", color: Colors.green),
-    ],
-    tags: [
-      for (final tag in [_tag1, _tag2, _tag3])
-        Tag(tagId: tag, name: tag.value, color: Colors.red),
-    ],
-    pages: [
-      Page(pageId: _page1, name: "One", bookId: _bookA, chapter: "act1"),
-      Page(pageId: _page2, name: "Two", bookId: _bookA, chapter: "act1.intro"),
-    ],
-  );
-}
+    Book(bookId: _bookB, title: "B", icon: "mdi:book", color: Colors.green),
+  ],
+  tags: [
+    for (final tag in [_tag1, _tag2, _tag3])
+      Tag(tagId: tag, name: tag.value, color: Colors.red),
+  ],
+  pages: [
+    Page(pageId: _page1, name: "One", bookId: _bookA, chapter: "act1"),
+    Page(pageId: _page2, name: "Two", bookId: _bookA, chapter: "act1.intro"),
+  ],
+);
 
 final _targets = skir.OperationTargets(
   subject: skir.ResourceTarget.anyResource,

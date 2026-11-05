@@ -1,6 +1,5 @@
 //! Publishes the backend to a cluster: every deployable component, the database image, then a
-//! restart so the runtime operator pulls the new images. The CI cluster also gets the client
-//! configuration the end to end suites read.
+//! restart so the runtime operator pulls the new images.
 
 use std::fs;
 use std::io::Write;
@@ -11,17 +10,38 @@ use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 use serde_json::Value;
 
+use crate::cluster::CiCluster;
 use crate::lock::HeavyLock;
-use crate::stack::client_configuration::ClientConfiguration;
-use crate::{CommandExt, Context, Scratch, cluster, secrets};
+use crate::{CommandExt, Context, Scratch, secrets};
 
 /// Tools deploy runs, for the doctor.
 pub const TOOLS: &[&str] = &["wash", "crane", "kubectl", "tar", "git"];
 
 /// The database jobs run surrealkit from this image's binary (`deploy/base/start/job.yaml`).
 const SURREALKIT_IMAGE: &str = "ghcr.io/surrealdb/surrealkit:0.6.3";
-/// A base with `/bin/sh` and CA certificates, which the database jobs need.
-const DATABASE_BASE_IMAGE: &str = "alpine:3.20";
+/// The base of the database jobs, which need `/bin/sh`. surrealkit is linked against glibc, and
+/// its image is built on Debian 12; on a musl base such as Alpine it does not start, which the
+/// shell reports as the file not being found.
+const DATABASE_BASE_IMAGE: &str = "debian:12-slim";
+/// surrealkit's own CA bundle, which the slim base does not have.
+const SURREALKIT_CA_BUNDLE: &str = "etc/ssl/certs/ca-certificates.crt";
+/// The tag the component overlays pull (`deploy/local/workloaddeployment-patch.yaml`).
+const COMPONENT_TAG: &str = "latest";
+/// The tag the database overlay pulls (`backend/database/deploy/local/start/kustomization.yaml`).
+const DATABASE_TAG: &str = "dev";
+/// The local k3d cluster's kubeconfig context.
+const LOCAL_CONTEXT: &str = "k3d-seamlezz-local";
+/// The kubectl arguments that restart every workload, so the runtime operator pulls the images
+/// just pushed.
+const RESTART_WORKLOADS: [&str; 4] = ["delete", "workloadreplicasets", "--all-namespaces", "--all"];
+/// The kubectl arguments that remove the local cluster's finished schema sync.
+const RESYNC_SCHEMA: [&str; 5] = [
+    "delete",
+    "job",
+    "--namespace=typewriter",
+    "--selector=typewriter.seamlezz.com/db-rollout-action=start",
+    "--ignore-not-found",
+];
 
 /// A cluster this command may deploy to. Nothing else is reachable.
 #[derive(Clone, Copy, ValueEnum)]
@@ -32,48 +52,26 @@ pub enum Cluster {
     Ci,
 }
 
-impl Cluster {
-    fn context(self) -> &'static str {
-        match self {
-            Self::Local => "k3d-seamlezz-local",
-            Self::Ci => cluster::CONTEXT,
-        }
-    }
-
-    /// The CI overlay keeps the local overlay's in cluster registry.
-    fn registry(self) -> &'static str {
-        "oci.local.seamlezz.net"
-    }
-
-    fn repository(self) -> String {
-        format!("{}/typewriter", self.registry())
-    }
-
-    /// The tag the component overlays pull (`deploy/local/workloaddeployment-patch.yaml`).
-    fn component_tag(self) -> &'static str {
-        "latest"
-    }
-
-    /// The tag the database overlay pulls (`backend/database/deploy/local/start/kustomization.yaml`).
-    fn database_tag(self) -> &'static str {
-        "dev"
-    }
-
-    /// k3d nodes run the host's architecture.
-    fn platform(self) -> &'static str {
-        if cfg!(target_arch = "aarch64") {
-            "linux/arm64"
-        } else {
-            "linux/amd64"
-        }
+/// The platform images are pushed for: k3d nodes run the host's architecture.
+fn platform() -> &'static str {
+    if cfg!(target_arch = "aarch64") {
+        "linux/arm64"
+    } else {
+        "linux/amd64"
     }
 }
 
 /// How pushes reach a cluster's registry.
 struct Registry {
-    cluster: Cluster,
-    user: &'static str,
+    host: String,
+    user: String,
     password: String,
+}
+
+impl Registry {
+    fn repository(&self) -> String {
+        format!("{}/typewriter", self.host)
+    }
 }
 
 /// A component the runtime deploys: a cdylib with a `deploy/` folder, the predicate the
@@ -83,32 +81,60 @@ pub(crate) struct Component {
     pub(crate) artifact: PathBuf,
 }
 
-/// Pushes this commit's backend to `cluster`'s registry. The CI cluster then gets the commit
-/// released to its Typewriter tenant.
+/// Pushes this commit's backend to `cluster`'s registry; the CI cluster is the one an earlier
+/// `cargo xtask cluster ci` created.
 pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
-    ensure_main_checkout(ctx)?;
-    let registry = match cluster {
-        Cluster::Local => Registry {
-            cluster,
-            user: "gabber235",
-            password: secrets::local_registry_password()?,
-        },
-        Cluster::Ci => Registry {
-            cluster,
-            user: "admin",
-            password: cluster::registry_password(ctx)?,
-        },
-    };
-    publish(ctx, &registry)?;
-    if let Cluster::Ci = cluster {
-        let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
-        cluster::release(ctx, revision.trim())?;
+    match cluster {
+        Cluster::Local => {
+            ensure_main_checkout(ctx)?;
+            publish(
+                ctx,
+                &Registry {
+                    host: "oci.local.seamlezz.net".into(),
+                    user: "gabber235".into(),
+                    password: secrets::local_registry_password()?,
+                },
+            )?;
+            // A finished Job does not run again, so Flux recreates this one and it syncs the schema
+            // of the image just pushed (`backend/database/deploy/local/start`).
+            ctx.tool(".", "kubectl", &["--context", LOCAL_CONTEXT])
+                .args(RESYNC_SCHEMA)
+                .run()?;
+            ctx.tool(".", "kubectl", &["--context", LOCAL_CONTEXT])
+                .args(RESTART_WORKLOADS)
+                .run()
+        }
+        Cluster::Ci => deploy_ci(ctx, &CiCluster::open(ctx)?),
     }
-    Ok(())
 }
 
+/// Pushes this commit's backend to `ci`'s registry and releases it to its Typewriter tenant.
+pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
+    ensure_main_checkout(ctx)?;
+    let registry = &ci.clients.registry;
+    publish(
+        ctx,
+        &Registry {
+            host: registry.host.clone(),
+            user: registry.user.clone(),
+            password: ci.registry_password(ctx)?,
+        },
+    )?;
+    ci.kubectl(ctx, &RESTART_WORKLOADS).run()?;
+    let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
+    let branch = ctx
+        .tool(".", "git", &["branch", "--show-current"])
+        .output_text()?;
+    ensure!(
+        !branch.trim().is_empty(),
+        "the cluster reads this commit from its branch on GitHub, and HEAD is on no branch"
+    );
+    ci.release(ctx, branch.trim(), revision.trim())
+}
+
+/// Builds every deployable component and pushes it and the database image to `registry`; the
+/// caller restarts the cluster's workloads so they pull them.
 fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
-    let cluster = registry.cluster;
     // The components compile against the generated Skir sources.
     crate::generate::generate(ctx, None)?;
     let components = deployable(ctx)?;
@@ -119,9 +145,9 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
     for component in &components {
         let reference = format!(
             "{}/{}:{}",
-            cluster.repository(),
+            registry.repository(),
             component.package,
-            cluster.component_tag()
+            COMPONENT_TAG
         );
         // The wash fork reads registry credentials from flags only; the long form keeps the
         // password out of errors (`crate::display`), and `=` keeps a password that starts with
@@ -133,7 +159,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
                 "oci",
                 "push",
                 "-u",
-                registry.user,
+                &registry.user,
                 &format!("--password={}", registry.password),
                 &reference,
             ],
@@ -142,25 +168,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
         .run()
         .with_context(|| format!("cannot push {reference}"))?;
     }
-    push_database_image(ctx, registry)?;
-    if let Cluster::Ci = cluster {
-        let state = ctx.root.join(cluster::STATE);
-        fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;
-        ClientConfiguration::ci_cluster(ctx)?.write(&state)?;
-    }
-    ctx.tool(
-        ".",
-        "kubectl",
-        &[
-            "--context",
-            cluster.context(),
-            "delete",
-            "workloadreplicasets",
-            "--all-namespaces",
-            "--all",
-        ],
-    )
-    .run()
+    push_database_image(ctx, registry)
 }
 
 /// Agent worktrees never deploy; only the main checkout publishes to a cluster.
@@ -248,14 +256,9 @@ pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
     Ok(components)
 }
 
-/// alpine, plus /usr/local/bin/surrealkit and /workspace/backend/database, entrypoint surrealkit.
+/// Debian, plus /usr/local/bin/surrealkit, its CA bundle and /workspace/backend/database, entrypoint surrealkit.
 fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
-    let cluster = registry.cluster;
-    let image = format!(
-        "{}/database:{}",
-        cluster.repository(),
-        cluster.database_tag()
-    );
+    let image = format!("{}/database:{DATABASE_TAG}", registry.repository());
     let scratch = Scratch::new("database-image")?;
     let stage = |name: &str| -> Result<PathBuf> {
         let path = scratch.0.join(name);
@@ -268,7 +271,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
     ctx.tool(
         ".",
         "crane",
-        &["export", "--platform", cluster.platform(), SURREALKIT_IMAGE],
+        &["export", "--platform", platform(), SURREALKIT_IMAGE],
     )
     .arg(&exported)
     .run()?;
@@ -278,6 +281,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
         .arg("-C")
         .arg(&surrealkit)
         .arg("usr/local/bin/surrealkit")
+        .arg(SURREALKIT_CA_BUNDLE)
         .run()?;
 
     let schema = stage("schema/workspace/backend")?;
@@ -293,6 +297,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
         .arg("-C")
         .arg(&surrealkit)
         .arg("usr")
+        .arg("etc")
         .run()?;
     tar(ctx)
         .arg("-cf")
@@ -309,9 +314,9 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
             &[
                 "auth",
                 "login",
-                cluster.registry(),
+                &registry.host,
                 "-u",
-                registry.user,
+                &registry.user,
                 "--password-stdin",
             ],
         )
@@ -326,7 +331,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
     ensure!(
         login.wait()?.success(),
         "crane cannot log in to {}",
-        cluster.registry()
+        registry.host
     );
 
     ctx.tool(
@@ -335,7 +340,7 @@ fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
         &[
             "append",
             "--platform",
-            cluster.platform(),
+            platform(),
             "-b",
             DATABASE_BASE_IMAGE,
             "-t",

@@ -57,7 +57,7 @@ private const val CONFIGURATION_FILE_SETTING = "TYPEWRITER_CONFIG_FILE"
 
 private fun Map<String, String>.nonBlank(name: String): String? = get(name)?.takeIf(String::isNotBlank)
 
-private fun readConfiguration(path: Path): Map<String, String> {
+internal fun readConfiguration(path: Path): Map<String, String> {
     require(Files.isRegularFile(path)) { "Realm configuration file does not exist: $path" }
     val properties = Properties()
     Files.newBufferedReader(path).use(properties::load)

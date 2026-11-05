@@ -25,5 +25,17 @@ otel-wasi.workspace = true
 tracing.workspace = true
 wit-bindgen.workspace = true
 
+[features]
+# Exposes the shared frame vectors to the example that writes them for `cargo xtask generate`.
+frame-vectors = []
+
+[[example]]
+name = "write_frame_vectors"
+required-features = ["frame-vectors"]
+
+[dev-dependencies]
+proptest.workspace = true
+trybuild.workspace = true
+
 [lints]
 workspace = true

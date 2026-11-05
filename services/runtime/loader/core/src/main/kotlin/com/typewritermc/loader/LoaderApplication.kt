@@ -16,6 +16,7 @@ import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.sdk.OpenTelemetrySdk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.flowOf
@@ -124,7 +125,14 @@ class LoaderApplication internal constructor(
  */
 fun loaderApplication(logOutput: LoaderLogOutput): LoaderApplication {
     val settings = LoaderSettings.system()
-    val openTelemetry = loaderOpenTelemetry(logOutput, settings.telemetryConfiguration())
+    return loaderApplication(settings, loaderOpenTelemetry(logOutput, settings.telemetryConfiguration()))
+}
+
+/** Assembles the loader application around [openTelemetry], which the application flushes and shuts down on close. */
+internal fun loaderApplication(
+    settings: LoaderSettings,
+    openTelemetry: OpenTelemetrySdk,
+): LoaderApplication {
     val application =
         koinApplication {
             modules(

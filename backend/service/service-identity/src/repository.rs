@@ -16,11 +16,6 @@ impl ValidatedServiceRole {
     pub fn as_record(&self) -> &ServiceRoleRecord {
         &self.0
     }
-
-    #[cfg(test)]
-    pub(crate) fn admit_for_test(role: ServiceRoleRecord) -> Self {
-        Self(role)
-    }
 }
 
 impl IdentityRepository for SurrealIdentityRepository {

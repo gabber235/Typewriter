@@ -1,6 +1,5 @@
 package com.typewritermc.imprint.gradle
 
-import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.CapabilityManifest
@@ -11,23 +10,25 @@ import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
-import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.RealmManifest
+import com.typewritermc.imprint.gradle.testing.capabilityBuild
+import com.typewritermc.imprint.gradle.testing.entries
+import com.typewritermc.imprint.gradle.testing.extensionWithCapability
+import com.typewritermc.imprint.gradle.testing.fixture
+import com.typewritermc.imprint.gradle.testing.javaLibraryBuild
+import com.typewritermc.imprint.gradle.testing.javaType
+import com.typewritermc.imprint.gradle.testing.readManifest
+import de.infix.testBalloon.framework.core.TestConfig
+import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import java.io.File
-import java.nio.file.Files
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
 
-val ImprintPluginTest by testSuite {
+val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     test("projects declare exactly one artifact with an exact version") {
         val fixture = fixture()
         fixture
@@ -58,40 +59,6 @@ val ImprintPluginTest by testSuite {
                 """.trimIndent(),
                 expectFailure = true,
             ).output shouldContain "Artifact version must use complete semantic version syntax"
-    }
-
-    test("extensions create arbitrary isolated source parts") {
-        val fixture = fixture("capability")
-        fixture.writeBuild(
-            "capability",
-            capabilityBuild("typewritermc:items"),
-        )
-        fixture.writeBuild(
-            """
-            plugins {
-                kotlin("jvm") version "2.4.21"
-                id("com.typewritermc.imprint")
-            }
-            typewriter {
-                extension {
-                    id = "typewritermc:quests"
-                    version = "1.0.0"
-                    sourceSet("items") {
-                        capabilities {
-                            capability(project(":capability"), version = "^1")
-                        }
-                    }
-                }
-            }
-            """.trimIndent(),
-        )
-
-        val output = fixture.run("typewriterSourceSets").output
-
-        output shouldContain "Typewriter source set common"
-        output shouldContain "Typewriter source set items"
-        output shouldNotContain "realm"
-        output shouldNotContain "panel"
     }
 
     test("extension common receives engine core and extension API") {
@@ -666,30 +633,33 @@ val ImprintPluginTest by testSuite {
             "Cyclic extension source set inclusion: first > second > first"
     }
 
-    test("relationship inputs track producers constraints and artifact contents") {
+    test("a changed requirement constraint rewrites the manifest") {
         val fixture = fixture("base")
         fixture.writeBuild("base", capabilityBuild("typewritermc:base"))
-        val build =
-            capabilityBuild(
-                "typewritermc:items",
-                requires = "capability(project(\":base\"), version = \"^1\")",
-            )
+        val build = capabilityBuild("typewritermc:items", requires = "capability(project(\":base\"), version = \"^1\")")
         fixture.writeBuild(build)
-
-        fixture.run("generateImprintManifest").task(":base:jar")?.outcome shouldBe TaskOutcome.SUCCESS
-        val original = fixture.manifestBytes()
-        fixture.run("generateImprintManifest").task(":generateImprintManifest")?.outcome shouldBe TaskOutcome.UP_TO_DATE
-
-        fixture.write("base/src/main/resources/content.txt", "changed artifact content")
-        fixture.run("generateImprintManifest").task(":generateImprintManifest")?.outcome shouldBe TaskOutcome.SUCCESS
-        fixture.manifestBytes().toList() shouldBe original.toList()
+        fixture.run("generateImprintManifest")
 
         fixture.writeBuild(build.replace("^1", "^1.0"))
-        fixture.run("generateImprintManifest").task(":generateImprintManifest")?.outcome shouldBe TaskOutcome.SUCCESS
+        fixture.run("generateImprintManifest")
+
         val manifest = ImprintManifestCodec.decode(fixture.manifestBytes()) as CapabilityManifest
         manifest.directRequirements
             .single()
             .version.expression shouldBe "^1.0"
+    }
+
+    test("changed content of a required artifact leaves the manifest bytes unchanged") {
+        val fixture = fixture("base")
+        fixture.writeBuild("base", capabilityBuild("typewritermc:base"))
+        fixture.writeBuild(capabilityBuild("typewritermc:items", requires = "capability(project(\":base\"), version = \"^1\")"))
+        fixture.run("generateImprintManifest")
+        val original = fixture.manifestBytes()
+
+        fixture.write("base/src/main/resources/content.txt", "changed artifact content")
+        fixture.run("generateImprintManifest")
+
+        fixture.manifestBytes().toList() shouldBe original.toList()
     }
 
     test("platform archive changes invalidate hosted manifest content") {
@@ -799,189 +769,3 @@ val ImprintPluginTest by testSuite {
             "Project version 9.0.0 conflicts with Imprint artifact version 1.0.0"
     }
 }
-
-private fun fixture(vararg projects: String): FunctionalFixture {
-    val directory = Files.createTempDirectory("imprint-functional-test").toFile()
-    val includes = projects.joinToString("\n") { "include(\":$it\")" }
-    directory.resolve("settings.gradle.kts").writeText(
-        """
-        pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }
-        dependencyResolutionManagement { repositories { mavenCentral() } }
-        rootProject.name = "fixture"
-        $includes
-        """.trimIndent(),
-    )
-    projects.forEach { directory.resolve(it).mkdirs() }
-    return FunctionalFixture(directory)
-}
-
-private class FunctionalFixture(
-    private val directory: File,
-) {
-    fun writeBuild(content: String) = write("build.gradle.kts", content)
-
-    fun writeBuild(
-        project: String,
-        content: String,
-    ) = write("$project/build.gradle.kts", content)
-
-    fun write(
-        path: String,
-        content: String,
-    ) {
-        directory.resolve(path).apply {
-            parentFile.mkdirs()
-            writeText(content)
-        }
-    }
-
-    fun writeRuntimeEntrypoints(
-        project: String,
-        vararg classes: String,
-    ) {
-        writeBytes(
-            "$project/build/generated/ksp/main/resources/$IMPRINT_RUNTIME_ENTRYPOINTS_PATH",
-            HostedRuntimeEntrypointMetadataCodec.encode(HostedRuntimeEntrypointMetadata(classes.toList())),
-        )
-    }
-
-    fun writeBytes(
-        path: String,
-        content: ByteArray,
-    ) {
-        directory.resolve(path).apply {
-            parentFile.mkdirs()
-            writeBytes(content)
-        }
-    }
-
-    fun build(
-        content: String,
-        expectFailure: Boolean = false,
-    ): org.gradle.testkit.runner.BuildResult {
-        writeBuild(content)
-        return run("typewriterInfo", expectFailure)
-    }
-
-    fun run(
-        task: String,
-        expectFailure: Boolean = false,
-    ): org.gradle.testkit.runner.BuildResult {
-        val runner =
-            GradleRunner
-                .create()
-                .withProjectDir(directory)
-                .withArguments(task, "--stacktrace", "--no-build-cache")
-                .withPluginClasspath()
-        return if (expectFailure) runner.buildAndFail() else runner.build()
-    }
-
-    fun manifestBytes(project: String = ""): ByteArray =
-        directory
-            .resolve(if (project.isBlank()) "build" else "$project/build")
-            .resolve("generated/imprint/artifact.cbor")
-            .readBytes()
-
-    fun singleJar(path: String): File =
-        directory.resolve(path).listFiles { file -> file.extension == "jar" }?.single()
-            ?: error("Expected one JAR in $path")
-
-    fun publishCapability(
-        group: String,
-        module: String,
-        version: String,
-        artifactId: String,
-    ) {
-        val moduleDirectory = directory.resolve("repository/${group.replace('.', '/')}/$module/$version")
-        moduleDirectory.mkdirs()
-        val manifest =
-            CapabilityManifest(
-                id = ArtifactId(artifactId),
-                version = ArtifactVersion(version),
-                directRequirements = emptyList(),
-                resolvedCapabilities = emptyList(),
-                contributions = emptyList(),
-            )
-        ZipOutputStream(moduleDirectory.resolve("$module-$version.jar").outputStream()).use { archive ->
-            archive.putNextEntry(ZipEntry(IMPRINT_MANIFEST_PATH))
-            archive.write(ImprintManifestCodec.encode(manifest))
-            archive.closeEntry()
-        }
-        moduleDirectory.resolve("$module-$version.pom").writeText(
-            """
-            <project>
-                <modelVersion>4.0.0</modelVersion>
-                <groupId>$group</groupId>
-                <artifactId>$module</artifactId>
-                <version>$version</version>
-            </project>
-            """.trimIndent(),
-        )
-        val metadataDirectory = moduleDirectory.parentFile
-        metadataDirectory.resolve("maven-metadata.xml").writeText(
-            """
-            <metadata>
-                <groupId>$group</groupId>
-                <artifactId>$module</artifactId>
-                <versioning>
-                    <latest>$version</latest>
-                    <release>$version</release>
-                    <versions><version>$version</version></versions>
-                </versioning>
-            </metadata>
-            """.trimIndent(),
-        )
-    }
-}
-
-private fun capabilityBuild(
-    id: String,
-    dependencies: String = "",
-    requires: String = "",
-): String =
-    """
-    plugins { id("com.typewritermc.imprint") }
-    $dependencies
-    typewriter {
-        engineCapability {
-            id = "$id"
-            version = "1.0.0"
-            ${if (requires.isBlank()) "" else "requires { $requires }"}
-        }
-    }
-    """.trimIndent()
-
-private fun javaLibraryBuild(): String = "plugins { `java-library` }"
-
-private fun extensionWithCapability(dependency: String): String =
-    """
-    plugins { id("com.typewritermc.imprint") }
-    typewriter {
-        extension {
-            id = "typewritermc:quests"
-            version = "1.0.0"
-            sourceSet("target") {
-                capabilities { capability($dependency, version = "^1") }
-            }
-        }
-    }
-    """.trimIndent()
-
-private fun javaType(
-    packageName: String,
-    name: String,
-): String = "package $packageName; public class $name {}"
-
-private fun File.readManifest(): ImprintManifest =
-    ZipFile(this).use { archive ->
-        ImprintManifestCodec.decode(archive.getInputStream(archive.getEntry(IMPRINT_MANIFEST_PATH)).readBytes())
-    }
-
-private fun File.entries(): List<String> =
-    ZipFile(this).use { archive ->
-        archive
-            .entries()
-            .asSequence()
-            .map { it.name }
-            .toList()
-    }

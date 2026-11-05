@@ -36,7 +36,7 @@ ResourceSession resourceSession(Ref ref) {
   ref.watch(localWorkScopeProvider);
   final telemetry = ref.watch(panelTelemetryProvider.future);
   final session = ResourceSession(
-    SkirMutationClient(() => ref.read(natsProvider), () => telemetry),
+    SkirMutationClient(() => ref.read(natsProvider.future), () => telemetry),
     ref.watch(userIdProvider).value,
   );
   ref.onDispose(session.end);

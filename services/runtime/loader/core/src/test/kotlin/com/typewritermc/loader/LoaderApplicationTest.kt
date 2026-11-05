@@ -1,10 +1,35 @@
 package com.typewritermc.loader
 
+import com.typewritermc.loader.testing.RecordingSpanExporter
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.mainSpanBlocking
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.SdkTracerProvider
+import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
+import java.util.concurrent.TimeUnit
 
 val LoaderApplicationTest by testSuite {
-    test("shared application assembles the artifact bootstrap") {
-        loaderApplication { }.use { application -> application.bootstrap.shouldBeInstanceOf<ArtifactLoaderBootstrap>() }
+    test("closing the loader exports pending spans") {
+        val exporter = RecordingSpanExporter()
+        // The batch never exports on its own schedule, so the span stays pending until the loader closes.
+        val processor = BatchSpanProcessor.builder(exporter).setScheduleDelay(1, TimeUnit.HOURS).build()
+        val openTelemetry =
+            OpenTelemetrySdk
+                .builder()
+                .setTracerProvider(SdkTracerProvider.builder().addSpanProcessor(processor).build())
+                .build()
+        val application = loaderApplication(LoaderSettings(), openTelemetry)
+
+        application.telemetry.mainSpanBlocking("loader.test.work", ErrorSlug.of("loader-test-work-failed")) { }
+        exporter.exported.shouldBeEmpty()
+
+        application.close()
+
+        exporter.exported.map(SpanData::getName) shouldBe listOf("loader.test.work")
+        exporter.shutDown shouldBe true
     }
 }

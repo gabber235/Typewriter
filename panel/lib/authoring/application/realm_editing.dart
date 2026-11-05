@@ -146,19 +146,18 @@ final class RealmEditing implements Listenable {
     apply: (branch) => branch.applyPrepared(edit),
   );
 
-  /// Refreshes saved facts before capturing a synchronous journal review.
-  Future<AuthoringConflictReview> reviewConflict(EditGroupId id) async {
-    workspace.inspectUnsubmitted(id);
-    if (workspace.applying) {
-      throw const EditPreparationFailure("Wait for the current save to finish");
-    }
-    final observation = await workspace.persistence.refresh();
-    if (workspace.applying) {
-      throw const EditPreparationFailure("Wait for the current save to finish");
-    }
-    workspace.acceptConfirmed(observation);
-    return const RealmEditModel().review(id, workspace.inspectUnsubmitted(id));
-  }
+  /// The conflict review of [id] while its group needs one. The workspace
+  /// starts it when the group enters a conflict and reads the saved values
+  /// the Realm reports as current for it; null while no review is needed.
+  EditReview<AuthoringConflictReview>? conflictReview(EditGroupId id) =>
+      workspace
+          .reviewOf(id)
+          ?.convert((review) => const RealmEditModel().review(id, review));
+
+  /// Reads the saved values again for the conflict review of [id]; the
+  /// result shows through [conflictReview].
+  Future<void> refreshConflictReview(EditGroupId id) =>
+      workspace.refreshReview(id);
 
   EditStageResult resolveConflict(
     AuthoringConflictReview reviewed,

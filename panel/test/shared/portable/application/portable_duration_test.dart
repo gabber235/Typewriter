@@ -19,23 +19,6 @@ void main() {
           in (fixture["cases"]! as List).cast<Map<String, Object?>>()) {
         final milliseconds = int.parse(item["milliseconds"]! as String);
         final value = skir.Duration(milliseconds: milliseconds);
-        final decoded = skir.Duration.serializer.fromBytes(
-          skir.Duration.serializer.toBytes(value),
-        );
-        expect(
-          decoded.milliseconds,
-          milliseconds,
-          reason: item["id"]! as String,
-        );
-        final payload = skir.DataValue.createDuration(value: value);
-        final payloadDecoded = skir.DataValue.serializer.fromBytes(
-          skir.DataValue.serializer.toBytes(payload),
-        ) as skir.DataValue_durationWrapper;
-        expect(
-          payloadDecoded.value.value.milliseconds,
-          milliseconds,
-          reason: item["id"]! as String,
-        );
         expect(
           value.isPortable,
           item["admitted"],

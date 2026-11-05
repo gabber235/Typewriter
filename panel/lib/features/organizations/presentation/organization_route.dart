@@ -119,7 +119,11 @@ class OrganizationScaffold extends ConsumerWidget {
                           showInspector:
                               scope == null ||
                               ref.watch(showsSideInspectorProvider(scope)),
-                          child: child,
+                          // The nested router's route barriers block the
+                          // semantics of earlier painted siblings up to the
+                          // nearest boundary; without this one they hide the
+                          // app bar and sidebar from assistive technology.
+                          child: Semantics(container: true, child: child),
                         ),
                       ),
                       ActionRow(),

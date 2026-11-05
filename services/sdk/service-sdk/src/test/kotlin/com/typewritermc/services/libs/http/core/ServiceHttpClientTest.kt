@@ -1,10 +1,10 @@
 package com.typewritermc.services.libs.http.core
 
-import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator
 import io.opentelemetry.api.trace.SpanKind
@@ -35,7 +35,7 @@ val ServiceHttpClientTest by testSuite {
             val baggage = Baggage.builder().put("tenant", "active").build()
             Context.root().with(parent).with(baggage).makeCurrent().use {
                 client.execute(
-                    request(
+                    httpRequest(
                         headers =
                             HttpHeaders.of(
                                 "traceparent" to "00-00000000000000000000000000000001-0000000000000001-01",
@@ -59,11 +59,11 @@ val ServiceHttpClientTest by testSuite {
         TelemetryTestHarness.create().use { harness ->
             var calls = 0
             val client =
-                client(harness) {
+                httpClient(harness) {
                     calls++
                     error("not called")
                 }
-            client.execute(request(body = byteArrayOf(1, 2), maximumRequestBytes = 1, timeout = 2.seconds)) shouldBe
+            client.execute(httpRequest(body = byteArrayOf(1, 2), maximumRequestBytes = 1, timeout = 2.seconds)) shouldBe
                 HttpResult.Failure(HttpError.RequestTooLarge(1, 2))
             calls shouldBe 0
             harness.assertNoActiveSpans()
@@ -83,8 +83,8 @@ val ServiceHttpClientTest by testSuite {
     test("all HTTP statuses are successes with response telemetry") {
         for (status in listOf(200, 404, 500)) {
             TelemetryTestHarness.create().use { harness ->
-                val client = client(harness) { HttpResult.Success(HttpResponse(status, HttpHeaders.Empty, byteArrayOf(1, 2, 3))) }
-                val result = client.execute(request(uri = URI("https://example.test/path?token=secret")))
+                val client = httpClient(harness) { HttpResult.Success(HttpResponse(status, HttpHeaders.Empty, byteArrayOf(1, 2, 3))) }
+                val result = client.execute(httpRequest(uri = URI("https://example.test/path?token=secret")))
                 (result as HttpResult.Success).response.statusCode shouldBe status
                 harness.spans {
                     span("http.test") {
@@ -110,7 +110,7 @@ val ServiceHttpClientTest by testSuite {
             )
         for ((error, category) in cases) {
             TelemetryTestHarness.create().use { harness ->
-                client(harness) { HttpResult.Failure(error) }.execute(request()) shouldBe HttpResult.Failure(error)
+                httpClient(harness) { HttpResult.Failure(error) }.execute(httpRequest()) shouldBe HttpResult.Failure(error)
                 harness.spans {
                     span("http.test") {
                         attribute("error.type", category)
@@ -122,40 +122,20 @@ val ServiceHttpClientTest by testSuite {
         }
     }
 
-    test("cancellation and nested fatal failures escape unchanged and close spans") {
-        for (failure in listOf(CancellationException("cancel"), object : LinkageError("fatal") {})) {
-            TelemetryTestHarness.create().use { harness ->
-                val thrown = shouldThrow<Throwable> { client(harness) { throw failure }.execute(request()) }
-                if (failure is CancellationException) {
-                    (thrown is CancellationException) shouldBe true
-                } else {
-                    (thrown === failure) shouldBe
-                        true
-                }
-                harness.assertNoActiveSpans()
-            }
+    test("cancellation escapes as cancellation and closes the span") {
+        TelemetryTestHarness.create().use { harness ->
+            shouldThrow<CancellationException> {
+                httpClient(harness) { throw CancellationException("cancel") }.execute(httpRequest())
+            }.message shouldBe "cancel"
+            harness.assertNoActiveSpans()
+        }
+    }
+
+    test("a fatal failure escapes unchanged and closes the span") {
+        val fatal = object : LinkageError("fatal") {}
+        TelemetryTestHarness.create().use { harness ->
+            shouldThrow<LinkageError> { httpClient(harness) { throw fatal }.execute(httpRequest()) } shouldBeSameInstanceAs fatal
+            harness.assertNoActiveSpans()
         }
     }
 }
-
-private fun client(
-    harness: TelemetryTestHarness,
-    execute: suspend (HttpRequest) -> HttpResult,
-) = ServiceHttpClient(HttpTransport(execute), harness.telemetry, ContextPropagators.noop())
-
-private fun request(
-    uri: URI = URI("https://example.test/path"),
-    headers: HttpHeaders = HttpHeaders.Empty,
-    body: ByteArray = byteArrayOf(),
-    maximumRequestBytes: Long? = null,
-    timeout: kotlin.time.Duration? = null,
-) = HttpRequest(
-    HttpOperation("http.test"),
-    ErrorSlug.of("http-failed"),
-    if (body.isEmpty()) HttpMethod.GET else HttpMethod.POST,
-    uri,
-    headers,
-    body,
-    timeout,
-    maximumRequestBytes,
-)

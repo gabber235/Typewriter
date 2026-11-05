@@ -2,20 +2,26 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 /// Appearances evaluate the displays the real Kotlin catalog assembly
 /// published for the framework types.
 void main() {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
+  final entry = skir.AuthoringRecord(
+    configuration: skir.TypeSelection.wrapComplete(
+      compiledSdkElementValue.authoredActualType!,
+    ),
+    fields: compiledSdkElementValue.authoredRecord!.fields,
+  );
 
   test("a Book with a blank title is named Book", () {
-    final blank = _withField(
+    final blank = withField(
       compiledSdkBookRecord,
       "title",
       skir.DataValue.wrapStringValue(""),
     );
-    final titled = _withField(
+    final titled = withField(
       compiledSdkBookRecord,
       "title",
       skir.DataValue.wrapStringValue("Main story"),
@@ -26,8 +32,6 @@ void main() {
   });
 
   test("the most specific declared display names the resource", () {
-    final entry = _entry();
-
     final formulas = catalog.displayFormulasFor(entry.configuration);
     final target = formulas?.target;
 
@@ -43,7 +47,7 @@ void main() {
   });
 
   test("parts a display does not override read the type display", () {
-    final appearance = catalog.appearanceOf(_entry());
+    final appearance = catalog.appearanceOf(entry);
 
     // The element display overrides only the label; accent and icon are the
     // defaults, which read the entry type's own display.
@@ -67,7 +71,7 @@ void main() {
   });
 
   test("a missing resource has no appearance", () {
-    final document = _Document(catalog, {
+    final document = AuthoredRecords(catalog.snapshot.generation, {
       skir.ResourceId(value: "book"): compiledSdkBookRecord,
     });
 
@@ -105,50 +109,3 @@ final _cueDefinition = skir.TypeDefinitionId(
   ),
   revision: 1,
 );
-
-skir.AuthoringRecord _entry() => skir.AuthoringRecord(
-  configuration: skir.TypeSelection.wrapComplete(
-    compiledSdkElementValue.authoredActualType!,
-  ),
-  fields: compiledSdkElementValue.authoredRecord!.fields,
-);
-
-skir.AuthoringRecord _withField(
-  skir.AuthoringRecord record,
-  String name,
-  skir.DataValue value,
-) => skir.AuthoringRecord(
-  configuration: record.configuration,
-  fields: [
-    for (final field in record.fields)
-      if (field.name == name)
-        skir.FieldValue(name: name, value: value)
-      else
-        field,
-  ],
-);
-
-final class _Document implements PortableAuthoringView {
-  _Document(this.catalog, this.resources);
-
-  final CheckedEditorCatalog catalog;
-
-  @override
-  final Map<skir.ResourceId, skir.AuthoringRecord> resources;
-
-  @override
-  skir.CatalogGeneration get generation => catalog.snapshot.generation;
-
-  @override
-  List<skir.LinkProjection> get links => const [];
-
-  @override
-  skir.AuthoringRecord? resource(skir.ResourceId id) => resources[id];
-
-  @override
-  PortablePathResult<skir.DataValue> read(skir.ValueLocation location) =>
-      const PortablePathUnavailable("Not read by appearances");
-
-  @override
-  skir.DataValue defaultValue(skir.TypeUse? type) => skir.DataValue.unfilled;
-}

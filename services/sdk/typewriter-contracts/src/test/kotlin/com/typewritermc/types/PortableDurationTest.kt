@@ -23,10 +23,12 @@ val PortableDurationTest by testSuite {
             it.parent
         }.map { it.resolve("skir-src/editor/v1/fixtures/portable_duration_conformance.json") }.first(Files::exists)
     val fixture = Json.parseToJsonElement(Files.readString(fixturePath)).jsonObject
-    fixture
-        .getValue("maximumMilliseconds")
-        .jsonPrimitive.content
-        .toLong() shouldBe MAX_PORTABLE_DURATION_MILLISECONDS
+    test("the shared fixture names the same portable maximum") {
+        fixture
+            .getValue("maximumMilliseconds")
+            .jsonPrimitive.content
+            .toLong() shouldBe MAX_PORTABLE_DURATION_MILLISECONDS
+    }
     fixture.getValue("cases").jsonArray.forEach { item ->
         val case = item.jsonObject
         test(case.getValue("id").jsonPrimitive.content) {
@@ -43,7 +45,7 @@ val PortableDurationTest by testSuite {
                 duration.duration.inWholeMilliseconds shouldBe milliseconds
                 DataValue.duration(milliseconds.milliseconds) shouldBe wire
             } else {
-                shouldThrow<IllegalArgumentException> { DataValue.duration(milliseconds.milliseconds) }
+                shouldThrow<IllegalArgumentException> { DataValue.duration(milliseconds.milliseconds) }.message shouldBe DURATION_REJECTION
                 shouldThrow<IllegalArgumentException> { wire.requirePortable() }.message shouldBe
                     "Duration millisecond count exceeds the finite portable range."
             }
@@ -68,8 +70,10 @@ val PortableDurationTest by testSuite {
         }
     }
     test("model rejects infinite and fractional millisecond durations") {
-        shouldThrow<IllegalArgumentException> { DataValue.duration(Duration.INFINITE) }
-        shouldThrow<IllegalArgumentException> { DataValue.duration(-Duration.INFINITE) }
-        shouldThrow<IllegalArgumentException> { DataValue.duration(1.nanoseconds) }
+        for (duration in listOf(Duration.INFINITE, -Duration.INFINITE, 1.nanoseconds)) {
+            shouldThrow<IllegalArgumentException> { DataValue.duration(duration) }.message shouldBe DURATION_REJECTION
+        }
     }
 }
+
+private const val DURATION_REJECTION = "Duration values require finite, exactly representable whole milliseconds."

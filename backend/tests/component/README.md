@@ -9,12 +9,12 @@ Run the suite from the devenv shell at the repository root. This is the supporte
 ```console
 cargo xtask check components
 cargo xtask components service-identity
-cargo xtask components synthetic-http case_000 --jobs 1
+cargo xtask components synthetic-isolation every_case_starts_with_its_own_empty_broker --jobs 1
 cargo xtask components --list
 cargo xtask components service-identity engine_identity_persists_credentials_and_roles --jobs 1 --live
 ```
 
-`cargo xtask check components` runs every fixture and writes the results as a `TestRun` (`skir-src/harness/v1/test_run.skir`) to `.xtask/results/components.json`. `cargo xtask components` runs one fixture, or the cases of one fixture matching a filter; `--results <path>` writes its `TestRun`. Either way a failed case is rerun once: passing on the rerun reports it as flaky without failing the run, and cases listed in `harness/quarantine.toml` are reported without gating. devenv provides the pinned Rust toolchain, the Wasm target and `nats-server`.
+`cargo xtask check components` runs every fixture and writes the results as a `TestRun` (`skir-src/harness/v1/test_run.skir`) to `.xtask/results/components.json`. `cargo xtask components` runs one fixture, or the cases of one fixture matching a filter; `--results <path>` writes its `TestRun`. Either way a failed case runs a second time and every attempt is recorded: passing on the second attempt reports it as flaky without failing the run, and cases listed in `harness/quarantine.toml` are reported without gating. devenv provides the pinned Rust toolchain, the Wasm target and `nats-server`.
 
 The runner reads the fixture catalog from the suite's `catalog` binary, checks that every deployable backend component has a fixture, asks Cargo to build the selected components, reads exact artifacts from Cargo JSON messages, hashes them, writes an immutable run manifest, then starts one library test process. Direct `cargo test` intentionally fails without that manifest because it cannot guarantee fresh Wasm artifacts.
 
@@ -128,6 +128,16 @@ Use `context.wait_for_span(name, timeout).await` to assert completed guest telem
 - Typed Skir messaging expectation bodies and replies.
 
 Raw byte APIs remain available for malformed payload and protocol tests.
+
+Domain modules hold the requests, doubles, builders and expectations of one area: `access`
+(policy requests and grants), `broker` (connections holding a grant), `callout` (signed
+authorization requests and identity provider keys), `identity` (Authentik and service roles),
+`organization` (founding, join codes and requests, members) and `service` (hosts and their
+execution).
+
+A test file holds only its fixture declaration and its cases. The ast-grep rule
+`rules/rust-test-local-helper.yml` fails `cargo xtask check quality` on any other
+function, type or impl in `suite/src`; a new helper grows this kit instead.
 
 ## Failure behavior
 

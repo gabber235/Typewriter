@@ -1,6 +1,6 @@
 //! The managed section of the pull request description. Everything between [`START`] and [`END`]
 //! is rendered from the `TestRun`s and the change report and replaced on every push; text outside
-//! the markers (the agent's summary, notes) is left alone. Media goes to the evidence branch
+//! the markers (the agent's summary, notes) is left alone. Media goes to its stores
 //! first, and nothing leaves the runner while it contains a secret the run knew.
 
 use std::fmt::Write as _;
@@ -13,10 +13,11 @@ use anyhow::{Context as _, Result, anyhow, bail};
 use serde::Deserialize;
 use serde::de::IgnoredAny;
 
-use super::{ATTEMPTS, Inputs, REPOSITORY, clone_branch, media_url, pr_folder};
-use crate::results::{self, Outcome, TestRun, runner_name};
+use super::stage::{self, published_files};
+use super::{ATTEMPTS, Inputs, REPOSITORY, Store};
+use crate::results::{self, Quarantine, TestRun, Verdict as CaseVerdict, runner_name};
 use crate::review::verdict::{
-    COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START,
+    COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START, covers,
 };
 use crate::skirout::base::harness::v1::test_run::{ArtifactKind, Demonstrates, TestCase};
 use crate::{CommandExt, Context};
@@ -34,39 +35,48 @@ const CHANGE_MAP_LIMIT: usize = 50;
 /// Uploads the media of every run under the results folder to `pr/<pr>/<sha>/` on the evidence
 /// branch and rewrites the managed section of pull request `pr`.
 pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()> {
-    let runs = results::read_all(&ctx.root.join(&inputs.results))?;
-    let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
-    let media = media(&runs);
-    let prefix = pr_folder(pr, Some(sha));
     let secrets = known_secrets();
-    let section = |verdict: Option<&Verdict>| {
+    // Raw results never reach a media store: only their staged projection is read.
+    let runs = stage::staged(&ctx.root, &inputs.results, &secrets)?;
+    let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
+    let quarantine = Quarantine::load(ctx)?;
+    let media = media(&runs);
+    let provenance = provenance(ctx, sha)?;
+    let section = |verdict: Option<&Verdict>, covered: bool| {
         render_section(&Section {
             sha,
+            provenance: &provenance,
             pr: Some(pr),
             runs: &runs,
+            quarantine: &quarantine,
             report: &report,
             verdict,
-            media_url: Some(&media_url(&prefix)),
+            covered,
+            jobs_failed: inputs.jobs_failed,
         })
     };
     // Media is uploaded before the description is read, so the read modify write stays short.
     // The verdict comes from the description, so the final section is scrubbed again there.
-    scrub(&section(None), &media, &secrets)?;
-    if !media.is_empty() {
-        let repository = clone_branch(ctx)?;
-        for (source, target) in &media {
-            let destination = repository.path(&format!("{prefix}/{target}"));
-            if let Some(parent) = destination.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            fs::copy(source, &destination)
-                .with_context(|| format!("cannot copy {}", source.display()))?;
+    scrub(&section(None, false), &media, &secrets)?;
+    for store in Store::ALL {
+        let files: Vec<&(PathBuf, String)> = media
+            .iter()
+            .filter(|(_, target)| Store::of(Path::new(target)) == store)
+            .collect();
+        if files.is_empty() {
+            continue;
         }
+        let repository = store.checkout(ctx)?;
+        replace_media(&repository.path(""), store, pr, sha, &files)?;
         repository.commit_and_push(ctx, &format!("pr {pr} at {}", &sha[..sha.len().min(7)]))?;
     }
     edit_pull_body(ctx, pr, |body| {
         let (body, verdict) = take_verdict(body);
-        let section = section(verdict.as_ref());
+        let covered = match &verdict {
+            Some(verdict) => covers(ctx, &verdict.commit, sha, &report.base)?,
+            None => false,
+        };
+        let section = section(verdict.as_ref(), covered);
         scrub(&section, &[], &secrets)?;
         Ok(replace_between(&body, START, END, &section))
     })?;
@@ -75,16 +85,70 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
 }
 
 /// The section without media links, for fork pull requests, whose workflow token cannot push.
+/// Makes `files` the only media of pull request `pr` in `store`'s checkout at `root`: only the
+/// description's latest run is worth keeping.
+fn replace_media(
+    root: &Path,
+    store: Store,
+    pr: u64,
+    sha: &str,
+    files: &[&(PathBuf, String)],
+) -> Result<()> {
+    let folder = root.join(store.folder(pr, None));
+    if folder.exists() {
+        fs::remove_dir_all(&folder)
+            .with_context(|| format!("cannot remove {}", folder.display()))?;
+    }
+    let commit = root.join(store.folder(pr, Some(sha)));
+    for (source, target) in files {
+        let destination = commit.join(target);
+        if let Some(parent) = destination.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::copy(source, &destination)
+            .with_context(|| format!("cannot copy {}", source.display()))?;
+    }
+    Ok(())
+}
+
+/// The section's first line: which commit it shows, when it was written and which run wrote it, so
+/// a reader can tell whether it is current.
+fn provenance(ctx: &Context, sha: &str) -> Result<String> {
+    let now = ctx
+        .tool(".", "date", &["-u", "+%Y-%m-%d %H:%M"])
+        .output_text()?;
+    let run = std::env::var("GITHUB_RUN_ID").ok();
+    Ok(provenance_line(sha, now.trim(), run.as_deref()))
+}
+
+fn provenance_line(sha: &str, now: &str, run: Option<&str>) -> String {
+    let short = &sha[..sha.len().min(7)];
+    let line = format!(
+        "Evidence from [{short}](https://github.com/{REPOSITORY}/commit/{sha}), {now} UTC."
+    );
+    match run {
+        Some(run) => {
+            format!("{line} [CI run](https://github.com/{REPOSITORY}/actions/runs/{run}).")
+        }
+        None => line,
+    }
+}
+
 pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
-    let runs = results::read_all(&ctx.root.join(&inputs.results))?;
+    let runs = stage::staged(&ctx.root, &inputs.results, &known_secrets())?;
     let report = ChangeReport::read(&ctx.root.join(&inputs.report))?;
+    let quarantine = Quarantine::load(ctx)?;
+    let provenance = provenance(ctx, sha)?;
     let section = render_section(&Section {
         sha,
+        provenance: &provenance,
         pr: None,
         runs: &runs,
+        quarantine: &quarantine,
         report: &report,
         verdict: None,
-        media_url: None,
+        covered: false,
+        jobs_failed: inputs.jobs_failed,
     });
     scrub(&section, &[], &known_secrets())?;
     Ok(section)
@@ -93,6 +157,7 @@ pub fn summary(ctx: &Context, sha: &str, inputs: &Inputs) -> Result<String> {
 /// The parts of `cargo xtask review report --json` the section shows.
 #[derive(Deserialize)]
 struct ChangeReport {
+    base: String,
     findings: Vec<Finding>,
     tests: TestChanges,
     change_map: Vec<EntityChange>,
@@ -120,8 +185,10 @@ struct Finding {
 #[derive(Deserialize)]
 struct TestChanges {
     added: Vec<IgnoredAny>,
+    moved: Vec<IgnoredAny>,
     deleted: Vec<IgnoredAny>,
     weakened: Vec<IgnoredAny>,
+    rewritten: Vec<IgnoredAny>,
     disabled: Vec<IgnoredAny>,
     expectations_rewritten: Vec<IgnoredAny>,
     harness_edits: Vec<IgnoredAny>,
@@ -181,22 +248,192 @@ fn take_verdict(body: &str) -> (String, Option<Verdict>) {
 
 struct Section<'a> {
     sha: &'a str,
+    provenance: &'a str,
+    /// The pull request the media was uploaded for; `None` when it was not uploaded.
     pr: Option<u64>,
     runs: &'a [(PathBuf, TestRun)],
+    quarantine: &'a Quarantine,
     report: &'a ChangeReport,
     verdict: Option<&'a Verdict>,
-    /// Where the media folder is served; `None` when the media was not uploaded.
-    media_url: Option<&'a str>,
+    /// Whether the verdict read everything in this commit (`covers`).
+    covered: bool,
+    /// A check or suite job failed, so the results here may not be all of them.
+    jobs_failed: bool,
 }
 
+/// One glance answers "can this merge?": the headline says it, what needs a person stays open, and
+/// everything that only backs the headline up is collapsed.
 fn render_section(section: &Section) -> String {
     let mut out = String::new();
-    let short = &section.sha[..section.sha.len().min(7)];
+    let _ = writeln!(out, "{}\n\n{}\n", headline(section), section.provenance);
+    render_attention(&mut out, section);
+    render_review(&mut out, section);
+    render_recordings(&mut out, section);
+    render_coverage(&mut out, &section.report.coverage);
+    render_test_changes(&mut out, section);
+    render_change_map(&mut out, section);
+    out
+}
 
-    let _ = writeln!(out, "### Recordings");
-    let scenarios: Vec<(&TestRun, &TestCase)> = cases(section.runs)
-        .filter(|(_, case)| case.requirement.is_some() || !case.artifacts.is_empty())
+/// The cases that hold the pull request back, each with its verdict.
+fn troubled<'a>(section: &'a Section) -> Vec<(&'a TestRun, &'a TestCase, CaseVerdict)> {
+    cases(section.runs)
+        .map(|(run, case)| (run, case, verdict(section, run, case)))
+        .filter(|(_, _, verdict)| *verdict != CaseVerdict::Passed)
+        .collect()
+}
+
+fn gating_findings(section: &Section) -> usize {
+    section
+        .report
+        .findings
+        .iter()
+        .filter(|finding| finding.severity == "gate")
+        .count()
+}
+
+fn headline(section: &Section) -> String {
+    let trouble = troubled(section).len();
+    let gating = gating_findings(section);
+    let passed = cases(section.runs).count() - trouble;
+    let total = passed + trouble;
+    let state = if total == 0 {
+        "**No tests reported**"
+    } else if trouble > 0 || gating > 0 || section.jobs_failed {
+        "**Not ready**"
+    } else if section.covered {
+        "**Ready for a maintainer**"
+    } else {
+        "**Proven, not reviewed**"
+    };
+    let review = match (section.verdict, section.covered) {
+        (None, _) => "no review yet",
+        (Some(_), true) => "review covers this commit",
+        (Some(_), false) => "review is stale",
+    };
+    format!("{state}: {passed} of {total} tests proven, {gating} findings to fix, {review}.")
+}
+
+/// Everything that is not proven, with its message and recording open.
+fn render_attention(out: &mut String, section: &Section) {
+    let troubled = troubled(section);
+    let gating: Vec<&Finding> = section
+        .report
+        .findings
+        .iter()
+        .filter(|finding| finding.severity == "gate")
         .collect();
+    if troubled.is_empty() && gating.is_empty() && !section.jobs_failed {
+        return;
+    }
+    let _ = writeln!(out, "### Needs attention");
+    if section.jobs_failed {
+        let _ = writeln!(
+            out,
+            "- **A check or suite job failed**, so the results below may be missing some tests. \
+             The CI run says which job.\n"
+        );
+    }
+    for (run, case, verdict) in troubled {
+        let explained = results::last_failure(case).map_or_else(
+            || "no failure message".to_owned(),
+            |failure| {
+                format!(
+                    "{}{}",
+                    cell(&failure.message),
+                    failure
+                        .first_broken
+                        .as_ref()
+                        .map(|step| format!(" (first broken: {})", cell(step)))
+                        .unwrap_or_default()
+                )
+            },
+        );
+        let name = match &case.requirement {
+            Some(requirement) => format!("{requirement} `{}`", case.id),
+            None => format!("`{}`", case.id),
+        };
+        let _ = writeln!(
+            out,
+            "- {} {}, {name}: {explained}\n\n  {}\n",
+            result(verdict),
+            runner_name(&run.runner),
+            recording(section, run, case),
+        );
+    }
+    if !gating.is_empty() {
+        let _ = writeln!(
+            out,
+            "- **{} findings to fix**, inline on the changed lines{}.",
+            gating.len(),
+            section
+                .pr
+                .map(|pr| format!(
+                    " ([code scanning](https://github.com/{REPOSITORY}/pull/{pr}/checks))"
+                ))
+                .unwrap_or_default()
+        );
+    }
+    out.push('\n');
+}
+
+fn render_review(out: &mut String, section: &Section) {
+    let short = &section.sha[..section.sha.len().min(7)];
+    let _ = writeln!(out, "### Review");
+    match section.verdict {
+        Some(verdict) => {
+            let stale = if section.covered {
+                String::new()
+            } else {
+                format!(
+                    "{STALE}reviewed {}, the head is now {short} with other changes.\n",
+                    &verdict.commit[..verdict.commit.len().min(7)]
+                )
+            };
+            let _ = writeln!(
+                out,
+                "{VERDICT_START}\n{VERDICT_COMMIT}{} -->\n{stale}{}\n{VERDICT_END}",
+                verdict.commit, verdict.text
+            );
+        }
+        None => {
+            let _ = writeln!(out, "{VERDICT_START}\nNo verdict yet.\n{VERDICT_END}");
+        }
+    }
+}
+
+/// Every scenario's recording, collapsed: the failing ones are already open above.
+fn render_recordings(out: &mut String, section: &Section) {
+    let scenarios: Vec<(&TestRun, &TestCase)> = cases(section.runs)
+        .filter(|(_, case)| case.requirement.is_some() || results::artifacts(case).next().is_some())
+        .collect();
+    // A step's own run, one test each, counts under one name with its siblings.
+    let mut per_runner: Vec<(String, usize, usize)> = Vec::new();
+    for (_, run) in section.runs {
+        let name = runner_name(&run.runner);
+        let passed = run
+            .cases
+            .iter()
+            .filter(|case| verdict(section, run, case) == CaseVerdict::Passed)
+            .count();
+        match per_runner.iter_mut().find(|(known, ..)| *known == name) {
+            Some((_, proven, total)) => {
+                *proven += passed;
+                *total += run.cases.len();
+            }
+            None => per_runner.push((name.to_owned(), passed, run.cases.len())),
+        }
+    }
+    let per_runner: Vec<String> = per_runner
+        .into_iter()
+        .map(|(name, proven, total)| format!("{name}: {proven} of {total}"))
+        .collect();
+    let _ = writeln!(
+        out,
+        "\n<details><summary>Recordings ({} scenarios). Tests proven per suite: {}</summary>\n",
+        scenarios.len(),
+        per_runner.join(", "),
+    );
     if scenarios.is_empty() {
         let _ = writeln!(out, "No requirement scenarios ran.");
     } else {
@@ -213,130 +450,34 @@ fn render_section(section: &Section) -> String {
                     Some(requirement) => format!("{requirement} `{}`", case.id),
                     None => format!("`{}`", case.id),
                 },
-                result(&case.outcome),
-                recording(run, case, section.media_url),
+                result(verdict(section, run, case)),
+                recording(section, run, case),
             );
         }
     }
+    let _ = writeln!(out, "\n</details>");
+}
 
-    let _ = writeln!(out, "\n### Broken and unreliable");
-    let mut troubled = 0;
-    for (run, case) in cases(section.runs) {
-        let (word, failure) = match &case.outcome {
-            Outcome::Failed(failure) => ("**broken**", failure),
-            Outcome::Flaky(failure) => ("**unreliable**", failure),
-            _ => continue,
-        };
-        troubled += 1;
-        let _ = writeln!(
-            out,
-            "- {word} {}/{}: {}{}",
-            runner_name(&run.runner),
-            case.id,
-            cell(&failure.message),
-            failure
-                .first_broken
-                .as_ref()
-                .map(|step| format!(" (first broken: {})", cell(step)))
-                .unwrap_or_default()
-        );
-    }
-    if troubled == 0 {
-        let _ = writeln!(out, "None.");
-    }
-
-    let _ = writeln!(out, "\n### Review");
-    match section.verdict {
-        Some(verdict) => {
-            let fresh =
-                section.sha.starts_with(&verdict.commit) || verdict.commit.starts_with(section.sha);
-            let stale = if fresh {
-                String::new()
-            } else {
-                format!(
-                    "{STALE}reviewed {}, the head is now {short}.\n",
-                    &verdict.commit[..verdict.commit.len().min(7)]
-                )
-            };
-            let _ = writeln!(
-                out,
-                "{VERDICT_START}\n{VERDICT_COMMIT}{} -->\n{stale}{}\n{VERDICT_END}",
-                verdict.commit, verdict.text
-            );
-        }
-        None => {
-            let _ = writeln!(out, "{VERDICT_START}\nNo verdict yet.\n{VERDICT_END}");
-        }
-    }
-    let gates = section
-        .report
-        .findings
-        .iter()
-        .filter(|finding| finding.severity == "gate")
-        .count();
-    let flags = section.report.findings.len() - gates;
-    let _ = writeln!(
-        out,
-        "Findings inline: {gates} gating, {flags} flags{}.",
-        section
-            .pr
-            .map(|pr| format!(
-                " ([code scanning](https://github.com/{REPOSITORY}/pull/{pr}/checks))"
-            ))
-            .unwrap_or_default()
-    );
-
-    render_coverage(&mut out, &section.report.coverage);
-
-    let _ = writeln!(out, "\n### Run health");
-    let mut flaky = Vec::new();
-    let mut quarantined = Vec::new();
-    let mut over_budget = Vec::new();
-    for (run, case) in cases(section.runs) {
-        let id = format!("{}/{}", runner_name(&run.runner), case.id);
-        match &case.outcome {
-            Outcome::Flaky(_) => flaky.push(format!("{id} (passed on rerun)")),
-            Outcome::Quarantined(_) => quarantined.push(id),
-            Outcome::OverBudget(millis) => over_budget.push(format!("{id} by {millis} ms")),
-            _ => {}
-        }
-    }
-    let _ = writeln!(
-        out,
-        "Flaky {}{}. Quarantined {}{}. Over budget {}{}.",
-        flaky.len(),
-        listed(&flaky),
-        quarantined.len(),
-        listed(&quarantined),
-        over_budget.len(),
-        listed(&over_budget)
-    );
-    for (_, run) in section.runs {
-        let passed = run
-            .cases
-            .iter()
-            .filter(|case| matches!(case.outcome, Outcome::Passed | Outcome::OverBudget(_)))
-            .count();
-        let _ = writeln!(
-            out,
-            "- {}: {passed} of {} passed",
-            runner_name(&run.runner),
-            run.cases.len()
-        );
-    }
-
+/// Test changes, open when a test lost strength, since that is what a reader must judge.
+fn render_test_changes(out: &mut String, section: &Section) {
     let tests = &section.report.tests;
+    let suspect = tests.weakened.len() + tests.disabled.len() + tests.deleted.len();
     let _ = writeln!(
         out,
-        "\n### Test changes\nAdded {}. Deleted {}. Weakened {}. Disabled {}. Expectations rewritten {}. Harness edits {}.",
+        "\n<details{}><summary>Test changes: {} added, {} moved, {} deleted, {} weakened, {} rewritten, {} disabled</summary>\n\nExpectations rewritten {}. Harness edits {}.\n\n</details>",
+        if suspect > 0 { " open" } else { "" },
         tests.added.len(),
+        tests.moved.len(),
         tests.deleted.len(),
         tests.weakened.len(),
+        tests.rewritten.len(),
         tests.disabled.len(),
         tests.expectations_rewritten.len(),
         tests.harness_edits.len()
     );
+}
 
+fn render_change_map(out: &mut String, section: &Section) {
     let map = &section.report.change_map;
     let _ = writeln!(
         out,
@@ -360,23 +501,18 @@ fn render_section(section: &Section) -> String {
     if map.len() > CHANGE_MAP_LIMIT {
         let _ = writeln!(out, "- and {} more", map.len() - CHANGE_MAP_LIMIT);
     }
-    let _ = writeln!(out, "\n</details>\n");
-    let _ = write!(
-        out,
-        "<sub>Commit {short}. Rewritten by CI on every push.</sub>"
-    );
-    out
+    let _ = writeln!(out, "\n</details>");
 }
 
 /// How much of the changed code the tests ran, one row per area the change touched. Reported,
-/// never gating; the uncovered lines are inline findings.
+/// never gating; the uncovered lines are in the reviewer's report.
 fn render_coverage(out: &mut String, coverage: &Coverage) {
     if coverage.areas.is_empty() {
         return;
     }
     let _ = writeln!(
         out,
-        "\n### Coverage\n| Area | Changed lines covered |\n|---|---|"
+        "\n<details><summary>Coverage of changed lines</summary>\n\n| Area | Changed lines covered |\n|---|---|"
     );
     let mut notes = Vec::new();
     for area in &coverage.areas {
@@ -398,6 +534,7 @@ fn render_coverage(out: &mut String, coverage: &Coverage) {
     if !notes.is_empty() {
         let _ = writeln!(out, "\n<sub>{}</sub>", notes.join(". "));
     }
+    let _ = writeln!(out, "\n</details>");
 }
 
 fn cases(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = (&TestRun, &TestCase)> {
@@ -414,41 +551,53 @@ fn kind(demonstrates: &Demonstrates) -> &'static str {
     }
 }
 
-fn result(outcome: &Outcome) -> String {
-    match outcome {
-        Outcome::Passed => "proven".to_string(),
-        Outcome::OverBudget(millis) => format!("proven, {millis} ms over budget"),
-        Outcome::Failed(_) => "**broken**".to_string(),
-        Outcome::Flaky(_) => "**unreliable**".to_string(),
-        Outcome::Quarantined(_) => "**quarantined**".to_string(),
-        Outcome::Unknown(_) => "unknown".to_string(),
+/// The case's verdict under its run's attempt policy; a case without attempts proves nothing.
+fn verdict(section: &Section, run: &TestRun, case: &TestCase) -> CaseVerdict {
+    results::verdict(run, case, section.quarantine).unwrap_or(CaseVerdict::Failed)
+}
+
+fn result(verdict: CaseVerdict) -> &'static str {
+    match verdict {
+        CaseVerdict::Passed => "proven",
+        CaseVerdict::Failed => "**broken**",
+        CaseVerdict::Flaky => "**unreliable**",
+        CaseVerdict::Quarantined => "**quarantined**",
     }
 }
 
-/// The previews and links of a case's artifacts, then what broke, as one table cell.
-fn recording(run: &TestRun, case: &TestCase, media_url: Option<&str>) -> String {
+/// The previews and links of a case's published artifacts, every attempt's, then what broke, as
+/// one table cell.
+fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
     let mut parts = Vec::new();
-    for artifact in &case.artifacts {
-        let Some(base) = media_url else {
-            parts.push(format!("`{runner}/{}` in the run artifacts", artifact.path));
+    for (path, artifact) in results::artifacts(case) {
+        let Some(pr) = section.pr else {
+            parts.push(format!(
+                "`{runner}/{}` in the run artifacts",
+                path.display()
+            ));
             continue;
         };
-        let url = format!("{base}/{runner}/{}", artifact.path);
+        let url = |file: &Path| {
+            let file = Path::new(runner).join(file);
+            Store::of(&file).url(pr, section.sha, &file)
+        };
         parts.push(match artifact.kind {
             ArtifactKind::Clip => {
-                let preview = Path::new(&artifact.path).with_extension("webp");
                 format!(
-                    "![]({base}/{runner}/{}) [full video]({url})",
-                    preview.display()
+                    "![]({}) [full video]({})",
+                    url(&stage::preview(&path)),
+                    url(&path)
                 )
             }
-            ArtifactKind::Screenshot => format!("![]({url})"),
-            ArtifactKind::LogExcerpt | ArtifactKind::Unknown(_) => format!("[log]({url})"),
+            ArtifactKind::Screenshot => format!("![]({})", url(&path)),
+            ArtifactKind::LogExcerpt | ArtifactKind::Spans | ArtifactKind::Unknown(_) => {
+                continue;
+            }
         });
     }
-    if let Outcome::Failed(failure) | Outcome::Flaky(failure) | Outcome::Quarantined(failure) =
-        &case.outcome
+    if verdict(section, run, case) != CaseVerdict::Passed
+        && let Some(failure) = results::last_failure(case)
     {
         parts.push(cell(&failure.message));
     }
@@ -477,27 +626,15 @@ pub(crate) fn listed(items: &[String]) -> String {
     }
 }
 
-/// Every artifact file of every run with its path in the commit folder, `<runner>/<path>`.
-/// Artifact paths are relative to the folder of the run file; a clip's preview travels with it.
+/// Every artifact file of every staged run with its path in the commit folder,
+/// `<runner>/<path>`, relative to the folder of the run file.
 fn media(runs: &[(PathBuf, TestRun)]) -> Vec<(PathBuf, String)> {
     let mut media = Vec::new();
     for (path, run) in runs {
         let folder = path.parent().unwrap_or(Path::new("."));
         let runner = runner_name(&run.runner);
-        for artifact in run.cases.iter().flat_map(|case| &case.artifacts) {
-            media.push((
-                folder.join(&artifact.path),
-                format!("{runner}/{}", artifact.path),
-            ));
-            if artifact.kind == ArtifactKind::Clip {
-                let preview = Path::new(&artifact.path).with_extension("webp");
-                if folder.join(&preview).exists() {
-                    media.push((
-                        folder.join(&preview),
-                        format!("{runner}/{}", preview.display()),
-                    ));
-                }
-            }
+        for file in published_files(folder, run) {
+            media.push((folder.join(&file), format!("{runner}/{}", file.display())));
         }
     }
     media
@@ -505,7 +642,7 @@ fn media(runs: &[(PathBuf, TestRun)]) -> Vec<(PathBuf, String)> {
 
 /// The values of [`SECRETS`] that are set, and each long line of them, so a log that printed
 /// part of a key is caught too.
-fn known_secrets() -> Vec<String> {
+pub(super) fn known_secrets() -> Vec<String> {
     let mut secrets = Vec::new();
     for value in SECRETS.iter().filter_map(|name| std::env::var(name).ok()) {
         let value = value.trim().to_string();
@@ -524,8 +661,8 @@ fn known_secrets() -> Vec<String> {
     secrets
 }
 
-/// Refuses to publish when the section or a text artifact contains a secret.
-fn scrub(section: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Result<()> {
+/// Refuses when `text` or a text file of `media` contains a secret.
+pub(super) fn scrub(text: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Result<()> {
     let leaked = |bytes: &[u8]| {
         secrets.iter().any(|secret| {
             bytes
@@ -533,8 +670,8 @@ fn scrub(section: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Resu
                 .any(|window| window == secret.as_bytes())
         })
     };
-    if leaked(section.as_bytes()) {
-        bail!("the evidence section contains a secret; nothing was published");
+    if leaked(text.as_bytes()) {
+        bail!("the evidence text contains a secret; nothing leaves the runner");
     }
     // Recordings and screenshots are pixels; logs and other text are what can carry a secret.
     let pixels = |path: &Path| {
@@ -549,7 +686,7 @@ fn scrub(section: &str, media: &[(PathBuf, String)], secrets: &[String]) -> Resu
             fs::read(source).with_context(|| format!("cannot read {}", source.display()))?;
         if leaked(&bytes) {
             bail!(
-                "{} contains a secret; nothing was published",
+                "{} contains a secret; nothing leaves the runner",
                 source.display()
             );
         }
@@ -589,7 +726,7 @@ pub(crate) fn edit_pull_body(
     bail!("the description of #{pr} kept changing; gave up after {ATTEMPTS} attempts")
 }
 
-fn pull_body(ctx: &Context, pr: u64) -> Result<String> {
+pub(crate) fn pull_body(ctx: &Context, pr: u64) -> Result<String> {
     #[derive(Deserialize)]
     struct Pull {
         body: String,
@@ -640,4 +777,238 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
         bail!("gh pr edit failed");
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::results::Outcome;
+    use crate::test_support::{
+        TempRoot, empty_change_report, failed, raw_failed_run, requirement_run,
+    };
+
+    const SECRET: &str = "ghp_0123456789abcdefghij";
+
+    #[test]
+    fn only_the_managed_section_is_replaced() {
+        let body = format!("A{START}old{END}B");
+        assert_eq!(
+            replace_between(&body, START, END, "new"),
+            format!("A{START}\nnew\n{END}B")
+        );
+    }
+
+    #[test]
+    fn publishing_again_does_not_grow_the_description() {
+        let once = replace_between("Summary", START, END, "new");
+        assert_eq!(replace_between(&once, START, END, "new"), once);
+    }
+
+    #[test]
+    fn a_description_without_the_section_gets_it_appended() {
+        assert_eq!(
+            replace_between("Summary\n\n", START, END, "new"),
+            format!("Summary\n\n{START}\nnew\n{END}\n")
+        );
+    }
+
+    #[test]
+    fn a_section_holding_a_secret_is_refused() {
+        let section = format!("| case | log: token {SECRET} |");
+        let error = scrub(&section, &[], &[SECRET.to_owned()]).unwrap_err();
+        assert!(error.to_string().contains("contains a secret"));
+    }
+
+    #[test]
+    fn a_text_artifact_holding_a_secret_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("case.log");
+        fs::write(&log, format!("authorization: {SECRET}\n")).unwrap();
+        let media = [(log, "case.log".to_owned())];
+        let error = scrub("clean", &media, &[SECRET.to_owned()]).unwrap_err();
+        assert!(error.to_string().contains("case.log contains a secret"));
+    }
+
+    #[test]
+    fn a_publish_of_raw_results_uploads_only_the_staged_clips_and_screenshots() {
+        let root = TempRoot::new();
+        raw_failed_run(&root, ".xtask/results/panel");
+
+        let runs = stage::staged(&root.path(""), Path::new(".xtask/results"), &[]).unwrap();
+        let uploaded = media(&runs);
+
+        assert_eq!(
+            uploaded
+                .iter()
+                .map(|(_, target)| target.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "panel/attempts/1/clips/conn.mp4",
+                "panel/attempts/1/clips/conn.webp",
+                "panel/attempts/1/screenshots/CONN-1/failure.png",
+            ]
+        );
+        assert!(
+            uploaded
+                .iter()
+                .all(|(source, _)| source.starts_with(root.path(".xtask/public")))
+        );
+    }
+
+    #[test]
+    fn a_clip_plays_from_the_site_and_its_preview_shows_from_the_branch() {
+        let clip = Path::new("panel/attempts/1/clips/conn.mp4");
+        let preview = stage::preview(clip);
+
+        assert_eq!(
+            Store::of(clip).url(546, "8f93ae1abc", clip),
+            "https://docs.typewritermc.com/evidence/pr/546/8f93ae1/panel/attempts/1/clips/conn.mp4"
+        );
+        assert_eq!(
+            Store::of(&preview).url(546, "8f93ae1abc", &preview),
+            format!(
+                "https://raw.githubusercontent.com/{REPOSITORY}/evidence/pr/546/8f93ae1/panel/attempts/1/clips/conn.webp"
+            )
+        );
+    }
+
+    #[test]
+    fn a_new_run_replaces_the_pull_requests_older_media_and_no_other() {
+        let root = TempRoot::new();
+        root.write("site/evidence/pr/546/old/panel/old.mp4", "old");
+        root.write("site/evidence/pr/7/keep/panel/other.mp4", "other");
+        root.write("site/branches/pr-546/index.html", "docs preview");
+        root.write("new.mp4", "new");
+        let file = (root.path("new.mp4"), "panel/new.mp4".to_owned());
+
+        replace_media(&root.path("site"), Store::Videos, 546, "abc1234", &[&file]).unwrap();
+
+        assert!(!root.path("site/evidence/pr/546/old").exists());
+        assert!(
+            root.path("site/evidence/pr/546/abc1234/panel/new.mp4")
+                .exists()
+        );
+        assert!(
+            root.path("site/evidence/pr/7/keep/panel/other.mp4")
+                .exists()
+        );
+        assert!(root.path("site/branches/pr-546/index.html").exists());
+    }
+
+    #[test]
+    fn the_section_says_which_commit_and_run_it_shows_and_when() {
+        assert_eq!(
+            provenance_line("8f93ae1abc", "2026-11-02 10:14", Some("41415929881")),
+            format!(
+                "Evidence from [8f93ae1](https://github.com/{REPOSITORY}/commit/8f93ae1abc), 2026-11-02 10:14 UTC. [CI run](https://github.com/{REPOSITORY}/actions/runs/41415929881)."
+            )
+        );
+    }
+
+    #[test]
+    fn a_proven_and_reviewed_change_leads_with_ready_and_hides_its_recordings() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
+        )];
+        let verdict = Verdict {
+            commit: "abcdef1234".to_owned(),
+            text: "Looks right.".to_owned(),
+        };
+        let section = render_section(&Section {
+            sha: "abcdef1234",
+            provenance: "Evidence from abcdef1.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: Some(&verdict),
+            covered: true,
+            jobs_failed: false,
+        });
+        assert!(section.starts_with("**Ready for a maintainer**: 1 of 1 tests proven"));
+        assert!(!section.contains("Needs attention"));
+        assert!(section.contains("<details><summary>Recordings (1 scenarios)"));
+    }
+
+    #[test]
+    fn a_failed_job_is_not_ready_even_when_every_reported_test_passed() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
+        )];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a run that lost a suite.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: true,
+        });
+
+        assert!(section.starts_with("**Not ready**"), "{section}");
+        assert!(section.contains("A check or suite job failed"), "{section}");
+    }
+
+    #[test]
+    fn a_broken_scenario_leads_with_not_ready_and_shows_above_every_fold() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", failed("the realm never appeared")),
+        )];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a broken run.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+        assert!(section.starts_with("**Not ready**: 0 of 1 tests proven"));
+        let attention = section.find("### Needs attention").unwrap();
+        let first_fold = section.find("<details>").unwrap();
+        let message = section.find("the realm never appeared").unwrap();
+        assert!(attention < message && message < first_fold);
+    }
+
+    #[test]
+    fn a_verdict_on_other_changes_is_marked_stale() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
+        )];
+        let verdict = Verdict {
+            commit: "1234567".to_owned(),
+            text: "Looks right.".to_owned(),
+        };
+        let section = render_section(&Section {
+            sha: "2222222",
+            provenance: "Evidence from a later push.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: Some(&verdict),
+            covered: false,
+            jobs_failed: false,
+        });
+        assert!(section.starts_with("**Proven, not reviewed**"));
+        assert!(section.contains("review is stale"));
+        assert!(section.contains("**Stale**: reviewed 1234567"));
+    }
+
+    #[test]
+    fn clean_text_is_published() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("case.log");
+        fs::write(&log, "all good\n").unwrap();
+        let media = [(log, "case.log".to_owned())];
+        assert!(scrub("clean", &media, &[SECRET.to_owned()]).is_ok());
+    }
 }

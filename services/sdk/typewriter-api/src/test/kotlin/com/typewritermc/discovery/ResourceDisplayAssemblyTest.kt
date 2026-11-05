@@ -9,12 +9,10 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
-import com.typewritermc.expression.descendants
 import com.typewritermc.expression.field
 import com.typewritermc.expression.input
 import com.typewritermc.expression.literal
@@ -26,21 +24,20 @@ import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.library.fields
 import com.typewritermc.presentation.RuntimePresentationQueries
+import com.typewritermc.testkit.origin
 import com.typewritermc.types.Color
-import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.Icon
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.fields
-import com.typewritermc.types.integer
-import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.template
+import com.typewritermc.types.toWire
 import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -77,6 +74,12 @@ import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 
 val ResourceDisplayAssemblyTest by testSuite {
+    val fixtureResource = TypeDefinitionId.qualified("fixture", "DisplayResource")
+
+    val fixturePage = TypeDefinitionId.qualified("fixture", "DisplayPage")
+
+    val fixtureBox = TypeDefinitionId.qualified("fixture", "DisplayBox")
+
     test("Realm labels a titled book with its title and leaves the type name fallback to editors") {
         val assembly = assemble()
 
@@ -104,7 +107,7 @@ val ResourceDisplayAssemblyTest by testSuite {
             "Intro"
     }
 
-    test("the default display reads the subject's type display") {
+    test("a resource type without its own display uses the default display over the type display the catalog publishes") {
         val display = TypeDisplay("Fixture resource", "", Icon.Iconify("mdi:cube"), Color(0xFF123456u))
         val assembly =
             assemble(
@@ -112,12 +115,12 @@ val ResourceDisplayAssemblyTest by testSuite {
                 searchKeys =
                     mapOf(fixtureResource to "fixture"),
             )
-        val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(fixtureResource.namedUse()), emptyMap())
-        val formulas = assembly.displays.displayFor(fixtureResource, assembly.checked)!!
 
-        formulas.target shouldBe ResourceTarget.ANY_RESOURCE
-        val reads = (formulas.label.callIds() + formulas.accent.callIds() + formulas.icon.callIds()).toSet()
-        reads shouldBe setOf("value.configuration", "catalog.declaration")
+        // The default formulas read the published declaration, a panel profile read: the panel evaluates them to these values.
+        assembly.displays.displayFor(fixtureResource, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
+        assembly.editorCatalog.types
+            .single { it.definition.id == fixtureResource }
+            .display shouldBe display.toWire()
     }
 
     test("a display formula that reads a host context input is rejected") {
@@ -262,149 +265,4 @@ val ResourceDisplayAssemblyTest by testSuite {
             .filter { it.definition.id == BookDefinition.id || it.definition.id == fixtureResource }
             .map { it.searchKey } shouldBe listOf(null, null)
     }
-}
-
-private val fixtureResource = TypeDefinitionId.qualified("fixture", "DisplayResource")
-private val fixturePage = TypeDefinitionId.qualified("fixture", "DisplayPage")
-private val fixtureBox = TypeDefinitionId.qualified("fixture", "DisplayBox")
-
-/** A page type `id<T>` with a text title and contents of the free parameter T. */
-private fun genericType(id: TypeDefinitionId): Pair<TypeDefinitionId, Pair<TypeDefinition, TypeDisplay?>> {
-    val parameter = ParameterKey(owner = id, index = 0)
-    val field = {
-        name: String,
-        type: TypeTemplate,
-        ->
-        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = name), type = type)
-    }
-    return id to
-        Pair(
-            TypeDefinition.partial(
-                id = id,
-                parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-                parents = listOf(PageDefinition.id.namedTemplate()),
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                field("title", ScalarKind.TEXT.template),
-                                field("contents", TypeTemplate.ParameterWrapper(parameter)),
-                            ),
-                        abstract_ = false,
-                    ),
-            ),
-            null,
-        )
-}
-
-private fun fixtureType(
-    id: TypeDefinitionId,
-    parent: TypeDefinitionId? = null,
-    display: TypeDisplay? = null,
-) = id to
-    Pair(
-        TypeDefinition.partial(
-            id = id,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields = emptyList(),
-                    abstract_ = false,
-                ),
-            parents =
-                listOfNotNull(parent).map {
-                    it.namedTemplate()
-                },
-        ),
-        display,
-    )
-
-private fun endpoint(
-    id: String,
-    slot: EndpointSlot,
-    resource: TypeDefinitionId,
-) = EndpointDefinition(
-    id = EndpointId(value = id),
-    slot = slot,
-    resource = resource.namedTemplate(),
-    cardinality = EndpointCardinality.MANY,
-    onDelete = RelationDeletePolicy.CLEAR,
-)
-
-private fun book(title: String) =
-    AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(BookDefinition.use),
-        mapOf(
-            "title" to DataValue.StringValueWrapper(title),
-            "icon" to DataValue.UNFILLED,
-            "color" to DataValue.UNFILLED,
-            "tags" to DataValue.UNFILLED,
-            "pages" to DataValue.UNFILLED,
-        ),
-    )
-
-private class FixtureDisplay(
-    override val target: ResourceTarget,
-    private val build: () -> DisplayFormulas,
-) : GeneratedResourceDisplayProvider {
-    override fun formulas(): DisplayFormulas = build()
-}
-
-private fun displayProvider(
-    target: ResourceTarget,
-    build: () -> DisplayFormulas,
-) = OwnedResourceDisplay(providerOrigin(), FixtureDisplay(target, build))
-
-private fun assemble(
-    declarations: List<Pair<TypeDefinitionId, Pair<TypeDefinition, TypeDisplay?>>> = emptyList(),
-    displays: List<OwnedResourceDisplay> = emptyList(),
-    searchKeys: Map<TypeDefinitionId, String> = emptyMap(),
-    relations: List<RelationContract> = emptyList(),
-    includeGenerated: Boolean = true,
-): CatalogAssembly {
-    val origin = providerOrigin()
-    val generated = generatedTypeProviders().distinctBy { it.definition.id }
-    val generatedDisplays =
-        generatedProviders<GeneratedResourceDisplayProvider>(GeneratedProviderKind.ResourceDisplay)
-            .filter { includeGenerated || it.target == ResourceTarget.ANY_RESOURCE }
-            .map { OwnedResourceDisplay(origin, it) }
-    return CatalogContributions(
-        declarations =
-            generated.map { OwnedTypeDeclaration(origin, it.definition, it.display, searchKey = it.searchKey) } +
-                declarations.map { (id, declared) ->
-                    OwnedTypeDeclaration(origin, declared.first, declared.second, searchKey = searchKeys[id])
-                },
-        relations = generatedProviders<GeneratedRelationProvider>(GeneratedProviderKind.Relation).map { it.contract } + relations,
-        displays = generatedDisplays + displays,
-    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "resource displays")))
-}
-
-private fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
-    editorCatalog.diagnostics.filter { it.affected == type }.map { it.code }
-
-private fun CatalogAssembly.label(record: AuthoringRecord): String? = with(DisplayReads) { displays.label(record, checked) }
-
-/** The operations this formula calls. */
-private fun ExpressionNode.callIds(): List<String> =
-    descendants().filterIsInstance<ExpressionNode.CallWrapper>().map { it.value.operation.value }.toList()
-
-private object DisplayReads : AuthoredReads {
-    override val catalog = CatalogGeneration(value = "resource displays")
-    override val readContext = ReadContext(catalog)
-
-    override fun <T> read(path: BoundPath<T>): Availability<T> = error("Display formulas read portable values")
-
-    override fun <T> readRepresentation(
-        path: BoundPath<*>,
-        representation: TypeUse,
-    ): Availability<T> = error("Display formulas read portable values")
-
-    override fun presence(path: BoundPath<*>): Availability<Boolean> = error("Display formulas read portable values")
-
-    override fun binding(path: BoundPath<*>): Availability<DraftBinding> = error("Display formulas read portable values")
-
-    override fun canonicalValueKey(path: BoundPath<*>): Availability<String> = error("Display formulas read portable values")
-
-    override fun members(path: BoundCollectionPath): List<ItemId> = emptyList()
-
-    override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Display formulas read portable values")
 }

@@ -4,19 +4,22 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "Apply lifecycle", type: ApplyControls)
-Widget applyControlsUseCase(BuildContext context) => applyControlsStory(
-  uncertain: context.knobs.boolean(label: "Unknown external outcome"),
-);
-
-Widget applyControlsStory({bool uncertain = false}) => FakeApp(
-  child: Scaffold(
-    body: Center(
-      child: SizedBox(width: 420, child: _ApplyScenario(uncertain: uncertain)),
+Widget applyControlsUseCase(BuildContext context) {
+  final reply = context.knobs.object.segmented(
+    label: "Save reply",
+    options: const ["Confirmed", "Lost"],
+    initialOption: "Confirmed",
+  );
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(width: 420, child: _ApplyScenario(uncertain: reply == "Lost")),
     ),
-  ),
-);
+  );
+}
 
 final class _ApplyScenario extends HookWidget {
   const _ApplyScenario({required this.uncertain, this.group = false});
@@ -83,20 +86,20 @@ final class _ApplyScenario extends HookWidget {
           EditingGroupPanel(workspace: owner.workspace, id: owner.groupId)
         else
           ApplyControls(control: control),
-        const Text("Apply appears only while this owner has pending work."),
       ],
     );
   }
 }
 
 @widgetbook.UseCase(name: "Retained group", type: EditingGroupPanel)
-Widget editingGroupPanelUseCase(BuildContext context) => FakeApp(
-  child: Scaffold(
-    body: Center(
-      child: SizedBox(
+Widget editingGroupPanelUseCase(BuildContext context) {
+  return const Story(
+    [],
+    at: PanelLocation.component(
+      SizedBox(
         width: 420,
         child: _ApplyScenario(uncertain: false, group: true),
       ),
     ),
-  ),
-);
+  );
+}

@@ -1,4 +1,6 @@
 [
   { "username": "ada", "password": "stack", "subject": "user_ada", "organizations": ["acme"] },
-  { "username": "grace", "password": "stack", "subject": "user_grace", "organizations": [] }
+  { "username": "grace", "password": "stack", "subject": "user_grace", "organizations": [] },
+  { "username": "alan", "password": "stack", "subject": "user_alan", "organizations": [] },
+  { "username": "barbara", "password": "stack", "subject": "user_barbara", "organizations": [] }
 ]

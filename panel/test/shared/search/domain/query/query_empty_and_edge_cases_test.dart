@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "support/query_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final selectors = <QuerySelectorDefinition>[
@@ -54,7 +53,7 @@ void main() {
   });
 
   test("non-empty query with no selectors is treated as plain text", () {
-    final result = checkQuery("title:test #tag", selectors: const [])
+    final result = checkQuery("  title:test #tag  ", selectors: const [])
         .expectNoIssues()
         .expectQuery("title:test #tag")
         .expectNoExpression()
@@ -62,18 +61,9 @@ void main() {
 
     expect(result.selectors, isEmpty);
     expect(result.tokens, isEmpty);
-    expect(result.queryBefore, "title:test #tag");
-    expect(result.queryAfter, isEmpty);
-    expect(result.raw, "title:test #tag");
-  });
-
-  test("lexer with no selectors tokenizes all input as plain text", () {
-    final result = lexQuery("  title:test #tag  ", selectors: const []);
-
     expect(result.query, "title:test #tag");
     expect(result.queryBefore, "title:test #tag");
     expect(result.queryAfter, isEmpty);
-    expect(result.expression, isNull);
     expect(result.raw, "  title:test #tag  ");
   });
 
@@ -90,7 +80,7 @@ void main() {
     expect(result.raw, "");
   });
 
-  test("cursor at end of input clamps", () {
+  test("a cursor past the end clamps into the last selector value", () {
     final result = checkQuery("#a", selectors: selectors, cursorOffset: 10)
         .expectNoIssues()
         .expectNoQuery()
@@ -98,10 +88,20 @@ void main() {
           token.isSelector(id: "tag", value: "a");
         })
         .done();
-    expect(result.cursorContext, isNotNull);
+    expect(
+      result.cursorContext,
+      const SelectorValueCursorContext(
+        cursorOffset: 2,
+        activeRange: QueryRange(1, 2),
+        selectorId: "tag",
+        partialValue: "a",
+        keyRange: QueryRange(0, 1),
+        valueRange: QueryRange(1, 2),
+      ),
+    );
   });
 
-  test("only symbol selector with no token", () {
+  test("a bare selector key reports a missing value", () {
     final result = checkQuery("#", selectors: selectors)
         .expectIssues([QueryIssueCode.missingSelectorValue])
         .expectNoQuery()
@@ -109,13 +109,22 @@ void main() {
           token.isSelector(id: "tag", value: null);
         })
         .done();
-    expect(result.selectors, hasLength(1));
-    final selector = result.selectors.single as QueryLexerKeyValueSelectorToken;
-    expect(selector.value, isNull);
-    expect(selector.valueRange, isNull);
-    expect(result.issues, hasLength(1));
+    expect(result.issues.map((issue) => (issue.code, issue.range)), [
+      (QueryIssueCode.missingSelectorValue, const QueryRange(0, 1)),
+    ]);
+  });
 
-    expect(result.issues.first.code, QueryIssueCode.missingSelectorValue);
+  // Found by query_properties_test: sources match the free text as one
+  // phrase, so repeated spaces must not change it.
+  test("free text collapses repeated whitespace", () {
+    final result = checkQuery("hello   world #a  again", selectors: selectors)
+        .expectNoIssues()
+        .expectQuery("hello world again")
+        .expectExpression((token) {
+          token.isSelector(id: "tag", value: "a");
+        })
+        .done();
+    expect(result.query, "hello world again");
   });
 
   test("trailing operator is preserved as leftover query", () {

@@ -75,9 +75,10 @@ class MutationActivityView extends StatelessWidget {
               padding: context.isMobile
                   ? EdgeInsets.symmetric(horizontal: context.spacing.space2)
                   : EdgeInsets.zero,
+              // The control names itself; the live region only announces
+              // when its label changes.
               child: Semantics(
                 liveRegion: true,
-                label: label,
                 child: AppBarControl.text(
                   tooltip: label,
                   semanticLabel: label,

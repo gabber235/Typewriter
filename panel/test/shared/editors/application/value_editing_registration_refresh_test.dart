@@ -2,86 +2,98 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/editor_fixture.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _key = EditorResourceKey(scope: "org1", identity: "resource");
 final _title = editorRootPath.field("title");
 final _description = editorRootPath.field("description");
-ValueEditingRegistration _target({
-  required EditorCommitter commit,
-  int revision = 1,
-  String description = "Original description",
-  EditorCommitPolicy policy = EditorCommitPolicy.applyResource,
-  List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
-}) => fakeEditorTarget(
-  targetId: _key.identity,
-  scope: _key.scope,
-  label: "Resource",
-  document: recordEditorDocument(
-    {
-      "title": skir.DataValue.wrapStringValue("Original"),
-      "description": skir.DataValue.wrapStringValue(description),
-    },
-    {
-      "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      "description": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-    },
-    revision,
-  ),
-  validation: acceptTestEditorMutation,
-  commitPolicy: policy,
-  validateDraft: validateDraft,
-  commit: commit,
+
+/// The record's two text fields, title and description.
+final _textFields = {
+  "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+  "description": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+};
+
+/// The record as it was saved.
+final _saved = recordEditorDocument(
+  texts({"title": "Original", "description": "Original description"}),
+  _textFields,
+  1,
+);
+
+/// The record as the first contract read it.
+final _remoteOne = recordEditorDocument(
+  texts({"title": "Original", "description": "Remote one"}),
+  _textFields,
+  1,
+);
+
+/// The record as the second contract read it, one revision later.
+final _remoteTwo = recordEditorDocument(
+  texts({"title": "Original", "description": "Remote two"}),
+  _textFields,
+  2,
 );
 
 void main() {
-  test("incompatible replacement stays pending across a host rebuild", () {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
-    final source = _contractTarget("one", 1, "Remote one").acquire(workspace);
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
-    );
-    source.update(_title, skir.DataValue.wrapStringValue("Draft"));
+  test(
+    "incompatible replacement stays pending across a host rebuild",
+    () async {
+      final workspace = testWorkSession();
+      final source =
+          resourceTarget(_key, contract: "one", document: _remoteOne).hold(
+            workspace,
+          )..update(_title, skir.DataValue.wrapStringValue("Draft"));
 
-    final rebuilt = _contractTarget("two", 2, "Remote two").acquire(workspace);
+      final rebuilt = resourceTarget(
+        _key,
+        contract: "two",
+        document: _remoteTwo,
+      ).acquire(workspace);
 
-    expect(rebuilt.workspace, same(source.workspace));
-    expect(source.contractReconciliationPending, isTrue);
-    expect(source.readOnly, isTrue);
-    expect(
-      source.value(_title).valueOrNull,
-      skir.DataValue.wrapStringValue("Draft"),
-    );
-    expect(
-      source.value(_description).valueOrNull,
-      skir.DataValue.wrapStringValue("Remote one"),
-    );
+      expect(rebuilt.workspace, same(source.workspace));
+      await eventually(
+        () => expect(source.contractReconciliationPending, isTrue),
+      );
+      expect(source.readOnly, isTrue);
+      expect(
+        source.value(_title).valueOrNull,
+        skir.DataValue.wrapStringValue("Draft"),
+      );
+      expect(
+        source.value(_description).valueOrNull,
+        skir.DataValue.wrapStringValue("Remote one"),
+      );
 
-    expect(source.reconcilePendingContract(), isTrue);
-    expect(source.contractReconciliationPending, isFalse);
-    expect(source.readOnly, isFalse);
-    expect(
-      source.value(_title).valueOrNull,
-      skir.DataValue.wrapStringValue("Draft"),
-    );
-    expect(
-      source.value(_description).valueOrNull,
-      skir.DataValue.wrapStringValue("Remote two"),
-    );
-  });
+      expect(source.reconcilePendingContract(), isTrue);
+      expect(source.contractReconciliationPending, isFalse);
+      expect(source.readOnly, isFalse);
+      expect(
+        source.value(_title).valueOrNull,
+        skir.DataValue.wrapStringValue("Draft"),
+      );
+      expect(
+        source.value(_description).valueOrNull,
+        skir.DataValue.wrapStringValue("Remote two"),
+      );
+    },
+  );
 
-  test("discard accepts an incompatible replacement explicitly", () {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
-    final source = _contractTarget("one", 1, "Remote one").acquire(workspace);
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
+  test("discard accepts an incompatible replacement explicitly", () async {
+    final workspace = testWorkSession();
+    final source = resourceTarget(
+      _key,
+      contract: "one",
+      document: _remoteOne,
+    ).hold(workspace)..update(_title, skir.DataValue.wrapStringValue("Draft"));
+    resourceTarget(
+      _key,
+      contract: "two",
+      document: _remoteTwo,
+    ).acquire(workspace);
+    await eventually(
+      () => expect(source.contractReconciliationPending, isTrue),
     );
-    source.update(_title, skir.DataValue.wrapStringValue("Draft"));
-    _contractTarget("two", 2, "Remote two").acquire(workspace);
 
     expect(source.discardDraftAndAcceptPendingContract(), isTrue);
     expect(source.hasWork, isFalse);
@@ -96,26 +108,23 @@ void main() {
   });
 
   test("unavailable contract preserves draft until retry succeeds", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
-    final target = _contractTarget("one", 1, "Remote one");
+    final workspace = testWorkSession();
+    final target = resourceTarget(_key, contract: "one", document: _remoteOne);
     final resource = target.persistence as ScriptedValuePersistence;
     final source = target.acquire(workspace);
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
-    );
+    holdValueLease(workspace, _key);
     source
       ..update(_title, skir.DataValue.wrapStringValue("Draft"))
       ..markContractUnavailable("Catalog unavailable");
 
-    expect(source.contractUnavailable, isTrue);
+    await eventually(() => expect(source.contractUnavailable, isTrue));
     expect(source.readOnly, isTrue);
     expect(
       source.value(_title).valueOrNull,
       skir.DataValue.wrapStringValue("Draft"),
     );
 
-    resource.load = () async => _ContractSnapshot(
+    resource.load = () async => FakeContractEditorSnapshot(
       "one",
       source.document.copyWith(revision: 2, readOnly: false, diagnostics: []),
     );
@@ -131,25 +140,27 @@ void main() {
   test(
     "replacement preserves drafts and uses current validation and commit",
     () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
+      final workspace = testWorkSession();
       var oldSends = 0;
       var newSends = 0;
       var reject = true;
-      final source = _target(
-        commit: (commit) async {
-          oldSends++;
-          return MutationSuccess(revision: 2, value: commit.rootValue);
-        },
-      ).acquire(workspace);
-
-      addTearDown(
-        workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
-      );
-      source.update(_title, skir.DataValue.wrapStringValue("Draft"));
-      final replacement = _target(
-        revision: 2,
-        description: "Remote description",
+      final source =
+          resourceTarget(
+              _key,
+              document: _saved,
+              commit: (commit) async {
+                oldSends++;
+                return MutationSuccess(revision: 2, value: commit.rootValue);
+              },
+            ).hold(workspace)
+            ..update(_title, skir.DataValue.wrapStringValue("Draft"));
+      final replacement = resourceTarget(
+        _key,
+        document: recordEditorDocument(
+          texts({"title": "Original", "description": "Remote description"}),
+          _textFields,
+          2,
+        ),
         validateDraft: (_) => reject
             ? [
                 const EditorDiagnostic(
@@ -165,16 +176,27 @@ void main() {
         },
       ).acquire(workspace);
       expect(replacement.workspace, same(source.workspace));
+      await eventually(
+        () => expect(
+          source.value(_description).valueOrNull,
+          skir.DataValue.wrapStringValue("Remote description"),
+        ),
+      );
       expect(
         source.value(_title).valueOrNull,
         skir.DataValue.wrapStringValue("Draft"),
       );
-      expect(
-        source.value(_description).valueOrNull,
-        skir.DataValue.wrapStringValue("Remote description"),
-      );
 
-      expect(await source.flush(), isA<MutationInvalid>());
+      expect(
+        await source.flush(),
+        isA<MutationInvalid>().having(
+          (invalid) => [
+            for (final diagnostic in invalid.diagnostics) diagnostic.message,
+          ],
+          "messages",
+          ["Current validation"],
+        ),
+      );
       expect(newSends, 0);
       reject = false;
       expect(await source.flush(), isA<MutationSuccess>());
@@ -184,25 +206,23 @@ void main() {
   );
 
   test("replacement does not retarget a running submission", () async {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     final response = Completer<TypedMutationResult>();
     final sent = Completer<EditorCommit>();
     var newSends = 0;
-    final source = _target(
+    final source = resourceTarget(
+      _key,
+      document: _saved,
       commit: (commit) {
         sent.complete(commit);
         return response.future;
       },
-    ).acquire(workspace);
-
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
-    );
-    source.update(_title, skir.DataValue.wrapStringValue("First"));
+    ).hold(workspace)..update(_title, skir.DataValue.wrapStringValue("First"));
     final pending = source.flush();
     final captured = await sent.future;
-    _target(
+    resourceTarget(
+      _key,
+      document: _saved,
       commit: (commit) async {
         newSends++;
         return MutationSuccess(revision: 3, value: commit.rootValue);
@@ -218,73 +238,26 @@ void main() {
   });
 
   test("commit policy cannot change for an existing resource", () {
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
+    final workspace = testWorkSession();
     Future<TypedMutationResult> commit(EditorCommit commit) async =>
         MutationSuccess(revision: 2, value: commit.rootValue);
-    _target(commit: commit).acquire(workspace);
+    resourceTarget(_key, document: _saved, commit: commit).acquire(workspace);
     expect(
-      () => _target(
+      () => resourceTarget(
+        _key,
+        document: _saved,
+        commitPolicy: EditorCommitPolicy.autosaveChanges,
         commit: commit,
-        policy: EditorCommitPolicy.autosaveChanges,
       ).acquire(workspace),
       throwsStateError,
     );
     expect(
-      _target(commit: commit).acquire(workspace).commitPolicy,
+      resourceTarget(
+        _key,
+        document: _saved,
+        commit: commit,
+      ).acquire(workspace).commitPolicy,
       EditorCommitPolicy.applyResource,
     );
   });
-}
-
-ValueEditingRegistration _contractTarget(
-  String contract,
-  int revision,
-  String description,
-) {
-  final snapshot = _ContractSnapshot(
-    contract,
-    recordEditorDocument(
-      {
-        "title": skir.DataValue.wrapStringValue("Original"),
-        "description": skir.DataValue.wrapStringValue(description),
-      },
-      {
-        "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-        "description": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-      },
-      revision,
-    ),
-  );
-  return ValueEditingRegistration(
-    targetId: _key.identity,
-    label: "Resource",
-    persistence: ScriptedValuePersistence(
-      key: _key,
-      current: snapshot,
-      commit: (commit) async => MutationSuccess(
-        revision: commit.expectedRevision + 1,
-        value: commit.rootValue,
-      ),
-    ),
-    snapshot: snapshot,
-    commitPolicy: EditorCommitPolicy.applyResource,
-  );
-}
-
-final class _ContractSnapshot extends EditorSnapshot
-    implements EditorContractSnapshot {
-  const _ContractSnapshot(this.contract, this.document);
-
-  final String contract;
-  @override
-  final EditorDocument document;
-
-  @override
-  bool contractCompatibleWith(EditorSnapshot candidate) =>
-      candidate is _ContractSnapshot && candidate.contract == contract;
-
-  @override
-  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
-      acceptTestEditorMutation(path, value);
 }

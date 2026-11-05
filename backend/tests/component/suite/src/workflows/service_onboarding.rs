@@ -1,30 +1,22 @@
-use std::time::Duration;
-
-use component_test::{
-    FixtureBuilder, FixtureSpec, TestContext, TestResult, component_fixture, component_test,
-};
 use json_matcher::assert_jm;
-use typewriter_component_test::prelude::{
-    DatabaseHandle, SchemaPreset, SkirHttpExt, SkirMessagingExt, TypewriterFixtureBuilderExt,
+use typewriter_component_test::{
+    identity::{Authentik, expect_account_creation, host_role, issue_identity},
+    prelude::*,
 };
 use wasmcloud_utils::{
     skir::base::service::v1::{
-        identity::{IssueServiceIdentityRequest, IssueServiceIdentityResponse},
-        registration::{BindServiceRequest, BindServiceResponse},
-        service::{ServiceRole, ServiceRole_Host},
+        identity::IssueServiceIdentityResponse,
+        organization::OrganizationServicesChanged,
+        registration::{BindServiceRequest, BindServiceResponse, ServiceBoundNotification},
         status::{EnsureRegistrationLeaseRequest, EnsureRegistrationLeaseResponse},
     },
-    skir_client::UnrecognizedValues,
-    skir_variant,
     transport_routes::service_registration,
 };
-
-struct Authentik;
 
 #[component_fixture(
     id = "workflow-service-onboarding",
     primary(package = "service-identity", target = "service_identity"),
-    dependency(package = "service-registration", target = "service_registration"),
+    dependency(package = "service-registration", target = "service_registration")
 )]
 pub struct ServiceOnboarding;
 
@@ -51,93 +43,62 @@ impl FixtureSpec for ServiceOnboarding {
 async fn issued_service_can_register_with_an_organization(
     context: &mut TestContext<ServiceOnboarding>,
 ) -> TestResult {
-    context
-        .http_mock::<Authentik>()?
-        .expect()
-        .post()
-        .path_query("/api/v3/core/users/service_account/")
-        .header(
-            http::header::AUTHORIZATION,
-            http::HeaderValue::from_static("Bearer fixture-token"),
-        )
-        .response_json(&serde_json::json!({
-            "username": "onboarding-service",
-            "token": "issued-token",
-            "user_uid": "onboarding",
-            "user_pk": 42
-        }))?
-        .register()?;
-    let identity = context
-        .http()?
-        .skir_post(
-            "/service/identity/issue",
-            &IssueServiceIdentityRequest {
-                role: skir_variant!(ServiceRole::Host {
-                    version: "1.0.0".into(),
-                }),
-                _unrecognized: None,
-            },
-            IssueServiceIdentityRequest::serializer(),
-            IssueServiceIdentityResponse::serializer(),
-        )
-        .await?;
-    assert!(matches!(
-        identity.body,
-        IssueServiceIdentityResponse::Success(ref success)
-            if success.service_id == "onboarding"
-    ));
+    expect_account_creation(context, "onboarding", 42)?;
+    let identity = issue_identity(context, host_role()).await?;
+    assert!(
+        matches!(&identity.body, IssueServiceIdentityResponse::Success(success)
+            if success.service_id == "onboarding"),
+        "{:?}",
+        identity.body
+    );
 
-    let database = context
-        .extension::<DatabaseHandle>()
-        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
-    database
-        .execute(
-            "CREATE user:owner SET name = 'owner'; CREATE organization:alpha SET name = 'alpha', founder = user:owner",
-        )
-        .await?;
-    let lease = context
-        .messaging()?
-        .request_skir(
-            "typewriter.from.service.onboarding.registration.ensure",
+    seed_organization(context, &acme(), ada(), &[]).await?;
+    let lease: EnsureRegistrationLeaseResponse = context
+        .request(
+            from_service("onboarding", "registration.ensure"),
             &EnsureRegistrationLeaseRequest::default(),
-            EnsureRegistrationLeaseRequest::serializer(),
-            EnsureRegistrationLeaseResponse::serializer(),
-            Duration::from_secs(2),
-            UnrecognizedValues::Drop,
         )
         .await?;
     let EnsureRegistrationLeaseResponse::Issued(lease) = lease else {
-        anyhow::bail!("expected issued registration lease");
+        anyhow::bail!("expected an issued registration lease, received {lease:?}");
     };
-    let registration_token = lease.token;
 
-    context
-        .messaging_mock()?
-        .expect_publish("typewriter.to.organization.alpha.services.watch");
-    context
-        .messaging_mock()?
-        .expect_publish("typewriter.to.service.onboarding.registration.bound");
-    let binding = context
-        .messaging()?
-        .request_skir(
-            "typewriter.from.user.owner.organization.alpha.services.bind",
+    context.expect_publish(
+        to_organization(&acme(), "services.watch"),
+        |event: &OrganizationServicesChanged| {
+            matches!(event, OrganizationServicesChanged::Replace(services)
+                if matches!(services.as_slice(), [service]
+                    if service.service_id.key.to_string() == "onboarding"
+                        && service.organization.as_ref().is_some_and(|organization| organization.key.to_string() == "acme")))
+        },
+    )?;
+    context.expect_publish(
+        to_service("onboarding", "registration.bound"),
+        |notification: &ServiceBoundNotification| {
+            notification.organization_id == "acme"
+                && notification.organization_name.as_deref() == Some("acme")
+        },
+    )?;
+    let binding: BindServiceResponse = context
+        .request(
+            from_member(ada(), &acme(), "services.bind"),
             &BindServiceRequest {
-                registration_token,
-                _unrecognized: None,
+                registration_token: lease.token,
+                ..Default::default()
             },
-            BindServiceRequest::serializer(),
-            BindServiceResponse::serializer(),
-            Duration::from_secs(2),
-            UnrecognizedValues::Drop,
         )
         .await?;
-    assert!(matches!(
-        binding,
-        BindServiceResponse::Success(ref service) if service.service_id == "onboarding"
-    ));
-    let stored = database
-        .query_json("SELECT VALUE organization FROM ONLY service:onboarding")
-        .await?;
-    assert_jm!(stored, "organization:alpha");
+    assert!(
+        matches!(&binding, BindServiceResponse::Success(service) if service.service_id == "onboarding"),
+        "{binding:?}"
+    );
+    context.messaging()?.wait_idle().await?;
+    assert_jm!(
+        context
+            .database()?
+            .query_json("SELECT VALUE organization FROM ONLY service:onboarding")
+            .await?,
+        "organization:acme"
+    );
     Ok(())
 }

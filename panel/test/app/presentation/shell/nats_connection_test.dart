@@ -1,11 +1,19 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/test_utils.dart";
+/// A page holding state the user made: text typed into its field.
+const _page = PanelLocation.component(
+  Align(
+    alignment: Alignment.topLeft,
+    child: SizedBox(
+      width: 300,
+      child: TextField(decoration: InputDecoration(labelText: "Note")),
+    ),
+  ),
+);
 
 void main() {
-  const token = AsyncData(AccessToken(token: "access-token"));
-
   for (final (kind, title, action) in [
     (NatsFailureKind.authentication, "Access denied", "Sign out"),
     (NatsFailureKind.permission, "Access denied", "Sign out"),
@@ -17,190 +25,93 @@ void main() {
     (NatsFailureKind.unknown, "Connection failed", "Retry"),
   ]) {
     testWidgets("$kind shows its actionable failure category", (tester) async {
-      await tester.pumpTestApp(
-        child: const RequiredNatsConnection(child: Text("connected")),
-        overrides: [
-          accessTokenProvider.overrideWithValue(token),
-          natsLifecycleProvider.overrideWithValue(
-            NatsFailed(
-              NatsClientException(kind: kind, message: "safe message"),
-            ),
-          ),
-        ],
-      );
+      final panel = await tester.pumpPanel([signedIn(ada)], at: _page);
 
-      expect(find.text(title), findsOneWidget);
-      expect(find.text(action), findsOneWidget);
+      panel.world.nats.disconnect(
+        failure: NatsClientException(kind: kind, message: "safe message"),
+      );
+      await panel.settle();
+
+      expect(panel.shows(title), isTrue);
+      expect(panel.labeled(action), findsOneWidget);
+      expect(panel.field("Note").exists, isFalse);
     });
   }
 
-  testWidgets("unknown failure never renders secret cause", (tester) async {
+  testWidgets("an unknown failure never shows its secret cause", (
+    tester,
+  ) async {
     const secret = "super-secret-token";
-    await tester.pumpTestApp(
-      child: const RequiredNatsConnection(child: Text("connected")),
-      overrides: [
-        accessTokenProvider.overrideWithValue(token),
-        natsLifecycleProvider.overrideWithValue(
-          NatsFailed(
-            NatsClientException(
-              kind: NatsFailureKind.unknown,
-              message: secret,
-              cause: secret,
-            ),
-          ),
-        ),
-      ],
-    );
+    final panel = await tester.pumpPanel([signedIn(ada)], at: _page);
 
-    expect(find.text("Connection failed"), findsOneWidget);
-    expect(find.text("Retry"), findsOneWidget);
+    panel.world.nats.disconnect(
+      failure: const NatsClientException(
+        kind: NatsFailureKind.unknown,
+        message: secret,
+        cause: secret,
+      ),
+    );
+    await panel.settle();
+
+    expect(panel.shows("Connection failed"), isTrue);
     expect(find.textContaining(secret), findsNothing);
   });
 
-  testWidgets("connected state renders protected content", (tester) async {
-    await tester.pumpTestApp(
-      child: const RequiredNatsConnection(child: Text("connected")),
-      overrides: [
-        accessTokenProvider.overrideWithValue(token),
-        natsLifecycleProvider.overrideWithValue(const NatsConnected()),
-      ],
-    );
+  testWidgets("a connected panel shows its page", (tester) async {
+    final panel = await tester.pumpPanel([signedIn(ada)], at: _page);
 
-    expect(find.text("connected"), findsOneWidget);
+    expect(panel.field("Note").exists, isTrue);
   });
 
-  testWidgets("connection status retains route state and blocks input", (
+  testWidgets("Retry opens a new connection", (tester) async {
+    final panel = await tester.pumpPanel([signedIn(ada)], at: _page);
+    final failed = panel.world.nats.connection;
+    panel.world.nats.disconnect(
+      failure: NatsClientException(
+        kind: NatsFailureKind.unavailable,
+        message: "safe message",
+      ),
+    );
+    await panel.settle();
+
+    await panel.tapOn(panel.labeled("Retry"));
+
+    expect(panel.world.nats.connection, isNot(same(failed)));
+  });
+
+  testWidgets("Sign out on an access denial signs the user out", (
     tester,
   ) async {
-    final lifecycle = _MutableLifecycle();
-    final focus = FocusNode();
-    addTearDown(focus.dispose);
-    var initialized = 0;
-    var disposed = 0;
-    var activations = 0;
-    await tester.pumpTestApp(
-      child: RequiredNatsConnection(
-        child: _RouteProbe(
-          focus: focus,
-          onInit: () => initialized++,
-          onDispose: () => disposed++,
-          onActivate: () => activations++,
-        ),
+    final panel = await tester.pumpPanel([signedIn(ada)], at: _page);
+    panel.world.nats.disconnect(
+      failure: NatsClientException(
+        kind: NatsFailureKind.permission,
+        message: "safe message",
       ),
-      overrides: [
-        accessTokenProvider.overrideWithValue(token),
-        natsLifecycleProvider.overrideWith(() => lifecycle),
-      ],
     );
-    final control = find.text("Route control");
-    final position = tester.getCenter(control);
-    await tester.tap(control);
-    expect(activations, 1);
+    await panel.settle();
 
-    for (final status in [
-      const NatsConnecting(),
-      const NatsReconnecting(
-        NatsClientException(
-          kind: NatsFailureKind.unavailable,
-          message: "Interrupted",
-        ),
-      ),
-      const NatsFailed(
-        NatsClientException(
-          kind: NatsFailureKind.unavailable,
-          message: "Interrupted",
-        ),
-      ),
-      const NatsClosed(),
-    ]) {
-      focus.requestFocus();
-      await tester.pump(const Duration(milliseconds: 1));
-      expect(focus.hasFocus, isTrue);
-      lifecycle.status = status;
-      await tester.pump(const Duration(milliseconds: 1));
-      await tester.pump(const Duration(milliseconds: 1));
-      expect(control, findsNothing);
-      expect(find.text("Route control", skipOffstage: false), findsOneWidget);
-      expect(focus.hasFocus, isFalse);
-      expect(focus.canRequestFocus, isFalse);
-      await tester.tapAt(position);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      expect(activations, 1);
-      expect(initialized, 1);
-      expect(disposed, 0);
+    await panel.tapOn(panel.labeled("Sign out"));
 
-      lifecycle.status = const NatsConnected();
-      await tester.pump(const Duration(milliseconds: 1));
-      expect(control, findsOneWidget);
-      expect(focus.canRequestFocus, isTrue);
-    }
-    await tester.tap(control);
-    expect(activations, 2);
-    expect(initialized, 1);
-    await tester.pumpWidget(const SizedBox());
-    expect(disposed, 1);
-  });
-}
-
-class _MutableLifecycle extends NatsLifecycle {
-  @override
-  NatsConnectionState build() => const NatsConnected();
-
-  NatsConnectionState get status => state;
-
-  set status(NatsConnectionState status) => state = status;
-}
-
-class _RouteProbe extends StatefulWidget {
-  const _RouteProbe({
-    required this.focus,
-    required this.onInit,
-    required this.onDispose,
-    required this.onActivate,
+    await panel.eventually(() => expect(panel.world.session.user, isNull));
   });
 
-  final FocusNode focus;
-  final VoidCallback onInit;
-  final VoidCallback onDispose;
-  final VoidCallback onActivate;
+  testWidgets("an outage keeps the page and its input until reconnected", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([signedIn(ada)], at: _page);
+    final note = panel.field("Note");
+    await note.type("draft");
 
-  @override
-  State<_RouteProbe> createState() => _RouteProbeState();
-}
+    panel.world.nats.disconnect();
+    await panel.settle();
+    expect(note.exists, isFalse);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyX);
+    await panel.settle();
 
-class _RouteProbeState extends State<_RouteProbe> {
-  @override
-  void initState() {
-    super.initState();
-    widget.onInit();
-  }
-
-  @override
-  void dispose() {
-    widget.onDispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.topLeft,
-    child: Focus(
-      focusNode: widget.focus,
-      onKeyEvent: (_, event) {
-        if (event is KeyDownEvent &&
-            event.logicalKey == LogicalKeyboardKey.enter) {
-          widget.onActivate();
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: GestureDetector(
-        onTap: widget.onActivate,
-        child: const Padding(
-          padding: EdgeInsets.all(32),
-          child: Text("Route control"),
-        ),
-      ),
-    ),
-  );
+    panel.world.nats.reconnect();
+    await panel.settle();
+    expect(note.value, "draft");
+    expect(note.isFocused, isFalse);
+  });
 }

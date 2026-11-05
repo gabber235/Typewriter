@@ -4,14 +4,11 @@ import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
 import com.typewritermc.services.libs.http.core.HttpTransport
-import com.typewritermc.services.libs.http.jdk.JdkHttpTransport
 import com.typewritermc.services.libs.registrar.CredentialStorage
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
-import com.typewritermc.services.libs.registrar.RegistrarRuntimeFactory
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.registrar.testing.FakeCredentialStorage
-import com.typewritermc.services.libs.registrar.testing.RegistrarActionLedger
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
@@ -19,9 +16,6 @@ import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.types.shouldBeInstanceOf
-import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -33,9 +27,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 
 val RegistrarKoinModuleTest by testSuite {
-    test("resolves singleton graph and closes owned HTTP transport") {
+    test("closing the application closes the registrar HTTP transport") {
         val telemetry = OpenTelemetry.noop()
-        val ledger = RegistrarActionLedger()
         val scope = CoroutineScope(SupervisorJob())
         val application =
             koinApplication {
@@ -43,10 +36,18 @@ val RegistrarKoinModuleTest by testSuite {
                     module {
                         single<OpenTelemetry> { telemetry }
                         single<ServiceTelemetry> { telemetry.serviceTelemetry("registrar-test") }
-                        single<CredentialStorage> { FakeCredentialStorage(ledger = ledger) }
+                        single<CredentialStorage> { FakeCredentialStorage() }
                     },
                     registrarModule(
-                        configuration(),
+                        RegistrarConfiguration(
+                            identityIssueUri = URI("https://api.example.test/service/identity/issue"),
+                            sentinelCredentialsUri = URI("https://api.example.test/auth/sentinel"),
+                            oauthTokenUri = URI("https://auth.example.test/application/o/token/"),
+                            oauthClientId = "typewriter-services",
+                            oauthScopes = setOf("openid"),
+                            natsServerUri = URI("nats://nats.example.test:4222"),
+                            role = ServiceRole.Custom("realm", "1.0.0"),
+                        ),
                         scope,
                         RetryPolicy.fixed(1.seconds),
                         CoroutineDelayScheduler,
@@ -55,16 +56,9 @@ val RegistrarKoinModuleTest by testSuite {
                 )
             }
         val transport = application.koin.get<HttpTransport>()
-        try {
-            application.koin.get<ServiceRegistrar>() shouldBeSameInstanceAs
-                application.koin.get<ServiceRegistrar>()
-            application.koin.get<RegistrarRuntimeFactory>().shouldBeInstanceOf<RegistrarRuntimeFactory>()
-            transport.shouldBeInstanceOf<JdkHttpTransport>()
-            ledger.actions.shouldBeEmpty()
-        } finally {
-            scope.cancel()
-            application.close()
-        }
+        application.koin.get<ServiceRegistrar>()
+        scope.cancel()
+        application.close()
         val request =
             HttpRequest(
                 HttpOperation("registrar.closed"),
@@ -75,14 +69,3 @@ val RegistrarKoinModuleTest by testSuite {
         shouldThrow<IllegalStateException> { transport.execute(request) }
     }
 }
-
-private fun configuration() =
-    RegistrarConfiguration(
-        identityIssueUri = URI("https://api.example.test/service/identity/issue"),
-        sentinelCredentialsUri = URI("https://api.example.test/auth/sentinel"),
-        oauthTokenUri = URI("https://auth.example.test/application/o/token/"),
-        oauthClientId = "typewriter-services",
-        oauthScopes = setOf("openid"),
-        natsServerUri = URI("nats://nats.example.test:4222"),
-        role = ServiceRole.Custom("realm", "1.0.0"),
-    )

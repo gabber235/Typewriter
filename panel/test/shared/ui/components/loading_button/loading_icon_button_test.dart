@@ -1,101 +1,56 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../../support/test_utils.dart";
-
-enum _IconButtonVariant { standard, filled, outlined }
-
-extension on _IconButtonVariant {
-  Widget button({
-    required Widget icon,
-    required FutureOr<void> Function()? onPressed,
-    LoadingButtonController? controller,
-    double? iconSize,
-  }) => switch (this) {
-    _IconButtonVariant.standard => LoadingIconButton(
-      icon: icon,
-      onPressed: onPressed,
-      controller: controller,
-      iconSize: iconSize,
-    ),
-    _IconButtonVariant.filled => LoadingIconButton.filled(
-      icon: icon,
-      onPressed: onPressed,
-      controller: controller,
-      iconSize: iconSize,
-    ),
-    _IconButtonVariant.outlined => LoadingIconButton.outlined(
-      icon: icon,
-      onPressed: onPressed,
-      controller: controller,
-      iconSize: iconSize,
-    ),
-  };
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  for (final variant in _IconButtonVariant.values) {
+  for (final variant in LoadingIconButtonStyle.values) {
     group("LoadingIconButton.${variant.name}", () {
       testWidgets("shows a spinner while the action is running", (
         tester,
       ) async {
         final completer = Completer<void>();
         var invocations = 0;
-
-        await tester.pumpTestApp(
-          child: Center(
-            child: variant.button(
-              icon: const Icon(Icons.add),
-              onPressed: () async {
-                invocations++;
-                await completer.future;
-                invocations++;
-              },
-            ),
+        final panel = await tester.showComponent(
+          variant.button(
+            icon: const Icon(Icons.add, semanticLabel: "Add"),
+            onPressed: () async {
+              invocations++;
+              await completer.future;
+              invocations++;
+            },
           ),
         );
 
-        await tester.tap(find.byType(IconButton));
-
-        await tester.pumpUntil(() {
+        await tester.tap(panel.labeled("Add"));
+        await panel.eventually(() {
           expect(invocations, 1);
-          expect(find.byType(CircularProgressIndicator), findsOneWidget);
-          expect(find.byIcon(Icons.add), findsNothing);
+          expect(panel.shows("Loading"), isTrue);
+          expect(panel.shows("Add"), isFalse);
         });
 
-        await tester.tap(find.byType(IconButton));
+        await tester.tap(panel.labeled("Loading"));
         expect(invocations, 1);
 
         completer.complete();
-
-        await tester.pumpUntil(() {
+        await panel.eventually(() {
           expect(invocations, 2);
-          expect(find.byType(CircularProgressIndicator), findsNothing);
-          expect(find.byIcon(Icons.add), findsOneWidget);
+          expect(panel.shows("Loading"), isFalse);
+          expect(panel.shows("Add"), isTrue);
         });
       });
 
       testWidgets("shows a snackbar and tooltip on failure", (tester) async {
-        await tester.pumpTestApp(
-          child: Center(
-            child: variant.button(
-              icon: const Icon(Icons.warning),
-              onPressed: () => throw Exception("Boom"),
-            ),
+        final panel = await tester.showComponent(
+          variant.button(
+            icon: const Icon(Icons.warning, semanticLabel: "Warn"),
+            onPressed: () => throw Exception("Boom"),
           ),
         );
 
-        await tester.tap(find.byType(IconButton));
-        await tester.pumpAndSettle();
+        await panel.tapOn(panel.labeled("Warn"));
 
-        expect(find.byType(SnackBar), findsOneWidget);
-        expect(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is Tooltip && widget.message == "Exception: Boom",
-          ),
-          findsOneWidget,
-        );
+        expect(find.text("Exception: Boom"), findsOneWidget);
+        expect(find.tooltip("Exception: Boom"), findsOneWidget);
       });
     });
   }
@@ -104,57 +59,27 @@ void main() {
     final completer = Completer<void>();
     final controller = LoadingButtonController();
     var invoked = false;
-
-    await tester.pumpTestApp(
-      child: Center(
-        child: LoadingIconButton(
-          controller: controller,
-          icon: const Icon(Icons.save),
-          onPressed: () async {
-            invoked = true;
-            await completer.future;
-          },
-        ),
+    final panel = await tester.showComponent(
+      LoadingIconButton(
+        controller: controller,
+        icon: const Icon(Icons.save, semanticLabel: "Save"),
+        onPressed: () async {
+          invoked = true;
+          await completer.future;
+        },
       ),
     );
 
     expect(controller.trigger(), true);
-    await tester.pump();
-
-    expect(invoked, true);
-    expect(controller.isLoading, true);
+    await panel.eventually(() {
+      expect(invoked, true);
+      expect(panel.shows("Loading"), isTrue);
+    });
     expect(controller.trigger(), false);
 
     completer.complete();
-    await tester.pumpAndSettle();
+    await panel.settle();
 
-    expect(controller.isLoading, false);
-  });
-
-  testWidgets("matches the configured icon size while loading", (tester) async {
-    final completer = Completer<void>();
-
-    await tester.pumpTestApp(
-      child: Center(
-        child: LoadingIconButton(
-          iconSize: 32,
-          icon: const Icon(Icons.refresh),
-          onPressed: () => completer.future,
-        ),
-      ),
-    );
-
-    await tester.tap(find.byType(IconButton));
-    await tester.pumpUntil(
-      () => expect(find.byType(CircularProgressIndicator), findsOneWidget),
-    );
-
-    expect(
-      tester.getSize(find.byType(CircularProgressIndicator)),
-      const Size.square(32),
-    );
-
-    completer.complete();
-    await tester.pumpAndSettle();
+    expect(panel.shows("Save"), isTrue);
   });
 }

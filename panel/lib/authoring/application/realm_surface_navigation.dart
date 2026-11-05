@@ -296,6 +296,19 @@ class RealmSurfaceNavigation {
         );
   }
 
+  /// Reveals [resource]'s inspector with keyboard focus on its first field.
+  void _inspect(
+    AuthoringScope scope,
+    skir.ResourceId resource,
+    bool Function() isCurrent,
+  ) => ref
+      .read(realmLocationRevealProvider(scope))
+      .request(
+        skir.ValueLocation(resource: resource, path: editorRootPath),
+        presentation: skir.PresentationRole.inspector,
+        isCurrent: isCurrent,
+      );
+
   /// Performs a navigation action of a presentation or resource operation.
   Future<void> navigate(
     AuthoringScope scope,
@@ -326,15 +339,23 @@ class RealmSurfaceNavigation {
               isCurrent: isCurrent,
             );
         if (!isCurrent()) return;
+        ref.read(selectionProvider.notifier).selectAll([id]);
+        // The pushed surface focuses itself while it is shown, so the
+        // inspector is revealed once the surface settled; revealing it sooner
+        // would lose focus to the surface again.
+        unawaited(
+          ref.read(routeSettlingProvider).settled(isCurrent: isCurrent).then((
+            _,
+          ) {
+            if (ref.mounted && isCurrent()) {
+              _inspect(scope, resource, isCurrent);
+            }
+          }),
+        );
+        return;
       }
       ref.read(selectionProvider.notifier).selectAll([id]);
-      ref
-          .read(realmLocationRevealProvider(scope))
-          .request(
-            skir.ValueLocation(resource: resource, path: editorRootPath),
-            presentation: skir.PresentationRole.inspector,
-            isCurrent: isCurrent,
-          );
+      _inspect(scope, resource, isCurrent);
     } else if (mode == skir.ResourceNavigationMode.reveal) {
       await reveal(
         scope,

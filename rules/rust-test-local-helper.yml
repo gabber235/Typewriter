@@ -1,0 +1,166 @@
+# Requirement: a Rust test holds only its entry points and its test cases. Every setup, seed,
+# fake, driver, assertion and builder lives in shared test support: the component test kit
+# (`typewriter-component-test` or `component-test-core`) for component tests, and the crate's
+# `test_support` module (or an integration test folder's `support/`) everywhere else, so cases
+# share one vocabulary and a helper is never rebuilt per file.
+#
+# Allowed in a test: `use` and `mod` declarations, constants and statics holding test data, test
+# functions (`#[test]`, `#[<runtime>::test]`, `#[component_test]`), macro invocations such as
+# `proptest!`, and what a macro reads in place: the `#[component_fixture]` struct and its
+# `impl FixtureSpec`. Items inside a test case are part of the case.
+#
+# Two rules: one for `#[cfg(test)] mod` blocks in any source file, one for whole test files
+# (integration tests under `tests/`, component suites, and out of line test modules named
+# `tests.rs`, `*_test.rs`, `*_tests.rs`, `*_properties.rs` or `fuzz.rs`).
+id: rust-test-local-helper
+language: rust
+severity: error
+message: A test module declares a helper.
+note: Move it into the crate's `test_support` module (or the component test kit), merged into a general piece, or inline it into the case.
+files:
+  - "backend/**/*.rs"
+  - "xtask/**/*.rs"
+ignores:
+  - "**/target/**"
+  - "**/tests/ui/**"
+  # Shared test support is where helpers belong.
+  - "**/test_support.rs"
+  - "**/test_support/**"
+  - "**/tests/support/**"
+utils:
+  helper-kind:
+    any:
+      - kind: function_item
+      - kind: struct_item
+      - kind: enum_item
+      - kind: union_item
+      - kind: impl_item
+      - kind: trait_item
+      - kind: type_item
+      - kind: macro_definition
+  allowed:
+    any:
+      # A test case.
+      - kind: function_item
+        follows:
+          kind: attribute_item
+          regex: "^#\\[(\\w+::)*(test|component_test)\\b"
+          stopBy:
+            not:
+              any:
+                - kind: attribute_item
+                - kind: line_comment
+                - kind: block_comment
+      # The fixture the component test cases run on.
+      - kind: struct_item
+        follows:
+          kind: attribute_item
+          regex: "^#\\[component_fixture"
+          stopBy:
+            not:
+              any:
+                - kind: attribute_item
+                - kind: line_comment
+                - kind: block_comment
+      # The fixture's configuration.
+      - kind: impl_item
+        has:
+          field: trait
+          regex: "^FixtureSpec$"
+rule:
+  matches: helper-kind
+  inside:
+    kind: declaration_list
+    inside:
+      kind: mod_item
+      not:
+        has:
+          field: name
+          regex: "^test_support$"
+      follows:
+        kind: attribute_item
+        regex: "^#\\[cfg\\((all\\()?test\\b"
+        stopBy:
+          not:
+            any:
+              - kind: attribute_item
+              - kind: line_comment
+              - kind: block_comment
+  not:
+    matches: allowed
+---
+id: rust-test-file-local-helper
+language: rust
+severity: error
+message: A test file declares a helper.
+note: Move it into the crate's `test_support` module, the test folder's `support/`, or the component test kit, merged into a general piece, or inline it into the case.
+files:
+  - "backend/**/tests/*.rs"
+  - "xtask/tests/*.rs"
+  - "backend/tests/component/suite/src/**/*.rs"
+  - "backend/**/tests.rs"
+  - "backend/**/*_test.rs"
+  - "backend/**/*_tests.rs"
+  - "backend/**/*_properties.rs"
+  - "backend/**/fuzz.rs"
+  - "xtask/**/tests.rs"
+  - "xtask/**/*_test.rs"
+  - "xtask/**/*_tests.rs"
+  - "xtask/**/*_properties.rs"
+  - "xtask/**/fuzz.rs"
+ignores:
+  - "**/target/**"
+  - "**/tests/ui/**"
+  # Shared test support is where helpers belong.
+  - "**/test_support.rs"
+  - "**/test_support/**"
+  - "**/tests/support/**"
+  - "backend/tests/component/suite/src/catalog.rs"
+  # Production code: the review module about test changes, not a test file.
+  - "xtask/src/review/tests.rs"
+  # The component test kit and stack: shared support, not tests. Their own `#[cfg(test)]`
+  # modules are checked by `rust-test-local-helper`.
+  - "backend/tests/component/crates/*/src/**"
+utils:
+  helper-kind:
+    any:
+      - kind: function_item
+      - kind: struct_item
+      - kind: enum_item
+      - kind: union_item
+      - kind: impl_item
+      - kind: trait_item
+      - kind: type_item
+      - kind: macro_definition
+  allowed:
+    any:
+      - kind: function_item
+        follows:
+          kind: attribute_item
+          regex: "^#\\[(\\w+::)*(test|component_test)\\b"
+          stopBy:
+            not:
+              any:
+                - kind: attribute_item
+                - kind: line_comment
+                - kind: block_comment
+      - kind: struct_item
+        follows:
+          kind: attribute_item
+          regex: "^#\\[component_fixture"
+          stopBy:
+            not:
+              any:
+                - kind: attribute_item
+                - kind: line_comment
+                - kind: block_comment
+      - kind: impl_item
+        has:
+          field: trait
+          regex: "^FixtureSpec$"
+rule:
+  matches: helper-kind
+  inside:
+    kind: source_file
+  not:
+    matches: allowed

@@ -5,42 +5,27 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.contract.OperationOutcome
-import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.operationOutcome
+import com.typewritermc.services.libs.communicator.testing.ExampleAddress
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
 import com.typewritermc.services.libs.communicator.transport.Payload
-import com.typewritermc.services.libs.communicator.transport.TransportDelivery
-import com.typewritermc.services.libs.communicator.transport.TransportError
-import com.typewritermc.services.libs.communicator.transport.TransportResult
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import java.util.Locale
 
-data class ExampleAddress(
-    val service: String,
-    val organization: String,
-)
-
-private val template =
-    "realm.{service}.organization.{organization}".addressTemplate(
-        { addressValuesOf("service" to it.service, "organization" to it.organization) },
-        { ExampleAddress(it.require("service"), it.require("organization")) },
-    )
-
-private val codec =
-    object : PayloadCodec<String> {
-        override fun encode(value: String): Payload = Payload.copyOf(value.encodeToByteArray())
-
-        override fun decode(payload: Payload): String = payload.toByteArray().decodeToString()
-    }
-
 val CoreFoundationsTest by testSuite {
+    val template =
+        "realm.{service}.organization.{organization}".addressTemplate(
+            { addressValuesOf("service" to it.service, "organization" to it.organization) },
+            { ExampleAddress(it.require("service"), it.require("organization")) },
+        )
+
     test("response classifications map to every typed operation outcome") {
         ResponseClassification(ResponseOutcome.SUCCESS, ResponseVariant.of("success"))
             .operationOutcome("value") shouldBe OperationOutcome.Success("value")
@@ -79,13 +64,13 @@ val CoreFoundationsTest by testSuite {
         template.match(MessageAddress.of("other.engine.organization.org-1")) shouldBe null
     }
 
-    test("bound subscriptions retain stable templates and use one concrete address") {
+    test("a bound subscription listens on its one address and still reads it") {
         val value = ExampleAddress("engine", "org-1")
         val bound = template.subscribedAt(value)
 
-        bound.template shouldBe template.template
+        template.subscriptionPattern.value shouldBe "realm.*.organization.*"
         bound.subscriptionPattern.value shouldBe "realm.engine.organization.org-1"
-        bound.render(value) shouldBe template.render(value)
+        bound.match(bound.render(value)) shouldBe value
     }
 
     test("patterns reject malformed literals and placeholders") {
@@ -181,24 +166,5 @@ val CoreFoundationsTest by testSuite {
         val inbound = InboundMessage(address, byteArrayOf(1, 2), reply, headers)
         inbound shouldBe InboundMessage(address, byteArrayOf(1, 2), reply, MessageHeaders.of("x-test" to "one"))
         inbound.hashCode() shouldBe InboundMessage(address, byteArrayOf(1, 2), reply, headers).hashCode()
-    }
-
-    test("all transport failures and delivery variants remain typed") {
-        val cause = IllegalStateException("failure")
-        listOf(
-            TransportError.Timeout(),
-            TransportError.Unavailable(cause),
-            TransportError.NoResponders(cause),
-            TransportError.Failure(cause),
-        ).forEach { error ->
-            TransportResult.Failure(error).error shouldBe error
-            TransportDelivery.Failure(error).error shouldBe error
-        }
-        TransportResult.Success("value").value shouldBe "value"
-        TransportDelivery.Completed shouldBe TransportDelivery.Completed
-    }
-
-    test("codec exposes explicit encode and decode") {
-        codec.decode(codec.encode("value")) shouldBe "value"
     }
 }

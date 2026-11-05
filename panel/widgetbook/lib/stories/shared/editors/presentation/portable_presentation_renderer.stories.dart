@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "Collections", type: PortablePresentationRenderer)
 Widget collectionPresentationUseCase(BuildContext context) {
@@ -22,30 +23,24 @@ Widget collectionPresentationUseCase(BuildContext context) {
       CollectionEditorExample.directLinks => "Direct resource links",
     },
   );
-  return FakeApp(
-    child: Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: context.knobs.double.slider(
-              label: "Collection width",
-              initialValue: 400,
-              min: 320,
-              max: 900,
-            ),
-            child: CollectionPresentationGallery(
-              example: example,
-              longTitles: context.knobs.boolean(
-                label: "Long collection titles",
-              ),
-              empty: context.knobs.boolean(label: "Empty collection"),
-              readOnly: context.knobs.boolean(label: "Collection read only"),
-              enabled: context.knobs.boolean(
-                label: "Collection enabled",
-                initialValue: true,
-              ),
-            ),
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      _Scrolling(
+        width: context.knobs.double.slider(
+          label: "Collection width",
+          initialValue: 400,
+          min: 320,
+          max: 900,
+        ),
+        child: _CollectionPresentation(
+          example: example,
+          longTitles: context.knobs.boolean(label: "Long collection titles"),
+          empty: context.knobs.boolean(label: "Empty collection"),
+          readOnly: context.knobs.boolean(label: "Collection read only"),
+          enabled: context.knobs.boolean(
+            label: "Collection enabled",
+            initialValue: true,
           ),
         ),
       ),
@@ -53,15 +48,15 @@ Widget collectionPresentationUseCase(BuildContext context) {
   );
 }
 
-final class CollectionPresentationGallery extends HookWidget {
-  const CollectionPresentationGallery({
-    this.example = CollectionEditorExample.textList,
-    this.longTitles = false,
-    this.empty = false,
-    this.readOnly = false,
-    this.enabled = true,
-    super.key,
+class _CollectionPresentation extends HookWidget {
+  const _CollectionPresentation({
+    required this.example,
+    required this.longTitles,
+    required this.empty,
+    required this.readOnly,
+    required this.enabled,
   });
+
   final CollectionEditorExample example;
   final bool longTitles;
   final bool empty;
@@ -88,31 +83,6 @@ final class CollectionPresentationGallery extends HookWidget {
 }
 
 @widgetbook.UseCase(
-  name: "Portable document",
-  type: PortablePresentationRenderer,
-)
-Widget portablePresentationRendererUseCase(BuildContext context) {
-  return FakeApp(
-    child: Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: SizedBox(
-            width: context.knobs.double.slider(
-              label: "Editor width",
-              initialValue: 640,
-              min: 320,
-              max: 900,
-            ),
-            child: const PortablePresentationGallery(),
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-@widgetbook.UseCase(
   name: "Inherited field presentation",
   type: PortablePresentationRenderer,
 )
@@ -127,24 +97,44 @@ Widget inheritedFieldPresentationUseCase(BuildContext context) {
       InheritedFieldVariant.disabled => "Disabled",
     },
   );
-  return FakeApp(
-    child: Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: SizedBox(
-            width: context.knobs.double.slider(
-              label: "Editor width",
-              initialValue: 640,
-              min: 320,
-              max: 900,
-            ),
-            child: InheritedFieldPresentationGallery(variant: variant),
-          ),
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      _Scrolling(
+        width: context.knobs.double.slider(
+          label: "Editor width",
+          initialValue: 640,
+          min: 320,
+          max: 900,
         ),
+        child: _InheritedFieldPresentation(variant: variant),
       ),
     ),
   );
+}
+
+class _InheritedFieldPresentation extends HookWidget {
+  const _InheritedFieldPresentation({required this.variant});
+
+  final InheritedFieldVariant variant;
+
+  @override
+  Widget build(BuildContext context) {
+    final scenario = useMemoized(
+      () => InheritedFieldPresentationScenario(variant: variant),
+      [variant],
+    );
+    useEffect(() => scenario.dispose, [scenario]);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 12,
+      children: [
+        const Text("Quest action"),
+        PortablePresentationRenderer(host: scenario.host),
+      ],
+    );
+  }
 }
 
 @widgetbook.UseCase(
@@ -161,31 +151,24 @@ Widget inheritedInspectorLayoutUseCase(BuildContext context) {
       InheritedInspectorLayoutVariant.replacedDetails => "Replaced details",
     },
   );
-  return FakeApp(
-    child: Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: SizedBox(
-            width: context.knobs.double.slider(
-              label: "Inspector width",
-              initialValue: 640,
-              min: 320,
-              max: 900,
-            ),
-            child: InheritedInspectorLayoutGallery(variant: variant),
-          ),
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      _Scrolling(
+        width: context.knobs.double.slider(
+          label: "Inspector width",
+          initialValue: 640,
+          min: 320,
+          max: 900,
         ),
+        child: _InheritedInspectorLayout(variant: variant),
       ),
     ),
   );
 }
 
-final class InheritedInspectorLayoutGallery extends HookWidget {
-  const InheritedInspectorLayoutGallery({
-    this.variant = InheritedInspectorLayoutVariant.childOrder,
-    super.key,
-  });
+class _InheritedInspectorLayout extends HookWidget {
+  const _InheritedInspectorLayout({required this.variant});
 
   final InheritedInspectorLayoutVariant variant;
 
@@ -200,96 +183,182 @@ final class InheritedInspectorLayoutGallery extends HookWidget {
   }
 }
 
-final class InheritedFieldPresentationGallery extends HookWidget {
-  const InheritedFieldPresentationGallery({
-    this.variant = InheritedFieldVariant.inherited,
-    super.key,
+/// A quest form whose title is too short, showing where the renderer places
+/// diagnostics for each severity, role and owner.
+@widgetbook.UseCase(name: "Field validation", type: PortableDiagnosticFrame)
+Widget portableFieldValidationUseCase(BuildContext context) => Story(
+  const [],
+  at: PanelLocation.component(
+    SizedBox(
+      width: context.knobs.double.slider(
+        label: "Diagnostic width",
+        initialValue: 480,
+        min: 320,
+        max: 900,
+      ),
+      height: 520,
+      child: _QuestFormDiagnostics(
+        severity: context.knobs.object.dropdown(
+          label: "Diagnostic severity",
+          options: const [
+            skir.DiagnosticSeverity.information,
+            skir.DiagnosticSeverity.warning,
+            skir.DiagnosticSeverity.error,
+          ],
+          initialOption: skir.DiagnosticSeverity.error,
+          labelBuilder: (severity) => switch (severity) {
+            skir.DiagnosticSeverity.information => "Information",
+            skir.DiagnosticSeverity.warning => "Warning",
+            _ => "Error",
+          },
+        ),
+        role: context.knobs.object.dropdown(
+          label: "Presentation role",
+          options: const [
+            skir.PresentationRole.inspector,
+            skir.PresentationRole.workspace,
+            skir.PresentationRole.resourceSearchResult,
+          ],
+          initialOption: skir.PresentationRole.inspector,
+          labelBuilder: (role) => switch (role) {
+            skir.PresentationRole.workspace => "Workspace",
+            skir.PresentationRole.resourceSearchResult => "Search result",
+            _ => "Inspector",
+          },
+        ),
+        owner: context.knobs.object.dropdown(
+          label: "Diagnostic owner",
+          options: PortableDiagnosticFallback.values,
+          initialOption: PortableDiagnosticFallback.presentation,
+          labelBuilder: (owner) => owner.name,
+        ),
+        general: context.knobs.boolean(label: "General message"),
+        readOnly: context.knobs.boolean(label: "Read only"),
+        collapsed: context.knobs.boolean(label: "Collapsed header"),
+      ),
+    ),
+  ),
+);
+
+class _QuestFormDiagnostics extends HookWidget {
+  const _QuestFormDiagnostics({
+    required this.severity,
+    required this.role,
+    required this.owner,
+    required this.general,
+    required this.readOnly,
+    required this.collapsed,
   });
 
-  final InheritedFieldVariant variant;
+  final skir.DiagnosticSeverity severity;
+  final skir.PresentationRole role;
+  final PortableDiagnosticFallback owner;
+  final bool general;
+  final bool readOnly;
+  final bool collapsed;
 
   @override
   Widget build(BuildContext context) {
-    final scenario = useMemoized(
-      () => InheritedFieldPresentationScenario(variant: variant),
-      [variant],
+    final host = useMemoized(
+      () => _QuestFormHost(
+        severity: severity,
+        role: role,
+        owner: owner,
+        general: general,
+        readOnly: readOnly,
+        collapsed: collapsed,
+      ),
+      [severity, role, owner, general, readOnly, collapsed],
     );
-    useEffect(() => scenario.dispose, [scenario]);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text("Quest action"),
-        const SizedBox(height: 12),
-        PortablePresentationRenderer(host: scenario.host),
-      ],
-    );
-  }
-}
-
-final class PortablePresentationGallery extends HookWidget {
-  const PortablePresentationGallery({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final host = useMemoized(_PortableGalleryHost.new);
     useEffect(() => host.dispose, [host]);
     return PortablePresentationRenderer(host: host);
   }
 }
 
-class _PortableGalleryHost extends ChangeNotifier
+/// Holds a quest title and its objective count, refusing titles shorter than
+/// three characters the way a realm validator would.
+class _QuestFormHost extends ChangeNotifier
     implements PortablePresentationHost {
+  _QuestFormHost({
+    required this.severity,
+    required this.role,
+    required this.owner,
+    required this.general,
+    required this.readOnly,
+    required this.collapsed,
+  }) {
+    _diagnostics = [_shortTitle];
+  }
+
+  final skir.DiagnosticSeverity severity;
+  final skir.PresentationRole role;
+  final PortableDiagnosticFallback owner;
+  final bool general;
+  final bool collapsed;
+
   @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
+  final bool readOnly;
+
   final Map<skir.ExpressionBindingId, skir.DataValue> _values = {
-    _title: skir.DataValue.wrapStringValue("Quest objective"),
-    _count: skir.DataValue.wrapInteger("3"),
+    _title: skir.DataValue.wrapStringValue("Go"),
+    _objectives: skir.DataValue.wrapInteger("3"),
   };
+  List<PortablePresentationDiagnostic> _diagnostics = const [];
+
+  PortablePresentationDiagnostic get _shortTitle =>
+      PortablePresentationDiagnostic(
+        code: "quest_title",
+        message: "Use at least three characters",
+        severity: severity,
+        targets: general
+            ? const []
+            : [
+                PortableDiagnosticTarget.binding(
+                  skir.BindingRef(bindingId: _title, path: editorRootPath),
+                ),
+              ],
+      );
 
   @override
   PortablePresentationCapabilities get capabilities =>
       const PortablePresentationCapabilities();
 
   @override
+  bool get enabled => true;
+
+  @override
   PortablePresentationDocument get document => PortablePresentationDocument(
     catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-    root: _root,
+    root: _questForm(expanded: !collapsed),
     bindings: {
       _title: PortablePresentationBinding(
         schema: PortablePresentationBindingSchema.complete(_textType),
         value: _values[_title]!,
         editable: true,
       ),
-      _count: PortablePresentationBinding(
+      _objectives: PortablePresentationBinding(
         schema: PortablePresentationBindingSchema.complete(_integerType),
-        value: _values[_count]!,
+        value: _values[_objectives]!,
         editable: true,
       ),
     },
     budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
+    role: role,
+    diagnostics: _diagnostics,
+    diagnosticFallback: owner,
   );
 
   @override
-  bool get enabled => true;
-
-  @override
-  bool get readOnly => false;
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
 
   @override
   Future<PortablePresentationWriteResult> execute(
     skir.EditorAction editorAction, {
     required PortableInvocationContext context,
-  }) async => PortablePresentationWriteResult.rejected([
-    PortablePresentationDiagnostic(
-      code: "gallery_action",
-      message: "This gallery action has no persistence owner",
-      severity: skir.DiagnosticSeverity.error,
-    ),
-  ]);
+  }) async => const PortablePresentationWriteResult.applied();
 
   @override
   skir.TypeUse? expectedType(
@@ -297,7 +366,7 @@ class _PortableGalleryHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) => switch (reference.bindingId) {
     final value when value == _title => _textType,
-    final value when value == _count => _integerType,
+    final value when value == _objectives => _integerType,
     _ => null,
   };
 
@@ -319,262 +388,100 @@ class _PortableGalleryHost extends ChangeNotifier
     skir.DataValue value, {
     required PortableInvocationContext context,
   }) async {
-    if (reference.path.segments.isNotEmpty ||
-        !_values.containsKey(reference.bindingId)) {
-      return PortablePresentationWriteResult.rejected([
-        PortablePresentationDiagnostic(
-          code: "gallery_binding",
-          message: "The gallery binding is unavailable",
-          severity: skir.DiagnosticSeverity.error,
-        ),
-      ]);
+    if (reference.bindingId == _title) {
+      if (value case skir.DataValue_stringValueWrapper(value: final text)
+          when text.length < 3) {
+        return PortablePresentationWriteResult.rejected([_shortTitle]);
+      }
     }
     _values[reference.bindingId] = value;
+    _diagnostics = const [];
     notifyListeners();
     return const PortablePresentationWriteResult.applied();
   }
 }
 
 final _title = skir.ExpressionBindingId(value: "title");
-final _count = skir.ExpressionBindingId(value: "count");
+final _objectives = skir.ExpressionBindingId(value: "objectives");
 final _textType = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
 final _integerType = skir.TypeUse.wrapScalar(
   skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
 );
-final _root = skir.PresentationNode(
-  nodeId: "portable.gallery",
-  properties: skir.PresentationProperties.defaultInstance,
-  element: skir.PresentationElement.wrapChildren(
-    skir.ChildrenElement.createColumn(
-      children: [
-        skir.AxisChild.wrapFixed(
-          presentationNode(
-            "title",
-            skir.PresentationElement.createTextInput(
-              control: _control(_title, "Title"),
-              content:
-                  (skir.InputContent.mutable()
-                        ..placeholder = textLiteral("Quest objective"))
-                      .toFrozen(),
-              appearance: null,
-              entry: null,
-              mappings: null,
-              options: skir.TextEditingOptions.defaultInstance,
-            ),
-          ),
-        ),
-        skir.AxisChild.wrapFixed(
-          presentationNode(
-            "count",
-            skir.PresentationElement.wrapNumericInput(
-              (skir.NumericControl.mutable()
-                    ..control = _control(_count, "Count"))
-                  .toFrozen(),
-            ),
-          ),
-        ),
-      ],
-      layout: skir.AxisChildrenLayout(
-        clipOverflow: false,
 
-        spacing: 16,
-        mainAxisAlignment: skir.MainAxisAlignment.start,
-        crossAxisAlignment: skir.CrossAxisAlignment.stretch,
+skir.PresentationNode _questForm({required bool expanded}) =>
+    skir.PresentationNode(
+      nodeId: "quest",
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.wrapChildren(
+        skir.ChildrenElement.createColumn(
+          children: [
+            skir.AxisChild.wrapFixed(
+              presentationNode(
+                "title",
+                skir.PresentationElement.createTextInput(
+                  control: _control(_title, "Title"),
+                  content:
+                      (skir.InputContent.mutable()
+                            ..placeholder = textLiteral("Find the lantern"))
+                          .toFrozen(),
+                  appearance: null,
+                  entry: null,
+                  mappings: null,
+                  options: skir.TextEditingOptions.defaultInstance,
+                ),
+              ),
+            ),
+            skir.AxisChild.wrapFixed(
+              presentationNode(
+                "objectives",
+                skir.PresentationElement.wrapNumericInput(
+                  (skir.NumericControl.mutable()
+                        ..control = _control(_objectives, "Objectives"))
+                      .toFrozen(),
+                ),
+              ),
+            ),
+          ],
+          layout: skir.AxisChildrenLayout(
+            clipOverflow: false,
+            spacing: 16,
+            mainAxisAlignment: skir.MainAxisAlignment.start,
+            crossAxisAlignment: skir.CrossAxisAlignment.stretch,
+          ),
+        ),
       ),
-    ),
-  ),
-  header: skir.PresentationHeader(
-    binding: skir.BindingRef(
-      bindingId: _title,
-      path: skir.ValuePath(segments: const []),
-    ),
-    title: skir.PresentationHeaderTitle.wrapText(
-      textLiteral("Portable presentation host"),
-    ),
-    description: textLiteral("Bindings keep persistence outside the renderer"),
-    initiallyExpanded: true,
-    items: const [],
-    headerPadding: null,
-    contentPadding: null,
-  ),
-);
+      header: skir.PresentationHeader(
+        binding: skir.BindingRef(bindingId: _title, path: editorRootPath),
+        title: skir.PresentationHeaderTitle.wrapText(textLiteral("Quest")),
+        description: textLiteral("The Lost Village"),
+        initiallyExpanded: expanded,
+        items: const [],
+        headerPadding: null,
+        contentPadding: null,
+      ),
+    );
 
 skir.BoundControl _control(skir.ExpressionBindingId binding, String label) =>
     skir.BoundControl(
-      binding: skir.BindingRef(
-        bindingId: binding,
-        path: skir.ValuePath(segments: const []),
-      ),
+      binding: skir.BindingRef(bindingId: binding, path: editorRootPath),
       label: textLiteral(label),
       description: null,
       prefix: null,
       semanticLabel: null,
     );
 
-// Add alongside the existing portable renderer stories.
-@widgetbook.UseCase(name: "Field validation", type: PortableDiagnosticFrame)
-Widget portableFieldValidationUseCase(BuildContext context) =>
-    context.diagnosticStory();
+/// Scrolls [child] at [width], the way an inspector column holds a form.
+class _Scrolling extends StatelessWidget {
+  const _Scrolling({required this.width, required this.child});
 
-@widgetbook.UseCase(
-  name: "Descendant summary",
-  type: PortableDiagnosticHeaderMarker,
-)
-Widget portableHeaderDiagnosticsUseCase(BuildContext context) =>
-    context.diagnosticStory();
-
-@widgetbook.UseCase(name: "Inline messages", type: PortableDiagnosticMessages)
-Widget portableDiagnosticMessagesUseCase(BuildContext context) =>
-    context.diagnosticStory();
-
-@widgetbook.UseCase(name: "General feedback", type: PortablePresentationChrome)
-Widget portableGeneralDiagnosticsUseCase(BuildContext context) =>
-    context.diagnosticStory(initiallyGeneral: true);
-
-extension _PortableDiagnosticStoryContext on BuildContext {
-  Widget diagnosticStory({bool initiallyGeneral = false}) => FakeApp(
-    child: Scaffold(
-      body: Center(
-        child: SizedBox(
-          width: knobs.double.slider(
-            label: "Diagnostic width",
-            initialValue: 480,
-            min: 320,
-            max: 900,
-          ),
-          height: 520,
-          child: PortableDiagnosticGallery(
-            severity: knobs.object.dropdown(
-              label: "Diagnostic severity",
-              options: [
-                skir.DiagnosticSeverity.information,
-                skir.DiagnosticSeverity.warning,
-                skir.DiagnosticSeverity.error,
-              ],
-              initialOption: skir.DiagnosticSeverity.error,
-            ),
-            role: knobs.object.dropdown(
-              label: "Presentation role",
-              options: [
-                skir.PresentationRole.inspector,
-                skir.PresentationRole.workspace,
-                skir.PresentationRole.resourceSearchResult,
-              ],
-              initialOption: skir.PresentationRole.inspector,
-            ),
-            diagnosticFallback: knobs.object.dropdown(
-              label: "Diagnostic owner",
-              options: PortableDiagnosticFallback.values,
-              initialOption: PortableDiagnosticFallback.presentation,
-            ),
-            general: knobs.boolean(
-              label: "General message",
-              initialValue: initiallyGeneral,
-            ),
-            readOnly: knobs.boolean(label: "Read only", initialValue: false),
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-class PortableDiagnosticGallery extends HookWidget {
-  const PortableDiagnosticGallery({
-    required this.severity,
-    required this.role,
-    required this.general,
-    required this.readOnly,
-    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
-    super.key,
-  });
-  final skir.DiagnosticSeverity severity;
-  final skir.PresentationRole role;
-  final bool general;
-  final PortableDiagnosticFallback diagnosticFallback;
-  final bool readOnly;
+  final double width;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final host = useMemoized(
-      () => _PortableDiagnosticGalleryHost(
-        severity: severity,
-        role: role,
-        general: general,
-        diagnosticFallback: diagnosticFallback,
-        readOnly: readOnly,
-      ),
-      [severity, role, general, readOnly, diagnosticFallback],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: SizedBox(width: width, child: child),
     );
-    useEffect(() => host.dispose, [host]);
-    return PortablePresentationRenderer(host: host);
-  }
-}
-
-// Reuse the existing binding schemas, root header, and controls.
-class _PortableDiagnosticGalleryHost extends _PortableGalleryHost {
-  _PortableDiagnosticGalleryHost({
-    required this.severity,
-    required this.role,
-    required this.general,
-    required this.readOnly,
-    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
-  }) {
-    _values[_title] = skir.DataValue.wrapStringValue("ga");
-    _diagnostics = [_titleDiagnostic];
-  }
-  final skir.DiagnosticSeverity severity;
-  final skir.PresentationRole role;
-  final bool general;
-  final PortableDiagnosticFallback diagnosticFallback;
-  @override
-  final bool readOnly;
-  List<PortablePresentationDiagnostic> _diagnostics = const [];
-
-  PortablePresentationDiagnostic get _titleDiagnostic =>
-      PortablePresentationDiagnostic(
-        code: "gallery_title",
-        message: "Use at least three characters",
-        severity: severity,
-        targets: general
-            ? const []
-            : [
-                PortableDiagnosticTarget.binding(
-                  skir.BindingRef(bindingId: _title, path: editorRootPath),
-                ),
-              ],
-      );
-
-  @override
-  PortablePresentationDocument get document {
-    final source = super.document;
-    return PortablePresentationDocument(
-      catalog: source.catalog,
-      root: source.root,
-      bindings: source.bindings,
-      budget: source.budget,
-      role: role,
-      diagnostics: _diagnostics,
-      diagnosticFallback: diagnosticFallback,
-      material: source.material,
-      activePresentations: source.activePresentations,
-      slots: source.slots,
-    );
-  }
-
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) async {
-    if (reference.bindingId == _title && reference.path.segments.isEmpty) {
-      if (value case skir.DataValue_stringValueWrapper(value: final text)
-          when text.length < 3) {
-        return PortablePresentationWriteResult.rejected([_titleDiagnostic]);
-      }
-    }
-    _diagnostics = const [];
-    return super.write(reference, value, context: context);
   }
 }

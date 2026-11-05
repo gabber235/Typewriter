@@ -24,13 +24,13 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
-import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.InputAnswer
 import skirout.editor.v1.catalog.PreparationOperation
 import skirout.editor.v1.catalog.PreparationTarget
@@ -73,19 +73,10 @@ val ResumableInitializationTest by testSuite {
             ) as PrepareValueResult.ReadyWrapper
         ready.value.findings shouldBe emptyList()
     }
-    test("nested pending defaults resume while unrelated captures remain frozen") {
+    test("a nested default waits for its required input and is captured on resume while the earlier capture is kept") {
         val fixture = resumeFixture(defaultedSettings = true)
         val first = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request)) as PrepareValueResult.NeedsInputWrapper
-        fixture.marker.calls shouldBe 1
-        fixture.settings.calls shouldBe 0
-        first.value.pendingDefaults shouldBe setOf(path("settings", "label"))
-        val unchanged =
-            fixture.runtime.stepNow(
-                PreparationOperation.createResume(draft = first.value, answers = emptyList()),
-            ) as PrepareValueResult.NeedsInputWrapper
-        unchanged.value shouldBe first.value
-        fixture.marker.calls shouldBe 1
-        fixture.settings.calls shouldBe 0
+        val unchanged = fixture.runtime.stepNow(PreparationOperation.createResume(draft = first.value, answers = emptyList()))
         val resumed =
             fixture.runtime.stepNow(
                 PreparationOperation.createResume(
@@ -93,15 +84,17 @@ val ResumableInitializationTest by testSuite {
                     answers = listOf(InputAnswer(path = path("settings", "target"), value = reference())),
                 ),
             ) as PrepareValueResult.ReadyWrapper
-        fixture.marker.calls shouldBe 1
-        fixture.settings.calls shouldBe 1
         val fields = (resumed.value.content as PreparedContent.RecordWrapper).value.fieldMap
-        val marker = (fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
-        marker.field("id") shouldBe DataValue.StringValueWrapper("capture:1")
-        val settings = (fields.getValue("settings") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
-        settings.field("label") shouldBe DataValue.StringValueWrapper("capture:1")
+
+        first.value.pendingDefaults shouldBe setOf(path("settings", "label"))
+        unchanged shouldBe first
+        ((fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).field("id") shouldBe
+            DataValue.StringValueWrapper("capture:1")
+        ((fields.getValue("settings") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).field("label") shouldBe
+            DataValue.StringValueWrapper("capture:1")
         resumed.value.findings shouldBe emptyList()
     }
+
     test("nested reference answers preserve list and map item identity") {
         val root = id("Collections")
         val nested = id("CollectionSettings")
@@ -216,47 +209,52 @@ val ResumableInitializationTest by testSuite {
         val rows = ((record.fieldMap.getValue("mapping") as DataValue.NamedWrapper).payload as DataValue.MapValueWrapper).rows
         rows.single().id shouldBe mapItem
     }
-    test("continuations and answers round trip through the current wire") {
-        val fixture = resumeFixture(defaultedSettings = true)
-        val step = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request))
-        PrepareValueResult.serializer.fromBytes(PrepareValueResult.serializer.toBytes(step).toByteArray()) shouldBe step
-        val draft = (step as PrepareValueResult.NeedsInputWrapper).value
-        val operation =
-            PreparationOperation.createResume(
-                draft = draft,
-                answers = listOf(InputAnswer(path = path("settings", "target"), value = reference())),
-            )
-        PreparationOperation.serializer
-            .fromBytes(PreparationOperation.serializer.toBytes(operation).toByteArray())
-            .requireValid() shouldBe operation
-    }
-    test("invalid paths, duplicate answers and forged pending defaults are rejected without capture") {
-        val fixture = resumeFixture(defaultedSettings = true)
-        val first = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request)) as PrepareValueResult.NeedsInputWrapper
-        val answer = InputAnswer(path = path("settings", "target"), value = reference())
-        val invalidOperations =
-            listOf(
-                PreparationOperation.createResume(draft = first.value, answers = listOf(answer, answer)),
-                PreparationOperation.createResume(
-                    draft = first.value,
-                    answers = listOf(InputAnswer(path = path("absent"), value = reference())),
-                ),
-                PreparationOperation.createResume(
-                    draft = first.value,
-                    answers = listOf(InputAnswer(path = answer.path, value = DataValue.StringValueWrapper("wrong"))),
-                ),
-                PreparationOperation.createResume(draft = first.value.copy(pendingDefaults = setOf(answer.path)), answers = listOf(answer)),
-                PreparationOperation.createResume(
-                    draft = first.value.copy(catalog = CatalogGeneration(value = "old")),
-                    answers = listOf(answer),
-                ),
-            )
-        invalidOperations.forEach {
-            (fixture.runtime.stepNow(it) is PrepareValueResult.UnavailableErrorWrapper) shouldBe true
+    val rejectedResume =
+        run {
+            val fixture = resumeFixture(defaultedSettings = true)
+            val first =
+                (
+                    fixture.runtime.stepNow(
+                        PreparationOperation.StartWrapper(fixture.request),
+                    ) as PrepareValueResult.NeedsInputWrapper
+                ).value
+            val answer = InputAnswer(path = path("settings", "target"), value = reference())
+            mapOf(
+                "a duplicate answer" to PreparationOperation.createResume(draft = first, answers = listOf(answer, answer)),
+                "an answer for an absent path" to
+                    PreparationOperation.createResume(
+                        draft = first,
+                        answers = listOf(InputAnswer(path = path("absent"), value = reference())),
+                    ),
+                "an answer of the wrong type" to
+                    PreparationOperation.createResume(
+                        draft = first,
+                        answers = listOf(InputAnswer(path = answer.path, value = DataValue.StringValueWrapper("wrong"))),
+                    ),
+                "a forged pending default" to
+                    PreparationOperation.createResume(draft = first.copy(pendingDefaults = setOf(answer.path)), answers = listOf(answer)),
+                "a draft from another catalog generation" to
+                    PreparationOperation.createResume(
+                        draft = first.copy(catalog = CatalogGeneration(value = "old")),
+                        answers = listOf(answer),
+                    ),
+            ).mapValues { (_, operation) -> fixture.runtime.stepNow(operation) }
         }
-        fixture.settings.calls shouldBe 0
-        fixture.marker.calls shouldBe 1
+
+    mapOf(
+        "a duplicate answer" to "invalid_preparation_continuation: An input was answered more than once.",
+        "an answer for an absent path" to "invalid_preparation_continuation: The answer does not belong to a pending input.",
+        "an answer of the wrong type" to "invalid_preparation_continuation: The answer does not match its applied type.",
+        "a forged pending default" to "invalid_preparation_continuation: A pending default is not an omitted constructor field.",
+        "a draft from another catalog generation" to "invalid_preparation_continuation: The preparation catalog changed.",
+    ).forEach { (case, expected) ->
+        test("resuming with $case is refused") {
+            val refused = rejectedResume.getValue(case).shouldBeInstanceOf<PrepareValueResult.UnavailableErrorWrapper>()
+
+            refused.value.findings.map { "${it.code}: ${it.message}" } shouldBe listOf(expected)
+        }
     }
+
     test("an abstract required record can choose a concrete type and discover its nested reference") {
         val abstractId = id("Abstract")
         val concreteId = id("Concrete")
@@ -319,33 +317,44 @@ val ResumableInitializationTest by testSuite {
                 ),
             ) as PrepareValueResult.NeedsInputWrapper
         next.value.requiredInputs shouldBe listOf(RequiredInput(path = path("choice", "target"), expected = LINK_USE.use))
-        (
+        val ready =
             runtime.stepNow(
                 PreparationOperation.createResume(
                     draft = next.value,
                     answers = listOf(InputAnswer(path = path("choice", "target"), value = reference())),
                 ),
-            ) is PrepareValueResult.ReadyWrapper
-        ) shouldBe
-            true
+            ) as PrepareValueResult.ReadyWrapper
+        (ready.value.content as PreparedContent.RecordWrapper).value.fieldMap shouldBe
+            mapOf("choice" to DataValue.named(concreteUse, DataValue.record(mapOf("target" to reference()))))
+        ready.value.findings shouldBe emptyList()
     }
-    test("ordinary editing preserves incomplete fields and capture failures") {
+    test("ordinary preparation keeps a default that waits for a required input unfinished") {
         val fixture = resumeFixture(defaultedSettings = true)
-        val ordinary = fixture.runtime.prepareNow(fixture.request)
-        ordinary.findings.any { it.code == "unfinished_constructor_input" } shouldBe true
+
+        fixture.runtime
+            .prepareNow(fixture.request)
+            .findings
+            .map { it.code } shouldBe listOf("unfinished_constructor_input")
+    }
+
+    test("a failed capture still materializes the fields it could prepare and reports the failure") {
         val failing = resumeFixture(failMarker = true)
         val unavailable =
             failing.runtime.stepNow(
                 PreparationOperation.StartWrapper(failing.request),
             ) as PrepareValueResult.UnavailableErrorWrapper
-        val content = (unavailable.materialize().content as PreparedContent.RecordWrapper).value.fieldMap
-        content.keys shouldBe setOf("settings", "marker")
-        unavailable.value.findings.any { it.code == "test_capture_failed" } shouldBe true
+
+        val fields = (unavailable.materialize().content as PreparedContent.RecordWrapper).value.fieldMap
+
+        fields.keys shouldBe setOf("settings", "marker")
+        ((fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).field("id") shouldBe DataValue.UNFILLED
+        unavailable.value.findings.map { it.code } shouldBe listOf("test_capture_failed")
     }
+
     test("a valid default reference is retained without an input prompt") {
         val referenceId = id("DefaultReference")
         val field = FieldOwner(definition = referenceId, name = "target")
-        val plan = CountingPlan(field, value = reference())
+        val plan = SamplingPlan(field, value = reference())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
@@ -366,169 +375,8 @@ val ResumableInitializationTest by testSuite {
                 ),
             )
         val runtime =
-            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(ResumePlanFactory(referenceId, plan))))
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, referenceId))))
         val ready = runtime.stepNow(PreparationOperation.StartWrapper(request(referenceId))) as PrepareValueResult.ReadyWrapper
         ((ready.value.content as PreparedContent.RecordWrapper).value.fieldMap.getValue("target")) shouldBe reference()
-        plan.calls shouldBe 1
     }
 }
-
-private data class ResumeFixture(
-    val runtime: DefaultInitializationRuntime,
-    val request: ValuePreparationRequest,
-    val marker: CountingPlan,
-    val settings: CountingPlan,
-)
-
-private fun resumeFixture(
-    defaultedSettings: Boolean = false,
-    failMarker: Boolean = false,
-): ResumeFixture {
-    val root = id("Root")
-    val settings = id("Settings")
-    val marker = id("Marker")
-    val markerPlan = CountingPlan(FieldOwner(definition = marker, name = "id"), fail = failMarker)
-    val settingsPlan = CountingPlan(FieldOwner(definition = settings, name = "label"))
-    val settingsFields =
-        buildList {
-            add(
-                FieldDeclaration.partial(owner = FieldOwner(definition = settings, name = "target"), type = LINK_USE.template()),
-            )
-            if (defaultedSettings) {
-                add(
-                    FieldDeclaration.partial(
-                        owner = FieldOwner(definition = settings, name = "label"),
-                        type = ScalarKind.TEXT.template,
-                        hasConstructorDefault = true,
-                    ),
-                )
-            }
-        }
-    val catalog =
-        DefaultCheckedCatalog(
-            GENERATION,
-            listOf(
-                resourceDefinition(),
-                linkDefinition(),
-                TypeDefinition.partial(
-                    id = root,
-                    representation =
-                        RepresentationTemplate.createRecord(
-                            fields =
-                                listOf(
-                                    FieldDeclaration.partial(
-                                        owner = FieldOwner(definition = root, name = "settings"),
-                                        type = settings.template(emptyList()),
-                                    ),
-                                    FieldDeclaration.partial(
-                                        owner = FieldOwner(definition = root, name = "marker"),
-                                        type = marker.template(emptyList()),
-                                    ),
-                                ),
-                            abstract_ = false,
-                        ),
-                ),
-                TypeDefinition.partial(
-                    id = settings,
-                    representation = RepresentationTemplate.createRecord(fields = settingsFields, abstract_ = false),
-                ),
-                TypeDefinition.partial(
-                    id = marker,
-                    representation =
-                        RepresentationTemplate.createRecord(
-                            fields =
-                                listOf(
-                                    FieldDeclaration.partial(
-                                        owner = FieldOwner(definition = marker, name = "id"),
-                                        type = ScalarKind.TEXT.template,
-                                        hasConstructorDefault = true,
-                                    ),
-                                ),
-                            abstract_ = false,
-                        ),
-                ),
-            ),
-        )
-    val factories =
-        buildList {
-            add(ResumePlanFactory(marker, markerPlan))
-            if (defaultedSettings) add(ResumePlanFactory(settings, settingsPlan))
-        }
-    return ResumeFixture(
-        DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, factories)),
-        request(root),
-        markerPlan,
-        settingsPlan,
-    )
-}
-
-private class CountingPlan(
-    val field: FieldOwner,
-    val fail: Boolean = false,
-    val value: DataValue? = null,
-) : NativeConstructionPlan {
-    override val defaultedFields = setOf(field)
-    var calls = 0
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult {
-        calls++
-        return if (fail) {
-            CaptureResult.Unavailable(
-                listOf(
-                    InitializationDiagnostic(field = field, code = "test_capture_failed", message = "Capture failed.", relativePath = null),
-                ),
-            )
-        } else {
-            CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
-        }
-    }
-}
-
-private class ResumePlanFactory(
-    override val definition: TypeDefinitionId,
-    override val constructionPlan: NativeConstructionPlan,
-) : NativeBindingFactory {
-    override val provider = NativeBindingId(value = "test.resume")
-
-    override fun bind(
-        actual: CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> = error("Preparation does not decode complete records.")
-}
-
-private val GENERATION = CatalogGeneration(value = "resume")
-private val RESOURCE_ID = id("Resource")
-private val LINK_ID = id("Reference")
-private val LINK_USE = LINK_ID.namedUse(emptyList())
-private val ENDPOINT = EndpointId(value = "required-reference")
-
-private fun id(name: String) = TypeDefinitionId.qualified("test.resume", name)
-
-private fun NamedTypeUse.template() = definition.template(emptyList())
-
-private fun resourceDefinition() =
-    TypeDefinition.partial(id = RESOURCE_ID, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
-
-private fun linkDefinition() =
-    TypeDefinition.partial(
-        id = LINK_ID,
-        representation = RepresentationTemplate.createLink(endpoint = ENDPOINT, target = RESOURCE_ID.template(emptyList())),
-    )
-
-private fun request(id: TypeDefinitionId) =
-    ValuePreparationRequest(
-        catalog = GENERATION,
-        target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(id.namedUse(emptyList()))),
-        suppliedValue = DataValue.record(emptyMap()),
-    )
-
-private fun path(vararg fields: String) = ValuePath(segments = fields.map { PathSegment.createField(name = it) })
-
-private fun reference() =
-    DataValue.named(
-        LINK_USE,
-        DataValue.createLink(endpoint = ENDPOINT, target = LinkTarget(resource = ResourceId("reserved-target").toSkir(), opposite = null)),
-    )

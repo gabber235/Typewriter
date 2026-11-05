@@ -145,7 +145,6 @@ internal class CapabilityProviderProcessor(
             owner = ownerClass,
             functionName = functionName,
             factory = ClassName(ownerClass.packageName, "${owner.simpleName.asString()}${suffix}GeneratedCapabilityProvider"),
-            provider = ClassName(ownerClass.packageName, "${owner.simpleName.asString()}${suffix}BoundCapabilityProvider"),
             kind = kind,
             id = "cap_${identity.sha256()}",
             requestType = requestType.toTypeName(),
@@ -191,7 +190,6 @@ private class CapabilityDeclaration(
     val owner: ClassName,
     val functionName: String,
     val factory: ClassName,
-    val provider: ClassName,
     val kind: CapabilityKind,
     val id: String,
     val requestType: TypeName,
@@ -202,12 +200,18 @@ private class CapabilityDeclaration(
 ) {
     private val descriptorType: ClassName = kind.descriptor.asClassName()
 
+    /**
+     * The bound provider, nested in [factory] so it loads with the factory. The generated provider loader defines the
+     * indexed factory and its nested classes itself; a separate top level class would come from the host's loader when
+     * the host can see the extension, and the factory could not reach it.
+     */
+    private val provider: ClassName = factory.nestedClass("Bound")
+
     fun file() =
         GeneratedFile
             .builder(factory.packageName, factory.simpleName)
             .addProperty(reference())
             .addType(factoryType())
-            .addType(providerType())
             .build()
 
     /** `val <function>Capability`: the typed reference clients invoke the capability through. */
@@ -274,7 +278,8 @@ private class CapabilityDeclaration(
                     .returns(Api.RealmCapabilityProvider)
                     .addStatement("return %T(resolver.resolve(%T::class) as %T,♢descriptor)", provider, owner, owner)
                     .build(),
-            ).build()
+            ).addType(providerType())
+            .build()
     }
 
     private fun providerType(): TypeSpec {

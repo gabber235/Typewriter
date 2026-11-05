@@ -13,7 +13,9 @@ mod evidence;
 mod generate;
 mod gitops;
 mod graph;
+mod heavy;
 mod hooks;
+mod junit;
 mod lock;
 mod process;
 mod results;
@@ -21,6 +23,8 @@ mod review;
 mod secrets;
 mod skirout;
 mod stack;
+#[cfg(test)]
+mod test_support;
 
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -62,7 +66,7 @@ enum Cli {
     /// Regenerates the generated sources (Git ignores them) whose inputs changed.
     Generate,
     /// Runs an end to end suite against this worktree's stack and writes its `TestRun`.
-    E2e { suite: e2e::Suite },
+    E2e(e2e::E2eArgs),
     /// Runs a command with this worktree's stack up, or removes stacks left behind.
     #[command(subcommand)]
     Stack(stack::StackCommand),
@@ -79,6 +83,12 @@ enum Cli {
     /// Publishes and removes documentation previews; `check docs` checks the site.
     #[command(subcommand)]
     Docs(docs::DocsCommand),
+    /// Runs a command xtask has no command for under the machine wide heavy build lock,
+    /// for example `cargo xtask heavy -- flutter test test/foo_test.dart`.
+    Heavy {
+        #[arg(last = true, required = true)]
+        command: Vec<String>,
+    },
     /// Runs a git hook's rules; devenv registers the hooks that call this.
     #[command(subcommand)]
     Hook(hooks::HookCommand),
@@ -118,7 +128,7 @@ fn main() -> ExitCode {
         Cli::Deploy { cluster } => deploy::deploy(&context, cluster),
         Cli::Cluster(command) => cluster::command(&context, command),
         Cli::Generate => generate::generate(&context, None),
-        Cli::E2e { suite } => e2e::run(&context, suite),
+        Cli::E2e(args) => e2e::run(&context, &args),
         Cli::Stack(command) => stack::command(&context, command),
         Cli::Doctor => doctor::doctor(&context),
         Cli::Secrets(command) => secrets::command(&context, command),
@@ -126,15 +136,16 @@ fn main() -> ExitCode {
         Cli::Evidence(command) => evidence::run(&context, command),
         Cli::Docs(command) => docs::run(&context, command),
         Cli::Hook(command) => hooks::run(&context, command),
+        // The command's own exit code passes through.
+        Cli::Heavy { command } => return heavy::run(&command).map_or_else(failed, ExitCode::from),
         Cli::Step { name } => graph::run_native(&context, &name),
     };
-    match result {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(error) => {
-            eprintln!("xtask: {error:#}");
-            ExitCode::FAILURE
-        }
-    }
+    result.map_or_else(failed, |()| ExitCode::SUCCESS)
+}
+
+fn failed(error: anyhow::Error) -> ExitCode {
+    eprintln!("xtask: {error:#}");
+    ExitCode::FAILURE
 }
 
 /// Where the repository is. Every path a command touches is resolved against `root`.

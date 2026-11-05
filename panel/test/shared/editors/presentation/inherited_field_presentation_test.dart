@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final replacePrefix in [false, true]) {
@@ -133,15 +131,12 @@ void main() {
           ),
         );
         addTearDown(fixture.dispose);
-        await _pump(tester, fixture);
+        await tester.showPresentationHost(fixture.host);
         expect(
           find.text("Local prefix"),
           replacePrefix ? findsOneWidget : findsNothing,
         );
-        expect(
-          find.byType(TextFormField),
-          findsNWidgets(replacePrefix ? 2 : 1),
-        );
+        expect(visibleTextFields(), hasLength(replacePrefix ? 2 : 1));
         expect(
           find.text("First"),
           replacePrefix ? findsOneWidget : findsNothing,
@@ -156,16 +151,16 @@ void main() {
     "externally referenced sibling editing defaults produce a diagnostic",
     (tester) async {
       final fixture = InheritedFieldPresentationScenario(
-        sourceName: _siblingEditingName(),
+        sourceName: _siblingEditingName,
         layout: inheritedFieldColumn([
           inheritedFieldRequest(),
           inheritedFieldRemaining,
         ]),
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
+      await tester.showPresentationHost(fixture.host);
       expect(tester.takeException(), isNull);
-      expect(find.byType(TextFormField), findsOneWidget);
+      expect(visibleTextFields(), hasLength(1));
       expect(find.text("Welcome"), findsNothing);
       expect(
         find.textContaining(
@@ -179,14 +174,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is TextFormField &&
-              widget.controller?.text == "Hello player",
-        ),
-        findsOneWidget,
-      );
+      expect(visibleFieldValues(), ["Hello player"]);
       expect(tester.takeException(), isNull);
     },
   );
@@ -196,25 +184,18 @@ void main() {
       "unpublished multi field source ${sourceInspector ? 'renders locally' : 'allows consumer fallback'}",
       (tester) async {
         final fixture = InheritedFieldPresentationScenario(
-          sourceName: _siblingEditingName(),
+          sourceName: _siblingEditingName,
           publishNameDefault: false,
           useSourceInspector: sourceInspector,
         );
         addTearDown(fixture.dispose);
-        await _pump(tester, fixture);
-        expect(
-          find.byType(TextFormField),
-          sourceInspector ? findsOneWidget : findsNWidgets(2),
-        );
+        final panel = await tester.showPresentationHost(fixture.host);
+        expect(visibleTextFields(), hasLength(sourceInspector ? 1 : 2));
         expect(
           find.textContaining("Field presentation test:element"),
           findsNothing,
         );
-        await tester.enterText(
-          find.byType(TextFormField).first,
-          "  Local policy  ",
-        );
-        await tester.pumpAndSettle();
+        await panel.fieldAt(0).type("  Local policy  ");
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
         expect(
@@ -229,59 +210,25 @@ void main() {
   testWidgets(
     "compiled SDK custom inspector inherits the Element completion mapping",
     (tester) async {
-      final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
-      var value = compiledSdkElementValue;
-      final actual = value.authoredActualType!;
-      final selected = catalog.selectPresentation(
-        skir.TypeSelection.wrapComplete(actual),
-        skir.PresentationRole.inspector,
-      ) as SelectedEditorPresentation;
-      expect(
-        selected.descriptor.id,
-        skir.PresentationId(namespace: "fixture", name: "entry inspector"),
+      final inspector = ValueInspector(
+        compiledSdkElementValue,
+        catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
       );
-      final writes = <skir.ValuePath>[];
-      final host = BoundPresentationHost(
-        catalog: catalog,
-        root: () => selected.material.layout,
-        role: selected.resolvedRole,
-        material: selected.material,
-        bindings: [
-          BoundPresentationBinding(
-            id: inheritedConfiguredValue,
-            use: skir.TypeUse.wrapNamed(actual),
-            read: (path) => value.editorValueAt(path),
-            write: (path, replacement) {
-              final result = value.replaceAt(
-                path,
-                replacement,
-              ) as PortablePathValue<skir.DataValue>;
-              value = result.value;
-              writes.add(path);
-              return const PortablePresentationWriteResult.applied();
-            },
-          ),
-        ],
-        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
-      );
+      final host = inspector.host();
       addTearDown(host.dispose);
-      await tester.pumpTestApp(
-        child: Scaffold(body: PortablePresentationRenderer(host: host)),
+      final panel = await tester.showComponent(
+        Scaffold(body: PortablePresentationRenderer(host: host)),
       );
-      await tester.pumpAndSettle();
-      final name = find.byWidgetPredicate(
-        (widget) =>
-            widget is TextFormField &&
-            widget.controller?.text ==
-                compiledSdkElementValue.authoredField("name")?.authoredString,
+      final name = visibleFieldValues().indexOf(
+        compiledSdkElementValue.authoredField("name")!.authoredString!,
       );
-      expect(name, findsOneWidget);
-      await tester.enterText(name, "  Compiled greeting  ");
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-      expect(value.authoredField("name")?.authoredString, "Compiled greeting");
-      expect(writes.last, editorRootPath.field("name"));
+      expect(name, isNot(-1));
+      await panel.fieldAt(name).type("  Compiled greeting  ");
+      await panel.press(LogicalKeyboardKey.escape);
+      expect(
+        inspector.value.authoredField("name")?.authoredString,
+        "Compiled greeting",
+      );
       expect(tester.takeException(), isNull);
     },
   );
@@ -311,12 +258,11 @@ void main() {
       ),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(find.byType(TextFormField), findsOneWidget);
+    final panel = await tester.showPresentationHost(fixture.host);
+    expect(visibleTextFields(), hasLength(1));
     expect(find.text("Optional name"), findsOneWidget);
     expect(find.text("Name"), findsNothing);
-    await tester.enterText(find.byType(TextFormField), "  Optional quest  ");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("  Optional quest  ");
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(fixture.name, "Optional quest");
@@ -324,21 +270,17 @@ void main() {
   });
   for (final localPrefix in [false, true]) {
     testWidgets(
-      "${localPrefix ? 'local' : 'inherited'} prefix retains its material dependency table",
+      "${localPrefix ? 'local' : 'inherited'} prefix lists its collection from its declaring material",
       (tester) async {
+        final row = skir.ExpressionBindingId(value: "shared.row");
         skir.PresentationDependencies dependencies(String relation) =>
             (skir.PresentationDependencies.mutable()
                   ..collections = [
                     (skir.PresentationCollectionDefinition.mutable()
                           ..sourceId = "shared.source"
-                          ..rowBinding = declareNamedBinding(
-                            "shared.row",
-                            textTemplate,
-                          )
+                          ..rowBinding = declareBinding(row, textTemplate)
                           ..key = skir.ExpressionNode.createInput(
-                            binding: skir.ExpressionBindingId(
-                              value: "shared.row",
-                            ),
+                            binding: row,
                             path: editorRootPath,
                           )
                           ..selectability = skir.ExpressionNode.wrapLiteral(
@@ -353,14 +295,51 @@ void main() {
                                     ),
                                   ))
                                 .toFrozen(),
-                          ])
+                          ]
+                          ..projection =
+                              (skir.PresentationCollectionProjection.mutable()
+                                    ..root = skir.NamedTypeTemplate(
+                                      definition:
+                                          inheritedActionType.definition,
+                                      arguments: const [],
+                                    )
+                                    ..resourceBinding = declareNamedBinding(
+                                      "shared.resource",
+                                      skir.TypeUse.wrapNamed(
+                                        skir.resourceIdType,
+                                      ).portableTemplate,
+                                    ))
+                                  .toFrozen())
                         .toFrozen(),
                   ])
                 .toFrozen();
-        final slot = presentationNode(
-          "scope.probe",
-          skir.PresentationElement.wrapSlot(
-            skir.PresentationSlotElement(slotId: "probe"),
+        // Shows the row whose key is the record's name, as the collection
+        // the prefix reads lists it.
+        final prefix = presentationNode(
+          "shared.lookup",
+          skir.PresentationElement.wrapCollectionLookup(
+            (skir.CollectionLookupElement.mutable()
+                  ..sourceId = "shared.source"
+                  ..key = skir.BindingRef(
+                    bindingId: inheritedConfiguredValue,
+                    path: editorRootPath.field("message"),
+                  )
+                  ..found = presentationNode(
+                    "shared.found",
+                    skir.PresentationElement.wrapText(
+                      (skir.TextContent.mutable()
+                            ..value = skir.ExpressionNode.createInput(
+                              binding: row,
+                              path: editorRootPath,
+                            ))
+                          .toFrozen(),
+                    ),
+                  )
+                  ..missing = presentationText(
+                    "shared.missing",
+                    textLiteral("No row"),
+                  ))
+                .toFrozen(),
           ),
         );
         final fixture = InheritedFieldPresentationScenario(
@@ -368,57 +347,57 @@ void main() {
           customDependencies: dependencies("caller relation"),
           sourceName: inheritedFieldTextInput(
             "element.name",
-            control: inheritedFieldControl(label: "Name", prefix: slot),
+            control: inheritedFieldControl(label: "Name", prefix: prefix),
             trim: true,
           ),
           layout: inheritedFieldRequest(
-            control: inheritedFieldControl(prefix: localPrefix ? slot : null),
+            control: inheritedFieldControl(prefix: localPrefix ? prefix : null),
           ),
         );
         addTearDown(fixture.dispose);
-        skir.PresentationMaterial? observed;
-        final document = fixture.host.document;
-        final scope = PortablePresentationScope(
-          bindings: {
-            inheritedConfiguredValue: PortableExpressionBinding(
-              value: fixture.value,
-              schema: CompletePortablePresentationBinding(
-                skir.TypeUse.wrapNamed(inheritedActionType),
-              ),
-            ),
+        // A Realm whose collection rows depend on the collection definition
+        // the presentation material declares: each relation lists its own
+        // row for the message the record holds.
+        final host = ProjectingHost(
+          fixture.host,
+          collections: (sourceId, material) {
+            final definition = material.dependencies.collections.singleWhere(
+              (candidate) => candidate.sourceId == sourceId,
+            );
+            final key = skir.DataValue.wrapStringValue("Hello player");
+            return PortableCollectionProjection(
+              definition: definition,
+              rows: [
+                PortableCollectionRowProjection(
+                  resource: skir.ResourceId(value: "shared:row"),
+                  configuration: skir.TypeSelection.unknown,
+                  label: "Row",
+                  row: skir.DataValue.wrapStringValue(
+                    "Row of ${definition.relations.single.relationId}",
+                  ),
+                  key: key,
+                  canonicalKey: canonicalAuthoredValue(key),
+                  selectable: true,
+                ),
+              ],
+            );
           },
-          budget: document.budget,
-          operations: testPortableOperations(),
-          catalog: fixture.catalog,
-          queries: PortableExpressionQueries(catalog: fixture.catalog),
-          role: skir.PresentationRole.inspector,
-          host: fixture.host,
-          slotBuilders: {
-            "probe": (scope) {
-              observed = scope.material;
-              return const SizedBox.shrink();
-            },
-          },
-        ).withMaterial(document.material!);
-        await tester.pumpTestApp(
-          child: Material(
-            child: PortablePresentationNodeRenderer(
-              node: document.root,
-              scope: scope,
-            ),
+        );
+        await tester.showComponent(
+          Scaffold(body: PortablePresentationRenderer(host: host)),
+        );
+        expect(
+          find.text(
+            localPrefix ? "Row of caller relation" : "Row of source relation",
           ),
-        );
-        await tester.pumpAndSettle();
-        expect(observed, isNotNull);
-        expect(
-          observed!.dependencies.collections.single.sourceId,
-          "shared.source",
+          findsOneWidget,
         );
         expect(
-          observed!.dependencies.collections.single.relations.single.relationId,
-          localPrefix ? "caller relation" : "source relation",
+          find.text(
+            localPrefix ? "Row of source relation" : "Row of caller relation",
+          ),
+          findsNothing,
         );
-        expect(observed!.dependencies.collections, hasLength(1));
         expect(tester.takeException(), isNull);
       },
     );
@@ -428,12 +407,10 @@ void main() {
     (tester) async {
       final fixture = InheritedFieldPresentationScenario(nestedOwners: true);
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      final fields = find.byType(TextFormField);
-      expect(fields, findsNWidgets(4));
+      final panel = await tester.showPresentationHost(fixture.host);
+      expect(visibleTextFields(), hasLength(4));
       for (final (index, owner) in [(0, "first"), (2, "second")]) {
-        await tester.enterText(fields.at(index), "  $owner quest  ");
-        await tester.pumpAndSettle();
+        await panel.fieldAt(index).type("  $owner quest  ");
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
         expect(
@@ -473,8 +450,8 @@ void main() {
         ),
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(find.byType(TextFormField), findsNWidgets(2));
+      await tester.showPresentationHost(fixture.host);
+      expect(visibleTextFields(), hasLength(2));
       expect(
         find.text("Field name presentation inheritance is recursive"),
         findsOneWidget,
@@ -492,20 +469,21 @@ void main() {
             layout: remaining ? inheritedFieldRemaining : null,
           );
           addTearDown(fixture.dispose);
-          await _pump(tester, fixture);
-          final inputs = find.byType(TextFormField);
-          expect(inputs, findsNWidgets(2));
+          final panel = await tester.showPresentationHost(fixture.host);
+          expect(visibleTextFields(), hasLength(2));
           expect(find.text("Name"), findsOneWidget);
           await tester.sendKeyEvent(LogicalKeyboardKey.tab);
           await tester.pumpAndSettle();
           await tester.sendKeyEvent(LogicalKeyboardKey.space);
           await tester.pumpAndSettle();
-          expect(_editable(tester, 0).focusNode.hasFocus, isTrue);
-          await tester.enterText(inputs.first, "  Quest name  ");
-          await tester.pumpAndSettle();
+          expect(panel.fieldAt(0).isFocused, isTrue);
+          await panel.fieldAt(0).type("  Quest name  ");
           await tester.sendKeyEvent(key);
           if (key == LogicalKeyboardKey.enter) {
-            expect(_editable(tester, 0).textInputAction, TextInputAction.done);
+            expect(
+              tester.testTextInput.setClientArgs?["inputAction"],
+              TextInputAction.done.toString(),
+            );
             // The test engine delivers platform text actions separately.
             await tester.testTextInput.receiveAction(TextInputAction.done);
           }
@@ -515,7 +493,7 @@ void main() {
           if (key == LogicalKeyboardKey.tab) {
             await tester.sendKeyEvent(LogicalKeyboardKey.space);
             await tester.pumpAndSettle();
-            expect(_editable(tester, 1).focusNode.hasFocus, isTrue);
+            expect(panel.fieldAt(1).isFocused, isTrue);
           }
           expect(tester.takeException(), isNull);
         },
@@ -530,11 +508,10 @@ void main() {
       variant: InheritedFieldVariant.explicitControl,
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    final panel = await tester.showPresentationHost(fixture.host);
     expect(find.text("Exact name"), findsOneWidget);
     expect(find.text("Name"), findsNothing);
-    await tester.enterText(find.byType(TextFormField).first, "  Exact name  ");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("  Exact name  ");
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pumpAndSettle();
     expect(fixture.name, "  Exact name  ");
@@ -544,37 +521,31 @@ void main() {
   testWidgets("local labels reach the focused native editor and retain trim", (
     tester,
   ) async {
-    final semantics = tester.ensureSemantics();
     final fixture = InheritedFieldPresentationScenario(
       variant: InheritedFieldVariant.localLabel,
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    final panel = await tester.showPresentationHost(fixture.host);
     expect(find.text("Action name"), findsOneWidget);
     expect(find.text("Name"), findsNothing);
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pumpAndSettle();
-    expect(_editable(tester, 0).focusNode.hasFocus, isTrue);
-    expect(
-      tester.getSemantics(find.byType(EditableText).first).label,
-      "Action name",
-    );
-    await tester.enterText(find.byType(TextFormField).first, "  With label  ");
-    await tester.pumpAndSettle();
+    expect(panel.fieldAt(0).isFocused, isTrue);
+    expect(visibleTextFields().first.spoken, "Action name");
+    await panel.fieldAt(0).type("  With label  ");
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(fixture.name, "With label");
-    expect(_editable(tester, 0).focusNode.hasFocus, isFalse);
+    // Escape ends editing: the field takes no more typed text.
+    expect(tester.testTextInput.hasAnyClients, isFalse);
     expect(tester.takeException(), isNull);
-    semantics.dispose();
   });
 
   testWidgets("semantic label overrides visible label independently", (
     tester,
   ) async {
-    final semantics = tester.ensureSemantics();
     final fixture = InheritedFieldPresentationScenario(
       layout: inheritedFieldColumn([
         inheritedFieldRequest(
@@ -586,13 +557,9 @@ void main() {
       ]),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    await tester.showPresentationHost(fixture.host);
     expect(find.text("Short label"), findsOneWidget);
-    expect(
-      tester.getSemantics(find.byType(EditableText)).label,
-      "Quest display name",
-    );
-    semantics.dispose();
+    expect(visibleTextFields().single.spoken, "Quest display name");
   });
 
   testWidgets(
@@ -604,12 +571,11 @@ void main() {
         ),
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(find.byType(TextFormField), findsOneWidget);
+      final panel = await tester.showPresentationHost(fixture.host);
+      expect(visibleTextFields(), hasLength(1));
       expect(find.text("Name"), findsNothing);
       expect(find.text("name"), findsNothing);
-      await tester.enterText(find.byType(TextFormField), "  Empty label  ");
-      await tester.pumpAndSettle();
+      await panel.fieldAt(0).type("  Empty label  ");
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       expect(fixture.name, "Empty label");
@@ -632,10 +598,9 @@ void main() {
       ),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    final panel = await tester.showPresentationHost(fixture.host);
     expect(find.text("Hello player"), findsNWidgets(2));
-    await tester.enterText(find.byType(TextFormField).last, "Current message");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(1).type("Current message");
     expect(find.text("Current message"), findsNWidgets(2));
     expect(find.text("Hello player"), findsNothing);
     expect(tester.takeException(), isNull);
@@ -663,10 +628,10 @@ void main() {
       ),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
+    await tester.showPresentationHost(fixture.host);
     expect(find.text("Local prefix"), findsOneWidget);
     expect(find.text("Inherited prefix"), findsNothing);
-    expect(find.byType(TextFormField), findsOneWidget);
+    expect(visibleTextFields(), hasLength(1));
   });
 
   testWidgets("hidden name requests stay reserved from remaining fields", (
@@ -687,8 +652,8 @@ void main() {
       layout: inheritedFieldColumn([inheritedFieldRemaining, hidden]),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(find.byType(TextFormField), findsOneWidget);
+    await tester.showPresentationHost(fixture.host);
+    expect(visibleTextFields(), hasLength(1));
     expect(find.text("Welcome"), findsNothing);
     expect(find.text("Hello player"), findsOneWidget);
     expect(find.text("Name"), findsNothing);
@@ -711,9 +676,11 @@ void main() {
       sourceName: source.toFrozen(),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(_editable(tester, 0).readOnly, isTrue);
-    expect(_editable(tester, 1).readOnly, isFalse);
+    final panel = await tester.showPresentationHost(fixture.host);
+    expect(panel.fieldAt(0).isReadOnly, isTrue);
+    expect(panel.fieldAt(1).isReadOnly, isFalse);
+    await panel.fieldAt(0).enter("Changed name");
+    expect(fixture.name, "Welcome");
     expect(fixture.writes, isEmpty);
   });
 
@@ -747,9 +714,11 @@ void main() {
       ]),
     );
     addTearDown(fixture.dispose);
-    await _pump(tester, fixture);
-    expect(_editable(tester, 0).readOnly, isTrue);
-    expect(_editable(tester, 1).readOnly, isFalse);
+    final panel = await tester.showPresentationHost(fixture.host);
+    expect(panel.fieldAt(0).isReadOnly, isTrue);
+    expect(panel.fieldAt(1).isReadOnly, isFalse);
+    await panel.fieldAt(0).enter("Changed name");
+    expect(fixture.name, "Welcome");
     expect(fixture.writes, isEmpty);
   });
 
@@ -760,8 +729,8 @@ void main() {
         referenceNodeId: "missing.name",
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(find.byType(TextFormField), findsOneWidget);
+      await tester.showPresentationHost(fixture.host);
+      expect(visibleTextFields(), hasLength(1));
       expect(find.text("Welcome"), findsNothing);
       expect(find.text("Hello player"), findsOneWidget);
       expect(
@@ -782,28 +751,15 @@ void main() {
         variant: InheritedFieldVariant.explicitControl,
       );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
-      expect(find.byType(TextFormField), findsNWidgets(2));
+      await tester.showPresentationHost(fixture.host);
+      expect(visibleTextFields(), hasLength(2));
       expect(find.text("Exact name"), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
 }
 
-Future<void> _pump(
-  WidgetTester tester,
-  InheritedFieldPresentationScenario fixture,
-) async {
-  await tester.pumpTestApp(
-    child: Scaffold(body: PortablePresentationRenderer(host: fixture.host)),
-  );
-  await tester.pumpAndSettle();
-}
-
-EditableText _editable(WidgetTester tester, int index) =>
-    tester.widget<EditableText>(find.byType(EditableText).at(index));
-
-skir.PresentationNode _siblingEditingName() => inheritedFieldTextInput(
+final _siblingEditingName = inheritedFieldTextInput(
   "element.name",
   control: inheritedFieldControl(
     label: "Name",

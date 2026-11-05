@@ -215,9 +215,12 @@ val ShortcutEvaluationTest by testSuite {
     }
 
     test("raw regex shortcut patterns are validated alone when the expression is built") {
-        shouldThrow<IllegalArgumentException> { subject<String>().matches("a)|(b") }
-        shouldThrow<IllegalArgumentException> { subject<String>().matches("(?=a)") }
-        shouldThrow<IllegalArgumentException> { subject<String>().containsMatchIn("(") }
+        shouldThrow<IllegalArgumentException> { subject<String>().matches("a)|(b") }.message shouldBe
+            "The regular expression contains an unmatched closing group."
+        shouldThrow<IllegalArgumentException> { subject<String>().matches("(?=a)") }.message shouldBe
+            "Lookarounds, named groups, flags, and special groups are not supported."
+        shouldThrow<IllegalArgumentException> { subject<String>().containsMatchIn("(") }.message shouldBe
+            "The regular expression contains an unterminated group."
     }
 
     test("rule shortcuts bound, divide and choose among allowed values") {

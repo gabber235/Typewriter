@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/unicode.dart";
 
 void main() {
   test("case mapping applies full untailored mappings with Final_Sigma", () {
@@ -34,13 +33,13 @@ void main() {
   });
 
   test("normalization produces the four UAX 15 forms", () {
-    expect(_nfc("Å"), "Å");
-    expect(_nfd("Å"), "Å");
-    expect(_nfkc("ﬁ"), "fi");
-    expect(_nfc("ﬁ"), "ﬁ");
-    expect(_nfd("가"), "가");
-    expect(_nfc("각"), "각");
-    expect(_nfc(""), "");
+    expect(portableNormalize("Å", compatibility: false, compose: true), "Å");
+    expect(portableNormalize("Å", compatibility: false, compose: false), "Å");
+    expect(portableNormalize("ﬁ", compatibility: true, compose: true), "fi");
+    expect(portableNormalize("ﬁ", compatibility: false, compose: true), "ﬁ");
+    expect(portableNormalize("가", compatibility: false, compose: false), "가");
+    expect(portableNormalize("각", compatibility: false, compose: true), "각");
+    expect(portableNormalize("", compatibility: false, compose: true), "");
   });
 
   test("white space is the pinned White_Space property plus U+FEFF", () {
@@ -61,7 +60,7 @@ void main() {
     "and CaseFolding files say",
     () async {
       final simple = <int, List<String>>{};
-      for (final line in await _unicodeLines("UnicodeData.txt")) {
+      for (final line in await unicodeLines("UnicodeData.txt")) {
         final fields = line.split(";");
         simple[int.parse(fields[0], radix: 16)] = [
           fields[12],
@@ -70,11 +69,11 @@ void main() {
         ];
       }
       final special = {
-        for (final fields in await _unicodeRecords("SpecialCasing.txt"))
+        for (final fields in await unicodeRecords("SpecialCasing.txt"))
           if (fields[4].isEmpty) int.parse(fields[0], radix: 16): fields,
       };
       final folding = {
-        for (final fields in await _unicodeRecords("CaseFolding.txt"))
+        for (final fields in await unicodeRecords("CaseFolding.txt"))
           if (fields[1] == "C" || fields[1] == "F")
             int.parse(fields[0], radix: 16): fields[2],
       };
@@ -83,7 +82,7 @@ void main() {
       for (var codePoint = 0; codePoint <= 0x10FFFF; codePoint++) {
         if (codePoint >= 0xD800 && codePoint <= 0xDFFF) continue;
         final value = String.fromCharCode(codePoint);
-        final self = _hex(codePoint);
+        final self = unicodeHex(codePoint);
         final expected = {
           "upper": special[codePoint]?[3] ?? simple[codePoint]?[0],
           "lower": special[codePoint]?[1] ?? simple[codePoint]?[1],
@@ -98,12 +97,12 @@ void main() {
         };
         for (final MapEntry(key: operation, value: mapping)
             in expected.entries) {
-          final want = _codePoints(
+          final want = unicodeCodePoints(
             mapping == null || mapping.isEmpty ? self : mapping,
           );
           if (actual[operation] != want) {
             failures.add(
-              "$operation($self) was ${_hexString(actual[operation]!)}",
+              "$operation($self) was ${unicodeHexString(actual[operation]!)}",
             );
           }
         }
@@ -115,12 +114,11 @@ void main() {
   test(
     "normalization conforms to every line of the pinned NormalizationTest.txt",
     () async {
-      expect(skir.PortableUnicodeTables.release, "17.0.0");
       final failures = <String>[];
       final listed = <int>{};
       var part = "";
       var lines = 0;
-      for (final line in await _unicodeLines("NormalizationTest.txt")) {
+      for (final line in await unicodeLines("NormalizationTest.txt")) {
         final data = line.split("#").first.trim();
         if (data.isEmpty) continue;
         if (data.startsWith("@")) {
@@ -131,18 +129,34 @@ void main() {
         final [source, nfc, nfd, nfkc, nfkd] = data
             .split(";")
             .take(5)
-            .map(_codePoints)
+            .map(unicodeCodePoints)
             .toList();
         if (part == "@Part1") listed.add(source.runes.first);
-        _checkForms(line, [source, nfc, nfd], nfc, nfd, nfkc, nfkd, failures);
-        _checkForms(line, [nfkc, nfkd], nfkc, nfkd, nfkc, nfkd, failures);
+        checkNormalizationForms(
+          line,
+          [source, nfc, nfd],
+          nfc,
+          nfd,
+          nfkc,
+          nfkd,
+          failures,
+        );
+        checkNormalizationForms(
+          line,
+          [nfkc, nfkd],
+          nfkc,
+          nfkd,
+          nfkc,
+          nfkd,
+          failures,
+        );
       }
       for (var codePoint = 0; codePoint <= 0x10FFFF; codePoint++) {
         if (codePoint >= 0xD800 && codePoint <= 0xDFFF) continue;
         if (listed.contains(codePoint)) continue;
         final value = String.fromCharCode(codePoint);
-        _checkForms(
-          "unlisted U+${_hex(codePoint)}",
+        checkNormalizationForms(
+          "unlisted U+${unicodeHex(codePoint)}",
           [value],
           value,
           value,
@@ -156,64 +170,3 @@ void main() {
     },
   );
 }
-
-String _nfc(String value) =>
-    portableNormalize(value, compatibility: false, compose: true);
-
-String _nfd(String value) =>
-    portableNormalize(value, compatibility: false, compose: false);
-
-String _nfkc(String value) =>
-    portableNormalize(value, compatibility: true, compose: true);
-
-String _nfkd(String value) =>
-    portableNormalize(value, compatibility: true, compose: false);
-
-void _checkForms(
-  String label,
-  List<String> sources,
-  String nfc,
-  String nfd,
-  String nfkc,
-  String nfkd,
-  List<String> failures,
-) {
-  for (final source in sources) {
-    final forms = {
-      "NFC": (_nfc(source), nfc),
-      "NFD": (_nfd(source), nfd),
-      "NFKC": (_nfkc(source), nfkc),
-      "NFKD": (_nfkd(source), nfkd),
-    };
-    for (final MapEntry(key: form, value: (actual, expected))
-        in forms.entries) {
-      if (actual != expected) {
-        failures.add(
-          "$label: $form(${_hexString(source)}) was ${_hexString(actual)}",
-        );
-      }
-    }
-  }
-}
-
-/// The lines of a file in the pinned Unicode release directory.
-Future<List<String>> _unicodeLines(String name) => File(
-  "../services/protocol/unicode/${skir.PortableUnicodeTables.release}/$name",
-).readAsLines();
-
-/// The data lines of a semicolon separated Unicode data file, with comments
-/// removed and fields trimmed.
-Future<List<List<String>>> _unicodeRecords(String name) async => [
-  for (final line in await _unicodeLines(name))
-    if (line.split("#").first.trim() case final data when data.isNotEmpty)
-      data.split(";").map((field) => field.trim()).toList(),
-];
-
-String _codePoints(String field) => String.fromCharCodes(
-  field.trim().split(" ").map((code) => int.parse(code, radix: 16)),
-);
-
-String _hex(int codePoint) =>
-    codePoint.toRadixString(16).toUpperCase().padLeft(4, "0");
-
-String _hexString(String value) => value.runes.map(_hex).join(" ");

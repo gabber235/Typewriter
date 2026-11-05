@@ -1,6 +1,6 @@
 //! The component test runner. It reads the suite's fixture catalog, builds the backend components
 //! the fixtures name, writes the run manifest the suite verifies those artifacts against, runs the
-//! cases and settles their results with the shared rerun and quarantine policy.
+//! cases and records their attempts under the shared rerun and quarantine policy.
 //!
 //! The suite links the wasm host, so the harness never links it: the catalog comes from the
 //! suite's `catalog` binary, and each case appends its result to a file the runner reads.
@@ -18,12 +18,14 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
-use crate::results::{self, Failure, Outcome, Quarantine, TestCase, TestRun};
+use crate::results::{
+    self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun,
+};
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt, Context, deploy};
 
 pub const DESCRIBE: &str = "cargo xtask components --results .xtask/results/components.json: \
-                            every fixture of the component test suite, a failed case rerun once";
+                            every fixture of the component test suite, a failed case run twice";
 
 /// The suite's Cargo manifest, relative to the repository root.
 const SUITE: &str = "backend/tests/component/Cargo.toml";
@@ -50,7 +52,8 @@ pub struct ComponentTestArgs {
     /// Prints each case's lifecycle phases as they happen.
     #[arg(long)]
     live: bool,
-    /// Writes the settled results here as a `TestRun` (`skir-src/harness/v1/test_run.skir`).
+    /// Writes the results, every attempt included, here as a `TestRun`
+    /// (`skir-src/harness/v1/test_run.skir`).
     #[arg(long)]
     results: Option<PathBuf>,
 }
@@ -92,15 +95,26 @@ pub fn run(ctx: &Context, args: &ComponentTestArgs, log: Option<&File>) -> Resul
     };
     // The whole suite runs without filters; the listing check proved it is exactly `selected`.
     let everything = args.fixture.is_none();
-    let first = suite.run(&selected, everything)?;
     let quarantine = Quarantine::load(ctx)?;
-    let run = results::settle(first, |failed| suite.run(failed, false), &quarantine)?;
+    let run = results::attempts(
+        AttemptPolicy::RerunFailures(2),
+        &[],
+        &quarantine,
+        |n, ids| {
+            if n == 1 {
+                suite.run(&selected, everything)
+            } else {
+                let ids: Vec<&str> = ids.iter().map(String::as_str).collect();
+                suite.run(&ids, false)
+            }
+        },
+    )?;
     if let Some(path) = &args.results {
         results::write(&run, path)?;
     }
     match log {
-        Some(mut log) => results::report(&run, &quarantine, &mut log),
-        None => results::report(&run, &quarantine, &mut std::io::stderr()),
+        Some(mut log) => results::report(&run, &quarantine, None, &mut log),
+        None => results::report(&run, &quarantine, None, &mut std::io::stderr()),
     }
 }
 
@@ -512,8 +526,11 @@ impl Suite<'_> {
                 };
                 TestCase {
                     id: (*id).to_owned(),
-                    outcome,
-                    duration_millis,
+                    attempts: vec![Attempt {
+                        outcome,
+                        duration_millis,
+                        ..Attempt::default()
+                    }],
                     ..TestCase::default()
                 }
             })
@@ -523,7 +540,7 @@ impl Suite<'_> {
             commit: self.commit.clone(),
             started_at_millis,
             cases,
-            _unrecognized: None,
+            ..TestRun::default()
         })
     }
 }

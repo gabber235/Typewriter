@@ -2,376 +2,188 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
-
-Future<void> _setSurface(WidgetTester tester, {required bool mobile}) async {
-  final size = Size(mobile ? 390 : 1280, 800);
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = size;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.binding.setSurfaceSize(size);
-  addTearDown(() => tester.binding.setSurfaceSize(null));
-}
-
-Future<void> _openActivity(
-  WidgetTester tester,
-  ScopedWorkSession workspace, {
-  required bool mobile,
-}) async {
-  await tester.pumpTestApp(
-    child: Scaffold(
-      appBar: AppBar(
-        actions: [ScopedWorkSessionActivityView(controller: workspace)],
-      ),
-    ),
-  );
-  await tester.tap(
-    mobile ? find.byTooltip("Needs attention") : find.text("Needs attention"),
-  );
-  await tester.pumpAndSettle();
-}
-
-EditorDocument _document(String field, String value) {
-  final definition = skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(namespace: "test", name: "Resource"),
-    revision: 1,
-  );
-  final effectiveField = skir.EffectiveFieldTemplate(
-    key: field,
-    owner: skir.FieldOwner(definition: definition, name: field),
-    type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-    rules: const [],
-  );
-  final catalog = CheckedEditorCatalog(
-    skir.EditorCatalog(
-      resourceDisplays: const [],
-      resourceOperations: const [],
-      generation: skir.CatalogGeneration(value: "test"),
-      types: [
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: definition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: effectiveField.owner,
-                  type: effectiveField.type,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: [effectiveField],
-          ancestorTemplates: const [],
-        ),
-      ],
-      relations: const [],
-      realmRoot: skir.TypeDefinitionId.defaultInstance,
-      presentations: const [],
-      presentationMaterials: const [],
-      configuration: const [],
-      diagnostics: const [],
-
-      endpointBindings: const [],
-      capabilities: const [],
-      recommendations: const [],
-      roleFallbacks: const [],
-    ),
-  );
-  return EditorDocument(
-    rootType: skir.TypeUse.wrapNamed(
-      skir.NamedTypeUse(definition: definition, arguments: const []),
-    ),
-    catalog: catalog,
-    confirmedValue: skir.DataValue.createRecord(
-      fields: [
-        skir.FieldValue(
-          name: field,
-          value: skir.DataValue.wrapStringValue(value),
-        ),
-      ],
-    ),
-    revision: 1,
-  );
-}
-
-WorkEntryId _workEntryId(EditorResourceKey key) => WorkEntryId(
-  driver: WorkDriverId(domain: "value", scope: key),
-  identity: const EditGroupId(1),
-);
-
-void _dismissSubmissions(ScopedWorkSession workspace) {
-  for (final submission in workspace.submissions) {
-    workspace.dismiss(submission.id);
-  }
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
+  const phone = Size(390, 800);
+  final target = editorRootPath.field("target");
+
   for (final mobile in [false, true]) {
-    testWidgets(
-      "resource failure summary truncates collapsed and expands from body on "
-      "${mobile ? "mobile" : "desktop"}",
-      (tester) async {
-        await _setSurface(tester, mobile: mobile);
-        const key = EditorResourceKey(scope: "test", identity: "host");
-        final diagnostic = EditorDiagnostic(
-          code: EditorDiagnosticCode.invalidValue,
-          message: "Different values share the same revision and cannot be saved until the conflict is resolved",
-          path: editorRootPath,
-        );
-        final document = _document("target", "paper@*");
-        final workspace = ScopedWorkSession();
-        addTearDown(workspace.dispose);
-        final source = fakeEditorTarget(
-          targetId: key.identity,
-          scope: key.scope,
-          label: "Paper Host configuration",
-          document: document,
-          validation: acceptTestEditorMutation,
-          commitPolicy: EditorCommitPolicy.applyResource,
-          commit: (_) async => MutationInvalid([diagnostic]),
-        ).acquire(workspace);
-        addTearDown(
-          workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
-        );
-        source.update(
-          editorRootPath.field("target"),
-          skir.DataValue.wrapStringValue("unsupported"),
-        );
-        expect(await source.flush(), isA<MutationInvalid>());
-
-        await _openActivity(tester, workspace, mobile: mobile);
-        expect(
-          find.byKey(ValueKey(("resource", _workEntryId(key)))),
-          findsOneWidget,
-        );
-        final summary = "Save failed: ${diagnostic.message}";
-        final summaryFinder = find.text(summary);
-        expect(summaryFinder, findsOneWidget);
-        expect(
-          tester.renderObject<RenderParagraph>(summaryFinder).didExceedMaxLines,
-          isTrue,
-        );
-        expect(find.text("Code"), findsNothing);
-        expect(find.text("Show details"), findsNothing);
-        expect(find.byIcon(Icons.chevron_right), findsOneWidget);
-        expect(find.text("Retry"), findsOneWidget);
-        expect(find.byIcon(Icons.copy_outlined), findsOneWidget);
-        expect(
-          tester.getBottomRight(find.byIcon(Icons.copy_outlined)).dx,
-          lessThanOrEqualTo(mobile ? 390 : 1280),
-        );
-
-        await tester.tap(summaryFinder);
-        await tester.pumpAndSettle();
-        expect(find.text("Code"), findsOneWidget);
-        expect(find.text("invalidValue"), findsOneWidget);
-        expect(find.text("Diagnostic path"), findsOneWidget);
-        expect(find.text("unsupported"), findsNothing);
-        expect(
-          tester.renderObject<RenderParagraph>(summaryFinder).didExceedMaxLines,
-          isFalse,
-        );
-
-        await tester.tap(summaryFinder);
-        await tester.pumpAndSettle();
-        expect(find.text("Code"), findsNothing);
-        expect(
-          tester.renderObject<RenderParagraph>(summaryFinder).didExceedMaxLines,
-          isTrue,
-        );
-        _dismissSubmissions(workspace);
-      },
-    );
-  }
-  testWidgets(
-    "failure actions copy a shareable report and keep discard on error",
-    (tester) async {
-      await _setSurface(tester, mobile: false);
-      const key = EditorResourceKey(scope: "test", identity: "copy");
+    testWidgets("a failure summary expands from its header and collapses "
+        "again on ${mobile ? "mobile" : "desktop"}", (tester) async {
       final diagnostic = EditorDiagnostic(
         code: EditorDiagnosticCode.invalidValue,
-        message: "Choose a supported engine target",
-        path: editorRootPath.field("target"),
+        message:
+            "Different values share the same revision and cannot be saved "
+            "until the conflict is resolved",
+        path: editorRootPath,
       );
-      final document = _document("target", "paper@*");
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
-      final source = fakeEditorTarget(
-        targetId: key.identity,
-        scope: key.scope,
-        label: "Paper Host configuration",
-        document: document,
-        validation: acceptTestEditorMutation,
-        commitPolicy: EditorCommitPolicy.applyResource,
-        commit: (_) async => MutationInvalid([diagnostic]),
-      ).acquire(workspace);
-      addTearDown(
-        workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
-      );
-      source.update(
-        editorRootPath.field("target"),
-        skir.DataValue.wrapStringValue("unsupported"),
-      );
-      expect(await source.flush(), isA<MutationInvalid>());
+      final work = await rejectedWork("Paper Host configuration", [diagnostic]);
+      final panel = await tester.pumpPanel([
+        if (mobile) window(phone),
+      ], at: saveActivityOf(work));
+      await panel.activity.open("Needs attention");
+      final entry = panel.activity.entry("Paper Host configuration");
+      final summary = find.text("Save failed: ${diagnostic.message}");
+      expect(entry.hasDetails, isTrue);
+      expect(entry.isExpanded, isFalse);
+      expect(panel.shows("Code"), isFalse);
+      final collapsed = tester.getSize(summary).height;
 
-      String? clipboardText;
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async {
-          if (call.method == "Clipboard.setData") {
-            clipboardText =
-                (call.arguments as Map<Object?, Object?>)["text"] as String?;
-          }
-          return null;
-        },
+      await entry.toggleDetails();
+      expect(entry.isExpanded, isTrue);
+      expect(panel.shows("invalidValue"), isTrue);
+      expect(panel.shows("Diagnostic path"), isTrue);
+      expect(panel.shows("unsupported"), isFalse, reason: "drafts stay out");
+      expect(
+        tester.getSize(summary).height,
+        greaterThan(collapsed),
+        reason: "the expanded summary shows every line",
       );
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.platform,
-          null,
+
+      await entry.toggleDetails();
+      expect(entry.isExpanded, isFalse);
+      expect(panel.shows("Code"), isFalse);
+      expect(tester.getSize(summary).height, collapsed);
+    });
+
+    testWidgets("failure actions stay on screen on "
+        "${mobile ? "mobile" : "desktop"}", (tester) async {
+      final work = await rejectedWork("Paper Host configuration", [
+        EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidValue,
+          message: "Choose a supported engine target",
+          path: target,
         ),
-      );
+      ]);
+      final panel = await tester.pumpPanel([
+        if (mobile) window(phone),
+      ], at: saveActivityOf(work));
+      await panel.activity.open("Needs attention");
 
-      await _openActivity(tester, workspace, mobile: false);
-      expect(find.byIcon(Icons.copy_outlined), findsOneWidget);
-      expect(find.text("Retry"), findsOneWidget);
-      final discardFinder = find.widgetWithText(TextButton, "Discard");
-      final discard = tester.widget<TextButton>(discardFinder);
-      final context = tester.element(discardFinder);
-      expect(
-        discard.style!.foregroundColor!.resolve({}),
-        context.theme.colorScheme.error,
-      );
+      final width = mobile ? phone.width : desktopWindow.width;
+      for (final action in [
+        find.tooltip("Copy problem report"),
+        find.text("Retry"),
+        find.text("Discard"),
+      ]) {
+        final rect = tester.getRect(action);
+        expect(rect.left, greaterThanOrEqualTo(0));
+        expect(rect.right, lessThanOrEqualTo(width));
+      }
+    });
+  }
 
-      final copy = tester.getCenter(find.byIcon(Icons.copy_outlined));
-      final retry = tester.getCenter(find.text("Retry"));
-      final discardPosition = tester.getCenter(discardFinder);
-      expect(copy.dx, lessThan(retry.dx));
-      expect(retry.dx, lessThan(discardPosition.dx));
+  testWidgets("copying a failure puts a shareable report on the clipboard", (
+    tester,
+  ) async {
+    final work = await rejectedWork("Paper Host configuration", [
+      EditorDiagnostic(
+        code: EditorDiagnosticCode.invalidValue,
+        message: "Choose a supported engine target",
+        path: target,
+      ),
+    ]);
+    String? clipboard;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == "Clipboard.setData") {
+          clipboard =
+              (call.arguments as Map<Object?, Object?>)["text"] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
+    await panel.activity.open("Needs attention");
 
-      await tester.tap(find.byIcon(Icons.copy_outlined));
-      await tester.pump();
-      expect(clipboardText, isNotNull);
-      expect(clipboardText, contains("Paper Host configuration"));
-      expect(
-        clipboardText,
+    await panel.activity.entry("Paper Host configuration").copyReport();
+
+    expect(panel.shows("Problem copied to clipboard"), isTrue);
+    expect(
+      clipboard,
+      allOf([
+        contains("Paper Host configuration"),
         contains("Save failed: Choose a supported engine target"),
-      );
-      expect(clipboardText, contains("Phase: failed"));
-      expect(
-        clipboardText,
+        contains("Phase: failed"),
         contains("Reason: Choose a supported engine target"),
-      );
-      expect(clipboardText, contains("Code: invalidValue"));
-      expect(clipboardText, contains(r"Diagnostic path: $.target"));
-      ScaffoldMessenger.of(context).clearSnackBars();
-      await tester.pumpAndSettle();
-      _dismissSubmissions(workspace);
-    },
-  );
+        contains("Code: invalidValue"),
+        contains(r"Diagnostic path: $.target"),
+      ]),
+    );
+    expect(clipboard, isNot(contains("unsupported")), reason: "no draft data");
+  });
 
   testWidgets("resource contention details show safe retry metadata", (
     tester,
   ) async {
-    await _setSurface(tester, mobile: false);
-    const key = EditorResourceKey(scope: "test", identity: "contention");
-    final document = _document("target", "canonical");
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
-    final source = fakeEditorTarget(
-      targetId: key.identity,
-      scope: key.scope,
-      label: "Contended configuration",
-      document: document,
-      validation: acceptTestEditorMutation,
+    final work = testWorkSession();
+    final source = editedResource(
+      work,
+      "Contended configuration",
+      draft: "local value",
+      policy: EditorCommitPolicy.autosaveChanges,
       commit: (commit) async => MutationConflict(
         expectedRevision: commit.expectedRevision,
         actualRevision: commit.expectedRevision + 1,
-        actualValue: document.confirmedValue,
+        actualValue: recordEditorValue({
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
       ),
-    ).acquire(workspace);
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
-    );
-    source.update(
-      editorRootPath.field("target"),
-      skir.DataValue.wrapStringValue("local value"),
     );
     final flush = source.flush();
     await tester.pump(const Duration(seconds: 10));
     expect(await flush, isA<MutationUnavailable>());
+    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
+    await panel.activity.open("Needs attention");
 
-    await _openActivity(tester, workspace, mobile: false);
+    final entry = panel.activity.entry("Contended configuration");
     expect(
-      find.byKey(ValueKey(("resource", _workEntryId(key)))),
-      findsOneWidget,
+      panel.shows(
+        "The resource changed repeatedly. Retry when other edits stop",
+      ),
+      isTrue,
     );
-    expect(
-      find.text("The resource changed repeatedly. Retry when other edits stop"),
-      findsOneWidget,
-    );
-    await tester.tap(
-      find.text("The resource changed repeatedly. Retry when other edits stop"),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text("Contention"), findsOneWidget);
-    expect(find.text("versionMismatch"), findsOneWidget);
-    expect(find.text("4 total"), findsOneWidget);
-    expect(find.text("Retries"), findsOneWidget);
-    expect(find.text("3"), findsOneWidget);
-    expect(find.text("Expected version"), findsOneWidget);
-    expect(find.text("Observed version"), findsOneWidget);
-    expect(find.text("local value"), findsNothing);
+    await entry.toggleDetails();
+    for (final fact in [
+      "Contention",
+      "versionMismatch",
+      "4 total",
+      "Retries",
+      "3",
+      "Expected version",
+      "Observed version",
+    ]) {
+      expect(panel.shows(fact), isTrue, reason: fact);
+    }
+    expect(panel.shows("local value"), isFalse, reason: "drafts stay out");
   });
 
   testWidgets("ordinary resource drafts have no details disclosure", (
     tester,
   ) async {
-    await _setSurface(tester, mobile: false);
-    const key = EditorResourceKey(scope: "test", identity: "draft");
-    final document = _document("name", "canonical");
-    final workspace = ScopedWorkSession();
-    addTearDown(workspace.dispose);
-    final source = fakeEditorTarget(
-      targetId: key.identity,
-      scope: key.scope,
-      label: "Draft configuration",
-      document: document,
-      validation: acceptTestEditorMutation,
-      commitPolicy: EditorCommitPolicy.applyResource,
-      commit: (_) async =>
-          MutationSuccess(revision: 2, value: document.confirmedValue),
-    ).acquire(workspace);
-    addTearDown(
-      workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
+    final work = testWorkSession();
+    editedResource(
+      work,
+      "Draft configuration",
+      draft: "local draft",
+      commit: (_) async => throw StateError("No save expected"),
     );
-    source.update(
-      editorRootPath.field("name"),
-      skir.DataValue.wrapStringValue("local draft"),
-    );
+    final panel = await tester.pumpPanel(const [], at: saveActivityOf(work));
+    await panel.activity.open("1 draft");
 
-    await tester.pumpTestApp(
-      child: Scaffold(
-        appBar: AppBar(
-          actions: [ScopedWorkSessionActivityView(controller: workspace)],
-        ),
-      ),
-    );
-    await tester.tap(find.text("1 draft"));
-    await tester.pumpAndSettle();
-
-    expect(find.text("Changes await applying"), findsOneWidget);
+    expect(panel.shows("Changes await applying"), isTrue);
+    final entry = panel.activity.entry("Draft configuration");
+    expect(entry.hasDetails, isFalse);
+    await panel.tapOn(find.text("Changes await applying"));
+    expect(panel.shows("Code"), isFalse);
+    expect(find.tooltip("Copy problem report"), findsNothing);
   });
 }

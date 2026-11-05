@@ -116,7 +116,7 @@ internal class RuntimePresentationData(
                     body: MatchCaseScope<Subtype>.() -> Unit,
                 ) {
                     state.type(type.type.use)
-                    require(wireCases.none { candidate -> candidate.concreteType == type.type }) {
+                    require(wireCases.none { candidate -> candidate.concreteType == type.type.use }) {
                         "A polymorphic match may declare one case per concrete type."
                     }
                     val nodes = mutableListOf<PresentationNode>()

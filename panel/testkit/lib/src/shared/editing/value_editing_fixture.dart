@@ -1,3 +1,4 @@
+import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -5,6 +6,16 @@ import "package:typewriter_panel/typewriter_panel.dart";
 typedef EditorCommitter = Future<TypedMutationResult> Function(
   EditorCommit commit,
 );
+
+/// A committer that records every commit in [commits] and saves [value] at
+/// revision 2.
+EditorCommitter recordingCommit(
+  List<EditorCommit> commits,
+  skir.DataValue value,
+) => (commit) async {
+  commits.add(commit);
+  return TypedMutationResult.success(revision: 2, value: value);
+};
 typedef EditorMutationValidator = EditorMutationResult Function(
   skir.ValuePath path,
   skir.DataValue value,
@@ -217,21 +228,57 @@ class ScriptedValuePersistence extends ValueEditPersistence {
   );
 }
 
+/// A content snapshot that only replaces in place a snapshot of the same
+/// [contract], the way a host keeps a draft across a compatible rebuild.
+final class FakeContractEditorSnapshot extends EditorSnapshot
+    implements EditorContractSnapshot {
+  const FakeContractEditorSnapshot(this.contract, this.document);
+
+  /// The contract a replacement must share.
+  final String contract;
+  @override
+  final EditorDocument document;
+
+  @override
+  bool contractCompatibleWith(EditorSnapshot candidate) =>
+      candidate is FakeContractEditorSnapshot && candidate.contract == contract;
+
+  @override
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
+      acceptTestEditorMutation(path, value);
+}
+
+/// Confirms every save at the revision after the one it expected.
+Future<TypedMutationResult> confirmNextRevision(EditorCommit commit) async =>
+    MutationSuccess(
+      revision: commit.expectedRevision + 1,
+      value: commit.rootValue,
+    );
+
+/// A value editing registration for [document] whose saves go to [commit],
+/// which confirms each at the next revision unless the test says otherwise.
+///
+/// With a [contract], the snapshot is a [FakeContractEditorSnapshot] that
+/// accepts every change; otherwise [validation] and [validateDraft] judge
+/// changes.
 ValueEditingRegistration fakeEditorTarget({
   required Object targetId,
   required String label,
   required EditorDocument document,
-  required EditorCommitter commit,
-  required EditorMutationValidator validation,
+  EditorCommitter commit = confirmNextRevision,
+  EditorMutationValidator validation = acceptTestEditorMutation,
   Object? scope,
   EditorCommitPolicy commitPolicy = EditorCommitPolicy.autosaveChanges,
   List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
+  String? contract,
 }) {
-  final snapshot = FakeEditorSnapshot(
-    document,
-    validation: validation,
-    draftValidation: validateDraft,
-  );
+  final EditorSnapshot snapshot = contract == null
+      ? FakeEditorSnapshot(
+          document,
+          validation: validation,
+          draftValidation: validateDraft,
+        )
+      : FakeContractEditorSnapshot(contract, document);
   return ValueEditingRegistration(
     targetId: targetId,
     label: label,
@@ -248,4 +295,17 @@ ValueEditingRegistration fakeEditorTarget({
       commit: commit,
     ),
   );
+}
+
+/// Editing a resource the way an open editor holds it.
+extension HeldEditing on ValueEditingRegistration {
+  /// Acquires this resource in [work] and leases it there until the test
+  /// ends, the way an open editor keeps its resource.
+  ValueEditing hold(ScopedWorkSession work) {
+    final editing = acquire(work);
+    addTearDown(
+      work.lease(WorkDriverId(domain: "value", scope: persistence.key)).release,
+    );
+    return editing;
+  }
 }

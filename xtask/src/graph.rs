@@ -20,9 +20,10 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clap::ValueEnum;
 
+use crate::junit;
 use crate::lock::HeavyLock;
 use crate::process::{self, Group};
-use crate::results::{self, Failure, Outcome, TestCase, TestRun};
+use crate::results::{self, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun};
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt as _, Context, components, display, docs, generate, gitops, review};
 
@@ -48,7 +49,7 @@ pub enum Area {
     Docs,
     /// Project rules and new clones on the lines a change added (`cargo xtask review gate`).
     Quality,
-    /// The harness itself: clippy and rustfmt.
+    /// The harness itself: clippy, rustfmt and its tests.
     Xtask,
 }
 
@@ -75,9 +76,17 @@ impl Area {
             Self::Panel => &["panel/"],
             Self::Docs => &[DOCS_SITE],
             // The project rules scan every source the other areas check.
-            Self::Quality => &["services/", "backend/", "panel/", "rules/", "sgconfig.yml"],
-            // Their inputs are all in EVERY_AREA.
-            Self::Protocol | Self::Xtask => &[],
+            Self::Quality => &[
+                "services/",
+                "backend/",
+                "panel/",
+                "rules/",
+                "rule-tests/",
+                "sgconfig.yml",
+            ],
+            Self::Xtask => &["commit-scopes.json"],
+            // Its inputs are all in EVERY_AREA.
+            Self::Protocol => &[],
         }
     }
 }
@@ -89,6 +98,8 @@ const DOCS_SITE: &str = "documentation/";
 /// protocol and generator whose output every area compiles.
 const EVERY_AREA: &[&str] = &[
     "xtask/",
+    // Quarantine decides what gates in every area.
+    "harness/",
     ".cargo/",
     ".github/",
     "devenv.",
@@ -111,6 +122,9 @@ pub struct Step {
     pub needs_generate: bool,
     /// The coverage file the step writes into [`review::COVERAGE_DIR`] while it tests.
     pub coverage: Option<&'static str>,
+    /// The folder, relative to the repository root, below which the step's test tasks write
+    /// JUnit XML; its tests become the cases of a second run next to the step's.
+    pub junit: Option<&'static str>,
 }
 
 pub enum Run {
@@ -143,6 +157,7 @@ const fn program(
         budget: mins(minutes),
         needs_generate: true,
         coverage: None,
+        junit: None,
     }
 }
 
@@ -166,6 +181,13 @@ impl Step {
             ..self
         }
     }
+
+    const fn junit(self, root: &'static str) -> Self {
+        Self {
+            junit: Some(root),
+            ..self
+        }
+    }
 }
 
 /// Brings the generated sources up to date. Not heavy itself: it takes the heavy lock only around
@@ -178,9 +200,11 @@ pub const GENERATE: Step = Step {
         run: generate::step,
     },
     heavy: false,
-    budget: mins(10),
+    // A cold CI runner builds every generator from scratch.
+    budget: mins(20),
     needs_generate: false,
     coverage: None,
+    junit: None,
 };
 
 pub const CHECKS: &[Step] = &[
@@ -195,7 +219,8 @@ pub const CHECKS: &[Step] = &[
         &["check", "coverageReport"],
     )
     .heavy()
-    .coverage("services.xml"),
+    .coverage("services.xml")
+    .junit("services"),
     program(
         "backend:lint",
         Area::Backend,
@@ -217,7 +242,8 @@ pub const CHECKS: &[Step] = &[
     program(
         "backend:test",
         Area::Backend,
-        15,
+        // A CI runner with no Cargo cache compiles the workspace first, past 15 minutes.
+        30,
         "backend",
         "cargo",
         &[
@@ -267,6 +293,7 @@ pub const CHECKS: &[Step] = &[
         budget: mins(30),
         needs_generate: true,
         coverage: None,
+        junit: None,
     },
     program(
         "protocol",
@@ -308,8 +335,9 @@ pub const CHECKS: &[Step] = &[
     program(
         "panel:app",
         Area::Panel,
-        // Coverage instrumentation takes the suite from about 7 to about 11 minutes.
-        15,
+        // Coverage instrumentation takes the suite from about 7 to about 11 minutes; a CI runner
+        // with no pub or build cache needs past 15.
+        30,
         "panel",
         "flutter",
         &[
@@ -341,7 +369,8 @@ pub const CHECKS: &[Step] = &[
     program(
         "panel:widgetbook",
         Area::Panel,
-        5,
+        // Every story variant renders and is captured; a cold CI runner took 286 seconds.
+        10,
         "panel/widgetbook",
         "flutter",
         &[
@@ -366,6 +395,7 @@ pub const CHECKS: &[Step] = &[
         // The subscription ConfigMaps it validates are tracked deployment manifests.
         needs_generate: false,
         coverage: None,
+        junit: None,
     },
     // One native step: the install must finish before validate and build, and steps run in
     // parallel.
@@ -381,6 +411,7 @@ pub const CHECKS: &[Step] = &[
         // The site reads only its own sources.
         needs_generate: false,
         coverage: None,
+        junit: None,
     },
     Step {
         name: "quality",
@@ -394,6 +425,7 @@ pub const CHECKS: &[Step] = &[
         // The detectors read tracked sources only; generated output is ignored.
         needs_generate: false,
         coverage: None,
+        junit: None,
     },
     // Building the harness already needs its own generated types, so these never wait for
     // generate.
@@ -428,6 +460,19 @@ pub const CHECKS: &[Step] = &[
             "cargo",
             &["fmt", "--check", "--manifest-path", "xtask/Cargo.toml"],
         )
+    },
+    // The harness's own tests; temp dirs and `sh` children only, never a stack.
+    Step {
+        needs_generate: false,
+        ..program(
+            "xtask:test",
+            Area::Xtask,
+            3,
+            ".",
+            "cargo",
+            &["test", "--locked", "--manifest-path", "xtask/Cargo.toml"],
+        )
+        .heavy()
     },
 ];
 
@@ -580,23 +625,38 @@ fn run_step(ctx: &Context, step: &Step, logs: &Path, commit: &str) -> bool {
         runner: Runner::Step,
         commit: commit.to_owned(),
         started_at_millis: millis(started_at),
+        // A step runs once; a failed step is never run again.
+        attempt_policy: AttemptPolicy::Exactly(1),
         cases: vec![TestCase {
             id: step.name.to_owned(),
-            outcome: match &outcome {
-                Ok(()) => Outcome::Passed,
-                Err(error) => Outcome::Failed(Box::new(Failure {
-                    message: format!("{error:#}"),
-                    ..Failure::default()
-                })),
-            },
-            duration_millis: i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX),
+            attempts: vec![Attempt {
+                outcome: match &outcome {
+                    Ok(()) => Outcome::Passed,
+                    Err(error) => Outcome::Failed(Box::new(Failure {
+                        message: format!("{error:#}"),
+                        ..Failure::default()
+                    })),
+                },
+                duration_millis: i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX),
+                ..Attempt::default()
+            }],
             ..TestCase::default()
         }],
         _unrecognized: None,
     };
     let path = ctx.root.join(format!(".xtask/results/steps/{name}.json"));
     let written = results::write(&run, &path);
-    let outcome = outcome.and(written).and(stamped);
+    // The tests' run is written whatever the step's outcome: a failed step is when it names
+    // the tests that failed.
+    let tests = step.junit.map_or(Ok(()), |root| {
+        let tests = junit::run(&ctx.root.join(root), started_at, commit, millis(started_at))?;
+        results::write(
+            &tests,
+            &ctx.root
+                .join(format!(".xtask/results/steps/{name}-tests.json")),
+        )
+    });
+    let outcome = outcome.and(written).and(stamped).and(tests);
     report(step, outcome, elapsed, &log)
 }
 
@@ -674,4 +734,122 @@ fn millis(time: SystemTime) -> i64 {
     time.duration_since(UNIX_EPOCH).map_or(0, |since| {
         i64::try_from(since.as_millis()).unwrap_or(i64::MAX)
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeSet;
+    use std::path::PathBuf;
+
+    use super::*;
+    use crate::test_support::{TempRoot, area_names, failure_message, shell};
+
+    #[test]
+    fn a_panel_change_runs_the_panel_and_the_project_rules_only() {
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("panel/lib/a.dart")]
+            )),
+            BTreeSet::from(["panel", "quality"].map(String::from))
+        );
+    }
+
+    #[test]
+    fn a_documentation_change_runs_nothing() {
+        assert!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("README.md"), PathBuf::from("panel/AGENTS.md")]
+            ))
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn markdown_of_the_documentation_site_runs_the_docs() {
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("documentation/src/content/docs/index.md")]
+            )),
+            BTreeSet::from(["docs"].map(String::from))
+        );
+    }
+
+    #[test]
+    fn a_quarantine_change_runs_every_area() {
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("harness/quarantine.toml")]
+            )),
+            area_names(&select(None))
+        );
+    }
+
+    #[test]
+    fn a_harness_change_runs_every_area() {
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("xtask/src/graph.rs")]
+            )),
+            area_names(&select(None))
+        );
+    }
+
+    #[test]
+    fn a_commit_scope_change_runs_the_harness_checks() {
+        assert_eq!(
+            area_names(&affected(
+                select(None),
+                &[PathBuf::from("commit-scopes.json")]
+            )),
+            BTreeSet::from(["xtask"].map(String::from))
+        );
+    }
+
+    #[test]
+    fn a_failing_step_fails_and_records_its_failure() {
+        let root = TempRoot::new();
+        let passed = run_step(
+            &root.ctx,
+            &shell("test:fails", "exit 3", mins(1)),
+            &root.dir("logs"),
+            "commit",
+        );
+        let run = results::read(&root.path(".xtask/results/steps/test-fails.json")).unwrap();
+        assert!(!passed);
+        assert_eq!(run.cases[0].id, "test:fails");
+        assert!(failure_message(&run.cases[0].attempts[0].outcome).contains("exit status: 3"));
+    }
+
+    #[test]
+    fn a_step_over_its_budget_fails_and_records_its_failure() {
+        let root = TempRoot::new();
+        let passed = run_step(
+            &root.ctx,
+            &shell("test:slow", "sleep 30", Duration::from_millis(300)),
+            &root.dir("logs"),
+            "commit",
+        );
+        let run = results::read(&root.path(".xtask/results/steps/test-slow.json")).unwrap();
+        assert!(!passed);
+        assert!(failure_message(&run.cases[0].attempts[0].outcome).contains("budget"));
+    }
+
+    #[test]
+    fn a_passing_step_records_its_pass() {
+        let root = TempRoot::new();
+        let passed = run_step(
+            &root.ctx,
+            &shell("test:passes", "true", mins(1)),
+            &root.dir("logs"),
+            "commit",
+        );
+        let run = results::read(&root.path(".xtask/results/steps/test-passes.json")).unwrap();
+        assert!(passed);
+        assert_eq!(run.cases[0].attempts[0].outcome, Outcome::Passed);
+    }
 }

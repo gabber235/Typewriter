@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("dismiss is handled only while the inner input is focused", (
@@ -13,23 +12,25 @@ void main() {
     var ancestorDismissals = 0;
     var ancestorCancellations = 0;
 
-    await tester.pumpTestApp(
-      child: Actions(
-        actions: {
-          DismissIntent: CallbackAction<DismissIntent>(
-            onInvoke: (_) => ancestorDismissals++,
-          ),
-          CancelIntent: CallbackAction<CancelIntent>(
-            onInvoke: (_) => ancestorCancellations++,
-          ),
-        },
-        child: InputFieldContainer(
-          controller: controller,
-          onDismiss: () => inputDismissals++,
-          child: Focus(
-            key: const ValueKey("input"),
-            focusNode: controller.inputFocusNode,
-            child: const SizedBox.shrink(),
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Actions(
+          actions: {
+            DismissIntent: CallbackAction<DismissIntent>(
+              onInvoke: (_) => ancestorDismissals++,
+            ),
+            CancelIntent: CallbackAction<CancelIntent>(
+              onInvoke: (_) => ancestorCancellations++,
+            ),
+          },
+          child: InputFieldContainer(
+            controller: controller,
+            onDismiss: () => inputDismissals++,
+            child: Focus(
+              focusNode: controller.inputFocusNode,
+              child: const SizedBox.shrink(),
+            ),
           ),
         ),
       ),
@@ -37,28 +38,19 @@ void main() {
 
     controller.requestSurroundingFocus();
     await tester.pump();
-    Actions.invoke(
-      tester.element(find.byKey(const ValueKey("input"))),
-      const DismissIntent(),
-    );
+    Actions.invoke(controller.inputFocusNode.context!, const DismissIntent());
 
     expect(inputDismissals, 0);
     expect(ancestorDismissals, 1);
 
     controller.requestInputFocus();
     await tester.pump();
-    Actions.invoke(
-      tester.element(find.byKey(const ValueKey("input"))),
-      const DismissIntent(),
-    );
+    Actions.invoke(controller.inputFocusNode.context!, const DismissIntent());
 
     expect(inputDismissals, 1);
     expect(ancestorDismissals, 1);
 
-    Actions.invoke(
-      tester.element(find.byKey(const ValueKey("input"))),
-      const CancelIntent(),
-    );
+    Actions.invoke(controller.inputFocusNode.context!, const CancelIntent());
 
     expect(inputDismissals, 1);
     expect(ancestorCancellations, 1);
@@ -72,39 +64,37 @@ void main() {
     addTearDown(first.dispose);
     addTearDown(second.dispose);
 
-    await tester.pumpTestApp(
-      child: Column(
-        children: [
-          InputFieldContainer(
-            controller: first,
-            child: Focus(
-              key: const ValueKey("first"),
-              focusNode: first.inputFocusNode,
-              child: const SizedBox.shrink(),
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Column(
+          children: [
+            InputFieldContainer(
+              controller: first,
+              child: Focus(
+                focusNode: first.inputFocusNode,
+                child: const SizedBox.shrink(),
+              ),
             ),
-          ),
-          InputFieldContainer(
-            controller: second,
-            child: Focus(
-              key: const ValueKey("second"),
-              focusNode: second.inputFocusNode,
-              child: const SizedBox.shrink(),
+            InputFieldContainer(
+              controller: second,
+              child: Focus(
+                focusNode: second.inputFocusNode,
+                child: const SizedBox.shrink(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
 
     first.surroundingFocusNode.requestFocus();
     await tester.pump();
-    Actions.invoke(
-      tester.element(find.byKey(const ValueKey("first"))),
-      const ActivateIntent(),
-    );
+    Actions.invoke(first.inputFocusNode.context!, const ActivateIntent());
     await tester.pump();
 
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<InsertMode>(),
     );
 
@@ -112,7 +102,7 @@ void main() {
     await tester.pump();
 
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<InsertMode>(),
     );
 
@@ -120,7 +110,7 @@ void main() {
     await tester.pump();
 
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<NormalMode>(),
     );
   });
@@ -133,26 +123,29 @@ void main() {
     late StateSetter setState;
     var visible = true;
 
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
-        builder: (context, update) {
-          setState = update;
-          if (!visible) return const SizedBox.shrink();
-          return InputFieldContainer(
-            controller: controller,
-            child: Focus(
-              focusNode: controller.inputFocusNode,
-              child: const SizedBox.shrink(),
-            ),
-          );
-        },
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        StatefulBuilder(
+          builder: (context, update) {
+            setState = update;
+            if (!visible) return const SizedBox.shrink();
+            return InputFieldContainer(
+              controller: controller,
+              child: Focus(
+                focusNode: controller.inputFocusNode,
+                child: const SizedBox.shrink(),
+              ),
+            );
+          },
+        ),
       ),
     );
 
     controller.requestInputFocus();
     await tester.pump();
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<InsertMode>(),
     );
 
@@ -162,7 +155,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<NormalMode>(),
     );
   });
@@ -170,10 +163,11 @@ void main() {
   testWidgets("stale unregister preserves a replacement registration", (
     tester,
   ) async {
-    await tester.pumpTestApp(child: const SizedBox.shrink());
-    final coordinator = tester.container().read(
-      inputFieldModeCoordinatorProvider,
+    final panel = await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(SizedBox.shrink()),
     );
+    final coordinator = panel.container.read(inputFieldModeCoordinatorProvider);
     final staleInput = FocusNode();
     final staleSurrounding = FocusNode();
     final currentInput = FocusNode();
@@ -199,14 +193,14 @@ void main() {
     unregisterStale();
     await tester.pump();
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<InsertMode>(),
     );
 
     unregisterCurrent();
     await tester.pump();
     expect(
-      tester.container().read(currentInteractionModeProvider),
+      panel.container.read(currentInteractionModeProvider),
       isA<NormalMode>(),
     );
   });
@@ -214,10 +208,11 @@ void main() {
   testWidgets("deferred unregister is safe after provider disposal", (
     tester,
   ) async {
-    await tester.pumpTestApp(child: const SizedBox.shrink());
-    final coordinator = tester.container().read(
-      inputFieldModeCoordinatorProvider,
+    final panel = await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(SizedBox.shrink()),
     );
+    final coordinator = panel.container.read(inputFieldModeCoordinatorProvider);
     final input = FocusNode();
     final surrounding = FocusNode();
     addTearDown(input.dispose);

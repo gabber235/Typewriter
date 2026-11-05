@@ -441,16 +441,8 @@ impl MockRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::mock_request;
     use serde_json::json;
-
-    fn request(body: impl Into<Bytes>) -> MockRequest {
-        MockRequest {
-            method: Method::POST,
-            uri: "http://mock.test/items?a=1".parse().unwrap(),
-            headers: HeaderMap::new(),
-            body: body.into(),
-        }
-    }
 
     #[tokio::test]
     async fn matches_json_headers_counts_and_response() {
@@ -470,7 +462,7 @@ mod tests {
             .unwrap()
             .register()
             .unwrap();
-        let mut value = request(br#"{"a":1}"#.as_slice());
+        let mut value = mock_request(br#"{"a":1}"#.as_slice());
         value.headers.insert(
             http::header::ACCEPT,
             http::HeaderValue::from_static("application/json"),
@@ -489,7 +481,7 @@ mod tests {
         mock.expect().get().register().unwrap();
         assert!(mock.verify().unwrap_err().to_string().contains("unmet"));
         assert!(
-            mock.dispatch(request(Bytes::new()))
+            mock.dispatch(mock_request(Bytes::new()))
                 .await
                 .unwrap_err()
                 .to_string()
@@ -498,25 +490,54 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn supports_delay_failure_predicate_optional_and_redaction() {
+    async fn a_scripted_delay_reaches_the_outgoing_handler() {
         let mock = HttpMock::new("mock.test".into());
-        mock.redact("body-secret");
+        let delay = Duration::from_millis(50);
+        mock.expect().post().delay(delay).register().unwrap();
+
+        // The outgoing handler waits this long before it answers the component.
+        let response = mock.dispatch(mock_request("body")).await.unwrap();
+
+        assert_eq!(response.delay, delay);
+    }
+
+    #[tokio::test]
+    async fn a_scripted_transport_failure_reaches_the_caller() {
+        let mock = HttpMock::new("mock.test".into());
         mock.expect()
             .body_matches(|body| body == b"failure")
-            .delay(Duration::from_millis(1))
             .transport_failure("reset")
             .register()
             .unwrap();
-        let response = mock.dispatch(request("failure")).await.unwrap();
+
+        let response = mock.dispatch(mock_request("failure")).await.unwrap();
+
         assert_eq!(response.failure.as_deref(), Some("reset"));
+    }
+
+    #[tokio::test]
+    async fn an_optional_expectation_may_go_unmet() {
+        let mock = HttpMock::new("mock.test".into());
         mock.expect().get().optional().register().unwrap();
-        let mut secret = request("body-secret");
+
+        assert!(mock.verify().is_ok());
+    }
+
+    #[tokio::test]
+    async fn secrets_never_reach_the_transcript() {
+        let mock = HttpMock::new("mock.test".into());
+        mock.redact("body-secret");
+        mock.expect().post().register().unwrap();
+        let mut secret = mock_request("body-secret");
         secret.headers.insert(
             http::header::AUTHORIZATION,
             http::HeaderValue::from_static("token"),
         );
-        let _ = mock.dispatch(secret).await;
+
+        mock.dispatch(secret).await.unwrap();
+
         let transcript = mock.transcript().join("\n");
+        assert!(!transcript.is_empty());
         assert!(!transcript.contains("token"));
         assert!(!transcript.contains("body-secret"));
     }
@@ -535,7 +556,7 @@ mod tests {
             })
         });
         assert_eq!(
-            mock.dispatch(request("yes")).await.unwrap().status,
+            mock.dispatch(mock_request("yes")).await.unwrap().status,
             StatusCode::ACCEPTED
         );
     }

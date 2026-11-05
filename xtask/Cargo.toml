@@ -30,6 +30,10 @@ tree-sitter-dart = "0.2"
 tree-sitter-kotlin-ng = "1.1"
 tree-sitter-rust = "0.24"
 
+[dev-dependencies]
+# Temp dirs for the harness's own tests; already in the lock through secretspec.
+tempfile = "3"
+
 # Parsing the repository is the review tools' main cost. An optimized tree-sitter runtime halves
 # it; the grammars stay unoptimized, since their large generated parsers compile slowly.
 [profile.dev.package.tree-sitter]

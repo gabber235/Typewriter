@@ -12,15 +12,12 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationCollectionScope
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
-import com.typewritermc.configuration.Integer
-import com.typewritermc.configuration.NestedConfigurationScope
-import com.typewritermc.configuration.NullableField
-import com.typewritermc.configuration.Text
 import com.typewritermc.configuration.field
 import com.typewritermc.configuration.name
 import com.typewritermc.configuration.root
@@ -36,8 +33,10 @@ import com.typewritermc.discovery.contributionKey
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
+import com.typewritermc.expression.FixtureReads
 import com.typewritermc.expression.PortableExpressionLimits
 import com.typewritermc.expression.eq
+import com.typewritermc.expression.evaluate
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.operations.EvaluatorFailure
 import com.typewritermc.expression.operations.PortableOperationCatalog
@@ -50,6 +49,21 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.of
+import com.typewritermc.testkit.admitted
+import com.typewritermc.testkit.binding
+import com.typewritermc.testkit.checkInputs
+import com.typewritermc.testkit.complete
+import com.typewritermc.testkit.configurationProvider
+import com.typewritermc.testkit.fieldDeclaration
+import com.typewritermc.testkit.fieldPattern
+import com.typewritermc.testkit.integerField
+import com.typewritermc.testkit.nullableTextField
+import com.typewritermc.testkit.origin
+import com.typewritermc.testkit.ready
+import com.typewritermc.testkit.recordType
+import com.typewritermc.testkit.rulePredicate
+import com.typewritermc.testkit.textField
+import com.typewritermc.testkit.unsignedIntegerField
 import com.typewritermc.types.GeneratedNativeField
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.GeneratedScalarNativeBinding
@@ -72,9 +86,9 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
-import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
 import com.typewritermc.types.template
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -83,9 +97,6 @@ import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationTarget
-import skirout.editor.v1.catalog.RelationDeletePolicy
-import skirout.editor.v1.catalog.RepresentationKind
-import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
@@ -93,120 +104,232 @@ import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
-import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.RuleId
-import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
-import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.typed_value.PortableValue
-import kotlin.reflect.KClass
 
 val SdkRuntimeConformanceTest by testSuite {
-    test("unannotated relation endpoints clear links") {
-        com.typewritermc.library.BookTags.contract.first.onDelete shouldBe RelationDeletePolicy.CLEAR
-        com.typewritermc.library.BookTags.contract.second.onDelete shouldBe RelationDeletePolicy.CLEAR
-        com.typewritermc.library.TagParents.contract.first.onDelete shouldBe RelationDeletePolicy.CLEAR
-        com.typewritermc.library.TagParents.contract.second.onDelete shouldBe RelationDeletePolicy.CLEAR
-    }
+    val int = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
 
-    test("generated resource selection compiles typed predicates and evaluates configured value reads") {
-        val selection =
-            com.typewritermc.library.BookDraftType
-                .where { title eq literal("Requested") }
-        val predicate = requireNotNull(selection.predicate)
-        val location =
-            ValueLocation.of(
-                ResourceId("book:requested"),
-                ValuePath.root,
-            )
-        val evaluator =
-            DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() }, testPortableTypes())
+    val intUse = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
 
-        with(EmptyReads) {
-            evaluator.evaluate(
-                predicate,
-                ExpressionBindings(mapOf(ExpressionBindingId(value = "configured_value") to location)),
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-        }
-    }
+    val testCodeUse = TEST_CODE_ID.namedUse()
 
-    fun localNode(path: ValuePath) =
-        ExpressionNode.createLocal(
-            depth = 0,
-            slot = 0,
-            path =
-            path,
+    val testCodeDefinition =
+        TypeDefinition.partial(id = TEST_CODE_ID, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
+
+    val testMessageId = definitionId("TestMessage")
+
+    val testPortableRecordId = definitionId("TestPortableRecord")
+
+    val testTreeParameter = ParameterKey(owner = TEST_TREE_ID, index = 0)
+
+    val testMessageActionUse = TEST_MESSAGE_ACTION_ID.use()
+
+    val testTextTreeUse = TEST_TREE_ID.use(listOf(TEXT_USE))
+
+    val testIdentityKeyUse = TEST_IDENTITY_KEY_ID.namedUse()
+
+    val testIdentityKeySetUse = StandardTypes.set.namedUse(listOf(testIdentityKeyUse.use))
+
+    val testIdentityKeyMapUse = StandardTypes.map.namedUse(listOf(testIdentityKeyUse.use, TEXT_USE))
+
+    val testPortableRecordUse = testPortableRecordId.namedUse()
+
+    val testPortableRecordListUse = StandardTypes.list.namedUse(listOf(testPortableRecordUse.use))
+
+    val testPortableRecordDefinition =
+        TypeDefinition.partial(
+            id = testPortableRecordId,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = testPortableRecordId, name = "label"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
         )
 
-    test("portable evaluation short circuits, falls back on missing data and reads named scalars through their representation") {
-        val location = ValueLocation.of(ResourceId("expression:test"))
-        val binding = ExpressionBindingId(value = "value")
-        var reads = 0
-        var result: Availability<DataValue> = Availability.Unavailable(listOf(location))
-        val evaluator =
-            DefaultExpressionEvaluator(
-                ExpressionValueReader {
-                    reads += 1
-                    result
-                },
-                testPortableTypes(),
-            )
-        val bindings = ExpressionBindings(mapOf(binding to location))
-        val budget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)
-        val read = testInput(binding, ValuePath.root)
-
-        with(EmptyReads) {
-            evaluator.evaluate(
-                ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = read),
-                bindings,
-                budget,
-            ) shouldBe
-                Availability.Available(DataValue.BooleanWrapper(false))
-            reads shouldBe 0
-            evaluator.evaluate(
-                ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))),
-                bindings,
-                budget,
-            ) shouldBe Availability.Available(DataValue.StringValueWrapper("fallback"))
-            result = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("chapter")).available()
-            evaluator.evaluate(
-                ExpressionNode.createCall(
-                    operation = PortableOperationCatalog.TEXT_LENGTH.id,
-                    typeArguments = emptyList(),
-                    arguments = listOf(read),
+    val testIdentityKeyDefinition =
+        TypeDefinition.partial(
+            id = TEST_IDENTITY_KEY_ID,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_IDENTITY_KEY_ID, name = "value"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
-                bindings,
-                budget,
-            ) shouldBe Availability.Available(DataValue.integer(7.toBigInteger()))
-            result =
-                Availability.Failed(
-                    EvaluationDiagnostic(failure = FailureId(value = "read_failed"), message = "broken", locations = listOf(location)),
-                )
-            evaluator.evaluate(
-                ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))),
-                bindings,
-                budget,
-            ) shouldBe result
-        }
+        )
+
+    val testMessageDefinition =
+        TypeDefinition.partial(
+            id = testMessageId,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+        )
+
+    val testTextMessageDefinition =
+        TypeDefinition.partial(
+            id = TEST_TEXT_MESSAGE_ID,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TEXT_MESSAGE_ID, name = "text"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+            parents = listOf(testMessageId.namedTemplate()),
+        )
+
+    val testTranslationMessageDefinition =
+        TypeDefinition.partial(
+            id = TEST_TRANSLATION_MESSAGE_ID,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TRANSLATION_MESSAGE_ID, name = "key"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+            parents = listOf(testMessageId.namedTemplate()),
+        )
+
+    val testMessageActionDefinition =
+        TypeDefinition.partial(
+            id = TEST_MESSAGE_ACTION_ID,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "message"),
+                                type = testMessageId.template(),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "messages"),
+                                type = StandardTypes.list.template(listOf(testMessageId.template())),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "optional"),
+                                type = testMessageId.template().nullable(),
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+        )
+
+    val testTreeDefinition =
+        TypeDefinition.partial(
+            id = TEST_TREE_ID,
+            parameters = listOf(TypeParameter.partial(key = testTreeParameter, name = "T")),
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TREE_ID, name = "value"),
+                                type = testTreeParameter.template,
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TREE_ID, name = "children"),
+                                type = StandardTypes.list.template(listOf(TEST_TREE_ID.template(listOf(testTreeParameter.template)))),
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+        )
+
+    test("a generated resource selection matches exactly the resources whose configured field equals the value") {
+        val predicate =
+            requireNotNull(
+                com.typewritermc.library.BookDraftType
+                    .where { title eq literal("Requested") }
+                    .predicate,
+            )
+
+        fun matches(title: String): Availability<DataValue> =
+            evaluate(predicate, mapOf("configured_value" to ValueLocation.of(ResourceId("book:requested"), ValuePath.root))) {
+                DataValue.StringValueWrapper(title).available()
+            }
+
+        matches("Requested") shouldBe Availability.Available(DataValue.BooleanWrapper(true))
+        matches("Other") shouldBe Availability.Available(DataValue.BooleanWrapper(false))
+    }
+
+    val readLocation = ValueLocation.of(ResourceId("expression:test"))
+    val read = testInput(ExpressionBindingId(value = "value"), ValuePath.root)
+    val readBinding = mapOf("value" to readLocation)
+
+    test("portable and short circuits on a false left operand without reading the right") {
+        val reads = mutableListOf<ValueLocation>()
+
+        evaluate(ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = read), readBinding) {
+            reads += it
+            DataValue.BooleanWrapper(true).available()
+        } shouldBe Availability.Available(DataValue.BooleanWrapper(false))
+        reads shouldBe emptyList()
+    }
+
+    test("portable or else falls back when its value is unavailable") {
+        evaluate(ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))), readBinding) {
+            Availability.Unavailable(listOf(readLocation))
+        } shouldBe Availability.Available(DataValue.StringValueWrapper("fallback"))
+    }
+
+    test("portable or else keeps a failed read instead of falling back") {
+        val failed =
+            Availability.Failed(
+                EvaluationDiagnostic(failure = FailureId(value = "read_failed"), message = "broken", locations = listOf(readLocation)),
+            )
+
+        evaluate(ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))), readBinding) {
+            failed
+        } shouldBe failed
+    }
+
+    test("portable operations read a named scalar through its representation") {
+        evaluate(
+            ExpressionNode.createCall(
+                operation = PortableOperationCatalog.TEXT_LENGTH.id,
+                typeArguments = emptyList(),
+                arguments = listOf(read),
+            ),
+            readBinding,
+        ) { DataValue.named(testCodeUse, DataValue.StringValueWrapper("chapter")).available() } shouldBe
+            Availability.Available(DataValue.integer(7.toBigInteger()))
     }
 
     test("portable evaluation bounds expression depth without evaluating a short circuited branch") {
@@ -215,7 +338,7 @@ val SdkRuntimeConformanceTest by testSuite {
             nested = ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(true)), right = nested)
         }
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") }, testPortableTypes())
-        with(EmptyReads) {
+        with(FixtureReads) {
             val failed =
                 evaluator.evaluate(
                     nested,
@@ -231,34 +354,30 @@ val SdkRuntimeConformanceTest by testSuite {
         }
     }
 
-    test("portable helpers execute and native checks receive exact primitive and named scalar receivers") {
-        val origin = providerOrigin("typed_checks")
-        val counter = recordDefinition("Counter", "count", INT)
-        val counterProvider =
-            object : ConfigurationProvider {
-                override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
-                    integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count"))))
-                        .check { it > 0 }
-                        .error("positive count")
-                    return scope.collected()
+    val typedChecks =
+        run {
+            val origin = origin("typed_checks")
+            val counter = recordType(definitionId("Counter"), fieldDeclaration(definitionId("Counter"), "count", int))
+            val counterProvider =
+                object : ConfigurationProvider {
+                    override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
+                        integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count"))))
+                            .check { it > 0 }
+                            .error("positive count")
+                        return scope.collected()
+                    }
                 }
-            }
-        val chapterProvider =
-            object : ConfigurationProvider {
-                override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
-                    textField(scope, RelativeFieldPattern.root, ScalarKind.TEXT.template)
-                        .check { it.isNotBlank() }
-                        .error("nonblank code")
-                    return scope.collected()
+            val chapterProvider =
+                object : ConfigurationProvider {
+                    override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
+                        textField(scope, RelativeFieldPattern.root, ScalarKind.TEXT.template)
+                            .check { it.isNotBlank() }
+                            .error("nonblank code")
+                        return scope.collected()
+                    }
                 }
-            }
-        val assembly =
             CatalogContributions(
-                declarations =
-                    listOf(
-                        OwnedTypeDeclaration(origin, counter),
-                        OwnedTypeDeclaration(origin, TEST_CODE_DEFINITION),
-                    ),
+                declarations = listOf(OwnedTypeDeclaration(origin, counter), OwnedTypeDeclaration(origin, testCodeDefinition)),
                 configurations =
                     listOf(
                         OwnedConfiguration(origin, counter.id, counterProvider),
@@ -266,119 +385,145 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestCodeNativeBindingFactory)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "typed checks")))
-        val integer =
-            assembly.checked
-                .resolve(INT_USE)
-                .ready()
-                .complete(DataValue.integer(5.toBigInteger()))
-                .complete()
-        val chapterUse = TEST_CODE_USE
-        val chapter =
-            assembly.checked
-                .resolve(chapterUse.use)
-                .ready()
-                .complete(DataValue.named(chapterUse, DataValue.StringValueWrapper("chapter")))
-                .complete()
-
-        assembly.checks
-            .single { it.recipe.owner.owner == counter.id }
-            .recipe.predicate
-            .invoke(listOf(integer)) shouldBe true
-        val chapterCheck = assembly.checks.single { it.recipe.owner.owner == TEST_CODE_ID }.recipe
-        chapterCheck.inputs.single().expected shouldBe ScalarKind.TEXT.template
-        chapterCheck.predicate.invoke(listOf(chapter)) shouldBe true
-
-        val helpers = DefaultConfigurationCollectionScope(counter.id)
-        integerField(helpers, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count")))).minimum(3)
-        val rule =
-            helpers
-                .collected()
-                .recipes
-                .single()
-                .rules
-                .single()
-                .descriptor.predicate
-        val configured = ExpressionBindingId(value = "configured_value")
-        val location = ValueLocation.of(ResourceId("counter:1"))
-        val evaluator =
-            DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() }, testPortableTypes())
-        with(EmptyReads) {
-            evaluator.evaluate(
-                rule,
-                ExpressionBindings(mapOf(configured to location)),
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-            ) shouldBe
-                Availability.Available(DataValue.BooleanWrapper(true))
         }
 
-        val unsigned = DefaultConfigurationCollectionScope(counter.id)
-        unsignedIntegerField(unsigned, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count"))))
-            .minimum(ULong.MAX_VALUE - 1uL)
-        val unsignedRule =
-            unsigned
-                .collected()
-                .recipes
-                .single()
-                .rules
-                .single()
-                .descriptor.predicate
-        val unsignedEvaluator =
-            DefaultExpressionEvaluator(
-                ExpressionValueReader { DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger()).available() },
-                testPortableTypes(),
+    test("a native check on an integer field receives the exact integer") {
+        val check =
+            typedChecks.checks
+                .single { it.recipe.owner.owner == definitionId("Counter") }
+                .recipe.predicate
+
+        fun passes(count: Int) =
+            check.invoke(
+                listOf(
+                    typedChecks.checked
+                        .resolve(intUse)
+                        .ready()
+                        .complete(DataValue.integer(count.toBigInteger()))
+                        .complete(),
+                ),
             )
-        with(EmptyReads) {
-            unsignedEvaluator.evaluate(
-                unsignedRule,
-                ExpressionBindings(mapOf(configured to location)),
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-        }
+
+        passes(5) shouldBe true
+        passes(0) shouldBe false
     }
 
-    test("nullable scalar and nested record configuration retain physical authored paths") {
-        val owner = definitionId("Nullable")
-        val scalar = DefaultConfigurationCollectionScope(owner)
-        nullableTextField(scalar, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("text")))).whenPresent {
-            nonBlank()
-            check { it.isNotBlank() }.error("present text is nonblank")
-        }
-        val scalarConfiguration = scalar.collected()
-        scalarConfiguration.recipes
-            .single()
-            .relativePath.segments shouldBe listOf(FieldPatternSegment.field("text"))
-        scalarConfiguration.checks
-            .single()
-            .inputs
-            .single()
-            .skipNull shouldBe true
+    test("a native check on a named scalar receives its text representation") {
+        val check =
+            typedChecks.checks
+                .single { it.recipe.owner.owner == TEST_CODE_ID }
+                .recipe.predicate
 
-        val nested = DefaultConfigurationCollectionScope(owner)
-        integerField(
-            nested.nested(RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("style")))),
-            RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("repetitions"))),
-        ).check { it > 0 }.error("present repetitions are positive")
-        nested
-            .collected()
-            .checks
-            .single()
-            .inputs
-            .single()
-            .path.segments shouldBe
-            listOf(FieldPatternSegment.field("style"), FieldPatternSegment.field("repetitions"))
+        fun passes(code: String) =
+            check.invoke(
+                listOf(
+                    typedChecks.checked
+                        .resolve(
+                            testCodeUse.use,
+                        ).ready()
+                        .complete(DataValue.named(testCodeUse, DataValue.StringValueWrapper(code)))
+                        .complete(),
+                ),
+            )
+
+        passes("chapter") shouldBe true
+        passes(" ") shouldBe false
+    }
+
+    test("an integer minimum accepts its bound and refuses the value below it") {
+        val minimumThree: DefaultConfigurationCollectionScope.() -> Unit = {
+            integerField(this, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count")))).minimum(3)
+        }
+
+        evaluate(rulePredicate(minimumThree), "configured_value" to DataValue.integer(3.toBigInteger())) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(true))
+        evaluate(rulePredicate(minimumThree), "configured_value" to DataValue.integer(2.toBigInteger())) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(false))
+    }
+
+    test("an unsigned minimum compares values beyond the signed range exactly") {
+        val bound = ULong.MAX_VALUE - 1uL
+        val nearMaximum: DefaultConfigurationCollectionScope.() -> Unit = {
+            unsignedIntegerField(this, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count")))).minimum(bound)
+        }
+
+        evaluate(rulePredicate(nearMaximum), "configured_value" to DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger())) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(true))
+        evaluate(rulePredicate(nearMaximum), "configured_value" to DataValue.integer((bound - 1uL).toString().toBigInteger())) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(false))
+    }
+
+    test("line count rules accept text within their bounds and refuse text outside them") {
+        val atLeastTwoLines: DefaultConfigurationCollectionScope.() -> Unit = {
+            textField(
+                this,
+                RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("text"))),
+                ScalarKind.TEXT.template,
+            ).minimumLines(2)
+        }
+        val atMostTwoLines: DefaultConfigurationCollectionScope.() -> Unit = {
+            textField(
+                this,
+                RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("text"))),
+                ScalarKind.TEXT.template,
+            ).maximumLines(2)
+        }
+
+        listOf(
+            "one",
+            "one\ntwo",
+        ).map { evaluate(rulePredicate(atLeastTwoLines), "configured_value" to DataValue.StringValueWrapper(it)) } shouldBe
+            listOf(Availability.Available(DataValue.BooleanWrapper(false)), Availability.Available(DataValue.BooleanWrapper(true)))
+        listOf("one\ntwo", "one\ntwo\nthree").map {
+            evaluate(
+                rulePredicate(atMostTwoLines),
+                "configured_value" to DataValue.StringValueWrapper(it),
+            )
+        } shouldBe
+            listOf(Availability.Available(DataValue.BooleanWrapper(true)), Availability.Available(DataValue.BooleanWrapper(false)))
+    }
+
+    test("a rule declared when a nullable field is present accepts a missing value and judges a present one") {
+        val nonBlankWhenPresent: DefaultConfigurationCollectionScope.() -> Unit = {
+            nullableTextField(this, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("text")))).whenPresent { nonBlank() }
+        }
+
+        evaluate(rulePredicate(nonBlankWhenPresent), "configured_value" to DataValue.NULL) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(true))
+        evaluate(rulePredicate(nonBlankWhenPresent), "configured_value" to DataValue.StringValueWrapper("")) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(false))
+        evaluate(rulePredicate(nonBlankWhenPresent), "configured_value" to DataValue.StringValueWrapper("text")) shouldBe
+            Availability.Available(DataValue.BooleanWrapper(true))
+    }
+
+    test("a check declared when a nullable field is present asks the realm to skip a missing value") {
+        val owner = definitionId("Nullable")
+        checkInputs(owner) {
+            nullableTextField(this, fieldPattern("text")).whenPresent { check { it.isNotBlank() }.error("present text is nonblank") }
+        } shouldBe listOf(CheckInput(owner, fieldPattern("text"), ScalarKind.TEXT.template, skipNull = true))
+    }
+
+    test("a check declared inside a nested record reads the field through the record that holds it") {
+        val owner = definitionId("Nested")
+        checkInputs(owner) {
+            integerField(
+                nested(fieldPattern("style")),
+                fieldPattern("repetitions"),
+            ).check { it > 0 }.error("present repetitions are positive")
+        } shouldBe listOf(CheckInput(owner, fieldPattern("style", "repetitions"), int))
     }
 
     test("abstract native fields collections and nullable values dispatch by concrete type tag") {
-        val origin = providerOrigin("polymorphic_native")
+        val origin = origin("polymorphic_native")
         val assembly =
             CatalogContributions(
                 declarations =
                     listOf(
-                        OwnedTypeDeclaration(origin, TEST_MESSAGE_DEFINITION),
-                        OwnedTypeDeclaration(origin, TEST_TEXT_MESSAGE_DEFINITION),
-                        OwnedTypeDeclaration(origin, TEST_TRANSLATION_MESSAGE_DEFINITION),
-                        OwnedTypeDeclaration(origin, TEST_MESSAGE_ACTION_DEFINITION),
-                        OwnedTypeDeclaration(origin, TEST_TREE_DEFINITION),
+                        OwnedTypeDeclaration(origin, testMessageDefinition),
+                        OwnedTypeDeclaration(origin, testTextMessageDefinition),
+                        OwnedTypeDeclaration(origin, testTranslationMessageDefinition),
+                        OwnedTypeDeclaration(origin, testMessageActionDefinition),
+                        OwnedTypeDeclaration(origin, testTreeDefinition),
                     ),
                 nativeBindings =
                     listOf(
@@ -388,7 +533,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedNativeBinding(origin, TestTreeNativeBindingFactory),
                     ),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "polymorphic native")))
-        val checked = assembly.checked.resolve(TEST_MESSAGE_ACTION_USE).ready()
+        val checked = assembly.checked.resolve(testMessageActionUse).ready()
         val binding = assembly.bindings.bind(checked)
         val original =
             TestMessageAction(
@@ -402,7 +547,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val complete = checked.complete(encoded).complete()
         binding.decode(complete) shouldBe original
 
-        val treeChecked = assembly.checked.resolve(TEST_TEXT_TREE_USE).ready()
+        val treeChecked = assembly.checked.resolve(testTextTreeUse).ready()
         val treeBinding = assembly.bindings.bind(treeChecked)
         val tree = TestTree("root", listOf(TestTree("leaf", emptyList())))
 
@@ -411,14 +556,132 @@ val SdkRuntimeConformanceTest by testSuite {
         treeBinding.decode(treeChecked.complete(encodedTree).complete()) shouldBe tree
     }
 
+    val polymorphic =
+        CatalogContributions(
+            declarations =
+                listOf(
+                    testCodeDefinition,
+                    testMessageDefinition,
+                    testTextMessageDefinition,
+                    testTranslationMessageDefinition,
+                    testMessageActionDefinition,
+                    testTreeDefinition,
+                ).map { OwnedTypeDeclaration(origin("binding_misuse"), it) },
+            nativeBindings =
+                listOf(
+                    TestCodeNativeBindingFactory,
+                    TestTextMessageNativeBindingFactory,
+                    TestTranslationMessageNativeBindingFactory,
+                    TestMessageActionNativeBindingFactory,
+                    TestTreeNativeBindingFactory,
+                ).map { OwnedNativeBinding(origin("binding_misuse"), it) },
+        ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "binding misuse")))
+
+    mapOf(
+        "a polymorphic binding given a value without a concrete type" to
+            Triple(TEST_MESSAGE_USE, polymorphic.admitted(TEXT_USE, DataValue.StringValueWrapper("hello")), "missing_polymorphic_type_tag"),
+        "a polymorphic binding given a concrete type it cannot read" to
+            Triple(
+                TEST_MESSAGE_USE,
+                polymorphic.admitted(testCodeUse.use, DataValue.named(testCodeUse, DataValue.StringValueWrapper("code"))),
+                "unreadable_polymorphic_type",
+            ),
+        "a generated record binding given a record without one of its native fields" to
+            Triple(
+                TEST_TEXT_MESSAGE_ID.use(),
+                polymorphic.admitted(
+                    TEST_TRANSLATION_MESSAGE_ID.use(),
+                    DataValue.named(
+                        TEST_TRANSLATION_MESSAGE_ID.namedUse(),
+                        DataValue.record(
+                            mapOf("key" to DataValue.StringValueWrapper("k")),
+                        ),
+                    ),
+                ),
+                "missing_native_field",
+            ),
+        "a float32 binding given a float64 beyond the Float range" to
+            Triple(
+                floatScalar(FloatWidth.THIRTY_TWO).use,
+                polymorphic.admitted(floatScalar(FloatWidth.SIXTY_FOUR).use, DataValue.FloatWrapper(1e300)),
+                "float32_out_of_range",
+            ),
+        "a float32 binding given a float64 it cannot represent exactly" to
+            Triple(
+                floatScalar(FloatWidth.THIRTY_TWO).use,
+                polymorphic.admitted(floatScalar(FloatWidth.SIXTY_FOUR).use, DataValue.FloatWrapper(0.1)),
+                "float32_precision_loss",
+            ),
+    ).forEach { (case, misuse) ->
+        test("$case refuses to decode it") {
+            shouldThrow<NativeBindingException> { polymorphic.binding<Any>(misuse.first).decode(misuse.second) }.code shouldBe misuse.third
+        }
+    }
+
+    test("a link binding refuses to decode a link authored through another endpoint") {
+        val resource = definitionId("LinkedResource")
+        val links =
+            listOf("first", "second").map { endpoint ->
+                TypeDefinition.partial(
+                    id = definitionId("Link_$endpoint"),
+                    representation =
+                        RepresentationTemplate.createLink(
+                            endpoint =
+                                skirout.editor.v1.type_catalog
+                                    .EndpointId(value = "link.$endpoint"),
+                            target = resource.template(),
+                        ),
+                )
+            }
+        val catalog =
+            com.typewritermc.types.catalog.DefaultCheckedCatalog(
+                CatalogGeneration(value = "link endpoints"),
+                listOf(
+                    TypeDefinition.partial(
+                        id = resource,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                ) +
+                    links,
+            )
+        val second = links[1].id.namedUse()
+        val authored =
+            catalog
+                .resolve(second.use)
+                .ready()
+                .complete(
+                    DataValue.named(
+                        second,
+                        DataValue.createLink(
+                            endpoint =
+                                skirout.editor.v1.type_catalog
+                                    .EndpointId(value = "link.second"),
+                            target =
+                                skirout.editor.v1.type_catalog.LinkTarget(
+                                    resource = ResourceId("resource:1").toSkir(),
+                                    opposite = null,
+                                ),
+                        ),
+                    ),
+                ).complete()
+        val firstBinding =
+            com.typewritermc.types
+                .FactoryNativeBindingRegistry(
+                    catalog,
+                    emptyList(),
+                ).bind(catalog.resolve(links[0].id.use()).ready())
+
+        shouldThrow<NativeBindingException> { firstBinding.decode(authored) }.code shouldBe "wrong_link_endpoint"
+    }
+
     test("native binding registry rejects checked handles from another catalog generation") {
-        val origin = providerOrigin("catalog_generation")
+        val origin = origin("catalog_generation")
         val contributions =
             CatalogContributions(
                 declarations =
                     listOf(
-                        OwnedTypeDeclaration(origin, TEST_MESSAGE_DEFINITION),
-                        OwnedTypeDeclaration(origin, TEST_TEXT_MESSAGE_DEFINITION),
+                        OwnedTypeDeclaration(origin, testMessageDefinition),
+                        OwnedTypeDeclaration(origin, testTextMessageDefinition),
                     ),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestTextMessageNativeBindingFactory)),
             )
@@ -429,86 +692,99 @@ val SdkRuntimeConformanceTest by testSuite {
         shouldThrow<NativeBindingException> { second.bindings.bind(stale) }.code shouldBe "catalog_generation_mismatch"
     }
 
-    test("portable bindings preserve opaque records through generic containers") {
-        val origin = providerOrigin("portable_bindings")
-        val assembly =
-            CatalogContributions(
-                declarations = listOf(OwnedTypeDeclaration(origin, TEST_PORTABLE_RECORD_DEFINITION)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "portable bindings")))
-        val payload = DataValue.record(mapOf("label" to DataValue.StringValueWrapper("opaque")))
-        val value = DataValue.named(TEST_PORTABLE_RECORD_USE, payload)
-        val checked = assembly.checked.resolve(TEST_PORTABLE_RECORD_USE.use).ready()
+    val portableBindings =
+        CatalogContributions(
+            declarations = listOf(OwnedTypeDeclaration(origin("portable_bindings"), testPortableRecordDefinition)),
+        ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "portable bindings")))
+    val opaquePayload = DataValue.record(mapOf("label" to DataValue.StringValueWrapper("opaque")))
+    val opaqueRecord = DataValue.named(testPortableRecordUse, opaquePayload)
 
-        @Suppress("UNCHECKED_CAST")
-        val binding = assembly.bindings.bind(checked) as NativeBinding<PortableValue>
-        val decoded = binding.decode(checked.complete(value).complete())
-        decoded shouldBe PortableValue(actualType = TEST_PORTABLE_RECORD_USE.use, payload = payload)
-        binding.encode(decoded) shouldBe value
+    test("a portable binding decodes an opaque record to its actual type and payload and encodes it back unchanged") {
+        val binding = portableBindings.binding<PortableValue>(testPortableRecordUse.use)
+        val decoded =
+            binding.decode(
+                portableBindings.checked
+                    .resolve(testPortableRecordUse.use)
+                    .ready()
+                    .complete(opaqueRecord)
+                    .complete(),
+            )
 
-        val listChecked = assembly.checked.resolve(TEST_PORTABLE_RECORD_LIST_USE.use).ready()
-        val authoredList =
+        decoded shouldBe PortableValue(actualType = testPortableRecordUse.use, payload = opaquePayload)
+        binding.encode(decoded) shouldBe opaqueRecord
+    }
+
+    test("a portable binding carries opaque records through a list") {
+        val binding = portableBindings.binding<List<PortableValue>>(testPortableRecordListUse.use)
+        val authored =
             DataValue.named(
-                TEST_PORTABLE_RECORD_LIST_USE,
+                testPortableRecordListUse,
                 DataValue.listValue(
                     listOf(
                         skirout.editor.v1.type_catalog.ListItem(
                             id =
                                 skirout.editor.v1.type_catalog
                                     .ItemId(value = "opaque"),
-                            value = value,
+                            value = opaqueRecord,
                         ),
                     ),
                 ),
             )
-
-        @Suppress("UNCHECKED_CAST")
-        val listBinding = assembly.bindings.bind(listChecked) as NativeBinding<List<PortableValue>>
-        val portableList = listBinding.decode(listChecked.complete(authoredList).complete())
-        portableList shouldBe listOf(PortableValue(actualType = TEST_PORTABLE_RECORD_USE.use, payload = payload))
-        listBinding.encode(portableList) shouldBe
-            DataValue.named(
-                TEST_PORTABLE_RECORD_LIST_USE,
-                DataValue.listValue(
-                    listOf(
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "native:0"),
-                            value = value,
-                        ),
-                    ),
-                ),
+        val decoded =
+            binding.decode(
+                portableBindings.checked
+                    .resolve(testPortableRecordListUse.use)
+                    .ready()
+                    .complete(authored)
+                    .complete(),
             )
+        val encoded = binding.encode(decoded) as DataValue.NamedWrapper
 
+        decoded shouldBe listOf(PortableValue(actualType = testPortableRecordUse.use, payload = opaquePayload))
+        (encoded.value.payload as DataValue.ListValueWrapper).value.items.map { it.value } shouldBe listOf(opaqueRecord)
+    }
+
+    test("a portable binding refuses to encode a value whose actual type is not its own") {
         shouldThrow<NativeBindingException> {
-            binding.encode(PortableValue(actualType = TEST_CODE_USE.use, payload = payload))
+            portableBindings
+                .binding<PortableValue>(
+                    testPortableRecordUse.use,
+                ).encode(PortableValue(actualType = testCodeUse.use, payload = opaquePayload))
         }.code shouldBe "wrong_portable_actual_type"
-        val invalid = checked.complete(DataValue.named(TEST_PORTABLE_RECORD_USE, DataValue.record(emptyMap())))
-        (invalid as CompletenessResult.Invalid).problems.single().code shouldBe "missing_field"
+    }
+
+    test("an opaque record without its required field is incomplete") {
+        val invalid =
+            portableBindings.checked
+                .resolve(testPortableRecordUse.use)
+                .ready()
+                .complete(DataValue.named(testPortableRecordUse, DataValue.record(emptyMap())))
+
+        (invalid as CompletenessResult.Invalid).problems.map { it.code } shouldBe listOf("missing_field")
     }
 
     test("native set and map reject canonical duplicate non data record values") {
-        val origin = providerOrigin("canonical_native_duplicates")
+        val origin = origin("canonical_native_duplicates")
         val assembly =
             CatalogContributions(
-                declarations = listOf(OwnedTypeDeclaration(origin, TEST_IDENTITY_KEY_DEFINITION)),
+                declarations = listOf(OwnedTypeDeclaration(origin, testIdentityKeyDefinition)),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestIdentityKeyNativeBindingFactory)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "canonical native duplicates")))
         val first =
             DataValue.named(
-                TEST_IDENTITY_KEY_USE,
+                testIdentityKeyUse,
                 DataValue.record(mapOf("value" to DataValue.StringValueWrapper("same"))),
             )
         val second =
             DataValue.named(
-                TEST_IDENTITY_KEY_USE,
+                testIdentityKeyUse,
                 DataValue.record(mapOf("value" to DataValue.StringValueWrapper("same"))),
             )
 
-        val setChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_SET_USE.use).ready()
+        val setChecked = assembly.checked.resolve(testIdentityKeySetUse.use).ready()
         val setValue =
             DataValue.named(
-                TEST_IDENTITY_KEY_SET_USE,
+                testIdentityKeySetUse,
                 DataValue.setValue(
                     listOf(
                         skirout.editor.v1.type_catalog
@@ -532,10 +808,10 @@ val SdkRuntimeConformanceTest by testSuite {
             setBinding.decode(setChecked.complete(setValue).complete())
         }.code shouldBe "duplicate_set_value"
 
-        val mapChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_MAP_USE.use).ready()
+        val mapChecked = assembly.checked.resolve(testIdentityKeyMapUse.use).ready()
         val mapValue =
             DataValue.named(
-                TEST_IDENTITY_KEY_MAP_USE,
+                testIdentityKeyMapUse,
                 DataValue.mapValue(
                     listOf(
                         skirout.editor.v1.type_catalog.MapRow(
@@ -580,10 +856,21 @@ val SdkRuntimeConformanceTest by testSuite {
         imprecise.problems.single().code shouldBe "float32_precision_loss"
     }
 
-    test("catalog assembly isolates duplicate declarations and incompatible inherited fields") {
-        val origin = providerOrigin("catalog_conflicts")
-        val left = recordDefinition("Left", "value", ScalarKind.TEXT.template)
-        val right = recordDefinition("Right", "value", INT)
+    test("a float32 value beyond the Float range is refused") {
+        val assembly =
+            CatalogContributions(
+                declarations = emptyList(),
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "float32 range")))
+        val checked = assembly.checked.resolve(floatScalar(FloatWidth.THIRTY_TWO).use).ready()
+
+        (checked.complete(DataValue.FloatWrapper(1e300)) as CompletenessResult.Invalid).problems.map { it.code } shouldBe
+            listOf("float32_precision_loss")
+    }
+
+    test("catalog assembly marks a child unavailable when two parents declare the same field with different types") {
+        val origin = origin("catalog_conflicts")
+        val left = recordType(definitionId("Left"), fieldDeclaration(definitionId("Left"), "value", ScalarKind.TEXT.template))
+        val right = recordType(definitionId("Right"), fieldDeclaration(definitionId("Right"), "value", int))
         val childId = definitionId("Child")
         val child =
             TypeDefinition.partial(
@@ -591,17 +878,9 @@ val SdkRuntimeConformanceTest by testSuite {
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                 parents = listOf(left.id.namedTemplate(), right.id.namedTemplate()),
             )
-        val duplicate = recordDefinition("Duplicate", "value", ScalarKind.TEXT.template)
         val assembly =
             CatalogContributions(
-                declarations =
-                    listOf(
-                        OwnedTypeDeclaration(origin, left),
-                        OwnedTypeDeclaration(origin, right),
-                        OwnedTypeDeclaration(origin, child),
-                        OwnedTypeDeclaration(origin, duplicate),
-                        OwnedTypeDeclaration(providerOrigin("duplicate_owner"), duplicate),
-                    ),
+                declarations = listOf(left, right, child).map { OwnedTypeDeclaration(origin, it) },
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "catalog conflicts")))
 
         assembly.editorCatalog.types
@@ -616,17 +895,114 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 ),
             )
-        assembly.editorCatalog.types.count { it.definition.id == duplicate.id } shouldBe 1
-        (
-            assembly.editorCatalog.types
-                .single { it.definition.id == duplicate.id }
-                .status is skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
-        ) shouldBe true
     }
 
-    test("catalog assembly retains competing field defaults without invalidating their types") {
-        val origin = providerOrigin("field_presentation_conflicts")
-        val root = recordDefinition("PresentationRoot", "value", ScalarKind.TEXT.template)
+    test("catalog assembly keeps one entry for a type two owners declare and marks it unavailable") {
+        val duplicate =
+            recordType(definitionId("Duplicate"), fieldDeclaration(definitionId("Duplicate"), "value", ScalarKind.TEXT.template))
+        val assembly =
+            CatalogContributions(
+                declarations =
+                    listOf(
+                        OwnedTypeDeclaration(origin("catalog_conflicts"), duplicate),
+                        OwnedTypeDeclaration(origin("duplicate_owner"), duplicate),
+                    ),
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "catalog conflicts")))
+
+        assembly.editorCatalog.types
+            .single { it.definition.id == duplicate.id }
+            .status
+            .let {
+                (it as DeclarationStatus.UnavailableWrapper).value.map { diagnostic ->
+                    Triple(diagnostic.affected, diagnostic.code, diagnostic.origins)
+                }
+            } shouldBe
+            listOf(
+                Triple(
+                    duplicate.id,
+                    "duplicate_definition",
+                    listOf(
+                        skirout.editor.v1.diagnostic
+                            .DeclarationOrigin(owner = origin("catalog_conflicts").owner),
+                        skirout.editor.v1.diagnostic
+                            .DeclarationOrigin(owner = origin("duplicate_owner").owner),
+                    ),
+                ),
+            )
+    }
+
+    test("catalog assembly quarantines a declaration in the opaque parameter namespace") {
+        val reserved =
+            TypeDefinition.partial(
+                id = TypeDefinitionId.qualified("typewriter.parameter", "Reserved"),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            )
+        val assembly =
+            CatalogContributions(
+                declarations = listOf(OwnedTypeDeclaration(origin("reserved"), reserved)),
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "reserved")))
+
+        assembly.editorCatalog.types
+            .single { it.definition.id == reserved.id }
+            .status
+            .let { (it as DeclarationStatus.UnavailableWrapper).value.map { diagnostic -> diagnostic.code } } shouldBe
+            listOf("reserved_intrinsic_type_identity")
+    }
+
+    test("catalog assembly marks a type unavailable when a presentation targets it with the wrong number of type arguments") {
+        val subject =
+            recordType(
+                definitionId("PresentedSubject"),
+                fieldDeclaration(definitionId("PresentedSubject"), "value", ScalarKind.TEXT.template),
+            )
+        val provider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "orphan")
+        val target = PresentationTarget.NamedWrapper(subject.id.namedTemplate(listOf(int)))
+        val assembly =
+            CatalogContributions(
+                declarations = listOf(OwnedTypeDeclaration(origin("orphan"), subject)),
+                presentations =
+                    listOf(
+                        ownedPresentation(
+                            origin("orphan"),
+                            provider,
+                            target,
+                            fieldPresentationMaterial(
+                                provider,
+                                target,
+                                skirout.editor.v1.type_catalog
+                                    .PresentationId(namespace = "test", name = "text"),
+                            ),
+                        ),
+                    ),
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "orphan")))
+
+        assembly.editorCatalog.types
+            .single { it.definition.id == subject.id }
+            .status
+            .let { (it as DeclarationStatus.UnavailableWrapper).value.map { diagnostic -> diagnostic.code } } shouldBe
+            listOf("invalid_presentation_target")
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
+    }
+
+    test("a provider lease can only be retained for an origin that owns a provider") {
+        val assembly =
+            CatalogContributions(
+                declarations = emptyList(),
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "no providers")))
+
+        shouldThrow<IllegalArgumentException> { assembly.providers.retain(origin("nobody")) }.message shouldBe
+            "Unknown provider origin ${origin("nobody")}."
+    }
+
+    test("competing inherited field presentations keep every child type ready and raise no conflict") {
+        val origin = origin("field_presentation_conflicts")
+        val root =
+            recordType(
+                definitionId("PresentationRoot"),
+                fieldDeclaration(definitionId("PresentationRoot"), "value", ScalarKind.TEXT.template),
+            )
         val textNamed =
             TypeDefinition.partial(
                 id = definitionId("TextNamed"),
@@ -702,15 +1078,17 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.editorCatalog.types
             .filter { it.definition.id in setOf(conflicted.id, resolved.id, unrelated.id) }
             .forEach { it.status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY }
-        assembly.editorCatalog.presentationMaterials.forEach { material ->
-            material.inheritableNodes shouldBe listOf("field choice")
-        }
-        assembly.editorCatalog.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
+        assembly.editorCatalog.presentationMaterials.map { it.provider } shouldBe listOf(textProvider, choiceProvider, resolvedProvider)
+        assembly.editorCatalog.diagnostics shouldBe emptyList()
     }
 
     test("catalog assembly drops a material with an inferred control outside its owning record and keeps its type") {
-        val origin = providerOrigin("invalid_field_presentation")
-        val definition = recordDefinition("InvalidPresentationField", "actual", ScalarKind.TEXT.template)
+        val origin = origin("invalid_field_presentation")
+        val definition =
+            recordType(
+                definitionId("InvalidPresentationField"),
+                fieldDeclaration(definitionId("InvalidPresentationField"), "actual", ScalarKind.TEXT.template),
+            )
         val provider =
             skirout.editor.v1.type_catalog
                 .PresentationId(namespace = "test", name = "invalid field")
@@ -736,9 +1114,14 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("catalog assembly admits bounded atomic parts and rejects foreign owners or owner remainders") {
-        val origin = providerOrigin("atomic_parts")
-        val definition = recordDefinition("PartOwner", "value", ScalarKind.TEXT.template)
-        val foreign = recordDefinition("ForeignPartOwner", "value", ScalarKind.TEXT.template)
+        val origin = origin("atomic_parts")
+        val definition =
+            recordType(definitionId("PartOwner"), fieldDeclaration(definitionId("PartOwner"), "value", ScalarKind.TEXT.template))
+        val foreign =
+            recordType(
+                definitionId("ForeignPartOwner"),
+                fieldDeclaration(definitionId("ForeignPartOwner"), "value", ScalarKind.TEXT.template),
+            )
         val provider =
             skirout.editor.v1.type_catalog
                 .PresentationId(namespace = "test", name = "atomic part")
@@ -765,7 +1148,7 @@ val SdkRuntimeConformanceTest by testSuite {
             )
         val variants =
             listOf(
-                part to true,
+                part to null,
                 part.copy(
                     element =
                         skirout.editor.v1.presentation.PresentationElement.createPart(
@@ -776,7 +1159,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 ),
                             body = base.layout,
                         ),
-                ) to false,
+                ) to "Presentation part details has an incompatible declaring owner.",
                 part.copy(
                     element =
                         skirout.editor.v1.presentation.PresentationElement.createPart(
@@ -791,9 +1174,9 @@ val SdkRuntimeConformanceTest by testSuite {
                                         ),
                                 ),
                         ),
-                ) to false,
+                ) to "Presentation part details must have bounded editors within its owner record and no owner remainder.",
             )
-        variants.forEach { (layout, admitted) ->
+        variants.forEach { (layout, rejection) ->
             val assembly =
                 CatalogContributions(
                     declarations = listOf(OwnedTypeDeclaration(origin, definition), OwnedTypeDeclaration(origin, foreign)),
@@ -802,137 +1185,26 @@ val SdkRuntimeConformanceTest by testSuite {
             assembly.editorCatalog.types
                 .single { it.definition.id == definition.id }
                 .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
-            if (admitted) {
+            if (rejection == null) {
                 assembly.editorCatalog.presentationMaterials
                     .single()
                     .inheritableNodes shouldBe listOf("part")
             } else {
                 assembly.editorCatalog.presentationMaterials shouldBe emptyList()
-                assembly.editorCatalog.diagnostics.map { it.code } shouldBe listOf("presentation_material_build_failed")
+                assembly.callbackFailures.map { it.cause.message } shouldBe listOf(rejection)
             }
         }
     }
 
-    test("published materials own immutable inferred references") {
-        val references = mutableListOf("node")
-        val published =
-            fieldPresentationMaterial(
-                skirout.editor.v1.type_catalog
-                    .PresentationId(namespace = "test", name = "immutable fields"),
-                PresentationTarget.NamedWrapper(definitionId("ImmutablePresentation").namedTemplate()),
-                skirout.editor.v1.type_catalog
-                    .PresentationId(namespace = "test", name = "text"),
-            ).copy(inheritableNodes = references)
-        references.clear()
-        published.inheritableNodes shouldBe listOf("node")
-    }
-
-    test("catalog assembly owns one immutable published catalog graph") {
-        val id = definitionId("ImmutableSnapshot")
-        val argumentList = mutableListOf<TypeTemplate>(ScalarKind.TEXT.template)
-        val fieldList =
-            mutableListOf(
-                FieldDeclaration.partial(
-                    owner = FieldOwner(definition = id, name = "items"),
-                    type = StandardTypes.list.template(argumentList),
-                ),
-            )
-        val definition =
-            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = fieldList, abstract_ = false))
-        val fallbackParents =
-            mutableListOf<skirout.editor.v1.catalog.PresentationRole>(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
-        val endpointPath = mutableListOf<skirout.editor.v1.type_catalog.FieldPatternSegment>(FieldPatternSegment.field("items"))
-        val rules =
-            mutableListOf(
-                skirout.editor.v1.catalog.OwnedRule(
-                    id = RuleId(origin = RuleOrigin(owner = id, ordinal = 0), localIndex = 0),
-                    descriptor =
-                        skirout.editor.v1.catalog
-                            .RuleDescriptor(predicate = testLiteral(DataValue.BooleanWrapper(true))),
-                    diagnostic =
-                        skirout.editor.v1.diagnostic.DiagnosticTemplate(
-                            code = "valid",
-                            message = "valid",
-                            severity = DiagnosticSeverity.ERROR,
-                            targets = mutableListOf(RelativeFieldPattern.root),
-                        ),
-                ),
-            )
-        val recipe =
-            skirout.editor.v1.catalog.ConfigurationRecipe(
-                origin = RuleOrigin(owner = id, ordinal = 0),
-                relativePath = RelativeFieldPattern.root,
-                representationCondition = RepresentationKind.RECORD,
-                rules = rules,
-            )
-        val origin = providerOrigin("immutable_snapshot")
-        val configuration =
-            object : ConfigurationProvider {
-                override fun collect(scope: ConfigurationCollectionScope) =
-                    com.typewritermc.configuration.CollectedConfiguration(mutableListOf(recipe), emptyList())
-            }
-        val assembly =
-            CatalogContributions(
-                declarations = listOf(OwnedTypeDeclaration(origin, definition)),
-                configurations = listOf(OwnedConfiguration(origin, id, configuration)),
-            ).assemble(
-                CatalogAssemblyContext(
-                    generation = CatalogGeneration(value = "immutable snapshot"),
-                    endpointBindings =
-                        mutableListOf(
-                            skirout.editor.v1.catalog.EndpointBindingTemplate(
-                                endpoint = EndpointId(value = "immutable:endpoint"),
-                                containingResource = id.namedTemplate(),
-                                valueOwner = id,
-                                relativePath = RelativeFieldPattern(segments = endpointPath),
-                                target = StandardTypes.list.template(argumentList),
-                                containsCollection = true,
-                            ),
-                        ),
-                    roleFallbacks =
-                        mutableListOf(
-                            skirout.editor.v1.catalog.RoleFallback(
-                                role = skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
-                                parents = fallbackParents,
-                            ),
-                        ),
-                ),
-            )
-
-        fieldList +=
-            FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "late"), type = ScalarKind.TEXT.template)
-        argumentList[0] = INT
-        fallbackParents += skirout.editor.v1.catalog.PresentationRole.RESOURCE_SEARCH_RESULT
-        endpointPath += FieldPatternSegment.ITEMS
-        rules.clear()
-
-        val published = assembly.editorCatalog.types.single { it.definition.id == id }
-        val publishedField = (published.definition.representation as RepresentationTemplate.RecordWrapper).value.fields.single()
-        (publishedField.type as TypeTemplate.NamedWrapper).value.arguments shouldBe listOf(ScalarKind.TEXT.template)
-        assembly.configuration
-            .single()
-            .rules.size shouldBe 1
-        assembly.endpointBindings
-            .single()
-            .relativePath.segments shouldBe
-            listOf(FieldPatternSegment.field("items"))
-        assembly.editorCatalog.roleFallbacks
-            .single()
-            .parents shouldBe
-            listOf(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
-        val checked = assembly.checked.resolve(id.use()).ready()
-        (checked.schema.representation as ResolvedRepresentation.RecordWrapper).value.fields.size shouldBe 1
-    }
-
     test("catalog assembly reasons across inherited mandatory rules") {
-        val parent = recordDefinition("BoundedParent", "value", INT)
+        val parent = recordType(definitionId("BoundedParent"), fieldDeclaration(definitionId("BoundedParent"), "value", int))
         val child =
             TypeDefinition.partial(
                 id = definitionId("BoundedChild"),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                 parents = listOf(parent.id.namedTemplate()),
             )
-        val origin = providerOrigin("inherited_rules")
+        val origin = origin("inherited_rules")
         val minimum =
             configurationProvider { scope ->
                 integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value")))).minimum(10)
@@ -947,7 +1219,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 configurations =
                     listOf(
                         OwnedConfiguration(origin, parent.id, minimum),
-                        OwnedConfiguration(providerOrigin("child_rules"), child.id, maximum),
+                        OwnedConfiguration(origin("child_rules"), child.id, maximum),
                     ),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "inherited rules")))
 
@@ -980,7 +1252,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         abstract_ = false,
                     ),
             )
-        val origin = providerOrigin("generic_rules")
+        val origin = origin("generic_rules")
         val rules =
             configurationProvider { scope ->
                 textField(
@@ -1005,509 +1277,3 @@ val SdkRuntimeConformanceTest by testSuite {
         status.value.map { it.code } shouldBe listOf("contradictory_configuration_rules")
     }
 }
-
-private fun configurationProvider(configure: (ConfigurationCollectionScope) -> Unit): ConfigurationProvider =
-    object : ConfigurationProvider {
-        override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
-            configure(scope)
-            return scope.collected()
-        }
-    }
-
-private fun integerField(
-    scope: ConfigurationCollectionScope,
-    path: RelativeFieldPattern,
-): Integer<Int> {
-    @Suppress("UNCHECKED_CAST")
-    return scope.field(
-        path,
-        RepresentationKind.INTEGER,
-        INT,
-        Integer::class as KClass<Integer<Int>>,
-    )
-}
-
-private fun textField(
-    scope: ConfigurationCollectionScope,
-    path: RelativeFieldPattern,
-    expected: TypeTemplate,
-): Text = scope.field(path, RepresentationKind.TEXT, expected, Text::class)
-
-private fun unsignedIntegerField(
-    scope: ConfigurationCollectionScope,
-    path: RelativeFieldPattern,
-): Integer<ULong> {
-    @Suppress("UNCHECKED_CAST")
-    return scope.field(
-        path,
-        RepresentationKind.INTEGER,
-        integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR).template,
-        Integer::class as KClass<Integer<ULong>>,
-    )
-}
-
-private fun nullableTextField(
-    scope: ConfigurationCollectionScope,
-    path: RelativeFieldPattern,
-): NullableField<String, Text> {
-    @Suppress("UNCHECKED_CAST")
-    return scope.field(
-        path,
-        RepresentationKind.TEXT,
-        ScalarKind.TEXT.template.nullable(),
-        NullableField::class as KClass<NullableField<String, Text>>,
-        mapOf(
-            FieldPatternSegment.VALUES to
-                NestedConfigurationScope(
-                    RepresentationKind.TEXT,
-                    ScalarKind.TEXT.template,
-                    Text::class,
-                    com.typewritermc.configuration.TextExpressionsFactory,
-                ) { nested ->
-                    textField(nested, RelativeFieldPattern.root, ScalarKind.TEXT.template)
-                },
-        ),
-    )
-}
-
-private fun recordDefinition(
-    name: String,
-    field: String,
-    type: TypeTemplate,
-): TypeDefinition {
-    val id = definitionId(name)
-    return TypeDefinition.partial(
-        id = id,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = field), type = type),
-                    ),
-                abstract_ = false,
-            ),
-    )
-}
-
-private fun fieldPresentationMaterial(
-    provider: skirout.editor.v1.type_catalog.PresentationId,
-    target: PresentationTarget,
-    selected: skirout.editor.v1.type_catalog.PresentationId,
-): PresentationMaterial {
-    val binding =
-        skirout.editor.v1.binding.BindingRef(
-            path =
-                ValuePath(
-                    segments =
-                        listOf(
-                            PathSegment.FieldWrapper(
-                                skirout.editor.v1.type_catalog
-                                    .FieldPathSegment(name = "value"),
-                            ),
-                        ),
-                ),
-            bindingId =
-                skirout.editor.v1.type_catalog
-                    .ExpressionBindingId(value = "configured_value"),
-        )
-    val layout =
-        skirout.editor.v1.presentation.PresentationNode(
-            nodeId = "field choice",
-            properties =
-                skirout.editor.v1.presentation.PresentationProperties
-                    .partial(),
-            element =
-                skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
-                    control =
-                        skirout.editor.v1.presentation.BoundControl(
-                            binding = binding,
-                            label = null,
-                            description = null,
-                            prefix = null,
-                            semanticLabel = null,
-                        ),
-                    presentationId =
-                        skirout.editor.v1.type_catalog.PresentationId(
-                            namespace = selected.namespace,
-                            name = selected.name,
-                        ),
-                ),
-            header = null,
-        )
-    return PresentationMaterial(
-        provider =
-            skirout.editor.v1.type_catalog
-                .PresentationId(namespace = provider.namespace, name = provider.name),
-        target = target,
-        role = skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
-        layout = layout,
-        dependencies =
-            skirout.editor.v1.presentation.PresentationDependencies
-                .partial(),
-        subject =
-            (target as PresentationTarget.NamedWrapper).value.template,
-        inheritableNodes = emptyList(),
-    )
-}
-
-private fun ownedPresentation(
-    origin: ProviderOrigin,
-    id: skirout.editor.v1.type_catalog.PresentationId,
-    target: PresentationTarget,
-    material: PresentationMaterial,
-): OwnedPresentation {
-    val descriptor =
-        PresentationDescriptor.of(
-            id = id,
-            owner = origin.owner,
-            target = target,
-            roles = setOf(skirout.editor.v1.catalog.PresentationRole.INSPECTOR),
-            priority = 0,
-        )
-    return OwnedPresentation(
-        origin,
-        descriptor,
-        object : PresentationProvider {
-            override fun build(binding: com.typewritermc.presentation.PresentationBuildBinding) =
-                com.typewritermc.presentation.PresentationBuildResult(material.layout, material.dependencies)
-        },
-    )
-}
-
-private fun providerOrigin(name: String): ProviderOrigin {
-    val key = contributionKey(ContributionSourceId("test"), "main", ProducerId("sdk"), ContributionName(name))
-    return ProviderOrigin(DeclarationOwner(source = key, localIdentity = name), ArtifactId("test:sdk"), "main")
-}
-
-private fun definitionId(name: String): TypeDefinitionId = TypeDefinitionId.qualified("test", name)
-
-private fun <T> com.typewritermc.types.catalog.Resolution<T>.ready(): T = (this as com.typewritermc.types.catalog.Resolution.Ready).value
-
-private fun com.typewritermc.authoring.CompletenessResult.complete() = (this as CompletenessResult.Complete).value
-
-private fun DataValue.available(): Availability<DataValue> = Availability.Available(this)
-
-private object EmptyReads : AuthoredReads {
-    override val catalog: CatalogGeneration = CatalogGeneration(value = "expression catalog")
-    override val readContext = com.typewritermc.authoring.ReadContext(catalog)
-
-    override fun <T> read(path: BoundPath<T>): Availability<T> = error("Portable reads use the expression reader in this fixture.")
-
-    override fun <T> readRepresentation(
-        path: BoundPath<*>,
-        representation: TypeUse,
-    ): Availability<T> = error("Portable reads use the expression reader in this fixture.")
-
-    override fun presence(path: BoundPath<*>): Availability<Boolean> = error("Portable reads use the expression reader in this fixture.")
-
-    override fun binding(path: BoundPath<*>): Availability<com.typewritermc.authoring.DraftBinding> =
-        error("Portable reads use the expression reader in this fixture.")
-
-    override fun canonicalValueKey(path: BoundPath<*>): Availability<String> =
-        error("Portable reads use the expression reader in this fixture.")
-
-    override fun members(path: BoundCollectionPath): List<skirout.editor.v1.type_catalog.ItemId> = emptyList()
-
-    override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Selections are not used in this fixture.")
-}
-
-@JvmInline
-private value class TestCode(
-    val value: String,
-)
-
-private object TestCodeNativeBindingFactory : NativeBindingFactory {
-    override val definition: TypeDefinitionId = TEST_CODE_ID
-    override val provider: NativeBindingId = NativeBindingId(value = "test.code")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> =
-        GeneratedScalarNativeBinding(
-            checked = actual,
-            provider = provider,
-            signature = "test.code",
-            representation = arguments.resolver.bind(TEXT_USE),
-            unwrap = TestCode::value,
-            construct = { TestCode(it as String) },
-        )
-}
-
-private sealed interface TestMessage
-
-private data class TestTextMessage(
-    val text: String,
-) : TestMessage
-
-private data class TestTranslationMessage(
-    val key: String,
-) : TestMessage
-
-private data class TestMessageAction(
-    val message: TestMessage,
-    val messages: List<TestMessage>,
-    val optional: TestMessage?,
-)
-
-private data class TestTree<T>(
-    val value: T,
-    val children: List<TestTree<T>>,
-)
-
-private class TestIdentityKey(
-    val value: String,
-)
-
-private object TestTextMessageNativeBindingFactory : NativeBindingFactory {
-    override val definition = TEST_TEXT_MESSAGE_ID
-    override val provider = NativeBindingId(value = "test.text_message")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> =
-        GeneratedRecordNativeBinding(
-            checked = actual,
-            provider = provider,
-            signature = "test.text_message",
-            nativeClass = TestTextMessage::class,
-            fields = listOf(GeneratedNativeField("text", { arguments.resolver.bind(TEXT_USE) }, TestTextMessage::text)),
-            construct = { TestTextMessage(it.getValue("text") as String) },
-        )
-}
-
-private object TestTranslationMessageNativeBindingFactory : NativeBindingFactory {
-    override val definition = TEST_TRANSLATION_MESSAGE_ID
-    override val provider = NativeBindingId(value = "test.translation_message")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> =
-        GeneratedRecordNativeBinding(
-            checked = actual,
-            provider = provider,
-            signature = "test.translation_message",
-            nativeClass = TestTranslationMessage::class,
-            fields = listOf(GeneratedNativeField("key", { arguments.resolver.bind(TEXT_USE) }, TestTranslationMessage::key)),
-            construct = { TestTranslationMessage(it.getValue("key") as String) },
-        )
-}
-
-private object TestMessageActionNativeBindingFactory : NativeBindingFactory {
-    override val definition = TEST_MESSAGE_ACTION_ID
-    override val provider = NativeBindingId(value = "test.message_action")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> =
-        GeneratedRecordNativeBinding(
-            checked = actual,
-            provider = provider,
-            signature = "test.message_action",
-            nativeClass = TestMessageAction::class,
-            fields =
-                listOf(
-                    GeneratedNativeField("message", { arguments.resolver.bind(TEST_MESSAGE_USE) }, TestMessageAction::message),
-                    GeneratedNativeField("messages", { arguments.resolver.bind(TEST_MESSAGE_LIST_USE) }, TestMessageAction::messages),
-                    GeneratedNativeField("optional", { arguments.resolver.bind(TEST_OPTIONAL_MESSAGE_USE) }, TestMessageAction::optional),
-                ),
-            construct =
-                {
-                    @Suppress("UNCHECKED_CAST")
-                    TestMessageAction(
-                        it.getValue("message") as TestMessage,
-                        it.getValue("messages") as List<TestMessage>,
-                        it.getValue("optional") as TestMessage?,
-                    )
-                },
-        )
-}
-
-private object TestTreeNativeBindingFactory : NativeBindingFactory {
-    override val definition = TEST_TREE_ID
-    override val provider = NativeBindingId(value = "test.tree")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> {
-        val treeUse = actual.use as TypeUse.NamedWrapper
-        val childrenUse = StandardTypes.list.use(listOf(treeUse))
-        return GeneratedRecordNativeBinding(
-            checked = actual,
-            provider = provider,
-            signature = "test.tree",
-            nativeClass = TestTree::class,
-            fields =
-                listOf(
-                    GeneratedNativeField<TestTree<*>>("value", { arguments.bindings.single() }) { it.value },
-                    GeneratedNativeField<TestTree<*>>("children", { arguments.resolver.bind(childrenUse) }) { it.children },
-                ),
-            construct =
-                {
-                    @Suppress("UNCHECKED_CAST")
-                    TestTree(
-                        it.getValue("value"),
-                        it.getValue("children") as List<TestTree<Any?>>,
-                    )
-                },
-        )
-    }
-}
-
-private object TestIdentityKeyNativeBindingFactory : NativeBindingFactory {
-    override val definition = TEST_IDENTITY_KEY_ID
-    override val provider = NativeBindingId(value = "test.identity_key")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> =
-        GeneratedRecordNativeBinding(
-            checked = actual,
-            provider = provider,
-            signature = "test.identity_key",
-            nativeClass = TestIdentityKey::class,
-            fields = listOf(GeneratedNativeField("value", { arguments.resolver.bind(TEXT_USE) }, TestIdentityKey::value)),
-            construct = { TestIdentityKey(it.getValue("value") as String) },
-        )
-}
-
-private val INT = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
-private val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
-private val TEXT_USE = ScalarKind.TEXT.use
-private val TEST_CODE_ID = definitionId("TestCode")
-private val TEST_CODE_USE = TEST_CODE_ID.namedUse()
-private val TEST_CODE_DEFINITION =
-    TypeDefinition.partial(id = TEST_CODE_ID, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
-private val TEST_MESSAGE_ID = definitionId("TestMessage")
-private val TEST_TEXT_MESSAGE_ID = definitionId("TestTextMessage")
-private val TEST_TRANSLATION_MESSAGE_ID = definitionId("TestTranslationMessage")
-private val TEST_MESSAGE_ACTION_ID = definitionId("TestMessageAction")
-private val TEST_TREE_ID = definitionId("TestTree")
-private val TEST_IDENTITY_KEY_ID = definitionId("TestIdentityKey")
-private val TEST_PORTABLE_RECORD_ID = definitionId("TestPortableRecord")
-private val TEST_TREE_PARAMETER = ParameterKey(owner = TEST_TREE_ID, index = 0)
-private val TEST_MESSAGE_USE = TEST_MESSAGE_ID.use()
-private val TEST_MESSAGE_LIST_USE = StandardTypes.list.use(listOf(TEST_MESSAGE_USE))
-private val TEST_OPTIONAL_MESSAGE_USE = TEST_MESSAGE_USE.nullable()
-private val TEST_MESSAGE_ACTION_USE = TEST_MESSAGE_ACTION_ID.use()
-private val TEST_TEXT_TREE_USE = TEST_TREE_ID.use(listOf(TEXT_USE))
-private val TEST_IDENTITY_KEY_USE = TEST_IDENTITY_KEY_ID.namedUse()
-private val TEST_IDENTITY_KEY_SET_USE = StandardTypes.set.namedUse(listOf(TEST_IDENTITY_KEY_USE.use))
-private val TEST_IDENTITY_KEY_MAP_USE = StandardTypes.map.namedUse(listOf(TEST_IDENTITY_KEY_USE.use, TEXT_USE))
-private val TEST_PORTABLE_RECORD_USE = TEST_PORTABLE_RECORD_ID.namedUse()
-private val TEST_PORTABLE_RECORD_LIST_USE = StandardTypes.list.namedUse(listOf(TEST_PORTABLE_RECORD_USE.use))
-private val TEST_PORTABLE_RECORD_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_PORTABLE_RECORD_ID,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_PORTABLE_RECORD_ID, name = "label"),
-                            type = ScalarKind.TEXT.template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
-private val TEST_IDENTITY_KEY_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_IDENTITY_KEY_ID,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_IDENTITY_KEY_ID, name = "value"),
-                            type = ScalarKind.TEXT.template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
-private val TEST_MESSAGE_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_MESSAGE_ID,
-        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
-    )
-private val TEST_TEXT_MESSAGE_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_TEXT_MESSAGE_ID,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_TEXT_MESSAGE_ID, name = "text"),
-                            type = ScalarKind.TEXT.template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-        parents = listOf(TEST_MESSAGE_ID.namedTemplate()),
-    )
-private val TEST_TRANSLATION_MESSAGE_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_TRANSLATION_MESSAGE_ID,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_TRANSLATION_MESSAGE_ID, name = "key"),
-                            type = ScalarKind.TEXT.template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-        parents = listOf(TEST_MESSAGE_ID.namedTemplate()),
-    )
-private val TEST_MESSAGE_ACTION_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_MESSAGE_ACTION_ID,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "message"),
-                            type = TEST_MESSAGE_ID.template(),
-                        ),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "messages"),
-                            type = StandardTypes.list.template(listOf(TEST_MESSAGE_ID.template())),
-                        ),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "optional"),
-                            type = TEST_MESSAGE_ID.template().nullable(),
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
-private val TEST_TREE_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_TREE_ID,
-        parameters = listOf(TypeParameter.partial(key = TEST_TREE_PARAMETER, name = "T")),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_TREE_ID, name = "value"),
-                            type = TEST_TREE_PARAMETER.template,
-                        ),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_TREE_ID, name = "children"),
-                            type = StandardTypes.list.template(listOf(TEST_TREE_ID.template(listOf(TEST_TREE_PARAMETER.template)))),
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )

@@ -1,83 +1,64 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
-import "../../selectables/application/selection_test_support.dart";
-
-Future<void> _invokePrimaryAction(WidgetTester tester) async {
-  final modifier = isApple
-      ? LogicalKeyboardKey.metaLeft
-      : LogicalKeyboardKey.controlLeft;
-  await tester.sendKeyDownEvent(modifier);
-  await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-  await tester.sendKeyUpEvent(modifier);
-}
-
-Widget _dialogLauncher({
-  required Future<void> Function() onConfirm,
-  VoidCallback? onCancel,
-  Duration delayConfirm = Duration.zero,
-  Widget? body,
-}) {
-  return Builder(
-    builder: (context) => TextButton(
-      onPressed: () => showConfirmationDialogue(
-        context: context,
-        delayConfirm: delayConfirm,
-        body: body,
-        onConfirm: onConfirm,
-        onCancel: onCancel,
-      ),
-      child: const Text("Open"),
-    ),
-  );
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("primary action confirms from anywhere inside the dialog", (
     tester,
   ) async {
     var confirmations = 0;
-    await tester.pumpTestApp(
-      child: _dialogLauncher(
-        body: const TextField(autofocus: true),
-        onConfirm: () async => confirmations++,
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        confirmationDialogLauncher(
+          body: const TextField(
+            autofocus: true,
+            decoration: InputDecoration(labelText: "Reason"),
+          ),
+          onConfirm: () async => confirmations++,
+        ),
       ),
     );
 
     await tester.tap(find.text("Open"));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(EditableText));
+    await tester.tap(find.bySemanticsLabel("Reason"));
     await tester.pump();
     expect(
-      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
-      isTrue,
+      tester
+          .getSemantics(find.bySemanticsLabel("Reason"))
+          .flagsCollection
+          .isFocused,
+      Tristate.isTrue,
     );
-    await _invokePrimaryAction(tester);
+    await tester.pressPrimaryActionShortcut();
 
     await tester.pumpAndSettle();
 
     expect(confirmations, 1);
-    expect(find.byType(ConfirmationDialogue), findsNothing);
+    expect(find.text("Are you sure?"), findsNothing);
   });
 
   testWidgets("primary action respects the confirmation delay", (tester) async {
     var confirmations = 0;
-    await tester.pumpTestApp(
-      child: _dialogLauncher(
-        delayConfirm: const Duration(seconds: 2),
-        onConfirm: () async => confirmations++,
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        confirmationDialogLauncher(
+          delayConfirm: const Duration(seconds: 2),
+          onConfirm: () async => confirmations++,
+        ),
       ),
     );
 
     await tester.tap(find.text("Open"));
     await tester.pumpAndSettle();
-    await _invokePrimaryAction(tester);
+    await tester.pressPrimaryActionShortcut();
     await tester.pump();
     expect(confirmations, 0);
 
     await tester.pump(const Duration(seconds: 2));
-    await _invokePrimaryAction(tester);
+    await tester.pressPrimaryActionShortcut();
     await tester.pumpAndSettle();
 
     expect(confirmations, 1);
@@ -88,20 +69,23 @@ void main() {
   ) async {
     final pending = Completer<void>();
     var confirmations = 0;
-    await tester.pumpTestApp(
-      child: _dialogLauncher(
-        onConfirm: () {
-          confirmations++;
-          return pending.future;
-        },
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        confirmationDialogLauncher(
+          onConfirm: () {
+            confirmations++;
+            return pending.future;
+          },
+        ),
       ),
     );
 
     await tester.tap(find.text("Open"));
     await tester.pumpAndSettle();
-    await _invokePrimaryAction(tester);
+    await tester.pressPrimaryActionShortcut();
     await tester.pump();
-    await _invokePrimaryAction(tester);
+    await tester.pressPrimaryActionShortcut();
     await tester.pump();
 
     expect(confirmations, 1);
@@ -113,10 +97,13 @@ void main() {
     tester,
   ) async {
     var cancellations = 0;
-    await tester.pumpTestApp(
-      child: _dialogLauncher(
-        onConfirm: () async {},
-        onCancel: () => cancellations++,
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        confirmationDialogLauncher(
+          onConfirm: () async {},
+          onCancel: () => cancellations++,
+        ),
       ),
     );
 
@@ -126,41 +113,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(cancellations, 1);
-    expect(find.byType(ConfirmationDialogue), findsNothing);
+    expect(find.text("Are you sure?"), findsNothing);
   });
 
   testWidgets("Escape in a Normal mode dialog clears the selection first", (
     tester,
   ) async {
-    const selected = MockSelectableIdentifier("selected");
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (context) => TextButton(
-          onPressed: () => showAdvancedDialog<void>(
-            context: context,
-            builder: (_) => Dialog(
-              child: TextButton(
-                autofocus: true,
-                onPressed: () {},
-                child: const Text("Inside"),
+    final selected = TestSelectableIdentifier(id: "selected");
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showAdvancedDialog<void>(
+              context: context,
+              builder: (_) => Dialog(
+                child: TextButton(
+                  autofocus: true,
+                  onPressed: () {},
+                  child: const Text("Inside"),
+                ),
               ),
             ),
+            child: const Text("Open"),
           ),
-          child: const Text("Open"),
         ),
       ),
     );
-    final container = ProviderScope.containerOf(
-      tester.element(find.text("Open")),
-    );
-    container.read(selectionProvider.notifier).selectAll([selected]);
+    panel.container.read(selectionProvider.notifier).selectAll([selected]);
 
     await tester.tap(find.text("Open"));
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
 
-    expect(container.read(selectionProvider), isEmpty);
+    expect(panel.container.read(selectionProvider), isEmpty);
     expect(find.text("Inside"), findsOneWidget);
   });
 }

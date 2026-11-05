@@ -76,7 +76,7 @@ class JoinCodesCardList extends HookConsumerWidget {
             ),
           ),
         ),
-        SliverAnimatedList(
+        SliverAnimatedRows(
           key: animated.key,
           initialItemCount: animated.items.length,
           itemBuilder: (context, index, animation) =>

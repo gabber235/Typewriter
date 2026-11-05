@@ -17,9 +17,9 @@ pub const DESCRIBE: &str = "cd documentation && bun install --frozen-lockfile &&
 /// The site folder, relative to the repository root.
 const SITE_DIR: &str = "documentation";
 /// Where `gh-pages` is served; previews live below it at `branches/<name>/`.
-const SITE: &str = "https://docs.typewritermc.com";
+pub(crate) const SITE: &str = "https://docs.typewritermc.com";
 /// The published branch.
-const PAGES: &str = "gh-pages";
+pub(crate) const PAGES: &str = "gh-pages";
 /// Marks the preview comment on a pull request, so a later push edits it instead of adding one.
 const COMMENT_MARKER: &str = "<!-- typewriter-docs-preview -->";
 

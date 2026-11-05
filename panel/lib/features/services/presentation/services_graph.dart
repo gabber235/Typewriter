@@ -105,7 +105,7 @@ class ServicesGraph extends ConsumerWidget {
       for (final realm in topology.realms)
         if (hostsById.containsKey(realm.ownerHost.id))
           _connection(
-            id: "${realm.ownerHost.id}:${realm.realmId.id}",
+            id: "${realm.ownerHost.id.id}:realm:${realm.realmId.id}",
             source: ServiceHostIdentifier(realm.ownerHost.id),
             target: RealmInstanceIdentifier(realm.realmId),
             color: realmServiceRoleColor,
@@ -114,7 +114,7 @@ class ServicesGraph extends ConsumerWidget {
       for (final engine in topology.engines)
         if (hostsById.containsKey(engine.ownerHost.id))
           _connection(
-            id: "${engine.ownerHost.id}:${engine.engineId.id}",
+            id: "${engine.ownerHost.id.id}:engine:${engine.engineId.id}",
             source: ServiceHostIdentifier(engine.ownerHost.id),
             target: EngineInstanceIdentifier(engine.engineId),
             color: engineServiceRoleColor,
@@ -264,10 +264,11 @@ class _ServiceGraphNode extends HookWidget {
       selectableId: item.selectableId,
       focusNode: focusNode,
       onDoubleTap: item.onDoubleTap,
+      // The selector makes the card a selectable button; the label reads
+      // it as kind, name and status instead of every text it shows.
       builder: (isSelected, isFocused, isHovered) => Semantics(
         label: "${item.badge}, ${item.title}, ${item.status}",
-        selected: isSelected,
-        button: true,
+        excludeSemantics: true,
         child: ColoredBox(
           color: Surface.colorOf(context),
           child: Opacity(

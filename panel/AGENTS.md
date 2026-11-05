@@ -24,10 +24,11 @@ consumer files.
 ## Module boundaries
 
 The panel's modules and their allowed dependencies are declared in
-`test/architecture/module_graph.dart`. A module may use the modules below it, never above it
-or beside it. When code needs something from above, move the concept down to its true owner
-or let the upper module pass it in (a parameter, an inherited widget, or a provider override
-in the composition root). `module_graph_test.dart` names every violating file, line and symbol.
+`testkit/lib/src/support/architecture/module_graph.dart`. A module may use the modules below
+it, never above it or beside it. When code needs something from above, move the concept down
+to its true owner or let the upper module pass it in (a parameter, an inherited widget, or a
+provider override in the composition root). `test/architecture/module_graph_test.dart` names
+every violating file, line and symbol.
 
 ## Riverpod providers
 
@@ -68,5 +69,11 @@ Every new UI component must include an accompanying Widgetbook story in the same
 Represent clear, distinct variants in Widgetbook. Prefer knobs within one use case when they can expose the variants clearly. Add separate use cases when variants need meaningfully different scenarios, state, layout, or supporting data.
 
 ### Panel Testing
-Use `testApp()` and `pumpTestApp()` from `test/test_utils.dart`.
-Widgetbook components: wrap with `FakeApp`.
+`cargo xtask check panel` runs `flutter analyze` (not `dart analyze`) and `flutter test` in `panel/`,
+`panel/testkit/` and `panel/widgetbook/`. Leave zero issues, including infos.
+
+Import `package:typewriter_testkit/testing.dart`. Start widget tests with
+`tester.pumpPanel([traits], at: ...)`, which runs the real app router, theme and
+shortcuts over fakes the traits configure. Read and act through its drivers, which
+find controls by semantics, and wait with `eventually`. Story data lives in
+`widgetbook/lib/data/`, not in the testkit.

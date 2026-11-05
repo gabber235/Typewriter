@@ -13,6 +13,7 @@ dependencies:
   auto_size_text: ^3.0.0
   collection:
   cupertino_icons: ^2.0.0
+  cupertino_ui: ^1.1.3
   dart_casing: ^3.0.1
   nats_core:
     git:
@@ -42,6 +43,7 @@ dependencies:
   jovial_svg: ^1.1.30
   localstorage: ^6.0.0
   material_color_utilities:
+  material_ui: ^1.7.0
   oidc: ^5.0.2
   oidc_default_store: ^2.0.0
   okcolor: ^1.1.0

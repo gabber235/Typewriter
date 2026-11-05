@@ -25,7 +25,7 @@ class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody>
   static const _insertDuration = Duration(milliseconds: 750);
   static const _deleteDuration = Duration(milliseconds: 500);
 
-  final _listKey = GlobalKey<SliverAnimatedListState>();
+  final _listKey = GlobalKey<SliverAnimatedRowsState>();
   late List<SearchTreeRow> _rows;
   var _disableAnimations = false;
 
@@ -81,7 +81,7 @@ class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody>
 
   @override
   Widget build(BuildContext context) {
-    return SliverAnimatedList(
+    return SliverAnimatedRows(
       key: _listKey,
       initialItemCount: _rows.length,
       itemBuilder: (context, index, animation) {

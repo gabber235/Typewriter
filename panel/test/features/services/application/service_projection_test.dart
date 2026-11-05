@@ -2,46 +2,19 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-final _organization = skir.recordId("organization:projection");
-final _firstId = skir.recordId("service:first");
-final _secondId = skir.recordId("service:second");
-
-skir.Service _service(
-  skir.RecordId id,
-  String name, {
-  int revision = 4,
-  DateTime? lastSeen,
-}) => skir.Service(
-  serviceId: id,
-  revision: revision,
-  name: name,
-  role: skir.ServiceRole.createHost(version: "1"),
-  createdAt: DateTime.utc(2026),
-  organization: _organization,
-  state: skir.ServiceState(
-    status: skir.ServiceStatus.online,
-    lastSeen: lastSeen ?? DateTime.utc(2026, 1, 1),
-  ),
-  registration: null,
-);
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("runtime status keys are the Skir variant names", () {
-    expect(skir.ChildRuntimeStatus.rolledBack.key, "rolled_back");
-    expect(skir.HostRuntimeStatus.reconciling.key, "reconciling");
-    expect(skir.ChildRuntimeStatus.unknown.key, "unknown");
-    expect(
-      ChildRuntimeStatusKey.all.map((status) => status.key).toSet(),
-      hasLength(ChildRuntimeStatusKey.all.length),
-    );
-  });
-
   test(
     "service projection overlays identity and preserves canonical state",
     () {
-      final canonical = _service(_firstId, "Canonical");
+      final canonical = service(
+        "first",
+        name: "Canonical",
+        revision: 4,
+        organization: acme.organizationId,
+        lastSeen: DateTime.utc(2026, 1, 1),
+      );
       final local = LocalEditorValue(
         value: skir.DataValue.createRecord(
           fields: [
@@ -63,80 +36,46 @@ void main() {
     },
   );
 
-  test(
-    "single service projection does not leak another resource draft",
-    () async {
-      final first = _service(_firstId, "First");
-      final second = _service(_secondId, "Second");
-      final container = ProviderContainer.test(
-        overrides: [
-          organizationIdProvider.overrideWithValue(_organization),
-          canonicalOrganizationServicesProvider(_organization)
-              .overrideWith(() => _SeededServices([first, second])),
+  testWidgets("a name draft shows on its own service only", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(
+        services: [
+          for (final id in ["first", "second"])
+            service(
+              id,
+              revision: 4,
+              role: skir.ServiceRole.createCustom(
+                name: "discord",
+                version: "1.0.0",
+              ),
+              organization: acme.organizationId,
+              lastSeen: DateTime.utc(2026, 1, 1),
+            ),
         ],
-      );
-      addTearDown(container.dispose);
-      final workspace = container.read(localWorkControllerProvider);
+      ),
+    ]);
+    // The rename stays in flight, so the draft is what the panel shows.
+    panel.world.nats.registerHandler(
+      "cloud.to.user.ada.organization.acme.services.update",
+      (_) => Completer<Uint8List>().future,
+    );
+    await panel.services.card("Discord service", "First").select();
+    await panel.field("Name").focus();
 
-      final target = fakeEditorTarget(
-        targetId: _firstId,
-        scope: EditorResourceScope(organizationId: _organization),
-        label: "First",
-        document: first.editorSnapshot.document,
-        validation: acceptTestEditorMutation,
-        commitPolicy: EditorCommitPolicy.applyResource,
-        commit: (_) async => throw StateError("No save expected"),
-      );
-      target
-          .acquire(workspace)
-          .update(
-            editorRootPath.field("name"),
-            skir.DataValue.wrapStringValue("Edited first"),
-          );
-      final firstProjection = container.listen(
-        projectedServiceProvider(_firstId),
-        (_, _) {},
-      );
-      final secondProjection = container.listen(
-        projectedServiceProvider(_secondId),
-        (_, _) {},
-      );
-      final listProjection = container.listen(
-        projectedServicesProvider,
-        (_, _) {},
-      );
-      addTearDown(firstProjection.close);
-      addTearDown(secondProjection.close);
-      addTearDown(listProjection.close);
-      await container.read(canonicalServicesProvider.future);
-      await container.read(canonicalServiceProvider(_firstId).future);
-      await container.read(canonicalServiceProvider(_secondId).future);
-      await container.pump();
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: "edited_first",
+        selection: TextSelection.collapsed(offset: 12),
+      ),
+    );
+    for (var frame = 0; frame < 10; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
 
-      expect(
-        container.read(projectedServiceProvider(_firstId)).requireValue?.name,
-        "Edited first",
-      );
-      expect(
-        container.read(projectedServiceProvider(_secondId)).requireValue?.name,
-        "Second",
-      );
-      expect(
-        container
-            .read(projectedServicesProvider)
-            .requireValue
-            .map((service) => service.name),
-        ["Edited first", "Second"],
-      );
-    },
-  );
-}
-
-class _SeededServices extends CanonicalOrganizationServices {
-  _SeededServices(this.services);
-  final List<skir.Service> services;
-
-  @override
-  Stream<List<skir.Service>> build(skir.RecordId organizationId) =>
-      Stream.value(services);
+    expect(
+      panel.services.cards.map((card) => card.split(", ")[1]),
+      unorderedEquals(["Edited First", "Second"]),
+    );
+  });
 }

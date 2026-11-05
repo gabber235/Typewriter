@@ -142,8 +142,7 @@ final class ValueEditing
           ? EditorSavePhase.deletedElsewhere
           : phase?.active ?? false
           ? EditorSavePhase.saving
-          : phase is EditGroupUncertain ||
-                phase is EditGroupCommittedAwaitingRefresh
+          : phase is EditGroupUncertain
           ? EditorSavePhase.uncertain
           : phase is EditGroupRepeatedContention
           ? EditorSavePhase.repeatedContention
@@ -212,11 +211,15 @@ final class ValueEditing
         when diagnostics.isNotEmpty) {
       return TypedMutationResult.invalid(diagnostics);
     }
-    if (phase is EditGroupUncertain ||
-        phase is EditGroupCommittedAwaitingRefresh) {
+    // The save returned without a known outcome: nothing answered it, and it
+    // waits for Retry (uncertain) or its submission sends it again on its own
+    // (still saving).
+    if (phase is EditGroupUncertain || phase is EditGroupSaving) {
       return MutationUncertain(
-        message: phase!.message,
-        cause: phase,
+        message: phase is EditGroupSaving
+            ? "The save is not answered yet and is being sent again"
+            : phase!.message,
+        cause: phase!,
         stackTrace: StackTrace.current,
         submissionId: workspace.submissionId(groupId),
       );

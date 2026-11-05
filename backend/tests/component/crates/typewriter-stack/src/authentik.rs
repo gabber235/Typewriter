@@ -11,20 +11,22 @@ use std::net::Ipv4Addr;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result};
 use axum::extract::{Form, Json, Path, State};
 use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{delete, get, post, put};
+use axum::routing::{delete, get, post};
 use base64::Engine as _;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use ed25519_dalek::{Signer as _, SigningKey};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
+use typewriter_component_test::StackUser;
 
 #[derive(clap::Args)]
 pub struct IdentityArgs {
@@ -41,11 +43,7 @@ const KEY_ID: &str = "stack";
 const TOKEN_LIFETIME_SECONDS: u64 = 3600;
 
 pub async fn run(args: IdentityArgs) -> Result<()> {
-    let users: Vec<FixtureUser> = serde_json::from_str(
-        &std::fs::read_to_string(&args.users)
-            .with_context(|| format!("cannot read {}", args.users.display()))?,
-    )
-    .with_context(|| format!("{} is not a user list", args.users.display()))?;
+    let users = StackUser::read_all(&args.users)?;
     let mut seed = [0; 32];
     getrandom::getrandom(&mut seed).context("generating the signing key")?;
     let stand_in = Arc::new(AuthentikStandIn {
@@ -54,21 +52,12 @@ pub async fn run(args: IdentityArgs) -> Result<()> {
         users,
         service_accounts: Mutex::default(),
         next_account: AtomicI64::new(1),
-        outage: AtomicBool::new(false),
     });
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, args.identity)).await?;
     axum::serve(listener, stand_in.router())
         .with_graceful_shutdown(crate::shutdown_signal())
         .await?;
     Ok(())
-}
-
-/// A person the stack knows, shared with the panel tests.
-#[derive(Deserialize)]
-struct FixtureUser {
-    username: String,
-    password: String,
-    subject: String,
 }
 
 /// A service account `service-identity` created; it signs in with its username and app password.
@@ -80,11 +69,9 @@ struct ServiceAccount {
 struct AuthentikStandIn {
     base: String,
     signing: SigningKey,
-    users: Vec<FixtureUser>,
+    users: Vec<StackUser>,
     service_accounts: Mutex<HashMap<String, ServiceAccount>>,
     next_account: AtomicI64,
-    /// Set by failure scenarios through `PUT /stack/outage`.
-    outage: AtomicBool,
 }
 
 /// The grants the stack accepts; anything else fails deserialization.
@@ -126,8 +113,9 @@ impl AuthentikStandIn {
                 post(Self::create_service_account),
             )
             .route("/api/v3/core/users/{pk}/", delete(Self::delete_user))
-            .route("/stack/outage", put(Self::set_outage))
             .with_state(self)
+            // The web panel fetches discovery and tokens from another origin.
+            .layer(CorsLayer::permissive())
     }
 
     fn issuer(&self, app: &str) -> String {
@@ -154,15 +142,24 @@ impl AuthentikStandIn {
 
     async fn jwks(State(this): Shared) -> Json<Value> {
         let public = URL_SAFE_NO_PAD.encode(this.signing.verifying_key().to_bytes());
+        // Authentik publishes each key with its certificate's thumbprints
+        // (`providers/oauth2/views/jwks.py`). It also sends the certificate (`x5c`), which the
+        // panel parses, and this double has none to send.
         Json(json!({
-            "keys": [{ "kty": "OKP", "crv": "Ed25519", "alg": "EdDSA", "use": "sig", "kid": KEY_ID, "x": public }]
+            "keys": [{
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "alg": "EdDSA",
+                "use": "sig",
+                "kid": KEY_ID,
+                "x": public,
+                "x5t": "CJV2UCQq6OLdqP9jIUVaE9PlMno",
+                "x5t#S256": "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU",
+            }]
         }))
     }
 
     async fn token(State(this): Shared, Form(request): Form<TokenRequest>) -> Response {
-        if this.outage.load(Ordering::Relaxed) {
-            return oauth_error(StatusCode::SERVICE_UNAVAILABLE, "temporarily_unavailable");
-        }
         let signed_in = match request {
             TokenRequest::Password {
                 username,
@@ -275,12 +272,6 @@ impl AuthentikStandIn {
             .lock()
             .expect("service accounts lock")
             .retain(|_, account| account.uid != uid);
-        StatusCode::NO_CONTENT
-    }
-
-    /// `PUT /stack/outage` with `true` makes sign in fail as if Authentik were down.
-    async fn set_outage(State(this): Shared, Json(outage): Json<bool>) -> StatusCode {
-        this.outage.store(outage, Ordering::Relaxed);
         StatusCode::NO_CONTENT
     }
 }

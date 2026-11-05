@@ -6,6 +6,7 @@
 mod authentik;
 mod bind;
 mod broker;
+mod front;
 mod host;
 mod provision;
 mod session;
@@ -22,6 +23,8 @@ enum Command {
     Broker(broker::BrokerArgs),
     /// The Authentik surface Typewriter calls (identity stand in).
     Identity(authentik::IdentityArgs),
+    /// A browser facing front for one of the stack's HTTP services.
+    Front(front::FrontArgs),
     /// Every backend component in one wash host, connected to the broker and identity stand in.
     Host(host::HostArgs),
     /// Creates the stack's organization as its owner, then exits.
@@ -32,16 +35,27 @@ enum Command {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_writer(std::io::stderr)
-        .init();
-    match Command::parse() {
+    // Dependencies enable both of rustls's backends, and then rustls refuses to pick one. A client
+    // that takes the process default (`async-nats` on a `tls://` URL) would panic without this.
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .map_err(|_| anyhow::anyhow!("a rustls crypto provider was installed before main"))?;
+
+    // The wash runtime's own setup, as the `wash` host has it: console logs, and with an
+    // `OTEL_EXPORTER_OTLP_ENDPOINT` the OpenTelemetry layer that joins the trace context arriving
+    // on NATS messages and exports the host's and the components' spans.
+    let flush =
+        wash_runtime::observability::initialize_observability(tracing::Level::INFO, false, false)?;
+    let result = match Command::parse() {
         Command::Broker(args) => broker::run(args).await,
         Command::Identity(args) => authentik::run(args).await,
+        Command::Front(args) => front::run(args).await,
         Command::Host(args) => host::run(args).await,
         Command::Provision(args) => provision::run(args).await,
         Command::Bind(args) => bind::run(args).await,
-    }
+    };
+    flush();
+    result
 }
 
 /// Resolves when the supervisor asks the process to stop.

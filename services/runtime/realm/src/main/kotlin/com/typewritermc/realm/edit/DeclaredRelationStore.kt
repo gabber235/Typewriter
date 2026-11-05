@@ -17,7 +17,6 @@ import java.util.UUID
 internal data class StoredRelationDelta(
     val removed: List<StoredDeclaredEdge>,
     val created: List<StoredDeclaredEdge>,
-    val metadataChanged: List<StoredDeclaredEdge>,
 )
 
 internal interface DeclaredRelationStore {
@@ -41,7 +40,6 @@ internal class SurrealDeclaredRelationStore : DeclaredRelationStore {
         StoredRelationDelta(
             removed = delta.removals.map { transaction.requireStored(it) },
             created = delta.created.map { it.stored(UUID.randomUUID().toString()) },
-            metadataChanged = delta.metadataChanged.map { transaction.requireStored(it).copyLocations(it) },
         )
 
     override fun apply(
@@ -53,14 +51,6 @@ internal class SurrealDeclaredRelationStore : DeclaredRelationStore {
                 .query(
                     "DELETE ONLY \$edge RETURN BEFORE;",
                     mapOf("edge" to RecordId("resource_relation", edge.physicalId)),
-                ).take(0)
-        }
-        delta.metadataChanged.forEach { edge ->
-            transaction
-                .query(
-                    "UPDATE ONLY \$edge SET first_location = \$first_location ?? NONE, " +
-                        "second_location = \$second_location ?? NONE;",
-                    edge.bindings(),
                 ).take(0)
         }
         delta.created.forEach { edge ->
@@ -108,9 +98,6 @@ private fun Transaction.requireStored(projection: LinkProjection): StoredDeclare
 
 private fun LinkProjection.stored(id: String): StoredDeclaredEdge =
     StoredDeclaredEdge(id, contract, first, second, firstLocation, secondLocation)
-
-private fun StoredDeclaredEdge.copyLocations(projection: LinkProjection): StoredDeclaredEdge =
-    copy(sourceLocation = projection.firstLocation, targetLocation = projection.secondLocation)
 
 private fun StoredDeclaredEdge.bindings(): Map<String, Any?> =
     mapOf(

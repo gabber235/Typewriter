@@ -75,7 +75,7 @@ final class NatsRealmPublicationRepository
       cancelled = stop;
       try {
         final transport = SkirMutationClient(
-          () => ref.read(natsProvider),
+          () => ref.read(natsProvider.future),
           () => ref.read(panelTelemetryProvider.future),
         );
         final operation = skir.QueryPublicationViewRequest(expected: expected)

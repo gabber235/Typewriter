@@ -297,3 +297,47 @@ final _chunkPattern = RegExp(r"^(\d{1,9})/(\d{1,9})$");
 // the services transport uses the same bound.
 final _sizePattern = RegExp(r"^\d{1,15}$");
 final _sha256Pattern = RegExp(r"^[0-9a-f]{64}$");
+
+/// One payload split into frames of at most one chunk, which share a
+/// fresh payload id, the complete size and the digest.
+///
+/// The caller's headers travel on every frame, so each frame carries the same
+/// transport metadata as a plain request would. [PayloadAssembler] is its
+/// receiving side.
+final class FramedPayload {
+  FramedPayload(Uint8List payload, this._chunkBytes, Map<String, String> base)
+    : _payload = Uint8List.fromList(payload),
+      payloadId = uuid.v4().replaceAll("-", ""),
+      count = (payload.length + _chunkBytes - 1) ~/ _chunkBytes,
+      _digest = sha256.convert(payload).toString(),
+      _base = base;
+
+  final Uint8List _payload;
+  final int _chunkBytes;
+  final String _digest;
+  final Map<String, String> _base;
+
+  /// Identifies this payload's frames at the receiver.
+  final String payloadId;
+
+  /// The number of frames.
+  final int count;
+
+  /// The bytes of frame [index], a view of the payload.
+  Uint8List bytes(int index) => Uint8List.sublistView(
+    _payload,
+    index * _chunkBytes,
+    min((index + 1) * _chunkBytes, _payload.length),
+  );
+
+  /// The caller's headers with the framing headers of frame [index].
+  NatsHeaders headers(int index) => NatsHeaders(
+    entries: {
+      ..._base,
+      PayloadHeaders.payload: payloadId,
+      PayloadHeaders.chunk: "$index/$count",
+      PayloadHeaders.size: "${_payload.length}",
+      PayloadHeaders.sha256: _digest,
+    }.entries,
+  );
+}

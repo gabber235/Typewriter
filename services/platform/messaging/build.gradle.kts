@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -16,6 +17,8 @@ dependencies {
     api(libs.skir.client)
     implementation(libs.cryptography.provider.jdk)
     implementation(libs.nats.core)
-    testImplementation(project(":telemetry"))
+    testFixturesApi(testFixtures(project(":telemetry")))
+    testFixturesApi(libs.kotlin.serialize.json)
     testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.kotest.property)
 }

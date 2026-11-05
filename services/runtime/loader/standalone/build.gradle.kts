@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     application
+    `java-test-fixtures`
 }
 
 version = "1000.0.0"
@@ -10,8 +11,7 @@ dependencies {
     implementation(libs.clikt)
     implementation(libs.jline)
     testImplementation(libs.kotlin.coroutines.test)
-    testImplementation(project(":telemetry"))
-    testImplementation(libs.mockk)
+    testImplementation(testFixtures(project(":telemetry")))
 }
 
 // `installDist` is the runnable host the worktree stack starts (`cargo xtask stack run --spec panel`).

@@ -1,123 +1,32 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
-
-Future<void> _pressKeys(
-  WidgetTester tester, {
-  required LogicalKeyboardKey trigger,
-  LogicalKeyboardKey? modifier,
-}) async {
-  if (modifier != null) {
-    await tester.sendKeyDownEvent(modifier);
-  }
-  await tester.sendKeyDownEvent(trigger);
-  await tester.pump();
-  await tester.sendKeyUpEvent(trigger);
-  if (modifier != null) {
-    await tester.sendKeyUpEvent(modifier);
-  }
-  await tester.pump();
-
-  await tester.pump(const Duration(milliseconds: 400));
-}
-
-Widget _focusBox(FocusNode focusNode) {
-  return Focus(focusNode: focusNode, child: const SizedBox.shrink());
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  GraphData dataWithFocusableChild(FocusNode node) {
-    return GraphData(
-      cellSize: 50,
-      elements: [
-        GraphElement(
-          id: const GraphIdentifier("focusable"),
-          x: 0,
-          y: 0,
-          width: 2,
-          height: 2,
-          builder: (context) => _focusBox(node),
-        ),
-      ],
-      edges: const [],
-    );
-  }
+  testWidgets("equal zooms in", (tester) async {
+    final panel = await tester.pumpFocusedNode("Node");
+    expect(panel.graph.rectOf("Node").width / 100, closeTo(1, 1e-6));
 
-  double currentScale(WidgetTester tester) {
-    final viewer = tester.widget<InteractiveViewer>(
-      find.byType(InteractiveViewer),
-    );
-    final ctrl = viewer.transformationController!;
-    return ctrl.value.getMaxScaleOnAxis();
-  }
+    await panel.press(LogicalKeyboardKey.equal);
 
-  Future<void> pumpGraphWithFocus(WidgetTester tester, FocusNode node) async {
-    await tester.pumpTestApp(
-      child: Center(
-        child: SizedBox(
-          width: 800,
-          height: 600,
-          child: Graph(data: dataWithFocusableChild(node)),
-        ),
-      ),
-      settle: true,
-    );
-    node.requestFocus();
-    await tester.pumpAndSettle();
-  }
-
-  testWidgets("Equal zooms in", (tester) async {
-    final focusNode = FocusNode(debugLabel: "graph_focus");
-    await pumpGraphWithFocus(tester, focusNode);
-
-    final before = currentScale(tester);
-    expect(before, closeTo(1.0, 1e-6));
-
-    await _pressKeys(tester, trigger: LogicalKeyboardKey.equal);
-
-    final after = currentScale(tester);
-    expect(after, greaterThan(before));
+    expect(panel.graph.rectOf("Node").width / 100, greaterThan(1));
   });
 
-  testWidgets("Equal zooms in (unmodified)", (tester) async {
-    final focusNode = FocusNode(debugLabel: "graph_focus");
-    await pumpGraphWithFocus(tester, focusNode);
+  testWidgets("minus zooms out", (tester) async {
+    final panel = await tester.pumpFocusedNode("Node");
 
-    final before = currentScale(tester);
-    expect(before, closeTo(1.0, 1e-6));
+    await panel.press(LogicalKeyboardKey.minus);
 
-    await _pressKeys(tester, trigger: LogicalKeyboardKey.equal);
-
-    final after = currentScale(tester);
-    expect(after, greaterThan(before));
+    expect(panel.graph.rectOf("Node").width / 100, lessThan(1));
   });
 
-  testWidgets("Digit 0 resets zoom", (tester) async {
-    final focusNode = FocusNode(debugLabel: "graph_focus");
-    await pumpGraphWithFocus(tester, focusNode);
+  testWidgets("digit 0 resets the zoom", (tester) async {
+    final panel = await tester.pumpFocusedNode("Node");
+    await panel.press(LogicalKeyboardKey.equal);
+    expect(panel.graph.rectOf("Node").width / 100, greaterThan(1));
 
-    await _pressKeys(tester, trigger: LogicalKeyboardKey.equal);
-    final beforeReset = currentScale(tester);
-    expect(beforeReset, greaterThan(1.0));
+    await panel.press(LogicalKeyboardKey.digit0);
 
-    await _pressKeys(tester, trigger: LogicalKeyboardKey.digit0);
-
-    final afterReset = currentScale(tester);
-    expect(afterReset, closeTo(1.0, 1e-6));
-  });
-
-  testWidgets("Digit 0 resets zoom (unmodified)", (tester) async {
-    final focusNode = FocusNode(debugLabel: "graph_focus");
-    await pumpGraphWithFocus(tester, focusNode);
-
-    await _pressKeys(tester, trigger: LogicalKeyboardKey.equal);
-    final beforeReset = currentScale(tester);
-    expect(beforeReset, greaterThan(1.0));
-
-    await _pressKeys(tester, trigger: LogicalKeyboardKey.digit0);
-
-    final afterReset = currentScale(tester);
-    expect(afterReset, closeTo(1.0, 1e-6));
+    expect(panel.graph.rectOf("Node").width / 100, closeTo(1, 1e-6));
   });
 }

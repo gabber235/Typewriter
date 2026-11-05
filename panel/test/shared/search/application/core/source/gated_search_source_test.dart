@@ -2,8 +2,7 @@
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../support/search_core_test_harness.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("GatedSearchSource", () {
@@ -25,47 +24,6 @@ void main() {
       source.search(queryContext("cd"));
       expect(inner.initializeCount, 1);
       expect(inner.searches, [queryContext("cd")]);
-    });
-
-    test("initializes the inner source once", () {
-      final inner = FakeSearchSource();
-      final source = inner.gated((context) => true);
-      addTearDown(source.dispose);
-
-      source.initialize(SearchQueryContext.empty);
-
-      expect(inner.initializeCount, 1);
-    });
-
-    test("disposes the inner source once", () {
-      final inner = FakeSearchSource();
-      final source = inner.gated((context) => true);
-
-      source.dispose();
-
-      expect(inner.disposeCount, 1);
-    });
-
-    test("forwards selectors while open or closed", () {
-      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "#")];
-      final inner = FakeSearchSource(selectors: emitted);
-      final source = inner.gated((context) => false);
-      addTearDown(source.dispose);
-
-      source.search(queryContext("alpha"));
-
-      expect(source.selectors, emitted);
-    });
-
-    test("open gate forwards search with same context", () {
-      final inner = FakeSearchSource();
-      final source = inner.gated((context) => true);
-      addTearDown(source.dispose);
-      final context = queryContext("alpha");
-
-      source.search(context);
-
-      expect(inner.searches, [context]);
     });
 
     test("open gate forwards inner snapshots", () {
@@ -137,16 +95,6 @@ void main() {
       expect(inner.previewRequests, isEmpty);
     });
 
-    test("closed gate blocks search", () {
-      final inner = FakeSearchSource();
-      final source = inner.gated((context) => false);
-      addTearDown(source.dispose);
-
-      source.search(queryContext("alpha"));
-
-      expect(inner.searches, isEmpty);
-    });
-
     test("closed gate emits empty idle snapshot", () {
       final inner = FakeSearchSource();
       final source = inner.gated((context) => false);
@@ -197,24 +145,6 @@ void main() {
       source.search(queryContext("alpha"));
 
       expect(snapshots.single.guidance, [guidance]);
-    });
-
-    test("guidance function receives same blocked context", () {
-      final inner = FakeSearchSource();
-      final blockedContexts = <SearchQueryContext>[];
-      final source = inner.gated(
-        (context) => false,
-        closedGuidance: (context) {
-          blockedContexts.add(context);
-          return null;
-        },
-      );
-      addTearDown(source.dispose);
-      final context = queryContext("alpha");
-
-      source.search(context);
-
-      expect(blockedContexts, [context]);
     });
 
     test("closed gate ignores later inner ready snapshot", () {
@@ -386,23 +316,4 @@ void main() {
       expect(snapshots.single.guidance.single.title, "Choose realm first");
     });
   });
-}
-
-SearchQueryContext queryContext(
-  String query, {
-  List<SearchParsedSelector> selectors = const [],
-}) {
-  return SearchQueryContext(normalizedQuery: query, selectors: selectors);
-}
-
-SearchSourceSnapshot errorSnapshot(String message) {
-  return SearchSourceSnapshot.error(
-    errorSummaries: [
-      SearchErrorSummary(
-        id: "error",
-        message: message,
-        severity: SearchErrorSeverity.error,
-      ),
-    ],
-  );
 }

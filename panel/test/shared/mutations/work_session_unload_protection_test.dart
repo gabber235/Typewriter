@@ -1,63 +1,48 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../support/test_utils.dart";
-
-final class _RecordingProtection implements WorkSessionUnloadProtection {
-  final List<bool> values = [];
-  bool disposed = false;
-
-  @override
-  bool get protected => values.lastOrNull ?? false;
-
-  @override
-  set protected(bool value) => values.add(value);
-
-  @override
-  void dispose() => disposed = true;
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("binding updates protection and disposes its adapter", (
     tester,
   ) async {
-    final protection = _RecordingProtection();
-
-    await tester.pumpTestApp(
-      child: WorkSessionUnloadBinding(
+    final adapter = RecordingUnloadProtection();
+    await tester.showComponent(
+      WorkSessionUnloadBinding(
         protected: false,
-        protection: protection,
+        protection: adapter,
         child: const SizedBox(),
       ),
     );
-    await tester.pumpTestApp(
-      child: WorkSessionUnloadBinding(
+
+    await tester.showComponent(
+      WorkSessionUnloadBinding(
         protected: true,
-        protection: protection,
+        protection: adapter,
         child: const SizedBox(),
       ),
     );
     await tester.pumpWidget(const SizedBox());
 
-    expect(protection.values, [false, true]);
-    expect(protection.disposed, isTrue);
+    expect(adapter.values, [false, true]);
+    expect(adapter.disposed, isTrue);
   });
 
   testWidgets("replacing an adapter disposes the previous listener", (
     tester,
   ) async {
-    final first = _RecordingProtection();
-    final second = _RecordingProtection();
-
-    await tester.pumpTestApp(
-      child: WorkSessionUnloadBinding(
+    final first = RecordingUnloadProtection();
+    final second = RecordingUnloadProtection();
+    await tester.showComponent(
+      WorkSessionUnloadBinding(
         protected: true,
         protection: first,
         child: const SizedBox(),
       ),
     );
-    await tester.pumpTestApp(
-      child: WorkSessionUnloadBinding(
+
+    await tester.showComponent(
+      WorkSessionUnloadBinding(
         protected: true,
         protection: second,
         child: const SizedBox(),

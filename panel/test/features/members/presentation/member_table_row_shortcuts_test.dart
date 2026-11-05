@@ -1,66 +1,35 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
+
+final _member = member("Grace", joinedAt: DateTime.utc(2024));
 
 void main() {
-  testWidgets("member row shortcuts manage selection and removal", (
+  for (final (key, shifted, invoked) in [
+    (LogicalKeyboardKey.space, false, "toggle"),
+    (LogicalKeyboardKey.space, true, "select all"),
+    (LogicalKeyboardKey.escape, false, "clear"),
+    (LogicalKeyboardKey.delete, false, "remove selection"),
+  ]) {
+    testWidgets("${keyName(key, shifted: shifted)} on a selected "
+        "member row invokes $invoked", (tester) async {
+      final row = await tester.pumpMemberRow(_member, selected: true);
+
+      await row.press(key, shifted: shifted);
+
+      expect(row.invoked, [invoked]);
+      expect(row.panel.dialog.showing("Remove Grace?"), isFalse);
+    });
+  }
+
+  testWidgets("Delete on an unselected member row asks before removing it", (
     tester,
   ) async {
-    final focusNode = FocusNode();
-    addTearDown(focusNode.dispose);
-    var toggles = 0;
-    var selectAll = 0;
-    var clears = 0;
-    var removedFromSelection = 0;
+    final row = await tester.pumpMemberRow(_member, selected: false);
 
-    var removedSelection = 0;
-    final member = skir.OrganizationMember(
-      userId: skir.recordId("user:member"),
-      roles: const [],
-      joinedAt: DateTime.utc(2024),
-      name: "Member",
-      email: null,
-      avatarUrl: null,
-    );
+    await row.press(LogicalKeyboardKey.delete);
 
-    await tester.pumpWidget(
-      FakeApp(
-        child: MemberTableRowShortcuts(
-          member: member,
-          onToggleSelection: () => toggles++,
-          onSelectAll: () => selectAll++,
-          onClearSelection: () => clears++,
-          isSelected: true,
-          hasSelection: true,
-          onRemoveSelection: () async => removedSelection++,
-          onRemoveFromSelection: () => removedFromSelection++,
-          onFocusChange: (_) {},
-          child: Focus(
-            focusNode: focusNode,
-            child: const SizedBox(width: 20, height: 20),
-          ),
-        ),
-      ),
-    );
-    focusNode.requestFocus();
-    await tester.pump();
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.space);
-    expect(toggles, 1);
-
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.space);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-    expect(selectAll, 1);
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    expect(clears, 1);
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.delete);
-    expect(removedSelection, 1);
-    expect(find.text("Remove Member?"), findsNothing);
-    expect(removedFromSelection, 0);
+    expect(row.panel.dialog.showing("Remove Grace?"), isTrue);
+    expect(row.invoked, isEmpty);
   });
 }

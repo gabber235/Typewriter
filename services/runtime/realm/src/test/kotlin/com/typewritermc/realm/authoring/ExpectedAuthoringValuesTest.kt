@@ -18,6 +18,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.authoring_facts.ExpectationConflict
 import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -41,8 +42,14 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
             EditExpectation.createValue(at = at, expected = DataValue.StringValueWrapper("Quest")),
         )
 
-    test("returning to the expected value accepts the original expectations") {
-        CapturedAuthoringValues(mapOf(resource to record(name = "Story")), emptyList()).conflicts(expected) shouldHaveSize 1
+    test("a changed value conflicts with exactly the value expectation it violates and returning to it clears the conflict") {
+        CapturedAuthoringValues(mapOf(resource to record(name = "Story")), emptyList()).conflicts(expected) shouldBe
+            listOf(
+                ExpectationConflict(
+                    expected = EditExpectation.createValue(at = at, expected = DataValue.StringValueWrapper("Quest")),
+                    actual = EditExpectation.createValue(at = at, expected = DataValue.StringValueWrapper("Story")),
+                ),
+            )
         CapturedAuthoringValues(mapOf(resource to original), emptyList()).conflicts(expected).shouldBeEmpty()
     }
 

@@ -28,11 +28,18 @@ val GeneratedProviderLoaderTest by testSuite {
         first.service shouldBe service
     }
 
-    test("deployment owners reject missing services and constructor cycles") {
+    test("a deployment owner whose constructor needs a missing service is refused naming that service") {
         val owners = DeploymentRuntimeOwners(requireNotNull(OwnerConsumer::class.java.classLoader), emptyMap())
 
-        shouldThrow<IllegalArgumentException> { owners.resolve(OwnerConsumer::class.java) }
-        shouldThrow<IllegalArgumentException> { owners.resolve(CycleOwnerA::class.java) }
+        shouldThrow<IllegalArgumentException> { owners.resolve(OwnerConsumer::class.java) }.message shouldBe
+            "No runtime service is registered for com.typewritermc.discovery.FixtureRuntimeServiceContract."
+    }
+
+    test("deployment owners whose constructors need each other are refused naming the cycle") {
+        val owners = DeploymentRuntimeOwners(requireNotNull(OwnerConsumer::class.java.classLoader), emptyMap())
+
+        shouldThrow<IllegalArgumentException> { owners.resolve(CycleOwnerA::class.java) }.message shouldBe
+            "Runtime owner constructor cycle: com.typewritermc.discovery.CycleOwnerA then com.typewritermc.discovery.CycleOwnerB then com.typewritermc.discovery.CycleOwnerA"
     }
 
     test("deployment owners enforce exact deployment class identity") {
@@ -193,7 +200,7 @@ val GeneratedProviderLoaderTest by testSuite {
                 facts = DeploymentFacts(),
                 domain = DiscoveryDomains.Execution,
             )
-        }
+        }.message shouldBe "Duplicate runtime registrar shadow.runtime in contribution source fixture."
     }
 
     listOf(DiscoveryDomains.Realm, DiscoveryDomains.Execution).forEach { domain ->
@@ -233,100 +240,4 @@ val GeneratedProviderLoaderTest by testSuite {
                 }
         }
     }
-}
-
-private interface FixtureRuntimeServiceContract
-
-private class FixtureRuntimeService : FixtureRuntimeServiceContract
-
-private class OwnerConsumer(
-    val service: FixtureRuntimeServiceContract,
-)
-
-private class CycleOwnerA(
-    val next: CycleOwnerB,
-)
-
-private class CycleOwnerB(
-    val next: CycleOwnerA,
-)
-
-private class FailingOwner {
-    init {
-        error("construction failed")
-    }
-}
-
-class ShadowRegistrar : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("shadow.runtime"), setOf(DiscoveryDomains.Execution))
-
-    override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar =
-        instantiator.instantiate(ExecutionFixtureRegistrar::class.java) as RuntimeRegistrar
-}
-
-class DuplicateRegistrarProvider : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("shadow.runtime"), setOf(DiscoveryDomains.Execution))
-
-    override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar =
-        instantiator.instantiate(ExecutionFixtureRegistrar::class.java) as RuntimeRegistrar
-}
-
-class RealmFixtureRegistrarProvider : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("realm.runtime"), setOf(DiscoveryDomains.Realm))
-
-    override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar =
-        instantiator.instantiate(RealmFixtureRegistrar::class.java) as RuntimeRegistrar
-}
-
-class ExecutionFixtureRegistrar : RuntimeRegistrar {
-    init {
-        constructions += 1
-    }
-
-    context(scope: RuntimeScope)
-    override suspend fun register() = Unit
-
-    companion object {
-        var constructions = 0
-    }
-}
-
-class RealmFixtureRegistrar : RuntimeRegistrar {
-    init {
-        constructions += 1
-    }
-
-    context(scope: RuntimeScope)
-    override suspend fun register() = Unit
-
-    companion object {
-        var constructions = 0
-    }
-}
-
-private fun providerArtifact(
-    path: Path,
-    sourcePart: String,
-    corruptClass: Boolean = false,
-    referencedClass: ByteArray? = null,
-    providerClass: KClass<*> = ShadowRegistrar::class,
-): Path {
-    val providerName = providerClass.java.name
-    val classPath = providerName.replace('.', '/') + ".class"
-    val classBytes = requireNotNull(providerClass.java.getResourceAsStream("/$classPath")).use { it.readBytes() }
-    if (corruptClass) classBytes[classBytes.lastIndex] = (classBytes.last() + 1).toByte()
-    JarOutputStream(Files.newOutputStream(path)).use { archive ->
-        archive.putNextEntry(JarEntry(GENERATED_PROVIDER_INDEX_PATH))
-        archive.write("registrar\t$providerName\t$sourcePart\n".encodeToByteArray())
-        archive.closeEntry()
-        archive.putNextEntry(JarEntry(classPath))
-        archive.write(classBytes)
-        archive.closeEntry()
-        referencedClass?.let { bytes ->
-            archive.putNextEntry(JarEntry("fixture/Referenced.class"))
-            archive.write(bytes)
-            archive.closeEntry()
-        }
-    }
-    return path
 }

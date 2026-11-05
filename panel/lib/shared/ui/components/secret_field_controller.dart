@@ -24,7 +24,7 @@ _SecretFieldController _useSecretFieldController(
       return;
     }
 
-    if (currentState.remainingDurationAt(DateTime.now()) == Duration.zero) {
+    if (currentState.remainingDurationAt(clock.now()) == Duration.zero) {
       state.value = SecretFieldExpired(value: currentState.value);
       field.onExpired?.call();
     }
@@ -38,7 +38,15 @@ _SecretFieldController _useSecretFieldController(
     if (value == null) return;
 
     final fullValue = field.prefix != null ? "${field.prefix}$value" : value;
-    await Clipboard.setData(ClipboardData(text: fullValue));
+    try {
+      await Clipboard.setData(ClipboardData(text: fullValue));
+    } on PlatformException {
+      // A browser can refuse the page the clipboard. The value stays on screen.
+      if (context.mounted) {
+        showErrorSnackBar(context, field.copyFailedSnackbarText);
+      }
+      return;
+    }
     field.onCopied?.call();
     if (context.mounted) {
       showSuccessSnackBar(context, field.copiedSnackbarText);
@@ -49,7 +57,7 @@ _SecretFieldController _useSecretFieldController(
     state.value = const SecretFieldLoading();
     try {
       final result = await field.onGenerate();
-      state.value = result.isExpiredAt(DateTime.now())
+      state.value = result.isExpiredAt(clock.now())
           ? SecretFieldExpired(value: result.value)
           : result;
       if (field.copyOnGenerate) {

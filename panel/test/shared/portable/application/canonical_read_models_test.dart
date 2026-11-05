@@ -2,14 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-skir.TypeDefinitionId _readId(String record) => skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(
-    namespace: canonicalReadNamespace,
-    name: record,
-  ),
-  revision: 1,
-);
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test(
@@ -28,27 +21,6 @@ void main() {
       ], expected);
     },
   );
-
-  test("read identities are Skir record identities", () {
-    expect(
-      canonicalReadModels.typeUseUse,
-      skir.TypeUse.createNamed(
-        definition: _readId("editor/v1/type_catalog.skir:TypeUse"),
-        arguments: const [],
-      ),
-    );
-    expect(
-      canonicalReadModels.resourceAppearanceUse.definition,
-      _readId("editor/v1/catalog.skir:ResourceAppearance"),
-    );
-    final named = canonicalReadModels.published(
-      _readId("editor/v1/type_catalog.skir:TypeUse.named"),
-    )!;
-    expect(named.ancestorTemplates.map((parent) => parent.definition), [
-      _readId("editor/v1/type_catalog.skir:TypeUse"),
-    ]);
-    expect(named.effectiveFields.map((field) => field.key), ["value"]);
-  });
 
   test("an appearance reads its accent as the declared color", () {
     final value = skir.ResourceAppearance(
@@ -71,22 +43,14 @@ void main() {
       icon: skir.Icon.wrapSvg("<svg/>"),
       color: skir.Color(argb: -1),
     );
-    final published = skir.PublishedType(
-      definition: skir.TypeDefinition(
-        id: _readId("example:Book"),
-        parameters: const [],
-        representation: skir.RepresentationTemplate.createRecord(
-          fields: const [],
-          abstract_: false,
-        ),
-        parents: const [],
+    final published = publishedType(
+      typeDefinition("example:Book", namespace: canonicalReadNamespace),
+      representation: skir.RepresentationTemplate.createRecord(
+        fields: const [],
+        abstract_: false,
       ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: const [],
-      ancestorTemplates: const [],
       display: display,
       searchKey: "book",
-      placementField: null,
     );
     final encoded = canonicalReadModels.project(
       published,

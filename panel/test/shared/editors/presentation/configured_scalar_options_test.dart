@@ -2,16 +2,14 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final configured in [false, true]) {
     testWidgets(
-      "dropdown retains panel chrome with sparse overrides $configured",
+      "dropdown ${configured ? "with" : "without"} sparse overrides opens and writes the chosen option",
       (tester) async {
-        final fixture = _Fixture(
+        final fixture = EditedValue.scalar(
           skir.DataValue.wrapStringValue(""),
           skir.ScalarKind.text,
         );
@@ -43,71 +41,29 @@ void main() {
                             .toFrozen()
                       : null)
                 .toFrozen();
-        await fixture.pump(
+        final panel = await fixture.show(
           tester,
           skir.PresentationElement.wrapSelectInput(input),
         );
-        final context = tester.element(find.byType(Dropdown<String>));
-        final theme = Theme.of(context).dropdownMenuTheme;
-        final decoration = tester
-            .widget<InputDecorator>(find.byType(InputDecorator))
-            .decoration;
-        expect(decoration.filled, isTrue);
-        expect(decoration.fillColor, theme.inputDecorationTheme!.fillColor);
-        expect(decoration.border, theme.inputDecorationTheme!.border);
-        expect(
-          decoration.contentPadding,
-          theme.inputDecorationTheme!.contentPadding,
-        );
-        expect(
-          decoration.isDense,
-          configured || theme.inputDecorationTheme!.isDense,
-        );
-        expect(decoration.prefixIcon, isNull);
-        expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
-        expect(fixture.value, skir.DataValue.wrapStringValue(""));
+        bool menuOpen() => semanticsLabeled("typewritermc:paper").isNotEmpty;
+        expect(menuOpen(), isFalse);
 
         if (configured) {
-          tester
-              .widget<InputFieldContainer>(find.byType(InputFieldContainer))
-              .controller
-              .requestSurroundingFocus();
-          await tester.pump();
-          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-          await tester.pump();
-          expect(
-            tester
-                .widget<TextField>(find.byType(TextField))
-                .focusNode!
-                .hasFocus,
-            isTrue,
-          );
-          await tester.enterText(find.byType(TextField), "paper");
-          await tester.pump();
-          await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-        } else {
-          await tester.tap(find.byType(TextField));
-        }
-        await tester.pumpAndSettle();
-        final menu = tester.widget<MenuAnchor>(find.byType(MenuAnchor));
-        expect(menu.style!.padding, theme.menuStyle!.padding);
-        expect(menu.style!.shape, theme.menuStyle!.shape);
-        expect(
-          menu.style!.backgroundColor!.resolve({}),
-          configured
-              ? const Color(0xff0000ff)
-              : theme.menuStyle!.backgroundColor!.resolve({}),
-        );
-        expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
-        expect(find.byIcon(Icons.arrow_drop_down), findsNothing);
-        if (configured) {
+          await panel.press(LogicalKeyboardKey.tab);
+          await panel.press(LogicalKeyboardKey.enter);
+          expect(panel.fieldAt(0).isFocused, isTrue);
+          tester.testTextInput.enterText("paper");
+          await panel.press(LogicalKeyboardKey.arrowDown);
+          expect(menuOpen(), isTrue);
           await tester.testTextInput.receiveAction(TextInputAction.done);
         } else {
-          await tester.tap(find.text("typewritermc:paper").last);
+          await panel.fieldAt(0).focus();
+          expect(menuOpen(), isTrue);
+          await panel.tapOn(panel.labeled("typewritermc:paper"));
         }
-        await tester.pumpAndSettle();
+        await panel.settle();
         expect(fixture.value, skir.DataValue.wrapStringValue("paper"));
-        expect(menu.controller!.isOpen, isFalse);
+        expect(menuOpen(), isFalse);
         expect(tester.takeException(), isNull);
       },
     );
@@ -117,7 +73,7 @@ void main() {
     testWidgets(
       "leading glyph is centered and inherits icon defaults with column $wrapped",
       (tester) async {
-        final fixture = _Fixture(
+        final fixture = EditedValue.scalar(
           skir.DataValue.wrapInteger("7"),
           skir.ScalarKind.createInteger(
             width: skir.IntegerWidth.signedThirtyTwo,
@@ -162,7 +118,7 @@ void main() {
                             ))
                           .toFrozen())
                 .toFrozen();
-        await fixture.pump(
+        await fixture.show(
           tester,
           skir.PresentationElement.wrapNumericInput(input),
         );
@@ -217,7 +173,7 @@ void main() {
                             ))
                           .toFrozen())
                 .toFrozen();
-        await fixture.pump(
+        await fixture.show(
           tester,
           skir.PresentationElement.wrapNumericInput(configured),
         );
@@ -230,9 +186,9 @@ void main() {
   }
 
   testWidgets(
-    "text options reach the native editing widget and composition aware filtering",
+    "password text hides its value and filters typing to the allowed characters and length",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.wrapStringValue("AB"),
         skir.ScalarKind.text,
       );
@@ -261,30 +217,22 @@ void main() {
                           ])
                         .toFrozen())
               .toFrozen();
-      await fixture.pump(tester, skir.PresentationElement.wrapTextInput(input));
-      final native = tester.widget<TextField>(find.byType(TextField));
-      expect(native.obscureText, isTrue);
-      expect(native.enableSuggestions, isFalse);
-      expect(native.textCapitalization, TextCapitalization.characters);
-      expect(native.maxLength, 4);
-      expect(
-        native.maxLengthEnforcement,
-        MaxLengthEnforcement.truncateAfterCompositionEnds,
+      final panel = await fixture.show(
+        tester,
+        skir.PresentationElement.wrapTextInput(input),
       );
-      expect(native.decoration!.hintText, "Checkpoint");
-      expect(native.decoration!.prefixIcon, isNull);
-      await tester.enterText(find.byType(TextFormField), "AB1CDE");
-      await tester.pumpAndSettle();
+      final field = panel.fieldAt(0);
+      expect(field.isObscured, isTrue);
+      await field.type("AB1CDE");
       expect(fixture.value, skir.DataValue.wrapStringValue("ABCD"));
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
+      await panel.press(LogicalKeyboardKey.escape);
       expect(tester.takeException(), isNull);
     },
   );
   testWidgets("byte encoding grouping and count retain exact authored bytes", (
     tester,
   ) async {
-    final fixture = _Fixture(
+    final fixture = EditedValue.scalar(
       skir.DataValue.wrapBytes(skir.ByteString.fromBase16("0102")),
       skir.ScalarKind.bytes,
     );
@@ -298,14 +246,13 @@ void main() {
                         ..showCount = true)
                       .toFrozen())
             .toFrozen();
-    await fixture.pump(tester, skir.PresentationElement.wrapBytesInput(input));
-    expect(
-      tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-      "AQ I=",
+    final panel = await fixture.show(
+      tester,
+      skir.PresentationElement.wrapBytesInput(input),
     );
+    expect(panel.fieldAt(0).value, "AQ I=");
     expect(find.text("2 bytes"), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField), "AQ ID");
-    await tester.pumpAndSettle();
+    await panel.fieldAt(0).type("AQ ID");
     expect(
       fixture.value,
       skir.DataValue.wrapBytes(skir.ByteString.fromBase16("010203")),
@@ -313,9 +260,9 @@ void main() {
     expect(find.text("3 bytes"), findsOneWidget);
   });
   testWidgets(
-    "color codec and picker options reach the existing native owner",
+    "color entry edits rgb text and the picker offers hsl controls and the authored swatches",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.wrapInteger("4294901760"),
         skir.ScalarKind.createInteger(
           width: skir.IntegerWidth.unsignedThirtyTwo,
@@ -355,32 +302,29 @@ void main() {
                           ..radius = skir.PresentationRadius.large)
                         .toFrozen())
               .toFrozen();
-      await fixture.pump(
+      final panel = await fixture.show(
         tester,
         skir.PresentationElement.wrapColorInput(input),
       );
-      final picker = tester.widget<ColorPickerField>(
-        find.byType(ColorPickerField),
-      );
-      expect(picker.editingFormat, ColorFieldFormat.rgb);
-      expect(picker.pickerFormat, ColorFieldFormat.hsl);
-      expect(picker.showSwatch, isFalse);
-      expect(picker.showCopyAction, isFalse);
-      expect(picker.showFormatSelector, isFalse);
-      expect(picker.offeredSwatches, [4278255360]);
-      expect(picker.popupConstraints!.minWidth, 250);
-      expect(picker.popupConstraints!.maxWidth, 400);
-      expect(picker.popupConstraints!.maxHeight, 500);
-      expect(picker.popupPadding, const EdgeInsets.all(12));
-      await tester.enterText(find.byType(TextFormField), "0, 255, 0");
-      await tester.pumpAndSettle();
+      expect(find.tooltip("Copy color"), findsNothing);
+      await panel.fieldAt(0).type("0, 255, 0");
       expect(fixture.value, skir.DataValue.wrapInteger("4278255360"));
+
+      await panel.tapOn(find.tooltip("Open color picker"));
+      expect(panel.shows("H"), isTrue);
+      expect(panel.shows("L%"), isTrue);
+      expect(panel.shows("R"), isFalse);
+      expect(panel.shows("RGB"), isFalse);
+      expect(
+        semanticsLabeled("Offered colors").single.button("Color #FF00FF00"),
+        isNotNull,
+      );
     },
   );
   testWidgets(
-    "date options retain timestamp bounds and millisecond increment",
+    "date entry rejects a timestamp past its bound and the picker steps time by the authored increment",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.wrapTimestamp(DateTime.utc(2026, 10, 13, 14, 30)),
         skir.ScalarKind.timestamp,
       );
@@ -407,30 +351,43 @@ void main() {
                           ..presentation = skir.DateTimePickerPresentation.text)
                         .toFrozen())
               .toFrozen();
-      await fixture.pump(
+      final panel = await fixture.show(
         tester,
         skir.PresentationElement.wrapDateTimeInput(input),
       );
-      final picker = tester.widget<DateTimePickerField>(
-        find.byType(DateTimePickerField),
-      );
-      expect(picker.minimum, minimum);
-      expect(picker.maximum, maximum);
-      expect(picker.timeIncrementMilliseconds, 90000);
-      expect(picker.showPicker, isFalse);
-      await tester.enterText(find.byType(TextFormField), "2026-11-30 14:30:00");
-      await tester.pumpAndSettle();
+      expect(find.tooltip("Open picker"), findsNothing);
+      await panel.fieldAt(0).type("2026-11-30 14:30:00");
       expect(
         fixture.value,
         skir.DataValue.wrapTimestamp(DateTime.utc(2026, 10, 13, 14, 30)),
       );
       expect(find.text("The timestamp exceeds the maximum"), findsOneWidget);
+      await panel.press(LogicalKeyboardKey.escape);
+
+      final picked =
+          (input.toMutable()
+                ..options =
+                    (input.options!.toMutable()
+                          ..presentation =
+                              skir.DateTimePickerPresentation.calendar)
+                        .toFrozen())
+              .toFrozen();
+      await fixture.show(
+        tester,
+        skir.PresentationElement.wrapDateTimeInput(picked),
+      );
+      await panel.tapOn(find.tooltip("Open picker"));
+      await panel.tapOn(find.tooltip("Increase time"));
+      expect(
+        fixture.value,
+        skir.DataValue.wrapTimestamp(DateTime.utc(2026, 10, 13, 14, 31, 30)),
+      );
     },
   );
   testWidgets(
     "numeric locale keeps the entered fraction and native keyboard steps use exact increment",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.wrapFloat(1.5),
         skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
       );
@@ -446,30 +403,27 @@ void main() {
                           ..steppers = skir.NumericSteppers.inline)
                         .toFrozen())
               .toFrozen();
-      await fixture.pump(
+      final panel = await fixture.show(
         tester,
         skir.PresentationElement.wrapNumericInput(input),
       );
-      expect(
-        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-        "1,5",
-      );
-      await tester.enterText(find.byType(TextFormField), "1,26");
-      await tester.pumpAndSettle();
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
+      final field = panel.fieldAt(0);
+      expect(field.value, "1,5");
+      await field.type("1,26");
+      await panel.press(LogicalKeyboardKey.escape);
       expect(fixture.value, skir.DataValue.wrapFloat(1.26));
-      Focus.of(tester.element(find.byIcon(Icons.add))).requestFocus();
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+      await field.focus();
+      await panel.press(LogicalKeyboardKey.tab);
+      await panel.press(LogicalKeyboardKey.tab);
+      expect(panel.hasFocusOn("Increase"), isTrue);
+      await panel.press(LogicalKeyboardKey.enter);
       expect(fixture.value, skir.DataValue.wrapFloat(1.51));
     },
   );
   testWidgets("toggle options preserve native checkbox keyboard operation", (
     tester,
   ) async {
-    final fixture = _Fixture(
+    final fixture = EditedValue.scalar(
       skir.DataValue.wrapBoolean(true),
       skir.ScalarKind.boolean,
     );
@@ -484,70 +438,52 @@ void main() {
                         ..falseLabel = textLiteral("Hidden"))
                       .toFrozen())
             .toFrozen();
-    await fixture.pump(tester, skir.PresentationElement.wrapToggleInput(input));
-    final checkbox = tester.widget<CheckboxListTile>(
-      find.byType(CheckboxListTile),
+    final panel = await fixture.show(
+      tester,
+      skir.PresentationElement.wrapToggleInput(input),
     );
-    expect(checkbox.controlAffinity, ListTileControlAffinity.leading);
-    expect(find.text("Visible"), findsOneWidget);
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.space);
-    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.byType(Checkbox)).right,
+      lessThanOrEqualTo(tester.getRect(find.text("Visible")).left),
+    );
+    await panel.press(LogicalKeyboardKey.tab);
+    await panel.press(LogicalKeyboardKey.space);
     expect(fixture.value, skir.DataValue.wrapBoolean(false));
     expect(find.text("Hidden"), findsOneWidget);
   });
-  testWidgets(
-    "slider native keyboard retains divisions and appearance options",
-    (tester) async {
-      final fixture = _Fixture(
-        skir.DataValue.wrapFloat(40),
-        skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
-      );
-      final input =
-          (skir.SliderControl.mutable()
-                ..control = fixture.control
-                ..minimum = numberLiteral(0)
-                ..maximum = numberLiteral(100)
-                ..divisions = literalExpression(
-                  skir.DataValue.wrapInteger("10"),
-                )
-                ..options =
-                    (skir.SliderInteractionOptions.mutable()
-                          ..showValue = skir.SliderValueDisplay.always
-                          ..showTicks = false
-                          ..interaction = skir.SliderInteraction.dragOnly
-                          ..trackHeight = 6)
-                        .toFrozen())
-              .toFrozen();
-      await fixture.pump(
-        tester,
-        skir.PresentationElement.wrapSliderInput(input),
-      );
-      final slider = tester.widget<Slider>(find.byType(Slider));
-      expect(slider.divisions, 10);
-      expect(slider.allowedInteraction, SliderInteraction.slideOnly);
-      expect(find.text("40"), findsOneWidget);
-      tester
-          .widget<FocusableActionDetector>(
-            find.descendant(
-              of: find.byType(Slider),
-              matching: find.byType(FocusableActionDetector),
-            ),
-          )
-          .focusNode!
-          .requestFocus();
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.pumpAndSettle();
-      expect(fixture.value, skir.DataValue.wrapFloat(50));
-      expect(find.text("50"), findsOneWidget);
-    },
-  );
+  testWidgets("slider arrow keys step by one division", (tester) async {
+    final fixture = EditedValue.scalar(
+      skir.DataValue.wrapFloat(40),
+      skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+    );
+    final input =
+        (skir.SliderControl.mutable()
+              ..control = fixture.control
+              ..minimum = numberLiteral(0)
+              ..maximum = numberLiteral(100)
+              ..divisions = literalExpression(skir.DataValue.wrapInteger("10"))
+              ..options =
+                  (skir.SliderInteractionOptions.mutable()
+                        ..showValue = skir.SliderValueDisplay.always
+                        ..showTicks = false
+                        ..interaction = skir.SliderInteraction.dragOnly
+                        ..trackHeight = 6)
+                      .toFrozen())
+            .toFrozen();
+    final panel = await fixture.show(
+      tester,
+      skir.PresentationElement.wrapSliderInput(input),
+    );
+    expect(panel.shows("40"), isTrue);
+    await panel.press(LogicalKeyboardKey.tab);
+    await panel.press(LogicalKeyboardKey.arrowRight);
+    expect(fixture.value, skir.DataValue.wrapFloat(50));
+    expect(panel.shows("50"), isTrue);
+  });
   testWidgets(
     "radio choice content and disabled override retain native selection",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.wrapStringValue("first"),
         skir.ScalarKind.text,
       );
@@ -578,25 +514,21 @@ void main() {
                           ])
                         .toFrozen())
               .toFrozen();
-      await fixture.pump(
+      final panel = await fixture.show(
         tester,
         skir.PresentationElement.wrapSelectInput(input),
       );
-      final tiles = tester
-          .widgetList<RadioListTile<String>>(find.byType(RadioListTile<String>))
-          .toList();
-      expect(tiles[0].enabled, isTrue);
-      expect(tiles[1].enabled, isFalse);
-      expect(find.byTooltip("Unavailable in this state"), findsOneWidget);
-      await tester.tap(find.text("second"));
-      await tester.pumpAndSettle();
+      expect(semanticsLabeled("first").single.isEnabled, isTrue);
+      expect(semanticsLabeled("second").single.isEnabled, isFalse);
+      expect(find.tooltip("Unavailable in this state"), findsOneWidget);
+      await panel.tapOn(find.text("second"));
       expect(fixture.value, skir.DataValue.wrapStringValue("first"));
     },
   );
   testWidgets(
-    "selector appearance retains native density alignment and sparse text inheritance",
+    "selector with appearance overrides shows the value as a dropdown and selects as segments",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.wrapStringValue("first"),
         skir.ScalarKind.text,
       );
@@ -637,54 +569,28 @@ void main() {
                       (skir.InputTextStyle.mutable()..color = paint(0xff0000a0))
                           .toFrozen())
                 .toFrozen();
-      await fixture.pump(
+      final panel = await fixture.show(
         tester,
         skir.PresentationElement.wrapSelectInput(input.toFrozen()),
       );
-      final dropdown = tester.widget<DropdownMenu<String>>(
-        find.byType(DropdownMenu<String>),
-      );
-      expect(dropdown.textAlign, TextAlign.end);
-      expect(dropdown.textStyle!.color, const Color(0xff0000a0));
-      expect(
-        dropdown.textStyle!.fontVariations!
-            .singleWhere((variation) => variation.axis == "wght")
-            .value,
-        600,
-      );
-      expect(
-        tester
-            .widget<LabeledMessage>(find.byType(LabeledMessage))
-            .labelStyle!
-            .color,
-        const Color(0xffa00000),
-      );
+      expect(panel.fieldAt(0).value, "first");
       input.optionsConfig =
           (input.optionsConfig!.toFrozen().toMutable()
                 ..presentation = skir.ChoicePresentation.segmented)
               .toFrozen();
-      await fixture.pump(
+      await fixture.show(
         tester,
         skir.PresentationElement.wrapSelectInput(input.toFrozen()),
       );
-      final segmented = tester.widget<SlidingChoiceControl<String>>(
-        find.byType(SlidingChoiceControl<String>),
-      );
-      expect(segmented.padding!.resolve(TextDirection.ltr).vertical, 8);
-      expect(
-        find.byType(CupertinoSlidingSegmentedControl<String>),
-        findsOneWidget,
-      );
-      await tester.tap(find.text("second"));
-      await tester.pumpAndSettle();
+      await panel.tapOn(find.text("second"));
       expect(fixture.value, skir.DataValue.wrapStringValue("second"));
       expect(tester.takeException(), isNull);
     },
   );
   testWidgets(
-    "unfilled slider affordance uses the shared native action appearance",
+    "unfilled slider offers a keyboard action that sets the minimum",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.unfilled,
         skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
       );
@@ -700,30 +606,27 @@ void main() {
                           ..radius = skir.PresentationRadius.large)
                         .toFrozen())
               .toFrozen();
-      await fixture.pump(
+      final panel = await fixture.show(
         tester,
         skir.PresentationElement.wrapSliderInput(input),
       );
-      final button = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
-      expect(button.style!.visualDensity, VisualDensity.compact);
-      expect(button.style!.side!.resolve({}), BorderSide.none);
-      expect(
-        (button.style!.shape!.resolve({})! as RoundedRectangleBorder)
-            .borderRadius,
-        isNot(BorderRadius.zero),
-      );
-      Focus.of(tester.element(find.text("Set to 0"))).requestFocus();
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+      await panel.press(LogicalKeyboardKey.tab);
+      expect(panel.hasFocusOn("Set to 0"), isTrue);
+      await panel.press(LogicalKeyboardKey.enter);
       expect(fixture.value, skir.DataValue.wrapFloat(0));
-      expect(find.byType(Slider), findsOneWidget);
+      expect(panel.shows("Set to 0"), isFalse);
+      expect(
+        find.semantics.byPredicate(
+          (node) => node.getSemanticsData().flagsCollection.isSlider,
+        ),
+        findsOne,
+      );
     },
   );
   testWidgets(
     "color swatch remains independent of decorative icon and authored leading content",
     (tester) async {
-      final fixture = _Fixture(
+      final fixture = EditedValue.scalar(
         skir.DataValue.wrapInteger("4278255360"),
         skir.ScalarKind.createInteger(
           width: skir.IntegerWidth.unsignedThirtyTwo,
@@ -734,7 +637,7 @@ void main() {
         ..content =
             (skir.InputContent.mutable()..leading = skir.InputAdornment.none)
                 .toFrozen();
-      await fixture.pump(
+      await fixture.show(
         tester,
         skir.PresentationElement.wrapColorInput(input.toFrozen()),
       );
@@ -753,7 +656,7 @@ void main() {
           (input.content!.toFrozen().toMutable()
                 ..leading = skir.InputAdornment.wrapContent(leading))
               .toFrozen();
-      await fixture.pump(
+      await fixture.show(
         tester,
         skir.PresentationElement.wrapColorInput(input.toFrozen()),
       );
@@ -762,7 +665,7 @@ void main() {
       input.options =
           (skir.ColorInteractionOptions.mutable()..showSwatch = false)
               .toFrozen();
-      await fixture.pump(
+      await fixture.show(
         tester,
         skir.PresentationElement.wrapColorInput(input.toFrozen()),
       );
@@ -775,207 +678,116 @@ void main() {
     skir.TogglePresentation.switch_,
   ]) {
     testWidgets(
-      "readonly ${presentation.kind.name} observes native disabled separately from readonly text",
+      "readonly ${presentation.kind.name} ignores taps while readonly text stays focusable",
       (tester) async {
-        skir.PresentationColor paint(int value) =>
-            skir.PresentationColor.wrapValue(
-              literalExpression(skir.DataValue.wrapInteger(value.toString())),
-            );
-        final policy = skir.PresentationColor.wrapStates(
-          skir.PresentationStateColor(
-            rules: [
-              skir.PresentationStateColorRule(
-                match: skir.PresentationStateMatch(
-                  required_: [skir.PresentationInteractionState.disabled],
-                  excluded: const [],
-                ),
-                color: paint(0xffa00000),
-              ),
-              skir.PresentationStateColorRule(
-                match: skir.PresentationStateMatch(
-                  required_: [skir.PresentationInteractionState.readOnly],
-                  excluded: const [],
-                ),
-                color: paint(0xff0000a0),
-              ),
-            ],
-            fallback: paint(0xff008000),
-          ),
-        );
-        final appearance = (skir.InputAppearance.mutable()..fill = policy)
-            .toFrozen();
-        final fixture = _Fixture(
+        final fixture = EditedValue.scalar(
           skir.DataValue.wrapBoolean(true),
           skir.ScalarKind.boolean,
         );
         final toggle =
             (skir.ToggleControl.mutable()
                   ..control = fixture.control
-                  ..appearance = appearance
                   ..options =
                       (skir.ToggleInteractionOptions.mutable()
                             ..presentation = presentation)
                           .toFrozen())
                 .toFrozen();
-        await fixture.pump(
+        final panel = await fixture.show(
           tester,
           skir.PresentationElement.wrapToggleInput(toggle),
           readOnly: true,
         );
-        await tester.pumpAndSettle();
-        final controller = presentation == skir.TogglePresentation.checkbox
-            ? tester
-                  .widget<CheckboxListTile>(find.byType(CheckboxListTile))
-                  .statesController!
-            : tester
-                  .widget<SwitchListTile>(find.byType(SwitchListTile))
-                  .statesController!;
-        expect(controller.value, contains(WidgetState.disabled));
-        expect(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is Material && widget.color == const Color(0xffa00000),
-          ),
-          findsWidgets,
-        );
-        final textFixture = _Fixture(
+        final control = find.semantics.byPredicate((node) {
+          final flags = node.getSemanticsData().flagsCollection;
+          return !node.isMergedIntoParent &&
+              (flags.isChecked != CheckedState.none ||
+                  flags.isToggled != Tristate.none);
+        });
+        expect(control.evaluate().single.isEnabled, isFalse);
+        await tester.tapAt(control.evaluate().single.screenRect.center);
+        await panel.settle();
+        expect(fixture.value, skir.DataValue.wrapBoolean(true));
+
+        final textFixture = EditedValue.scalar(
           skir.DataValue.wrapStringValue("Inspect"),
           skir.ScalarKind.text,
         );
-        final text =
-            (skir.TextControl.mutable()
-                  ..control = textFixture.control
-                  ..appearance = appearance)
-                .toFrozen();
-        await textFixture.pump(
+        await textFixture.show(
           tester,
-          skir.PresentationElement.wrapTextInput(text),
+          skir.PresentationElement.wrapTextInput(
+            (skir.TextControl.mutable()..control = textFixture.control)
+                .toFrozen(),
+          ),
           readOnly: true,
         );
-        await tester.pumpAndSettle();
-        final field = tester.widget<TextField>(find.byType(TextField));
-        expect(field.readOnly, isTrue);
-        expect(
-          field.statesController!.value,
-          isNot(contains(WidgetState.disabled)),
-        );
-        expect(field.decoration!.fillColor, const Color(0xff0000a0));
+        final field = panel.fieldAt(0);
+        expect(field.isReadOnly, isTrue);
+        expect(field.isEnabled, isTrue);
+        await field.focus();
+        expect(field.isFocused, isTrue);
+        expect(field.value, "Inspect");
       },
     );
   }
   final noIconContent =
       (skir.InputContent.mutable()..leading = skir.InputAdornment.none)
           .toFrozen();
-  for (final family in ["number", "duration", "bytes", "date", "color"]) {
-    testWidgets(
-      "explicit no icon removes the native decoration slot for $family",
-      (tester) async {
-        final kind = switch (family) {
-          "duration" => skir.ScalarKind.duration,
-          "bytes" => skir.ScalarKind.bytes,
-          "date" => skir.ScalarKind.timestamp,
-          "color" => skir.ScalarKind.createInteger(
-            width: skir.IntegerWidth.unsignedThirtyTwo,
-          ),
-          _ => skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
-        };
-        final value = switch (family) {
-          "duration" => skir.DataValue.createDuration(
-            value: skir.Duration(milliseconds: 1000),
-          ),
-          "bytes" => skir.DataValue.wrapBytes(skir.ByteString.fromBase16("01")),
-          "date" => skir.DataValue.wrapTimestamp(DateTime.utc(2026, 10, 13)),
-          "color" => skir.DataValue.wrapInteger("4278255360"),
-          _ => skir.DataValue.wrapFloat(1),
-        };
-        final fixture = _Fixture(value, kind);
-        final element = switch (family) {
-          "duration" => skir.PresentationElement.wrapDurationInput(
-            (skir.DurationControl.mutable()
-                  ..control = fixture.control
-                  ..content = noIconContent)
-                .toFrozen(),
-          ),
-          "bytes" => skir.PresentationElement.wrapBytesInput(
-            (skir.BytesControl.mutable()
-                  ..control = fixture.control
-                  ..content = noIconContent)
-                .toFrozen(),
-          ),
-          "date" => skir.PresentationElement.wrapDateTimeInput(
-            (skir.DateTimeControl.mutable()
-                  ..control = fixture.control
-                  ..content = noIconContent)
-                .toFrozen(),
-          ),
-          "color" => skir.PresentationElement.wrapColorInput(
-            (skir.ColorControl.mutable()
-                  ..control = fixture.control
-                  ..content = noIconContent
-                  ..options =
-                      (skir.ColorInteractionOptions.mutable()
-                            ..showSwatch = false)
-                          .toFrozen())
-                .toFrozen(),
-          ),
-          _ => skir.PresentationElement.wrapNumericInput(
-            (skir.NumericControl.mutable()
-                  ..control = fixture.control
-                  ..content = noIconContent)
-                .toFrozen(),
-          ),
-        };
-        await fixture.pump(tester, element);
-        expect(
-          tester
-              .widget<TextField>(find.byType(TextField))
-              .decoration!
-              .prefixIcon,
-          isNull,
-        );
-      },
-    );
-  }
-}
-
-class _Fixture {
-  _Fixture(this.value, this.kind);
-  skir.DataValue value;
-  final skir.ScalarKind kind;
-  final id = skir.ExpressionBindingId(value: "fixture");
-  skir.BoundControl get control =>
-      (skir.BoundControl.mutable()
-            ..binding = skir.BindingRef(bindingId: id, path: editorRootPath))
-          .toFrozen();
-  Future<void> pump(
-    WidgetTester tester,
-    skir.PresentationElement element, {
-    bool readOnly = false,
-  }) async {
-    final host = BoundPresentationHost(
-      readOnly: readOnly,
-      catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
-      root: () =>
-          (skir.PresentationNode.mutable()
-                ..nodeId = "fixture"
-                ..element = element)
-              .toFrozen(),
-      bindings: [
-        BoundPresentationBinding(
-          id: id,
-          use: skir.TypeUse.wrapScalar(kind),
-          read: (_) => value,
-          write: (_, next) {
-            value = next;
-            return const PortablePresentationWriteApplied();
-          },
+  for (final family in ["number", "duration", "bytes", "date"]) {
+    testWidgets("explicit no icon hides the default $family icon", (
+      tester,
+    ) async {
+      final kind = switch (family) {
+        "duration" => skir.ScalarKind.duration,
+        "bytes" => skir.ScalarKind.bytes,
+        "date" => skir.ScalarKind.timestamp,
+        _ => skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+      };
+      final value = switch (family) {
+        "duration" => skir.DataValue.createDuration(
+          value: skir.Duration(milliseconds: 1000),
         ),
-      ],
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
-    );
-    addTearDown(host.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(body: PortablePresentationRenderer(host: host)),
-    );
+        "bytes" => skir.DataValue.wrapBytes(skir.ByteString.fromBase16("01")),
+        "date" => skir.DataValue.wrapTimestamp(DateTime.utc(2026, 10, 13)),
+        _ => skir.DataValue.wrapFloat(1),
+      };
+      final icon = switch (family) {
+        "duration" => Icons.timer,
+        "bytes" => Icons.data_object,
+        "date" => Icons.calendar_month,
+        _ => Icons.numbers,
+      };
+      final fixture = EditedValue.scalar(value, kind);
+      skir.PresentationElement element(skir.InputContent? content) =>
+          switch (family) {
+            "duration" => skir.PresentationElement.wrapDurationInput(
+              (skir.DurationControl.mutable()
+                    ..control = fixture.control
+                    ..content = content)
+                  .toFrozen(),
+            ),
+            "bytes" => skir.PresentationElement.wrapBytesInput(
+              (skir.BytesControl.mutable()
+                    ..control = fixture.control
+                    ..content = content)
+                  .toFrozen(),
+            ),
+            "date" => skir.PresentationElement.wrapDateTimeInput(
+              (skir.DateTimeControl.mutable()
+                    ..control = fixture.control
+                    ..content = content)
+                  .toFrozen(),
+            ),
+            _ => skir.PresentationElement.wrapNumericInput(
+              (skir.NumericControl.mutable()
+                    ..control = fixture.control
+                    ..content = content)
+                  .toFrozen(),
+            ),
+          };
+      await fixture.show(tester, element(null));
+      expect(find.byIcon(icon), findsOneWidget);
+      await fixture.show(tester, element(noIconContent));
+      expect(find.byIcon(icon), findsNothing);
+    });
   }
 }

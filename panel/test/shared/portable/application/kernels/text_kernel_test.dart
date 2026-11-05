@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 /// Number and duration parsing over text far longer than any portable result:
 /// the outcome depends on the significant digits only, never on how many
@@ -19,14 +20,14 @@ void main() {
   test("a decimal beyond the digit limit fails before it is built", () {
     expect(
       () => kernel.parseDecimal("1e200000"),
-      _fails(skir.PortableFailures.magnitudeLimit),
+      throwsPortableFailure(skir.PortableFailures.magnitudeLimit),
     );
   });
 
   test("an exponent beyond 32 bits is not a number", () {
     expect(
       () => kernel.parseDecimal("1e${"9" * 100000}"),
-      _fails(skir.PortableFailures.invalidNumberText),
+      throwsPortableFailure(skir.PortableFailures.invalidNumberText),
     );
     expect(kernel.parseDecimal("1e${zeros}3").toString(), "1000");
   });
@@ -34,7 +35,7 @@ void main() {
   test("a duration component of too many digits exceeds the range", () {
     expect(
       () => kernel.parseDuration("P${"9" * 100000}D"),
-      _fails(skir.PortableFailures.durationRange),
+      throwsPortableFailure(skir.PortableFailures.durationRange),
     );
     expect(kernel.parseDuration("PT${zeros}90S"), const Duration(seconds: 90));
   });
@@ -42,16 +43,8 @@ void main() {
   test("an integer whose digits exceed the limit in its radix fails", () {
     expect(
       () => kernel.parseInteger("z" * 13000, 36),
-      _fails(skir.PortableFailures.magnitudeLimit),
+      throwsPortableFailure(skir.PortableFailures.magnitudeLimit),
     );
     expect(kernel.parseInteger("${zeros}ff", 16), BigInt.from(255));
   });
 }
-
-Matcher _fails(skir.FailureId failure) => throwsA(
-  isA<skir.PortableOperationFailure>().having(
-    (error) => error.failure,
-    "failure",
-    failure,
-  ),
-);

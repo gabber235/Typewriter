@@ -1,12 +1,8 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.GeneratedProviderDeployment
-import com.typewritermc.discovery.GeneratedProviderLoader
-import com.typewritermc.discovery.RuntimeRegistrar
-import com.typewritermc.discovery.RuntimeScope
-import com.typewritermc.engine.LoadedPublishedContent
+import com.typewritermc.engine.runtime.testing.RecordingRegistrar
+import com.typewritermc.engine.runtime.testing.content
+import com.typewritermc.engine.runtime.testing.runtime
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
@@ -15,13 +11,13 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
 val DiscoveryEngineRuntimeTest by testSuite {
+    val emptyCatalog = DefaultCheckedCatalog(CatalogGeneration(value = "engine runtime test"), emptyList())
+
     test("registers discovered behavior and closes owned resources in reverse order") {
         runTest {
             val events = mutableListOf<String>()
@@ -52,7 +48,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
         }
     }
 
-    test("applies each fetched publication once without ordering its identity") {
+    test("refetching an applied publication leaves the engine unchanged") {
         runTest {
             val revisions = mutableListOf<Long>()
             val fixture = runtime(emptyList(), revisions)
@@ -73,8 +69,8 @@ val DiscoveryEngineRuntimeTest by testSuite {
         runTest {
             val gateway =
                 ResourceGraphContentGateway(
-                    catalog = EMPTY_CATALOG,
-                    bindings = FactoryNativeBindingRegistry(EMPTY_CATALOG, emptyList()),
+                    catalog = emptyCatalog,
+                    bindings = FactoryNativeBindingRegistry(emptyCatalog, emptyList()),
                     relations = emptyList(),
                 )
             val active = content(1, '4')
@@ -87,7 +83,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
                         descriptor = active.descriptor.copy(formatRevision = 3),
                     ),
                 )
-            }
+            }.message shouldBe "Unsupported compiled content format 3."
 
             gateway.graph shouldBeSameInstanceAs graph
         }
@@ -132,71 +128,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
 
             fixture.runtime.stop()
 
-            fixture.runtime.ownsDeployment() shouldBe false
             shouldThrow<IllegalStateException> { fixture.deployment.retain() }
         }
     }
 }
-
-private fun TestScope.runtime(
-    registrars: List<RuntimeRegistrar>,
-    revisions: MutableList<Long>? = null,
-    enforceImplementationCompatibility: Boolean = true,
-): RuntimeFixture {
-    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(emptyMap()), DiscoveryDomains.Execution)
-    return RuntimeFixture(
-        ReloadableEngineRuntime(
-            deployment = deployment,
-            registrars = registrars,
-            parentScope = this,
-            implementationToken = "implementation",
-            enforceImplementationCompatibility = enforceImplementationCompatibility,
-            contentGateway =
-                revisions?.let { values ->
-                    EngineContentGateway {
-                        values +=
-                            it.descriptor.publication.value
-                                .substringAfter(":")
-                                .toLong()
-                    }
-                },
-        ),
-        deployment,
-    )
-}
-
-private fun content(
-    revision: Long,
-    digestCharacter: Char,
-    implementationToken: String = "implementation",
-): LoadedPublishedContent =
-    LoadedPublishedContent(
-        PublishedContent(
-            publication = PublicationId(value = "publication:$revision"),
-            formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-            catalog = CatalogGeneration(value = "catalog:1"),
-            implementationToken = implementationToken,
-            outputs = emptyList(),
-        ),
-        emptyList(),
-    )
-
-private data class RuntimeFixture(
-    val runtime: ReloadableEngineRuntime,
-    val deployment: GeneratedProviderDeployment,
-)
-
-private class RecordingRegistrar(
-    private val name: String,
-    private val events: MutableList<String>,
-    private val fail: Boolean = false,
-) : RuntimeRegistrar {
-    context(scope: RuntimeScope)
-    override suspend fun register() {
-        events += "register:$name"
-        scope.own { events += "close:$name" }
-        if (fail) error("registration failed")
-    }
-}
-
-private val EMPTY_CATALOG = DefaultCheckedCatalog(CatalogGeneration(value = "engine runtime test"), emptyList())

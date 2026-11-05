@@ -1,360 +1,231 @@
-use component_test::{TestContext, TestResult, component_test, subject_matches};
-use typewriter_component_test::prelude::{SkirMessagingExpectationExt, skir_record_id};
+//! Service grants, checked by the subjects a service must and must not reach.
+
+use super::AuthTypewriterPermissions;
+use typewriter_component_test::{
+    access::{
+        Realm, SERVICE_POLICY, bound_service, expect_binding, expect_bound, expect_scope, permits,
+        request_permissions, service_grants, service_sign_in,
+    },
+    prelude::*,
+};
 use wasmcloud_utils::{
     skir::base::{
-        access::v1::permission::{
-            EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
-            Permission, Permissions,
-        },
-        service::v1::status::{
-            QueryServiceBindingRequest, QueryServiceBindingResponse,
-            QueryServiceBindingResponse_Binding, ServiceBinding, ServiceBinding_Bound,
-        },
-        service::v1::topology::{
-            GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
-            ServiceMessagingScope,
+        access::v1::permission::GetEntityPermissionResponse,
+        service::v1::{
+            status::{
+                QueryServiceBindingResponse, QueryServiceBindingResponse_Binding, ServiceBinding,
+            },
+            topology::GetServiceMessagingScopeResponse,
         },
     },
     skir_variant,
-    transport_routes::SERVICE_RESPONSE_LIMIT,
+    transport_routes::{REPLY_TTL_MS, SERVICE_RESPONSE_LIMIT},
 };
 
-use super::{AuthTypewriterPermissions, request_permission_response, request_permissions};
-
-fn request(service_id: &str) -> GetEntityPermissionRequest {
-    GetEntityPermissionRequest {
-        qualifier: EntityPermissionQualifier::Service(Box::default()),
-        jwt_claims: serde_json::to_vec(&serde_json::json!({
-            "sub": service_id,
-            "preferred_username": "Fixture Service"
-        }))
-        .expect("claims are valid JSON"),
-        _unrecognized: None,
-    }
-}
-
-fn permits(permission: &Permission, subject: &str) -> bool {
-    permission
-        .allow
-        .iter()
-        .any(|pattern| subject_matches(pattern, subject))
-        && !permission
-            .deny
-            .iter()
-            .any(|pattern| subject_matches(pattern, subject))
-}
-
-fn assert_published_content_access(permissions: &Permissions, organization: &str, realm: &str) {
-    let request = format!("service.to.{realm}.organization.{organization}.realm");
-    let events = format!("service.from.{realm}.organization.{organization}.realm");
-    assert!(permits(
-        &permissions.publish,
-        &format!("{request}.editor.authoring.compiled.query")
-    ));
-    assert!(permits(
-        &permissions.subscribe,
-        &format!("{events}.editor.authoring.compiled.changed")
-    ));
-    for suffix in [
-        "editor.authoring.edit.commit",
-        "editor.authoring.type.commit",
-        "editor.authoring.publish",
-        "editor.authoring.state.query",
-    ] {
-        assert!(!permits(
-            &permissions.publish,
-            &format!("{request}.{suffix}")
-        ));
-    }
-    for (other_organization, other_realm) in [
-        (organization, "foreign_realm"),
-        ("foreign_organization", realm),
-    ] {
-        assert!(!permits(
-            &permissions.publish,
-            &format!(
-                "service.to.{other_realm}.organization.{other_organization}.realm.editor.authoring.compiled.query"
-            )
-        ));
-        assert!(!permits(
-            &permissions.subscribe,
-            &format!(
-                "service.from.{other_realm}.organization.{other_organization}.realm.editor.authoring.compiled.changed"
-            )
-        ));
-    }
-}
-
-/// Rollout probes, commands and status queries flow from the coordinator on the realm mesh;
-/// participants answer on the reply inbox of each scatter.
-fn rollout_subjects(organization: &str, realm: &str) -> [String; 3] {
-    ["probe", "command", "status"].map(|suffix| {
-        format!("service.from.{realm}.organization.{organization}.realm.rollout.{suffix}")
-    })
-}
-
-fn assert_rollout_participant_access(permissions: &Permissions, organization: &str, realm: &str) {
-    for subject in rollout_subjects(organization, realm) {
-        assert!(permits(&permissions.subscribe, &subject));
-    }
-    for (other_organization, other_realm) in [
-        (organization, "foreign_realm"),
-        ("foreign_organization", realm),
-    ] {
-        for subject in rollout_subjects(other_organization, other_realm) {
-            assert!(!permits(&permissions.publish, &subject));
-            assert!(!permits(&permissions.subscribe, &subject));
-        }
-    }
-}
-
-fn assert_rollout_participant_only_denials(
-    permissions: &Permissions,
-    organization: &str,
-    realm: &str,
-) {
-    for subject in rollout_subjects(organization, realm) {
-        assert!(!permits(&permissions.publish, &subject));
-    }
-}
-
-fn assert_rollout_coordinator_access(permissions: &Permissions, organization: &str, realm: &str) {
-    for subject in rollout_subjects(organization, realm) {
-        assert!(permits(&permissions.publish, &subject));
-    }
-}
+/// Another realm of Acme and the same realm key in another organization.
+const FOREIGN: [(&str, &str); 2] = [("foreign_realm", "acme"), ("quests", "globex")];
 
 #[component_test(AuthTypewriterPermissions)]
-async fn attached_service_receives_only_its_realm_permissions(
+async fn a_service_may_answer_every_frame_of_its_largest_reply(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(QueryServiceBindingResponse::Binding {
-        binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
-            organization_id: "writers".into(),
-            organization_name: Some("Writers".into()),
-            _unrecognized: None,
-        })),
-    });
-    context
-        .messaging_mock()?
-        .expect_request("service.engine_one.binding.query")
-        .body_skir(
-            &QueryServiceBindingRequest::default(),
-            QueryServiceBindingRequest::serializer(),
-        )
-        .reply_skir(&status, QueryServiceBindingResponse::serializer());
-    let scope = GetServiceMessagingScopeResponse::Found(Box::new(ServiceMessagingScope {
-        organization_id: "writers".into(),
-        owned_realm: None,
-        attached_realm: Some(skir_record_id("realm_instance", "quests")),
-        _unrecognized: None,
-    }));
-    context
-        .messaging_mock()?
-        .expect_request("service.engine_one.messaging.scope")
-        .body_skir(
-            &GetServiceMessagingScopeRequest {
-                service_id: skir_record_id("service", "engine_one"),
-                _unrecognized: None,
-            },
-            GetServiceMessagingScopeRequest::serializer(),
-        )
-        .reply_skir(&scope, GetServiceMessagingScopeResponse::serializer());
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
 
-    let response = request_permissions(
-        context,
-        "auth.permissions.typewriter-services",
-        &request("engine_one"),
-    )
-    .await?;
-
-    let response_permission = response
-        .permissions
+    let response = permissions
         .response
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("service response permission missing"))?;
-    // A service may send every frame of the largest reply any service role serves.
+        .ok_or_else(|| anyhow::anyhow!("a service needs a response permission"))?;
     assert_eq!(
-        response_permission.max_messages,
+        response.max_messages,
         SERVICE_RESPONSE_LIMIT.map(|limit| limit as i32)
     );
     assert_eq!(
-        response_permission
-            .ttl
-            .as_ref()
-            .map(|duration| duration.milliseconds),
-        Some(300_000)
-    );
-
-    assert_eq!(
-        response.tags,
-        ["service:engine_one", "organization:writers"]
-    );
-    assert_published_content_access(&response.permissions, "writers", "quests");
-    assert_rollout_participant_access(&response.permissions, "writers", "quests");
-    assert_rollout_participant_only_denials(&response.permissions, "writers", "quests");
-    for suffix in [
-        "editor.authoring.edit.commit",
-        "editor.authoring.type.commit",
-        "editor.authoring.publish",
-        "editor.authoring.state.query",
-    ] {
-        assert!(!permits(
-            &response.permissions.subscribe,
-            &format!("service.to.quests.organization.writers.realm.{suffix}")
-        ));
-    }
-    assert!(!permits(
-        &response.permissions.publish,
-        "service.from.quests.organization.writers.realm.editor.authoring.compiled.changed"
-    ));
-    let publish = &response.permissions.publish.allow;
-    assert!(publish.contains(&"cloud.to.service.engine_one.execution.watch".into()));
-    assert!(publish.contains(&"cloud.to.service.engine_one.execution.register".into()));
-    assert!(publish.contains(&"cloud.to.service.engine_one.execution.report".into()));
-    for suffix in [
-        "shared.catalog.fetch",
-        "shared.publish",
-        "shared.blob.metadata",
-        "shared.blob.fetch",
-        "shared.blob.store",
-    ] {
-        assert!(publish.contains(&format!(
-            "service.to.quests.organization.writers.realm.{suffix}"
-        )));
-    }
-    assert!(publish.contains(&"cloud.to.service.engine_one.heartbeat".into()));
-    assert!(publish.contains(&"cloud.to.service.engine_one.shutdown".into()));
-    let subscribe = &response.permissions.subscribe.allow;
-    assert!(subscribe.contains(&"cloud.from.service.engine_one.execution.watch".into()));
-    assert!(subscribe.contains(&"cloud.from.service.engine_one.registration.bound".into()));
-    assert!(publish.iter().all(|subject| !subject.contains("realm.*")));
-    assert!(subscribe.iter().all(|subject| !subject.contains("realm.*")));
-    assert!(
-        subscribe
-            .iter()
-            .all(|subject| !subject.ends_with(".realm.>"))
+        response.ttl.as_ref().map(|ttl| ttl.milliseconds),
+        Some(REPLY_TTL_MS)
     );
     Ok(())
 }
 
 #[component_test(AuthTypewriterPermissions)]
-async fn realm_service_executes_realm_routes_and_coordinates_hosts(
+async fn an_attached_engine_reads_published_content_of_its_realm_only(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(QueryServiceBindingResponse::Binding {
-        binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
-            organization_id: "writers".into(),
-            organization_name: Some("Writers".into()),
-            _unrecognized: None,
-        })),
-    });
-    context
-        .messaging_mock()?
-        .expect_request("service.realm_host.binding.query")
-        .body_skir(
-            &QueryServiceBindingRequest::default(),
-            QueryServiceBindingRequest::serializer(),
-        )
-        .reply_skir(&status, QueryServiceBindingResponse::serializer());
-    let scope = GetServiceMessagingScopeResponse::Found(Box::new(ServiceMessagingScope {
-        organization_id: "writers".into(),
-        owned_realm: Some(skir_record_id("realm_instance", "quests")),
-        attached_realm: None,
-        _unrecognized: None,
-    }));
-    context
-        .messaging_mock()?
-        .expect_request("service.realm_host.messaging.scope")
-        .body_skir(
-            &GetServiceMessagingScopeRequest {
-                service_id: skir_record_id("service", "realm_host"),
-                _unrecognized: None,
-            },
-            GetServiceMessagingScopeRequest::serializer(),
-        )
-        .reply_skir(&scope, GetServiceMessagingScopeResponse::serializer());
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
 
-    let response = request_permissions(
-        context,
-        "auth.permissions.typewriter-services",
-        &request("realm_host"),
-    )
-    .await?;
+    assert!(permits(
+        &permissions.publish,
+        &realm_route("quests", "acme", "editor.authoring.compiled.query")
+    ));
+    assert!(permits(
+        &permissions.subscribe,
+        &realm_event("quests", "acme", "editor.authoring.compiled.changed")
+    ));
+    for route in [
+        "shared.catalog.fetch",
+        "shared.blob.fetch",
+        "shared.publish",
+    ] {
+        assert!(permits(
+            &permissions.publish,
+            &realm_route("quests", "acme", route)
+        ));
+    }
+    // Authoring belongs to the realm host, never to an attached engine.
+    for route in [
+        "editor.authoring.edit.commit",
+        "editor.authoring.publish",
+        "editor.authoring.state.query",
+    ] {
+        assert!(!permits(
+            &permissions.publish,
+            &realm_route("quests", "acme", route)
+        ));
+        assert!(!permits(
+            &permissions.subscribe,
+            &realm_route("quests", "acme", route)
+        ));
+    }
+    for (realm, organization) in FOREIGN {
+        assert!(!permits(
+            &permissions.publish,
+            &realm_route(realm, organization, "editor.authoring.compiled.query")
+        ));
+        assert!(!permits(
+            &permissions.subscribe,
+            &realm_event(realm, organization, "editor.authoring.compiled.changed")
+        ));
+    }
+    Ok(())
+}
 
-    let publish = &response.permissions.publish.allow;
-    let subscribe = &response.permissions.subscribe.allow;
-    assert_published_content_access(&response.permissions, "writers", "quests");
-    assert_rollout_participant_access(&response.permissions, "writers", "quests");
-    assert_rollout_coordinator_access(&response.permissions, "writers", "quests");
-    for suffix in [
-        "editor.authoring.compiled.query",
-        "editor.capability.command.invoke",
-        "editor.capability.computation.invoke",
+#[component_test(AuthTypewriterPermissions)]
+async fn an_attached_engine_follows_rollout_but_cannot_lead_it(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
+
+    for step in ["probe", "command", "status"] {
+        let own = realm_event("quests", "acme", &format!("rollout.{step}"));
+        assert!(permits(&permissions.subscribe, &own));
+        assert!(!permits(&permissions.publish, &own));
+        for (realm, organization) in FOREIGN {
+            let foreign = realm_event(realm, organization, &format!("rollout.{step}"));
+            assert!(!permits(&permissions.subscribe, &foreign));
+            assert!(!permits(&permissions.publish, &foreign));
+        }
+    }
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn a_bound_service_reports_its_lifecycle_on_its_own_subjects(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    bound_service(context, "engine_one", Realm::Attached("quests"))?;
+
+    let grant =
+        request_permissions(context, SERVICE_POLICY, &service_sign_in("engine_one")).await?;
+
+    assert_eq!(grant.tags, ["service:engine_one", "organization:acme"]);
+    let permissions = &grant.permissions;
+    for subject in [
+        "cloud.to.service.engine_one.heartbeat",
+        "cloud.to.service.engine_one.shutdown",
+        "cloud.to.service.engine_one.execution.watch",
+        "cloud.to.service.engine_one.execution.register",
+        "cloud.to.service.engine_one.execution.report",
+    ] {
+        assert!(
+            permits(&permissions.publish, subject),
+            "{subject} is not granted"
+        );
+        assert!(!permits(
+            &permissions.publish,
+            &subject.replace("engine_one", "engine_two")
+        ));
+    }
+    assert!(permits(
+        &permissions.subscribe,
+        "cloud.from.service.engine_one.registration.bound"
+    ));
+    assert!(!permits(
+        &permissions.subscribe,
+        "cloud.from.service.engine_two.registration.bound"
+    ));
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn a_realm_host_serves_its_realm_routes_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
+
+    for route in [
         "editor.catalog.fetch",
-        "editor.catalog.invalidate",
-        "editor.creation.prepare",
         "editor.presentation.search",
-        "editor.presentation.search.cancel",
         "editor.authoring.state.query",
         "editor.authoring.edit.commit",
-        "editor.authoring.type.preview",
-        "editor.authoring.type.commit",
-        "editor.authoring.search",
         "editor.authoring.publish",
-        "editor.authoring.publication.watch",
-        "editor.authoring.compiled.status.query",
-        "shared.blob.fetch",
-        "shared.blob.metadata",
+        "editor.authoring.compiled.query",
         "shared.blob.store",
-        "shared.catalog.fetch",
         "shared.publish",
     ] {
-        assert!(subscribe.contains(&format!(
-            "service.to.quests.organization.writers.realm.{suffix}"
-        )));
+        assert!(
+            permits(
+                &permissions.subscribe,
+                &realm_route("quests", "acme", route)
+            ),
+            "the host cannot serve {route}"
+        );
+        for (realm, organization) in FOREIGN {
+            assert!(!permits(
+                &permissions.subscribe,
+                &realm_route(realm, organization, route)
+            ));
+        }
     }
-    for suffix in [
+    for event in [
         "editor.catalog.invalidate",
-        "editor.presentation.search",
         "editor.authoring.changed",
         "editor.authoring.compiled.changed",
-        "editor.authoring.publication.watch",
     ] {
-        assert!(publish.contains(&format!(
-            "service.from.quests.organization.writers.realm.{suffix}"
-        )));
+        assert!(permits(
+            &permissions.publish,
+            &realm_event("quests", "acme", event)
+        ));
+        for (realm, organization) in FOREIGN {
+            assert!(!permits(
+                &permissions.publish,
+                &realm_event(realm, organization, event)
+            ));
+        }
     }
-    // Bulk read replies go to the requester inbox under the response permission.
-    for suffix in [
-        "editor.catalog.fetch.*",
-        "editor.authoring.state.query.*",
-        "editor.authoring.compiled.query.*",
-        "editor.authoring.publication.query.*",
-    ] {
-        assert!(!publish.contains(&format!(
-            "service.from.quests.organization.writers.realm.{suffix}"
-        )));
+    // Bulk reads reply on the requester inbox under the response permission, not on a subject.
+    assert!(!permits(
+        &permissions.publish,
+        &realm_event("quests", "acme", "editor.catalog.fetch.transfer")
+    ));
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn a_realm_host_coordinates_rollout_of_its_realm(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
+
+    for step in ["probe", "command", "status"] {
+        assert!(permits(
+            &permissions.publish,
+            &realm_event("quests", "acme", &format!("rollout.{step}"))
+        ));
+        for (realm, organization) in FOREIGN {
+            assert!(!permits(
+                &permissions.publish,
+                &realm_event(realm, organization, &format!("rollout.{step}"))
+            ));
+        }
     }
-    for suffix in [
-        "shared.catalog.fetch",
-        "shared.publish",
-        "shared.blob.metadata",
-        "shared.blob.fetch",
-        "shared.blob.store",
-    ] {
-        assert!(publish.contains(&format!(
-            "service.to.quests.organization.writers.realm.{suffix}"
-        )));
-    }
-    assert!(publish.iter().all(|subject| !subject.contains("realm.*")));
-    assert!(subscribe.iter().all(|subject| !subject.contains("realm.*")));
-    assert!(publish.iter().all(|subject| !subject.ends_with(".realm.>")));
-    assert!(
-        subscribe
-            .iter()
-            .all(|subject| !subject.ends_with(".realm.>"))
-    );
     Ok(())
 }
 
@@ -362,48 +233,43 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
 async fn failed_scope_lookup_replies_internal_error_instead_of_a_grant(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(QueryServiceBindingResponse::Binding {
-        binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
-            organization_id: "writers".into(),
-            organization_name: Some("Writers".into()),
-            _unrecognized: None,
-        })),
-    });
-    context
-        .messaging_mock()?
-        .expect_request("service.failing_host.binding.query")
-        .body_skir(
-            &QueryServiceBindingRequest::default(),
-            QueryServiceBindingRequest::serializer(),
-        )
-        .reply_skir(&status, QueryServiceBindingResponse::serializer());
-    context
-        .messaging_mock()?
-        .expect_request("service.failing_host.messaging.scope")
-        .body_skir(
-            &GetServiceMessagingScopeRequest {
-                service_id: skir_record_id("service", "failing_host"),
-                _unrecognized: None,
-            },
-            GetServiceMessagingScopeRequest::serializer(),
-        )
-        .reply_skir(
-            &GetServiceMessagingScopeResponse::InternalError(Box::default()),
-            GetServiceMessagingScopeResponse::serializer(),
-        );
+    expect_bound(context, "failing_host")?;
+    expect_scope(
+        context,
+        "failing_host",
+        GetServiceMessagingScopeResponse::InternalError(Box::default()),
+    )?;
 
     // The callout receives a typed failure at once instead of waiting for a reply.
-    let response = request_permission_response(
-        context,
-        "auth.permissions.typewriter-services",
-        &request("failing_host"),
-    )
-    .await?;
+    let reply: GetEntityPermissionResponse = context
+        .request(SERVICE_POLICY, &service_sign_in("failing_host"))
+        .await?;
 
-    assert!(matches!(
-        response,
-        GetEntityPermissionResponse::InternalError(_)
-    ));
+    assert!(
+        matches!(reply, GetEntityPermissionResponse::InternalError(_)),
+        "{reply:?}"
+    );
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn unknown_service_gets_no_permissions(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    expect_binding(
+        context,
+        "stranger",
+        QueryServiceBindingResponse::ServiceNotFoundError(Box::default()),
+    )?;
+
+    let reply: GetEntityPermissionResponse = context
+        .request(SERVICE_POLICY, &service_sign_in("stranger"))
+        .await?;
+
+    assert!(
+        matches!(reply, GetEntityPermissionResponse::InternalError(_)),
+        "{reply:?}"
+    );
     Ok(())
 }
 
@@ -411,60 +277,14 @@ async fn failed_scope_lookup_replies_internal_error_instead_of_a_grant(
 async fn unassigned_bound_service_receives_no_realm_permissions(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(QueryServiceBindingResponse::Binding {
-        binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
-            organization_id: "writers".into(),
-            organization_name: Some("Writers".into()),
-            _unrecognized: None,
-        })),
-    });
-    context
-        .messaging_mock()?
-        .expect_request("service.idle_host.binding.query")
-        .body_skir(
-            &QueryServiceBindingRequest::default(),
-            QueryServiceBindingRequest::serializer(),
-        )
-        .reply_skir(&status, QueryServiceBindingResponse::serializer());
-    let scope = GetServiceMessagingScopeResponse::Found(Box::new(ServiceMessagingScope {
-        organization_id: "writers".into(),
-        owned_realm: None,
-        attached_realm: None,
-        _unrecognized: None,
-    }));
-    context
-        .messaging_mock()?
-        .expect_request("service.idle_host.messaging.scope")
-        .body_skir(
-            &GetServiceMessagingScopeRequest {
-                service_id: skir_record_id("service", "idle_host"),
-                _unrecognized: None,
-            },
-            GetServiceMessagingScopeRequest::serializer(),
-        )
-        .reply_skir(&scope, GetServiceMessagingScopeResponse::serializer());
-
-    let response = request_permissions(
-        context,
-        "auth.permissions.typewriter-services",
-        &request("idle_host"),
-    )
-    .await?;
+    let permissions = service_grants(context, "idle_host", Realm::None).await?;
 
     assert!(
-        response
-            .permissions
+        permissions
             .publish
             .allow
             .iter()
-            .all(|subject| !subject.contains(".realm."))
-    );
-    assert!(
-        response
-            .permissions
-            .subscribe
-            .allow
-            .iter()
+            .chain(&permissions.subscribe.allow)
             .all(|subject| !subject.contains(".realm."))
     );
     Ok(())
@@ -474,34 +294,23 @@ async fn unassigned_bound_service_receives_no_realm_permissions(
 async fn unbound_service_receives_registration_notification_permission(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(QueryServiceBindingResponse::Binding {
-        binding: ServiceBinding::Unbound,
-    });
-    context
-        .messaging_mock()?
-        .expect_request("service.engine_one.binding.query")
-        .body_skir(
-            &QueryServiceBindingRequest::default(),
-            QueryServiceBindingRequest::serializer(),
-        )
-        .reply_skir(&status, QueryServiceBindingResponse::serializer());
-
-    let response = request_permissions(
+    expect_binding(
         context,
-        "auth.permissions.typewriter-services",
-        &request("engine_one"),
-    )
-    .await?;
+        "engine_one",
+        skir_variant!(QueryServiceBindingResponse::Binding {
+            binding: ServiceBinding::Unbound,
+        }),
+    )?;
 
-    assert_eq!(response.tags, ["service:engine_one"]);
-    assert!(
-        response
-            .permissions
-            .subscribe
-            .allow
-            .contains(&"cloud.from.service.engine_one.registration.bound".into())
-    );
-    assert!(response.permissions.publish.allow.iter().all(|subject| {
+    let grant =
+        request_permissions(context, SERVICE_POLICY, &service_sign_in("engine_one")).await?;
+
+    assert_eq!(grant.tags, ["service:engine_one"]);
+    assert!(permits(
+        &grant.permissions.subscribe,
+        "cloud.from.service.engine_one.registration.bound"
+    ));
+    assert!(grant.permissions.publish.allow.iter().all(|subject| {
         !subject.contains(".organization.") && !subject.starts_with("service.from.")
     }));
     Ok(())

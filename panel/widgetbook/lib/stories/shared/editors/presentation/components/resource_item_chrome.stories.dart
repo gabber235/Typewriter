@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "States", type: ResourceItemChrome)
 Widget resourceItemChromeUseCase(BuildContext context) {
@@ -20,9 +21,10 @@ Widget resourceItemChromeUseCase(BuildContext context) {
     dropAccepted: context.knobs.boolean(label: "Drop accepted"),
     dropRejected: context.knobs.boolean(label: "Drop rejected"),
   );
-  return FakeApp(
-    child: Center(
-      child: SizedBox(
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
         width: density == ResourceItemDensity.card ? 180 : 260,
         height: density == ResourceItemDensity.card ? 220 : null,
         child: PresentationInteractionScope(

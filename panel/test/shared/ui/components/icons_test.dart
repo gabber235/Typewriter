@@ -1,19 +1,9 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:http/testing.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  test("parses the SVG returned for an Iconify book icon", () {
-    const svg =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" '
-        'viewBox="0 0 24 24"><path fill="currentColor" '
-        'd="M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z"/></svg>';
-
-    expect(() => ScalableImage.fromSvgString(svg), returnsNormally);
-  });
-
   test(
     "loads an icon from a backup after a response that is not SVG",
     () async {
@@ -24,15 +14,15 @@ void main() {
             ? Response("<html>unavailable</html>", 200)
             : Response(
                 '''
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-<path d="M0 0h24v24H0z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 16">
+<path d="M0 0h32v16H0z"/></svg>
 ''',
                 200,
                 headers: {"content-type": "image/svg+xml"},
               );
       });
 
-      await loadIconifySvg(
+      final icon = await loadIconifySvg(
         "material-symbols:book",
         client: client,
         hosts: const ["primary.example", "backup.example"],
@@ -42,14 +32,21 @@ void main() {
         Uri.https("primary.example", "material-symbols/book.svg"),
         Uri.https("backup.example", "material-symbols/book.svg"),
       ]);
+      expect(icon.viewport, const Rect.fromLTWH(0, 0, 32, 16));
     },
   );
 
   testWidgets("uses a safe fallback when an Iconify response is unavailable", (
     tester,
   ) async {
-    await tester.pumpTestApp(child: const Icones("mdi:plus"));
-    await tester.pumpAndSettle();
+    // The panel's image hosts answer every icon; this one is unreachable.
+    await HttpOverrides.runZoned(
+      () => tester.pumpPanel(
+        const [],
+        at: const PanelLocation.component(Icones("mdi:plus")),
+      ),
+      createHttpClient: (_) => throw const SocketException("unreachable"),
+    );
 
     expect(find.byIcon(Icons.broken_image), findsOneWidget);
     expect(tester.takeException(), isNull);

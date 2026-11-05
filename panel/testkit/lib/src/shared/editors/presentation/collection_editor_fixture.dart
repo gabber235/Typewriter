@@ -57,9 +57,16 @@ final class CollectionEditorScenario extends ChangeNotifier {
             links: const [],
           );
     catalog = initial.catalog;
-    transport = ScriptedAuthoringTransport(AsyncData(initial));
+    realm = FakeRealm(
+      scope: AuthoringScope(
+        organizationId: skir.recordId("organization:collections"),
+        realmId: skir.recordId("realm_instance:collections"),
+      ),
+      name: "Collections",
+      document: initial,
+    );
     workspace = RealmEditing(
-      persistence: transport.persistence,
+      persistence: realm.persistence,
       submissions: submissions,
       initial: initial,
     );
@@ -96,7 +103,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
   final PortablePresentationCapabilities capabilities;
   final submissions = ScopedWorkSession();
   late final CheckedEditorCatalog catalog;
-  late final ScriptedAuthoringTransport transport;
+  late final FakeRealm realm;
   late final RealmEditing workspace;
   late final RealmEditingBinding binding;
   late final AuthoredPresentationHost host;
@@ -241,15 +248,124 @@ final class CollectionEditorScenario extends ChangeNotifier {
     );
   }
 
+  /// Keeps only the first [count] source rows in the draft.
+  void keepFirst(int count) {
+    binding
+        .edit(
+          label: "Keep selected source rows",
+          apply: (edit) => edit.set(
+            skir.ValueLocation(resource: resource, path: entriesPath),
+            skir.DataValue.createNamed(
+              actualType: value.authoredActualType!,
+              payload: skir.DataValue.createListValue(
+                items: value.authoredItems!.take(count),
+              ),
+            ),
+          ),
+        )
+        .requireAccepted();
+  }
+
   @override
   void dispose() {
     workspace.removeListener(notifyListeners);
     host.dispose();
     binding.detach();
     workspace.dispose();
-    transport.dispose();
+    unawaited(realm.close());
     submissions.dispose();
     super.dispose();
+  }
+}
+
+/// A collection host that holds every list item removal at its boundary
+/// until [admission] answers, then hands it and every other request to
+/// [source].
+///
+/// A rejected admission refuses the removal; an admitted one completes
+/// [sourceResult] with what [source] answered and then waits for
+/// [settlement] when given.
+final class GatedRemovalHost extends ChangeNotifier
+    implements PortablePresentationHost, PortableCollectionMutationHost {
+  GatedRemovalHost(this.source, this.admission, {this.settlement});
+
+  /// The host that applies every request once admitted.
+  final AuthoredPresentationHost source;
+
+  /// Answers whether a held removal goes ahead.
+  final Completer<bool> admission;
+
+  /// Holds the removal's answer back after [source] applied it.
+  final Completer<void>? settlement;
+
+  /// What [source] answered to the first admitted action.
+  final sourceResult = Completer<PortablePresentationWriteResult>();
+  @override
+  PortablePresentationDocument get document => source.document;
+  @override
+  bool get enabled => source.enabled;
+  @override
+  bool get readOnly => source.readOnly;
+  @override
+  PortablePresentationCapabilities get capabilities => source.capabilities;
+  @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => source.commitControl(reference, context: context);
+  @override
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => source.read(reference, context: context);
+  @override
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => source.location(reference, context: context);
+  @override
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => source.expectedType(reference, context: context);
+  @override
+  Future<PortablePresentationWriteResult> write(
+    skir.BindingRef reference,
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) => source.write(reference, value, context: context);
+  @override
+  Future<PortablePresentationWriteResult> addCollectionItem(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => source.addCollectionItem(reference, context: context);
+  @override
+  Future<PortablePresentationWriteResult> addMapRow(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => source.addMapRow(reference, context: context);
+  @override
+  Future<PortablePresentationWriteResult> execute(
+    skir.EditorAction action, {
+    required PortableInvocationContext context,
+  }) async {
+    if (action case skir.EditorAction_localWrapper(
+      value: skir.LocalEditorAction_removeListItemWrapper(),
+    )) {
+      if (!await admission.future) {
+        return PortablePresentationWriteRejected([
+          PortablePresentationDiagnostic(
+            code: "fixture_rejected",
+            message: "Removal rejected",
+            severity: skir.DiagnosticSeverity.error,
+          ),
+        ]);
+      }
+    }
+    final result = await source.execute(action, context: context);
+    if (!sourceResult.isCompleted) sourceResult.complete(result);
+    if (settlement case final pending?) await pending.future;
+    return result;
   }
 }
 
@@ -407,51 +523,10 @@ CheckedEditorCatalog _catalog(CollectionEditorExample example) {
   final integer = skir.TypeTemplate.wrapScalar(
     skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
   );
-  skir.PublishedType published(
-    String name,
-    skir.RepresentationTemplate representation, {
-    Map<String, skir.TypeTemplate> fields = const {},
-  }) => skir.PublishedType(
-    searchKey: null,
-    placementField: null,
-    definition: skir.TypeDefinition(
-      id: _id(name),
-      parameters: const [],
-      parents: const [],
-      representation: representation,
-    ),
-    status: skir.DeclarationStatus.ready,
-    display: defaultTypeDisplay(""),
-    ancestorTemplates: const [],
-    effectiveFields: [
-      for (final field in fields.entries)
-        skir.EffectiveFieldTemplate(
-          key: field.key,
-          owner: skir.FieldOwner(definition: _id(name), name: field.key),
-          type: field.value,
-          rules: const [],
-        ),
-    ],
-  );
   skir.PublishedType record(
     String name,
     Map<String, skir.TypeTemplate> fields,
-  ) => published(
-    name,
-    skir.RepresentationTemplate.createRecord(
-      abstract_: false,
-      fields: [
-        for (final field in fields.entries)
-          skir.FieldDeclaration(
-            owner: skir.FieldOwner(definition: _id(name), name: field.key),
-            type: field.value,
-            overrides: const [],
-            hasConstructorDefault: false,
-          ),
-      ],
-    ),
-    fields: fields,
-  );
+  ) => declaredRecord(_id(name), fields: fields);
   final entryType = _entryType(example);
   return CheckedEditorCatalog(
     (skir.EditorCatalog.mutable()
@@ -459,45 +534,16 @@ CheckedEditorCatalog _catalog(CollectionEditorExample example) {
           ..types = [
             record("Owner", {"entries": _named(entryType)}),
             record("Step", {"name": text, "amount": integer}),
-            published(
-              "TextList",
-              skir.RepresentationTemplate.createSequence(
-                item: text,
-                kind: skir.CollectionKind.list,
-              ),
+            declaredCollection(_id("TextList"), text),
+            declaredCollection(
+              _id("TextSet"),
+              text,
+              kind: skir.CollectionKind.set_,
             ),
-            published(
-              "TextSet",
-              skir.RepresentationTemplate.createSequence(
-                item: text,
-                kind: skir.CollectionKind.set_,
-              ),
-            ),
-            published(
-              "TextMap",
-              skir.RepresentationTemplate.createMapping(key: text, value: text),
-            ),
-            published(
-              "StepList",
-              skir.RepresentationTemplate.createSequence(
-                item: _named("Step"),
-                kind: skir.CollectionKind.list,
-              ),
-            ),
-            published(
-              "StepMap",
-              skir.RepresentationTemplate.createMapping(
-                key: text,
-                value: _named("Step"),
-              ),
-            ),
-            published(
-              "NestedList",
-              skir.RepresentationTemplate.createSequence(
-                item: _named("TextList"),
-                kind: skir.CollectionKind.list,
-              ),
-            ),
+            declaredMap(_id("TextMap"), key: text, value: text),
+            declaredCollection(_id("StepList"), _named("Step")),
+            declaredMap(_id("StepMap"), key: text, value: _named("Step")),
+            declaredCollection(_id("NestedList"), _named("TextList")),
           ])
         .toFrozen(),
   );

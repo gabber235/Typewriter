@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("initial output is immediate and equal policies keep deadlines", (
@@ -9,11 +8,13 @@ void main() {
   ) async {
     var input = 0;
     ValueUpdatePolicy<int>? policy;
-    Future<void> build() => tester.pumpTestApp(
-      settle: false,
-      child: HookBuilder(
-        builder: (context) =>
-            Text("${useDeferredValue(input, policy: policy)}"),
+    Future<void> build() => tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: HookBuilder(
+          builder: (context) =>
+              Text("${useDeferredValue(input, policy: policy)}"),
+        ),
       ),
     );
     await build();
@@ -35,11 +36,13 @@ void main() {
     (tester) async {
       var input = 0;
       ValueUpdatePolicy<int> policy = const CoalesceUpdates<int>();
-      Future<void> build() => tester.pumpTestApp(
-        settle: false,
-        child: HookBuilder(
-          builder: (context) =>
-              Text("${useDeferredValue(input, policy: policy)}"),
+      Future<void> build() => tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: HookBuilder(
+            builder: (context) =>
+                Text("${useDeferredValue(input, policy: policy)}"),
+          ),
         ),
       );
       await build();
@@ -72,11 +75,13 @@ void main() {
   ) async {
     var input = 0;
     var scope = "first";
-    Future<void> build() => tester.pumpTestApp(
-      settle: false,
-      child: HookBuilder(
-        key: ValueKey(scope),
-        builder: (context) => Text("${useDeferredValue(input)}"),
+    Future<void> build() => tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: HookBuilder(
+          key: ValueKey(scope),
+          builder: (context) => Text("${useDeferredValue(input)}"),
+        ),
       ),
     );
     await build();
@@ -88,7 +93,7 @@ void main() {
     expect(find.text("2"), findsOneWidget);
     input = 3;
     await build();
-    await tester.pumpTestApp(child: const SizedBox());
+    await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
     expect(tester.takeException(), isNull);
   });
@@ -96,16 +101,18 @@ void main() {
   testWidgets(
     "custom controllers can notify during observation and afterward",
     (tester) async {
-      final policy = _ImmediatePolicy();
+      final policy = ImmediateUpdatePolicy();
       var input = 0;
       var builds = 0;
-      Future<void> build() => tester.pumpTestApp(
-        settle: false,
-        child: HookBuilder(
-          builder: (context) {
-            builds++;
-            return Text("${useDeferredValue(input, policy: policy)}");
-          },
+      Future<void> build() => tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: HookBuilder(
+            builder: (context) {
+              builds++;
+              return Text("${useDeferredValue(input, policy: policy)}");
+            },
+          ),
         ),
       );
       await build();
@@ -119,34 +126,8 @@ void main() {
       await tester.pump();
       expect(find.text("2"), findsOneWidget);
       expect(tester.takeException(), isNull);
-      await tester.pumpTestApp(child: const SizedBox());
+      await tester.pumpWidget(const SizedBox());
       expect(policy.controller.disposed, isTrue);
     },
   );
-}
-
-class _ImmediatePolicy implements ValueUpdatePolicy<int> {
-  late _ImmediateController controller;
-  @override
-  ValueUpdateController<int> create(int initialValue) =>
-      controller = _ImmediateController(initialValue);
-}
-
-class _ImmediateController extends ValueNotifier<int>
-    implements ValueUpdateController<int> {
-  _ImmediateController(super.value) : latest = value;
-  int latest;
-  bool disposed = false;
-  @override
-  void observe(int next) {
-    if (next == latest) return;
-    latest = next;
-    value = next;
-  }
-
-  @override
-  void dispose() {
-    disposed = true;
-    super.dispose();
-  }
 }

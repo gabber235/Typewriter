@@ -2,348 +2,322 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/test_utils.dart";
+const _unbindSubject = "cloud.to.user.ada.organization.acme.services.unbind";
+const _bindSubject = "cloud.to.user.ada.organization.acme.services.bind";
+
+final _paper = service(
+  "paper_eu",
+  organization: acme.organizationId,
+  createdAt: DateTime.utc(2026, 8, 20),
+);
+
+final _discord = service(
+  "discord",
+  name: "discord_bridge",
+  role: skir.ServiceRole.createCustom(name: "discord", version: "1.0.0"),
+  organization: acme.organizationId,
+  createdAt: DateTime.utc(2026, 8, 20),
+);
+
+final _host = paperHost(
+  "paper_eu",
+  revision: 2,
+  engines: ["paper"],
+  state: hostRuntimeState(updatedAt: DateTime.utc(2026, 8, 20)),
+);
+
+final _realm = realmInstance(
+  "adventure",
+  host: "paper_eu",
+  hostName: "paper_eu",
+  version: "^1",
+  revision: 3,
+  state: childRuntimeState(updatedAt: DateTime.utc(2026, 8, 20)),
+);
+
+final _topology = topologySnapshot(
+  hosts: [_host],
+  realms: [_realm],
+  engines: [
+    engineInstance(
+      "paper_eu",
+      realm: _realm,
+      revision: 4,
+      state: childRuntimeState(updatedAt: DateTime.utc(2026, 8, 20)),
+    ),
+  ],
+);
 
 void main() {
-  test(
-    "Realm navigation keeps the Realm ID distinct from its host service",
-    () {
-      final route = realmNavigationRoute(
-        skir.recordId("organization:test"),
-        skir.recordId("realm_instance:adventure"),
-      );
-      final realmRoute = route.initialChildren!.single;
-
-      expect(route.rawPathParams["organizationId"], "test");
-      expect(realmRoute.rawPathParams["realmId"], "adventure");
-      expect(realmRoute.rawPathParams["realmId"], isNot("paper-eu"));
-    },
-  );
-
-  testWidgets("registration control stacks within a narrow content pane", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      child: const SizedBox(width: 360, child: RegistrationTokenInput()),
+  test("Realm navigation opens the Realm by its own id", () {
+    final route = realmNavigationRoute(
+      skir.recordId("organization:test"),
+      skir.recordId("realm_instance:adventure"),
     );
 
-    final inputTop = tester.getTopLeft(find.byType(EditorTextField)).dy;
-    final buttonTop = tester.getTopLeft(find.text("Connect")).dy;
-    expect(buttonTop, greaterThan(inputTop));
+    expect(route.rawPathParams["organizationId"], "test");
+    expect(route.initialChildren!.single.rawPathParams["realmId"], "adventure");
   });
 
-  testWidgets(
-    "shows custom services and every topology resource in one graph",
-    (tester) async {
-      final fixture = _Fixture(connected: true);
-      await tester.pumpTestApp(
-        child: SizedBox(
-          width: 1200,
-          height: 720,
-          child: ServicesGraph(
-            services: fixture.services,
-            topology: fixture.topology,
-          ),
-        ),
-        overrides: fixture.overrides,
-      );
-
-      expect(find.text("DISCORD SERVICE"), findsOneWidget);
-      expect(find.text("PAPER HOST"), findsOneWidget);
-      expect(find.text("REALM"), findsOneWidget);
-      expect(find.text("ENGINE"), findsOneWidget);
-      expect(find.text("Discord Bridge"), findsOneWidget);
-      expect(find.text("Paper Eu"), findsNWidgets(2));
-
-      expect(find.byType(Graph), findsOneWidget);
-      final graph = tester.widget<Graph>(find.byType(Graph));
-      expect(graph.data.elements, hasLength(4));
-      expect(graph.data.edges, hasLength(2));
-      expect(find.byTooltip("Zoom to fit"), findsNothing);
-    },
-  );
-
-  testWidgets("keeps orphan runtimes visible without topology edges", (
+  testWidgets("the registration control stacks within a narrow pane", (
     tester,
   ) async {
-    final fixture = _Fixture(connected: true);
-    final orphaned = (fixture.topology.toMutable()..hosts = []).toFrozen();
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 1200,
-        height: 720,
-        child: ServicesGraph(
-          services: [fixture.customService],
-          topology: orphaned,
-        ),
+    final panel = await tester.pumpPanel(
+      [signedIn(ada, organization: acme)],
+      at: const PanelLocation.component(
+        SizedBox(width: 360, child: RegistrationTokenInput()),
       ),
-      overrides: fixture.overrides,
     );
 
-    final graph = tester.widget<Graph>(find.byType(Graph));
-    expect(graph.data.elements, hasLength(3));
-    expect(graph.data.edges, isEmpty);
-    expect(find.text("REALM"), findsOneWidget);
-    expect(find.text("ENGINE"), findsOneWidget);
-  });
-
-  testWidgets("host selection uses the shared presentation inspector", (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1400, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final fixture = _Fixture(connected: true);
-    await tester.pumpTestApp(
-      child: InspectorScaffold(
-        child: ServicesGraph(
-          services: fixture.services,
-          topology: fixture.topology,
-        ),
-      ),
-      overrides: fixture.overrides,
-    );
-
-    await tester.tap(find.text("PAPER HOST"));
-    await tester.pumpAndSettle();
-
-    expect(find.text("Name"), findsOneWidget);
-    expect(find.text("CONNECTION"), findsOneWidget);
     expect(
-      find.descendant(
-        of: find.byType(PortablePresentationRenderer),
-        matching: find.text("Connected"),
-      ),
-      findsOneWidget,
+      tester.getTopLeft(panel.labeled("Connect").first).dy,
+      greaterThan(panel.field("Enter registration token").rect.top),
     );
-    expect(find.text("Version"), findsOneWidget);
-    expect(find.text("Entry point"), findsOneWidget);
-    expect(find.text("Realm hosting"), findsOneWidget);
-    expect(find.text("Supported engines"), findsOneWidget);
-    expect(find.text("RUNTIME HEALTH"), findsOneWidget);
-    expect(find.text("Host a Realm"), findsOneWidget);
-    expect(find.text("Run an execution engine"), findsOneWidget);
-
-    expect(find.text("Assigned Realm"), findsNothing);
-    expect(find.text("Hosted Realm"), findsNothing);
-    expect(find.text("Message"), findsNothing);
-    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
-    expect(find.text("Unbind"), findsOneWidget);
-
-    await tester.ensureVisible(find.text("Host a Realm"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(Checkbox).first);
-    await tester.pumpAndSettle();
-
-    expect(find.text("Assigned Realm"), findsOneWidget);
-    expect(find.text("Hosted Realm"), findsNothing);
   });
 
-  testWidgets("custom service selection exposes unbind without open", (
-    tester,
-  ) async {
-    final fixture = _Fixture(connected: true);
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 1200,
-        height: 720,
-        child: InspectorScaffold(
-          child: ServicesGraph(
-            services: fixture.services,
-            topology: fixture.topology,
-          ),
-        ),
-      ),
-      overrides: fixture.overrides,
+  testWidgets("a malformed token is refused with a message and never "
+      "sent", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
+
+    await panel.field("Enter registration token").type("not a token");
+    await panel.tapOn(panel.labeled("Connect").first);
+
+    expect(
+      panel.shows("Token must be 10 uppercase alphanumeric characters"),
+      isTrue,
     );
-
-    await tester.tap(find.text("Discord Bridge"));
-    await tester.pumpAndSettle();
-
-    expect(find.text("Unbind"), findsOneWidget);
-    expect(find.text("Open"), findsNothing);
+    expect(panel.world.nats.requestsTo(_bindSubject), isEmpty);
   });
 
-  testWidgets("runtime selection groups health and placement details", (
+  testWidgets("the graph shows every custom service and topology resource", (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1400, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final fixture = _Fixture(
-      connected: true,
-      childMessage: "Deployment needs attention",
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
+
+    expect(
+      panel.services.cards,
+      unorderedEquals([
+        "Discord service, Discord Bridge, Connected",
+        "Paper host, Paper Eu, Active",
+        "Realm, Paper Eu, Active",
+        "Engine, paper ^1, Active",
+      ]),
     );
-    await tester.pumpTestApp(
-      child: InspectorScaffold(
-        child: ServicesGraph(
-          services: fixture.services,
-          topology: fixture.topology,
+  });
+
+  testWidgets("runtimes stay visible when their host is gone", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(
+        services: [_discord],
+        topology: topologySnapshot(
+          realms: [..._topology.realms],
+          engines: [..._topology.engines],
         ),
       ),
-      overrides: fixture.overrides,
+    ]);
+
+    expect(
+      panel.services.cards,
+      unorderedEquals([
+        "Discord service, Discord Bridge, Connected",
+        "Realm, Paper Eu, Host offline",
+        "Engine, paper ^1, Host offline",
+      ]),
     );
+  });
 
-    await tester.tap(find.text("ENGINE"));
-    await tester.pumpAndSettle();
+  testWidgets("a selected host shows its identity, connection, capabilities "
+      "and configuration", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
 
-    expect(find.text("Owner host"), findsOneWidget);
-    expect(find.text("Target"), findsOneWidget);
-    expect(find.text("STATUS"), findsOneWidget);
-    expect(find.text("Artifact"), findsOneWidget);
-    expect(find.text("Assigned Realm"), findsOneWidget);
-    expect(find.text("Message"), findsOneWidget);
-    expect(find.text("Deployment needs attention"), findsOneWidget);
-    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
+    await panel.services.card("Paper host", "Paper Eu").select();
+
+    for (final label in [
+      "Name",
+      "CONNECTION",
+      "Connected",
+      "Version",
+      "Entry point",
+      "Realm hosting",
+      "Supported engines",
+      "RUNTIME HEALTH",
+      "Host a Realm",
+      "Run an execution engine",
+    ]) {
+      expect(panel.shows(label), isTrue, reason: "The inspector shows $label");
+    }
+    for (final label in ["Assigned Realm", "Message"]) {
+      expect(panel.shows(label), isFalse, reason: "$label stays hidden");
+    }
+    expect(panel.inspector.operations, ["Unbind"]);
+
+    expect(panel.inspector.isChecked("Host a Realm"), isTrue);
+    await panel.inspector.toggle("Host a Realm");
+
+    expect(panel.inspector.isChecked("Host a Realm"), isFalse);
+    expect(panel.shows("Assigned Realm"), isTrue);
+  });
+
+  testWidgets("a selected custom service offers Unbind and no Open", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
+
+    await panel.services.card("Discord service", "Discord Bridge").select();
+
+    expect(panel.inspector.operations, ["Unbind"]);
+  });
+
+  testWidgets("Unbind in the inspector removes the service", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
+    panel.world.nats.registerHandler(
+      _unbindSubject,
+      (_) => skir.UnbindServiceResponse.serializer.toBytes(
+        skir.UnbindServiceResponse.createSuccess(),
+      ),
+    );
+    await panel.services.card("Discord service", "Discord Bridge").select();
+
+    await panel.inspector.runConfirmed("Unbind", question: "Unbind 1 item(s)?");
+
+    await panel.eventually(
+      () => expect(
+        panel.services.cards,
+        isNot(contains(startsWith("Discord service"))),
+      ),
+    );
+  });
+
+  testWidgets("a rejected Unbind keeps the service and tells the author", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
+    panel.world.nats.registerHandler(
+      _unbindSubject,
+      (_) => skir.UnbindServiceResponse.serializer.toBytes(
+        skir.UnbindServiceResponse.createServiceNotFoundError(),
+      ),
+    );
+    await panel.services.card("Discord service", "Discord Bridge").select();
+
+    await panel.inspector.runConfirmed("Unbind", question: "Unbind 1 item(s)?");
+
+    expect(panel.shows("Unbind errors"), isTrue);
+    expect(panel.shows("404: Service not found"), isTrue);
+    expect(panel.shows("Needs attention"), isTrue);
+    expect(
+      panel.container
+          .read(canonicalServicesProvider)
+          .requireValue
+          .map((service) => service.name),
+      contains("discord_bridge"),
+    );
+  });
+
+  testWidgets("a selected engine groups health and placement details", (
+    tester,
+  ) async {
+    final attention = childRuntimeState(
+      message: "Deployment needs attention",
+      updatedAt: DateTime.utc(2026, 8, 20),
+    );
+    final realm = (_realm.toMutable()..state = attention).toFrozen();
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(
+        services: [_paper, _discord],
+        topology: topologySnapshot(
+          hosts: [_host],
+          realms: [realm],
+          engines: [
+            engineInstance(
+              "paper_eu",
+              realm: realm,
+              revision: 4,
+              state: attention,
+            ),
+          ],
+        ),
+      ),
+    ]);
+
+    await panel.services.card("Engine", "paper ^1").select();
+
+    for (final label in [
+      "Owner host",
+      "Target",
+      "STATUS",
+      "Artifact",
+      "Assigned Realm",
+      "Message",
+      "Deployment needs attention",
+    ]) {
+      expect(panel.shows(label), isTrue, reason: "The inspector shows $label");
+    }
+    double left(String label) => tester.getTopLeft(find.text(label)).dx;
     for (final label in ["Artifact", "Updated"]) {
-      expect(
-        tester.getTopLeft(find.text(label)).dx,
-        closeTo(tester.getTopLeft(find.text("STATUS")).dx, 0.01),
-      );
+      expect(left(label), closeTo(left("STATUS"), 0.01));
     }
     for (final label in ["Owner host", "Target"]) {
-      expect(
-        tester.getTopLeft(find.text(label)).dx,
-        closeTo(tester.getTopLeft(find.text("ASSIGNMENT")).dx, 0.01),
-      );
+      expect(left(label), closeTo(left("ASSIGNMENT"), 0.01));
     }
   });
 
-  testWidgets("offline Realm selection does not expose open", (tester) async {
-    final fixture = _Fixture(connected: false);
-    await tester.pumpTestApp(
-      child: SizedBox(
-        width: 1200,
-        height: 720,
-        child: InspectorScaffold(
-          child: ServicesGraph(
-            services: fixture.services,
-            topology: fixture.topology,
+  testWidgets("a Realm on an offline host reads offline and offers no "
+      "Open", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(
+        services: [
+          service(
+            "paper_eu",
+            organization: acme.organizationId,
+            createdAt: DateTime.utc(2026, 8, 20),
+            status: skir.ServiceStatus.offline,
           ),
-        ),
+          _discord,
+        ],
+        topology: _topology,
       ),
-      overrides: fixture.overrides,
-    );
+    ]);
 
-    await tester.tap(find.text("REALM"));
-    await tester.pumpAndSettle();
+    expect(panel.services.statusOf("Realm", "Paper Eu"), "Host offline");
+    await panel.services.card("Realm", "Paper Eu").select();
 
-    expect(find.text("Host offline"), findsNWidgets(2));
-    expect(find.text("Open"), findsNothing);
+    expect(panel.shows("Open"), isFalse);
   });
-}
 
-class _Fixture {
-  _Fixture({required bool connected, String? childMessage}) {
-    hostService = _service(
-      id: "paper-eu",
-      name: "paper_eu",
-      connected: connected,
-      role: skir.ServiceRole.createHost(version: "1.0.0"),
-    );
-    customService = _service(
-      id: "discord",
-      name: "discord_bridge",
-      connected: true,
-      role: skir.ServiceRole.createCustom(name: "discord", version: "1.0.0"),
-    );
-    host = skir.ServiceHost(
-      hostId: skir.recordId("service_host:paper-eu"),
-      serviceId: hostService.serviceId,
-      revision: 2,
-      entrypoint: "PAPER",
-      canHostRealm: true,
-      supportedEngines: [skir.SupportedEngine(engineId: "paper")],
-      topologyRevision: skir.ReconciledRevision(desired: 2, applied: 2),
-      state: skir.HostRuntimeState(
-        status: skir.HostRuntimeStatus.active,
-        message: null,
-        updatedAt: DateTime.utc(2026, 8, 20),
-      ),
-    );
-    realm = skir.RealmInstance(
-      realmId: skir.recordId("realm_instance:adventure"),
-      ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
-      revision: 3,
-      targetEngine: skir.EngineTarget(
-        engineId: "paper",
-        versionConstraint: "^1",
-      ),
-      state: _childState(message: childMessage),
-    );
-    engine = skir.EngineInstance(
-      engineId: skir.recordId("engine_instance:paper-eu"),
-      ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
-      realm: skir.RealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
-      revision: 4,
-      target: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
-      state: _childState(message: childMessage),
-    );
-    topology = skir.OrganizationTopologySnapshot(
-      hosts: [host],
-      realms: [realm],
-      engines: [engine],
-    );
-  }
+  testWidgets("leaving the services page while its projections restart "
+      "fails nothing", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
 
-  late final skir.Service hostService;
-  late final skir.Service customService;
-  late final skir.ServiceHost host;
-  late final skir.RealmInstance realm;
-  late final skir.EngineInstance engine;
-  late final skir.OrganizationTopologySnapshot topology;
-  final nats = FakeNatsClient();
+    await panel.follow(const IndexRoute());
 
-  List<skir.Service> get services => [hostService, customService];
-
-  List<Override> get overrides => [
-    userIdProvider.overrideWith((ref) async => "test-user"),
-    natsProvider.overrideWith(() => FakeNats(nats)),
-    organizationIdProvider.overrideWith(
-      (ref) => skir.recordId("organization:test"),
-    ),
-    organizationTopologyControllerProvider(skir.recordId("organization:test"))
-        .overrideWith(() => _FixtureScopedTopology(topology)),
-    canonicalServicesProvider.overrideWith((ref) async => services),
-  ];
-}
-
-skir.Service _service({
-  required String id,
-  required String name,
-  required bool connected,
-  required skir.ServiceRole role,
-}) => skir.Service(
-  serviceId: skir.recordId("service:$id"),
-  revision: 1,
-  name: name,
-  role: role,
-  createdAt: DateTime.utc(2026, 8, 20),
-  organization: skir.recordId("organization:test"),
-  state: skir.ServiceState(
-    status: connected ? skir.ServiceStatus.online : skir.ServiceStatus.offline,
-    lastSeen: DateTime.now(),
-  ),
-  registration: null,
-);
-
-skir.ChildRuntimeState _childState({String? message}) => skir.ChildRuntimeState(
-  status: skir.ChildRuntimeStatus.active,
-  activeArtifactVersion: "1.0.0",
-  message: message,
-  updatedAt: DateTime.utc(2026, 8, 20),
-);
-
-class _FixtureScopedTopology extends OrganizationTopologyController {
-  _FixtureScopedTopology(this.topology);
-  final skir.OrganizationTopologySnapshot topology;
-
-  @override
-  Stream<skir.OrganizationTopologySnapshot> build(
-    skir.RecordId organizationId,
-  ) => Stream.value(topology);
+    expect(panel.path, "/");
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -2,8 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets(
@@ -11,41 +10,46 @@ void main() {
     (tester) async {
       skir.BindingRef? writtenReference;
       skir.DataValue? writtenValue;
-      final presentationHost = _NamedTestHost(
+      final presentationHost = FakePresentationHost(
         onWrite: (reference, value) {
           writtenReference = reference;
           writtenValue = value;
         },
+        expected: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        types: {_styleReference: skir.TypeUse.wrapNamed(_styleType)},
+        locates: true,
       );
       addTearDown(presentationHost.dispose);
 
       final operations = testPortableOperations();
-      Widget host(bool visible) => testApp(
-        child: Scaffold(
-          body: PortablePresentationNodeRenderer(
-            node: _rootPresentation(),
-            scope: PortablePresentationScope(
-              operations: operations,
-              bindings: _bindings(visible),
-              budget: skir.EvaluationBudget(
-                maxSteps: 100,
-                maxCollectionItems: 100,
+      Widget host(bool visible) => PortablePresentationNodeRenderer(
+        node: _rootPresentation,
+        scope: PortablePresentationScope(
+          operations: operations,
+          bindings: {
+            _rootBinding: PortableExpressionBinding(
+              value: recordEditorValue({
+                "style": namedRecordOf(_styleType, {
+                  "visible": skir.DataValue.wrapBoolean(visible),
+                  "title": skir.DataValue.wrapStringValue("Original"),
+                }),
+              }),
+              location: skir.ValueLocation(
+                resource: skir.ResourceId(value: "element:message"),
+                path: skir.ValuePath(segments: const []),
               ),
-              host: presentationHost,
             ),
-          ),
+          },
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          host: presentationHost,
         ),
       );
 
-      await tester.pumpWidget(host(true));
-      expect(find.text("Custom style"), findsOneWidget);
-      expect(find.text("Original"), findsOneWidget);
+      final panel = await tester.showComponent(host(true));
+      expect(panel.shows("Custom style"), isTrue);
+      expect(visibleFieldValues(), ["Original"]);
 
-      await tester.enterText(
-        find.byKey(const ValueKey("style.title.input")),
-        "Changed",
-      );
-      await tester.pump();
+      await panel.fieldAt(0).type("Changed");
 
       expect(writtenReference?.bindingId, _rootBinding);
       expect(writtenReference?.path.segments, [
@@ -54,18 +58,22 @@ void main() {
       ]);
       expect(writtenValue, skir.DataValue.wrapStringValue("Changed"));
 
-      await tester.pumpWidget(host(false));
-      await tester.pump();
-      expect(find.text("Custom style"), findsNothing);
+      await tester.showComponent(host(false));
+      expect(panel.shows("Custom style"), isFalse);
     },
   );
 
   testWidgets("disabled nodes reject keyboard edits", (tester) async {
     var writes = 0;
-    final presentationHost = _NamedTestHost(onWrite: (_, _) => writes++);
+    final presentationHost = FakePresentationHost(
+      onWrite: (_, _) => writes++,
+      expected: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+      types: {_styleReference: skir.TypeUse.wrapNamed(_styleType)},
+      locates: true,
+    );
     addTearDown(presentationHost.dispose);
     final control =
-        _control().payloadPresentation!.element!
+        _control.payloadPresentation!.element!
             as skir.PresentationElement_childrenWrapper;
     final children = control.value as skir.ChildrenElement_columnWrapper;
     final title =
@@ -81,34 +89,36 @@ void main() {
       element: title.element,
       header: null,
     );
-    await tester.pumpWidget(
-      testApp(
-        child: Scaffold(
-          body: PortablePresentationNodeRenderer(
-            node: disabled,
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: _bindings(true),
-              budget: skir.EvaluationBudget(
-                maxSteps: 100,
-                maxCollectionItems: 100,
+    final panel = await tester.showComponent(
+      PortablePresentationNodeRenderer(
+        node: disabled,
+        scope: PortablePresentationScope(
+          operations: testPortableOperations(),
+          bindings: {
+            _rootBinding: PortableExpressionBinding(
+              value: recordEditorValue({
+                "style": namedRecordOf(_styleType, {
+                  "visible": skir.DataValue.wrapBoolean(true),
+                  "title": skir.DataValue.wrapStringValue("Original"),
+                }),
+              }),
+              location: skir.ValueLocation(
+                resource: skir.ResourceId(value: "element:message"),
+                path: skir.ValuePath(segments: const []),
               ),
-              host: presentationHost,
             ),
-          ),
+          },
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          host: presentationHost,
         ),
       ),
     );
 
-    final field = find.byType(TextFormField);
-    expect(field, findsOneWidget);
-    expect(tester.widget<TextFormField>(field).enabled, isFalse);
-    final editable = tester.widget<EditableText>(find.byType(EditableText));
-    editable.focusNode.requestFocus();
-    await tester.pump();
-    expect(editable.focusNode.hasFocus, isFalse);
-    await tester.enterText(field, "Changed");
-    await tester.pump();
+    final field = panel.fieldAt(0);
+    expect(field.isEnabled, isFalse);
+    await field.focus();
+    expect(field.isFocused, isFalse);
+    await panel.press(LogicalKeyboardKey.keyC);
     expect(writes, 0);
   });
 }
@@ -116,7 +126,7 @@ void main() {
 final _rootBinding = skir.ExpressionBindingId(value: "element");
 final _styleReference = skir.BindingRef(
   bindingId: _rootBinding,
-  path: _fieldPath("style"),
+  path: editorRootPath.field("style"),
 );
 final _styleType = skir.NamedTypeUse(
   definition: skir.TypeDefinitionId(
@@ -128,40 +138,7 @@ final _styleType = skir.NamedTypeUse(
   arguments: const [],
 );
 
-Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings(
-  bool visible,
-) => {
-  _rootBinding: PortableExpressionBinding(
-    value: skir.DataValue.createRecord(
-      fields: [
-        skir.FieldValue(
-          name: "style",
-          value: skir.DataValue.createNamed(
-            actualType: _styleType,
-            payload: skir.DataValue.createRecord(
-              fields: [
-                skir.FieldValue(
-                  name: "visible",
-                  value: skir.DataValue.wrapBoolean(visible),
-                ),
-                skir.FieldValue(
-                  name: "title",
-                  value: skir.DataValue.wrapStringValue("Original"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ),
-    location: skir.ValueLocation(
-      resource: skir.ResourceId(value: "element:message"),
-      path: skir.ValuePath(segments: const []),
-    ),
-  ),
-};
-
-skir.NamedControl _control() => skir.NamedControl(
+final _control = skir.NamedControl(
   control: skir.BoundControl(
     binding: _styleReference,
     label: null,
@@ -192,23 +169,10 @@ skir.NamedControl _control() => skir.NamedControl(
                 whenTrue: skir.PresentationNode(
                   nodeId: "style.visible",
                   properties: skir.PresentationProperties.defaultInstance,
-                  element: skir.PresentationElement.createText(
-                    value: skir.ExpressionNode.wrapLiteral(
+                  element: textElement(
+                    skir.ExpressionNode.wrapLiteral(
                       skir.DataValue.wrapStringValue("Custom style"),
                     ),
-                    color: null,
-                    sizing: null,
-                    fontWeight: null,
-                    fontItalic: null,
-                    fontOpticalSize: null,
-                    fontSlant: null,
-                    fontWidth: null,
-                    textAlignment: null,
-                    lineHeight: null,
-                    letterSpacing: null,
-                    decoration: null,
-                    semanticLabel: null,
-                    paragraph: skir.TextParagraph.defaultInstance,
                   ),
                   header: null,
                 ),
@@ -221,27 +185,16 @@ skir.NamedControl _control() => skir.NamedControl(
             skir.PresentationNode(
               nodeId: "style.title",
               properties: skir.PresentationProperties.defaultInstance,
-              element: skir.PresentationElement.createTextInput(
-                control: skir.BoundControl(
-                  binding: skir.BindingRef(
-                    bindingId: _rootBinding,
-                    path: skir.ValuePath(
-                      segments: [
-                        skir.PathSegment.createField(name: "style"),
-                        skir.PathSegment.createField(name: "title"),
-                      ],
-                    ),
+              element: textInputElement(
+                skir.BindingRef(
+                  bindingId: _rootBinding,
+                  path: skir.ValuePath(
+                    segments: [
+                      skir.PathSegment.createField(name: "style"),
+                      skir.PathSegment.createField(name: "title"),
+                    ],
                   ),
-                  label: null,
-                  description: null,
-                  prefix: null,
-                  semanticLabel: null,
                 ),
-                appearance: null,
-                content: null,
-                entry: null,
-                mappings: null,
-                options: skir.TextEditingOptions.defaultInstance,
               ),
               header: null,
             ),
@@ -262,95 +215,9 @@ skir.NamedControl _control() => skir.NamedControl(
   content: null,
 );
 
-skir.PresentationNode _rootPresentation() => skir.PresentationNode(
+final _rootPresentation = skir.PresentationNode(
   nodeId: "style.root",
   properties: skir.PresentationProperties.defaultInstance,
-  element: skir.PresentationElement.wrapNamedInput(_control()),
+  element: skir.PresentationElement.wrapNamedInput(_control),
   header: null,
 );
-
-skir.ValuePath _fieldPath(String name) =>
-    skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);
-
-final class _NamedTestHost extends ChangeNotifier
-    implements PortablePresentationHost {
-  _NamedTestHost({required this.onWrite});
-
-  final void Function(skir.BindingRef reference, skir.DataValue value) onWrite;
-
-  @override
-  EditControl? commitControl(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => null;
-
-  @override
-  PortablePresentationCapabilities get capabilities =>
-      const PortablePresentationCapabilities();
-
-  @override
-  PortablePresentationDocument get document => PortablePresentationDocument(
-    catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
-    root: skir.PresentationNode.defaultInstance,
-    bindings: const {},
-    budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-  );
-
-  @override
-  bool get enabled => true;
-
-  @override
-  bool get readOnly => false;
-
-  @override
-  Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction, {
-    required PortableInvocationContext context,
-  }) async => const PortablePresentationWriteApplied();
-
-  @override
-  skir.TypeUse? expectedType(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) => reference == _styleReference
-      ? skir.TypeUse.wrapNamed(_styleType)
-      : skir.TypeUse.wrapScalar(skir.ScalarKind.text);
-
-  @override
-  skir.ValueLocation? location(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) {
-    final base = context.bindings[reference.bindingId]?.location;
-    if (base == null) return null;
-    return skir.ValueLocation(
-      resource: base.resource,
-      path: skir.ValuePath(
-        segments: [...base.path.segments, ...reference.path.segments],
-      ),
-    );
-  }
-
-  @override
-  skir.DataValue? read(
-    skir.BindingRef reference, {
-    required PortableInvocationContext context,
-  }) {
-    final root = context.bindings[reference.bindingId]?.value;
-    if (root == null || reference.path.segments.isEmpty) return root;
-    return switch (root.readAt(reference.path)) {
-      PortablePathValue(:final value) => value,
-      PortablePathUnavailable() => null,
-    };
-  }
-
-  @override
-  Future<PortablePresentationWriteResult> write(
-    skir.BindingRef reference,
-    skir.DataValue value, {
-    required PortableInvocationContext context,
-  }) async {
-    onWrite(reference, value);
-    return const PortablePresentationWriteApplied();
-  }
-}

@@ -1,60 +1,36 @@
-use component_test::{TestContext, TestResult, component_test};
 use json_matcher::assert_jm;
-use typewriter_component_test::prelude::SkirMessagingExt;
+use typewriter_component_test::{
+    prelude::*,
+    service::{expect_status_update, seed_organization_services},
+};
 use wasmcloud_utils::skir::base::service::v1::{
     lifecycle::{ServiceHeartbeatNotification, ServiceShutdownNotification},
-    organization::OrganizationServicesChanged,
     service::ServiceStatus,
 };
 
-use super::{ServiceRegistration, database};
-
-fn service_update_matches(body: &[u8], expected_status: ServiceStatus) -> bool {
-    let Ok(response) = OrganizationServicesChanged::serializer()
-        .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
-    else {
-        return false;
-    };
-    let OrganizationServicesChanged::Update(service) = response else {
-        return false;
-    };
-    service.service_id.key.to_string() == "bound_service"
-        && service.state.is_some_and(|state| {
-            state.status == expected_status && state.last_seen > std::time::SystemTime::UNIX_EPOCH
-        })
-}
+use super::ServiceRegistration;
 
 #[component_test(ServiceRegistration)]
-async fn heartbeat_updates_unbound_service_without_organization_event(
+async fn heartbeat_marks_unbound_service_online_without_organization_event(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
-    let database = database(context)?;
-    database
-        .seed(
-            "CREATE service:demo_service SET name = 'demo_service', role = { type: 'host', version: '1.0.0' }",
-        )
-        .execute()
-        .await?;
+    let database = context.database()?;
+    Seed::new().service("lobby").apply(context).await?;
+    context.expect_no_publish("typewriter.to.organization.*.services.watch")?;
 
     context
-        .messaging()?
-        .publish_skir(
-            "typewriter.from.service.demo_service.heartbeat",
+        .publish(
+            from_service("lobby", "heartbeat"),
             &ServiceHeartbeatNotification::default(),
-            ServiceHeartbeatNotification::serializer(),
         )
         .await?;
     context.messaging()?.wait_idle().await?;
 
-    let state = database
-        .query_json("SELECT VALUE state.status AS status FROM ONLY service:demo_service")
-        .await?;
-    assert_jm!(state, "online");
     assert_jm!(
         database
-            .query_json("SELECT VALUE revision FROM ONLY service:demo_service")
+            .query_json("SELECT VALUE [state.status, revision] FROM ONLY service:lobby")
             .await?,
-        1
+        ["online", 1]
     );
     Ok(())
 }
@@ -63,41 +39,23 @@ async fn heartbeat_updates_unbound_service_without_organization_event(
 async fn heartbeat_publishes_bound_service_state(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
-    let database = database(context)?;
-    database
-        .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org",
-        )
-        .execute()
-        .await?;
-    context
-        .messaging_mock()?
-        .expect_publish("typewriter.to.organization.test_org.services.watch")
-        .body_matches(|body| service_update_matches(body, ServiceStatus::Online));
+    let database = context.database()?;
+    seed_organization_services(context, &acme(), ada(), &["lobby"]).await?;
+    expect_status_update(context, &acme(), "lobby", ServiceStatus::Online)?;
 
     context
-        .messaging()?
-        .publish_skir(
-            "typewriter.from.service.bound_service.heartbeat",
+        .publish(
+            from_service("lobby", "heartbeat"),
             &ServiceHeartbeatNotification::default(),
-            ServiceHeartbeatNotification::serializer(),
         )
         .await?;
     context.messaging()?.wait_idle().await?;
 
-    let state = database
-        .query_json("SELECT state.status AS status, state.last_seen AS last_seen FROM ONLY service:bound_service")
-        .await?;
-    assert_eq!(
-        state.get("status").and_then(serde_json::Value::as_str),
-        Some("online")
-    );
-    assert!(state.get("last_seen").is_some_and(|value| !value.is_null()));
     assert_jm!(
         database
-            .query_json("SELECT VALUE revision FROM ONLY service:bound_service")
+            .query_json("SELECT VALUE [state.status, state.last_seen != NONE, revision] FROM ONLY service:lobby")
             .await?,
-        1
+        ["online", true, 1]
     );
     Ok(())
 }
@@ -106,31 +64,26 @@ async fn heartbeat_publishes_bound_service_state(
 async fn shutdown_marks_bound_service_offline_and_publishes_update(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
-    let database = database(context)?;
-    database
-        .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org, state = { status: 'online', last_seen: time::now() }",
-        )
-        .execute()
+    let database = context.database()?;
+    Seed::new()
+        .organization(&acme(), ada())
+        .organization_service(&acme(), "lobby")
+        .service_online("lobby")
+        .apply(context)
         .await?;
-    context
-        .messaging_mock()?
-        .expect_publish("typewriter.to.organization.test_org.services.watch")
-        .body_matches(|body| service_update_matches(body, ServiceStatus::Offline));
+    expect_status_update(context, &acme(), "lobby", ServiceStatus::Offline)?;
 
     context
-        .messaging()?
-        .publish_skir(
-            "typewriter.from.service.bound_service.shutdown",
+        .publish(
+            from_service("lobby", "shutdown"),
             &ServiceShutdownNotification::default(),
-            ServiceShutdownNotification::serializer(),
         )
         .await?;
     context.messaging()?.wait_idle().await?;
 
     assert_jm!(
         database
-            .query_json("SELECT VALUE state.status FROM ONLY service:bound_service")
+            .query_json("SELECT VALUE state.status FROM ONLY service:lobby")
             .await?,
         "offline"
     );

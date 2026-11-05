@@ -10,8 +10,10 @@ enum _ElementSlot { leading, center, suffix }
 /// cannot preserve the configured minimum center width. The render object owns
 /// that responsive decision, so callers do not need separate breakpoint trees.
 /// A finite maximum width is required. The suffix is shown only alongside the
-/// center. Hidden children stay mounted while paint, pointer hits, semantics,
-/// and focus participation are suppressed.
+/// center. Hidden children stay mounted while paint, pointer hits and focus
+/// participation are suppressed. A hidden suffix also leaves the semantics
+/// tree; a hidden center keeps naming the layout for assistive technology,
+/// without offering its actions, because it is the leading control's label.
 class AdaptiveLeadingLayout
     extends SlottedMultiChildRenderObjectWidget<_ElementSlot, RenderBox> {
   const AdaptiveLeadingLayout({
@@ -42,7 +44,13 @@ class AdaptiveLeadingLayout
     return switch (slot) {
       _ElementSlot.leading => _AdaptiveSlot(visible: true, child: leading),
       _ElementSlot.center =>
-        center == null ? null : _AdaptiveSlot(visible: false, child: center!),
+        center == null
+            ? null
+            : _AdaptiveSlot(
+                visible: false,
+                labelsWhenHidden: true,
+                child: center!,
+              ),
       _ElementSlot.suffix =>
         suffix == null ? null : _AdaptiveSlot(visible: false, child: suffix!),
     };
@@ -298,6 +306,15 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
           verticalCenter - leadingSize.height / 2,
         );
       }
+
+      // The hidden center still labels the layout, so it sits over the
+      // leading control rather than wherever it was last shown.
+      if (centerChild != null) {
+        (centerChild.parentData! as BoxParentData).offset = Offset(
+          leadingX,
+          verticalCenter - centerChild.size.height / 2,
+        );
+      }
     }
   }
 
@@ -363,15 +380,23 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
     final centerChild = childForSlot(_ElementSlot.center);
     final suffixChild = childForSlot(_ElementSlot.suffix);
     if (leadingChild != null) visitor(leadingChild);
-    if (_showCenter && centerChild != null) visitor(centerChild);
+    if (centerChild != null) visitor(centerChild);
     if (_showSuffix && suffixChild != null) visitor(suffixChild);
   }
 }
 
 class _AdaptiveSlot extends StatefulWidget {
-  const _AdaptiveSlot({required this.visible, required this.child});
+  const _AdaptiveSlot({
+    required this.visible,
+    required this.child,
+    this.labelsWhenHidden = false,
+  });
 
   final bool visible;
+
+  /// Whether the slot stays in the semantics tree while hidden, with its
+  /// actions blocked, so its text keeps naming the layout.
+  final bool labelsWhenHidden;
   final Widget child;
 
   @override
@@ -405,7 +430,10 @@ class _AdaptiveSlotState extends State<_AdaptiveSlot> {
         focusNode: _focusNode,
         canRequestFocus: _visible,
         descendantsAreFocusable: _visible,
-        child: ExcludeSemantics(excluding: !_visible, child: widget.child),
+        child: ExcludeSemantics(
+          excluding: !_visible && !widget.labelsWhenHidden,
+          child: IgnorePointer(ignoring: !_visible, child: widget.child),
+        ),
       ),
     );
   }

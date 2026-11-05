@@ -1,25 +1,37 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets(
-    "uses the shared compact relative time without changing its dot",
-    (tester) async {
-      await tester.pumpTestApp(
-        child: StatusIndicator(
+  testWidgets("an offline subject shows how long ago it was last seen, "
+      "kept current as time passes", (tester) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        StatusIndicator(
           isOnline: false,
-          lastSeen: DateTime.now().subtract(
+          lastSeen: clock.now().subtract(
             const Duration(minutes: 5, seconds: 5),
           ),
         ),
-      );
+      ),
+    );
+    expect(panel.shows("5m ago"), isTrue);
 
-      expect(find.text("5m ago"), findsOneWidget);
-      final dot = tester.widget<Container>(find.byType(Container).last);
-      final decoration = dot.decoration! as BoxDecoration;
-      expect(decoration.shape, BoxShape.circle);
-    },
-  );
+    await tester.pump(const Duration(minutes: 1));
+    await panel.settle();
+
+    expect(panel.shows("6m ago"), isTrue);
+  });
+
+  testWidgets("an online subject reads as online", (tester) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        StatusIndicator(isOnline: true, lastSeen: clock.now()),
+      ),
+    );
+
+    expect(panel.shows("Online"), isTrue);
+  });
 }

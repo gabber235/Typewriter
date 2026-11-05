@@ -1,17 +1,21 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("destination replacement releases both destinations once when cleanup ends the scope", () {
     final work = ScopedWorkSession();
-    final driver = _Driver();
-    final initial = _Destination();
+    final driver = FakeWorkDriver();
+    final initial = FakeWorkDestination();
     work.register(driver, destination: initial);
     initial.onDispose = work.dispose;
-    final replacement = _Destination();
+    final replacement = FakeWorkDestination();
     expect(
-      () =>
-          work.getOrRegister(driver.id, _Driver.new, destination: replacement),
+      () => work.getOrRegister(
+        driver.id,
+        FakeWorkDriver.new,
+        destination: replacement,
+      ),
       throwsStateError,
     );
     expect(initial.disposals, 1);
@@ -26,7 +30,7 @@ void main() {
     "dirty drivers survive route lease release and clean drivers close once",
     () async {
       final work = ScopedWorkSession();
-      final driver = _Driver();
+      final driver = FakeWorkDriver();
       (work..register(driver)).lease(driver.id)
         ..release()
         ..release();
@@ -43,7 +47,7 @@ void main() {
 
   test("a clean driver is owned only by its route lease and releases without invisible retention", () {
     final work = ScopedWorkSession();
-    final driver = _Driver(dirty: false);
+    final driver = FakeWorkDriver(dirty: false);
     work.register(driver);
     final lease = work.lease(driver.id);
     expect(work.state.entries, isEmpty);
@@ -60,14 +64,14 @@ void main() {
     "scope disposal invalidates leases before cleanup callbacks reenter",
     () {
       final work = ScopedWorkSession();
-      final driver = _Driver();
+      final driver = FakeWorkDriver();
       var rejected = false;
       driver.onDispose = () {
         expect(() => work.lease(driver.id), throwsStateError);
         rejected = true;
         work.dispose();
       };
-      final destination = _Destination();
+      final destination = FakeWorkDestination();
       work.register(driver, destination: destination);
       final lease = work.lease(driver.id);
       work.dispose();
@@ -81,8 +85,8 @@ void main() {
 
   test("identical scopes in different domains never share a driver", () {
     final work = ScopedWorkSession();
-    final graph = _Driver(domain: "authoring");
-    final publication = _Driver(domain: "publication");
+    final graph = FakeWorkDriver(domain: "authoring");
+    final publication = FakeWorkDriver(domain: "publication");
     work
       ..register(graph)
       ..register(publication);
@@ -91,63 +95,4 @@ void main() {
     expect(graph.disposals, 1);
     expect(publication.disposals, 1);
   });
-}
-
-final class _Driver extends ChangeNotifier implements WorkDriver {
-  _Driver({this.domain = "fixture", this.dirty = true});
-  final String domain;
-  bool dirty;
-  int disposals = 0;
-  VoidCallback? onDispose;
-  @override
-  WorkDriverId get id => WorkDriverId(domain: domain, scope: "same realm");
-  @override
-  WorkDriverSnapshot get snapshot => WorkDriverSnapshot(
-    entries: [
-      if (dirty)
-        WorkEntryState(
-          id: WorkEntryId(driver: id, identity: "entry"),
-          label: "Retained work",
-          phase: "Local changes",
-          retained: dirty,
-          hasWork: dirty,
-        ),
-    ],
-  );
-  void settled() {
-    dirty = false;
-    notifyListeners();
-  }
-
-  @override
-  Future<void> save(WorkEntryId entry) async => settled();
-  @override
-  bool discard(WorkEntryId entry) {
-    settled();
-    return true;
-  }
-
-  @override
-  Future<void> retry(WorkEntryId entry) async => settled();
-  @override
-  void dispose() {
-    disposals++;
-    onDispose?.call();
-    super.dispose();
-  }
-}
-
-final class _Destination extends WorkDestination {
-  int disposals = 0;
-  VoidCallback? onDispose;
-  @override
-  bool get isCurrent => false;
-  @override
-  Future<void> open() async {}
-  @override
-  void dispose() {
-    disposals++;
-    onDispose?.call();
-    super.dispose();
-  }
 }

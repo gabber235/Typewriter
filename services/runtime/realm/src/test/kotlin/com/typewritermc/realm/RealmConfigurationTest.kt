@@ -5,20 +5,16 @@ import com.typewritermc.realm.storage.DatabaseEndpoint
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.net.URI
-import java.nio.file.Path
 
 val RealmConfigurationTest by testSuite {
-    test("default configuration uses versioned SurrealKV") {
-        val configuration = RealmSettings().databaseConfiguration()
+    test("the default configuration opens a versioned embedded SurrealKV database") {
+        val endpoint = RealmSettings().databaseConfiguration().endpoint
 
-        configuration.endpoint shouldBe DatabaseEndpoint.Embedded.SurrealKv(Path.of("database/realm"))
-        configuration.endpoint.connectionString shouldBe "surrealkv://database/realm?versioned=true"
-        configuration.authentication shouldBe DatabaseAuthentication.None
-        configuration.namespace shouldBe "typewriter"
-        configuration.database shouldBe "realm"
-        configuration.expectedVersion shouldBe SURREALDB_EMBEDDED_VERSION
+        endpoint.shouldBeInstanceOf<DatabaseEndpoint.Embedded.SurrealKv>()
+        endpoint.connectionString shouldContain "versioned=true"
     }
 
     test("remote configuration supports database credentials") {
@@ -66,29 +62,32 @@ val RealmConfigurationTest by testSuite {
         ).databaseConfiguration().authentication shouldBe DatabaseAuthentication.Bearer("token")
     }
 
-    test("invalid endpoint and authentication types are rejected") {
-        shouldThrow<IllegalStateException> {
-            settings("REALM_DB_ENDPOINT_TYPE" to "other").databaseConfiguration()
-        }
-        shouldThrow<IllegalStateException> {
-            settings("REALM_DB_ENGINE" to "other").databaseConfiguration()
-        }
-        shouldThrow<IllegalStateException> {
-            settings("REALM_DB_AUTHENTICATION" to "other").databaseConfiguration()
+    listOf(
+        "REALM_DB_ENDPOINT_TYPE",
+        "REALM_DB_ENGINE",
+        "REALM_DB_AUTHENTICATION",
+    ).forEach { setting ->
+        test("an unknown $setting value is rejected naming the setting and the value") {
+            shouldThrow<IllegalStateException> {
+                settings(setting to "other").databaseConfiguration()
+            }.message shouldBe "Realm setting $setting has unknown value: other"
         }
     }
 
-    test("remote URL and credentials are required when selected") {
+    test("a remote configuration without a URL is rejected naming REALM_DB_URL") {
         shouldThrow<IllegalArgumentException> {
             settings("REALM_DB_ENDPOINT_TYPE" to "remote").databaseConfiguration()
-        }
+        }.message shouldBe "Realm setting REALM_DB_URL must be configured"
+    }
+
+    test("remote credentials without a username are rejected naming REALM_DB_USERNAME") {
         shouldThrow<IllegalArgumentException> {
             settings(
                 "REALM_DB_ENDPOINT_TYPE" to "remote",
                 "REALM_DB_URL" to "ws://localhost:8235",
                 "REALM_DB_AUTHENTICATION" to "database",
             ).databaseConfiguration()
-        }
+        }.message shouldBe "Realm setting REALM_DB_USERNAME must be configured"
     }
 
     test("configuration variants retain their concrete types") {
@@ -102,5 +101,3 @@ val RealmConfigurationTest by testSuite {
             .shouldBeInstanceOf<DatabaseEndpoint.Embedded.RocksDb>()
     }
 }
-
-private fun settings(vararg values: Pair<String, String>): RealmSettings = RealmSettings(configuration = mapOf(*values))

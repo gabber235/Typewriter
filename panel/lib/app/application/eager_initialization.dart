@@ -5,8 +5,8 @@ part "eager_initialization.freezed.dart";
 /// Resolves global startup dependencies before exposing the application shell.
 ///
 /// Providers are watched in dependency order. Telemetry and sentinel
-/// credentials are required for transport setup, while authentication data is
-/// only loaded after authentication has been established. Loading and failure
+/// credentials are required for transport setup, then the identity provider
+/// session, which is null when nobody is signed in. Loading and failure
 /// are rendered locally so the router never evaluates guards against partial
 /// startup state.
 class EagerInitialization extends ConsumerWidget {
@@ -45,32 +45,10 @@ class EagerInitialization extends ConsumerWidget {
       return boundary;
     }
 
-    switch (_require(
-      ref.watch(isAuthenticatedProvider),
-      () => ref.invalidate(authProvider),
-    )) {
-      case _BlockedDependency(:final boundary):
-        return boundary;
-      case _ReadyDependency(:final value) when value != true:
-        return child;
-      case _ReadyDependency():
-        break;
-    }
-
-    switch (_require(
-      ref.watch(accessTokenProvider),
-      () => ref.invalidate(authProvider),
-    )) {
-      case _BlockedDependency(:final boundary):
-        return boundary;
-      case _ReadyDependency(:final value) when value == null:
-        return child;
-      case _ReadyDependency():
-        break;
-    }
-
+    // The session carries the user and the token together, so nothing
+    // below this boundary sees one without the other.
     if (_require(
-          ref.watch(authUserInfoProvider),
+          ref.watch(authSessionProvider),
           () => ref.invalidate(authProvider),
         )
         case _BlockedDependency(:final boundary)) {
@@ -97,6 +75,7 @@ class _Loading extends HookWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Typewriter",
+      debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
@@ -114,6 +93,7 @@ class _Error extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Typewriter",
+      debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),

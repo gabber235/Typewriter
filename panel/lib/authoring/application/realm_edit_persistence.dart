@@ -11,7 +11,7 @@ final class RealmEditPersistence
     required this.reservations,
   });
   final PreparedCommit<skir.CommitPreparedEditResponse> Function(
-    skir.PreparedEdit,
+    skir.CommitPreparedEditRequest,
   )
   request;
   final Future<AuthoringDocument> Function() observe;
@@ -24,20 +24,43 @@ final class RealmEditPersistence
       known;
   @override
   Future<AuthoringDocument> refresh() => observe();
+
+  /// Names one save attempt: every resend of the request it prepares carries
+  /// the same key, and the next capture gets a new one.
   @override
   PreparedCommit<EditSettlement<AuthoringDocument>> prepare(
     EditCapture<AuthoringDocument, RealmPreparedEdit> capture,
   ) {
     final compiled = const RealmEditModel().compose(capture);
-    return request(compiled.request)
-        .mapResponse((response) => response.editSettlement);
+    final catalog = capture.baseline.catalog;
+    return request(
+      skir.CommitPreparedEditRequest(
+        edit: compiled.request,
+        submission: uuid.v4(),
+      ),
+    ).mapResponse(
+      (response) => switch (response) {
+        skir.CommitPreparedEditResponse_committedWrapper(:final value)
+            when value.generation == catalog.snapshot.generation =>
+          EditSettlement.confirmed(
+            AuthoringDocument.fromState(value, catalog: catalog),
+          ),
+        // A resend after a catalog change answers with the saved state under
+        // the new catalog, which this request's catalog cannot read. The save
+        // landed; the session's catalog refresh brings the state.
+        skir.CommitPreparedEditResponse_committedWrapper() =>
+          const EditSettlement.confirmed(null),
+        _ => response.editSettlement,
+      },
+    );
   }
 }
 
+/// The settlement of every reply but `committed`, which
+/// [RealmEditPersistence.prepare] settles with the catalog it was composed
+/// against.
 extension RealmResponseSettlement on skir.CommitPreparedEditResponse {
   EditSettlement<AuthoringDocument> get editSettlement => switch (this) {
-    skir.CommitPreparedEditResponse.committed =>
-      const EditSettlement.accepted(),
     skir.CommitPreparedEditResponse_conflictErrorWrapper(:final value) =>
       EditSettlement.conflict(
         evidence: AuthoringConflictEvidence(

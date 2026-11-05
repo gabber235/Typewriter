@@ -1,0 +1,17 @@
+id: dart-flutter-animated-list
+valid:
+  - |
+    Widget build(BuildContext context) => SliverAnimatedRows(
+      initialItemCount: 0,
+      itemBuilder: (context, index, animation) => const SizedBox(),
+    );
+  - |
+    final key = GlobalKey<SliverAnimatedRowsState>();
+invalid:
+  - |
+    Widget build(BuildContext context) => SliverAnimatedList(
+      initialItemCount: 0,
+      itemBuilder: (context, index, animation) => const SizedBox(),
+    );
+  - |
+    final key = GlobalKey<AnimatedListState>();

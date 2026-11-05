@@ -16,28 +16,23 @@ class Organizations extends _$Organizations {
   final _sequenceState = SequencedCollection<List<skir.Organization>>();
 
   @override
-  Stream<List<skir.Organization>> build() async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (!ref.mounted) return;
-
-    if (userId == null) {
-      yield [];
-      return;
-    }
-
-    yield* skir.WatchUserOrganizationsRequest().watch<List<skir.Organization>>(
-      ref,
-      userId: userId,
-      snapshot: (response) => _organizationSnapshot(response).values.toList(),
-      reduce: _reduceOrganizations,
-      reconciliation: ProjectionReconciliation.sequenced(
-        snapshotSequence: (response) =>
-            _organizationSnapshot(response).sequence,
-        eventSequence: (event) => event.sequence,
-        sequenceState: _sequenceState,
-      ),
-    );
-  }
+  Stream<List<skir.Organization>> build() => ref.watchSignedIn(
+    signedOut: const [],
+    (userId) =>
+        skir.WatchUserOrganizationsRequest().watch<List<skir.Organization>>(
+          ref,
+          userId: userId,
+          snapshot: (response) =>
+              _organizationSnapshot(response).values.toList(),
+          reduce: _reduceOrganizations,
+          reconciliation: ProjectionReconciliation.sequenced(
+            snapshotSequence: (response) =>
+                _organizationSnapshot(response).sequence,
+            eventSequence: (event) => event.sequence,
+            sequenceState: _sequenceState,
+          ),
+        ),
+  );
 
   /// Creates an organization for the authenticated user.
   ///

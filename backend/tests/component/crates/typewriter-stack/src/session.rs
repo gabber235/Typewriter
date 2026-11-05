@@ -1,9 +1,9 @@
 //! A signed in person on the stack, connected the way the panel connects
 //! (`panel/lib/infrastructure/messaging/nats_connection.dart`): a password grant against the
-//! identity stand in, the sentinel credentials from the public HTTP route, and a NATS connection
-//! the auth callout authorizes from the access token and the entity permission qualifier. Requests
-//! are Skir payloads on the panel's `cloud.to` subjects, which the broker bridges to the
-//! components.
+//! identity provider (the stand in on a worktree stack, Authentik on the CI cluster), the sentinel
+//! credentials from the public HTTP route, and a NATS connection the auth callout authorizes from
+//! the access token and the entity permission qualifier. Requests are Skir payloads on the panel's
+//! `cloud.to` subjects, which the backend serves.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -11,10 +11,11 @@ use std::time::Duration;
 
 use anyhow::{Context as _, Result, anyhow, bail};
 use base64::Engine as _;
-use base64::engine::general_purpose::STANDARD;
+use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};
 use futures_util::StreamExt as _;
 use nkeys::KeyPair;
 use serde::Deserialize;
+use typewriter_component_test::StackUser;
 use wasmcloud_utils::skir::base::access::v1::permission::{
     EntityPermissionQualifier, EntityPermissionQualifier_User,
 };
@@ -37,38 +38,24 @@ pub struct StackEndpoints {
     /// The stack's state directory.
     #[arg(long)]
     pub state: PathBuf,
-    /// The identity stand in.
+    /// The identity provider's base URL, where `/application/o/token/` answers.
     #[arg(long)]
-    pub identity: u16,
-    /// The public HTTP routes.
+    pub identity: String,
+    /// The public HTTP routes' base URL (`API_BASE_URL`).
     #[arg(long)]
-    pub http: u16,
-    /// The broker's client port.
+    pub api: String,
+    /// The NATS URL clients connect to.
     #[arg(long)]
-    pub nats: u16,
-}
-
-/// A person the stack knows.
-#[derive(Deserialize)]
-pub struct FixtureUser {
-    pub username: String,
-    pub password: String,
-    pub subject: String,
-    /// Names of the organizations the person belongs to once the stack is provisioned.
-    pub organizations: Vec<String>,
+    pub nats: String,
 }
 
 impl StackEndpoints {
-    pub fn users(&self) -> Result<Vec<FixtureUser>> {
-        serde_json::from_str(
-            &std::fs::read_to_string(&self.users)
-                .with_context(|| format!("cannot read {}", self.users.display()))?,
-        )
-        .with_context(|| format!("{} is not a user list", self.users.display()))
+    pub fn users(&self) -> Result<Vec<StackUser>> {
+        StackUser::read_all(&self.users)
     }
 
     /// The stack's owner: the first fixture user who belongs to an organization.
-    pub fn owner(&self) -> Result<FixtureUser> {
+    pub fn owner(&self) -> Result<StackUser> {
         self.users()?
             .into_iter()
             .find(|user| !user.organizations.is_empty())
@@ -91,7 +78,7 @@ pub struct Session {
 impl Session {
     pub async fn sign_in(
         endpoints: &StackEndpoints,
-        user: &FixtureUser,
+        user: &StackUser,
         organization: Option<&RecordId>,
     ) -> Result<Self> {
         let http = reqwest::Client::new();
@@ -105,7 +92,8 @@ impl Session {
         }));
         let qualifier =
             STANDARD.encode(EntityPermissionQualifier::serializer().to_bytes(&qualifier));
-        let user_token = token_of(&user.subject)?;
+        // The panel names the user by the token's subject (`nats_connection.dart`).
+        let user_token = token_of(&subject_of(&token)?)?;
         let inbox = panel_reply_inbox_prefix(&user_token, &session);
         let key = Arc::new(KeyPair::from_seed(&sentinel.seed)?);
         let username = user.username.clone();
@@ -128,7 +116,7 @@ impl Session {
             }
         })
         .custom_inbox_prefix(inbox)
-        .connect(format!("nats://127.0.0.1:{}", endpoints.nats))
+        .connect(endpoints.nats.as_str())
         .await
         .with_context(|| {
             format!(
@@ -200,7 +188,7 @@ impl Session {
 async fn access_token(
     http: &reqwest::Client,
     endpoints: &StackEndpoints,
-    user: &FixtureUser,
+    user: &StackUser,
 ) -> Result<String> {
     #[derive(Deserialize)]
     struct Token {
@@ -208,8 +196,8 @@ async fn access_token(
     }
     let response = http
         .post(format!(
-            "http://127.0.0.1:{}/application/o/token/",
-            endpoints.identity
+            "{}/application/o/token/",
+            endpoints.identity.trim_end_matches('/')
         ))
         .form(&[
             ("grant_type", "password"),
@@ -219,10 +207,10 @@ async fn access_token(
         ])
         .send()
         .await
-        .context("signing in with the identity stand in")?;
+        .context("signing in with the identity provider")?;
     if !response.status().is_success() {
         bail!(
-            "the identity stand in refused {}: {}",
+            "the identity provider refused {}: {}",
             user.username,
             response.text().await.unwrap_or_default()
         );
@@ -241,7 +229,10 @@ async fn sentinel_credentials(
     endpoints: &StackEndpoints,
 ) -> Result<Sentinel> {
     let response = http
-        .get(format!("http://127.0.0.1:{}/auth/sentinel", endpoints.http))
+        .get(format!(
+            "{}/auth/sentinel",
+            endpoints.api.trim_end_matches('/')
+        ))
         .send()
         .await
         .context("fetching the sentinel credentials")?;
@@ -258,6 +249,25 @@ async fn sentinel_credentials(
         }),
         other => bail!("/auth/sentinel failed: {other:?}"),
     }
+}
+
+/// The `sub` claim of a JWT access token, which the session does not verify: the backend does.
+fn subject_of(token: &str) -> Result<String> {
+    #[derive(Deserialize)]
+    struct Claims {
+        sub: String,
+    }
+    let payload = token
+        .split('.')
+        .nth(1)
+        .context("the access token is not a JWT")?;
+    let claims: Claims = serde_json::from_slice(
+        &URL_SAFE_NO_PAD
+            .decode(payload)
+            .context("the access token's payload is not base64url")?,
+    )
+    .context("the access token's payload names no subject")?;
+    Ok(claims.sub)
 }
 
 /// A fresh 32 character lowercase hexadecimal connection session, as the panel chooses one.

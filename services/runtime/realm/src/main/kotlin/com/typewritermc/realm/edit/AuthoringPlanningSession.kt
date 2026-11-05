@@ -94,6 +94,26 @@ internal class AuthoringPlanningSession(
         emitted += deletion
     }
 
+    /**
+     * Appends [intent] as one step: when the planner refuses any part of it, the staged graph and the emitted intents
+     * are as they were before, so the caller may continue with other writes.
+     */
+    fun appendAtomically(intent: EditIntent) {
+        val stagedBefore = staged.toMap()
+        val removedBefore = removed.toSet()
+        val emittedBefore = emitted.size
+        try {
+            append(intent)
+        } catch (failure: IllegalArgumentException) {
+            staged.clear()
+            staged.putAll(stagedBefore)
+            removed.clear()
+            removed.addAll(removedBefore)
+            while (emitted.size > emittedBefore) emitted.removeLast()
+            throw failure
+        }
+    }
+
     fun append(intent: EditIntent) {
         when (intent) {
             is EditIntent.ConnectRelationWrapper -> {
@@ -310,9 +330,10 @@ internal class AuthoringPlanningSession(
     }
 
     private fun clearReferences(at: ValueLocation) {
+        val record = resources[at.resource] ?: return
         ResourceValueMapper
             .discover(
-                mapOf(at.resource to resources.getValue(at.resource)),
+                mapOf(at.resource to record),
             ).filter {
                 it.id.location.path
                     .atOrBelow(at.path)

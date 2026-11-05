@@ -29,13 +29,22 @@ val RealmDatabaseConfigurationTest by testSuite {
                 database = "realm",
                 expectedVersion = "3.0.0",
             )
-        }
+        }.message shouldBe "Embedded databases do not support authentication"
     }
 
-    test("remote URL must use a supported scheme and host") {
+    test("a remote URL with an unsupported scheme is rejected") {
         shouldThrow<IllegalArgumentException> { DatabaseEndpoint.Remote(URI("nats://localhost:4222")) }
+            .message shouldBe "Remote database URL must use HTTP or WebSocket"
+    }
+
+    test("a remote URL without a host is rejected") {
         shouldThrow<IllegalArgumentException> { DatabaseEndpoint.Remote(URI("ws:localhost")) }
+            .message shouldBe "Remote database URL must include a host"
+    }
+
+    test("a remote URL with embedded credentials is rejected") {
         shouldThrow<IllegalArgumentException> { DatabaseEndpoint.Remote(URI("wss://realm:secret@database.example.com")) }
+            .message shouldBe "Remote database URL must not contain credentials"
     }
 
     test("authentication does not expose secrets") {

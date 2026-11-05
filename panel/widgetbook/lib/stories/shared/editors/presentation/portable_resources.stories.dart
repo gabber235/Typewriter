@@ -2,159 +2,168 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
-@widgetbook.UseCase(name: "Graph layout", type: PortableResourcesHost)
-Widget resourcesGraphUseCase(BuildContext context) =>
-    const FakeApp(child: ResourcesWorkspaceStory(timeline: false));
+@widgetbook.UseCase(name: "Page workspace", type: PortableResourcesHost)
+Widget resourcesWorkspaceUseCase(BuildContext context) {
+  final layout = context.knobs.object.segmented(
+    label: "Layout",
+    options: const ["Graph", "Timeline"],
+    initialOption: "Graph",
+  );
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      ResourcesWorkspaceStory(
+        key: ValueKey(layout),
+        timeline: layout == "Timeline",
+        configured: context.knobs.boolean(label: "Configured appearance"),
+      ),
+    ),
+  );
+}
 
-@widgetbook.UseCase(name: "Timeline layout", type: PortableResourcesHost)
-Widget resourcesTimelineUseCase(BuildContext context) =>
-    const FakeApp(child: ResourcesWorkspaceStory(timeline: true));
-
-/// A page laying out its elements as a graph or a timeline, with the selected
-/// element's inspector beside it.
-final class ResourcesWorkspaceStory extends StatefulWidget {
+/// A page laying out its elements as a graph or a timeline, with the inspector
+/// of the element the user opened beside it.
+///
+/// Edits go through a [RealmEditing] over a [FakeRealm], the same save path a
+/// Realm surface uses, so moving or editing an element keeps the change.
+final class ResourcesWorkspaceStory extends HookConsumerWidget {
   const ResourcesWorkspaceStory({
     required this.timeline,
-    this.workspace,
-    this.onResourceSelected,
+    this.configured = false,
     super.key,
   });
 
   final bool timeline;
-  final RealmEditing? workspace;
-  final ValueChanged<skir.ResourceId>? onResourceSelected;
+
+  /// Whether the page overrides the layout's cell size, spacing and colors.
+  final bool configured;
 
   @override
-  State<ResourcesWorkspaceStory> createState() =>
-      _ResourcesWorkspaceStoryState();
-}
-
-final class _ResourcesWorkspaceStoryState
-    extends State<ResourcesWorkspaceStory> {
-  final _operations = PortableOperationResults();
-  late final _PageFixture _fixture = _pageFixture();
-  late skir.ResourceId _selected = _fixture.firstEntry;
-  late final _transport = ScriptedAuthoringTransport(
-    AsyncData(_fixture.draft.toDocument()),
-  );
-  final _submissions = ScopedWorkSession();
-  late final _workspace =
-      widget.workspace ??
-      RealmEditing(
-        persistence: _transport.persistence,
-        submissions: _submissions,
-        initial: _fixture.draft.toDocument(),
-      );
-  late final _binding = _workspace.attach(_fixture.page);
-  late final _host = AuthoredPresentationHost(
-    resource: _fixture.page,
-    source: _workspace.document,
-    material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.workspace,
-    budget: _budget,
-    capabilities: const PortablePresentationCapabilities(),
-    edit: _binding,
-  );
-  RealmEditingBinding? _inspector;
-  void _updated() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _workspace.addListener(_updated);
-  }
-
-  @override
-  void dispose() {
-    _workspace.removeListener(_updated);
-    _operations.dispose();
-    _host.dispose();
-    _binding.detach();
-    _inspector?.detach();
-    if (widget.workspace == null) _workspace.dispose();
-    _transport.dispose();
-    _submissions.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    _host.update(
-      source: _workspace.document,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fixture = useMemoized(_pageFixture);
+    final realm = useMemoized(
+      () => FakeRealm(
+        scope: AuthoringScope(
+          organizationId: skir.recordId("organization:story"),
+          realmId: skir.recordId("realm_instance:story"),
+        ),
+        name: "Story",
+        document: fixture.draft.toDocument(),
+      ),
+    );
+    final submissions = useMemoized(ScopedWorkSession.new);
+    final workspace = useMemoized(
+      () => RealmEditing(
+        persistence: realm.persistence,
+        submissions: submissions,
+        initial: realm.document,
+      ),
+    );
+    final operations = useMemoized(PortableOperationResults.new);
+    final binding = useMemoized(() => workspace.attach(fixture.page));
+    final host = useMemoized(
+      () => AuthoredPresentationHost(
+        resource: fixture.page,
+        source: workspace.document,
+        material: skir.PresentationMaterial.defaultInstance,
+        role: skir.PresentationRole.workspace,
+        budget: _budget,
+        capabilities: const PortablePresentationCapabilities(),
+        edit: binding,
+      ),
+    );
+    useEffect(
+      () => () {
+        operations.dispose();
+        host.dispose();
+        binding.detach();
+        workspace.dispose();
+        submissions.dispose();
+        unawaited(realm.close());
+      },
+      const [],
+    );
+    useListenable(workspace);
+    // The inspector shows the element the user selected last, or the one
+    // they opened, as the inspector beside a Realm surface does.
+    final opened = useState(fixture.firstEntry);
+    final selection = ref.watch(selectionProvider);
+    final shown =
+        selection
+            .whereType<AuthoringResourceIdentifier>()
+            .lastOrNull
+            ?.resourceId ??
+        opened.value;
+    final inspector = useMemoized(() => workspace.attach(shown), [shown]);
+    useEffect(() => inspector.detach, [inspector]);
+    host.update(
+      source: workspace.document,
       capabilities: const PortablePresentationCapabilities(),
       available: true,
       readOnly: false,
     );
-    _inspector?.detach();
-    _inspector = _workspace.attach(_selected);
-    final workspace = skir.PresentationNode(
-      nodeId: widget.timeline ? "page.timeline" : "page.graph",
+    final node = skir.PresentationNode(
+      nodeId: timeline ? "page.timeline" : "page.graph",
       properties: skir.PresentationProperties.defaultInstance,
-      element: widget.timeline
-          ? skir.PresentationElement.createResources(
-              control: _fixture.control,
-              layout: skir.ResourcesLayout.createTimeline(appearance: null),
-              order: null,
-              itemBinding: declareNamedBinding(
-                "resources.item",
-                skir.TypeTemplate.unknown,
-              ),
-            )
-          : skir.PresentationElement.createResources(
-              control: _fixture.control,
-              layout: skir.ResourcesLayout.createGraph(
+      element: skir.PresentationElement.createResources(
+        control: fixture.control,
+        layout: timeline
+            ? skir.ResourcesLayout.createTimeline(
+                appearance: configured ? _timelineAppearance : null,
+              )
+            : skir.ResourcesLayout.createGraph(
                 direction: skir.GraphDirection.leftToRight,
-                appearance: null,
+                appearance: configured ? _graphAppearance : null,
               ),
-              order: null,
-              itemBinding: declareNamedBinding(
-                "resources.item",
-                skir.TypeTemplate.unknown,
-              ),
-            ),
+        order: null,
+        itemBinding: declareNamedBinding(
+          "resources.item",
+          skir.TypeTemplate.unknown,
+        ),
+      ),
       header: null,
     );
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.timeline ? "Timeline page" : "Graph page"),
-      ),
-      body: Row(
+    return SizedBox.expand(
+      child: Row(
         children: [
           Expanded(
-            child: PortablePresentationNodeRenderer(
-              node: workspace,
-              scope: PortablePresentationScope(
-                operations: _operations,
-                bindings: {
-                  configuredValueBindingId: PortableExpressionBinding(
-                    value: skir.DataValue.createRecord(
-                      fields: _workspace.document
-                          .resource(_fixture.page)!
-                          .fields,
+            // The interactions a Realm surface installs, so elements drag
+            // and drop as they do there.
+            child: AuthoredResourcesInteractions(
+              authoringScope: realm.scope,
+              binding: binding,
+              child: PortablePresentationNodeRenderer(
+                node: node,
+                scope: PortablePresentationScope(
+                  operations: operations,
+                  bindings: {
+                    configuredValueBindingId: PortableExpressionBinding(
+                      value: skir.DataValue.createRecord(
+                        fields: workspace.document
+                            .resource(fixture.page)!
+                            .fields,
+                      ),
+                      location: skir.ValueLocation(
+                        resource: fixture.page,
+                        path: skir.ValuePath(segments: const []),
+                      ),
                     ),
-                    location: skir.ValueLocation(
-                      resource: _fixture.page,
-                      path: skir.ValuePath(segments: const []),
-                    ),
+                  },
+                  budget: _budget,
+                  catalog: fixture.catalog,
+                  queries: PortableExpressionQueries(
+                    catalog: fixture.catalog,
+                    authored: workspace.document,
                   ),
-                },
-                budget: _budget,
-                catalog: _fixture.catalog,
-                queries: PortableExpressionQueries(
-                  catalog: _fixture.catalog,
-                  authored: _workspace.document,
+                  resource: fixture.page,
+                  role: skir.PresentationRole.workspace,
+                  host: host,
+                  openResource: (resource) => opened.value = resource,
                 ),
-                resource: _fixture.page,
-                role: skir.PresentationRole.workspace,
-                host: _host,
-                openResource: (resource) {
-                  setState(() => _selected = resource);
-                  widget.onResourceSelected?.call(resource);
-                },
               ),
             ),
           ),
@@ -169,10 +178,10 @@ final class _ResourcesWorkspaceStoryState
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: AuthoredResourceEditor(
-                  key: ValueKey(_selected.value),
-                  resource: _selected,
-                  document: _workspace.document,
-                  edit: _inspector,
+                  key: ValueKey(shown.value),
+                  resource: shown,
+                  document: workspace.document,
+                  edit: inspector,
                   role: skir.PresentationRole.inspector,
                   budget: _budget,
                 ),
@@ -582,5 +591,23 @@ skir.ValuePath _itemPath(String field, String item) => skir.ValuePath(
   ],
 );
 
-AuthoringDocument resourcesWorkspaceStoryDocument() =>
-    _pageFixture().draft.toDocument();
+final _accent = skir.PresentationColor.wrapValue(
+  skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("${0xff7354bf}")),
+);
+
+final _graphAppearance =
+    (skir.ResourceGraphAppearance.mutable()
+          ..cellSize = numberLiteral(60)
+          ..edgeColor = _accent
+          ..cardPadding = skir.PresentationInsets.wrapAll(8))
+        .toFrozen();
+
+final _timelineAppearance =
+    (skir.ResourceTimelineAppearance.mutable()
+          ..rulerHeight = 44
+          ..trackPadding = 6
+          ..laneHeight = 40
+          ..laneGap = 12
+          ..headerPadding = 8
+          ..gridMajorColor = _accent)
+        .toFrozen();

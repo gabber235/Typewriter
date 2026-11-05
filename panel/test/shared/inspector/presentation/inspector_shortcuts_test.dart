@@ -1,318 +1,103 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("fitted headings render in mobile and minimum desktop panes", (
-    tester,
-  ) async {
-    final selected = TestSelectableIdentifier(
-      id: "a book with an unusually long title that needs fitting",
-    );
-    for (final width in [400.0, 1600.0]) {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: width,
-            height: 800,
-            child: const InspectorScaffold(child: SizedBox()),
-          ),
+  const title = "A book with an unusually long title that needs fitting";
+  final item = TestSelectableIdentifier(id: "test-item");
+
+  group("the heading of the selected item stays inside the inspector", () {
+    final long = TestSelectableIdentifier(id: title);
+
+    testWidgets("on a phone", (tester) async {
+      final panel = await tester.pumpPanel(
+        [window(const Size(400, 800))],
+        at: const PanelLocation.component(
+          SizedBox.expand(child: InspectorScaffold(child: SizedBox.expand())),
         ),
-        overrides: [
-          selectionProvider.overrideWithValue([selected]),
-          inspectorSizeProvider.overrideWithValue(kInspectorMinSize),
-        ],
       );
-      expect(
-        find.byType(width < 600 ? MobileInspector : DesktopInspector),
-        findsOneWidget,
-      );
-      await tester.pump(const Duration(milliseconds: 250));
-      await tester.pumpAndSettle();
-      if (width < 600) {
-        tester
-            .widget<DraggableScrollableSheet>(
-              find.byType(DraggableScrollableSheet),
-            )
-            .controller!
-            .jumpTo(0.9);
-        await tester.pumpAndSettle();
+      panel.container.read(selectionProvider.notifier).selectAll([long]);
+      await panel.settle();
+      await panel.inspector.pull(const Offset(0, -500));
+
+      panel.inspector.expectHeadingInside(title.formatted);
+    });
+
+    testWidgets("in the narrowest desktop inspector", (tester) async {
+      final panel = await tester.pumpDesktopInspector();
+      await panel.selectAll([long]);
+      await panel.inspector.focusHeading(long.id.formatted);
+      for (var step = 0; step < 10; step++) {
+        await panel.pressShifted(LogicalKeyboardKey.period);
       }
-      final heading = tester.widget<AutoSizeText>(find.byType(AutoSizeText));
-      expect(heading.minFontSize, 18);
-      expect(heading.maxFontSize, 40);
-      expect(heading.textSpan?.toPlainText(), selected.id.formatted);
-      expect(tester.takeException(), isNull);
-    }
+
+      expect(panel.inspector.rect.width, lessThan(kInspectorDefaultSize));
+      panel.inspector.expectHeadingInside(title.formatted);
+    });
   });
 
-  testWidgets(
-    "inspector context counts requested selections including unresolved items",
-    (tester) async {
-      final first = TestSelectableIdentifier(id: "first");
-      final second = TestSelectableIdentifier(id: "second");
-      await tester.pumpTestApp(
-        child: const Center(
-          child: SizedBox(
-            width: 1600,
-            height: 800,
-            child: InspectorScaffold(child: SizedBox()),
-          ),
-        ),
-      );
-      final container = tester.container(of: find.byType(InspectorScaffold));
-      container.read(selectionProvider.notifier).selectAll([first]);
-      await tester.pumpAndSettle();
-      expect(find.byType(AutoSizeText), findsOneWidget);
-      container.read(selectionProvider.notifier).selectAll([first, second]);
-      await tester.pumpAndSettle();
-      expect(find.byType(AutoSizeText), findsNothing);
-      final environments = tester.widgetList<PresentationEnvironment>(
-        find.byType(PresentationEnvironment),
-      );
-      expect(environments.single.host.selectionCount, 2);
-      container.read(selectionProvider.notifier).selectAll([first]);
-      await tester.pumpAndSettle();
-      expect(find.byType(AutoSizeText), findsOneWidget);
-      final resolved = container.read(inspectedSelectionProvider).requireValue;
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpTestApp(
-        child: const Center(
-          child: SizedBox(
-            width: 1600,
-            height: 800,
-            child: InspectorScaffold(child: SizedBox()),
-          ),
-        ),
-        overrides: [
-          selectionProvider.overrideWithValue([first, second]),
-          inspectedSelectionProvider.overrideWith((ref) => AsyncData(resolved)),
-        ],
-      );
-      expect(find.byType(AutoSizeText), findsNothing);
-      expect(
-        tester
-            .widget<PresentationEnvironment>(
-              find.byType(PresentationEnvironment),
-            )
-            .host
-            .selectionCount,
-        2,
-      );
-    },
-  );
+  testWidgets("the heading counts every selected item, resolved or not", (
+    tester,
+  ) async {
+    final pending = LoadingSelectableIdentifier("pending");
+    final panel = await tester.pumpDesktopInspector();
+    await panel.selectAll([item]);
+    final selection = panel.container.read(selectionProvider.notifier);
+    expect(panel.inspector.heading(item.id.formatted), findsOneWidget);
 
-  group("Inspector shortcuts", () {
-    testWidgets("organization scaffold hosts the inspector", (tester) async {
-      await tester.pumpTestApp(
-        child: const OrganizationScaffold(
-          child: SizedBox.expand(key: ValueKey("route-content")),
-        ),
-        overrides: [
-          realmInteractionProvider.overrideWith(
-            (ref) => const RealmInteractionState(
-              connectionState: RealmConnectionState.online,
-            ),
-          ),
-          ...canonicalServicesProviderOverrides(state: DisplayState.noItems),
-          ...realmProviderOverrides(),
-          ...organizationProviderOverrides(),
-          ...organizationsProviderOverrides(state: DisplayState.noItems),
-          authUserInfoProvider.overrideWithValue(const AsyncLoading()),
-          ...appearanceProviderOverrides(),
-          selectionProvider.overrideWithValue([
-            TestSelectableIdentifier(id: "test-item"),
-          ]),
-        ],
-        settle: false,
-      );
-      for (var index = 0; index < 20; index++) {
-        await tester.idle();
-        await tester.pump();
-      }
+    selection.selectAll([item, pending]);
+    await panel.settle();
+    expect(panel.inspector.heading(item.id.formatted), findsNothing);
 
-      expect(find.byType(InspectorScaffold), findsOneWidget);
-      expect(find.byType(MobileInspector), findsOneWidget);
-      expect(find.byKey(const ValueKey("route-content")), findsOneWidget);
+    selection.selectAll([item]);
+    await panel.settle();
+    expect(panel.inspector.heading(item.id.formatted), findsOneWidget);
+  });
 
-      await tester.pumpWidget(const SizedBox.shrink());
-      for (var index = 0; index < 20; index++) {
-        await tester.idle();
-        await tester.pump();
-      }
-    });
+  testWidgets("changing the page beside it keeps the inspector width", (
+    tester,
+  ) async {
+    final page = ValueNotifier("First page");
+    addTearDown(page.dispose);
+    final panel = await tester.pumpDesktopInspector(
+      page: ValueListenableBuilder(
+        valueListenable: page,
+        builder: (context, name, _) => Text(name),
+      ),
+    );
+    await panel.selectAll([item]);
+    await panel.inspector.focusHeading(item.id.formatted);
+    await panel.press(LogicalKeyboardKey.period);
+    final resized = panel.inspector.rect.width;
 
-    testWidgets("routed child changes preserve inspector state", (
-      tester,
+    page.value = "Second page";
+    await panel.settle();
+
+    expect(panel.shows("Second page"), isTrue);
+    expect(panel.inspector.rect.width, resized);
+  });
+
+  testWidgets("period shrinks the inspector and comma restores it; with "
+      "shift held, both take a larger step", (tester) async {
+    final panel = await tester.pumpDesktopInspector();
+    await panel.selectAll([item]);
+    await panel.inspector.focusHeading(item.id.formatted);
+    final original = panel.inspector.rect.width;
+
+    Future<double> shrinkAndRestore(
+      Future<void> Function(LogicalKeyboardKey key) press,
     ) async {
-      final routeChild = ValueNotifier<Widget>(
-        const SizedBox(key: ValueKey("first")),
-      );
-      addTearDown(routeChild.dispose);
+      await press(LogicalKeyboardKey.period);
+      final shrunk = panel.inspector.rect.width;
+      await press(LogicalKeyboardKey.comma);
+      expect(panel.inspector.rect.width, original);
+      return original - shrunk;
+    }
 
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 1600,
-            height: 800,
-            child: InspectorScaffold(
-              child: ValueListenableBuilder<Widget>(
-                valueListenable: routeChild,
-                builder: (context, child, _) => child,
-              ),
-            ),
-          ),
-        ),
-        overrides: [
-          selectionProvider.overrideWithValue([
-            TestSelectableIdentifier(id: "test-item"),
-          ]),
-        ],
-        settle: true,
-      );
+    final small = await shrinkAndRestore(panel.press);
+    final large = await shrinkAndRestore(panel.pressShifted);
 
-      final inspectorElement = tester.element(find.byType(DesktopInspector));
-      tester
-          .container(of: find.byType(InspectorScaffold))
-          .read(inspectorSizeProvider.notifier)
-          .size(kInspectorDefaultSize + 50);
-      routeChild.value = const SizedBox(key: ValueKey("second"));
-      await tester.pump();
-
-      expect(find.byKey(const ValueKey("first")), findsNothing);
-      expect(find.byKey(const ValueKey("second")), findsOneWidget);
-      expect(
-        tester.element(find.byType(DesktopInspector)),
-        same(inspectorElement),
-      );
-      expect(
-        tester
-            .container(of: find.byType(InspectorScaffold))
-            .read(inspectorSizeProvider),
-        kInspectorDefaultSize + 50,
-      );
-    });
-
-    testWidgets("period shrinks and comma expands (small step)", (
-      tester,
-    ) async {
-      final testSelectable = TestSelectableIdentifier(id: "test-item");
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 1600,
-            height: 800,
-            child: InspectorScaffold(child: const SizedBox.shrink()),
-          ),
-        ),
-        overrides: [
-          selectionProvider.overrideWithValue([testSelectable]),
-        ],
-        settle: true,
-      );
-
-      final focusScope = tester.widget<FocusScope>(
-        find.descendant(
-          of: find.byType(DesktopInspector),
-          matching: find.byType(FocusScope),
-        ),
-      );
-      focusScope.focusNode?.requestFocus();
-      await tester.pumpAndSettle();
-
-      final container = tester.container(of: find.byType(InspectorScaffold));
-      final initial = container.read(inspectorSizeProvider);
-      expect(initial, equals(kInspectorDefaultSize));
-
-      final inspectorWidth = MediaQuery.of(
-        tester.element(find.byType(DesktopInspector)),
-      ).size.width;
-      final inspectorMax =
-          (inspectorWidth * kInspectorMaxFactor).floorToDouble() - 1.0;
-      final inspectorMin = min(kInspectorMinSize, inspectorMax);
-      final effectiveBefore = initial.clamp(
-        max(0.0, inspectorMin),
-        inspectorMax,
-      );
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.period);
-      await tester.pump();
-
-      final afterShrink = container.read(inspectorSizeProvider);
-      expect(afterShrink, equals(effectiveBefore - kInspectorResizeSmallStep));
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.comma);
-      await tester.pump();
-
-      final afterExpand = container.read(inspectorSizeProvider);
-      expect(afterExpand, equals(effectiveBefore));
-    });
-
-    testWidgets("shift+period shrinks and shift+comma expands (large step)", (
-      tester,
-    ) async {
-      final testSelectable = TestSelectableIdentifier(id: "test-item");
-
-      await tester.pumpTestApp(
-        child: Center(
-          child: SizedBox(
-            width: 1600,
-            height: 800,
-            child: InspectorScaffold(child: const SizedBox.shrink()),
-          ),
-        ),
-        overrides: [
-          selectionProvider.overrideWithValue([testSelectable]),
-        ],
-        settle: true,
-      );
-
-      final focusScope = tester.widget<FocusScope>(
-        find.descendant(
-          of: find.byType(DesktopInspector),
-          matching: find.byType(FocusScope),
-        ),
-      );
-      focusScope.focusNode?.requestFocus();
-      await tester.pumpAndSettle();
-
-      final container = tester.container(of: find.byType(InspectorScaffold));
-      final initial = container.read(inspectorSizeProvider);
-
-      final inspectorWidth = MediaQuery.of(
-        tester.element(find.byType(DesktopInspector)),
-      ).size.width;
-      final inspectorMax =
-          (inspectorWidth * kInspectorMaxFactor).floorToDouble() - 1.0;
-      final inspectorMin = min(kInspectorMinSize, inspectorMax);
-      final effectiveBefore = initial.clamp(
-        max(0.0, inspectorMin),
-        inspectorMax,
-      );
-
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.period);
-      await tester.pump();
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.period);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.pump();
-
-      final afterShrink = container.read(inspectorSizeProvider);
-      expect(afterShrink, equals(effectiveBefore - kInspectorResizeLargeStep));
-
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.comma);
-      await tester.pump();
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.comma);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.pump();
-
-      final afterExpand = container.read(inspectorSizeProvider);
-      expect(afterExpand, equals(effectiveBefore));
-    });
+    expect(small, greaterThan(0));
+    expect(large, greaterThan(small));
   });
 }

@@ -95,6 +95,4 @@ class ReloadableEngineRuntime(
     }
 
     override suspend fun close() = stop()
-
-    internal fun ownsDeployment(): Boolean = deployment != null
 }

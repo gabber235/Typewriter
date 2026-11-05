@@ -2,24 +2,15 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-LocalWorkScope _scope(String? organization) => LocalWorkScope(
-  userId: "user",
-  organizationId: organization == null
-      ? null
-      : skir.recordId("organization:$organization"),
-);
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   late LocalWorkScope current;
   late bool blocksNavigation;
   late WorkSessionLossController controller;
 
   setUp(() {
-    current = _scope("one");
+    current = workScopeIn("one");
     blocksNavigation = true;
     controller = WorkSessionLossController(
       () => current,
@@ -27,37 +18,22 @@ void main() {
     );
   });
 
-  test(
-    "session loss reads live work through the production router graph",
-    () async {
-      final container = ProviderContainer.test(
-        overrides: [
-          ...appOverrides(),
-          userIdProvider.overrideWith((ref) async => "user"),
-        ],
-      );
-      await container.read(userIdProvider.future);
-      final owner = container.read(workSessionLossProvider);
-      final router = container.read(appRouterProvider);
-      final scope = container.read(localWorkScopeProvider);
-      container.read(localWorkProvider);
+  final globex = organization("Globex");
 
-      expect(router.workSessionLoss, same(owner));
-      expect(owner.currentScope, scope);
-      expect(
-        await owner.allowScopeLoss(
-          destination: _scope("one"),
-          confirm: () async => throw StateError("No protected work"),
-        ),
-        isTrue,
-      );
-
-      final source =
-          fakeEditorTarget(
+  testWidgets("a draft makes leaving the organization ask, and staying keeps "
+      "it", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme, others: [globex]),
+      realm(),
+    ]);
+    final realmScope = panel.world.requireRealm.scope;
+    final source =
+        fakeEditorTarget(
             targetId: "resource",
             label: "Draft",
             scope: EditorResourceScope(
-              organizationId: skir.recordId("organization:one"),
+              organizationId: realmScope.organizationId,
+              realmId: realmScope.realmId,
             ),
             document: EditorDocument(
               rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
@@ -68,104 +44,59 @@ void main() {
             validation: acceptTestEditorMutation,
             commitPolicy: EditorCommitPolicy.applyResource,
             commit: (_) async => throw StateError("No save expected"),
-          ).acquire(container.read(localWorkControllerProvider))..update(
-            editorRootPath,
-            skir.DataValue.wrapStringValue("Draft"),
-          );
-      await container.pump();
-      expect(container.read(localWorkProvider).blocksNavigation, isTrue);
-      var confirmations = 0;
-      expect(
-        await owner.allowScopeLoss(
-          destination: _scope("one"),
-          confirm: () async {
-            confirmations++;
-            return false;
-          },
-        ),
-        isFalse,
-      );
-      expect(confirmations, 1);
-      expect(
-        source.value(editorRootPath).valueOrNull,
-        skir.DataValue.wrapStringValue("Draft"),
-      );
-    },
-  );
+          ).acquire(panel.container.read(localWorkControllerProvider))
+          ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
+    await panel.settle();
+    final before = panel.path;
 
-  test(
-    "initial deep link admits navigation with live local work providers",
-    () async {
-      final container = ProviderContainer.test(
-        overrides: [
-          ...appOverrides(),
-          userIdProvider.overrideWith((ref) async => "user"),
-        ],
-      );
-      await container.read(userIdProvider.future);
-      final router = container.read(appRouterProvider);
-      final owner = container.read(workSessionLossProvider);
-      container.read(localWorkProvider);
-      router.access.authentication.setDecision(
-        const RouteAuthenticationDecision.authenticated(),
-      );
-      router.access.organizations.setState(
-        const OrganizationRouteAccessState.available(
-          principalId: "user",
-          organizationIds: {"one"},
-        ),
-      );
-      final uri = Uri.parse("/organization/one/services");
-
-      await router.delegate().setInitialRoutePath(
-        UrlState(uri, router.matcher.match(uri.path)!),
-      );
-      container.invalidate(routeParamProvider);
-      await container.pump();
-
-      expect(router.current.name, OrganizationRoute.name);
-      expect(router.current.pendingChildren.single.name, ServicesRoute.name);
-      expect(owner.currentScope, _scope("one"));
-      expect(container.read(appRouterProvider), same(router));
-      expect(container.read(workSessionLossProvider), same(owner));
-    },
-  );
-
-  test("account and router share the application scoped coordinator and disposal ends consent", () {
-    final container = ProviderContainer.test(
-      overrides: [
-        ...appOverrides(),
-        localWorkScopeProvider.overrideWithValue(_scope("one")),
-      ],
+    unawaited(
+      panel.container
+          .read(appRouterProvider)
+          .navigate(
+            OrganizationRoute(organizationId: globex.organizationId.id),
+          ),
     );
-    final accountPolicy = container.read(workSessionLossProvider);
-    final router = container.read(appRouterProvider);
-    expect(router.workSessionLoss, same(accountPolicy));
-    expect(accountPolicy.currentScope, _scope("one"));
-    container.dispose();
-    expect(() => accountPolicy.currentScope, throwsStateError);
+    await panel.settle();
+    await panel.dialog.choose("Stay", message: "Leave this work session?");
+
+    expect(panel.path, before);
+    expect(
+      source.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("Draft"),
+    );
   });
 
-  test("disposed coordination rejects pending consent without reading a released owner", () async {
-    var scopeReads = 0;
-    final owner = WorkSessionLossController(() {
-      scopeReads++;
-      return _scope("one");
-    }, () => true);
+  testWidgets("a deep link opens an organization page", (tester) async {
+    final panel = await tester.pumpPanel(
+      [signedIn(ada, organization: acme)],
+      at: PanelLocation.route(
+        OrganizationRoute(
+          organizationId: acme.organizationId.id,
+          children: [const ServicesRoute()],
+        ),
+      ),
+    );
+
+    expect(panel.path, "/organization/${acme.organizationId.id}/services");
+  });
+
+  test("disposed coordination rejects pending consent", () async {
+    final owner = WorkSessionLossController(
+      () => workScopeIn("one"),
+      () => true,
+    );
     final answer = Completer<bool>();
     final decision = owner.allowScopeLoss(
-      destination: _scope("two"),
+      destination: workScopeIn("two"),
       confirm: () => answer.future,
     );
-    expect(scopeReads, 1);
     owner.dispose();
     expect(await decision, isFalse);
     answer.complete(true);
     await Future<void>.delayed(Duration.zero);
-    expect(scopeReads, 1);
     expect(
       await owner.allowScopeLoss(
-        destination: _scope("two"),
+        destination: workScopeIn("two"),
         confirm: () async => true,
       ),
       isFalse,
@@ -177,7 +108,7 @@ void main() {
     var confirmations = 0;
 
     final allowed = await controller.allowScopeLoss(
-      destination: _scope("one"),
+      destination: workScopeIn("one"),
       confirm: () async {
         confirmations++;
         return false;
@@ -193,7 +124,7 @@ void main() {
     var confirmations = 0;
 
     final allowed = await controller.allowScopeLoss(
-      destination: _scope("two"),
+      destination: workScopeIn("two"),
       confirm: () async {
         confirmations++;
         return false;
@@ -225,7 +156,7 @@ void main() {
     var confirmations = 0;
 
     final allowed = await controller.allowScopeLoss(
-      destination: _scope("two"),
+      destination: workScopeIn("two"),
       confirm: () async {
         confirmations++;
         return false;
@@ -241,7 +172,7 @@ void main() {
 
     expect(
       await controller.allowScopeLoss(
-        destination: _scope("two"),
+        destination: workScopeIn("two"),
         confirm: () async => decision,
       ),
       isFalse,
@@ -250,7 +181,7 @@ void main() {
     decision = true;
     expect(
       await controller.allowScopeLoss(
-        destination: _scope("two"),
+        destination: workScopeIn("two"),
         confirm: () async => decision,
       ),
       isTrue,
@@ -267,11 +198,11 @@ void main() {
     }
 
     final first = controller.allowScopeLoss(
-      destination: _scope("two"),
+      destination: workScopeIn("two"),
       confirm: confirm,
     );
     final duplicate = controller.allowScopeLoss(
-      destination: _scope("two"),
+      destination: workScopeIn("two"),
       confirm: confirm,
     );
 
@@ -286,12 +217,12 @@ void main() {
     () async {
       final decision = Completer<bool>();
       final first = controller.allowScopeLoss(
-        destination: _scope("two"),
+        destination: workScopeIn("two"),
         confirm: () => decision.future,
       );
 
       final different = await controller.allowScopeLoss(
-        destination: _scope("three"),
+        destination: workScopeIn("three"),
         confirm: () async => true,
       );
 
@@ -304,11 +235,11 @@ void main() {
   test("confirmation cannot authorize a changed source scope", () async {
     final decision = Completer<bool>();
     final pending = controller.allowScopeLoss(
-      destination: _scope("two"),
+      destination: workScopeIn("two"),
       confirm: () => decision.future,
     );
 
-    current = _scope("three");
+    current = workScopeIn("three");
     decision.complete(true);
 
     expect(await pending, isFalse);
@@ -317,7 +248,7 @@ void main() {
   test("forced revocation invalidates an older pending decision", () async {
     final decision = Completer<bool>();
     final pending = controller.allowScopeLoss(
-      destination: _scope("two"),
+      destination: workScopeIn("two"),
       confirm: () => decision.future,
     );
 
@@ -338,14 +269,14 @@ void main() {
     "a synchronous confirmation failure releases pending ownership",
     () async {
       final failed = controller.allowScopeLoss(
-        destination: _scope("two"),
+        destination: workScopeIn("two"),
         confirm: () => throw StateError("dialog failed"),
       );
       await expectLater(failed, throwsStateError);
 
       expect(
         await controller.allowScopeLoss(
-          destination: _scope("two"),
+          destination: workScopeIn("two"),
           confirm: () async => true,
         ),
         isTrue,

@@ -1,5 +1,8 @@
 part of "query_bar.dart";
 
+/// The name assistive technology reads for the open suggestion list.
+const querySuggestionsSemanticLabel = "Query suggestions";
+
 Widget _buildSuggestionPanel({
   required BuildContext context,
   required List<QuerySuggestion> suggestions,
@@ -33,8 +36,10 @@ Widget _buildSuggestionPanel({
     clipBehavior: Clip.antiAlias,
     child: Padding(
       padding: padding,
-      child: Container(
-        key: const ValueKey("query_bar_suggestions"),
+      child: Semantics(
+        label: querySuggestionsSemanticLabel,
+        container: true,
+        explicitChildNodes: true,
         child: ListView.builder(
           shrinkWrap: true,
           itemCount: suggestions.length + (warning == null ? 0 : 1),
@@ -54,7 +59,6 @@ Widget _buildSuggestionPanel({
             final isActive = activeSuggestionIndex == index;
 
             return MouseRegion(
-              key: ValueKey("query_bar_suggestion_$index"),
               onEnter: (_) => onHoverIndex(index),
               child: MenuItemButton(
                 style: _suggestionItemStyle(context, isActive: isActive),

@@ -1,26 +1,34 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.library.book
+import com.typewritermc.library.library
 import com.typewritermc.operations.MoveToOwner
-import com.typewritermc.operations.OperationResourceOption
-import com.typewritermc.realm.TestRealmStructure
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.requirePortable
+import com.typewritermc.realm.routeFixtureCatalog
+import com.typewritermc.realm.testing.RealmCatalog
+import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.withSetup
+import com.typewritermc.setup.setup
+import com.typewritermc.testing.routes.fixtureGraphEntry
+import com.typewritermc.testing.routes.fixtureGraphPage
+import com.typewritermc.testing.routes.fixtureTimelinePage
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.launch
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import skirout.editor.v1.search.RealmPresentationSearchRequest
+import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchQuery
@@ -28,19 +36,45 @@ import skirout.editor.v1.search.RealmSearchSelector
 import skirout.editor.v1.search.RealmSearchSelectorExpression
 import skirout.editor.v1.search.RealmSearchSelectorOperator
 import skirout.editor.v1.type_catalog.CapabilityId
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeTemplate
 
 val RealmPresentationSearchRoutesTest by testSuite {
+    /** An entry on a graph page, and the two other pages it can move to: "Page 1" with a graph layout and "Page 2" without. */
+    val pages =
+        setup("search-pages") {
+            library {
+                books.book("pages") {
+                    val entry =
+                        pages.fixtureGraphPage("graph") {
+                            name = "Page 0"
+                            elements.fixtureGraphEntry("entry") { placement = GraphPlacement() }
+                        }
+                    val canvas =
+                        pages.fixtureGraphPage("canvas") {
+                            name = "Page 1"
+                            handle
+                        }
+                    val timeline =
+                        pages.fixtureTimelinePage("timeline") {
+                            name = "Page 2"
+                            handle
+                        }
+                    Triple(entry, canvas, timeline)
+                }
+            }
+        }
+
+    val shelf = setup("shelf") { library { books.book("book") { handle } } }
+
     test("switching from an operation search cancels its stream even when the next capability is unavailable") {
         runTest {
             RealmCatalogStore().use { catalogs ->
-                CoreOperationsFixture().use { fixture ->
+                RealmFixture.core().use { realm ->
                     catalogs.installTestCatalog("generation")
                     val operation = PendingSearchSource(backgroundScope)
-                    val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, fixture.views, operation)
-                    val candidates = fixture.candidateSearch(MoveToOwner, "destination")
+                    val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, realm.views, operation)
+                    val candidates = realm.operations.candidateSearch(realm.operations.operation(MoveToOwner), "destination")
                     source.watch(validSearchRequest().copy(capabilityId = candidates)) { }
                     runCurrent()
                     operation.active.toSet() shouldBe setOf("search")
@@ -59,36 +93,38 @@ val RealmPresentationSearchRoutesTest by testSuite {
 
     test("an operation field search offers its declared candidates filtered by the query, never others") {
         runTest {
-            CoreOperationsFixture(withElements = true).use { fixture ->
-                val source = OperationRealmPresentationSearchSource(backgroundScope, fixture.views)
+            withSetup(pages, catalog = routeFixtureCatalog) { (entry, canvas, timeline) ->
+                val source = OperationRealmPresentationSearchSource(backgroundScope, views)
 
-                suspend fun search(query: String): List<OperationResourceOption> {
+                suspend fun search(query: String): List<ResourceId> {
                     val published = mutableListOf<RealmPresentationSearchUpdate>()
-                    source.watch(fixture.candidateRequest(MoveToOwner, "destination", query, "graph-entry"), published::add)
+                    source.watch(candidateRequest(operations.operation(MoveToOwner), "destination", query, entry.resource), published::add)
                     runCurrent()
                     val snapshot = (published.single() as RealmPresentationSearchUpdate.SnapshotWrapper).value
                     snapshot.status shouldBe RealmPresentationSearchStatus.READY
-                    return snapshot.values.map(fixture::option)
+                    return snapshot.values.map { option(it).id }
                 }
 
-                search("").map { it.id.value }.toSet() shouldBe setOf("canvas", "timeline")
-                search("page 2").map { it.id.value } shouldBe listOf("timeline")
-                search("nothing").map { it.id.value } shouldBe emptyList()
+                search("").toSet() shouldBe setOf(canvas.id, timeline.id)
+                search("page 2") shouldBe listOf(timeline.id)
+                search("nothing") shouldBe emptyList()
             }
         }
     }
 
     test("an operation field search is unavailable for a selection the operation does not apply to") {
         runTest {
-            CoreOperationsFixture().use { fixture ->
-                val source = OperationRealmPresentationSearchSource(backgroundScope, fixture.views)
-                val response =
-                    source.watch(
-                        fixture.candidateRequest(MoveToOwner, "destination", "", TestRealmStructure.root.value).copy(
-                            capabilityId = CapabilityId(value = "unknown"),
-                        ),
-                    ) { }
-                (response is RealmPresentationSearchUpdate.UnavailableErrorWrapper) shouldBe true
+            withSetup(shelf, catalog = RealmCatalog(operations = { origin -> listOf(tagOnly(origin)) })) { book ->
+                val source = OperationRealmPresentationSearchSource(backgroundScope, views)
+                val tagOnly = operations.operation("fixture.TagOnly")
+
+                val response = source.watch(candidateRequest(tagOnly, "target", "", book.resource)) { }
+
+                response
+                    .shouldBeInstanceOf<RealmPresentationSearchUpdate.UnavailableErrorWrapper>()
+                    .value.diagnostics
+                    .map { it.message } shouldBe
+                    listOf("The operation does not apply to the search selection.")
             }
         }
     }
@@ -105,24 +141,6 @@ val RealmPresentationSearchRoutesTest by testSuite {
         }
     }
 
-    test("source receives the complete request and can publish replacement snapshots") {
-        runTest {
-            val source = FakeRealmPresentationSearchSource()
-            val request = validSearchRequest()
-            val published = mutableListOf<RealmPresentationSearchUpdate>()
-
-            val initial = source.watch(request, published::add) as RealmPresentationSearchUpdate.SnapshotWrapper
-            val update = published.single() as RealmPresentationSearchUpdate.SnapshotWrapper
-
-            source.request shouldBe request
-            initial.value.status shouldBe RealmPresentationSearchStatus.LOADING
-            update.value.subscriptionId shouldBe request.subscriptionId
-            update.value.status shouldBe RealmPresentationSearchStatus.READY
-            update.value.values shouldContainExactly listOf(DataValue.StringValueWrapper("Alex"))
-            update.value.guidance shouldContainExactly listOf("Search by player name")
-        }
-    }
-
     test("invalid request is rejected before a source can start") {
         val invalid =
             validSearchRequest().copy(
@@ -134,7 +152,12 @@ val RealmPresentationSearchRoutesTest by testSuite {
         val response = requireNotNull(invalidRealmPresentationSearchRequest(invalid)) as RealmPresentationSearchUpdate.SnapshotWrapper
 
         response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
-        response.value.diagnostics.size shouldBe 3
+        response.value.diagnostics.map { it.message } shouldContainExactly
+            listOf(
+                "Realm search capability ID must not be blank",
+                "Realm presentation search payload is missing",
+                "Realm presentation search result type is missing",
+            )
     }
 
     test("an unknown selector operator is rejected before a source can start") {
@@ -173,115 +196,3 @@ val RealmPresentationSearchRoutesTest by testSuite {
             .message shouldBe "Realm presentation search response used a different subscription ID"
     }
 }
-
-private class PendingSearchSource(
-    private val scope: CoroutineScope,
-) : RealmPresentationSearchSource {
-    val active = mutableSetOf<String>()
-    private val jobs = mutableMapOf<String, Job>()
-
-    override suspend fun watch(
-        request: RealmPresentationSearchRequest,
-        updates: RealmPresentationSearchUpdatePublisher,
-    ): RealmPresentationSearchUpdate {
-        jobs[request.subscriptionId] =
-            scope.launch {
-                active += request.subscriptionId
-                try {
-                    awaitCancellation()
-                } finally {
-                    active -= request.subscriptionId
-                }
-            }
-        return RealmPresentationSearchUpdate.createSnapshot(
-            subscriptionId = request.subscriptionId,
-            status = RealmPresentationSearchStatus.LOADING,
-            values = emptyList(),
-            guidance = emptyList(),
-            diagnostics = emptyList(),
-        )
-    }
-
-    override fun cancel(subscriptionId: String): Boolean =
-        jobs.remove(subscriptionId)?.let {
-            it.cancel()
-            true
-        } ?: false
-}
-
-private class FakeRealmPresentationSearchSource : RealmPresentationSearchSource {
-    var request: RealmPresentationSearchRequest? = null
-
-    override suspend fun watch(
-        request: RealmPresentationSearchRequest,
-        updates: RealmPresentationSearchUpdatePublisher,
-    ): RealmPresentationSearchUpdate {
-        this.request = request
-        updates.publish(
-            RealmPresentationSearchUpdate.createSnapshot(
-                subscriptionId = request.subscriptionId,
-                status = RealmPresentationSearchStatus.READY,
-                values = listOf(DataValue.StringValueWrapper("Alex")),
-                guidance = listOf("Search by player name"),
-                diagnostics = emptyList(),
-            ),
-        )
-        return RealmPresentationSearchUpdate.createSnapshot(
-            subscriptionId = request.subscriptionId,
-            status = RealmPresentationSearchStatus.LOADING,
-            values = emptyList(),
-            guidance = emptyList(),
-            diagnostics = emptyList(),
-        )
-    }
-
-    override fun cancel(subscriptionId: String): Boolean = false
-}
-
-private fun validSearchRequest() =
-    RealmPresentationSearchRequest(
-        subscriptionId = "search",
-        generation = CatalogGeneration(value = "generation"),
-        capabilityId = CapabilityId(value = "capability"),
-        payload = DataValue.StringValueWrapper("server"),
-        resultType = TypeTemplate.ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT),
-        operationContext = null,
-        query =
-            RealmSearchQuery(
-                normalizedQuery = "alex",
-                terms = listOf("alex"),
-                selectors = emptyList(),
-                selectorExpression = null,
-            ),
-    )
-
-/** A search over the candidates of [field] in the input of the operation object [operation], for dragging [subjects]. */
-private fun CoreOperationsFixture.candidateRequest(
-    operation: Any,
-    field: String,
-    query: String,
-    vararg subjects: String,
-) = validSearchRequest().copy(
-    generation = CatalogGeneration(value = catalogGeneration()),
-    capabilityId = CapabilityId(value = candidateSearch(operation, field).value),
-    resultType =
-        com.typewritermc.operations.OperationResourceOptionDefinition.use
-            .toTemplate()
-            .template,
-    operationContext = searchContext(*subjects),
-    query = RealmSearchQuery(normalizedQuery = query, terms = listOf(query), selectors = emptyList(), selectorExpression = null),
-)
-
-/** Decodes one search result value as an operation resource option. */
-private fun CoreOperationsFixture.option(value: DataValue): OperationResourceOption =
-    views.read { root ->
-        val checked =
-            (root.catalog.checked.resolve(com.typewritermc.operations.OperationResourceOptionDefinition.use.use) as Resolution.Ready).value
-        val complete =
-            checked.complete(
-                value.requirePortable(),
-            ) as com.typewritermc.authoring.CompletenessResult.Complete
-        root.catalog.nativeBindings
-            .bind(checked)
-            .decode(complete.value) as OperationResourceOption
-    }

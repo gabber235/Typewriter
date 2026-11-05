@@ -2,84 +2,57 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/support/selected_inspector_story.dart";
+import "package:widgetbook_workspace/support/story.dart";
 
-@widgetbook.UseCase(name: "Default", type: InspectorScaffold)
-Widget inspectorUseCase(BuildContext context) => const FakeApp(
-  child: InspectorScaffold(
-    child: Center(child: Text("Select an item to inspect")),
-  ),
+final _lostVillage = Book(
+  bookId: skir.ResourceId(value: "book:the_lost_village"),
+  title: "The Lost Village",
+  icon: "material-symbols:book",
+  color: Colors.teal,
 );
 
-@widgetbook.UseCase(name: "Book plus Tag mixed color", type: InspectorScaffold)
-Widget mixedBookAndTagColorUseCase(BuildContext context) =>
-    bookAndTagSelectionStory(sharedColor: false);
+final _quest = Tag(
+  tagId: skir.ResourceId(value: "tag:quest"),
+  name: "Quest",
+  color: Colors.teal,
+);
 
-@widgetbook.UseCase(name: "Book plus Tag shared color", type: InspectorScaffold)
-Widget sharedBookAndTagColorUseCase(BuildContext context) =>
-    bookAndTagSelectionStory(sharedColor: true);
-
-Widget bookAndTagSelectionStory({required bool sharedColor}) {
-  final book = Book(
-    bookId: skir.ResourceId(value: "book:earth"),
-    title: "earth",
-    icon: "mdi:earth",
-    color: Colors.teal,
-    tagIds: const [],
+/// The inspector beside a Realm's resources, showing what the user selected.
+@widgetbook.UseCase(name: "Default", type: InspectorScaffold)
+Widget inspectorUseCase(BuildContext context) {
+  final color = context.knobs.object.segmented(
+    label: "Tag color",
+    options: const ["Shared with the Book", "Its own"],
+    initialOption: "Its own",
   );
-  final tag = Tag(
-    tagId: skir.ResourceId(value: "tag:earth"),
-    name: "earth",
-    color: sharedColor ? Colors.teal : Colors.orange,
-    parentIds: const [],
-    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
-  );
-
-  return AuthoringFixtureApp(
-    createDocument: () => fixtureAuthoringDocument(books: [book], tags: [tag]),
-    overrides: [
-      organizationIdProvider.overrideWithValue(
-        skir.recordId("organization:widgetbook"),
-      ),
-      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
-    ],
-    child: InspectorScaffold(
-      child: SelectedInspectorStory(
-        selection: [
-          AuthoringResourceIdentifier(
-            organizationId: skir.recordId("organization:widgetbook"),
-            realmId: skir.recordId("service:widgetbook"),
-            resourceId: book.bookId,
-          ),
-          AuthoringResourceIdentifier(
-            organizationId: skir.recordId("organization:widgetbook"),
-            realmId: skir.recordId("service:widgetbook"),
-            resourceId: tag.tagId,
-          ),
-        ],
-        child: Center(
-          child: Wrap(
-            spacing: 16,
-            children: [
-              for (final (label, color, icon) in [
-                (book.title, book.color, "material-symbols:book"),
-                (tag.name, tag.color, "material-symbols:label"),
-              ])
-                SizedBox(
-                  width: 180,
-                  child: ResourceItemChrome(
-                    appearance: skir.ResourceAppearance(
-                      label: label,
-                      accent: color.toSkirColor(),
-                      icon: skir.Icon.wrapIconify(icon),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
+  final tag = color == "Its own"
+      ? _quest.copyWith(color: Colors.orange)
+      : _quest;
+  return Story([
+    signedIn(ada, organization: acme),
+    realm(books: [_lostVillage], tags: [tag]),
+    ...context.knobs.traits("Selection", {
+      "Nothing": const [],
+      "One Book": [
+        selected([_resource(_lostVillage.bookId)]),
+      ],
+      "A Book and a Tag": [
+        selected([_resource(_lostVillage.bookId), _resource(tag.tagId)]),
+      ],
+    }, initial: "A Book and a Tag"),
+    ...context.knobs.traits("Window", {
+      "Desktop": const [],
+      "Compact": const [compact],
+    }),
+  ]);
 }
+
+/// [resource] of the Realm the story seeds.
+AuthoringResourceIdentifier _resource(skir.ResourceId resource) =>
+    AuthoringResourceIdentifier(
+      organizationId: acme.organizationId,
+      realmId: skir.recordId("realm_instance:main"),
+      resourceId: resource,
+    );

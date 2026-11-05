@@ -1,0 +1,55 @@
+id: kotlin-test-local-helper
+valid:
+  # The suite, constants, plain values, anonymous objects and declarations inside a test case.
+  - |
+    package com.typewritermc.extensions.conformance
+
+    import de.infix.testBalloon.framework.core.testSuite
+
+    const val INVOCATION = "synthetic"
+
+    val SyntheticDiscoveryTest by testSuite {
+        val messageCatalog = DefaultCheckedCatalog(CatalogGeneration(value = "conformance messages"), listOf())
+        val context =
+            object : RealmSearchContext, RealmCommandContext {
+                override val invocationId: String = INVOCATION
+            }
+
+        test("both concrete messages can be authored") {
+            fun authored(name: String) = messageCatalog.resolve(name)
+            val tidy = { value: String -> value.trim() }
+            authored(tidy(" hello ")) shouldBe Resolution.Found
+        }
+    }
+invalid:
+  # A top level helper function.
+  - |
+    val OrderTest by testSuite {
+        test("orders") { order() shouldBe Order() }
+    }
+
+    private fun order() = Order()
+  # A top level fake.
+  - |
+    class FakeClock : Clock {
+        override fun now() = Instant.EPOCH
+    }
+
+    val OrderTest by testSuite {}
+  # A top level value that is not a constant.
+  - |
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "conformance messages"), listOf())
+
+    val OrderTest by testSuite {}
+  # A named function inside the suite, outside every test case.
+  - |
+    val OrderTest by testSuite {
+        fun order() = Order()
+        test("orders") { order() shouldBe Order() }
+    }
+  # A lambda bound to a name inside the suite.
+  - |
+    val OrderTest by testSuite {
+        val order = { Order() }
+        test("orders") { order() shouldBe Order() }
+    }

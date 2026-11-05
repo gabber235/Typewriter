@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     `java-gradle-plugin`
+    `java-test-fixtures`
     alias(libs.plugins.kotlin.serialize)
 }
 
@@ -13,7 +14,8 @@ dependencies {
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.semver)
     implementation("com.gradleup.shadow:shadow-gradle-plugin:9.6.1")
-    testImplementation(gradleTestKit())
+
+    testFixturesApi(gradleTestKit())
 }
 
 gradlePlugin {

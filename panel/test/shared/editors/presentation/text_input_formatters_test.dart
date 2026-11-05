@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("normalizes identifiers before filtering characters", () {
@@ -22,14 +23,4 @@ void main() {
     expect(result.text, "a_");
     expect(result.text.isValidIdentifier, isFalse);
   });
-}
-
-extension on Iterable<TextInputFormatter> {
-  TextEditingValue applyTo(TextEditingValue value) {
-    var current = value;
-    for (final formatter in this) {
-      current = formatter.formatEditUpdate(current, current);
-    }
-    return current;
-  }
 }

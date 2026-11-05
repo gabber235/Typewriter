@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.requireValid
 import com.typewritermc.protocol.transport.RealmRouteScope
@@ -8,15 +9,17 @@ import com.typewritermc.protocol.transport.generated.authoringStateQuery
 import com.typewritermc.protocol.transport.generated.authoringTypeCommit
 import com.typewritermc.protocol.transport.generated.authoringTypePreview
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.savedState
 import com.typewritermc.realm.edit.AuthoringRepository
+import com.typewritermc.realm.edit.invalidCommit
 import com.typewritermc.realm.operation.DefaultTypeArgumentOperations
 import com.typewritermc.realm.operation.TypeArgumentOperations
 import com.typewritermc.realm.operation.requireValid
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.requireValid
-import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.CommitPreparedEditRequest
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
@@ -26,15 +29,14 @@ import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.kernel.v1.resource_id.ResourceId
-import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
-import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged
 
 /**
  * Exposes saved snapshot queries, prepared edit commit, and type argument previews to the editor.
  *
- * A state query answers with one retained view and its confirmed observation identity. Commit delegates admission
- * to the repository; preview and preparation return proposed edits without changing saved resources. Finding
+ * A state query answers with one retained view and its confirmed observation identity. Commit refuses a prepared edit
+ * that breaks a rule every edit must keep, naming the rule, and delegates admission of every other edit to the
+ * repository; preview and preparation return proposed edits without changing saved resources. Finding
  * freshness is evaluated against the returned baseline.
  */
 internal class AuthoringRoutes(
@@ -47,10 +49,26 @@ internal class AuthoringRoutes(
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
             unary(address.authoringStateQuery) { call -> query(call.request) }
-            unary(address.authoringEditCommit) { call -> repository.commit(call.request.requireValid()) }
+            unary(address.authoringEditCommit) { call -> commit(call.request) }
             unary(address.authoringTypePreview) { call -> preview(call.request) }
             unary(address.authoringTypeCommit) { call -> typeArguments.prepare(call.request.requireValid()) }
         }
+
+    private suspend fun commit(request: CommitPreparedEditRequest): CommitPreparedEditResponse {
+        val edit =
+            try {
+                request.edit.requireValid()
+            } catch (invalid: IllegalArgumentException) {
+                return invalidCommit("invalid_edit", invalid.message ?: "The prepared edit is invalid.")
+            }
+        val submission =
+            try {
+                SubmissionKey(request.submission)
+            } catch (invalid: IllegalArgumentException) {
+                return invalidCommit("invalid_submission", invalid.message ?: "The submission key is invalid.")
+            }
+        return repository.commit(edit, submission)
+    }
 
     private suspend fun query(request: QueryAuthoringStateRequest): QueryAuthoringStateResponse {
         val lease = views.capture()
@@ -61,27 +79,7 @@ internal class AuthoringRoutes(
                     SkirCatalogChanged(actualGeneration = root.catalog.generation),
                 )
             }
-            val projection =
-                ResourceValueMapper.project(
-                    root.links.values,
-                    root.resources,
-                    root.catalog.relations,
-                )
-            val resources =
-                root.resources.entries.sortedBy { it.key.value }.map { (id, record) ->
-                    SkirAuthoringResource(id = id, content = record)
-                }
-            val capturedFindings = captureFindings(root, findings())
-            val authored =
-                SkirAuthoringState(
-                    generation = root.catalog.generation,
-                    resources = resources,
-                    links = projection.projections,
-                    findings = capturedFindings.findings,
-                    confirmedObservation =
-                        AuthoringObservationId(value = root.observationId),
-                )
-            return QueryAuthoringStateResponse.StateWrapper(authored)
+            return QueryAuthoringStateResponse.StateWrapper(root.savedState(findings()))
         }
     }
 

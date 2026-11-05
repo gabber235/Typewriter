@@ -1,11 +1,15 @@
 package com.typewritermc.realm.storage
 
 import com.surrealdb.RecordId
+import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.types.requireValid
 import skirout.kernel.v1.resource_id.ResourceId
 
 /** Maps the opaque authored identity onto the single canonical resource table. */
 internal fun ResourceId.surrealRecordId(): RecordId = RecordId("resource", value)
+
+/** Maps a committed submission key onto the table that remembers it. */
+internal fun SubmissionKey.surrealRecordId(): RecordId = RecordId("commit_submission", value)
 
 /** Recovers only the opaque authored identity. Database table identity never crosses this boundary. */
 internal fun RecordId.toResourceId(): ResourceId {

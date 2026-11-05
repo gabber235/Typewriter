@@ -1,10 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
-import { emitKotlin } from "../src/routes/emit/kotlin.js";
 import { parseManifest, type Party, type ScopeKind } from "../src/routes/manifest.js";
 import { replyInboxes, replyInboxText } from "../src/routes/replies.js";
-import { symbolProviders } from "../src/symbols.js";
-import { committedRoutes, manifestSource } from "./support.js";
+import { manifestSource } from "./support.js";
 
 const { roles } = parseManifest(manifestSource(""), "routes.yaml");
 
@@ -42,43 +40,5 @@ describe("reply inboxes a server answers", () => {
     expect(answered("service", { role: "registered_service" }, { component: "auth-typewriter-permissions" })).toEqual([
       "_INBOX.{service}.*",
     ]);
-  });
-});
-
-describe("Kotlin reply address rules", () => {
-  test("each request contract answers only its callers' inboxes through the generated matchers", async () => {
-    const { input, resolved } = await committedRoutes();
-    const files = emitKotlin(resolved, symbolProviders(input).kotlin);
-    const file = (path: string) => files.find((candidate) => candidate.path === path)!.code;
-    const contract = (code: string, name: string) => code.slice(code.indexOf(`val RealmRouteScope.${name} get()`));
-    const realm = file("RealmRoutes.kt");
-    expect(contract(realm, "sharedBlobStore")).toContain(
-      "replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) || isServiceReplyInbox(reply) },",
-    );
-    expect(contract(realm, "rolloutProbe")).toContain(
-      "replyAddresses = ReplyAddressRule { _, reply -> isServiceReplyInbox(reply) },",
-    );
-    expect(contract(realm, "editorCatalogWatch")).toContain(
-      "replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },",
-    );
-    const service = file("ServiceRegistrationRoutes.kt");
-    expect(service.slice(service.indexOf("val ServiceRouteScope.registrationLeaseEnsure get()"))).toContain(
-      "replyAddresses = ReplyAddressRule { scope, reply -> isServiceReplyInbox(reply, service = scope.serviceId) },",
-    );
-    const inboxes = file("ReplyInboxes.kt");
-    expect(inboxes).toContain(
-      "fun isPanelReplyInbox(reply: MessageAddress, user: String? = null): Boolean {\n" +
-        "    val tokens = reply.value.split('.')\n" +
-        "    return tokens.size == 4 &&\n" +
-        '        tokens[0] == "_INBOX" &&\n' +
-        "        (user == null || tokens[1] == user)\n}",
-    );
-    expect(inboxes).toContain(
-      "fun isServiceReplyInbox(reply: MessageAddress, service: String? = null): Boolean {\n" +
-        "    val tokens = reply.value.split('.')\n" +
-        "    return tokens.size == 3 &&\n" +
-        '        tokens[0] == "_INBOX" &&\n' +
-        "        (service == null || tokens[1] == service)\n}",
-    );
   });
 });

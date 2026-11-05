@@ -1,24 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-GraphElement _element(
-  String id, {
-  required int x,
-  required int y,
-  int width = 1,
-  int height = 1,
-  int priority = 0,
-}) {
-  return GraphElement(
-    id: GraphIdentifier(id),
-    x: x,
-    y: y,
-    width: width,
-    height: height,
-    priority: priority,
-    builder: (_) => const SizedBox(),
-  );
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   group("GraphLayoutEngine", () {
@@ -26,8 +8,8 @@ void main() {
       final data = GraphData(
         cellSize: 10,
         elements: [
-          _element("moving", x: 1, y: 2, width: 2, height: 3),
-          _element("resizing", x: 5, y: 6, width: 1, height: 1),
+          graphElement("moving", x: 1, y: 2, width: 2, height: 3),
+          graphElement("resizing", x: 5, y: 6, width: 1, height: 1),
         ],
         edges: const [],
       );
@@ -59,10 +41,10 @@ void main() {
       final data = GraphData(
         cellSize: 10,
         elements: [
-          _element("inside", x: 1, y: 1),
-          _element("partial", x: 9, y: 9, width: 2, height: 2),
-          _element("touching", x: 10, y: 2),
-          _element("outside", x: 12, y: 12),
+          graphElement("inside", x: 1, y: 1),
+          graphElement("partial", x: 9, y: 9, width: 2, height: 2),
+          graphElement("touching", x: 10, y: 2),
+          graphElement("outside", x: 12, y: 12),
         ],
         edges: const [],
       );
@@ -79,7 +61,10 @@ void main() {
     test("keeps elements inside viewport overscan", () {
       final data = GraphData(
         cellSize: 10,
-        elements: [_element("near", x: 11, y: 2), _element("far", x: 31, y: 2)],
+        elements: [
+          graphElement("near", x: 11, y: 2),
+          graphElement("far", x: 31, y: 2),
+        ],
         edges: const [],
       );
       final layout = const GraphLayoutEngine().build(data: data);
@@ -95,7 +80,7 @@ void main() {
     test("retains requested elements outside viewport culling", () {
       final data = GraphData(
         cellSize: 10,
-        elements: [_element("focused", x: 100, y: 100)],
+        elements: [graphElement("focused", x: 100, y: 100)],
         edges: const [],
       );
       final layout = const GraphLayoutEngine().build(data: data);
@@ -114,9 +99,9 @@ void main() {
       final data = GraphData(
         cellSize: 10,
         elements: [
-          _element("high", x: 10, y: 0, priority: 2),
-          _element("large", x: 0, y: 0, width: 4, height: 4, priority: 0),
-          _element("middle", x: 5, y: 0, priority: 1),
+          graphElement("high", x: 10, y: 0, priority: 2),
+          graphElement("large", x: 0, y: 0, width: 4, height: 4, priority: 0),
+          graphElement("middle", x: 5, y: 0, priority: 1),
         ],
         edges: const [],
       );
@@ -131,8 +116,8 @@ void main() {
     });
 
     test("resolves every edge connection side from current data", () {
-      final source = _element("source", x: 0, y: 0, width: 2, height: 2);
-      final target = _element("target", x: 4, y: 4, width: 2, height: 2);
+      final source = graphElement("source", x: 0, y: 0, width: 2, height: 2);
+      final target = graphElement("target", x: 4, y: 4, width: 2, height: 2);
       final expected = {
         EdgeSide.top: const Offset(10, 0),
         EdgeSide.bottom: const Offset(10, 20),
@@ -166,8 +151,8 @@ void main() {
 
     test("replaces and removes edges without retaining stale state", () {
       final elements = [
-        _element("source", x: 0, y: 0),
-        _element("target", x: 2, y: 0),
+        graphElement("source", x: 0, y: 0),
+        graphElement("target", x: 2, y: 0),
       ];
       GraphLayoutResult build(List<GraphEdge> edges) {
         return const GraphLayoutEngine().build(

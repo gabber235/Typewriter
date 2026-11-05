@@ -1,120 +1,45 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
-
-class TestModeWithDisplay extends InteractionMode with ModeDisplay {
-  @override
-  String get name => "TestWithDisplay";
-
-  @override
-  Widget buildDisplay(BuildContext context) {
-    return const Text("Test Display");
-  }
-}
-
-class TestModeWithoutDisplay extends InteractionMode {
-  @override
-  String get name => "TestWithoutDisplay";
-}
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("ModeDisplayWidget", () {
-    testWidgets("shows display when mode implements ModeDisplay", (
-      tester,
-    ) async {
-      await tester.pumpTestApp(child: const ModeDisplayWidget());
+  testWidgets("a mode without a display shows no indicator", (tester) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(ModeDisplayWidget()),
+    );
 
-      tester
-          .container()
-          .read(currentInteractionModeProvider.notifier)
-          .setMode(TestModeWithDisplay());
-      await tester.pump();
+    await panel.enterMode(PlainTestMode());
 
-      expect(
-        find.text("Test Display"),
-        findsOneWidget,
-        reason: "Mode with ModeDisplay should show its display widget",
-      );
-    });
+    expect(panel.shows("Test Display"), isFalse);
+  });
 
-    testWidgets("hides display when mode doesn't implement ModeDisplay", (
-      tester,
-    ) async {
-      await tester.pumpTestApp(child: const ModeDisplayWidget());
+  testWidgets("entering a mode with a display shows its indicator", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(ModeDisplayWidget()),
+    );
+    await panel.enterMode(PlainTestMode());
 
-      tester
-          .container()
-          .read(currentInteractionModeProvider.notifier)
-          .setMode(TestModeWithoutDisplay());
-      await tester.pump();
+    await panel.enterMode(DisplayTestMode());
 
-      expect(
-        find.text("Test Display"),
-        findsNothing,
-        reason: "Mode without ModeDisplay should not show any display",
-      );
-      expect(
-        find.byType(SizedBox),
-        findsOneWidget,
-        reason: "Should render SizedBox.shrink when no display",
-      );
-    });
+    expect(panel.shows("Test Display"), isTrue);
+  });
 
-    testWidgets("updates display when mode changes", (tester) async {
-      await tester.pumpTestApp(child: const ModeDisplayWidget());
+  testWidgets("leaving a mode with a display removes its indicator", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(ModeDisplayWidget()),
+    );
+    await panel.enterMode(DisplayTestMode());
+    expect(panel.shows("Test Display"), isTrue);
 
-      final notifier = tester.container().read(
-        currentInteractionModeProvider.notifier,
-      )..setMode(TestModeWithoutDisplay());
-      await tester.pump();
+    await panel.enterMode(PlainTestMode());
 
-      expect(
-        find.text("Test Display"),
-        findsNothing,
-        reason: "Initially should not display anything",
-      );
-
-      notifier.setMode(TestModeWithDisplay());
-      await tester.pump();
-
-      expect(
-        find.text("Test Display"),
-        findsOneWidget,
-        reason: "Should show display after changing to mode with ModeDisplay",
-      );
-
-      notifier.setMode(TestModeWithoutDisplay());
-      await tester.pump();
-
-      expect(
-        find.text("Test Display"),
-        findsNothing,
-        reason:
-            "Should hide display after changing to mode without ModeDisplay",
-      );
-    });
-
-    testWidgets("renders SizedBox.shrink when no display", (tester) async {
-      await tester.pumpTestApp(child: const ModeDisplayWidget());
-
-      tester
-          .container()
-          .read(currentInteractionModeProvider.notifier)
-          .setMode(TestModeWithoutDisplay());
-      await tester.pump();
-
-      final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox));
-      expect(
-        sizedBox.width,
-        0.0,
-        reason: "SizedBox.shrink should have zero width",
-      );
-      expect(
-        sizedBox.height,
-        0.0,
-        reason: "SizedBox.shrink should have zero height",
-      );
-    });
+    expect(panel.shows("Test Display"), isFalse);
   });
 }

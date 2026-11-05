@@ -1,0 +1,19 @@
+id: test-skip-added
+valid:
+  - |
+    #[test]
+    #[should_panic(expected = "no realm")]
+    fn a_missing_realm_is_refused() {}
+  - |
+    #[cfg_attr(not(unix), allow(dead_code))]
+    #[tokio::test]
+    async fn the_stack_stops() {}
+invalid:
+  - |
+    #[test]
+    #[ignore]
+    fn the_stack_stops() {}
+  - |
+    #[tokio::test]
+    #[ignore = "needs the agent stack"]
+    async fn the_stack_stops() {}

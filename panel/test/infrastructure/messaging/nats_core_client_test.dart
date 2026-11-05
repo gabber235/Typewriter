@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _configuration = NatsClientConfiguration(
   url: "nats://fixture:4222",
@@ -9,24 +10,6 @@ const _configuration = NatsClientConfiguration(
   organizationId: "fixture-organization",
   connectionSession: "0123456789abcdef0123456789abcdef",
 );
-
-final class _PendingCloseSubscription implements NatsSubscription {
-  final StreamController<NatsMessage> _messages =
-      StreamController<NatsMessage>.broadcast();
-  int unsubscribeCount = 0;
-
-  @override
-  Stream<NatsMessage> get messages => _messages.stream;
-
-  @override
-  Future<void> get done => _messages.done;
-
-  @override
-  Future<void> unsubscribe() async {
-    unsubscribeCount++;
-    await _messages.close();
-  }
-}
 
 void main() {
   test(
@@ -136,7 +119,9 @@ void main() {
   test("close waits for an acquiring persistent subscription", () async {
     final connection = Completer<NatsConnection>();
     final acquisition = Completer<NatsSubscription>();
-    final subscription = _PendingCloseSubscription();
+    final subscription = await FakeNatsClient().subscribe(
+      "cloud.from.fixture.changed",
+    );
     final client = NatsCoreClient.fromConnectionFuture(
       connection.future,
       configuration: _configuration,
@@ -154,7 +139,143 @@ void main() {
     connection.completeError(StateError("fixture connection ended"));
     await closing;
 
-    expect(subscription.unsubscribeCount, 1);
+    expect(subscription.unsubscribes, 1);
     expect(client.connectionState, isA<NatsClosed>());
+  });
+
+  final transportFailures = <(String, Object, NatsFailureKind)>[
+    (
+      "a denied permission",
+      NatsPermissionException(
+        serverMessage: "Permissions Violation for Publish",
+        operation: NatsPermissionOperation.publish,
+      ),
+      NatsFailureKind.permission,
+    ),
+    (
+      "no responders",
+      const NatsNoRespondersException(),
+      NatsFailureKind.noResponders,
+    ),
+    (
+      "a closed connection",
+      const NatsClosedException(),
+      NatsFailureKind.closed,
+    ),
+    ("a timeout", NatsTimeoutException("connect"), NatsFailureKind.timeout),
+    (
+      "a protocol violation",
+      const NatsProtocolException("unexpected frame"),
+      NatsFailureKind.protocol,
+    ),
+  ];
+  for (final (name, error, kind) in transportFailures) {
+    test("$name fails the connection as ${kind.name}", () async {
+      final client = NatsCoreClient.fromConnectionFuture(
+        Future<NatsConnection>.error(error),
+        configuration: _configuration,
+      );
+
+      final failed = await client.connectionStateChanges.firstWhere(
+        (state) => state is NatsFailed,
+      ) as NatsFailed;
+
+      expect(failed.failure.kind, kind);
+      expect(failed.failure.cause, same(error));
+    });
+  }
+
+  test("a closed client refuses every operation as closed", () async {
+    final client = NatsCoreClient.fromConnectionFuture(
+      Future<NatsConnection>.error(StateError("no server in this test")),
+      configuration: _configuration,
+    );
+    await client.close();
+    final refusedAsClosed = throwsA(
+      isA<NatsClientException>().having(
+        (error) => error.kind,
+        "kind",
+        NatsFailureKind.closed,
+      ),
+    );
+
+    await expectLater(
+      client.request("subject", Uint8List(1), limits: transportLimits),
+      refusedAsClosed,
+    );
+    await expectLater(client.publish("subject", Uint8List(1)), refusedAsClosed);
+    await expectLater(client.subscribe("subject"), refusedAsClosed);
+    await expectLater(
+      client.subscribePersistent("TYPEWRITER_FIXTURE", "TW_fixture", "subject"),
+      refusedAsClosed,
+    );
+  });
+
+  group("a named consumer", () {
+    test("has one subscription owner at a time", () async {
+      var opened = 0;
+      final client = NatsCoreClient.fromConnectionFuture(
+        Future<NatsConnection>.error(StateError("no server in this test")),
+        configuration: _configuration,
+        persistentOpener: (stream, consumer, filter) async {
+          opened++;
+          return FakeNatsClient().subscribe("cloud.from.fixture.changed");
+        },
+      );
+      addTearDown(client.close);
+      await client.subscribePersistent(
+        "TYPEWRITER_FIXTURE",
+        "TW_fixture",
+        "cloud.from.fixture.changed",
+      );
+
+      await expectLater(
+        client.subscribePersistent(
+          "TYPEWRITER_FIXTURE",
+          "TW_fixture",
+          "cloud.from.fixture.changed",
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect(opened, 1);
+    });
+
+    test("is free again after a failed acquisition", () async {
+      const unavailable = NatsClientException(
+        kind: NatsFailureKind.unavailable,
+        message: "The stream is not reachable",
+      );
+      var attempts = 0;
+      final subscription = await FakeNatsClient().subscribe(
+        "cloud.from.fixture.changed",
+      );
+      final client = NatsCoreClient.fromConnectionFuture(
+        Future<NatsConnection>.error(StateError("no server in this test")),
+        configuration: _configuration,
+        persistentOpener: (stream, consumer, filter) async {
+          attempts++;
+          if (attempts == 1) throw unavailable;
+          return subscription;
+        },
+      );
+      addTearDown(client.close);
+
+      await expectLater(
+        client.subscribePersistent(
+          "TYPEWRITER_FIXTURE",
+          "TW_fixture",
+          "cloud.from.fixture.changed",
+        ),
+        throwsA(same(unavailable)),
+      );
+      expect(
+        await client.subscribePersistent(
+          "TYPEWRITER_FIXTURE",
+          "TW_fixture",
+          "cloud.from.fixture.changed",
+        ),
+        same(subscription),
+      );
+    });
   });
 }

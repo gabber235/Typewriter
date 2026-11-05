@@ -2,122 +2,105 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-skir.RecordId _id(String table, String key) =>
-    skir.RecordId(table: table, key: skir.RecordIdKey.wrapString(key));
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final globex = organization("Globex");
 
-  test("controller remains valid when authentication becomes ready", () async {
-    final user = Completer<String?>();
-    final organization = _id("organization", "first");
-    final container = ProviderContainer.test(
-      overrides: [
-        userIdProvider.overrideWith((ref) => user.future),
-        organizationIdProvider.overrideWith((ref) => organization),
-      ],
+  test("work started before sign in resolves is listed once it did", () async {
+    final world = testWorld([signedIn(ada, organization: acme)]);
+    final container = world.container;
+    // The panel shell watches local work for as long as it is open.
+    final work = (container..listen(localWorkProvider, (_, _) {})).read(
+      localWorkControllerProvider,
     );
-    final controller = container.read(localWorkControllerProvider);
 
-    user.complete("user");
     await container.read(userIdProvider.future);
     await container.pump();
+    textEditorTarget(
+          "resource",
+          label: "Draft",
+          scope: EditorResourceScope(organizationId: acme.organizationId),
+        )
+        .acquire(work)
+        .update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
 
-    expect(container.read(localWorkControllerProvider), same(controller));
-    expect(
-      () => fakeEditorTarget(
-        targetId: "resource",
-        label: "Resource",
-        scope: EditorResourceScope(organizationId: organization),
-        document: EditorDocument(
-          rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          catalog: _emptyCatalog,
-          confirmedValue: skir.DataValue.wrapStringValue("Original"),
-          revision: 1,
-        ),
-        validation: acceptTestEditorMutation,
-        commit: (_) async => throw StateError("No save expected"),
-      ).acquire(controller),
-      returnsNormally,
+    await eventually(
+      () => expect(
+        [
+          for (final entry in container.read(localWorkProvider).entries.values)
+            entry.label,
+        ],
+        ["Draft"],
+      ),
     );
   });
 
-  late ProviderContainer container;
-  late skir.RecordId organization;
-  late skir.RecordId realm;
+  const leaveQuestion = "Leave this work session?";
 
-  setUp(() async {
-    organization = _id("organization", "first");
-    realm = _id("realm", "first");
-    container = ProviderContainer.test(
-      overrides: [
-        userIdProvider.overrideWith((ref) async => "user"),
-        organizationIdProvider.overrideWith((ref) => organization),
-        realmIdProvider.overrideWith((ref) => realm),
-      ],
-    );
-    await container.read(userIdProvider.future);
-  });
+  testWidgets(
+    "leaving the realm keeps drafts and switching organization drops them",
+    (tester) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme, others: [globex]),
+        realm(),
+      ]);
+      final work = panel.container.read(localWorkControllerProvider);
+      final realmScope = panel.world.requireRealm.scope;
+      final source =
+          textEditorTarget(
+              "resource",
+              label: "Draft",
+              scope: EditorResourceScope(
+                organizationId: realmScope.organizationId,
+                realmId: realmScope.realmId,
+              ),
+            ).acquire(work)
+            ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
 
-  Future<void> switchOrganization() async {
-    organization = _id("organization", "second");
-    container.invalidate(organizationIdProvider);
-    await container.pump();
-  }
-
-  test(
-    "realm navigation retains drafts and organization navigation drops them",
-    () async {
-      final workspace = container.read(localWorkControllerProvider);
-      final target = fakeEditorTarget(
-        targetId: "resource",
-        label: "Draft",
-        scope: EditorResourceScope(
-          organizationId: organization,
-          realmId: realm,
-        ),
-        document: EditorDocument(
-          rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          catalog: _emptyCatalog,
-          confirmedValue: skir.DataValue.wrapStringValue("Original"),
-          revision: 1,
-        ),
-        validation: acceptTestEditorMutation,
-        commitPolicy: EditorCommitPolicy.applyResource,
-        commit: (_) async => throw StateError("No save expected"),
+      await panel.follow(
+        OrganizationRoute(organizationId: acme.organizationId.id),
       );
-      final source = target.acquire(workspace)
-        ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
-
-      realm = _id("realm", "second");
-      container.invalidate(realmIdProvider);
-      await container.pump();
-      expect(container.read(localWorkControllerProvider), same(workspace));
+      expect(
+        [
+          for (final entry
+              in panel.container.read(localWorkProvider).entries.values)
+            entry.label,
+        ],
+        ["Draft"],
+      );
       expect(
         source.value(editorRootPath).valueOrNull,
         skir.DataValue.wrapStringValue("Draft"),
       );
 
-      await switchOrganization();
-      final next = container.read(localWorkControllerProvider);
-      expect(next, same(workspace));
-      final nextState = container.read(localWorkProvider);
-      expect(nextState.entries, isEmpty);
-      expect(source.workspace.closed, isTrue);
+      await panel.follow(
+        OrganizationRoute(organizationId: globex.organizationId.id),
+      );
+      await panel.dialog.choose("Leave", message: leaveQuestion);
+      expect(panel.path, contains("globex"));
+      expect([
+        for (final entry
+            in panel.container.read(localWorkProvider).entries.values)
+          entry.label,
+      ], isEmpty);
       expect(await source.flush(), isA<MutationUnavailable>());
     },
   );
 
-  test(
-    "switching forgets a sent request and ignores its late response",
-    () async {
-      final workspace = container.read(localWorkControllerProvider);
+  testWidgets(
+    "switching organization forgets a sent request and ignores its late "
+    "response",
+    (tester) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme, others: [globex]),
+        realm(),
+      ]);
+      final work = panel.container.read(localWorkControllerProvider);
       final response = Completer<SubmissionResult<String>>();
       final sent = Completer<void>();
       var integrations = 0;
-      final submission = workspace.start(
+      final submission = work.start(
         PreparedCommit<String>(
           id: "sent",
           label: "Sent request",
@@ -125,31 +108,33 @@ void main() {
             sent.complete();
             return response.future;
           },
-          integrate: (_) async {
-            integrations++;
-          },
+          integrate: (_) async => integrations++,
         ),
       );
       final result = submission.run();
-
       await sent.future;
 
-      await switchOrganization();
-      expect(container.read(localWorkProvider).submissions, isEmpty);
-      expect(workspace.submissions, isEmpty);
+      await panel.follow(
+        OrganizationRoute(organizationId: globex.organizationId.id),
+      );
+      expect(panel.container.read(localWorkProvider).submissions, isEmpty);
       response.complete(const SubmissionConfirmed("Applied remotely"));
       expect(await result, isA<SubmissionConfirmed<String>>());
       expect(integrations, 0);
-
       expect(submission.run, throwsStateError);
     },
   );
 
-  test(
-    "switching forgets uncertain requests and disables their replay",
-    () async {
-      final workspace = container.read(localWorkControllerProvider);
-      final submission = workspace.start(
+  testWidgets(
+    "switching organization forgets uncertain requests and disables their "
+    "replay",
+    (tester) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme, others: [globex]),
+        realm(),
+      ]);
+      final work = panel.container.read(localWorkControllerProvider);
+      final submission = work.start(
         PreparedCommit<String>(
           id: "uncertain",
           label: "Uncertain request",
@@ -163,12 +148,11 @@ void main() {
       );
       expect(await submission.run(), isA<SubmissionUncertain<String>>());
 
-      await switchOrganization();
-      expect(container.read(localWorkProvider).submissions, isEmpty);
-      expect(workspace.submissions, isEmpty);
+      await panel.follow(
+        OrganizationRoute(organizationId: globex.organizationId.id),
+      );
+      expect(panel.container.read(localWorkProvider).submissions, isEmpty);
       expect(submission.run, throwsStateError);
     },
   );
 }
-
-final _emptyCatalog = CheckedEditorCatalog(skir.EditorCatalog.defaultInstance);

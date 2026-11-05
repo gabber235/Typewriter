@@ -1,0 +1,32 @@
+# Whether the reviewer's verdict covers the head. Apart from CI, since a verdict changes only the
+# description: this reruns on that edit, and CI's whole suite does not. Publishing evidence writes
+# the description with the workflow token, which starts no workflows.
+name: Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  covered:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/devenv
+      - run: >-
+          devenv shell -- cargo xtask review covered
+          --pr ${{ github.event.number }}
+          --head "${{ github.event.pull_request.head.sha }}"
+          --base "${{ github.event.pull_request.base.sha }}"
+        env:
+          GH_TOKEN: ${{ github.token }}

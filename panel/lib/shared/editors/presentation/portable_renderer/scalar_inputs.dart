@@ -127,6 +127,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
               },
             ),
       ),
+      labelsInput: true,
     );
   }
 
@@ -265,6 +266,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
               },
             ),
       ),
+      labelsInput: true,
     );
   }
 

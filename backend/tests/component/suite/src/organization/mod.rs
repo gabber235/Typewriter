@@ -1,3 +1,3 @@
-mod organization_members;
+pub(crate) mod organization_members;
 mod organization_roles;
 mod user_organization;

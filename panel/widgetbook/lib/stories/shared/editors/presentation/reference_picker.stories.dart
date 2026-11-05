@@ -4,8 +4,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story.dart";
 
-@widgetbook.UseCase(name: "Reference choices", type: SearchModal)
+/// The choices of a reference field: a compatible page, an incompatible one
+/// with its reason, and creating a new target.
+@widgetbook.UseCase(name: "Reference choices", type: ReferencePickerCandidate)
 Widget referencePickerUseCase(BuildContext context) {
   final incompatible = context.knobs.boolean(
     label: "Incompatible destination",
@@ -15,9 +18,10 @@ Widget referencePickerUseCase(BuildContext context) {
     label: "Allow target creation",
     initialValue: true,
   );
-  return FakeApp(
-    child: Center(
-      child: Builder(
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      Builder(
         builder: (context) => FilledButton(
           onPressed: () => showReferencePicker<String>(
             context,
@@ -52,107 +56,57 @@ Widget referencePickerUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Required reference creation", type: SearchModal)
+/// Creating an Entry whose required Page and Book the user picks or creates
+/// on the way, in a Realm that already holds a compatible Page or none.
+@widgetbook.UseCase(
+  name: "Required reference creation",
+  type: ResourceCreationSession,
+)
 Widget resourceCreationFlowUseCase(BuildContext context) {
-  final existing = context.knobs.boolean(
-    label: "Compatible current page",
-    initialValue: false,
-  );
-  return HookBuilder(
-    key: ValueKey(existing),
-    builder: (context) {
-      final fixture = useMemoized(ResourceCreationFixture.new, [existing]);
-      final initial = useMemoized(() => fixture.document(existing: existing), [
-        fixture,
-      ]);
-      final transport = useMemoized(
-        () => ScriptedAuthoringTransport(AsyncData(initial)),
-        [initial],
-      );
-      useEffect(() => transport.dispose, [transport]);
-      final busy = useState(false);
-      final outcome = useState<String?>(null);
-      final scope = AuthoringScope(
-        organizationId: skir.recordId("organization:test"),
-        realmId: skir.recordId("realm:test"),
-      );
-      return FakeApp(
-        overrides: [
-          organizationIdProvider.overrideWith((_) => scope.organizationId),
-          realmIdProvider.overrideWith((_) => scope.realmId),
-          ...authoringFixtureOverrides(document: initial, transport: transport),
-        ],
-        child: Consumer(
-          builder: (context, ref, _) {
-            final document =
-                ref.watch(workingAuthoringDocumentProvider(scope)).value ??
-                initial;
-            return Center(
-              child: SizedBox(
-                width: 520,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 16,
-                  children: [
-                    Text(
-                      existing
-                          ? "Use the compatible current page"
-                          : "Create an entry, its page and its Book",
-                    ),
-                    const Text(
-                      "Choose existing references or create their targets. Back returns to the previous choice. Cancel any prompt to discard the creation.",
-                    ),
-                    FilledButton(
-                      onPressed: busy.value
-                          ? null
-                          : () async {
-                              busy.value = true;
-                              outcome.value = null;
-                              try {
-                                final created = await ref
-                                    .read(resourceCreationProvider(scope))
-                                    .create(
-                                      context: context,
-                                      request: fixture.request("Entry"),
-                                      creationContext: CreationContext(
-                                        preferredResources: [
-                                          if (existing) fixture.page,
-                                        ],
-                                      ),
-                                    );
-                                if (context.mounted) {
-                                  outcome.value = created == null
-                                      ? "Creation cancelled"
-                                      : "Entry created";
-                                }
-                              } on Object catch (error) {
-                                if (context.mounted) {
-                                  outcome.value = error.toString();
-                                }
-                              } finally {
-                                if (context.mounted) busy.value = false;
-                              }
-                            },
-                      child: Text(
-                        busy.value ? "Resolving references" : "Begin creation",
-                      ),
-                    ),
-                    if (outcome.value case final message?) Text(message),
-                    Text("Resources: ${document.entries.length}"),
-                    for (final entry in document.entries.values)
-                      Text(
-                        document.catalog.typeSelectionName(
-                          entry.content.configuration,
-                        ),
-                      ),
-                  ],
-                ),
+  final existing = context.knobs.boolean(label: "Compatible current page");
+  return Story([
+    signedIn(ada, organization: acme),
+    realmServing(_creation.document(existing: existing)),
+  ], at: PanelLocation.component(_CreateEntry(existing: existing)));
+}
+
+final _creation = ResourceCreationFixture();
+
+class _CreateEntry extends HookConsumerWidget {
+  const _CreateEntry({required this.existing});
+
+  /// Whether the Entry starts from the Realm's compatible Page.
+  final bool existing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final busy = useState(false);
+    Future<void> create() async {
+      busy.value = true;
+      try {
+        await ref
+            .read(resourceCreationProvider(_scope))
+            .create(
+              context: context,
+              request: _creation.request("Entry"),
+              creationContext: CreationContext(
+                preferredResources: [if (existing) _creation.page],
               ),
             );
-          },
-        ),
-      );
-    },
-  );
+      } finally {
+        if (context.mounted) busy.value = false;
+      }
+    }
+
+    return FilledButton(
+      onPressed: busy.value ? null : create,
+      child: const Text("Create Entry"),
+    );
+  }
 }
+
+/// The Realm the story's world seeds.
+final _scope = AuthoringScope(
+  organizationId: acme.organizationId,
+  realmId: skir.recordId("realm_instance:main"),
+);

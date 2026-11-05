@@ -1,6 +1,6 @@
 id: kotlin-test-disabled
 language: kotlin
-severity: warning
+severity: error
 message: A test was disabled.
 note: Fix the test or the code; a test that cannot pass yet belongs in harness/quarantine.toml with an issue.
 rule:

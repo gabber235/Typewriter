@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   const telemetry = NoopPanelTelemetry();
@@ -43,32 +44,57 @@ void main() {
 
   test("OpenTelemetry tracing injects a valid NATS context", () async {
     final traced = OpenTelemetryPanelTelemetry();
+    Map<String, String>? sent;
 
     await traced.traceNats(
       subject: "test.subject",
       payloadSize: 3,
       operationName: "request",
-      operation: (header) async {
-        expect(
-          header["traceparent"],
-          matches(RegExp(r"^00-[0-9a-f]{32}-[0-9a-f]{16}-01$")),
-        );
-        expect(header["tracestate"], isNull);
-      },
+      operation: (header) async => sent = Map.of(header),
     );
+
+    expect(sent, isNotNull, reason: "the request ran inside the trace");
+    expect(
+      sent!["traceparent"],
+      matches(RegExp(r"^00-[0-9a-f]{32}-[0-9a-f]{16}-01$")),
+    );
+    expect(sent!["tracestate"], isNull);
   });
 
-  test("operation errors are rethrown unchanged", () async {
-    final error = StateError("network failed");
+  for (final (name, create) in <(String, PanelTelemetry Function())>[
+    ("no-op", () => telemetry),
+    ("OpenTelemetry", OpenTelemetryPanelTelemetry.new),
+  ]) {
+    test("$name tracing rethrows operation errors unchanged", () async {
+      final traced = create();
+      final error = StateError("network failed");
+
+      await expectLater(
+        traced.traceNats<void>(
+          subject: "test.subject",
+          payloadSize: 0,
+          operationName: "request",
+          operation: (_) => Future<void>.error(error),
+        ),
+        throwsA(same(error)),
+      );
+      await expectLater(
+        traced.traceHttp(
+          method: "POST",
+          uri: Uri.parse("https://example.com/path"),
+          operation: (_) => Future<Response>.error(error),
+        ),
+        throwsA(same(error)),
+      );
+    });
+  }
+
+  test("disabled tracing starts the panel without an exporter", () async {
+    final world = testWorld(const []);
 
     expect(
-      () => telemetry.traceNats<void>(
-        subject: "test.subject",
-        payloadSize: 0,
-        operationName: "request",
-        operation: (_) => Future<void>.error(error),
-      ),
-      throwsA(same(error)),
+      await world.container.read(panelTelemetryProvider.future),
+      isA<NoopPanelTelemetry>(),
     );
   });
 }

@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final configured = skir.ExpressionBindingId(value: "configured_value");
@@ -11,16 +11,16 @@ void main() {
     path: const [],
   );
   test("atomic part observation preserves lexical aliases and can skip body editors", () {
-    final part = _node(
+    final part = elementNode(
       skir.PresentationElement.createPart(
         key: skir.PresentationPartId.defaultInstance,
-        body: _field("first", configured),
+        body: numericFieldNode("first", configured),
       ),
     );
-    final layout = _node(
+    final layout = elementNode(
       skir.PresentationElement.createScopedBinding(
-        binding: _reference(configured, "name"),
-        scopeBinding: _untyped(configured),
+        binding: fieldReference(configured, "name"),
+        scopeBinding: untypedBinding(configured),
         child: part,
       ),
     );
@@ -75,30 +75,30 @@ void main() {
 
   test("root prefix exclusion preserves prefixes on nested controls", () {
     final owned = origin.append([skir.PathSegment.createField(name: "name")]);
-    skir.PresentationNode scoped(skir.PresentationNode child) => _node(
+    skir.PresentationNode scoped(skir.PresentationNode child) => elementNode(
       skir.PresentationElement.createScopedBinding(
-        binding: _reference(configured, "name"),
-        scopeBinding: _untyped(configured),
+        binding: fieldReference(configured, "name"),
+        scopeBinding: untypedBinding(configured),
         child: child,
       ),
     );
-    final second = _field("second", configured).toMutable();
+    final second = numericFieldNode("second", configured).toMutable();
     final secondInput =
         (second.element! as skir.PresentationElement_numericInputWrapper).value
             .toMutable();
     secondInput.control =
         (secondInput.control.toFrozen().toMutable()
-              ..prefix = _field("third", configured))
+              ..prefix = numericFieldNode("third", configured))
             .toFrozen();
     second.element = skir.PresentationElement.wrapNumericInput(
       secondInput.toFrozen(),
     );
-    final root = _node(
+    final root = elementNode(
       skir.PresentationElement.wrapRecordInput(
         (skir.RecordControl.defaultInstance.toMutable()
               ..control = (skir.BoundControl.defaultInstance.toMutable()
-                ..binding = _reference(configured, "name")
-                ..prefix = scoped(_field("first", configured)))
+                ..binding = fieldReference(configured, "name")
+                ..prefix = scoped(numericFieldNode("first", configured)))
               ..fieldPresentation = scoped(second.toFrozen()))
             .toFrozen(),
       ),
@@ -116,7 +116,7 @@ void main() {
     final second = skir.ExpressionBindingId(value: "second");
     final destinations = <AuthoredBindingAddress?>[];
     AuthoredPresentationIndex.build(
-      _node(
+      elementNode(
         skir.PresentationElement.wrapInvocation(
           skir.PresentationInvocation(
             presentationId: skir.PresentationId(
@@ -126,7 +126,7 @@ void main() {
             arguments: [
               skir.PresentationArgument(
                 input: first,
-                binding: _reference(configured, "name"),
+                binding: fieldReference(configured, "name"),
               ),
               skir.PresentationArgument(
                 input: second,
@@ -150,14 +150,14 @@ void main() {
     final alias = skir.ExpressionBindingId(value: "local");
     final destinations = <AuthoredBindingAddress?>[];
     AuthoredPresentationIndex.build(
-      _node(
+      elementNode(
         skir.PresentationElement.createScopedBinding(
           binding: skir.BindingRef(
             bindingId: skir.ExpressionBindingId(value: "missing"),
             path: skir.ValuePath.defaultInstance,
           ),
-          scopeBinding: _untyped(alias),
-          child: _field("value", alias),
+          scopeBinding: untypedBinding(alias),
+          child: numericFieldNode("value", alias),
         ),
       ),
       {configured: origin},
@@ -170,16 +170,16 @@ void main() {
     "search summary and result aliases shadow an existing owned binding",
     () {
       final owned = origin.append([skir.PathSegment.createField(name: "name")]);
-      final item = _field("value", configured);
+      final item = numericFieldNode("value", configured);
       final provider = skir.SearchProvider.wrapStaticValues(
         (skir.StaticSearchProvider.defaultInstance.toMutable()
               ..result = (skir.SearchResultMapping.defaultInstance.toMutable()
-                ..binding = _untyped(configured)
+                ..binding = untypedBinding(configured)
                 ..presentation = item))
             .toFrozen(),
       );
       final destinations = <AuthoredBindingAddress?>[];
-      final search = _node(
+      final search = elementNode(
         skir.PresentationElement.wrapSearchInput(
           (skir.SearchControl.defaultInstance.toMutable()
                 ..control = (skir.BoundControl.defaultInstance.toMutable()
@@ -187,7 +187,7 @@ void main() {
                     bindingId: configured,
                     path: skir.ValuePath.defaultInstance,
                   ))
-                ..summaryBinding = _untyped(configured)
+                ..summaryBinding = untypedBinding(configured)
                 ..summary = item
                 ..provider = provider)
               .toFrozen(),
@@ -213,13 +213,13 @@ void main() {
                 ..condition = skir.ExpressionNode.wrapLiteral(
                   skir.DataValue.wrapBoolean(false),
                 )
-                ..whenTrue = _field("width", configured)
-                ..whenFalse = _field("height", configured))
+                ..whenTrue = numericFieldNode("width", configured)
+                ..whenFalse = numericFieldNode("height", configured))
               .toFrozen();
-      final layout = _column([
-        _field("X", configured),
-        _field("Y", configured),
-        _node(skir.PresentationElement.wrapConditional(conditional)),
+      final layout = elementColumn([
+        numericFieldNode("X", configured),
+        numericFieldNode("Y", configured),
+        elementNode(skir.PresentationElement.wrapConditional(conditional)),
       ]);
       final index = AuthoredPresentationIndex.build(layout, {
         configured: origin,
@@ -229,7 +229,7 @@ void main() {
   );
 
   test("default providers reserve through their BoundControl without provider discovery", () {
-    final reference = _reference(configured, "X");
+    final reference = fieldReference(configured, "X");
     final control =
         (skir.BoundControl.defaultInstance.toMutable()..binding = reference)
             .toFrozen();
@@ -242,7 +242,7 @@ void main() {
               ))
             .toFrozen();
     final index = AuthoredPresentationIndex.build(
-      _node(skir.PresentationElement.wrapDefaultPresentation(provider)),
+      elementNode(skir.PresentationElement.wrapDefaultPresentation(provider)),
       {configured: origin},
     );
     expect(index.fieldsOf(origin), {"X"});
@@ -255,21 +255,21 @@ void main() {
     final record =
         (skir.RecordControl.defaultInstance.toMutable()
               ..control = (skir.BoundControl.defaultInstance.toMutable()
-                ..binding = _reference(configured, "position"))
-              ..fieldPresentation = _node(
+                ..binding = fieldReference(configured, "position"))
+              ..fieldPresentation = elementNode(
                 skir.PresentationElement.wrapScopedBinding(
                   skir.ScopedBindingElement(
-                    binding: _reference(configured, "position"),
-                    scopeBinding: _untyped(configured),
-                    child: _field("X", configured),
+                    binding: fieldReference(configured, "position"),
+                    scopeBinding: untypedBinding(configured),
+                    child: numericFieldNode("X", configured),
                   ),
                 ),
               ))
             .toFrozen();
     final index = AuthoredPresentationIndex.build(
-      _column([
-        _field("Y", configured),
-        _node(skir.PresentationElement.wrapRecordInput(record)),
+      elementColumn([
+        numericFieldNode("Y", configured),
+        elementNode(skir.PresentationElement.wrapRecordInput(record)),
       ]),
       {configured: origin},
     );
@@ -282,9 +282,9 @@ void main() {
     final list =
         (skir.ListControl.defaultInstance.toMutable()
               ..control = (skir.BoundControl.defaultInstance.toMutable()
-                ..binding = _reference(configured, "items"))
-              ..itemBinding = _untyped(item)
-              ..itemPresentation = _field("width", item))
+                ..binding = fieldReference(configured, "items"))
+              ..itemBinding = untypedBinding(item)
+              ..itemPresentation = numericFieldNode("width", item))
             .toFrozen();
     final explicit =
         (skir.BoundControl.defaultInstance.toMutable()
@@ -303,9 +303,9 @@ void main() {
             .toFrozen();
     final destinations = <AuthoredBindingAddress?>[];
     final index = AuthoredPresentationIndex.build(
-      _column([
-        _node(skir.PresentationElement.wrapListInput(list)),
-        _node(
+      elementColumn([
+        elementNode(skir.PresentationElement.wrapListInput(list)),
+        elementNode(
           skir.PresentationElement.wrapNumericInput(
             (skir.NumericControl.defaultInstance.toMutable()
                   ..control = explicit)
@@ -342,42 +342,11 @@ void main() {
       root: AuthoredBindingRoot.local(alias, origin: "second"),
       path: const [],
     );
-    final index = AuthoredPresentationIndex.build(_field("X", alias), {
-      alias: first,
-    });
+    final index = AuthoredPresentationIndex.build(
+      numericFieldNode("X", alias),
+      {alias: first},
+    );
     expect(index.fieldsOf(first), {"X"});
     expect(index.fieldsOf(second), isEmpty);
   });
 }
-
-skir.BindingRef _reference(skir.ExpressionBindingId id, String field) =>
-    skir.BindingRef(
-      bindingId: id,
-      path: skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: field)],
-      ),
-    );
-skir.PresentationNode _field(String name, skir.ExpressionBindingId id) => _node(
-  skir.PresentationElement.wrapNumericInput(
-    (skir.NumericControl.defaultInstance.toMutable()
-          ..control = (skir.BoundControl.defaultInstance.toMutable()
-            ..binding = _reference(id, name)))
-        .toFrozen(),
-  ),
-);
-skir.PresentationNode _node(skir.PresentationElement element) =>
-    presentationNode(element.kind.name, element);
-skir.PresentationNode _column(List<skir.PresentationNode> nodes) => _node(
-  skir.PresentationElement.wrapChildren(
-    skir.ChildrenElement.wrapColumn(
-      (skir.AxisChildrenElement.defaultInstance.toMutable()
-            ..children = nodes.map(skir.AxisChild.wrapFixed))
-          .toFrozen(),
-    ),
-  ),
-);
-
-/// Declares [id] without a type: the index tracks authored addresses and never
-/// reads binding types.
-skir.BindingDeclaration _untyped(skir.ExpressionBindingId id) =>
-    declareBinding(id, skir.TypeTemplate.unknown);

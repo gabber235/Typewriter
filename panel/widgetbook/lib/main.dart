@@ -47,8 +47,20 @@ class TypewriterWidgetbook extends StatelessWidget {
           ),
         ]),
         InspectorAddon(),
-        MaterialThemeAddon(
+        // The panel themes come from its material library, which widgetbook's
+        // material addon does not know, so the addon installs them itself.
+        ThemeAddon<ThemeData>(
           themes: [darkTheme, lightTheme],
+          themeBuilder: (context, theme, child) => Theme(
+            data: theme,
+            child: ColoredBox(
+              color: theme.scaffoldBackgroundColor,
+              child: DefaultTextStyle(
+                style: theme.textTheme.bodyMedium!,
+                child: child,
+              ),
+            ),
+          ),
           initialTheme:
               SchedulerBinding.instance.platformDispatcher.platformBrightness ==
                   Brightness.dark
@@ -60,11 +72,9 @@ class TypewriterWidgetbook extends StatelessWidget {
         // ignore: experimental_member_use
         TimeDilationAddon(),
       ],
-      lightTheme: buildTheme(Brightness.light),
-      darkTheme: buildTheme(Brightness.dark),
+      // Every story brings the real panel app through its `Story`, which
+      // follows the theme chosen here.
       appBuilder: (context, child) {
-        // Don't have the MaterialApp here.
-        // We have it in the `FakeApp` so that it rerenders when we make changes to the theme.
         return child;
       },
       directories: directories,

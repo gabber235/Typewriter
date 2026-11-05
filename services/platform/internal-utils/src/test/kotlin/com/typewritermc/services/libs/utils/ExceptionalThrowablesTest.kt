@@ -6,12 +6,13 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlinx.coroutines.CancellationException
 
+@Suppress("DEPRECATION")
 val ExceptionalThrowablesTest by testSuite {
     test("finds every exceptional throwable kind directly") {
         listOf(
             CancellationException("cancelled"),
             TestVirtualMachineError(),
-            threadDeath(),
+            ThreadDeath(),
             LinkageError("linkage"),
         ).forEach { it.findExceptional() shouldBeSameInstanceAs it }
     }
@@ -40,13 +41,8 @@ val ExceptionalThrowablesTest by testSuite {
     }
 
     test("rethrows the exact exceptional throwable instance") {
-        val exceptional = threadDeath()
+        val exceptional = ThreadDeath()
         val wrapper = IllegalStateException("wrapper").apply { addSuppressed(exceptional) }
         shouldThrow<Throwable> { wrapper.rethrowExceptional() } shouldBeSameInstanceAs exceptional
     }
 }
-
-@Suppress("DEPRECATION")
-private fun threadDeath(): Throwable = ThreadDeath()
-
-private class TestVirtualMachineError : VirtualMachineError("fatal")

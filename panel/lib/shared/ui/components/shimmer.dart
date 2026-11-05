@@ -40,7 +40,8 @@ class _SlidingGradientTransform extends GradientTransform {
 ///
 /// Wrap a loading region with this widget, then use [ShimmerLoading] for each
 /// placeholder that should move with the same gradient. The animation stops
-/// when no loading descendant remains registered.
+/// when no loading descendant remains registered, and never runs while the
+/// user asked the platform to reduce motion.
 class Shimmer extends StatefulWidget {
   const Shimmer({super.key, this.linearGradient, this.child});
 
@@ -67,6 +68,7 @@ class Shimmer extends StatefulWidget {
 class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
   late AnimationController _shimmerController;
   int _listenerCount = 0;
+  bool _reducedMotion = false;
   final Map<Object, Rect> _childBounds = {};
 
   @override
@@ -82,16 +84,31 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reducedMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _syncAnimation();
+  }
+
   void _addListener() {
     _listenerCount++;
-    if (_listenerCount == 1) {
-      _shimmerController.repeat(min: -0.5, max: 1.5, period: 1000.ms);
-    }
+    _syncAnimation();
   }
 
   void _removeListener() {
     _listenerCount--;
-    if (_listenerCount == 0) {
+    _syncAnimation();
+  }
+
+  /// Moves the gradient while a placeholder is registered, unless the user
+  /// asked for reduced motion; then the placeholders stay still.
+  void _syncAnimation() {
+    if (_listenerCount > 0 && !_reducedMotion) {
+      if (!_shimmerController.isAnimating) {
+        _shimmerController.repeat(min: -0.5, max: 1.5, period: 1000.ms);
+      }
+    } else {
       _shimmerController.stop();
     }
   }

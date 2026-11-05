@@ -206,6 +206,7 @@ class _ActivityCardState extends State<_ActivityCard> {
                         runSpacing: context.spacing.space2,
                         children: [
                           IconButton(
+                            tooltip: "Copy problem report",
                             icon: const Icon(Icons.copy_outlined, size: 16),
                             color: context.colors.contentSecondary,
                             onPressed: () => _copyReport(context),

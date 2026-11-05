@@ -3,6 +3,7 @@ package com.typewritermc.types
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.text
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.configuration.field
 import com.typewritermc.configuration.of
@@ -29,7 +30,6 @@ import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
@@ -38,7 +38,6 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.FloatWidth
-import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -47,7 +46,6 @@ import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
-import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -252,11 +250,12 @@ val TypeSystemFoundationTest by testSuite {
         val symbolicActual = variable.id.template(listOf(parameter.template))
         val symbolicExpected = variable.id.template(listOf(resource.id.template()))
 
+        catalog.isReadableAs(concreteActual, concreteExpected) shouldBe true
         catalog.isTemplateReadableAs(
             symbolicActual,
             symbolicExpected,
             mapOf(parameter to listOf(reward.id.template())),
-        ) shouldBe catalog.isReadableAs(concreteActual, concreteExpected)
+        ) shouldBe true
         catalog.isTemplateReadableAs(symbolicExpected, symbolicActual) shouldBe false
     }
 
@@ -351,60 +350,17 @@ val TypeSystemFoundationTest by testSuite {
         val elementLink = id("mutual_element_link")
         val list = listDefinition()
 
-        fun link(definition: TypeDefinitionId) =
-            TypeDefinition.partial(
-                id = definition,
-                parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = definition, index = 0), name = "T")),
-                representation =
-                    RepresentationTemplate.createLink(
-                        endpoint = EndpointId(value = definition.toString()),
-                        target = ParameterKey(owner = definition, index = 0).template,
-                    ),
-            )
-
-        fun reference(
-            link: TypeDefinitionId,
-            target: TypeDefinitionId,
-        ) = link.template(listOf(target.template()))
-
-        fun elements(target: TypeDefinitionId) = list.id.template(listOf(reference(elementLink, target)))
-
-        fun record(
-            definition: TypeDefinitionId,
-            name: String,
-            type: TypeTemplate,
-            parent: TypeDefinitionId? = null,
-        ) = TypeDefinition.partial(
-            id = definition,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = definition, name = name),
-                                type = type,
-                                overrides =
-                                    parent
-                                        ?.let {
-                                            listOf(FieldOwner(definition = it, name = name))
-                                        }.orEmpty(),
-                            ),
-                        ),
-                    abstract_ = parent == null,
-                ),
-            parents = parent?.let { listOf(it.namedTemplate()) }.orEmpty(),
-        )
         val declarations =
             listOf(
                 list,
-                link(pageLink),
-                link(elementLink),
-                record(page, "elements", elements(element)),
-                record(element, "page", reference(pageLink, page)),
-                record(sequencePage, "elements", elements(sequenceEntry), page),
-                record(sequenceEntry, "page", reference(pageLink, sequencePage), element),
+                linkDefinition(pageLink),
+                linkDefinition(elementLink),
+                fieldRecord(page, "elements", elementsOf(list.id, elementLink, element)),
+                fieldRecord(element, "page", referenceTo(pageLink, page)),
+                fieldRecord(sequencePage, "elements", elementsOf(list.id, elementLink, sequenceEntry), page),
+                fieldRecord(sequenceEntry, "page", referenceTo(pageLink, sequencePage), element),
             )
-        val unrelatedEntry = record(id("mutual_unrelated_entry"), "page", reference(pageLink, element), element)
+        val unrelatedEntry = fieldRecord(id("mutual_unrelated_entry"), "page", referenceTo(pageLink, element), element)
         val invalid =
             catalog(
                 *(declarations + unrelatedEntry).toTypedArray(),
@@ -522,16 +478,19 @@ val TypeSystemFoundationTest by testSuite {
         val listUse = list.id.namedUse(listOf(treeUse.use))
         val checked = (catalog.resolve(listUse.use) as Resolution.Ready).value
 
-        fun sequence(children: List<DataValue>): DataValue =
-            DataValue.named(
-                listUse,
-                DataValue.listValue(children.mapIndexed { index, value -> ListItem(id = ItemId(value = "item$index"), value = value) }),
-            )
-
-        fun node(children: List<DataValue>): DataValue = DataValue.named(treeUse, DataValue.record(mapOf("children" to sequence(children))))
-        val leaf = node(emptyList())
-        val nested = (checked.complete(sequence(listOf(node(listOf(leaf, leaf))))) as CompletenessResult.Complete).value
-        val siblings = (checked.complete(sequence(listOf(node(listOf(leaf)), leaf))) as CompletenessResult.Complete).value
+        val leaf = nodeValue(treeUse, listUse, emptyList())
+        val nested =
+            (
+                checked.complete(
+                    sequenceValue(listUse, listOf(nodeValue(treeUse, listUse, listOf(leaf, leaf)))),
+                ) as CompletenessResult.Complete
+            ).value
+        val siblings =
+            (
+                checked.complete(
+                    sequenceValue(listUse, listOf(nodeValue(treeUse, listUse, listOf(leaf)), leaf)),
+                ) as CompletenessResult.Complete
+            ).value
 
         DefaultCanonicalValueEquality.equivalent(nested, siblings) shouldBe false
         (DefaultCanonicalValueEquality.hash(nested) == DefaultCanonicalValueEquality.hash(siblings)) shouldBe false
@@ -616,13 +575,14 @@ val TypeSystemFoundationTest by testSuite {
                 ),
             )
 
-        (checked.complete(unfinished) is CompletenessResult.Unfinished) shouldBe true
+        (checked.complete(unfinished) as CompletenessResult.Unfinished).locations.map { it.path.text } shouldContainExactly listOf("count")
         val invalidNull =
             DataValue.named(
                 use,
                 DataValue.record(mapOf("note" to DataValue.NULL, "count" to DataValue.NULL)),
             )
-        (checked.complete(invalidNull) is CompletenessResult.Invalid) shouldBe true
+        (checked.complete(invalidNull) as CompletenessResult.Invalid).problems.map { it.location.path.text to it.code } shouldContainExactly
+            listOf("count" to "wrong_scalar")
     }
 
     test("named scalar identity remains while its payload is unfinished") {
@@ -633,7 +593,7 @@ val TypeSystemFoundationTest by testSuite {
         val checked = (catalog.resolve(use.use) as Resolution.Ready).value
 
         val result = checked.complete(DataValue.named(use, DataValue.UNFILLED)) as CompletenessResult.Unfinished
-        result.locations.size shouldBe 1
+        result.locations.map { it.path.text } shouldContainExactly listOf("")
     }
 
     test("unknown record keys reject structural admission") {
@@ -669,7 +629,13 @@ val TypeSystemFoundationTest by testSuite {
 
         DefaultCanonicalValueEquality.equivalent(firstComplete, secondComplete) shouldBe true
         DefaultCanonicalValueEquality.hash(firstComplete) shouldBe DefaultCanonicalValueEquality.hash(secondComplete)
+    }
 
+    test("a list with two items under one id is invalid") {
+        val list = listDefinition()
+        val catalog = catalog(list)
+        val use = list.id.namedUse(listOf(TEXT))
+        val checked = (catalog.resolve(use.use) as Resolution.Ready).value
         val duplicate =
             DataValue.named(
                 use,
@@ -710,7 +676,7 @@ val TypeSystemFoundationTest by testSuite {
         (catalog.resolve(good.id.use()) is Resolution.Ready) shouldBe true
     }
 
-    test("catalog wire encoding preserves structured declaration provenance") {
+    test("a presentation and an endpoint binding keep their declaration provenance through the wire") {
         val owner =
             DeclarationOwner(
                 source =
@@ -745,13 +711,11 @@ val TypeSystemFoundationTest by testSuite {
                 containsCollection = true,
             )
 
-        val encoded = presentation.owner
-        encoded.source.source.value shouldBe "extension.example"
-        encoded.source.sourcePart shouldBe "realm"
-        encoded.source.producer.value shouldBe "types"
-        encoded.source.name.value shouldBe "presentations/editor"
-        encoded.localIdentity shouldBe "message.editor"
-        endpointBinding.requireValid() shouldBe endpointBinding
+        val decoded = PresentationDescriptor.serializer.fromBytes(PresentationDescriptor.serializer.toBytes(presentation).toByteArray())
+        decoded.owner shouldBe owner
+        EndpointBindingTemplate.serializer
+            .fromBytes(EndpointBindingTemplate.serializer.toBytes(endpointBinding).toByteArray())
+            .requireValid() shouldBe endpointBinding
     }
 
     test("the portable check keeps canonical values and rejects nonfinite floats") {
@@ -829,132 +793,4 @@ val TypeSystemFoundationTest by testSuite {
         val narrowed = 9.9999999f
         checked.complete(DataValue.FloatWrapper(narrowed.toDouble())).shouldBeInstanceOf<CompletenessResult.Complete>()
     }
-}
-
-private val TEXT = ScalarKind.TEXT.use
-private val TEXT_TEMPLATE = ScalarKind.TEXT.template
-
-private fun catalog(vararg definitions: TypeDefinition) = DefaultCheckedCatalog(CatalogGeneration(value = "test"), definitions.toList())
-
-private fun id(name: String) = TypeDefinitionId.qualified("test", name)
-
-private fun field(
-    owner: String,
-    name: String,
-    type: TypeTemplate,
-) = FieldDeclaration.partial(owner = FieldOwner(definition = id(owner), name = name), type = type)
-
-private fun recordDefinition(
-    name: String,
-    vararg fields: FieldDeclaration,
-): TypeDefinition =
-    TypeDefinition.partial(id = id(name), representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = false))
-
-private fun resourceDefinition(): TypeDefinition {
-    val id = id("resource")
-    return TypeDefinition.partial(
-        id = id,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "name"), type = TEXT_TEMPLATE),
-                    ),
-                abstract_ = true,
-            ),
-    )
-}
-
-private fun rewardDefinition(resource: TypeDefinitionId): TypeDefinition {
-    val id = id("reward")
-    return TypeDefinition.partial(
-        id = id,
-        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-        parents = listOf(resource.namedTemplate()),
-    )
-}
-
-private fun weightedDefinition(): TypeDefinition {
-    val id = id("weighted")
-    val parameter = ParameterKey(owner = id, index = 0)
-    return TypeDefinition.partial(
-        id = id,
-        parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "value"), type = parameter.template),
-                    ),
-                abstract_ = false,
-            ),
-    )
-}
-
-private fun variableDefinition(resource: TypeDefinitionId): TypeDefinition {
-    val id = id("variable")
-    val parameter = ParameterKey(owner = id, index = 0)
-    return TypeDefinition(
-        id = id,
-        parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(resource.template()))),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "value"), type = parameter.template),
-                    ),
-                abstract_ = false,
-            ),
-        parents = listOf(resource.namedTemplate()),
-    )
-}
-
-private fun listDefinition(): TypeDefinition {
-    val id = id("list")
-    val parameter = ParameterKey(owner = id, index = 0)
-    return TypeDefinition.partial(
-        id = id,
-        parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-        representation = RepresentationTemplate.createSequence(item = parameter.template, kind = CollectionKind.LIST),
-    )
-}
-
-private fun treeDefinition(list: TypeDefinitionId): TypeDefinition {
-    val id = id("tree")
-    val parameter = ParameterKey(owner = id, index = 0)
-    val tree = id.template(listOf(parameter.template))
-    return TypeDefinition.partial(
-        id = id,
-        parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = id, name = "children"),
-                            type = list.template(listOf(tree)),
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
-}
-
-private fun optionalDefinition(): TypeDefinition {
-    val id = id("optional")
-    return TypeDefinition.partial(
-        id = id,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "note"), type = TEXT_TEMPLATE.nullable()),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = id, name = "count"),
-                            type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
 }

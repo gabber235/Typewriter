@@ -4,19 +4,29 @@ import com.typewritermc.services.libs.communicator.transport.Payload
 import io.natskt.NatsClient
 import io.natskt.api.AuthPayload
 import io.natskt.api.ConnectionPhase
+import io.natskt.api.ConnectionState
 import io.natskt.api.Credentials
 import io.natskt.api.Message
 import io.natskt.api.Subscription
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.seconds
 
 internal data class NatsClientMessage(
     val subject: String,
@@ -51,6 +61,7 @@ internal interface NatsClientAdapter {
 
     suspend fun drain(timeout: kotlin.time.Duration)
 
+    /** Returns once the server has processed every operation this client wrote before the call. */
     suspend fun flush()
 
     suspend fun publish(message: NatsClientMessage)
@@ -123,7 +134,23 @@ private class RealNatsClientAdapter(
 
     override suspend fun drain(timeout: kotlin.time.Duration) = client.drain(timeout)
 
-    override suspend fun flush() = client.flush()
+    private val roundTrips = Mutex()
+
+    /**
+     * Writes a PING and waits for its PONG. The server answers operations in order, so the PONG proves every
+     * subscription written before is registered; writing the buffer alone does not. Round trips are serialized so a
+     * PONG answers the PING of the caller that waits for it. The vendor records a PONG only as its time and round trip
+     * time, so the wait ends when that pair changes.
+     */
+    override suspend fun flush() =
+        roundTrips.withLock {
+            val before = client.connectionState.value.lastPong()
+            client.ping()
+            client.flush()
+            withTimeoutOrNull(ROUND_TRIP_TIMEOUT) { client.connectionState.first { it.lastPong() != before } }
+                ?: throw IllegalStateException("The NATS server did not answer a PING within $ROUND_TRIP_TIMEOUT")
+            Unit
+        }
 
     override suspend fun publish(message: NatsClientMessage) {
         client.publish(message.subject, message.payload?.toByteArray(), message.headers, message.replyTo)
@@ -136,19 +163,46 @@ private class RealNatsClientAdapter(
         val subscription =
             RealNatsClientSubscription(
                 client.subscribe(subject, queueGroup, eager = true, unsubscribeOnLastCollector = false),
+                clientScope,
             )
         subscription.isActive.first { it }
         return subscription
     }
 }
 
+private fun ConnectionState.lastPong() = lastPongAt to rtt
+
+private val ROUND_TRIP_TIMEOUT = 5.seconds
+
+/**
+ * A vendor subscription whose messages are buffered from the moment it exists.
+ *
+ * The vendor hands messages to a shared flow without replay, which drops every message that arrives while nothing
+ * collects. A request answered before its caller starts collecting would be lost, so a collector starts here, before
+ * the server can deliver anything, and buffers each message until [messages] is collected. It runs unconfined so it
+ * is collecting when the constructor returns.
+ */
 private class RealNatsClientSubscription(
     private val subscription: Subscription,
+    scope: CoroutineScope,
 ) : NatsClientSubscription {
-    override val messages: Flow<NatsClientMessage> = subscription.messages.map { it.toAdapterMessage() }
+    private val buffered = Channel<NatsClientMessage>(Channel.UNLIMITED)
+    private val bridge =
+        scope
+            .launch(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+                subscription.messages.collect { buffered.send(it.toAdapterMessage()) }
+            }.apply { invokeOnCompletion { cause -> buffered.close(cause.takeUnless { it is CancellationException }) } }
+
+    override val messages: Flow<NatsClientMessage> = buffered.receiveAsFlow()
     override val isActive: StateFlow<Boolean> = subscription.isActive
 
-    override suspend fun unsubscribe() = subscription.unsubscribe()
+    override suspend fun unsubscribe() {
+        try {
+            subscription.unsubscribe()
+        } finally {
+            bridge.cancel()
+        }
+    }
 }
 
 private fun Message.toAdapterMessage() =

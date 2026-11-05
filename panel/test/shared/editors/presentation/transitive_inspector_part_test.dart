@@ -1,20 +1,35 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
-import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets(
     "a nested explicit heading call reserves its inherited position",
     (tester) async {
-      final fixture = _scenario(childCallsOuter: true);
+      final fixture = InheritedInspectorLayoutScenario(
+        childLayout: inheritedFieldColumn([
+          inspectorLayoutPart("child.part", inspectorDetailsPart),
+          inspectorLayoutRemainder("child.remaining"),
+        ], id: "child"),
+        childInheritableNodes: ["child", "child.part", "child.remaining"],
+        familyLayout: inheritedFieldColumn([
+          _outerDetails,
+          inspectorLayoutPart("family.heading", inspectorHeadingPart),
+          inspectorLayoutRemainder("family.remaining"),
+        ], id: "family"),
+        familyInheritableNodes: [
+          "family",
+          "family.outer",
+          "family.heading",
+          "family.remaining",
+        ],
+      );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
+      final panel = await tester.showPresentationHost(
+        fixture.host,
+        scrolls: true,
+      );
 
-      expect(find.text("Entry heading"), findsOneWidget);
+      expect(panel.shows("Entry heading"), isTrue);
       expect(
         find.textContaining("Replace or exclude the whole part"),
         findsNothing,
@@ -26,66 +41,42 @@ void main() {
   testWidgets(
     "an inherited atomic part cannot repeat a locally placed heading",
     (tester) async {
-      final fixture = _scenario(childCallsOuter: false);
+      final fixture = InheritedInspectorLayoutScenario(
+        childLayout: inheritedFieldColumn([
+          inspectorLayoutPart("child.part", inspectorHeadingPart),
+          inspectorLayoutRemainder("child.remaining"),
+        ], id: "child"),
+        childInheritableNodes: ["child", "child.part", "child.remaining"],
+        familyLayout: inheritedFieldColumn([
+          _outerDetails,
+          inspectorLayoutRemainder("family.remaining"),
+        ], id: "family"),
+        familyInheritableNodes: ["family", "family.outer", "family.remaining"],
+      );
       addTearDown(fixture.dispose);
-      await _pump(tester, fixture);
+      final panel = await tester.showPresentationHost(
+        fixture.host,
+        scrolls: true,
+      );
 
       expect(
         find.textContaining("Replace or exclude the whole part"),
         findsWidgets,
       );
-      expect(find.text("Entry heading"), findsOneWidget);
-      expect(find.text("Outer content"), findsNothing);
+      expect(panel.shows("Entry heading"), isTrue);
+      expect(panel.shows("Outer content"), isFalse);
       expect(tester.takeException(), isNull);
     },
   );
 }
 
-InheritedInspectorLayoutScenario _scenario({required bool childCallsOuter}) =>
-    InheritedInspectorLayoutScenario(
-      childLayout: inheritedFieldColumn([
-        inspectorLayoutPart(
-          "child.part",
-          childCallsOuter ? inspectorDetailsPart : inspectorHeadingPart,
-        ),
-        inspectorLayoutRemainder("child.remaining"),
-      ], id: "child"),
-      childInheritableNodes: ["child", "child.part", "child.remaining"],
-      familyLayout: inheritedFieldColumn([
-        inspectorLayoutPart(
-          "family.outer",
-          inspectorDetailsPart,
-          body: inheritedFieldColumn([
-            inspectorLayoutPart("family.outer.heading", inspectorHeadingPart),
-            presentationNode(
-              "family.outer.content",
-              skir.PresentationElement.wrapText(
-                (skir.TextContent.mutable()
-                      ..value = textLiteral("Outer content"))
-                    .toFrozen(),
-              ),
-            ),
-          ], id: "family.outer.body"),
-        ),
-        if (childCallsOuter)
-          inspectorLayoutPart("family.heading", inspectorHeadingPart),
-        inspectorLayoutRemainder("family.remaining"),
-      ], id: "family"),
-      familyInheritableNodes: [
-        "family",
-        "family.outer",
-        if (childCallsOuter) "family.heading",
-        "family.remaining",
-      ],
-    );
-
-Future<void> _pump(
-  WidgetTester tester,
-  InheritedInspectorLayoutScenario fixture,
-) => tester.pumpTestApp(
-  child: Scaffold(
-    body: SingleChildScrollView(
-      child: PortablePresentationRenderer(host: fixture.host),
-    ),
-  ),
+/// A details part "family.outer" whose body places its own heading above
+/// the text "Outer content".
+final _outerDetails = inspectorLayoutPart(
+  "family.outer",
+  inspectorDetailsPart,
+  body: inheritedFieldColumn([
+    inspectorLayoutPart("family.outer.heading", inspectorHeadingPart),
+    presentationText("family.outer.content", textLiteral("Outer content")),
+  ], id: "family.outer.body"),
 );

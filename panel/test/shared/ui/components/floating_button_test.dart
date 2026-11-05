@@ -1,68 +1,56 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("invokes async and changes FAB icon to spinner while running", (
+  testWidgets("a running action shows progress until it finishes", (
     tester,
   ) async {
     final completer = Completer<void>();
-    var invoked = 0;
-
-    await tester.pumpTestApp(
-      child: Center(
-        child: FloatingButton(
-          icon: const Icon(Icons.add),
-          onPressed: () async {
-            invoked++;
-            await completer.future;
-            invoked++;
-          },
-          child: const SizedBox.expand(child: Center(child: Text("Content"))),
-        ),
+    var finished = false;
+    final panel = await tester.showComponent(
+      FloatingButton(
+        icon: const Icon(Icons.add),
+        onPressed: () async {
+          await completer.future;
+          finished = true;
+        },
+        child: const SizedBox.expand(child: Center(child: Text("Content"))),
       ),
     );
+    expect(panel.shows("In progress"), isFalse);
 
-    expect(invoked, 0);
-    expect(find.byType(Icon), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await tester.tap(find.byIcon(Icons.add));
 
-    await tester.tap(find.byType(FloatingActionButton));
-
-    await tester.pumpUntil(() {
-      expect(invoked, 1);
-      expect(find.byType(Icon), findsNothing);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text("Content"), findsOneWidget);
+    await panel.eventually(() {
+      expect(panel.shows("In progress"), isTrue);
+      expect(find.byIcon(Icons.add), findsNothing);
+      expect(panel.shows("Content"), isTrue);
     });
 
     completer.complete();
-
-    await tester.pumpUntil(() {
-      expect(invoked, 2);
-      expect(find.byType(Icon), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.text("Content"), findsOneWidget);
+    await panel.eventually(() {
+      expect(finished, isTrue);
+      expect(panel.shows("In progress"), isFalse);
+      expect(find.byIcon(Icons.add), findsOneWidget);
     });
   });
 
-  testWidgets("shows snackbar and tooltip on failure", (tester) async {
-    await tester.pumpTestApp(
-      child: Center(
-        child: FloatingButton(
-          icon: const Icon(Icons.add),
-          onPressed: () {
-            throw Exception("Boom");
-          },
-          child: const SizedBox.expand(child: Center(child: Text("Content"))),
-        ),
+  testWidgets("a failed action reports its error in a snackbar and tooltip", (
+    tester,
+  ) async {
+    final panel = await tester.showComponent(
+      FloatingButton(
+        icon: const Icon(Icons.add),
+        onPressed: () => throw Exception("Boom"),
+        child: const SizedBox.expand(child: Center(child: Text("Content"))),
       ),
     );
 
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add));
+    await panel.settle();
 
-    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.textContaining("Boom"), findsOneWidget);
+    expect(find.tooltip(RegExp("Boom")), findsOneWidget);
   });
 }
