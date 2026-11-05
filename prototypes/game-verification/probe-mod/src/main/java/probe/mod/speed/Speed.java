@@ -91,6 +91,7 @@ public final class Speed {
             r.run();
         }
         if (thisFrameSkipped && parkNanos > 0) LockSupport.parkNanos(parkNanos);
+        if (!thisFrameSkipped) probe.mod.video.Video.afterFrame();
     }
 
     /** Draws n whole frames from now, in any gate mode, then runs r on the client thread. */
@@ -176,7 +177,8 @@ public final class Speed {
             }
             case "stats" -> "{\"fps\":" + mc.getFps() + ",\"frame\":" + latest.frame() + ",\"tick\":" + latest.tick() + ",\"at\":" + micros() + "}";
             default -> {
-                String r = probe.mod.observe.Observe.handle(name, p, mc);
+                String r = probe.mod.video.Video.handle(name, p, mc);
+                if (r == null) r = probe.mod.observe.Observe.handle(name, p, mc);
                 yield r != null ? r : "{\"error\":\"unknown " + name + "\"}";
             }
         };

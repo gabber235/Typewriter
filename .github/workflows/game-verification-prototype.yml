@@ -25,7 +25,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: video, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: video, backend: opengl, runner: ubuntu-24.04, repeat: 0 }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -49,7 +50,7 @@ jobs:
           date +%T
           sudo apt-get install -y -qq --no-install-recommends \
             xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libegl-mesa0 libgbm1 mesa-vulkan-drivers libvulkan1 \
-            mesa-utils mesa-utils-bin vulkan-tools python3-numpy python3-pil \
+            mesa-utils mesa-utils-bin vulkan-tools python3-numpy python3-pil ffmpeg \
             libx11-6 libxext6 libxcursor1 libxi6 libxrandr2 libxss1 libxfixes3 libxkbcommon0 libxkbcommon-x11-0 libasound2t64
       - uses: actions/cache@v4
         with:
@@ -82,3 +83,5 @@ jobs:
             prototypes/game-verification/runs/c-speed.jsonl
             prototypes/game-verification/runs/shots
             prototypes/game-verification/runs/h-evidence
+            prototypes/game-verification/runs/b-video.jsonl
+            prototypes/game-verification/runs/video

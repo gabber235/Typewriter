@@ -16,6 +16,11 @@ public class TickCapMixin {
 
     @Inject(method = "getTickTargetMillis", at = @At("HEAD"), cancellable = true)
     private void probe$uncap(float fallback, CallbackInfoReturnable<Float> cir) {
+        // Step mode: the virtual clock is game time, 20 ticks per virtual second whatever the server rate.
+        if (probe.mod.video.Video.stepping()) {
+            cir.setReturnValue(50f);
+            return;
+        }
         if (Speed.uncapped && this.level != null && this.level.tickRateManager().runsNormally()) {
             cir.setReturnValue(this.level.tickRateManager().millisecondsPerTick());
         }

@@ -87,6 +87,14 @@ public final class Probe implements ClientModInitializer {
         event("mod_init", "\"jvmStartMicros\":" + java.lang.management.ManagementFactory.getRuntimeMXBean().getStartTime() * 1000);
     }
 
+    public static long frames() {
+        return frames;
+    }
+
+    public static long ticks() {
+        return ticks;
+    }
+
     public static void onTick(Minecraft mc) {
         if (out == null) return;
         ticks++;
@@ -95,7 +103,8 @@ public final class Probe implements ClientModInitializer {
             write(fact(mc, "t", tp));
             lastPerceived = tp;
         }
-        Speed.publish(frames, ticks, tp);
+        // A tick's state is first drawn by the next frame, so a sighting names that frame (spike B).
+        Speed.publish(frames + 1, ticks, tp);
         probe.mod.observe.Ride.onTick(mc);
         try {
             out.flush();

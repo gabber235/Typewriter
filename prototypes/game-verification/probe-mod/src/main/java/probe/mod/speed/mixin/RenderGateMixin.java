@@ -15,6 +15,11 @@ import probe.mod.speed.Speed;
  */
 @Mixin(Minecraft.class)
 public class RenderGateMixin {
+    @org.spongepowered.asm.mixin.injection.Inject(method = "runTick", at = @At("HEAD"))
+    private void probe$clock(boolean advanceGameTime, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        probe.mod.video.Video.beforeRunTick();
+    }
+
     @Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/device/GpuSurface;acquireNextTexture()V"))
     private void probe$acquire(GpuSurface surface) throws Exception {
         if (!Speed.decideFrame()) surface.acquireNextTexture();
@@ -27,6 +32,9 @@ public class RenderGateMixin {
 
     @Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render()V"))
     private void probe$render(GameRenderer renderer) {
-        if (!Speed.skipRender()) renderer.render();
+        if (!Speed.skipRender()) {
+            renderer.render();
+            probe.mod.video.Video.afterRender((Minecraft) (Object) this);
+        }
     }
 }

@@ -14,6 +14,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import run as R
 import speed
 from run import Client, RUNS, free_port, leak_check, rss_mb, stop_all
+import video
 from speed import Line, TunedPaper, KINDS, MATERIALS, needle_for, leftovers, stat
 
 RESULTS = RUNS / "h.jsonl"
@@ -85,8 +86,10 @@ def cmd_env():
 # ---------- Xvfb and renderer settings ----------
 
 class Xvfb:
-    def __init__(self, width=1280, height=1024):
-        self.width, self.height = width, height
+    size = (1280, 1024)  # the video plan sets the client size, so x11grab sees only the game
+
+    def __init__(self, width=None, height=None):
+        self.width, self.height = width or Xvfb.size[0], height or Xvfb.size[1]
         self.proc = None
 
     def start(self):
@@ -607,6 +610,100 @@ def cmd_compare(cycles):
         step(f"frame in terrain {backend}", run_speed, "c1", "frame", "--rounds", "3", "--keep-shots")
 
 
+# ---------- spike B: video ----------
+
+class X11Grab:
+    """B2: ffmpeg records the client's Xvfb display, as the panel's evidence recorder does."""
+
+    def __init__(self, display, path, fps, w, h):
+        self.path = pathlib.Path(path)
+        self.log = self.path.with_suffix(".x11.log")
+        self.t0 = time.time()
+        self.proc = subprocess.Popen([video.FFMPEG, "-hide_banner", "-loglevel", "info", "-y", "-f", "x11grab", "-draw_mouse", "0", "-video_size", f"{w}x{h}", "-framerate", str(fps),
+                                      "-i", f"{display}+0,0", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", str(self.path)],
+                                     stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=open(self.log, "wb"))
+
+    def cpu(self):
+        return video.proc_cpu(self.proc.pid)
+
+    def stop(self):
+        cpu = self.cpu()
+        wall = time.time() - self.t0
+        try:
+            self.proc.stdin.write(b"q")
+            self.proc.stdin.close()
+        except Exception:
+            pass
+        try:
+            self.proc.wait(60)
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+        text = self.log.read_text(errors="replace")
+        m = re.search(r"start: ([0-9.]+)", text)
+        drop = re.findall(r"drop=\s*(\d+)", text)
+        dup = re.findall(r"dup=\s*(\d+)", text)
+        return {"start": float(m.group(1)) if m else None, "cpu_pct": round(cpu / wall * 100) if cpu is not None else None, "bytes": self.path.stat().st_size if self.path.exists() else 0,
+                "wall_s": round(wall, 1), "ffmpeg_drop": int(drop[-1]) if drop else None, "ffmpeg_dup": int(dup[-1]) if dup else None, "exit": self.proc.returncode}
+
+
+def grab_for(s, path, fps):
+    return X11Grab(s.display.name, path, fps, s.client.width, s.client.height)
+
+
+def x11_cost(cfg, seconds=8):
+    """B2 cost: client rendering uncapped while ffmpeg grabs the display at 30 fps."""
+    set_cfg(cfg)
+    out = video.OUT / f"x11-cost-{cfg.world}-{int(time.time())}"
+    out.mkdir(parents=True, exist_ok=True)
+    with CiSession(f"x11cost-{cfg.world}", dispatch="tick") as s:
+        time.sleep(12)
+        s.C("clearChat")
+        for name in ("none", "x11-30", "none"):
+            f0, c0, t0 = s.C("stats"), video.proc_cpu(s.clientpid), time.time()
+            g = X11Grab(s.display.name, out / f"{name}.mp4", 30, s.client.width, s.client.height) if name != "none" else None
+            time.sleep(seconds)
+            f1, c1, t1 = s.C("stats"), video.proc_cpu(s.clientpid), time.time()
+            gs = g.stop() if g else None
+            row = {"kind": "cost", "label": f"x11-{cfg.world}", "world": cfg.world, "rd": cfg.rd, "config": name, "fps": round((f1["frame"] - f0["frame"]) / ((f1["at"] - f0["at"]) / 1e6), 1),
+                   "client_cpu_pct": round((c1 - c0) / (t1 - t0) * 100), "renderer": s.renderer.get("gpu") if isinstance(s.renderer, dict) else None}
+            if gs:
+                row.update({"ffmpeg_cpu_pct": gs["cpu_pct"], "file_bytes": gs["bytes"], "kb_per_s": round(gs["bytes"] / gs["wall_s"] / 1024, 1), "grab": gs, "probe": video.probe_video(out / f"{name}.mp4")})
+                video.still(out / f"{name}.mp4", 60, 30, out / f"{name}-frame60.png")
+            video.record(row)
+
+
+def video_cost(cfg, configs):
+    set_cfg(cfg)
+    video.cmd_cost(argparse.Namespace(world=cfg.world, rd=cfg.rd, seconds=8, settle=12, reps=1, configs=configs, keep_frame=True))
+
+
+def video_reqs(cfg, **k):
+    set_cfg(cfg)
+    a = dict(n=60, mode="rt", rate=20, cap=0, fps=30, rd=cfg.rd, linger=0.6, settle=12, grab=None, pre=0.15)
+    a.update(k)
+    video.cmd_reqs(argparse.Namespace(**a))
+
+
+def video_step(cfg, cases):
+    set_cfg(cfg)
+    video.cmd_step(argparse.Namespace(cases=cases, fps=30, rd=cfg.rd, reps=1, settle=12))
+
+
+def cmd_video(backend):
+    Xvfb.size = (854, 480)
+    video.GRAB = grab_for
+    void, terrain = Cfg(backend=backend), Cfg(backend=backend, world="default", rd=5)
+    cost = "none,all-null,rt30-null,rt30-x264,rt30-x264uf,rt30-x264-half,all-x264,none"
+    step("video cost void", video_cost, void, cost)
+    step("video cost terrain", video_cost, terrain, cost)
+    step("video x11 cost terrain", x11_cost, terrain)
+    step("video reqs rt void", video_reqs, void)
+    step("video reqs x11 void", video_reqs, void, grab="x11")
+    step("video step terrain", video_step, terrain, "rt:20:0,step:20:0,step:10:0,step:5:0")
+    step("video reqs step terrain", video_reqs, terrain, n=40, mode="step", rate=10)
+    step("video reqs rt terrain", video_reqs, terrain, n=40)
+
+
 def cmd_multi(backend):
     cfg = Cfg(backend=backend)
     for n in (1, 2, 4):
@@ -616,7 +713,7 @@ def cmd_multi(backend):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -635,6 +732,8 @@ def main():
             cmd_flake(a.backend, a.cycles)
         elif a.plan == "multi":
             cmd_multi(a.backend)
+        elif a.plan == "video":
+            cmd_video(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:
