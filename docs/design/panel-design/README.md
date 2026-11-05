@@ -26,7 +26,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 
 - Material Symbols as the one icon set.
 - Which duplicate component survives, in the Components table.
-- 32 px rows.
+- Row density: 32, 48, and 58 px were all rejected in a trial; undecided.
 
 ## Draft when rules, not confirmed
 
@@ -75,8 +75,10 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Change by someone else | Slow wave plus a chip | The animation performs the change; show who when it was not the user; an added element is fine if it carries new information |
 | Pane focus | Ring travels, plus lift, shrink, and brighten | Signals stack when each does its own job; the ring always leads |
 | Larger surface | The row grows into it | Continuity beats a strike from elsewhere |
+| List density | All three rejected | No model yet for static look |
+| Empty state | Mascot, large playful line, serious subtitle, action on the right | Play and clarity sit side by side, each in its own place |
 
-Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right.
+Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right.
 
 Across trials, every added element was rejected: red border, second button, caret, ribbon, countdown line.
 
