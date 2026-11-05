@@ -17,6 +17,9 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Hover | Things rise with one overshoot and no shadow; key caps strike up; buttons with a key always show it |
 | Loading | Loaded rows ripple upwards from below |
 | Rules | General rules that decide many cases, over many specific rows |
+| Keys | One key language across the panel; a key keeps its meaning everywhere |
+| Actions | As context specific as possible |
+| Alignment | Trials of three options per element, to check the rules against the maintainer's feel |
 | Voice | Between plain and playful: jokes where possible, literal English when it matters |
 
 ## Choices by the author, not confirmed
@@ -39,6 +42,7 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - Filled action placement, and per row actions.
 - Hiding key caps, hints, and the mode chip with touch only.
 - Where jokes are allowed.
+- The key language table, and the selection versus focus rule.
 - Values for `jam`, `hoverIn`, `capIn`, `loadIn`, and slow ink.
 
 ## Open
@@ -65,6 +69,7 @@ Measured at `c5db6eb2f` on 2026-11-05. Counts come from searches. Remove a row w
 | 3 | Focus ring is grey and hidden at 450 px and below | `color_scheme.dart:92`, `focus_highlight.dart:127` |
 | 3 | No shortcut help surface; command list coverage not measured | `search_shortcuts.dart:60` |
 | 3 | `Ctrl+N` and `Ctrl+Esc` cannot reach the page | `shortcuts.dart:31,37` |
+| 2 | A means create in the resource editor and Apply roles on members; X is an extra alias for remove | `resource_route.dart:115`, `member_actions.dart:68`, `shortcuts.dart:85` |
 | 3 | Single key commands cannot be turned off or remapped | `shortcuts.dart`, `normal_mode.dart` |
 | 3 | Nothing turns semantics on for web; not run with a screen reader | `web/index.html` |
 | 3 | Sidebar takes 1000 ms; 750 ms hover scale and tree insert | `sidebar_shell.dart:34`, `animation.dart:7`, `search_tree_animated_body.dart:25` |
