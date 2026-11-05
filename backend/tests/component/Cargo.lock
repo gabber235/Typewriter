@@ -415,10 +415,13 @@ checksum = "31b698c5f9a010f6573133b09e0de5408834d0c82f8d7475a89fc1867a71cd90"
 dependencies = [
  "axum-core",
  "bytes",
+ "form_urlencoded",
  "futures-util",
  "http",
  "http-body",
  "http-body-util",
+ "hyper",
+ "hyper-util",
  "itoa",
  "matchit",
  "memchr",
@@ -426,10 +429,15 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "serde_core",
+ "serde_json",
+ "serde_path_to_error",
+ "serde_urlencoded",
  "sync_wrapper",
+ "tokio",
  "tower",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -448,6 +456,7 @@ dependencies = [
  "sync_wrapper",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -710,15 +719,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "camino"
-version = "1.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb1307f12aa967b5a58416e87b3653360e0fd614a016b6e970db08fecbb1b80d"
-dependencies = [
- "serde_core",
-]
-
-[[package]]
 name = "cap-primitives"
 version = "4.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -734,30 +734,6 @@ dependencies = [
  "rustix-linux-procfs",
  "windows-sys 0.61.2",
  "winx",
-]
-
-[[package]]
-name = "cargo-platform"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd0061da739915fae12ea00e16397555ed4371a6bb285431aab930f61b0aa4ba"
-dependencies = [
- "serde",
- "serde_core",
-]
-
-[[package]]
-name = "cargo_metadata"
-version = "0.23.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef987d17b0a113becdd19d3d0022d04d7ef41f9efe4f3fb63ac44ba61df3ade9"
-dependencies = [
- "camino",
- "cargo-platform",
- "semver",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -902,9 +878,9 @@ dependencies = [
 
 [[package]]
 name = "clap_lex"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
+checksum = "1c133bc6a41be0d194c306b5506d15e6feeea7b1d6604bd3f8310dfb2ca96486"
 
 [[package]]
 name = "cmake"
@@ -969,13 +945,13 @@ dependencies = [
  "http",
  "http-body-util",
  "hyper",
+ "nats-broker",
  "opentelemetry",
  "opentelemetry_sdk",
  "reqwest 0.13.5",
  "serde",
  "serde_json",
  "sha2 0.11.1",
- "tempfile",
  "tokio",
  "tracing",
  "tracing-opentelemetry",
@@ -1002,21 +978,6 @@ dependencies = [
  "inventory",
  "serde",
  "thiserror",
-]
-
-[[package]]
-name = "component-test-xtask"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cargo_metadata",
- "clap",
- "component-test",
- "component-test-model",
- "hex",
- "serde_json",
- "sha2 0.11.1",
- "typewriter-component-tests",
 ]
 
 [[package]]
@@ -1471,6 +1432,17 @@ name = "data-encoding"
 version = "2.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4583a4551df46e2792f82ceeac45e850d2e2d5debba0b91f102385cda5b11f06"
+
+[[package]]
+name = "database-schema"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "indexmap",
+ "serde",
+ "surrealdb",
+ "toml",
+]
 
 [[package]]
 name = "der"
@@ -3321,6 +3293,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nats-broker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "libc",
+ "nats-jwt-rs",
+ "nkeys",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "nats-jwt-rs"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4657,6 +4644,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "sync_wrapper",
  "tokio",
  "tokio-rustls",
@@ -5240,6 +5228,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a93142f0367a4cc53ae0fead1bcda39e85beccfad3dcd717656cacab94b12985"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "serde_path_to_error"
+version = "0.1.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10a9ff822e371bb5403e391ecd83e182e0e77ba7f6fe0160b795797109d1b457"
+dependencies = [
+ "itoa",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -6320,6 +6319,7 @@ version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
 dependencies = [
+ "log",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",
@@ -6480,14 +6480,13 @@ dependencies = [
  "anyhow",
  "async-trait",
  "component-test",
- "indexmap",
+ "database-schema",
  "reqwest 0.13.5",
  "serde",
  "serde_json",
  "skir-client",
  "surrealdb",
  "tokio",
- "toml",
  "trybuild",
  "uuid",
  "wash-runtime",
@@ -6512,6 +6511,40 @@ dependencies = [
  "tokio",
  "typewriter-component-test",
  "wasmcloud-utils",
+]
+
+[[package]]
+name = "typewriter-stack"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "async-trait",
+ "axum",
+ "base64 0.23.1",
+ "bytes",
+ "clap",
+ "component-test-core",
+ "database-schema",
+ "ed25519-dalek",
+ "futures-util",
+ "getrandom 0.2.17",
+ "http-body-util",
+ "hyper",
+ "indexmap",
+ "nats-broker",
+ "nats-jwt-rs",
+ "nkeys",
+ "reqwest 0.13.5",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "wash-runtime",
+ "wasmcloud-plugin-surrealdb",
+ "wasmcloud-utils",
+ "wasmtime-wasi-http",
 ]
 
 [[package]]

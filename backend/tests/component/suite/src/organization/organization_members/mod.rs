@@ -21,10 +21,6 @@ use wasmcloud_utils::{
 #[component_fixture(
     id = "organization-members",
     primary(package = "organization-members", target = "organization_members"),
-    affected_paths(
-        "backend/organization/organization-members/",
-        "backend/database/schema/organization/"
-    )
 )]
 pub struct OrganizationMembers;
 

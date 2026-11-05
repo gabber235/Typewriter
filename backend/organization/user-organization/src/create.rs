@@ -70,7 +70,8 @@ pub async fn handle_create(
         RETURN {
             LET $organization = CREATE ONLY organization SET
                 name = $name,
-                logo_url = $logo_url,
+                // An absent logo binds as NULL, which `option<string>` rejects; store NONE.
+                logo_url = $logo_url ?? NONE,
                 founder = $user_id
             ;
 

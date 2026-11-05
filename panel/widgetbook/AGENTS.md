@@ -26,6 +26,6 @@ Add knobs for design relevant configuration such as width, read only state, enab
 
 ## Generated files and verification
 
-Do not edit `lib/main.directories.g.dart` manually. Regenerate it with `dart run build_runner build` after adding, removing, renaming, or moving annotated stories.
+`lib/main.directories.g.dart` is generated and ignored by Git. `cargo xtask generate` (and every `cargo xtask check`) regenerates it after annotated stories are added, removed, renamed, or moved.
 
 Format changed Dart files. Run Widgetbook analysis and tests. Add behavioral tests for interactive stories and completeness tests for catalogs that represent an exhaustive protocol hierarchy.

@@ -1,0 +1,13 @@
+# Generated sources are ignored by Git (.gitignore) but are real APIs that code calls. ripgrep and
+# fd read this file after .gitignore, so these lines keep them in every search.
+!panel/**/*.g.dart
+!panel/**/*.freezed.dart
+!panel/**/*.gr.dart
+!panel/lib/infrastructure/protocols/skir/skirout/
+!panel/lib/infrastructure/protocols/operations/skirout/
+!panel/lib/infrastructure/messaging/generated/skirout/
+!backend/wasmcloud-utils/src/skirout/
+!backend/wasmcloud-utils/src/transport_routes/skirout/
+!services/protocol/src/main/kotlin/skirout/
+!services/protocol/transport-adapters/kotlin/skirout/
+!services/sdk/typewriter-api/src/main/skirout/

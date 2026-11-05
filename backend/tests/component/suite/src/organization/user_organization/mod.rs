@@ -34,10 +34,6 @@ async fn execute_join_submission_transaction(
 #[component_fixture(
     id = "user-organization",
     primary(package = "user-organization", target = "user_organization"),
-    affected_paths(
-        "backend/organization/user-organization/",
-        "backend/database/schema/organization/"
-    )
 )]
 pub struct UserOrganization;
 

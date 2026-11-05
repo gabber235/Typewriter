@@ -17,13 +17,13 @@ hex.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
+nats-broker = { path = "../../../../testing/nats-broker" }
 opentelemetry.workspace = true
 opentelemetry_sdk.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 reqwest.workspace = true
 sha2.workspace = true
-tempfile.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-opentelemetry.workspace = true

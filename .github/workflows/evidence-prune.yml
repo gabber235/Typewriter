@@ -1,0 +1,35 @@
+name: Evidence prune
+
+# Drops media from the evidence branch once nobody can see it: when a pull request closes,
+# and in a weekly run that expires merged pull requests and squashes history.
+on:
+  pull_request_target:
+    types: [closed]
+  schedule:
+    - cron: "0 4 * * 0"
+
+# Pushes to the evidence branch with the workflow token.
+permissions:
+  contents: write
+
+# No concurrency group: CI publishes and prunes retry their pushes onto each other's commits, and
+# the weekly squash starts over when a push lands during it.
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # pull_request_target runs with a writable token, so it checks out the base branch, never
+      # the pull request's code.
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/devenv
+      - if: github.event_name == 'pull_request_target'
+        run: >-
+          devenv shell -- cargo xtask evidence prune closed
+          --pr ${{ github.event.number }}
+          --merged ${{ github.event.pull_request.merged }}
+          --keep ${{ github.event.pull_request.head.sha }}
+      - if: github.event_name == 'schedule'
+        run: devenv shell -- cargo xtask evidence prune weekly --retention 30d

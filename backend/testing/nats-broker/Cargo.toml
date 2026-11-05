@@ -1,0 +1,22 @@
+[package]
+name = "nats-broker"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+description = "One operator mode nats-server per test process that hands every caller its own account."
+
+[dependencies]
+anyhow = "1"
+async-nats = "0.49.1"
+libc = "0.2"
+nats-jwt-rs.workspace = true
+nkeys.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tempfile = "3"
+tokio = { version = "1", features = ["io-util", "process", "sync", "time"] }
+
+[lints]
+workspace = true

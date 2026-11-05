@@ -11,6 +11,7 @@ Only use these top-level folders:
 - `organization`
 - `service`
 - `editor`
+- `harness` (results the test runners write and `cargo xtask` reads, not product concepts)
 
 Each bounded context owns its own version folders, such as `editor/v1` or `service/v1`. These folders do not imply a stability promise before release.
 
@@ -70,10 +71,10 @@ Every struct, enum and method number is derived from where it is declared:
 | declaration | `8 C FF NNNN` | `editor/v1/catalog.skir` (file 06), 1st struct: `84060001` |
 | method      | `9 C FF NN`   | same file, 1st method: `940601`|
 
-`C` is the context (kernel 0, access 1, organization 2, service 3, editor 4), `FF` the file's
+`C` is the context (kernel 0, access 1, organization 2, service 3, editor 4, harness 5), `FF` the file's
 position in its `v1` folder in byte order of the file name from 01, `NNNN` and `NN` the position in
 the file from 1. Write a new method with `= ?` (Skir requires the `=`) and a new type without a
-number; `bun run generate:protocol` writes the numbers, rewrites stale ones and rejects forbidden
+number; `cargo xtask generate` writes the numbers, rewrites stale ones and rejects forbidden
 imports. Never pick a number by hand. Variants run 1, 2, 3 and `removed` is not used before release.
 
 ## Pre-release evolution
@@ -89,6 +90,6 @@ imports. Never pick a number by hand. Variants run 1, 2, 3 and `removed` is not 
 `editor/v1/operations.yaml` declares every primitive of the portable expression language: signature, profile, failures and item identities. Expressions call them through `ExpressionNode.call`; `expression.skir` does not change for a new operation.
 
 - Prefer a Kotlin shortcut (`services/sdk/typewriter-api/.../expression/shortcuts/`) over a new primitive. A primitive is only justified when no composition of primitives gives the same result (missing data, failures and list item identities included) without asymptotically more work or a lost early exit.
-- Adding a primitive: declare it, run `bun run generate:protocol`, implement the generated Kotlin kernel method (profile `rule` only) and the Dart kernel method, then add cases to `editor/v1/fixtures/operations/<group>.json`. The compilers and the coverage test point at each missing step.
+- Adding a primitive: declare it, run `cargo xtask generate`, implement the generated Kotlin kernel method (profile `rule` only) and the Dart kernel method, then add cases to `editor/v1/fixtures/operations/<group>.json`. The compilers and the coverage test point at each missing step.
 - Profile `panel` operations (localized formatting, time zones, resource reads) have no Kotlin kernel; rules and selection predicates cannot use them.
 - Failures are declared in the manifest and travel as `FailureId`; never raise or compare string codes.

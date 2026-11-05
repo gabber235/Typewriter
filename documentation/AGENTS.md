@@ -4,7 +4,7 @@ Astro 6 + Starlight documentation site using TypeScript, Tailwind CSS 4, and Bun
 
 ## Validation
 
-Run `bun run validate` to validate everything — it chains `biome check .` (formatting, linting, import organization) and `astro check` (TypeScript and Astro types). This is the gate to run before committing and in CI; it is read-only and exits non-zero if anything is off.
+Run `bun run validate` to validate everything — it chains `biome check .` (formatting, linting, import organization) and `astro check` (TypeScript and Astro types). It is read-only and exits non-zero if anything is off. `cargo xtask check docs` (inside `devenv shell`) runs it together with the install and the build, exactly as CI does.
 
 Run `bun run fix` to auto-apply every Biome fix and then re-run `astro check` to confirm types still pass.
 

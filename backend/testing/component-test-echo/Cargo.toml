@@ -11,3 +11,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wit-bindgen.workspace = true
+
+[lints]
+workspace = true

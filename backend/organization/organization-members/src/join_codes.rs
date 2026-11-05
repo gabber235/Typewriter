@@ -8,7 +8,10 @@
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
 use serde::Deserialize;
 use wasmcloud_utils::{
-    database::{DatabaseDuration, RecordId, organization::JoinCodeRecord, transaction_query},
+    database::{
+        DatabaseDuration, RecordId, TransactionOutcome, organization::JoinCodeRecord,
+        transaction_query,
+    },
     skir::base::organization::v1::join_codes::*,
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
@@ -101,58 +104,14 @@ pub async fn handle_generate(
         }
     };
 
-    let role_ids = req
-        .auto_accept
-        .role_ids
-        .as_slice()
-        .into_surreal_record_ids();
-
-    let result = transaction_query!(
-        JoinCodeGenerationOutcome,
-        r#"
-        BEGIN TRANSACTION;
-        RETURN {
-            LET $requested = SELECT * FROM $roles WHERE organization = $org;
-            LET $missing = array::complement(array::distinct($roles), $requested.id);
-
-            IF array::len($missing) > 0 {
-                RETURN { outcome: 'roles-not-found-error', role_ids: $missing }
-            };
-
-            LET $unassignable = SELECT VALUE id FROM $requested WHERE !assignable;
-            IF array::len($unassignable) > 0 {
-                RETURN { outcome: 'roles-not-assignable-error', role_ids: $unassignable }
-            };
-
-            LET $code = CREATE ONLY organization_join_code SET
-                organization = $org,
-                created_by = $actor,
-                single_use = $single_use,
-                auto_accept_roles = $roles,
-                expires_at = IF $duration = NONE OR $duration = NULL { NULL } ELSE { time::now() + $duration };
-
-            LET $sequence = UPDATE ONLY $org SET join_codes_sequence += 1
-                RETURN VALUE join_codes_sequence;
-
-            RETURN {
-                outcome: 'created',
-                code: (SELECT id, created_at, expires_at, single_use, auto_accept_roles FROM ONLY $code),
-                sequence: $sequence
-            };
-        };
-        COMMIT TRANSACTION;
-        "#,
+    let result = create_join_code(
+        organization_id,
+        actor_id,
+        req.single_use,
+        &req.auto_accept.role_ids,
+        expiration,
     )
-    .bind("org", organization_id)
-    .bind("actor", actor_id)
-    .bind("single_use", req.single_use)
-    .bind("roles", role_ids)
-    .bind("duration", expiration)
-    .execute()
-    .await
-    .error_with_slug("join-code-generate-query-failed")?
-    .decode()
-    .error_with_slug("join-code-generate-result-parse-failed")?;
+    .await?;
 
     let result = wasmcloud_utils::skir_domain_result!(GenerateOrganizationJoinCodeResponse, result);
     main_attribute!("join_code.outcome" = result.as_str());
@@ -191,6 +150,65 @@ pub async fn handle_generate(
     Ok(skir_variant!(
         GenerateOrganizationJoinCodeResponse::Success { code, event }
     ))
+}
+
+/// Creates the code in one transaction after checking that every automatic role exists in the
+/// organization and is assignable, and advances the organization code sequence.
+async fn create_join_code(
+    organization_id: RecordId,
+    actor_id: RecordId,
+    single_use: bool,
+    role_ids: &[wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId],
+    expiration: Option<DatabaseDuration>,
+) -> Result<TransactionOutcome<JoinCodeGenerationOutcome>, otel_wasi::Error> {
+    let role_ids = role_ids.into_surreal_record_ids();
+
+    transaction_query!(
+        JoinCodeGenerationOutcome,
+        r#"
+        BEGIN TRANSACTION;
+        RETURN {
+            LET $requested = SELECT * FROM $roles WHERE organization = $org;
+            LET $missing = array::complement(array::distinct($roles), $requested.id);
+
+            IF array::len($missing) > 0 {
+                RETURN { outcome: 'roles-not-found-error', role_ids: $missing }
+            };
+
+            LET $unassignable = SELECT VALUE id FROM $requested WHERE !assignable;
+            IF array::len($unassignable) > 0 {
+                RETURN { outcome: 'roles-not-assignable-error', role_ids: $unassignable }
+            };
+
+            LET $code = CREATE ONLY organization_join_code SET
+                organization = $org,
+                created_by = $actor,
+                single_use = $single_use,
+                auto_accept_roles = $roles,
+                expires_at = IF $duration = NONE OR $duration = NULL { NULL } ELSE { time::now() + $duration };
+
+            LET $sequence = UPDATE ONLY $org SET join_codes_sequence += 1
+                RETURN VALUE join_codes_sequence;
+
+            RETURN {
+                outcome: 'created',
+                code: (SELECT id, created_at, expires_at, single_use, auto_accept_roles FROM ONLY $code),
+                sequence: $sequence
+            };
+        };
+        COMMIT TRANSACTION;
+        "#,
+    )
+    .bind("org", organization_id)
+    .bind("actor", actor_id)
+    .bind("single_use", single_use)
+    .bind("roles", role_ids)
+    .bind("duration", expiration)
+    .execute()
+    .await
+    .error_with_slug("join-code-generate-query-failed")?
+    .decode()
+    .error_with_slug("join-code-generate-result-parse-failed")
 }
 
 /// Revokes an active invitation code and publishes its removal.

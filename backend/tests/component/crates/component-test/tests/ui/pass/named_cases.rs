@@ -4,7 +4,6 @@ use component_test::{FixtureBuilder, FixtureSpec, TestContext, component_fixture
     id = "example",
     primary(package = "example-component", target = "example_component"),
     dependency(package = "helper", target = "helper"),
-    affected_paths("backend/example/")
 )]
 struct Example;
 

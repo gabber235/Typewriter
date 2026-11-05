@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CapabilityProviderProcessor.kt:CapabilityProviderProcessor$context(_: Resolver) private fun declaration: CapabilityDeclaration?</ID>
+    <ID>CyclomaticComplexMethod:EndpointUsageValidator.kt:EndpointUsageValidator$private fun validateReference</ID>
+    <ID>CyclomaticComplexMethod:FieldShapeTypes.kt:context(_: TypeParameterBindings, _: DefinitionReferences) internal fun FieldShape.draftProjection: CodeBlock</ID>
+    <ID>CyclomaticComplexMethod:KspExtensions.kt:fun KSType.portableScalarKind: ScalarKind?</ID>
+    <ID>CyclomaticComplexMethod:KspTypeGraphConverter.kt:KspTypeGraphConverter$private fun buildDefinition</ID>
+    <ID>CyclomaticComplexMethod:PortableKotlinEmission.kt:internal fun TypeDefinition.referencedIds: Set&lt;TypeDefinitionId&gt;</ID>
+    <ID>CyclomaticComplexMethod:SetupEmitter.kt:SetupEmitter$private fun SdkDeclaration.builder: FunSpec</ID>
+    <ID>CyclomaticComplexMethod:TypewriterTypeProcessorProvider.kt:TypewriterTypeProcessor$context(resolver: Resolver) private fun generateType</ID>
+    <ID>CyclomaticComplexMethod:TypewriterTypeProcessorProvider.kt:TypewriterTypeProcessor$context(resolver: Resolver) private fun processRound: List&lt;KSAnnotated&gt;</ID>
+    <ID>CyclomaticComplexMethod:TypewriterTypeProcessorProvider.kt:TypewriterTypeProcessor$private fun KSClassDeclaration.effectiveAccessorFields: List&lt;EffectiveAccessorField&gt;?</ID>
+    <ID>CyclomaticComplexMethod:TypewriterTypeProcessorProvider.kt:private fun KSType.endpointTemplate: TypeTemplate?</ID>
+    <ID>CyclomaticComplexMethod:TypewriterTypeProcessorProvider.kt:private fun discoverEndpointBindings: List&lt;EndpointBindingTemplate&gt;</ID>
+  </CurrentIssues>
+</SmellBaseline>

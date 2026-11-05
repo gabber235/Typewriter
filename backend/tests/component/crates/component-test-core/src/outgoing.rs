@@ -46,8 +46,7 @@ impl OutgoingHandler for DispatchOutgoingHandler {
     ) -> SendFuture {
         let this = self.clone();
         Box::new(async move {
-            let (parts, body) = request.into_parts();
-            let body = body.collect().await?.to_bytes();
+            let (parts, body) = buffered(request).await?;
             let response = this
                 .dispatch(parts, body)
                 .await
@@ -58,18 +57,36 @@ impl OutgoingHandler for DispatchOutgoingHandler {
             if let Some(failure) = response.failure {
                 return Err(Error::InternalError(Some(failure)));
             }
-            let mut result = hyper::Response::builder().status(response.status);
-            *result.headers_mut().ok_or_else(|| {
-                Error::InternalError(Some("response builder unavailable".into()))
-            })? = response.headers;
-            let body: WasiBody = Full::new(response.body)
-                .map_err(|never| match never {})
-                .boxed_unsync();
-            let response = result
-                .body(body)
-                .map_err(|error| Error::InternalError(Some(error.to_string())))?;
-            let io: RequestIoFuture = Box::new(async { Ok(()) });
-            Ok((response, io))
+            wasi_response(response.status, response.headers, response.body)
         })
     }
+}
+
+/// A component's outgoing request with its whole body read.
+pub async fn buffered(
+    request: hyper::Request<WasiBody>,
+) -> Result<(http::request::Parts, Bytes), Error> {
+    let (parts, body) = request.into_parts();
+    Ok((parts, body.collect().await?.to_bytes()))
+}
+
+/// A complete response for a component's outgoing request, with nothing left to stream.
+pub fn wasi_response(
+    status: http::StatusCode,
+    headers: http::HeaderMap,
+    body: Bytes,
+) -> Result<(hyper::Response<WasiBody>, RequestIoFuture), Error> {
+    let mut result = hyper::Response::builder().status(status);
+    *result
+        .headers_mut()
+        .ok_or_else(|| Error::InternalError(Some("response builder unavailable".into())))? =
+        headers;
+    let body: WasiBody = Full::new(body)
+        .map_err(|never| match never {})
+        .boxed_unsync();
+    let response = result
+        .body(body)
+        .map_err(|error| Error::InternalError(Some(error.to_string())))?;
+    let io: RequestIoFuture = Box::new(async { Ok(()) });
+    Ok((response, io))
 }

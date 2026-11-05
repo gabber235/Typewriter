@@ -1,7 +1,9 @@
+import com.typewritermc.buildlogic.CoverageReport
 import org.gradle.api.tasks.bundling.Jar
 
 plugins {
     base
+    id("com.typewritermc.coverage-report")
 }
 
 val internalPlatformProjects =
@@ -33,8 +35,16 @@ subprojects.forEach { serviceProject ->
     }
 }
 
+// One `./gradlew check` covers the imprint build too, including its ktlint checks.
 tasks.named("check") {
     dependsOn(subprojects.map { "${it.path}:check" })
+    dependsOn(gradle.includedBuild("imprint").task(":check"))
+}
+
+// Kover merges within one build, so the imprint build contributes its own merged report.
+tasks.named<CoverageReport>("coverageReport") {
+    dependsOn(gradle.includedBuild("imprint").task(":koverXmlReport"))
+    koverReports.from(file("imprint/build/reports/kover/report.xml"))
 }
 
 tasks.register("ktlintCheck") {

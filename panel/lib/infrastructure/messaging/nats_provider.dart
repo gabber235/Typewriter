@@ -74,8 +74,6 @@ Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
 class Nats extends _$Nats {
   late NatsConnectionOwner _connection;
 
-  NatsClient get client => state;
-
   @override
   NatsClient build() {
     final token = ref.watch(accessTokenProvider).value?.token;

@@ -12,7 +12,7 @@ class FakeNats extends Nats {
   @override
   NatsClient build() => _initialClient;
 
-  NatsClient get connection => client;
+  NatsClient get connection => state;
 
   set connection(NatsClient client) => state = client;
 

@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>TooGenericExceptionCaught:ManifestContentPipeline.kt:RuntimeEntrypointContribution.HostedRuntimeMetadata$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:ManifestContentPipeline.kt:failure: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>

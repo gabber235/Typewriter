@@ -19,53 +19,8 @@ use wasmcloud_utils::database::{
 
 const FAILED_TRANSACTION_MESSAGE: &str = "The query was not executed due to a failed transaction";
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SchemaPreset {
-    Service,
-    Organization,
-    Registration,
-    Full,
-}
-
-#[derive(Clone, Copy)]
-struct SchemaFile {
-    name: &'static str,
-    sql: &'static str,
-}
-
-const CAPABILITY_MANIFEST: &str = include_str!("../../../../../database/capabilities.toml");
-include!(concat!(env!("OUT_DIR"), "/schema_files.rs"));
-
-impl SchemaPreset {
-    fn manifest_name(self) -> &'static str {
-        match self {
-            Self::Service => "service",
-            Self::Organization => "organization",
-            Self::Registration => "registration",
-            Self::Full => "full",
-        }
-    }
-
-    fn files(self) -> Result<Vec<SchemaFile>> {
-        let manifest = crate::schema_manifest::Manifest::parse(CAPABILITY_MANIFEST, |_| true)
-            .map_err(anyhow::Error::msg)?;
-        if manifest.declared_files().len() != EMBEDDED_SCHEMA_FILES.len() {
-            anyhow::bail!("embedded schema files do not match the capability manifest");
-        }
-        manifest
-            .preset_files(self.manifest_name())
-            .map_err(anyhow::Error::msg)?
-            .into_iter()
-            .map(|name| {
-                EMBEDDED_SCHEMA_FILES
-                    .iter()
-                    .find(|file| file.name == name)
-                    .copied()
-                    .with_context(|| format!("schema file {name:?} was not embedded"))
-            })
-            .collect()
-    }
-}
+/// The schema preset a fixture's database receives, as `capabilities.toml` names it.
+pub use database_schema::Preset as SchemaPreset;
 
 #[derive(Clone)]
 pub struct DatabaseHandle {
@@ -195,16 +150,8 @@ impl FixtureExtension for TypewriterDatabase {
             plugin: plugin.clone(),
             key: key.clone(),
         };
-        for (index, file) in self.preset.files()?.iter().enumerate() {
-            handle.execute(file.sql).await.with_context(|| {
-                format!(
-                    "applying schema preset {:?}, file {} `{}`, query index {index}",
-                    self.preset,
-                    index + 1,
-                    file.name
-                )
-            })?;
-        }
+        let connection = plugin.get_or_create_connection(&key).await?;
+        self.preset.apply(&*connection.read().await).await?;
         context.plugin(plugin);
         let mut interface = WitInterface::from("seamlezz:surrealdb/call@0.4.0");
         interface.config.insert("url".into(), key.url.clone());

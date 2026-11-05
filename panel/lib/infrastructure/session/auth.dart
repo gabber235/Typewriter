@@ -73,6 +73,13 @@ abstract class AccessToken with _$AccessToken {
       _AccessToken;
 }
 
+/// Where the OIDC client persists tokens and flow state.
+///
+/// Production uses the platform store. End to end scenarios replace it with an
+/// in memory store, so they need no keychain or keyring.
+@Riverpod(keepAlive: true)
+OidcStore oidcStore(Ref ref) => OidcDefaultStore();
+
 /// Owns the panel's identity provider session for the application lifetime.
 ///
 /// Construction selects the redirect flow required by the current platform,
@@ -125,7 +132,7 @@ class Auth extends _$Auth {
       clientCredentials: OidcClientAuthentication.none(
         clientId: config.clientId,
       ),
-      store: OidcDefaultStore(),
+      store: ref.watch(oidcStoreProvider),
       settings: settings,
     );
 

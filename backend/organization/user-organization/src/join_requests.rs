@@ -1,7 +1,9 @@
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
-    database::{RecordId as DatabaseRecordId, transaction_query, transaction_query_file},
+    database::{
+        RecordId as DatabaseRecordId, TransactionOutcome, transaction_query, transaction_query_file,
+    },
     skir::base::organization::v1::{join_request::*, role::OrganizationRole, user::*},
     skir_domain_result,
     skir_utils::RecordIdKeyIdentity,
@@ -95,50 +97,30 @@ pub async fn handle_request(
     );
 
     let code = request.code;
-    let result = transaction_query_file!(
-        JoinSubmissionOutcome,
-        "src/join_submission_transaction.surql",
-    )
-    .bind("user", user_id)
-    .bind("code", DatabaseRecordId::from(&code))
-    .execute()
-    .await
-    .error_with_slug("join-request-query-failed")?
-    .decode()
-    .error_with_slug("join-request-result-parse-failed")?;
+    let result = submit_join_code(user_id, &code).await?;
 
     let outcome = skir_domain_result!(SubmitUserJoinRequestResponse, result);
     match outcome {
-        JoinSubmissionOutcome::CodeNotFoundError => {
-            otel_wasi::main_attribute!("join_request.outcome" = "code_not_found");
-            Ok(skir_variant!(
-                SubmitUserJoinRequestResponse::CodeNotFoundError { code }
-            ))
-        }
-        JoinSubmissionOutcome::AlreadyMemberError => {
-            otel_wasi::main_attribute!("join_request.outcome" = "already_member_error");
-            Ok(skir_variant!(
-                SubmitUserJoinRequestResponse::AlreadyMemberError
-            ))
-        }
-        JoinSubmissionOutcome::NoAssignableRolesError => {
-            otel_wasi::main_attribute!("join_request.outcome" = "no_assignable_roles_error");
-            Ok(skir_variant!(
-                SubmitUserJoinRequestResponse::NoAssignableRolesError
-            ))
-        }
-        JoinSubmissionOutcome::MaxPendingRequestsError => {
-            otel_wasi::main_attribute!("join_request.outcome" = "max_pending_requests_error");
-            Ok(skir_variant!(
-                SubmitUserJoinRequestResponse::MaxPendingRequestsError
-            ))
-        }
-        JoinSubmissionOutcome::PendingRequestExistsError => {
-            otel_wasi::main_attribute!("join_request.outcome" = "pending_request_exists_error");
-            Ok(skir_variant!(
-                SubmitUserJoinRequestResponse::PendingRequestExistsError
-            ))
-        }
+        JoinSubmissionOutcome::CodeNotFoundError => rejected(
+            "code_not_found",
+            skir_variant!(SubmitUserJoinRequestResponse::CodeNotFoundError { code }),
+        ),
+        JoinSubmissionOutcome::AlreadyMemberError => rejected(
+            "already_member_error",
+            skir_variant!(SubmitUserJoinRequestResponse::AlreadyMemberError),
+        ),
+        JoinSubmissionOutcome::NoAssignableRolesError => rejected(
+            "no_assignable_roles_error",
+            skir_variant!(SubmitUserJoinRequestResponse::NoAssignableRolesError),
+        ),
+        JoinSubmissionOutcome::MaxPendingRequestsError => rejected(
+            "max_pending_requests_error",
+            skir_variant!(SubmitUserJoinRequestResponse::MaxPendingRequestsError),
+        ),
+        JoinSubmissionOutcome::PendingRequestExistsError => rejected(
+            "pending_request_exists_error",
+            skir_variant!(SubmitUserJoinRequestResponse::PendingRequestExistsError),
+        ),
         JoinSubmissionOutcome::RequestMade {
             request,
             single_use,
@@ -148,29 +130,9 @@ pub async fn handle_request(
             join_codes_sequence,
         } => {
             let organization_id = request.organization.id.key.raw_identity()?;
-            let user_request: UserJoinRequest = request.clone().into();
-            let user_event = UserJoinRequestsChanged {
-                sequence: user_sequence,
-                changes: vec![UserJoinRequestsChange::Add(Box::new(user_request.clone()))],
-                ..Default::default()
-            };
-            wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
-                &wasmcloud_utils::transport::UserScope::try_from(user_key)?,
-            )
-            .persist(user_event.clone())
-            .await?;
-            let organization_event = OrganizationJoinRequestsChanged {
-                sequence: organization_sequence,
-                changes: vec![OrganizationJoinRequestsChange::Add(Box::new(
-                    request.clone().into(),
-                ))],
-                ..Default::default()
-            };
-            wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
-                &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
-            )
-            .persist(organization_event)
-            .await?;
+            let (user_request, user_event) =
+                publish_request_made(user_key, &request, user_sequence, organization_sequence)
+                    .await?;
             publish_consumed_code(organization_id, single_use, code_id, join_codes_sequence)
                 .await?;
 
@@ -196,29 +158,13 @@ pub async fn handle_request(
                 .cloned()
                 .map(OrganizationRole::from)
                 .collect();
-            let organization_value: wasmcloud_utils::skir::base::organization::v1::organization::Organization =
-                organization.clone().into();
-            let user_event = wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChanged {
-                sequence: user_sequence,
-                changes: vec![wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChange::Add(Box::new(organization_value))],
-                ..Default::default()
-            };
-            wasmcloud_utils::transport_routes::UserOrganizationsWatchRoute::delivery(
-                &wasmcloud_utils::transport::UserScope::try_from(user_key)?,
+            let user_event = publish_auto_accepted(
+                user_key,
+                &organization,
+                member,
+                user_sequence,
+                organization_sequence,
             )
-            .persist(user_event.clone())
-            .await?;
-            let member_value: wasmcloud_utils::skir::base::organization::v1::member::OrganizationMember =
-                member.clone().into();
-            let member_event = wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChanged {
-                sequence: organization_sequence,
-                changes: vec![wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChange::Add(Box::new(member_value))],
-                ..Default::default()
-            };
-            wasmcloud_utils::transport_routes::OrganizationMembersWatchRoute::delivery(
-                &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
-            )
-            .persist(member_event)
             .await?;
             publish_consumed_code(organization_id, single_use, code_id, join_codes_sequence)
                 .await?;
@@ -236,6 +182,111 @@ pub async fn handle_request(
             }))
         }
     }
+}
+
+/// Runs the join submission transaction for one user and code.
+async fn submit_join_code(
+    user_id: DatabaseRecordId,
+    code: &wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId,
+) -> Result<TransactionOutcome<JoinSubmissionOutcome>, otel_wasi::Error> {
+    transaction_query_file!(
+        JoinSubmissionOutcome,
+        "src/join_submission_transaction.surql",
+    )
+    .bind("user", user_id)
+    .bind("code", DatabaseRecordId::from(code))
+    .execute()
+    .await
+    .error_with_slug("join-request-query-failed")?
+    .decode()
+    .error_with_slug("join-request-result-parse-failed")
+}
+
+/// Records why the transaction rejected the submission and returns its domain response.
+fn rejected(
+    outcome: &'static str,
+    response: SubmitUserJoinRequestResponse,
+) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
+    otel_wasi::main_attribute!("join_request.outcome" = outcome);
+    Ok(response)
+}
+
+/// Publishes a new pending request to the user and organization request projections.
+///
+/// Returns the user scoped request and event that the submitter receives in the response.
+async fn publish_request_made(
+    user_key: &str,
+    request: &JoinRequestProjection,
+    user_sequence: i64,
+    organization_sequence: i64,
+) -> Result<(UserJoinRequest, UserJoinRequestsChanged), otel_wasi::Error> {
+    let organization_id = request.organization.id.key.raw_identity()?;
+    let user_request: UserJoinRequest = request.clone().into();
+    let user_event = UserJoinRequestsChanged {
+        sequence: user_sequence,
+        changes: vec![UserJoinRequestsChange::Add(Box::new(user_request.clone()))],
+        ..Default::default()
+    };
+    wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
+        &wasmcloud_utils::transport::UserScope::try_from(user_key)?,
+    )
+    .persist(user_event.clone())
+    .await?;
+    let organization_event = OrganizationJoinRequestsChanged {
+        sequence: organization_sequence,
+        changes: vec![OrganizationJoinRequestsChange::Add(Box::new(
+            request.clone().into(),
+        ))],
+        ..Default::default()
+    };
+    wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
+        &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
+    )
+    .persist(organization_event)
+    .await?;
+    Ok((user_request, user_event))
+}
+
+/// Publishes an automatically accepted membership to the user organization view and the
+/// organization member projection.
+///
+/// Returns the user scoped event that the submitter receives in the response.
+async fn publish_auto_accepted(
+    user_key: &str,
+    organization: &OrganizationRecord,
+    member: OrganizationMemberProjection,
+    user_sequence: i64,
+    organization_sequence: i64,
+) -> Result<
+    wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChanged,
+    otel_wasi::Error,
+> {
+    let organization_id = organization.id.key.raw_identity()?;
+    let organization_value: wasmcloud_utils::skir::base::organization::v1::organization::Organization =
+        organization.clone().into();
+    let user_event = wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChanged {
+        sequence: user_sequence,
+        changes: vec![wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChange::Add(Box::new(organization_value))],
+        ..Default::default()
+    };
+    wasmcloud_utils::transport_routes::UserOrganizationsWatchRoute::delivery(
+        &wasmcloud_utils::transport::UserScope::try_from(user_key)?,
+    )
+    .persist(user_event.clone())
+    .await?;
+    let member_value: wasmcloud_utils::skir::base::organization::v1::member::OrganizationMember =
+        member.into();
+    let member_event = wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChanged {
+        sequence: organization_sequence,
+        changes: vec![wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChange::Add(Box::new(member_value))],
+        ..Default::default()
+    };
+    wasmcloud_utils::transport_routes::OrganizationMembersWatchRoute::delivery(
+        &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
+    )
+    .persist(member_event)
+    .await?;
+    Ok(user_event)
 }
 
 /// Persists the removal event for a consumed single use code.

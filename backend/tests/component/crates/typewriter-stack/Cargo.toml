@@ -1,0 +1,38 @@
+[package]
+name = "typewriter-stack"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+repository.workspace = true
+description = "The processes of a worktree's Typewriter stack, which `cargo xtask stack` supervises."
+
+[dependencies]
+anyhow.workspace = true
+async-trait.workspace = true
+async-nats.workspace = true
+axum = "0.8"
+base64.workspace = true
+bytes.workspace = true
+clap = { version = "4", features = ["derive"] }
+component-test-core.workspace = true
+database-schema = { path = "../../../../database/schema" }
+ed25519-dalek = "2"
+futures-util.workspace = true
+getrandom = "0.2"
+http-body-util.workspace = true
+hyper.workspace = true
+indexmap.workspace = true
+nats-broker = { path = "../../../../testing/nats-broker" }
+nats-jwt-rs.workspace = true
+nkeys.workspace = true
+reqwest = { workspace = true, features = ["form", "json"] }
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["signal"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+wash-runtime.workspace = true
+wasmcloud-plugin-surrealdb.workspace = true
+wasmcloud-utils.workspace = true
+wasmtime-wasi-http.workspace = true

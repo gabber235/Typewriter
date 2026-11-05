@@ -13,9 +13,12 @@ import kotlinx.coroutines.flow.collect
 fun interface BindingTokenOutput {
     /** Displays a registration token without assuming ownership of its lifetime. */
     fun display(token: String)
+
+    /** The displayed token is no longer pending: the service was bound or registration stopped. */
+    fun cleared() {}
 }
 
-/** Displays each changed binding token from registrar state. */
+/** Displays each changed binding token from registrar state and reports when no token is pending anymore. */
 class RegistrarConsoleObserver(
     private val output: BindingTokenOutput,
 ) {
@@ -23,7 +26,14 @@ class RegistrarConsoleObserver(
     suspend fun observe(states: Flow<RegistrarSnapshot>) {
         var displayed: String? = null
         states.collect { snapshot ->
-            val awaiting = snapshot.state as? RegistrarState.AwaitingBinding ?: return@collect
+            val awaiting = snapshot.state as? RegistrarState.AwaitingBinding
+            if (awaiting == null) {
+                if (displayed != null) {
+                    displayed = null
+                    output.cleared()
+                }
+                return@collect
+            }
             val token = awaiting.registrationToken?.reveal() ?: return@collect
             if (token == displayed) return@collect
             displayed = token

@@ -1,0 +1,25 @@
+inputs:
+  nixpkgs:
+    url: github:NixOS/nixpkgs/nixpkgs-unstable
+  # languages.rust pins an exact toolchain and the wasm32-wasip2 target through it.
+  rust-overlay:
+    url: github:oxalica/rust-overlay
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  # git-hooks registers the commit-msg and pre-commit hooks (devenv.nix).
+  git-hooks:
+    url: github:cachix/git-hooks.nix
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  # Flutter beta, rebuilt for each release and cached on gabber235.cachix.org. No `follows`:
+  # Flutter built against the overlay's own nixpkgs is what the cache holds.
+  flutter-overlay:
+    url: github:gabber235/flutter-overlay
+nixConfig:
+  extra-substituters:
+    - https://gabber235.cachix.org
+  extra-trusted-public-keys:
+    - gabber235.cachix.org-1:sXlzXx2H2hsyx+SA4NkiXhAVD4q0IgnditjhCEsBgXQ=
+require_version: ">=2.4"

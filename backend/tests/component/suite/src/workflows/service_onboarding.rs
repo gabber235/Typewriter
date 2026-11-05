@@ -25,12 +25,6 @@ struct Authentik;
     id = "workflow-service-onboarding",
     primary(package = "service-identity", target = "service_identity"),
     dependency(package = "service-registration", target = "service_registration"),
-    affected_paths(
-        "backend/service/service-identity/",
-        "backend/service/service-registration/",
-        "backend/database/schema/service/",
-        "backend/database/schema/organization/"
-    )
 )]
 pub struct ServiceOnboarding;
 

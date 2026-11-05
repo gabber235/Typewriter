@@ -103,14 +103,12 @@ Valid commit types:
 
 Scopes are defined in [`commit-scopes.json`](commit-scopes.json). When adding a new accepted scope, update that file in the same pull request.
 
-- Top level product scopes like `backend`, `panel`, `engine`, `extensions`, `services`, `proto`, `documentation`, `module-plugin`, `marketplace`, `discord_bot`, `code_generator`
-- Path scopes for selected domains, for example `backend/tests`, `backend/access`, `services/runtime/realm`
-- Operational scopes: `repo`, `ci`, `deps`
+`commit-scopes.json` is the complete list; the hook prints it when a scope is refused.
 
 Multiple scopes are supported with commas.
 
 ```text
-feat(backend/access,backend/tests): add auth endpoint coverage
+feat(backend/access/auth-callout,backend/tests): add auth endpoint coverage
 ```
 
 Scope requirement policy:
@@ -125,8 +123,8 @@ Examples:
 - `fix(services/runtime/realm): handle empty title`
 - `docs: update setup steps`
 
-Local commit message checks are installed automatically by `bun install`. To reinstall them manually:
+Entering `devenv shell` installs the `commit-msg` and `pre-commit` hooks; both run `cargo xtask hook`. Check a range of commits the way CI does with:
 
 ```bash
-bunx --no-install lefthook install
+cargo xtask hook commit-msg --range origin/develop..HEAD
 ```
