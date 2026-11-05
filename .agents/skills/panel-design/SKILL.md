@@ -14,7 +14,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A user's action finishes and they have not moved on | Focus goes where they act next: a new thing's first empty required field, the first bad field after validation, the opener when a surface closes | 3 |
 | The focused thing disappears | Focus goes to its nearest neighbour, next before previous, otherwise to what contained it | 3 |
 | A page or surface opens | Focus goes to its first item to act on, and to a text field only when typing is its purpose | 3 |
-| Something happens that the user did not just do | Focus and layout stay still, and scroll stays anchored. A slow `waveSlow` carries the change, and a chip that springs in names who did it | 3 |
+| Something happens that the user did not just do | Focus and layout stay still, and scroll stays anchored. A changed value moves with `waveSlow`; an added or removed thing uses its usual move. A chip springs in with who did it and why, as their avatar when one exists | 3 |
 
 ## Surfaces
 
@@ -25,7 +25,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A choice comes from a list that can grow or be searched | Use the search overlay | 2 |
 | A task needs more room than its place has | The row or control grows into a surface with `surfaceIn`, and Esc shrinks it back. It stays optional. Never strike in at the centre over a dimmed page | 2 |
 | Other work cannot continue until a question is answered | Use a dialog. Nothing else may use one | 2 |
-| The window is too narrow for side by side | Show one pane at a time, in the order tree, content, inspector. Floating surfaces become bottom sheets. No action is lost | 3 |
+| The window is under 900 px, or a pane would be narrower than 320 px | Show one pane at a time, in the order tree, content, inspector. Floating surfaces become bottom sheets. No action is lost | 3 |
 
 ## Feedback
 
@@ -83,6 +83,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A pane gains focus | It lifts forward and brightens while the others sink back, with `paneFocus` | 2 |
 | A move repeats fast or would go off screen | Make it smaller, down to none. A held key makes the ring jump | 2 |
 | Several moves would play together | Only the user's latest action moves. Everything else changes without motion | 2 |
+| A service or realm sends motion for something it presents | Play the named move it gives by default. When it also sends a duration or curve, use those. Missing values fall back to the token | 2 |
 | You cannot name what a move tells the user | Do not add it. Only rippling busy words and skeletons may loop | 2 |
 | Any move runs | Input still works, and the move can retarget from where it is | 3 |
 | Reduced motion is on | Keep every result and remove the travel, in the tokens, not per widget | 3 |
@@ -114,7 +115,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Placing content | A title and its content share one left edge. Table rows are about 42 px, and at least 44 px on touch | 2 |
 | Showing many things that have details | Use a table with an inspector. The table scans, and the selected thing appears large in the inspector with its details, actions, and keys | 2 |
 | A static page feels boring | Add interest with real information, never decoration: a stable colour tile for each person or kind of thing, a small visual of real data such as activity. Keep exact values in the inspector | 2 |
-| Showing the health of many things | Every item states its status in muted words, such as Running. Only what is wrong gets colour and size | 3 |
+| Showing the health of many things | Every item states its status in words, such as Running. Normal states may carry a small, quiet colour; what is wrong gets the strongest colour and size, so the eye finds it first | 3 |
+| Adding colour to a page | Colour always carries information: a tile per person or kind, a status, a small visual of real data. Keep it to small marks, balanced across the screen, never large fills. A page with none feels lifeless; colour everywhere overloads | 2 |
 | Styling a static page | Stay calm and familiar: soft filled shapes for controls, spaced muted labels, flat surfaces. Depth appears only in motion. Never add rules under titles, text markers such as `>`, brackets, physical key rows, or paper panes | 2 |
 | Writing text | At least 4.5:1 in both themes | 3 |
 | Choosing a font | A full sentence uses IBM Plex Sans. Everything else uses Lilex, at weight 500 or 600 on labels and buttons | 2 |
@@ -126,6 +128,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Misreading would cost the user something | Plain literal English in short sentences: what happened, then what to do. No idioms | 3 |
 | Nothing depends on it: sign in, empty, long wait, small success, first run | A joke in simple words is welcome, beside clear text that stands alone | 2 |
 | Naming an action | One name everywhere, and its result uses the same word: Publish, Published. Sentence case, whole strings, real plurals | 2 |
+| One thing shows in several places | It carries its own name and the same status colour everywhere: card, inspector, list. Never another thing's name | 2 |
 
 ## Building
 
