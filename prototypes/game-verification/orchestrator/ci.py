@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Spike H: run.py and speed.py on a GitHub free runner, under Xvfb on a software renderer.
 
-  ci.py plan smoke|fps|speed|flake|multi [--backend opengl|vulkan] [--cycles 3]
+  ci.py plan smoke|fps|speed|flake|multi|compare [--backend opengl|vulkan] [--cycles 3]
 
 Linux only. Everything the runner needs that the Mac spikes do not lives here: one Xvfb per client,
 Mesa environment, a renderer assertion so a silent fallback fails, CPU from /proc, and a JSON result
@@ -474,6 +474,7 @@ def cmd_flake(backend, cycles):
 class Multi:
     def __init__(self, n, cfg):
         self.n, self.cfg = n, cfg
+        self.next_ping = 1000
         self.run = RUNS / f"multi-{n}-{int(time.time())}"
         self.line = free_port()
         limit = "-Dprobe.maxRuntimeSec=1200"
@@ -526,22 +527,23 @@ class Multi:
         return False
 
 
-def multi_requirements(m, i, n, out):
+def multi_requirements(m, i, n, base, out):
     """cmd_c3's R4 loop for one client, on its own sockets, against the shared Paper."""
     c = m.clients[i]
     S, C = Line(m.line, prefix="tick/"), Line(m.lives[i])
-    totals, wrong, dirty = [], 0, 0
+    totals, wrong, dirty, details = [], 0, 0, []
     for k in range(n):
         kind = KINDS[k % 4]
         token = f"M{i}T{k}x"
         material = MATERIALS[k % len(MATERIALS)]
         broken = (k + 1) % 20 == 0
-        act_ping, end_ping = 2 * k + 1000, 2 * k + 1001
+        act_ping, end_ping = base + 2 * k, base + 2 * k + 1  # higher than any earlier ping, or the barrier has already passed
         t0 = time.perf_counter()
         S("act", player=c.name, kind=kind, token=token, material=material, broken="1" if broken else "0", ping=act_ping)
         obs = C("observe", needle=needle_for(kind, token, material), timeoutMs=2000, ping=act_ping)
         if obs["ok"] == broken:
             wrong += 1
+            details.append({"k": k, "kind": kind, "broken": broken, "why": obs["why"], "ms": (obs["at"] - obs["start"]) / 1000})
         S("reset", player=c.name, ping=end_ping)
         C("clearChat")
         st = C("state", ping=end_ping)
@@ -549,7 +551,7 @@ def multi_requirements(m, i, n, out):
             dirty += 1
         if not broken:
             totals.append(time.perf_counter() - t0)
-    out[i] = {"wrong": wrong, "dirty": dirty, "total": stat(totals)}
+    out[i] = {"wrong": wrong, "dirty": dirty, "total": stat(totals), "details": details[:5]}
 
 
 def multi_phase(m, gate, rate, n):
@@ -558,9 +560,11 @@ def multi_phase(m, gate, rate, n):
         line("gate", mode=gate)
     time.sleep(1)
     out = {}
+    base = m.next_ping
+    m.next_ping += 2 * n + 10
     start = time.time()
     with Usage(m.pids) as u:
-        threads = [threading.Thread(target=multi_requirements, args=(m, i, n, out)) for i in range(m.n)]
+        threads = [threading.Thread(target=multi_requirements, args=(m, i, n, base, out)) for i in range(m.n)]
         for t in threads:
             t.start()
         for t in threads:
@@ -569,7 +573,7 @@ def multi_phase(m, gate, rate, n):
     if len(out) != m.n:
         raise RuntimeError(f"only {len(out)} of {m.n} clients finished")
     return {"gate": gate, "rate": rate, "n_each": n, "wall_s": round(wall, 1), "requirements_per_s": round(m.n * n / wall, 1), "wrong": sum(v["wrong"] for v in out.values()), "dirty": sum(v["dirty"] for v in out.values()),
-            "per_client": [out[i]["total"] for i in range(m.n)], **u.row()}
+            "per_client": [out[i]["total"] for i in range(m.n)], "wrong_details": [d for i in range(m.n) for d in out[i]["details"]][:8], **u.row()}
 
 
 def multi(n, cfg, reqs):
@@ -588,6 +592,21 @@ def multi(n, cfg, reqs):
         record("multi", **row)
 
 
+def cmd_compare(cycles):
+    """Backends on one runner, alternating, because runners differ more than backends do."""
+    for i in range(cycles):
+        for backend in ("opengl", "vulkan"):
+            set_cfg(Cfg(backend=backend))
+            step(f"compare {i} {backend} void", fps_cell, Cfg(backend=backend), shot=False)
+            step(f"compare {i} {backend} default rd5", fps_cell, Cfg(backend=backend, world="default", rd=5))
+            set_cfg(Cfg(backend=backend))
+            step(f"compare {i} {backend} R4 rate 200", run_speed, "c3", "--approach", "R4", "--n", "200", "--rate", "200")
+            step(f"compare {i} {backend} R3 rate 200", run_speed, "c3", "--approach", "R3", "--n", "100", "--rate", "200")
+    for backend in ("opengl", "vulkan"):
+        set_cfg(Cfg(backend=backend, world="default", rd=5))
+        step(f"frame in terrain {backend}", run_speed, "c1", "frame", "--rounds", "3", "--keep-shots")
+
+
 def cmd_multi(backend):
     cfg = Cfg(backend=backend)
     for n in (1, 2, 4):
@@ -597,7 +616,7 @@ def cmd_multi(backend):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -616,6 +635,8 @@ def main():
             cmd_flake(a.backend, a.cycles)
         elif a.plan == "multi":
             cmd_multi(a.backend)
+        elif a.plan == "compare":
+            cmd_compare(2)
     finally:
         stop_all()
         for d in list(displays):

@@ -25,23 +25,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: fps, backend: opengl, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: fps, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: fps, backend: opengl, runner: ubuntu-24.04-arm, repeat: 0 }
-          - { plan: speed, backend: opengl, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: speed, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: speed, backend: opengl, runner: ubuntu-24.04-arm, repeat: 0 }
-          - { plan: multi, backend: opengl, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04, repeat: 2 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04, repeat: 3 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04, repeat: 4 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04, repeat: 5 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04, repeat: 6 }
-          - { plan: flake, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: flake, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04-arm, repeat: 1 }
-          - { plan: flake, backend: opengl, runner: ubuntu-24.04-arm, repeat: 2 }
+          - { plan: multi, backend: opengl, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: multi, backend: opengl, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: compare, backend: both, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: compare, backend: both, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: compare, backend: both, runner: ubuntu-24.04, repeat: 3 }
     defaults:
       run:
         working-directory: prototypes/game-verification
