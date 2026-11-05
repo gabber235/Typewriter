@@ -113,7 +113,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Choosing an action's weight | One filled button per pane at most, in the pane header, right side. The rest are quiet. Row actions show on hover and focus, and in the context menu | 2 |
 | Placing content | A title and its content share one left edge. Table rows are about 38 px, and at least 44 px on touch | 2 |
 | Showing many things that have details | Use a table with an inspector. The table scans, and the selected thing appears large in the inspector with its details, actions, and keys | 2 |
-| Adding character to a static page | Use one or two details, such as a typed section label. Structure comes first and motion carries the rest. Never build the whole page around the typewriter metaphor | 2 |
+| Adding character to a static page | Use typed details: a double rule under the page title, spaced brand blue column and field labels, a `>` marker on the selected row. Surfaces stay flat, and depth appears only in motion. Never make rows look like physical keys or a pane look like paper | 2 |
 | Writing text | At least 4.5:1 in both themes | 3 |
 | Choosing a font | A full sentence uses IBM Plex Sans. Everything else uses Lilex, at weight 500 or 600 on labels and buttons | 2 |
 
