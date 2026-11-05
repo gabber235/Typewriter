@@ -36,7 +36,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Something fails | The control shakes and turns red briefly, then returns to its normal action, so pressing it again repeats the action. Never add a second button or a red border. The message says what happened and the next step, and stays until the next try. Keep the user's work | 3 |
 | Several things fail at once | The first takes the move and focus. The rest show still messages | 2 |
 | A change appears elsewhere on screen | A `wave` through the letters switches the text in other places showing it, not the place the user edited. Changes that are not text use a fill that fades | 2 |
-| A list is empty | Say what belongs here. If the user can add one, name the key | 2 |
+| Something is empty | Show the mascot, a large playful line, and a serious subtitle saying what belongs here. If the user can add one, put the main action on the right with its key | 2 |
 | Access is lost | Hide the content and show a doorway screen | 3 |
 | The connection or a service is lost | Show one steady notice. Content stays readable | 3 |
 
@@ -111,7 +111,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Setting any visual value | Use a token from the tables below or the theme. Add a missing one beside `panel/lib/shared/theme/typewriter_spacing.dart`. Never write a literal | 2 |
 | Showing a state | Each signal has one meaning: fill is selected, ring is focus, brighter surface is the active pane, status colour is that status, filled button is the pane's main action. Signals combine and stay distinct | 3 |
 | Choosing an action's weight | One filled button per pane at most, in the pane header, right side. The rest are quiet. Row actions show on hover and focus, and in the context menu | 2 |
-| Placing content | A title and its content share one left edge. Single line rows are 32 px, 44 px on touch; richer rows grow to fit | 2 |
+| Placing content | A title and its content share one left edge. Rows keep their current height until a density is chosen, and at least 44 px on touch | 2 |
 | Writing text | At least 4.5:1 in both themes | 3 |
 | Choosing a font | A full sentence uses IBM Plex Sans. Everything else uses Lilex, at weight 500 or 600 on labels and buttons | 2 |
 
@@ -213,7 +213,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 
 | Moment | Write |
 |---|---|
-| Empty book | This page is blank. Press N and fix that. |
+| Empty book | This page is blank. Subtitle: Pages hold the dialogue and quests of this book. |
 | Normal error | The realm did not answer. Press Publish to try again. |
 | Wait | Connecting to the realm |
 | Permanent action | Remove Ada? They lose access straight away. |
