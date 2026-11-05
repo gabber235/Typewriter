@@ -182,8 +182,11 @@ val ResourceOperationRoutesTest by testSuite {
                 listOf("MoveToOwner", "LinkWith", "Unlink", "Duplicate", "LinkWithDuplicate", "Delete")
             val move = resolved.first().definition
             move.capability.value shouldBe operations.operation(MoveToOwner).capability.value
-            resolved.mapNotNull { operation -> operation.definition.drop?.let { operation.definition.id.simpleName to it.hint } }.toMap() shouldBe
-                mapOf("MoveToOwner" to "Move here", "LinkWith" to "Link", "Unlink" to "Unlink")
+            val dropHints =
+                resolved.mapNotNull { operation ->
+                    operation.definition.drop?.let { drop -> operation.definition.id.simpleName to drop.hint }
+                }
+            dropHints.toMap() shouldBe mapOf("MoveToOwner" to "Move here", "LinkWith" to "Link", "Unlink" to "Unlink")
             resolved
                 .last()
                 .definition.presentation.shortcut shouldBe skirout.editor.v1.operation.OperationShortcut.DELETE
