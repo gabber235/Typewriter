@@ -130,6 +130,10 @@ FLAT_GEN = '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecr
 def prepare():
     CACHE.mkdir(exist_ok=True)
     if not PAPER_JAR.exists():
+        # Paper's download host answers 403 to the default urllib client name.
+        opener = urllib.request.build_opener()
+        opener.addheaders = [("User-Agent", "typewriter-game-verification/0 (+https://github.com/gabber235/Typewriter)")]
+        urllib.request.install_opener(opener)
         url = json.load(urllib.request.urlopen("https://fill.papermc.io/v3/projects/paper/versions/26.3/builds/242"))["downloads"]["server:default"]["url"]
         urllib.request.urlretrieve(url, PAPER_JAR)
     if not (PATCHED / "versions").exists():
