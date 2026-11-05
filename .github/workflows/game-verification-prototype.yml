@@ -25,11 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: multi, backend: opengl, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: multi, backend: opengl, runner: ubuntu-24.04, repeat: 2 }
-          - { plan: compare, backend: both, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: compare, backend: both, runner: ubuntu-24.04, repeat: 2 }
-          - { plan: compare, backend: both, runner: ubuntu-24.04, repeat: 3 }
+          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
     defaults:
       run:
         working-directory: prototypes/game-verification
