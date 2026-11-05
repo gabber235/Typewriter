@@ -83,7 +83,13 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Adding an action | Make one command through an Intent, used by key, button, menu, and command list (Ctrl or Cmd+K, `?` for the scope) | 3 |
 | Something works with one input | Make it work with pointer, keyboard, and touch: hover reveal, drag, pan. Drag also has a single click path | 3 |
 | Keys change meaning | Show the mode in the chip: Normal, Insert, Move, Resize. A focused field is Insert, and Esc leaves it | 3 |
-| Choosing a key | Use only keys a page can intercept, so never Ctrl or Cmd+N, T, W, or Ctrl+Esc. Single keys follow the off and remap setting | 3 |
+| An action means something the key language already covers | Reuse that key, and name the action for its context: D is Remove member on a member and Delete page on a page | 2 |
+| Choosing a key for a new meaning | Pick a key no other meaning uses anywhere, and add it to the key language in the same change. Scope changes a key's target, never its meaning | 2 |
+| Choosing any key | Use only keys a page can intercept, so never Ctrl or Cmd+N, T, W, or Ctrl+Esc. Single keys follow the off and remap setting | 3 |
+| Placing an action | Attach it to the smallest thing it acts on: the focused row, then the selection, then the pane, then the page | 2 |
+| One key matches at several levels | The most specific level wins | 2 |
+| Both a focused row and a selection exist | Act on the selection if it contains the focused row, otherwise on the focused row | 3 |
+| An action cannot work here | Leave it out of key hints and the command list, which list the most specific actions first | 2 |
 | Moving around | Tab between controls and groups, arrows and H, J, K, L inside them, Esc out one level | 2 |
 | Only touch is available | Hide key caps, key hints, and the mode chip | 2 |
 
@@ -154,6 +160,25 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 - **Carriage:** `1 - (1 - t/h)^1.6` until `h`, then `1 - a * sin(pi*p) * (1 - p)^1.2`, `p = (t - h) / (1 - h)`, `a` the recoil.
 - **Exit:** `Cubic(0.4, 0, 0.2, 1)`.
 - **Feel:** when judging a move, open `docs/design/panel-design/demos/experience.html` in a browser.
+
+| Key language | Meaning |
+|---|---|
+| Enter | Open or activate the focused thing |
+| Space | Toggle or expand the focused thing |
+| Ctrl or Cmd+Enter | Run the main action of this surface |
+| Esc | Step out one level |
+| N | Create a new thing here |
+| D, Delete, Backspace | Remove the focused or selected thing |
+| C | Copy the focused thing's value |
+| Arrows, H, J, K, L | Move inside this pane |
+| Ctrl+Arrows, Ctrl+H, J, L | Move between panes |
+| Home, End | First and last item |
+| Ctrl or Cmd+U, D | Scroll a page |
+| Ctrl or Cmd+K | Search and commands |
+| `?` | All keys for this scope |
+| Shift+M, Shift+R | Enter Move or Resize mode |
+| Shift+P | Open the realm inbox |
+| Ctrl or Cmd+=, -, 0 | Zoom in, out, and reset |
 
 | When you need | Use | Never |
 |---|---|---|
