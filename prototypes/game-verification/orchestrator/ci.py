@@ -123,7 +123,7 @@ displays = []
 class Cfg:
     """One renderer setup. gl picks how SDL gets its OpenGL context under Xvfb."""
 
-    def __init__(self, backend="opengl", width=854, height=480, rd=2, world="void", lp=None, gl="srgb-skip", audio=None):
+    def __init__(self, backend="opengl", width=854, height=480, rd=2, world="void", lp=None, gl="srgb-skip", audio="null"):
         self.backend, self.width, self.height, self.rd, self.world, self.lp, self.gl, self.audio = backend, width, height, rd, world, lp, gl, audio
 
     def env(self, display):
@@ -393,7 +393,8 @@ def fps_cell(cfg, seconds=10, shot=True):
     set_cfg(cfg)
     label = f"fps-{cfg.backend}-{cfg.world}-{cfg.width}x{cfg.height}-rd{cfg.rd}-lp{cfg.lp if cfg.lp is not None else 'def'}"
     with CiSession(label, dispatch="tick") as s:
-        settled = s.C("observe", needle='"settledAt"', timeoutMs=45000)
+        # settledAt never came in the default world in 45 s, inference: occluded sections never count as visible.
+        settled = s.C("observe", needle='"settledAt"', timeoutMs=15000)
         time.sleep(2)
         f0 = s.C("stats")
         st0 = s.S("status", player=s.p)
@@ -451,6 +452,7 @@ def cmd_speed(backend):
     c3("--approach", "R4", "--n", "200", "--rate", "200")
     c3("--approach", "R3", "--n", "200", "--rate", "200")
     c3("--approach", "R3", "--n", "200", "--rate", "200", "--gate", "2")
+    c3("--approach", "R3", "--n", "200", "--rate", "200", "--gate", "2", "--uncap")
     c3("--approach", "R4", "--n", "100", "--late-ticks", "1")
     c3("--approach", "R4", "--n", "100", "--late-ticks", "1", "--fail", "timeout", "--obs-timeout", "150")
     step("c1 frame", run_speed, "c1", "frame", "--rounds", "3", "--keep-shots")
