@@ -217,7 +217,7 @@ class Paper:
 
 # ---------- Client ----------
 
-def options_txt(rd, sim=5):
+def options_txt(rd, sim=5, width=854, height=480):
     lines = {
         "version": 5023,
         "soundCategory_master": 0.0, "soundCategory_music": 0.0, "soundCategory_record": 0.0, "soundCategory_weather": 0.0,
@@ -229,7 +229,7 @@ def options_txt(rd, sim=5):
         "biomeBlendRadius": 0, "mipmapLevels": 0, "improvedTransparency": "false", "cutoutLeaves": "false",
         "chunkSectionFadeInTime": 0.0, "menuBackgroundBlurriness": 0,
         "renderDistance": rd, "simulationDistance": sim,
-        "fullscreen": "false", "overrideWidth": 854, "overrideHeight": 480, "guiScale": 2,
+        "fullscreen": "false", "overrideWidth": width, "overrideHeight": height, "guiScale": 2,
         "tutorialStep": "none", "narrator": 0, "narratorHotkey": "false", "onboardAccessibility": "false",
         "skipMultiplayerWarning": "true", "joinedFirstServer": "true", "realmsNotifications": "false", "hideSplashTexts": "true",
     }
@@ -238,7 +238,7 @@ def options_txt(rd, sim=5):
 
 class Client:
     def __init__(self, game_dir, name="probe1", server=None, backend=None, xmx="2g", rd=2, facts_mode="all", launcher="direct",
-                 watch="", window_flags="0", window_clear="0", background_app=True, extra_jvm=(), env=None):
+                 watch="", window_flags="0", window_clear="0", background_app=True, extra_jvm=(), env=None, width=854, height=480):
         self.dir = pathlib.Path(game_dir)
         self.name = name
         self.server = server
@@ -253,6 +253,7 @@ class Client:
         self.background_app = background_app
         self.extra_jvm = list(extra_jvm)
         self.env = env or {}
+        self.width, self.height = width, height
         self.facts = self.dir / f"facts-{name}.jsonl"
         self.stop_file = self.dir / "probe.stop"
         self.proc = None
@@ -260,13 +261,13 @@ class Client:
     def start(self):
         d = self.dir
         d.mkdir(parents=True, exist_ok=True)
-        (d / "options.txt").write_text(options_txt(self.rd))
-        sets = options_txt(self.rd)
+        sets = options_txt(self.rd, width=self.width, height=self.height)
+        (d / "options.txt").write_text(sets)
         assert "soundCategory_master:0.0" in sets and "soundCategory_music:0.0" in sets  # never make noise on this machine
         props = [f"-D{MARKER}=1", f"-Xmx{self.xmx}", f"-Dprobe.facts={self.facts}", f"-Dprobe.factsMode={self.facts_mode}",
                  f"-Dprobe.watchBlocks={self.watch}", f"-Dprobe.stopFile={self.stop_file}", "-Dprobe.maxRuntimeSec=600",
                  f"-Dprobe.windowFlags={self.window_flags}", f"-Dprobe.windowFlagsClear={self.window_clear}", f"-Xlog:gc:file={self.dir}/gc.log", *self.extra_jvm]
-        args = ["--username", self.name, "--offlineDeveloperMode", "--gameDir", str(d), "--width", "854", "--height", "480"]
+        args = ["--username", self.name, "--offlineDeveloperMode", "--gameDir", str(d), "--width", str(self.width), "--height", str(self.height)]
         if self.backend:
             args += ["--graphicsBackend", self.backend]
         if self.server:

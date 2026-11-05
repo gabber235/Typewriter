@@ -62,8 +62,8 @@ import org.bukkit.util.Vector;
 final class Speed {
     private static final int Y = 64;
     private static ProbePlugin plugin;
-    private static final List<Integer> packetEntities = new ArrayList<>();
-    private static final List<Location> fakeBlocks = new ArrayList<>();
+    private static final Map<UUID, List<Integer>> packetEntities = new HashMap<>();
+    private static final Map<UUID, List<Location>> fakeBlocks = new HashMap<>();
     private static final List<Entity> realEntities = new ArrayList<>();
     private static final List<World> pool = new ArrayList<>();
     private static World current;
@@ -205,7 +205,7 @@ final class Speed {
             case "block" -> {
                 Location at = new Location(p.getWorld(), base.getBlockX() + 2, base.getBlockY(), base.getBlockZ() + 2);
                 p.sendBlockChange(at, Material.valueOf(q.get("material")).createBlockData());
-                fakeBlocks.add(at);
+                fakesOf(fakeBlocks, p).add(at);
             }
             case "entity" -> {
                 Location at = base.clone().add(0, 1.5, 3);
@@ -220,7 +220,7 @@ final class Speed {
                 var connection = ((CraftPlayer) p).getHandle().connection;
                 connection.send(add);
                 connection.send(data);
-                packetEntities.add(id);
+                fakesOf(packetEntities, p).add(id);
             }
             default -> throw new IllegalArgumentException(kind);
         }
@@ -231,15 +231,21 @@ final class Speed {
         p.resetTitle();
         p.sendActionBar(Component.empty());
         var connection = ((CraftPlayer) p).getHandle().connection;
-        if (!packetEntities.isEmpty()) {
-            connection.send(new ClientboundRemoveEntitiesPacket(packetEntities.stream().mapToInt(i -> i).toArray()));
-            packetEntities.clear();
+        List<Integer> entities = fakesOf(packetEntities, p);
+        if (!entities.isEmpty()) {
+            connection.send(new ClientboundRemoveEntitiesPacket(entities.stream().mapToInt(i -> i).toArray()));
+            entities.clear();
         }
-        for (Location at : fakeBlocks) {
+        List<Location> blocks = fakesOf(fakeBlocks, p);
+        for (Location at : blocks) {
             if (at.isWorldLoaded() && at.getWorld() == p.getWorld()) p.sendBlockChange(at, at.getBlock().getBlockData());
         }
-        fakeBlocks.clear();
+        blocks.clear();
         if ("1".equals(q.get("full"))) cleanPlayer(p);
+    }
+
+    private static <T> List<T> fakesOf(Map<UUID, List<T>> byPlayer, Player p) {
+        return byPlayer.computeIfAbsent(p.getUniqueId(), id -> new ArrayList<>());
     }
 
     private static void cleanPlayer(Player p) {
@@ -263,7 +269,7 @@ final class Speed {
         Location base = p.getLocation();
         Location blockAt = new Location(p.getWorld(), base.getBlockX() + 2, base.getBlockY(), base.getBlockZ() + 2);
         p.sendBlockChange(blockAt, Material.GOLD_BLOCK.createBlockData());
-        fakeBlocks.add(blockAt);
+        fakesOf(fakeBlocks, p).add(blockAt);
         Location fake = base.clone().add(1, 1.5, 3);
         Display.TextDisplay d = new Display.TextDisplay(net.minecraft.world.entity.EntityTypes.TEXT_DISPLAY, ((CraftWorld) p.getWorld()).getHandle());
         d.setPos(fake.getX(), fake.getY(), fake.getZ());
@@ -273,7 +279,7 @@ final class Speed {
         connection.send(new ClientboundAddEntityPacket(d.getId(), UUID.randomUUID(), fake.getX(), fake.getY(), fake.getZ(), 0f, 180f,
                 net.minecraft.world.entity.EntityTypes.TEXT_DISPLAY, 0, Vec3.ZERO, 0));
         connection.send(new ClientboundSetEntityDataPacket(d.getId(), d.getEntityData().packAll()));
-        packetEntities.add(d.getId());
+        fakesOf(packetEntities, p).add(d.getId());
         TextDisplay real = p.getWorld().spawn(base.clone().add(-1, 1.5, 3), TextDisplay.class, e -> {
             e.text(Component.text("DIRTY-real"));
             e.customName(Component.text("DIRTY-real"));
