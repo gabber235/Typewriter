@@ -180,7 +180,7 @@ final class Speed {
                 p.showTitle(title);
             }
             default -> {
-                if (!Observe.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
+                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
             }
         }
         if (q.containsKey("ping") && p != null) {

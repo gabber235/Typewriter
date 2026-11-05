@@ -178,6 +178,7 @@ public final class Speed {
             case "stats" -> "{\"fps\":" + mc.getFps() + ",\"frame\":" + latest.frame() + ",\"tick\":" + latest.tick() + ",\"at\":" + micros() + "}";
             default -> {
                 String r = probe.mod.video.Video.handle(name, p, mc);
+                if (r == null) r = probe.mod.golden.Golden.handle(name, p, mc);
                 if (r == null) r = probe.mod.observe.Observe.handle(name, p, mc);
                 yield r != null ? r : "{\"error\":\"unknown " + name + "\"}";
             }

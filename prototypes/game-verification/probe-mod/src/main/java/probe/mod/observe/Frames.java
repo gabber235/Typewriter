@@ -25,7 +25,7 @@ public final class Frames {
     }
 
     public record Diff(int count, int x0, int y0, int x1, int y1, int r, int g, int b, int maxDelta, long sad) {
-        String json(String extra) {
+        public String json(String extra) {
             return "{\"count\":" + count + ",\"bbox\":[" + x0 + "," + y0 + "," + x1 + "," + y1 + "],\"rgb\":[" + r + "," + g + "," + b + "],\"maxDelta\":" + maxDelta + ",\"sad\":" + sad + extra + "}";
         }
     }

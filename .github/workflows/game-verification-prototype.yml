@@ -25,7 +25,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04, repeat: 3 }
+          - { plan: goldens, backend: both, runner: ubuntu-24.04, repeat: 4 }
+          - { plan: goldens, backend: both, runner: ubuntu-24.04, repeat: 5 }
+          - { plan: goldens, backend: vulkan, runner: ubuntu-24.04-arm, repeat: 6 }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -69,6 +75,8 @@ jobs:
       # A failed job skips the cache save, and a failed cell is data read from the artifact.
       - name: Measure
         continue-on-error: true
+        env:
+          MATRIX_REPEAT: ${{ matrix.repeat }}
         run: /usr/bin/python3 orchestrator/ci.py plan ${{ matrix.plan }} --backend ${{ matrix.backend }}
       - name: Upload results and frames
         if: always()
@@ -84,3 +92,5 @@ jobs:
             prototypes/game-verification/runs/h-evidence
             prototypes/game-verification/runs/b-video.jsonl
             prototypes/game-verification/runs/video
+            prototypes/game-verification/runs/f-goldens.jsonl
+            prototypes/game-verification/runs/f-goldens

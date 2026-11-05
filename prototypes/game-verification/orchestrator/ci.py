@@ -704,6 +704,27 @@ def cmd_video(backend):
     step("video reqs rt terrain", video_reqs, terrain, n=40)
 
 
+# ---------- spike F: golden frames ----------
+
+def golden(kind, backend, n, **k):
+    import goldens
+    world, rd = ("void", 2) if kind == "session" else ("default", 5)
+    set_cfg(Cfg(backend=backend, world=world, rd=rd))
+    goldens.SESSION = lambda label, world, rd: CiSession(label, dispatch="tick")
+    cpu = re.sub(r"[^A-Za-z0-9]+", "", meta["cpu"].replace("AMD EPYC", "epyc").replace("Intel(R) Xeon(R) Platinum", "xeon").replace("(R)", "").replace("Processor", ""))[:14]
+    label = f"{meta['arch']}-{backend}-{cpu}-{os.environ.get('GITHUB_RUN_ID', 'local')[-4:]}{os.environ.get('MATRIX_REPEAT', '')}-{kind[0]}{n}"
+    a = argparse.Namespace(label=label, runs=k.get("runs", 3), break_runs=k.get("break_runs", 2), sets=k.get("sets", ""))
+    out = goldens.cmd_session(a) if kind == "session" else goldens.cmd_terrain(a)
+    record("goldens", label=label, dir=str(out), kind=kind, backend=backend)
+
+
+def cmd_goldens(backends):
+    for backend in backends:
+        step(f"goldens {backend} session full", golden, "session", backend, 1)
+        step(f"goldens {backend} session fresh", golden, "session", backend, 2, sets="all,no-anim0,no-early", break_runs=1)
+        step(f"goldens {backend} terrain", golden, "terrain", backend, 1)
+
+
 def cmd_multi(backend):
     cfg = Cfg(backend=backend)
     for n in (1, 2, 4):
@@ -713,7 +734,7 @@ def cmd_multi(backend):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -734,6 +755,8 @@ def main():
             cmd_multi(a.backend)
         elif a.plan == "video":
             cmd_video(a.backend)
+        elif a.plan == "goldens":
+            cmd_goldens(["vulkan", "opengl"] if a.backend == "both" else [a.backend])
         elif a.plan == "compare":
             cmd_compare(2)
     finally:
