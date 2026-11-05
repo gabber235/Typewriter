@@ -113,7 +113,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Choosing an action's weight | One filled button per pane at most, in the pane header, right side. The rest are quiet. Row actions show on hover and focus, and in the context menu | 2 |
 | Placing content | A title and its content share one left edge. Table rows are about 42 px, and at least 44 px on touch | 2 |
 | Showing many things that have details | Use a table with an inspector. The table scans, and the selected thing appears large in the inspector with its details, actions, and keys | 2 |
-| A static page feels boring | Add interest with real information, never decoration: a stable colour tile for each person, a small visual of real data such as activity. Keep exact values in the inspector | 2 |
+| A static page feels boring | Add interest with real information, never decoration: a stable colour tile for each person or kind of thing, a small visual of real data such as activity. Keep exact values in the inspector | 2 |
+| Showing the health of many things | Keep them grey and quiet. Only what is wrong gets colour, size, and words | 3 |
 | Styling a static page | Stay calm and familiar: soft filled shapes for controls, spaced muted labels, flat surfaces. Depth appears only in motion. Never add rules under titles, text markers such as `>`, brackets, physical key rows, or paper panes | 2 |
 | Writing text | At least 4.5:1 in both themes | 3 |
 | Choosing a font | A full sentence uses IBM Plex Sans. Everything else uses Lilex, at weight 500 or 600 on labels and buttons | 2 |

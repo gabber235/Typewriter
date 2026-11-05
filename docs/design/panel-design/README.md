@@ -51,7 +51,6 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - The active pane lift in light mode.
 - A replacement for `Ctrl+Esc` as cancel, and the full key map per scope.
 - Undo depends on realm commit history (`docs/design/authoring-writes.md`), which is not built.
-- Whether interest from real information holds on pages without people.
 - Golden pages: none exist, since no page meets the target yet.
 - Whether declining a join request or cancelling one's own needs a hold.
 - What "keep the user's work" means while a realm is suspended, where changes are paused.
@@ -82,8 +81,10 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Static identity | Typed details over physical keys or paper | Static identity is typographic; depth belongs to motion |
 | Dense page and controls | Muted labels, no rule, no marker; soft filled controls as today | Choosing an option does not mean liking every part; the rule and marker from the earlier pick were wrong |
 | Calm but not boring | Person colours, activity bars, roomier rows; no large tile | Interest comes from real information, never decoration |
+| Book tree | Colour tile per page type | Real information holds without people |
+| Services graph | Grey unless something is wrong; load and moving traffic rejected | Health stays calm until it needs attention |
 
-Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right, static identity wrong, dense page wrong, controls wrong, interest wrong.
+Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right, static identity wrong, dense page wrong, controls wrong, interest wrong, book tree right, services graph wrong.
 
 Options must differ in concept. Three sizes of one idea taught nothing.
 
