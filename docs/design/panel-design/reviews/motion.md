@@ -29,7 +29,7 @@ onto them. Most page findings below disappear with the shared ones.
 | Hover | `hoverIn` rise 2 px, scale 1.012; `hoverOut` 90 ms | `animation.dart:6-11`; `grid_selectable_card.dart:155`; `sidebar_links.dart:71-80`; `services/.../SurfaceLayouts.kt:17-25` | Ink overlay colour, or scale 1.05 on `ElasticOutCurve(0.4)` 750 ms with a 300 ms `easeInOutQuad` return. MOTION-3 |
 | Press | `press` spring, sinks 4 px, scale 0.93 | Theme ink splash (`component_themes.dart:56-68`, `:236`) | Material ink ripple and overlay colour. MOTION-6 |
 | Focus move | `focusMove` ring travels | `focus_highlight.dart:130-132`; `selector.dart:161-170`, `:248-264`; `grid_selectable_card.dart:106-114` | Ring appears in place: border colour over 200 or 250 ms, plus a 0 to 15 to 0 px pulse. MOTION-4 |
-| Focus moves inside the graph | `focusMove`; viewport follows | `graph.dart:102`; `graph_viewport_controller.dart:17`, `:32` | Viewport pans 250 ms `easeOutCubic`, no reduced motion. MOTION-1, MOTION-2 |
+| Focus moves inside the graph | `focusMove`; viewport follows | `graph.dart:102`; `graph_viewport_controller.dart:17`, `:32` | Viewport pans 250 ms `easeOutCubic`; the framework shortens it under reduced motion (graph.md). MOTION-1 |
 | Pane gains focus | `paneFocus` spring, 1.03 and 0.985 | `panes.dart:346`, `focus_highlight.dart:130` | Border colour only, 200 ms `fastEaseInToSlowEaseOut`. MOTION-5 |
 | Key pressed | Key cap glows | No key cap on any page button | Nothing glows. MOTION-7 |
 | Busy | Pressed in, busy word types, `ripple` | `loading_button.dart:248-340`, `:357-375`; `floating_button.dart:115`; `mutation_activity_button.dart:67` | Icon swapped for a `CircularProgressIndicator`. MOTION-8 |
@@ -79,7 +79,7 @@ onto them. Most page findings below disappear with the shared ones.
 | Hover a node | `hoverIn`, `hoverOut` | `grid_selectable_card.dart:155`; `animation.dart:6-11` | Scale 1.05 on `ElasticOutCurve(0.4)` 750 ms. MOTION-3 |
 | Focus a node | `focusMove` | `selector.dart:161-170`, `:248-264`; `grid_selectable_card.dart:113` | Border appears in place, pixel pulse. MOTION-4 |
 | Select a node | Fill changes as the move passes; inspector carries it | `grid_selectable_card.dart:20-21`, `:106-107`; `inspector.dart:332-359` | Fill 250 ms `fastEaseInToSlowEaseOut`; inspector slides open on its own. MOTION-13 |
-| Pan, zoom, reset | Fast, reduced to none | `graph_viewport_controller.dart:17`, `:32` | 250 ms `easeOutCubic`, no reduced motion. MOTION-1, MOTION-2 |
+| Pan, zoom, reset | Fast, reduced to none | `graph_viewport_controller.dart:17`, `:32` | 250 ms `easeOutCubic`; the framework shortens it under reduced motion (graph.md). MOTION-1 |
 | Connect: busy | Pressed in, `ripple` | `registration_token_input.dart:60-64` | Spinner. MOTION-8 |
 | Connect: invalid token or failure | `jam` on Connect | `registration_token_input.dart:28-31`; `loading_button.dart:347-349` | Invalid token returns without failing the button, so nothing shakes; a request failure gets `shakeX`. MOTION-9 |
 | Connect: success | New node comes from Connect | `services_graph.dart:39-45` | Node appears in the repacked graph without motion. MOTION-31 |

@@ -20,7 +20,7 @@ Load the `panel-design` skill first. Read each of its rules as: when you see Whe
 5. Check every `panel-design` rule that applies. Record `pass`, `fail`, or `cannot_verify` for each.
 6. Run the action walk and the critique below.
 7. Drop findings with no evidence, findings under Exceptions, and severity 0.
-8. When a finding is severity 3 or 4, check it a second way: a probe test for what the source says, the source for what an image shows. Keep it only if both agree.
+8. When a finding is severity 3 or 4, check it a second way: a probe test for what the source says, the source for what an image shows. Keep it only if both agree. A missing move, a timing, or a state no story reaches is read from source alone: keep it and write `source only` in evidence.
 9. Write `docs/design/panel-design/reviews/<page>.md`.
 
 ## Getting evidence
@@ -33,6 +33,8 @@ Load the `panel-design` skill first. Read each of its rules as: when you see Whe
 | Focus target, key path, or semantics | Write a throwaway widget test: `pumpStory` for a story, `pumpPanel` for a route. Run it through `cargo xtask heavy --`, cite what it showed, delete it | Read the source and say so |
 | A value that differs from the Values tables | Quote "Setting any visual value" | |
 | A state the story offers but no image shows | A finding under "A surface is new or changed" | |
+| A state only an action reaches: open panel, selection, failure | A probe that runs the action | Source, marked `source only` |
+| Which node holds focus | Node rectangles from the probe; an invisible wrapper is a Tab stop with no visible control | |
 | How a move feels, once the right token runs | Nothing you can check | `cannot_verify`, for a maintainer |
 | Contrast | Compute it from the token values | `cannot_verify` |
 
@@ -82,7 +84,7 @@ When the rules have a gap, propose a new When and Then row under Suggestions.
 
 Use the rule's `Sev`. Change it only when frequency or impact on this page clearly differs, and say why.
 
-A missing or wrong move on an everyday action (hover, press, focus, opening something, loading, rows added or removed) is 3, whatever its rule says. Other motion keeps its rule's `Sev`.
+A missing or wrong move on an everyday action (hover, press, focus, opening something, loading, rows added or removed, moving a thing on a canvas) is 3, whatever its rule says; quote `Everyday motion` as its rule. Other motion keeps its rule's `Sev`. Motion the framework already reduces counts as handled.
 
 ## Output
 
