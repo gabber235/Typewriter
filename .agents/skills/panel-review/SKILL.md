@@ -46,7 +46,7 @@ For every action on the page:
 | A create action | Run it | Focus on the new thing's first empty required field | 3 |
 | A remove action on books, pages, or entries | Run it | No question, Undo offered, focus on the next row | 4 |
 | An action that cannot be undone | Press its key once, then press with every modifier | Nothing happens without the full hold | 4 |
-| A failing action | Fail it through a fake | Failure stays, says what to do, offers Retry | 3 |
+| A failing action | Fail it through a fake | The message stays and says what to do; the same control repeats the action | 3 |
 | A value revealed on hover | Reach it with keys, then touch | It reveals both ways | 3 |
 | A drag | Do it with keys, then with single clicks | Both give the same result | 2 |
 | Compact width | Render the compact story | Every action still reachable | 3 |
