@@ -82,6 +82,8 @@ When the rules have a gap, propose a new When and Then row under Suggestions.
 
 Use the rule's `Sev`. Change it only when frequency or impact on this page clearly differs, and say why.
 
+A missing or wrong move on an everyday action (hover, press, focus, opening something, loading, rows added or removed) is 3, whatever its rule says. Other motion keeps its rule's `Sev`.
+
 ## Output
 
 ```
