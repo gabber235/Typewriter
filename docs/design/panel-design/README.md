@@ -7,7 +7,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Topic | Choice |
 |---|---|
 | Type | Lilex and IBM Plex Sans; JetBrains Mono leaves |
-| Colour | Cool as today; warning separate from accent; focus ring blue |
+| Colour | Cool as today; warning separate from accent; focus ring blue; small balanced marks that carry information, strongest on what is wrong |
 | Motion concept | Motion is how the panel points; the typewriter is how it does it with character |
 | Motion feel | Character is required; fast but neutral is rejected; exits never bounce |
 | Motion mix | Panel toggle, dialog, and focus move from key strike; new row, button press, and Saved from the machine |
@@ -20,6 +20,8 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Keys | One key language across the panel; a key keeps its meaning everywhere |
 | Actions | As context specific as possible |
 | Alignment | Trials of three options per element, to check the rules against the maintainer's feel |
+| Motion from services | Named moves as the easy default; developers keep full control over duration and curve; good motion controls in the realm make it easy to add |
+| Others' changes | Values wave slowly; adds and removes use their usual moves plus a chip with who and why, later an avatar |
 | Voice | Between plain and playful: jokes where possible, literal English when it matters |
 
 ## Choices by the author, not confirmed
@@ -27,6 +29,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 - Material Symbols as the one icon set.
 - Which duplicate component survives, in the Components table.
 - Table rows at about 42 px, chosen in a trial.
+- Compact below 900 px, or when a pane would be narrower than 320 px.
 
 ## Draft when rules, not confirmed
 
@@ -91,6 +94,10 @@ Options must differ in concept. Three sizes of one idea taught nothing.
 Across trials, every added element was rejected: red border, second button, caret, ribbon, countdown line.
 
 The maintainer mixes parts across options, so options test ideas rather than whole designs.
+
+## Calibration
+
+Three fresh agents reviewed Members, Services, and the resource editor with only the skills. Reports are in `reviews/`. A maintainer marked 25 finding themes from 70 findings: 24 right, 1 partly. A motion pass followed, since the first skill sent motion to `cannot_verify`: 38 findings in 15 themes, 13 right, 2 partly (who and why on others' changes; services keep control over motion). The partly: colour on healthy states is allowed in small balanced amounts, since a page with none feels lifeless. The skills were tightened where reviewers had to guess.
 
 ## Findings
 
