@@ -1,7 +1,6 @@
 package com.typewritermc.entity.entries.activity
 
 import com.typewritermc.core.utils.point.Vector
-import com.typewritermc.core.utils.point.distanceSquaredWeightedY
 import com.typewritermc.engine.paper.entry.entity.PositionProperty
 import kotlin.math.abs
 
@@ -41,12 +40,14 @@ internal fun walkingLookRotation(
 /**
  * Decides whether the entity may advance past the path node it is currently steering towards.
  *
- * A node counts as passed once the entity arrives within the arrival radius. Other nodes on walkable
+ * A node counts as passed once the entity arrives horizontally within the arrival radius. Height is only
+ * compared against [maxStepHeight], because the standing height can differ from the node's surface height
+ * when the entity rests partly on a neighboring block. Other nodes on walkable
  * ground may also be passed early within the wider pass radius, which rounds corners instead of forcing
  * the entity onto every block center. The early pass needs [isShortcutClear] to confirm the entity can
  * walk straight on to the following node, so it is not taken around a fence post or wall corner the
  * skipped node was steering around. Nodes that [requiresArrival], such as the last one, never allow the
- * shortcut, and elevation changes always require actual arrival so jumps and steps target the correct block.
+ * shortcut, and a node more than [maxStepHeight] away in height is not passed, so jumps finish on the correct block.
  */
 internal fun canAdvancePastNode(
     location: PositionProperty,
@@ -57,13 +58,14 @@ internal fun canAdvancePastNode(
     passRadiusSquared: Double,
     isShortcutClear: () -> Boolean,
 ): Boolean {
-    val arrived = (location.distanceSquaredWeightedY(nodeTarget, 0.8) ?: return false) <= arrivalRadiusSquared
-    if (arrived) return true
-    if (requiresArrival) return false
+    if (location.world != nodeTarget.world) return false
+    if (abs(nodeTarget.y - location.y) > maxStepHeight) return false
 
     val dx = nodeTarget.x - location.x
     val dz = nodeTarget.z - location.z
-    if (dx * dx + dz * dz > passRadiusSquared) return false
-    if (abs(nodeTarget.y - location.y) > maxStepHeight) return false
+    val horizontalDistanceSquared = dx * dx + dz * dz
+    if (horizontalDistanceSquared <= arrivalRadiusSquared) return true
+    if (requiresArrival) return false
+    if (horizontalDistanceSquared > passRadiusSquared) return false
     return isShortcutClear()
 }

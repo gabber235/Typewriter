@@ -141,6 +141,20 @@ class WalkingSteeringSpec : FunSpec({
             advance(location, node).shouldBeFalse()
         }
 
+        test("arrival ignores a height difference within step height") {
+            val location = positionAt(1.0, 65.5, 0.5)
+            val node = positionAt(1.6, 65.0, 0.5)
+
+            advance(location, node, requiresArrival = true).shouldBeTrue()
+        }
+
+        test("arrival requires the entity to be within step height of the node") {
+            val location = positionAt(1.0, 65.0, 0.5)
+            val node = positionAt(1.0, 66.0, 0.5)
+
+            advance(location, node, requiresArrival = true).shouldBeFalse()
+        }
+
         test("a node too far away does not advance") {
             val location = positionAt(0.5, 65.0, 0.5)
             val node = positionAt(2.0, 65.0, 0.5)

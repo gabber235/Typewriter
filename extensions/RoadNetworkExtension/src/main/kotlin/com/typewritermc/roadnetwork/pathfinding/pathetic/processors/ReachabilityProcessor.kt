@@ -40,6 +40,7 @@ class ReachabilityProcessor(
     companion object {
         private const val MIN_VELOCITY_THRESHOLD = 0.0001
         private const val STEP_DETECTION_THRESHOLD = 0.05
+        private const val JUMP_LANDING_CLEARANCE = 0.01
     }
 
     override fun isValid(context: EvaluationContext): Boolean {
@@ -170,16 +171,10 @@ class ReachabilityProcessor(
         val deltaY = currentGroundY - parentGroundY
         val isJump = deltaY > capabilities.maxStepHeight
 
-        val startY = if (isJump) {
-            parentGroundY + capabilities.maxStepHeight
-        } else {
-            parentGroundY
-        }
-
         val startPosition = Location(
             world,
             parentPos.x + 0.5,
-            startY,
+            parentGroundY,
             parentPos.z + 0.5
         ).toProperty()
 
@@ -204,7 +199,27 @@ class ReachabilityProcessor(
 
         if (velocity.lengthSquared < MIN_VELOCITY_THRESHOLD) return true
 
-        return performCollisionCheck(velocity, startPosition, world, currentGroundY, isJump, sidestepInfo)
+        if (isJump) return isJumpClear(velocity, startPosition, world)
+        return performCollisionCheck(velocity, startPosition, world, currentGroundY, sidestepInfo)
+    }
+
+    /**
+     * A walking entity jumps by rising straight up until its feet clear the landing height and only then
+     * moving across, so the jump is checked in those two parts. Checking one diagonal sweep would hit the
+     * side of the landing block itself.
+     */
+    private fun isJumpClear(velocity: Vector, startPosition: PositionProperty, world: World): Boolean {
+        val relativeEntityBox = createRelativeEntityBoundingBox()
+        val blockGetter = BukkitBlockGetter(world)
+
+        val rise = Vector(0.0, velocity.y + JUMP_LANDING_CLEARANCE, 0.0)
+        val riseResult = blockCollision.handlePhysics(relativeEntityBox, rise, startPosition, blockGetter, null, false)
+        if (riseResult.collisionY) return false
+
+        val across = Vector(velocity.x, 0.0, velocity.z)
+        val acrossResult =
+            blockCollision.handlePhysics(relativeEntityBox, across, riseResult.newPosition, blockGetter, null, false)
+        return !acrossResult.collisionX && !acrossResult.collisionZ
     }
 
     private fun performCollisionCheck(
@@ -212,7 +227,6 @@ class ReachabilityProcessor(
         startPosition: PositionProperty,
         world: World,
         currentGroundY: Double,
-        isJump: Boolean,
         sidestepInfo: SidestepInfo? = null
     ): Boolean {
         val relativeEntityBox = createRelativeEntityBoundingBox()
@@ -221,15 +235,12 @@ class ReachabilityProcessor(
 
         return when {
             velocity.y < 0 -> handleFallCollision(result)
-            isJump -> handleJumpCollision(result)
             else -> handleStepOrFlatMovement(result, velocity, startPosition, currentGroundY, blockGetter, sidestepInfo)
         }
     }
 
     private fun handleFallCollision(result: PhysicsResult): Boolean =
         result.collisionY && !result.collisionX && !result.collisionZ
-
-    private fun handleJumpCollision(result: PhysicsResult): Boolean = !result.collisionY
 
     private fun handleStepOrFlatMovement(
         result: PhysicsResult,

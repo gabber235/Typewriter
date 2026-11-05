@@ -205,6 +205,7 @@ sealed interface NavigationActivityTaskState {
             private const val MIN_DISTANCE_SQUARED = 0.001
 
             private const val PASS_NODE_RADIUS_SQUARED = 1.0
+            private const val ARRIVAL_RADIUS_SQUARED = 0.15 * 0.15
 
             private const val JUMP_DISTANCE_THRESHOLD = 2.4
             private const val JUMP_SPEED_DIVISOR = 0.2085
@@ -350,7 +351,7 @@ sealed interface NavigationActivityTaskState {
                     target,
                     requiresArrival,
                     capabilities.maxStepHeight,
-                    nearNodeRadius,
+                    ARRIVAL_RADIUS_SQUARED,
                     PASS_NODE_RADIUS_SQUARED,
                 ) {
                     val following = nodeTarget(currentPath, pathIndex + 1, world)
@@ -383,8 +384,11 @@ sealed interface NavigationActivityTaskState {
             )
         }
 
-        private fun canWalkStraightTo(target: PositionProperty, world: World): Boolean {
-            val horizontalDelta = Vector(target.x - location.x, 0.0, target.z - location.z)
+        private fun canWalkStraightTo(target: PositionProperty, world: World): Boolean =
+            isHorizontalMoveClear(target.x - location.x, target.z - location.z, world)
+
+        private fun isHorizontalMoveClear(deltaX: Double, deltaZ: Double, world: World): Boolean {
+            val horizontalDelta = Vector(deltaX, 0.0, deltaZ)
             val result = blockCollision.handlePhysics(
                 boundingBox(),
                 horizontalDelta,
@@ -504,10 +508,14 @@ sealed interface NavigationActivityTaskState {
                 Vector(0.0, -0.1, 0.0)
             } else Vector.ZERO
 
-            var newVelocity = velocity + gravityVelocity
-            newVelocity = Vector(targetVelocity.x, newVelocity.y, targetVelocity.z)
+            val verticalVelocity = (velocity + gravityVelocity).y
+            val isRising = dy > 0 && velocity.y > 0
+            val world = location.world.toBukkitWorld()
+            if (isRising && !isHorizontalMoveClear(targetVelocity.x, targetVelocity.z, world)) {
+                return Vector(0.0, verticalVelocity, 0.0)
+            }
 
-            return newVelocity
+            return Vector(targetVelocity.x, verticalVelocity, targetVelocity.z)
         }
 
         private fun stepHeightToTarget(target: PositionProperty): Double {
@@ -552,6 +560,9 @@ sealed interface NavigationActivityTaskState {
                 jumpVelZ = 0.0
             }
 
+            if (!isHorizontalMoveClear(jumpVelX, jumpVelZ, location.world.toBukkitWorld())) {
+                return Vector(0.0, capabilities.jumpStrength, 0.0)
+            }
             return Vector(jumpVelX, capabilities.jumpStrength, jumpVelZ)
         }
 
