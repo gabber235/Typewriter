@@ -24,7 +24,7 @@ Read `overview.md` first; it introduces the seven primitives and links to the re
 | [engines.md](engines.md) | Bridges; engine communication summary |
 | [authoring-writes.md](authoring-writes.md) | How any client (panel, engine, MCP service) writes authored state: actor, generic SDK, generated helpers |
 | [panel-engine-communication.md](panel-engine-communication.md) | Panel and engine communication: scenarios, target choice, emit actions, engine reports, results |
-| [panel-design/](panel-design/README.md) | How the web panel looks, moves, and behaves; builders and reviewers work from it |
+| [panel-design/](panel-design/README.md) | Web panel design choices and findings; instructions are the `panel-design` and `panel-review` skills |
 | [glossary.md](glossary.md) | Every type and term, one line each |
 | [closed-beta-roadmap.md](closed-beta-roadmap.md) | The stacked PR order toward the closed beta, with what each layer needs |
 
