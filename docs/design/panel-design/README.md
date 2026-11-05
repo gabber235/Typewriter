@@ -20,6 +20,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Keys | One key language across the panel; a key keeps its meaning everywhere |
 | Actions | As context specific as possible |
 | Alignment | Trials of three options per element, to check the rules against the maintainer's feel |
+| Fix order | Broken motion on everyday actions is fixed first, with focus and keys |
 | Motion from services | Named moves as the easy default; developers keep full control over duration and curve; good motion controls in the realm make it easy to add |
 | Others' changes | Values wave slowly; adds and removes use their usual moves plus a chip with who and why, later an avatar |
 | Voice | Between plain and playful: jokes where possible, literal English when it matters |
