@@ -82,7 +82,7 @@ Each trial offers three live options, one being the rule as written, shown blind
 | Dense page and controls | Muted labels, no rule, no marker; soft filled controls as today | Choosing an option does not mean liking every part; the rule and marker from the earlier pick were wrong |
 | Calm but not boring | Person colours, activity bars, roomier rows; no large tile | Interest comes from real information, never decoration |
 | Book tree | Colour tile per page type | Real information holds without people |
-| Services graph | Grey unless something is wrong; load and moving traffic rejected | Health stays calm until it needs attention |
+| Services graph | Grey with a muted status on each, colour only when wrong; load and moving traffic rejected | Status is always readable; colour is saved for what needs attention |
 
 Author predictions: change mark wrong, tooltip half right, navigation right, change by others half right, pane focus half right, surface right, density wrong, empty state half right, members page mostly right, static identity wrong, dense page wrong, controls wrong, interest wrong, book tree right, services graph wrong.
 
