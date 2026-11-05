@@ -96,6 +96,7 @@ public final class Probe implements ClientModInitializer {
             lastPerceived = tp;
         }
         Speed.publish(frames, ticks, tp);
+        probe.mod.observe.Ride.onTick(mc);
         try {
             out.flush();
         } catch (IOException ignored) {

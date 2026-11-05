@@ -83,12 +83,20 @@ public final class Speed {
     /** End of renderFrame. Publishes state, finishes on demand captures, paces a gated loop. */
     public static void afterFrame(Minecraft mc, long frame, long tick, String perceived) {
         publish(frame, tick, perceived);
+        probe.mod.observe.Drawn.endFrame(mc, !thisFrameSkipped);
+        probe.mod.observe.Ride.onFrame(mc, !thisFrameSkipped);
         Runnable r = afterRendered;
         if (r != null && !thisFrameSkipped && framesToRender == 0) {
             afterRendered = null;
             r.run();
         }
         if (thisFrameSkipped && parkNanos > 0) LockSupport.parkNanos(parkNanos);
+    }
+
+    /** Draws n whole frames from now, in any gate mode, then runs r on the client thread. */
+    public static void drawThen(int frames, Runnable r) {
+        framesToRender = frames;
+        afterRendered = r;
     }
 
     public static void publish(long frame, long tick, String perceived) {
@@ -167,7 +175,10 @@ public final class Speed {
                 yield "{\"ok\":true}";
             }
             case "stats" -> "{\"fps\":" + mc.getFps() + ",\"frame\":" + latest.frame() + ",\"tick\":" + latest.tick() + ",\"at\":" + micros() + "}";
-            default -> "{\"error\":\"unknown " + name + "\"}";
+            default -> {
+                String r = probe.mod.observe.Observe.handle(name, p, mc);
+                yield r != null ? r : "{\"error\":\"unknown " + name + "\"}";
+            }
         };
     }
 

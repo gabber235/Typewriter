@@ -38,7 +38,7 @@ class Line:
         self.s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.f = self.s.makefile("rb")
 
-    def __call__(self, name, _dispatch=None, **params):
+    def __call__(self, name, /, _dispatch=None, **params):
         q = urllib.parse.urlencode(params)
         pre = (_dispatch + "/") if _dispatch else self.prefix
         self.s.sendall(f"{pre}{name}?{q}\n".encode())

@@ -71,6 +71,7 @@ final class Speed {
 
     static void start(ProbePlugin p) {
         plugin = p;
+        ProbeAccess.set(p);
         int port = Integer.getInteger("probe.line.port", 0);
         if (port == 0) return;
         Thread t = new Thread(() -> {
@@ -178,7 +179,9 @@ final class Speed {
                 r.put("sentMicros", micros());
                 p.showTitle(title);
             }
-            default -> throw new IllegalArgumentException("unknown " + name);
+            default -> {
+                if (!Observe.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
+            }
         }
         if (q.containsKey("ping") && p != null) {
             ((CraftPlayer) p).getHandle().connection.send(new ClientboundPingPacket(Integer.parseInt(q.get("ping"))));
