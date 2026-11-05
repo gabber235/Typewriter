@@ -28,6 +28,8 @@ a Rust and wasmCloud backend, a Flutter panel, and Skir contracts shared between
 - Run `cargo xtask check <area>` for every area touched and always `cargo xtask check quality`;
   `cargo xtask check --list` names the areas a change affects.
 - Before reporting planned work done, run the `typewriter-review` skill and raise every mismatch.
+- Build every layer test first: write the failing test, see it fail for the expected reason, then
+  write the code.
 
 ## Git
 
