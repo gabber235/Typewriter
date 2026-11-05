@@ -14,7 +14,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A user's action finishes and they have not moved on | Focus goes where they act next: a new thing's first empty required field, the first bad field after validation, the opener when a surface closes | 3 |
 | The focused thing disappears | Focus goes to its nearest neighbour, next before previous, otherwise to what contained it | 3 |
 | A page or surface opens | Focus goes to its first item to act on, and to a text field only when typing is its purpose | 3 |
-| Something happens that the user did not just do | Focus and layout stay still, and scroll stays anchored. The thing gets a slow ink mark | 3 |
+| Something happens that the user did not just do | Focus and layout stay still, and scroll stays anchored. A slow `waveSlow` carries the change, and a chip that springs in names who did it | 3 |
 
 ## Surfaces
 
@@ -35,7 +35,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Something succeeds | Say nothing if the result is visible. Otherwise type the result word at the control, or show a clearing toast for background work | 2 |
 | Something fails | The control shakes and turns red briefly, then returns to its normal action, so pressing it again repeats the action. Never add a second button or a red border. The message says what happened and the next step, and stays until the next try. Keep the user's work | 3 |
 | Several things fail at once | The first takes the move and focus. The rest show still messages | 2 |
-| A change appears elsewhere on screen | Other places showing that text ripple their letters in brand blue, not the place the user edited. Changes that are not text use a fill that fades | 2 |
+| A change appears elsewhere on screen | A `wave` through the letters switches the text in other places showing it, not the place the user edited. Changes that are not text use a fill that fades | 2 |
 | A list is empty | Say what belongs here. If the user can add one, name the key | 2 |
 | Access is lost | Hide the content and show a doorway screen | 3 |
 | The connection or a service is lost | Show one steady notice. Content stays readable | 3 |
@@ -65,9 +65,11 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 
 | When | Then | Sev |
 |---|---|---|
-| The user causes something to arrive | It comes from where it was caused and lands with its token. Deeper navigation arrives from the right, and back from the left | 2 |
-| Showing any state on something | Change the thing itself: its fill, its letters, its depth. Never add a border, line, spinner, or second control | 2 |
-| Anything changes state | Animate between the states inside the component: label, width, colour. Nothing swaps. Shared letters stay and only the different letters type: Publish, Publishing, Published | 2 |
+| The user causes something to arrive | It comes from where it was caused and lands with its token | 2 |
+| Something exists before and after a change | Move it to its new place instead of replacing it. Opening a row turns that row into the page heading; the rest ripple in, and Back reverses | 2 |
+| Moving between pages with nothing to carry over | Rows ripple in, from the right going deeper, from the left going back | 2 |
+| Showing any state on something | Change the thing itself: its fill, its letters, its depth. Never add a border, line, spinner, or second control. Add an element only for information not otherwise visible, such as who did it, and it must arrive with motion | 2 |
+| Anything changes state | The move performs the change: the value switches as the motion passes, never first. Animate inside the component: label, width, colour. Nothing swaps. Shared letters stay and only the different letters type: Publish, Publishing, Published | 2 |
 | Anything grows or responds over time: a hold, a fill, progress, a press | Drive it with a spring so it has weight. Nothing moves linearly | 2 |
 | Text appears | Reserve its space so nothing shifts. Short text, about 20 letters or fewer, types itself. Longer text arrives whole, on a bounce, with chunks animating inside. It never delays reading | 2 |
 | A key is in use | Its key cap glows | 2 |
@@ -161,6 +163,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | `listOut` | Spring | Stiffness 380, damping 30 | Height, vertical scale, and opacity go to 0 together |
 | `hold` | Spring | 800 ms | The fill leads and settles |
 | `ripple` | Ease in and out | 620 ms, 42 ms between letters | Letters rise 3 px, looping |
+| `wave` | Spring per letter | 420 ms, 34 ms between letters | Each letter rises 4 px, turns brand blue, and switches as it passes |
+| `waveSlow` | Ease in and out | 1000 ms, 60 ms between letters | As `wave`, 2 px |
 | `drain` | Linear | 6 s | The one linear move, since it shows real time |
 | `type` | Stepped | 36 ms per letter | None |
 | `ink` | Ease out | 900 ms fade; 2 s for changes by others | None |
