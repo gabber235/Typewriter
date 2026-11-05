@@ -106,18 +106,19 @@ class Golden:
         S("block", player=p, x=1, y=66, z=9, material=sc["block"], fake=1)
         self.barrier()
 
-    def settle(self, max_s):
-        """Render barrier: grab until two frames in a row are identical, or give up at max_s."""
+    def settle(self, max_s, across_ticks=True):
+        """Render barrier: two frames in a row identical, or give up at max_s. With the partial tick pinned, two
+        frames inside one client tick are always identical, so the pair must span ticks (terrain run 1 on the Mac
+        passed while the player still drifted after a teleport: 61k pixels)."""
         t0 = time.time()
+        slots = ["ga", "gb"]
         self.C("g.grab", frames=4, slot="ga")
-        n = 1
+        n, i = 1, 0
         while True:
-            self.C("g.grab", frames=2, slot="gb")
-            n += 1
-            same = self.C("g.same", a="ga", b="gb", thr=0)["count"] == 0
-            if same or time.time() - t0 > max_s:
-                return {"stable": same, "grabs": n, "settle_s": round(time.time() - t0, 3)}
-            self.C("g.grab", frames=2, slot="ga")
+            if across_ticks:
+                time.sleep(0.11)
+            i ^= 1
+            self.C("g.grab", frames=2, slot=slots[i])
             n += 1
             same = self.C("g.same", a="ga", b="gb", thr=0)["count"] == 0
             if same or time.time() - t0 > max_s:
