@@ -47,7 +47,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A wait is too short to notice, under 300 ms | Show nothing | 2 |
 | Nothing about the page is known yet | Show a doorway screen | 2 |
 | The layout is known and its content is not | Show a skeleton of the real layout. Panes load apart without moving each other | 2 |
-| Content is on screen and refreshing | Keep it, show the caret at the status, and change values without motion | 2 |
+| Content is on screen and refreshing | Keep it, ripple the status word with `ripple`, and change values without motion | 2 |
 | Loaded content arrives | Ripple the visible rows upwards from below with `loadIn`, once per pane | 2 |
 | The user causes one new row | Slide it in from the left with `rowIn` | 2 |
 | A wait continues past 5 s | Make the words more specific. Motion does not grow | 2 |
@@ -57,7 +57,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 
 | When | Then | Sev |
 |---|---|---|
-| An action can be undone | One press, no question. The thing stays in place, struck through, with Undo and its countdown. Focus moves on. When time runs out it collapses | 4 |
+| An action can be undone | One press, no question. The thing stays in place, struck through, with Undo. Its background drains with `drain`, the inverse of a hold. Focus moves on. When time runs out it collapses with `listOut` | 4 |
 | An action cannot be undone, or undo is not built yet | Hold to confirm with `hold`. The row grows a fill on a spring, the key cap glows, and one line states the outcome and count, typed in reserved space in the first third of the hold. Show the hold only once that text is known. Releasing cancels. The hold setting swaps this for a dialog with Cancel focused, confirmed by Ctrl or Cmd+Enter | 4 |
 | Anything would skip those rules | Remove it | 4 |
 
@@ -66,20 +66,21 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When | Then | Sev |
 |---|---|---|
 | The user causes something to arrive | It comes from where it was caused and lands with its token. Deeper navigation arrives from the right, and back from the left | 2 |
+| Showing any state on something | Change the thing itself: its fill, its letters, its depth. Never add a border, line, spinner, or second control | 2 |
 | Anything changes state | Animate between the states inside the component: label, width, colour. Nothing swaps. Shared letters stay and only the different letters type: Publish, Publishing, Published | 2 |
 | Anything grows or responds over time: a hold, a fill, progress, a press | Drive it with a spring so it has weight. Nothing moves linearly | 2 |
 | Text appears | Reserve its space so nothing shifts, and type it. It must finish with time left to read it | 2 |
 | A key is in use | Its key cap glows | 2 |
-| A control is busy or unavailable | It looks pressed in, like a held key | 2 |
-| Anything leaves | It goes towards its origin, faster than it arrived, with no bounce. Something in a list collapses, and its neighbours close the gap with it | 2 |
-| Something is temporary: an undo, a notice | Show how much time is left | 2 |
+| A control is busy or unavailable | It looks pressed in, like a held key. When busy, its label types the busy word and the letters ripple with `ripple` | 2 |
+| Anything leaves | It goes towards its origin, faster than it arrived, with no bounce. Something in a list squashes shut with its text, and its neighbours close the gap with it | 2 |
+| Something is temporary: an undo, a notice | Its background drains to show the time left | 2 |
 | Choosing how strong a move is | Go strong: a deep press, a big bounce, a hard shake. Keep it fast. Flat is the failure to avoid | 2 |
 | The pointer reaches something you can act on | It rises with `hoverIn`, without a shadow, and leaves with `hoverOut`. If it has a key, its key cap strikes up with `capIn` | 2 |
 | A button has a key | Always show the key cap. Pressing either one presses both | 2 |
 | Focus moves | The ring slides with `focusMove` | 2 |
 | A move repeats fast or would go off screen | Make it smaller, down to none. A held key makes the ring jump | 2 |
 | Several moves would play together | Only the user's latest action moves. Everything else changes without motion | 2 |
-| You cannot name what a move tells the user | Do not add it. Only the caret and skeletons may loop | 2 |
+| You cannot name what a move tells the user | Do not add it. Only rippling busy words and skeletons may loop | 2 |
 | Any move runs | Input still works, and the move can retarget from where it is | 3 |
 | Reduced motion is on | Keep every result and remove the travel, in the tokens, not per widget | 3 |
 
@@ -157,8 +158,10 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | `hoverOut` | Exit | 90 ms | None |
 | `panelOut` | Exit | 200 ms | None |
 | `dialogOut` | Exit | 150 ms | None |
-| `rowOut` | Exit | 160 ms | None |
+| `listOut` | Spring | Stiffness 380, damping 30 | Height, vertical scale, and opacity go to 0 together |
 | `hold` | Spring | 800 ms | The fill leads and settles |
+| `ripple` | Ease in and out | 620 ms, 42 ms between letters | Letters rise 3 px, looping |
+| `drain` | Linear | 6 s | The one linear move, since it shows real time |
 | `type` | Stepped | 36 ms per letter | None |
 | `ink` | Ease out | 900 ms fade; 2 s for changes by others | None |
 | `jam` | Judder | 400 ms | 4 cycles, 9 px and decaying, with a red flash that fades in 1.5 s |
@@ -191,7 +194,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When you need | Use | Never |
 |---|---|---|
 | A busy button | `LoadingButton`, `LoadingIconButton` | A private spinner |
-| A wait | The caret, `Shimmer` | `CircularProgressIndicator` |
+| A wait | `ripple` on the status word, `Shimmer` | `CircularProgressIndicator` |
 | A menu or popover | `AnchoredPopup`, `ContextMenuRegion` | `PopupMenuButton`, `MenuAnchor` |
 | A select | `Dropdown`, `MultiselectDropdown` | `DropdownButtonFormField` |
 | A dialog | The one dialog component | `AlertDialog` |
