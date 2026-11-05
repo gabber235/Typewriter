@@ -102,6 +102,12 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Confirm`**: intent event for advancing, raised only when the raw key is the one currently offered. See [events-and-handlers.md](events-and-handlers.md#event).
 
+**`Configuration<C>`**: root resource holding a `Partial<C>`, one named version of an extension's record. See [configurations.md](configurations.md).
+
+**`Configured<C>`**: entry field that selects a `Configuration<C>` and overrides single values; its `value` is the full `C`, worked out at publish. See [configurations.md](configurations.md).
+
+**`ConfigurationHolder`**: a resource in the owner chain that selects configurations: `Book`, `Page`, `RealmRoot`. The root's selection is the default. See [configurations.md](configurations.md).
+
 **Configured event**: an event with a configuration type parameter (`Tick<C : TickConfig>`) whose source only emits for configurations some handler can run for. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
 **`ConfiguredSource<E, C>`**: source interface whose `open(demand: Demand<C>, sink: Sink<E>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
@@ -240,6 +246,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`FormulaGroupEntry`**: grouping whose key is a formula, so outside facts decide who is in which group. See [interactions.md](interactions.md#groupings-and-membership).
 
+**`FieldGroup`**: a presentation's statement of which group its field belongs in, so `remainingFields()` needs no knowledge of the type. See [configurations.md](configurations.md#general-parts).
+
 **`GroupEntry<K>`**: a grouping; `K` is picked, `X` means one group per player and `List<X>` means several. See [interactions.md](interactions.md#groupings-and-membership).
 
 **Grouping**: a way to bucket protagonists, declared by a `FormulaGroupEntry` or a `ManualGroupEntry`. See [interactions.md](interactions.md#groupings-and-membership).
@@ -317,6 +325,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`ManualGroupEntry`**: grouping changed only through the `JoinGroup` and `LeaveGroup` actions, so creators build parties with data. See [interactions.md](interactions.md#groupings-and-membership).
 
 **`MemberContext`**: core formula context evaluated per member, adding `protagonist` to `InteractionContext`. See [formula-language.md](formula-language.md#formula-contexts).
+
+**`Partial<T>`**: a type with `T`'s fields, each nullable; every configuration layer is one. See [configurations.md](configurations.md).
 
 **Membership**: core stored value (protagonist, group identity) that places a protagonist in a group. See [interactions.md](interactions.md#groupings-and-membership).
 

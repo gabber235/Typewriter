@@ -9,14 +9,14 @@ Configurations replace the legacy **snippet system**. A configuration is a full 
 - Configurations are **not global settings**. They are for an extension's features: shared settings that, for example, all entries of one type use by default and can override individually. A configuration type is an ordinary record type, like other resource types.
 - For a value creators want to share across their own content, they use a **book variable** instead.
 - An entry can hold a **configuration reference**, tying it to a specific configuration.
-- Each configuration type has a **default** variant, used when no configuration is selected.
+- Each configuration type has a **default**: the configuration selected on the realm root. With none selected, the extension's own defaults apply.
 - Related configuration types use **composition, not inheritance**. Example: a spoken dialogue entry uses both the dialogue configuration (text speed) and the spoken dialogue configuration (voice volume). Each type owns its own settings, and both apply.
 
 ### Overrides
 
 | Override | Meaning |
 | --- | --- |
-| Content tree | A book or page selects a configuration; everything inside uses it unless overridden lower down (like priority) |
+| Content tree | The realm, a book, or a page selects a configuration; everything inside uses it unless overridden lower down (like priority). Every level adds up, so each value comes from the nearest level that sets it |
 | Per entry | An entry overrides single values directly |
 | Formulas | Configuration values can be formulas, so they can differ per protagonist |
 
@@ -26,7 +26,7 @@ spoken dialogue entry
   uses spoken dialogue configuration   voice volume = 80
 
 each configuration type:
-  default        used when nothing is selected
+  default        selected on the realm
   selected one   chosen by entry reference, or inherited from book or page
   overrides      per entry values, formulas
 ```
@@ -36,6 +36,8 @@ each configuration type:
 Content creators (consistent settings in one place, overridable where needed), extension developers (declare typed settings for their features).
 
 ## Why
+
+Most creators do not think about configurations while writing, so the entry editor keeps them out of the way: one quiet row, opening to a picker per type, then each value with where it comes from.
 
 Snippets were loose text values. Typed, overridable configurations with defaults are better in every way.
 
