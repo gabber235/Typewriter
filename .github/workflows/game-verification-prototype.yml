@@ -45,7 +45,9 @@ jobs:
           java-version: "25"
       - name: Install Xvfb and the software renderers
         run: |
+          date +%T
           sudo apt-get update -qq
+          date +%T
           sudo apt-get install -y -qq --no-install-recommends \
             xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libegl-mesa0 libgbm1 mesa-vulkan-drivers libvulkan1 \
             mesa-utils mesa-utils-bin vulkan-tools python3-numpy python3-pil \
@@ -65,7 +67,9 @@ jobs:
         run: |
           /usr/bin/python3 orchestrator/run.py prepare
           ./gradlew --no-daemon --console=plain -q :probe-mod:writeClientLaunch :probe-mod:jar :probe-plugin:jar
+      # A failed job skips the cache save, and a failed cell is data read from the artifact.
       - name: Measure
+        continue-on-error: true
         run: /usr/bin/python3 orchestrator/ci.py plan ${{ matrix.plan }} --backend ${{ matrix.backend }}
       - name: Upload results and frames
         if: always()

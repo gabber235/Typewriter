@@ -123,8 +123,8 @@ displays = []
 class Cfg:
     """One renderer setup. gl picks how SDL gets its OpenGL context under Xvfb."""
 
-    def __init__(self, backend="opengl", width=854, height=480, rd=2, world="void", lp=None, gl="srgb-skip"):
-        self.backend, self.width, self.height, self.rd, self.world, self.lp, self.gl = backend, width, height, rd, world, lp, gl
+    def __init__(self, backend="opengl", width=854, height=480, rd=2, world="void", lp=None, gl="srgb-skip", audio=None):
+        self.backend, self.width, self.height, self.rd, self.world, self.lp, self.gl, self.audio = backend, width, height, rd, world, lp, gl, audio
 
     def env(self, display):
         env = {"DISPLAY": display, "SDL_VIDEODRIVER": "x11", "SDL_AUDIODRIVER": "dummy", "LIBGL_ALWAYS_SOFTWARE": "1", "GALLIUM_DRIVER": "llvmpipe"}
@@ -134,6 +134,8 @@ class Cfg:
             env["SDL_VIDEO_FORCE_EGL"] = "1"
         if self.lp is not None:
             env["LP_NUM_THREADS"] = str(self.lp)
+        if self.audio:
+            env["ALSOFT_DRIVERS"] = self.audio
         return env
 
     def row(self):
@@ -242,7 +244,10 @@ def capture(run, label, note=""):
     return counts
 
 
-class CiSession(speed.Session):
+BaseSession = speed.Session  # speed.Session becomes CiSession below, so speed.py's commands get it
+
+
+class CiSession(BaseSession):
     cfg = Cfg()
 
     def __init__(self, label, dispatch="tick", rd=2, **k):
@@ -274,7 +279,7 @@ class CiSession(speed.Session):
         return self
 
     def client_stop(self):
-        speed.Session.__exit__(self, None, None, None)
+        BaseSession.__exit__(self, None, None, None)
         self.display.stop()
 
     def __exit__(self, *exc):
@@ -329,9 +334,9 @@ def step(name, fn, *a, **k):
 
 # ---------- what to measure ----------
 
-def try_setup(name, backend, gl, timeout=150):
+def try_setup(name, backend, gl, timeout=150, audio=None):
     """Which SDL and Mesa setting gives which renderer: client alone, up to the title screen."""
-    cfg = Cfg(backend=backend, gl=gl)
+    cfg = Cfg(backend=backend, gl=gl, audio=audio)
     run = RUNS / f"setup-{name}-{int(time.time())}"
     display = Xvfb().start()
     client = Client(run / "client", backend=backend, xmx="1g", rd=2, facts_mode="changes", background_app=False, env=cfg.env(display.name))
@@ -359,8 +364,9 @@ def try_setup(name, backend, gl, timeout=150):
         display.stop()
     logs = capture(run, f"setup-{name}")
     row["logs"] = logs
+    row["audio"] = audio
     text = (run / "client/client.log").read_text(errors="replace") if (run / "client/client.log").exists() else ""
-    row["log_hits"] = [l[:200] for l in text.splitlines() if re.search(r"GLX|falling back|fall back|Vulkan|OpenGL|SDL|Graphics", l, re.I)][:15]
+    row["log_hits"] = [l[:200] for l in text.splitlines() if re.search(r"GLX|falling back|fall back|Vulkan|OpenGL|SDL|Graphics|OpenAL|Sound engine|SoundSystem", l, re.I)][:15]
     shutil.rmtree(run, ignore_errors=True)
     record("setup", **row)
     return row
@@ -413,6 +419,7 @@ def cmd_smoke(backends):
     step("env", cmd_env)
     for name, backend, gl in (("gl-plain", "opengl", "plain"), ("gl-srgb-skip", "opengl", "srgb-skip"), ("gl-egl", "opengl", "egl"), ("vulkan", "vulkan", "plain"), ("auto", None, "plain")):
         step(f"setup {name}", try_setup, name, backend, gl)
+    step("setup audio null driver", try_setup, "audio-null", "opengl", "srgb-skip", audio="null")
     ok = []
     for backend in backends:
         if step(f"first {backend} void", first, Cfg(backend=backend)) is None and failures and failures[-1].startswith(f"first {backend}"):
