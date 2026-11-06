@@ -58,7 +58,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When | Then | Sev |
 |---|---|---|
 | An action can be undone | One press, no question. The thing stays in place, struck through, with Undo. Its background drains with `drain`, the inverse of a hold. Focus moves on. When time runs out it collapses with `listOut` | 4 |
-| An action cannot be undone, or undo is not built yet | Hold to confirm with `hold`. The row grows a fill on a spring, the key cap glows, and one line states the outcome and count, typed in reserved space in the first third of the hold. Show the hold only once that text is known. Releasing cancels. The hold setting swaps this for a dialog with Cancel focused, confirmed by Ctrl or Cmd+Enter | 4 |
+| An action loses the user's work or makes someone else act again, and cannot be undone (Discard, Use saved, Decline, Remove member) | Hold to confirm with `hold`. The row grows a fill on a spring, the key cap glows, and one line states the outcome and count, typed in reserved space in the first third of the hold. Show the hold only once that text is known. Releasing cancels. The hold setting swaps this for a dialog with Cancel focused, confirmed by Ctrl or Cmd+Enter | 4 |
+| An action can simply be done again and loses nothing (Publish, cancelling one's own request) | One press, no hold and no question. Its key works only where the action is shown | 2 |
 | Anything would skip those rules | Remove it | 4 |
 
 ## Motion
