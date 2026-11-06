@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "probe.mod.golden.mixin",
-  "compatibilityLevel": "JAVA_25",
-  "client": ["TextureManagerAccessor", "TextureAtlasAccessor", "AnimationStateAccessor", "FlickerMixin", "TitleShiftMixin"],
-  "injectors": { "defaultRequire": 1 }
-}

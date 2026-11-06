@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "probe.mod.ready.mixin",
-  "compatibilityLevel": "JAVA_25",
-  "client": ["ToastAccessor", "HandsAccessor"],
-  "injectors": { "defaultRequire": 1 }
-}
