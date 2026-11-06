@@ -731,10 +731,44 @@ def cmd_multi(backend):
         step(f"multi {n}", multi, n, cfg, 100)
 
 
+# ---------- spike I: coverage per requirement ----------
+
+def run_cov(*argv):
+    """Runs one coverage.py command unchanged and copies its result rows into h.jsonl."""
+    import coverage
+    before = coverage.RESULTS.stat().st_size if coverage.RESULTS.exists() else 0
+    old = sys.argv
+    sys.argv = ["coverage.py", *argv]
+    try:
+        coverage.main()
+    finally:
+        sys.argv = old
+        if coverage.RESULTS.exists():
+            with coverage.RESULTS.open() as f:
+                f.seek(before)
+                for line in f:
+                    record("coverage", argv=" ".join(argv), cfg=CiSession.cfg.row(), result=json.loads(line))
+
+
+def cmd_coverage(backend):
+    set_cfg(Cfg(backend=backend))
+    for cov in ("off", "agent"):
+        step(f"boot {cov}", run_cov, "boot", "--cov", cov, "--repeat", "3")
+    step("boot agent all classes", run_cov, "boot", "--cov", "agent", "--includes", "*", "--repeat", "1")
+    for recipe in (("--dispatch", "direct"), ("--dispatch", "tick", "--rate", "200")):
+        for cov in ("off", "agent", "rt", "tcp", "off", "rt"):
+            step(f"cov {cov} {' '.join(recipe)}", run_cov, "loop", "--cov", cov, "--n", "1000", *recipe)
+        step(f"cov rt group 10 {' '.join(recipe)}", run_cov, "loop", "--cov", "rt", "--n", "1000", "--group", "10", *recipe)
+    for barrier in ("naive", "quiet"):
+        step(f"cov trap {barrier}", run_cov, "loop", "--cov", "rt", "--n", "700", "--kinds", "trap", "--analyze", "--barrier", barrier)
+    step("cov rt analyze tick 200", run_cov, "loop", "--cov", "rt", "--n", "1000", "--analyze", "--dispatch", "tick", "--rate", "200")
+    step("cov all classes", run_cov, "loop", "--cov", "rt", "--n", "200", "--includes", "*")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -757,6 +791,8 @@ def main():
             cmd_video(a.backend)
         elif a.plan == "goldens":
             cmd_goldens(["vulkan", "opengl"] if a.backend == "both" else [a.backend])
+        elif a.plan == "coverage":
+            cmd_coverage(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

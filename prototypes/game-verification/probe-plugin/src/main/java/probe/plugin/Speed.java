@@ -117,6 +117,7 @@ final class Speed {
         int qm = rest.indexOf('?');
         String name = qm < 0 ? rest : rest.substring(0, qm);
         Map<String, String> q = query(qm < 0 ? "" : rest.substring(qm + 1));
+        if (name.equals("covDump")) return json(Coverage.waitAndDump(q));
         Callable<Map<String, Object>> call = () -> run(name, q);
         Map<String, Object> result;
         if (dispatch.equals("direct")) {
@@ -180,9 +181,10 @@ final class Speed {
                 p.showTitle(title);
             }
             default -> {
-                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
+                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r) && !Coverage.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
             }
         }
+        if (q.containsKey("cov")) Coverage.dump(q.get("cov"), r);
         if (q.containsKey("ping") && p != null) {
             ((CraftPlayer) p).getHandle().connection.send(new ClientboundPingPacket(Integer.parseInt(q.get("ping"))));
         }
