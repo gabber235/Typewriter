@@ -104,7 +104,7 @@ def needle(kind, token, material):
 
 
 def cmd_loop(a):
-    label = f"i-{a.cov}-{a.dispatch}-r{int(a.rate)}-g{a.gate}-{a.barrier.replace(':', '')}-{a.kinds}-grp{a.group}" + ("-all" if a.includes != "probe.plugin.*" else "")
+    label = f"i-{a.cov}-{a.dispatch}-r{int(a.rate)}-g{a.gate}-{a.barrier.replace(':', '')}-{a.kinds}-grp{a.group}" + ("-all" if a.includes != "probe.plugin.*" else "") + (f"-tail{a.tail_ms}" if a.tail_ms != 2 else "")
     stamp = f"{label}-{int(time.time())}"
     tcp_port = free_port() if a.cov == "tcp" else None
     jvm, classes = agent_jvm(a.cov, stamp, a.includes, tcp_port)
@@ -130,7 +130,7 @@ def cmd_loop(a):
             rid = f"{i:05d}" if a.group == 1 else f"g{i // a.group:05d}"
             last_of_group = (i + 1) % a.group == 0 or i == a.n - 1
             t0 = time.perf_counter()
-            r_act = act(s, kind, token, material, act_ping, {})
+            r_act = act(s, kind, token, material, act_ping, {"tailMs": a.tail_ms} if kind.startswith("tail") else {})
             obs = s.C("observe", needle=needle(kind, token, material), timeoutMs=2000, ping=act_ping)
             t1 = time.perf_counter()
             if not obs["ok"]:
@@ -306,6 +306,7 @@ def main():
     l.add_argument("--kinds", default="base", choices=["base", "trap"])
     l.add_argument("--includes", default="probe.plugin.*")
     l.add_argument("--analyze", action="store_true")
+    l.add_argument("--tail-ms", type=int, default=2, help="async tails sleep this long before their own lines run")
     b = sub.add_parser("boot")
     b.add_argument("--cov", default="off", choices=["off", "agent"])
     b.add_argument("--includes", default="probe.plugin.*")
