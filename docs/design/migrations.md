@@ -151,6 +151,9 @@ Instance changes run through the book's generated hook (decided 2026-11-05).
 | Instance removed | Its identities end, so its data goes by the owner rule. The dry run shows how much |
 | Instance renamed | The hook asks which old key became the new one, then moves the data. The default clears, as with other migrations |
 | First instance added to a book with data | The same question: the root copy's data moves to an instance |
+| `New` embed added, removed, or renamed | The same as an instance added, removed, or renamed; its key is the embed's name ([book-composition.md](book-composition.md#3-the-embed)) |
+| First `New` embed of a book with root data | The same question as a first instance |
+| Embed switched from `New` to `Existing` or `All` | Its copy ends, as for an instance removed |
 
 Moving uses the same step as [group entries](#group-entries).
 

@@ -60,9 +60,17 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Book**: a `Resource` (not an entry) that carries variables, instances, and imports. See [formula-language.md](formula-language.md#book).
 
-**Book instance**: one entry in a book's `instances` map; publishing makes a copy of the book's resources for it, identified by source plus instance path. See [formula-language.md](formula-language.md#copies-at-publish).
+**`BookContext`**: formula context of a book's `condition`: `protagonist` and `engine`, with book variables through scope. See [book-composition.md](book-composition.md#1-the-books).
 
-**Book narrowing**: the check inside `fire` that only follows links into books that apply to the subject. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
+**`BookGone`**: `Live` value keyed by step that appears when a running step's book, or the book its interaction started in, stops applying; its handler stops that part at once. See [book-composition.md](book-composition.md#7-stopping).
+
+**`BookInlet`**: authored relay where a link comes into a book; its `through` links name the entries inside; publish removes it and rewires the links. See [book-composition.md](book-composition.md#2-inlets-and-outlets).
+
+**Book instance**: one entry in a book's `instances` map, or a `New` embed of the book; publishing makes a thin copy of the book's resources for it, identified by source plus instance path. See [formula-language.md](formula-language.md#copies-at-publish).
+
+**Book narrowing**: the check inside `fire` that only follows links into books that apply to the subject. See [book-composition.md](book-composition.md#6-conditions).
+
+**`BookOutlet`**: authored relay where a link leaves a book; entries inside link into it and an embed's `outlets` field links out of it; publish removes it. See [book-composition.md](book-composition.md#2-inlets-and-outlets).
 
 **`BookVariable`**: a book variable's type and optional default. See [formula-language.md](formula-language.md#variables).
 
@@ -190,6 +198,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`EditExpectation.exists`**: authoring guard that a value location exists or not; it replaces `resource_exists`, and list operations guard only the items they name with it. See [panel-engine-communication.md](panel-engine-communication.md) question 12.
 
+**`EmbedBook<V, I, O>`**: entry that places a book inside another book; `instance` picks a new or listed instance, `inlets` and `outlets` come from the book's relays through `bind`. See [book-composition.md](book-composition.md#3-the-embed).
+
 **`emit()`**: queues an event from a handler; it is decided after the current event finishes, without nesting. See [events-and-handlers.md](events-and-handlers.md#emitting).
 
 **`Elapsed<D>`**: event fired on the realm when a `Due` of type `D` reaches `at`; carries the fired value as `due`. See [stored-data.md](stored-data.md#due).
@@ -306,11 +316,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`InAudience`**: `Live` mirror for a protagonist being inside an audience node, with `since`, the moment they entered. See [live-data.md](live-data.md#audiences).
 
+**Inlet**: see `BookInlet`.
+
 **`initiated_by`**: the principal a trusted service names as behind a commit (the player behind an in game capture), taken from `Origin`; recorded for history, never used for authorization. See [authoring-writes.md](authoring-writes.md#principles).
 
 **Input hold**: whatever currently holds the protagonist's input and so decides which raw key becomes an intent event. See [interactions.md](interactions.md#input-holds).
 
 **`input(name, type, default)`**: asks the creator for a value a migration cannot decide alone. See [migrations.md](migrations.md#the-xmigrations-hook).
+
+**`InstanceChoice<V>`**: the instance an embed uses: `New(values)` makes one, `Existing(keys)` picks listed ones, `All` takes every listed one. See [book-composition.md](book-composition.md#3-the-embed).
 
 **Intent event**: an event such as `Confirm` made from raw input only when the key is the one offered. Input with one holder needs none. See [events-and-handlers.md](events-and-handlers.md#event).
 
@@ -426,6 +440,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Outcome`**: handler parameter with the final outcome; it lets an after handler also see denied events. See [events-and-handlers.md](events-and-handlers.md#follow-ups-and-cancel).
 
+**Outlet**: see `BookOutlet`.
+
 **Owed state**: the guideline to store what is owed, not what happened, so a live handler can act whenever the protagonist is online. See [stored-data.md](stored-data.md#offline-changes).
 
 **Owner**: the key identities of a stored value; it is removed when any of them ends. See [stored-data.md](stored-data.md#owners-and-lifetime).
@@ -493,6 +509,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 ## R
 
 **`random(...)`**: formula randomness seeded by (run, place), so rechecking agrees and a new run rolls again; the run is the chain's seed record, the write, or the event, depending on the context. See [formula-language.md](formula-language.md#time-and-randomness).
+
+**`resource.relay`**: relation family of relays; an endpoint in it accepts any resource, and a link through a relay is valid when every link it becomes after rewiring is valid. See [book-composition.md](book-composition.md#2-inlets-and-outlets).
 
 **Reaction**: behaviour attached to a variable that only changes data; kinds are `OnWrite`, `AfterWrite`, and `Every`. See [stored-data.md](stored-data.md#reactions).
 
@@ -585,6 +603,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`TakeSnapshot<H>`**: core event that runs when a hold starts and has no stored snapshot; its one handler returns the snapshot. See [interactions.md](interactions.md#snapshot-and-restore).
 
 **Template**: string template sugar where the expected type picks the `template` provider. See [formula-language.md](formula-language.md#text-templates).
+
+**Thin copy**: a book copy that shares its decoded data with every other copy and owns only its key and the leaves rebound at load (formulas that read `book`, links). See [formula-language.md](formula-language.md#copies-at-publish).
 
 **Threads**: there is no main thread; live access runs on the thread that owns the identity. See [events-and-handlers.md](events-and-handlers.md#threads).
 

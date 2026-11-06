@@ -140,6 +140,7 @@ Readers that create demand:
 - derive inputs
 - parameters of suspended handlers
 - queued step give up formulas
+- book conditions: every conditional book's condition, for every online protagonist from `SessionArrived` (a `Var.Value(true)` condition is no formula and creates none) ([book-composition.md](book-composition.md#6-conditions))
 - handlers on `Added<X>`, `Changed<X>`, `Removed<X>`, gated by their other parameters and by `Candidate` keys
 
 A one shot handler parameter pulls once (running the writer if missing) and does not subscribe. Producing handlers run only for identities with demand; KSP knows which mirror each handler produces from its return type.

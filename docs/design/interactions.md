@@ -558,7 +558,10 @@ fun replaceAndBeginQueued(ended: List<Interaction>, row: Queued<*>) {
 
 // waited reads now, so this rechecks on the timer.
 data class GaveUp(@Key val step: Step) : Live
-@Derive fun Queued<*>.gaveUp(context: QueuedContext) = if (entry.rules.giveUp(context)) GaveUp(step) else null
+// A step whose book no longer applies leaves too (book-composition.md).
+@Derive
+fun Queued<*>.gaveUp(context: QueuedContext) =
+    if (entry.rules.giveUp(context) || !entry.appliesTo(subject)) GaveUp(step) else null
 
 @Handler
 fun Added<GaveUp>.leave(row: Queued<*>) {
@@ -782,7 +785,7 @@ entry.triggers.fire(context, for = group)   // default: the current subject
 | `ContinueForEachMember(who: Var<List<Protagonist>, InteractionContext>)` | One copy per listed member, like legacy `GroupTriggerActionEntry`, each deciding its own clashes | none, only `protagonist` |
 | `ContinueForEveryone(who: Var<List<Protagonist>, InteractionContext>)` | Evaluates the list and creates a snapshot group keyed by the new interaction, ending with it | `Snapshot` |
 
-Book narrowing happens inside `fire`. Which `group` type a field sees after widening is in [formula-language.md](formula-language.md#group-fields).
+Book narrowing happens inside `fire`; a group is never rewritten, and a member a book does not apply to only loses their view. A condition turning false mid interaction stops the part from that book at once ([book-composition.md](book-composition.md#7-stopping)). Which `group` type a field sees after widening is in [formula-language.md](formula-language.md#group-fields).
 
 ### Live members
 

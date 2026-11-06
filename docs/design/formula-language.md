@@ -231,6 +231,7 @@ Core defines every context. Capability modules define none: engine values are ge
 | `PublishScope` | Fields evaluated by the realm at publish (book instances) | Pure values only |
 | `TypeScope` | `Var<Type, TypeScope>` type fields | Pure values only; types in scope |
 | `DefinitionScope` | A `Definition`'s value | The definition's surroundings |
+| `BookContext` | A book's `condition` ([book-composition.md](book-composition.md#6-conditions)) | `protagonist`, `engine`; book variables through scope |
 | `MigrationScope` | Migration inputs ([migrations.md](migrations.md)) | `old` |
 | `CaptureContext` | A formula run on a player by [`Capture`](capture.md) | `protagonist`, `engine` |
 | `EventContext<E>` | The condition and cancel of an [event entry](events-and-handlers.md#event-entries) | `InteractionContext` plus `event: E` |
@@ -372,6 +373,7 @@ data class Book<V : Record>(
     val variables: Map<String, BookVariable> = emptyMap(),
     val instances: Var<Map<String, V>, PublishScope> = ...,
     val imports: List<Import> = emptyList(),
+    val condition: Var<Boolean, BookContext> = Var.Value(true),   // layer 31, see book-composition.md
 ) : Resource, ConfigurationHolder
 
 data class BookVariable(val type: Var<Type, TypeScope>, val default: Var<*, PublishScope>? = null)
@@ -401,23 +403,39 @@ Plain mode is the normal map editor whose values are real records (one field per
 towns.associate { it.id to BountyBoardVariables(town = it) }
 ```
 
-A book with no listed instances has one root copy with an empty path. A variable without a default must be filled by every instance, or publishing is blocked. A failing instances formula also blocks publishing.
+A book's instances are its listed instances plus every `New` embed of it ([book-composition.md](book-composition.md#3-the-embed)). A book with none of either has one root copy with an empty path. A variable without a default must be filled by every instance, or publishing is blocked. A failing instances formula also blocks publishing.
 
 ### Copies at publish
 
-Publishing makes one copy of every resource a book owns, per instance (decided 2026-11-05). Each copy is its own entry, so handlers, `Candidate<E>`, links, and stored data need no special code. The compiled form exists today and always has an empty path:
+Publishing makes one copy of every resource a book owns, per instance (decided 2026-11-05). Each copy is its own entry, so handlers, `Candidate<E>`, links, and stored data need no special code. The compiled key exists today and always has an empty path:
 
 ```
 CompiledResourceKey(source = give_money, context = ["riverside"])
-CompiledEdge((talk, ["riverside"]) -> (give_money, ["riverside"]))   // a link stays inside its copy
-CompiledEdge((talk, ["riverside"]) -> (some_tag, []))                // a reference leaving the book keeps its target
 ```
+
+Copies are thin (decided 2026-11-06). What differs between copies is only the identity and the `book` record; the authored fields are identical, so the data is stored and decoded once:
+
+```
+// compiled form: one payload, the copy paths beside it
+CompiledResource(source = give_money, value = ..., copies = [["riverside"], ["hilltop"]])
+// an edge inside the book is stored once and applies in every copy
+CompiledEdge((talk, SameCopy) -> (give_money, SameCopy))
+// a reference leaving the book keeps its target
+CompiledEdge((talk, SameCopy) -> (some_tag, []))
+```
+
+The engine decodes each payload once and makes a shallow copy per key: a new object whose fields point at the shared values, so `entry` in a handler still means one copy. Two kinds of leaf depend on the copy and are rebound at load, each as its own small object (decided 2026-11-06):
+
+- A formula that reads `book` is bound to that copy's book record. The realm types every formula, so it marks these in the compiled form.
+- A link is built from the published edges, as `CompiledResourceKey` targets. The authored `Ref` holds only a `ResourceId` and cannot name a copy, so the engine never reads links from it.
+
+Leaves that do not depend on the copy (no `book` read, a link leaving the book) stay shared. Passing the copy at call time instead was rejected: it would put the copy into every formula context and every `fire` call.
 
 - `book` in a copy reads that instance's record.
 - An entry identity in stored data is source plus path, so stored data is per instance automatically.
 - A variable's copy is its own identity: `bounties_done(variable = (bounties_done, ["riverside"]), protagonist = ann)`.
 - A `Definition` is copied too, and is the same everywhere unless it reads `book`.
-- A link from another book is not allowed. Books connect through edges (layer 31).
+- A link from another book is not allowed. Books connect through inlets, outlets, and embeds ([book-composition.md](book-composition.md)).
 
 Instance changes follow [migrations](migrations.md#books): the map key is the instance key, and renaming one moves its stored data.
 
@@ -433,7 +451,7 @@ bounty.bounties_done > 2             // one instance: left out
 ### Not proven
 
 - Picking by name needs the instance keys while checking. In formula mode, that means running the formula while editing.
-- Whether copies can share bytes in the compiled file, and how much memory an engine needs. Without sharing, 200 entries in 50 towns is 10,000 records.
+- Thin copies: a generated shallow copy in the decoder (`NativeBindingRegistry`), and the real size per entry. Estimated for 200 entries in 50 towns: about 20 MB as full copies, about 2 MB thin. A benchmark in the layer 13 build settles both.
 - A rename in formula mode looks like a remove and an add, so only the migration's question can tell.
 - The path is a list, but this design only uses one segment.
 
@@ -804,7 +822,6 @@ A formula can start a chain: when a condition turns true, or whenever a formula'
 
 - `XDraft` modeling of invalid values: confirmed by the roadmap survey (`Availability`), but its fit for `dynamic()` is not yet verified in code.
 - Provider override details: whether a same name function replaces a generated member and how `hidden` hides one.
-- Placed generated book entries as instances (layer 31).
 - Where cross resource diagnostics from `dynamic()` are produced.
 - Editor design for function type parameters in the panel.
 - Live formula values per protagonist in the panel (vision item) have no design yet.

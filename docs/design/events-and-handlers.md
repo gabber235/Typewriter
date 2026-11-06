@@ -150,7 +150,7 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | A live capability trait (`HasChat`, `HasInventory`, `HasHealth`) | The engine object for that identity; for a group subject, one per member. |
 | `List<T>` | One run with the values that exist at these keys, filled like `T` from a list field or by `@From`; missing keys drop out. |
 | `All<T>` | Every value of type `T`; for a mirror, on every engine ([live-data.md](live-data.md#demand-across-engines)). |
-| `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject. |
+| `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject ([book-composition.md](book-composition.md#6-conditions)). |
 | A plain value named like a `Var` field of the receiver's entry | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
@@ -392,7 +392,7 @@ fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
 }
 ```
 
-That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`. Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
+That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`: a link into an entry whose book does not apply to the subject is skipped ([book-composition.md](book-composition.md#6-conditions)). Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
 
 Forwarding is declared by the trigger type: the extension marks it forwardable.
 
