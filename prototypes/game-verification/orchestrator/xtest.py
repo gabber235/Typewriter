@@ -27,6 +27,7 @@ class XTest:
         pos = self.win.translate_coords(self.root, 0, 0)
         self.origin = (-pos.x, -pos.y)
         self.size = (geo.width, geo.height)
+        self.relative = False
         self.cursor = (self.origin[0] + geo.width // 2, self.origin[1] + geo.height // 2)
         xtest.fake_input(self.d, X.MotionNotify, x=self.cursor[0], y=self.cursor[1])
         self.d.sync()
@@ -70,6 +71,11 @@ class XTest:
         xtest.fake_input(self.d, X.ButtonPress if down else X.ButtonRelease, b)
         self.d.sync()
 
+    def motion_by(self, dx, dy):
+        """Relative motion, as a physical mouse reports it; the only kind that turns right under SDL relative mode."""
+        xtest.fake_input(self.d, X.MotionNotify, detail=True, x=int(round(dx)), y=int(round(dy)))
+        self.d.sync()
+
     def motion_to(self, x, y):
         self.cursor = (int(round(x)), int(round(y)))
         xtest.fake_input(self.d, X.MotionNotify, x=self.cursor[0], y=self.cursor[1])
@@ -95,6 +101,8 @@ class XTest:
 
     def center(self):
         """Pointer back to the middle of the window: without a real grab nothing warps it, so it drifts off."""
+        if self.relative:
+            return  # SDL keeps a grabbed pointer in the middle itself
         self.motion_to(self.origin[0] + self.size[0] // 2, self.origin[1] + self.size[1] // 2)
 
     def grab(self):
@@ -104,7 +112,8 @@ class XTest:
             self.button(1, True)
             self.button(1, False)
             self.wait(3)
-        return self.C("in.state")["grabbed"]
+        self.relative = self.C("in.state")["grabbed"]
+        return self.relative
 
     def aim(self, at, notes):
         st = self.C("in.state")
@@ -115,6 +124,12 @@ class XTest:
         dyaw = (yaw - st["yaw"] + 180) % 360 - 180
         dpitch = pitch - st["pitch"]
         per_pixel = st["perPixel"]
+        if self.relative:
+            self.motion_by(dyaw / per_pixel, dpitch / per_pixel)
+            self.wait(2)
+            st = self.C("in.state")
+            notes.update(yaw=round(st["yaw"], 2), pitch=round(st["pitch"], 2), aimHit=st.get("hit"))
+            return
         # A small nudge first: the first motion after a grab only sets the cursor.
         self.motion_to(self.cursor[0] + 1, self.cursor[1])
         self.wait(1)

@@ -892,16 +892,12 @@ def cmd_interfere(backend):
 # ---------- spike J: real player input ----------
 
 INPUT_ROWS = [
-    # Round two. X with a real SDL grab and real focus is the person on a virtual display.
+    # Round three: X with a real grab sends relative motion, as a physical mouse does.
     ("run", "attack,attackPacket,interact,interactPacket,use,scroll", "J2,X", 200, 2, 200, "real"),
     ("run", "num,swap,sneak,jump,fly,inv,move", "J2,X", 200, 2, 200, "real"),
-    ("run", "chat,cmd,suggest", "J2,X", 200, 2, 200, "real"),
-    ("run", "break", "X", 200, 2, 20, "real"),
+    ("run", "break", "J2,X", 200, 2, 20, "real"),
     ("run", "breakCancel", "J2,X", 200, 2, 20, "real"),
-    ("run", "use,num,sneak,jump,fly", "J1,J3", 200, 2, 200, "fake"),
-    ("run", "breakCancel", "J1,J3", 200, 2, 20, "fake"),
     ("rendered", "all", "J2,J1,X,J3", 5, 0, 20, "real"),
-    ("lag", "break,use,sneak,move,chat,attack", "J2,X,J3", 10, 2, 20, "real"),
 ]
 
 

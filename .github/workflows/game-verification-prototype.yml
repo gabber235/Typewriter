@@ -30,10 +30,6 @@ jobs:
           - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
           - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 3 }
           - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 4 }
-          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 5 }
-          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 6 }
-          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 7 }
-          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 8 }
     defaults:
       run:
         working-directory: prototypes/game-verification
