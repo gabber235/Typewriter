@@ -77,6 +77,7 @@ final class CheckedEditorCatalog {
     return switch (definition.typeId) {
       skir.TypeId_qualifiedWrapper(:final value) => value.name,
       skir.TypeId_declaredWrapper(:final value) => value.value,
+      skir.TypeId_memberWrapper(:final value) => value.name,
       _ => "Unknown type",
     };
   }
@@ -438,12 +439,14 @@ final class CheckedEditorCatalog {
     );
   }
 
-  bool isAbstractRecordSelection(skir.TypeSelection selection) =>
-      switch (selected(selection)?.definition.representation) {
-        skir.RepresentationTemplate_recordWrapper(:final value) =>
-          value.abstract_,
-        _ => false,
-      };
+  bool isAbstractRecordSelection(skir.TypeSelection selection) {
+    final definition = selected(selection)?.definition;
+    return definition != null &&
+        definition.representation
+            is skir.RepresentationTemplate_recordWrapper &&
+        !definition.representation.isInstantiable &&
+        enumCases(definition.id) == null;
+  }
 
   List<skir.TypeSelection> concreteRecordSelections(
     skir.TypeSelection expected,
@@ -455,7 +458,7 @@ final class CheckedEditorCatalog {
       final representation = published.definition.representation;
       if (published.status != skir.DeclarationStatus.ready ||
           representation is! skir.RepresentationTemplate_recordWrapper ||
-          representation.value.abstract_ ||
+          !representation.isInstantiable ||
           !isNominalSubtype(published.definition.id, root)) {
         continue;
       }
@@ -854,7 +857,7 @@ final class CheckedEditorCatalog {
   }
 
   skir.RepresentationKind? representationKind(skir.TypeSelection selection) =>
-      _representationKind(selected(selection)?.definition.representation);
+      _representationKind(selected(selection)?.definition);
 
   skir.RepresentationKind? _representationKindForUse(skir.TypeUse? use) {
     var current = use;
@@ -864,31 +867,39 @@ final class CheckedEditorCatalog {
     return switch (current) {
       skir.TypeUse_scalarWrapper(:final value) => _scalarRepresentation(value),
       skir.TypeUse_namedWrapper(:final value) => _representationKind(
-        published(value.definition)?.definition.representation,
+        published(value.definition)?.definition,
       ),
       _ => null,
     };
   }
 
+  /// The case names of the enum [id] in declaration order, or null when it is
+  /// not an enum.
+  List<String>? enumCases(skir.TypeDefinitionId id) =>
+      published(id)?.definition
+          .enumCases((caseId) => published(caseId)?.definition);
+
   skir.RepresentationKind? _representationKind(
-    skir.RepresentationTemplate? representation,
-  ) => switch (representation) {
-    skir.RepresentationTemplate_scalarWrapper(:final value) =>
-      switch (value.kind) {
-        final kind => _scalarRepresentation(kind),
-      },
-    skir.RepresentationTemplate_recordWrapper() =>
-      skir.RepresentationKind.record,
-    skir.RepresentationTemplate_sequenceWrapper(:final value) =>
-      value.kind == skir.CollectionKind.list
-          ? skir.RepresentationKind.list
-          : skir.RepresentationKind.set_,
-    skir.RepresentationTemplate_mappingWrapper() => skir.RepresentationKind.map,
-    skir.RepresentationTemplate_enumerationWrapper() =>
-      skir.RepresentationKind.enumeration,
-    skir.RepresentationTemplate_linkWrapper() => skir.RepresentationKind.link,
-    _ => null,
-  };
+    skir.TypeDefinition? definition,
+  ) => definition != null && enumCases(definition.id) != null
+      ? skir.RepresentationKind.enumeration
+      : switch (definition?.representation) {
+          skir.RepresentationTemplate_scalarWrapper(:final value) =>
+            switch (value.kind) {
+              final kind => _scalarRepresentation(kind),
+            },
+          skir.RepresentationTemplate_recordWrapper() =>
+            skir.RepresentationKind.record,
+          skir.RepresentationTemplate_sequenceWrapper(:final value) =>
+            value.kind == skir.CollectionKind.list
+                ? skir.RepresentationKind.list
+                : skir.RepresentationKind.set_,
+          skir.RepresentationTemplate_mappingWrapper() =>
+            skir.RepresentationKind.map,
+          skir.RepresentationTemplate_linkWrapper() =>
+            skir.RepresentationKind.link,
+          _ => null,
+        };
 
   skir.RepresentationKind? _scalarRepresentation(skir.ScalarKind kind) =>
       switch (kind) {

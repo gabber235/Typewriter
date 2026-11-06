@@ -283,6 +283,9 @@ function typesFile(catalog: ResolvedOperations, skir: Skir): Body {
     "import com.typewritermc.types.record",
     "import com.typewritermc.types.field",
     "import com.typewritermc.types.unwrapNamed",
+    "import com.typewritermc.types.actualType",
+    "import com.typewritermc.types.member",
+    "import com.typewritermc.types.memberName",
     "import skirout.editor.v1.type_catalog.TypeDefinitionId",
   ]);
   const enums = catalog.enums.map((enumeration): Lines => {
@@ -295,11 +298,11 @@ function typesFile(catalog: ResolvedOperations, skir: Skir): Body {
       `/** The catalog type of [${name}]. */`,
       `val ${name}Type: ${skir.typeUse} = ${skir.typeUse}.NamedWrapper(TypeDefinitionId.declared(${quoted(enumeration.typeId)}).namedUse())`,
       BLANK,
-      `fun ${name}.toDataValue(): ${skir.dataValue} = ${skir.dataValue}.named((${name}Type as ${skir.typeUse}.NamedWrapper).value, ${skir.dataValue}.EnumCaseWrapper(name))`,
+      `fun ${name}.toDataValue(): ${skir.dataValue} = ${skir.dataValue}.named((${name}Type as ${skir.typeUse}.NamedWrapper).value.member(name), ${skir.dataValue}.UNIT)`,
       BLANK,
       `internal fun ${skir.dataValue}.as${name}(): ${name} {`,
       ...indent([
-        `val case = (unwrapNamed() as? ${skir.dataValue}.EnumCaseWrapper)?.value`,
+        `val case = (this as? ${skir.dataValue}.NamedWrapper)?.actualType?.definition?.memberName`,
         `return ${name}.entries.firstOrNull { it.name == case } ?: throw OperationFailure(EvaluatorFailure.IllTypedArgument, "Expected a ${name} case.")`,
       ]),
       "}",

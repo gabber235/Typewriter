@@ -88,6 +88,7 @@ import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
 import com.typewritermc.types.ksp.typeDefinitionIdentity
+import com.typewritermc.types.memberOwner
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.nullable
 import com.typewritermc.types.substitute
@@ -317,7 +318,7 @@ private class TypewriterTypeProcessor(
         if (!declaration.hasValidTypeIdentity()) return
         val conversion = KspTypeGraphConverter().convertDeclaration(declaration)
         if (conversion is KspTypeConversionResult.Failure) {
-            conversion.diagnostics.forEach { logger.error(it.toString(), declaration) }
+            conversion.diagnostics.forEach { logger.error(it.toString(), it.symbol ?: declaration) }
             return
         }
         conversion as KspTypeConversionResult.Success
@@ -393,6 +394,7 @@ private class TypewriterTypeProcessor(
                     references = references,
                     display = display,
                     searchKey = searchKey.value,
+                    cases = conversion.casesWithoutDeclaration(typeDefinition),
                 )
             }
         val file = GeneratedFile.builder(model.names.definition.packageName, model.names.file)
@@ -401,6 +403,10 @@ private class TypewriterTypeProcessor(
         output.index(model.names.definition, GeneratedProviderKind.Type)
         if (declaration.supportsNativeBinding()) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
     }
+
+    /** The case definitions of [owner] that no Kotlin declaration emits, such as the unit cases of an enum. */
+    private fun KspTypeConversionResult.Success.casesWithoutDeclaration(owner: TypeDefinition): List<TypeDefinition> =
+        definitions.filter { case -> case.id.memberOwner == owner.id && case.id !in declarations }
 
     /** The declaration's type variables without their variance and without `Any` bounds, as every emitted type uses them. */
     context(parameters: TypeParameterResolver)
@@ -473,7 +479,7 @@ private class TypewriterTypeProcessor(
         root: TypeDefinition,
         conversion: KspTypeConversionResult.Success,
     ): List<EffectiveAccessorField>? {
-        if (root.representation !is RepresentationTemplate.RecordWrapper) return emptyList()
+        if (root.representation !is RepresentationTemplate.RecordWrapper || classKind == ClassKind.ENUM_CLASS) return emptyList()
         val definitions = conversion.definitions.associateBy(TypeDefinition::id)
         var valid = true
 
@@ -864,7 +870,7 @@ private fun discoverEndpointBindings(
                         )
                     }
 
-                    is RepresentationTemplate.EnumerationWrapper, is RepresentationTemplate.ScalarWrapper -> {}
+                    is RepresentationTemplate.ScalarWrapper -> {}
 
                     else -> {
                         unknownVariant(representation)

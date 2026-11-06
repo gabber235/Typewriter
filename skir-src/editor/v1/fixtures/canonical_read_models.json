@@ -13,7 +13,37 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/catalog.skir:DeclarationStatus.ready"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/catalog.skir:DeclarationStatus.unavailable"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -30,7 +60,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -109,7 +141,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -268,7 +301,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -530,7 +564,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -626,7 +661,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -741,7 +777,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -891,7 +928,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -940,7 +978,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -958,7 +997,37 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ArgumentSelection.chosen"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ArgumentSelection.unfilled"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -1007,7 +1076,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -1038,7 +1108,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -1061,24 +1133,202 @@
       "kind": "qualified",
       "value": {
         "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:ClosedCases"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:ClosedCases"
+                }
+              },
+              "revision": 1
+            },
+            "name": "cases"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "typewriter",
+                    "name": "List"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": [
+                {
+                  "kind": "named",
+                  "value": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "skir",
+                          "name": "editor/v1/type_catalog.skir:NamedTypeTemplate"
+                        }
+                      },
+                      "revision": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
         "name": "editor/v1/type_catalog.skir:CollectionKind"
       }
     },
     "revision": 1
   },
   "representation": {
-    "kind": "enumeration",
+    "kind": "record",
     "value": {
-      "cases": [
-        {
-          "key": "list"
-        },
-        {
-          "key": "set"
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:CollectionKind"
+                      }
+                    },
+                    "name": "list"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:CollectionKind"
+                      }
+                    },
+                    "name": "set"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
         }
-      ]
+      }
     }
   }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:CollectionKind"
+          }
+        },
+        "name": "list"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:CollectionKind"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:CollectionKind"
+          }
+        },
+        "name": "set"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:CollectionKind"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
 },
 {
   "id": {
@@ -1204,7 +1454,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1242,7 +1493,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1280,7 +1532,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1348,7 +1601,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1386,7 +1640,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1424,111 +1679,8 @@
             "value": "text"
           }
         }
-      ]
-    }
-  }
-},
-{
-  "id": {
-    "type_id": {
-      "kind": "qualified",
-      "value": {
-        "namespace": "skir",
-        "name": "editor/v1/type_catalog.skir:EnumVariant"
-      }
-    },
-    "revision": 1
-  },
-  "representation": {
-    "kind": "record",
-    "value": {
-      "fields": [
-        {
-          "owner": {
-            "definition": {
-              "type_id": {
-                "kind": "qualified",
-                "value": {
-                  "namespace": "skir",
-                  "name": "editor/v1/type_catalog.skir:EnumVariant"
-                }
-              },
-              "revision": 1
-            },
-            "name": "key"
-          },
-          "type": {
-            "kind": "scalar",
-            "value": "text"
-          }
-        }
-      ]
-    }
-  }
-},
-{
-  "id": {
-    "type_id": {
-      "kind": "qualified",
-      "value": {
-        "namespace": "skir",
-        "name": "editor/v1/type_catalog.skir:EnumerationRepresentationTemplate"
-      }
-    },
-    "revision": 1
-  },
-  "representation": {
-    "kind": "record",
-    "value": {
-      "fields": [
-        {
-          "owner": {
-            "definition": {
-              "type_id": {
-                "kind": "qualified",
-                "value": {
-                  "namespace": "skir",
-                  "name": "editor/v1/type_catalog.skir:EnumerationRepresentationTemplate"
-                }
-              },
-              "revision": 1
-            },
-            "name": "cases"
-          },
-          "type": {
-            "kind": "named",
-            "value": {
-              "definition": {
-                "type_id": {
-                  "kind": "qualified",
-                  "value": {
-                    "namespace": "typewriter",
-                    "name": "List"
-                  }
-                },
-                "revision": 1
-              },
-              "arguments": [
-                {
-                  "kind": "named",
-                  "value": {
-                    "definition": {
-                      "type_id": {
-                        "kind": "qualified",
-                        "value": {
-                          "namespace": "skir",
-                          "name": "editor/v1/type_catalog.skir:EnumVariant"
-                        }
-                      },
-                      "revision": 1
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1673,7 +1825,8 @@
             "value": "boolean"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1741,7 +1894,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1779,7 +1933,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -1797,7 +1952,61 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:FieldPatternSegment.field"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:FieldPatternSegment.items"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:FieldPatternSegment.keys"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:FieldPatternSegment.values"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -1846,7 +2055,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -1877,7 +2087,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -1907,7 +2119,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -1937,7 +2151,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -1999,7 +2215,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2015,18 +2232,129 @@
     "revision": 1
   },
   "representation": {
-    "kind": "enumeration",
+    "kind": "record",
     "value": {
-      "cases": [
-        {
-          "key": "thirty_two"
-        },
-        {
-          "key": "sixty_four"
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:FloatWidth"
+                      }
+                    },
+                    "name": "thirty_two"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:FloatWidth"
+                      }
+                    },
+                    "name": "sixty_four"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
         }
-      ]
+      }
     }
   }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:FloatWidth"
+          }
+        },
+        "name": "sixty_four"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:FloatWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:FloatWidth"
+          }
+        },
+        "name": "thirty_two"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:FloatWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
 },
 {
   "id": {
@@ -2073,7 +2401,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2089,36 +2418,465 @@
     "revision": 1
   },
   "representation": {
-    "kind": "enumeration",
+    "kind": "record",
     "value": {
-      "cases": [
-        {
-          "key": "signed_eight"
-        },
-        {
-          "key": "signed_sixteen"
-        },
-        {
-          "key": "signed_thirty_two"
-        },
-        {
-          "key": "signed_sixty_four"
-        },
-        {
-          "key": "unsigned_eight"
-        },
-        {
-          "key": "unsigned_sixteen"
-        },
-        {
-          "key": "unsigned_thirty_two"
-        },
-        {
-          "key": "unsigned_sixty_four"
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "signed_eight"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "signed_sixteen"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "signed_thirty_two"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "signed_sixty_four"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "unsigned_eight"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "unsigned_sixteen"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "unsigned_thirty_two"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "member",
+                  "value": {
+                    "owner": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "skir",
+                        "name": "editor/v1/type_catalog.skir:IntegerWidth"
+                      }
+                    },
+                    "name": "unsigned_sixty_four"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
         }
-      ]
+      }
     }
   }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "signed_eight"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "signed_sixteen"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "signed_sixty_four"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "signed_thirty_two"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "unsigned_eight"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "unsigned_sixteen"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "unsigned_sixty_four"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "member",
+      "value": {
+        "owner": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "name": "unsigned_thirty_two"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "scalar",
+    "value": {
+      "kind": "unit"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:IntegerWidth"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
 },
 {
   "id": {
@@ -2154,7 +2912,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2203,7 +2962,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2282,7 +3042,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2361,7 +3122,77 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
+    }
+  }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:MemberTypeId"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:MemberTypeId"
+                }
+              },
+              "revision": 1
+            },
+            "name": "owner"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeId"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:MemberTypeId"
+                }
+              },
+              "revision": 1
+            },
+            "name": "name"
+          },
+          "type": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        }
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2399,7 +3230,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2495,7 +3327,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2591,7 +3424,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2640,7 +3474,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2689,7 +3524,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2762,7 +3598,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -2780,7 +3617,61 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:PathSegment.field"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:PathSegment.item"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:PathSegment.map_key"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:PathSegment.map_value"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -2829,7 +3720,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -2892,7 +3784,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -2923,7 +3816,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -2953,7 +3848,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -3062,7 +3959,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -3100,7 +3998,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -3157,9 +4056,198 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:RecordForm"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RecordForm.concrete"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RecordForm.open"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RecordForm.closed"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:RecordForm.closed"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:RecordForm.closed"
+                }
+              },
+              "revision": 1
+            },
+            "name": "value"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ClosedCases"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:RecordForm"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:RecordForm.concrete"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "form": "concrete"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:RecordForm"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:RecordForm.open"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "form": "concrete"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:RecordForm"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
 },
 {
   "id": {
@@ -3235,14 +4323,26 @@
               },
               "revision": 1
             },
-            "name": "abstract"
+            "name": "form"
           },
           "type": {
-            "kind": "scalar",
-            "value": "boolean"
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RecordForm"
+                  }
+                },
+                "revision": 1
+              }
+            }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -3308,7 +4408,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -3326,72 +4427,75 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
-    }
-  }
-},
-{
-  "id": {
-    "type_id": {
-      "kind": "qualified",
-      "value": {
-        "namespace": "skir",
-        "name": "editor/v1/type_catalog.skir:RepresentationTemplate.enumeration"
-      }
-    },
-    "revision": 1
-  },
-  "representation": {
-    "kind": "record",
-    "value": {
-      "fields": [
-        {
-          "owner": {
-            "definition": {
-              "type_id": {
-                "kind": "qualified",
-                "value": {
-                  "namespace": "skir",
-                  "name": "editor/v1/type_catalog.skir:RepresentationTemplate.enumeration"
-                }
-              },
-              "revision": 1
-            },
-            "name": "value"
-          },
-          "type": {
-            "kind": "named",
-            "value": {
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
               "definition": {
                 "type_id": {
                   "kind": "qualified",
                   "value": {
                     "namespace": "skir",
-                    "name": "editor/v1/type_catalog.skir:EnumerationRepresentationTemplate"
+                    "name": "editor/v1/type_catalog.skir:RepresentationTemplate.scalar"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RepresentationTemplate.record"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RepresentationTemplate.sequence"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RepresentationTemplate.mapping"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:RepresentationTemplate.link"
                   }
                 },
                 "revision": 1
               }
             }
-          }
+          ]
         }
-      ]
-    }
-  },
-  "parents": [
-    {
-      "definition": {
-        "type_id": {
-          "kind": "qualified",
-          "value": {
-            "namespace": "skir",
-            "name": "editor/v1/type_catalog.skir:RepresentationTemplate"
-          }
-        },
-        "revision": 1
       }
     }
-  ]
+  }
 },
 {
   "id": {
@@ -3438,7 +4542,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -3501,7 +4606,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -3564,7 +4670,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -3627,7 +4734,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -3690,7 +4798,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -3777,7 +4886,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -3850,7 +4960,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -3868,7 +4979,121 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.unit"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.boolean"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.text"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.bytes"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.integer"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.float"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.decimal"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.timestamp"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ScalarKind.duration"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -3885,7 +5110,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -3915,7 +5142,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -3945,7 +5174,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -3975,7 +5206,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -4037,7 +5270,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -4100,7 +5334,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -4131,7 +5366,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -4161,7 +5398,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -4191,7 +5430,9 @@
   },
   "representation": {
     "kind": "record",
-    "value": {}
+    "value": {
+      "form": "concrete"
+    }
   },
   "parents": [
     {
@@ -4253,7 +5494,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -4332,7 +5574,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -4505,7 +5748,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -4578,7 +5822,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -4596,7 +5841,49 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeId.declared"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeId.qualified"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeId.member"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -4645,7 +5932,72 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:TypeId"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:TypeId.member"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:TypeId.member"
+                }
+              },
+              "revision": 1
+            },
+            "name": "value"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:MemberTypeId"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -4708,7 +6060,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -4837,7 +6190,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -4855,7 +6209,37 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeSelection.complete"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeSelection.pending"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -4904,7 +6288,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -4967,7 +6352,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -4999,7 +6385,61 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeTemplate.parameter"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeTemplate.named"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeTemplate.nullable"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeTemplate.scalar"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -5048,7 +6488,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5111,7 +6552,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5174,7 +6616,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5237,7 +6680,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5269,7 +6713,49 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeUse.named"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeUse.nullable"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeUse.scalar"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },
@@ -5318,7 +6804,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5381,7 +6868,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5444,7 +6932,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5524,7 +7013,8 @@
             }
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   }
 },
@@ -5560,7 +7050,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5609,7 +7100,8 @@
             "value": "text"
           }
         }
-      ]
+      ],
+      "form": "concrete"
     }
   },
   "parents": [
@@ -5639,7 +7131,35 @@
   "representation": {
     "kind": "record",
     "value": {
-      "abstract": true
+      "form": {
+        "kind": "closed",
+        "value": {
+          "cases": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "declared",
+                  "value": {
+                    "value": "3845952a4d714e23ad55f07051669930"
+                  }
+                },
+                "revision": 1
+              }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "declared",
+                  "value": {
+                    "value": "67ed1a5b0e534c05b8d233ef9783971b"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          ]
+        }
+      }
     }
   }
 },

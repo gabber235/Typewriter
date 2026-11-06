@@ -3,6 +3,7 @@ package com.typewritermc.types.ksp
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
@@ -25,7 +26,9 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterString
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.member
 import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.nullable
 import com.typewritermc.types.parse
 import com.typewritermc.types.qualified
@@ -34,10 +37,11 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.EnumVariant
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -63,6 +67,8 @@ data class OwnedFieldDeclaration(
 data class KspTypeDiagnostic(
     val path: List<String>,
     val message: String,
+    /** The declaration the author must change, when it is not the converted root. */
+    val symbol: KSNode? = null,
 ) {
     override fun toString(): String = "${path.joinToString(".")}: $message"
 }
@@ -303,14 +309,8 @@ class KspTypeGraphConverter(
                 }
 
                 declaration.classKind == ClassKind.ENUM_CLASS -> {
-                    RepresentationTemplate.createEnumeration(
-                        cases =
-                            declaration.declarations
-                                .filterIsInstance<KSClassDeclaration>()
-                                .filter { it.classKind == ClassKind.ENUM_ENTRY }
-                                .map { EnumVariant(key = it.serialName ?: it.simpleName.asString()) }
-                                .toList(),
-                    )
+                    val cases = declaration.enumEntries().map { entry -> unitCase(identity, entry) }
+                    RepresentationTemplate.createRecord(fields = emptyList(), form = closedForm(cases))
                 }
 
                 declaration.classKind == ClassKind.OBJECT && fields.isEmpty() -> {
@@ -328,12 +328,80 @@ class KspTypeGraphConverter(
                                     hasConstructorDefault = field.hasConstructorDefault,
                                 )
                             },
-                        abstract_ = declaration.classKind == ClassKind.INTERFACE || Modifier.ABSTRACT in declaration.modifiers,
+                        form =
+                            when {
+                                Modifier.SEALED in declaration.modifiers -> {
+                                    closedForm(
+                                        declaration
+                                            .getSealedSubclasses()
+                                            .mapNotNull { case -> caseTemplate(declaration, case, path + case.simpleName.asString()) }
+                                            .toList(),
+                                    )
+                                }
+
+                                declaration.classKind == ClassKind.INTERFACE || Modifier.ABSTRACT in declaration.modifiers -> {
+                                    RecordForm.OPEN
+                                }
+
+                                else -> {
+                                    RecordForm.CONCRETE
+                                }
+                            },
                     )
                 }
             }
         definitions[identity] = TypeDefinition(id = identity, parameters = parameters, representation = representation, parents = parents)
         visiting.remove(identity)
+    }
+
+    /** Declares the unit case [entry] of the enum [owner] and returns its template. */
+    private fun unitCase(
+        owner: TypeDefinitionId,
+        entry: KSClassDeclaration,
+    ): NamedTypeTemplate {
+        val case = owner.member(entry.serialName ?: entry.simpleName.asString())
+        definitions[case] =
+            TypeDefinition(
+                id = case,
+                parameters = emptyList(),
+                representation = RepresentationTemplate.createScalar(kind = ScalarKind.UNIT),
+                parents = listOf(owner.namedTemplate()),
+            )
+        ownedFields[case] = emptyList()
+        return case.namedTemplate()
+    }
+
+    /**
+     * The template of the sealed subtype [case] in the parameters of [parent]. A generic case must pass each of its
+     * own parameters straight to the parent, so the parent's arguments decide the case's arguments.
+     */
+    private fun caseTemplate(
+        parent: KSClassDeclaration,
+        case: KSClassDeclaration,
+        path: List<String>,
+    ): NamedTypeTemplate? {
+        if (case.annotation<TypewriterType>() == null && case.parentDeclaration != parent) {
+            return failure(path, "A sealed subtype must be nested in its parent or carry its own @TypewriterType.", case)
+        }
+        val identity = identity(case, path) ?: return null
+        buildDefinition(case, identity, path)
+        val parentIdentity = identity(parent, path) ?: return null
+        val passed =
+            case.superTypes
+                .map { it.resolve() }
+                .firstOrNull { it.declaration == parent }
+                ?.arguments
+                ?.map { it.type?.resolve()?.declaration }
+                .orEmpty()
+        val arguments =
+            case.typeParameters.map { parameter ->
+                val index = passed.indexOf(parameter)
+                if (index < 0) {
+                    return failure(path, "A generic sealed subtype must pass each of its type parameters to its parent.", case)
+                }
+                ParameterKey(owner = parentIdentity, index = index).template
+            }
+        return identity.namedTemplate(arguments)
     }
 
     private fun ensureCollectionDefinition(identity: TypeDefinitionId) {
@@ -384,8 +452,9 @@ class KspTypeGraphConverter(
     private fun failure(
         path: List<String>,
         message: String,
+        symbol: KSNode? = null,
     ): Nothing? {
-        diagnostics += KspTypeDiagnostic(path, message)
+        diagnostics += KspTypeDiagnostic(path, message, symbol)
         return null
     }
 }
@@ -397,9 +466,22 @@ class KspTypeGraphConverter(
 fun KSClassDeclaration.typeDefinitionIdentity(): TypeDefinitionId? {
     val type =
         annotation<TypewriterType>()
+            ?: sealedParent()?.let { parent -> return parent.typeDefinitionIdentity()?.member(serialName ?: simpleName.asString()) }
             ?: return TypeDefinitionId.qualified("kotlin", qualifiedName?.asString() ?: simpleName.asString())
     return type.identity()
 }
+
+/** The sealed declaration this one is nested in and extends, which names it as one of its cases. */
+private fun KSClassDeclaration.sealedParent(): KSClassDeclaration? =
+    (parentDeclaration as? KSClassDeclaration)?.takeIf { parent ->
+        Modifier.SEALED in parent.modifiers && superTypes.any { it.resolve().declaration == parent }
+    }
+
+/** The entries of this enum class in declaration order. */
+private fun KSClassDeclaration.enumEntries(): List<KSClassDeclaration> =
+    declarations.filterIsInstance<KSClassDeclaration>().filter { it.classKind == ClassKind.ENUM_ENTRY }.toList()
+
+private fun closedForm(cases: List<NamedTypeTemplate>): RecordForm = RecordForm.createClosed(cases = cases)
 
 private fun TypewriterType.identity(): TypeDefinitionId? {
     val declared = runCatching { DeclaredTypeId.parse(id) }.getOrNull() ?: return null

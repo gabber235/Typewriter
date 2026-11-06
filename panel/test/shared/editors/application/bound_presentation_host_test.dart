@@ -266,7 +266,7 @@ void main() {
     final catalog = testCheckedCatalog(
       generation: _hostCatalogGeneration,
       types: [
-        declaredRecord(message, abstract: true),
+        declaredRecord(message, open: true),
         declaredRecord(
           textMessage,
           fields: {
@@ -334,7 +334,7 @@ void main() {
     final catalog = testCheckedCatalog(
       generation: _hostCatalogGeneration,
       types: [
-        declaredRecord(reward, abstract: true),
+        declaredRecord(reward, open: true),
         declaredRecord(
           coin,
           parents: [

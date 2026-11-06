@@ -25,9 +25,11 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.enumCaseName
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.isValid
+import com.typewritermc.types.memberOwner
 import com.typewritermc.types.nullable
 import com.typewritermc.types.portableOrNull
 import com.typewritermc.types.unknownVariant
@@ -610,7 +612,9 @@ class PortableExpressionChecker(
                 }
 
                 is DataValue.NamedWrapper -> {
-                    nominalExpressionType(value.actualType.use)
+                    // An enum literal is a value of its enum, like an enum input, rather than of its one case.
+                    val enum = value.enumCaseName()?.let { value.actualType.definition.memberOwner }
+                    nominalExpressionType(enum?.use() ?: value.actualType.use)
                 }
 
                 is DataValue.BooleanWrapper -> {

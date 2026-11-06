@@ -78,7 +78,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
       parameters: parameters,
       representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       parents: parents,
     ),

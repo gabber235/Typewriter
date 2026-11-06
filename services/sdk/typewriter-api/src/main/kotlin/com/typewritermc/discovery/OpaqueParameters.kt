@@ -6,6 +6,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -42,7 +43,7 @@ internal class OpaqueParameters(
                 TypeDefinition(
                     id = keys.getValue(parameter.key),
                     parameters = emptyList(),
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
                     parents = parameter.bounds.mapNotNull { (close(it) as? TypeTemplate.NamedWrapper)?.value },
                 )
             }

@@ -4,10 +4,10 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-/// The abstract Page, the concrete Sequence, Static, Scene and Manifest
+/// The open Page, the concrete Sequence, Static, Scene and Manifest
 /// pages refining it, and an unrelated type.
 final _pageKinds = authoredCatalog([
-  declaredRecord("Page", abstract: true),
+  declaredRecord("Page", open: true),
   for (final (kind, icon, argb) in [
     ("Sequence", "account-tree", 0xff2196f3),
     ("Static", "push-pin", 0xff673ab7),

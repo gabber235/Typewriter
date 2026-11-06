@@ -10,13 +10,11 @@ import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.EnumVariant
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -54,20 +52,15 @@ val TypeValidationTest by testSuite {
                 Rejection(
                     "Field name must not be blank.",
                 ) { FieldOwner(definition = ownerType, name = " ").requireValid() },
-            "a blank enum key" to Rejection("Enum variant key must not be blank.") { EnumVariant(key = "").requireValid() },
+            "a blank member name" to Rejection("Member name must not be blank.") { ownerType.member(" ").requireValid() },
             "a blank endpoint" to Rejection("Endpoint ids must not be blank.") { EndpointId(value = "").requireValid() },
             "a blank local identity" to
                 Rejection("Local declaration identity must not be blank.") {
                     DeclarationOwner(source = ownerContribution, localIdentity = "").requireValid()
                 },
-            "an enumeration with a blank case" to
-                Rejection("Enum variant key must not be blank.") {
-                    TypeDefinition(
-                        id = ownerType,
-                        parameters = emptyList(),
-                        representation = RepresentationTemplate.createEnumeration(cases = listOf(EnumVariant(key = " "))),
-                        parents = emptyList(),
-                    ).requireValid()
+            "a closed record with a blank case" to
+                Rejection("Member name must not be blank.") {
+                    closedRecord(ownerType, listOf(ownerType.member(" "))).requireValid()
                 },
             "an unknown type use" to Rejection("Unknown type use variant.") { TypeUse.UNKNOWN.requireValid() },
             "an unknown type template" to Rejection("Unknown type template variant.") { TypeTemplate.UNKNOWN.requireValid() },

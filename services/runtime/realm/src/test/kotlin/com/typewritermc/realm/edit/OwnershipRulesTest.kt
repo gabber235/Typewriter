@@ -37,6 +37,7 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -113,7 +114,7 @@ val OwnershipRulesTest by testSuite {
                                     type = childrenType.template(),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             ),
             TypeDefinition.partial(
@@ -127,7 +128,7 @@ val OwnershipRulesTest by testSuite {
                                     type = ScalarKind.TEXT.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             ),
             TypeDefinition.partial(
@@ -142,7 +143,7 @@ val OwnershipRulesTest by testSuite {
                                     overrides = listOf(FieldOwner(definition = memberType, name = "frame")),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
                 parents = listOf(memberType.namedTemplate()),
             ),

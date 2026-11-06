@@ -439,7 +439,7 @@ authoredLinkCollection({
                 hasConstructorDefault: false,
               ),
             ],
-            abstract_: false,
+            form: skir.RecordForm.concrete,
           ),
           fields: [
             skir.EffectiveFieldTemplate(

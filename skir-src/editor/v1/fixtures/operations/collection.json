@@ -1064,12 +1064,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "99d0453e6d814766b9032b4676f3a255"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "99d0453e6d814766b9032b4676f3a255"}}, "name": "Ascending"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Ascending"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1122,12 +1122,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "99d0453e6d814766b9032b4676f3a255"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "99d0453e6d814766b9032b4676f3a255"}}, "name": "Descending"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Descending"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1187,12 +1187,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "99d0453e6d814766b9032b4676f3a255"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "99d0453e6d814766b9032b4676f3a255"}}, "name": "Ascending"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Ascending"}
+                  "payload": "unit"
                 }
               }
             }

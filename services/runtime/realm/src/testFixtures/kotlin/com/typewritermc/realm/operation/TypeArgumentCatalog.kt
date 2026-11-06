@@ -38,6 +38,7 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -99,15 +100,18 @@ internal val DUAL_RELATION =
 
 internal val REPAIR_DEFINITIONS =
     listOf(
-        TypeDefinition.partial(id = REWARD, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true)),
+        TypeDefinition.partial(
+            id = REWARD,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
+        ),
         TypeDefinition.partial(
             id = COIN,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             parents = listOf(REWARD.namedTemplate()),
         ),
         TypeDefinition.partial(
             id = GEM,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             parents = listOf(REWARD.namedTemplate()),
         ),
         TypeDefinition.partial(
@@ -126,7 +130,7 @@ internal val REPAIR_DEFINITIONS =
                                 type = BUNDLE_PARAMETER.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
         TypeDefinition.partial(
@@ -150,7 +154,7 @@ internal val REPAIR_DEFINITIONS =
                                 type = CONTAINER_PARAMETER.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
         TypeDefinition.partial(
@@ -183,7 +187,7 @@ internal val REPAIR_DEFINITIONS =
                                 type = LINK.template(listOf(DUAL_SECOND_PARAMETER.template)),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
     )

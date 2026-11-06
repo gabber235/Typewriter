@@ -14,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -47,7 +48,7 @@ val PlacementFieldPublicationTest by testSuite {
                                     type = GraphPlacementDefinition.id.template(),
                                 )
                             },
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val assembly = assemble(declaration)

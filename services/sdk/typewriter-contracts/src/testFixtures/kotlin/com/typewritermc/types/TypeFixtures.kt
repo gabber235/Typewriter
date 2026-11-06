@@ -16,6 +16,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -70,7 +71,7 @@ fun fieldRecord(
                                 }.orEmpty(),
                     ),
                 ),
-            abstract_ = parent == null,
+            form = if (parent == null) RecordForm.OPEN else RecordForm.CONCRETE,
         ),
     parents = parent?.let { listOf(it.namedTemplate()) }.orEmpty(),
 )
@@ -109,7 +110,10 @@ fun recordDefinition(
     name: String,
     vararg fields: FieldDeclaration,
 ): TypeDefinition =
-    TypeDefinition.partial(id = id(name), representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = false))
+    TypeDefinition.partial(
+        id = id(name),
+        representation = RepresentationTemplate.createRecord(fields = fields.toList(), form = RecordForm.CONCRETE),
+    )
 
 fun resourceDefinition(): TypeDefinition {
     val id = id("resource")
@@ -121,7 +125,7 @@ fun resourceDefinition(): TypeDefinition {
                     listOf(
                         FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "name"), type = TEXT_TEMPLATE),
                     ),
-                abstract_ = true,
+                form = RecordForm.OPEN,
             ),
     )
 }
@@ -130,7 +134,7 @@ fun rewardDefinition(resource: TypeDefinitionId): TypeDefinition {
     val id = id("reward")
     return TypeDefinition.partial(
         id = id,
-        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
         parents = listOf(resource.namedTemplate()),
     )
 }
@@ -147,7 +151,7 @@ fun weightedDefinition(): TypeDefinition {
                     listOf(
                         FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "value"), type = parameter.template),
                     ),
-                abstract_ = false,
+                form = RecordForm.CONCRETE,
             ),
     )
 }
@@ -164,7 +168,7 @@ fun variableDefinition(resource: TypeDefinitionId): TypeDefinition {
                     listOf(
                         FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "value"), type = parameter.template),
                     ),
-                abstract_ = false,
+                form = RecordForm.CONCRETE,
             ),
         parents = listOf(resource.namedTemplate()),
     )
@@ -196,7 +200,7 @@ fun treeDefinition(list: TypeDefinitionId): TypeDefinition {
                             type = list.template(listOf(tree)),
                         ),
                     ),
-                abstract_ = false,
+                form = RecordForm.CONCRETE,
             ),
     )
 }
@@ -215,7 +219,61 @@ fun optionalDefinition(): TypeDefinition {
                             type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
                         ),
                     ),
-                abstract_ = false,
+                form = RecordForm.CONCRETE,
             ),
     )
 }
+
+/** A record [definition] without fields that accepts only [cases], in that order. */
+fun closedRecord(
+    definition: TypeDefinitionId,
+    cases: List<TypeDefinitionId>,
+): TypeDefinition =
+    TypeDefinition.partial(
+        id = definition,
+        representation =
+            RepresentationTemplate.createRecord(
+                fields = emptyList(),
+                form = RecordForm.createClosed(cases = cases.map { it.namedTemplate() }),
+            ),
+    )
+
+/** A unit case [name] of [owner], naming [parent] as its parent when given. */
+fun unitCase(
+    owner: TypeDefinitionId,
+    name: String,
+    parent: TypeDefinitionId? = owner,
+): TypeDefinition =
+    TypeDefinition.partial(
+        id = owner.member(name),
+        representation = RepresentationTemplate.createScalar(kind = ScalarKind.UNIT),
+        parents = listOfNotNull(parent?.namedTemplate()),
+    )
+
+/** The enum [owner] listing [cases] in order, followed by its case definitions. */
+fun enumDefinitions(
+    owner: TypeDefinitionId,
+    vararg cases: String,
+): List<TypeDefinition> = listOf(closedRecord(owner, cases.map(owner::member))) + cases.map { unitCase(owner, it) }
+
+/** A record [definition] without fields of [form], under [parents]. */
+fun bareRecord(
+    definition: TypeDefinitionId,
+    form: RecordForm,
+    vararg parents: TypeDefinitionId,
+): TypeDefinition =
+    TypeDefinition.partial(
+        id = definition,
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = form),
+        parents = parents.map { it.namedTemplate() },
+    )
+
+/** The value of the unit case [name] of [owner]. */
+fun caseValue(
+    owner: TypeDefinitionId,
+    name: String,
+): DataValue = DataValue.named(owner.member(name).namedUse(), DataValue.UNIT)
+
+/** The codes of the declaration problems that make [id] unavailable, or none when it is ready. */
+fun com.typewritermc.types.catalog.CheckedCatalog.unavailableCodes(id: TypeDefinitionId): List<String> =
+    (definition(id) as? skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper)?.value.orEmpty().map { it.code }

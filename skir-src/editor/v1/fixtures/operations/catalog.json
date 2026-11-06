@@ -24,12 +24,12 @@
                           "value": {
                             "actual_type": {
                               "definition": {
-                                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                                "type_id": {"kind": "member", "value": {"owner": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}}, "name": "Red"}},
                                 "revision": 1
                               },
                               "arguments": []
                             },
-                            "payload": {"kind": "enum_case", "value": "Red"}
+                            "payload": "unit"
                           }
                         }
                       }
@@ -55,14 +55,203 @@
           },
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+          "representation": {
+            "kind": "record",
+            "value": {
+              "fields": [],
+              "form": {
+                "kind": "closed",
+                "value": {
+                  "cases": [
+                    {
+                      "definition": {
+                        "type_id": {
+                          "kind": "member",
+                          "value": {
+                            "owner": {
+                              "kind": "qualified",
+                              "value": {
+                                "namespace": "fixture",
+                                "name": "Color"
+                              }
+                            },
+                            "name": "Red"
+                          }
+                        },
+                        "revision": 1
+                      },
+                      "arguments": []
+                    },
+                    {
+                      "definition": {
+                        "type_id": {
+                          "kind": "member",
+                          "value": {
+                            "owner": {
+                              "kind": "qualified",
+                              "value": {
+                                "namespace": "fixture",
+                                "name": "Color"
+                              }
+                            },
+                            "name": "Green"
+                          }
+                        },
+                        "revision": 1
+                      },
+                      "arguments": []
+                    },
+                    {
+                      "definition": {
+                        "type_id": {
+                          "kind": "member",
+                          "value": {
+                            "owner": {
+                              "kind": "qualified",
+                              "value": {
+                                "namespace": "fixture",
+                                "name": "Color"
+                              }
+                            },
+                            "name": "Blue"
+                          }
+                        },
+                        "revision": 1
+                      },
+                      "arguments": []
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {
+              "kind": "member",
+              "value": {
+                "owner": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "name": "Red"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "scalar",
+            "value": {
+              "kind": "unit"
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {
+              "kind": "member",
+              "value": {
+                "owner": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "name": "Green"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "scalar",
+            "value": {
+              "kind": "unit"
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {
+              "kind": "member",
+              "value": {
+                "owner": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "name": "Blue"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "scalar",
+            "value": {
+              "kind": "unit"
+            }
+          }
         }
       ],
       "expected": {
         "available": {
           "named": {
             "namespace": "skir",
-            "name": "editor/v1/type_catalog.skir:RepresentationTemplate.enumeration",
+            "name": "editor/v1/type_catalog.skir:RepresentationTemplate.scalar",
             "revision": 1,
             "arguments": [],
             "payload": {
@@ -70,50 +259,19 @@
                 "value": {
                   "named": {
                     "namespace": "skir",
-                    "name": "editor/v1/type_catalog.skir:EnumerationRepresentationTemplate",
+                    "name": "editor/v1/type_catalog.skir:ScalarRepresentationTemplate",
                     "revision": 1,
                     "arguments": [],
                     "payload": {
                       "record": {
-                        "cases": {
-                          "list": [
-                            {
-                              "id": "canonical:0",
-                              "value": {
-                                "named": {
-                                  "namespace": "skir",
-                                  "name": "editor/v1/type_catalog.skir:EnumVariant",
-                                  "revision": 1,
-                                  "arguments": [],
-                                  "payload": {"record": {"key": {"string": "Red"}}}
-                                }
-                              }
-                            },
-                            {
-                              "id": "canonical:1",
-                              "value": {
-                                "named": {
-                                  "namespace": "skir",
-                                  "name": "editor/v1/type_catalog.skir:EnumVariant",
-                                  "revision": 1,
-                                  "arguments": [],
-                                  "payload": {"record": {"key": {"string": "Green"}}}
-                                }
-                              }
-                            },
-                            {
-                              "id": "canonical:2",
-                              "value": {
-                                "named": {
-                                  "namespace": "skir",
-                                  "name": "editor/v1/type_catalog.skir:EnumVariant",
-                                  "revision": 1,
-                                  "arguments": [],
-                                  "payload": {"record": {"key": {"string": "Blue"}}}
-                                }
-                              }
-                            }
-                          ]
+                        "kind": {
+                          "named": {
+                            "namespace": "skir",
+                            "name": "editor/v1/type_catalog.skir:ScalarKind.unit",
+                            "revision": 1,
+                            "arguments": [],
+                            "payload": {"record": {}}
+                          }
                         }
                       }
                     }
@@ -170,7 +328,196 @@
           },
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+          "representation": {
+            "kind": "record",
+            "value": {
+              "fields": [],
+              "form": {
+                "kind": "closed",
+                "value": {
+                  "cases": [
+                    {
+                      "definition": {
+                        "type_id": {
+                          "kind": "member",
+                          "value": {
+                            "owner": {
+                              "kind": "qualified",
+                              "value": {
+                                "namespace": "fixture",
+                                "name": "Color"
+                              }
+                            },
+                            "name": "Red"
+                          }
+                        },
+                        "revision": 1
+                      },
+                      "arguments": []
+                    },
+                    {
+                      "definition": {
+                        "type_id": {
+                          "kind": "member",
+                          "value": {
+                            "owner": {
+                              "kind": "qualified",
+                              "value": {
+                                "namespace": "fixture",
+                                "name": "Color"
+                              }
+                            },
+                            "name": "Green"
+                          }
+                        },
+                        "revision": 1
+                      },
+                      "arguments": []
+                    },
+                    {
+                      "definition": {
+                        "type_id": {
+                          "kind": "member",
+                          "value": {
+                            "owner": {
+                              "kind": "qualified",
+                              "value": {
+                                "namespace": "fixture",
+                                "name": "Color"
+                              }
+                            },
+                            "name": "Blue"
+                          }
+                        },
+                        "revision": 1
+                      },
+                      "arguments": []
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {
+              "kind": "member",
+              "value": {
+                "owner": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "name": "Red"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "scalar",
+            "value": {
+              "kind": "unit"
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {
+              "kind": "member",
+              "value": {
+                "owner": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "name": "Green"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "scalar",
+            "value": {
+              "kind": "unit"
+            }
+          }
+        },
+        {
+          "id": {
+            "type_id": {
+              "kind": "member",
+              "value": {
+                "owner": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "name": "Blue"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "fixture",
+                    "name": "Color"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "scalar",
+            "value": {
+              "kind": "unit"
+            }
+          }
         }
       ],
       "expected": {"unavailable": [], "reads": []}

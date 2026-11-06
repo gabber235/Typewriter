@@ -473,7 +473,7 @@ extension CheckedFieldPresentationCatalog on CheckedEditorCatalog {
       value,
     ),
     skir.TypeTemplate_namedWrapper(:final value) => _representationKind(
-      published(value.definition)?.definition.representation,
+      published(value.definition)?.definition,
     ),
     skir.TypeTemplate_nullableWrapper(:final value) =>
       _templateRepresentationKind(value.value),

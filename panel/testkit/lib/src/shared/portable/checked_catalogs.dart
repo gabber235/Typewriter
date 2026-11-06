@@ -69,7 +69,7 @@ repeatedParameterCatalog({required bool repeated}) {
         pair,
         representation: skir.RepresentationTemplate.createRecord(
           fields: const [],
-          abstract_: false,
+          form: skir.RecordForm.concrete,
         ),
         parameters: [
           skir.TypeParameter(key: firstParameter, name: "A", bounds: const []),
@@ -167,7 +167,7 @@ inheritedPresentationCatalog() {
     root,
     representation: skir.RepresentationTemplate.createRecord(
       fields: const [],
-      abstract_: false,
+      form: skir.RecordForm.concrete,
     ),
     parameters: [
       skir.TypeParameter(key: rootParameter, name: "T", bounds: const []),

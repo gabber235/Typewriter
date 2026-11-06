@@ -592,12 +592,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesToEven"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                  "payload": "unit"
                 }
               }
             }
@@ -623,12 +623,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesToEven"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                  "payload": "unit"
                 }
               }
             }
@@ -654,12 +654,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "Floor"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Floor"}
+                  "payload": "unit"
                 }
               }
             }
@@ -685,12 +685,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "Ceiling"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Ceiling"}
+                  "payload": "unit"
                 }
               }
             }
@@ -716,12 +716,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "TowardZero"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "TowardZero"}
+                  "payload": "unit"
                 }
               }
             }
@@ -747,12 +747,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesAway"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesAway"}
+                  "payload": "unit"
                 }
               }
             }
@@ -778,12 +778,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesAway"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesAway"}
+                  "payload": "unit"
                 }
               }
             }
@@ -809,12 +809,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesToEven"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                  "payload": "unit"
                 }
               }
             }
@@ -840,12 +840,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesToEven"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                  "payload": "unit"
                 }
               }
             }
@@ -888,12 +888,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "Ceiling"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Ceiling"}
+                  "payload": "unit"
                 }
               }
             }
@@ -919,12 +919,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "TowardZero"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "TowardZero"}
+                  "payload": "unit"
                 }
               }
             }
@@ -950,12 +950,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesToEven"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                  "payload": "unit"
                 }
               }
             }
@@ -981,12 +981,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesAway"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesAway"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1012,12 +1012,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "Ceiling"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Ceiling"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1043,12 +1043,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesToEven"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1074,12 +1074,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "Floor"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Floor"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1105,12 +1105,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}}, "name": "NearestTiesToEven"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1791,9 +1791,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "One",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "One"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1816,9 +1817,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Other",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Other"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1841,9 +1843,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Other",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Other"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1866,9 +1869,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Zero",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Zero"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1891,9 +1895,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Two",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Two"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1916,9 +1921,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Few",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Few"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1941,9 +1947,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Many",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Many"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1966,9 +1973,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Other",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Other"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -1991,9 +1999,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Few",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Few"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -2016,9 +2025,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Many",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Many"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -2166,9 +2176,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Few",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Few"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -2191,9 +2202,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "One",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "One"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -2216,9 +2228,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "One",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "One"}
+            "payload": {"unit": true}
           }
         },
         "reads": []
@@ -2241,9 +2254,10 @@
         "available": {
           "named": {
             "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "member": "Other",
             "revision": 1,
             "arguments": [],
-            "payload": {"enum_case": "Other"}
+            "payload": {"unit": true}
           }
         },
         "reads": []

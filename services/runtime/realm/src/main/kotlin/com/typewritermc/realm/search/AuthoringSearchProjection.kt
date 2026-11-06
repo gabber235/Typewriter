@@ -1,5 +1,6 @@
 package com.typewritermc.realm.search
 
+import com.typewritermc.types.enumCaseName
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.payload
@@ -24,12 +25,8 @@ private fun DataValue.collectText(target: MutableList<String>) {
             target += value
         }
 
-        is DataValue.EnumCaseWrapper -> {
-            target += value
-        }
-
         is DataValue.NamedWrapper -> {
-            payload.collectText(target)
+            enumCaseName()?.let { target += it } ?: payload.collectText(target)
         }
 
         is DataValue.RecordWrapper -> {

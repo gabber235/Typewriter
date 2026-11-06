@@ -103,13 +103,13 @@ class GeneratedEnumNativeBinding<T>(
     override val actualType: TypeUse = checked.use
 
     override fun encode(value: T): DataValue =
-        DataValue.named((checked.use as TypeUse.NamedWrapper).value, DataValue.EnumCaseWrapper(key(value)))
+        DataValue.named((checked.use as TypeUse.NamedWrapper).value.member(key(value)), DataValue.UNIT)
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T {
         val case =
-            value.value.namedPayload() as? DataValue.EnumCaseWrapper
-                ?: throw NativeBindingException("wrong_native_representation", "Expected a named enum value.")
-        return construct(case.value)
+            value.value.enumCaseName()
+                ?: throw NativeBindingException("wrong_native_representation", "Expected a named enum case.")
+        return construct(case)
     }
 }
 

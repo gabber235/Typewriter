@@ -40,11 +40,9 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
               .published(named.definition)
               ?.definition
               .representation;
-    final requiresPreparation = switch (representation) {
-      skir.RepresentationTemplate_recordWrapper(:final value) =>
-        !value.abstract_,
-      _ => false,
-    };
+    final requiresPreparation =
+        representation is skir.RepresentationTemplate_recordWrapper &&
+        representation.isInstantiable;
     if (!requiresPreparation) {
       return _stage("Add collection item", (operation) {
         operation.insert(
@@ -368,7 +366,7 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
           ?.definition
           .representation;
       if (representation is! skir.RepresentationTemplate_recordWrapper ||
-          representation.value.abstract_) {
+          !representation.isInstantiable) {
         return null;
       }
       final prepare = prepareValue;

@@ -94,8 +94,8 @@ extension RealmStructureCatalog on CheckedEditorCatalog {
     bool concreteRecord(skir.PublishedType published) =>
         published.status == skir.DeclarationStatus.ready &&
         switch (published.definition.representation) {
-          skir.RepresentationTemplate_recordWrapper(:final value) =>
-            !value.abstract_,
+          final skir.RepresentationTemplate_recordWrapper record =>
+            record.isInstantiable,
           _ => false,
         };
     return [

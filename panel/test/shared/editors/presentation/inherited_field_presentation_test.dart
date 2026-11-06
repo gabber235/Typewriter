@@ -18,37 +18,13 @@ void main() {
           ),
           revision: 1,
         );
-        final fields = [
-          for (final name in ["first", "second"])
-            skir.FieldDeclaration(
-              owner: skir.FieldOwner(definition: definition, name: name),
-              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              overrides: const [],
-              hasConstructorDefault: false,
-            ),
-        ];
-        final published =
-            (skir.PublishedType.mutable()
-                  ..definition = skir.TypeDefinition(
-                    id: definition,
-                    parameters: const [],
-                    parents: const [],
-                    representation: skir.RepresentationTemplate.createRecord(
-                      fields: fields,
-                      abstract_: false,
-                    ),
-                  )
-                  ..status = skir.DeclarationStatus.ready
-                  ..effectiveFields = [
-                    for (final field in fields)
-                      skir.EffectiveFieldTemplate(
-                        key: field.owner.name,
-                        owner: field.owner,
-                        type: field.type,
-                        rules: const [],
-                      ),
-                  ])
-                .toFrozen();
+        final published = declaredRecord(
+          definition,
+          fields: {
+            "first": skir.ScalarKind.text,
+            "second": skir.ScalarKind.text,
+          },
+        );
         final first = inheritedFieldControl().toMutable()
           ..binding = skir.BindingRef(
             bindingId: inheritedConfiguredValue,

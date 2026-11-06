@@ -10,11 +10,12 @@ library;
 import "skirout/editor/v1/authoring.dart"
     show ArgumentLocation, ArgumentLocation_mutable, ArgumentLocation_orMutable;
 
-export "package:skir_client/skir_client.dart" hide EnumVariant, Service;
+export "package:skir_client/skir_client.dart" hide Service;
 
 export "../operations/portable_operation_runtime.dart" hide ByteString;
 export "../operations/skirout/portable_unicode_tables.dart";
 export "converters.dart";
+export "record_forms.dart";
 export "skirout/access/v1/permission.dart";
 export "skirout/access/v1/sentinel.dart";
 export "skirout/editor/v1/action.dart";

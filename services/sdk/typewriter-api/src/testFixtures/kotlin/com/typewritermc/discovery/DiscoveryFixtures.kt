@@ -112,6 +112,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -259,7 +260,7 @@ internal fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
     val origin = origin("native identity", "test:native_identity")
     val id = TypeDefinitionId.qualified("query.test", "Abstract")
     val definition =
-        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true))
+        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN))
     val descriptor =
         PresentationDescriptor.of(
             PresentationId(namespace = "test", name = "native_identity"),
@@ -319,7 +320,7 @@ internal val sectionsRelation = ownership("realm.sections", RealmRootDefinition.
 internal fun structure(): List<OwnedTypeDeclaration> =
     listOf(
         resource(RealmRootDefinition.id),
-        resource(RealmSectionDefinition.id, abstract = true),
+        resource(RealmSectionDefinition.id, form = RecordForm.OPEN),
         resource(section, parents = listOf(RealmSectionDefinition.id)),
     )
 
@@ -335,13 +336,13 @@ internal fun assemble(definitions: List<TypeDefinition>): CatalogAssembly = asse
 
 internal fun resource(
     id: TypeDefinitionId,
-    abstract: Boolean = false,
+    form: RecordForm = RecordForm.CONCRETE,
     parents: List<TypeDefinitionId> = emptyList(),
 ) = OwnedTypeDeclaration(
     origin,
     recordType(
         id,
-        abstract = abstract,
+        form = form,
         parents =
             parents.map {
                 it.namedTemplate()
@@ -404,7 +405,7 @@ internal fun genericType(id: TypeDefinitionId): Pair<TypeDefinitionId, Pair<Type
                                 field("title", ScalarKind.TEXT.template),
                                 field("contents", TypeTemplate.ParameterWrapper(parameter)),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             ),
             null,
@@ -422,7 +423,7 @@ internal fun fixtureType(
             representation =
                 RepresentationTemplate.createRecord(
                     fields = emptyList(),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents =
                 listOfNotNull(parent).map {

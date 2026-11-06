@@ -40,6 +40,7 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
@@ -172,7 +173,7 @@ val CapturedAuthoringReadsTest by testSuite {
             TypeDefinition(
                 id = derivedType,
                 parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(TEST_TYPE.namedTemplate()),
             )
         val catalog = DefinitionCatalog(TEST_DEFINITIONS + listOf(derived))
@@ -227,7 +228,7 @@ val CapturedAuthoringReadsTest by testSuite {
             TypeDefinition.partial(
                 id = generic,
                 parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val catalog = DefinitionCatalog(TEST_DEFINITIONS + listOf(definition))
         val text = ResourceId(value = "text")
@@ -260,7 +261,7 @@ val CapturedAuthoringReadsTest by testSuite {
             TypeDefinition.partial(
                 id = generic,
                 parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val catalog = DefinitionCatalog(TEST_DEFINITIONS + listOf(definition))
         val resource = ResourceId(value = "pending")

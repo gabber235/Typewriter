@@ -85,10 +85,6 @@ fun DataValue.canonicalValueKey(): String =
             "duration:$duration"
         }
 
-        is DataValue.EnumCaseWrapper -> {
-            "enum:${value.length}:$value"
-        }
-
         is DataValue.RecordWrapper -> {
             fields
                 .sortedBy { it.name }

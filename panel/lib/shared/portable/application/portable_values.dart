@@ -104,8 +104,7 @@ skir.DataValue _admitPortable(
     skir.DataValue_booleanWrapper() ||
     skir.DataValue_stringValueWrapper() ||
     skir.DataValue_bytesWrapper() ||
-    skir.DataValue_timestampWrapper() ||
-    skir.DataValue_enumCaseWrapper() => value,
+    skir.DataValue_timestampWrapper() => value,
     // Kotlin's BigInteger syntax: an optional sign and decimal digits.
     skir.DataValue_integerWrapper(value: final text) =>
       _integerSyntax.hasMatch(text)
@@ -203,8 +202,11 @@ final _integerSyntax = RegExp(r"^[+-]?[0-9]+$");
 
 /// Formats a value for presentation labels.
 ///
-/// Named values use their payload, and empty values have no display text.
+/// Named values use their payload, an enum value its case name, and empty
+/// values have no display text.
 String portableExpressionDisplayText(skir.DataValue value) {
+  final caseName = value.enumCaseName;
+  if (caseName != null) return caseName;
   final unwrapped = value.authoredPayload;
   if (unwrapped == skir.DataValue.unfilled ||
       unwrapped == skir.DataValue.null_ ||
@@ -220,7 +222,6 @@ String portableExpressionDisplayText(skir.DataValue value) {
     skir.DataValue_bytesWrapper(:final value) => "${value.length} bytes",
     skir.DataValue_timestampWrapper(:final value) => value.toIso8601String(),
     skir.DataValue_durationWrapper(:final value) => value.toString(),
-    skir.DataValue_enumCaseWrapper(:final value) => value,
     skir.DataValue_listValueWrapper(:final value) =>
       "${value.items.length} items",
     skir.DataValue_setValueWrapper(:final value) =>
@@ -259,8 +260,6 @@ String _canonical(skir.DataValue value, int depth) {
       "timestamp:${value.millisecondsSinceEpoch}",
     skir.DataValue_durationWrapper(:final value) =>
       "duration:${value.value.milliseconds}",
-    skir.DataValue_enumCaseWrapper(:final value) =>
-      "enum:${value.length}:$value",
     skir.DataValue_recordWrapper(:final value) => _framed(
       "record",
       value.fields
@@ -340,7 +339,11 @@ String _typeIdKey(skir.TypeId value) => switch (value) {
     value.namespace,
     value.name,
   ]),
-  _ => "unknown_type_id",
+  skir.TypeId_memberWrapper(:final value) => _framed("member", [
+    _typeIdKey(value.owner),
+    value.name,
+  ]),
+  skir.TypeId_unknown() => throw StateError("Unknown type id."),
 };
 
 String _typeUseKey(skir.TypeUse value, int depth) {

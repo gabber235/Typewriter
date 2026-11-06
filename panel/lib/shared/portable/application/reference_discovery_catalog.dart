@@ -112,11 +112,11 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     return switch (representation) {
       skir.RepresentationTemplate_linkWrapper(:final value) =>
         value.endpoint == endpoint,
-      skir.RepresentationTemplate_recordWrapper(:final value) =>
+      final skir.RepresentationTemplate_recordWrapper record =>
         fields(selection).any(
               (field) => _mayContainReference(field.type, endpoint, next),
             ) ||
-            (value.abstract_ &&
+            (!record.isInstantiable &&
                 concreteRecordSelections(selection).any(
                   (candidate) => fields(candidate).any(
                     (field) => _mayContainReference(field.type, endpoint, next),

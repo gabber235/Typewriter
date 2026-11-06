@@ -40,6 +40,7 @@ import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -210,7 +211,7 @@ internal val PUBLICATION_DEFINITIONS =
     listOf(
         TypeDefinition.partial(
             id = CompilationUnitDefinition.id,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
         ),
         TypeDefinition.partial(
             id = PUBLICATION_PAGE,
@@ -223,7 +224,7 @@ internal val PUBLICATION_DEFINITIONS =
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(CompilationUnitDefinition.id.namedTemplate()),
         ),

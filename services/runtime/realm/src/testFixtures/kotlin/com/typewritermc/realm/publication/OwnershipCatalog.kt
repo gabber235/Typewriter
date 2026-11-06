@@ -31,6 +31,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -143,7 +144,7 @@ private val DEFINITIONS =
                         listOf(
                             FieldDeclaration.partial(owner = FieldOwner(definition = PAGE, name = "children"), type = CHILDREN.template()),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
         TypeDefinition.partial(
@@ -157,12 +158,12 @@ private val DEFINITIONS =
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
         TypeDefinition.partial(
             id = CompilationUnitDefinition.id,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
         ),
         TypeDefinition.partial(
             id = NESTED,
@@ -176,7 +177,7 @@ private val DEFINITIONS =
                                 overrides = listOf(FieldOwner(definition = CHILD, name = "value")),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(CHILD.namedTemplate(), CompilationUnitDefinition.id.namedTemplate()),
         ),

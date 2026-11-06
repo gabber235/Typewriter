@@ -1,5 +1,7 @@
 package com.typewritermc.types.catalog
 
+import com.typewritermc.types.closedCases
+import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -48,10 +50,10 @@ internal fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> {
 /** The type templates a representation mentions directly: field types, items, keys, values and link targets. */
 internal fun RepresentationTemplate.templates(): List<TypeTemplate> =
     when (this) {
-        is RepresentationTemplate.RecordWrapper -> value.fields.map { field -> field.type }
+        is RepresentationTemplate.RecordWrapper -> value.fields.map { field -> field.type } + closedCases().orEmpty().map { it.template }
         is RepresentationTemplate.SequenceWrapper -> listOf(value.item)
         is RepresentationTemplate.MappingWrapper -> listOf(value.key, value.value)
         is RepresentationTemplate.LinkWrapper -> listOf(value.target)
-        is RepresentationTemplate.ScalarWrapper, is RepresentationTemplate.EnumerationWrapper -> emptyList()
+        is RepresentationTemplate.ScalarWrapper -> emptyList()
         else -> unknownVariant(this)
     }

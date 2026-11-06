@@ -68,14 +68,15 @@ internal class DefinitionOwners(
                     owners[id] = endpoint.toClassName().nestedClass(SdkRelation.LINK_DEFINITION)
                 }
             }
-        val missing = referenced.filterNot(owners::containsKey)
+        val references = DefinitionReferences(owners)
+        val missing = referenced.filterNot(references::owns)
         missing.forEach { id ->
             logger.error(
                 "Type ${id.describe()} has no generated definition; declare it with @TypewriterType or import it with @TypewriterTypeImports.",
                 origin,
             )
         }
-        return DefinitionReferences(owners).takeIf { missing.isEmpty() }
+        return references.takeIf { missing.isEmpty() }
     }
 }
 
@@ -105,6 +106,13 @@ internal fun TypeUse.referencedIds(): Set<TypeDefinitionId> =
 internal fun TypeDefinitionId.describe(): String =
     when (val identity = typeId) {
         is TypeId.DeclaredWrapper -> identity.value.value
+
         is TypeId.QualifiedWrapper -> "${identity.value.namespace}/${identity.value.name}"
+
+        is TypeId.MemberWrapper -> "${TypeDefinitionId(
+            typeId = identity.value.owner,
+            revision = revision,
+        ).describe()}.${identity.value.name}"
+
         else -> unknownVariant(identity)
     }

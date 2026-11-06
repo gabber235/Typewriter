@@ -95,7 +95,7 @@ final class BoundPage {
           : const [],
       representation: skir.RepresentationTemplate.createRecord(
         fields: [name],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       parents: const [],
     );
@@ -104,7 +104,7 @@ final class BoundPage {
       parameters: const [],
       representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       parents: const [],
     );

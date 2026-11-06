@@ -27,6 +27,8 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
+import com.typewritermc.types.member
+import com.typewritermc.types.memberName
 import com.typewritermc.types.payload
 import com.typewritermc.types.unknownVariant
 import okio.ByteString
@@ -43,6 +45,7 @@ import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NullableTypeTemplate
 import skirout.editor.v1.type_catalog.QualifiedTypeId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -53,8 +56,6 @@ import skirout.editor.v1.type_catalog.TypeUse
 import java.time.Instant
 import java.util.Base64
 import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
-import skirout.editor.v1.type_catalog.EnumVariant as SkirEnumVariant
-import skirout.editor.v1.type_catalog.EnumerationRepresentationTemplate as SkirEnumeration
 import skirout.editor.v1.type_catalog.RecordRepresentationTemplate as SkirRecord
 import skirout.kernel.v1.icon.Icon as SkirIcon
 
@@ -86,9 +87,11 @@ class CanonicalReadModel<T> internal constructor(
  * both. The rule:
  *
  * - A Skir struct is a record. Its fields are the Skir fields in field number order, keyed by their Skir names.
- * - A Skir enum whose variants are all constants is an enumeration whose cases are the variant names.
- * - Any other Skir enum is an abstract record without fields. Each variant is a concrete record with the enum as its
- *   parent; a wrapper variant has one field, `value`, holding the wrapped value, and a constant variant has none.
+ * - A Skir enum whose variants are all constants is an enum: a closed record without fields whose cases are unit
+ *   members named by the variant names.
+ * - Any other Skir enum is a closed record without fields that lists its variants. Each variant is a concrete record
+ *   with the enum as its parent; a wrapper variant has one field, `value`, holding the wrapped value, and a constant
+ *   variant has none.
  * - A record is identified by `TypeId.Qualified(`[CANONICAL_READ_NAMESPACE]`, <record id>)` at revision 1, where the
  *   record id is Skir's own `<module path>:<qualified name>`, for example `editor/v1/type_catalog.skir:TypeUse`. A
  *   variant appends `.<variant name>`, for example `editor/v1/type_catalog.skir:TypeUse.named`.
@@ -97,7 +100,7 @@ class CanonicalReadModel<T> internal constructor(
  *   nullable and an array is the framework List.
  * - The kernel Color and Icon are the framework declared Color and Icon types, so a read color equals an authored one.
  *
- * Values follow the schema: a record is a named record payload, an enumeration a named enum case, a list a list value
+ * Values follow the schema: a record is a named record payload, an enum value its case as a named unit, a list a list value
  * whose items are identified `canonical:<index>`.
  */
 open class CanonicalReadModelRegistry(
@@ -290,8 +293,8 @@ open class CanonicalReadModelRegistry(
                     require(path.isEmpty()) { "A canonical enum has no fields." }
                     val variant = (descriptor as EnumDescriptor.Reflective<*>).variantOf(value)
                     SkirDataValue.createNamed(
-                        actualType = NamedTypeUse(definition = record.id, arguments = emptyList()),
-                        payload = SkirDataValue.EnumCaseWrapper(variant.name),
+                        actualType = NamedTypeUse(definition = record.id.member(variant.name), arguments = emptyList()),
+                        payload = SkirDataValue.UNIT,
                     )
                 }
 
@@ -388,10 +391,10 @@ open class CanonicalReadModelRegistry(
             }
 
             is ReadRecord.Enumeration -> {
-                require(actual == record.id) { "Expected the canonical type ${record.id.name()}." }
-                val case = (named.payload as? SkirDataValue.EnumCaseWrapper)?.value
+                val case = actual.memberName
+                require(case != null && actual == record.id.member(case)) { "Expected a case of ${record.id.name()}." }
                 require(case in record.cases) { "Unknown canonical enum case." }
-                jsonString(case!!)
+                jsonString(case)
             }
 
             is ReadRecord.Union -> {
@@ -422,7 +425,7 @@ open class CanonicalReadModelRegistry(
         ) : ReadRecord(id) {
             lateinit var fields: List<Pair<String, TypeTemplate>>
 
-            override val definitions get() = listOf(recordDefinition(id, fields, parent = null, abstract = false))
+            override val definitions get() = listOf(recordDefinition(id, fields, parent = null, form = RecordForm.CONCRETE))
         }
 
         class Enumeration(
@@ -431,17 +434,15 @@ open class CanonicalReadModelRegistry(
         ) : ReadRecord(id) {
             override val definitions
                 get() =
-                    listOf(
-                        TypeDefinition(
-                            id = id,
-                            parameters = emptyList(),
-                            representation =
-                                RepresentationTemplate.EnumerationWrapper(
-                                    SkirEnumeration(cases = cases.map { SkirEnumVariant(key = it) }),
-                                ),
-                            parents = emptyList(),
-                        ),
-                    )
+                    listOf(recordDefinition(id, emptyList(), parent = null, form = closed(cases.map(id::member)))) +
+                        cases.map { case ->
+                            TypeDefinition(
+                                id = id.member(case),
+                                parameters = emptyList(),
+                                representation = RepresentationTemplate.createScalar(kind = ScalarKind.UNIT),
+                                parents = listOf(NamedTypeTemplate(definition = id, arguments = emptyList())),
+                            )
+                        }
         }
 
         class Union(
@@ -451,13 +452,13 @@ open class CanonicalReadModelRegistry(
 
             override val definitions
                 get() =
-                    listOf(recordDefinition(id, emptyList(), parent = null, abstract = true)) +
+                    listOf(recordDefinition(id, emptyList(), parent = null, form = closed(variants.map(ReadVariant::id)))) +
                         variants.map { variant ->
                             recordDefinition(
                                 variant.id,
                                 listOfNotNull(variant.value?.let { VALUE_FIELD to it }),
                                 parent = id,
-                                abstract = false,
+                                form = RecordForm.CONCRETE,
                             )
                         }
         }
@@ -555,7 +556,7 @@ open class CanonicalReadModelRegistry(
             id: TypeDefinitionId,
             fields: List<Pair<String, TypeTemplate>>,
             parent: TypeDefinitionId?,
-            abstract: Boolean,
+            form: RecordForm,
         ) = TypeDefinition(
             id = id,
             parameters = emptyList(),
@@ -571,11 +572,14 @@ open class CanonicalReadModelRegistry(
                                     hasConstructorDefault = false,
                                 )
                             },
-                        abstract_ = abstract,
+                        form = form,
                     ),
                 ),
             parents = listOfNotNull(parent?.let { NamedTypeTemplate(definition = it, arguments = emptyList()) }),
         )
+
+        fun closed(cases: List<TypeDefinitionId>): RecordForm =
+            RecordForm.createClosed(cases = cases.map { NamedTypeTemplate(definition = it, arguments = emptyList()) })
 
         fun scalar(type: PrimitiveType): ScalarKind =
             when (type) {
@@ -692,6 +696,7 @@ private fun TypeDefinitionId.name(): String =
     when (val type = typeId) {
         is TypeId.QualifiedWrapper -> type.value.name
         is TypeId.DeclaredWrapper -> type.value.value
+        is TypeId.MemberWrapper -> "${TypeDefinitionId(typeId = type.value.owner, revision = revision).name()}#${type.value.name}"
         else -> ""
     }
 

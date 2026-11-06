@@ -24,7 +24,7 @@ skir.PublishedType _publishedRecord({
   definition,
   representation: skir.RepresentationTemplate.createRecord(
     fields: fields,
-    abstract_: false,
+    form: skir.RecordForm.concrete,
   ),
   fields: effectiveFields,
 );
@@ -71,7 +71,7 @@ CheckedEditorCatalog shelfCatalog({
         ),
       ),
       declaredRecord(testTypeId("Shelf"), searchKey: "shelf"),
-      declaredRecord(entry, abstract: true),
+      declaredRecord(entry, open: true),
       declaredRecord(
         testTypeId("SimpleMessage"),
         parents: [

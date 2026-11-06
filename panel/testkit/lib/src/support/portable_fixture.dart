@@ -43,7 +43,6 @@ skir.DataValue fixtureValue(Map<String, Object?> source) {
     "duration" => skir.DataValue.createDuration(
       value: skir.Duration(milliseconds: int.parse(value! as String)),
     ),
-    "enum_case" => skir.DataValue.wrapEnumCase(value! as String),
     "record" => skir.DataValue.createRecord(
       fields: [
         for (final MapEntry(:key, :value)
@@ -82,17 +81,19 @@ skir.DataValue fixtureValue(Map<String, Object?> source) {
     "named" => () {
       final named = value! as Map<String, Object?>;
       final declared = named["declared"] as String?;
+      final owner = skir.TypeDefinitionId(
+        typeId: declared != null
+            ? skir.TypeId.wrapDeclared(skir.DeclaredTypeId(value: declared))
+            : skir.TypeId.createQualified(
+                namespace: named["namespace"]! as String,
+                name: named["name"]! as String,
+              ),
+        revision: named["revision"]! as int,
+      );
+      final member = named["member"] as String?;
       return skir.DataValue.createNamed(
         actualType: skir.NamedTypeUse(
-          definition: skir.TypeDefinitionId(
-            typeId: declared != null
-                ? skir.TypeId.wrapDeclared(skir.DeclaredTypeId(value: declared))
-                : skir.TypeId.createQualified(
-                    namespace: named["namespace"]! as String,
-                    name: named["name"]! as String,
-                  ),
-            revision: named["revision"]! as int,
-          ),
+          definition: member != null ? owner.member(member) : owner,
           arguments: [
             for (final argument
                 in named["arguments"] as List<Object?>? ?? const [])

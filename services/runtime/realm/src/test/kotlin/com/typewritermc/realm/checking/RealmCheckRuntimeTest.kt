@@ -75,6 +75,7 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -135,7 +136,7 @@ val RealmCheckRuntimeTest by testSuite {
                                     type = duplicateMapType.template(listOf(duplicateValueType.template(), ScalarKind.TEXT.template)),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             ),
             TypeDefinition.partial(
@@ -153,7 +154,7 @@ val RealmCheckRuntimeTest by testSuite {
                                     type = ScalarKind.TEXT.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             ),
             TypeDefinition.partial(

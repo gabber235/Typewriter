@@ -105,6 +105,20 @@ fun TypeDefinitionId.Companion.declared(
     revision: Int = 1,
 ): TypeDefinitionId = TypeDefinitionId(typeId = TypeId.DeclaredWrapper(DeclaredTypeId.parse(id)), revision = revision)
 
+/** The id of the case [name] of this closed record, at this definition's revision. */
+fun TypeDefinitionId.member(name: String): TypeDefinitionId =
+    TypeDefinitionId(typeId = TypeId.createMember(owner = typeId, name = name), revision = revision)
+
+/** The case name when this id is a member of a closed record, or null for any other id. */
+val TypeDefinitionId.memberName: String? get() = (typeId as? TypeId.MemberWrapper)?.value?.name
+
+/** The closed record that lists this case when this id is a member, or null for any other id. */
+val TypeDefinitionId.memberOwner: TypeDefinitionId?
+    get() = (typeId as? TypeId.MemberWrapper)?.let { TypeDefinitionId(typeId = it.value.owner, revision = revision) }
+
+/** The use of the unit case [name] of the enum this use applies. */
+fun NamedTypeUse.member(name: String): NamedTypeUse = NamedTypeUse(definition = definition.member(name), arguments = emptyList())
+
 /** This definition applied to [arguments]. */
 fun TypeDefinitionId.namedUse(arguments: List<TypeUse> = emptyList()): NamedTypeUse = NamedTypeUse(definition = this, arguments = arguments)
 

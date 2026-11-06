@@ -114,6 +114,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -167,7 +168,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
@@ -183,14 +184,14 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
     val testMessageDefinition =
         TypeDefinition.partial(
             id = testMessageId,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
         )
 
     val testTextMessageDefinition =
@@ -205,7 +206,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(testMessageId.namedTemplate()),
         )
@@ -222,7 +223,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(testMessageId.namedTemplate()),
         )
@@ -247,7 +248,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = testMessageId.template().nullable(),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
@@ -268,7 +269,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = StandardTypes.list.template(listOf(TEST_TREE_ID.template(listOf(testTreeParameter.template)))),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
@@ -639,7 +640,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 listOf(
                     TypeDefinition.partial(
                         id = resource,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                     ),
                 ) +
                     links,
@@ -875,7 +876,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val child =
             TypeDefinition.partial(
                 id = childId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(left.id.namedTemplate(), right.id.namedTemplate()),
             )
         val assembly =
@@ -935,7 +936,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val reserved =
             TypeDefinition.partial(
                 id = TypeDefinitionId.qualified("typewriter.parameter", "Reserved"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val assembly =
             CatalogContributions(
@@ -1006,31 +1007,31 @@ val SdkRuntimeConformanceTest by testSuite {
         val textNamed =
             TypeDefinition.partial(
                 id = definitionId("TextNamed"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(root.id.namedTemplate()),
             )
         val choiceNamed =
             TypeDefinition.partial(
                 id = definitionId("ChoiceNamed"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(root.id.namedTemplate()),
             )
         val conflicted =
             TypeDefinition.partial(
                 id = definitionId("ConflictedPresentationChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(textNamed.id.namedTemplate(), choiceNamed.id.namedTemplate()),
             )
         val resolved =
             TypeDefinition.partial(
                 id = definitionId("ResolvedPresentationChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(textNamed.id.namedTemplate(), choiceNamed.id.namedTemplate()),
             )
         val unrelated =
             TypeDefinition.partial(
                 id = definitionId("UnrelatedPresentationChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(root.id.namedTemplate()),
             )
         val textProvider =
@@ -1201,7 +1202,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val child =
             TypeDefinition.partial(
                 id = definitionId("BoundedChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(parent.id.namedTemplate()),
             )
         val origin = origin("inherited_rules")
@@ -1249,7 +1250,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                     type = parameter.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val origin = origin("generic_rules")

@@ -29,6 +29,7 @@ import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
@@ -318,7 +319,6 @@ internal fun JsonObject.compactValue(): DataValue {
         "bytes" -> DataValue.BytesWrapper(requireNotNull(encoded.jsonPrimitive.content.decodeBase64()) { "Invalid base64 bytes." })
         "timestamp" -> DataValue.timestamp(Instant.parse(encoded.jsonPrimitive.content))
         "duration" -> DataValue.duration(encoded.jsonPrimitive.long.milliseconds)
-        "enum_case" -> DataValue.EnumCaseWrapper(encoded.jsonPrimitive.content)
         "record" -> DataValue.record(encoded.jsonObject.mapValues { (_, value) -> value.jsonObject.compactValue() })
         "list" -> DataValue.listValue(encoded.items())
         "set" -> DataValue.setValue(encoded.items())
@@ -358,14 +358,15 @@ internal fun JsonObject.link(): DataValue {
 }
 
 internal fun JsonObject.named(): DataValue {
-    requireKeys(setOf("declared", "namespace", "name", "revision", "arguments", "payload"), "named value")
-    val definition =
+    requireKeys(setOf("declared", "namespace", "name", "member", "revision", "arguments", "payload"), "named value")
+    val owner =
         this["declared"]?.let { TypeDefinitionId.declared(it.jsonPrimitive.content) }
             ?: TypeDefinitionId.qualified(
                 getValue("namespace").jsonPrimitive.content,
                 getValue("name").jsonPrimitive.content,
                 this["revision"]?.jsonPrimitive?.int ?: 1,
             )
+    val definition = this["member"]?.let { owner.member(it.jsonPrimitive.content) } ?: owner
     val arguments = this["arguments"]?.jsonArray.orEmpty().map { TypeUse.serializer.fromJsonCode(it.toString()).requireValid() }
     return DataValue.named(definition.namedUse(arguments), getValue("payload").jsonObject.compactValue())
 }

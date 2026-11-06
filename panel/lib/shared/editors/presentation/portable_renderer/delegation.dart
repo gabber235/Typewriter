@@ -390,6 +390,12 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
               null => skir.TypeTemplate.unknown,
             },
           );
+      if (catalog?.enumCases(value.definition) != null) {
+        return skir.PresentationElement.wrapEnumInput(
+          (skir.EnumControl.defaultInstance.toMutable()..control = control)
+              .toFrozen(),
+        );
+      }
       return switch (representation) {
         skir.RepresentationTemplate_scalarWrapper(:final value) =>
           _scalarDefaultElement(value.kind, control),
@@ -472,11 +478,6 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
               keyBinding: declared("generated_key", value.key),
               valueBinding: declared("generated_value", value.value),
             ),
-          ),
-        skir.RepresentationTemplate_enumerationWrapper() =>
-          skir.PresentationElement.wrapEnumInput(
-            (skir.EnumControl.defaultInstance.toMutable()..control = control)
-                .toFrozen(),
           ),
         skir.RepresentationTemplate_linkWrapper() =>
           skir.PresentationElement.wrapLinkInput(

@@ -41,8 +41,7 @@ final class LinkChoicesFixture {
       ],
       catalog: authoredCatalog(
         [
-          if (abstractWrapper)
-            declaredRecord("AbstractWrapper", abstract: true),
+          if (abstractWrapper) declaredRecord("AbstractWrapper", open: true),
           declaredCollection("Links", "TargetLink"),
           declaredRecord(
             "Node",

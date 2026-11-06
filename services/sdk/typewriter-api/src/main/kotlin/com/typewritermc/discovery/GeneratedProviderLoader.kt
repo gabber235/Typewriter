@@ -442,6 +442,7 @@ class GeneratedProviderLoader {
                             provider.nativeClass,
                             provider.searchKey,
                         )
+                    provider.cases.forEach { case -> declarations += OwnedTypeDeclaration(origin, case.requireValid()) }
                 }
 
                 GeneratedProviderKind.NativeBinding -> {
