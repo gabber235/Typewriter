@@ -1249,8 +1249,30 @@ private class ContentLayer(
     /** The creator rules over the owner's whole list, once per owner: the boundary check for untrusted declarations. */
     fun invalid(id: TypeDefinitionId): List<String> {
         val owner = checkNotNull(id.contentOwner())
-        return problemsByOwner.getOrPut(owner) { source.declarations(owner).declarationProblems(owner) }[id].orEmpty()
+        return problemsByOwner
+            .getOrPut(owner) {
+                val declarations = source.declarations(owner)
+                val problems = declarations.declarationProblems(owner)
+                problems +
+                    declarations
+                        .filter { it.id !in problems }
+                        .associate { it.id to it.boundProblems() }
+                        .filterValues { it.isNotEmpty() }
+            }[id]
+            .orEmpty()
     }
+
+    /**
+     * `argument_bound` when a code type this declaration holds applies an argument outside its parameter's bound, as
+     * `Ref<Int>` does. Code declarations resolve each use when it is read; a creator's declaration is refused up front.
+     */
+    private fun TypeDefinition.boundProblems(): List<String> =
+        representation
+            .templates()
+            .mapNotNull { (it.apply(emptyMap()) as? Resolution.Ready)?.value }
+            .filterNot { it.mentionsContent() }
+            .any { use -> (base.resolve(use) as? Resolution.Invalid)?.diagnostics?.any { it.code == "argument_bound" } == true }
+            .let { if (it) listOf("argument_bound") else emptyList() }
 
     /** The declaration with every field key in its templates replaced by where its chain leads. Content declarations take no parameters. */
     fun expandFields(definition: TypeDefinition): TypeDefinition =

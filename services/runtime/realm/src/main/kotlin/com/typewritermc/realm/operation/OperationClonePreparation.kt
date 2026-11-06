@@ -71,7 +71,7 @@ internal class OperationClonePreparation(
             capturedReads.observeInput(InputIdentity.Existence(resource))
             capturedReads.observeInput(InputIdentity.Form(ValueLocation.of(resource)))
             capturedReads.observeInput(InputIdentity.Value(ValueLocation.of(resource)))
-            capturedReads.observeInput(InputIdentity.Incoming(resource, null))
+            owning.forEach { capturedReads.observeInput(InputIdentity.Incoming(resource, it)) }
             ownership.filter { it.first == resource }.forEach { pending += it.second }
         }
         val copies = closure.associateWith { operation.identities.resource("clone:${it.value.length}:${it.value}").toSkir() }

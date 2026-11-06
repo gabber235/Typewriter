@@ -1,6 +1,7 @@
 package com.typewritermc.types.codegen
 
 import com.google.devtools.ksp.getAllSuperTypes
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -87,6 +88,7 @@ import com.typewritermc.types.ksp.EndpointUsageValidator
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
+import com.typewritermc.types.ksp.RELATION_LINK_TARGET_BOUND
 import com.typewritermc.types.ksp.typeDefinitionIdentity
 import com.typewritermc.types.memberOwner
 import com.typewritermc.types.namedTemplate
@@ -258,7 +260,13 @@ private class TypewriterTypeProcessor(
                 .sorted()
                 .toList()
         val (first, second) = sources.mapIndexed { index, source -> source.copy(slot = EndpointSlot.entries[index]).toEndpoint() }
-        val referenced = (first.resourceTemplate.referencedIds() + second.resourceTemplate.referencedIds()).toSet()
+        // Each endpoint's link definition bounds its target by Resource, so the relation names Resource's definition.
+        resolver.getClassDeclarationByName(checkNotNull(Resource::class.qualifiedName))?.let {
+            endpointDeclarations[RELATION_LINK_TARGET_BOUND] =
+                it
+        }
+        val referenced =
+            first.resourceTemplate.referencedIds() + second.resourceTemplate.referencedIds() + RELATION_LINK_TARGET_BOUND
         val references = owners.references(endpointDeclarations, referenced, declaration) ?: return
         val relation = SdkRelation(name, id, first, second, families, references)
         output.provide(relation.file(), name, GeneratedProviderKind.Relation, declaration)

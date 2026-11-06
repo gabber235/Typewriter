@@ -49,6 +49,7 @@ import com.typewritermc.testkit.ready
 import com.typewritermc.types.Type
 import com.typewritermc.types.function
 import com.typewritermc.types.functionUse
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.toSkir
@@ -199,10 +200,7 @@ suspend fun RealmFixture.publishToEngine(): Map<ResourceId, Any> =
         checkNotNull(gateway.graph).resources.mapKeys { (key, _) -> key.source }
     }
 
-/**
- * A static page holding what [block] declares, returning its handles by name. Content a later layer step has not built
- * yet is marked pending instead of thrown while the suite is configured, so a demo stays red inside its own tests.
- */
+/** A static page holding what [block] declares, returning its handles by name. */
 fun SetupRoot.formulaPage(block: FormulaPageBuilder.() -> Unit): FormulaPage =
     library {
         books.book("formulas") {
@@ -215,7 +213,6 @@ class FormulaPageBuilder internal constructor(
     private val elements: SetupList<StaticEntry>,
 ) {
     private val named = linkedMapOf<String, ResourceId>()
-    private var pending: String? = null
 
     /** A Definition named [name] of [type] holding the plain Kotlin [value]. */
     fun definition(
@@ -263,12 +260,10 @@ class FormulaPageBuilder internal constructor(
             .toSkir()
             .also { named[name] = it }
 
-    /** Marks [content] as not built yet; every handle of the page then throws NotImplementedError naming it. */
-    internal fun pending(content: String) {
-        pending = pending ?: content
-    }
+    /** The resource this page declared as [name]. */
+    fun named(name: String): ResourceId = named[name] ?: error("The formula page declares no $name yet.")
 
-    internal fun page(id: ResourceId): FormulaPage = FormulaPage(id, named.toMap(), pending)
+    internal fun page(id: ResourceId): FormulaPage = FormulaPage(id, named.toMap())
 
     /** A Definition named [name] whose declarations [types] builds on it, of the type and value [held] picks. */
     private fun declared(
@@ -323,35 +318,44 @@ fun FormulaPageBuilder.demoTwoDefinitions() {
             }
         },
     ) { caseValue(it, "Open") }
+    val reward =
+        customType("Reward") {
+            field("giver", entryRef)
+            field("helper", entryRef)
+            field("gold", intUse)
+        }
+    formula("first_reward", fieldKey(reward), "Reward(giver = smith, helper = smith, gold = total)")
     formula("giver_name", textUse, "first_reward.giver.name")
-    pending("Reward, first_reward and gift, whose content records hold references")
+    val smith = named("smith")
+    definition(
+        "gift",
+        declares {
+            record {
+                field("giver", entryRef)
+                field("gold", intUse)
+            }
+        },
+    ) { recordValue(it, "giver" to contentLink(smith), "gold" to DataValue.integer(5)) }
 }
 
 /** The handles of a formula page: the page and every resource the demos name. */
 class FormulaPage internal constructor(
     private val page: ResourceId,
     private val named: Map<String, ResourceId>,
-    private val pending: String?,
 ) {
-    val pageId: ResourceId get() = page.also { built() }
-    val baseReward: ResourceId get() = handle("base_reward")
-    val bonus: ResourceId get() = handle("bonus")
-    val total: ResourceId get() = handle("total")
-    val smith: ResourceId get() = handle("smith")
-    val reward: ResourceId get() = handle("Reward")
-    val firstReward: ResourceId get() = handle("first_reward")
-    val giverName: ResourceId get() = handle("giver_name")
-    val gift: ResourceId get() = handle("gift")
-    val door: ResourceId get() = handle("door")
+    val pageId: ResourceId get() = page
+    val baseReward: ResourceId get() = named("base_reward")
+    val bonus: ResourceId get() = named("bonus")
+    val total: ResourceId get() = named("total")
+    val smith: ResourceId get() = named("smith")
+    val reward: ResourceId get() = named("Reward")
+    val firstReward: ResourceId get() = named("first_reward")
+    val giverName: ResourceId get() = named("giver_name")
+    val gift: ResourceId get() = named("gift")
+    val door: ResourceId get() = named("door")
 
-    private fun handle(name: String): ResourceId {
-        built()
-        return named[name] ?: error("The formula page declares no $name.")
-    }
-
-    private fun built() {
-        pending?.let { throw NotImplementedError("An operation is not implemented: $it") }
-    }
+    /** The resource the page declared as [name]. */
+    fun named(name: String): ResourceId = named[name] ?: error("The formula page declares no $name.")
 }
 
 /** What the realm computed for formulas: a value at a path, the text as an author reads it, and the checked type. */
@@ -435,7 +439,7 @@ fun delete(resource: ResourceId): EditIntent = EditIntent.createDeleteResource(i
 fun setGiver(
     gift: ResourceId,
     to: ResourceId,
-): EditIntent = TODO("set giver intent")
+): EditIntent = setReference(gift, "giver", to)
 
 /** Replaces the formula text of [resource] with [source]. */
 fun setFormula(

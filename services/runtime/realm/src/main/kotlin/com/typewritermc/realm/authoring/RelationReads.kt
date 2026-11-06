@@ -6,6 +6,8 @@ import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.graphLinkRelationIds
+import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
@@ -72,9 +74,10 @@ internal class RelationReads(
     }
 
     fun observe(source: LinkOccurrence) {
+        val relation = contract(source.id.endpoint).id
         reads.observeInput(InputIdentity.Value(source.id.location))
-        reads.observeInput(InputIdentity.Incoming(source.source, null))
-        reads.observeInput(InputIdentity.Incoming(source.target.resource, null))
+        reads.observeInput(InputIdentity.Incoming(source.source, relation))
+        reads.observeInput(InputIdentity.Incoming(source.target.resource, relation))
     }
 
     /** Bindings this resource declares for [endpoint]; the evidence is recorded as read before anyone inspects it. */
@@ -92,7 +95,7 @@ internal class RelationReads(
         subject: ResourceId,
         origin: OperationOrigin = OperationOrigin(),
     ): LinkOccurrence? {
-        reads.observeInput(InputIdentity.Incoming(subject, null))
+        catalog.ownershipRelationIds.forEach { reads.observeInput(InputIdentity.Incoming(subject, it)) }
         val membership =
             origin.occurrences.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
                 ?: links.values.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
@@ -159,7 +162,7 @@ internal class RelationReads(
     }
 
     /**
-     * Link occurrences that would connect [subject] and [target] through each non owning relation, the dragged side
+     * Link occurrences that would connect [subject] and [target] through each graph link relation, the dragged side
      * first. Bindings live at each relation's first endpoint, so the subject holds the link when it declares a binding
      * for the relation and the target holds it only otherwise: a tag dropped onto a book is written to the book's tags
      * while a tag dropped onto a tag gains the target as a parent. [item] names a new collection item.
@@ -170,7 +173,7 @@ internal class RelationReads(
         item: (String) -> ItemId,
     ): List<LinkOccurrence> =
         catalog.relations
-            .filterNot { it.ownsResources }
+            .filter { it.id in catalog.graphLinkRelationIds }
             .flatMap { relation ->
                 val endpoint = relation.first.id
                 listOf(subject to target, target to subject).firstNotNullOfOrNull { (holder, linked) ->
@@ -198,7 +201,7 @@ internal class RelationReads(
             val id = pending.removeFirst()
             if (!visited.add(id)) continue
             reads.observeInput(InputIdentity.Value(ValueLocation.of(id)))
-            reads.observeInput(InputIdentity.Incoming(id, null))
+            reads.observeInput(InputIdentity.Incoming(id, relation.id))
             if (id == other) return true
             next[id].orEmpty().forEach(pending::add)
         }
@@ -237,19 +240,22 @@ internal class RelationReads(
         }
     }
 
-    /** Non owning link occurrences between [id] and [target], whichever of them holds each. */
+    /** Graph link occurrences between [id] and [target], whichever of them holds each. */
     fun linksBetween(
         id: ResourceId,
         target: ResourceId,
     ): List<LinkOccurrence> = linksOf(id).filter { it.source == target || it.target.resource == target }
 
-    /** Non owning link occurrences held by [id] or pointing at it. */
+    /**
+     * Graph link occurrences held by [id] or pointing at it: links of non owning relations an author draws, not the
+     * content references that name [id] from content.
+     */
     fun linksOf(id: ResourceId): List<LinkOccurrence> {
+        val graphLinks = catalog.graphLinkRelationIds
         reads.observeInput(InputIdentity.Value(ValueLocation.of(id)))
-        reads.observeInput(InputIdentity.Incoming(id, null))
+        graphLinks.forEach { reads.observeInput(InputIdentity.Incoming(id, it)) }
         return links.values.filter { occurrence ->
-            (occurrence.source == id || occurrence.target.resource == id) &&
-                !contract(occurrence.id.endpoint).ownsResources
+            (occurrence.source == id || occurrence.target.resource == id) && contract(occurrence.id.endpoint).id in graphLinks
         }
     }
 }

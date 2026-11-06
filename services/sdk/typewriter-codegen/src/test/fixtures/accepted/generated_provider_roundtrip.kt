@@ -198,7 +198,8 @@ fun exampleCollectionProjection(): CollectionProjection<Example, ExampleRow, Exa
         content(ExampleRowFields.title, ExampleFields.title)
     }
 
-@TypewriterTypeImports(ResourceId::class)
+// Resource is the parent of every resource type, so this standalone artifact states its definition too.
+@TypewriterTypeImports(ResourceId::class, Resource::class)
 private object FixtureTypeImports
 
 object ExampleInspector : ExamplePresentation {

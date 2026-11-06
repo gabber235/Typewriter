@@ -45,6 +45,7 @@ val CONTENT_TYPE_PROBLEMS: Set<String> =
         "not_a_listed_case",
         "case_missing_parent",
         "inheritance_cycle",
+        "argument_bound",
     )
 
 /** The structural rules both catalogs share, pure over one declaration list: codes per declaration, absent when it has none. */

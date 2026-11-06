@@ -5,19 +5,26 @@ package com.typewritermc.realm.testing
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.ReachabilityQuery
+import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.exactEditablePath
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.reverse
 import com.typewritermc.authoring.root
 import com.typewritermc.engine.pages.Definition
 import com.typewritermc.engine.pages.StaticPageDefinition
+import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.RealmGraphReads
 import com.typewritermc.realm.catalog.code
 import com.typewritermc.realm.catalog.over
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.realm.operation.operationObservation
+import com.typewritermc.testing.routes.FixtureStaticEntryDefinition
 import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -26,12 +33,16 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.catalog.unavailableCode
+import com.typewritermc.types.endpointId
 import com.typewritermc.types.functionUse
+import com.typewritermc.types.listValue
 import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.record
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
 import io.kotest.matchers.shouldBe
@@ -39,10 +50,13 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -215,6 +229,61 @@ fun fieldKey(
 
 /** A list of [item]. */
 fun listType(item: TypeUse): TypeUse = StandardTypes.list.namedUse(listOf(item)).use
+
+/** `Ref<T>` as content writes it: a content reference to a resource of [target]. */
+fun refTo(target: TypeUse): TypeUse =
+    ContentReferences.Source.Definition.id
+        .namedUse(listOf(target))
+        .use
+
+/** `Ref<FixtureStaticEntry>`, the reference type the demos hold. */
+val entryRef: TypeUse = refTo(FixtureStaticEntryDefinition.id.use())
+
+/** A content reference to [target] stored at a position of the reference type [type]. */
+fun contentLink(
+    target: ResourceId,
+    type: TypeUse = entryRef,
+): DataValue = linkValue(checkNotNull(type.named), ContentReferences.id.endpointId(EndpointSlot.FIRST), target)
+
+/** A list value of a list of [item] holding [items], each under an item id named after its position. */
+fun listValue(
+    item: TypeUse,
+    vararg items: DataValue,
+): DataValue =
+    DataValue.named(
+        checkNotNull(listType(item).named),
+        DataValue.listValue(items.mapIndexed { index, value -> ListItem(id = ItemId(value = "item-$index"), value = value) }),
+    )
+
+/** Points the field [field] of the record a Definition [resource] of [type] holds plainly at [target]. */
+fun setReference(
+    resource: ResourceId,
+    field: String,
+    target: ResourceId,
+    type: TypeUse = entryRef,
+): EditIntent =
+    EditIntent.createSetValue(
+        at =
+            plainValueLocation(resource).let {
+                it.copy(path = it.path.field(field))
+            },
+        value = contentLink(target, type),
+    )
+
+/**
+ * The resources that hold a content reference to [target], as a check reads them through the graph: one step back
+ * along the content references relation.
+ */
+fun RealmFixture.usagesOf(target: ResourceId): List<ResourceId> =
+    views.capture().use { lease ->
+        with(CapturedAuthoringReads(lease.originalView())) {
+            RealmGraphReads
+                .reachable(ReachabilityQuery(setOf(target.toResourceId()), ContentReferences.id.reverse(), ResourceDrafts, maxDepth = 1))
+                .resources
+                .map { it.id.toSkir() }
+                .filter { it != target }
+        }
+    }
 
 /** A Definition's value written plainly as [value], stored as the value of a Definition of [type]. */
 fun plainVar(

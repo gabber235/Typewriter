@@ -214,7 +214,7 @@ internal object ResourceValueMapper {
                 val declared = sourceRecord.linkSlots(catalog).singleOrNull { it.location == occurrence.id.location.path }
                 if (declared != null && declared.endpoint == occurrence.id.endpoint) {
                     val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.MANY
-                    if (declared.containsCollection != expectsCollection) {
+                    if (declared.containsCollection && !expectsCollection) {
                         fit += ValueProblem(location = occurrence.id.location, code = "endpoint_binding_cardinality_mismatch")
                     } else if (!resources.getValue(occurrence.target.resource).matches(declared.target, catalog)) {
                         fit += ValueProblem(location = occurrence.id.location, code = "binding_target_type_mismatch")

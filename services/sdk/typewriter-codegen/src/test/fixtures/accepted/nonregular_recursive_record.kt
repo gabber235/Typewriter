@@ -6,6 +6,7 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceDefinition
 import skirout.editor.v1.type_catalog.ScalarKind
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterType
@@ -29,7 +30,7 @@ data class Nest<T>(
 fun main() {
     val catalog = DefaultCheckedCatalog(
         CatalogGeneration(value = "recursive fixture"),
-        StandardTypes.definitions + NestDefinition.definition + RecursiveSourceDefinition.definition,
+        StandardTypes.definitions + ResourceDefinition.definition + NestDefinition.definition + RecursiveSourceDefinition.definition,
     )
     val bindings = FactoryNativeBindingRegistry(catalog, listOf(NestNativeBindingFactory, RecursiveSourceNativeBindingFactory))
     val text = ScalarKind.TEXT.use

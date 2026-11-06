@@ -22,7 +22,6 @@ import com.typewritermc.codegen.serialName
 import com.typewritermc.codegen.valueClassScalarKind
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Ref
-import com.typewritermc.types.Resource
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterString
@@ -368,9 +367,7 @@ class KspTypeGraphConverter(
                 .mapNotNull { reference ->
                     val parent = reference.resolve()
                     val qualified = parent.declaration.qualifiedName?.asString()
-                    if (qualified == "kotlin.Any" || parent.declaration isType Resource::class.asClassName() ||
-                        (declaration.classKind == ClassKind.ENUM_CLASS && qualified == "kotlin.Enum")
-                    ) {
+                    if (qualified == "kotlin.Any" || (declaration.classKind == ClassKind.ENUM_CLASS && qualified == "kotlin.Enum")) {
                         return@mapNotNull null
                     }
                     template(parent, declaration, path + "parent")?.named

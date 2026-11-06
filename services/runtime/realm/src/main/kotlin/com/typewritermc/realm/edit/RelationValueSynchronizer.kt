@@ -9,6 +9,7 @@ import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
+import com.typewritermc.realm.authoring.declaredFieldTypeAt
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -450,7 +451,7 @@ internal class RelationValueSynchronizer(
             remove(resources, EditIntent.createRemove(at = parent, item = last.id), problems)
             return
         }
-        val nullable = resources[location.resource]?.authoredTypeAt(location.path, catalog) is TypeUse.NullableWrapper
+        val nullable = resources[location.resource]?.declaredFieldTypeAt(location.path, catalog) is TypeUse.NullableWrapper
         update(resources, location, if (nullable) DataValue.NULL else DataValue.UNFILLED, problems)
     }
 }
