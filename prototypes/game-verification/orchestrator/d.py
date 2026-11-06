@@ -136,6 +136,14 @@ class Fleet:
         self.nodes = [n for p in self.papers for n in p.nodes]
 
     def __enter__(self):
+        try:
+            return self._enter()
+        except BaseException:
+            # Keep the logs of a failed join: __exit__ does not run when __enter__ raises.
+            self.__exit__(None, None, None)
+            raise
+
+    def _enter(self):
         t0 = time.time()
         for p in self.papers:
             p.server.start()
@@ -147,13 +155,36 @@ class Fleet:
             n.client.server = f"127.0.0.1:{n.paper.server.port}"
         t0 = time.time()
         self.join_each = {}
-        if self.join == "stagger":
+        if self.join in ("stagger", "stagger-gate"):
+            # One at a time; stagger-gate stops drawing each client once it is ready, so it costs the next one nothing.
             for n in self.nodes:
                 s0 = time.time()
                 n.client.start()
                 n.connect()
                 n.wait_ready()
+                if self.join == "stagger-gate":
+                    n.C("gate", mode=2)
                 self.join_each[n.name] = round(time.time() - s0, 1)
+        elif self.join == "ready-gate":
+            # All at once, each client stops drawing the moment it is ready.
+            starts = {}
+            for n in self.nodes:
+                starts[n.name] = time.time()
+                n.client.start()
+
+            def one(n):
+                n.connect()
+                n.wait_ready()
+                n.C("gate", mode=2)
+                self.join_each[n.name] = round(time.time() - starts[n.name], 1)
+            threads = [threading.Thread(target=one, args=(n,)) for n in self.nodes]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+            missing = [n.name for n in self.nodes if n.name not in self.join_each]
+            if missing:
+                raise TimeoutError(f"not ready: {missing}")
         else:
             starts = {}
             for n in self.nodes:
@@ -172,7 +203,8 @@ class Fleet:
             self.renderers = [hooks["after_join"](n.client) for n in self.nodes]
         for n in self.nodes:
             n.S = n.paper.line_for()
-            n.C("gate", mode=0 if self.join != "gated" else 1)
+            if self.join not in ("stagger-gate", "ready-gate"):
+                n.C("gate", mode=0 if self.join != "gated" else 1)
         for p in self.papers:
             p.S("e.calm")
             p.S("time", player=p.nodes[0].name)

@@ -25,12 +25,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: clients, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: clients, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: clients, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
-          - { plan: joins, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: interfere, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: interfere, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: joins2, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: joins2, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: cells, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: cells, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
     defaults:
       run:
         working-directory: prototypes/game-verification
