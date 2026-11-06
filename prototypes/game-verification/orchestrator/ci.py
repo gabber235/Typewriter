@@ -867,6 +867,13 @@ def cmd_cells(backend):
     step("clients 4x4", d.fleet_cell, [4, 4], 20, 200, ("server", "player"), "ready-gate")
 
 
+def cmd_scopes(backend):
+    """E6 server wide against per player after a warm up phase, alternating, so order and warm up do not decide."""
+    d = d_hooks(backend)
+    for layout in ([4], [8], [4, 4]):
+        step(f"scopes {'x'.join(map(str, layout))}", d.fleet_cell, layout, 15, 200, ("player", "server", "player", "server"), "ready-gate")
+
+
 def cmd_interfere(backend):
     """Client 0 leaks, the others run the mixed set with a leftover check; near, far, and on its own Paper."""
     d = d_hooks(backend)
@@ -879,7 +886,7 @@ def cmd_interfere(backend):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "interfere"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "interfere"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -912,6 +919,8 @@ def main():
             cmd_joins(a.backend)
         elif a.plan == "joins2":
             cmd_joins2(a.backend)
+        elif a.plan == "scopes":
+            cmd_scopes(a.backend)
         elif a.plan == "cells":
             cmd_cells(a.backend)
         elif a.plan == "interfere":
