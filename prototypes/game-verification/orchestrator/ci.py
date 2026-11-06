@@ -765,10 +765,44 @@ def cmd_coverage(backend):
     step("cov all classes", run_cov, "loop", "--cov", "rt", "--n", "200", "--includes", "*")
 
 
+# ---------- spike E: readiness signals ----------
+
+def run_ready(*argv, world="void", rd=2):
+    """Runs one readiness.py command unchanged and copies its result rows into h.jsonl."""
+    import readiness
+    set_cfg(Cfg(backend=CiSession.cfg.backend, world=world, rd=rd))
+    readiness.SESSION = lambda label, rd=2, **k: CiSession(label, dispatch="tick", rd=rd)
+    before = readiness.RESULTS.stat().st_size if readiness.RESULTS.exists() else 0
+    old = sys.argv
+    sys.argv = ["readiness.py", *argv]
+    try:
+        readiness.main()
+    finally:
+        sys.argv = old
+        if readiness.RESULTS.exists():
+            with readiness.RESULTS.open() as f:
+                f.seek(before)
+                for line in f:
+                    row = json.loads(line)
+                    record("readiness", argv=" ".join(argv), cfg=CiSession.cfg.row(), result={k: v for k, v in row.items() if k != "renderer"})
+
+
+def cmd_readiness(backend):
+    set_cfg(Cfg(backend=backend))
+    lbl = f"ci{os.environ.get('MATRIX_REPEAT', '')}"
+    step("readiness rendered", run_ready, "scenes", "--mode", "rendered", "--n", "50", "--label", lbl)
+    step("start swap void", run_ready, "start", "--kind", "swap", "--n", "30", "--label", lbl)
+    step("start reset void", run_ready, "start", "--kind", "reset", "--n", "30", "--tail", "1.5", "--label", lbl)
+    step("start reconnect void", run_ready, "start", "--kind", "reconnect", "--n", "10", "--tail", "6", "--label", lbl)
+    step("start reconnect terrain", run_ready, "start", "--kind", "reconnect", "--world", "default", "--n", "6", "--tail", "8", "--label", lbl, world="default", rd=5)
+    step("start fresh void", run_ready, "start", "--kind", "fresh", "--n", "3", "--tail", "10", "--label", lbl)
+    step("readiness gated", run_ready, "scenes", "--mode", "gated", "--n", "30", "--label", lbl)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -793,6 +827,8 @@ def main():
             cmd_goldens(["vulkan", "opengl"] if a.backend == "both" else [a.backend])
         elif a.plan == "coverage":
             cmd_coverage(a.backend)
+        elif a.plan == "readiness":
+            cmd_readiness(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

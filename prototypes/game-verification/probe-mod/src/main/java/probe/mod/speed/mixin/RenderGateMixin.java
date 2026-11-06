@@ -35,6 +35,7 @@ public class RenderGateMixin {
         if (!Speed.skipRender()) {
             renderer.render();
             probe.mod.video.Video.afterRender((Minecraft) (Object) this);
+            probe.mod.ready.Ready.afterRender((Minecraft) (Object) this);
         }
     }
 }

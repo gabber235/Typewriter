@@ -43,7 +43,7 @@ public final class Golden {
     }
 
     /** Every animated sprite back to its first frame, uploaded now. Same phase whatever ran before. */
-    static int animationsToStart(Minecraft mc) {
+    public static int animationsToStart(Minecraft mc) {
         int n = 0;
         for (AbstractTexture t : ((TextureManagerAccessor) mc.getTextureManager()).probe$byPath().values()) {
             if (!(t instanceof TextureAtlas atlas)) continue;

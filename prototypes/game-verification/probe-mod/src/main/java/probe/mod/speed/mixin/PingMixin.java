@@ -14,5 +14,6 @@ public class PingMixin {
     @Inject(method = "handlePing", at = @At("TAIL"))
     private void probe$ping(ClientboundPingPacket packet, CallbackInfo ci) {
         Speed.lastPing = packet.getId();
+        probe.mod.ready.Ready.onPing(packet.getId());
     }
 }

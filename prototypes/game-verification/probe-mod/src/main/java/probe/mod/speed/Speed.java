@@ -85,6 +85,7 @@ public final class Speed {
         publish(frame, tick, perceived);
         probe.mod.observe.Drawn.endFrame(mc, !thisFrameSkipped);
         probe.mod.observe.Ride.onFrame(mc, !thisFrameSkipped);
+        probe.mod.ready.Ready.afterFrame(mc, frame, tick, perceived, !thisFrameSkipped);
         Runnable r = afterRendered;
         if (r != null && !thisFrameSkipped && framesToRender == 0) {
             afterRendered = null;
@@ -180,6 +181,7 @@ public final class Speed {
                 String r = probe.mod.video.Video.handle(name, p, mc);
                 if (r == null) r = probe.mod.golden.Golden.handle(name, p, mc);
                 if (r == null) r = probe.mod.observe.Observe.handle(name, p, mc);
+                if (r == null) r = probe.mod.ready.Ready.handle(name, p, mc);
                 yield r != null ? r : "{\"error\":\"unknown " + name + "\"}";
             }
         };
