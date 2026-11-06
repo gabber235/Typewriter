@@ -812,7 +812,8 @@ private fun discoverEndpointBindings(
                 visit(template.value.value, path, containsCollection, valueOwner, stack)
             }
 
-            is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper -> {}
+            // A function stores a Formula, a core record this module does not declare, so it adds no binding here.
+            is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper, is TypeTemplate.FunctionWrapper -> {}
 
             is TypeTemplate.NamedWrapper -> {
                 val definition = definitions[template.value.definition] ?: return
@@ -958,7 +959,13 @@ private const val NOT_CLASS_OR_PARAMETER = "Relation endpoint arguments must use
 
 private fun TypeTemplate.withNullability(type: KSType): TypeTemplate = if (type.isMarkedNullable) this.nullable() else this
 
-private fun KSClassDeclaration.isTypeGraphReady(): Boolean {
+/**
+ * Whether every type this declaration's graph reaches resolves. Declarations of this compilation and the cases of a
+ * sealed declaration are followed, since the converter walks into their fields: a record nested in a list or a case
+ * can name an endpoint a later round generates.
+ */
+private fun KSClassDeclaration.isTypeGraphReady(visited: MutableSet<KSClassDeclaration> = mutableSetOf()): Boolean {
+    if (!visited.add(this)) return true
     val references =
         sequence {
             yieldAll(superTypes)
@@ -966,14 +973,18 @@ private fun KSClassDeclaration.isTypeGraphReady(): Boolean {
             primaryConstructor?.parameters?.forEach { parameter -> yield(parameter.type) }
             getAllProperties().forEach { property -> yield(property.type) }
         }
-    return references.all { reference -> runCatching { reference.resolve().isResolvedTypeGraph() }.getOrDefault(false) }
+    return references.all { reference -> runCatching { reference.resolve().isResolvedTypeGraph(visited) }.getOrDefault(false) } &&
+        getSealedSubclasses().all { case -> case.origin.name != "KOTLIN" || case.isTypeGraphReady(visited) }
 }
 
 /** Star projections count as resolved, so the converter reports them at their declaration instead of deferring forever. */
-private fun KSType.isResolvedTypeGraph(): Boolean =
+private fun KSType.isResolvedTypeGraph(visited: MutableSet<KSClassDeclaration>): Boolean =
     !isError &&
+        (declaration as? KSClassDeclaration)?.let { source ->
+            source.origin.name != "KOTLIN" || source.isTypeGraphReady(visited)
+        } != false &&
         arguments.all { argument ->
-            argument.variance == Variance.STAR || argument.type?.resolve()?.isResolvedTypeGraph() == true
+            argument.variance == Variance.STAR || argument.type?.resolve()?.isResolvedTypeGraph(visited) == true
         }
 
 private val SEARCH_KEY = Regex("[a-z][a-z0-9]*")

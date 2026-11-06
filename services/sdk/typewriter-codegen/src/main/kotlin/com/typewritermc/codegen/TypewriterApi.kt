@@ -17,10 +17,15 @@ internal object TypewriterApi {
     private const val CONFIGURATION = "com.typewritermc.configuration"
     private const val DISCOVERY = "com.typewritermc.discovery"
     private const val EXPRESSION = "com.typewritermc.expression"
+    private const val FORMULA = "com.typewritermc.formula"
     private const val OPERATIONS = "com.typewritermc.operations"
     private const val PRESENTATION = "com.typewritermc.presentation"
     private const val SETUP = "com.typewritermc.setup"
     private const val TYPES = "com.typewritermc.types"
+
+    // Formula
+    val Formula = ClassName(FORMULA, "Formula")
+    val Var = ClassName(FORMULA, "Var")
 
     // Authoring
     val AppliedNativeArguments = ClassName(AUTHORING, "AppliedNativeArguments")

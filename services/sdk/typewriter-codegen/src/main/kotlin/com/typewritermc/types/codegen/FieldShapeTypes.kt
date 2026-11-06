@@ -19,6 +19,7 @@ import com.typewritermc.codegen.mapCode
 import com.typewritermc.configuration.name
 import com.typewritermc.configuration.root
 import com.typewritermc.types.nullable
+import com.typewritermc.types.parts
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.catalog.RepresentationKind
@@ -92,6 +93,10 @@ internal val FieldShape.configurationScope: TypeName
             is FieldShape.Parameter -> {
                 Api.GenericValueConfigurationScope.parameterizedBy(configurationValue)
             }
+
+            is FieldShape.Function -> {
+                stored.configurationScope
+            }
         }
 
 /** The value a configuration scope sees: wrappers expose their stored representation. */
@@ -101,6 +106,7 @@ internal val FieldShape.configurationValue: TypeName
             is FieldShape.Nullable -> value.configurationValue.copy(nullable = true)
             is FieldShape.Wrapped -> representation
             is FieldShape.Color -> representation
+            is FieldShape.Function -> stored.configurationValue
             else -> native.copy(nullable = false)
         }
 
@@ -160,11 +166,20 @@ internal val FieldShape.expressionScope: TypeName
             is FieldShape.Parameter -> {
                 Api.GenericValueExpressions.parameterizedBy(configurationValue)
             }
+
+            is FieldShape.Function -> {
+                stored.expressionScope
+            }
         }
 
 /** Library expression scopes have a factory object named `<Scope>Factory` beside them. */
 internal val FieldShape.expressionFactory: ClassName
-    get() = (this as? FieldShape.Record)?.names?.expressionsFactory ?: expressionScope.rawClass.factory()
+    get() =
+        when (this) {
+            is FieldShape.Record -> names.expressionsFactory
+            is FieldShape.Function -> stored.names.expressionsFactory
+            else -> expressionScope.rawClass.factory()
+        }
 
 /** The presentation control of a field of this shape. */
 internal val FieldShape.presentationControl: TypeName
@@ -217,11 +232,20 @@ internal val FieldShape.presentationControl: TypeName
             is FieldShape.Parameter -> {
                 Api.Control
             }
+
+            is FieldShape.Function -> {
+                stored.presentationControl
+            }
         }
 
 /** The scope a nested slot exposes: concrete records expose their typed presentation scope directly. */
 internal val FieldShape.presentationNested: TypeName
-    get() = if (this is FieldShape.Record && !abstract) presentationScope else presentationControl
+    get() =
+        when {
+            this is FieldShape.Record && !abstract -> presentationScope
+            this is FieldShape.Function -> stored.presentationNested
+            else -> presentationControl
+        }
 
 private val FieldShape.Record.presentationScope: TypeName
     get() = names.presentationScope.parameterizedOrSelf(arguments.map(FieldShape::native))
@@ -237,7 +261,7 @@ internal val FieldShape.representationKind: RepresentationKind
             is FieldShape.Sequence -> if (kind == CollectionKind.LIST) RepresentationKind.LIST else RepresentationKind.SET
             is FieldShape.Mapping -> RepresentationKind.MAP
             is FieldShape.Enumeration -> RepresentationKind.ENUMERATION
-            is FieldShape.Record, is FieldShape.Parameter -> RepresentationKind.RECORD
+            is FieldShape.Record, is FieldShape.Parameter, is FieldShape.Function -> RepresentationKind.RECORD
         }
 
 /** The read side type exposed on drafts; type parameters map to the draft's `D<index>` variables. */
@@ -277,6 +301,10 @@ internal fun FieldShape.draftType(draftVariables: List<TypeVariableName>): TypeN
 
         is FieldShape.Record -> {
             names.draft.parameterizedOrSelf(arguments.map { it.draftType(draftVariables) })
+        }
+
+        is FieldShape.Function -> {
+            stored.draftType(draftVariables)
         }
     }
 
@@ -342,6 +370,10 @@ internal fun FieldShape.draftProjection(): CodeBlock =
                 )
             }
         }
+
+        is FieldShape.Function -> {
+            stored.draftProjection()
+        }
     }
 
 context(_: TypeParameterBindings, _: DefinitionReferences)
@@ -393,7 +425,9 @@ internal fun FieldShape.configurationScopeCreation(
     collection: String,
     pattern: RelativeFieldPattern,
 ): CodeBlock =
-    if (this is FieldShape.Record) {
+    if (this is FieldShape.Function) {
+        stored.configurationScopeCreation(collection, pattern)
+    } else if (this is FieldShape.Record) {
         val implementation = names.configurationScopeImpl.parameterizedOrSelf(arguments.map(FieldShape::native))
         if (pattern.segments.isEmpty()) {
             CodeBlock.of("%T(%N)", implementation, collection)
@@ -423,6 +457,7 @@ internal fun FieldShape.nestedPresentationScopes(): CodeBlock {
             is FieldShape.Sequence -> listOf(Api.NestedPresentationSlotItems to item)
             is FieldShape.Mapping -> listOf(Api.NestedPresentationSlotKeys to key, Api.NestedPresentationSlotValues to value)
             is FieldShape.Record -> if (abstract) emptyList() else listOf(Api.NestedPresentationSlotFields to this)
+            is FieldShape.Function -> return stored.nestedPresentationScopes()
             else -> emptyList()
         }
     return slots
@@ -431,7 +466,9 @@ internal fun FieldShape.nestedPresentationScopes(): CodeBlock {
 }
 
 private fun FieldShape.nestedPresentationDescriptor(): CodeBlock =
-    if (this is FieldShape.Record && !abstract) {
+    if (this is FieldShape.Function) {
+        stored.nestedPresentationDescriptor()
+    } else if (this is FieldShape.Record && !abstract) {
         CodeBlock.of(
             "%T(%T::class as %T,♢create = { nested·->♢%T(nested) })",
             Api.NestedPresentationScope,
@@ -457,6 +494,7 @@ internal val TypeTemplate.containsParameter: Boolean
             is TypeTemplate.NamedWrapper -> value.arguments.any { it.containsParameter }
             is TypeTemplate.NullableWrapper -> value.value.containsParameter
             is TypeTemplate.ScalarWrapper -> false
+            is TypeTemplate.FunctionWrapper -> value.parts.any { it.containsParameter }
             else -> unknownVariant(this)
         }
 

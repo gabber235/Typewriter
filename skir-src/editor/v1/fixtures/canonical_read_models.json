@@ -2362,6 +2362,432 @@
       "kind": "qualified",
       "value": {
         "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:FunctionParameterTemplate"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionParameterTemplate"
+                }
+              },
+              "revision": 1
+            },
+            "name": "name"
+          },
+          "type": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionParameterTemplate"
+                }
+              },
+              "revision": 1
+            },
+            "name": "type"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeTemplate"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:FunctionParameterUse"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionParameterUse"
+                }
+              },
+              "revision": 1
+            },
+            "name": "name"
+          },
+          "type": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionParameterUse"
+                }
+              },
+              "revision": 1
+            },
+            "name": "type"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeUse"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:FunctionTypeTemplate"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionTypeTemplate"
+                }
+              },
+              "revision": 1
+            },
+            "name": "context"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "typewriter",
+                    "name": "List"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": [
+                {
+                  "kind": "named",
+                  "value": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "skir",
+                          "name": "editor/v1/type_catalog.skir:FunctionParameterTemplate"
+                        }
+                      },
+                      "revision": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionTypeTemplate"
+                }
+              },
+              "revision": 1
+            },
+            "name": "parameters"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "typewriter",
+                    "name": "List"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": [
+                {
+                  "kind": "named",
+                  "value": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "skir",
+                          "name": "editor/v1/type_catalog.skir:FunctionParameterTemplate"
+                        }
+                      },
+                      "revision": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionTypeTemplate"
+                }
+              },
+              "revision": 1
+            },
+            "name": "result"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeTemplate"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:FunctionTypeUse"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionTypeUse"
+                }
+              },
+              "revision": 1
+            },
+            "name": "context"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "typewriter",
+                    "name": "List"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": [
+                {
+                  "kind": "named",
+                  "value": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "skir",
+                          "name": "editor/v1/type_catalog.skir:FunctionParameterUse"
+                        }
+                      },
+                      "revision": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionTypeUse"
+                }
+              },
+              "revision": 1
+            },
+            "name": "parameters"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "typewriter",
+                    "name": "List"
+                  }
+                },
+                "revision": 1
+              },
+              "arguments": [
+                {
+                  "kind": "named",
+                  "value": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "skir",
+                          "name": "editor/v1/type_catalog.skir:FunctionParameterUse"
+                        }
+                      },
+                      "revision": 1
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:FunctionTypeUse"
+                }
+              },
+              "revision": 1
+            },
+            "name": "result"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeUse"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
         "name": "editor/v1/type_catalog.skir:IntegerScalar"
       }
     },
@@ -6436,12 +6862,88 @@
                 },
                 "revision": 1
               }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeTemplate.function"
+                  }
+                },
+                "revision": 1
+              }
             }
           ]
         }
       }
     }
   }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:TypeTemplate.function"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:TypeTemplate.function"
+                }
+              },
+              "revision": 1
+            },
+            "name": "value"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:FunctionTypeTemplate"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:TypeTemplate"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
 },
 {
   "id": {
@@ -6752,12 +7254,88 @@
                 },
                 "revision": 1
               }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:TypeUse.function"
+                  }
+                },
+                "revision": 1
+              }
             }
           ]
         }
       }
     }
   }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:TypeUse.function"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:TypeUse.function"
+                }
+              },
+              "revision": 1
+            },
+            "name": "value"
+          },
+          "type": {
+            "kind": "named",
+            "value": {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:FunctionTypeUse"
+                  }
+                },
+                "revision": 1
+              }
+            }
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:TypeUse"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
 },
 {
   "id": {

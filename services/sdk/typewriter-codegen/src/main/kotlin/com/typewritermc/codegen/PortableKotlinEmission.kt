@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName
 import com.typewritermc.types.named
+import com.typewritermc.types.parts
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclaredTypeId
@@ -11,6 +12,8 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.FunctionParameterTemplate
+import skirout.editor.v1.type_catalog.FunctionParameterUse
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -173,10 +176,32 @@ internal fun ParameterKey.kotlinCode(): CodeBlock =
 context(_: DefinitionReferences)
 internal fun TypeUse.kotlinCode(): CodeBlock =
     when (this) {
-        is TypeUse.NamedWrapper -> createNamedCode(TypeUse::class, value.definition.kotlinCode(), value.arguments.map { it.kotlinCode() })
-        is TypeUse.NullableWrapper -> CodeBlock.of("%T.createNullable(value·=·%L)", TypeUse::class, value.value.kotlinCode())
-        is TypeUse.ScalarWrapper -> CodeBlock.of("%T(%L)", TypeUse.ScalarWrapper::class, value.kotlinCode())
-        else -> unknownVariant(this)
+        is TypeUse.NamedWrapper -> {
+            createNamedCode(TypeUse::class, value.definition.kotlinCode(), value.arguments.map { it.kotlinCode() })
+        }
+
+        is TypeUse.NullableWrapper -> {
+            CodeBlock.of("%T.createNullable(value·=·%L)", TypeUse::class, value.value.kotlinCode())
+        }
+
+        is TypeUse.ScalarWrapper -> {
+            CodeBlock.of("%T(%L)", TypeUse.ScalarWrapper::class, value.kotlinCode())
+        }
+
+        is TypeUse.FunctionWrapper -> {
+            functionCode(
+                value.context,
+                value.parameters,
+                value.result,
+                { name },
+                { type.kotlinCode() },
+                { kotlinCode() },
+            )
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
     }
 
 context(_: DefinitionReferences)
@@ -203,6 +228,10 @@ internal fun TypeTemplate.kotlinCode(): CodeBlock =
 
         is TypeTemplate.ScalarWrapper -> {
             CodeBlock.of("%T(%L)", TypeTemplate.ScalarWrapper::class, value.kotlinCode())
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            functionCode(value.context, value.parameters, value.result, { name }, { type.kotlinCode() }, { kotlinCode() }, template = true)
         }
 
         else -> {
@@ -259,6 +288,29 @@ private fun namedUseCode(
     arguments: List<CodeBlock>,
 ): CodeBlock = CodeBlock.of("%T(definition·=·%L,♢arguments·=·%L)", NamedTypeUse::class, definition, arguments.listCode())
 
+/** `createFunction` of a function use, or of a template when [template], from its slots and result. */
+private fun <S, T> functionCode(
+    context: List<S>,
+    parameters: List<S>,
+    result: T,
+    name: S.() -> String,
+    slotType: S.() -> CodeBlock,
+    resultCode: T.() -> CodeBlock,
+    template: Boolean = false,
+): CodeBlock {
+    val slotClass = if (template) FunctionParameterTemplate::class else FunctionParameterUse::class
+
+    fun slots(slots: List<S>) =
+        slots.map { slot -> CodeBlock.of("%T(name·=·%S,♢type·=·%L)", slotClass, slot.name(), slot.slotType()) }.listCode()
+    return CodeBlock.of(
+        "%T.createFunction(context·=·%L,♢parameters·=·%L,♢result·=·%L)",
+        if (template) TypeTemplate::class else TypeUse::class,
+        slots(context),
+        slots(parameters),
+        result.resultCode(),
+    )
+}
+
 /** The type use of this template, with each parameter supplied by [parameter]. */
 context(_: DefinitionReferences)
 private fun TypeTemplate.useCode(parameter: (ParameterKey) -> CodeBlock): CodeBlock =
@@ -277,6 +329,10 @@ private fun TypeTemplate.useCode(parameter: (ParameterKey) -> CodeBlock): CodeBl
 
         is TypeTemplate.ScalarWrapper -> {
             CodeBlock.of("%T(%L)", TypeUse.ScalarWrapper::class, value.kotlinCode())
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            functionCode(value.context, value.parameters, value.result, { name }, { type.useCode(parameter) }, { useCode(parameter) })
         }
 
         else -> {
@@ -443,6 +499,10 @@ internal fun TypeDefinition.referencedIds(): Set<TypeDefinitionId> {
 
             is TypeTemplate.ParameterWrapper -> {
                 ids += template.value.owner
+            }
+
+            is TypeTemplate.FunctionWrapper -> {
+                template.value.parts.forEach(::visit)
             }
 
             else -> {

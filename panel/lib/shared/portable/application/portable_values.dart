@@ -356,6 +356,11 @@ String _typeUseKey(skir.TypeUse value, int depth) {
     skir.TypeUse_scalarWrapper(:final value) => _framed("scalar", [
       _scalarKindKey(value),
     ]),
+    skir.TypeUse_functionWrapper(:final value) => _framed("function", [
+      for (final slot in value.context) "context:${slot.name}",
+      for (final slot in value.parameters) "parameter:${slot.name}",
+      for (final part in value.parts) _typeUseKey(part, depth + 1),
+    ]),
     _ => "unknown_type_use",
   };
 }

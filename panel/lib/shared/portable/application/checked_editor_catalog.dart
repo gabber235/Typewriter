@@ -87,6 +87,8 @@ final class CheckedEditorCatalog {
     skir.TypeUse_nullableWrapper(:final value) =>
       "${typeUseName(value.value)}?",
     skir.TypeUse_scalarWrapper(:final value) => _scalarName(value),
+    skir.TypeUse_functionWrapper(:final value) =>
+      "(${value.parameters.map((parameter) => "${parameter.name}: ${typeUseName(parameter.type)}").join(", ")}) -> ${typeUseName(value.result)}",
     _ => "Unknown type",
   };
 
@@ -596,6 +598,9 @@ final class CheckedEditorCatalog {
         value,
         depth + 1,
       ),
+      skir.TypeUse_functionWrapper(:final value) => value.parts.every(
+        (part) => _isReadyTypeUse(part, depth + 1),
+      ),
       _ => false,
     };
   }
@@ -692,6 +697,20 @@ final class CheckedEditorCatalog {
     return true;
   }
 
+  bool _partsMatch(
+    List<skir.TypeTemplate> expected,
+    List<skir.TypeUse> actual,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
+  ) {
+    if (expected.length != actual.length) return false;
+    for (var index = 0; index < expected.length; index++) {
+      if (!_templateMatches(expected[index], actual[index], bindings)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   bool _templateMatches(
     skir.TypeTemplate expected,
     skir.TypeUse actual,
@@ -714,6 +733,10 @@ final class CheckedEditorCatalog {
                     (application) =>
                         _templateMatchesUse(value, application, bindings),
                   )),
+    skir.TypeTemplate_functionWrapper(:final value) =>
+      actual is skir.TypeUse_functionWrapper &&
+          value.sameSlots(actual.value) &&
+          _partsMatch(value.parts, actual.value.parts, bindings),
     _ => false,
   };
 
@@ -850,6 +873,9 @@ final class CheckedEditorCatalog {
         value.value,
         nullable: true,
       ),
+      skir.TypeTemplate_functionWrapper(:final value) => value.toUse(
+        _concreteTemplateType,
+      ),
       _ => null,
     };
     if (use == null || !nullable) return use;
@@ -868,6 +894,9 @@ final class CheckedEditorCatalog {
       skir.TypeUse_scalarWrapper(:final value) => _scalarRepresentation(value),
       skir.TypeUse_namedWrapper(:final value) => _representationKind(
         published(value.definition)?.definition,
+      ),
+      skir.TypeUse_functionWrapper() => _representationKindForUse(
+        current.storedUse,
       ),
       _ => null,
     };
@@ -991,6 +1020,9 @@ final class CheckedEditorCatalog {
     },
     skir.TypeTemplate_scalarWrapper(:final value) => skir.TypeUse.wrapScalar(
       value,
+    ),
+    skir.TypeTemplate_functionWrapper(:final value) => value.toUse(
+      (part) => _apply(part, bindings),
     ),
     _ => null,
   };

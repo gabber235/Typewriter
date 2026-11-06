@@ -14,6 +14,7 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.RELATION_LINK_NAMESPACE
+import com.typewritermc.types.parts
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
@@ -87,6 +88,7 @@ internal fun TypeTemplate.referencedIds(): Set<TypeDefinitionId> =
         is TypeTemplate.NullableWrapper -> value.value.referencedIds()
         is TypeTemplate.ParameterWrapper -> setOf(value.owner)
         is TypeTemplate.ScalarWrapper -> emptySet()
+        is TypeTemplate.FunctionWrapper -> value.parts.flatMapTo(linkedSetOf()) { it.referencedIds() }
         else -> unknownVariant(this)
     }
 
@@ -99,6 +101,7 @@ internal fun TypeUse.referencedIds(): Set<TypeDefinitionId> =
         is TypeUse.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap { it.referencedIds() }
         is TypeUse.NullableWrapper -> value.value.referencedIds()
         is TypeUse.ScalarWrapper -> emptySet()
+        is TypeUse.FunctionWrapper -> value.parts.flatMapTo(linkedSetOf()) { it.referencedIds() }
         else -> unknownVariant(this)
     }
 

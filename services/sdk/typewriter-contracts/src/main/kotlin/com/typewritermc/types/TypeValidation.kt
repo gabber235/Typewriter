@@ -7,6 +7,8 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.FunctionTypeTemplate
+import skirout.editor.v1.type_catalog.FunctionTypeUse
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -197,6 +199,7 @@ private fun TypeUse.requireValid(depth: Int) {
         is TypeUse.NamedWrapper -> value.requireValid(depth)
         is TypeUse.NullableWrapper -> value.value.requireValid(depth + 1)
         is TypeUse.ScalarWrapper -> value.requireValid()
+        is TypeUse.FunctionWrapper -> value.requireValid(depth)
         else -> throw IllegalArgumentException("Unknown type use variant.")
     }
 }
@@ -214,7 +217,28 @@ private fun TypeTemplate.requireValid(depth: Int) {
         is TypeTemplate.NamedWrapper -> value.requireValid(depth)
         is TypeTemplate.NullableWrapper -> value.value.requireValid(depth + 1)
         is TypeTemplate.ScalarWrapper -> value.requireValid()
+        is TypeTemplate.FunctionWrapper -> value.requireValid(depth)
         else -> throw IllegalArgumentException("Unknown type template variant.")
+    }
+}
+
+private fun FunctionTypeUse.requireValid(depth: Int) {
+    requireFunctionNames(context.map { it.name }, parameters.map { it.name })
+    parts.forEach { it.requireValid(depth + 1) }
+}
+
+private fun FunctionTypeTemplate.requireValid(depth: Int) {
+    requireFunctionNames(context.map { it.name }, parameters.map { it.name })
+    parts.forEach { it.requireValid(depth + 1) }
+}
+
+private fun requireFunctionNames(
+    context: List<String>,
+    parameters: List<String>,
+) {
+    require((context + parameters).all(String::isNotBlank)) { "Function type slots must be named." }
+    require(context.toSet().size == context.size && parameters.toSet().size == parameters.size) {
+        "Function type slot names must be distinct."
     }
 }
 

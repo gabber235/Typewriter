@@ -6,6 +6,9 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.parts
+import com.typewritermc.types.slotNames
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
@@ -201,7 +204,7 @@ internal fun selectMostSpecificDescriptors(
 
 private fun CheckedType.applications(): List<NamedTypeUse> =
     buildList {
-        (use as? TypeUse.NamedWrapper)?.value?.let(::add)
+        (use.storedUse as? TypeUse.NamedWrapper)?.value?.let(::add)
         addAll(schema.ancestors)
     }
 
@@ -243,6 +246,13 @@ private fun TypeTemplate.matches(
                     }
                     matches
                 }
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            val function = (actual as? TypeUse.FunctionWrapper)?.value
+            function != null &&
+                function.slotNames == value.slotNames &&
+                value.parts.zip(function.parts).all { (expected, supplied) -> expected.matches(supplied, parameters, checked) }
         }
 
         else -> {
@@ -297,6 +307,13 @@ private fun TypeTemplate.subsumes(
             }
         }
 
+        is TypeTemplate.FunctionWrapper -> {
+            val function = (candidate as? TypeTemplate.FunctionWrapper)?.value
+            function != null &&
+                function.slotNames == value.slotNames &&
+                value.parts.zip(function.parts).all { (pattern, part) -> pattern.subsumes(part, checked, parameters) }
+        }
+
         else -> {
             unknownVariant(this)
         }
@@ -341,6 +358,13 @@ private fun TypeTemplate.subsumes(
                     candidate.value.arguments.isEmpty() &&
                     catalog.isNominalSubtype(candidate.value.definition, value.definition)
             }
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            val function = (candidate as? TypeTemplate.FunctionWrapper)?.value
+            function != null &&
+                function.slotNames == value.slotNames &&
+                value.parts.zip(function.parts).all { (pattern, part) -> pattern.subsumes(part, catalog, parameters) }
         }
 
         else -> {

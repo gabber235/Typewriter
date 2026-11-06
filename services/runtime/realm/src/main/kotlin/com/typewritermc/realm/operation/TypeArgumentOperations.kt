@@ -23,6 +23,7 @@ import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.of
+import com.typewritermc.types.closedCases
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -34,6 +35,7 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.EditIntent
@@ -322,7 +324,7 @@ private fun collectRepairs(
 
     val namedValue = value as? DataValue.NamedWrapper
     val actualNamed = actual as? TypeUse.NamedWrapper
-    val expectedNamed = expected as? TypeUse.NamedWrapper
+    val expectedNamed = (expected as? TypeUse.NamedWrapper)?.let { catalog.heldCase(it, actualNamed) ?: it }
     val canRetag =
         namedValue != null &&
             actualNamed != null &&
@@ -432,6 +434,22 @@ private fun collectRepairs(
     }
 }
 
+/**
+ * The case of the closed record [expected] that a value of [actual] holds, applied to [expected]'s arguments, so a
+ * value keeps its case when the record's arguments change. Null when [expected] is not closed or lists no such case.
+ */
+private fun CheckedCatalog.heldCase(
+    expected: TypeUse.NamedWrapper,
+    actual: TypeUse.NamedWrapper?,
+): TypeUse.NamedWrapper? {
+    val held = actual?.value?.definition ?: return null
+    val resolved = resolve(expected) as? Resolution.Ready ?: return null
+    return resolved.value.schema.representation
+        .closedCases()
+        ?.firstOrNull { it.definition == held }
+        ?.let { TypeUse.NamedWrapper(it) }
+}
+
 private fun incompatibleLinks(
     resource: ResourceId,
     requested: TypeSelection,
@@ -519,6 +537,7 @@ private fun TypeTemplate.concreteUseOrNull(): TypeUse? {
         is TypeTemplate.NamedWrapper -> value.definition.use(value.arguments.map { it.concreteUseOrNull() ?: return null })
         is TypeTemplate.NullableWrapper -> value.value.concreteUseOrNull()?.nullable()
         is TypeTemplate.ScalarWrapper -> value.use
+        is TypeTemplate.FunctionWrapper -> value.toUse { it.concreteUseOrNull() }
         else -> unknownVariant(this)
     }
 }

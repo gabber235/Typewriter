@@ -20,14 +20,17 @@ import com.typewritermc.codegen.isType
 import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.codegen.valueClassStoredType
 import com.typewritermc.types.Color
+import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterString
 import com.typewritermc.types.template
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeTemplate
+import com.typewritermc.codegen.TypewriterApi as Api
 
 /**
  * The one classification of an authoring field. Emitters derive every Kotlin type and every runtime descriptor from
@@ -104,6 +107,16 @@ internal sealed interface FieldShape {
         override val native: TypeName,
     ) : FieldShape
 
+    /**
+     * A function type, stored as the Formula record. [stored] is the Formula record shape that configures, presents
+     * and drafts the value; [native] stays the Kotlin type as authored, a function type or a Var's context marker.
+     */
+    data class Function(
+        val stored: Record,
+        override val template: TypeTemplate,
+        override val native: TypeName,
+    ) : FieldShape
+
     /** A type parameter of the declaration that owns the field. */
     data class Parameter(
         val index: Int,
@@ -111,6 +124,16 @@ internal sealed interface FieldShape {
         override val native: TypeName,
     ) : FieldShape
 }
+
+/** The Formula record, which stores the value of every function type. */
+private val formulaShape: FieldShape.Record =
+    FieldShape.Record(
+        SdkNames.of(Api.Formula),
+        emptyList(),
+        abstract = false,
+        template = FORMULA_USE.toTemplate().template,
+        native = Api.Formula,
+    )
 
 /** Classifies a value from its portable template and resolved Kotlin type. The only KSType inspection for fields. */
 context(parameters: TypeParameterResolver)
@@ -124,6 +147,7 @@ internal fun classify(
         is TypeTemplate.ParameterWrapper -> FieldShape.Parameter(template.value.index, template, native)
         is TypeTemplate.ScalarWrapper -> FieldShape.Scalar(template.value, template, native.copy(nullable = false))
         is TypeTemplate.NamedWrapper -> classifyNamed(template.value, type, native)
+        is TypeTemplate.FunctionWrapper -> FieldShape.Function(formulaShape, template, native)
         else -> unknownVariant(template)
     }
 }

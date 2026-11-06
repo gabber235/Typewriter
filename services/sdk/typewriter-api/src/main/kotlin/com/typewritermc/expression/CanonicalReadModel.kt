@@ -29,6 +29,7 @@ import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.member
 import com.typewritermc.types.memberName
+import com.typewritermc.types.parts
 import com.typewritermc.types.payload
 import com.typewritermc.types.unknownVariant
 import okio.ByteString
@@ -139,6 +140,7 @@ open class CanonicalReadModelRegistry(
             is TypeUse.NamedWrapper -> owns(use.value.definition) || use.value.arguments.any(::supports)
             is TypeUse.NullableWrapper -> supports(use.value.value)
             is TypeUse.ScalarWrapper -> false
+            is TypeUse.FunctionWrapper -> use.value.parts.any(::supports)
             else -> unknownVariant(use)
         }
 

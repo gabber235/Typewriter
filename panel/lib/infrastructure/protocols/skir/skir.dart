@@ -15,6 +15,7 @@ export "package:skir_client/skir_client.dart" hide Service;
 export "../operations/portable_operation_runtime.dart" hide ByteString;
 export "../operations/skirout/portable_unicode_tables.dart";
 export "converters.dart";
+export "function_types.dart";
 export "record_forms.dart";
 export "skirout/access/v1/permission.dart";
 export "skirout/access/v1/sentinel.dart";

@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.asClassName
@@ -26,6 +27,8 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterString
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.functionTemplate
+import com.typewritermc.types.functionUse
 import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -50,6 +53,7 @@ import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import com.typewritermc.codegen.TypewriterApi as Api
 
 fun interface KspLinkPolicy {
     fun endpoint(endpoint: KSClassDeclaration): EndpointId?
@@ -103,6 +107,9 @@ class KspTypeGraphConverter(
     private val declarations = linkedMapOf<TypeDefinitionId, KSClassDeclaration>()
     private val diagnostics = mutableListOf<KspTypeDiagnostic>()
     private val visiting = mutableSetOf<TypeDefinitionId>()
+
+    /** The property whose type is being converted, where a diagnostic about that type belongs. */
+    private var property: KSPropertyDeclaration? = null
 
     fun convert(type: KSType): KspTypeConversionResult {
         reset()
@@ -163,6 +170,13 @@ class KspTypeGraphConverter(
                 value.use
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                val context = value.context.map { it.name to (it.type.complete(path + it.name) ?: return null) }
+                val parameters = value.parameters.map { it.name to (it.type.complete(path + it.name) ?: return null) }
+                val result = value.result.complete(path + "result") ?: return null
+                functionUse(context = context, parameters = parameters, result = result)
+            }
+
             else -> {
                 unknownVariant(this)
             }
@@ -202,22 +216,25 @@ class KspTypeGraphConverter(
         path: List<String>,
     ): TypeTemplate? {
         type.portableScalarKind()?.let { return it.template }
+        if (type.isFunctionType) return kotlinFunctionTemplate(type, owner, path)
         if (declaration isType Ref::class.asClassName()) return referenceTemplate(type, owner, path)
+        if (declaration isType Api.Var) return varTemplate(type, declaration, owner, path)
         val collection = declaration.collectionIdentity()
         if (collection != null) {
             ensureCollectionDefinition(collection)
-            val arguments =
-                type.arguments.mapIndexed { index, argument ->
-                    argument.type?.let { reference ->
-                        template(reference.resolve(), owner, path + "argument $index", reference.explicitNullable)
-                    }
-                        ?: failure(path + "argument $index", "Star projections are not authorable.")
-                }
-            if (arguments.any { it == null }) return null
-            return collection.template(arguments.filterNotNull())
+            return collection.template(typeArguments(type, owner, path) ?: return null)
         }
         val identity = identity(declaration, path) ?: return null
         buildDefinition(declaration, identity, path)
+        return identity.template(typeArguments(type, owner, path) ?: return null)
+    }
+
+    /** The templates of [type]'s arguments, or null when one of them is not authorable. */
+    private fun typeArguments(
+        type: KSType,
+        owner: KSClassDeclaration?,
+        path: List<String>,
+    ): List<TypeTemplate>? {
         val arguments =
             type.arguments.mapIndexed { index, argument ->
                 argument.type?.let { reference ->
@@ -225,8 +242,75 @@ class KspTypeGraphConverter(
                 }
                     ?: failure(path + "argument $index", "Star projections are not authorable.")
             }
-        if (arguments.any { it == null }) return null
-        return identity.template(arguments.filterNotNull())
+        return arguments.takeIf { all -> all.none { it == null } }?.filterNotNull()
+    }
+
+    /**
+     * A Kotlin function type lowers to a structural function type. Names are part of the type, so each parameter of a
+     * function with two or more parameters must be named; a single unnamed parameter is named `it`.
+     */
+    private fun kotlinFunctionTemplate(
+        type: KSType,
+        owner: KSClassDeclaration?,
+        path: List<String>,
+    ): TypeTemplate? {
+        val inputs = type.arguments.dropLast(1)
+        val names = inputs.map { it.parameterName() }
+        if (inputs.size >= 2 && names.any { it == null }) {
+            return failure(path, "Name each parameter of a function type with two or more parameters.", property)
+        }
+        val parameters =
+            inputs.mapIndexed { index, argument ->
+                val name = names[index] ?: "it"
+                val reference = argument.type ?: return failure(path + name, "Star projections are not authorable.")
+                name to (template(reference.resolve(), owner, path + name, reference.explicitNullable) ?: return null)
+            }
+        val result = type.arguments.last().type ?: return failure(path + "result", "Star projections are not authorable.")
+        return functionTemplate(
+            parameters = parameters,
+            result = template(result.resolve(), owner, path + "result", result.explicitNullable) ?: return null,
+        )
+    }
+
+    /**
+     * `Var<T, F>` lowers to the Var record applied to `T` and the function type its formulas have: no parameters, the
+     * properties of the scope `F` as context, and `T` as result. Inside Var's own declaration `F` stays its parameter.
+     */
+    private fun varTemplate(
+        type: KSType,
+        declaration: KSClassDeclaration,
+        owner: KSClassDeclaration?,
+        path: List<String>,
+    ): TypeTemplate? {
+        val identity = identity(declaration, path) ?: return null
+        buildDefinition(declaration, identity, path)
+        val valueType = type.arguments[0].type ?: return failure(path + "value", "Star projections are not authorable.")
+        val value = template(valueType.resolve(), owner, path + "value", valueType.explicitNullable) ?: return null
+        val scopeType = type.arguments[1].type?.resolve() ?: return failure(path + "context", "Star projections are not authorable.")
+        val formula =
+            when (val scope = scopeType.declaration) {
+                is KSTypeParameter -> {
+                    parameterTemplate(scope, owner, path + "context") ?: return null
+                }
+
+                is KSClassDeclaration -> {
+                    if (scope.classKind != ClassKind.INTERFACE) {
+                        return failure(path + "context", "The context of a Var must be an interface.", property)
+                    }
+                    val context =
+                        scope.getAllProperties().toList().map { slot ->
+                            val name = slot.simpleName.asString()
+                            name to
+                                (template(slot.type.resolve(), owner, path + "context" + name, slot.type.explicitNullable) ?: return null)
+                        }
+                    functionTemplate(context = context, result = value)
+                }
+
+                else -> {
+                    return failure(path + "context", "The context of a Var must be an interface.", property)
+                }
+            }
+        return identity.template(listOf(value, formula))
     }
 
     private fun referenceTemplate(
@@ -333,7 +417,7 @@ class KspTypeGraphConverter(
                                 Modifier.SEALED in declaration.modifiers -> {
                                     closedForm(
                                         declaration
-                                            .getSealedSubclasses()
+                                            .casesInDeclarationOrder()
                                             .mapNotNull { case -> caseTemplate(declaration, case, path + case.simpleName.asString()) }
                                             .toList(),
                                     )
@@ -425,8 +509,14 @@ class KspTypeGraphConverter(
             .filter(KSPropertyDeclaration::isStoredTypeProperty)
             .mapNotNull { property ->
                 val name = property.serialName ?: property.simpleName.asString()
+                val outer = this.property
+                this.property = property
                 val fieldType =
-                    template(property.type.resolve(), declaration, path + name, property.type.explicitNullable) ?: return@mapNotNull null
+                    try {
+                        template(property.type.resolve(), declaration, path + name, property.type.explicitNullable)
+                    } finally {
+                        this.property = outer
+                    } ?: return@mapNotNull null
                 val overrides =
                     declaration
                         .getAllSuperTypes()
@@ -477,9 +567,23 @@ private fun KSClassDeclaration.sealedParent(): KSClassDeclaration? =
         Modifier.SEALED in parent.modifiers && superTypes.any { it.resolve().declaration == parent }
     }
 
+/** The sealed subtypes of this declaration: nested ones in source order, then the others as KSP lists them. */
+private fun KSClassDeclaration.casesInDeclarationOrder(): Sequence<KSClassDeclaration> {
+    val nested = declarations.filterIsInstance<KSClassDeclaration>().toList()
+    return getSealedSubclasses().sortedBy { case -> nested.indexOf(case).takeIf { it >= 0 } ?: Int.MAX_VALUE }
+}
+
 /** The entries of this enum class in declaration order. */
 private fun KSClassDeclaration.enumEntries(): List<KSClassDeclaration> =
     declarations.filterIsInstance<KSClassDeclaration>().filter { it.classKind == ClassKind.ENUM_ENTRY }.toList()
+
+/** The name a function type gives this argument, as `(level: Int) -> Int` does through `@ParameterName`. */
+private fun KSTypeArgument.parameterName(): String? =
+    (annotations + type?.annotations.orEmpty())
+        .firstOrNull { it.shortName.asString() == "ParameterName" }
+        ?.arguments
+        ?.firstOrNull()
+        ?.value as? String
 
 private fun closedForm(cases: List<NamedTypeTemplate>): RecordForm = RecordForm.createClosed(cases = cases)
 

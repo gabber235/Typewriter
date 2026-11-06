@@ -5,18 +5,24 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.type
 import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
+import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.MAX_TYPE_DEPTH
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.closedCases
+import com.typewritermc.types.directUses
+import com.typewritermc.types.function
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.isInstantiable
+import com.typewritermc.types.mapParts
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.parts
 import com.typewritermc.types.qualified
+import com.typewritermc.types.slotNames
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
@@ -33,6 +39,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DependentField
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FunctionParameterUse
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -143,6 +150,23 @@ fun TypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<TypeUs
             Resolution.Ready(value.use)
         }
 
+        is TypeTemplate.FunctionWrapper -> {
+            val function = value
+            function.context
+                .mapResolution { slot ->
+                    slot.type.apply(arguments).map { FunctionParameterUse(name = slot.name, type = it) }
+                }.flatMap { context ->
+                    function.parameters
+                        .mapResolution { slot ->
+                            slot.type.apply(arguments).map { FunctionParameterUse(name = slot.name, type = it) }
+                        }.flatMap { parameters ->
+                            function.result.apply(arguments).map { result ->
+                                TypeUse.createFunction(context = context, parameters = parameters, result = result)
+                            }
+                        }
+                }
+        }
+
         else -> {
             unknownVariant(this)
         }
@@ -220,6 +244,7 @@ class DefaultCheckedCatalog(
                         is TypeUse.ScalarWrapper -> ready(candidate, ResolvedRepresentation.createScalar(kind = candidate.value))
                         is TypeUse.NullableWrapper -> resolveNullable(candidate)
                         is TypeUse.NamedWrapper -> resolveNamed(candidate.value)
+                        is TypeUse.FunctionWrapper -> resolveFunction(candidate)
                         else -> unknownVariant(candidate)
                     }
                 cache[key] = resolved
@@ -381,6 +406,18 @@ class DefaultCheckedCatalog(
         return applications
     }
 
+    /**
+     * A function type checks as itself and stores as the Formula record: its schema is Formula's, under the function's
+     * own use, so checking sees the function and storage sees the record.
+     */
+    private fun resolveFunction(candidate: TypeUse.FunctionWrapper): Resolution<CheckedType> {
+        candidate.value.parts.forEach { part -> (resolve(part) as? Resolution.Invalid)?.let { return it } }
+        return when (val formula = resolveNamed(FORMULA_USE)) {
+            is Resolution.Invalid -> formula
+            is Resolution.Ready -> Resolution.Ready(CheckedType(generation, candidate, formula.value.schema.copy(use = candidate), this))
+        }
+    }
+
     private fun resolveNullable(candidate: TypeUse.NullableWrapper): Resolution<CheckedType> =
         when (val inner = resolve(candidate.value.value)) {
             is Resolution.Invalid -> {
@@ -451,10 +488,27 @@ class DefaultCheckedCatalog(
     ): Resolution<Unit> {
         candidate.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
         return when (candidate) {
-            is TypeUse.ScalarWrapper -> Resolution.Ready(Unit)
-            is TypeUse.NullableWrapper -> validateTypeApplication(candidate.value.value, visiting)
-            is TypeUse.NamedWrapper -> validateApplication(candidate.value, visiting).map { Unit }
-            else -> unknownVariant(candidate)
+            is TypeUse.ScalarWrapper -> {
+                Resolution.Ready(Unit)
+            }
+
+            is TypeUse.NullableWrapper -> {
+                validateTypeApplication(candidate.value.value, visiting)
+            }
+
+            is TypeUse.NamedWrapper -> {
+                validateApplication(candidate.value, visiting).map { Unit }
+            }
+
+            is TypeUse.FunctionWrapper -> {
+                candidate.value.parts
+                    .mapResolution { validateTypeApplication(it, visiting) }
+                    .map { Unit }
+            }
+
+            else -> {
+                unknownVariant(candidate)
+            }
         }
     }
 
@@ -839,6 +893,14 @@ class DefaultCheckedCatalog(
                     named.arguments.zip(actualNamed.arguments).all { (left, right) -> infer(left, right, inferred) }
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                val function = template.value
+                val actualFunction = actual.function
+                actualFunction != null &&
+                    function.slotNames == actualFunction.slotNames &&
+                    function.parts.zip(actualFunction.parts).all { (left, right) -> infer(left, right, inferred) }
+            }
+
             else -> {
                 unknownVariant(template)
             }
@@ -1037,6 +1099,11 @@ private fun TypeUse.structuralHash(): Int =
             value.structuralHash()
         }
 
+        is TypeUse.FunctionWrapper -> {
+            val names = (value.context + value.parameters).fold(kind.ordinal) { hash, slot -> 31 * hash + slot.name.hashCode() }
+            value.parts.fold(names) { hash, part -> 31 * hash + part.structuralHash() }
+        }
+
         else -> {
             kind.ordinal
         }
@@ -1071,21 +1138,9 @@ private fun TypeUse.typeDepthFailure(): TypeDefinitionId? {
         if (depth > MAX_TYPE_DEPTH) {
             return named?.definition ?: nearestDefinition ?: TYPE_USE_DIAGNOSTIC_OWNER
         }
-        when (current) {
-            is TypeUse.NamedWrapper -> {
-                current.value.arguments
-                    .asReversed()
-                    .forEach { pending.addLast(it to depth + 1) }
-            }
-
-            is TypeUse.NullableWrapper -> {
-                pending.addLast(current.value.value to depth + 1)
-            }
-
-            else -> {
-                Unit
-            }
-        }
+        current.directUses
+            .asReversed()
+            .forEach { pending.addLast(it to depth + 1) }
     }
     return null
 }
@@ -1111,6 +1166,12 @@ private fun TypeDefinition.exceedsTypeDepth(): Boolean {
                 pending.addLast(current.value.value to depth + 1)
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                current.value.parts
+                    .asReversed()
+                    .forEach { pending.addLast(it to depth + 1) }
+            }
+
             else -> {
                 Unit
             }
@@ -1126,6 +1187,12 @@ private fun resolvedField(
     type: TypeUse,
     guarantees: List<skirout.editor.v1.type_catalog.RuleId> = emptyList(),
 ) = ResolvedField(key = owner.name, declarationOwner = owner.definition, type = type, guarantees = guarantees)
+
+private fun <T, R> Resolution<T>.flatMap(transform: (T) -> Resolution<R>): Resolution<R> =
+    when (this) {
+        is Resolution.Invalid -> this
+        is Resolution.Ready -> transform(value)
+    }
 
 private fun <T, R> Resolution<T>.map(transform: (T) -> R): Resolution<R> =
     when (this) {
@@ -1148,6 +1215,7 @@ private fun TypeTemplate.namedTemplates(): List<NamedTypeTemplate> =
     when (this) {
         is TypeTemplate.NullableWrapper -> value.value.namedTemplates()
         is TypeTemplate.NamedWrapper -> listOf(value) + value.arguments.flatMap { it.namedTemplates() }
+        is TypeTemplate.FunctionWrapper -> value.parts.flatMap { it.namedTemplates() }
         else -> emptyList()
     }
 
@@ -1156,6 +1224,7 @@ private fun TypeTemplate.substituteKnown(bindings: Map<ParameterKey, TypeUse>): 
         is TypeTemplate.ParameterWrapper -> bindings[value]?.toTemplate() ?: this
         is TypeTemplate.NamedWrapper -> value.copy(arguments = value.arguments.map { it.substituteKnown(bindings) }).template
         is TypeTemplate.NullableWrapper -> value.value.substituteKnown(bindings).nullable()
+        is TypeTemplate.FunctionWrapper -> TypeTemplate.FunctionWrapper(value.mapParts { it.substituteKnown(bindings) })
         else -> this
     }
 
@@ -1171,5 +1240,6 @@ fun CheckedCatalog.isReady(template: TypeTemplate): Boolean =
         is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper -> true
         is TypeTemplate.NullableWrapper -> isReady(template.value.value)
         is TypeTemplate.NamedWrapper -> isReady(template.value)
+        is TypeTemplate.FunctionWrapper -> template.value.parts.all(::isReady)
         else -> unknownVariant(template)
     }
