@@ -25,9 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: restarts, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: restarts, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: restarts, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
     defaults:
       run:
         working-directory: prototypes/game-verification
