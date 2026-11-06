@@ -11,7 +11,7 @@ No page meets the rules yet. Most faults come from a few shared causes, so fix t
 | Cause | Where | Clears |
 |---|---|---|
 | Confirmation dialog focuses the destructive button, and Shift skips it | `popups.dart:151,191,198`, `shortcuts.dart:81-88` | MEMBERS-1, MEMBERS-2, SERVICES-1, JOINREQ-1, JOINCODES-1, ORGS-5 |
-| Permanent actions on one press with no hold | Publish and Discard in the inbox, Use saved in conflict review | SHEETS-1, SHEETS-2, CONFLICT-1 |
+| Work lost on one press with no hold | Discard in the inbox, Use saved in conflict review | SHEETS-2, CONFLICT-1. SHEETS-1 drops to 2: Publish stays one press, but Ctrl+Enter must work only where Publish is shown |
 | No focus on open, and no focus target after remove or create | Every route; focus scopes in `panes.dart` | MEMBERS-3, MEMBERS-4, SERVICES-2, SERVICES-3, RESOURCE-1, RESOURCE-2, SIGNIN-1, ORGS-1, JOINREQ-2, JOINREQ-3, JOINCODES-3, JOINCODES-4, SHEETS-3, CONFLICT-2 |
 | No motion tokens; every widget writes its own durations and curves | `panel/lib`, `animation.dart`, `Expansible` uses, bulk bars, `StaggerEntrance` per cell | MOTION-1 to MOTION-38, SEARCH-4 to SEARCH-6, GRAPH-1, GRAPH-2, JOINCODES-10 to JOINCODES-13, JOINREQ-7, JOINREQ-9 |
 | Failures go to snackbars or tooltips with raw text | `ScaffoldMessenger` call sites, `LoadingButton`, `skir_mutation.dart:188` | MEMBERS-5, MEMBERS-10, SERVICES-8, RESOURCE-12, SIGNIN-3, ORGS-4, JOINREQ-6, SHARED-JOINCODES-2, SEARCH-2 |
