@@ -37,6 +37,9 @@ final class WorldBuilder {
   /// The theme mode the user chose.
   ThemeMode themeMode = ThemeMode.light;
 
+  /// Whether the user asked the platform for reduced motion.
+  bool reducedMotion = false;
+
   /// Whether the organization projections the panel watches over NATS are
   /// replaced by [FakeOrganizations]; false leaves the real projections
   /// reading [World.nats], where the test registers replies.
@@ -112,6 +115,7 @@ final class World {
     required this.appearance,
     required this.realm,
     required this.window,
+    required this.reducedMotion,
     required this._builder,
   }) {
     container = ProviderContainer(
@@ -190,6 +194,7 @@ final class World {
       appearance: FakeAppearance(builder.themeMode),
       realm: realm,
       window: builder.window,
+      reducedMotion: builder.reducedMotion,
       builder: builder,
     );
   }
@@ -211,6 +216,9 @@ final class World {
 
   /// The window the panel renders in.
   final Size window;
+
+  /// Whether the panel renders for a user who asked for reduced motion.
+  final bool reducedMotion;
 
   final WorldBuilder _builder;
 

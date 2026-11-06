@@ -43,3 +43,19 @@ final class _Appearance extends Trait {
   @override
   void applyTo(WorldBuilder world) => world.themeMode = mode;
 }
+
+/// The user asked the platform for reduced motion.
+const Trait reducedMotion = _Motion();
+
+final class _Motion extends Trait {
+  const _Motion();
+
+  @override
+  Slot get slot => Slot.motion;
+
+  @override
+  String get description => "reducedMotion";
+
+  @override
+  void applyTo(WorldBuilder world) => world.reducedMotion = true;
+}
