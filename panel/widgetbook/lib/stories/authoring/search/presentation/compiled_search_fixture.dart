@@ -185,7 +185,7 @@ skir.PublishedType _subtype(
             parameters: const [],
             representation: skir.RepresentationTemplate.createRecord(
               fields: const [],
-              abstract_: false,
+              form: skir.RecordForm.concrete,
             ),
             parents: [
               skir.NamedTypeTemplate(

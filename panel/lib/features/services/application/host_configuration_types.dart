@@ -55,7 +55,7 @@ skir.EffectiveFieldTemplate _draftField(
 
 skir.PublishedType _draftPublished(
   skir.TypeDefinitionId definition, {
-  bool abstract = false,
+  bool open = false,
   List<skir.NamedTypeTemplate> parents = const [],
   List<skir.EffectiveFieldTemplate> fields = const [],
 }) => skir.PublishedType(
@@ -73,7 +73,7 @@ skir.PublishedType _draftPublished(
           hasConstructorDefault: false,
         ),
       ),
-      abstract_: abstract,
+      form: open ? skir.RecordForm.open : skir.RecordForm.concrete,
     ),
     parents: parents,
   ),
@@ -107,7 +107,7 @@ final _hostConfigurationCatalog = skir.EditorCatalog(
         ),
       ],
     ),
-    _draftPublished(_realmDraft, abstract: true),
+    _draftPublished(_realmDraft, open: true),
     _draftPublished(_realmDisabled, parents: [_draftTemplate(_realmDraft)]),
     _draftPublished(
       _realmHosted,
@@ -116,7 +116,7 @@ final _hostConfigurationCatalog = skir.EditorCatalog(
         _draftField(_realmHosted, "target", _hostConfigurationTextTemplate),
       ],
     ),
-    _draftPublished(_engineDraft, abstract: true),
+    _draftPublished(_engineDraft, open: true),
     _draftPublished(_engineDisabled, parents: [_draftTemplate(_engineDraft)]),
     _draftPublished(
       _engineEnabled,

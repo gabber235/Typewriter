@@ -31,6 +31,7 @@ import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.immutableMapCopy
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
@@ -344,7 +345,8 @@ private fun realmStructureDiagnostics(
     return declarations
         .filter {
             it.definition.id in resourceTypes &&
-                (it.definition.representation as? RepresentationTemplate.RecordWrapper)?.value?.abstract_ == false
+                it.definition.representation is RepresentationTemplate.RecordWrapper &&
+                it.definition.representation.isInstantiable()
         }.mapNotNull { owned ->
             val id = owned.definition.id
             val origins = listOf(DeclarationOrigin(owner = owned.origin.owner))
@@ -386,6 +388,7 @@ private fun TypeDefinitionId.derivedDisplay(): TypeDisplay =
             when (val id = typeId) {
                 is TypeId.QualifiedWrapper -> id.value.name.substringAfterLast('.')
                 is TypeId.DeclaredWrapper -> "Type"
+                is TypeId.MemberWrapper -> id.value.name
                 else -> unknownVariant(id)
             },
         description = "",

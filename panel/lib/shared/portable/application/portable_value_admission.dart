@@ -242,18 +242,6 @@ final class _PortableValueInspector {
             skir.PathSegment.mapValue,
           ], depth + 2);
         }
-      case skir.RepresentationTemplate_enumerationWrapper(
-        value: final enumeration,
-      ):
-        if (value is! skir.DataValue_enumCaseWrapper ||
-            !enumeration.cases.any((c) => c.key == value.value)) {
-          problem(
-            path,
-            value is skir.DataValue_enumCaseWrapper
-                ? "unknown_enum_case"
-                : "expected_enum",
-          );
-        }
       case skir.RepresentationTemplate_linkWrapper(value: final link):
         if (value is! skir.DataValue_linkWrapper ||
             value.value.endpoint != link.endpoint) {

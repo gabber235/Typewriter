@@ -8,7 +8,9 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.types.MAX_TYPE_DEPTH
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.reasons
+import com.typewritermc.types.closedCases
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
@@ -35,8 +37,10 @@ import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PartialSchema
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResolvedField
+import skirout.editor.v1.type_catalog.ResolvedRecordForm
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -313,11 +317,17 @@ class DefaultCheckedCatalog(
         return false
     }
 
-    override fun concreteForms(expected: CheckedType): List<CheckedType> =
-        definitions.values
+    override fun concreteForms(expected: CheckedType): List<CheckedType> {
+        expected.schema.representation.closedCases()?.let { cases ->
+            return cases
+                .mapNotNull { case -> (resolve(case.use) as? Resolution.Ready)?.value }
+                .flatMap { case -> if (case.schema.representation.isInstantiable()) listOf(case) else concreteForms(case) }
+                .distinct()
+        }
+        return definitions.values
             .filter { it.size == 1 }
             .map(List<TypeDefinition>::single)
-            .filter { (it.representation as? RepresentationTemplate.RecordWrapper)?.value?.abstract_ != true }
+            .filter { it.representation.isInstantiable() }
             .flatMap { definition -> inferConcreteApplications(definition, expected.use) }
             .distinct()
             .mapNotNull { named ->
@@ -325,6 +335,7 @@ class DefaultCheckedCatalog(
                 val resolved = resolve(candidate) as? Resolution.Ready ?: return@mapNotNull null
                 resolved.value.takeIf { isResolvedReadableAs(candidate, expected.use, resolved.value.schema) }
             }
+    }
 
     override fun validateAuthoring(record: AuthoringRecord): StructuralResult = record.validateStructure(this)
 
@@ -570,7 +581,9 @@ class DefaultCheckedCatalog(
             }
 
             is RepresentationTemplate.RecordWrapper -> {
-                Resolution.Ready(ResolvedRepresentation.createRecord(fields = fields, abstract_ = representation.value.abstract_))
+                representation.value.form
+                    .resolve(bindings)
+                    .map { form -> ResolvedRepresentation.createRecord(fields = fields, form = form) }
             }
 
             is RepresentationTemplate.SequenceWrapper -> {
@@ -586,10 +599,6 @@ class DefaultCheckedCatalog(
                 Resolution.Ready(
                     ResolvedRepresentation.createMapping(key = (key as Resolution.Ready).value, value = (value as Resolution.Ready).value),
                 )
-            }
-
-            is RepresentationTemplate.EnumerationWrapper -> {
-                Resolution.Ready(ResolvedRepresentation.createEnumeration(cases = representation.value.cases))
             }
 
             is RepresentationTemplate.LinkWrapper -> {
@@ -680,7 +689,47 @@ class DefaultCheckedCatalog(
         val fields = (definition.representation as? RepresentationTemplate.RecordWrapper)?.value?.fields.orEmpty()
         if (fields.map { it.owner.name }.distinct().size != fields.size) markUnavailable(definition.id, "duplicate_field")
         if (fields.any { it.owner.definition != definition.id }) markUnavailable(definition.id, "invalid_field_owner")
+        definition.closedFormProblems().forEach { markUnavailable(definition.id, it) }
     }
+
+    /** A closed record and its cases must agree in both directions: each lists or names the other. */
+    private fun TypeDefinition.closedFormProblems(): List<String> =
+        buildList {
+            parents.forEach { parent ->
+                val cases = definitions[parent.definition]?.singleOrNull()?.representation?.closedCases() ?: return@forEach
+                if (cases.none { it.definition == id }) add("not_a_listed_case")
+            }
+            representation.closedCases()?.forEach { case ->
+                val listed = definitions[case.definition]?.singleOrNull() ?: return@forEach
+                if (listed.parents.none { it.definition == id }) add("case_missing_parent")
+            }
+        }
+
+    private fun RecordForm.resolve(bindings: Map<ParameterKey, TypeUse>): Resolution<ResolvedRecordForm> =
+        when (this) {
+            RecordForm.CONCRETE -> {
+                Resolution.Ready(ResolvedRecordForm.CONCRETE)
+            }
+
+            RecordForm.OPEN -> {
+                Resolution.Ready(ResolvedRecordForm.OPEN)
+            }
+
+            is RecordForm.ClosedWrapper -> {
+                val cases =
+                    value.cases.map { case ->
+                        when (val applied = case.template.apply(bindings)) {
+                            is Resolution.Invalid -> return applied
+                            is Resolution.Ready -> applied.value.named ?: return invalid(case.definition, "invalid_case")
+                        }
+                    }
+                Resolution.Ready(ResolvedRecordForm.createClosed(cases = cases))
+            }
+
+            else -> {
+                unknownVariant(this)
+            }
+        }
 
     private fun markInheritanceCycles() {
         val visiting = linkedSetOf<TypeDefinitionId>()
@@ -998,6 +1047,7 @@ private fun TypeDefinitionId.structuralHash(): Int {
         when (val id = typeId) {
             is TypeId.DeclaredWrapper -> id.value.value.hashCode()
             is TypeId.QualifiedWrapper -> 31 * id.value.namespace.hashCode() + id.value.name.hashCode()
+            is TypeId.MemberWrapper -> 31 * id.value.owner.hashCode() + id.value.name.hashCode()
             else -> id.kind.ordinal
         }
     return 31 * identity + revision

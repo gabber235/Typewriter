@@ -191,6 +191,7 @@ import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -1050,7 +1051,7 @@ class RealmCommonTypeProvider : GeneratedTypeProvider {
     override val definition =
         TypeDefinition.partial(
             id = RealmProviderFixture.type,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
         )
 }
 
@@ -1098,7 +1099,7 @@ class RealmTargetedTypeProvider : GeneratedTypeProvider {
     override val definition =
         TypeDefinition.partial(
             id = RealmProviderFixture.type,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
         )
 }
 

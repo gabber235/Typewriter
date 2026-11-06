@@ -42,6 +42,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -102,7 +103,7 @@ val TypeSystemFoundationTest by testSuite {
                             listOf(
                                 FieldDeclaration.partial(owner = FieldOwner(definition = definitionId, name = "value"), type = type),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
 
@@ -119,7 +120,7 @@ val TypeSystemFoundationTest by testSuite {
         val definition =
             TypeDefinition.partial(
                 id = definitionId,
-                representation = RepresentationTemplate.createRecord(fields = sourceFields, abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = sourceFields, form = RecordForm.CONCRETE),
             )
         val catalog = catalog(definition)
 
@@ -191,14 +192,14 @@ val TypeSystemFoundationTest by testSuite {
                                         ),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
                 parents = listOf(left.id.namedTemplate(), right.id.namedTemplate()),
             )
         val unresolved =
             TypeDefinition.partial(
                 id = id("unresolved_child"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(left.id.namedTemplate(), right.id.namedTemplate()),
             )
         val catalog = catalog(left, right, child, unresolved)
@@ -266,7 +267,7 @@ val TypeSystemFoundationTest by testSuite {
             TypeDefinition.partial(
                 id = messageId,
                 parameters = listOf(TypeParameter.partial(key = messageParameter, name = "T")),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )
         val textMessageId = id("text_message")
         val textParameter = ParameterKey(owner = textMessageId, index = 0)
@@ -283,7 +284,7 @@ val TypeSystemFoundationTest by testSuite {
                                     type = textParameter.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
                 parents = listOf(messageId.namedTemplate(listOf(textParameter.template))),
             )
@@ -314,7 +315,7 @@ val TypeSystemFoundationTest by testSuite {
         val invalidParent =
             TypeDefinition.partial(
                 id = id("invalid_bound_parent"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(variable.id.namedTemplate(listOf(TEXT_TEMPLATE))),
             )
         listOf(variable.id.template(listOf(TEXT_TEMPLATE)), invalidParent.id.template()).forEach { invalidType ->
@@ -331,7 +332,7 @@ val TypeSystemFoundationTest by testSuite {
                                         overrides = listOf(FieldOwner(definition = parent.id, name = "payload")),
                                     ),
                                 ),
-                            abstract_ = false,
+                            form = RecordForm.CONCRETE,
                         ),
                     parents = listOf(parent.id.namedTemplate()),
                 )
@@ -424,12 +425,12 @@ val TypeSystemFoundationTest by testSuite {
                     listOf(
                         TypeParameter(key = parameter, name = "T", bounds = listOf(familyId.template(listOf(parameter.template)))),
                     ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )
         val concrete =
             TypeDefinition.partial(
                 id = id("recursive_concrete"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(familyId.namedTemplate(listOf(id("recursive_concrete").template()))),
             )
         val catalog = catalog(family, concrete)
@@ -456,12 +457,12 @@ val TypeSystemFoundationTest by testSuite {
                                 ),
                         ),
                     ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )
         val concrete =
             TypeDefinition.partial(
                 id = concreteId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(familyId.namedTemplate(listOf(concreteId.template()))),
             )
         val catalog = catalog(family, concrete)
@@ -517,7 +518,7 @@ val TypeSystemFoundationTest by testSuite {
             TypeDefinition.partial(
                 id = baseId,
                 parameters = listOf(TypeParameter.partial(key = baseParameter, name = "T")),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )
         val marker = recordDefinition("known_marker")
         val derivedId = id("known_derived")
@@ -531,7 +532,7 @@ val TypeSystemFoundationTest by testSuite {
                         TypeParameter.partial(key = first, name = "A"),
                         TypeParameter.partial(key = second, name = "B"),
                     ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(baseId.namedTemplate(listOf(first.template)), marker.id.namedTemplate()),
             )
         val catalog = catalog(base, marker, derived)
@@ -666,7 +667,7 @@ val TypeSystemFoundationTest by testSuite {
                                     type = missing.template().nullable(),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = catalog(good, bad)

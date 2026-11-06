@@ -8,13 +8,16 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.duration
+import com.typewritermc.types.enumCases
 import com.typewritermc.types.field
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.items
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
@@ -186,7 +189,7 @@ class DefaultInitializationRuntime(
         return when (val representation = checked.schema.representation) {
             is ResolvedRepresentation.RecordWrapper -> {
                 val record = payload as? DataValue.RecordWrapper ?: return false
-                if (representation.value.abstract_) return false
+                if (!checked.schema.representation.isInstantiable()) return false
                 record.fields.all { supplied ->
                     val field = representation.value.fields.singleOrNull { it.key == supplied.name }
                     field != null && admissibleInput(field.type, supplied.value, depth + 1)
@@ -214,7 +217,6 @@ class DefaultInitializationRuntime(
             }
 
             is ResolvedRepresentation.ScalarWrapper,
-            is ResolvedRepresentation.EnumerationWrapper,
             is ResolvedRepresentation.LinkWrapper,
             -> {
                 when (completeSample(expected, value)) {
@@ -293,7 +295,6 @@ class DefaultInitializationRuntime(
                 }
 
                 is ResolvedRepresentation.ScalarWrapper,
-                is ResolvedRepresentation.EnumerationWrapper,
                 is ResolvedRepresentation.LinkWrapper,
                 -> {}
 
@@ -403,7 +404,6 @@ class DefaultInitializationRuntime(
                 }
 
                 is ResolvedRepresentation.ScalarWrapper,
-                is ResolvedRepresentation.EnumerationWrapper,
                 is ResolvedRepresentation.LinkWrapper,
                 -> {
                     payload
@@ -777,18 +777,13 @@ class DefaultInitializationRuntime(
                     DataValue.mapValue(emptyList())
                 }
 
-                is ResolvedRepresentation.EnumerationWrapper -> {
-                    representation.value.cases
-                        .firstOrNull()
-                        ?.let { DataValue.EnumCaseWrapper(it.key) } ?: DataValue.UNFILLED
-                }
-
                 is ResolvedRepresentation.LinkWrapper -> {
                     DataValue.UNFILLED
                 }
 
                 is ResolvedRepresentation.RecordWrapper -> {
-                    if (representation.value.abstract_) return DataValue.UNFILLED
+                    checked.enumCases()?.let { cases -> return DataValue.named(use.member(cases.first()), DataValue.UNIT) }
+                    if (!representation.isInstantiable()) return DataValue.UNFILLED
                     val prepared = prepareRecordFields(checked, emptyMap(), context, path)
                     findings += prepared.findings
                     DataValue.record(prepared.fields)

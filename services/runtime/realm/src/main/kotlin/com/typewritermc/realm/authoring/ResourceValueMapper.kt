@@ -18,6 +18,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.items
 import com.typewritermc.types.nullable
 import com.typewritermc.types.payload
@@ -96,7 +97,7 @@ internal class LinkSchemaCapabilities(
             }
 
             is ResolvedRepresentation.RecordWrapper -> {
-                representation.value.abstract_ ||
+                !representation.isInstantiable() ||
                     representation.value.fields.any { contains(it.type, endpoint, nextVisited, depth + 1) }
             }
 

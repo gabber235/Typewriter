@@ -22,6 +22,7 @@ import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.QualifiedTypeId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RecordRepresentationTemplate
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -83,7 +84,7 @@ val CanonicalReadModelsTest by testSuite {
                         id = readId("example:Book"),
                         representation =
                             RepresentationTemplate.RecordWrapper(
-                                RecordRepresentationTemplate(fields = emptyList(), abstract_ = false),
+                                RecordRepresentationTemplate(fields = emptyList(), form = RecordForm.CONCRETE),
                             ),
                     ),
                 status = DeclarationStatus.READY,

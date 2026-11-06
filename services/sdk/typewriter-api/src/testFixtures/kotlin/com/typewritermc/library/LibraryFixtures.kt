@@ -116,6 +116,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -372,7 +373,7 @@ internal fun controlCatalogAssembly(runtime: PresentationRuntime): com.typewrite
                         origin("fixture_entry"),
                         TypeDefinition.partial(
                             id = entryGraphFixtureType,
-                            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                             parents = listOf(ElementDefinition.id.namedTemplate()),
                         ),
                         com.typewritermc.types.TypeDisplay(
@@ -422,7 +423,7 @@ internal fun inheritedInspectorDeclarations(): List<OwnedTypeDeclaration> {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = true,
+                    form = RecordForm.OPEN,
                 ),
             parents = listOf(ElementDefinition.id.namedTemplate()),
         )
@@ -438,7 +439,7 @@ internal fun inheritedInspectorDeclarations(): List<OwnedTypeDeclaration> {
                                 type = ScalarKind.TEXT.template,
                             )
                         },
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(inspectorFamilyFixtureType.namedTemplate()),
         )

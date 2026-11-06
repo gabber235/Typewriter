@@ -47,7 +47,7 @@ void main() {
       typeDefinition("example:Book", namespace: canonicalReadNamespace),
       representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       display: display,
       searchKey: "book",

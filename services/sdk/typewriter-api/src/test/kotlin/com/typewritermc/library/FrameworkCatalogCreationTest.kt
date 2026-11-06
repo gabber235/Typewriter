@@ -83,6 +83,7 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -104,7 +105,7 @@ val FrameworkCatalogCreationTest by testSuite {
                 StandardTypes.definitions + framework.definitions +
                     TypeDefinition.partial(
                         id = concreteId,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                         parents = listOf(ElementDefinition.id.namedTemplate()),
                     ),
             )

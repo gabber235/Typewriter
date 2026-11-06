@@ -23,6 +23,7 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -68,7 +69,7 @@ val CatalogIsolationTest by testSuite {
                             bounds = listOf(bound.id.template()),
                         ),
                     ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val parent =
             TypeDefinition.partial(
@@ -80,7 +81,7 @@ val CatalogIsolationTest by testSuite {
                             name = "T",
                         ),
                     ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )
         val child =
             recordType(

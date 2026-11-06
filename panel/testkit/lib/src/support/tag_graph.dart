@@ -54,7 +54,7 @@ final class TagGraph {
           ),
           _field(type, "next", listOfResourcesTemplate),
         ],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       fields: [
         _effective(

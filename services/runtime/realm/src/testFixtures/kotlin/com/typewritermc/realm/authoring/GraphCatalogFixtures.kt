@@ -37,6 +37,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -172,7 +173,7 @@ internal val GRAPH_CATALOG =
             record(BUTTON) { field("target", BAD_LINK.template()) }
             sequence(BUTTON_LIST, item = BUTTON.template(), kind = CollectionKind.LIST)
             record(OPTIONAL_LINK_HOLDER) { field("target", BAD_LINK.template()) }
-            record(ABSTRACT_MESSAGE, abstract = true)
+            record(ABSTRACT_MESSAGE, form = RecordForm.OPEN)
             record(LINK_MESSAGE, parents = listOf(ABSTRACT_MESSAGE.namedTemplate())) { field("target", BAD_LINK.template()) }
             record(
                 BOX,

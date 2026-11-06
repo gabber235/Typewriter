@@ -33,6 +33,7 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -81,7 +82,7 @@ val LinkAuthorizationTest by testSuite {
                         parameters = listOf(TypeParameter.partial(key = derived, name = "T")),
                         parents = listOf(genericBase.namedTemplate(listOf(derived.template))),
                     )
-                    record(anyTarget, abstract = true)
+                    record(anyTarget, form = RecordForm.OPEN)
                     record(targetType, parents = listOf(anyTarget.namedTemplate()))
                     record(siblingType, parents = listOf(anyTarget.namedTemplate()))
                     link(genericLink, firstEndpoint, link.template, parameters = listOf(TypeParameter.partial(key = link, name = "T")))

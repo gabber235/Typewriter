@@ -27,6 +27,10 @@ interface GeneratedTypeProvider {
     /** The search scope keyword of a resource type, or null for a type that is not a resource. */
     val searchKey: String?
         get() = null
+
+    /** The unit case definitions of an enum, which have no provider of their own. */
+    val cases: List<TypeDefinition>
+        get() = emptyList()
 }
 
 interface GeneratedRelationProvider {

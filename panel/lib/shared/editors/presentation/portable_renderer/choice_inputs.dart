@@ -132,7 +132,8 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
     skir.SelectInteractionOptions? options,
     bool allowCustom = false,
   }) {
-    final current = scope.read(control.binding)?.authoredPayload;
+    final read = scope.read(control.binding);
+    final current = read?.authoredPayload;
     if (current == null) {
       return _diagnostic("The choice binding is unavailable");
     }
@@ -147,8 +148,14 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
             options?.presentation == skir.ChoicePresentation.radio)) {
       return _diagnostic("Custom choice values need an editable dropdown");
     }
+    // A named choice, such as an enum case, is told apart by its actual type,
+    // since every enum case shares the unit payload.
     final selected = choices
-        .where((choice) => choice.value.authoredPayload == current)
+        .where(
+          (choice) => choice.value is skir.DataValue_namedWrapper
+              ? choice.value == read
+              : choice.value.authoredPayload == current,
+        )
         .firstOrNull
         ?.id;
     return _controlFrame(
@@ -441,10 +448,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
     final control = input.control;
     final current = childScope.read(control.binding);
     final payload = current?.authoredPayload;
-    final selected = switch (payload) {
-      skir.DataValue_enumCaseWrapper(:final value) => value,
-      _ => null,
-    };
+    final selected = current?.enumCaseName;
     final actual =
         current?.authoredActualType ??
         switch (childScope
@@ -453,17 +457,15 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
           skir.TypeUse_namedWrapper(:final value) => value,
           _ => null,
         };
-    final representation = actual == null
+    final owner = actual == null
         ? null
-        : childScope.catalog
-              ?.published(actual.definition)
-              ?.definition
-              .representation;
-    final cases = switch (representation) {
-      skir.RepresentationTemplate_enumerationWrapper(:final value) =>
-        value.cases.map((variant) => variant.key).toList(growable: false),
-      _ => const <String>[],
-    };
+        : skir.NamedTypeUse(
+            definition: actual.definition.memberOwner ?? actual.definition,
+            arguments: const [],
+          );
+    final cases = owner == null
+        ? const <String>[]
+        : childScope.catalog?.enumCases(owner.definition) ?? const <String>[];
     if (current == null ||
         (selected == null && payload != skir.DataValue.unfilled) ||
         cases.isEmpty) {
@@ -477,11 +479,10 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
           (
             id: value,
             label: value,
-            value: current is skir.DataValue_namedWrapper
-                ? current.preservingNamedIdentity(
-                    skir.DataValue.wrapEnumCase(value),
-                  )
-                : skir.DataValue.wrapEnumCase(value),
+            value: skir.DataValue.createNamed(
+              actualType: owner!.member(value),
+              payload: skir.DataValue.unit,
+            ),
           ),
       ],
       appearance: input.appearance,

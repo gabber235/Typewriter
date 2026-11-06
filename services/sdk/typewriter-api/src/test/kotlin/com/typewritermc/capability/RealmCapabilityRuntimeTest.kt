@@ -20,6 +20,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -42,7 +43,7 @@ val RealmCapabilityRuntimeTest by testSuite {
                                         type = ScalarKind.TEXT.template,
                                     ),
                                 ),
-                            abstract_ = false,
+                            form = RecordForm.CONCRETE,
                         ),
                 ),
         )

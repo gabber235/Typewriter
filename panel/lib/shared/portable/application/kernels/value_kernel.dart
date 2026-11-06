@@ -203,6 +203,8 @@ int _compareCodePoints(String left, String right) {
 
 /// The canonical text of a value, as `value.to_text` defines it.
 String portableText(skir.DataValue value) {
+  final caseName = value.enumCaseName;
+  if (caseName != null) return caseName;
   final payload = value.authoredPayload;
   if (payload == skir.DataValue.null_) return "null";
   if (payload == skir.DataValue.unit) return "unit";
@@ -222,7 +224,6 @@ String portableText(skir.DataValue value) {
     skir.DataValue_durationWrapper(:final value) => portableDurationText(
       Duration(milliseconds: value.value.milliseconds),
     ),
-    skir.DataValue_enumCaseWrapper(:final value) => value,
     _ => portableJsonText(payload),
   };
 }

@@ -423,13 +423,16 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
   final types = <skir.PublishedType>[
     _published(
       "section",
-      skir.RepresentationTemplate.createRecord(abstract_: true, fields: []),
+      skir.RepresentationTemplate.createRecord(
+        form: skir.RecordForm.open,
+        fields: [],
+      ),
     ),
     for (final type in fields.entries)
       _published(
         type.key,
         skir.RepresentationTemplate.createRecord(
-          abstract_: false,
+          form: skir.RecordForm.concrete,
           fields: [
             for (final field in type.value.entries)
               skir.FieldDeclaration(

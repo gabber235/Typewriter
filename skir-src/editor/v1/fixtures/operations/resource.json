@@ -23,7 +23,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -40,7 +40,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -68,7 +68,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -151,7 +151,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -168,7 +168,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -196,7 +196,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -288,7 +288,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -305,7 +305,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -333,7 +333,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -436,7 +436,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -453,7 +453,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -481,7 +481,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -584,7 +584,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -601,7 +601,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -629,7 +629,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -701,7 +701,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -718,7 +718,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -746,7 +746,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -829,7 +829,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -846,7 +846,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -874,7 +874,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -955,7 +955,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -972,7 +972,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -1000,7 +1000,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -1144,7 +1144,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -1161,7 +1161,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -1189,7 +1189,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {

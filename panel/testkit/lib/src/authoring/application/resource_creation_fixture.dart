@@ -63,7 +63,7 @@ final class ResourceCreationFixture {
         "reviewer": _named("ReportBook"),
     });
     if (abstractReport) {
-      _record("Delivery", {}, abstract: true, resource: false);
+      _record("Delivery", {}, open: true, resource: false);
       _record(
         "EmailDelivery",
         {"recipient": _named("ReportBook")},
@@ -174,14 +174,14 @@ final class ResourceCreationFixture {
   void _record(
     String name,
     Map<String, skir.TypeTemplate> fields, {
-    bool abstract = false,
+    bool open = false,
     bool resource = true,
     String? parent,
   }) {
     _publish(
       name,
       skir.RepresentationTemplate.createRecord(
-        abstract_: abstract,
+        form: open ? skir.RecordForm.open : skir.RecordForm.concrete,
         fields: [
           for (final field in fields.entries)
             skir.FieldDeclaration(
@@ -372,7 +372,7 @@ final class ResourceCreationFixture {
       publishedType(
         _id("Store"),
         representation: skir.RepresentationTemplate.createRecord(
-          abstract_: false,
+          form: skir.RecordForm.concrete,
           fields: [
             for (final field in fields.entries)
               skir.FieldDeclaration(

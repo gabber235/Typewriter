@@ -112,6 +112,7 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -648,7 +649,7 @@ internal fun weightedDefinition(): TypeDefinition =
                             type = floatScalar(FloatWidth.SIXTY_FOUR).template,
                         ),
                     ),
-                abstract_ = false,
+                form = RecordForm.CONCRETE,
             ),
         parents = emptyList(),
     )
@@ -671,7 +672,7 @@ internal fun build(content: (PresentationBuildScope) -> Unit): PresentationBuild
                                 type = StandardTypes.list.template(listOf(ScalarKind.TEXT.template)),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
     val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "lowering"), StandardTypes.definitions + subject)

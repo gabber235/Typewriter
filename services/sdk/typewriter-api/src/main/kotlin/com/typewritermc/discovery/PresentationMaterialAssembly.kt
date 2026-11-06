@@ -26,6 +26,7 @@ import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.isEnum
 import com.typewritermc.types.isValid
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.parameterKeys
@@ -352,7 +353,7 @@ private fun PresentationTarget.presentationSubjects(definitions: Map<TypeDefinit
         is PresentationTarget.RepresentationWrapper -> {
             val named =
                 definitions.values
-                    .filter { it.representation.presentationKind() == value }
+                    .filter { it.presentationKind(definitions) == value }
                     .map { definition ->
                         definition.id.template(definition.parameters.map { it.key.template })
                     }
@@ -411,6 +412,10 @@ private fun RepresentationKind.scalarSubjects(): List<TypeTemplate> =
         }
     }
 
+/** The kind presentations target this declaration by, where an enum is its own kind rather than a record. */
+private fun TypeDefinition.presentationKind(definitions: Map<TypeDefinitionId, TypeDefinition>): RepresentationKind =
+    if (isEnum(definitions::get)) RepresentationKind.ENUMERATION else representation.presentationKind()
+
 private fun RepresentationTemplate.presentationKind(): RepresentationKind =
     when (this) {
         is RepresentationTemplate.ScalarWrapper -> {
@@ -442,10 +447,6 @@ private fun RepresentationTemplate.presentationKind(): RepresentationKind =
 
         is RepresentationTemplate.MappingWrapper -> {
             RepresentationKind.MAP
-        }
-
-        is RepresentationTemplate.EnumerationWrapper -> {
-            RepresentationKind.ENUMERATION
         }
 
         is RepresentationTemplate.LinkWrapper -> {
@@ -582,8 +583,7 @@ private fun TypeTemplate.presentationKinds(
 
             is TypeTemplate.NamedWrapper -> {
                 definitions[value.definition]
-                    ?.representation
-                    ?.presentationKind()
+                    ?.presentationKind(definitions)
                     ?.let(::setOf)
                     .orEmpty()
             }

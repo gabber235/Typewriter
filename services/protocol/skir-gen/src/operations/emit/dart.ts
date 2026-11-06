@@ -145,11 +145,11 @@ function typeDeclarations(catalog: ResolvedOperations, skir: Skir): Lines[] {
           "/// The catalog type of this enumeration.",
           `static ${skir.namedTypeUse} get type => ${typeUse(skir, enumeration.typeId)};`,
           BLANK,
-          `${skir.dataValue} toDataValue() => ${skir.dataValue}.wrapNamed(${skir.namedValue}(actualType: type, payload: ${skir.dataValue}.wrapEnumCase(caseName)));`,
+          `${skir.dataValue} toDataValue() => ${skir.dataValue}.wrapNamed(${skir.namedValue}(actualType: ${skir.namedTypeUse}(definition: ${skir.typeDefinitionId}(typeId: ${skir.typeId}.createMember(owner: type.definition.typeId, name: caseName), revision: type.definition.revision), arguments: const []), payload: ${skir.dataValue}.unit));`,
           BLANK,
           `static ${name} fromDataValue(${skir.dataValue} value) {`,
           ...indent([
-            "final caseName = value.asEnumCase();",
+            "final caseName = value.asMemberName();",
             `for (final candidate in ${name}.values) {`,
             ...indent(["if (candidate.caseName == caseName) return candidate;"]),
             "}",

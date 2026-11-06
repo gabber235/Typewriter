@@ -468,7 +468,7 @@ skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
                 hasConstructorDefault: false,
               ),
           ],
-          abstract_: false,
+          form: skir.RecordForm.concrete,
         ),
         parents: const [],
       ),

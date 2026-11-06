@@ -162,6 +162,7 @@ import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -379,12 +380,12 @@ internal fun resumeFixture(
                                         type = marker.template(emptyList()),
                                     ),
                                 ),
-                            abstract_ = false,
+                            form = RecordForm.CONCRETE,
                         ),
                 ),
                 TypeDefinition.partial(
                     id = settings,
-                    representation = RepresentationTemplate.createRecord(fields = settingsFields, abstract_ = false),
+                    representation = RepresentationTemplate.createRecord(fields = settingsFields, form = RecordForm.CONCRETE),
                 ),
                 TypeDefinition.partial(
                     id = marker,
@@ -398,7 +399,7 @@ internal fun resumeFixture(
                                         hasConstructorDefault = true,
                                     ),
                                 ),
-                            abstract_ = false,
+                            form = RecordForm.CONCRETE,
                         ),
                 ),
             ),
@@ -431,7 +432,10 @@ internal fun id(name: String) = TypeDefinitionId.qualified("test.resume", name)
 internal fun NamedTypeUse.template() = definition.template(emptyList())
 
 internal fun resourceDefinition() =
-    TypeDefinition.partial(id = RESOURCE_ID, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
+    TypeDefinition.partial(
+        id = RESOURCE_ID,
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    )
 
 internal fun linkDefinition() =
     TypeDefinition.partial(

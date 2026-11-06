@@ -180,6 +180,8 @@ class _CollectionEntry extends StatelessWidget {
 // Scalar map keys provide a readable fallback title.
 extension _CollectionKeyTitle on skir.DataValue {
   String? get collectionKeyTitle {
+    final caseName = enumCaseName;
+    if (caseName != null) return caseName;
     final payload = authoredPayload;
     final readable = switch (payload) {
       skir.DataValue_stringValueWrapper() ||
@@ -187,7 +189,6 @@ extension _CollectionKeyTitle on skir.DataValue {
       skir.DataValue_integerWrapper() ||
       skir.DataValue_floatWrapper() ||
       skir.DataValue_decimalWrapper() ||
-      skir.DataValue_enumCaseWrapper() ||
       skir.DataValue_timestampWrapper() ||
       skir.DataValue_durationWrapper() => true,
       _ => false,

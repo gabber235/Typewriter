@@ -668,19 +668,11 @@ final class _CatalogTypes implements skir.PortableTypes {
       _catalog.admitsPortableValue(type, value);
 
   @override
-  List<String> enumCases(skir.TypeUse type) {
-    final representation = switch (type) {
-      skir.TypeUse_namedWrapper(:final value) =>
-        _catalog.published(value.definition)?.definition.representation,
-      _ => null,
-    };
-    return switch (representation) {
-      skir.RepresentationTemplate_enumerationWrapper(:final value) => [
-        for (final variant in value.cases) variant.key,
-      ],
-      _ => const [],
-    };
-  }
+  List<String> enumCases(skir.TypeUse type) => switch (type) {
+    skir.TypeUse_namedWrapper(:final value) =>
+      _catalog.enumCases(value.definition) ?? const [],
+    _ => const [],
+  };
 
   @override
   bool isInstance(skir.DataValue value, skir.TypeUse type) => switch (value) {

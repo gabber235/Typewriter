@@ -197,7 +197,6 @@ Object? _compact(skir.DataValue value) {
     skir.DataValue_durationWrapper(:final value) => {
       "duration": "${value.value.milliseconds}",
     },
-    skir.DataValue_enumCaseWrapper(:final value) => {"enum_case": value},
     skir.DataValue_recordWrapper(:final value) => {
       "record": {
         for (final field in value.fields) field.name: _compact(field.value),

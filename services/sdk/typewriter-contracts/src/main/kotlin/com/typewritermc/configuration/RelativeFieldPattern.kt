@@ -1,5 +1,7 @@
 package com.typewritermc.configuration
 
+import com.typewritermc.types.catalog.CheckedType
+import com.typewritermc.types.enumCases
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -37,6 +39,17 @@ fun RelativeFieldPattern.requireValid(): RelativeFieldPattern =
         }
     }
 
+/** The representation kind of this type, where an enum is its own kind rather than a record. */
+fun CheckedType.representationKind(): RepresentationKind =
+    if (enumCases() !=
+        null
+    ) {
+        RepresentationKind.ENUMERATION
+    } else {
+        schema.representation.kind()
+    }
+
+/** The representation kind of this representation alone; a closed record of unit cases needs [representationKind]. */
 fun ResolvedRepresentation.kind(): RepresentationKind =
     when (this) {
         is ResolvedRepresentation.ScalarWrapper -> {
@@ -68,10 +81,6 @@ fun ResolvedRepresentation.kind(): RepresentationKind =
 
         is ResolvedRepresentation.MappingWrapper -> {
             RepresentationKind.MAP
-        }
-
-        is ResolvedRepresentation.EnumerationWrapper -> {
-            RepresentationKind.ENUMERATION
         }
 
         is ResolvedRepresentation.LinkWrapper -> {

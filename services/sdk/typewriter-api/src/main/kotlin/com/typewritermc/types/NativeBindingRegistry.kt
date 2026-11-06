@@ -193,8 +193,10 @@ class FactoryNativeBindingRegistry(
                 collectionBinding(actual, use.value) ?: run {
                     val candidates = factoriesByDefinition[use.value.definition].orEmpty()
                     if (candidates.isEmpty()) {
-                        val record = actual.schema.representation as? ResolvedRepresentation.RecordWrapper
-                        if (record?.value?.abstract_ == true) {
+                        val representation = actual.schema.representation
+                        if (representation is ResolvedRepresentation.RecordWrapper && !representation.isInstantiable() &&
+                            actual.enumCases() == null
+                        ) {
                             PolymorphicNativeBinding(actual, use.value, catalog, this)
                         } else {
                             PortableNativeBinding(actual, use.value)

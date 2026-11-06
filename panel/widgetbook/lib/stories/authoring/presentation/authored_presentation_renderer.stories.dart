@@ -590,7 +590,7 @@ CheckedEditorCatalog _interactionCatalog() {
         published(
           root,
           skir.RepresentationTemplate.createRecord(
-            abstract_: false,
+            form: skir.RecordForm.concrete,
             fields: [
               for (final field in fields.entries)
                 skir.FieldDeclaration(

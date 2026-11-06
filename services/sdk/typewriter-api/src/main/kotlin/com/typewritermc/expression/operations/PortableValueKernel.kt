@@ -5,6 +5,7 @@ import build.skir.UnrecognizedValuesPolicy
 import com.typewritermc.types.bigInteger
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.duration
+import com.typewritermc.types.enumCaseName
 import com.typewritermc.types.named
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable
@@ -77,7 +78,7 @@ internal object PortableValueKernel : ValueKernel {
     override fun toJson(value: DataValue): String = canonicalJson(value)
 
     override fun toText(value: DataValue): String =
-        when (val scalar = value.unwrapNamed()) {
+        value.enumCaseName() ?: when (val scalar = value.unwrapNamed()) {
             DataValue.NULL -> "null"
             DataValue.UNIT -> "unit"
             is DataValue.BooleanWrapper -> scalar.value.toString()
@@ -87,7 +88,6 @@ internal object PortableValueKernel : ValueKernel {
             is DataValue.StringValueWrapper -> scalar.value
             is DataValue.TimestampWrapper -> timestampText(scalar.value)
             is DataValue.DurationWrapper -> durationText(scalar.duration.inWholeMilliseconds)
-            is DataValue.EnumCaseWrapper -> scalar.value
             else -> canonicalJson(scalar)
         }
 

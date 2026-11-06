@@ -141,7 +141,7 @@ final class PageCreationFixture {
           declaredRecord(
             "Page",
             fields: {"book": "BookPagesPage", "name": skir.ScalarKind.text},
-            abstract: true,
+            open: true,
           ),
           declaredRecord(
             "SequencePage",

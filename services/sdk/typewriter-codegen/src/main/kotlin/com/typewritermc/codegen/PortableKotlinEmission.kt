@@ -2,12 +2,12 @@ package com.typewritermc.codegen
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.MemberName
 import com.typewritermc.types.named
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.EnumVariant
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
@@ -15,6 +15,7 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -103,12 +104,20 @@ internal class DefinitionReferences(
     private val owners: Map<TypeDefinitionId, ClassName>,
     private val self: TypeDefinitionId? = null,
 ) {
-    fun code(id: TypeDefinitionId): CodeBlock =
+    fun code(id: TypeDefinitionId): CodeBlock {
         when (id) {
-            self -> CodeBlock.of("id")
-            in owners -> CodeBlock.of("%T.id", owners.getValue(id))
-            else -> error("No generated definition owns $id.")
+            self -> return CodeBlock.of("id")
+            in owners -> return CodeBlock.of("%T.id", owners.getValue(id))
         }
+        val member = id.typeId as? TypeId.MemberWrapper ?: error("No generated definition owns $id.")
+        val owner = TypeDefinitionId(typeId = member.value.owner, revision = id.revision)
+        return CodeBlock.of("%L.%M(%S)", code(owner), MEMBER, member.value.name)
+    }
+
+    /** Whether code can name [id]: through its own owner, or as a case of an owned closed record. */
+    fun owns(id: TypeDefinitionId): Boolean =
+        id == self || id in owners ||
+            (id.typeId as? TypeId.MemberWrapper)?.let { owns(TypeDefinitionId(typeId = it.value.owner, revision = id.revision)) } == true
 
     /** References as seen from inside the owner of [definition]. */
     fun inside(definition: TypeDefinitionId): DefinitionReferences = DefinitionReferences(owners, definition)
@@ -136,12 +145,23 @@ internal fun TypeDefinitionId.declarationCode(): CodeBlock {
                 )
             }
 
+            is TypeId.MemberWrapper -> {
+                return CodeBlock.of(
+                    "%L.%M(%S)",
+                    TypeDefinitionId(typeId = identity.value.owner, revision = revision).declarationCode(),
+                    MEMBER,
+                    identity.value.name,
+                )
+            }
+
             else -> {
                 unknownVariant(identity)
             }
         }
     return CodeBlock.of("%T(typeId·=·%L,♢revision·=·%L)", TypeDefinitionId::class, identity, revision)
 }
+
+private val MEMBER = MemberName("com.typewritermc.types", "member")
 
 context(references: DefinitionReferences)
 internal fun TypeDefinitionId.kotlinCode(): CodeBlock = references.code(this)
@@ -316,6 +336,33 @@ internal fun FieldDeclaration.kotlinCode(): CodeBlock =
     )
 
 context(_: DefinitionReferences)
+internal fun RecordForm.kotlinCode(): CodeBlock =
+    when (this) {
+        RecordForm.CONCRETE -> {
+            CodeBlock.of("%T.CONCRETE", RecordForm::class)
+        }
+
+        RecordForm.OPEN -> {
+            CodeBlock.of("%T.OPEN", RecordForm::class)
+        }
+
+        is RecordForm.ClosedWrapper -> {
+            CodeBlock.of(
+                "%T.createClosed(cases·=·%L)",
+                RecordForm::class,
+                value.cases
+                    .map {
+                        it.kotlinCode()
+                    }.listCode(),
+            )
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
+    }
+
+context(_: DefinitionReferences)
 internal fun RepresentationTemplate.kotlinCode(): CodeBlock =
     when (this) {
         is RepresentationTemplate.ScalarWrapper -> {
@@ -328,7 +375,7 @@ internal fun RepresentationTemplate.kotlinCode(): CodeBlock =
                 RepresentationTemplate::class,
                 namedArguments(
                     "fields" to value.fields.map { it.kotlinCode() }.listCode(),
-                    "abstract_" to CodeBlock.of("%L", value.abstract_),
+                    "form" to value.form.kotlinCode(),
                 ),
             )
         }
@@ -348,14 +395,6 @@ internal fun RepresentationTemplate.kotlinCode(): CodeBlock =
                 RepresentationTemplate::class,
                 value.key.kotlinCode(),
                 value.value.kotlinCode(),
-            )
-        }
-
-        is RepresentationTemplate.EnumerationWrapper -> {
-            CodeBlock.of(
-                "%T.createEnumeration(cases·=·%L)",
-                RepresentationTemplate::class,
-                value.cases.map { CodeBlock.of("%T(key·=·%S)", EnumVariant::class, it.key) }.listCode(),
             )
         }
 

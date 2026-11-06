@@ -436,7 +436,7 @@ abstract interface class PortableTypes {
   /// Whether [value]'s actual type is [type] or one of its descendants.
   bool isInstance(skir.DataValue value, skir.TypeUse type);
 
-  /// The case names of the enumeration [type], in declaration order.
+  /// The case names of the enum [type], in declaration order.
   List<String> enumCases(skir.TypeUse type);
 
   /// Whether the catalog admits [value] as a value of [type].
@@ -649,10 +649,9 @@ extension PortableKernelValues on skir.DataValue {
     _ => throw _illTyped("Expected a link."),
   };
 
-  String asEnumCase() => switch (_structural) {
-    skir.DataValue_enumCaseWrapper(:final value) => value,
-    _ => throw _illTyped("Expected an enum case."),
-  };
+  /// The case name of an enum value: its actual type's member name.
+  String asMemberName() =>
+      enumCaseName ?? (throw _illTyped("Expected an enum case."));
 
   PortableNumber asNumber() => switch (_structural) {
     skir.DataValue_integerWrapper(:final value) => PortableInteger(

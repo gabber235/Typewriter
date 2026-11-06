@@ -23,7 +23,6 @@ import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.EnumerationResolvedRepresentation
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.LinkResolvedRepresentation
@@ -164,11 +163,11 @@ private class ValueInspection(
                     problem(at, "expected_named")
                     return
                 }
-                if (named.actualType != use.value) {
-                    problem(at, "wrong_actual_type")
-                    return
+                if (named.actualType == use.value) {
+                    validatePayload(named.payload, checked, at, depth + 1)
+                } else {
+                    validateUse(value, use, at, depth)
                 }
-                validatePayload(named.payload, checked, at, depth + 1)
             }
 
             is TypeUse.ScalarWrapper -> {
@@ -257,7 +256,6 @@ private class ValueInspection(
             is ResolvedRepresentation.RecordWrapper -> validateRecord(value, representation.value, at, depth)
             is ResolvedRepresentation.SequenceWrapper -> validateSequence(value, representation.value, at, depth)
             is ResolvedRepresentation.MappingWrapper -> validateMapping(value, representation.value, at, depth)
-            is ResolvedRepresentation.EnumerationWrapper -> validateEnumeration(value, representation.value, at)
             is ResolvedRepresentation.LinkWrapper -> validateLink(value, representation.value, at)
             else -> unknownVariant(representation)
         }
@@ -352,19 +350,6 @@ private class ValueInspection(
             validateUse(row.key, representation.key, at.item(row.id).mapKey(), depth + 1)
             validateUse(row.value, representation.value, at.item(row.id).mapValue(), depth + 1)
         }
-    }
-
-    private fun validateEnumeration(
-        value: DataValue,
-        representation: EnumerationResolvedRepresentation,
-        at: ValueLocation,
-    ) {
-        val enum = value as? DataValue.EnumCaseWrapper
-        if (enum == null) {
-            problem(at, "expected_enum")
-            return
-        }
-        if (representation.cases.none { it.key == enum.value }) problem(at, "unknown_enum_case")
     }
 
     private fun validateLink(

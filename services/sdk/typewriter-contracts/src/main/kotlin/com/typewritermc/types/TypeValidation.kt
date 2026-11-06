@@ -4,7 +4,6 @@ import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.EnumVariant
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
@@ -12,6 +11,7 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -48,6 +48,11 @@ fun TypeId.requireValid(): TypeId =
             is TypeId.QualifiedWrapper -> {
                 require(value.namespace.isNotBlank()) { "Type namespace must not be blank." }
                 require(value.name.isNotBlank()) { "Type name must not be blank." }
+            }
+
+            is TypeId.MemberWrapper -> {
+                value.owner.requireValid()
+                require(value.name.isNotBlank()) { "Member name must not be blank." }
             }
 
             else -> {
@@ -113,13 +118,20 @@ fun FieldDeclaration.requireValid(): FieldDeclaration =
         overrides.forEach { it.requireValid() }
     }
 
-fun EnumVariant.requireValid(): EnumVariant = apply { require(key.isNotBlank()) { "Enum variant key must not be blank." } }
-
 fun EndpointId.requireValid(): EndpointId = apply { require(value.isNotBlank()) { "Endpoint ids must not be blank." } }
 
 fun RelationId.requireValid(): RelationId = apply { require(value.isNotBlank()) { "Relation ids must not be blank." } }
 
 fun RelationFamilyId.requireValid(): RelationFamilyId = apply { require(value.isNotBlank()) { "Relation family ids must not be blank." } }
+
+fun RecordForm.requireValid(): RecordForm =
+    apply {
+        when (this) {
+            RecordForm.CONCRETE, RecordForm.OPEN -> Unit
+            is RecordForm.ClosedWrapper -> value.cases.forEach { it.requireValid() }
+            else -> throw IllegalArgumentException("Unknown record form.")
+        }
+    }
 
 fun RepresentationTemplate.requireValid(): RepresentationTemplate =
     apply {
@@ -130,6 +142,7 @@ fun RepresentationTemplate.requireValid(): RepresentationTemplate =
 
             is RepresentationTemplate.RecordWrapper -> {
                 value.fields.forEach { it.requireValid() }
+                value.form.requireValid()
             }
 
             is RepresentationTemplate.SequenceWrapper -> {
@@ -140,10 +153,6 @@ fun RepresentationTemplate.requireValid(): RepresentationTemplate =
             is RepresentationTemplate.MappingWrapper -> {
                 value.key.requireValid()
                 value.value.requireValid()
-            }
-
-            is RepresentationTemplate.EnumerationWrapper -> {
-                value.cases.forEach { it.requireValid() }
             }
 
             is RepresentationTemplate.LinkWrapper -> {

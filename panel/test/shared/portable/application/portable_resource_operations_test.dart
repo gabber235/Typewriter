@@ -174,7 +174,7 @@ void main() {
         parameters: const [],
         representation: skir.RepresentationTemplate.createRecord(
           fields: const [],
-          abstract_: false,
+          form: skir.RecordForm.concrete,
         ),
         parents: const [],
       );
@@ -210,7 +210,7 @@ void main() {
                   parents: const [],
                   representation: skir.RepresentationTemplate.createRecord(
                     fields: [otherName],
-                    abstract_: false,
+                    form: skir.RecordForm.concrete,
                   ),
                 ),
               ),

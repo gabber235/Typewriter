@@ -103,6 +103,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -201,7 +202,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 StandardTypes.definitions +
                     TypeDefinition.partial(
                         id = id,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                     ),
             )
         val checked = catalog.ready(id.use())
@@ -239,7 +240,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val nested =
             TypeDefinition.partial(
                 id = nestedId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val root =
             definitions {
@@ -672,7 +673,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                     type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val target = PresentationTarget.NamedWrapper(id.namedTemplate(listOf(parameter.template)))
@@ -768,7 +769,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val unrelated =
             TypeDefinition.partial(
                 id = unrelatedId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val target = PresentationTarget.NamedWrapper(subjectId.namedTemplate())
         val descriptor = descriptor("invalid collection", target, 0, PresentationRole.INSPECTOR)
@@ -844,7 +845,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val child =
             TypeDefinition.partial(
                 id = childId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(baseId.namedTemplate()),
             )
         val resource =
@@ -936,7 +937,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val base =
             TypeDefinition.partial(
                 id = baseId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val generic =
             TypeDefinition.partial(
@@ -951,7 +952,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                     type = parameter.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val projections =
@@ -1126,7 +1127,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                             listOf("title", "note").map { name ->
                                 FieldDeclaration.partial(owner = FieldOwner(definition = id, name = name), type = ScalarKind.TEXT.template)
                             },
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation runtime"), listOf(definition))
@@ -1170,7 +1171,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 StandardTypes.definitions +
                     TypeDefinition.partial(
                         id = resourceId,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                     ) +
                     TypeDefinition.partial(
                         id = linkId,
@@ -1738,7 +1739,10 @@ val DefaultPresentationRuntimeTest by testSuite {
     test("selects specific presentations before priority and preserves fallback order") {
         val id = TypeDefinitionId.qualified("test", "RegistrySubject")
         val definition =
-            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
+            TypeDefinition.partial(
+                id = id,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+            )
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation registry"), listOf(definition))
         val checked = catalog.ready(id.use())
         val representation =
@@ -1768,7 +1772,10 @@ val DefaultPresentationRuntimeTest by testSuite {
     test("reference pickers fall back to previews without sharing editing or search roles") {
         val id = TypeDefinitionId.qualified("test", "ReferenceTarget")
         val definition =
-            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
+            TypeDefinition.partial(
+                id = id,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+            )
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "reference fallback"), listOf(definition))
         val checked = catalog.ready(id.use())
         val preview = descriptor("preview", PresentationTarget.NamedWrapper(id.namedTemplate()), 0, PresentationRole.REFERENCE_PREVIEW)
@@ -1802,7 +1809,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         TypeParameter.partial(key = first, name = "A"),
                         TypeParameter.partial(key = second, name = "B"),
                     ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "incomparable presentations"), StandardTypes.definitions + definition)
         val actual =
@@ -1852,7 +1859,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         TypeParameter.partial(key = first, name = "A"),
                         TypeParameter.partial(key = second, name = "B"),
                     ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "repeated parameter presentation"), listOf(definition))
         val actual =
@@ -1889,22 +1896,11 @@ val DefaultPresentationRuntimeTest by testSuite {
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration(value = "readable presentation argument"),
-                listOf(
-                    TypeDefinition.partial(
-                        id = rewardId,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
-                    ),
-                    TypeDefinition.partial(
-                        id = coinId,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-                        parents = listOf(rewardId.namedTemplate()),
-                    ),
-                    TypeDefinition.partial(
-                        id = variableId,
-                        parameters = listOf(TypeParameter.partial(key = variableParameter, name = "T")),
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-                    ),
-                ),
+                definitions {
+                    record(rewardId, form = RecordForm.OPEN)
+                    record(coinId, parents = listOf(rewardId.namedTemplate()))
+                    record(variableId, parameters = listOf(TypeParameter.partial(key = variableParameter, name = "T")))
+                },
             )
         val actual = catalog.ready(variableId.use(listOf(coinId.use())))
         val broad =
@@ -1929,22 +1925,11 @@ val DefaultPresentationRuntimeTest by testSuite {
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration(value = "specific readable presentation argument"),
-                listOf(
-                    TypeDefinition.partial(
-                        id = rewardId,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
-                    ),
-                    TypeDefinition.partial(
-                        id = coinId,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-                        parents = listOf(rewardId.namedTemplate()),
-                    ),
-                    TypeDefinition.partial(
-                        id = variableId,
-                        parameters = listOf(TypeParameter.partial(key = variableParameter, name = "T")),
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-                    ),
-                ),
+                definitions {
+                    record(rewardId, form = RecordForm.OPEN)
+                    record(coinId, parents = listOf(rewardId.namedTemplate()))
+                    record(variableId, parameters = listOf(TypeParameter.partial(key = variableParameter, name = "T")))
+                },
             )
         val actual = catalog.ready(variableId.use(listOf(coinId.use())))
         val concrete =

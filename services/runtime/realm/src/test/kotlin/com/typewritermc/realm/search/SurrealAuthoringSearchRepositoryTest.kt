@@ -11,6 +11,7 @@ import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
@@ -29,6 +30,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -43,7 +45,7 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
         val catalog =
             DefinitionCatalog(
                 definitions {
-                    record(parent, abstract = true)
+                    record(parent, form = RecordForm.OPEN)
                     record(compatible, parents = listOf(parent.namedTemplate()))
                     record(incompatible)
                 },
@@ -125,7 +127,7 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
                     "list" to DataValue.listValue(items("listed")),
                     "set" to DataValue.setValue(items("member")),
                     "map" to DataValue.mapValue(listOf(MapRow(id = ItemId(value = "row"), key = text("key"), value = text("mapped")))),
-                    "mood" to DataValue.EnumCaseWrapper("cheerful"),
+                    "mood" to DataValue.named(definition("mood").member("cheerful").namedUse(), DataValue.UNIT),
                     "done" to DataValue.BooleanWrapper(true),
                 ),
             )

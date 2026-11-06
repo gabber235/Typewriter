@@ -14,6 +14,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.typewritermc.codegen.declarationCode
 import com.typewritermc.codegen.kotlinCode
+import com.typewritermc.codegen.listCode
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.TypeDisplay
@@ -62,7 +63,19 @@ internal object DefinitionEmitter : SdkEmitter {
                         .builder("nativeClass", KClass::class.asClassName().parameterizedBy(STAR), KModifier.OVERRIDE)
                         .getter(FunSpec.getterBuilder().addStatement("return %T::class", names.source).build())
                         .build(),
-                ).addProperty(declaration.displayProperty)
+                ).apply {
+                    if (declaration.cases.isNotEmpty()) {
+                        addProperty(
+                            PropertySpec
+                                .builder("cases", LIST.parameterizedBy(TypeDefinition::class.asClassName()), KModifier.OVERRIDE)
+                                .initializer(
+                                    context(declaration.references.inside(declaration.definition.id)) {
+                                        declaration.cases.map { it.kotlinCode() }.listCode()
+                                    },
+                                ).build(),
+                        )
+                    }
+                }.addProperty(declaration.displayProperty)
                 .apply { declaration.searchKeyProperty?.let(::addProperty) }
                 .addFunction(
                     FunSpec

@@ -12,7 +12,7 @@
 ///     }, type: typeUse("Quest")),
 ///   ],
 ///   catalog: authoredCatalog([
-///     declaredRecord("Step", abstract: true),
+///     declaredRecord("Step", open: true),
 ///     declaredRecord("Quest", fields: {"title": skir.ScalarKind.text}),
 ///   ]),
 /// );
@@ -83,7 +83,7 @@ skir.TypeDisplay typeDisplay(
 /// but those it inherits from that type.
 ///
 /// It refines [parents], whose fields [authoredCatalog] adds to its own; it
-/// is concrete unless [abstract]; its [parameters] are bounded by the types
+/// is concrete unless [open], or closed over [cases] when given; its [parameters] are bounded by the types
 /// listed under each name. It is ready unless [status] says otherwise,
 /// places by [placementField] when given and shows [display], the default
 /// display unless given.
@@ -93,7 +93,8 @@ skir.PublishedType declaredRecord(
   Set<String> defaulted = const {},
   Map<String, List<skir.RuleId>> rules = const {},
   Object? inheritedFrom,
-  bool abstract = false,
+  bool open = false,
+  List<Object>? cases,
   List<Object> parents = const [],
   Map<String, List<Object>> parameters = const {},
   skir.DeclarationStatus status = skir.DeclarationStatus.ready,
@@ -118,7 +119,13 @@ skir.PublishedType declaredRecord(
               hasConstructorDefault: defaulted.contains(field),
             ),
       ],
-      abstract_: abstract,
+      form: cases != null
+          ? skir.RecordForm.createClosed(
+              cases: [for (final case_ in cases) _named(case_)],
+            )
+          : open
+          ? skir.RecordForm.open
+          : skir.RecordForm.concrete,
     ),
     parameters: [
       for (final (index, MapEntry(key: parameter, value: bounds))
@@ -145,6 +152,33 @@ skir.PublishedType declaredRecord(
     searchKey: searchKey,
   );
 }
+
+/// The enum [type], a test type name or a [skir.TypeDefinitionId]: a closed
+/// record over the unit [cases], followed by one declaration per case.
+List<skir.PublishedType> declaredEnum(Object type, List<String> cases) {
+  final id = _id(type);
+  return [
+    declaredRecord(id, cases: [for (final name in cases) id.member(name)]),
+    for (final name in cases)
+      publishedType(
+        id.member(name),
+        representation: skir.RepresentationTemplate.createScalar(
+          kind: skir.ScalarKind.unit,
+        ),
+        parents: [_named(id)],
+      ),
+  ];
+}
+
+/// The value of the case [name] of the enum [type].
+skir.DataValue enumValue(Object type, String name) =>
+    skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
+        definition: _id(type).member(name),
+        arguments: const [],
+      ),
+      payload: skir.DataValue.unit,
+    );
 
 /// The ready scalar type [type] of [kind].
 skir.PublishedType declaredScalar(Object type, skir.ScalarKind kind) =>

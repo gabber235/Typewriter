@@ -46,6 +46,7 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -77,7 +78,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                 hasConstructorDefault = true,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
@@ -173,7 +174,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                         type = pendingParameter.template,
                                     ),
                                 ),
-                            abstract_ = false,
+                            form = RecordForm.CONCRETE,
                         ),
                 ),
             ),
@@ -308,7 +309,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                         representation =
                             RepresentationTemplate.createRecord(
                                 fields = listOf(FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "next"), type = type)),
-                                abstract_ = false,
+                                form = RecordForm.CONCRETE,
                             ),
                     )
                 },
@@ -385,7 +386,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val abstractDefinition =
             TypeDefinition.partial(
                 id = abstractId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )
         val concreteDefinition =
             TypeDefinition.partial(
@@ -396,7 +397,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                             listOf(
                                 FieldDeclaration.partial(owner = concreteValueOwner, type = ScalarKind.TEXT.template),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
                 parents = listOf(abstractId.namedTemplate()),
             )
@@ -414,7 +415,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                     hasConstructorDefault = true,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(abstractDefinition, concreteDefinition, ownerDefinition))
@@ -458,7 +459,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                     hasConstructorDefault = true,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val parentDefinition =
@@ -470,7 +471,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                             listOf(
                                 FieldDeclaration.partial(owner = parentChildOwner, type = childId.template()),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(childDefinition, parentDefinition))
@@ -514,7 +515,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                             listOf(
                                 FieldDeclaration.partial(owner = seed, type = ScalarKind.TEXT.template, hasConstructorDefault = true),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val theme =
@@ -537,7 +538,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                     type = ScalarKind.TEXT.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(style, theme))
@@ -583,7 +584,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                     type = directId.template(),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(direct))
@@ -627,7 +628,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                         ),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + grow)
@@ -657,7 +658,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val node =
             TypeDefinition.partial(
                 id = nodeId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )
         val branch =
             TypeDefinition.partial(
@@ -671,7 +672,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                     type = nodeId.template(),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
                 parents = listOf(nodeId.namedTemplate()),
             )
@@ -684,7 +685,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                             listOf(
                                 FieldDeclaration.partial(owner = FieldOwner(definition = ownerId, name = "node"), type = nodeId.template()),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(node, branch, owner))
@@ -719,7 +720,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                     type = boxParameter.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val treeId = TypeDefinitionId.qualified("test", "DefaultTree")
@@ -741,7 +742,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                                     type = StandardTypes.list.template(listOf(treeId.template(listOf(treeParameter.template)))),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + listOf(box, tree))
