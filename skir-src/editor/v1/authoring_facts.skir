@@ -7,6 +7,7 @@ import {
   AuthoringRecord,
   DataValue,
   RelationId,
+  TypeDefinition,
   TypeSelection,
   ValueLocation,
   ValuePath,
@@ -55,6 +56,10 @@ enum EditExpectation(84030003) {
     direction: TraversalDirection = 2;
     expected: [LinkProjection] = 3;
   } = 6;
+  types: struct {
+    resource: ResourceId = 0;
+    expected: [TypeDefinition] = 1;
+  } = 7;
 }
 
 /// Pairs a required original fact with the current saved fact so the caller can refresh before retrying.

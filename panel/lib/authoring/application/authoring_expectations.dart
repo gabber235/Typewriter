@@ -25,6 +25,7 @@ Object _factKey(skir.EditExpectation expected) => switch (expected) {
     value.contract,
     value.direction,
   ),
+  skir.EditExpectation_typesWrapper(:final value) => ("types", value.resource),
   _ => throw StateError("Unknown edit expectation"),
 };
 bool _sameExpectation(skir.EditExpectation first, skir.EditExpectation second) {
@@ -51,7 +52,12 @@ bool _sameExpectation(skir.EditExpectation first, skir.EditExpectation second) {
     final right = second.value.expected;
     if (left == null || right == null) return left == right;
     return left.configuration == right.configuration &&
-        _sameExpectedFields(left.fields, right.fields);
+        _sameExpectedFields(left.fields, right.fields) &&
+        _sameTypes(left.types, right.types);
+  }
+  if (first is skir.EditExpectation_typesWrapper &&
+      second is skir.EditExpectation_typesWrapper) {
+    return _sameTypes(first.value.expected, second.value.expected);
   }
   return first == second;
 }
@@ -146,3 +152,16 @@ skir.NamedTypeUse? _concreteNamed(skir.TypeUse? type) => switch (type) {
   skir.TypeUse_nullableWrapper(:final value) => _concreteNamed(value.value),
   _ => null,
 };
+
+bool _sameTypes(
+  Iterable<skir.TypeDefinition> first,
+  Iterable<skir.TypeDefinition> second,
+) {
+  final left = first.toList(growable: false);
+  final right = second.toList(growable: false);
+  if (left.length != right.length) return false;
+  for (var index = 0; index < left.length; index++) {
+    if (left[index] != right[index]) return false;
+  }
+  return true;
+}

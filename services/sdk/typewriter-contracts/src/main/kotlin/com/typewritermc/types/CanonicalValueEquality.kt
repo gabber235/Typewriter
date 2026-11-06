@@ -116,6 +116,10 @@ fun DataValue.canonicalValueKey(): String =
             listOf(value.endpoint.value, value.target.resource.value, opposite).framed("link")
         }
 
+        is DataValue.TypeUseWrapper -> {
+            listOf(value.semanticForm()).framed("type")
+        }
+
         else -> {
             unknownVariant(this)
         }

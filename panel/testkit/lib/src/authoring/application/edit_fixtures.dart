@@ -102,6 +102,7 @@ final class ParentFieldFixture {
     return skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
+          types: const [],
           configuration: request.recordSelection,
           fields: [
             skir.FieldValue(
@@ -265,6 +266,7 @@ final class RelationEditFixture {
     );
     final originalResource = saved.resources.single;
     final linkedRecord = skir.AuthoringRecord(
+      types: const [],
       configuration: originalResource.content.configuration,
       fields: [
         for (final field in originalResource.content.fields)
@@ -294,6 +296,7 @@ final class RelationEditFixture {
           skir.AuthoringResource(
             id: target,
             content: skir.AuthoringRecord(
+              types: const [],
               configuration: originalResource.content.configuration,
               fields: [
                 for (final name in ["back", "back2"])
@@ -473,6 +476,7 @@ skir.PreparedValue preparedRecord(
 ) => skir.PreparedValue(
   content: skir.PreparedContent.wrapRecord(
     skir.AuthoringRecord(
+      types: const [],
       configuration: request.recordSelection,
       fields: fields,
     ),

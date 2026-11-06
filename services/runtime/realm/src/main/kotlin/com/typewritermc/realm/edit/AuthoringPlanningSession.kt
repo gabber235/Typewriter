@@ -15,9 +15,12 @@ import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.authoring.valueAt
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.over
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.withoutUnreachableTypes
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -74,8 +77,15 @@ internal class AuthoringPlanningSession(
     val baseline: AuthoringView,
     private val invocationId: String,
 ) {
-    val planner = AuthoringMutationPlanner(baseline.catalog.checked, baseline.catalog.relations)
+    val planner = AuthoringMutationPlanner(baseline)
     private val staged = baseline.resources.toMutableMap()
+
+    /** The catalog over what is staged now, with its bindings: an earlier write's declarations are visible to the next one. */
+    val stagedCatalog: AuthoringCatalogLease get() = catalogWith(emptyMap())
+
+    /** The catalog over what is staged now with [upserts] written over it, for a record whose values need its own declarations. */
+    fun catalogWith(upserts: Map<ResourceId, AuthoringRecord>): AuthoringCatalogLease = baseline.catalog.over(staged + upserts)
+
     private val removed = linkedSetOf<ResourceId>()
     val resources: Map<ResourceId, AuthoringRecord> = Collections.unmodifiableMap(staged)
     private val emitted = mutableListOf<EditIntent>()
@@ -185,10 +195,19 @@ internal class AuthoringPlanningSession(
      */
     fun finish(): Pair<PreparedEdit, AuthoringMutationPlan> {
         val edit = PreparedEdit(catalog = baseline.catalog.generation, expectations = emptyList(), intents = intents)
-        val plan = accepted(planner.plan(baseline.resources, edit))
-        check(
-            baseline.resources + plan.resources - plan.removedResources == resources,
-        ) { "Normalized edit replay changed the staged graph" }
+        val plan = accepted(planner.plan(edit))
+        // Commit drops declarations nothing reaches any more, so the staged graph is compared after the same rule.
+        val expected =
+            resources.mapValues { (id, record) ->
+                if (baseline.resources[id] !=
+                    record
+                ) {
+                    record.withoutUnreachableTypes()
+                } else {
+                    record
+                }
+            }
+        check(baseline.resources + plan.resources - plan.removedResources == expected) { "Normalized edit replay changed the staged graph" }
         return edit to plan
     }
 
@@ -220,8 +239,9 @@ internal class AuthoringPlanningSession(
                         (record.configuration as? TypeSelection.CompleteWrapper)?.use ?: error("The counterpart type is incomplete")
                     val value = DataValue.named(configured, DataValue.RecordWrapper(record.payload))
                     val existing = target.valueAt(requested.value.containing.path)
-                    val declared = target.authoredTypeAt(requested.value.containing.path, baseline.catalog.checked)
-                    val schema = declared?.let { baseline.catalog.checked.resolve(it) } as? Resolution.Ready
+                    val catalog = stagedCatalog.checked
+                    val declared = target.authoredTypeAt(requested.value.containing.path, catalog)
+                    val schema = declared?.let { catalog.resolve(it) } as? Resolution.Ready
                     val embedded =
                         if (schema?.value?.schema?.representation is ResolvedRepresentation.SequenceWrapper) {
                             val id =
@@ -254,7 +274,7 @@ internal class AuthoringPlanningSession(
                                 endpoint,
                                 intent.target,
                                 resources.getValue(intent.target),
-                                baseline.catalog.checked,
+                                stagedCatalog.checked,
                             ).filter { it.path.atOrBelow(embedded.path) }
                     require(locations.size == 1) { "The prepared counterpart has ambiguous endpoints" }
                     CounterpartChoice.ExistingWrapper(
@@ -267,7 +287,7 @@ internal class AuthoringPlanningSession(
                 }
 
                 null -> {
-                    when (val binding = ResourceValueMapper.counterpartBinding(endpoint, intent.target, target, baseline.catalog.checked)) {
+                    when (val binding = ResourceValueMapper.counterpartBinding(endpoint, intent.target, target, stagedCatalog.checked)) {
                         is CounterpartBinding.Scalar -> {
                             CounterpartChoice.ExistingWrapper(
                                 LinkOccurrence(

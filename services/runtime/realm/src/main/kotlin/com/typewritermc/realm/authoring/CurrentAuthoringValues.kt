@@ -12,6 +12,7 @@ import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -27,6 +28,9 @@ internal interface CurrentAuthoringValues {
         } else {
             (value(at) as? DataValue.NamedWrapper)?.actualType?.let(TypeSelection::CompleteWrapper)
         }
+
+    /** The types [resource] declares; empty when it declares none or does not exist. */
+    fun types(resource: ResourceId): List<TypeDefinition> = resource(resource)?.types.orEmpty()
 
     fun resourceIds(): Set<ResourceId>
 
@@ -92,6 +96,10 @@ internal fun CurrentAuthoringValues.actual(expected: EditExpectation): EditExpec
                 expected.value.direction,
                 links(expected.value.resource, expected.value.contract, expected.value.direction),
             )
+        }
+
+        is EditExpectation.TypesWrapper -> {
+            EditExpectation.createTypes(resource = expected.value.resource, expected = types(expected.value.resource))
         }
 
         else -> {

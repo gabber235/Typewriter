@@ -13,26 +13,40 @@ import com.typewritermc.library.tag
 import com.typewritermc.library.taxonomy
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.RealmStorage
+import com.typewritermc.realm.testing.declares
 import com.typewritermc.realm.testing.definitionOf
+import com.typewritermc.realm.testing.fieldKey
 import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.links
 import com.typewritermc.realm.testing.plain
 import com.typewritermc.realm.testing.record
+import com.typewritermc.realm.testing.recordDefinition
+import com.typewritermc.realm.testing.resolvedSchema
 import com.typewritermc.realm.testing.text
+import com.typewritermc.realm.testing.typeUse
+import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.varValue
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
 import com.typewritermc.testing.routes.fixtureTimelinePage
 import com.typewritermc.testkit.setup.SetupRejected
+import com.typewritermc.types.Type
+import com.typewritermc.types.catalog.content
+import com.typewritermc.types.integer
 import com.typewritermc.types.items
+import com.typewritermc.types.record
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.typed_value.PortableValue
 
 val SetupApplierTest by testSuite {
     val greeting =
@@ -90,6 +104,57 @@ val SetupApplierTest by testSuite {
         withSetup(reward, catalog = routeFixtureCatalog) { baseReward ->
             record(baseReward.id.toSkir()).configuration shouldBe TypeSelection.CompleteWrapper(definitionOf(intUse))
             varValue(baseReward.id.toSkir()) shouldBe plain(50)
+        }
+    }
+
+    test("a setup seeds the types a resource declares") {
+        val custom =
+            setup("custom-type") {
+                library {
+                    books.book("types") {
+                        pages.staticPage("types") {
+                            elements.definition<Type>("Reward", typeUse) {
+                                val reward = TypeDefinitionId.content(handle.id.toSkir(), "reward")
+                                types = listOf(recordDefinition(reward))
+                                value = Var.Value(Type(reward.use()))
+                            }
+                        }
+                    }
+                }
+            }
+
+        withSetup(custom, catalog = routeFixtureCatalog) { reward ->
+            val id = reward.id.toSkir()
+            record(id).types shouldBe listOf(recordDefinition(TypeDefinitionId.content(id, "reward")))
+            resolvedSchema(fieldKey(id))
+        }
+    }
+
+    test("a setup seeds an inline record value with no Kotlin class") {
+        val gift =
+            setup("inline-gift") {
+                library {
+                    books.book("gifts") {
+                        pages.staticPage("gifts") {
+                            val declared = declares { record("k1") { field("gold", intUse) } }.on(elements.idOf("gift").toSkir())
+                            elements.definition<PortableValue>("gift", declared.use) {
+                                types = declared.types
+                                value =
+                                    Var.Value(
+                                        PortableValue(
+                                            actualType = declared.use,
+                                            payload =
+                                                DataValue.record("gold" to DataValue.integer(5)),
+                                        ),
+                                    )
+                            }
+                        }
+                    }
+                }
+            }
+
+        withSetup(gift, catalog = routeFixtureCatalog) { handle ->
+            value(handle.id.toSkir(), "value", "value", "gold") shouldBe DataValue.integer(5)
         }
     }
 }

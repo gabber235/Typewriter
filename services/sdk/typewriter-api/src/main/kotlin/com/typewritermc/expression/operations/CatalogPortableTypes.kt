@@ -190,6 +190,10 @@ private fun fitsScalar(
             value is DataValue.DurationWrapper
         }
 
+        ScalarKind.TYPE -> {
+            value is DataValue.TypeUseWrapper
+        }
+
         is ScalarKind.IntegerWrapper -> {
             value is DataValue.IntegerWrapper && value.bigInteger in integerRange(kind)
         }

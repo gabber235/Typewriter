@@ -45,14 +45,11 @@ val TypeArgumentOperationsTest by testSuite {
         }
     }
 
-    test("previewing a change on a record with an undeclared field is refused at that field") {
+    test("an undeclared field a record already holds does not block previewing a change, which leaves it in place") {
         val invalid = rewardContainer.mapValues { (_, record) -> record.with("unknown", DataValue.StringValueWrapper("retained")) }
         RealmFixture.of(REPAIR_CATALOG, invalid).use { realm ->
-            realm
-                .preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN))
-                .shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.RejectedErrorWrapper>()
-                .value
-                .map { it.location } shouldContain location(container, "unknown")
+            realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady().clearedLocations shouldNotContain
+                location(container, "unknown")
         }
     }
 

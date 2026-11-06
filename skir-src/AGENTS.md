@@ -61,6 +61,10 @@ structs are storage adapters, not mirrors.
 
 - `kernel/v1/record_id.skir`: `RecordId` keeps SurrealDB's key shapes (number, uuid, array,
   object) although every producer uses a string key.
+- `editor/v1/type_catalog.skir`: `TypeDefinition` is also a write shape in `set_types`, a create's
+  record and `OperationResourceUpsert.content` (resource_operations.skir). When Kotlin code
+  resolves a stored or staged declaration as a type, it goes through `CheckedCatalog.withContent`,
+  which validates each declaration it reaches.
 
 ### Numbering
 

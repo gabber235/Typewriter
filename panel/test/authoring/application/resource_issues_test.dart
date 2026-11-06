@@ -131,4 +131,65 @@ void main() {
     );
     expect(issues.savedFor(id).single.current, isFalse);
   });
+
+  test(
+    "a finding whose evidence holds a types fact stays current and shows",
+    () {
+      final issues = ResourceIssues.evaluate(
+        document: base,
+        publication: unfinishedValueBlocking(
+          at,
+          origin: origin,
+          evidence: skir.DiagnosticEvidence(
+            catalog: base.generation,
+            expectations: [
+              skir.EditExpectation.createTypes(
+                resource: id,
+                expected: const [],
+              ),
+            ],
+          ),
+        ),
+      );
+      final saved = issues.savedFor(id).single;
+      expect(saved.current, isTrue);
+      expect(saved.blocksPublication, isTrue);
+    },
+  );
+
+  test("a resource with a content type argument shows no unavailable type", () {
+    final box = skir.ResourceId(value: "box");
+    final reward = contentTypeDefinition("box", "k1");
+    final document = base
+        .withCatalogEntries(
+          types: [
+            declaredRecord("Box", parameters: {"T": []}),
+          ],
+        )
+        .changedRemotely(
+          (edit) => edit.create(
+            box,
+            skir.AuthoringRecord(
+              types: [contentRecordDeclaration(reward)],
+              configuration: skir.TypeSelection.createComplete(
+                definition: typeDefinition("Box"),
+                arguments: [
+                  skir.TypeUse.createNamed(
+                    definition: reward,
+                    arguments: const [],
+                  ),
+                ],
+              ),
+              fields: const [],
+            ),
+          ),
+        );
+
+    final issues = ResourceIssues.evaluate(document: document);
+
+    expect(
+      issues.currentFor(box).map((issue) => issue.diagnostic.code),
+      isNot(contains("unresolved_type")),
+    );
+  });
 }

@@ -504,6 +504,7 @@ AuthoringEdit _interactionDraft() {
       skir.AuthoringResource(
         id: _interactionResource,
         content: skir.AuthoringRecord(
+          types: const [],
           configuration: skir.TypeSelection.wrapComplete(configuration),
           fields: [
             skir.FieldValue(

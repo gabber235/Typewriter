@@ -394,6 +394,7 @@ void main() {
     final prepared = skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
+          types: const [],
           configuration: fixture.wrapperSelection,
           fields: [
             skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
@@ -522,6 +523,7 @@ void main() {
     final prepared = skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
+          types: const [],
           configuration: fixture.wrapperSelection,
           fields: [
             skir.FieldValue(name: "back", value: skir.DataValue.unfilled),

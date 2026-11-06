@@ -309,6 +309,8 @@ extension PreparedEditResources on skir.PreparedEdit {
           yield value.at.resource;
         case skir.EditIntent_configureResourceWrapper(:final value):
           yield value.resource;
+        case skir.EditIntent_setTypesWrapper(:final value):
+          yield value.resource;
         case skir.EditIntent_unknown():
       }
     }

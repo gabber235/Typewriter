@@ -24,6 +24,7 @@ import {
   LinkTarget,
   ListItem,
   NamedTypeUse,
+  TypeDefinition,
   TypeDefinitionId,
   TypeSelection,
   ValueLocation,
@@ -146,9 +147,15 @@ struct ResourceConfigurationIntent(84020020) {
   configuration: TypeSelection = 1;
 }
 
+/// Replaces the types a resource declares.
+struct ResourceTypesIntent(84020021) {
+  resource: ResourceId = 0;
+  types: [TypeDefinition] = 1;
+}
+
 /// Ordered proposed mutations. Relation intent names exact authored occurrences so admission can
 /// synchronize inverses and validate the resulting graph before persistence.
-enum EditIntent(84020021) {
+enum EditIntent(84020022) {
   create_resource: CreateResourceIntent = 1;
   delete_resource: DeleteResourceIntent = 2;
   set_value: SetValueIntent = 3;
@@ -159,38 +166,39 @@ enum EditIntent(84020021) {
   disconnect_relation: LinkOccurrenceId = 8;
   retag: RetagIntent = 9;
   configure_resource: ResourceConfigurationIntent = 10;
+  set_types: ResourceTypesIntent = 11;
 }
 
 /// Carries a proposed edit and the original saved facts that justify replaying it.
 /// Matching supplied facts alone is insufficient: Realm admission independently requires guards for
 /// the affected values and relations. Preparation grants no persistence or publication authority.
-struct PreparedEdit(84020022) {
+struct PreparedEdit(84020023) {
   catalog: CatalogGeneration = 0;
   expectations: [EditExpectation] = 1;
   intents: [EditIntent] = 2;
 }
 
-struct PreparedEditReady(84020023) {
+struct PreparedEditReady(84020024) {
   edit: PreparedEdit = 0;
 }
 
-enum AuthoringOperation(84020024) {
+enum AuthoringOperation(84020025) {
   commit_prepared: PreparedEdit = 1;
 }
 
 /// Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.
-struct AuthoringChanged(84020025) {
+struct AuthoringChanged(84020026) {
   generation: CatalogGeneration = 0;
 }
 
-enum LinkRepairIntent(84020026) {
+enum LinkRepairIntent(84020027) {
   clear: LinkOccurrenceId = 1;
   remove: LinkOccurrenceId = 2;
 }
 
 /// Proposes a fixed definition type configuration change together with all value and link repairs.
 /// Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
-struct TypeArgumentChangePreview(84020027) {
+struct TypeArgumentChangePreview(84020028) {
   resource: ResourceId = 0;
   next: TypeSelection = 1;
   edit: PreparedEdit = 2;
@@ -198,17 +206,17 @@ struct TypeArgumentChangePreview(84020027) {
   cleared_locations: [ValueLocation] = 4;
 }
 
-struct ArgumentLocation(84020028) {
+struct ArgumentLocation(84020029) {
   index: int32 = 0;
 }
 
-struct AuthoringSearchHit(84020029) {
+struct AuthoringSearchHit(84020030) {
   resource: ResourceId = 0;
   subject: PresentationSubject = 1;
   context: PortableValue = 2;
 }
 
-struct AuthoringSearchResult(84020030) {
+struct AuthoringSearchResult(84020031) {
   generation: CatalogGeneration = 0;
   hits: [AuthoringSearchHit] = 1;
   diagnostics: [Diagnostic] = 2;
@@ -217,7 +225,7 @@ struct AuthoringSearchResult(84020030) {
 /// Identifies one saved authoring observation without ordering resource changes.
 /// A local operation overlay echoes this identity while carrying separate proposed values; a
 /// changed saved view requires refreshing the baseline.
-struct AuthoringObservationId(84020031) {
+struct AuthoringObservationId(84020032) {
   value: string = 0;
 }
 

@@ -121,6 +121,7 @@ final class MapEntriesFixture {
   }) => skir.PreparedValue(
     content: skir.PreparedContent.wrapRecord(
       skir.AuthoringRecord(
+        types: const [],
         configuration: request.recordSelection,
         fields: [
           skir.FieldValue(

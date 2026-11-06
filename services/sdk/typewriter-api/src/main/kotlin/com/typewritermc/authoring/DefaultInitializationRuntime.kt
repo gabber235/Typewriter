@@ -906,7 +906,7 @@ fun ScalarKind.authoredDefault(): DataValue =
         is ScalarKind.FloatWrapper -> DataValue.FloatWrapper(0.0)
         ScalarKind.DECIMAL -> DataValue.DecimalWrapper("0")
         ScalarKind.DURATION -> DataValue.duration(kotlin.time.Duration.ZERO)
-        ScalarKind.TIMESTAMP -> DataValue.UNFILLED
+        ScalarKind.TIMESTAMP, ScalarKind.TYPE -> DataValue.UNFILLED
         else -> unknownVariant(this)
     }
 

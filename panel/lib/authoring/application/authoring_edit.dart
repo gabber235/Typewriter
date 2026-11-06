@@ -702,12 +702,34 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     _resources[resource] = skir.AuthoringRecord(
       configuration: configuration,
       fields: current.fields,
+      types: current.types,
     );
     _intents.add(
       skir.EditIntent.createConfigureResource(
         resource: resource,
         configuration: configuration,
       ),
+    );
+  }
+
+  /// Replaces the types [resource] declares with [types], as the realm replays set_types.
+  void setTypes(skir.ResourceId resource, List<skir.TypeDefinition> types) {
+    final current = _resources[resource];
+    if (current == null) throw StateError("The resource is absent");
+    _observe(_exists(resource: resource));
+    _observe(
+      skir.EditExpectation.createTypes(
+        resource: resource,
+        expected: current.types,
+      ),
+    );
+    _resources[resource] = skir.AuthoringRecord(
+      configuration: current.configuration,
+      fields: current.fields,
+      types: types,
+    );
+    _intents.add(
+      skir.EditIntent.createSetTypes(resource: resource, types: types),
     );
   }
 
@@ -734,6 +756,8 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         retag(value.at, value.type);
       case skir.EditIntent_configureResourceWrapper(:final value):
         configureResource(value.resource, value.configuration);
+      case skir.EditIntent_setTypesWrapper(:final value):
+        setTypes(value.resource, value.types.toList());
       case skir.EditIntent_unknown():
         return "The operation contains an unknown edit";
     }

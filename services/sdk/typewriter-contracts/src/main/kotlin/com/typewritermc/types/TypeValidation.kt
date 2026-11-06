@@ -1,6 +1,7 @@
 package com.typewritermc.types
 
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.ContentKey
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
@@ -57,6 +58,15 @@ fun TypeId.requireValid(): TypeId =
                 require(value.name.isNotBlank()) { "Member name must not be blank." }
             }
 
+            is TypeId.ContentWrapper -> {
+                require(value.resource.value.isNotBlank()) { "Content type resource must not be blank." }
+                when (val key = value.key) {
+                    is ContentKey.GeneratedWrapper -> require(key.value.isNotBlank()) { "Content type key must not be blank." }
+                    is ContentKey.FieldWrapper -> require(key.value.isNotBlank()) { "Content type field must not be blank." }
+                    else -> throw IllegalArgumentException("Unknown content key variant.")
+                }
+            }
+
             else -> {
                 throw IllegalArgumentException("Unknown type identity variant.")
             }
@@ -79,7 +89,7 @@ fun ScalarKind.requireValid(): ScalarKind =
     apply {
         when (this) {
             ScalarKind.UNIT, ScalarKind.BOOLEAN, ScalarKind.TEXT, ScalarKind.BYTES,
-            ScalarKind.DECIMAL, ScalarKind.TIMESTAMP, ScalarKind.DURATION,
+            ScalarKind.DECIMAL, ScalarKind.TIMESTAMP, ScalarKind.DURATION, ScalarKind.TYPE,
             -> Unit
 
             is ScalarKind.IntegerWrapper -> require(value.width != IntegerWidth.UNKNOWN) { "Unknown integer width." }

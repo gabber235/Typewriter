@@ -11,6 +11,7 @@ import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.over
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.immutableMapCopy
@@ -264,7 +265,7 @@ class InMemoryAuthoringViewStore(
     ): RootRetention {
         try {
             val immutable = immutableResources(resources)
-            return RootRetention(AuthoringView(catalog, immutable, discoverLinks(immutable).immutableMapCopy()))
+            return RootRetention(AuthoringView(catalog.over(immutable), immutable, discoverLinks(immutable).immutableMapCopy()))
         } catch (failure: Throwable) {
             try {
                 catalog.close()
@@ -330,6 +331,7 @@ internal fun requiredAuthoringInputs(resources: Map<ResourceId, AuthoringRecord>
         resources.forEach { (id, record) ->
             add(InputIdentity.Existence(id))
             add(InputIdentity.Form(ValueLocation.of(id)))
+            add(InputIdentity.Types(id))
             collectValueInputs(DataValue.RecordWrapper(record.payload), ValueLocation.of(id), this)
         }
     }

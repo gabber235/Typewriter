@@ -78,6 +78,7 @@ final class CheckedEditorCatalog {
       skir.TypeId_qualifiedWrapper(:final value) => value.name,
       skir.TypeId_declaredWrapper(:final value) => value.value,
       skir.TypeId_memberWrapper(:final value) => value.name,
+      skir.TypeId_contentWrapper() => "Custom type",
       _ => "Unknown type",
     };
   }
@@ -123,6 +124,7 @@ final class CheckedEditorCatalog {
     skir.ScalarKind.decimal => "Decimal",
     skir.ScalarKind.timestamp => "Timestamp",
     skir.ScalarKind.duration => "Duration",
+    skir.ScalarKind.type => "Type",
     skir.ScalarKind_integerWrapper(:final value) => switch (value.width) {
       skir.IntegerWidth.signedEight => "Signed 8 bit integer",
       skir.IntegerWidth.signedSixteen => "Signed 16 bit integer",
@@ -563,6 +565,13 @@ final class CheckedEditorCatalog {
 
   bool _isReadyApplication(skir.NamedTypeUse application, int depth) {
     if (depth > _maximumCheckedTypeDepth) return false;
+    // Patch: this catalog holds only the published code snapshot, so it cannot
+    // resolve a type a resource declares. The realm judges those; the layer
+    // that gives the panel a catalog over the document's declarations removes
+    // this.
+    if (application.definition.typeId is skir.TypeId_contentWrapper) {
+      return true;
+    }
     final published = this.published(application.definition);
     if (published == null || published.status != skir.DeclarationStatus.ready) {
       return false;
@@ -618,7 +627,8 @@ final class CheckedEditorCatalog {
         scalar == skir.ScalarKind.bytes ||
         scalar == skir.ScalarKind.decimal ||
         scalar == skir.ScalarKind.timestamp ||
-        scalar == skir.ScalarKind.duration;
+        scalar == skir.ScalarKind.duration ||
+        scalar == skir.ScalarKind.type;
   }
 
   bool _isReadableAs(skir.TypeUse actual, skir.TypeUse expected, int depth) {

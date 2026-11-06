@@ -9,6 +9,7 @@ import "package:typewriter_testkit/testing.dart";
 void main() {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
   final entry = skir.AuthoringRecord(
+    types: const [],
     configuration: skir.TypeSelection.wrapComplete(
       compiledSdkElementValue.authoredActualType!,
     ),
@@ -57,6 +58,7 @@ void main() {
 
   test("a resource without a typed display uses the default display", () {
     final cue = skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.wrapComplete(
         skir.NamedTypeUse(definition: _cueDefinition, arguments: const []),
       ),

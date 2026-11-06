@@ -16,10 +16,8 @@ import com.typewritermc.setup.SetupName
 import com.typewritermc.setup.SetupOwner
 import com.typewritermc.setup.SetupPart
 import com.typewritermc.testkit.CatalogEncoder
-import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
@@ -28,6 +26,7 @@ import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -51,10 +50,16 @@ interface SetupEditor {
     ): CommitPreparedEditResponse
 }
 
-/** An [EditContext] plus what a setup must read: the catalog that encodes its records and the realm's section ids. */
+/** An [EditContext] plus what a setup must read: the encoder of its records and the realm's section ids. */
 interface SetupEdit : EditContext {
-    val checked: CheckedCatalog
-    val nativeBindings: NativeBindingRegistry
+    /**
+     * The encoder over what this edit has staged so far, with [types] declared on [id] as the create of [id] will store
+     * them, so a part's values can name the types it and earlier parts declare.
+     */
+    fun encoder(
+        id: ResourceId,
+        types: List<TypeDefinition>,
+    ): CatalogEncoder
 
     /** The realm's single instance of the section type [definition], or null when the realm has none. */
     fun sectionId(definition: TypeDefinitionId): ResourceId?
@@ -116,13 +121,13 @@ class SetupApplier(
 
 /** The record an author's create would carry for [part], with its owner link left for the insert to fill. */
 private fun SetupEdit.record(part: SetupPart): AuthoringRecord {
-    val record = CatalogEncoder(checked, nativeBindings).record(part.definition.use(part.arguments), part.construct())
+    val record = encoder(part.id, part.types).record(part.definition.use(part.arguments), part.construct()).copy(types = part.types)
     return part.ownerField?.let { record.with(it.serialized, DataValue.UNFILLED) } ?: record
 }
 
 /** The owner list item for [part], pointing back at the part's owner field when it has one. */
 private fun SetupEdit.ownerLink(part: SetupPart): DataValue =
-    CatalogEncoder(checked, nativeBindings)
+    encoder(part.id, part.types)
         .encode(part.item, Ref<Nothing, Nothing>(part.id, part.ownerField?.let { ValuePath.root.field(it.serialized) }))
 
 /** Rejection problems as setup paths; other responses as they are. */

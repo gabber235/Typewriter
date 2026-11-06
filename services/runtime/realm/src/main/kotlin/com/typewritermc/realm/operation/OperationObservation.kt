@@ -1,12 +1,11 @@
 package com.typewritermc.realm.operation
 
-import com.typewritermc.authoring.validateStructure
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.catalog.over
 import com.typewritermc.realm.edit.AuthoringSnapshotValidator
 import com.typewritermc.types.immutableMapCopy
-import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -26,19 +25,17 @@ internal fun AuthoringLease.operationObservation(
     require(upserts.keys.intersect(removals).isEmpty()) { "An overlay cannot replace and remove the same resource" }
     require((upserts.keys + removals).all { it.value.isNotBlank() }) { "An overlay resource identity is empty" }
     require(removals.all { it in root.resources }) { "An overlay removes an unknown resource" }
-    upserts.forEach { (_, record) ->
-        val structural = record.validateStructure(root.catalog.checked)
-        require(structural is StructuralResult.VALID) { "An overlay resource has invalid authored structure: $structural" }
-    }
     val resources = (root.resources + upserts - removals).immutableMapCopy()
     val links = ResourceValueMapper.discover(resources)
-    val projected = ResourceValueMapper.project(links, resources, root.catalog.relations, root.catalog.checked)
+    // The code catalog plus what this draft declares, judged by the same rule as a commit with root as the saved side.
+    val catalog = root.catalog.over(resources)
+    val projected = ResourceValueMapper.project(links, resources, root.catalog.relations, catalog.checked)
     val problems =
-        AuthoringSnapshotValidator(root.catalog.checked, root.catalog.relations)
-            .validate(root.resources, resources, upserts.keys + removals, projected)
+        AuthoringSnapshotValidator(catalog.checked, root.catalog.checked, root.catalog.relations)
+            .validate(root.resources, resources, upserts.keys + removals, projected, root.projection)
     require(problems.isEmpty()) { "An overlay violates resource structure or relation policy: $problems" }
     return AuthoringView(
-        root.catalog,
+        catalog,
         resources,
         links.associateBy { it.id }.immutableMapCopy(),
         root.observationId,

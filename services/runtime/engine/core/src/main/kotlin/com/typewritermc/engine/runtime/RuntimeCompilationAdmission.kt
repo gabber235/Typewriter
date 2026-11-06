@@ -6,6 +6,8 @@ import com.typewritermc.engine.relation
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.namesFieldKey
+import com.typewritermc.types.catalog.referencedDefinitions
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.use
@@ -17,6 +19,8 @@ internal fun RuntimeCompilationFacts.requireAccepted(
     checked: CheckedCatalog,
     relations: Collection<RelationContract>,
 ) {
+    val named = types.flatMap { it.referencedDefinitions() } + resources.flatMap { it.actualType.use.referencedDefinitions() }
+    require(named.none { it.namesFieldKey() }) { "Compiled content names a field key; the compiler expands them." }
     val seeds =
         resources.flatMap { resource ->
             sequenceOf(resource.actualType) +

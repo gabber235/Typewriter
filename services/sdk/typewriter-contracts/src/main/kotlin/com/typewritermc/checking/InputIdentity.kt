@@ -36,6 +36,11 @@ sealed interface InputIdentity {
         val relation: RelationId?,
     ) : InputIdentity
 
+    /** The types [resource] declares. */
+    data class Types(
+        val resource: ResourceId,
+    ) : InputIdentity
+
     data class Catalog(
         val generation: CatalogGeneration,
     ) : InputIdentity

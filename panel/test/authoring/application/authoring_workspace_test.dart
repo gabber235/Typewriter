@@ -409,6 +409,7 @@ void main() {
       apply: (edit) => edit.create(
         created,
         skir.AuthoringRecord(
+          types: const [],
           configuration: skir.TypeSelection.unknown,
           fields: [
             skir.FieldValue(
@@ -432,6 +433,7 @@ void main() {
       (remote) => remote.create(
         created,
         skir.AuthoringRecord(
+          types: const [],
           configuration: skir.TypeSelection.unknown,
           fields: [
             skir.FieldValue(
@@ -939,6 +941,7 @@ void main() {
       (AuthoringEdit edit) => edit.create(
         created,
         skir.AuthoringRecord(
+          types: const [],
           configuration: skir.TypeSelection.unknown,
           fields: [
             skir.FieldValue(
@@ -1541,6 +1544,7 @@ void main() {
           _resource: skir.AuthoringResource(
             id: _resource,
             content: skir.AuthoringRecord(
+              types: const [],
               configuration: entry.content.configuration,
               fields: entry.content.fields.toList().reversed,
             ),

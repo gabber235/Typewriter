@@ -18,16 +18,18 @@ import skirout.editor.v1.type_catalog.TypeSelection
  */
 
 /**
- * Checks the selection and every field value with requirePortable and rejects a field name that appears twice.
- * Returns the canonical form: fields in name order and canonical values.
+ * Checks the selection, every field value with requirePortable and every declared type, and rejects a field name that
+ * appears twice. Returns the canonical form: fields in name order and canonical values. Whether a declaration is one a
+ * creator may set is the catalog overlay's judgement, not this shape check.
  */
 fun AuthoringRecord.requireValid(): AuthoringRecord {
+    types.forEach { it.requireValid() }
     val selection = configuration.requireValid()
     val checked = fields.map { field -> FieldValue(name = field.name, value = field.value.requirePortable()) }.sortedBy { it.name }
     checked.zipWithNext { previous, next -> require(previous.name != next.name) { "Record field ${next.name} is duplicated." } }
     val unchanged =
         selection === configuration && checked.indices.all { checked[it].value === fields[it].value && checked[it].name == fields[it].name }
-    return if (unchanged) this else AuthoringRecord(configuration = selection, fields = checked)
+    return if (unchanged) this else AuthoringRecord(configuration = selection, fields = checked, types = types)
 }
 
 fun TypeSelection.requireValid(): TypeSelection =

@@ -773,6 +773,7 @@ val TypeSystemFoundationTest by testSuite {
                 AuthoringRecord(
                     configuration = TypeSelection.CompleteWrapper(id("duplicate_record").namedUse()),
                     fields = fields,
+                    types = emptyList(),
                 ).requireValid()
             }
 

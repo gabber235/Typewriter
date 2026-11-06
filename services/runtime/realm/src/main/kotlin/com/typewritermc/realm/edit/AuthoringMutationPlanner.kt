@@ -6,9 +6,13 @@ import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.contentSourceOf
+import com.typewritermc.types.catalog.misfiledDeclarations
+import com.typewritermc.types.catalog.withoutUnreachableTypes
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.items
 import com.typewritermc.types.named
@@ -51,36 +55,42 @@ internal sealed interface MutationPlanningResult {
  * Expectation comparison and persistence belong to [RealmAuthoringOwner], outside this pure planner.
  */
 internal class AuthoringMutationPlanner(
-    private val catalog: CheckedCatalog,
-    private val contracts: List<RelationContract>,
+    private val saved: AuthoringView,
 ) {
-    private val validator = AuthoringSnapshotValidator(catalog, contracts)
-    private val relations = RelationValueSynchronizer(catalog, contracts)
+    /** The saved state's catalog: the code catalog plus what the saved resources declare. */
+    private val catalog: CheckedCatalog get() = saved.catalog.checked
+    private val contracts: List<RelationContract> get() = saved.catalog.relations
 
-    fun plan(
-        latestResources: Map<ResourceId, AuthoringRecord>,
-        edit: PreparedEdit,
-    ): MutationPlanningResult {
+    fun plan(edit: PreparedEdit): MutationPlanningResult {
+        val latestResources = saved.resources
         val resources = latestResources.toMutableMap()
         val removed = linkedSetOf<ResourceId>()
         val problems = replayStaged(resources, removed, edit).toMutableList()
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
+        // A misfiled declaration is refused even when unused, so it is judged before unused ones are dropped.
+        problems +=
+            resources.filter { (id, record) -> latestResources[id] != record }.flatMap { (id, record) -> record.misfiledDeclarations(id) }
+        if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
+        dropUnreachableTypes(resources, latestResources)
         val affected =
             buildSet {
                 addAll(removed)
                 resources.forEach { (id, record) -> if (latestResources[id] != record) add(id) }
             }
+        val final = resources.toMap().let { state -> catalog.withContent(contentSourceOf(state::get)) }
         val proposedLinks = ResourceValueMapper.discover(resources)
-        val projection = ResourceValueMapper.project(proposedLinks, resources, contracts, catalog)
-        problems += validator.validate(latestResources, resources, affected, projection)
+        val projection = ResourceValueMapper.project(proposedLinks, resources, contracts, final)
+        val savedProjection = saved.projection
+        problems +=
+            AuthoringSnapshotValidator(
+                final,
+                catalog,
+                contracts,
+            ).validate(latestResources, resources, affected, projection, savedProjection)
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
-        val beforeLinks =
-            ResourceValueMapper
-                .project(ResourceValueMapper.discover(latestResources), latestResources, contracts, catalog)
-                .projections
-        val beforeSet = beforeLinks.toSet()
+        val beforeSet = savedProjection.projections.toSet()
         val afterSet = projection.projections.toSet()
         val relations =
             RelationProjectionDelta(
@@ -109,6 +119,9 @@ internal class AuthoringMutationPlanner(
         edit.intents.forEachIndexed { index, intent ->
             if (problems.isNotEmpty()) return@forEachIndexed
             if (index < deletionRunEnd) return@forEachIndexed
+            // An overlay caches what it reaches, and any intent can change what a content type means, so each intent reads a fresh one.
+            val catalog = this.catalog.withContent(contentSourceOf(resources::get))
+            val relations = RelationValueSynchronizer(catalog, contracts)
             when (intent) {
                 is EditIntent.CreateResourceWrapper -> {
                     create(resources, removed, intent, problems)
@@ -122,7 +135,7 @@ internal class AuthoringMutationPlanner(
                         requested += deleting.value.id
                         deletionRunEnd++
                     }
-                    delete(resources, removed, requested, problems)
+                    delete(resources, removed, requested, catalog, relations, problems)
                 }
 
                 is EditIntent.SetValueWrapper -> {
@@ -163,6 +176,10 @@ internal class AuthoringMutationPlanner(
                     configureResource(resources, intent, problems)
                 }
 
+                is EditIntent.SetTypesWrapper -> {
+                    setTypes(resources, intent, problems)
+                }
+
                 else -> {
                     unknownVariant(intent)
                 }
@@ -189,6 +206,8 @@ internal class AuthoringMutationPlanner(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         removed: MutableSet<ResourceId>,
         requested: Set<ResourceId>,
+        catalog: CheckedCatalog,
+        relations: RelationValueSynchronizer,
         problems: MutableList<ValueProblem>,
     ) {
         val missing = requested.filter { it !in resources && it !in removed }
@@ -313,6 +332,29 @@ internal class AuthoringMutationPlanner(
             return
         }
         resources[intent.value.resource] = record.copy(configuration = intent.value.configuration)
+    }
+
+    private fun setTypes(
+        resources: MutableMap<ResourceId, AuthoringRecord>,
+        intent: EditIntent.SetTypesWrapper,
+        problems: MutableList<ValueProblem>,
+    ) {
+        val record = resources[intent.value.resource]
+        if (record == null) {
+            problems += problem(intent.value.resource, "resource_missing")
+            return
+        }
+        resources[intent.value.resource] = record.copy(types = intent.value.types)
+    }
+
+    /** A declaration nothing a changed record stores reaches any more goes in the same commit. */
+    private fun dropUnreachableTypes(
+        resources: MutableMap<ResourceId, AuthoringRecord>,
+        latest: Map<ResourceId, AuthoringRecord>,
+    ) {
+        resources.entries.forEach { entry ->
+            if (latest[entry.key] != entry.value) entry.setValue(entry.value.withoutUnreachableTypes())
+        }
     }
 }
 

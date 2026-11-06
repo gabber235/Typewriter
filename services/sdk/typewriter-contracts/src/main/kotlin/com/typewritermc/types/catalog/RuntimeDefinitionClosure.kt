@@ -13,7 +13,7 @@ import skirout.editor.v1.type_catalog.TypeUse
 
 fun CheckedCatalog.runtimeDefinitions(seeds: Iterable<TypeUse>): List<TypeDefinition> {
     val pending = ArrayDeque<TypeDefinitionId>()
-    pending.addAll(seeds.flatMap(TypeUse::referencedDefinitions))
+    pending.addAll(seeds.flatMap { it.referencedDefinitions() })
     val found = linkedMapOf<TypeDefinitionId, TypeDefinition>()
     while (pending.isNotEmpty()) {
         val id = pending.removeFirst()
@@ -26,29 +26,18 @@ fun CheckedCatalog.runtimeDefinitions(seeds: Iterable<TypeUse>): List<TypeDefini
     return found.values.toList()
 }
 
-private fun TypeUse.referencedDefinitions(): Set<TypeDefinitionId> =
-    when (this) {
-        is TypeUse.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap(TypeUse::referencedDefinitions)
-        is TypeUse.NullableWrapper -> value.value.referencedDefinitions()
-        is TypeUse.ScalarWrapper -> emptySet()
-        is TypeUse.FunctionWrapper -> FORMULA_USE.referencedDefinitions() + value.parts.flatMap(TypeUse::referencedDefinitions)
-        else -> unknownVariant(this)
-    }
-
 private fun TypeTemplate.referencedDefinitions(): Set<TypeDefinitionId> =
     when (this) {
         is TypeTemplate.ParameterWrapper -> emptySet()
         is TypeTemplate.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap(TypeTemplate::referencedDefinitions)
         is TypeTemplate.NullableWrapper -> value.value.referencedDefinitions()
         is TypeTemplate.ScalarWrapper -> emptySet()
-        is TypeTemplate.FunctionWrapper -> FORMULA_USE.referencedDefinitions() + value.parts.flatMap(TypeTemplate::referencedDefinitions)
+        is TypeTemplate.FunctionWrapper -> setOf(FORMULA_USE.definition) + value.parts.flatMap(TypeTemplate::referencedDefinitions)
         else -> unknownVariant(this)
     }
 
-private fun skirout.editor.v1.type_catalog.NamedTypeUse.referencedDefinitions(): Set<TypeDefinitionId> =
-    TypeUse.NamedWrapper(this).referencedDefinitions()
-
-internal fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> {
+/** Every definition this declaration names: its parents, bounds, field types and closed cases. */
+fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> {
     val roots =
         parents.map { TypeTemplate.NamedWrapper(it) } + parameters.flatMap { parameter -> parameter.bounds } + representation.templates()
     return roots.flatMapTo(linkedSetOf(), TypeTemplate::referencedDefinitions)

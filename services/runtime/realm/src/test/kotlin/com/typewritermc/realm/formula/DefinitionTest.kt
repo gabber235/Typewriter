@@ -10,12 +10,15 @@ import com.typewritermc.realm.operation.refusalCodes
 import com.typewritermc.realm.operation.shouldBeReady
 import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.realm.testing.RealmStorage
+import com.typewritermc.realm.testing.caseValue
 import com.typewritermc.realm.testing.commitPreparedTypeChange
 import com.typewritermc.realm.testing.computed
+import com.typewritermc.realm.testing.declares
 import com.typewritermc.realm.testing.definitionDraft
 import com.typewritermc.realm.testing.definitionOf
 import com.typewritermc.realm.testing.definitionValueUse
 import com.typewritermc.realm.testing.expectRefused
+import com.typewritermc.realm.testing.fieldKey
 import com.typewritermc.realm.testing.formulaPage
 import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.plain
@@ -25,10 +28,12 @@ import com.typewritermc.realm.testing.publicationBlockers
 import com.typewritermc.realm.testing.publishToEngine
 import com.typewritermc.realm.testing.readDraft
 import com.typewritermc.realm.testing.record
+import com.typewritermc.realm.testing.resolvedSchema
 import com.typewritermc.realm.testing.setVar
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.shouldContainLocation
 import com.typewritermc.realm.testing.stringUse
+import com.typewritermc.realm.testing.typeArgumentOf
 import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.varValue
 import com.typewritermc.realm.testing.withSetup
@@ -126,6 +131,36 @@ val DefinitionTest by testSuite {
                 draft.value.shouldBeInstanceOf<Availability.Failed>()
                 draft.name shouldBe Availability.Available("base_reward")
             }
+        }
+    }
+
+    val customTypes =
+        setup("custom-types") {
+            formulaPage {
+                customType("Reward") { field("gold", intUse) }
+                definition(
+                    "door",
+                    declares {
+                        union {
+                            case("Open")
+                            case("Closed")
+                        }
+                    },
+                ) { caseValue(it, "Open") }
+            }
+        }
+
+    test("a formula page seeds a custom type with the fields it declares") {
+        withSetup(customTypes, catalog = routeFixtureCatalog) { page ->
+            resolvedSchema(fieldKey(page.reward)).schema.fields.map { it.key to it.type } shouldBe listOf("gold" to intUse)
+        }
+    }
+
+    test("a formula page seeds an inline union value") {
+        withSetup(customTypes, catalog = routeFixtureCatalog) { page ->
+            val door = typeArgumentOf(page.door)
+            resolvedSchema(door)
+            value(page.door, "value", "value") shouldBe caseValue(door, "Open")
         }
     }
 }

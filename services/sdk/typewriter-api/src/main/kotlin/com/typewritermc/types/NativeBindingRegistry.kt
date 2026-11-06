@@ -7,6 +7,7 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.isNominalSubtype
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
@@ -57,6 +58,9 @@ interface NativeBindingRegistry {
         actual: CheckedType,
         supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult
+
+    /** The same bindings over [catalog], such as a view's catalog with its content types. */
+    fun over(catalog: CheckedCatalog): NativeBindingRegistry
 }
 
 class NativeBindingException(
@@ -83,10 +87,12 @@ sealed interface NativeValidationResult {
  */
 class FactoryNativeBindingRegistry(
     private val catalog: CheckedCatalog,
-    factories: List<NativeBindingFactory>,
+    private val factories: List<NativeBindingFactory>,
 ) : NativeBindingRegistry {
     private val factoriesByDefinition = factories.groupBy(NativeBindingFactory::definition)
     private val bindings = mutableMapOf<TypeUse, DeferredNativeBinding>()
+
+    override fun over(catalog: CheckedCatalog): NativeBindingRegistry = FactoryNativeBindingRegistry(catalog, factories)
 
     override fun bind(actual: CheckedType): NativeBinding<*> {
         if (actual.catalog != catalog.generation) {
@@ -377,14 +383,21 @@ private class PortableNativeBinding(
     override val signature: String = "portable(${actualType.canonicalText})"
     override val opaque: Boolean = true
 
+    /** Encodes [value] as its own actual type, which is this binding's type or, for a closed union, one of its cases. */
     override fun encode(value: PortableValue): DataValue {
-        if (value.actualType != actualType) {
+        val actual = value.actualType.named
+        if (value.actualType != actualType && (actual == null || !checked.isNominalSubtype(actual.definition, application.definition))) {
             throw NativeBindingException("wrong_portable_actual_type", "The portable value type does not match its native binding.")
         }
-        return DataValue.named(application, value.payload)
+        return DataValue.named(actual ?: application, value.payload)
     }
 
-    override fun decode(value: CompleteValue): PortableValue = PortableValue(actualType = actualType, payload = value.payload<DataValue>())
+    /** Decodes the stored value as the type it was written with, so a union value keeps its case. */
+    override fun decode(value: CompleteValue): PortableValue =
+        PortableValue(
+            actualType = (value.value as? DataValue.NamedWrapper)?.value?.actualType?.use ?: actualType,
+            payload = value.payload<DataValue>(),
+        )
 }
 
 private class PolymorphicNativeBinding(
@@ -534,6 +547,10 @@ private class ScalarNativeBinding(
                 DataValue.duration(value as kotlin.time.Duration)
             }
 
+            ScalarKind.TYPE -> {
+                DataValue.TypeUseWrapper((value as Type).use)
+            }
+
             else -> {
                 unknownVariant(kind)
             }
@@ -588,6 +605,10 @@ private class ScalarNativeBinding(
 
             ScalarKind.DURATION -> {
                 (value.value as DataValue.DurationWrapper).duration
+            }
+
+            ScalarKind.TYPE -> {
+                Type((value.value as DataValue.TypeUseWrapper).value)
             }
 
             else -> {

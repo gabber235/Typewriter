@@ -8,6 +8,7 @@ import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.VAR_TYPE_ID
 import kotlinx.serialization.Serializable
 
 /** A range of a formula's source text, in UTF-16 code units, end exclusive. */
@@ -73,7 +74,6 @@ sealed interface Var<T, F> {
 /** The context of a Definition's formulas: it names nothing, so they are pure by construction. */
 interface DefinitionScope
 
-const val VAR_TYPE_ID = "acacc4ba2c064f5484d99d06a597d05b"
 const val TEXT_SPAN_TYPE_ID = "a869bc7c438547b3a3e8969864bfbe64"
 const val FORMULA_REFERENCE_TYPE_ID = "71cb6e564abe4e89ba39d207bd227744"
 const val CONTENT_REFERENCES_RELATION_ID = "4e4373d69e5a4445870fd0f8f472b2b0"

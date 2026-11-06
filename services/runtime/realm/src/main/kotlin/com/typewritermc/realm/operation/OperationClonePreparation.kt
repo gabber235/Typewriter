@@ -15,6 +15,7 @@ import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.actualType
+import com.typewritermc.types.catalog.remappingContent
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -172,7 +173,8 @@ internal class OperationClonePreparation(
                         ValueLocation.of(original),
                         ValueLocation.of(copies.getValue(original)),
                     ) as DataValue.RecordWrapper
-                copies.getValue(original) to record.copy(fields = fields.value.fields)
+                // Declarations get the copy's ids, and every use inside the closure points at the copied types.
+                copies.getValue(original) to record.copy(fields = fields.value.fields).remappingContent(copies)
             }
         records.forEach { (id, record) -> operation.create(id.toResourceId(), record) }
 

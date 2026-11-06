@@ -9,6 +9,7 @@ import com.typewritermc.authoring.text
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
@@ -93,6 +94,8 @@ data class SetupPart(
     val definition: TypeDefinitionId,
     /** The type arguments of a generic resource, in declaration order; empty for any other. */
     val arguments: List<TypeUse>,
+    /** The types the part declares itself, each with a content id on [id]. */
+    val types: List<TypeDefinition>,
     val owner: SetupOwner,
     /** The owning list field of [owner] the part is inserted into, for example a book's `pages`. */
     val list: ValuePath,
@@ -172,6 +175,9 @@ class SetupList<in E : Resource> internal constructor(
 ) {
     private var placed = 0
 
+    /** The id the part [key] of this list has, so content it declares can name its owner before the part is added. */
+    fun idOf(key: String): ResourceId = stableId(ownerPath + "${field.text} $key")
+
     @GeneratedSdkApi
     fun <T : Resource, F : SetupFields<T>, H> add(
         key: String,
@@ -196,6 +202,7 @@ class SetupList<in E : Resource> internal constructor(
                 type,
                 definition,
                 arguments,
+                scope.types,
                 owner,
                 field,
                 item,
@@ -218,6 +225,7 @@ class PartScope<T : Resource> internal constructor(
 ) {
     internal val assigned = linkedMapOf<String, Any?>()
     internal var explicitPlacement: Placement? = null
+    internal var types: List<TypeDefinition> = emptyList()
 
     /** The part's owning list [field] with items of type [item], placed by this part's layout. */
     @GeneratedSdkApi
@@ -297,6 +305,13 @@ abstract class SetupFields<T : Resource>
                 ) {
                     part.assigned[property.name] = value
                 }
+            }
+
+        /** The types this part declares itself; each id names [handle] as its owner. */
+        var types: List<TypeDefinition>
+            get() = part.types
+            set(value) {
+                part.types = value
             }
 
         /** Overrides the placement the owner's layout would give. */

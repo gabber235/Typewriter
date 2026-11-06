@@ -45,7 +45,7 @@ class RealmCheckInputs(
         val candidates =
             recipe.inputs.map { input ->
                 val expected =
-                    expectedType(subject, input.path, reads.view.original.catalog.checked)
+                    expectedType(subject, input.path, reads.typeCatalog)
                         ?: return CheckEvaluation(CheckOutcome.NeedsInputWrapper(listOf(subject.location)), emptyList())
                 reads.expand(subject.location, input.path).map { location ->
                     InputCandidate(input, location, occurrenceBindings(subject.location, input.path, location), expected)

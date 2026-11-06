@@ -116,6 +116,7 @@ Map<skir.ResourceId, skir.AuthoringRecord> _records(
       expectFixtureKeys(resource, {"configuration", "fields"}, "resource");
       final fields = resource["fields"]! as Map<String, Object?>;
       return skir.AuthoringRecord(
+        types: const [],
         configuration: skir.TypeSelection.serializer.fromJson(
           resource["configuration"],
         ),

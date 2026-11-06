@@ -7,14 +7,21 @@ import com.typewritermc.engine.encodeShard
 import com.typewritermc.engine.runtime.testing.AdmissionRejection
 import com.typewritermc.engine.runtime.testing.admissionCatalog
 import com.typewritermc.engine.runtime.testing.admissionFacts
+import com.typewritermc.engine.runtime.testing.admissionPage
+import com.typewritermc.engine.runtime.testing.contentRecord
+import com.typewritermc.engine.runtime.testing.gateway
 import com.typewritermc.engine.runtime.testing.payloadDefinition
+import com.typewritermc.engine.runtime.testing.publicationOf
 import com.typewritermc.engine.runtime.testing.resourceDefinition
 import com.typewritermc.engine.runtime.testing.unrelatedDefinition
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.catalog.content
+import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -26,11 +33,14 @@ import skirout.editor.v1.compiled_content.RuntimeRelationFact
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedValue
 import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 
 val RuntimeCompilationEncodingTest by testSuite {
     val boolean = RepresentationTemplate.createScalar(kind = ScalarKind.BOOLEAN)
@@ -127,5 +137,43 @@ val RuntimeCompilationEncodingTest by testSuite {
                 .encodeToByteArray()
                 .decodeResourceGraphShard()
         }.message shouldBe "Resource ids must not be blank."
+    }
+
+    test("an artifact with an invalid content declaration is refused") {
+        val generic =
+            TypeDefinition.partial(
+                id = TypeDefinitionId.content(admissionPage, "k1"),
+                parameters =
+                    listOf(
+                        TypeParameter(
+                            key = ParameterKey(owner = TypeDefinitionId.content(admissionPage, "k1"), index = 0),
+                            name = "T",
+                            bounds = emptyList(),
+                        ),
+                    ),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+            )
+        shouldThrow<IllegalArgumentException> {
+            gateway().apply(publicationOf(admissionFacts(types = listOf(resourceDefinition, generic), payload = generic.id)))
+        }.message shouldBe "Compiled content declarations are invalid."
+    }
+
+    test("an artifact that names a field key is refused") {
+        val reward =
+            contentRecord(
+                TypeDefinitionId.content(admissionPage, "k1"),
+                "gold" to TypeDefinitionId.contentField(admissionPage, "value").use(),
+            )
+        shouldThrow<IllegalArgumentException> {
+            gateway().apply(publicationOf(admissionFacts(types = listOf(resourceDefinition, reward), payload = reward.id)))
+        }.message shouldBe "Compiled content names a field key; the compiler expands them."
+    }
+
+    test("an artifact whose code type differs from the engine catalog is still refused") {
+        val reward = contentRecord(TypeDefinitionId.content(admissionPage, "k1"), "gold" to payloadDefinition.id.use())
+        val changed = TypeDefinition.partial(id = resourceDefinition.id, representation = boolean)
+        shouldThrow<IllegalArgumentException> {
+            gateway().apply(publicationOf(admissionFacts(types = listOf(changed, reward, payloadDefinition), payload = reward.id)))
+        }.message shouldBe "Compiled runtime type facts do not equal the accepted declaration closure."
     }
 }

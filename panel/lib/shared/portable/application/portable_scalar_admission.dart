@@ -28,6 +28,9 @@ bool admitsPortableScalarValue(skir.ScalarKind expected, skir.DataValue value) {
   if (expected == skir.ScalarKind.timestamp) {
     return value is skir.DataValue_timestampWrapper;
   }
+  if (expected == skir.ScalarKind.type) {
+    return value is skir.DataValue_typeUseWrapper;
+  }
   if (expected == skir.ScalarKind.duration) {
     return value is skir.DataValue_durationWrapper &&
         value.value.value.isPortable;

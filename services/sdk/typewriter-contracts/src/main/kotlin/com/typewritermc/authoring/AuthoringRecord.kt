@@ -32,13 +32,14 @@ fun AuthoringRecord.Companion.of(
     AuthoringRecord(
         configuration = configuration,
         fields = fields.entries.sortedBy { it.key }.map { (name, value) -> FieldValue(name = name, value = value) },
+        types = emptyList(),
     )
 
 /** A record with the fields of [payload], which are already in name order. */
 fun AuthoringRecord.Companion.of(
     configuration: TypeSelection,
     payload: RecordPayload,
-): AuthoringRecord = AuthoringRecord(configuration = configuration, fields = payload.fields)
+): AuthoringRecord = AuthoringRecord(configuration = configuration, fields = payload.fields, types = emptyList())
 
 /** The fields by name, in name order. */
 val AuthoringRecord.fieldMap: Map<String, DataValue> get() = fields.associateTo(LinkedHashMap()) { it.name to it.value }

@@ -27,6 +27,7 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -50,12 +51,45 @@ class EntryCreation(
  */
 suspend fun RealmFixture.createEntry(name: String): EntryCreation {
     val page = resources.typesOf(StaticPageDefinition.id).single()
-    val entry = AuthorResourceId("entry-${UUID.randomUUID()}")
-    val pageField = ValuePath.root.field("page")
     val record =
-        encoder
-            .record(FixtureStaticEntryDefinition.id.use(), FixtureStaticEntry(Ref(AuthorResourceId(page.value)), GraphPlacement(), name))
-            .with("page", DataValue.UNFILLED)
+        encoder.record(FixtureStaticEntryDefinition.id.use(), FixtureStaticEntry(Ref(AuthorResourceId(page.value)), GraphPlacement(), name))
+    return createElement("create-entry:$name") { record }
+}
+
+/**
+ * An edit creating the record [record] builds for its new id as a new element of the realm's single static page, the
+ * way an author adds one: the element is created with its page link unfilled, then listed in the page's elements, which
+ * writes both sides.
+ */
+internal suspend fun RealmFixture.createElement(
+    name: String,
+    record: (ResourceId) -> AuthoringRecord,
+): EntryCreation {
+    val (id, writes) = elementWrites(record)
+    val edit =
+        views.capture().use { lease ->
+            WorkingViewEditContext(lease.root, name).run {
+                writes()
+                finish()
+            }
+        }
+    return EntryCreation(id, edit)
+}
+
+/** Commits the element [createElement] would create, and its id; a write refused while it is made is the reply. */
+internal suspend fun RealmFixture.commitElement(record: (ResourceId) -> AuthoringRecord): Pair<ResourceId, CommitPreparedEditResponse> {
+    val (id, writes) = elementWrites(record)
+    return id to commit { writes() }
+}
+
+/** The id of the element [record] builds on the static page, and the writes that create it and place it there. */
+internal fun RealmFixture.elementWrites(
+    record: (ResourceId) -> AuthoringRecord,
+): Pair<ResourceId, suspend WorkingViewEditContext.() -> Unit> {
+    val page = resources.typesOf(StaticPageDefinition.id).single()
+    val entry = AuthorResourceId("entry-${UUID.randomUUID()}")
+    val created = record(ResourceId(value = entry.value))
+    val pageField = ValuePath.root.field("page")
     val item =
         encoder.encode(
             PageElements.Page.Definition.id
@@ -63,15 +97,10 @@ suspend fun RealmFixture.createEntry(name: String): EntryCreation {
                 .use,
             Ref<Nothing, Nothing>(entry, pageField),
         )
-    val edit =
-        views.capture().use { lease ->
-            WorkingViewEditContext(lease.root, "create-entry:$name").run {
-                create(entry, record)
-                insert(boundCollectionPath(ValueLocation.of(page, ValuePath.root.field("elements"))), null, item)
-                finish()
-            }
-        }
-    return EntryCreation(ResourceId(value = entry.value), edit)
+    return ResourceId(value = entry.value) to {
+        create(entry, created.with("page", DataValue.UNFILLED))
+        insert(boundCollectionPath(ValueLocation.of(page, ValuePath.root.field("elements"))), null, item)
+    }
 }
 
 /** Commits [creation] through the Realm's admission. */

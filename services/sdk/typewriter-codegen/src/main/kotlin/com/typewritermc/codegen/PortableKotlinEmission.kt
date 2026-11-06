@@ -265,6 +265,7 @@ internal fun ScalarKind.kotlinCode(): CodeBlock =
         ScalarKind.DECIMAL -> CodeBlock.of("%T", ScalarKind.DECIMAL::class)
         ScalarKind.TIMESTAMP -> CodeBlock.of("%T", ScalarKind.TIMESTAMP::class)
         ScalarKind.DURATION -> CodeBlock.of("%T", ScalarKind.DURATION::class)
+        ScalarKind.TYPE -> CodeBlock.of("%T", ScalarKind.TYPE::class)
         is ScalarKind.IntegerWrapper -> CodeBlock.of("%T.createInteger(width·=·%L)", ScalarKind::class, value.width.kotlinCode())
         is ScalarKind.FloatWrapper -> CodeBlock.of("%T.createFloat(width·=·%L)", ScalarKind::class, value.width.kotlinCode())
         else -> unknownVariant(this)

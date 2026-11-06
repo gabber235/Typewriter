@@ -144,6 +144,7 @@ void main() {
         fixture.resource: skir.AuthoringResource(
           id: fixture.resource,
           content: skir.AuthoringRecord(
+            types: const [],
             configuration: skir.TypeSelection.unknown,
             fields: record.fields,
           ),
