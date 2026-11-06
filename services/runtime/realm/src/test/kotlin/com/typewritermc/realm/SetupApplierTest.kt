@@ -2,6 +2,9 @@ package com.typewritermc.realm
 
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.root
+import com.typewritermc.engine.pages.definition
+import com.typewritermc.engine.pages.staticPage
+import com.typewritermc.formula.Var
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.LibraryDefinition
 import com.typewritermc.library.book
@@ -10,9 +13,14 @@ import com.typewritermc.library.tag
 import com.typewritermc.library.taxonomy
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.RealmStorage
+import com.typewritermc.realm.testing.definitionOf
+import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.links
+import com.typewritermc.realm.testing.plain
+import com.typewritermc.realm.testing.record
 import com.typewritermc.realm.testing.text
+import com.typewritermc.realm.testing.varValue
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
 import com.typewritermc.testing.routes.fixtureTimelinePage
@@ -24,6 +32,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
+import skirout.editor.v1.type_catalog.TypeSelection
 
 val SetupApplierTest by testSuite {
     val greeting =
@@ -65,6 +74,22 @@ val SetupApplierTest by testSuite {
     test("two setups that share a part create it once") {
         withSetup(greeting + greeting, catalog = routeFixtureCatalog) { _ ->
             resources.values.count { it.configuration.definition == BookDefinition.id } shouldBe 1
+        }
+    }
+
+    test("a generic resource is saved as the application its setup names, with its values") {
+        val reward =
+            setup("reward") {
+                library {
+                    books.book("rewards") {
+                        pages.staticPage("rewards") { elements.definition<Int>("base_reward", intUse) { value = Var.Value(50) } }
+                    }
+                }
+            }
+
+        withSetup(reward, catalog = routeFixtureCatalog) { baseReward ->
+            record(baseReward.id.toSkir()).configuration shouldBe TypeSelection.CompleteWrapper(definitionOf(intUse))
+            varValue(baseReward.id.toSkir()) shouldBe plain(50)
         }
     }
 }
