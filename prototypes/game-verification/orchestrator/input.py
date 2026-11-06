@@ -188,6 +188,30 @@ class Bench:
         raise RuntimeError(f"mark {mark} never arrived")
 
 
+def renorm(rows):
+    """Offline re-judging: typed prefixes of the unique token ('t1', 't12', ...) count as one name."""
+    tokre = re.compile(r"\bt\d+\b|\bt\b(?=[ '\]]|$)")
+    def fix(xs):
+        return [re.sub(r" gt=\d+ start=\d+ bt=\d+", "", tokre.sub("tN", re.sub(r"held=\d+", "held=N", x))) for x in xs]
+    for r in rows:
+        r["ev"] = collapse(fix(r.get("ev", [])))
+        r["evAsync"] = sorted(fix(r.get("evAsync") or []))
+        r["pk"] = collapse(fix(r.get("pk", [])))
+        r["kinds"] = list(dict.fromkeys(e.split(":", 1)[0] for e in r["ev"] + r["evAsync"]))
+    return rows
+
+
+def cmd_report(a):
+    rows = []
+    for t in a.traces:
+        with gzip.open(t, "rt") as f:
+            rows += [json.loads(l) for l in f]
+    rows = renorm([r for r in rows if "error" not in r])
+    summ = summarize(rows)
+    print_summary(summ)
+    return summ
+
+
 def summarize(rows):
     by = collections.defaultdict(list)
     for r in rows:
@@ -232,6 +256,8 @@ def session(a, label):
 
 def setup(b, a):
     b.C("in.setup", focus=a.focus, grab=a.grab)
+    if b.xtest and a.grab == "real":
+        assert b.xtest.grab(), "XTest click did not grab the mouse"
     if a.rate != 20:
         b.S("tickrate", rate=a.rate)
         b.C("uncap", on=1)
@@ -295,6 +321,9 @@ def cmd_lag(a, xtest=None, session_factory=None):
         b = Bench(s, xtest(s) if xtest else None)
         setup(b, a)
 
+        # The spike thread gets its own connection: two threads on one line mix up the replies.
+        side = speed.Line(b.C.port) if a.where == "client" else None
+
         def spike(bb):
             if a.where == "server":
                 bb.S("in.lag", player=bb.p, ms=a.ms, after=a.after)
@@ -303,7 +332,7 @@ def cmd_lag(a, xtest=None, session_factory=None):
                 import threading
                 def later():
                     time.sleep(a.after / max(1, a.rate))
-                    bb.C("r.lag", ms=a.ms)
+                    side("r.lag", ms=a.ms)
                 threading.Thread(target=later, daemon=True).start()
 
         with gzip.open(trace, "wt") as f:
@@ -356,12 +385,14 @@ def args(argv=None):
             p.add_argument("--where", default="client")
             p.add_argument("--ms", type=int, default=300)
             p.add_argument("--after", type=int, default=3, help="ticks into the input")
+    r = sub.add_parser("report")
+    r.add_argument("traces", nargs="+")
     return ap.parse_args(argv)
 
 
 def main():
     a = args()
-    {"run": cmd_run, "lag": cmd_lag}[a.cmd](a)
+    {"run": cmd_run, "lag": cmd_lag, "report": cmd_report}[a.cmd](a)
 
 
 if __name__ == "__main__":

@@ -892,14 +892,16 @@ def cmd_interfere(backend):
 # ---------- spike J: real player input ----------
 
 INPUT_ROWS = [
-    # rows 0 to 2: gated, server rate 200; breaking runs at rate 20 because Paper counts break progress in wall time
-    ("run", "chat,cmd,suggest,swap,scroll", "J2,J1,X,J3", 200, 2, 200),
-    ("run", "use,num,sneak,jump,fly", "J2,J1,X,J3", 200, 2, 200),
-    ("run", "move,inv,attack,attackPacket,interact,interactPacket", "J2,J1,X,J3", 200, 2, 200),
-    ("run", "break", "J2,J1,X", 200, 2, 20),
-    ("run", "breakCancel", "J2,J1,X", 200, 2, 20),
-    ("rendered", "all", "J2,J1,X,J3", 5, 0, 20),
-    ("lag", "break,use,sneak,move,chat,attack", "J2,X,J3", 10, 2, 20),
+    # Round two. X with a real SDL grab and real focus is the person on a virtual display.
+    ("run", "attack,attackPacket,interact,interactPacket,use,scroll", "J2,X", 200, 2, 200, "real"),
+    ("run", "num,swap,sneak,jump,fly,inv,move", "J2,X", 200, 2, 200, "real"),
+    ("run", "chat,cmd,suggest", "J2,X", 200, 2, 200, "real"),
+    ("run", "break", "X", 200, 2, 20, "real"),
+    ("run", "breakCancel", "J2,X", 200, 2, 20, "real"),
+    ("run", "use,num,sneak,jump,fly", "J1,J3", 200, 2, 200, "fake"),
+    ("run", "breakCancel", "J1,J3", 200, 2, 20, "fake"),
+    ("rendered", "all", "J2,J1,X,J3", 5, 0, 20, "real"),
+    ("lag", "break,use,sneak,move,chat,attack", "J2,X,J3", 10, 2, 20, "real"),
 ]
 
 
@@ -918,9 +920,9 @@ def run_input(*argv, xtest=True):
 def cmd_input(backend):
     set_cfg(Cfg(backend=backend))
     rep = int(os.environ.get("MATRIX_REPEAT", "0") or 0)
-    kind, ops, paths, n, gate, rate = INPUT_ROWS[rep]
+    kind, ops, paths, n, gate, rate, grab = INPUT_ROWS[rep]
     lbl = f"ci{rep}"
-    common = ["--paths", paths, "--ops", ops, "--n", str(n), "--label", lbl]
+    common = ["--paths", paths, "--ops", ops, "--n", str(n), "--label", lbl, "--focus", grab, "--grab", grab]
     if kind == "run":
         step(f"input {ops} g{gate} r{rate}", run_input, "run", *common, "--gate", str(gate), "--rate", str(rate))
     elif kind == "rendered":

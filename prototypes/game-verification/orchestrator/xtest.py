@@ -93,6 +93,19 @@ class XTest:
                 return st, True
             time.sleep(0.0005)
 
+    def center(self):
+        """Pointer back to the middle of the window: without a real grab nothing warps it, so it drifts off."""
+        self.motion_to(self.origin[0] + self.size[0] // 2, self.origin[1] + self.size[1] // 2)
+
+    def grab(self):
+        """A person's first click into the window takes the mouse (real grab only); done before any measured input."""
+        if not self.C("in.state")["grabbed"]:
+            self.center()
+            self.button(1, True)
+            self.button(1, False)
+            self.wait(3)
+        return self.C("in.state")["grabbed"]
+
     def aim(self, at, notes):
         st = self.C("in.state")
         ex, ey, ez = st["eye"]
@@ -113,6 +126,9 @@ class XTest:
     # ---- ops, the same scripts as the client side paths ----
 
     def run(self, op, q, mark):
+        if op != "inv":
+            self.center()
+            self.wait(1)
         t0 = self.ticks()
         notes = {}
         timed_out = False

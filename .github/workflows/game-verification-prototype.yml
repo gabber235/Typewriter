@@ -20,7 +20,7 @@ jobs:
   measure:
     name: ${{ matrix.plan }} ${{ matrix.backend }} ${{ matrix.runner }} ${{ matrix.repeat }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -32,6 +32,8 @@ jobs:
           - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 4 }
           - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 5 }
           - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 6 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 7 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 8 }
     defaults:
       run:
         working-directory: prototypes/game-verification
