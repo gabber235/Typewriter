@@ -233,6 +233,9 @@ val FORMULA_USE: NamedTypeUse = NamedTypeUse(definition = TypeDefinitionId.decla
 /** The id of the Formula record, declared in typewriter-api beside its endpoint. */
 const val FORMULA_TYPE_ID = "a2ac548560b44c90a92d929a273eacc5"
 
+/** The id of Var, declared in typewriter-api; an alias reads the type its Value case holds. */
+const val VAR_TYPE_ID = "acacc4ba2c064f5484d99d06a597d05b"
+
 /**
  * The use a value at this position is stored as: a function type stores its body as a Formula record, every other
  * use stores itself. Nested positions keep their own use; only the outer position is replaced.

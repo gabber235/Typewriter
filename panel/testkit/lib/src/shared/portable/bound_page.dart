@@ -147,6 +147,7 @@ final class BoundPage {
       resource: skir.AuthoringResource(
         id: resource,
         content: skir.AuthoringRecord(
+          types: const [],
           configuration:
               configuration ??
               skir.TypeSelection.createComplete(

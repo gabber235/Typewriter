@@ -125,6 +125,10 @@ private fun DataValue.portable(depth: Int): DataValue {
             }
         }
 
+        is DataValue.TypeUseWrapper -> {
+            apply { value.requireValid() }
+        }
+
         else -> {
             throw IllegalArgumentException("Unknown value variant.")
         }

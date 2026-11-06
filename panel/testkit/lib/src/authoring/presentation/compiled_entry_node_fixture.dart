@@ -139,6 +139,7 @@ AuthoringDocument compiledEntryNodeDocument({
   ) => skir.AuthoringResource(
     id: id,
     content: skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.wrapComplete(type),
       fields: [
         for (final field in catalog.fields(

@@ -44,6 +44,7 @@ final class CompiledSearchFixture {
         arguments: const [],
       );
       return skir.AuthoringRecord(
+        types: const [],
         configuration: selection,
         fields: [
           for (final field in catalog.fields(selection))
@@ -61,6 +62,7 @@ final class CompiledSearchFixture {
       String name,
       String label,
     ) => skir.AuthoringRecord(
+      types: const [],
       configuration: source.configuration,
       fields: [
         for (final field in source.fields)

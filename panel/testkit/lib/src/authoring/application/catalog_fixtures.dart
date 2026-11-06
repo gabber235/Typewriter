@@ -383,6 +383,7 @@ final class AuthoredDraft {
     );
     final resource = skir.ResourceId(value: "message:one");
     final record = skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.createComplete(
         definition: definition,
         arguments: const [],
@@ -520,6 +521,7 @@ final class AuthoredDraft {
     );
     final resource = skir.ResourceId(value: "repeating:one");
     final record = skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.createComplete(
         definition: definition,
         arguments: const [],
@@ -612,6 +614,7 @@ final class AuthoredDraft {
     );
     final resource = skir.ResourceId(value: "page:empty");
     final record = skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.createComplete(
         definition: definition,
         arguments: const [],
@@ -775,6 +778,7 @@ final class AuthoredDraft {
         skir.AuthoringResource(
           id: resource,
           content: skir.AuthoringRecord(
+            types: const [],
             configuration: skir.TypeSelection.createComplete(
               definition: tag,
               arguments: const [],

@@ -20,6 +20,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.mapTypeUses
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.named
@@ -45,6 +46,7 @@ import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -234,14 +236,16 @@ private fun AuthoringRecord.compile(
     id: ResourceId,
     readiness: ResourceReadiness.Ready,
 ): CompiledResource {
-    val actual = (configuration as TypeSelection.CompleteWrapper).use
+    // An artifact never holds a field key: the resource's actual type and every actual type and held type inside are expanded.
+    val checked = snapshot.catalog.checked
+    val actual = (checked.expand((configuration as TypeSelection.CompleteWrapper).use.use) as TypeUse.NamedWrapper).value
     val binding = readiness.binding
     return CompiledResource(
         key = CompiledResourceKey(source = id, context = CompilationContext.Root),
         actualType = actual,
         bindingProvider = binding.provider,
         bindingSignature = binding.signature,
-        value = (readiness.value.value as DataValue.NamedWrapper).value,
+        value = (readiness.value.value.mapTypeUses(checked::expand) as DataValue.NamedWrapper).value,
     )
 }
 

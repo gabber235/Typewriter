@@ -8,6 +8,7 @@ void main() {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
   final book = skir.ResourceId(value: "book:compiled");
   final record = skir.AuthoringRecord(
+    types: const [],
     configuration: compiledSdkBookRecord.configuration,
     fields: [
       for (final field in compiledSdkBookRecord.fields)

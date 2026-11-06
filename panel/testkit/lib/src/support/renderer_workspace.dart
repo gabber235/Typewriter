@@ -560,6 +560,7 @@ authoredLinkCollection({
         ]
       : const <skir.ListItem>[];
   final sourceRecord = skir.AuthoringRecord(
+    types: const [],
     configuration: skir.TypeSelection.wrapComplete(rootUse),
     fields: [
       skir.FieldValue(
@@ -572,6 +573,7 @@ authoredLinkCollection({
     ],
   );
   skir.AuthoringRecord targetRecord(String name) => skir.AuthoringRecord(
+    types: const [],
     configuration: skir.TypeSelection.wrapComplete(rootUse),
     fields: [
       skir.FieldValue(
@@ -785,6 +787,7 @@ CheckedEditorCatalog _collectionCatalog() {
 
 skir.AuthoringRecord _collectionRecord(String field, skir.DataValue value) =>
     skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.createComplete(
         definition: skir.TypeDefinitionId(
           typeId: skir.TypeId.createQualified(

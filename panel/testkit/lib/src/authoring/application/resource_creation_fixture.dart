@@ -564,6 +564,7 @@ extension on skir.AuthoringRecord {
   /// fixture resource shows.
   skir.AuthoringRecord named(String field, skir.ResourceId id) =>
       skir.AuthoringRecord(
+        types: const [],
         configuration: configuration,
         fields: [
           for (final value in fields)

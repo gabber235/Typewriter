@@ -39,7 +39,7 @@ internal class RealmExpressionRuntime(
         val evaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { requested -> snapshot.authoredValue(requested) },
-                CatalogPortableTypes(snapshot.view.original.catalog.checked),
+                CatalogPortableTypes(snapshot.typeCatalog),
             )
         val result =
             with(reads) {

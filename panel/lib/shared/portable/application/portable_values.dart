@@ -192,6 +192,7 @@ skir.DataValue _admitPortable(
               link.target.resource.value.trim().isEmpty
           ? invalid("Links need an endpoint and a target resource.")
           : value,
+    skir.DataValue_typeUseWrapper() => value,
     _ => invalid("Unknown value variant."),
   };
 }
@@ -230,6 +231,7 @@ String portableExpressionDisplayText(skir.DataValue value) {
       "${value.rows.length} entries",
     skir.DataValue_recordWrapper() => "record",
     skir.DataValue_linkWrapper(:final value) => value.target.resource.value,
+    skir.DataValue_typeUseWrapper() => "type",
     _ => "",
   };
 }
@@ -302,6 +304,9 @@ String _canonical(skir.DataValue value, int depth) {
       value.target.resource.value,
       _pathKey(value.target.opposite),
     ]),
+    skir.DataValue_typeUseWrapper(:final value) => _framed("type", [
+      _typeUseKey(value, depth + 1),
+    ]),
     _ => "unknown",
   };
 }
@@ -342,6 +347,14 @@ String _typeIdKey(skir.TypeId value) => switch (value) {
   skir.TypeId_memberWrapper(:final value) => _framed("member", [
     _typeIdKey(value.owner),
     value.name,
+  ]),
+  skir.TypeId_contentWrapper(:final value) => _framed("content", [
+    value.resource.value,
+    switch (value.key) {
+      skir.ContentKey_generatedWrapper(:final value) => "generated:$value",
+      skir.ContentKey_fieldWrapper(:final value) => "field:$value",
+      skir.ContentKey_unknown() => throw StateError("Unknown content key."),
+    },
   ]),
   skir.TypeId_unknown() => throw StateError("Unknown type id."),
 };

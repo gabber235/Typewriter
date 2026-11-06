@@ -12,6 +12,7 @@ import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.use
+import com.typewritermc.authoring.validateStructure
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
@@ -36,6 +37,7 @@ import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -62,7 +64,13 @@ internal data class StoredDeclaredEdge(
 
 internal data class ProjectionResult(
     val projections: List<LinkProjection>,
+    /** Hard problems: the link does not exist as a stored fact (endpoint, target or source is wrong). */
     val problems: List<ValueProblem>,
+    /**
+     * Links that exist but do not fit their holder's current schema. A holder's schema can change through another
+     * resource or a new generation, so the link still projects and the misfit is judged like any other.
+     */
+    val fit: List<ValueProblem> = emptyList(),
 )
 
 internal data class DeclaredLinkEvidence(
@@ -164,6 +172,8 @@ internal object ResourceValueMapper {
         catalog: CheckedCatalog? = null,
     ): ProjectionResult {
         val problems = mutableListOf<ValueProblem>()
+        val fit = mutableListOf<ValueProblem>()
+        val structurallyValid = hashMapOf<ResourceId, Boolean>()
         val byEndpoint =
             contracts
                 .flatMap { contract ->
@@ -198,20 +208,23 @@ internal object ResourceValueMapper {
                     problems += ValueProblem(location = occurrence.id.location, code = "target_resource_type_mismatch")
                     return@forEach
                 }
+                // Whether the link fits its slot is a judgement against the holder's current schema; the link still projects.
+                // A link where the holder's type has no slot or names another endpoint is the structure's misfit at its location.
                 val sourceRecord = resources.getValue(occurrence.source)
                 val declared = sourceRecord.linkSlots(catalog).singleOrNull { it.location == occurrence.id.location.path }
-                if (declared == null || declared.endpoint != occurrence.id.endpoint) {
-                    problems += ValueProblem(location = occurrence.id.location, code = "endpoint_location_not_declared")
-                    return@forEach
-                }
-                val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.MANY
-                if (declared.containsCollection != expectsCollection) {
-                    problems += ValueProblem(location = occurrence.id.location, code = "endpoint_binding_cardinality_mismatch")
-                    return@forEach
-                }
-                if (!resources.getValue(occurrence.target.resource).matches(declared.target, catalog)) {
-                    problems += ValueProblem(location = occurrence.id.location, code = "binding_target_type_mismatch")
-                    return@forEach
+                if (declared != null && declared.endpoint == occurrence.id.endpoint) {
+                    val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.MANY
+                    if (declared.containsCollection != expectsCollection) {
+                        fit += ValueProblem(location = occurrence.id.location, code = "endpoint_binding_cardinality_mismatch")
+                    } else if (!resources.getValue(occurrence.target.resource).matches(declared.target, catalog)) {
+                        fit += ValueProblem(location = occurrence.id.location, code = "binding_target_type_mismatch")
+                    }
+                } else if (structurallyValid.getOrPut(
+                        occurrence.source,
+                    ) { sourceRecord.validateStructure(catalog) == StructuralResult.VALID }
+                ) {
+                    // A record whose structure fits but holds a link its schema has no slot for still does not fit.
+                    fit += ValueProblem(location = occurrence.id.location, code = "endpoint_location_not_declared")
                 }
             }
             val oppositeLocation = occurrence.target.opposite?.let { ValueLocation(resource = occurrence.target.resource, path = it) }
@@ -248,7 +261,7 @@ internal object ResourceValueMapper {
                 }
             projected += projection
         }
-        return ProjectionResult(projected.sortedBy(::projectionKey), problems.distinct())
+        return ProjectionResult(projected.sortedBy(::projectionKey), problems.distinct(), fit.distinct())
     }
 
     fun declaredLocations(

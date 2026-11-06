@@ -180,7 +180,7 @@ class RealmFixture private constructor(
     fun prepare(intents: List<EditIntent>): PreparedEdit =
         views.read { view ->
             val edit = PreparedEdit(catalog = view.catalog.generation, expectations = emptyList(), intents = intents)
-            when (val planned = AuthoringMutationPlanner(view.catalog.checked, view.catalog.relations).plan(view.resources, edit)) {
+            when (val planned = AuthoringMutationPlanner(view).plan(edit)) {
                 is MutationPlanningResult.Rejected -> {
                     edit
                 }

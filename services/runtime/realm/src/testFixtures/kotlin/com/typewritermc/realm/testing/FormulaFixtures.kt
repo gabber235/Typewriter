@@ -46,6 +46,7 @@ import com.typewritermc.setup.SetupRoot
 import com.typewritermc.testing.routes.fixtureStaticEntry
 import com.typewritermc.testkit.complete
 import com.typewritermc.testkit.ready
+import com.typewritermc.types.Type
 import com.typewritermc.types.function
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integerScalar
@@ -72,6 +73,7 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.editor.v1.typed_value.PortableValue
 import skirout.kernel.v1.resource_id.ResourceId
 
 /*
@@ -232,11 +234,26 @@ class FormulaPageBuilder internal constructor(
         source: String,
     ): ResourceId = add(name, type, if (type.function != null) plain(Formula(source)) else computed(source))
 
+    /** A Definition named [name] of the content type [type] declares, holding the value [value] builds from that type. */
+    fun definition(
+        name: String,
+        type: ContentTypes,
+        value: (TypeUse) -> DataValue,
+    ): ResourceId =
+        declared(name, type) { declared ->
+            val written = value(declared.use)
+            declared.use to
+                when (written) {
+                    is DataValue.NamedWrapper -> PortableValue(actualType = written.value.actualType.use, payload = written.value.payload)
+                    else -> PortableValue(actualType = declared.use, payload = written)
+                }
+        }
+
     /** A Definition named [name] holding the custom type [build] declares. */
     fun customType(
         name: String,
         build: TypeDefinitionBuilder.() -> Unit,
-    ): ResourceId = TODO("Definition holding a custom type")
+    ): ResourceId = declared(name, declares { record(build = build) }) { typeUse to Type(it.use) }
 
     /** A FixtureStaticEntry named [name], a real entry next to the Definitions. */
     fun smith(name: String = "smith"): ResourceId =
@@ -252,6 +269,24 @@ class FormulaPageBuilder internal constructor(
     }
 
     internal fun page(id: ResourceId): FormulaPage = FormulaPage(id, named.toMap(), pending)
+
+    /** A Definition named [name] whose declarations [types] builds on it, of the type and value [held] picks. */
+    private fun declared(
+        name: String,
+        types: ContentTypes,
+        held: (DeclaredTypes) -> Pair<TypeUse, Any?>,
+    ): ResourceId {
+        val declared = types.on(elements.idOf(name).toSkir())
+        val (type, value) = held(declared)
+        return elements
+            .definition<Any?>(name, type) {
+                this.name = name
+                this.types = declared.types
+                this.value = plain(value)
+            }.id
+            .toSkir()
+            .also { named[name] = it }
+    }
 
     private fun add(
         name: String,
@@ -270,15 +305,6 @@ class FormulaPageBuilder internal constructor(
     }
 }
 
-/** The fields and cases of one custom type declaration. */
-class TypeDefinitionBuilder {
-    /** A field [name] holding [type]. */
-    fun field(
-        name: String,
-        type: TypeUse,
-    ): Unit = TODO("custom type field")
-}
-
 /** Demo 1, the roadmap's acceptance goal: base_reward, bonus and total. */
 fun FormulaPageBuilder.demoOneDefinitions() {
     definition("base_reward", intUse, 50)
@@ -287,7 +313,19 @@ fun FormulaPageBuilder.demoOneDefinitions() {
 }
 
 /** Demo 2: the Reward type, first_reward, giver_name, gift and door; needs [FormulaPageBuilder.smith] and demo 1. */
-fun FormulaPageBuilder.demoTwoDefinitions(): Unit = pending("demo two content")
+fun FormulaPageBuilder.demoTwoDefinitions() {
+    definition(
+        "door",
+        declares {
+            union {
+                case("Open")
+                case("Closed")
+            }
+        },
+    ) { caseValue(it, "Open") }
+    formula("giver_name", textUse, "first_reward.giver.name")
+    pending("Reward, first_reward and gift, whose content records hold references")
+}
 
 /** The handles of a formula page: the page and every resource the demos name. */
 class FormulaPage internal constructor(
@@ -387,10 +425,11 @@ infix fun List<Diagnostic>.shouldContainLocation(resource: ResourceId) {
 fun rename(
     resource: ResourceId,
     name: String,
-): EditIntent = TODO("rename intent")
+): EditIntent =
+    EditIntent.createSetValue(at = ValueLocation.of(resource, ValuePath.root.field("name")), value = DataValue.StringValueWrapper(name))
 
 /** Deletes [resource]. */
-fun delete(resource: ResourceId): EditIntent = TODO("delete intent")
+fun delete(resource: ResourceId): EditIntent = EditIntent.createDeleteResource(id = resource)
 
 /** Points the plain giver link of the gift Definition [gift] at [to]. */
 fun setGiver(

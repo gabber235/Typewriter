@@ -7,13 +7,17 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.setup.Setup
+import com.typewritermc.testkit.CatalogEncoder
 import com.typewritermc.testkit.setup.EditRefused
 import com.typewritermc.testkit.setup.SetupEdit
 import com.typewritermc.testkit.setup.SetupEditor
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 /**
@@ -57,8 +61,15 @@ private class WorkingViewSetupEdit(
     private val view: AuthoringView,
 ) : SetupEdit,
     EditContext by context {
-    override val checked get() = view.catalog.checked
-    override val nativeBindings get() = view.catalog.nativeBindings
+    override fun encoder(
+        id: ResourceId,
+        types: List<TypeDefinition>,
+    ): CatalogEncoder {
+        val declaring = id.toSkir()
+        val declared = (context.session.resources[declaring] ?: AuthoringRecord.partial()).copy(types = types)
+        val catalog = context.session.catalogWith(mapOf(declaring to declared))
+        return CatalogEncoder(catalog.checked, catalog.nativeBindings)
+    }
 
     override fun sectionId(definition: TypeDefinitionId): ResourceId? =
         view.resources.entries

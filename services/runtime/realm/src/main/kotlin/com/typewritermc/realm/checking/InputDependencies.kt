@@ -39,6 +39,10 @@ internal fun EditExpectation.dependencies(): Set<InputIdentity> =
             setOf(InputIdentity.Incoming(value.resource, value.contract))
         }
 
+        is EditExpectation.TypesWrapper -> {
+            setOf(InputIdentity.Types(value.resource))
+        }
+
         else -> {
             unknownVariant(this)
         }

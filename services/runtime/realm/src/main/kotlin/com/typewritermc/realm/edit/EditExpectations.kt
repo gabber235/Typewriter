@@ -136,6 +136,12 @@ internal fun CurrentAuthoringValues.requiredExpectations(
                 links(intent.value.resource)
             }
 
+            is EditIntent.SetTypesWrapper -> {
+                required +=
+                    EditExpectation.createResourceExists(id = intent.value.resource, expected = resource(intent.value.resource) != null)
+                required += EditExpectation.createTypes(resource = intent.value.resource, expected = types(intent.value.resource))
+            }
+
             else -> {
                 unknownVariant(intent)
             }
@@ -187,6 +193,10 @@ internal fun EditExpectation.sameFact(other: EditExpectation): Boolean =
         is EditExpectation.LinksWrapper -> {
             other is EditExpectation.LinksWrapper && value.resource == other.value.resource && value.contract == other.value.contract &&
                 value.direction == other.value.direction
+        }
+
+        is EditExpectation.TypesWrapper -> {
+            other is EditExpectation.TypesWrapper && value.resource == other.value.resource
         }
 
         else -> {

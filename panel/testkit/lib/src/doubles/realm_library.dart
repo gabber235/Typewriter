@@ -37,6 +37,7 @@ AuthoringDocument realmDocument({
   ) => entries[id] = skir.AuthoringResource(
     id: id,
     content: skir.AuthoringRecord(
+      types: const [],
       configuration: _selection(kind),
       fields: [
         for (final entry in fields.entries) _field(entry.key, entry.value),

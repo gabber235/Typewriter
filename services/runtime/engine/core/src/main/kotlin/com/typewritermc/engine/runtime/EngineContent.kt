@@ -9,7 +9,10 @@ import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
 import com.typewritermc.engine.decodeResourceGraphShard
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.contentOwner
+import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.toSkir
+import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
 import skirout.editor.v1.type_catalog.PublicationId
@@ -43,11 +46,17 @@ class ResourceGraphContentGateway(
         require(content.descriptor.formatRevision == PUBLISHED_CONTENT_FORMAT_REVISION) {
             "Unsupported compiled content format ${content.descriptor.formatRevision}."
         }
-        val facts = content.artifacts.map { it.admittedFacts() }
-        graph = CompiledResourceGraph.assemble(facts, relations, catalog, bindings)
+        val decoded = content.artifacts.map { it.decodedFacts() }
+        // One catalog per publication: creator types travel with the content, and the overlay validates them as the realm's does.
+        val declared = decoded.flatMap { it.types }.filter { it.id.contentOwner() != null }.distinct()
+        val published = if (declared.isEmpty()) catalog else catalog.withContent(contentSourceOf(declared))
+        require(declared.all { published.definition(it.id) == DeclarationStatus.READY }) { "Compiled content declarations are invalid." }
+        val publishedBindings = if (declared.isEmpty()) bindings else bindings.over(published)
+        decoded.forEach { it.requireAccepted(published, relations) }
+        graph = CompiledResourceGraph.assemble(decoded, relations, published, publishedBindings)
     }
 
-    private fun LoadedCompiledArtifact.admittedFacts(): RuntimeCompilationFacts {
+    private fun LoadedCompiledArtifact.decodedFacts(): RuntimeCompilationFacts {
         require(reference.root.projection == RESOURCE_GRAPH_PROJECTION && reference.mediaType == RESOURCE_GRAPH_MEDIA_TYPE) {
             "Engine content does not support ${reference.root.projection.value} and ${reference.mediaType}."
         }
@@ -62,7 +71,6 @@ class ResourceGraphContentGateway(
         require(facts.formatRevision == reference.formatRevision && facts.formatRevision == RESOURCE_GRAPH_FORMAT_REVISION) {
             "Compiled resource graph artifact format does not match its manifest."
         }
-        facts.requireAccepted(catalog, relations)
         return facts
     }
 }

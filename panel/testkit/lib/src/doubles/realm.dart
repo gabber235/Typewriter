@@ -656,6 +656,7 @@ extension RealmPreparation on AuthoringDocument {
     return skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
+          types: const [],
           configuration: request.recordSelection,
           fields: [
             for (final field in catalog.fields(request.recordSelection))
@@ -690,6 +691,7 @@ extension RealmPreparation on AuthoringDocument {
         }
         target = value.target;
         record = skir.AuthoringRecord(
+          types: const [],
           configuration: value.recordSelection,
           fields: [
             for (final field in document.catalog.fields(value.recordSelection))

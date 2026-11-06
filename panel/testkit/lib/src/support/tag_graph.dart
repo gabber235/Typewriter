@@ -376,6 +376,7 @@ skir.AuthoringResource _resource(
 ) => skir.AuthoringResource(
   id: id,
   content: skir.AuthoringRecord(
+    types: const [],
     configuration: skir.TypeSelection.createComplete(
       definition: type,
       arguments: const [],

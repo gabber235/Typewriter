@@ -183,11 +183,7 @@ internal class DefaultTypeArgumentOperations(
                 relationRepairs.forEach { repair -> add(EditIntent.DisconnectRelationWrapper(repair.occurrence)) }
             }
         val planned =
-            AuthoringMutationPlanner(
-                root.catalog.checked,
-                root.catalog.relations,
-            ).plan(
-                root.resources,
+            AuthoringMutationPlanner(root).plan(
                 PreparedEdit(
                     catalog = root.catalog.generation,
                     expectations = emptyList(),

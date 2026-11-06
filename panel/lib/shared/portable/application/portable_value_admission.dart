@@ -118,6 +118,14 @@ final class _PortableValueInspector {
           problem(path, scalarProblem(scalar, value));
         }
       case skir.TypeUse_namedWrapper(value: final expectedNamed):
+        // Patch: a value under a type a resource declares is the realm's to
+        // judge, since this catalog holds only the published code snapshot.
+        if (expectedNamed.definition.typeId is skir.TypeId_contentWrapper ||
+            (value is skir.DataValue_namedWrapper &&
+                value.value.actualType.definition.typeId
+                    is skir.TypeId_contentWrapper)) {
+          return;
+        }
         if (value is! skir.DataValue_namedWrapper) {
           problem(path, "expected_named");
           return;

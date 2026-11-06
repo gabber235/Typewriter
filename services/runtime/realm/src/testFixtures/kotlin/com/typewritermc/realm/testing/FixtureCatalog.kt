@@ -6,6 +6,7 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.realm.authoring.EmptyProviders
 import com.typewritermc.realm.authoring.TestCatalogLease
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.code
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.of
 import com.typewritermc.types.requireValid
@@ -135,6 +136,6 @@ private fun endpoint(endpoint: EndpointDefinition): EndpointDefinition =
  * after the Realm is closed, so a test can prove that closing released every lease.
  */
 internal fun RealmFixture.openCatalogLeases(): () -> Int {
-    val lease = views.read { it.catalog } as TestCatalogLease
+    val lease = views.read { it.catalog.code } as TestCatalogLease
     return { lease.openCount }
 }

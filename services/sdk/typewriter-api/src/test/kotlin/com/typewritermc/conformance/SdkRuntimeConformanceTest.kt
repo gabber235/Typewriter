@@ -80,6 +80,7 @@ import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
@@ -743,6 +744,51 @@ val SdkRuntimeConformanceTest by testSuite {
 
         decoded shouldBe listOf(PortableValue(actualType = testPortableRecordUse.use, payload = opaquePayload))
         (encoded.value.payload as DataValue.ListValueWrapper).value.items.map { it.value } shouldBe listOf(opaqueRecord)
+    }
+
+    val portableDoorId = definitionId("PortableDoor")
+    val portableDoorUse = portableDoorId.namedUse().use
+    val portableDoorBindings =
+        CatalogContributions(
+            declarations =
+                (
+                    listOf(
+                        TypeDefinition.partial(
+                            id = portableDoorId,
+                            representation =
+                                RepresentationTemplate.createRecord(
+                                    fields = emptyList(),
+                                    form =
+                                        RecordForm.createClosed(
+                                            cases = listOf("Open", "Closed").map { portableDoorId.member(it).namedTemplate() },
+                                        ),
+                                ),
+                        ),
+                    ) +
+                        listOf("Open", "Closed").map {
+                            TypeDefinition.partial(
+                                id = portableDoorId.member(it),
+                                representation = RepresentationTemplate.createScalar(kind = ScalarKind.UNIT),
+                                parents = listOf(portableDoorId.namedTemplate()),
+                            )
+                        }
+                ).map { OwnedTypeDeclaration(origin("portable_door"), it) },
+        ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "portable door")))
+    val openDoor = DataValue.named(portableDoorId.member("Open").namedUse(), DataValue.UNIT)
+
+    test("a portable binding of a closed union decodes the case a value holds and encodes it back unchanged") {
+        val binding = portableDoorBindings.binding<PortableValue>(portableDoorUse)
+        val decoded =
+            binding.decode(
+                portableDoorBindings.checked
+                    .resolve(portableDoorUse)
+                    .ready()
+                    .complete(openDoor)
+                    .complete(),
+            )
+
+        decoded shouldBe PortableValue(actualType = portableDoorId.member("Open").namedUse().use, payload = DataValue.UNIT)
+        binding.encode(decoded) shouldBe openDoor
     }
 
     test("a portable binding refuses to encode a value whose actual type is not its own") {

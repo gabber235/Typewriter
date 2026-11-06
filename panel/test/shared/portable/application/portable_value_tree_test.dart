@@ -145,6 +145,7 @@ void main() {
 
   test("sets an absent direct field without creating unrelated fields", () {
     final record = skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.unknown,
       fields: [
         skir.FieldValue(
@@ -166,6 +167,7 @@ void main() {
 
   test("nested writes require explicit parent initialization", () {
     final record = skir.AuthoringRecord(
+      types: const [],
       configuration: skir.TypeSelection.unknown,
       fields: const [],
     );
@@ -233,5 +235,29 @@ void main() {
       (result as PortablePathUnavailable<List<skir.ValuePath>>).message,
       contains("depth limit"),
     );
+  });
+
+  test("rebuilding a record keeps its declared types", () {
+    final declared = [
+      contentRecordDeclaration(contentTypeDefinition("reward", "k1")),
+    ];
+    final record = skir.AuthoringRecord(
+      types: declared,
+      configuration: skir.TypeSelection.unknown,
+      fields: [
+        skir.FieldValue(
+          name: "title",
+          value: skir.DataValue.wrapStringValue("old"),
+        ),
+      ],
+    );
+
+    final result = record.replaceAt(
+      skir.ValuePath(segments: [skir.PathSegment.createField(name: "title")]),
+      skir.DataValue.wrapStringValue("new"),
+    );
+
+    final updated = (result as PortablePathValue<skir.AuthoringRecord>).value;
+    expect(updated.types, declared);
   });
 }

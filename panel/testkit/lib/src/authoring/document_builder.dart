@@ -422,6 +422,7 @@ skir.AuthoringResource authoredRecord(
     _ => skir.ResourceId(value: "$id"),
   },
   content: skir.AuthoringRecord(
+    types: const [],
     configuration: type == null
         ? skir.TypeSelection.unknown
         : skir.TypeSelection.wrapComplete(type),

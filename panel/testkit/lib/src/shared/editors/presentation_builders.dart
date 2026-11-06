@@ -307,6 +307,28 @@ skir.TypeDefinitionId typeDefinition(
   revision: revision,
 );
 
+/// The type [key] that the resource [resource] declares itself.
+skir.TypeDefinitionId contentTypeDefinition(String resource, String key) =>
+    skir.TypeDefinitionId(
+      typeId: skir.TypeId.createContent(
+        resource: skir.ResourceId(value: resource),
+        key: skir.ContentKey.wrapGenerated(key),
+      ),
+      revision: 1,
+    );
+
+/// A record declaration [id] with no fields, as a resource declares one.
+skir.TypeDefinition contentRecordDeclaration(skir.TypeDefinitionId id) =>
+    skir.TypeDefinition(
+      id: id,
+      parameters: const [],
+      representation: skir.RepresentationTemplate.createRecord(
+        fields: const [],
+        form: skir.RecordForm.concrete,
+      ),
+      parents: const [],
+    );
+
 /// A use of the type [name] in [namespace] without type arguments.
 skir.NamedTypeUse namedTypeUse(String name, {String namespace = "test"}) =>
     skir.NamedTypeUse(

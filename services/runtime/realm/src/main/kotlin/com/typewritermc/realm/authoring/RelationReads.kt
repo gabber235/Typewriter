@@ -36,7 +36,7 @@ import skirout.kernel.v1.resource_id.ResourceId
 internal class RelationReads(
     val reads: CapturedAuthoringReads,
 ) {
-    val catalog: AuthoringCatalogLease get() = reads.view.original.catalog
+    val catalog: AuthoringCatalogLease get() = reads.viewCatalog
     val resources: Map<ResourceId, AuthoringRecord> get() = reads.view.resources
     val links: Map<LinkOccurrenceId, LinkOccurrence> get() = reads.view.links
 

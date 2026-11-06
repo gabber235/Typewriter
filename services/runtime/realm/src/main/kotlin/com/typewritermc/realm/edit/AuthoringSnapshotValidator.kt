@@ -6,45 +6,69 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.validateStructure
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.contentSourceOf
+import com.typewritermc.types.catalog.misfiledDeclarations
+import com.typewritermc.types.catalog.misfits
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
-import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.RelationContract
-import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** Validates an authored snapshot against structure, relation and realm structure rules. */
+/**
+ * Validates an authored snapshot against structure, relation and realm structure rules. [catalog] reads the proposed
+ * state and [savedCatalog] the saved one.
+ */
 internal class AuthoringSnapshotValidator(
     private val catalog: CheckedCatalog,
+    private val savedCatalog: CheckedCatalog,
     private val contracts: List<RelationContract>,
 ) {
     /**
      * Validates the same affected graph boundary for replay and caller supplied working overlays. [before] holds the
      * resources the change started from, so removing the realm root or a realm section is detected.
+     *
+     * A value can stop fitting its schema through an edit on another resource or a new generation, so a record is
+     * refused only for what this change made worse: its misfits now, less the ones it already had. The old record is
+     * judged twice, under the saved catalog and under the proposed one with its own declarations as they were, so a
+     * delete or retype elsewhere is tolerated however the change groups it, while a change whose own declarations make
+     * its own value misfit is refused.
      */
     fun validate(
         before: Map<ResourceId, AuthoringRecord>,
         resources: Map<ResourceId, AuthoringRecord>,
         affected: Set<ResourceId>,
         projection: ProjectionResult = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, contracts, catalog),
+        savedProjection: ProjectionResult =
+            ResourceValueMapper.project(ResourceValueMapper.discover(before), before, contracts, savedCatalog),
     ): List<ValueProblem> {
         val problems = mutableListOf<ValueProblem>()
         resources.filterKeys { it in affected }.forEach { (id, record) ->
-            when (val structural = record.validateStructure(catalog)) {
-                StructuralResult.VALID -> Unit
-                is StructuralResult.InvalidWrapper -> problems += structural.value.map { it.on(id) }
-                else -> unknownVariant(structural)
-            }
+            problems += record.misfiledDeclarations(id)
+            val old = before[id]
+            val baseline =
+                old
+                    ?.let { previous ->
+                        val ownAsBefore =
+                            if (previous.types == record.types) {
+                                catalog
+                            } else {
+                                catalog.withContent(contentSourceOf((resources + (id to record.copy(types = previous.types)))::get))
+                            }
+                        val alone = projectAlone(id, previous, resources, ownAsBefore)
+                        previous.misfits(id, savedCatalog) { savedProjection.fit.on(id) } +
+                            previous.misfits(id, ownAsBefore) { alone.fit.on(id) }
+                    }.orEmpty()
+                    .toSet()
+            problems += record.misfits(id, catalog) { projection.fit.on(id) }.filterNot { it in baseline }.map { it.problem }
         }
         val affectedLocations =
             ResourceValueMapper
@@ -56,9 +80,23 @@ internal class AuthoringSnapshotValidator(
         validateRealmStructure(before, resources, affected, projection.projections, contracts, catalog, problems)
         validateCardinality(projection.projections, contracts, affected, problems)
         validateAcyclic(projection.projections, contracts, affected, problems)
-        return problems
+        return problems.distinct()
+    }
+
+    /** One record's own links judged over [resources] with that record put back as [record]. */
+    private fun projectAlone(
+        id: ResourceId,
+        record: AuthoringRecord,
+        resources: Map<ResourceId, AuthoringRecord>,
+        catalog: CheckedCatalog,
+    ): ProjectionResult {
+        val state = resources + (id to record)
+        return ResourceValueMapper.project(ResourceValueMapper.discover(mapOf(id to record)), state, contracts, catalog)
     }
 }
+
+/** The problems located on [resource]. */
+private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = filter { it.location.resource == resource }
 
 private fun validateOwnership(
     projections: List<LinkProjection>,
@@ -201,5 +239,3 @@ private fun validateAcyclic(
         }
     }
 }
-
-private fun ValueProblem.on(resource: ResourceId): ValueProblem = copy(location = location.copy(resource = resource))

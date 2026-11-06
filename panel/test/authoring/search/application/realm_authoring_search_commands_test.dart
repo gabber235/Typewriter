@@ -12,6 +12,7 @@ void main() {
       arguments: const [],
     );
     final content = skir.AuthoringRecord(
+      types: const [],
       configuration: configuration,
       fields: [
         skir.FieldValue(

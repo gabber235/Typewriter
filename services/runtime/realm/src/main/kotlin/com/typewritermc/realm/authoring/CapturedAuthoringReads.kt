@@ -37,11 +37,15 @@ import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.configuration.kind
 import com.typewritermc.configuration.name
 import com.typewritermc.expression.operations.HostFailure
+import com.typewritermc.realm.catalog.ViewCatalogLease
+import com.typewritermc.realm.catalog.code
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
@@ -114,6 +118,25 @@ class CapturedAuthoringReads(
 ) : AuthoredReads {
     override val catalog: CatalogGeneration = view.original.catalog.generation
 
+    private var builtCatalog: Pair<Long, ViewCatalogLease>? = null
+
+    /**
+     * This reader's catalog: the code catalog plus what the view it reads declares, recording each declaration and held
+     * type it reaches. A working view gets a new one when its revision changes, so an operation reads what it staged.
+     */
+    internal val viewCatalog: ViewCatalogLease
+        get() {
+            val revision = (view as? AuthoredReadView.Working)?.revision ?: 0L
+            builtCatalog?.takeIf { it.first == revision }?.let { return it.second }
+            val resources = view.resources
+            return ViewCatalogLease(view.original.catalog.code, contentSourceOf(resources::get, ::observe)).also {
+                builtCatalog =
+                    revision to it
+            }
+        }
+
+    internal val typeCatalog: CheckedCatalog get() = viewCatalog.checked
+
     private var reads = 0L
     private var checkTuples = 0L
     private val missing = linkedSetOf<ValueLocation>()
@@ -125,7 +148,7 @@ class CapturedAuthoringReads(
         if (complete !is Availability.Available) return complete.cast()
         return try {
             val binding =
-                view.original.catalog.nativeBindings
+                viewCatalog.nativeBindings
                     .bind(complete.value.schema)
             @Suppress("UNCHECKED_CAST")
             Availability.Available(binding.decode(complete.value) as T)
@@ -157,7 +180,7 @@ class CapturedAuthoringReads(
                     "A representation read requires a named authored value.",
                     listOf(path.location),
                 ).cast()
-        if (!view.original.catalog.checked
+        if (!typeCatalog
                 .isReadableAs(named.actualType.use, path.expected)
         ) {
             return failed(
@@ -189,7 +212,7 @@ class CapturedAuthoringReads(
             }
         return try {
             val native =
-                view.original.catalog.nativeBindings
+                viewCatalog.nativeBindings
                     .bind(complete.schema)
                     .decode(complete)
             @Suppress("UNCHECKED_CAST")
@@ -239,7 +262,7 @@ class CapturedAuthoringReads(
             val readable =
                 when (selection) {
                     is TypeSelection.CompleteWrapper -> {
-                        view.original.catalog.checked
+                        typeCatalog
                             .isReadableAs(selection.use.use, path.expected)
                     }
 
@@ -281,7 +304,7 @@ class CapturedAuthoringReads(
                             "A draft binding requires a named authored value.",
                             listOf(path.location),
                         )
-                if (!view.original.catalog.checked
+                if (!typeCatalog
                         .isReadableAs(named.actualType.use, path.expected)
                 ) {
                     return failed(
@@ -321,7 +344,7 @@ class CapturedAuthoringReads(
                 val value = located.value
                 if (value == DataValue.UNFILLED || value == DataValue.NULL) return unavailable(path.location)
                 val actual = (value as? DataValue.NamedWrapper)?.actualType?.use ?: path.expected
-                if (!view.original.catalog.checked
+                if (!typeCatalog
                         .isReadableAs(actual, path.expected)
                 ) {
                     return failed(
@@ -450,7 +473,7 @@ class CapturedAuthoringReads(
         observe(InputIdentity.Value(path.location))
         if (located.value == DataValue.UNFILLED) return unavailable(path.location)
         val actual = (located.value as? DataValue.NamedWrapper)?.actualType?.use ?: path.expected
-        if (!view.original.catalog.checked
+        if (!typeCatalog
                 .isReadableAs(actual, path.expected)
         ) {
             return failed(HostFailure.UnreadableValue, "The authored value is not readable as the requested type.", listOf(path.location))
@@ -570,11 +593,11 @@ class CapturedAuthoringReads(
                 }
 
                 is TypeSelection.PendingWrapper -> {
-                    if (view.original.catalog.checked
+                    if (typeCatalog
                             .isNominalSubtype(selection.definition, owner)
                     ) {
                         val partial =
-                            view.original.catalog.checked
+                            typeCatalog
                                 .resolvePartial(selection)
                         if (partial is Resolution.Ready) {
                             occurrences +=
@@ -670,7 +693,7 @@ class CapturedAuthoringReads(
             if (
                 checked?.represents(owner) != true &&
                 (selection as? TypeSelection.PendingWrapper)?.let {
-                    view.original.catalog.checked
+                    typeCatalog
                         .isNominalSubtype(it.definition, owner)
                 } != true
             ) {
@@ -699,10 +722,10 @@ class CapturedAuthoringReads(
     ): Boolean {
         if (expected == null) return true
         val use =
-            expectedType(subject, pattern, view.original.catalog.checked)
+            expectedType(subject, pattern, typeCatalog)
                 ?: return false
         val resolved =
-            view.original.catalog.checked
+            typeCatalog
                 .resolve(use) as? Resolution.Ready ?: return false
         return resolved.value.schema.representation
             .kind() == expected
@@ -855,7 +878,7 @@ class CapturedAuthoringReads(
                     }
 
                     is TypeSelection.PendingWrapper -> {
-                        if (view.original.catalog.checked
+                        if (typeCatalog
                                 .isNominalSubtype(selection.definition, requested.id)
                         ) {
                             TypeMatch.Yes(null)
@@ -895,7 +918,7 @@ class CapturedAuthoringReads(
 
     private fun TypeDefinitionId.couldRepresent(expected: TypeDefinitionId): Boolean =
         this == expected ||
-            view.original.catalog.checked
+            typeCatalog
                 .isNominalSubtype(this, expected)
 
     private fun pendingBindingReadableAs(
@@ -908,7 +931,7 @@ class CapturedAuthoringReads(
             return selection.arguments.zip(expectedNamed.value.arguments).all { (actual, required) ->
                 when (actual) {
                     is ArgumentSelection.ChosenWrapper -> {
-                        view.original.catalog.checked
+                        typeCatalog
                             .isReadableAs(actual.type, required)
                     }
 
@@ -922,10 +945,10 @@ class CapturedAuthoringReads(
                 }
             }
         }
-        return view.original.catalog.checked
+        return typeCatalog
             .knownApplications(selection)
             .any { application ->
-                view.original.catalog.checked
+                typeCatalog
                     .isReadableAs(application.use, expected)
             }
     }
@@ -944,7 +967,7 @@ class CapturedAuthoringReads(
             is TypeSelection.PendingWrapper -> {
                 when (
                     val partial =
-                        view.original.catalog.checked
+                        typeCatalog
                             .resolvePartial(selection)
                 ) {
                     is Resolution.Ready -> {
@@ -969,7 +992,7 @@ class CapturedAuthoringReads(
     ): CheckedType? =
         when (
             val result =
-                view.original.catalog.checked
+                typeCatalog
                     .resolve(use)
         ) {
             is Resolution.Ready -> {
@@ -1028,19 +1051,28 @@ class CapturedAuthoringReads(
             }
 
             is InputIdentity.Incoming -> {
-                original.catalog.relations.filter { identity.relation == null || it.id == identity.relation }.forEach { contract ->
-                    recorder.observe(
-                        EditExpectation.links(
-                            identity.resource,
-                            contract.id,
-                            TraversalDirection.BOTH,
-                            values.links(identity.resource, contract.id, TraversalDirection.BOTH),
-                        ),
-                    )
-                }
+                observeIncoming(identity)
+            }
+
+            is InputIdentity.Types -> {
+                recorder.observe(EditExpectation.createTypes(resource = identity.resource, expected = values.types(identity.resource)))
             }
 
             is InputIdentity.Catalog -> {}
+        }
+    }
+
+    private fun observeIncoming(identity: InputIdentity.Incoming) {
+        val original = view.original
+        original.catalog.relations.filter { identity.relation == null || it.id == identity.relation }.forEach { contract ->
+            recorder.observe(
+                EditExpectation.links(
+                    identity.resource,
+                    contract.id,
+                    TraversalDirection.BOTH,
+                    original.values.links(identity.resource, contract.id, TraversalDirection.BOTH),
+                ),
+            )
         }
     }
 

@@ -7,8 +7,6 @@ import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.CapturedAuthoringValues
-import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.conflicts
 import com.typewritermc.realm.authoring.savedState
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
@@ -103,19 +101,11 @@ internal class RealmAuthoringOwner(
         if (edit.catalog != current.catalog.generation) {
             return Admission.Refused(CommitPreparedEditResponse.CatalogChangedErrorWrapper(current.catalog.generation))
         }
-        val projections =
-            ResourceValueMapper.project(
-                current.links.values,
-                current.resources,
-                current.catalog.relations,
-                current.catalog.checked,
-            )
-        val values = CapturedAuthoringValues(current.resources, projections.projections)
+        val values = current.values
         val conflicts = values.conflicts(edit.expectations)
         if (conflicts.isNotEmpty()) return Admission.Refused(CommitPreparedEditResponse.ConflictErrorWrapper(conflicts))
-        val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations)
         val plan =
-            when (val planned = planner.plan(current.resources, edit)) {
+            when (val planned = AuthoringMutationPlanner(current).plan(edit)) {
                 is MutationPlanningResult.Rejected -> {
                     return Admission.Refused(CommitPreparedEditResponse.RejectedErrorWrapper(planned.problems))
                 }
@@ -231,6 +221,7 @@ internal fun EditExpectation.location(): ValueLocation =
         is EditExpectation.ResourceWrapper -> ValueLocation.of(value.id)
         is EditExpectation.ResourceExistsWrapper -> ValueLocation.of(value.id)
         is EditExpectation.LinksWrapper -> ValueLocation.of(value.resource)
+        is EditExpectation.TypesWrapper -> ValueLocation.of(value.resource)
         is EditExpectation.ResourceIdsWrapper -> error("Resource id set expectations are never required for commit admission.")
         else -> unknownVariant(this)
     }

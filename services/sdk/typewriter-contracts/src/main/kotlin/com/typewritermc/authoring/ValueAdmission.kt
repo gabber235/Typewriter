@@ -6,6 +6,9 @@ import com.typewritermc.types.bits
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.contentOwner
+import com.typewritermc.types.catalog.referencedDefinitions
+import com.typewritermc.types.catalog.unavailableCode
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -32,6 +35,7 @@ import skirout.editor.v1.type_catalog.RecordResolvedRepresentation
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -57,32 +61,55 @@ sealed interface CompletenessResult {
     ) : CompletenessResult
 }
 
+/**
+ * A way a value does not fit its schema, and the type it is about when that type is gone or invalid. Two misfits are
+ * the same when their location, code and type agree, so a second use of a missing type is a new one.
+ */
+data class Misfit(
+    val problem: ValueProblem,
+    val type: TypeDefinitionId? = null,
+)
+
 /** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
 fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult {
+    val problems = inspectStructure(catalog).problems
+    return if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
+}
+
+/**
+ * Every structural problem of this record on [owner], with each use of a type that is gone or invalid inside its values
+ * as its own misfit at its location: a named value's actual type or a stored type use.
+ */
+fun AuthoringRecord.structuralMisfits(
+    owner: skirout.kernel.v1.resource_id.ResourceId,
+    catalog: CheckedCatalog,
+): List<Misfit> {
+    val inspection = inspectStructure(catalog)
+    return (inspection.problems.map { Misfit(it) } + inspection.typed).map { misfit ->
+        misfit.copy(problem = misfit.problem.copy(location = misfit.problem.location.copy(resource = owner)))
+    }
+}
+
+private fun AuthoringRecord.inspectStructure(catalog: CheckedCatalog): ValueInspection {
     val root = ValueLocation.of(AUTHORING_ROOT)
-    return when (val configuration = configuration) {
+    val inspection = ValueInspection(catalog)
+    when (val configuration = configuration) {
         is TypeSelection.CompleteWrapper -> {
             when (val resolved = catalog.resolve(configuration.use.use)) {
-                is Resolution.Invalid -> {
-                    StructuralResult.InvalidWrapper(resolved.diagnostics.map { it.asValueProblem(root) })
-                }
-
-                is Resolution.Ready -> {
-                    val inspection = ValueInspection(catalog)
-                    inspection.validatePayload(DataValue.RecordWrapper(payload), resolved.value, root)
-                    inspection.structuralResult()
-                }
+                is Resolution.Invalid -> inspection.problems += resolved.diagnostics.map { it.asValueProblem(root) }
+                is Resolution.Ready -> inspection.validatePayload(DataValue.RecordWrapper(payload), resolved.value, root)
             }
         }
 
         is TypeSelection.PendingWrapper -> {
-            validatePending(configuration, catalog, root)
+            inspectPending(configuration, inspection, root)
         }
 
         else -> {
             unknownVariant(configuration)
         }
     }
+    return inspection
 }
 
 /** Admits a complete value for native use, distinguishing unfinished locations from structurally invalid content. */
@@ -97,14 +124,15 @@ fun CheckedType.complete(value: DataValue): CompletenessResult {
     }
 }
 
-private fun AuthoringRecord.validatePending(
+private fun AuthoringRecord.inspectPending(
     selection: TypeSelection.PendingWrapper,
-    catalog: CheckedCatalog,
+    inspection: ValueInspection,
     root: ValueLocation,
-): StructuralResult {
-    val partial = catalog.resolvePartial(selection)
+) {
+    val partial = inspection.catalog!!.resolvePartial(selection)
     if (partial is Resolution.Invalid) {
-        return StructuralResult.InvalidWrapper(partial.diagnostics.map { it.asValueProblem(root) })
+        inspection.problems += partial.diagnostics.map { it.asValueProblem(root) }
+        return
     }
     partial as Resolution.Ready
     val known = partial.value.knownFields.associateBy { it.key }
@@ -114,7 +142,6 @@ private fun AuthoringRecord.validatePending(
     val present = fields.mapView.keys
     (present - expectedKeys).forEach { key -> problems += ValueProblem(location = root.field(key), code = "unknown_field") }
     (expectedKeys - present).forEach { key -> problems += ValueProblem(location = root.field(key), code = "missing_field") }
-    val inspection = ValueInspection(catalog)
     known.forEach { (name, field) ->
         val value = field(name) ?: return@forEach
         inspection.validateUse(value, field.type, root.field(name))
@@ -123,17 +150,28 @@ private fun AuthoringRecord.validatePending(
         val value = field(name) ?: return@forEach
         if (value != DataValue.UNFILLED) problems += ValueProblem(location = root.field(name), code = "dependent_field_requires_type")
     }
-    problems += inspection.problems
-    return if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
+    inspection.problems += problems
 }
 
 private class ValueInspection(
-    private val catalog: CheckedCatalog?,
+    val catalog: CheckedCatalog?,
 ) {
     val problems = mutableListOf<ValueProblem>()
     val unfinished = mutableListOf<ValueLocation>()
 
-    fun structuralResult(): StructuralResult = if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
+    /** Uses of a type that is gone or invalid, each at its own location; only misfits read them. */
+    val typed = mutableListOf<Misfit>()
+
+    /** Records each content type [use] names that stands in as the error type, at [at]. */
+    private fun noteUnavailable(
+        use: TypeUse,
+        at: ValueLocation,
+    ) {
+        val resolver = catalog ?: return
+        use.referencedDefinitions().distinct().filter { it.contentOwner() != null }.forEach { id ->
+            resolver.unavailableCode(id)?.let { typed += Misfit(ValueProblem(location = at, code = it), id) }
+        }
+    }
 
     fun validateCheckedValue(
         value: DataValue,
@@ -165,6 +203,7 @@ private class ValueInspection(
                     return
                 }
                 if (named.actualType == use.value) {
+                    noteUnavailable(named.actualType.use, at)
                     validatePayload(named.payload, checked, at, depth + 1)
                 } else {
                     validateUse(value, use, at, depth)
@@ -227,6 +266,7 @@ private class ValueInspection(
                     problem(at, "unreadable_actual_type")
                     return
                 }
+                noteUnavailable(named.actualType.use, at)
                 when (val actual = resolver.resolve(named.actualType.use)) {
                     is Resolution.Invalid -> problems += actual.diagnostics.map { it.asValueProblem(at) }
                     is Resolution.Ready -> validatePayload(named.payload, actual.value, at, depth + 1)
@@ -400,9 +440,24 @@ private class ValueInspection(
                 ScalarKind.DECIMAL -> value is DataValue.DecimalWrapper && value.value.isCanonicalDecimal()
                 ScalarKind.TIMESTAMP -> value is DataValue.TimestampWrapper
                 ScalarKind.DURATION -> value is DataValue.DurationWrapper
+                ScalarKind.TYPE -> value is DataValue.TypeUseWrapper
                 else -> unknownVariant(kind)
             }
-        if (!valid) problem(at, "wrong_scalar")
+        if (!valid) {
+            problem(at, "wrong_scalar")
+            return
+        }
+        if (value is DataValue.TypeUseWrapper) validateHeldType(value.value, at)
+    }
+
+    /** A held type must resolve; a content type it names that is gone or invalid is its own misfit here. */
+    private fun validateHeldType(
+        use: TypeUse,
+        at: ValueLocation,
+    ) {
+        val resolver = catalog ?: return
+        (resolver.resolve(use) as? Resolution.Invalid)?.let { invalid -> problems += invalid.diagnostics.map { it.asValueProblem(at) } }
+        noteUnavailable(use, at)
     }
 
     private fun problem(

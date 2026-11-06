@@ -274,6 +274,7 @@ void main() {
           skir.AuthoringResource(
             id: location.resource,
             content: skir.AuthoringRecord(
+              types: const [],
               configuration: skir.TypeSelection.createComplete(
                 definition: root,
                 arguments: const [],

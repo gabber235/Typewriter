@@ -61,6 +61,7 @@ void main() {
                 skir.AuthoringResource(
                   id: id,
                   content: skir.AuthoringRecord(
+                    types: const [],
                     configuration: configuration,
                     fields: [
                       skir.FieldValue(

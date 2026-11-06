@@ -227,6 +227,7 @@ void main() {
         other: skir.AuthoringResource(
           id: other,
           content: skir.AuthoringRecord(
+            types: const [],
             configuration: skir.TypeSelection.createComplete(
               definition: boundPage.otherType,
               arguments: const [],
@@ -377,6 +378,7 @@ void main() {
               skir.AuthoringResource(
                 id: id,
                 content: skir.AuthoringRecord(
+                  types: const [],
                   configuration: skir.TypeSelection.createComplete(
                     definition: boundPage.type,
                     arguments: const [],

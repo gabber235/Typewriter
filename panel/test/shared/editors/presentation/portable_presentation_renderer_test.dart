@@ -2303,6 +2303,7 @@ void main() {
         catalog: catalog,
         resources: {
           RendererWorkspace.resource: skir.AuthoringRecord(
+            types: const [],
             configuration: skir.TypeSelection.unknown,
             fields: [
               skir.FieldValue(name: "icon", value: skir.DataValue.unfilled),
@@ -2317,6 +2318,7 @@ void main() {
           return skir.PreparedValue(
             content: skir.PreparedContent.wrapRecord(
               skir.AuthoringRecord(
+                types: const [],
                 configuration: value.recordSelection,
                 fields: [
                   skir.FieldValue(

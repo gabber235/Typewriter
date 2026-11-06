@@ -99,6 +99,11 @@ abstract class AuthoringFacts with _$AuthoringFacts {
               .toSet()
               .toList(),
         ),
+      skir.EditExpectation_typesWrapper(:final value) =>
+        skir.EditExpectation.createTypes(
+          resource: value.resource,
+          expected: resources[value.resource]?.types ?? const [],
+        ),
       _ => throw StateError("Unknown edit expectation"),
     };
   }

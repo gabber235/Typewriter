@@ -49,6 +49,18 @@ void main() {
     );
   });
 
+  test("editing a field keeps the resource's declared types", () {
+    final resource = skir.ResourceId(value: "resource:1");
+    final declared = [
+      contentRecordDeclaration(contentTypeDefinition("resource:1", "k1")),
+    ];
+    final draft = listRecord.edit
+      ..setTypes(resource, declared)
+      ..set(titleAt, skir.DataValue.wrapStringValue("changed"));
+
+    expect(draft.resource(resource)?.types, declared);
+  });
+
   test("staged reads retain the first original observation", () {
     final draft = listRecord.edit;
 
@@ -440,6 +452,7 @@ void main() {
     final prepared = skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
+          types: const [],
           configuration: selection,
           fields: [
             skir.FieldValue(
@@ -536,6 +549,7 @@ void main() {
           ..create(
             skir.ResourceId(value: "resource:1"),
             skir.AuthoringRecord(
+              types: const [],
               configuration: skir.TypeSelection.wrapComplete(
                 listTypeOf(skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
               ),
@@ -1065,6 +1079,7 @@ void main() {
     fixture.draft.create(
       concurrent,
       skir.AuthoringRecord(
+        types: const [],
         configuration: skir.TypeSelection.wrapComplete(
           skir.NamedTypeUse(
             definition: testTypeId("Action"),
@@ -1102,6 +1117,7 @@ void main() {
           return skir.PreparedValue(
             content: skir.PreparedContent.wrapRecord(
               skir.AuthoringRecord(
+                types: const [],
                 configuration: request.recordSelection,
                 fields: [
                   skir.FieldValue(
@@ -1129,6 +1145,7 @@ void main() {
         return skir.PreparedValue(
           content: skir.PreparedContent.wrapRecord(
             skir.AuthoringRecord(
+              types: const [],
               configuration: request.recordSelection,
               fields: [
                 skir.FieldValue(
