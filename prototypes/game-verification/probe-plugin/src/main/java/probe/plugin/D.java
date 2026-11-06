@@ -58,6 +58,7 @@ final class D {
     private static final Map<UUID, AtomicInteger> asyncRunning = new ConcurrentHashMap<>();
     private static final Map<UUID, Leftovers> left = new HashMap<>();
     private static final Map<Integer, long[]> quietInfo = new ConcurrentHashMap<>();
+    private static final Map<UUID, Set<Thread>> asyncThreads = new ConcurrentHashMap<>();
     private static final int NIGHT = 18000;
 
     /** What one player's requirements left behind, cleared by d.reset. */
@@ -75,11 +76,12 @@ final class D {
     static boolean run(String name, Map<String, String> q, Player p, Map<String, Object> r) throws Exception {
         switch (name) {
             case "d.req" -> req(p, q, r);
-            case "d.quiet" -> quiet(p, q.getOrDefault("scope", "server"), Integer.parseInt(q.get("qping")));
+            case "d.quiet" -> quiet(p, q.getOrDefault("scope", "server"), Integer.parseInt(q.get("qping")), 20_000, 0);
             case "d.qinfo" -> {
                 long[] v = quietInfo.remove(Integer.parseInt(q.get("qping")));
                 r.put("quietMicros", v == null ? -1 : v[0]);
                 r.put("polls", v == null ? -1 : v[1]);
+                r.put("hung", v == null ? -1 : v[2]);
             }
             case "d.reset" -> reset(p);
             case "d.busy" -> {
@@ -108,15 +110,32 @@ final class D {
 
     private static void async(Player p, long ms, Runnable then) {
         AtomicInteger n = asyncRunning.computeIfAbsent(p.getUniqueId(), id -> new AtomicInteger());
+        Set<Thread> mine = asyncThreads.computeIfAbsent(p.getUniqueId(), id -> ConcurrentHashMap.newKeySet());
         n.incrementAndGet();
         Bukkit.getScheduler().runTaskAsynchronously(ProbeAccess.plugin(), () -> {
+            mine.add(Thread.currentThread());
             try {
                 sleep(ms);
-                if (then != null) then.run();
+                // Cancelled at the outer limit: the work is abandoned and has no effect.
+                if (then != null && !Thread.currentThread().isInterrupted()) then.run();
             } finally {
+                mine.remove(Thread.currentThread());
+                Thread.interrupted();
                 n.decrementAndGet();
             }
         });
+    }
+
+    /** The outer limit: hung work of this player is cancelled, so its later requirements start clean. */
+    private static int cancelAsync(UUID id) {
+        Set<Thread> mine = asyncThreads.get(id);
+        if (mine == null) return 0;
+        int n = 0;
+        for (Thread t : mine) {
+            t.interrupt();
+            n++;
+        }
+        return n;
     }
 
     private static void req(Player p, Map<String, String> q, Map<String, Object> r) {
@@ -129,7 +148,17 @@ final class D {
         Leftovers lo = of(p);
         Location base = p.getLocation();
         World wd = p.getWorld();
+        // Async kinds run their work even when broken: a real fail with work in flight is what the fail rule is about.
+        long asyncMs = Long.parseLong(q.getOrDefault("asyncMs", String.valueOf(ThreadLocalRandom.current().nextLong(0, 20))));
+        Runnable chat = () -> p.sendMessage(Component.text(token));
+        switch (kind) {
+            case "async", "asyncslow" -> async(p, asyncMs, broken ? null : chat);
+            case "asyncsync" -> async(p, asyncMs, broken ? null : () -> later(p, chat, 1));
+            case "hang" -> async(p, 600_000, null);
+            default -> {}
+        }
         if (!broken) switch (kind) {
+            case "async", "asyncslow", "asyncsync", "hang" -> {}
             case "title" -> p.showTitle(title(token));
             case "chat" -> p.sendMessage(Component.text(token));
             case "block" -> {
@@ -139,8 +168,6 @@ final class D {
             }
             case "entity" -> lo.packetEntities.add(packetEntity(p, base.clone().add(0, 1.5, 3), token));
             case "late" -> later(p, () -> p.sendMessage(Component.text(token)), Integer.parseInt(q.get("late")));
-            case "async" -> async(p, Long.parseLong(q.getOrDefault("asyncMs", String.valueOf(ThreadLocalRandom.current().nextLong(0, 20)))),
-                () -> p.sendMessage(Component.text(token)));
             // Leaky kinds: world=1 uses the world wide API, world=0 its per player counterpart.
             case "bcast" -> {
                 if (world) Bukkit.broadcast(Component.text(token));
@@ -216,7 +243,15 @@ final class D {
             case "none" -> {}
             default -> throw new IllegalArgumentException(kind);
         }
-        BukkitTask wt = Bukkit.getScheduler().runTaskLater(ProbeAccess.plugin(), () -> ping(p, id), w);
+        // fail=window: the barrier after w ticks (E3t). fail=quiet: after w ticks, then only once this player's own
+        // counted work is quiet, with an outer limit in wall ms (limitMs) or in ticks (limitTicks).
+        boolean quietRule = "quiet".equals(q.getOrDefault("fail", "window"));
+        long limitMs = Long.parseLong(q.getOrDefault("limitMs", "20000"));
+        int limitTicks = Integer.parseInt(q.getOrDefault("limitTicks", "0"));
+        BukkitTask wt = Bukkit.getScheduler().runTaskLater(ProbeAccess.plugin(), () -> {
+            if (quietRule) quiet(p, "player", id, limitMs, limitTicks);
+            else ping(p, id);
+        }, w);
         Ready.harness.add(wt.getTaskId());
     }
 
@@ -252,13 +287,15 @@ final class D {
     }
 
     /** Ready.quiet with a scope: polls between ticks until the scope is idle, then sends the barrier. */
-    private static void quiet(Player p, String scope, int id) {
+    private static void quiet(Player p, String scope, int id, long limitMs, int limitTicks) {
         UUID who = p.getUniqueId();
         boolean server = "server".equals(scope);
         Thread t = new Thread(() -> {
             long t0 = micros();
             int polls = 0;
-            long deadline = System.nanoTime() + 20_000_000_000L;
+            long deadline = System.nanoTime() + limitMs * 1_000_000L;
+            int tick0 = Bukkit.getCurrentTick();
+            long hung = 0;
             while (true) {
                 polls++;
                 CompletableFuture<Boolean> f = new CompletableFuture<>();
@@ -279,13 +316,14 @@ final class D {
                 } catch (Exception e) {
                     break;
                 }
-                if (System.nanoTime() > deadline) {
+                if (System.nanoTime() > deadline || (limitTicks > 0 && Bukkit.getCurrentTick() - tick0 >= limitTicks)) {
+                    hung = cancelAsync(who);
                     MinecraftServer.getServer().execute(() -> ping(p, id));
                     break;
                 }
                 LockSupport.parkNanos(200_000);
             }
-            quietInfo.put(id, new long[] {micros() - t0, polls});
+            quietInfo.put(id, new long[] {micros() - t0, polls, hung});
         }, "probe-d-quiet");
         t.setDaemon(true);
         t.start();

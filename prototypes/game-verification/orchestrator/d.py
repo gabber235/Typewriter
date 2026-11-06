@@ -354,7 +354,7 @@ def requirement(n, k, kind, w, scope="server", broken=False, late=0, check=False
     q = dict(player=n.name, kind=kind, token=token, w=w, broken=int(broken), wping=wping, material=material, late=late, **(params or {}))
     n.S("d.req", **q)
     t_sent = time.perf_counter()
-    needle_kind = {"late": "chat", "async": "chat", "bcast": "chat", "titleall": "title"}.get(kind, kind)
+    needle_kind = {"late": "chat", "async": "chat", "asyncslow": "chat", "asyncsync": "chat", "hang": "chat", "bcast": "chat", "titleall": "title"}.get(kind, kind)
     if needle_kind in ("title", "chat", "block", "entity"):
         obs = n.C("observe", needle=needle_for(needle_kind, token, material), ping=wping, timeoutMs=20000)
         ok = obs["ok"]
@@ -365,7 +365,7 @@ def requirement(n, k, kind, w, scope="server", broken=False, late=0, check=False
     t_verdict = time.perf_counter()
     cur, t_quiet = e6(n, scope, qping)
     t_done = time.perf_counter()
-    row = {"c": n.name, "k": k, "kind": kind, "w": w, "broken": broken, "ok": ok, "why": why, "wrong": ok == broken if needle_kind in ("title", "chat", "block", "entity") else False,
+    row = {"c": n.name, "k": k, "kind": kind, "w": w, "broken": broken, "wping": wping, "ok": ok, "why": why, "wrong": ok == broken if needle_kind in ("title", "chat", "block", "entity") else False,
            "sent_ms": round((t_sent - t0) * 1000, 2), "verdict_ms": round((t_verdict - t0) * 1000, 2), "quiet_ms": round((t_quiet - t_verdict) * 1000, 2),
            "done_ms": round((t_done - t0) * 1000, 2), "server_tick": None}
     extra = None
@@ -571,9 +571,71 @@ def _interfere(layout, seconds, spacing, label, leaks, server_wide):
     return row
 
 
+# ---------- fail rule with async work ----------
+
+# Kind, window ticks (None: late d ticks, window d + 2), async ms range. Windows are E's, not sized for the rate.
+FAIL_MIX = [("chat", 2, None), ("title", 2, None), ("late", None, None), ("async", 4, (0, 20)), ("asyncslow", 4, (50, 150)), ("asyncsync", 4, (0, 20))]
+RULES = {"window": {"fail": "window"}, "quiet-1000ms": {"fail": "quiet", "limitMs": 1000}, "quiet-20ticks": {"fail": "quiet", "limitTicks": 20, "limitMs": 60000}}
+
+
+def fail_cell(n, rate, rule, reps, label, hang=0):
+    """reps rounds of FAIL_MIX, each kind broken in every fifth round, then `hang` requirements whose work never ends."""
+    n.S("tickrate", player=n.name, rate=rate)
+    time.sleep(0.5)
+    rnd = random.Random(rate * 7 + len(rule))
+    rows = []
+    for r in range(reps):
+        for kind, w, ms in FAIL_MIX:
+            late = 0
+            if kind == "late":
+                late = rnd.randint(1, 8)
+                w = late + 2
+            params = dict(RULES[rule])
+            if ms:
+                params["asyncMs"] = rnd.randint(*ms)
+            row = requirement(n, n.k, kind, w, scope="player", broken=r % 5 == 4, late=late, params=params)
+            n.k += 1
+            row.update({"rate": rate, "rule": rule, "asyncMs": params.get("asyncMs")})
+            rows.append(row)
+    for _ in range(hang):
+        row = requirement(n, n.k, "hang", 4, scope="player", broken=False, params=dict(RULES[rule]))
+        n.k += 1
+        qi = n.S("d.qinfo", _dispatch="direct", qping=row["wping"])
+        # A hung requirement must fail: the effect never comes because the work never ends.
+        row.update({"rate": rate, "rule": rule, "wrong": row["ok"], "hung_cancelled": qi.get("hung"), "quiet_wait_ms": qi.get("quietMicros", 0) / 1000})
+        rows.append(row)
+    save_raw(f"{label}-{rule}-r{rate}", rows)
+    return rows
+
+
+def fail_summary(rows, rate, rule):
+    out = {"rate": rate, "rule": rule, "load1": round(os.getloadavg()[0], 1), "kinds": {}}
+    for kind in [k for k, _, _ in FAIL_MIX] + ["hang"]:
+        mine = [r for r in rows if r["kind"] == kind]
+        if not mine:
+            continue
+        good, bad = [r for r in mine if not r["broken"]], [r for r in mine if r["broken"]]
+        out["kinds"][kind] = {"n": len(mine), "wrong_pass_side": sum(r["wrong"] for r in good), "wrong_fail_side": sum(r["wrong"] for r in bad),
+                              "pass_ms": stat([r["verdict_ms"] for r in good if r["ok"]]), "fail_ms": stat([r["verdict_ms"] for r in mine if not r["ok"]]),
+                              "hung_cancelled": sum(r.get("hung_cancelled") or 0 for r in mine) if kind == "hang" else None}
+    return out
+
+
+def failrule(rates=(20, 200, 400), rules=tuple(RULES), reps=50, hang=10, label=None):
+    label = label or f"fail-{int(time.time())}"
+    with Fleet([1], join="ready-gate", spacing=64, rate=200, label=label) as f:
+        n = f.nodes[0]
+        for rate in rates:
+            for rule in rules:
+                rows = fail_cell(n, rate, rule, reps, label, hang=hang if rule != "window" else 0)
+                record("failrule", label=label, **fail_summary(rows, rate, rule))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["fleet", "interfere"])
+    ap.add_argument("what", choices=["fleet", "interfere", "failrule"])
+    ap.add_argument("--reps", type=int, default=50)
+    ap.add_argument("--rates", default="20,200,400")
     ap.add_argument("--layout", default="1")
     ap.add_argument("--seconds", type=float, default=15)
     ap.add_argument("--rate", type=int, default=200)
@@ -584,7 +646,9 @@ def main():
     a = ap.parse_args()
     layout = [int(x) for x in a.layout.split("x")]
     try:
-        if a.what == "fleet":
+        if a.what == "failrule":
+            failrule(tuple(int(x) for x in a.rates.split(",")), reps=a.reps)
+        elif a.what == "fleet":
             fleet_cell(layout, a.seconds, a.rate, a.scope.split(","), a.join, a.spacing)
         else:
             leaks = [tuple(x.split(":")) for x in a.leaks.split(",")] if a.leaks else LEAKS
