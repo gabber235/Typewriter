@@ -91,6 +91,8 @@ data class SetupPart(
     val path: List<String>,
     val type: KClass<out Resource>,
     val definition: TypeDefinitionId,
+    /** The type arguments of a generic resource, in declaration order; empty for any other. */
+    val arguments: List<TypeUse>,
     val owner: SetupOwner,
     /** The owning list field of [owner] the part is inserted into, for example a book's `pages`. */
     val list: ValuePath,
@@ -175,6 +177,7 @@ class SetupList<in E : Resource> internal constructor(
         key: String,
         type: KClass<T>,
         definition: TypeDefinitionId,
+        arguments: List<TypeUse>,
         ownerField: SetupFieldName?,
         placementField: String?,
         fields: (PartScope<T>) -> F,
@@ -187,7 +190,20 @@ class SetupList<in E : Resource> internal constructor(
         val placement = placementField?.let { scope.explicitPlacement ?: layout.next(placed++) }
         build.fill(
             slot,
-            SetupPart(scope.id, path, type, definition, owner, field, item, ownerField, placementField, placement, scope.assigned.toMap()),
+            SetupPart(
+                scope.id,
+                path,
+                type,
+                definition,
+                arguments,
+                owner,
+                field,
+                item,
+                ownerField,
+                placementField,
+                placement,
+                scope.assigned.toMap(),
+            ),
         )
         return handles
     }

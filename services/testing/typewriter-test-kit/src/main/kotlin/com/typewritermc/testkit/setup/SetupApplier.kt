@@ -116,7 +116,7 @@ class SetupApplier(
 
 /** The record an author's create would carry for [part], with its owner link left for the insert to fill. */
 private fun SetupEdit.record(part: SetupPart): AuthoringRecord {
-    val record = CatalogEncoder(checked, nativeBindings).record(part.definition.use(), part.construct())
+    val record = CatalogEncoder(checked, nativeBindings).record(part.definition.use(part.arguments), part.construct())
     return part.ownerField?.let { record.with(it.serialized, DataValue.UNFILLED) } ?: record
 }
 
