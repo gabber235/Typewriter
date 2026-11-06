@@ -21,10 +21,14 @@ dependencies {
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))
     implementation(project(":engine-api"))
+    implementation(project(":formula"))
     implementation(libs.surrealdb.java.sdk)
     implementation(libs.kotlin.serialize.json)
 
     testFixturesApi(project(":typewriter-test-kit"))
+    testFixturesApi(project(":formula"))
+    // Realm tests load the engine core artifact the way a deployment lists it, so its core pages are real.
+    testFixturesApi(project(":engine-core"))
     testFixturesApi(project(":loader-api"))
     testFixturesApi(testFixtures(project(":messaging")))
     testFixturesApi(testFixtures(project(":file-transfer")))

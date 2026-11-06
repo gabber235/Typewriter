@@ -63,6 +63,7 @@ includeProject("engine-conformance-composite", "runtime/engine/capabilities/conf
 includeProject("engine-panel", "runtime/engine/runtimes/panel")
 includeProject("engine-paper", "runtime/engine/runtimes/paper")
 includeProject("engine-conformance", "runtime/engine/runtimes/conformance")
+includeProject("formula", "runtime/formula")
 includeProject("realm", "runtime/realm")
 includeProject("basic-extension", "extensions/basic")
 includeProject("conformance-extension", "extensions/conformance")

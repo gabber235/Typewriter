@@ -9,6 +9,7 @@ import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.engine.pages.StaticPage
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.library.Book
@@ -57,6 +58,9 @@ data class RealmCatalog(
     }
 
     companion object {
+        /** The engine core artifact, which declares the core pages. */
+        val engineCore = GeneratedProviderArtifact(ArtifactId("engine-core"), StaticPage::class.codeSource())
+
         /** The extension artifact [id] whose classes include [type], loaded the way Realm loads extensions. */
         fun extension(
             id: String,

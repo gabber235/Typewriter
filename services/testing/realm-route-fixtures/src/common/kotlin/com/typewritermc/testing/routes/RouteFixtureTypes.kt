@@ -11,6 +11,8 @@ import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmCommandOutcome
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.elements.Entry
+import com.typewritermc.engine.pages.StaticEntry
+import com.typewritermc.engine.pages.StaticPage
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.Page
@@ -61,6 +63,14 @@ data class FixtureTimelineEntry(
     override val name: String = "",
     override val placement: TimelineEntryPlacement,
 ) : Entry
+
+/** A real entry of the core static page, so content can sit next to it on the same page. */
+@TypewriterType(id = "d3f0562dba934f4290da338f21302315")
+data class FixtureStaticEntry(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+) : StaticEntry
 
 /** The payload and result of the fixture capabilities: a text the capability echoes or reacts to. */
 @TypewriterType(id = "5b0f7e2a9c3d4e1f8a6b2c4d6e8f0a12")
