@@ -20,6 +20,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Keys | One key language across the panel; a key keeps its meaning everywhere |
 | Actions | As context specific as possible |
 | Alignment | Trials of three options per element, to check the rules against the maintainer's feel |
+| Holds | Discard, Use saved, and Decline need a hold; Publish and cancelling one's own request are one press |
 | Fix order | Broken motion on everyday actions is fixed first, with focus and keys |
 | Motion from services | Named moves as the easy default; developers keep full control over duration and curve; good motion controls in the realm make it easy to add |
 | Others' changes | Values wave slowly; adds and removes use their usual moves plus a chip with who and why, later an avatar |
@@ -56,9 +57,7 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - A replacement for `Ctrl+Esc` as cancel, and the full key map per scope.
 - Undo depends on realm commit history (`docs/design/authoring-writes.md`), which is not built.
 - Golden pages: none exist, since no page meets the target yet.
-- Whether declining a join request or cancelling one's own needs a hold.
 - What "keep the user's work" means while a realm is suspended, where changes are paused.
-- Using saved in a conflict discards work: whether it needs a hold.
 - The demo does not yet show hover or loading.
 
 ## Trials
