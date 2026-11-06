@@ -103,7 +103,7 @@ All pending migrations run in the publication transaction, together with switchi
 
 - Any failure changes nothing: no data is converted and the old content stays live. The publication shows the error.
 - Change operations are applied by the realm's storage, which needs no engine running, so offline protagonists are migrated too.
-- After the commit, `Changed<X>` handlers run as for any other transaction.
+- After the commit, `Changed<T>` handlers run as for any other transaction.
 - Running interactions see the new content through hot publish (see [interactions.md](interactions.md)).
 
 Rolling a production realm back to an earlier revision is a realm mode feature, not part of a migration: see [../vision/realm-modes.md](../vision/realm-modes.md).

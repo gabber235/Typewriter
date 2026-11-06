@@ -128,15 +128,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Confirm`**: intent event for advancing, naming the step whose key offer took the press. See [dialogue.md](dialogue.md#6-the-key).
 
-**`Configuration<C>`**: root resource holding a `Partial<C>`, one named version of an extension's record. See [configurations.md](configurations.md).
+**`Configuration<T>`**: root resource holding a `Partial<T>`, one named version of an extension's record. See [configurations.md](configurations.md).
 
-**`Configured<C>`**: entry field that selects a `Configuration<C>` and overrides single values; its `value` is the full `C`, worked out at publish. See [configurations.md](configurations.md).
+**`Configured<T>`**: entry field that selects a `Configuration<T>` and overrides single values; its `value` is the full `T`, worked out at publish. See [configurations.md](configurations.md).
 
 **`ConfigurationHolder`**: a resource in the owner chain that selects configurations: `Book`, `Page`, `RealmRoot`. The root's selection is the default. See [configurations.md](configurations.md).
 
-**Configured event**: an event with a configuration type parameter (`Tick<C : TickConfig>`) whose source only emits for configurations some handler can run for. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+**Configured event**: an event with a configuration type parameter (`Tick<Config : TickConfig>`) whose source only emits for configurations some handler can run for. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
-**`ConfiguredSource<E, C>`**: source interface whose `open(demand: Demand<C>, sink: Sink<E>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+**`ConfiguredSource<E, Config>`**: source interface whose `open(demand: Demand<Config>, sink: Sink<E>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
 **`ContentCommandRan`**: event a content command node runs; its handler fires the node's triggers with the arguments as context. See [commands.md](commands.md#end-to-end-in-content).
 
@@ -174,7 +174,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`demand` and `mirrors` KV buckets**: per realm NATS KV buckets through which a reader on one engine demands a mirror and producers on other engines publish its values. See [live-data.md](live-data.md#demand-across-engines).
 
-**`Demand<C>`**: source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. See [events-and-handlers.md](events-and-handlers.md#demand).
+**`Demand<Config>`**: source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. See [events-and-handlers.md](events-and-handlers.md#demand).
 
 **Derive**: a pure function over tracked inputs whose result type decides what it maintains. See [overview.md](overview.md#derive).
 
@@ -268,7 +268,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Grace (session)**: how long a session survives without an engine reporting it, set per engine kind (about 10 seconds for Minecraft). See [live-data.md](live-data.md#session).
 
-**`EntryGroup<X>`**: the group identity of our group entries, (entry, key), so deleting the entry ends its groups. See [interactions.md](interactions.md#groupings-and-membership).
+**`EntryGroup<K>`**: the group identity of our group entries, (entry, key), so deleting the entry ends its groups. See [interactions.md](interactions.md#groupings-and-membership).
 
 **`GroupIdentity`**: catalog parent of what members belong to, with stored data and derived members: `EntryGroup` and `Snapshot`, and an extension's own. See [interactions.md](interactions.md#groupings-and-membership).
 
@@ -278,7 +278,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`FieldGroup`**: a presentation's statement of which group its field belongs in, so `remainingFields()` needs no knowledge of the type. See [configurations.md](configurations.md#general-parts).
 
-**`GroupEntry<K>`**: a grouping; `K` is picked, `X` means one group per player and `List<X>` means several. See [interactions.md](interactions.md#groupings-and-membership).
+**`GroupEntry<K>`**: a grouping; `K` is picked, a plain `K` means one group per player and a list such as `List<Team>` means several. See [interactions.md](interactions.md#groupings-and-membership).
 
 **Grouping**: a way to bucket protagonists, declared by a `FormulaGroupEntry` or a `ManualGroupEntry`. See [interactions.md](interactions.md#groupings-and-membership).
 
@@ -524,7 +524,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`RealmCheckProvider`**: the existing realm check interface through which core and extensions report findings. See [live-data.md](live-data.md#checks).
 
-**`Ref<E, T>`**: an authored relation to resource `T` through endpoint `E` of a `@ReferenceContract`; runtime values name the entry type directly instead (`npc: NpcEntry`). See [stored-data.md](stored-data.md#identity).
+**`Ref<Endpoint, T>`**: an authored relation to resource `T` through endpoint `E` of a `@ReferenceContract`; runtime values name the entry type directly instead (`npc: NpcEntry`). See [stored-data.md](stored-data.md#identity).
 
 **`Removed<T>`**: lifecycle event fired when a value is removed; for mirrors it cancels suspended handlers that resolved it. See [stored-data.md](stored-data.md#lifecycle-events).
 
@@ -610,7 +610,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Tick pipeline**: how chains run: starts queue and merge during a tick, one worker runs them at tick end, world changes share one owner visit, and only `require` guards wait for the realm. See [events-and-handlers.md](events-and-handlers.md#tick-pipeline).
 
-**`Tick<C : TickConfig>`**: configured capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+**`Tick<Config : TickConfig>`**: configured capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
 **Trigger**: an ordinary handler on a world event that fires an entry's links. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 

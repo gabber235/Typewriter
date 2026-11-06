@@ -624,12 +624,12 @@ Interaction fields read `group`, `chain`, and `protagonist` through `Interaction
 
 A **grouping** is a way to bucket protagonists by a key: island 42, team red. Decided 2026-11-05 in the layer 11 rough design. There are two kinds of group entry, because there are two ways to land in a group: outside facts decide it, or something assigns you.
 
-The entry's picked type argument `K` decides everything (decided 2026-11-05), chosen with the same editor as `Definition<T>`. `X` means one group per player, and `List<X>` means several. `X` can be a creator type, such as a union.
+The entry's picked type argument `K` decides everything (decided 2026-11-05), chosen with the same editor as `Definition<T>`. A plain `K` such as `Team` means one group per player, and a list such as `List<Team>` means several. `K` can be a creator type, such as a union.
 
 ```kotlin
 interface GroupEntry<K> : StaticEntry
 
-// Outside facts decide: the formula is checked against K. With X?, null means in no group.
+// Outside facts decide: the formula is checked against K. With a nullable `K` such as `Team?`, null means in no group.
 @TypewriterType(id = FORMULA_GROUP_ENTRY_TYPE_ID)
 class FormulaGroupEntry<K>(/* page, name, placement */ val key: Var<K, MemberContext>) : GroupEntry<K>
 
@@ -637,17 +637,17 @@ class FormulaGroupEntry<K>(/* page, name, placement */ val key: Var<K, MemberCon
 @TypewriterType(id = MANUAL_GROUP_ENTRY_TYPE_ID)
 class ManualGroupEntry<K>(/* page, name, placement */) : GroupEntry<K>
 
-// X is bound from the group's K.
-class JoinGroupEntry<X>(
+// K is bound from the group's K (its element type when the group's K is a list).
+class JoinGroupEntry<K>(
     /* page, name, placement, triggers */
     val group: Ref<ManualGroupEntry<*>>,
-    val key: Var<X, MemberContext>,
+    val key: Var<K, MemberContext>,
 ) : ActionEntry
 
-class LeaveGroupEntry<X>(
+class LeaveGroupEntry<K>(
     /* page, name, placement, triggers */
     val group: Ref<ManualGroupEntry<*>>,
-    val key: Var<X?, MemberContext>,   // null: every group of this entry
+    val key: Var<K?, MemberContext>,   // null: every group of this entry
 ) : ActionEntry
 ```
 
@@ -656,7 +656,7 @@ A group identity says what members belong to. Our two entries use `EntryGroup`; 
 ```kotlin
 interface GroupIdentity : Identity
 
-data class EntryGroup<X>(val entry: GroupEntry<*>, val key: X) : GroupIdentity
+data class EntryGroup<K>(val entry: GroupEntry<*>, val key: K) : GroupIdentity
 
 // ContinueForEveryone. Ends with the interaction.
 data class Snapshot(val interaction: Interaction) : GroupIdentity
@@ -677,7 +677,7 @@ fun join(entry: ManualGroupEntry<*>, who: Protagonist, key: Any) {
 }
 
 // FormulaGroupEntry: core compares with what is stored, not with the old formula value,
-// because the formula can differ after a rejoin. keys() makes a Set from X? or a List,
+// because the formula can differ after a rejoin. keys() makes a Set from a nullable K or a List,
 // so one and many are the same code.
 @Handler
 fun Added<Watched<K>>.sync(group: Candidate<FormulaGroupEntry<K>>, who: Protagonist) =

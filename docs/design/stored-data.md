@@ -17,7 +17,7 @@ An identity is something stored data can be about. Identities are the only types
 | `Session` | One connection of a protagonist (see [live-data.md](live-data.md)). |
 | `Engine` | One engine, by its stable topology engine id; survives restarts and ends when the engine leaves the topology (see [live-data.md](live-data.md#session)). |
 | An entry type (`NpcEntry`) | A published entry: a `Resource` typed field in a runtime value (stored data, holds, live values, events) is that entry's identity, stored as its `ResourceId` plus its instance path, read as the current published version, and ended when the entry is unpublished. Authored fields keep `Ref<Contract.Side, T>`; KSP rejects a `Resource` typed field in an authored type. |
-| `BoundPath<X>` | A place in authored content: an entry plus a path through fields, list items, and map rows, in its portable `value_location` form. Reads the current published value. Only the location is its identity. |
+| `BoundPath<T>` | A place in authored content: an entry plus a path through fields, list items, and map rows, in its portable `value_location` form. Reads the current published value. Only the location is its identity. |
 | `GroupIdentity` | What members belong to. Our group entries use `EntryGroup(entry, key)`, such as `EntryGroup(islands, "42")`, so it ends with the entry. Each group entry exports its own type through `bind` (`islands` gives `Island`). `Snapshot(interaction)` ends with the interaction. |
 | Book instance | One instance of a book, a path on the identity of each [copy](formula-language.md#copies-at-publish). |
 
@@ -99,7 +99,7 @@ Every stored value, whether written by a derive, by a step, or by code, emits:
 | `Changed<T>(old, new)` | The value at those keys changes. |
 | `Removed<T>` | The value is removed (cleared, or a key identity ended), or a live handler stops tracking it (`because`). |
 
-`Changed<D>` also works on a storage declaration: `Changed<Reputation>`, or `Changed<Variable<K, T>>` for a creator variable. `Changed` handlers run after the commit of the transaction that caused the change. `because` is defined in [live-data.md](live-data.md#added-changed-removed-and-because).
+`Changed<T>` also works on a storage declaration: `Changed<Reputation>`, or `Changed<Variable<K, T>>` for a creator variable. `Changed` handlers run after the commit of the transaction that caused the change. `because` is defined in [live-data.md](live-data.md#added-changed-removed-and-because).
 
 ### Reading
 
@@ -126,7 +126,7 @@ Stored values are indexed per type, so finding every value of a type, or every v
 
 The guideline is **store moments, not counters**: `startedAt`, `skippedAt`. Steps then rarely write, and a restarted step is a real resume.
 
-All stored data is owned by the realm, also the values of a running step, and every write is a transaction (decided 2026-11-03). There is no single writer: the realm serializes writes, and a generation check drops a stale write. Fast changing state that needs no saving lives in a `Runtime`. Engines tell the realm which stored keys they currently demand and receive `Changed<X>` pushes in commit order on their own subject (see [live-data.md](live-data.md#lost-pushes)).
+All stored data is owned by the realm, also the values of a running step, and every write is a transaction (decided 2026-11-03). There is no single writer: the realm serializes writes, and a generation check drops a stale write. Fast changing state that needs no saving lives in a `Runtime`. Engines tell the realm which stored keys they currently demand and receive `Changed<T>` pushes in commit order on their own subject (see [live-data.md](live-data.md#lost-pushes)).
 
 Stored data and `Due` are never put on NATS streams: they need transactions and exactly once delivery, which the realm owns.
 
@@ -186,7 +186,7 @@ The engine predicts and the realm decides (decided 2026-11-04):
 
 So a line like `if (quest.coins > 100) quest.rank = gold` always decides on the committed value, never on a stale one. The realm has the extension artifacts to do this (`DefaultRealmRuntimeFactory.kt:129`). How long the realm keeps old revisions for an engine still on one during a rollout is open for the plan.
 
-A transaction fails as a whole when a `require` guard is false, or when evaluating the formula throws (a provider error, the recursion limit). A failed transaction applies nothing. `Changed<X>` handlers run only after a successful commit.
+A transaction fails as a whole when a `require` guard is false, or when evaluating the formula throws (a provider error, the recursion limit). A failed transaction applies nothing. `Changed<T>` handlers run only after a successful commit.
 
 ### Transaction functions
 
@@ -373,7 +373,7 @@ Kotlin entries see plain lists without item ids; the runtime gets the ids from `
 
 A timer is a stored value, so a formula can read when it elapses, through the exports of `stored()` ([formula-language.md](formula-language.md#scope-and-exports)). Time left and next reset read the same way, which keeps what legacy offers as `time.expires` (`TimedFactEntry`, `CronFactEntry`, `CountdownFact`). How a formula names a reaction's timer is for the layer 7 plan.
 
-`Every` is a configured source, like `Tick<C>` (decided 2026-11-04). Nothing writes to the value when a creator publishes an `Every`, so the source arms its timer. It compares every published `Every` with its timer at startup and after each publish, and writes only differences, so a lost row heals and a schedule edit applies. The core event runtime already recomputes `Demand<C>` on publish ([events-and-handlers.md](events-and-handlers.md#configured-events)). An extension's own timed reaction can reuse `ReactionTimer` and the handler: a type, a way to arm, and nothing else.
+`Every` is a configured source, like `Tick<Config>` (decided 2026-11-04). Nothing writes to the value when a creator publishes an `Every`, so the source arms its timer. It compares every published `Every` with its timer at startup and after each publish, and writes only differences, so a lost row heals and a schedule edit applies. The core event runtime already recomputes `Demand<Config>` on publish ([events-and-handlers.md](events-and-handlers.md#configured-events)). An extension's own timed reaction can reuse `ReactionTimer` and the handler: a type, a way to arm, and nothing else.
 
 ```kotlin
 class EverySource : ConfiguredSource<Elapsed<ReactionTimer<*, *>>, Every<*, *>> {
@@ -395,7 +395,7 @@ fun armEvery(place: BoundPath<Every<*, *>>, schedule: Schedule) {
 }
 ```
 
-The `Demand<C>` API (`watch`, `(place, every)`) and how the event names its configuration are for the layer 7 plan. A midnight between the content switch and the arming is skipped once. `AfterWrite` needs no source: it arms on the next write, and a schedule edit leaves armed timers at their old time.
+The `Demand<Config>` API (`watch`, `(place, every)`) and how the event names its configuration are for the layer 7 plan. A midnight between the content switch and the arming is skipped once. `AfterWrite` needs no source: it arms on the next write, and a schedule edit leaves armed timers at their old time.
 
 Each key is its own transaction, so a refusal or conflict affects only that key. The run is not one moment: at many keys, values change a little apart.
 
@@ -554,7 +554,7 @@ fun Added<SwordOwed>.give(owed: SwordOwed, inventory: HasInventory) {
 
 The realm and the inventory cannot commit together, so a crash between the two steps costs something. This is the pattern to teach and the one the layer 6 demo uses: claim first, so a crash can lose a reward but never duplicate one. It is not a framework rule; an extension may choose the other order.
 
-A realm check warns about live handlers on `Changed<X>` when X can change offline.
+A realm check warns about live handlers on `Changed<T>` when T can change offline.
 
 ## Checks
 
@@ -566,7 +566,7 @@ The stored data checks from the one check list:
 | KSP | build error | A live parameter on an `Elapsed<D>` handler. |
 | Realm | error | Keys of a stored reader that cannot be filled from scope. |
 | Realm | error | A cycle between derives. |
-| Realm | warning | A live handler on `Changed<X>` when X can change offline. |
+| Realm | warning | A live handler on `Changed<T>` when T can change offline. |
 | Realm | warning | A stored derive reading mirrors (not offline capable). |
 
 Errors block publication; warnings never do.

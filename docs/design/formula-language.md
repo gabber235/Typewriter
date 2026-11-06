@@ -82,14 +82,14 @@ data class FormulaReference(
 )
 
 @TypewriterType(id = VAR_TYPE_ID)
-sealed interface Var<T, F> {
-    data class Value<T, F>(val value: T) : Var<T, F>
-    data class Computed<T, F>(val formula: F) : Var<T, F>
+sealed interface Var<T, C> {
+    data class Value<T, C>(val value: T) : Var<T, C>
+    data class Computed<T, C>(val formula: C) : Var<T, C>
 }
 ```
 
 - Every function type is stored as a `Formula` record: the checked catalog resolves `TypeUse.function` to `Formula`'s schema, while the function type stays the type used for checking. Names in `source` resolve against where the value sits, so no captured values are stored.
-- `Var<T, F>` is an existing union (abstract record plus `parents`), so the plain and formula toggle is picking a concrete form (`concreteForms`), the stored form is `NamedValue.actual_type`, and Kotlin decodes it like any sealed type. A plain value nests one level: `Var.Value { value: 50 }`.
+- `Var<T, C>` is an existing union (abstract record plus `parents`), so the plain and formula toggle is picking a concrete form (`concreteForms`), the stored form is `NamedValue.actual_type`, and Kotlin decodes it like any sealed type. A plain value nests one level: `Var.Value { value: 50 }`.
 - KSP lowers the Kotlin context slot: `Var<Int, MemberContext>` becomes `Var<Int, context(chain: Chain, engine: Engine, protagonist: Protagonist) () -> Int>`, and `Var<Int>` becomes `Var<Int, () -> Int>`. This is one converter rule, next to the one for `Ref`.
 - Pure only contexts (`PublishScope`, `TypeScope`) provide no context parameters and lower to `() -> T`. Only context parameters reach stored or live data, so a function type without context is pure by construction (see [Where formulas run](#where-formulas-run)).
 - A function typed `T` needs no special case in storage: `Var.Value.value` is already a `Formula`, so its editor is the body editor with no formula switch.
@@ -780,7 +780,7 @@ val key = FormulaKey(part, valuesOf(reads.context))
 
 ### Interpreter
 
-The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<X>` and hot publish and observes watched formulas to update their `Watched<T>` mirrors, as Jane Street's Incremental does with observers. On the engine only the worker's recheck touches the graph, once per tick, so it needs no locks ([live-data.md](live-data.md#formula-changes)). Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1 and its observers in layer 2 (`WatchFormula`); engine inputs and engine observers come with layers 6 to 8.
+The formula interpreter lives in a new `formula` module (`runtime/formula`) that the realm and `engine-core` both depend on; it depends on `typewriter-api`. It parses text, checks, binds names, runs `dynamic()`, evaluates, and caches outcomes. Types KSP generates into extension code (`FormulaFunction`, `FormulaType`, `FormulaParameter`, `TypeVariable`) live in `typewriter-api`; `Var`, `Formula` and `FormulaReference` live in `typewriter-contracts`. Read tracking is one component in this module, `TrackedGraph`: inputs, memoized queries that record their reads, early cutoff, revisions, `fork` overlays, and observers that, after each batch of input changes, recheck watched queries and report changed results. The realm uses it as the query graph (inputs from `AuthoringViewDelta`, results pulled); the engine sets inputs from `Changed<T>` and hot publish and observes watched formulas to update their `Watched<T>` mirrors, as Jane Street's Incremental does with observers. On the engine only the worker's recheck touches the graph, once per tick, so it needs no locks ([live-data.md](live-data.md#formula-changes)). Engine memos are kept for watched results and LRU bounded otherwise. The realm part is built in layer 1 and its observers in layer 2 (`WatchFormula`); engine inputs and engine observers come with layers 6 to 8.
 
 Values during evaluation are plain Kotlin values, so a `FormulaFunction.invoke` calls the provider without conversion: catalog scalars use the Kotlin type KSP maps them from (`Int` is `kotlin.Int`, `Decimal` is `BigDecimal`), Kotlin catalog types are instances of their class (an enum case is its constant), `null` is `null`, and functions are closures. Content types have no Kotlin class, so they are `ContentValue` instances (a record carries its `TypeId` and its fields by name, a case its `TypeId` and payload). The realm reads stored `DataValue` into these values with the same reader the engine uses for compiled content. Creating the module is a build change the layer 1 build asks for. How evaluation records its reads, which change signal each read kind has, and the `Watched<T>` mirror are in [live-data.md](live-data.md#formula-changes).
 

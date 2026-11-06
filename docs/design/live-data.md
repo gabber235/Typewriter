@@ -63,11 +63,11 @@ Returning `null` means there is no value for that identity; a handler that asks 
 
 ### First read
 
-A tick writer also gives the first value (decided 2026-11-04): when a key becomes demanded, core runs the writer once, whatever its poll rate. So no separate first read handler exists. A tick writer is the default, since a poll cannot miss a change that fires no event, such as another plugin's `setHealth`. Event writers are for a big value, as above, or a value only an event carries; a mirror with only event writers has no value until its event fires. The first value starts tracking, so its `Added<X>` carries `because = Tracking`.
+A tick writer also gives the first value (decided 2026-11-04): when a key becomes demanded, core runs the writer once, whatever its poll rate. So no separate first read handler exists. A tick writer is the default, since a poll cannot miss a change that fires no event, such as another plugin's `setHealth`. Event writers are for a big value, as above, or a value only an event carries; a mirror with only event writers has no value until its event fires. The first value starts tracking, so its `Added<T>` carries `because = Tracking`.
 
 ### Added, Changed, Removed and Because
 
-Mirrors, holds, stored values, and watched formulas all emit the same lifecycle events: `Added<X>`, `Changed<X>(old, new)`, `Removed<X>` (decided 2026-11-04). `Added` and `Removed` carry `because: Because`, and `Changed` is always a real change:
+Mirrors, holds, stored values, and watched formulas all emit the same lifecycle events: `Added<T>`, `Changed<T>(old, new)`, `Removed<T>` (decided 2026-11-04). `Added` and `Removed` carry `because: Because`, and `Changed` is always a real change:
 
 | `Because` | Meaning | Examples |
 | --- | --- | --- |
@@ -132,7 +132,7 @@ health.orNull                 // null when there is no value
 
 Mirrors and lazy sources share one notion of demand. Demand is per identity and key, and it exists only where some reader could actually run, meaning all its other parameters are satisfiable.
 
-Demand is necessity in the `TrackedGraph` (decided 2026-11-04), not a separate registry. Every reader is an observer of the graph, and a key is demanded when a path leads from an observer to it. A derive input therefore needs no registration: the derive's own read is the path. A key that becomes necessary runs its writer and starts its producers; a key that stops being necessary waits out its grace, then fires `Removed<X>` with `because = Tracking` and stops its producers. The plan proves that the graph fits handlers on workers and several owner threads, and measures its cost per tick; if it fails, a registry can sit behind the same observer calls without changing readers.
+Demand is necessity in the `TrackedGraph` (decided 2026-11-04), not a separate registry. Every reader is an observer of the graph, and a key is demanded when a path leads from an observer to it. A derive input therefore needs no registration: the derive's own read is the path. A key that becomes necessary runs its writer and starts its producers; a key that stops being necessary waits out its grace, then fires `Removed<T>` with `because = Tracking` and stops its producers. The plan proves that the graph fits handlers on workers and several owner threads, and measures its cost per tick; if it fails, a registry can sit behind the same observer calls without changing readers.
 
 Readers that create demand:
 
@@ -141,7 +141,7 @@ Readers that create demand:
 - parameters of suspended handlers
 - queued step give up formulas
 - book conditions: every conditional book's condition, for every online protagonist from `SessionArrived` (a `Var.Value(true)` condition is no formula and creates none) ([book-composition.md](book-composition.md#6-conditions))
-- handlers on `Added<X>`, `Changed<X>`, `Removed<X>`, gated by their other parameters and by `Candidate` keys
+- handlers on `Added<T>`, `Changed<T>`, `Removed<T>`, gated by their other parameters and by `Candidate` keys
 
 A one shot handler parameter pulls once (running the writer if missing) and does not subscribe. Producing handlers run only for identities with demand; KSP knows which mirror each handler produces from its return type.
 
@@ -168,11 +168,11 @@ The check runs on the worker and reruns only when the position changes. Entering
 
 ### Demand for configured sources
 
-Configured events (`Tick<C>` and other real events with a configuration, see [events-and-handlers.md](events-and-handlers.md)) use the same demand. A source receives `Demand<C>`, the configurations that currently have a runnable handler, so only those are active:
+Configured events (`Tick<Config>` and other real events with a configuration, see [events-and-handlers.md](events-and-handlers.md)) use the same demand. A source receives `Demand<Config>`, the configurations that currently have a runnable handler, so only those are active:
 
 ```kotlin
-interface ConfiguredSource<E, C> : EnginePart {
-    fun open(demand: Demand<C>, sink: Sink<E>): AutoCloseable
+interface ConfiguredSource<E, Config> : EnginePart {
+    fun open(demand: Demand<Config>, sink: Sink<E>): AutoCloseable
 }
 ```
 
@@ -183,7 +183,7 @@ Anything that "finds" a value for a handler (the nearest NPC, NPCs in range) is 
 - A `Tick` handler gives the first value and keeps it current while it is demanded.
 - `null` means no value, so the handler is skipped.
 - Free keys iterate: a handler runs once per value.
-- `Removed<X>` cancels a suspended handler that resolved it.
+- `Removed<T>` cancels a suspended handler that resolved it.
 - A parameter nothing can produce is a build error.
 
 ```kotlin
@@ -224,8 +224,8 @@ Formulas read mirrors like any other input. On the engine, evaluation records it
 
 | Read | Change signal |
 | --- | --- |
-| stored value | `Changed<X>` |
-| mirror | `Changed<X>` of the `Live` type |
+| stored value | `Changed<T>` |
+| mirror | `Changed<T>` of the `Live` type |
 | content | hot publish |
 | `now` | timer recheck |
 
@@ -309,7 +309,7 @@ spawn.members                                                                   
 spawn.contains(it.protagonist)                                                  // one key read
 ```
 
-- A criterion is one kind of formula, so it can read anything a formula can: stored values, mirrors, also a mirror on another engine. A read that crosses engines costs publishes; the `info` finding for `All<X>` of a frequently changing mirror flags it.
+- A criterion is one kind of formula, so it can read anything a formula can: stored values, mirrors, also a mirror on another engine. A read that crosses engines costs publishes; the `info` finding for `All<T>` of a frequently changing mirror flags it.
 - `considered` is who can take a place: every game session on the network at a root, otherwise the members of its parents. Panel users take no place. `here` means this engine holds their session.
 - `considered` exists only in a criterion. `spawn.members` is a reader usable in any formula. A criterion reading its own node's members, even through other nodes, is an error at publish.
 - `spawn.contains(protagonist)` is a plain definition over the `inAudience` key read: it reads one key, so it does not publish everyone. It replaces `InAudienceFact`.
@@ -338,11 +338,11 @@ mirrors_<realm id>    <type>.<keys>                    MirrorEntry { holder: Eng
 - **Producer.** Every engine watches `demand`. A demanded key this engine can produce becomes necessary here, exactly as if a local reader had asked.
 - **Rate.** A key is published at most 4 times a second across engines, keeping the latest value; local readers stay on every tick.
 - **The browser never touches the buckets.** A tab watches through the panel engine, and the panel engine is the reader ([panel-engine-communication.md](panel-engine-communication.md), question 15).
-- **Which reads cross** (decided 2026-11-04). `All<X>` of a mirror always means every engine; there is no local variant until a reader needs one. A key read crosses when its subject is not held here. A query without a subject does not cross, because it runs on each owning engine. Live identities and traits never cross, because they have no wire form, and stored values come from the realm. A mirror with a live identity as a key or value has no wire form either, so it stays on its engine: `All<NpcPosition>` is this engine's NPCs, and `NearestNpc` of a protagonist on another engine has no value.
-- **One shot read of a key on another engine** (decided 2026-11-04). An after handler writes the demand and waits up to 1 second for the value, only on a miss (the plan measures this limit). A subject with no session skips at once; a value that does not arrive skips the handler and is logged. A verdict never waits, so KSP rejects a verdict with a non nullable mirror or stored parameter keyed by a field other than the subject; with `Health?` a miss is `null` and the verdict says what it means. A verdict that needs a value every time reads `All<X>`. The demand entry lives out its TTL unrefreshed, so a read soon after is a hit.
+- **Which reads cross** (decided 2026-11-04). `All<T>` of a mirror always means every engine; there is no local variant until a reader needs one. A key read crosses when its subject is not held here. A query without a subject does not cross, because it runs on each owning engine. Live identities and traits never cross, because they have no wire form, and stored values come from the realm. A mirror with a live identity as a key or value has no wire form either, so it stays on its engine: `All<NpcPosition>` is this engine's NPCs, and `NearestNpc` of a protagonist on another engine has no value.
+- **One shot read of a key on another engine** (decided 2026-11-04). An after handler writes the demand and waits up to 1 second for the value, only on a miss (the plan measures this limit). A subject with no session skips at once; a value that does not arrive skips the handler and is logged. A verdict never waits, so KSP rejects a verdict with a non nullable mirror or stored parameter keyed by a field other than the subject; with `Health?` a miss is `null` and the verdict says what it means. A verdict that needs a value every time reads `All<T>`. The demand entry lives out its TTL unrefreshed, so a read soon after is a hit.
 - **Remote values feed the graph.** Reads and derives rerun; lifecycle handlers run only on the engine that owns the mirror, so nothing runs twice.
 
-JetStream is right here though it was rejected for `Changed<X>` (see Lost pushes), because the realm holds the truth for stored values and a read exists. A mirror has no such store: the bucket is that read.
+JetStream is right here though it was rejected for `Changed<T>` (see Lost pushes), because the realm holds the truth for stored values and a read exists. A mirror has no such store: the bucket is that read.
 
 ## Session
 
@@ -411,7 +411,7 @@ Routing is hybrid: an event goes where a handler for it can run, and engines run
 What the realm owns goes through the realm:
 
 - stored commits
-- `Changed<X>` pushes (the realm knows which stored keys each engine demands and pushes to that engine's own subject; see Lost pushes below)
+- `Changed<T>` pushes (the realm knows which stored keys each engine demands and pushes to that engine's own subject; see Lost pushes below)
 - `Due` firing; its handlers run on the realm, and live work follows the commit ([stored-data.md](stored-data.md#due))
 
 Engines write the `sessions`, `demand`, and `mirrors` KV buckets themselves (see NATS JetStream).
@@ -431,7 +431,7 @@ Declared in `transport-routes.yaml`, realm scoped (decided 2026-11-03). Only `re
 | --- | --- | --- |
 | protagonist event | `protagonist.{principal_kind}.{principal_id}` | `EventDelivery` for every engine holding the protagonist |
 | session event | `session.{session}` | `EventResult`, and targets that are one connection |
-| stored changes | `changed.{engine}` | `Changed<X>` batches and heartbeats from the realm |
+| stored changes | `changed.{engine}` | `Changed<T>` batches and heartbeats from the realm |
 
 These addresses hold free values, so the generator gets free parameters next to its bound ones (`subject.ts:4`), granted through a wildcard token. Panel tab routes are `session.user.{user}.{session}`, granted per user, and arrive when the panel first emits events; they also need the subject family for panel to service events.
 
@@ -514,8 +514,8 @@ All checks form one list. Errors block publication; warnings and info never bloc
 | warning or error | a [domain](domains.md) value no engine reports (`KnownIds`): a warning while no engine has reported the type, an error once one has (always a warning for `OpenDomainValue`) |
 | warning | tied allow and deny priorities |
 | warning | tied hold priorities for the same hold type, holder, and key |
-| warning | live handlers on `Changed<X>` when X can change offline |
+| warning | live handlers on `Changed<T>` when T can change offline |
 | warning | stored derives reading mirrors |
 | info | mirrors always tracked because of a handler |
-| info | `All<X>` of a mirror that changes often, since it publishes every key across engines |
+| info | `All<T>` of a mirror that changes often, since it publishes every key across engines |
 | info | formulas reading polled values |

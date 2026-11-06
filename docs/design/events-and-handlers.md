@@ -93,7 +93,7 @@ The occurrence dedupe key is (connection, kind, client sequence number) when the
 
 ### Configured events
 
-An event type may take a configuration type parameter: `Tick<C : TickConfig>`. The source only emits for matching configurations and passes the configuration to the handler as `config`.
+An event type may take a configuration type parameter: `Tick<Config : TickConfig>`. The source only emits for matching configurations and passes the configuration to the handler as `config`.
 
 ```kotlin
 object EveryTick : TickConfig
@@ -108,7 +108,7 @@ How it works:
 
 1. KSP indexes every (event, configuration type) pair used by a handler.
 2. Publication turns each pair into configuration instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
-3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, C>.open(demand: Demand<C>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
+3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, Config>.open(demand: Demand<Config>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
 
 Configurations a source cannot index are not configured events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
 
@@ -116,7 +116,7 @@ Appearing and disappearing state (being in a region, being near an NPC) is not a
 
 ## Demand
 
-`Demand<C>` is the source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<X>`) follows the same rule and is described in [live-data.md](live-data.md).
+`Demand<Config>` is the source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<T>`) follows the same rule and is described in [live-data.md](live-data.md).
 
 ## Handler
 
@@ -233,7 +233,7 @@ Parameter types decide placement. The realm sees this statically, and the panel 
 
 | Handler asks for | Runs |
 | --- | --- |
-| Only stored data | Once, on an engine where the event happened; for realm delivered events (`Changed<X>`, `Due`), on the realm ([stored-data.md](stored-data.md#offline-changes)). |
+| Only stored data | Once, on an engine where the event happened; for realm delivered events (`Changed<T>`, `Due`), on the realm ([stored-data.md](stored-data.md#offline-changes)). |
 | Mirrors, no live trait | On the engine that owns the mirror, without live object access. |
 | A live trait | On the engine where its subject is live. The handler runs on a worker; the engine's trait implementation places each read and effect ([tick pipeline](#tick-pipeline)). |
 | A live trait on a group subject | On each member's engine. |
