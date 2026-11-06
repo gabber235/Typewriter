@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "probe.mod.mixin",
-  "compatibilityLevel": "JAVA_25",
-  "client": ["ChatAccessor", "HudAccessor", "MinecraftMixin", "MouseHandlerMixin", "WindowMixin"],
-  "injectors": { "defaultRequire": 1 }
-}

@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "probe.mod.n.mixin",
-  "compatibilityLevel": "JAVA_25",
-  "client": ["WakeMixin", "StepTickMixin"],
-  "injectors": { "defaultRequire": 1 }
-}
