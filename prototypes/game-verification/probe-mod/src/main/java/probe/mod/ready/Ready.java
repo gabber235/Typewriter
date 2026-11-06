@@ -145,7 +145,9 @@ public final class Ready {
     /** Start candidates, the same for every watch. */
     private static int start(Minecraft mc, Spec s) {
         int bits = 0;
-        if (mc.gui.screen() == null) bits |= SCREEN_NONE;
+        // The startup LoadingOverlay can still be fading out in the world; while it is up the client handles no
+        // keybinds (no attack, no use), and it removes itself only in a drawn frame, so a gated client keeps it.
+        if (mc.gui.screen() == null && mc.gui.overlay() == null) bits |= SCREEN_NONE;
         var toasts = (probe.mod.ready.mixin.ToastAccessor) mc.gui.toastManager();
         if (toasts.probe$visible().isEmpty() && toasts.probe$queued().isEmpty()) bits |= TOASTS_NONE;
         if (mc.level == null || mc.player == null) return bits;

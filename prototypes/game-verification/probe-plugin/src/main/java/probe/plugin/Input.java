@@ -175,7 +175,7 @@ final class Input implements Listener {
                 f.setAccessible(true);
                 var g = net.minecraft.server.level.ServerPlayerGameMode.class.getDeclaredField("destroyProgressStart");
                 g.setAccessible(true);
-                return " gt=" + f.getInt(gm) + " start=" + g.getInt(gm) + " bt=" + Bukkit.getCurrentTick();
+                return " gt=" + f.getInt(gm) + " start=" + g.getInt(gm) + " bt=" + Bukkit.getCurrentTick() + " ground=" + ((CraftPlayer) pl).getHandle().onGround();
             }
         } catch (ReflectiveOperationException e) {
             return " " + e;

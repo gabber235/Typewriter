@@ -1028,10 +1028,19 @@ def cmd_stepped(backend):
     step("n pause", run_n, n, "pause", "--seconds", "35", "--label", lbl)
 
 
+def cmd_breakstep(backend):
+    """Stepped breaking with both sides traced, three fresh rigs (the overlay race is per client start)."""
+    k_hooks(backend)
+    import n
+    n.hooks["record"] = record
+    for i in range(3):
+        step(f"n break tick {i}", run_n, n, "break", "--n", "50", "--lag", "tick", "--trace", "1", "--label", "ci")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -1078,6 +1087,8 @@ def main():
             cmd_restarts(a.backend)
         elif a.plan == "stepped":
             cmd_stepped(a.backend)
+        elif a.plan == "breakstep":
+            cmd_breakstep(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

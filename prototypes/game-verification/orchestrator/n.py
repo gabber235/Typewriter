@@ -267,6 +267,9 @@ def cmd_break(a):
     import input as I
     with Rig(f"n-{a.label}", lag=a.lag) as rig:
         b = I.Bench(Shim(rig))
+        if a.trace:
+            for op in ("break", "breakCancel"):
+                I.OPS[op][1]["trace"] = "1"
         rig.C("in.setup", focus="fake", grab="fake")
         rig.C("gate", mode=2, parkMicros=a.park)
         mode = a.mode
@@ -288,7 +291,10 @@ def cmd_break(a):
                 st1 = rig.S("n.stats", _dispatch="direct")
                 r["serverTicks"] = st1["tick"] - st0["tick"]
                 r["lagTicks"] = st1["lagTick"] - st0["lagTick"]
-                rows.append({k: r.get(k) for k in ("op", "ok", "error", "total_s", "ticks", "serverTicks", "lagTicks", "ev")})
+                keep = ("op", "ok", "error", "total_s", "ticks", "serverTicks", "lagTicks", "ev")
+                if a.trace:
+                    keep += ("pk", "notes", "late", "raw")
+                rows.append({k: r.get(k) for k in keep})
             if i % 20 == 19:
                 print(f"{i + 1} {time.time() - t0:.0f}s load {load()}", flush=True)
         if mode == "step":
@@ -307,7 +313,8 @@ def cmd_break(a):
                          "firstError": next((r["error"] for r in rs if r.get("error")), None)})
         for s in summ:
             print(s, flush=True)
-        record("break", label=a.label, mode=mode, lag=a.lag, n=a.n, wall_s=round(time.time() - t0, 1), summary=summ)
+        record("break", label=a.label, mode=mode, lag=a.lag, n=a.n, wall_s=round(time.time() - t0, 1), summary=summ,
+               **({"rows": rows} if a.trace else {}))
     leak_check()
 
 
@@ -348,7 +355,7 @@ def main(argv=None):
     add("req", cmd_req, n=200, kinds="chat,late,asyncx,async,asyncslow,asyncsync", limit_ms=1000, async_ms=-1)
     add("exact", cmd_exact, n=100)
     add("base", cmd_base, n=500, rate=200)
-    add("break", cmd_break, n=200, ops="break,breakCancel", lag="tick", mode="step")
+    add("break", cmd_break, n=200, ops="break,breakCancel", lag="tick", mode="step", trace=0)
     add("pause", cmd_pause, seconds=35)
     a = ap.parse_args(argv)
     print("uptime load", load(), flush=True)

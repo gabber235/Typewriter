@@ -166,8 +166,45 @@ public final class Input {
         s.settleLeft = s.settle;
     }
 
+    // ---- spike N: break trace, one token per client tick and per player action packet sent ----
+
+    static volatile StringBuilder trace;
+    private static Field[] gm;
+
+    /** Any thread that sends; called from ClientCommonPacketListenerImpl.send. */
+    public static void traceSent(net.minecraft.network.protocol.Packet<?> pk) {
+        StringBuilder t = trace;
+        if (t != null && pk instanceof ServerboundPlayerActionPacket a)
+            synchronized (t) { t.append(" SEND@").append(clientTicks).append(':').append(a.getAction().name()).append('#').append(a.getSequence()); }
+    }
+
+    private static void traceTick(Minecraft mc) {
+        StringBuilder t = trace;
+        if (t == null || mc.player == null) return;
+        try {
+            if (gm == null) {
+                Class<?> c = net.minecraft.client.multiplayer.MultiPlayerGameMode.class;
+                gm = new Field[] {c.getDeclaredField("isDestroying"), c.getDeclaredField("destroyProgress"), c.getDeclaredField("destroyDelay")};
+                for (Field f : gm) f.setAccessible(true);
+            }
+            HitResult hr = mc.hitResult;
+            String hit = hr == null ? "N" : hr.getType() == HitResult.Type.BLOCK ? "B" : hr.getType() == HitResult.Type.ENTITY ? "E" : "M";
+            synchronized (t) {
+                t.append(" t").append(clientTicks).append(" hit=").append(hit).append(" down=").append(mc.options.keyAttack.isDown() ? 1 : 0)
+                        .append(" grab=").append(mc.mouseHandler.isMouseGrabbed() ? 1 : 0).append(" act=").append(mc.isWindowActive() ? 1 : 0)
+                        .append(" scr=").append(mc.gui.screen() == null ? 0 : 1).append(" ov=").append(mc.gui.overlay() == null ? "-" : mc.gui.overlay().getClass().getSimpleName()).append(" miss=").append(mc.missTime)
+                        .append(" d=").append(gm[0].getBoolean(mc.gameMode) ? 1 : 0).append(" p=").append(String.format(Locale.ROOT, "%.2f", gm[1].getFloat(mc.gameMode)))
+                        .append(" dl=").append(gm[2].getInt(mc.gameMode)).append(" g=").append(mc.player.onGround() ? 1 : 0)
+                        .append(" y=").append(Math.round(mc.player.getYRot())).append('/').append(Math.round(mc.player.getXRot())).append(';');
+            }
+        } catch (ReflectiveOperationException e) {
+            t.append(" ").append(e);
+        }
+    }
+
     /** Tail of Minecraft.tick, after the tick end packet. */
     public static void tailTick(Minecraft mc) {
+        traceTick(mc);
         Script s = running;
         if (s == null || s.settleLeft < 0) return;
         if (s.settleLeft-- > 0) return;
@@ -383,6 +420,8 @@ public final class Input {
                 aim(s, mc, k, path, at);
                 BooleanSupplier gone = () -> mc.level.getBlockState(pos).isAir();
                 if (keys) {
+                    boolean traced = "1".equals(p.get("trace"));
+                    if (traced) s.now(() -> trace = new StringBuilder());
                     s.now(() -> k.button(1, true));
                     s.until("client air", gone, max);
                     s.now(() -> s.note("airAfter", clientTicks - s.startTick));
@@ -403,6 +442,11 @@ public final class Input {
                 }
                 s.waitTicks(i(p, "after", 4));
                 s.now(() -> s.note("blockAfter", BuiltInRegistries.BLOCK.getKey(mc.level.getBlockState(pos).getBlock()).toString()));
+                s.now(() -> {
+                    StringBuilder t = trace;
+                    trace = null;
+                    if (t != null) s.note("trace", t.toString().trim());
+                });
             }
             case "use" -> {
                 int hold = i(p, "hold");

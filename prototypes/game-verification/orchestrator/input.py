@@ -104,7 +104,7 @@ def collapse(seq):
 
 
 def norm(e, ent, tok=None):
-    d = re.sub(r" gt=\d+ start=\d+ bt=\d+", "", re.sub(r"held=\d+", "held=N", e["d"]))
+    d = re.sub(r" gt=\d+ start=\d+ bt=\d+( ground=\w+)?", "", re.sub(r"held=\d+", "held=N", e["d"]))
     if tok:
         d = d.replace(tok, "TOK")
     if ent is not None:
@@ -175,7 +175,7 @@ class Bench:
         kinds = list(dict.fromkeys(e.split(":", 1)[0] for e in ev + ev_async))
         return {"op": name, "path": path, "ok": ok, "held": held, "kinds": kinds, "scriptOk": res.get("ok"), "ev": ev, "evAsync": ev_async, "late": late, "pk": pk, "notes": notes,
                 "input_s": round(t1 - t0, 4), "mark_s": round(t2 - t1, 4), "total_s": round(t2 - t0, 4),
-                "ticks": res.get("ticks"), "threads": collapse([e["th"] for e in body if e["k"] == "ev"])}
+                "ticks": res.get("ticks"), "raw": [f'{e["tick"]} {e["th"]} {e["k"]} {e["n"]} {e["d"]}' for e in log if e["n"] not in ("MovePlayer",)], "threads": collapse([e["th"] for e in body if e["k"] == "ev"])}
 
     def wait_mark(self, seq0, mark, timeout=10):
         deadline = time.time() + timeout
@@ -192,7 +192,7 @@ def renorm(rows):
     """Offline re-judging: typed prefixes of the unique token ('t1', 't12', ...) count as one name."""
     tokre = re.compile(r"\bt\d+\b|\bt\b(?=[ '\]]|$)")
     def fix(xs):
-        return [re.sub(r" gt=\d+ start=\d+ bt=\d+", "", tokre.sub("tN", re.sub(r"held=\d+", "held=N", x))) for x in xs]
+        return [re.sub(r" gt=\d+ start=\d+ bt=\d+( ground=\w+)?", "", tokre.sub("tN", re.sub(r"held=\d+", "held=N", x))) for x in xs]
     for r in rows:
         r["ev"] = collapse(fix(r.get("ev", [])))
         r["evAsync"] = sorted(fix(r.get("evAsync") or []))
