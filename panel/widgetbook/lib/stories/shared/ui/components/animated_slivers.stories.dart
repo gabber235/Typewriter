@@ -14,93 +14,80 @@ Widget animatedSectionsUseCase(BuildContext context) {
     options: const [0.0, 24.0, 64.0],
     initialOption: 24.0,
   );
-  final reducedMotion = context.knobs.boolean(label: "Reduce motion");
   return Story(
-    const [],
-    at: PanelLocation.component(
-      AnimatedSectionsStory(gap: gap, reducedMotion: reducedMotion),
-    ),
+    context.knobs.traits("Motion", {
+      "Full": const [],
+      "Reduced": const [reducedMotion],
+    }),
+    at: PanelLocation.component(AnimatedSectionsStory(gap: gap)),
   );
 }
 
 class AnimatedSectionsStory extends HookWidget {
-  const AnimatedSectionsStory({
-    this.gap = 24,
-    this.reducedMotion = false,
-    super.key,
-  });
+  const AnimatedSectionsStory({this.gap = 24, super.key});
   final double gap;
-  final bool reducedMotion;
   @override
   Widget build(BuildContext context) {
     final items = useState(<int>[1, 2]);
     final next = useRef(3);
-    return Builder(
-      builder: (context) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(disableAnimations: reducedMotion),
-        child: SizedBox(
-          width: 440,
-          height: 540,
-          child: Column(
+    return SizedBox(
+      width: 440,
+      height: 540,
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () =>
-                        items.value = [...items.value, next.value++],
-                    child: const Text("Add request"),
-                  ),
-                  TextButton(
-                    onPressed: () => items.value = [],
-                    child: const Text("Clear"),
-                  ),
-                ],
+              TextButton(
+                onPressed: () => items.value = [...items.value, next.value++],
+                child: const Text("Add request"),
               ),
-              Expanded(
-                child: CustomScrollView(
-                  slivers: [
-                    SliverStaggerScope(
-                      sliver: SliverMainAxisGroup(
-                        slivers: [
-                          SliverAnimatedContent(
-                            child: items.value.isEmpty
-                                ? null
-                                : const SectionTitle(title: "Join requests"),
-                          ),
-                          SliverAnimatedGap(
-                            extent: items.value.isEmpty ? 0 : gap,
-                          ),
-                          AnimatedSliverList<int>(
-                            items: items.value,
-                            identity: (item) => item,
-                            itemBuilder: (context, item) => ListTile(
-                              title: Text("Join request $item"),
-                              trailing: IconButton(
-                                tooltip: "Remove",
-                                onPressed: () => items.value = items.value
-                                    .where((value) => value != item)
-                                    .toList(),
-                                icon: const Icon(Icons.close),
-                              ),
-                            ),
-                          ),
-                          SliverAnimatedContent(
-                            child: items.value.isEmpty
-                                ? const EmptyState(
-                                    title: "No join requests",
-                                    description: "Requests to join appear here",
-                                  )
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              TextButton(
+                onPressed: () => items.value = [],
+                child: const Text("Clear"),
               ),
             ],
           ),
-        ),
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverStaggerScope(
+                  sliver: SliverMainAxisGroup(
+                    slivers: [
+                      SliverAnimatedContent(
+                        child: items.value.isEmpty
+                            ? null
+                            : const SectionTitle(title: "Join requests"),
+                      ),
+                      SliverAnimatedGap(extent: items.value.isEmpty ? 0 : gap),
+                      AnimatedSliverList<int>(
+                        items: items.value,
+                        identity: (item) => item,
+                        itemBuilder: (context, item) => ListTile(
+                          title: Text("Join request $item"),
+                          trailing: IconButton(
+                            tooltip: "Remove",
+                            onPressed: () => items.value = items.value
+                                .where((value) => value != item)
+                                .toList(),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ),
+                      ),
+                      SliverAnimatedContent(
+                        child: items.value.isEmpty
+                            ? const EmptyState(
+                                title: "No join requests",
+                                description: "Requests to join appear here",
+                              )
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
