@@ -1,6 +1,8 @@
 package com.typewritermc.types.catalog
 
+import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.closedCases
+import com.typewritermc.types.parts
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -29,6 +31,7 @@ private fun TypeUse.referencedDefinitions(): Set<TypeDefinitionId> =
         is TypeUse.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap(TypeUse::referencedDefinitions)
         is TypeUse.NullableWrapper -> value.value.referencedDefinitions()
         is TypeUse.ScalarWrapper -> emptySet()
+        is TypeUse.FunctionWrapper -> FORMULA_USE.referencedDefinitions() + value.parts.flatMap(TypeUse::referencedDefinitions)
         else -> unknownVariant(this)
     }
 
@@ -38,8 +41,12 @@ private fun TypeTemplate.referencedDefinitions(): Set<TypeDefinitionId> =
         is TypeTemplate.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap(TypeTemplate::referencedDefinitions)
         is TypeTemplate.NullableWrapper -> value.value.referencedDefinitions()
         is TypeTemplate.ScalarWrapper -> emptySet()
+        is TypeTemplate.FunctionWrapper -> FORMULA_USE.referencedDefinitions() + value.parts.flatMap(TypeTemplate::referencedDefinitions)
         else -> unknownVariant(this)
     }
+
+private fun skirout.editor.v1.type_catalog.NamedTypeUse.referencedDefinitions(): Set<TypeDefinitionId> =
+    TypeUse.NamedWrapper(this).referencedDefinitions()
 
 internal fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> {
     val roots =

@@ -16,6 +16,7 @@ import com.typewritermc.presentation.PresentationTyping
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
 import com.typewritermc.presentation.validateInheritableNodes
+import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
@@ -30,9 +31,12 @@ import com.typewritermc.types.isEnum
 import com.typewritermc.types.isValid
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.parts
 import com.typewritermc.types.portableOrNull
+import com.typewritermc.types.slotNames
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
@@ -287,6 +291,10 @@ private fun TypeTemplate.isValidMaterialTemplate(
             true
         }
 
+        is TypeTemplate.FunctionWrapper -> {
+            value.parts.all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) }
+        }
+
         else -> {
             unknownVariant(this)
         }
@@ -497,6 +505,13 @@ private fun TypeTemplate.matchesTemplate(
             }
         }
 
+        is TypeTemplate.FunctionWrapper -> {
+            val function = (actual as? TypeTemplate.FunctionWrapper)?.value
+            function != null &&
+                function.slotNames == value.slotNames &&
+                value.parts.zip(function.parts).all { (expected, supplied) -> expected.matchesTemplate(supplied, parameters) }
+        }
+
         else -> {
             unknownVariant(this)
         }
@@ -588,6 +603,10 @@ private fun TypeTemplate.presentationKinds(
                     .orEmpty()
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                FORMULA_TEMPLATE.presentationKinds(definitions, bounds, visiting)
+            }
+
             else -> {
                 unknownVariant(this)
             }
@@ -632,6 +651,10 @@ private fun TypeTemplate.presentationApplications(
                     }
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                FORMULA_TEMPLATE.presentationApplications(definitions, bounds, visiting)
+            }
+
             else -> {
                 unknownVariant(this)
             }
@@ -673,3 +696,6 @@ private fun TypeTemplate.presentationNested(
         }
     }
 }
+
+/** The record a function type is presented as, since it stores its body as one. */
+private val FORMULA_TEMPLATE: TypeTemplate = FORMULA_USE.toTemplate().template

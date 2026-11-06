@@ -20,6 +20,7 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.template
+import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
@@ -289,5 +290,6 @@ private fun TypeTemplate.asClosedUse(): TypeUse =
         is TypeTemplate.NullableWrapper -> value.value.asClosedUse().nullable()
         is TypeTemplate.ScalarWrapper -> value.use
         is TypeTemplate.ParameterWrapper -> error("Resource operations require closed type applications.")
+        is TypeTemplate.FunctionWrapper -> requireNotNull(value.toUse { it.asClosedUse() })
         else -> unknownVariant(this)
     }

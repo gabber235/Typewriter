@@ -7,6 +7,7 @@ import com.typewritermc.types.bytes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.directUses
 import com.typewritermc.types.duration
 import com.typewritermc.types.enumCases
 import com.typewritermc.types.field
@@ -20,10 +21,12 @@ import com.typewritermc.types.mapValue
 import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.parts
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.InputAnswer
@@ -733,8 +736,14 @@ class DefaultInitializationRuntime(
         return try {
             when (use) {
                 is TypeUse.NullableWrapper -> DataValue.NULL
+
                 is TypeUse.ScalarWrapper -> use.value.authoredDefault()
+
                 is TypeUse.NamedWrapper -> namedDefault(use.value, context, findings, path)
+
+                // A function body has no ordinary default; the author writes it.
+                is TypeUse.FunctionWrapper -> DataValue.UNFILLED
+
                 else -> unknownVariant(use)
             }
         } finally {
@@ -830,6 +839,7 @@ class DefaultInitializationRuntime(
                 is TypeUse.NamedWrapper -> use
                 is TypeUse.NullableWrapper -> use.value.value as? TypeUse.NamedWrapper
                 is TypeUse.ScalarWrapper -> null
+                is TypeUse.FunctionWrapper -> use.storedUse as TypeUse.NamedWrapper
                 else -> unknownVariant(use)
             } ?: return null
         return when (val resolution = catalog.resolve(named)) {
@@ -875,21 +885,11 @@ private class DefaultInitializationContext(
 }
 
 private fun TypeUse.strictlyContains(candidate: TypeUse): Boolean {
-    val pending = ArrayDeque<TypeUse>()
-    when (this) {
-        is TypeUse.NamedWrapper -> pending.addAll(value.arguments)
-        is TypeUse.NullableWrapper -> pending += value.value
-        is TypeUse.ScalarWrapper -> Unit
-        else -> unknownVariant(this)
-    }
+    val pending = ArrayDeque(directUses)
     while (pending.isNotEmpty()) {
-        when (val current = pending.removeFirst()) {
-            candidate -> return true
-            is TypeUse.NamedWrapper -> pending.addAll(current.value.arguments)
-            is TypeUse.NullableWrapper -> pending += current.value.value
-            is TypeUse.ScalarWrapper -> Unit
-            else -> unknownVariant(current)
-        }
+        val current = pending.removeFirst()
+        if (current == candidate) return true
+        pending.addAll(current.directUses)
     }
     return false
 }

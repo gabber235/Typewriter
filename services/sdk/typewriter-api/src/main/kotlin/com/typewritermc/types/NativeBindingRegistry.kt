@@ -216,6 +216,11 @@ class FactoryNativeBindingRegistry(
                 }
             }
 
+            // A function value is its stored body: the Formula record's binding reads and writes it.
+            is TypeUse.FunctionWrapper -> {
+                binding(resolve(use.storedUse))
+            }
+
             else -> {
                 unknownVariant(use)
             }
@@ -291,6 +296,27 @@ private fun TypeTemplate.concreteFor(actual: TypeUse): TypeUse =
                     value.arguments.zip(named.value.arguments).map { (template, argument) ->
                         template.concreteFor(argument)
                     },
+                )
+            } else {
+                actual
+            }
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            val function = actual.function
+            if (function != null && function.parts.size == value.parts.size) {
+                TypeUse.FunctionWrapper(
+                    function.copy(
+                        context =
+                            value.context.zip(
+                                function.context,
+                            ) { template, slot -> slot.copy(type = template.type.concreteFor(slot.type)) },
+                        parameters =
+                            value.parameters.zip(
+                                function.parameters,
+                            ) { template, slot -> slot.copy(type = template.type.concreteFor(slot.type)) },
+                        result = value.result.concreteFor(function.result),
+                    ),
                 )
             } else {
                 actual

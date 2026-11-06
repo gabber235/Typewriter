@@ -6,6 +6,8 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.nullable
+import com.typewritermc.types.parts
+import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.TypeRecommendation
@@ -31,6 +33,10 @@ internal fun typeRecommendations(
 
             is TypeTemplate.NullableWrapper -> {
                 count(template.value.value)
+            }
+
+            is TypeTemplate.FunctionWrapper -> {
+                template.value.parts.forEach(::count)
             }
 
             is TypeTemplate.NamedWrapper -> {
@@ -80,6 +86,10 @@ private fun TypeTemplate.toCompleteUse(): TypeUse? =
         is TypeTemplate.NamedWrapper -> {
             val completeArguments = value.arguments.map(TypeTemplate::toCompleteUse)
             if (completeArguments.any { it == null }) null else value.definition.use(completeArguments.filterNotNull())
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            value.toUse(TypeTemplate::toCompleteUse)
         }
 
         else -> {

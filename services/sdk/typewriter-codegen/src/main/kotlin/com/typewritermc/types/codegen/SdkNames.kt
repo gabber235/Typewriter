@@ -50,10 +50,9 @@ internal class SdkNames private constructor(
     val setupSection = base.suffixed("Section")
 
     companion object {
-        fun of(declaration: KSClassDeclaration): SdkNames {
-            val source = declaration.toClassName()
-            return SdkNames(source, ClassName(source.packageName, source.simpleNames.joinToString("")))
-        }
+        fun of(declaration: KSClassDeclaration): SdkNames = of(declaration.toClassName())
+
+        fun of(source: ClassName): SdkNames = SdkNames(source, ClassName(source.packageName, source.simpleNames.joinToString("")))
 
         private fun ClassName.suffixed(suffix: String) = ClassName(packageName, simpleName + suffix)
     }

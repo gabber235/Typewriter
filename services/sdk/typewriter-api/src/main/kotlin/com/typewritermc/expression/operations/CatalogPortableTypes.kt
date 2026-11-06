@@ -12,6 +12,7 @@ import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.signed
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
@@ -76,6 +77,10 @@ class CatalogPortableTypes(
                 } else {
                     fitsShape(value, type, validatePayloads)
                 }
+            }
+
+            is TypeUse.FunctionWrapper -> {
+                fits(value, type.storedUse, validatePayloads)
             }
 
             else -> {

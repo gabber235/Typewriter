@@ -790,6 +790,7 @@ skir.TypeUse? _closedUse(skir.TypeTemplate template) => switch (template) {
   skir.TypeTemplate_scalarWrapper(:final value) => skir.TypeUse.wrapScalar(
     value,
   ),
+  skir.TypeTemplate_functionWrapper(:final value) => value.toUse(_closedUse),
   _ => null,
 };
 

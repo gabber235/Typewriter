@@ -1,6 +1,7 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.types.canonicalText
+import com.typewritermc.types.mapParts
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.toTemplate
@@ -69,6 +70,10 @@ internal class OpaqueParameters(
                 template
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                TypeTemplate.FunctionWrapper(template.value.mapParts(::close))
+            }
+
             else -> {
                 unknownVariant(template)
             }
@@ -86,6 +91,10 @@ internal class OpaqueParameters(
 
             is TypeTemplate.NullableWrapper -> {
                 TypeTemplate.createNullable(value = open(template.value.value))
+            }
+
+            is TypeTemplate.FunctionWrapper -> {
+                TypeTemplate.FunctionWrapper(template.value.mapParts(::open))
             }
 
             else -> {

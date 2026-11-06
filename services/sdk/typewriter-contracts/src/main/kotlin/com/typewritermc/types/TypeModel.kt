@@ -4,6 +4,10 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MetaSerializable
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.FunctionParameterTemplate
+import skirout.editor.v1.type_catalog.FunctionParameterUse
+import skirout.editor.v1.type_catalog.FunctionTypeTemplate
+import skirout.editor.v1.type_catalog.FunctionTypeUse
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -153,6 +157,88 @@ fun TypeTemplate.nullable(): TypeTemplate = TypeTemplate.createNullable(value = 
 /** The named application this use is, or null for a nullable or scalar use. */
 val TypeUse.named: NamedTypeUse? get() = (this as? TypeUse.NamedWrapper)?.value
 
+/** The function type this use is, or null for any other use. */
+val TypeUse.function: FunctionTypeUse? get() = (this as? TypeUse.FunctionWrapper)?.value
+
+/** Every type a function type mentions: context, then parameters, then its result. */
+val FunctionTypeUse.parts: List<TypeUse> get() =
+    context.map(FunctionParameterUse::type) + parameters.map(FunctionParameterUse::type) +
+        result
+
+/** The types this use is built from one level down: a named type's arguments, a nullable's value, a function's parts. */
+val TypeUse.directUses: List<TypeUse> get() =
+    when (this) {
+        is TypeUse.NamedWrapper -> value.arguments
+        is TypeUse.NullableWrapper -> listOf(value.value)
+        is TypeUse.ScalarWrapper -> emptyList()
+        is TypeUse.FunctionWrapper -> value.parts
+        else -> unknownVariant(this)
+    }
+
+/** The names of a function type's context slots, then of its parameters; two function types agree only on equal names. */
+val FunctionTypeUse.slotNames: Pair<List<String>, List<String>> get() =
+    context.map(FunctionParameterUse::name) to
+        parameters.map(FunctionParameterUse::name)
+
+/** The names of a function template's context slots, then of its parameters. */
+val FunctionTypeTemplate.slotNames: Pair<List<String>, List<String>>
+    get() = context.map(FunctionParameterTemplate::name) to parameters.map(FunctionParameterTemplate::name)
+
+/** Every type a function template mentions: context, then parameters, then its result. */
+val FunctionTypeTemplate.parts: List<TypeTemplate>
+    get() = context.map(FunctionParameterTemplate::type) + parameters.map(FunctionParameterTemplate::type) + result
+
+/** This function template with [transform] applied to every type it mentions, keeping names. */
+fun FunctionTypeTemplate.mapParts(transform: (TypeTemplate) -> TypeTemplate): FunctionTypeTemplate =
+    FunctionTypeTemplate(
+        context = context.map { it.copy(type = transform(it.type)) },
+        parameters = parameters.map { it.copy(type = transform(it.type)) },
+        result = transform(result),
+    )
+
+/** The function use of this template, each part converted by [transform]; null when any part converts to null. */
+inline fun FunctionTypeTemplate.toUse(transform: (TypeTemplate) -> TypeUse?): TypeUse? {
+    val context = context.map { FunctionParameterUse(name = it.name, type = transform(it.type) ?: return null) }
+    val parameters = parameters.map { FunctionParameterUse(name = it.name, type = transform(it.type) ?: return null) }
+    return TypeUse.createFunction(context = context, parameters = parameters, result = transform(result) ?: return null)
+}
+
+/** The function type use with these named context slots, parameters and result. */
+fun functionUse(
+    context: List<Pair<String, TypeUse>> = emptyList(),
+    parameters: List<Pair<String, TypeUse>> = emptyList(),
+    result: TypeUse,
+): TypeUse =
+    TypeUse.createFunction(
+        context = context.map { (name, type) -> FunctionParameterUse(name = name, type = type) },
+        parameters = parameters.map { (name, type) -> FunctionParameterUse(name = name, type = type) },
+        result = result,
+    )
+
+/** The function type template with these named context slots, parameters and result. */
+fun functionTemplate(
+    context: List<Pair<String, TypeTemplate>> = emptyList(),
+    parameters: List<Pair<String, TypeTemplate>> = emptyList(),
+    result: TypeTemplate,
+): TypeTemplate =
+    TypeTemplate.createFunction(
+        context = context.map { (name, type) -> FunctionParameterTemplate(name = name, type = type) },
+        parameters = parameters.map { (name, type) -> FunctionParameterTemplate(name = name, type = type) },
+        result = result,
+    )
+
+/** The record every function type is stored as: its body's source and the references inside it. */
+val FORMULA_USE: NamedTypeUse = NamedTypeUse(definition = TypeDefinitionId.declared(FORMULA_TYPE_ID), arguments = emptyList())
+
+/** The id of the Formula record, declared in typewriter-api beside its endpoint. */
+const val FORMULA_TYPE_ID = "a2ac548560b44c90a92d929a273eacc5"
+
+/**
+ * The use a value at this position is stored as: a function type stores its body as a Formula record, every other
+ * use stores itself. Nested positions keep their own use; only the outer position is replaced.
+ */
+val TypeUse.storedUse: TypeUse get() = if (this is TypeUse.FunctionWrapper) FORMULA_USE.use else this
+
 /** The named application this template is, or null for any other template. */
 val TypeTemplate.named: NamedTypeTemplate? get() = (this as? TypeTemplate.NamedWrapper)?.value
 
@@ -215,8 +301,17 @@ fun TypeUse.toTemplate(): TypeTemplate =
         is TypeUse.NamedWrapper -> value.toTemplate().template
         is TypeUse.NullableWrapper -> value.value.toTemplate().nullable()
         is TypeUse.ScalarWrapper -> value.template
+        is TypeUse.FunctionWrapper -> value.toTemplate()
         else -> unknownVariant(this)
     }
+
+/** Lifts a concrete function type into a template with no free parameters. */
+fun FunctionTypeUse.toTemplate(): TypeTemplate =
+    functionTemplate(
+        context = context.map { it.name to it.type.toTemplate() },
+        parameters = parameters.map { it.name to it.type.toTemplate() },
+        result = result.toTemplate(),
+    )
 
 /** Lifts a concrete named application into a template with no free parameters. */
 fun NamedTypeUse.toTemplate(): NamedTypeTemplate = definition.namedTemplate(arguments.map(TypeUse::toTemplate))
@@ -228,6 +323,7 @@ fun TypeTemplate.parameterKeys(): Set<ParameterKey> =
         is TypeTemplate.NamedWrapper -> value.arguments.flatMapTo(linkedSetOf()) { it.parameterKeys() }
         is TypeTemplate.NullableWrapper -> value.value.parameterKeys()
         is TypeTemplate.ScalarWrapper -> emptySet()
+        is TypeTemplate.FunctionWrapper -> value.parts.flatMapTo(linkedSetOf()) { it.parameterKeys() }
         else -> unknownVariant(this)
     }
 
@@ -238,6 +334,7 @@ fun TypeTemplate.substitute(arguments: Map<ParameterKey, TypeTemplate>): TypeTem
         is TypeTemplate.NamedWrapper -> value.substitute(arguments).template
         is TypeTemplate.NullableWrapper -> value.value.substitute(arguments).nullable()
         is TypeTemplate.ScalarWrapper -> this
+        is TypeTemplate.FunctionWrapper -> TypeTemplate.FunctionWrapper(value.mapParts { it.substitute(arguments) })
         else -> unknownVariant(this)
     }
 

@@ -27,6 +27,7 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
@@ -643,6 +644,10 @@ private fun TypeTemplate.toUseOrNull(): TypeUse? =
 
         is TypeTemplate.ScalarWrapper -> {
             value.use
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            value.toUse { it.toUseOrNull() }
         }
 
         else -> {

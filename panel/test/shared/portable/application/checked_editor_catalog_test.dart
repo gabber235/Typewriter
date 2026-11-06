@@ -186,6 +186,22 @@ void main() {
     expect(fixture.catalog.isReadableAs(base, root), isFalse);
   });
 
+  test("a function type shows as (level: Text) -> Boolean", () {
+    final fixture = inheritedPresentationCatalog();
+    final function = skir.TypeUse.createFunction(
+      context: const [],
+      parameters: [
+        skir.FunctionParameterUse(
+          name: "level",
+          type: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        ),
+      ],
+      result: skir.TypeUse.wrapScalar(skir.ScalarKind.boolean),
+    );
+
+    expect(fixture.catalog.typeUseName(function), "(level: Text) -> Boolean");
+  });
+
   test("readability is covariant through matching generic arguments", () {
     final wrapper = typeDefinition("Wrapper");
     final reward = typeDefinition("Reward");

@@ -15,6 +15,7 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.signed
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
@@ -174,6 +175,10 @@ private class ValueInspection(
                 validateScalar(value, use.value, at)
             }
 
+            is TypeUse.FunctionWrapper -> {
+                validateUse(value, use.storedUse, at, depth)
+            }
+
             else -> {
                 unknownVariant(use)
             }
@@ -226,6 +231,10 @@ private class ValueInspection(
                     is Resolution.Invalid -> problems += actual.diagnostics.map { it.asValueProblem(at) }
                     is Resolution.Ready -> validatePayload(named.payload, actual.value, at, depth + 1)
                 }
+            }
+
+            is TypeUse.FunctionWrapper -> {
+                validateUse(value, expected.storedUse, at, depth)
             }
 
             else -> {
@@ -281,7 +290,7 @@ private class ValueInspection(
                     if (value != DataValue.NULL) validateUseWithResolver(value, use.value.value, at, depth + 1)
                 }
 
-                is TypeUse.NamedWrapper -> {
+                is TypeUse.NamedWrapper, is TypeUse.FunctionWrapper -> {
                     problem(at, "catalog_required_for_nested_named")
                 }
 

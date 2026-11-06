@@ -145,6 +145,8 @@ final class _PortableValueInspector {
           path,
           depth + 2,
         );
+      case skir.TypeUse_functionWrapper():
+        visit(expected.storedUse, value, path, depth + 1);
       default:
         problem(path, "unknown_type");
     }
