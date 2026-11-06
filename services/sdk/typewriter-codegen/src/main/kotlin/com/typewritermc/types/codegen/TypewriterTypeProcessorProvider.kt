@@ -50,6 +50,7 @@ import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
+import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
@@ -157,6 +158,11 @@ private class TypewriterTypeProcessor(
     private val registrarProviders = RegistrarProviderProcessor(output, logger)
     private val collectionProjectionProviders = CollectionProjectionProviderProcessor(output, logger)
     private val capabilityProviders = CapabilityProviderProcessor(output, owners, logger, options[SOURCE_PART_OPTION].orEmpty())
+    private val formulaProviders =
+        FormulaProviderProcessor(output, owners, logger) {
+            it.qualifiedName?.asString() in
+                explicitlyImportedTypes
+        }
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
@@ -220,6 +226,7 @@ private class TypewriterTypeProcessor(
                 generateAdapters(declaration)
             }
         }
+        deferred += formulaProviders.process(resolver)
         return deferred.distinct()
     }
 

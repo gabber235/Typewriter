@@ -12,6 +12,7 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.floatScalar
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.listValue
@@ -19,10 +20,14 @@ import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.record
+import com.typewritermc.types.template
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 
 /** The standard types plus every type typewriter-api declares, Formula and Var among them. */
@@ -101,3 +106,57 @@ fun formulaValue(source: String): DataValue =
                 DataValue.named(StandardTypes.list.namedUse(listOf(FormulaReferenceDefinition.id.use())), DataValue.listValue(emptyList())),
         ),
     )
+
+/** Every formula function the generated provider indexes on the test class path list, the standard library among them. */
+val formulaFunctions: List<FormulaFunction> by lazy {
+    generatedProviders<GeneratedFormulaProvider>(GeneratedProviderKind.Formula).flatMap(GeneratedFormulaProvider::functions)
+}
+
+/**
+ * Calls the formula function [name] whose context and parameters fit the Kotlin [arguments], as a formula call with
+ * those values would. Scalars, lists and Kotlin functions are their own evaluation values, so they pass unchanged.
+ */
+fun callFormula(
+    name: String,
+    vararg arguments: Any?,
+): Any? {
+    val function =
+        formulaFunctions.single { function ->
+            val slots = function.signature.context + function.signature.parameters
+            function.name == name && slots.size == arguments.size && slots.zip(arguments).all { (slot, value) -> value.fits(slot.type) }
+        }
+    return function.invoke(KotlinValues, arguments.toList())
+}
+
+private fun Any?.fits(type: TypeTemplate): Boolean =
+    when (this) {
+        is Int -> type == integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
+        is Long -> type == integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).template
+        is Double -> type == floatScalar(FloatWidth.SIXTY_FOUR).template
+        is String -> type == ScalarKind.TEXT.template
+        is Boolean -> type == ScalarKind.BOOLEAN.template
+        is List<*> -> type.named?.definition == StandardTypes.list
+        is Function<*> -> type is TypeTemplate.FunctionWrapper
+        else -> false
+    }
+
+/** A formula call over values that are already their Kotlin form. */
+private object KotlinValues : FormulaCall {
+    override fun intoKotlin(
+        value: Any?,
+        type: TypeTemplate,
+    ): Any? = value
+
+    override fun fromKotlin(
+        value: Any?,
+        type: TypeTemplate,
+    ): Any? = value
+
+    override fun display(value: Any?): String = value.toString()
+
+    override fun resolve(value: Any?): Any? = value
+
+    override fun force(value: Any?): Any? = value
+
+    override fun fail(message: String): Nothing = throw FormulaFailureException(FormulaFailure.ProviderThrew(message))
+}

@@ -1,6 +1,8 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.capability.RealmCapabilityProvider
+import com.typewritermc.formula.FormulaFunction
+import com.typewritermc.formula.GeneratedFormulaProvider
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -44,11 +46,18 @@ data class OwnedCollectionProjection(
     val specification: com.typewritermc.presentation.CollectionProjectionSpec,
 )
 
+/** A formula function and the provider that declares it. */
+data class OwnedFormulaFunction(
+    val origin: ProviderOrigin,
+    val function: FormulaFunction,
+)
+
 data class LoadedGeneratedProviders(
     val contributions: CatalogContributions,
     val capabilities: List<OwnedRealmCapability>,
     val registrars: List<OwnedRuntimeRegistrar>,
     val collectionProjections: List<OwnedCollectionProjection>,
+    val formula: List<OwnedFormulaFunction>,
 )
 
 /**
@@ -240,6 +249,7 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.CollectionProjection -> GeneratedCollectionProjectionProvider::class.java
                 GeneratedProviderKind.ResourceOperation -> GeneratedResourceOperationProvider::class.java
                 GeneratedProviderKind.ResourceDisplay -> GeneratedResourceDisplayProvider::class.java
+                GeneratedProviderKind.Formula -> GeneratedFormulaProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
             "Generated ${kind.key} provider ${providerClass.name} must implement ${expected.name}."
@@ -428,6 +438,7 @@ class GeneratedProviderLoader {
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
         val displays = mutableListOf<OwnedResourceDisplay>()
+        val formula = mutableListOf<OwnedFormulaFunction>()
 
         loaded.forEach { loadedProvider ->
             val origin = loadedProvider.origin
@@ -503,6 +514,10 @@ class GeneratedProviderLoader {
                         )
                 }
 
+                GeneratedProviderKind.Formula -> {
+                    formula += loadedProvider.require<GeneratedFormulaProvider>().functions.map { OwnedFormulaFunction(origin, it) }
+                }
+
                 GeneratedProviderKind.CollectionProjection -> {
                     collectionProjections +=
                         OwnedCollectionProjection(
@@ -534,6 +549,7 @@ class GeneratedProviderLoader {
             capabilities = capabilities,
             registrars = registrars,
             collectionProjections = collectionProjections,
+            formula = formula,
         )
     }
 }

@@ -233,6 +233,7 @@ internal fun providerArtifact(
     corruptClass: Boolean = false,
     referencedClass: ByteArray? = null,
     providerClass: KClass<*> = ShadowRegistrar::class,
+    kind: GeneratedProviderKind = GeneratedProviderKind.Registrar,
 ): Path {
     val providerName = providerClass.java.name
     val classPath = providerName.replace('.', '/') + ".class"
@@ -240,7 +241,7 @@ internal fun providerArtifact(
     if (corruptClass) classBytes[classBytes.lastIndex] = (classBytes.last() + 1).toByte()
     JarOutputStream(Files.newOutputStream(path)).use { archive ->
         archive.putNextEntry(JarEntry(GENERATED_PROVIDER_INDEX_PATH))
-        archive.write("registrar\t$providerName\t$sourcePart\n".encodeToByteArray())
+        archive.write("${kind.key}\t$providerName\t$sourcePart\n".encodeToByteArray())
         archive.closeEntry()
         archive.putNextEntry(JarEntry(classPath))
         archive.write(classBytes)

@@ -42,6 +42,21 @@ interface NativeBinding<T> {
     fun decode(value: CompleteValue): T
 }
 
+/**
+ * What a conversion between evaluation values and Kotlin needs from the evaluation that runs it. A formula function
+ * call is one, so a provider's values cross at its own edge.
+ */
+interface EvaluationValues {
+    /** A value not yet evaluated, evaluated one level; any other value as it is. */
+    fun resolve(value: Any?): Any?
+
+    /** [value] with everything inside it evaluated. */
+    fun force(value: Any?): Any?
+
+    /** Stops the current call with [message], as a failure the provider caused. */
+    fun fail(message: String): Nothing
+}
+
 interface NativeBindingRegistry {
     fun bind(actual: CheckedType): NativeBinding<*>
 
