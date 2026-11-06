@@ -3,11 +3,13 @@ package com.typewritermc.types.ksp
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.asClassName
 import com.typewritermc.codegen.KnownTypes
@@ -76,6 +78,14 @@ data class KspTypeDiagnostic(
     override fun toString(): String = "${path.joinToString(".")}: $message"
 }
 
+/** The templates of one function signature's positions, with the type parameters the function owns. */
+data class KspSignatureConversion(
+    val typeParameters: List<TypeParameter>,
+    val positions: List<TypeTemplate>,
+    val definitions: List<TypeDefinition>,
+    val declarations: Map<TypeDefinitionId, KSClassDeclaration>,
+)
+
 sealed interface KspTypeConversionResult {
     data class Success(
         val root: TypeUse,
@@ -110,6 +120,9 @@ class KspTypeGraphConverter(
     /** The property whose type is being converted, where a diagnostic about that type belongs. */
     private var property: KSPropertyDeclaration? = null
 
+    /** The function whose signature is being converted and the synthetic id that owns its type parameters. */
+    private var signatureOwner: Pair<KSDeclaration, TypeDefinitionId>? = null
+
     fun convert(type: KSType): KspTypeConversionResult {
         reset()
         val root = use(type, listOf(type.displayName))
@@ -134,6 +147,45 @@ class KspTypeGraphConverter(
             )
         } else {
             KspTypeConversionResult.Failure(diagnostics.toList())
+        }
+    }
+
+    /**
+     * The templates of [positions], types written in the signature of [function], whose own type parameters are keyed
+     * by [owner]. A function is not a catalog definition, so [owner] is a synthetic id the caller chooses. Null after
+     * the diagnostics are returned through [failures].
+     */
+    fun convertSignature(
+        function: KSDeclaration,
+        owner: TypeDefinitionId,
+        positions: List<KSTypeReference>,
+        failures: (List<KspTypeDiagnostic>) -> Unit,
+    ): KspSignatureConversion? {
+        reset()
+        signatureOwner = function to owner
+        try {
+            val path = listOf(function.simpleName.asString())
+            val parameters =
+                function.typeParameters.mapIndexed { index, parameter ->
+                    TypeParameter(
+                        key = ParameterKey(owner = owner, index = index),
+                        name = parameter.name.asString(),
+                        bounds =
+                            parameter.bounds
+                                .map(KSTypeReference::resolve)
+                                .filterNot { it.declaration.qualifiedName?.asString() == "kotlin.Any" }
+                                .mapNotNull { template(it, null, path + parameter.name.asString()) }
+                                .toList(),
+                    )
+                }
+            val templates = positions.map { template(it.resolve(), null, path, it.explicitNullable) }
+            if (diagnostics.isNotEmpty()) {
+                failures(diagnostics.toList())
+                return null
+            }
+            return KspSignatureConversion(parameters, templates.map(::checkNotNull), definitions.values.toList(), declarations.toMap())
+        } finally {
+            signatureOwner = null
         }
     }
 
@@ -202,6 +254,10 @@ class KspTypeGraphConverter(
         owner: KSClassDeclaration?,
         path: List<String>,
     ): TypeTemplate? {
+        signatureOwner?.let { (function, key) ->
+            val index = function.typeParameters.indexOf(parameter)
+            if (index >= 0) return ParameterKey(owner = key, index = index).template
+        }
         if (owner == null) return failure(path, "A free type parameter has no declaration owner.")
         val index = owner.typeParameters.indexOf(parameter)
         if (index < 0) return failure(path, "A type parameter belongs to another declaration.")
@@ -617,5 +673,5 @@ private val KSPropertyDeclaration.hasConstructorDefault: Boolean
 private val KSType.displayName: String
     get() = declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
 
-private val com.google.devtools.ksp.symbol.KSTypeReference.explicitNullable: Boolean
+private val KSTypeReference.explicitNullable: Boolean
     get() = resolve().isMarkedNullable

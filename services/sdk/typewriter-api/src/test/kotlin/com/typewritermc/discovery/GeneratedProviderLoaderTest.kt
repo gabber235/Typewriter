@@ -184,6 +184,21 @@ val GeneratedProviderLoaderTest by testSuite {
             "classes: fixture/Referenced.class."
     }
 
+    test("a formula provider with a wrong class is reported, not loaded") {
+        val root = Files.createTempDirectory("generated-formula-provider")
+        val artifact = providerArtifact(root.resolve("formula.jar"), "main", kind = GeneratedProviderKind.Formula)
+
+        shouldThrow<IllegalArgumentException> {
+            GeneratedProviderLoader().load(
+                artifacts = listOf(GeneratedProviderArtifact(ArtifactId("fixture:formula"), artifact)),
+                facts = DeploymentFacts(),
+                domain = DiscoveryDomains.Realm,
+            )
+        }.message shouldBe
+            "Generated formula provider com.typewritermc.discovery.ShadowRegistrar must implement " +
+            "com.typewritermc.formula.GeneratedFormulaProvider."
+    }
+
     test("rejects duplicate eligible registrar identity within one contribution source") {
         val root = Files.createTempDirectory("generated-registrar-identity")
         val first = providerArtifact(root.resolve("first.jar"), "common")

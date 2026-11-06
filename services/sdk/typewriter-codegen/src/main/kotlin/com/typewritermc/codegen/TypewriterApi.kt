@@ -25,6 +25,10 @@ internal object TypewriterApi {
 
     // Formula
     val Formula = ClassName(FORMULA, "Formula")
+    val FormulaCall = ClassName(FORMULA, "FormulaCall")
+    val FormulaFunction = ClassName(FORMULA, "FormulaFunction")
+    val GeneratedFormulaProvider = ClassName(FORMULA, "GeneratedFormulaProvider")
+    val NotProvided = ClassName(FORMULA, "NotProvided")
     val Var = ClassName(FORMULA, "Var")
 
     // Authoring

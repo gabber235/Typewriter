@@ -100,17 +100,21 @@ internal fun namedArguments(vararg arguments: Pair<String, CodeBlock>): CodeBloc
 /**
  * Resolves each type definition id to the generated object that states it, so generated code writes every id once.
  *
- * Inside an owner object its own id is the bare `id`; everywhere else it is `Owner.id`. Callers build the owner table
- * before emission and report ids without an owner as declaration diagnostics, so [code] never meets an unknown id.
+ * Inside an owner object its own id is the bare `id`; everywhere else it is `Owner.id`. An id that is no catalog
+ * definition, such as the synthetic owner of a formula function's type parameters, is named by the [local] expression
+ * of the file that states it. Callers build the owner table before emission and report ids without an owner as
+ * declaration diagnostics, so [code] never meets an unknown id.
  */
 internal class DefinitionReferences(
     private val owners: Map<TypeDefinitionId, ClassName>,
     private val self: TypeDefinitionId? = null,
+    private val local: Map<TypeDefinitionId, CodeBlock> = emptyMap(),
 ) {
     fun code(id: TypeDefinitionId): CodeBlock {
         when (id) {
             self -> return CodeBlock.of("id")
             in owners -> return CodeBlock.of("%T.id", owners.getValue(id))
+            in local -> return local.getValue(id)
         }
         val member = id.typeId as? TypeId.MemberWrapper ?: error("No generated definition owns $id.")
         val owner = TypeDefinitionId(typeId = member.value.owner, revision = id.revision)
@@ -119,11 +123,14 @@ internal class DefinitionReferences(
 
     /** Whether code can name [id]: through its own owner, or as a case of an owned closed record. */
     fun owns(id: TypeDefinitionId): Boolean =
-        id == self || id in owners ||
+        id == self || id in owners || id in local ||
             (id.typeId as? TypeId.MemberWrapper)?.let { owns(TypeDefinitionId(typeId = it.value.owner, revision = id.revision)) } == true
 
     /** References as seen from inside the owner of [definition]. */
-    fun inside(definition: TypeDefinitionId): DefinitionReferences = DefinitionReferences(owners, definition)
+    fun inside(definition: TypeDefinitionId): DefinitionReferences = DefinitionReferences(owners, definition, local)
+
+    /** These references plus the ids a generated file states itself, each named by its expression. */
+    fun withLocal(ids: Map<TypeDefinitionId, CodeBlock>): DefinitionReferences = DefinitionReferences(owners, self, local + ids)
 }
 
 /** The single literal statement of an id, used only for an owner's own `id` property. */
