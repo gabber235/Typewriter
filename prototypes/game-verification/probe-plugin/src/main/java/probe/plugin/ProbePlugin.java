@@ -72,6 +72,7 @@ public final class ProbePlugin extends JavaPlugin implements Listener {
         http.createContext("/cmd/", this::command);
         http.start();
         Speed.start(this);
+        Input.start(this);
         getLogger().info("probe control on " + http.getAddress().getPort());
     }
 

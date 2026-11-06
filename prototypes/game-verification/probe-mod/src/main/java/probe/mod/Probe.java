@@ -84,6 +84,7 @@ public final class Probe implements ClientModInitializer {
         dog.setDaemon(true);
         dog.start();
         Speed.init();
+        probe.mod.input.Input.init();
         event("mod_init", "\"jvmStartMicros\":" + java.lang.management.ManagementFactory.getRuntimeMXBean().getStartTime() * 1000);
     }
 

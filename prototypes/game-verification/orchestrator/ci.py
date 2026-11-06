@@ -889,10 +889,52 @@ def cmd_interfere(backend):
     step("interfere own paper", d.interfere, (1, 3), 8, 1, "int-1x3-s1", [("bcast", "world"), ("time", "world"), ("wentity", "world"), ("sound", "world")], True)
 
 
+# ---------- spike J: real player input ----------
+
+INPUT_ROWS = [
+    # rows 0 to 2: gated, server rate 200; breaking runs at rate 20 because Paper counts break progress in wall time
+    ("run", "chat,cmd,suggest,swap,scroll", "J2,J1,X,J3", 200, 2, 200),
+    ("run", "use,num,sneak,jump,fly", "J2,J1,X,J3", 200, 2, 200),
+    ("run", "move,inv,attack,attackPacket,interact,interactPacket", "J2,J1,X,J3", 200, 2, 200),
+    ("run", "break", "J2,J1,X", 200, 2, 20),
+    ("run", "breakCancel", "J2,J1,X", 200, 2, 20),
+    ("rendered", "all", "J2,J1,X,J3", 5, 0, 20),
+    ("lag", "break,use,sneak,move,chat,attack", "J2,X,J3", 10, 2, 20),
+]
+
+
+def run_input(*argv, xtest=True):
+    """Runs one input.py command unchanged; path X drives the client's own Xvfb with XTest."""
+    import input as inp
+    a = inp.args(list(argv))
+    factory = None
+    if xtest:
+        import xtest as xt
+        factory = xt.XTest
+    row = {"run": inp.cmd_run, "lag": inp.cmd_lag}[a.cmd](a, xtest=factory)
+    record("input", argv=" ".join(argv), cfg=CiSession.cfg.row(), result=row)
+
+
+def cmd_input(backend):
+    set_cfg(Cfg(backend=backend))
+    rep = int(os.environ.get("MATRIX_REPEAT", "0") or 0)
+    kind, ops, paths, n, gate, rate = INPUT_ROWS[rep]
+    lbl = f"ci{rep}"
+    common = ["--paths", paths, "--ops", ops, "--n", str(n), "--label", lbl]
+    if kind == "run":
+        step(f"input {ops} g{gate} r{rate}", run_input, "run", *common, "--gate", str(gate), "--rate", str(rate))
+    elif kind == "rendered":
+        step("input rendered r20", run_input, "run", *common, "--gate", "0", "--rate", "20")
+        step("input gated r20", run_input, "run", *common, "--gate", "2", "--rate", "20")
+    else:
+        for where in ("client", "server"):
+            step(f"input lag {where}", run_input, "lag", *common, "--where", where, "--ms", "300", "--gate", str(gate), "--rate", str(rate))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -933,6 +975,8 @@ def main():
             cmd_cells(a.backend)
         elif a.plan == "interfere":
             cmd_interfere(a.backend)
+        elif a.plan == "input":
+            cmd_input(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

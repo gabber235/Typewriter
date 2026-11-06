@@ -25,7 +25,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 3 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 4 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 5 }
+          - { plan: input, backend: vulkan, runner: ubuntu-24.04, repeat: 6 }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -49,7 +55,7 @@ jobs:
           date +%T
           sudo apt-get install -y -qq --no-install-recommends \
             xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libegl-mesa0 libgbm1 mesa-vulkan-drivers libvulkan1 \
-            mesa-utils mesa-utils-bin vulkan-tools python3-numpy python3-pil ffmpeg \
+            mesa-utils mesa-utils-bin vulkan-tools python3-numpy python3-pil python3-xlib ffmpeg \
             libx11-6 libxext6 libxcursor1 libxi6 libxrandr2 libxss1 libxfixes3 libxkbcommon0 libxkbcommon-x11-0 libasound2t64
       - uses: actions/cache@v4
         with:
@@ -96,3 +102,5 @@ jobs:
             prototypes/game-verification/runs/e-readiness
             prototypes/game-verification/runs/d-clients.jsonl
             prototypes/game-verification/runs/d-clients
+            prototypes/game-verification/runs/j-input.jsonl
+            prototypes/game-verification/runs/j-input

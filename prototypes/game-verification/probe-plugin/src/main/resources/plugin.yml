@@ -3,3 +3,6 @@ version: '0'
 main: probe.plugin.ProbePlugin
 api-version: '26.3'
 load: POSTWORLD
+commands:
+  claim:
+    description: spike J claim
