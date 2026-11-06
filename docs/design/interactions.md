@@ -150,7 +150,7 @@ The stored snapshot row decides everything, so a crash has no path of its own:
 
 Everything else goes into `Added<H>` and `Removed<H>` handlers. `Added<H>` handlers, `Removed<H>` handlers, and `RestoreSnapshot<H>` handlers must be safe to repeat.
 
-A `Snapshot<H>` parameter reads and updates a Hold's stored snapshot. Content uses it to change where the protagonist lands after a camera scene, so the protagonist gets one teleport instead of being sent back first.
+A parameter of a Hold's snapshot type (`LeashCenter`, `CameraSnapshot`) reads that snapshot at the Hold's keys, as `RestoreSnapshot` already does. One `TakeSnapshot<H>` handler per Hold type makes this unambiguous; KSP rejects a snapshot type returned for two Hold types. A `Snapshot<H>` parameter reads and updates a Hold's stored snapshot. Content uses it to change where the protagonist lands after a camera scene, so the protagonist gets one teleport instead of being sent back first.
 
 ### Lifecycle
 
@@ -276,6 +276,7 @@ data class StepRules(
     val onRejoin: OnRejoin = OnRejoin.Drop,
     val protected: Var<Boolean, StepContext> = Var.Value(false),
     val giveUp: Var<Boolean, QueuedContext> = Var.Value(false),
+    val leavable: Var<Boolean, StepContext> = Var.Value(true),   // see Ways out
 )
 
 enum class OnClash { Drop, Queue, Replace }
@@ -293,6 +294,7 @@ object StepRulesInspector : StepRulesPresentation {
         showIf(onClash.read() eq literal(OnClash.Drop), whenFalse = { giveUp.input() }) {}
         onRejoin.input()
         protected.input()
+        leavable.input()
     }
 }
 
@@ -614,6 +616,207 @@ It takes the strictest `entry.rules.onRejoin`; `RestartStep` fires `Triggered(ro
 
 A server move is a leave and a rejoin, and the step's `onRejoin` applies. There is no separate "continue" choice and no follow setting.
 
+## Ways out
+
+Layer 17 rough design, decided 2026-11-06. Replaces legacy interaction bounds (`InteractionBound`, `InteractionScope` on `origin/develop`). A legacy bound bundled four needs in one object; three of them are existing primitives here:
+
+| Need | Legacy | Here |
+| --- | --- | --- |
+| Effects while it runs: camera locked, slow down near the edge | `LockInteractionBound`, `PlayerRadiusInteractionBound.updateZoom` | [Holds](#holds) under an audience |
+| Don't break things: no dropping the quest item | `DropItemInteractionBound` | A verdict while a hold exists, like `ChatSent.block` ([dialogue.md](dialogue.md)); the quest item is layer 23 |
+| A way out: walk away, a command | `interruptInteraction()` and `interruptTriggers` | A way out entry and `LeaveAsked` |
+| Whether leaving is allowed now | Implicit: `interaction.priority > bound.priority` gave blocking, otherwise interrupting | `StepRules.leavable`, explicit |
+
+Every way out is explicit. Nothing has one by default, a camera hold included.
+
+Nothing here is built yet. See [Ways out: not proven](#ways-out-not-proven).
+
+### The rule
+
+`leavable` is the player side counterpart of `protected`: `protected` says whether another interaction may interrupt, `leavable` whether the player may leave ([Steps](#steps)). Core keeps each member's running steps:
+
+```kotlin
+// Written by core at tick end, like Held.
+data class InSteps(@Key val who: Protagonist, val steps: Map<Step, InStep>) : Live
+
+data class InStep(
+    val entry: StepEntry,
+    val interaction: Interaction,
+    val leavable: Boolean,   // the whole interaction: every running step, every member
+)
+```
+
+`leavable` is interaction wide. One member for whom a running step is not leavable blocks leaving for the whole group; otherwise one member leaving ends the interaction for everyone, following the group rule. To decide per person, fire per member (`ContinueForEachMember`).
+
+### Leaving
+
+```kotlin
+// The intent, like Confirm. way: the entry whose links fire.
+@TypewriterType(id = "...")
+data class LeaveAsked(val who: Holder, val way: Triggerable, val interactions: Set<Interaction>) : Event
+
+@Handler
+fun LeaveAsked.leave() {
+    val _ = Leave(interactions).attempt()
+    way.complete(context)   // as in E.fire
+}
+
+@Transaction context(tx: Transaction)
+fun leave(interactions: Set<Interaction>) {
+    interactions.forEach { interactionStart(it).clear() }
+}
+```
+
+The way out's links start a new chain: legacy `interruptTriggers` (the smith shrugs).
+
+### Lifetime: running audiences
+
+Rules and effects for a stretch of play hang under an audience, so their lifetime is the audience membership and nothing starts or ends them by hand ([live-data.md](live-data.md#audiences)). Next to the formula audience, one new kind is in while one of its steps runs:
+
+```kotlin
+data class RunningAudienceEntry(
+    override val children: List<Ref<AudienceEntry>> = emptyList(),
+    val during: Var<Set<Ref<RunningAudience.Steps, StepEntry>>, PublishScope> = Var.Value(emptySet()),
+) : AudienceEntry
+
+@Derive
+fun RunningAudienceEntry.inside(
+    protagonist: Protagonist,
+    @From(Parent::class) inParents: List<InAudience>,
+    steps: InSteps,
+    during: Set<Ref<RunningAudience.Steps, StepEntry>>,
+): InAudience? = ...   // in while one of the steps in `steps` is in `during`
+```
+
+`during` is a [link query](formula-language.md#link-fields-as-queries): picked by hand, or `page.elements.filter { it is StepEntry }`. Switching on and off is the audience membership and the steps' `leavable`.
+
+### Gesture ways out
+
+A gesture must block the raw input when leaving is not allowed, so it is a hold with a verdict handler. A way out is an audience child with links:
+
+```kotlin
+interface WayOut : AudienceEntry, Triggerable
+
+// Written by core at tick end, for members inside the way out's audience.
+// interactions: those of the steps that put the member in the RunningAudience above it,
+// or all of the member's interactions under any other audience.
+// allowed: every one of them is leavable (InStep.leavable).
+data class Exits(
+    @Key val who: Protagonist,
+    @Key val way: WayOut,
+    val interactions: Set<Interaction>,
+    val allowed: Boolean,
+) : Live
+```
+
+The leash replaces the legacy player radius bound, including its slow down near the edge:
+
+```kotlin
+class LeashEntry(
+    /* page, name, placement, triggers, refused, changes */
+    override val children: List<Ref<AudienceEntry>> = emptyList(),
+    val radius: Var<Double, MemberContext> = Var.Value(4.0),
+) : WayOut
+
+data class Leash(@Key val who: Protagonist, val way: LeashEntry, val radius: Double) : Hold
+data class LeashCenter(val at: Position)
+
+// The same shape as PotionEffectEntry.hold.
+@Derive
+fun LeashEntry.hold(who: Protagonist, inside: InAudience, radius: Double) = Leash(who, this, radius)
+
+@Handler
+fun TakeSnapshot<Leash>.center(location: HasLocation) = LeashCenter(location.location)
+
+// A verdict reads cached data only. exit's way key is free, so it iterates.
+@Handler
+fun PlayerMove.leash(leash: Leash, center: LeashCenter, exit: Exits): Verdict {
+    if (exit.way != leash.way) return pass()
+    val distance = to.distance(center.at) ?: Double.MAX_VALUE   // null: another world
+    if (distance <= leash.radius) return pass()
+    if (!exit.allowed) return deny()
+    return pass { emit(LeaveAsked(player, leash.way, exit.interactions)) }
+}
+```
+
+The slow down is a keyed attribute modifier, so another plugin's speed change still applies, and only ours is removed. It is transient (Paper `addTransientModifier`, checked on paper-api 1.21.4), so it is never saved with the player and a crash cannot leave it behind; legacy used `addModifier`, which is saved.
+
+```kotlin
+// Minecraft capability trait. Paper: removeModifier(key), then addTransientModifier.
+interface HasAttributes {
+    fun set(attribute: Attribute, modifier: AttributeModifier)   // replaces one with the same key
+    fun remove(attribute: Attribute, key: NamespacedKey)
+}
+
+val LEASH_KEY: NamespacedKey = ...      // typewriter:leash
+val MOVEMENT_SPEED: Attribute = ...     // minecraft:movement_speed
+
+@Handler
+fun PlayerMove.slow(leash: Leash, center: LeashCenter, attributes: HasAttributes) {
+    val distance = to.distance(center.at) ?: return
+    // edgeSlowdown is legacy calculateZoom: 0 at the center, -0.6 at the edge
+    attributes.set(MOVEMENT_SPEED, AttributeModifier(LEASH_KEY, edgeSlowdown(distance, leash.radius), AddMultipliedTotal))
+}
+
+@Handler
+fun Removed<Leash>.release(attributes: HasAttributes) = attributes.remove(MOVEMENT_SPEED, LEASH_KEY)
+```
+
+`Attribute`, `AttributeModifier`, and `NamespacedKey` are planned Minecraft types ([minecraft-types.md](minecraft-types.md#types-still-to-design)); the planned modifier also has a `slot`, which only items use. `AddMultipliedTotal` is Paper's `MULTIPLY_SCALAR_1`, what legacy used.
+
+Two leashes under two audiences are the same hold type and keys, so the highest priority wins ([Priority](#priority)).
+
+### Action way out
+
+Any trigger can end an interaction through one action, so a command, an item, or an NPC click needs no code of its own:
+
+```kotlin
+class LeaveEntry(
+    /* page, name, placement, triggers, refused, changes */
+    val of: Var<Set<Ref<LeaveSteps.Leave, StepEntry>>, PublishScope> = Var.Value(emptySet()),   // empty: any
+) : ActionEntry, Triggerable
+
+@Handler
+fun Triggered<LeaveEntry>.leave(steps: InSteps, of: Set<Ref<LeaveSteps.Leave, StepEntry>>) {
+    val chosen = steps.steps.values.filter { of.isEmpty() || of.points(it.entry) }
+    if (chosen.isEmpty()) return
+    if (chosen.all { it.leavable }) emit(LeaveAsked(subject, entry, chosen.map { it.interaction }.toSet()))
+    else entry.refused.fire(context)   // "You cannot leave now."
+}
+```
+
+`CommandEntry "leave"` ([commands.md](commands.md)) triggers a `LeaveEntry`.
+
+### End to end
+
+```
+Manifest page "Smith talk"
+  RunningAudience "talking"     during = page.elements.filter { it is StepEntry }
+    LeashEntry  radius = 4      triggers -> shrug_line
+
+ask_line   rules.leavable = false
+question   rules.leavable = true
+
+CommandEntry "leave" -> LeaveEntry(of = empty)    refused -> cannot_leave_line
+```
+
+| Moment | What happens |
+| --- | --- |
+| Ann starts `ask_line` | `InSteps` has it, so she enters "talking". The leash derive runs, the snapshot saves her spot, and `Exits.allowed` is false |
+| She walks 5 blocks | She slows near the edge; past it, the move is denied |
+| `question` starts | The same `Leash` continues (same keys); `allowed` is true |
+| She walks 5 blocks | `LeaveAsked`: the interaction ends and `shrug_line` fires |
+| She leaves "talking" | After the grace, `Removed<Leash>` removes the modifier |
+| She types `/leave` during `ask_line` | `LeaveEntry` finds the step not leavable and fires `refused` |
+
+### Ways out: not proven
+
+- **`of.points(entry)`**: matching a running entry against a hydrated link set (a `CompiledResourceKey`, [book-composition.md](book-composition.md#4-publish)) has no designed helper.
+- **Types of `PlayerMove.to` and `HasLocation.location`**: the docs name the fields, not the types; `Position` is assumed.
+- **Cost**: `InSteps` and `Exits` are rewritten at tick end for members of running steps, and `PlayerMove` runs both leash handlers on every move of a leashed player.
+- **`RunningAudienceEntry.inside`**: a derive reading a core written `Live` and a publish time link query together; both forms exist, not together.
+- **Nothing ran.** It rests on layers 8, 12, 15, and 16, none of which are built.
+
 ## Contexts
 
 Interaction fields read `group`, `chain`, and `protagonist` through `InteractionContext` and `MemberContext`; see [formula-language.md](formula-language.md#formula-contexts).
@@ -880,4 +1083,5 @@ Writes go through [transaction functions](stored-data.md#transaction-functions).
 
 ## Open
 
-- Interaction bounds (blocking versus interrupting, changing over time; roadmap layer 17) are not designed yet.
+- Key ways out (sneak to leave a camera lock) need a key offer that means leave; keys are offers whose press becomes `Confirm` ([dialogue.md](dialogue.md)). Designed with scenes (layer 18).
+- A default way out for every conversation needs a query over the whole library; the name of that scope is open.

@@ -228,6 +228,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`EveryTick`**: core `TickConfig` object for a handler that runs every tick. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
+**`Exits`**: core `Live` per member and way out: which interactions it may end and whether leaving is allowed now. See [interactions.md](interactions.md#gesture-ways-out).
+
 **Exceptions**: a throwing provider or the recursion limit fails one evaluation: text shows a fallback, conditions are not met, changes are not applied. See [formula-language.md](formula-language.md#exceptions).
 
 **`exports { }`**: `dynamic()` builder saying what other resources get when they name this one. See [formula-language.md](formula-language.md#scope-and-exports).
@@ -290,6 +292,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`HasChat`, `HasInventory`, `HasHealth`**: example live capability traits an engine provides for its identities, each small and for one capability. See [live-data.md](live-data.md#live-capability-traits).
 
+**`HasAttributes`**: Minecraft capability trait that sets and removes keyed, transient attribute modifiers. See [interactions.md](interactions.md#gesture-ways-out).
+
 **`Held`**: core `Live` value per protagonist naming which interaction holds each Hold type, and which steps have settled. See [interactions.md](interactions.md#clashes).
 
 **`HeldBy`**: who holds a Hold type: its interaction, priority, and whether it is protected. See [interactions.md](interactions.md#clashes).
@@ -315,6 +319,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Importer**: a separate one time tool that moves legacy 0.9 content and data into the new model. See [migrations.md](migrations.md#importer-for-09).
 
 **`InAudience`**: `Live` mirror for a protagonist being inside an audience node, with `since`, the moment they entered. See [live-data.md](live-data.md#audiences).
+
+**`InSteps`**, **`InStep`**: core `Live` per member listing their running steps, each with its interaction and whether that interaction is leavable. See [interactions.md](interactions.md#the-rule).
 
 **Inlet**: see `BookInlet`.
 
@@ -364,7 +370,17 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Lane**: not a separate concept; the hold type is the lane, and two things clash only on the same hold type and keys. See [interactions.md](interactions.md#holds).
 
+**`leavable`**: step rule formula saying whether the player may leave; interaction wide, so one member it is false for blocks leaving for the whole group. See [interactions.md](interactions.md#the-rule).
+
+**`LeaveAsked`**: core intent event that ends interactions and fires the way out's links. See [interactions.md](interactions.md#leaving).
+
+**`LeaveEntry`**: action that ends the protagonist's leavable interactions, or fires `refused`; any trigger can fire it. See [interactions.md](interactions.md#action-way-out).
+
+**`Leash`**, **`LeashCenter`**, **`LeashEntry`**: the walk away way out: a hold under an audience, its snapshot of where the player stood, and the entry with its radius. See [interactions.md](interactions.md#gesture-ways-out).
+
 **Lifecycle events**: `Added<T>`, `Changed<T>(old, new)`, and `Removed<T>`, fired for every stored value, hold, and mirror. See [stored-data.md](stored-data.md#lifecycle-events).
+
+**Link query**: a link field in formula mode, returning references at publish (`page.elements.filter { it is StepEntry }`). See [formula-language.md](formula-language.md#link-fields-as-queries).
 
 **`Live`**: an immutable mirror of engine state, keyed by identities, never saved, maintained only while demanded. See [live-data.md](live-data.md#live-mirrors).
 
@@ -538,6 +554,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Running<E>`**: stored row of a running step: its entry, subject, context, and `startedAt`. Handlers and derives take it as a parameter. See [interactions.md](interactions.md#steps).
 
+**`RunningAudienceEntry`**: audience a protagonist is in while one of its `during` steps runs. See [interactions.md](interactions.md#lifetime-running-audiences).
+
 **`Runtime`**: a mutable local object on one server, never saved, with a creator lifetime; created by returning it from a handler. See [interactions.md](interactions.md#runtime-objects).
 
 ## S
@@ -661,6 +679,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`Watched<T>`**: the mirror of a watched formula, keyed by its field and subject; its `Changed` is a real change and is what formula starts use. See [live-data.md](live-data.md#formula-changes).
 
 **`WatchFormula`**: realm subscription that streams diagnostics, type, completions, and hover per keystroke. See [formula-language.md](formula-language.md#watchformula).
+
+**Way out**, **`WayOut`**: an explicit way for the player to leave an interaction: a gesture (an audience child hold, such as the leash) or the `LeaveEntry` action. Replaces legacy interaction bounds. See [interactions.md](interactions.md#ways-out).
 
 **Widening**: explicitly firing a chain for a group instead of one protagonist, making one shared interaction. See [interactions.md](interactions.md#widening).
 

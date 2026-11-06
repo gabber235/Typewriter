@@ -207,6 +207,24 @@ group.members.forEach { it.reputation += 5 }
 
 Assigning inside a verdict or another pure field is a type error. Update fields may set and update stored values only, never world actions such as giving items; those stay explicit entries. The change operations, transactions and the `Triggerable` trait are in [stored-data.md](stored-data.md).
 
+### Link fields as queries
+
+A link field can be a `Var` like any other field (decided 2026-11-06 in the layer 17 rough design). Plain mode picks links by hand, as before; formula mode is a query that returns references, evaluated by the realm at publish (`PublishScope`), as book `instances` are. While editing, the panel shows the links the query finds. At publish they become ordinary edges, so a new entry on the page joins on the next publish, and they pass the same link checks as hand picked links, relays included ([book-composition.md](book-composition.md#2-inlets-and-outlets)).
+
+```kotlin
+val during: Var<Set<Ref<RunningAudience.Steps, StepEntry>>, PublishScope> = Var.Value(emptySet())
+```
+
+```
+page.elements.filter { it is StepEntry }                                             // every step on this page
+book.pages.flatMap { it.elements }.filter { it is OptionDialogueEntry }              // every option dialogue in the book
+book.pages.flatMap { it.elements }.filter { it is DialogueEntry && it.name.startsWith("smith_") }
+```
+
+- `book` has the book's own members, such as `pages`, next to its variables. `page` is the element's own page, with the fields of `Page` (`LibraryModel.kt`): `name`, `chapter`, `elements`.
+- The result type is checked, so a query that can return something other than the field's target type is a type error; `is` narrows it.
+- Only values fixed at publish can be filtered. A `Var<RichText, MemberContext>` speaker differs per player, so "speaker is the smith" works only on a plain value or a link.
+
 ## Formula contexts
 
 A context is a plain Kotlin interface whose properties are the scope values a field gets. KSP turns `C` into the field's `scope` call. The code that evaluates the field (the entry's handler) passes an instance, with core helpers for core contexts:
@@ -381,7 +399,7 @@ data class BookVariable(val type: Var<Type, TypeScope>, val default: Var<*, Publ
 
 ### Variables
 
-Each variable is a type with an optional default, with key rules from the existing configuration system (`BookConfiguration`). Book variables hold per instance values and per instance functions. Entries read them through `scope(contents) { value("book", V) }`:
+Each variable is a type with an optional default, with key rules from the existing configuration system (`BookConfiguration`). Book variables hold per instance values and per instance functions. Entries read them through `scope(contents) { value("book", V) }`; `book` also has the book's own members, such as `pages` ([Link fields as queries](#link-fields-as-queries)):
 
 ```
 text = "The ${book.town.name} board has work for you."
@@ -824,4 +842,7 @@ A formula can start a chain: when a condition turns true, or whenever a formula'
 - Provider override details: whether a same name function replaces a generated member and how `hidden` hides one.
 - Where cross resource diagnostics from `dynamic()` are produced.
 - Editor design for function type parameters in the panel.
+- A book variable named like a book member (`pages`): which wins, or whether the name is refused.
+- Inside a chapter: `page.chapter` is a `HierarchyPath`, and a provider for "this chapter or below" is not designed.
+- Link queries: a `Ref` in a formula reading through to its target's fields (`it.name`, `it.elements`), and `is` as an expression, which the design so far shows only in `when` branches.
 - Live formula values per protagonist in the panel (vision item) have no design yet.

@@ -264,7 +264,7 @@ PlaceholderAPI is a provider function (`context(engine: Engine) fun papi(name: S
 
 ## Audiences
 
-Audience entries stay their own entry system: trees, enter and leave, children. There is one formula audience (decided 2026-11-04). Its criterion runs per protagonist on that protagonist's engine, and membership is a mirror. Objectives likewise stay their own entry system (display, tracking, progress); only their criteria become formulas.
+Audience entries stay their own entry system: trees, enter and leave, children. There is one formula audience (decided 2026-11-04), and one running audience that is in while one of its steps runs ([interactions.md](interactions.md#lifetime-running-audiences)). Its criterion runs per protagonist on that protagonist's engine, and membership is a mirror. Objectives likewise stay their own entry system (display, tracking, progress); only their criteria become formulas.
 
 ```kotlin
 data class AudienceMember(val protagonist: Protagonist, val since: Instant, val here: Boolean)
@@ -278,7 +278,7 @@ interface AudienceContext {
 data class FormulaAudienceEntry(
     override val children: List<Ref<AudienceEntry>> = emptyList(),
     val criterion: Var<Boolean, AudienceContext>,
-) : AudienceFilterEntry
+) : AudienceEntry
 
 data class InAudience(
     @Key val protagonist: Protagonist,

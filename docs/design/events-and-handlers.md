@@ -154,6 +154,7 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | A plain value named like a `Var` field of the receiver's entry | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
+| A hold's snapshot type (`LeashCenter`) | That hold's stored snapshot at the hold's keys ([interactions.md](interactions.md#snapshot-and-restore)). |
 | `Snapshot<H>` | A hold's stored snapshot, readable and writable ([interactions.md](interactions.md)). |
 
 Live capability traits are provided by the engine (`PaperProtagonist : Player, HasChat, ...`). Optional capabilities are plain Kotlin type checks.
