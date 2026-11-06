@@ -108,7 +108,7 @@ Measured with `javap` on Paper's mapped jars, over 47 packet classes picked from
 
 ## Later
 
-Per viewer entities move to layer 21, replacing EntityLib. A real game entity that was never added to a world could give its data values, so no tables per version would be needed. That idea is untested.
+The base of per viewer entities lands in layer 18, because the scene camera is its first demo: `FakeEntity`, `spawn`, `move`, `remove`, and `lookThrough` (the camera packet only), built on `wire.send` ([scenes.md](scenes.md#4-the-rig-as-legacy)). Layer 21 builds NPCs on top of it, replacing EntityLib. A real game entity that was never added to a world could give its data values, so no tables per version would be needed. That idea is untested.
 
 ## Not proven
 

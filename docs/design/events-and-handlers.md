@@ -64,6 +64,7 @@ class BlockBreakSource(paper: PaperEvents) : Source<BlockBreak> by
 - `origin` comes from the event's subject: a Minecraft session id is the UUID, so the protagonist gives the session.
 - A `change` verdict is applied with `apply = { damage = it.event.damage }`, read from `outcome.event`.
 - `PaperEvents.listen` is the fallback for unusual cases, such as a cause that is not the subject.
+- `PaperEvents.own(player) { ... }` marks a game change as Typewriter's own: a Paper event raised inside the block, for that player, reaches the conversion with `own` true, and a source returns `null` for it. Other plugins still see the Paper event. The block is not suspending, so the mark covers exactly the call that raises the event. The same rule as `wire.send` for packets ([packets.md](packets.md#5-typewriters-own-packets-get-through)); first use is the camera's body follow ([scenes.md](scenes.md#5-typewriters-own-moves)).
 
 | Detail | Who does it |
 | --- | --- |
@@ -578,10 +579,10 @@ Of the 30 legacy events, 24 use the shared entry. `PlayerDamaged`, `PlayerKillPl
 | 8 Mirrors | `FactChange` | |
 | 10 Minecraft types | `BlockPlace`, `ConsumeItem`, `CraftItem`, `DropItem`, `PickupItem`, `Fish`, `Interact`, `InteractBlock`, `ChangeWorld`, `Teleport`, `PlayerRespawn`, `PlayerMove`; `BlockBreak` gains its fields | `GiveItem`, `RemoveItem`, `RemoveItemFromSlot`, `SetItem`, `DropItem`, `Teleport`, `ApplyVelocity`, `BurnPlayer`, `AddPotionEffect`, `RemovePotionEffect`, `SwitchServer` |
 | 16 Dialogue | | `Message`, `ActionBarSimpleMessage`, `ShowTitle`, `SendToast` |
-| 18 Scenes | | `PlaySound`, `StopSound`, `SpawnParticle`, `Firework`, `SetBlock`, `Cinematic` |
+| 18 Scenes | `PlayerDamaged`, `ClientLoaded` | `PlaySound`, `StopSound`, `SpawnParticle`, `Firework`, `SetBlock`, `Cinematic` |
 | 20 Assets | `ResourcePack` | |
 | 21 Entities | `LeashEntity`, `PlayerHitEntity`, `PlayerKillEntity`, `PlayerKillPlayer`, `PlayerProjectileHitBlock`, `PlayerProjectileHitEntity` | |
-| 22 Regions, rules | `PlayerDamaged`, `PlayerDeath` | |
+| 22 Regions, rules | `PlayerDeath` | |
 
 `PlayerMove` holds the player, `from`, and `to`. A condition covers what legacy needed fields for:
 

@@ -82,7 +82,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## C
 
-**`CameraHold`**: the hold a scene uses for the camera; it snapshots location, flight, and velocity and restores them at the end. See [interactions.md](interactions.md#scenes).
+**`CameraAim`**: where a camera segment looks, apart from where it goes: `Keyframes`, `Ahead`, or `At(target)`. See [scenes.md](scenes.md#3-camera-kinds).
+
+**`CameraHold`**: the hold a camera track derives for one protagonist: the current segment, its resolved path and aim, and the playhead. It snapshots location and velocity and restores them at the end. See [scenes.md](scenes.md#3-camera-kinds).
+
+**`CameraPath`**: a camera segment's path with its formulas resolved for one member: a world and a position per frame. See [scenes.md](scenes.md#3-camera-kinds).
+
+**`CameraRig`**: `Runtime` holding the fake entity a protagonist's client looks through during a scene. See [scenes.md](scenes.md#4-the-rig-as-legacy).
+
+**`CameraSegment`**: interface for camera segments on a camera track; kinds are fixed, Catmull-Rom, and Bezier, each owning its own points. See [scenes.md](scenes.md#3-camera-kinds).
 
 **`CancelableEvent`**: interface of an event a verdict can deny, such as `BlockBreak`. See [events-and-handlers.md](events-and-handlers.md#event-entries).
 
@@ -117,6 +125,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`ChosenTarget`**: stored value `ChosenTarget(user, target)` naming the protagonist a panel user acts on, so the choice follows the user across devices. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
 **Clash**: what happens when an incoming step needs a hold type another interaction holds for the same protagonist. See [interactions.md](interactions.md#clashes).
+
+**`ClientLoaded`**: wire event from `ServerboundPlayerLoadedPacket`: the client has loaded its world, also after a world change. See [scenes.md](scenes.md#7-preparation-waits).
 
 **`ClientPosition`**: example wire event that is only a fake view, kept separate from `PlayerMove` because its effect differs. See [events-and-handlers.md](events-and-handlers.md#event).
 
@@ -159,6 +169,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`CronSchedule`**: core `Schedule` from a cron expression and a time zone. See [stored-data.md](stored-data.md#due).
 
 **`CommandEntry`**: the literal root of a content command, with an `available` formula, built from `LiteralEntry` and `ArgumentEntry<T>`. See [commands.md](commands.md#end-to-end-in-content).
+
+**`CueKeyframe`**: keyframe on a cue track whose links fire once when the playhead reaches or passes it, guarded by `CueFired`. See [scenes.md](scenes.md#8-skip-and-cues).
 
 ## D
 
@@ -235,6 +247,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`exports { }`**: `dynamic()` builder saying what other resources get when they name this one. See [formula-language.md](formula-language.md#scope-and-exports).
 
 ## F
+
+**`FakeEntity`**: a per viewer entity that exists only on the wire, so a crash leaves nothing; its base is in layer 18, NPCs build on it in 21. See [scenes.md](scenes.md#4-the-rig-as-legacy).
 
 **Finder**: a `Live` type plus producing handlers that finds a value for a handler, such as the nearest NPC. See [live-data.md](live-data.md#finders-are-mirrors).
 
@@ -356,13 +370,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Keyed hold**: a hold with `@Key` fields beyond the holder, so one holder can hold many holds of one type, such as `NpcView`. See [interactions.md](interactions.md#keyed-holds).
 
-**`KeyOffer`**: `Live` value in which a step asks for a key press. Offers do not clash; the newest takes presses. See [dialogue.md](dialogue.md#6-the-key).
+**`KeyOffer`**: `Live` value in which a step or a way out (`by`) asks for a key press, carrying the event a press emits (`press`). Offers do not clash; the newest takes presses. See [dialogue.md](dialogue.md#6-the-key).
 
 **`KeyPressed`**: raw event for one of the confirmation keys. See [dialogue.md](dialogue.md#6-the-key).
 
 **Keys**: the identities a stored value is about: none (global), one, several (ordered), or a `Set` (symmetric). See [stored-data.md](stored-data.md#keys).
 
 **`KeysLeft`**: `Live` value saying which keys a camera or lock leaves usable. See [dialogue.md](dialogue.md#6-the-key).
+
+**`KeyWayOutEntry`**: way out that offers a key whose press emits `LeaveAsked`, offered only while leaving is allowed. See [scenes.md](scenes.md#9-the-key-way-out).
 
 **`KnownIds`**: stored value `KnownIds(engine, type, ids)` with the ids one engine reports for one domain; the shared picker and the domain check read it. See [domains.md](domains.md).
 
@@ -424,6 +440,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`NearestNpc`, `NearbyNpcs`**: example finder mirrors; the second shows an entry reference as a parameter key. See [live-data.md](live-data.md#finders-are-mirrors).
 
+**`NotReadyEntry`**: way out for a member whose scene preparation ended `Failed` or `TimedOut`; when leaving is blocked, the member plays on. See [scenes.md](scenes.md#7-preparation-waits).
+
 **`now`**: the time, fixed per evaluation; in a `Changes` field it is the realm commit time. See [formula-language.md](formula-language.md#time-and-randomness).
 
 **`NpcActivity`**: example `Runtime` for a running NPC activity, created on `Added<NpcRunning>`. See [interactions.md](interactions.md#runtime-objects).
@@ -438,7 +456,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Occurrence**: one real happening that may reach several sources; sources of the same meaning join it. See [events-and-handlers.md](events-and-handlers.md#occurrences-and-dedupe).
 
-**`OfferedKey`**: hold naming the one key and step a player's press goes to now; not counted in clashes. See [dialogue.md](dialogue.md#6-the-key).
+**`OfferedKey`**: hold naming the one key a player's press goes to now and the event it emits; not counted in clashes. See [dialogue.md](dialogue.md#6-the-key).
 
 **Offline changes**: stored data changing while its protagonist is offline; stored only handlers run on the realm, live reactions may be missed. See [stored-data.md](stored-data.md#offline-changes).
 
@@ -459,6 +477,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Outlet**: see `BookOutlet`.
 
 **Owed state**: the guideline to store what is owed, not what happened, so a live handler can act whenever the protagonist is online. See [stored-data.md](stored-data.md#offline-changes).
+
+**`own`**: `PaperEvents.own(player) { ... }` marks a game change as Typewriter's own, so its Paper event makes no Typewriter event; other plugins still see it. See [events-and-handlers.md](events-and-handlers.md#writing-a-source).
 
 **Owner**: the key identities of a stored value; it is removed when any of them ends. See [stored-data.md](stored-data.md#owners-and-lifetime).
 
@@ -484,9 +504,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`PlayerMove`**: example Paper event that really moves the player. See [events-and-handlers.md](events-and-handlers.md#event).
 
+**`Playhead`**: stored row per scene step with the frame, the instant it stood there, and the waits that pause it for everyone. See [scenes.md](scenes.md#1-the-step-and-the-playhead).
+
+**`PlaySceneEntry`**: the step that plays a scene page, with `waitAtMost` for preparation waits. See [scenes.md](scenes.md#1-the-step-and-the-playhead).
+
 **Portable expression**: the v1 panel operation encoding, unrelated to formulas and never reused by them. See [formula-language.md](formula-language.md).
 
 **Portable kernels**: the Kotlin and Dart implementations of `operations.yaml` that keep panel and realm expression results equal; formula stdlib providers may call the Kotlin ones as a library. See [formula-language.md](formula-language.md#standard-library).
+
+**`Prepared`**: stored row with how a member came through a preparation wait (`Readiness`), kept until the step ends. See [scenes.md](scenes.md#7-preparation-waits).
 
 **Preview**: adds a `Simulating(mode)` stored value to the previewed step; handlers run for real unless they check it. See [interactions.md](interactions.md#preview-and-recording).
 
@@ -526,6 +552,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`random(...)`**: formula randomness seeded by (run, place), so rechecking agrees and a new run rolls again; the run is the chain's seed record, the write, or the event, depending on the context. See [formula-language.md](formula-language.md#time-and-randomness).
 
+**`Readiness`**: the result of a preparation wait: `Ready`, `Failed(reason)`, or `TimedOut`. See [scenes.md](scenes.md#7-preparation-waits).
+
 **`resource.relay`**: relation family of relays; an endpoint in it accepts any resource, and a link through a relay is valid when every link it becomes after rewiring is valid. See [book-composition.md](book-composition.md#2-inlets-and-outlets).
 
 **Reaction**: behaviour attached to a variable that only changes data; kinds are `OnWrite`, `AfterWrite`, and `Every`. See [stored-data.md](stored-data.md#reactions).
@@ -560,7 +588,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## S
 
-**Scene**: a step whose holds take the camera and hide the protagonist by packets. See [interactions.md](interactions.md#scenes).
+**Scene**: a step that plays a scene page: tracks derive Holds at the frame of a shared `Playhead`. See [scenes.md](scenes.md).
+
+**`ScenePlaying`**: `Live` value saying a scene page plays for a member, with the step, context, and playhead its tracks read. See [scenes.md](scenes.md#1-the-step-and-the-playhead).
 
 **`Schedule`**: open catalog type that answers when a repeating `Due` fires next; `next(after)` returns `null` for never again. See [stored-data.md](stored-data.md#due).
 
@@ -585,6 +615,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`SidebarHold`**: example display hold derived from `InAudience`, with its text as a tracked parameter and a handler on `Changed<SidebarHold>`. See [live-data.md](live-data.md#audiences).
 
 **`Simulating(mode)`**: stored value marking a previewed step. See [interactions.md](interactions.md#preview-and-recording).
+
+**`SkipTrackEntry`**: scene track whose segments offer a key that jumps the playhead past the segment. See [scenes.md](scenes.md#8-skip-and-cues).
 
 **`Snapshot` (group)**: the `group` type after `ContinueForEveryone`, a fixed snapshot group. See [interactions.md](interactions.md#widening).
 
@@ -673,6 +705,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`Verdict`**: a decision phase result: `allow`, `deny`, `change`, or `pass`. See [events-and-handlers.md](events-and-handlers.md#verdicts).
 
 ## W
+
+**`Wait`**: one member getting one cue ready; while a `Playhead` has any, the scene is paused. See [scenes.md](scenes.md#7-preparation-waits).
+
+**`WaitDue`**: `Due` that releases a preparation wait as `TimedOut` after `waitAtMost`. See [scenes.md](scenes.md#7-preparation-waits).
 
 **`WatchValues`**: how a tab reads a mirror or stored value: one watch on the panel engine, with values as `DataValue`. See [panel-engine-communication.md](panel-engine-communication.md) (question 15).
 

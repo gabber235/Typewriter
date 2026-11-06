@@ -172,7 +172,7 @@ fun Running<OptionDialogueEntry>.shown(who: Protagonist, context: MemberContext)
 
 @Derive
 fun Running<OptionDialogueEntry>.offer(who: Protagonist) =
-    KeyOffer(who, step, preferred = null, since = startedAt)
+    KeyOffer(who, by = step, preferred = null, since = startedAt, press = Confirm(who, step))
 
 // A changed list resets the selection, as legacy does.
 fun Selected?.indexIn(shown: ShownOptions): Int =
@@ -237,7 +237,7 @@ data class HeldWand(@Key val who: Protagonist, val power: Int) : Live
 
 ### 6. The key
 
-Keys are offers, not holds. Several can exist, so a dialogue can run beside a scene's skip key. The newest takes presses, and the other gets the key back when the newest ends. A press needs an intent event here, because the offer names the step and the handlers do not care which key it was.
+Keys are offers, not holds. Several can exist, so a dialogue can run beside a scene's skip key. The newest takes presses, and the other gets the key back when the newest ends. A press needs an intent event here, because the handlers do not care which key it was. The offer carries that event as `press`, so a step offers `Confirm(who, step)` and a key way out offers `LeaveAsked` ([scenes.md](scenes.md#9-the-key-way-out)).
 
 ```kotlin
 enum class ConfirmationKey(val label: RichText) {
@@ -247,21 +247,21 @@ enum class ConfirmationKey(val label: RichText) {
 @TypewriterType(id = "...")
 data class ConfirmationConfiguration(val key: ConfirmationKey = ConfirmationKey.Sneak)
 
-// Asked for by a step.
-data class KeyOffer(@Key val who: Protagonist, @Key val step: Step,
-    val preferred: ConfirmationKey?, val since: Instant) : Live
+// Asked for by a step or a way out (by); press is what a press emits.
+data class KeyOffer(@Key val who: Protagonist, @Key val by: Identity,
+    val preferred: ConfirmationKey?, val since: Instant, val press: Event) : Live
 
 // What a camera or a lock leaves usable.
 data class KeysLeft(@Key val who: Protagonist, @Key val step: Step,
     val keys: Set<ConfirmationKey>) : Live
-@Derive fun Running<CameraEntry>.keys(who: Protagonist) = KeysLeft(who, step, setOf(Jump, Sneak))
+@Derive fun CameraHold.keys() = KeysLeft(who, step, setOf(Jump, Sneak))   // scenes.md
 
 // The one answer per player. A Hold, but not from a Running, so it is not counted in clashes.
-data class OfferedKey(@Key val who: Protagonist, val key: ConfirmationKey, val step: Step) : Hold
+data class OfferedKey(@Key val who: Protagonist, val key: ConfirmationKey, val press: Event) : Hold
 
 @Derive
 fun KeyOffer.offered(
-    all: List<KeyOffer>,            // who is filled from the receiver, step is free
+    all: List<KeyOffer>,            // who is filled from the receiver, by is free
     left: List<KeysLeft>,
     config: ConfirmationConfiguration,
 ): OfferedKey? {
@@ -269,7 +269,7 @@ fun KeyOffer.offered(
     val usable = left.fold(ConfirmationKey.entries.toSet()) { keys, l -> keys intersect l.keys }
     val key = listOfNotNull(preferred, config.key).firstOrNull { it in usable }
         ?: usable.firstOrNull() ?: return null
-    return OfferedKey(who, key, step)
+    return OfferedKey(who, key, press)
 }
 
 @TypewriterType(id = "...")
@@ -280,7 +280,7 @@ data class Confirm(val who: Protagonist, val step: Step) : Event
 
 @Handler
 fun KeyPressed.take(offered: OfferedKey): Verdict =
-    if (offered.key == key) deny { emit(Confirm(player, offered.step)) } else pass()
+    if (offered.key == key) deny { emit(offered.press) } else pass()
 
 // Jump cannot be cancelled, so legacy weakens jump strength. A Hold adds a restore after a crash.
 data class JumpLock(@Key val who: Protagonist) : Hold
@@ -373,7 +373,7 @@ fun Running<OptionDialogueEntry>.noOptions(shown: List<ShownOptions>) =
 // Timed: legacy holds a confirmation only while canSkip. An offer follows the same formula.
 @Derive
 fun Running<TimedDialogueEntry>.offer(who: Protagonist, canSkip: Boolean) =
-    KeyOffer(who, step, null, startedAt).takeIf { canSkip }
+    KeyOffer(who, by = step, preferred = null, since = startedAt, press = Confirm(who, step)).takeIf { canSkip }
 
 // Input: one holder, so no routing is needed. Raw event, hold, and a handler on the raw event.
 data class TypedInput(@Key val who: Protagonist) : Hold

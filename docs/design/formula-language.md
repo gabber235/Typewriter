@@ -84,7 +84,7 @@ data class FormulaReference(
 @TypewriterType(id = VAR_TYPE_ID)
 sealed interface Var<T, C> {
     data class Value<T, C>(val value: T) : Var<T, C>
-    data class Computed<T, C>(val formula: C) : Var<T, C>
+    data class Computed<T, C>(val formula: Formula) : Var<T, C>
 }
 ```
 

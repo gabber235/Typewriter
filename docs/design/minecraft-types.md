@@ -15,7 +15,7 @@ Spatial data has three parts: a **world**, a **vector** (x, y, z), and a **rotat
 | `Vec3` | vector | velocity, offsets, particle spread |
 | `BlockVec` | whole number vector | a block offset |
 | `Rotation` | rotation | "look in this direction" cue |
-| `Pose` | vector + rotation | camera keyframe relative to a scene origin |
+| `Pose` | vector + rotation | a facing at an offset; camera points use `Position` ([scenes.md](scenes.md#3-camera-kinds)) |
 | `Location` | world + vector | particle spot, sound location, region center |
 | `BlockLocation` | world + whole number vector | fake block, block events |
 | `Position` | world + vector + rotation | teleport, NPC spawn |

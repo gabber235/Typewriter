@@ -214,7 +214,8 @@ Each one proves a different part of the design. Legacy has 16 displays and 17 fi
 | --- | --- |
 | Weather, freeze time, experience | Conversion track, small once core exists |
 | Particle | Layer 25, with `RegionOutlineHold` |
-| Fake block, looping cinematic | Layer 18 |
+| Fake block | Layer 18 ([scenes.md](scenes.md)) |
+| Looping cinematic | Later, as the vision says |
 | Compass, quest item, item slot binder | Layer 23 |
 | Timer | No Hold: `Due` from layer 7 |
 | Trigger | No Hold: enter and exit entries from layer 8 |
@@ -357,10 +358,10 @@ Other steps use the same row:
 
 | Need | Code |
 | --- | --- |
-| A scene ends | `Tick<EveryTick>` comparing `running.elapsed` with its length |
+| A scene ends | `Tick<EveryTick>` comparing the `Playhead` frame with the page's last frame ([scenes.md](scenes.md)) |
 | A delay | `Added<Running<DelayEntry>>` writes `DelayDue(step, at) : Due`, and `Elapsed<DelayDue>` completes the step |
 | A search and a click | An event handler that takes `Running<E>` and completes it |
-| A skip | `Skipped(@Key step, at) : Stored`, removed with the step |
+| A scene's clock, skip, and pause | `Playhead(@Key step, frame, since, waits) : Stored`, removed with the step |
 | A preview | `Simulating(@Key step) : Stored` |
 
 Stored values keyed by a step are removed when the step ends, so step data cannot leak after a crash, a server move, or a hot publish. Everything the protagonist sees is a derive over `Running` plus its entry, so a hot publish updates a running step in place ([live-data.md](live-data.md#hot-publish)).
@@ -401,7 +402,7 @@ Interactions stay inside one engine kind. Engines share stored state only throug
 
 ## Clashes
 
-The step system does not limit anyone to one at a time. Any number of steps and interactions run together. Two clash only when they need the same Hold type for the same protagonist. Only a `Hold` returned by a derive on `Running<E>` counts; a `Live` value from a step never clashes.
+The step system does not limit anyone to one at a time. Any number of steps and interactions run together. Two clash only when they need the same Hold type for the same protagonist. A `Hold` counts for a step when its derive is on `Running<E>`, or on content (an element, such as a scene track) and asks for a `Live` made on that `Running<E>` ([scenes.md](scenes.md#clashes-for-page-content)); a `Live` value from a step never clashes.
 
 An incoming step counts every Hold type its derives can return. A running step counts what it holds now, so a released Hold can be taken. If a step later wants a Hold that someone took, its own `onClash` applies.
 
@@ -787,6 +788,10 @@ fun Triggered<LeaveEntry>.leave(steps: InSteps, of: Set<Ref<LeaveSteps.Leave, St
 
 `CommandEntry "leave"` ([commands.md](commands.md)) triggers a `LeaveEntry`.
 
+### Key and not ready ways out
+
+Layer 18 adds two ways out ([scenes.md](scenes.md)). `KeyWayOutEntry` offers a key whose press emits `LeaveAsked`, through a `KeyOffer` that carries its press ([dialogue.md](dialogue.md#6-the-key)). `NotReadyEntry` leaves for a member whose preparation in a scene ended `Failed` or `TimedOut`; when leaving is blocked, the member plays on.
+
 ### End to end
 
 ```
@@ -1006,13 +1011,13 @@ A widened chain's events have a group subject; how handlers then iterate members
 
 ## Scenes
 
-Scenes are steps whose Holds take the camera and hide the protagonist. Their feature details are decided when scenes are built (roadmap layer 18); the primitive level rules are:
+A scene is a step that plays a scene page: a shared `Playhead`, tracks that derive Holds at the current frame, the camera on a fake entity, and preparation waits. See [scenes.md](scenes.md). The primitive level rules:
 
-- The filming protagonist is hidden by packets, not by an invisibility potion, so nothing is persisted and nothing needs restoring.
-- `CameraHold` takes a snapshot of the protagonist's location, flight, and velocity, and restores them at the end. Content can overwrite the snapshot through `Snapshot<CameraHold>` to land the protagonist somewhere else with one teleport.
+- The filming protagonist is hidden from others by packets, so nothing is persisted and nothing needs restoring.
+- `CameraHold` takes a snapshot of the protagonist's location and velocity, and restores them at the end. A teleport during the camera is denied into that snapshot, so the protagonist lands somewhere else with one teleport.
 - While `CameraHold` is held, the formula member `protagonist.position` reads the camera position. Covers legacy `PlayerPositionOverride` in the context: the override disappears with the Hold.
 - Back to back scenes adopt the camera Hold within grace, so the cut has no restore in between.
-- A cinematic has the normal step rule `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
+- A scene has the normal step rule `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
 
 ## NPC scope
 
@@ -1083,5 +1088,4 @@ Writes go through [transaction functions](stored-data.md#transaction-functions).
 
 ## Open
 
-- Key ways out (sneak to leave a camera lock) need a key offer that means leave; keys are offers whose press becomes `Confirm` ([dialogue.md](dialogue.md)). Designed with scenes (layer 18).
 - A default way out for every conversation needs a query over the whole library; the name of that scope is open.
