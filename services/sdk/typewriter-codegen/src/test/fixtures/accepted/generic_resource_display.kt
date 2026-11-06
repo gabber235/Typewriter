@@ -12,6 +12,7 @@ import com.typewritermc.types.Owning
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceDefinition
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -61,7 +62,7 @@ fun main(args: Array<String>) {
         .load(
             listOf(
                 GeneratedProviderArtifact(ArtifactId("fixture"), Path.of(args.single())),
-                GeneratedProviderArtifact(ArtifactId("core"), Path.of(Resource::class.java.protectionDomain.codeSource.location.toURI())),
+                GeneratedProviderArtifact(ArtifactId("core"), Path.of(ResourceDefinition::class.java.protectionDomain.codeSource.location.toURI())),
             ),
             DeploymentFacts(emptyMap()),
             DiscoveryDomains.Realm,

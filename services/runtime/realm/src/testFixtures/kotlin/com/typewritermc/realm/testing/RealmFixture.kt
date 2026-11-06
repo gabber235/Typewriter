@@ -36,6 +36,7 @@ import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
 import java.util.UUID
@@ -208,6 +209,42 @@ class RealmFixture private constructor(
     }
 
     /**
+     * The saved relation rows of [contract], each as its row id with the first and second resource it joins. Only a
+     * fixture that saves into SurrealDB stores relation rows.
+     */
+    internal fun relationRows(contract: RelationId): Set<StoredRelationRow> =
+        checkNotNull(database) { "Relation rows need a Realm that saves into SurrealDB." }
+            .query("SELECT id, in, out FROM resource_relation WHERE contract = \$contract;", mapOf("contract" to contract.value))
+            .take(0)
+            .getArray()
+            .mapTo(linkedSetOf()) { row ->
+                val value = row.getObject()
+                StoredRelationRow(
+                    row =
+                        value
+                            .get("id")
+                            .getRecordId()
+                            .id.string,
+                    first =
+                        ResourceId(
+                            value =
+                                value
+                                    .get("in")
+                                    .getRecordId()
+                                    .id.string,
+                        ),
+                    second =
+                        ResourceId(
+                            value =
+                                value
+                                    .get("out")
+                                    .getRecordId()
+                                    .id.string,
+                        ),
+                )
+            }
+
+    /**
      * A second author who loaded the saved state now. Edits they prepare later still start from that state, as an
      * open editor's do, so a change another author committed in between surfaces as a conflict.
      */
@@ -293,3 +330,10 @@ class RealmFixture private constructor(
             }
     }
 }
+
+/** One saved relation row: its own id and the first and second resource it joins. */
+data class StoredRelationRow(
+    val row: String,
+    val first: ResourceId,
+    val second: ResourceId,
+)

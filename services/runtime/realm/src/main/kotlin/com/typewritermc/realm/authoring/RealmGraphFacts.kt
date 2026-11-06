@@ -9,6 +9,7 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.Cloneability
 import com.typewritermc.operations.LinkCapacity
+import com.typewritermc.realm.catalog.graphLinkRelationIds
 import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
@@ -54,8 +55,8 @@ internal class RealmGraphFacts(
     override fun ownerOf(id: AuthorResourceId): AuthorResourceId? = ownerOf(id.toSkir())?.toResourceId()
 
     private fun ownerOf(id: ResourceId): ResourceId? {
-        relations.reads.observeInput(InputIdentity.Incoming(id, null))
         val ownership = catalog.ownershipRelationIds
+        ownership.forEach { relations.reads.observeInput(InputIdentity.Incoming(id, it)) }
         return relations.projections
             .filter { it.contract in ownership && it.second == id }
             .map { it.first }
@@ -159,7 +160,7 @@ internal class RealmGraphFacts(
         while (pending.isNotEmpty()) {
             val id = pending.removeFirst()
             if (!closure.add(id)) continue
-            relations.reads.observeInput(InputIdentity.Incoming(id, null))
+            catalog.ownershipRelationIds.forEach { relations.reads.observeInput(InputIdentity.Incoming(id, it)) }
             owned[id].orEmpty().forEach(pending::add)
         }
         return closure
@@ -171,12 +172,12 @@ internal class RealmGraphFacts(
             record.configuration.definition
         }
 
-    /** The non owning reference slots of [id] at their first endpoints, including room for one more collection item. */
+    /** The graph link slots of [id] at their first endpoints, including room for one more collection item. */
     private fun referenceSlots(id: ResourceId): List<ReferenceSlot> {
         val record = relations.recordOf(id)
         val slots = mutableListOf<ReferenceSlot>()
         catalog.relations
-            .filterNot { it.ownsResources }
+            .filter { it.id in catalog.graphLinkRelationIds }
             .forEach { relation ->
                 val endpoint = relation.first.id
                 val evidence = with(relations) { id.bindingEvidence(endpoint) }

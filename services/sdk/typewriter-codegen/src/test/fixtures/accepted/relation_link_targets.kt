@@ -4,6 +4,7 @@ import com.typewritermc.types.One
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceDefinition
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
@@ -54,6 +55,7 @@ fun main() {
         DefaultCheckedCatalog(
             CatalogGeneration(value = "relation link fixture"),
             StandardTypes.definitions +
+                ResourceDefinition.definition +
                 LinkedRewardDefinition.definition +
                 LinkedCoinDefinition.definition +
                 LinkedGemDefinition.definition +

@@ -16,6 +16,7 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.authoring.authoredTypeAt
+import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.ownsResources
@@ -68,7 +69,7 @@ internal class OperationLayoutPreparation(
                 .mapTo(hashSetOf()) { it.first.id }
         val memberships = relations.links.values.filter { it.source == this && it.id.endpoint in owningEndpoints }
         subjects.forEach { subject ->
-            relations.reads.observeInput(InputIdentity.Incoming(subject, null))
+            relations.catalog.ownershipRelationIds.forEach { relations.reads.observeInput(InputIdentity.Incoming(subject, it)) }
             requireNotNull(memberships.singleOrNull { it.target.resource == subject }) {
                 "Place resources in one exact destination ownership occurrence before preparing layout."
             }

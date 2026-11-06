@@ -139,6 +139,22 @@ internal fun AuthoringRecord.authoredTypeAt(
     return type
 }
 
+/**
+ * The type the schema declares for the field at [path], before a stored value there names its own actual type: a
+ * nullable slot stays nullable while it holds a value. Null when no schema reaches the field.
+ */
+internal fun AuthoringRecord.declaredFieldTypeAt(
+    path: ValuePath,
+    catalog: CheckedCatalog,
+): TypeUse? {
+    val field = path.segments.lastOrNull() as? PathSegment.FieldWrapper ?: return null
+    val container = authoredTypeAt(ValuePath(segments = path.segments.dropLast(1)), catalog) ?: return null
+    val resolved = catalog.resolve(container.traversable()) as? Resolution.Ready ?: return null
+    return resolved.value.schema.fields
+        .singleOrNull { it.key == field.name }
+        ?.type
+}
+
 private fun TypeUse.traversable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value else this
 
 private fun DataValue?.namedPayload(): Pair<TypeUse, DataValue>? =

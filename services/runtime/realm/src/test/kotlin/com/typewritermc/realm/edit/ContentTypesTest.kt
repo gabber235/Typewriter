@@ -5,8 +5,11 @@ import com.typewritermc.authoring.with
 import com.typewritermc.engine.pages.Definition
 import com.typewritermc.engine.pages.DefinitionDefinition
 import com.typewritermc.engine.pages.StaticPageDefinition
+import com.typewritermc.formula.ContentReferences
+import com.typewritermc.operations.Duplicate
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.routeFixtureCatalog
+import com.typewritermc.realm.routes.operations
 import com.typewritermc.realm.testing.ContentTypes
 import com.typewritermc.realm.testing.DeclaredTypes
 import com.typewritermc.realm.testing.RealmFixture
@@ -21,13 +24,16 @@ import com.typewritermc.realm.testing.commitDefinition
 import com.typewritermc.realm.testing.commitRecordUser
 import com.typewritermc.realm.testing.commitTypeDefinition
 import com.typewritermc.realm.testing.conflictingFacts
+import com.typewritermc.realm.testing.contentLink
 import com.typewritermc.realm.testing.createEntry
 import com.typewritermc.realm.testing.declaredTypes
 import com.typewritermc.realm.testing.declares
 import com.typewritermc.realm.testing.definitionOf
 import com.typewritermc.realm.testing.delete
+import com.typewritermc.realm.testing.entryRef
 import com.typewritermc.realm.testing.expectRefused
 import com.typewritermc.realm.testing.fieldKey
+import com.typewritermc.realm.testing.formulaPage
 import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.listType
 import com.typewritermc.realm.testing.overDraft
@@ -44,6 +50,7 @@ import com.typewritermc.realm.testing.rename
 import com.typewritermc.realm.testing.resolvedSchema
 import com.typewritermc.realm.testing.schemaOf
 import com.typewritermc.realm.testing.setDefinitionValue
+import com.typewritermc.realm.testing.setReference
 import com.typewritermc.realm.testing.setTypes
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.shouldBeReady
@@ -54,9 +61,11 @@ import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.typeArgumentOf
 import com.typewritermc.realm.testing.typeUse
 import com.typewritermc.realm.testing.unavailableCodeOf
+import com.typewritermc.realm.testing.usagesOf
 import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.viewCatalog
 import com.typewritermc.realm.testing.withSetup
+import com.typewritermc.setup.setup
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.catalog.contentOwner
@@ -979,6 +988,188 @@ val ContentTypesTest by testSuite {
                     plain(PortableValue(actualType = checkNotNull(it.use.named).definition.member("Open").use(), payload = DataValue.UNIT))
                 }.created()
             value(id, "value", "value") shouldBe caseValue(door.on(id).use, "Open")
+        }
+    }
+
+    val linked =
+        setup("linked-entries") {
+            formulaPage {
+                smith()
+                smith("jones")
+            }
+        }
+    val rewardWithGiver =
+        declares {
+            record {
+                field("giver", entryRef)
+                field("gold", intUse)
+            }
+        }
+
+    test("deleting a link target clears a link inside a value whose type is missing") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            val first = commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(delete(reward)).shouldBeCommitted()
+            commit(delete(page.smith)).shouldBeCommitted()
+            value(first, "value", "value", "giver") shouldBe DataValue.UNFILLED
+        }
+    }
+
+    test("after a Ref field is removed from a declaration, later deletes in the realm still commit") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(setTypes(reward, declares { record("k1") { field("gold", intUse) } })).shouldBeCommitted()
+            commit(delete(page.named("jones"))).shouldBeCommitted()
+        }
+    }
+
+    test("deleting the target of a link the declaration no longer has clears that link") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            val first = commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(setTypes(reward, declares { record("k1") { field("gold", intUse) } })).shouldBeCommitted()
+            commit(delete(page.smith)).shouldBeCommitted()
+            value(first, "value", "value", "giver") shouldBe DataValue.UNFILLED
+        }
+    }
+
+    test("a commit that sets a link at a place its declaration lacks is still refused") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(setTypes(reward, declares { record("k1") { field("gold", intUse) } })).shouldBeCommitted()
+            val second = commitRecordUser("second", reward, "gold" to DataValue.integer(2))
+            expectRefused(setReference(second, "giver", page.named("jones"))).codes shouldContain "unknown_field"
+        }
+    }
+
+    test("renaming the target of a link its declaration no longer has commits") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(setTypes(reward, declares { record("k1") { field("gold", intUse) } })).shouldBeCommitted()
+            commit(rename(page.smith, "blacksmith")).shouldBeCommitted()
+        }
+    }
+
+    test("deleting a link target commits when the holder has another field that no longer fits") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            val first = commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(
+                setTypes(
+                    reward,
+                    declares {
+                        record("k1") {
+                            field("giver", entryRef)
+                            field("gold", textUse)
+                        }
+                    },
+                ),
+            ).shouldBeCommitted()
+            commit(delete(page.smith)).shouldBeCommitted()
+            value(first, "value", "value", "giver") shouldBe DataValue.UNFILLED
+        }
+    }
+
+    test("a holder with two fields that no longer fit can be fixed one field at a time") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val pair =
+                declares {
+                    record("k1") {
+                        field("a", intUse)
+                        field("b", intUse)
+                    }
+                }
+            val reward = commitTypeDefinition("Reward", pair).created()
+            val first = commitRecordUser("first", reward, "a" to DataValue.integer(1), "b" to DataValue.integer(2))
+            commit(
+                setTypes(
+                    reward,
+                    declares {
+                        record("k1") {
+                            field("a", textUse)
+                            field("b", textUse)
+                        }
+                    },
+                ),
+            ).shouldBeCommitted()
+            val type = fieldKey(reward)
+            val text = { value: String -> DataValue.StringValueWrapper(value) }
+            commit(setDefinitionValue(first, plainVar(type, recordValue(type, "a" to text("one"), "b" to DataValue.integer(2)))))
+                .shouldBeCommitted()
+            commit(setDefinitionValue(first, plainVar(type, recordValue(type, "a" to text("one"), "b" to text("two"))))).shouldBeCommitted()
+        }
+    }
+
+    test("a holder with a missing type is listed as a usage of its reference's target") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            val first = commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(delete(reward)).shouldBeCommitted()
+            usagesOf(page.smith) shouldContain first
+        }
+    }
+
+    test("a link in a copied content record stays a link") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val gift =
+                commitDefinition("gift", rewardWithGiver) {
+                    plainVar(it.use, recordValue(it.use, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1)))
+                }
+            val before = resources.keys
+            operations.commit(operations.prepare(operations.operation(Duplicate), gift.created()))
+            val copy = (resources.keys - before).single()
+            usagesOf(page.smith) shouldContain copy
+        }
+    }
+
+    test("a declaration edit writes no relation row for a holder it did not touch") {
+        withSetup(linked, storage = RealmStorage.Surreal, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            val before = relationRows(ContentReferences.id)
+            commit(
+                setTypes(
+                    reward,
+                    declares {
+                        record("k1") {
+                            field("giver", entryRef)
+                            field("gold", intUse)
+                            field("note", textUse)
+                        }
+                    },
+                ),
+            ).shouldBeCommitted()
+            relationRows(ContentReferences.id) shouldBe before
+        }
+    }
+
+    test("a content link held across unrelated commits is one relation row, and none after it is removed") {
+        withSetup(linked, storage = RealmStorage.Surreal, catalog = routeFixtureCatalog) { page ->
+            val gift =
+                commitDefinition("gift", rewardWithGiver) {
+                    plainVar(it.use, recordValue(it.use, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1)))
+                }.created()
+            commit(rename(gift, "present")).shouldBeCommitted()
+            commit(rename(page.smith, "blacksmith")).shouldBeCommitted()
+            relationRows(ContentReferences.id).map { it.first to it.second } shouldBe listOf(gift to page.smith)
+            commit(
+                setDefinitionValue(
+                    gift,
+                    plainVar(
+                        typeArgumentOf(gift),
+                        recordValue(
+                            typeArgumentOf(gift),
+                            "giver" to DataValue.UNFILLED,
+                            "gold" to DataValue.integer(1),
+                        ),
+                    ),
+                ),
+            ).shouldBeCommitted()
+            relationRows(ContentReferences.id).shouldBeEmpty()
         }
     }
 }

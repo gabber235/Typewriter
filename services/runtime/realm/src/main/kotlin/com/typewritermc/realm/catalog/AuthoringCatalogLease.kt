@@ -4,6 +4,7 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
+import com.typewritermc.formula.ContentReferences
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -49,3 +50,10 @@ interface AuthoringCatalogLease : AutoCloseable {
 /** Identifies the relations of this catalog that belong to the resource ownership family. */
 val AuthoringCatalogLease.ownershipRelationIds: Set<RelationId>
     get() = relations.filter { it.ownsResources }.mapTo(hashSetOf(), RelationContract::id)
+
+/**
+ * The relations an author links resources with: every non owning relation except the content references, which say
+ * where content names a resource and are read as usages.
+ */
+val AuthoringCatalogLease.graphLinkRelationIds: Set<RelationId>
+    get() = relations.filter { !it.ownsResources && it.id != ContentReferences.id }.mapTo(hashSetOf(), RelationContract::id)
