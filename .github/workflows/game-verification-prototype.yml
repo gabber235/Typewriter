@@ -25,7 +25,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: restarts, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: restarts, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: restarts, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -98,3 +100,4 @@ jobs:
             prototypes/game-verification/runs/d-clients
             prototypes/game-verification/runs/j-input.jsonl
             prototypes/game-verification/runs/j-input
+            prototypes/game-verification/runs/k.jsonl

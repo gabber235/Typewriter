@@ -73,12 +73,14 @@ public final class ProbePlugin extends JavaPlugin implements Listener {
         http.start();
         Speed.start(this);
         Input.start(this);
+        K.start(this);
         getLogger().info("probe control on " + http.getAddress().getPort());
     }
 
     @Override
     public void onDisable() {
         if (http != null) http.stop(0);
+        K.stop();
     }
 
     private void startWatchdog() {

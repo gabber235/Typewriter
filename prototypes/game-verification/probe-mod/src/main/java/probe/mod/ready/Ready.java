@@ -137,6 +137,11 @@ public final class Ready {
         return bits;
     }
 
+    /** Spike K: the start bits for a radius, outside a watch. Client thread. */
+    public static int startBits(Minecraft mc, int radius) {
+        return start(mc, new Spec(new String[0], null, null, null, null, null, false, null, radius, false, false));
+    }
+
     /** Start candidates, the same for every watch. */
     private static int start(Minecraft mc, Spec s) {
         int bits = 0;

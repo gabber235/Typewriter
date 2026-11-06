@@ -934,10 +934,74 @@ def cmd_input(backend):
             step(f"input lag {where}", run_input, "lag", *common, "--where", where, "--ms", "300", "--gate", str(gate), "--rate", str(rate))
 
 
+# ---------- spike K: restarts and isolation per requirement ----------
+
+def k_hooks(backend):
+    """Plugs Xvfb per client, the renderer assertion and h.jsonl into k.py."""
+    import k
+    cfg = Cfg(backend=backend)
+    owned = {}
+
+    def env(i):
+        x = Xvfb().start()
+        owned.setdefault(i, []).append(x)
+        return cfg.env(x.name)
+
+    def cleanup(rig):
+        for xs in owned.values():
+            for x in xs:
+                x.stop()
+        owned.clear()
+        for sub in sorted(rig.run.glob("*")):
+            dest = EVIDENCE / rig.run.name / sub.name
+            for log in ("client.log", "server.log"):
+                src = sub / log
+                if src.exists():
+                    dest.mkdir(parents=True, exist_ok=True)
+                    (dest / log).write_bytes(src.read_bytes()[-200_000:])
+            for crash in sub.rglob("hs_err*.log"):
+                dest.mkdir(parents=True, exist_ok=True)
+                shutil.copy(crash, dest / crash.name)
+
+    k.hooks.update({"env": env, "client_kw": {"backend": backend, "background_app": False},
+                    "after_join": lambda c: renderer_row(assert_renderer(c, backend)), "record": record, "cleanup": cleanup})
+    return k
+
+
+def run_k(k, *argv):
+    old = sys.argv
+    sys.argv = ["k.py", *argv]
+    try:
+        k.main()
+    finally:
+        sys.argv = old
+
+
+def cmd_restarts(backend):
+    """repeat 0: restart kinds; 1: isolation on one client at rates 20 and 200; 2: isolation on 4 clients."""
+    k = k_hooks(backend)
+    rep = int(os.environ.get("MATRIX_REPEAT", "0") or 0)
+    lbl = f"ci{rep}"
+    step("k prep", run_k, k, "prep")
+    if rep == 0:
+        for kind, n in (("K1", 3), ("K1auto", 3), ("K2", 3), ("K3", 3), ("K1stop", 2)):
+            step(f"restart {kind}", run_k, k, "restart", "--kind", kind, "--n", str(n), "--label", lbl)
+    elif rep == 1:
+        for rate in ("20", "200"):
+            for mode, n in (("I1", 100), ("I2full", 100), ("I2naive", 40), ("I0", 40)):
+                step(f"iso {mode} r{rate}", run_k, k, "iso", "--mode", mode, "--n", str(n), "--rate", rate, "--label", lbl)
+        for mode in ("I1", "I2full"):
+            step(f"iso {mode} r200 chunks", run_k, k, "iso", "--mode", mode, "--n", "100", "--rate", "200", "--need", "chunks", "--label", lbl)
+    else:
+        step("iso I1 4 clients r200", run_k, k, "iso", "--mode", "I1", "--n", "100", "--rate", "200", "--clients", "4", "--label", lbl)
+        step("iso I2full 4 clients r200", run_k, k, "iso", "--mode", "I2full", "--n", "100", "--rate", "200", "--clients", "4", "--label", lbl)
+        step("iso I1 4 clients r20", run_k, k, "iso", "--mode", "I1", "--n", "60", "--rate", "20", "--clients", "4", "--label", lbl)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -980,6 +1044,8 @@ def main():
             cmd_interfere(a.backend)
         elif a.plan == "input":
             cmd_input(a.backend)
+        elif a.plan == "restarts":
+            cmd_restarts(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:
