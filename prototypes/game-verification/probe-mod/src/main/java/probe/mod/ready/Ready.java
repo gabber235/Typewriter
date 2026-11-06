@@ -418,6 +418,12 @@ public final class Ready {
                 probe.mod.golden.Golden.flicker = true;
                 return "{\"ok\":true}";
             });
+            // Spike D: the start bits on demand, without a watch, for a client joining or swapping.
+            case "r.bits" -> {
+                int radius = Integer.parseInt(p.getOrDefault("radius", "2"));
+                Spec s = new Spec(new String[0], null, null, null, null, null, false, null, radius, false, false);
+                yield onClient(mc, () -> "{\"bits\":" + start(mc, s) + ",\"loop\":" + Probe.frames() + ",\"at\":" + micros() + "}");
+            }
             case "r.now" -> "{\"loop\":" + Probe.frames() + ",\"at\":" + micros() + "}";
             default -> null;
         };

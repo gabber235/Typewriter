@@ -38,7 +38,7 @@ import org.joml.Vector3f;
 final class Ready {
     private static final int Y = 64;
     static final int REGION_A = 4096, REGION_B = 8192;
-    private static final Set<Integer> harness = ConcurrentHashMap.newKeySet();
+    static final Set<Integer> harness = ConcurrentHashMap.newKeySet();
     private static final Map<String, Long> effectAt = new ConcurrentHashMap<>();
     private static final Map<String, Object[]> quietInfo = new ConcurrentHashMap<>();
     private static TextDisplay walker;

@@ -25,7 +25,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: smoke, backend: both, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: clients, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: clients, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: clients, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: joins, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: interfere, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: interfere, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -90,5 +95,9 @@ jobs:
             prototypes/game-verification/runs/f-goldens
             prototypes/game-verification/runs/i-coverage.jsonl
             prototypes/game-verification/runs/i-coverage/*-lines.jsonl
-            prototypes/game-verification/runs/e-readiness.jsonl
             prototypes/game-verification/runs/e-readiness
+            prototypes/game-verification/runs/d-clients.jsonl
+            prototypes/game-verification/runs/d-clients.jsonl
+            prototypes/game-verification/runs/e-readiness
+            prototypes/game-verification/runs/d-clients.jsonl
+            prototypes/game-verification/runs/d-clients

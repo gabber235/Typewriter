@@ -799,10 +799,71 @@ def cmd_readiness(backend):
     step("readiness gated", run_ready, "scenes", "--mode", "gated", "--n", "30", "--label", lbl)
 
 
+# ---------- spike D: client count and interference ----------
+
+def d_hooks(backend):
+    """Plugs Xvfb per client, the renderer assertion, /proc CPU and h.jsonl into d.py."""
+    import d
+    cfg = Cfg(backend=backend)
+    owned = {}
+
+    def env(gi):
+        x = Xvfb().start()
+        owned[gi] = x
+        return cfg.env(x.name)
+
+    def cleanup(fleet):
+        for gi in [n.gi for n in fleet.nodes]:
+            if gi in owned:
+                owned.pop(gi).stop()
+        # One client and one server dir per member; keep log tails, never the run dir (symlinks into the cache).
+        for sub in sorted(fleet.run.glob("*")):
+            dest = EVIDENCE / fleet.run.name / sub.name
+            for log in ("client.log", "server.log"):
+                src = sub / log
+                if src.exists():
+                    dest.mkdir(parents=True, exist_ok=True)
+                    (dest / log).write_bytes(src.read_bytes()[-200_000:])
+            for crash in sub.rglob("hs_err*.log"):
+                dest.mkdir(parents=True, exist_ok=True)
+                shutil.copy(crash, dest / crash.name)
+
+    d.hooks.update({"env": env, "usage": Usage, "paper": CiPaper, "client_kw": {"backend": backend, "background_app": False},
+                    "after_join": lambda c: renderer_row(assert_renderer(c, backend)), "record": record, "cleanup": cleanup,
+                    "renderer_row": lambda f: f.renderers[0] if getattr(f, "renderers", None) else None})
+    return d
+
+
+def cmd_clients(backend):
+    """Throughput per arrangement, rate 200, gated, each with E6 server wide and per player."""
+    d = d_hooks(backend)
+    for layout in ([1], [4], [8], [2, 2], [2], [6], [3, 3], [1, 1, 1, 1]):
+        step(f"clients {'x'.join(map(str, layout))}", d.fleet_cell, layout, 20, 200, ("server", "player"), "gated")
+
+
+def cmd_joins(backend):
+    """Join modes, and the rate 20 throughput next to rate 200."""
+    d = d_hooks(backend)
+    for n in (4, 8):
+        for join in ("together", "stagger", "gated"):
+            step(f"join {n} {join}", d.fleet_cell, [n], 5, 200, ("player",), join)
+    for layout in ([1], [4], [8]):
+        step(f"rate 20 {'x'.join(map(str, layout))}", d.fleet_cell, layout, 15, 20, ("player",), "gated")
+
+
+def cmd_interfere(backend):
+    """Client 0 leaks, the others run the mixed set with a leftover check; near, far, and on its own Paper."""
+    d = d_hooks(backend)
+    step("interfere near", d.interfere, (4,), 8, 1)
+    spatial = [("wentity", "world"), ("sound", "world"), ("particle", "world"), ("bcast", "world")]
+    step("interfere far", d.interfere, (4,), 8, 64, None, spatial, False)
+    step("interfere own paper", d.interfere, (1, 3), 8, 1, "int-1x3-s1", [("bcast", "world"), ("time", "world"), ("wentity", "world"), ("sound", "world")], True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "interfere"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -829,6 +890,12 @@ def main():
             cmd_coverage(a.backend)
         elif a.plan == "readiness":
             cmd_readiness(a.backend)
+        elif a.plan == "clients":
+            cmd_clients(a.backend)
+        elif a.plan == "joins":
+            cmd_joins(a.backend)
+        elif a.plan == "interfere":
+            cmd_interfere(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

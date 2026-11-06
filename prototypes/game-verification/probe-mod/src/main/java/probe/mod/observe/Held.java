@@ -78,6 +78,9 @@ final class Held {
             .append(String.format(Locale.ROOT, ",\"cam\":[%.3f,%.3f,%.3f]", cam.x, cam.y, cam.z));
         boss(mc, b);
         sidebar(mc, b);
+        // Spike D: world wide state a neighbour can change (clock, weather) and particles near the player.
+        if (mc.level != null) b.append(",\"day\":").append(mc.level.getDefaultClockTime()).append(String.format(Locale.ROOT, ",\"rain\":%.3f", mc.level.getRainLevel(1f)))
+            .append(",\"particles\":").append(J.q(mc.particleEngine.countParticles()));
         return b.append('}').toString();
     }
 
