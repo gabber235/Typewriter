@@ -170,6 +170,52 @@ def judge(rep, sc, mode):
         if a[5] != b[5]:
             last_change = b
     verdict = {}
+    FACTS = HELD | VIEW | TITLE_IN
+    for n_ticks in (1, 2):
+        # E5: the quiet barrier, then nothing perceivable (state and requirement facts) changes for n client ticks.
+        a = acks["E4"]
+        if a is None:
+            continue
+        last = None
+        hit = None
+        for r in rows:
+            key = (r[5], r[4] & FACTS)
+            if last is None or key != last[0]:
+                last = (key, r[2])
+            if r[0] >= a[1] and r[2] - last[1] >= n_ticks:
+                hit = r
+                break
+        if hit is None:
+            continue
+        ok = (hit[4] & bit) == bit
+        v = {"ok": ok, "wrong": ok == broken, "decide_ms": round((hit[1] - zero) / 1000, 2), "loop": hit[0]}
+        if ok and not broken and t_at is not None:
+            v["wasted_ms"] = round(max(0, hit[1] - t_at) / 1000, 2)
+        if last_change is not None:
+            v["changed_after"] = last_change[0] > hit[0]
+            v["changed_after_ms"] = round(max(0, last_change[1] - hit[1]) / 1000, 2)
+        verdict[f"E5t{n_ticks}"] = v
+    # E6: the quiet barrier, then the client reports nothing of its own in flight: radius chunks held, no title fading
+    # in, and no perceivable state still moving from one loop to the next (interpolation).
+    a = acks["E4"]
+    if a is not None:
+        prev = None
+        hit = None
+        for r in rows:
+            fading = sc["spec"] == "title" and (r[4] & HELD) and not (r[4] & TITLE_IN)
+            if r[0] >= a[1] and (r[4] & CHUNKS) and not fading and prev is not None and prev[5] == r[5]:
+                hit = r
+                break
+            prev = r
+        if hit is not None:
+            ok = (hit[4] & bit) == bit
+            v = {"ok": ok, "wrong": ok == broken, "decide_ms": round((hit[1] - zero) / 1000, 2), "loop": hit[0]}
+            if ok and not broken and t_at is not None:
+                v["wasted_ms"] = round(max(0, hit[1] - t_at) / 1000, 2)
+            if last_change is not None:
+                v["changed_after"] = last_change[0] > hit[0]
+                v["changed_after_ms"] = round(max(0, last_change[1] - hit[1]) / 1000, 2)
+            verdict["E6"] = v
     for sig in SIGNALS:
         if sig in ("E1", "E1w", "E4"):
             a = acks[sig]
@@ -315,11 +361,13 @@ def pixel_truth(rep, sc, out, verdict, rows, pix):
         return v
 
     for sig, v in list(verdict.items()):
+        if "+" in sig:
+            continue
         loop = v.pop("loop", None)
         if loop is None and v.get("decide_ms") is not None:
             loop = loop_at_time(rows, zero + v["decide_ms"] * 1000)
         v.update(judge_frame(pix_from(pix, loop) if loop is not None else None))
-        if sig in ("E3t", "E4") and loop is not None:
+        if sig in ("E3t", "E4", "E5t1", "E5t2", "E6") and loop is not None:
             for rc in RECIPES:
                 verdict.setdefault(f"{sig}+{rc}", {}).update(judge_frame(recipe_frame(rc, sc, rows, pix, loop)))
     for rc in ("obj", "objq"):
@@ -439,6 +487,8 @@ def fresh_client(s):
                window_clear=old.window_clear, extra_jvm=old.extra_jvm, env=old.env, width=old.width, height=old.height)
     if hasattr(old, "facts") and old.facts.exists():
         old.facts.unlink()
+    # The old client's stop file would stop the new process at once.
+    old.stop_file.unlink(missing_ok=True)
     c.start()
     c.wait_event("load_finished", 120)
     c.wait_event("renderer", 10)
@@ -487,6 +537,9 @@ def start_trial(s, kind, world, i, pings, fact_signal, at, tail):
     time.sleep(tail)
     tr = C("r.stop", pingFrom=fb)
     S("reset", player=p)
+    if kind == "reset":
+        # The leftovers push the player; drift adds up over trials until the player falls off the platform.
+        S("e.clean", player=p, kind="none", to="home")
     barrier(s, pings)
     return dict(kind=kind, world=world, fact_signal=fact_signal, seen=seen, fact_ping=fb, t0_rel=t0 - tr["start"], trace=tr)
 
@@ -656,7 +709,7 @@ def cmd_report(a):
     rows = [json.loads(l) for l in RESULTS.open()]
     rows = [r for r in rows if r.get("kind") == "scene" and (not a.label or r["label"] == a.label)]
     for r in rows:
-        sigs = [k for k, v in r.items() if isinstance(v, dict) and "pix_wrong" in v or k in SIGNALS]
+        sigs = [k for k, v in r.items() if isinstance(v, dict) and "wrong" in v]
         head = f"{r['label']:>8} {r['mode']:>8} {r['scene']:>9} n={r['n']} w={r['w']} load={r['load']} noTruth={r['no_truth']} noPix={r.get('no_pix_truth')} missAck={r['missing_ack']}"
         print(head)
         for k in sigs:
