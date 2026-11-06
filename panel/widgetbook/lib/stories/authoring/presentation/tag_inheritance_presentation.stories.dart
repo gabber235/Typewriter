@@ -31,7 +31,7 @@ Widget tagInheritanceUseCase(BuildContext context) {
     min: 280,
     max: 700,
   );
-  final (tags, roots) = _topologies[topology]!(long);
+  final (tags, roots) = _topologies[topology]!(long: long);
   return Story(
     [
       signedIn(ada, organization: acme),
@@ -70,32 +70,33 @@ Widget tagInheritanceUseCase(BuildContext context) {
 
 /// Tag hierarchies by name: the tags and the roots the subject carries,
 /// with long names when asked.
-final _topologies = <String, (List<Tag>, List<Tag>) Function(bool long)>{
-  "Leaf": (long) {
-    final quest = _tag("Quest", long);
-    return ([quest], [quest]);
-  },
-  "Chain": (long) {
-    final region = _tag("Region", long);
-    final village = _tag("Village", long, parents: [region]);
-    final quest = _tag("Quest", long, parents: [village]);
-    return ([quest, village, region], [quest]);
-  },
-  "Branching": (long) {
-    final story = _tag("Story", long);
-    final region = _tag("Region", long);
-    final quest = _tag("Quest", long, parents: [story, region]);
-    return ([quest, story, region], [quest]);
-  },
-  "Shared ancestor": (long) {
-    final story = _tag("Story", long);
-    final region = _tag("Region", long);
-    final village = _tag("Village", long, parents: [story, region]);
-    final quest = _tag("Quest", long, parents: [village]);
-    final errand = _tag("Errand", long, parents: [village]);
-    return ([quest, errand, village, story, region], [quest, errand]);
-  },
-};
+final _topologies =
+    <String, (List<Tag>, List<Tag>) Function({required bool long})>{
+      "Leaf": ({required long}) {
+        final quest = _tag("Quest", long);
+        return ([quest], [quest]);
+      },
+      "Chain": ({required long}) {
+        final region = _tag("Region", long);
+        final village = _tag("Village", long, parents: [region]);
+        final quest = _tag("Quest", long, parents: [village]);
+        return ([quest, village, region], [quest]);
+      },
+      "Branching": ({required long}) {
+        final story = _tag("Story", long);
+        final region = _tag("Region", long);
+        final quest = _tag("Quest", long, parents: [story, region]);
+        return ([quest, story, region], [quest]);
+      },
+      "Shared ancestor": ({required long}) {
+        final story = _tag("Story", long);
+        final region = _tag("Region", long);
+        final village = _tag("Village", long, parents: [story, region]);
+        final quest = _tag("Quest", long, parents: [village]);
+        final errand = _tag("Errand", long, parents: [village]);
+        return ([quest, errand, village, story, region], [quest, errand]);
+      },
+    };
 
 Tag _tag(String name, bool long, {List<Tag> parents = const []}) {
   final shown = long ? "$name of the northern highlands" : name;
