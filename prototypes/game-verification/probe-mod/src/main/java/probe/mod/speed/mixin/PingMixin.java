@@ -13,6 +13,10 @@ import probe.mod.speed.Speed;
 public class PingMixin {
     @Inject(method = "handlePing", at = @At("TAIL"))
     private void probe$ping(ClientboundPingPacket packet, CallbackInfo ci) {
+        if (packet.getId() >= probe.mod.n.N.BASE) {
+            probe.mod.n.N.onStepPing(packet.getId()); // spike N step ping, not a barrier
+            return;
+        }
         // Highest, not last: a window barrier still scheduled after a fast pass arrives after later barriers (spike D).
         Speed.lastPing = Math.max(Speed.lastPing, packet.getId());
         probe.mod.ready.Ready.onPing(packet.getId());

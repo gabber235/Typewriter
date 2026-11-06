@@ -74,6 +74,7 @@ public final class ProbePlugin extends JavaPlugin implements Listener {
         Speed.start(this);
         Input.start(this);
         K.start(this);
+        N.start(this);
         getLogger().info("probe control on " + http.getAddress().getPort());
     }
 

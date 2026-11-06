@@ -5,6 +5,6 @@
   "name": "Probe",
   "environment": "client",
   "entrypoints": { "client": ["probe.mod.Probe"] },
-  "mixins": ["probe.mixins.json", "probe.speed.mixins.json", "probe.observe.mixins.json", "probe.golden.mixins.json", "probe.ready.mixins.json", "probe.input.mixins.json", "probe.k.mixins.json"],
+  "mixins": ["probe.mixins.json", "probe.speed.mixins.json", "probe.observe.mixins.json", "probe.golden.mixins.json", "probe.ready.mixins.json", "probe.input.mixins.json", "probe.k.mixins.json", "probe.n.mixins.json"],
   "depends": { "fabricloader": ">=0.20.0", "minecraft": "*" }
 }

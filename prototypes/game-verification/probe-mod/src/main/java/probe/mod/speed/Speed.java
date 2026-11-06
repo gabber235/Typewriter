@@ -184,6 +184,7 @@ public final class Speed {
                 if (r == null) r = probe.mod.ready.Ready.handle(name, p, mc);
                 if (r == null) r = probe.mod.input.Input.handle(name, p, mc);
                 if (r == null) r = probe.mod.k.K.handle(name, p, mc);
+                if (r == null) r = probe.mod.n.N.handle(name, p, mc);
                 yield r != null ? r : "{\"error\":\"unknown " + name + "\"}";
             }
         };

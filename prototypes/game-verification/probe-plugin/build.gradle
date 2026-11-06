@@ -9,6 +9,7 @@ repositories { mavenCentral() }
 // is directly usable. Run `orchestrator/run.py prepare` first to create cache/patched.
 dependencies {
     compileOnly 'org.jetbrains:annotations:23.0.0'
+    compileOnly project(':step-agent')
     compileOnly fileTree("${rootDir}/cache/patched/versions") { include '**/*.jar' }
     compileOnly fileTree("${rootDir}/cache/patched/libraries") { include '**/*.jar' }
 }

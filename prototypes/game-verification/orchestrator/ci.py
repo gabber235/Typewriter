@@ -998,10 +998,40 @@ def cmd_restarts(backend):
         step("iso I1 4 clients r20", run_k, k, "iso", "--mode", "I1", "--n", "60", "--rate", "20", "--clients", "4", "--label", lbl)
 
 
+# ---------- spike N: the runner steps ticks ----------
+
+def run_n(n, *argv):
+    old = sys.argv
+    sys.argv = ["n.py", *argv]
+    try:
+        n.main()
+    finally:
+        sys.argv = old
+
+
+def cmd_stepped(backend):
+    """N1 freeze probe, step cost, requirements, exact windows, the unstepped baseline, breaking, a pause."""
+    k_hooks(backend)  # n.py builds on k.py's rig, so the same Xvfb and renderer hooks apply
+    import n
+    n.hooks["record"] = record
+    lbl = "ci"
+    step("n freeze", run_n, n, "freeze", "--label", lbl)
+    step("n steps", run_n, n, "steps", "--n", "2000", "--park", "2000,0", "--label", lbl)
+    step("n req", run_n, n, "req", "--n", "100", "--label", lbl)
+    step("n req async0", run_n, n, "req", "--n", "50", "--kinds", "async,asyncsync", "--async-ms", "0", "--label", lbl)
+    step("n exact", run_n, n, "exact", "--n", "100", "--label", lbl)
+    step("n base", run_n, n, "base", "--n", "500", "--label", lbl)
+    step("n break tick", run_n, n, "break", "--n", "100", "--lag", "tick", "--label", lbl)
+    step("n break wall", run_n, n, "break", "--n", "30", "--lag", "wall", "--label", lbl)
+    step("n break r200 tick", run_n, n, "break", "--n", "30", "--lag", "tick", "--mode", "200", "--label", lbl)
+    step("n hang", run_n, n, "req", "--n", "5", "--kinds", "hang,chat", "--label", lbl)
+    step("n pause", run_n, n, "pause", "--seconds", "35", "--label", lbl)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -1046,6 +1076,8 @@ def main():
             cmd_input(a.backend)
         elif a.plan == "restarts":
             cmd_restarts(a.backend)
+        elif a.plan == "stepped":
+            cmd_stepped(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

@@ -6,4 +6,4 @@ pluginManagement {
     }
 }
 rootProject.name = 'game-verification'
-include 'probe-mod', 'probe-plugin', 'coverage-tool'
+include 'probe-mod', 'probe-plugin', 'coverage-tool', 'step-agent'

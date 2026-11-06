@@ -118,6 +118,8 @@ final class Speed {
         String name = qm < 0 ? rest : rest.substring(0, qm);
         Map<String, String> q = query(qm < 0 ? "" : rest.substring(qm + 1));
         if (name.equals("covDump")) return json(Coverage.waitAndDump(q));
+        if (name.equals("n.run")) return json(N.runBlocking(q));
+        if (name.equals("n.freeze")) return json(N.freezeProbe(q));
         Callable<Map<String, Object>> call = () -> run(name, q);
         Map<String, Object> result;
         if (dispatch.equals("direct")) {
@@ -181,7 +183,7 @@ final class Speed {
                 p.showTitle(title);
             }
             default -> {
-                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r) && !Coverage.run(name, q, p, r) && !Ready.run(name, q, p, r) && !D.run(name, q, p, r) && !Input.run(name, q, p, r) && !K.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
+                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r) && !Coverage.run(name, q, p, r) && !Ready.run(name, q, p, r) && !D.run(name, q, p, r) && !Input.run(name, q, p, r) && !K.run(name, q, p, r) && !N.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
             }
         }
         if (q.containsKey("cov")) Coverage.dump(q.get("cov"), r);
