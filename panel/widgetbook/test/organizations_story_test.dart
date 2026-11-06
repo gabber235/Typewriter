@@ -89,4 +89,18 @@ void main() {
     );
     await tester.runStory();
   });
+
+  testWidgets(
+    "the organizations page keeps loading while its list has not arrived",
+    (tester) async {
+      final panel = await tester.pumpStory(
+        indexPageUseCase,
+        knobs: {"Organizations": "Loading"},
+        run: const Duration(seconds: 11),
+      );
+
+      expect(panel.shows("Loading Organizations..."), isTrue);
+      expect(panel.shows(ErrorScreen.defaultTitle), isFalse);
+    },
+  );
 }
