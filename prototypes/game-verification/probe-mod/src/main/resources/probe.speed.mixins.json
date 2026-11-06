@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "probe.mod.speed.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["RenderGateMixin", "TickCapMixin", "PingMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

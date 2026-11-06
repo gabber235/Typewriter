@@ -1,0 +1,31 @@
+plugins { id 'java' }
+
+// Spike I: the JaCoCo agent for Paper and a small reader that turns one exec dump per requirement
+// into covered lines. `writeCoverageTool` writes build/coverage-tool.json with the agent jar and
+// the reader's classpath, so the orchestrator never downloads anything itself.
+repositories { mavenCentral() }
+
+def jacocoVersion = '0.8.14'
+
+configurations { agent }
+
+dependencies {
+    implementation "org.jacoco:org.jacoco.core:${jacocoVersion}"
+    agent "org.jacoco:org.jacoco.agent:${jacocoVersion}:runtime@jar"
+}
+
+tasks.withType(JavaCompile).configureEach { it.options.release = 25 }
+
+tasks.register('writeCoverageTool') {
+    dependsOn tasks.named('classes')
+    def out = layout.buildDirectory.file('coverage-tool.json')
+    outputs.file(out)
+    outputs.upToDateWhen { false }
+    doLast {
+        out.get().asFile.text = groovy.json.JsonOutput.toJson([
+            agent: configurations.agent.singleFile.absolutePath,
+            classpath: sourceSets.main.runtimeClasspath.files*.absolutePath,
+            version: jacocoVersion,
+        ])
+    }
+}
