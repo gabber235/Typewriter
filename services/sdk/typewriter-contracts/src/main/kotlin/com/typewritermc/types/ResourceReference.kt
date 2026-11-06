@@ -68,7 +68,7 @@ annotation class TypewriterGeneratedEndpoint(
  * [opposite] path is stored as its readable Skir JSON.
  */
 @Serializable
-data class Ref<E : RelationshipEndpoint<*, *>, out T : Resource>(
+data class Ref<Endpoint : RelationshipEndpoint<*, *>, out T : Resource>(
     val target: ResourceId,
     @Serializable(with = OppositePathSerializer::class)
     val opposite: ValuePath? = null,
