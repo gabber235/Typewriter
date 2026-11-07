@@ -50,6 +50,10 @@ final class WorldBuilder {
   /// Rive library needs.
   bool liveAnimations = false;
 
+  /// The motion token table the panel plays; null plays the standard table,
+  /// with its loops limited to one round unless [liveAnimations] is set.
+  TypewriterMotion? motionTable;
+
   /// Doubles traits install for sources the world does not model itself,
   /// such as the membership of an organization.
   final overrides = <Override>[];
@@ -126,6 +130,14 @@ final class World {
         if (_builder.organizationDoubles) ...organizations.overrides,
         appearance.override,
         if (!_builder.liveAnimations) const FakeRive().override,
+        if (_builder.motionTable case final table?)
+          motionTableProvider.overrideWithValue(table)
+        // A busy word plays one round, so settling ends while it shows; a
+        // browser story keeps the panel's endless loops.
+        else if (!_builder.liveAnimations)
+          motionTableProvider.overrideWithValue(
+            TypewriterMotion.standard().oneRoundLoops,
+          ),
         ...?realm?.overrides,
         ..._builder.overrides,
       ],

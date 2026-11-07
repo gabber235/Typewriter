@@ -10,6 +10,7 @@ export "src/traits/members/membership.dart";
 export "src/traits/members/membership_backend.dart";
 export "src/traits/members/membership_data.dart";
 export "src/traits/members/membership_service.dart";
+export "src/traits/motion.dart";
 export "src/traits/mutations/unsaved_work.dart";
 export "src/traits/organizations/presence.dart";
 export "src/traits/organizations/user_backend.dart";
