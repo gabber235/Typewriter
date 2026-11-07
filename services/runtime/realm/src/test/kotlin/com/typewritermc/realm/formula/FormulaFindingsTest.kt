@@ -4,6 +4,7 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
+import com.typewritermc.formula.Var
 import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.realm.edit.PAIR_FIRST
 import com.typewritermc.realm.edit.PAIR_SECOND
@@ -15,6 +16,7 @@ import com.typewritermc.realm.edit.pairRelation
 import com.typewritermc.realm.edit.path
 import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.booleanUse
 import com.typewritermc.realm.testing.commitDefinition
 import com.typewritermc.realm.testing.commitPreparedTypeChange
 import com.typewritermc.realm.testing.commitRecordUser
@@ -34,6 +36,7 @@ import com.typewritermc.realm.testing.formulaPage
 import com.typewritermc.realm.testing.formulas
 import com.typewritermc.realm.testing.hookCatalog
 import com.typewritermc.realm.testing.intUse
+import com.typewritermc.realm.testing.lootUse
 import com.typewritermc.realm.testing.mapType
 import com.typewritermc.realm.testing.mapValue
 import com.typewritermc.realm.testing.plainType
@@ -43,6 +46,7 @@ import com.typewritermc.realm.testing.publicationBlockersByResource
 import com.typewritermc.realm.testing.record
 import com.typewritermc.realm.testing.recordValue
 import com.typewritermc.realm.testing.restore
+import com.typewritermc.realm.testing.sameSourceNameCatalog
 import com.typewritermc.realm.testing.setDefinitionValue
 import com.typewritermc.realm.testing.setType
 import com.typewritermc.realm.testing.setTypes
@@ -57,6 +61,7 @@ import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.typeUse
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
+import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.types.integer
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
@@ -96,6 +101,29 @@ val FormulaFindingsTest by testSuite {
         withSetup(page, catalog = routeFixtureCatalog) { demo ->
             errorCodesOn(demo.named("chained")).shouldBeEmpty()
             formulas.evaluation(demo.named("chained")) shouldBe Evaluation.NotEvaluated
+        }
+    }
+
+    test("a code type is named by its class name, not by the display name its annotation gives it") {
+        val page =
+            setup("findings-source-name") {
+                formulaPage {
+                    definition("loot", lootUse, FixtureLoot(gold = Var.Value(3)))
+                    formula("by_class", booleanUse, "loot == FixtureLoot(gold = 3)")
+                    formula("by_display", booleanUse, "loot == Loot(gold = 3)")
+                }
+            }
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            errorCodesOn(demo.named("by_class")).shouldBeEmpty()
+            formulas.value(demo.named("by_class")) shouldBe true
+            errorCodesOn(demo.named("by_display")) shouldBe listOf("formula_unknown_name")
+        }
+    }
+
+    test("two code types with one class name make that name ambiguous, whatever their display names") {
+        val page = setup("findings-shared-source-name") { formulaPage { formula("built", booleanUse, "FixtureLoot() == FixtureLoot()") } }
+        withSetup(page, catalog = sameSourceNameCatalog) { demo ->
+            errorCodesOn(demo.named("built")) shouldContain "formula_ambiguous_type"
         }
     }
 

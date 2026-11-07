@@ -187,6 +187,13 @@ data class CancelledDefaults(val value: String = throw kotlinx.coroutines.Cancel
 @TypewriterType(id = "a0000000000000000000000000000105")
 data class TransientDefaults(@Transient val hidden: Int = 5, val derived: Int = hidden * 2)
 
+@TypewriterDisplay(name = "Prize pool")
+@TypewriterType(id = "a0000000000000000000000000000106")
+data class Reward(val coins: Int = 0) {
+    @TypewriterType(id = "a0000000000000000000000000000107")
+    data class Bonus(val coins: Int = 0)
+}
+
 @TypewriterCollectionProjection
 fun exampleCollectionProjection(): CollectionProjection<Example, ExampleRow, ExampleRowExpressions> =
     collectionProjection<Example, ExampleRow, ExampleRowExpressions>(
@@ -314,6 +321,11 @@ fun main(args: Array<String>) {
                 assembly.editorCatalog.resourceDisplays.single().target shouldBe
                     skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper(ExampleDefinition.id.template())
                 assembly.editorCatalog.types.single { it.definition.id == ExampleDefinition.id }.searchKey shouldBe "example"
+            }
+            requirement("a type publishes its class name as its source name, whatever its display, and a nested class its own name") {
+                val names = assembly.editorCatalog.types.associate { it.definition.id to it.name }
+                names[RewardDefinition.id] shouldBe "Reward"
+                names[RewardBonusDefinition.id] shouldBe "Bonus"
             }
             requirement("configuration rules reach nested, item, key and value paths") {
                 contributions.configurations shouldHaveSize 1

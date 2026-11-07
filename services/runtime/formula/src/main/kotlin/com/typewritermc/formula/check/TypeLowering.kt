@@ -25,7 +25,7 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 
-// Written types: scalars by their Kotlin names, the standard collections, `Ref<T>`, catalog types by display name,
+// Written types: scalars by their Kotlin names, the standard collections, `Ref<T>`, catalog types by source name,
 // and content types through the Definition a stored reference names. Formula text names types; it cannot declare one.
 
 private val scalars: Map<String, TypeUse> =
@@ -139,7 +139,7 @@ private fun Checker.lowerStored(
     return applyArguments(node, held, arguments)
 }
 
-/** A type name with no stored reference: a scalar, a standard generic, or a catalog type by its display name. */
+/** A type name with no stored reference: a scalar, a standard generic, or a catalog type by its source name. */
 private fun Checker.lowerByText(
     node: NamedType,
     name: Name,

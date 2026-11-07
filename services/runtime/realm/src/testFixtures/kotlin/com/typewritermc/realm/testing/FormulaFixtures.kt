@@ -775,6 +775,23 @@ val prizeExtensionCatalog: RealmCatalog =
         },
     )
 
+/** The route fixtures plus a second extension's record whose source name is also `FixtureLoot`. */
+val sameSourceNameCatalog: RealmCatalog =
+    routeFixtureCatalog.copy(
+        declarations = { loaded ->
+            val twin = TypeDefinitionId.qualified("loot-extension", "FixtureLoot")
+            listOf(
+                OwnedTypeDeclaration(
+                    loaded.declarations.first().origin,
+                    TypeDefinition.partial(
+                        id = twin,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+                    ),
+                ),
+            )
+        },
+    )
+
 private val changingCode: TypeDefinitionId = TypeDefinitionId.qualified("generation-test", "purse")
 
 /** A code record no Kotlin class backs, whose fields [changingCodeCatalog] picks per generation. */

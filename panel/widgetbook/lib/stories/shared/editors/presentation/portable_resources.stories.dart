@@ -450,6 +450,7 @@ skir.TypeDefinitionId _qualified(String name) => skir.TypeDefinitionId(
 
 skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
     skir.PublishedType(
+      name: "",
       searchKey: null,
       placementField: fields.any((field) => field.name == "placement")
           ? editorRootPath.field("placement")

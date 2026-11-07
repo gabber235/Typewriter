@@ -51,7 +51,7 @@ interface AuthoringCatalogLease : AutoCloseable {
     val displays: ResourceDisplayCatalog
         get() = ResourceDisplayCatalog()
 
-    /** The code types formulas name by their display name; a catalog that publishes no displays names none. */
+    /** The code types formulas name by their source name, such as the Kotlin class name. */
     val formulaTypeNames: Map<String, List<TypeUse>>
         get() = emptyMap()
 
