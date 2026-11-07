@@ -64,7 +64,11 @@ class Admonition extends StatelessWidget {
         };
     final backgroundColor = color.withValues(alpha: color.a * 0.1);
     return SurfaceContainer(
-      duration: animationDuration,
+      motion: ResolvedMotion(
+        motion: CurveMotion(Curves.linear, animationDuration),
+        landing: const NoLanding(),
+        repeatFloor: 0,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
         border: Border.all(color: color, width: 1),

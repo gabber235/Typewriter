@@ -724,7 +724,7 @@ class _SurfaceDemo extends HookWidget {
                     ? Alignment.center
                     : Alignment.topLeft,
                 child: SurfaceContainer(
-                  duration: Duration.zero,
+                  motion: ResolvedMotion.immediate,
                   decoration: BoxDecoration(
                     color: context.colors.surfaceRaised,
                     borderRadius: BorderRadius.circular(context.shapes.large),
@@ -762,7 +762,7 @@ class _SurfaceOutDemo extends HookWidget {
             width: 300,
             height: 180,
             child: SurfaceContainer(
-              duration: Duration.zero,
+              motion: ResolvedMotion.immediate,
               decoration: BoxDecoration(
                 color: context.colors.surfaceRaised,
                 borderRadius: BorderRadius.circular(context.shapes.large),

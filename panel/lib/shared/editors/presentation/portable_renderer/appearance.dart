@@ -21,7 +21,12 @@ class _PresentationSurface extends StatelessWidget {
         context,
         appearance: inherited,
       );
-      final motion = resolver.motion(style.transition, scope);
+      final overrides = switch (style.transition.reading) {
+        MotionRead(:final value) => value,
+        MotionReadFailed(:final message) => throw PresentationValueFailure(
+          message,
+        ),
+      };
       final source = style.backgroundColor;
       final fill = source == null ? null : resolver.resolve(source, scope);
       final background = Color.alphaBlend(
@@ -53,20 +58,29 @@ class _PresentationSurface extends StatelessWidget {
               )
             : inherited.secondaryForeground,
       );
-      return SurfaceContainer(
-        duration: motion.duration,
-        curve: motion.curve,
-        decoration: BoxDecoration(
-          color: fill,
-          border: _border(context, style.border, scope, appearance: local),
-          borderRadius: _radius(context, style.radius, scope),
-          boxShadow: [
-            for (final shadow in style.shadows)
-              _boxShadow(resolver, shadow, scope),
-          ],
-        ),
-        foregroundFor: hasForeground ? foregroundFor : null,
-        child: child,
+      final decoration = BoxDecoration(
+        color: fill,
+        border: _border(context, style.border, scope, appearance: local),
+        borderRadius: _radius(context, style.radius, scope),
+        boxShadow: [
+          for (final shadow in style.shadows)
+            _boxShadow(resolver, shadow, scope),
+        ],
+      );
+      return HookBuilder(
+        builder: (context) {
+          final motion = usePresentationMotion(
+            target: decoration,
+            interaction: resolver.interaction,
+            overrides: overrides,
+          );
+          return SurfaceContainer(
+            motion: motion,
+            decoration: decoration,
+            foregroundFor: hasForeground ? foregroundFor : null,
+            child: child,
+          );
+        },
       );
     } on PresentationValueFailure catch (failure) {
       return diagnostic(failure.message);

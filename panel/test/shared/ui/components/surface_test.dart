@@ -176,7 +176,14 @@ void main() {
                 update = setState;
                 brightness = Theme.brightnessOf(context);
                 return SurfaceContainer(
-                  duration: const Duration(milliseconds: 100),
+                  motion: const ResolvedMotion(
+                    motion: CurveMotion(
+                      Curves.linear,
+                      Duration(milliseconds: 100),
+                    ),
+                    landing: NoLanding(),
+                    repeatFloor: 0,
+                  ),
                   decoration: BoxDecoration(color: fill),
                   foregroundFor: (context, displayed) => displayed.on(context),
                   child: Builder(
