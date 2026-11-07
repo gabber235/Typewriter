@@ -22,10 +22,12 @@ class JoinCodeRowActions extends HookConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
-      child: IconButton(
+      child: Button(
+        face: ButtonFace.icon,
         icon: Icon(Icons.link_off, size: 20, color: theme.colorScheme.error),
-        onPressed: () => _confirmRevokeCode(context, ref, isRevoking),
+        label: "Revoke join code",
         tooltip: "Revoke join code",
+        onPressed: () => _confirmRevokeCode(context, ref, isRevoking),
       ),
     );
   }

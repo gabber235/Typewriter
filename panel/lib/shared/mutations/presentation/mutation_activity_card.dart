@@ -98,9 +98,10 @@ class _ActivityCardState extends State<_ActivityCard> {
                             ? "Double tap to collapse"
                             : "Double tap to expand"
                       : null,
-                  child: InkWell(
-                    onTap: isExpandable ? _toggleDetails : null,
-                    borderRadius: context.shapes.smallBorderRadius,
+                  child: Button(
+                    face: ButtonFace.bare,
+                    label: "",
+                    onPressed: isExpandable ? _toggleDetails : null,
                     child: Padding(
                       padding: EdgeInsets.all(context.spacing.space1),
                       child: Row(
@@ -204,9 +205,11 @@ class _ActivityCardState extends State<_ActivityCard> {
                         spacing: context.spacing.space2,
                         runSpacing: context.spacing.space2,
                         children: [
-                          IconButton(
-                            tooltip: "Copy problem report",
+                          Button(
+                            face: ButtonFace.icon,
                             icon: const Icon(Icons.copy_outlined, size: 16),
+                            label: "Copy problem report",
+                            tooltip: "Copy problem report",
                             color: context.colors.contentSecondary,
                             onPressed: () => _copyReport(context),
                           ),

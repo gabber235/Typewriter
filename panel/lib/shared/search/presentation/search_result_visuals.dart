@@ -27,7 +27,8 @@ class SearchResultIconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: 180.ms,
+      duration: motionTimeline(context, MotionToken.ink).duration,
+      curve: motionTimeline(context, MotionToken.ink).curve,
       width: 50,
       height: 50,
       decoration: BoxDecoration(
@@ -144,7 +145,8 @@ class SearchResultSoftChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: 300.ms,
+      duration: motionTimeline(context, MotionToken.ink).duration,
+      curve: motionTimeline(context, MotionToken.ink).curve,
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: ShapeDecoration(
         color: backgroundColor,
@@ -153,7 +155,8 @@ class SearchResultSoftChip extends StatelessWidget {
       child: AnimatedDefaultTextStyle(
         style: Theme.of(context).textTheme.bodySmall!
             .copyWith(fontSize: 10, color: foregroundColor),
-        duration: 300.ms,
+        duration: motionTimeline(context, MotionToken.ink).duration,
+        curve: motionTimeline(context, MotionToken.ink).curve,
         child: Text(label),
       ),
     );

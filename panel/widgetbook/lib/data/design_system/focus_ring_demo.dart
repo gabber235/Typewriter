@@ -50,7 +50,7 @@ class FocusRingDemo extends StatelessWidget {
                     ],
                   ),
                   gap,
-                  TextButton(onPressed: () {}, child: const Text("Invite")),
+                  Button(label: "Invite", onPressed: () {}),
                   gap,
                   const TextField(
                     decoration: InputDecoration(hintText: "Display name"),

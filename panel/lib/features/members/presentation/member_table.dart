@@ -115,9 +115,12 @@ class MembersTable extends HookConsumerWidget {
               child: Material(
                 color: Colors.transparent,
                 shape: CircleBorder(),
-                child: InkWell(
-                  customBorder: CircleBorder(),
-                  onTap: toggleSelection,
+                child: Button(
+                  face: ButtonFace.bare,
+                  label: isSelected
+                      ? "Deselect ${member.name ?? member.email ?? "member"}"
+                      : "Select ${member.name ?? member.email ?? "member"}",
+                  onPressed: toggleSelection,
                   child: SelectableAvatar(
                     avatarUrl:
                         member.avatarUrl?.nullIfEmpty ??
@@ -135,9 +138,10 @@ class MembersTable extends HookConsumerWidget {
             Material(
               color: Colors.transparent,
               borderRadius: context.shapes.mediumBorderRadius,
-              child: InkWell(
-                borderRadius: context.shapes.mediumBorderRadius,
-                onTap: toggleSelection,
+              child: Button(
+                face: ButtonFace.bare,
+                label: "",
+                onPressed: toggleSelection,
                 child: Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: context.spacing.space2,

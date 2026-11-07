@@ -40,7 +40,7 @@ void main() {
       expect(find.tooltip("Add item"), findsOneWidget);
       expect(
         tester
-            .getSemantics(find.widgetWithText(FilledButton, "Prefix insertion"))
+            .getSemantics(find.widgetWithText(Button, "Prefix insertion"))
             .getSemanticsData()
             .hasAction(SemanticsAction.tap),
         isTrue,
@@ -2049,7 +2049,7 @@ void main() {
     expect(find.tooltip("Add entry"), findsOneWidget);
     expect(
       find.byWidgetPredicate(
-        (widget) => widget is IconButton && widget.tooltip == "Add entry",
+        (widget) => widget is Button && widget.tooltip == "Add entry",
       ),
       findsOneWidget,
     );

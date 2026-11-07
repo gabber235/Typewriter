@@ -131,24 +131,15 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
               scope: childScope,
             ),
           );
-    final content = icon == null
-        ? Text(label)
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              icon,
-              SizedBox(width: context.spacing.space2),
-              Text(label),
-            ],
-          );
     return _nativeActionButton(
       variant: button.appearance?.variant ?? skir.ButtonVariant.filled,
       states: states,
       style: style,
       onPressed: childScope.canExecuteActionFor(button.action)
-          ? () => unawaited(childScope.executeAction(button.action))
+          ? () => childScope.executeAction(button.action)
           : null,
-      child: content,
+      icon: icon,
+      label: label,
     );
   });
 
@@ -173,31 +164,16 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
     final callback = childScope.canExecuteActionFor(button.action)
         ? () => childScope.executeAction(button.action)
         : null;
-    return switch (button.appearance?.variant) {
-      final variant when variant == skir.ButtonVariant.filled =>
-        LoadingIconButton.filled(
-          statesController: states,
-          style: style,
-          tooltip: label,
-          onPressed: callback,
-          icon: child,
-        ),
-      final variant when variant == skir.ButtonVariant.outlined =>
-        LoadingIconButton.outlined(
-          statesController: states,
-          style: style,
-          tooltip: label,
-          onPressed: callback,
-          icon: child,
-        ),
-      _ => LoadingIconButton(
-        statesController: states,
-        style: style,
-        tooltip: label,
-        onPressed: callback,
-        icon: child,
-      ),
-    };
+    return Button(
+      face: ButtonFace.icon,
+      statesController: states,
+      color: _accentOf(style, button.appearance?.variant),
+      dense: _denseOf(style),
+      label: label,
+      tooltip: label,
+      onPressed: callback,
+      icon: child,
+    );
   });
 
   Widget _renderMenu(
@@ -248,9 +224,12 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
             controller.isOpen ? controller.close() : controller.open();
         final variant = menu.appearance?.variant;
         if (variant == null) {
-          return IconButton(
+          return Button(
+            face: ButtonFace.icon,
             statesController: states,
-            style: style,
+            color: _accentOf(style, null),
+            dense: _denseOf(style),
+            label: label,
             tooltip: label,
             onPressed: childScope.canExecuteAction ? toggle : null,
             icon: Icones(
@@ -264,7 +243,7 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
           states: states,
           style: style,
           onPressed: childScope.canExecuteAction ? toggle : null,
-          child: Text(label),
+          label: label,
         );
       },
     );
@@ -287,28 +266,41 @@ Widget _nativeActionButton({
   required skir.ButtonVariant variant,
   required WidgetStatesController states,
   required ButtonStyle style,
-  required VoidCallback? onPressed,
-  required Widget child,
-}) => switch (variant) {
-  final value when value == skir.ButtonVariant.outlined => OutlinedButton(
-    statesController: states,
-    style: style,
-    onPressed: onPressed,
-    child: child,
-  ),
-  final value when value == skir.ButtonVariant.text => TextButton(
-    statesController: states,
-    style: style,
-    onPressed: onPressed,
-    child: child,
-  ),
-  _ => FilledButton(
-    statesController: states,
-    style: style,
-    onPressed: onPressed,
-    child: child,
-  ),
-};
+  required FutureOr<void> Function()? onPressed,
+  required String label,
+  Widget? icon,
+}) => Button(
+  face: switch (variant) {
+    final value when value == skir.ButtonVariant.outlined =>
+      ButtonFace.outlined,
+    final value when value == skir.ButtonVariant.text => ButtonFace.quiet,
+    _ => ButtonFace.filled,
+  },
+  statesController: states,
+  color: _accentOf(style, variant),
+  dense: _denseOf(style),
+  icon: icon,
+  label: label,
+  onPressed: onPressed,
+);
+
+/// The authored colour of a portable button: its fill when filled, its text
+/// colour otherwise. The other authored styling gives way to the face.
+Color? _accentOf(ButtonStyle style, skir.ButtonVariant? variant) {
+  final filled =
+      variant != skir.ButtonVariant.outlined &&
+      variant != skir.ButtonVariant.text &&
+      variant != null;
+  return filled
+      ? style.backgroundColor?.resolve(const {})
+      : style.foregroundColor?.resolve(const {}) ??
+            style.iconColor?.resolve(const {});
+}
+
+/// Whether a portable button takes the compact face: authored compact
+/// density does, comfortable or none keeps the normal size.
+bool _denseOf(ButtonStyle style) =>
+    style.visualDensity == VisualDensity.compact;
 
 Widget _actionAppearance(
   PortablePresentationScope scope,

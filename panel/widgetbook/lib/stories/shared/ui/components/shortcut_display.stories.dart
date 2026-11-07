@@ -67,36 +67,3 @@ Widget singleShortcutDisplayUseCase(BuildContext context) {
     ),
   );
 }
-
-@widgetbook.UseCase(name: "Rotating", type: ShortcutDisplay)
-Widget rotatingShortcutsUseCase(BuildContext context) {
-  final interval = context.knobs.duration(
-    label: "Interval",
-    initialValue: const Duration(seconds: 4),
-  );
-  final style = context.knobs.object.segmented(
-    label: "Style",
-    options: const [KeyStyle.solid(), KeyStyle.outline()],
-    initialOption: const KeyStyle.solid(),
-    labelBuilder: (style) => switch (style) {
-      SolidKeyStyle() => "Solid",
-      OutlineKeyStyle() => "Outline",
-    },
-  );
-
-  return Story(
-    const [],
-    at: PanelLocation.component(
-      RotatingShortcuts(
-        style: style,
-        shortcuts: [
-          SingleActivator(LogicalKeyboardKey.keyD),
-          SingleActivator(LogicalKeyboardKey.delete, meta: true),
-          SingleActivator(LogicalKeyboardKey.backspace, control: true),
-          CharacterActivator(r"\", alt: true),
-        ],
-        interval: interval,
-      ),
-    ),
-  );
-}

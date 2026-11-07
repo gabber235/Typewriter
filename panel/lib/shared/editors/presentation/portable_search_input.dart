@@ -181,15 +181,13 @@ final class PortableSearchInput extends HookWidget {
       leading: leading,
       trailing: suffix,
       child: Semantics(
-        button: true,
         enabled: editable,
-        label: "Activate search input",
-        child: InkWell(
+        child: Button(
           key: const ValueKey("authored_search_summary"),
+          face: ButtonFace.bare,
+          label: "Activate search input",
           focusNode: summaryFocus,
-          canRequestFocus: editable,
-          onTap: editable ? openSearch : null,
-          borderRadius: context.shapes.mediumBorderRadius,
+          onPressed: editable ? openSearch : null,
           child: InputDecorator(
             isEmpty: false,
             isFocused: summaryFocus.hasFocus,
@@ -227,6 +225,24 @@ final class PortableSearchInput extends HookWidget {
         ),
       ),
     );
+    final grow = motionTimeline(context, MotionToken.loadIn);
+    // A zero length size change would land inside layout.
+    final grows = grow.duration != Duration.zero;
+    final field = editing.value && editable
+        ? TextFieldTapRegion(
+            child: SearchRoot.borrowed(
+              controller: controller,
+              child: _PortableSearchSurface(
+                placeholder: placeholder,
+                picker: picker,
+                scope: scope,
+                control: control,
+                style: style,
+                maximumExtent: (maximum ?? 320).clamp(80, 800),
+              ),
+            ),
+          )
+        : summary;
     final content = _controlFrame(
       control.control,
       control.appearance == null
@@ -263,28 +279,14 @@ final class PortableSearchInput extends HookWidget {
                   onInvoke: (_) => openSearch(),
                 ),
             ],
-            child: AnimatedSize(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : 300.ms,
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.topCenter,
-              child: editing.value && editable
-                  ? TextFieldTapRegion(
-                      child: SearchRoot.borrowed(
-                        controller: controller,
-                        child: _PortableSearchSurface(
-                          placeholder: placeholder,
-                          picker: picker,
-                          scope: scope,
-                          control: control,
-                          style: style,
-                          maximumExtent: (maximum ?? 320).clamp(80, 800),
-                        ),
-                      ),
-                    )
-                  : summary,
-            ),
+            child: grows
+                ? AnimatedSize(
+                    duration: grow.duration,
+                    curve: grow.curve,
+                    alignment: Alignment.topCenter,
+                    child: field,
+                  )
+                : field,
           ),
         ),
       ),

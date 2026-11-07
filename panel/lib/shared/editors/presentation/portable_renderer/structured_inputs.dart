@@ -107,34 +107,31 @@ extension _PortableStructuredInputRendering
                         },
                       ),
                     )
-                  : OutlinedButton.icon(
+                  : Button(
                       key: ValueKey("${node.nodeId}.type"),
+                      face: ButtonFace.outlined,
                       statesController: states,
-                      style:
-                          _operationButtonStyle(control.content)
-                              ?.merge(buttonStyle) ??
-                          buttonStyle,
+                      color: _accentOf(
+                        buttonStyle,
+                        skir.ButtonVariant.outlined,
+                      ),
+                      dense: _denseOf(buttonStyle),
                       icon: _operationGlyph(
                         control.content?.chooseIcon,
                         childScope,
                         const Icon(Icons.category_outlined),
                       ),
-                      label: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          selected == null
-                              ? _entryPlaceholder(
-                                      control.inputContent,
-                                      childScope,
-                                    ) ??
-                                    _operationText(
-                                      childScope,
-                                      control.content?.chooseLabel,
-                                      "Choose a type",
-                                    )
-                              : choiceLabel(selected),
-                        ),
-                      ),
+                      label: selected == null
+                          ? _entryPlaceholder(
+                                  control.inputContent,
+                                  childScope,
+                                ) ??
+                                _operationText(
+                                  childScope,
+                                  control.content?.chooseLabel,
+                                  "Choose a type",
+                                )
+                          : choiceLabel(selected),
                       onPressed: enabled
                           ? () async {
                               final chosen = await showTypeSearch(

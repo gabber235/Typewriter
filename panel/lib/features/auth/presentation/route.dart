@@ -28,8 +28,10 @@ class AuthPage extends HookConsumerWidget {
               .copyWith(fontSize: 40, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: context.spacing.space6),
-        LoadingButton.filled(
-          child: Text("Sign in"),
+        Button(
+          face: ButtonFace.filled,
+          label: "Sign in",
+          busyLabel: "Signing in",
           onPressed: () => ref.read(authProvider.notifier).signIn(),
         ),
         Spacer(),

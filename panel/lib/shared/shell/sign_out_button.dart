@@ -21,7 +21,10 @@ class SignOutButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ElevatedButton(
+    return Button(
+      face: ButtonFace.filled,
+      label: "Sign out",
+      busyLabel: "Signing out",
       onPressed: () async {
         try {
           await ref.signOutVoluntarily(context);
@@ -30,7 +33,6 @@ class SignOutButton extends HookConsumerWidget {
           showErrorSnackBar(context, "Could not sign out. Please try again.");
         }
       },
-      child: const Text("Sign out"),
     );
   }
 }

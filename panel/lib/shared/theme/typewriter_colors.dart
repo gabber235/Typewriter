@@ -69,6 +69,9 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
     required this.onOfflineContainer,
   });
 
+  /// Fully transparent: no fill at all, for a fill that fades in or out.
+  Color get clear => const Color(0x00000000);
+
   final Color brand;
 
   /// [brand] as text: 4.5:1 on every surface and on its container, at the

@@ -211,15 +211,16 @@ final class _TypeUseCompositionPickerState
               for (final item in parameters.indexed)
                 Padding(
                   padding: EdgeInsets.only(top: context.spacing.space2),
-                  child: OutlinedButton(
-                    onPressed: () => _chooseNested(item.$1, item.$2.name),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(switch (arguments[item.$1]) {
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Button(
+                      face: ButtonFace.outlined,
+                      onPressed: () => _chooseNested(item.$1, item.$2.name),
+                      label: switch (arguments[item.$1]) {
                         skir.ArgumentSelection_chosenWrapper(:final value) =>
                           "${item.$2.name}: ${widget.catalog.typeUseName(value)}",
                         _ => "${item.$2.name}: Choose a type",
-                      }),
+                      },
                     ),
                   ),
                 ),
@@ -234,15 +235,13 @@ final class _TypeUseCompositionPickerState
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text("Cancel"),
-        ),
-        FilledButton(
+        Button(label: "Cancel", onPressed: () => Navigator.of(context).pop()),
+        Button(
+          face: ButtonFace.filled,
+          label: "Choose",
           onPressed: complete == null
               ? null
               : () => Navigator.of(context).pop(complete),
-          child: const Text("Choose"),
         ),
       ],
     );

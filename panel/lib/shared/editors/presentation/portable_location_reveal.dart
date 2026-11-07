@@ -71,6 +71,9 @@ class PortableLocationRevealController {
       _pendingIsCurrent = null;
       candidates.first.reveal();
     });
+    // A post frame callback alone waits for whatever draws the next frame; an
+    // idle panel draws none.
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   void dispose() {

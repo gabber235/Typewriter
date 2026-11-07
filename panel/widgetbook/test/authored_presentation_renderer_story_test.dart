@@ -119,7 +119,13 @@ void main() {
       panel.shows("The quest will no longer be available to players."),
       isTrue,
     );
-    await panel.tapOn(find.bySemanticsLabel("Archive"));
+    // The header keeps its own Archive button behind the dialog.
+    await panel.tapOn(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.bySemanticsLabel("Archive"),
+      ),
+    );
 
     expect(panel.shows("Archived quest"), isTrue);
   });

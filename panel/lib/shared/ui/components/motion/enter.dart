@@ -120,7 +120,10 @@ final class _LoadRun {
       _scheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => _launch());
     }
-    return () => joined.cancelled = true;
+    return () {
+      joined.cancelled = true;
+      joined.stop?.call();
+    };
   }
 
   void _launch() {
@@ -142,6 +145,7 @@ final class _LoadRun {
       for (final member in members) {
         if (member.cancelled) continue;
         final cancel = member.start(delay);
+        member.stop = cancel;
         if (cancel != null) _cancels.add(cancel);
       }
     }
@@ -177,6 +181,9 @@ final class _Joined {
   final BuildContext context;
   final VoidCallback? Function(Duration delay) start;
   bool cancelled = false;
+
+  /// Stops a start still waiting for its slot, when the joiner leaves.
+  VoidCallback? stop;
 }
 
 class _EnterRunScope extends InheritedWidget {

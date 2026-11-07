@@ -22,7 +22,8 @@ final class AuthoringConflictNotice extends StatelessWidget {
         ),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton(
+          child: Button(
+            label: "Review changes",
             onPressed: () => showDialog<void>(
               context: context,
               builder: (dialogContext) => AlertDialog(
@@ -38,14 +39,13 @@ final class AuthoringConflictNotice extends StatelessWidget {
                   ),
                 ),
                 actions: [
-                  TextButton(
+                  Button(
+                    label: "Close",
                     onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text("Close"),
                   ),
                 ],
               ),
             ),
-            child: const Text("Review changes"),
           ),
         ),
       ],

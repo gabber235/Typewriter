@@ -27,21 +27,21 @@ final class EditingGroupPanel<S, E> extends HookWidget {
         Text(group.label),
         ApplyControls(control: control),
         if (review != null)
-          TextButton(
+          Button(
+            label: "View changes",
             onPressed: () => showDialog<void>(
               context: context,
               builder: (context) => AlertDialog(
                 title: Text(group.label),
                 content: SingleChildScrollView(child: review!()),
                 actions: [
-                  TextButton(
+                  Button(
+                    label: "Close",
                     onPressed: () => Navigator.pop(context),
-                    child: const Text("Close"),
                   ),
                 ],
               ),
             ),
-            child: const Text("View changes"),
           ),
       ],
     );

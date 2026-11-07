@@ -47,10 +47,12 @@ class ModalHeader extends StatelessWidget {
             ),
           Align(
             alignment: Alignment.topRight,
-            child: IconButton(
+            child: Button(
+              face: ButtonFace.icon,
               icon: const Icon(Icons.close),
+              label: "Close",
+              tooltip: "Close",
               onPressed: onClose ?? () => Navigator.of(context).pop(),
-              constraints: const BoxConstraints(),
             ),
           ),
         ],

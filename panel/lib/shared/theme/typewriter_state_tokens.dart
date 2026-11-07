@@ -3,9 +3,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Opacity tokens used to resolve interactive widget states.
 ///
 /// Disabled states return no overlay from [layer], allowing the component's
-/// disabled colors to remain authoritative. Other states are resolved in
-/// priority order, from pressed through dragged and hovered. Focus adds no
-/// fill: the FocusRingLayer draws it as a ring.
+/// disabled colors to remain authoritative. Hover and press add no wash
+/// either: a `Button` plays `hoverIn` and `press`, and reads [hoverOpacity]
+/// and [pressedOpacity] only for its tint under reduced motion. Focus adds
+/// no fill: the FocusRingLayer draws it as a ring. Only a drag washes.
 @immutable
 class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
   const TypewriterStateTokens({
@@ -29,30 +30,21 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
   /// state wins according to the order documented on [TypewriterStateTokens].
   Color? layer(Color foreground, Set<WidgetState> states) {
     if (states.contains(WidgetState.disabled)) return null;
-    if (states.contains(WidgetState.pressed)) {
-      return foreground.withValues(alpha: pressedOpacity);
-    }
     if (states.contains(WidgetState.dragged)) {
       return foreground.withValues(alpha: draggedOpacity);
-    }
-    if (states.contains(WidgetState.hovered)) {
-      return foreground.withValues(alpha: hoverOpacity);
     }
     return null;
   }
 
   /// Creates a Material state property backed by [layer].
   ///
-  /// A focused control with no other state resolves to transparent rather
-  /// than null, so Material's own focus wash never fills it.
+  /// A control with no layer resolves to transparent rather than null, so
+  /// Material's own hover, press and focus wash never fills it.
   WidgetStateProperty<Color?> overlay(Color foreground) =>
       WidgetStateProperty.resolveWith(
         (states) =>
             layer(foreground, states) ??
-            (states.contains(WidgetState.focused) &&
-                    !states.contains(WidgetState.disabled)
-                ? Colors.transparent
-                : null),
+            (states.contains(WidgetState.disabled) ? null : Colors.transparent),
       );
 
   @override

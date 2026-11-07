@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Validation happens before the request so malformed tokens never reach the
 /// service API. The local work controller executes the repository request,
 /// including its accepted snapshot refresh, before the input is cleared.
-/// Request failures are passed to [LoadingButton], which owns the in progress
+/// Request failures are passed to [Button], which owns the in progress
 /// and error presentation.
 class RegistrationTokenInput extends HookConsumerWidget {
   const RegistrationTokenInput({super.key});
@@ -20,7 +20,7 @@ class RegistrationTokenInput extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = useTextEditingController();
     final focusNode = useFocusNode();
-    final loading = useLoadingButtonController();
+    final loading = useButtonController();
     final error = useState<String?>(null);
 
     Future<void> bind() async {
@@ -57,10 +57,12 @@ class RegistrationTokenInput extends HookConsumerWidget {
       },
       onSubmitted: loading.canTrigger ? (_) => loading.trigger() : null,
     );
-    final button = LoadingButton(
+    final button = Button(
+      face: ButtonFace.filled,
       controller: loading,
       onPressed: bind,
-      child: const Text("Connect"),
+      label: "Connect",
+      busyLabel: "Connecting",
     );
     return LayoutBuilder(
       builder: (context, constraints) {

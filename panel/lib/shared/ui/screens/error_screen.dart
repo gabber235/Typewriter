@@ -36,29 +36,32 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Spacer(),
-          Expanded(
-            flex: 6,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.zoomIn,
-              child: const RiveAsset(
-                asset: "assets/robot_island.riv",
-                stateMachineName: "Motion",
+    return EnterRun(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Spacer(),
+            Expanded(
+              flex: 6,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.zoomIn,
+                child: const RiveAsset(
+                  asset: "assets/robot_island.riv",
+                  stateMachineName: "Motion",
+                ),
               ),
             ),
-          ),
-          SizedBox(height: context.spacing.space6),
-          Padding(
-            padding: EdgeInsets.all(context.spacing.space2),
-            child: Column(
-              spacing: context.spacing.space2,
-              children: [
-                Text(
+            SizedBox(height: context.spacing.space6),
+            Padding(
+              padding: EdgeInsets.all(context.spacing.space2),
+              child: Column(
+                spacing: context.spacing.space2,
+                children: [
+                  Enter(
+                    token: MotionToken.loadIn,
+                    child: Text(
                       title.isEmpty ? ErrorScreen.defaultTitle : title,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -70,11 +73,11 @@ class ErrorScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: context.colors.dangerText,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 100.ms)
-                    .slideY(begin: 0.1, end: 0),
-                Text(
+                    ),
+                  ),
+                  Enter(
+                    token: MotionToken.loadIn,
+                    child: Text(
                       "Something went wrong, please report this to the Typewriter discord.",
                       textAlign: TextAlign.center,
                       style: context.text.sentence.copyWith(
@@ -85,12 +88,12 @@ class ErrorScreen extends StatelessWidget {
                         ),
                         color: colors.onSurfaceVariant,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 200.ms)
-                    .slideY(begin: 0.1, end: 0),
-                if (message.isNotEmpty)
-                  SelectableText(
+                    ),
+                  ),
+                  if (message.isNotEmpty)
+                    Enter(
+                      token: MotionToken.loadIn,
+                      child: SelectableText(
                         message,
                         textAlign: TextAlign.center,
                         style: context.text.sentence.copyWith(
@@ -101,21 +104,16 @@ class ErrorScreen extends StatelessWidget {
                           ),
                           color: colors.onSurface,
                         ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 300.ms, delay: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-              ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(height: context.spacing.space6),
-          if (child != null)
-            child!
-                .animate()
-                .fadeIn(duration: 300.ms, delay: 300.ms)
-                .slideY(begin: 0.1, end: 0),
-          Spacer(),
-        ],
+            SizedBox(height: context.spacing.space6),
+            if (child != null) Enter(token: MotionToken.loadIn, child: child!),
+            Spacer(),
+          ],
+        ),
       ),
     );
   }
@@ -138,31 +136,34 @@ class SmallErrorScreen extends ErrorScreen {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      spacing: context.spacing.space2,
-      children: [
-        if (withIcon)
-          MouseRegion(
-            cursor: SystemMouseCursors.zoomIn,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final size = constraints.maxWidth == double.infinity
-                    ? constraints.maxHeight
-                    : constraints.maxWidth;
-                return SizedBox(
-                  width: size,
-                  height: size,
-                  child: const RiveAsset(
-                    asset: "assets/robot_island.riv",
-                    stateMachineName: "Motion",
-                  ),
-                );
-              },
+    return EnterRun(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        spacing: context.spacing.space2,
+        children: [
+          if (withIcon)
+            MouseRegion(
+              cursor: SystemMouseCursors.zoomIn,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = constraints.maxWidth == double.infinity
+                      ? constraints.maxHeight
+                      : constraints.maxWidth;
+                  return SizedBox(
+                    width: size,
+                    height: size,
+                    child: const RiveAsset(
+                      asset: "assets/robot_island.riv",
+                      stateMachineName: "Motion",
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        Text(
+          Enter(
+            token: MotionToken.loadIn,
+            child: Text(
               title.isEmpty ? ErrorScreen.defaultTitle : title,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -174,11 +175,11 @@ class SmallErrorScreen extends ErrorScreen {
                 fontWeight: FontWeight.bold,
                 color: context.colors.dangerText,
               ),
-            )
-            .animate()
-            .fadeIn(duration: 300.ms, delay: 100.ms)
-            .slideY(begin: 0.1, end: 0),
-        Text(
+            ),
+          ),
+          Enter(
+            token: MotionToken.loadIn,
+            child: Text(
               message,
               textAlign: TextAlign.center,
               style: context.text.sentence.copyWith(
@@ -189,16 +190,11 @@ class SmallErrorScreen extends ErrorScreen {
                 ),
                 color: context.colors.contentSecondary,
               ),
-            )
-            .animate()
-            .fadeIn(duration: 300.ms, delay: 200.ms)
-            .slideY(begin: 0.1, end: 0),
-        if (child != null)
-          child!
-              .animate()
-              .fadeIn(duration: 300.ms, delay: 300.ms)
-              .slideY(begin: 0.1, end: 0),
-      ],
+            ),
+          ),
+          if (child != null) Enter(token: MotionToken.loadIn, child: child!),
+        ],
+      ),
     );
   }
 }

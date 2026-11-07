@@ -1,11 +1,10 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Switches keyed content with the panel's standard elastic size and scale
-/// transition.
+/// Switches keyed content in place: the new content arrives with `loadIn`
+/// and the old leaves with `listOut`, while the size follows.
 ///
-/// The child identity controls when a transition starts. Timing is intentionally
-/// fixed so loading and status changes share one motion treatment. The widget
-/// owns no application state.
+/// The child identity controls when a transition starts. The widget owns no
+/// application state; reduced motion is applied by the tokens.
 class ElasticSwitcher extends StatelessWidget {
   const ElasticSwitcher({required this.child, super.key});
 
@@ -14,33 +13,26 @@ class ElasticSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final disableAnimation = MediaQuery.disableAnimationsOf(context);
-    if (disableAnimation) return child ?? const SizedBox.shrink();
-    final sizeDuraiton = 1000.ms;
-    final scaleDuration = 800.ms;
-
-    return AnimatedSize(
-      duration: sizeDuraiton,
-      curve: const ElasticOutCurve(0.9),
-      clipBehavior: Clip.none,
-      child: AnimatedSwitcher(
-        duration: scaleDuration,
-        transitionBuilder: (child, animation) {
-          return ScaleTransition(
-            scale: CurvedAnimation(
-              parent: animation,
-              curve: const Interval(0.2, 1.0, curve: ElasticOutCurve(0.7)),
-              reverseCurve: const Interval(
-                0.8,
-                1.0,
-                curve: Curves.fastLinearToSlowEaseIn,
-              ),
-            ),
-            child: child,
-          );
-        },
-        child: child,
+    final arrive = motionTimeline(context, MotionToken.loadIn);
+    final leave = motionTimeline(context, MotionToken.listOut);
+    final content = AnimatedSwitcher(
+      duration: arrive.duration,
+      reverseDuration: leave.duration,
+      switchInCurve: arrive.curve,
+      switchOutCurve: leave.curve.flipped,
+      transitionBuilder: (child, animation) => ScaleTransition(
+        scale: animation,
+        child: FadeTransition(opacity: animation, child: child),
       ),
+      child: child,
+    );
+    // A zero length size change would land inside layout.
+    if (arrive.duration == Duration.zero) return content;
+    return AnimatedSize(
+      duration: arrive.duration,
+      curve: arrive.curve,
+      clipBehavior: Clip.none,
+      child: content,
     );
   }
 }

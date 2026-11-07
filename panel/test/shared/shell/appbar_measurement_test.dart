@@ -24,7 +24,7 @@ void main() {
               builder: (context, _) => MeasureThenAllocate(
                 width: width.value,
                 child: AnchoredPopup(
-                  builder: (context, open) => AppBarControl.text(
+                  builder: (context, open) => AppBarControl(
                     focusNode: focus,
                     onPressed: open,
                     contentBuilder: (context, compact) => AnimatedStatusContent(

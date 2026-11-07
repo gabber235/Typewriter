@@ -50,6 +50,29 @@ void main() {
     },
   );
 
+  testWidgets(
+    "a request to a mounted field reveals it while the panel is idle",
+    (tester) async {
+      final controller = PortableLocationRevealController();
+      addTearDown(controller.dispose);
+      final panel = await tester.showComponent(
+        PortableLocationRevealScope(
+          controller: controller,
+          child: PortableLocationTarget(
+            location: root,
+            child: TextField(decoration: InputDecoration(labelText: "Title")),
+          ),
+        ),
+      );
+
+      controller.request(root);
+      await tester.pump();
+      await tester.pump();
+
+      expect(panel.focused, "Title");
+    },
+  );
+
   testWidgets("a root reveal focuses the requested inspector presentation", (
     tester,
   ) async {

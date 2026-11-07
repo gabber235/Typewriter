@@ -473,18 +473,20 @@ extension _CollectionEditorPreparation on PortablePresentationNodeRenderer {
         _ => false,
       };
 
-  Widget nodeEnvelope(Widget child, bool available) => Semantics(
-    container: true,
-    enabled: available,
-    child: IgnorePointer(
-      ignoring: !available,
-      child: AnimatedOpacity(
-        opacity: available ? 1 : 0.55,
-        duration: const Duration(milliseconds: 120),
-        child: KeyedSubtree(key: ValueKey(node.nodeId), child: child),
-      ),
-    ),
-  );
+  Widget nodeEnvelope(BuildContext context, Widget child, bool available) =>
+      Semantics(
+        container: true,
+        enabled: available,
+        child: IgnorePointer(
+          ignoring: !available,
+          child: AnimatedOpacity(
+            opacity: available ? 1 : 0.55,
+            duration: motionTimeline(context, MotionToken.ink).duration,
+            curve: motionTimeline(context, MotionToken.ink).curve,
+            child: KeyedSubtree(key: ValueKey(node.nodeId), child: child),
+          ),
+        ),
+      );
 
   Widget intrinsicCollectionBody(
     BuildContext context,
@@ -496,6 +498,6 @@ extension _CollectionEditorPreparation on PortablePresentationNodeRenderer {
     node.element!,
     preparedScope,
     ownedCollectionHeaderBuilder: (root, body) =>
-        consume(root, nodeEnvelope(body, available)),
+        consume(root, nodeEnvelope(context, body, available)),
   );
 }
