@@ -9,138 +9,41 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// while the route owns selection and providers supply observed data. Row
 /// controls submit prepared repository commands through shared local work.
 class JoinCodesTable extends HookConsumerWidget {
-  const JoinCodesTable({
-    required this.codes,
-    required this.selectedCodes,
-    required this.onRevokeSelection,
-    super.key,
-  });
+  const JoinCodesTable({required this.selection, super.key});
 
-  final List<skir.JoinCode> codes;
-  final ValueNotifier<Set<skir.RecordId>> selectedCodes;
-  final Future<void> Function() onRevokeSelection;
+  final SelectableRows<skir.JoinCode> selection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final focusedCodeId = useState<skir.RecordId?>(null);
-    final animated = useAnimatedTable(
-      items: codes,
-      identity: (code) => code.code,
-      removedItemBuilder: (context, code, animation) => _buildCodeRow(
+    final codes = selection.rows.items;
+
+    return SelectionTable<skir.JoinCode>(
+      selection: selection,
+      idOf: (code) => code.code,
+      labels: const ["Join Code", "Type", "Expires"],
+      hasScrollBody: false,
+      columnWidths: const {
+        0: FixedColumnWidth(48),
+        1: FlexColumnWidth(2),
+        2: IntrinsicColumnWidth(),
+        3: IntrinsicColumnWidth(),
+        4: FixedColumnWidth(80),
+      },
+      emptyBuilder: (context) => const EmptyState(
+        icon: MaterialSymbols.link_off_rounded,
+        title: "No active join codes",
+        description: "Generate a join code above to get started!",
+      ),
+      rowBuilder: (context, entry) => _buildCodeRow(
         context,
         ref,
-        code,
-        selectedCodes.value.contains(code.code),
+        entry.item,
+        codes,
+        selection.selectedIds.value.contains(entry.id),
         focusedCodeId,
         theme,
-      ),
-    );
-
-    final allSelected =
-        codes.isNotEmpty && selectedCodes.value.length == codes.length;
-    final someSelected =
-        selectedCodes.value.isNotEmpty &&
-        selectedCodes.value.length < codes.length;
-
-    return SliverFillRemaining(
-      hasScrollBody: false,
-      child: AnimatedTable(
-        key: animated.key,
-        initialItemCount: animated.items.length,
-        columnWidths: const {
-          0: FixedColumnWidth(48),
-          1: FlexColumnWidth(2),
-          2: IntrinsicColumnWidth(),
-          3: IntrinsicColumnWidth(),
-          4: FixedColumnWidth(80),
-        },
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        headerRows: [
-          TableRow(
-            decoration: BoxDecoration(color: Surface.colorOf(context)),
-            children: [
-              TableCell(
-                verticalAlignment: TableCellVerticalAlignment.middle,
-                child: StaggerEntrance(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.space2,
-                      vertical: context.spacing.space3,
-                    ),
-                    child: Checkbox(
-                      value: allSelected ? true : (someSelected ? null : false),
-                      tristate: true,
-                      onChanged: (value) {
-                        if (allSelected || someSelected) {
-                          selectedCodes.value = {};
-                        } else {
-                          selectedCodes.value = codes
-                              .map((code) => code.code)
-                              .toSet();
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              _headerCell(context, theme, "Join Code"),
-              _headerCell(context, theme, "Type"),
-              _headerCell(context, theme, "Expires"),
-              const TableCell(child: SizedBox.shrink()),
-            ],
-          ),
-        ],
-        emptyBuilder: (context) => const EmptyState(
-          icon: MaterialSymbols.link_off_rounded,
-          title: "No active join codes",
-          description: "Generate a join code above to get started!",
-        ),
-        transitionBuilder: (context, animation, child) =>
-            ElasticTransition(animation: animation, child: child),
-        tableBuilder: (context, table) => Surface(
-          color: Surface.colorOf(context),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: context.shapes.mediumBorderRadius,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: table,
-          ),
-        ),
-        rowBuilder: (context, index, animation) {
-          final code = animated.items[index];
-          return _buildCodeRow(
-            context,
-            ref,
-            code,
-            selectedCodes.value.contains(code.code),
-            focusedCodeId,
-            theme,
-          );
-        },
-      ),
-    );
-  }
-
-  TableCell _headerCell(BuildContext context, ThemeData theme, String label) {
-    return TableCell(
-      child: StaggerEntrance(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.spacing.space2,
-            vertical: context.spacing.space3,
-          ),
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium!.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -149,6 +52,7 @@ class JoinCodesTable extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     skir.JoinCode code,
+    List<skir.JoinCode> codes,
     bool isSelected,
     ValueNotifier<skir.RecordId?> focusedCodeId,
     ThemeData theme,
@@ -157,12 +61,12 @@ class JoinCodesTable extends HookConsumerWidget {
 
     void toggleSelection() {
       if (isSelected) {
-        selectedCodes.value = selectedCodes.value
+        selection.selectedIds.value = selection.selectedIds.value
             .where((selected) => selected != code.code)
             .toSet();
         return;
       }
-      selectedCodes.value = {...selectedCodes.value, code.code};
+      selection.selectedIds.value = {...selection.selectedIds.value, code.code};
     }
 
     void updateFocus(bool focused) {
@@ -176,12 +80,13 @@ class JoinCodesTable extends HookConsumerWidget {
     Widget withShortcuts(Widget child) => JoinCodeTableRowShortcuts(
       code: code,
       onToggleSelection: toggleSelection,
-      onSelectAll: () => selectedCodes.value = codes.map((c) => c.code).toSet(),
-      onClearSelection: () => selectedCodes.value = {},
+      onSelectAll: () =>
+          selection.selectedIds.value = codes.map((c) => c.code).toSet(),
+      onClearSelection: () => selection.selectedIds.value = {},
       onCopy: () => _copyToClipboard(context, fullUrl),
       isSelected: isSelected,
-      hasSelection: selectedCodes.value.isNotEmpty,
-      onRevokeSelection: onRevokeSelection,
+      hasSelection: selection.selectedIds.value.isNotEmpty,
+      onRevokeSelection: selection.onRemoveSelection,
       onFocusChange: updateFocus,
       child: child,
     );
@@ -197,90 +102,75 @@ class JoinCodesTable extends HookConsumerWidget {
       children: [
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
-          child: StaggerEntrance(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space3,
-              ),
-              child: withShortcuts(
-                Checkbox(
-                  value: isSelected,
-                  onChanged: (_) => toggleSelection(),
-                ),
-              ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: context.spacing.space3,
+            ),
+            child: withShortcuts(
+              Checkbox(value: isSelected, onChanged: (_) => toggleSelection()),
             ),
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space2,
-                  vertical: context.spacing.space3,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: BlurReveal(
-                        blurSigma: 3,
-                        child: SelectableText(
-                          fullUrl,
-                          style: theme.textTheme.bodyMedium!.copyWith(
-                            fontSize: 13,
-                            color: theme.colorScheme.onSurface,
-                          ),
+          child: withShortcuts(
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space3,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: BlurReveal(
+                      blurSigma: 3,
+                      child: SelectableText(
+                        fullUrl,
+                        style: theme.textTheme.bodyMedium!.copyWith(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
-                    SizedBox(width: context.spacing.space2),
-                    IconButton(
-                      icon: const Icon(Icons.copy, size: 16),
-                      onPressed: () => _copyToClipboard(context, fullUrl),
-                      tooltip: "Copy Join Code",
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(width: context.spacing.space2),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 16),
+                    onPressed: () => _copyToClipboard(context, fullUrl),
+                    tooltip: "Copy Join Code",
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
               ),
             ),
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space3,
-              ),
-              child: JoinCodeTypeBadges(code: code),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: context.spacing.space3,
             ),
+            child: JoinCodeTypeBadges(code: code),
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space3,
-              ),
-              child: CountdownBadge(
-                endDate: code.expiresAt,
-                onExpired: () {
-                  selectedCodes.value = selectedCodes.value
-                      .where((selected) => selected != code.code)
-                      .toSet();
-                },
-              ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: context.spacing.space3,
+            ),
+            child: CountdownBadge(
+              endDate: code.expiresAt,
+              onExpired: () {
+                selection.selectedIds.value = selection.selectedIds.value
+                    .where((selected) => selected != code.code)
+                    .toSet();
+              },
             ),
           ),
         ),
-        TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(JoinCodeRowActions(code: code)),
-          ),
-        ),
+        TableCell(child: withShortcuts(JoinCodeRowActions(code: code))),
       ],
     );
   }

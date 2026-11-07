@@ -1,180 +1,352 @@
-import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
-const insertion = Duration(milliseconds: 200);
-const removal = Duration(milliseconds: 400);
-
 void main() {
-  group("useSliverAnimatedList", () {
-    testWidgets("renders initial items with completed animations", (
-      tester,
-    ) async {
-      await tester.showAnimatedItems(
-        [
+  for (final layout in AnimatedItemsLayout.values) {
+    group("rows in a ${layout.name}", () {
+      testWidgets(
+        "a removed row is gone and its neighbour sits where it was once the move settles",
+        (tester) async {
+          final source = await tester.showAnimatedItems([
+            const AnimatedItem(id: "a", label: "Alpha"),
+            const AnimatedItem(id: "b", label: "Beta"),
+          ], layout: layout);
+          final alphaTop = tester.paintedRectOf(find.text("Alpha")).top;
+
+          source.update([const AnimatedItem(id: "b", label: "Beta")]);
+          await tester.pump();
+          expect(
+            find.text("Alpha"),
+            findsOneWidget,
+            reason: "the row stays while it squashes shut",
+          );
+
+          await tester.pumpAndSettle();
+          expect(find.text("Alpha"), findsNothing);
+          expect(tester.paintedRectOf(find.text("Beta")).top, alphaTop);
+        },
+      );
+
+      testWidgets(
+        "a row added after the load slides in from the left and comes to rest",
+        (tester) async {
+          final source = await tester.showAnimatedItems([
+            const AnimatedItem(id: "a", label: "Alpha"),
+          ], layout: layout);
+          final restLeft = tester.paintedRectOf(find.text("Alpha")).left;
+
+          source.update([
+            ...source.items,
+            const AnimatedItem(id: "b", label: "Beta"),
+          ]);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 16));
+          expect(
+            tester.paintedRectOf(find.text("Beta")).left,
+            lessThan(restLeft),
+          );
+
+          await tester.pumpAndSettle();
+          expect(tester.paintedRectOf(find.text("Beta")).left, restLeft);
+          expect(tester.paintedOpacityOf(find.text("Beta")), 1);
+        },
+      );
+
+      testWidgets("with reduced motion a change lands on the next frame", (
+        tester,
+      ) async {
+        final source = await tester.showAnimatedItems(
+          [
+            const AnimatedItem(id: "a", label: "Alpha"),
+            const AnimatedItem(id: "b", label: "Beta"),
+          ],
+          layout: layout,
+          reducedMotion: true,
+        );
+        final alphaTop = tester.paintedRectOf(find.text("Alpha")).top;
+
+        source.update([
+          const AnimatedItem(id: "b", label: "Beta"),
+          const AnimatedItem(id: "c", label: "Gamma"),
+        ]);
+        await tester.pump();
+        await tester.pump();
+        expect(find.text("Alpha"), findsNothing);
+        expect(tester.paintedRectOf(find.text("Beta")).top, alphaTop);
+        expect(tester.paintedOpacityOf(find.text("Gamma")), 1);
+      });
+
+      testWidgets("a leaving row ignores taps", (tester) async {
+        final source = await tester.showAnimatedItems([
           const AnimatedItem(id: "a", label: "Alpha"),
           const AnimatedItem(id: "b", label: "Beta"),
-        ],
-        insertDuration: insertion,
-        removeDuration: removal,
+        ], layout: layout);
+
+        source.update([const AnimatedItem(id: "b", label: "Beta")]);
+        await tester.pump();
+        await tester.tap(find.text("Alpha"), warnIfMissed: false);
+        expect(source.tapped, isEmpty);
+      });
+
+      testWidgets("a reorder moves rows in place without an arrival", (
+        tester,
+      ) async {
+        final source = await tester.showAnimatedItems([
+          const AnimatedItem(id: "a", label: "Alpha"),
+          const AnimatedItem(id: "b", label: "Beta"),
+        ], layout: layout);
+        final alphaTop = tester.paintedRectOf(find.text("Alpha")).top;
+
+        source.update([
+          const AnimatedItem(id: "b", label: "Beta"),
+          const AnimatedItem(id: "a", label: "Alpha"),
+        ]);
+        await tester.pump();
+        expect(tester.hasRunningAnimations, isFalse);
+        expect(tester.paintedRectOf(find.text("Beta")).top, alphaTop);
+        expect(tester.paintedOpacityOf(find.text("Alpha")), 1);
+      });
+
+      testWidgets("a row added back while it leaves turns around and stays", (
+        tester,
+      ) async {
+        final source = await tester.showAnimatedItems([
+          const AnimatedItem(id: "a", label: "Alpha"),
+          const AnimatedItem(id: "b", label: "Beta"),
+        ], layout: layout);
+
+        source.update([
+          const AnimatedItem(id: "b", label: "Beta"),
+          const AnimatedItem(id: "a", label: "Alpha moved"),
+        ]);
+        await tester.pump(const Duration(milliseconds: 50));
+        source.update([const AnimatedItem(id: "b", label: "Beta")]);
+        await tester.pump(const Duration(milliseconds: 50));
+        source.update([
+          const AnimatedItem(id: "a", label: "Alpha newest"),
+          const AnimatedItem(id: "c", label: "Gamma"),
+        ]);
+        await tester.pumpAndSettle();
+
+        expect(source.renderedIds, ["a", "c"]);
+        expect(find.text("Alpha newest"), findsOneWidget);
+        expect(tester.paintedOpacityOf(find.text("Alpha newest")), 1);
+        expect(find.text("Beta"), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    });
+  }
+
+  for (final layout in AnimatedItemsLayout.values) {
+    group("a sending row in a ${layout.name}", () {
+      testWidgets(
+        "stays struck through while its remove sends, then squashes shut once the item leaves",
+        (tester) async {
+          final source = await tester.showAnimatedItems([
+            const AnimatedItem(id: "a", label: "Alpha"),
+            const AnimatedItem(id: "b", label: "Beta"),
+          ], layout: layout);
+          final alphaTop = tester.paintedRectOf(find.text("Alpha")).top;
+          final command = Completer<void>();
+
+          final sent = source.rows.sending(["a"], () => command.future);
+          await tester.pumpAndSettle();
+          expect(
+            tester.textDecorationOf(find.text("Alpha")),
+            TextDecoration.lineThrough,
+          );
+          expect(
+            tester.paintedRectOf(find.text("Alpha")).top,
+            alphaTop,
+            reason: "the row stays in place while it sends",
+          );
+          await tester.tap(find.text("Alpha"), warnIfMissed: false);
+          expect(source.tapped, isEmpty, reason: "a sending row ignores input");
+
+          command.complete();
+          await sent;
+          source.update([const AnimatedItem(id: "b", label: "Beta")]);
+          await tester.pump();
+          expect(
+            find.text("Alpha"),
+            findsOneWidget,
+            reason: "it leaves with listOut, struck through",
+          );
+          expect(
+            tester.textDecorationOf(find.text("Alpha")),
+            TextDecoration.lineThrough,
+          );
+
+          await tester.pumpAndSettle();
+          expect(find.text("Alpha"), findsNothing);
+          expect(tester.paintedRectOf(find.text("Beta")).top, alphaTop);
+        },
       );
 
-      expect(find.text("Alpha"), findsOneWidget);
-      expect(find.text("Beta"), findsOneWidget);
-      expect(AnimatedItems.opacityOf(tester, "a"), 1);
-      expect(AnimatedItems.opacityOf(tester, "b"), 1);
+      testWidgets(
+        "returns to present when its remove is refused, and never left",
+        (tester) async {
+          final source = await tester.showAnimatedItems([
+            const AnimatedItem(id: "a", label: "Alpha"),
+            const AnimatedItem(id: "b", label: "Beta"),
+          ], layout: layout);
+          final alphaRect = tester.paintedRectOf(find.text("Alpha"));
+
+          final sent = source.rows.sending([
+            "a",
+          ], () async => throw StateError("refused"));
+          await expectLater(sent, throwsStateError);
+          await tester.pump();
+
+          expect(
+            tester.textDecorationOf(find.text("Alpha")),
+            isNot(TextDecoration.lineThrough),
+          );
+          expect(tester.paintedRectOf(find.text("Alpha")), alphaRect);
+          expect(tester.paintedOpacityOf(find.text("Alpha")), 1);
+          expect(
+            tester.hasRunningAnimations,
+            isFalse,
+            reason: "nothing moves back in",
+          );
+        },
+      );
     });
+  }
 
+  group("the load", () {
+    testWidgets(
+      "rows present when content loads ripple in once, and all are visible after the ripple",
+      (tester) async {
+        final window = (await resolveMotionIn(
+          tester,
+          MotionToken.loadIn,
+        )).landing.stagger!.within;
+        final source = await tester.showAnimatedItems(
+          numberedItems(30),
+          inPane: true,
+          settle: false,
+        );
+        final visible = [
+          for (var row = 0; row < 8; row++) find.text("Row $row"),
+        ];
+        expect(
+          tester.paintedOpacityOf(visible.first),
+          lessThan(1),
+          reason: "the rows wait for the run",
+        );
+
+        await tester.runFrames(window);
+        for (final row in visible) {
+          expect(
+            tester.paintedOpacityOf(row),
+            greaterThan(0),
+            reason: "every visible row has started",
+          );
+        }
+
+        await tester.pumpAndSettle();
+        for (final row in visible) {
+          expect(tester.paintedOpacityOf(row), 1);
+        }
+
+        // Once per pane: the same rows shown again do not ripple.
+        source.visible.value = false;
+        await tester.pump();
+        source.visible.value = true;
+        await tester.pump();
+        expect(tester.paintedOpacityOf(visible.first), 1);
+      },
+    );
+
+    testWidgets(
+      "with reduced motion loaded rows are all visible on the first frame",
+      (tester) async {
+        await tester.showAnimatedItems(
+          numberedItems(30),
+          inPane: true,
+          settle: false,
+          reducedMotion: true,
+        );
+        await tester.pump();
+        expect(tester.paintedOpacityOf(find.text("Row 7")), 1);
+      },
+    );
+  });
+
+  group("the rows hook", () {
     // The web engine runs both halves of a frame without flushing microtasks
-    // between them, so a list can leave the tree after a row's animation ended
-    // and before the code waiting on that animation runs. These frames do the same.
-    testWidgets(
-      "a list can go away in the frame a removed row finishes leaving",
-      (tester) async {
-        final source = await tester.showAnimatedItems(
-          [const AnimatedItem(id: "a", label: "Alpha")],
-          insertDuration: insertion,
-          removeDuration: removal,
-        );
-        source.update(const []);
+    // between them, so a list can leave the tree after a row's move ended
+    // and before the code waiting on that move runs. These frames do the same.
+    for (final (name, from, to) in [
+      (
+        "a removed row finishes leaving",
+        const [AnimatedItem(id: "a", label: "Alpha")],
+        const <AnimatedItem>[],
+      ),
+      (
+        "an inserted row finishes arriving",
+        const <AnimatedItem>[],
+        const [AnimatedItem(id: "a", label: "Alpha")],
+      ),
+    ]) {
+      testWidgets("a list can go away in the frame $name", (tester) async {
+        final source = await tester.showAnimatedItems(List.of(from));
+        final settle =
+            tester.settleTimeOf(MotionToken.listOut) +
+            tester.settleTimeOf(MotionToken.rowIn);
+        source.update(List.of(to));
         await tester.pump();
 
         final binding = tester.binding;
         binding.handleBeginFrame(
-          binding.currentSystemFrameTimeStamp + removal * 2,
+          binding.currentSystemFrameTimeStamp + settle * 2,
         );
         binding.attachRootWidget(binding.wrapWithDefaultView(const SizedBox()));
         binding.handleDrawFrame();
         await tester.pump();
 
         expect(tester.takeException(), isNull);
-      },
-    );
+      });
+    }
 
-    testWidgets(
-      "a list can go away in the frame an inserted row finishes arriving",
-      (tester) async {
-        final source = await tester.showAnimatedItems(
-          <AnimatedItem>[],
-          insertDuration: insertion,
-          removeDuration: removal,
-        );
-        source.update(const [AnimatedItem(id: "a", label: "Alpha")]);
-        await tester.pump();
-
-        final binding = tester.binding;
-        binding.handleBeginFrame(
-          binding.currentSystemFrameTimeStamp + insertion * 2,
-        );
-        binding.attachRootWidget(binding.wrapWithDefaultView(const SizedBox()));
-        binding.handleDrawFrame();
-        await tester.pump();
-
-        expect(tester.takeException(), isNull);
-      },
-    );
-
-    testWidgets("inserts in the middle using the configured duration", (
+    testWidgets("mixed changes and a reorder settle in data order", (
       tester,
     ) async {
-      final source = await tester.showAnimatedItems(
-        [
-          const AnimatedItem(id: "a", label: "Alpha"),
-          const AnimatedItem(id: "c", label: "Gamma"),
-        ],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
-
-      source.update([
+      final source = await tester.showAnimatedItems([
         const AnimatedItem(id: "a", label: "Alpha"),
         const AnimatedItem(id: "b", label: "Beta"),
         const AnimatedItem(id: "c", label: "Gamma"),
+        const AnimatedItem(id: "d", label: "Delta"),
       ]);
-      await tester.pump();
-
-      expect(find.text("Beta"), findsOneWidget);
-      expect(AnimatedItems.opacityOf(tester, "b"), 0);
-
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(AnimatedItems.opacityOf(tester, "b"), closeTo(0.5, 0.01));
-
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(AnimatedItems.opacityOf(tester, "b"), 1);
-      expect(source.renderedIds, ["a", "b", "c"]);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets("keeps captured removed item for the removal duration", (
-      tester,
-    ) async {
-      final source = await tester.showAnimatedItems(
-        [
-          const AnimatedItem(id: "a", label: "Old Alpha"),
-          const AnimatedItem(id: "b", label: "Beta"),
-        ],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
-
-      source.update([const AnimatedItem(id: "b", label: "Beta")]);
-      await tester.pump();
-
-      expect(find.text("Old Alpha"), findsOneWidget);
-      expect(AnimatedItems.opacityOf(tester, "removed-a"), 1);
-
-      await tester.pump(const Duration(milliseconds: 399));
-      expect(find.text("Old Alpha"), findsOneWidget);
-      expect(AnimatedItems.opacityOf(tester, "removed-a"), greaterThan(0));
-
-      await tester.pump(const Duration(milliseconds: 2));
-      await tester.pump();
-      expect(find.text("Old Alpha"), findsNothing);
-      expect(find.text("Beta"), findsOneWidget);
-    });
-
-    testWidgets("handles mixed changes and reorder without index errors", (
-      tester,
-    ) async {
-      final source = await tester.showAnimatedItems(
-        [
-          const AnimatedItem(id: "a", label: "Alpha"),
-          const AnimatedItem(id: "b", label: "Beta"),
-          const AnimatedItem(id: "c", label: "Gamma"),
-          const AnimatedItem(id: "d", label: "Delta"),
-        ],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
 
       source.update([
         const AnimatedItem(id: "d", label: "Delta"),
         const AnimatedItem(id: "b", label: "Beta"),
         const AnimatedItem(id: "e", label: "Epsilon"),
       ]);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(source.renderedIds, ["d", "b", "e"]);
-      expect(find.text("Delta"), findsOneWidget);
-      expect(find.text("Beta"), findsOneWidget);
-      expect(find.text("Epsilon"), findsOneWidget);
+      expect(
+        tester.paintedRectOf(find.text("Delta")).top,
+        lessThan(tester.paintedRectOf(find.text("Beta")).top),
+      );
+      expect(
+        tester.paintedRectOf(find.text("Beta")).top,
+        lessThan(tester.paintedRectOf(find.text("Epsilon")).top),
+      );
       expect(find.text("Alpha"), findsNothing);
       expect(find.text("Gamma"), findsNothing);
-
       expect(tester.takeException(), isNull);
     });
 
     testWidgets("stays synchronized across rapid updates", (tester) async {
-      final source = await tester.showAnimatedItems(
-        [
-          const AnimatedItem(id: "a", label: "Alpha"),
-          const AnimatedItem(id: "b", label: "Beta"),
-        ],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
+      final source = await tester.showAnimatedItems([
+        const AnimatedItem(id: "a", label: "Alpha"),
+        const AnimatedItem(id: "b", label: "Beta"),
+      ]);
 
       source.update([
         const AnimatedItem(id: "b", label: "Beta"),
@@ -191,84 +363,37 @@ void main() {
         const AnimatedItem(id: "d", label: "Delta"),
         const AnimatedItem(id: "e", label: "Epsilon"),
       ]);
-      await tester.pump();
-
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(source.renderedIds, ["d", "e"]);
       expect(find.text("Delta"), findsOneWidget);
       expect(find.text("Epsilon"), findsOneWidget);
+      expect(find.text("Beta"), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets("updates payload without a structural animation", (
+    testWidgets("an updated item changes in place without a move", (
       tester,
     ) async {
-      final source = await tester.showAnimatedItems(
-        [const AnimatedItem(id: "a", label: "Old")],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
+      final source = await tester.showAnimatedItems([
+        const AnimatedItem(id: "a", label: "Old"),
+      ]);
 
       source.update([const AnimatedItem(id: "a", label: "New")]);
       await tester.pump();
 
       expect(find.text("Old"), findsNothing);
       expect(find.text("New"), findsOneWidget);
-      expect(AnimatedItems.opacityOf(tester, "a"), 1);
-      expect(source.removedIds, isEmpty);
+      expect(tester.paintedOpacityOf(find.text("New")), 1);
+      expect(tester.hasRunningAnimations, isFalse);
     });
 
-    testWidgets("snapshots a mutable source list", (tester) async {
-      final mutableItems = <AnimatedItem>[
+    testWidgets("rejects duplicate identities before changing its rows", (
+      tester,
+    ) async {
+      final source = await tester.showAnimatedItems([
         const AnimatedItem(id: "a", label: "Alpha"),
-      ];
-      final source = await tester.showAnimatedItems(
-        mutableItems,
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
-
-      final previousSnapshot = source.renderedItems;
-      mutableItems.add(const AnimatedItem(id: "b", label: "Beta"));
-
-      expect(previousSnapshot.map((item) => item.id), ["a"]);
-      expect(
-        () => previousSnapshot.add(const AnimatedItem(id: "c", label: "Gamma")),
-        throwsUnsupportedError,
-      );
-
-      source.rebuild();
-      await tester.pump();
-
-      expect(source.renderedIds, ["a", "b"]);
-      expect(find.text("Beta"), findsOneWidget);
-    });
-
-    testWidgets("rejects duplicate identities on initial build", (
-      tester,
-    ) async {
-      await tester.showAnimatedItems(
-        [
-          const AnimatedItem(id: "a", label: "Alpha"),
-          const AnimatedItem(id: "a", label: "Duplicate"),
-        ],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
-
-      expect(tester.takeException(), isArgumentError);
-    });
-
-    testWidgets("rejects duplicate identities before changing state", (
-      tester,
-    ) async {
-      final source = await tester.showAnimatedItems(
-        [const AnimatedItem(id: "a", label: "Alpha")],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
+      ]);
 
       source.update([
         const AnimatedItem(id: "a", label: "Alpha"),
@@ -283,20 +408,18 @@ void main() {
         const AnimatedItem(id: "a", label: "Alpha"),
         const AnimatedItem(id: "b", label: "Beta"),
       ]);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(source.renderedIds, ["a", "b"]);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets("synchronizes while unmounted and remounts latest items", (
+    testWidgets("rows follow their data while the list is hidden", (
       tester,
     ) async {
-      final source = await tester.showAnimatedItems(
-        [const AnimatedItem(id: "a", label: "Alpha")],
-        insertDuration: insertion,
-        removeDuration: removal,
-      );
+      final source = await tester.showAnimatedItems([
+        const AnimatedItem(id: "a", label: "Alpha"),
+      ]);
 
       source.visible.value = false;
       await tester.pump();
@@ -304,91 +427,15 @@ void main() {
         const AnimatedItem(id: "b", label: "Beta"),
         const AnimatedItem(id: "c", label: "Gamma"),
       ]);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       source.visible.value = true;
       await tester.pump();
 
       expect(find.text("Alpha"), findsNothing);
-      expect(find.text("Beta"), findsOneWidget);
-      expect(find.text("Gamma"), findsOneWidget);
-      expect(AnimatedItems.opacityOf(tester, "b"), 1);
-      expect(AnimatedItems.opacityOf(tester, "c"), 1);
+      expect(tester.paintedOpacityOf(find.text("Beta")), 1);
+      expect(tester.paintedOpacityOf(find.text("Gamma")), 1);
       expect(tester.takeException(), isNull);
     });
-  });
-
-  testWidgets("useAnimatedTable captures removed items and synchronizes", (
-    tester,
-  ) async {
-    final source = await tester.showAnimatedItems([
-      const AnimatedItem(id: "a", label: "Alpha"),
-      const AnimatedItem(id: "b", label: "Beta"),
-    ], layout: AnimatedItemsLayout.table);
-
-    source.update([const AnimatedItem(id: "c", label: "Gamma")]);
-    await tester.pump();
-    expect(find.text("Alpha"), findsOneWidget);
-    expect(find.text("Beta"), findsOneWidget);
-    expect(find.text("Gamma"), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 301));
-
-    await tester.pump();
-    expect(source.renderedIds, ["c"]);
-    expect(find.text("Alpha"), findsNothing);
-    expect(find.text("Beta"), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets("useAnimatedTable handles keyed reorder and rapid re-add", (
-    tester,
-  ) async {
-    final source = await tester.showAnimatedItems([
-      const AnimatedItem(id: "a", label: "Alpha"),
-      const AnimatedItem(id: "b", label: "Beta"),
-    ], layout: AnimatedItemsLayout.table);
-
-    source.update([
-      const AnimatedItem(id: "b", label: "Beta"),
-      const AnimatedItem(id: "a", label: "Alpha moved"),
-    ]);
-    await tester.pump(const Duration(milliseconds: 50));
-    source.update([
-      const AnimatedItem(id: "a", label: "Alpha newest"),
-      const AnimatedItem(id: "c", label: "Gamma"),
-    ]);
-    await tester.pump();
-
-    expect(tester.takeException(), isNull);
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump();
-    expect(source.renderedIds, ["a", "c"]);
-    expect(find.text("Alpha newest"), findsOneWidget);
-    expect(find.text("Gamma"), findsOneWidget);
-
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets("an inserted row survives the removal of the row before it", (
-    tester,
-  ) async {
-    final source = await tester.showAnimatedItems([
-      const AnimatedItem(id: "a", label: "Alpha"),
-    ]);
-
-    source.update([
-      const AnimatedItem(id: "a", label: "Alpha"),
-      const AnimatedItem(id: "b", label: "Beta"),
-    ]);
-    await tester.pump();
-    source.update([const AnimatedItem(id: "b", label: "Beta")]);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 501));
-    await tester.pump();
-
-    expect(find.text("Alpha"), findsNothing);
-    expect(find.text("Beta"), findsOneWidget);
-    expect(source.renderedIds, ["b"]);
-    expect(tester.takeException(), isNull);
   });
 }

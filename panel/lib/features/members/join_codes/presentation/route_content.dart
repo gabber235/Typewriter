@@ -14,6 +14,13 @@ class JoinCodesTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final codesAsync = ref.watch(visibleOrganizationJoinCodesProvider);
+    // One rows handle per tab, above the data builder: the table, the card
+    // list and the bulk bar's revokeSelection share it.
+    final rows = useAnimatedRows(
+      items: codesAsync.value ?? const <skir.JoinCode>[],
+      identity: (code) => code.code,
+      ready: codesAsync.hasValue,
+    );
     final rolesAsync = ref.watch(organizationRolesProvider);
     final selectedCodes = useState<Set<skir.RecordId>>({});
     final joinCodeOptions = useState(const JoinCodeOptions());
@@ -65,9 +72,14 @@ class JoinCodesTab extends HookConsumerWidget {
           confirmIcon: Fa6Solid.link_slash,
           onConfirm: () async {
             for (final code in codesToRevoke) {
-              await ref.executeMembership(
-                ref.membershipCommands.revoke(code),
-                (response) => response.requireAccepted(),
+              // The row stays struck through until the revoke event takes it
+              // out with listOut.
+              await rows.sending(
+                [code],
+                () => ref.executeMembership(
+                  ref.membershipCommands.revoke(code),
+                  (response) => response.requireAccepted(),
+                ),
               );
             }
             selectedCodes.value = {};
@@ -78,6 +90,11 @@ class JoinCodesTab extends HookConsumerWidget {
       }
     }
 
+    final selection = SelectableRows(
+      rows: rows,
+      selectedIds: selectedCodes,
+      onRemoveSelection: revokeSelection,
+    );
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
@@ -138,20 +155,14 @@ class JoinCodesTab extends HookConsumerWidget {
                 ),
               ),
               PinnedHeaderSliver(
-                child: AnimatedSize(
-                  duration: 800.ms,
-                  alignment: Alignment.topLeft,
-                  curve: ElasticOutCurve(0.9),
-                  child: AnimatedSwitcher(
-                    duration: 400.ms,
-                    child: selectedCodes.value.isEmpty
-                        ? const SizedBox.shrink()
-                        : BulkJoinCodeActions(
-                            selectedCount: selectedCodes.value.length,
-                            onRevoke: revokeSelection,
-                            onClearSelection: () => selectedCodes.value = {},
-                          ),
-                  ),
+                child: AnimatedPresence(
+                  child: selectedCodes.value.isEmpty
+                      ? null
+                      : BulkJoinCodeActions(
+                          selectedCount: selectedCodes.value.length,
+                          onRevoke: revokeSelection,
+                          onClearSelection: () => selectedCodes.value = {},
+                        ),
                 ),
               ),
             ],
@@ -161,19 +172,9 @@ class JoinCodesTab extends HookConsumerWidget {
           name: "Join Codes",
           builder: (codes) {
             liveCodes.value = codes;
-            return SliverStaggerScope(
-              sliver: context.isDesktop
-                  ? JoinCodesTable(
-                      codes: codes,
-                      selectedCodes: selectedCodes,
-                      onRevokeSelection: revokeSelection,
-                    )
-                  : JoinCodesCardList(
-                      codes: codes,
-                      selectedCodes: selectedCodes,
-                      onRevokeSelection: revokeSelection,
-                    ),
-            );
+            return context.isDesktop
+                ? JoinCodesTable(selection: selection)
+                : JoinCodesCardList(selection: selection);
           },
           loading: (_) => const _JoinCodesLoadingShimmer(),
           error: (title, message) => SliverFillRemaining(

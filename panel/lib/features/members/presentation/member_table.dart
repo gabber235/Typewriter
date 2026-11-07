@@ -9,137 +9,40 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// shared local work. Row identity is the user's record id, allowing animated
 /// updates to follow members across live add, update, and remove events.
 class MembersTable extends HookConsumerWidget {
-  const MembersTable({
-    required this.members,
-    required this.selectedIds,
-    required this.onRemoveSelection,
-    super.key,
-  });
+  const MembersTable({required this.selection, super.key});
 
-  final List<skir.OrganizationMember> members;
-  final ValueNotifier<Set<skir.RecordId>> selectedIds;
-  final Future<void> Function() onRemoveSelection;
+  final SelectableRows<skir.OrganizationMember> selection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     final focusedMemberId = useState<skir.RecordId?>(null);
-    final animated = useAnimatedTable(
-      items: members,
-      identity: (member) => member.userId,
-      removedItemBuilder: (context, member, animation) => _buildMemberRow(
+    final members = selection.rows.items;
+
+    return SelectionTable<skir.OrganizationMember>(
+      selection: selection,
+      idOf: (member) => member.userId,
+      labels: const ["Member", "Roles"],
+      columnWidths: const {
+        0: FixedColumnWidth(48),
+        1: IntrinsicColumnWidth(),
+        2: FlexColumnWidth(1),
+        3: FixedColumnWidth(80),
+      },
+      emptyBuilder: (context) => EmptyState(
+        title: "No members yet",
+        description: "Invite someone to get started!",
+        icon: MaterialSymbols.groups_2_rounded,
+      ),
+      rowBuilder: (context, entry) => _buildMemberRow(
         context,
         ref,
-        member,
-        selectedIds.value.contains(member.userId),
+        entry.item,
+        members,
+        selection.selectedIds.value.contains(entry.id),
         focusedMemberId,
         theme,
-      ),
-    );
-
-    final allSelected =
-        members.isNotEmpty && selectedIds.value.length == members.length;
-    final someSelected =
-        selectedIds.value.isNotEmpty &&
-        selectedIds.value.length < members.length;
-
-    return SliverFillRemaining(
-      child: AnimatedTable(
-        key: animated.key,
-        initialItemCount: animated.items.length,
-        columnWidths: const {
-          0: FixedColumnWidth(48),
-          1: IntrinsicColumnWidth(),
-          2: FlexColumnWidth(1),
-          3: FixedColumnWidth(80),
-        },
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        headerRows: [
-          TableRow(
-            decoration: BoxDecoration(color: Surface.colorOf(context)),
-            children: [
-              TableCell(
-                verticalAlignment: TableCellVerticalAlignment.middle,
-                child: StaggerEntrance(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.space2,
-                      vertical: context.spacing.space3,
-                    ),
-                    child: Checkbox(
-                      value: allSelected ? true : (someSelected ? null : false),
-                      tristate: true,
-                      onChanged: (value) {
-                        if (allSelected || someSelected) {
-                          selectedIds.value = {};
-                        } else {
-                          selectedIds.value = members
-                              .map((m) => m.userId)
-                              .toSet();
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              _headerCell(context, theme, "Member"),
-              _headerCell(context, theme, "Roles"),
-              const TableCell(child: SizedBox.shrink()),
-            ],
-          ),
-        ],
-        emptyBuilder: (context) => EmptyState(
-          title: "No members yet",
-          description: "Invite someone to get started!",
-          icon: MaterialSymbols.groups_2_rounded,
-        ),
-        transitionBuilder: (context, animation, child) {
-          return ElasticTransition(animation: animation, child: child);
-        },
-        tableBuilder: (context, table) => Surface(
-          color: Surface.colorOf(context),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: context.shapes.mediumBorderRadius,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: table,
-          ),
-        ),
-        rowBuilder: (context, index, animation) {
-          final member = animated.items[index];
-          return _buildMemberRow(
-            context,
-            ref,
-            member,
-            selectedIds.value.contains(member.userId),
-            focusedMemberId,
-            theme,
-          );
-        },
-      ),
-    );
-  }
-
-  TableCell _headerCell(BuildContext context, ThemeData theme, String label) {
-    return TableCell(
-      child: StaggerEntrance(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.spacing.space2,
-            vertical: context.spacing.space3,
-          ),
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium!.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -148,18 +51,22 @@ class MembersTable extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     skir.OrganizationMember member,
+    List<skir.OrganizationMember> members,
     bool isSelected,
     ValueNotifier<skir.RecordId?> focusedMemberId,
     ThemeData theme,
   ) {
     void toggleSelection() {
       if (isSelected) {
-        selectedIds.value = selectedIds.value
+        selection.selectedIds.value = selection.selectedIds.value
             .where((id) => id != member.userId)
             .toSet();
         return;
       }
-      selectedIds.value = {...selectedIds.value, member.userId};
+      selection.selectedIds.value = {
+        ...selection.selectedIds.value,
+        member.userId,
+      };
     }
 
     void updateFocus(bool focused) {
@@ -174,12 +81,14 @@ class MembersTable extends HookConsumerWidget {
       member: member,
       onToggleSelection: toggleSelection,
       onSelectAll: () =>
-          selectedIds.value = members.map((m) => m.userId).toSet(),
-      onClearSelection: () => selectedIds.value = {},
+          selection.selectedIds.value = members.map((m) => m.userId).toSet(),
+      onClearSelection: () => selection.selectedIds.value = {},
       isSelected: isSelected,
-      hasSelection: selectedIds.value.isNotEmpty,
-      onRemoveSelection: onRemoveSelection,
-      onRemoveFromSelection: () => selectedIds.value = selectedIds.value
+      hasSelection: selection.selectedIds.value.isNotEmpty,
+      onRemoveSelection: selection.onRemoveSelection,
+      onRemoveFromSelection: () => selection.selectedIds.value = selection
+          .selectedIds
+          .value
           .where((id) => id != member.userId)
           .toSet(),
       onFocusChange: updateFocus,
@@ -197,26 +106,24 @@ class MembersTable extends HookConsumerWidget {
       children: [
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
-          child: StaggerEntrance(
-            child: withShortcuts(
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space2,
-                  vertical: context.spacing.space3,
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  shape: CircleBorder(),
-                  child: InkWell(
-                    customBorder: CircleBorder(),
-                    onTap: toggleSelection,
-                    child: SelectableAvatar(
-                      avatarUrl:
-                          member.avatarUrl?.nullIfEmpty ??
-                          "$userIconUrl&seed=${member.userId}",
-                      isSelected: isSelected,
-                      radius: 16,
-                    ),
+          child: withShortcuts(
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space3,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                shape: CircleBorder(),
+                child: InkWell(
+                  customBorder: CircleBorder(),
+                  onTap: toggleSelection,
+                  child: SelectableAvatar(
+                    avatarUrl:
+                        member.avatarUrl?.nullIfEmpty ??
+                        "$userIconUrl&seed=${member.userId}",
+                    isSelected: isSelected,
+                    radius: 16,
                   ),
                 ),
               ),
@@ -224,44 +131,42 @@ class MembersTable extends HookConsumerWidget {
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(
-              Material(
-                color: Colors.transparent,
+          child: withShortcuts(
+            Material(
+              color: Colors.transparent,
+              borderRadius: context.shapes.mediumBorderRadius,
+              child: InkWell(
                 borderRadius: context.shapes.mediumBorderRadius,
-                child: InkWell(
-                  borderRadius: context.shapes.mediumBorderRadius,
-                  onTap: toggleSelection,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.space2,
-                      vertical: context.spacing.space3,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (member.name != null)
-                          Text(
-                            member.name!,
+                onTap: toggleSelection,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.space2,
+                    vertical: context.spacing.space3,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (member.name != null)
+                        Text(
+                          member.name!,
+                          style: theme.textTheme.bodyMedium!.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      if (member.email != null)
+                        BlurReveal(
+                          blurSigma: 3,
+                          child: Text(
+                            member.email!,
                             style: theme.textTheme.bodyMedium!.copyWith(
-                              fontWeight: FontWeight.w500,
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 13,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                        if (member.email != null)
-                          BlurReveal(
-                            blurSigma: 3,
-                            child: Text(
-                              member.email!,
-                              style: theme.textTheme.bodyMedium!.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 13,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -269,36 +174,30 @@ class MembersTable extends HookConsumerWidget {
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space2,
-                  vertical: context.spacing.space2,
-                ),
-                child: RoleMultiselectDropdown(
-                  selectedRoles: member.roles.toList(),
-                  onRolesChanged: (newRoles) {
-                    ref
-                        .executeMembership(
-                          ref.membershipCommands.updateRoles([
-                            member.userId,
-                          ], newRoles),
-                          (response) => response.requireAccepted(),
-                        )
-                        .catchApiExceptionsAndDisplay(context);
-                  },
-                  placeholder: "Select roles",
-                ),
+          child: withShortcuts(
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space2,
+              ),
+              child: RoleMultiselectDropdown(
+                selectedRoles: member.roles.toList(),
+                onRolesChanged: (newRoles) {
+                  ref
+                      .executeMembership(
+                        ref.membershipCommands.updateRoles([
+                          member.userId,
+                        ], newRoles),
+                        (response) => response.requireAccepted(),
+                      )
+                      .catchApiExceptionsAndDisplay(context);
+                },
+                placeholder: "Select roles",
               ),
             ),
           ),
         ),
-        TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(MemberRowActions(member: member)),
-          ),
-        ),
+        TableCell(child: withShortcuts(MemberRowActions(member: member))),
       ],
     );
   }
