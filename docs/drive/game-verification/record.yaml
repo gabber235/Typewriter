@@ -170,7 +170,7 @@ pieces:
 
   - id: requirement-shape
     status: figuring-out
-    open: Where requirement code lives, since one JVM takes one test compilation; IDE single runs unchecked
+    open: How several test compilations (modules, later extensions) share one warm pool, since one JVM takes one testBalloon compilation; IDE single runs unchecked
     tries:
       - id: fabric-client-gametest
         what: Fabric's client game test API as the runner
@@ -189,6 +189,24 @@ pieces:
         state: picked
         why: Decided by the developer
         evidence: [docs/design/game-verification/spikes/g-requirement-shape.md]
+      - id: root-compilation
+        parent: runner-c-testballoon
+        what: One root compilation reads every module's gameTest folder
+        taught: P2 proved 200 tests, one JVM, one scheduler; works only inside one Gradle build, so not for extensions built elsewhere
+        state: working
+        evidence: ["branch proto/gv-testballoon: services/prototypes/gv-testballoon/evidence/root"]
+      - id: classloader-per-compilation
+        parent: runner-c-testballoon
+        what: One JVM loads each compilation in its own class loader and runs testBalloon per loader; scheduler and pool in the shared parent loader
+        taught: Not tried
+        state: trying
+        evidence: []
+      - id: pool-process
+        parent: runner-c-testballoon
+        what: The warm pool and scheduler run as their own process; every test JVM (module, extension, IDE run) submits to it
+        taught: Not tried; would also let an IDE run reuse warm clients instead of booting them
+        state: trying
+        evidence: []
       - id: runner-a-and-b
         what: Tests in a pool (A), or requirement values run by the framework (B)
         taught: A shows flaky as green; B loses the IDE gutter and test filters
@@ -317,14 +335,16 @@ decided:
     why: Thousands of small tests; slow feedback makes every later drive worse over time
   - id: all-prototypes-in-waves
     what: Run all proposed prototypes (P1 to P5), just not all at the same time
+  - id: tests-beside-code
+    what: Tests are placed where it makes sense; in the future each extension and every entry is tested
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
 open:
   - id: paper-topology
     ask: Shared stepped Paper or a Paper per attempt, decided from P1's numbers
-  - id: requirement-home
-    ask: One game-tests module for every requirement, or gameTest folders beside each module compiled together?
+  - id: shared-pool-across-compilations
+    ask: Prototype how several test compilations share one warm pool (root compilation, a class loader per module, or a pool process)?
   - id: quiet-hook
     ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
 
