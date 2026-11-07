@@ -85,7 +85,6 @@ class DraggableGraphNode extends HookWidget {
       ignoringFeedbackSemantics: false,
       dragAnchorStrategy: (widget, context, position) =>
           source.anchor(offered, widget, context, position),
-      onDragStarted: () => source.begin(offered),
       onDragUpdate: (details) => source.update(offered, details),
       onDragEnd: (_) => source.end(offered),
       feedback: HookBuilder(
