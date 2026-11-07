@@ -36,7 +36,6 @@ import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -175,8 +174,6 @@ internal class PublicationFixture(
                             rule = RuleId(origin = RuleOrigin(owner = PUBLICATION_PAGE, ordinal = 0), localIndex = rule),
                             location = location,
                         ),
-                    incarnation = "external_input",
-                    execution = CheckExecutionId(value = "execution"),
                     catalog = views.read { it.catalog.generation },
                 ),
             expectations = expectations,

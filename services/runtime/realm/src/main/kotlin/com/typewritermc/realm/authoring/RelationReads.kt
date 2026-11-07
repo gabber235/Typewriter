@@ -45,23 +45,8 @@ internal class RelationReads(
     /** Changes whenever a staged write replaces the graph; saved and staged views never change. */
     val revision: Long get() = (reads.view as? AuthoredReadView.Working)?.revision ?: 0L
 
-    private var projected: Pair<Long, List<LinkProjection>>? = null
-
-    /** Relation projections of the current graph, recomputed only after a staged write replaces it. */
-    val projections: List<LinkProjection>
-        get() {
-            val revision = revision
-            projected?.let { (at, projections) -> if (at == revision) return projections }
-            val view = reads.view
-            val projections =
-                if (view.resources === view.original.resources) {
-                    view.original.projection.projections
-                } else {
-                    ResourceValueMapper.project(links.values, resources, catalog.relations, catalog.checked).projections
-                }
-            projected = revision to projections
-            return projections
-        }
+    /** Relation projections of the current graph; a working view rebuilds them after a staged write replaces it. */
+    val projections: List<LinkProjection> get() = reads.view.projection.projections
 
     fun contract(endpoint: EndpointId): RelationContract = catalog.relations.single { it.first.id == endpoint || it.second.id == endpoint }
 

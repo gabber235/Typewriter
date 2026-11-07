@@ -127,23 +127,22 @@ skir.PublicationStatus publicationBlockedBy(
 ]);
 
 /// The findings of one run, ending with [outcome], of the check that raised
-/// [diagnostic] at its location, in [status] against the seeded Realm's
-/// catalog.
+/// [diagnostic] at its location after reading [expectations], in [status]
+/// against the seeded Realm's catalog.
 skir.FindingSet findingSet(
   skir.Diagnostic diagnostic, {
   skir.FindingStatus status = skir.FindingStatus.current,
   skir.CheckOutcome outcome = skir.CheckOutcome.finished,
+  List<skir.EditExpectation> expectations = const [],
 }) => skir.FindingSet(
   ticket: skir.CheckTicket(
     instance: skir.CheckInstanceId(
       rule: skir.RuleId(origin: diagnostic.origin, localIndex: 0),
       location: diagnostic.primary!,
     ),
-    incarnation: "test",
-    execution: skir.CheckExecutionId(value: "execution:1"),
     catalog: realmDocument().catalog.snapshot.generation,
   ),
-  expectations: const [],
+  expectations: expectations,
   outcome: outcome,
   findings: [diagnostic],
   status: status,

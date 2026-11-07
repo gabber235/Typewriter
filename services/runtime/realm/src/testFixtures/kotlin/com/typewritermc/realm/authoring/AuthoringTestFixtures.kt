@@ -17,6 +17,9 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.CollectedExtensions
+import com.typewritermc.realm.catalog.ExtensionCatalog
+import com.typewritermc.realm.catalog.collectExtensions
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingFactory
@@ -104,6 +107,7 @@ internal class TestCatalogLease private constructor(
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
     internal val openCount: Int get() = state.open.get()
+    override val extensions: ExtensionCatalog get() = state.extensions(checks, configuration, providers)
 
     override fun retain(): AuthoringCatalogLease {
         state.open.incrementAndGet()
@@ -120,11 +124,29 @@ internal class TestCatalogLease private constructor(
     }
 
     override fun close() {
-        state.open.decrementAndGet()
+        if (state.open.decrementAndGet() == 0) state.close()
     }
 
+    /** What every lease of one catalog shares: how many are open, and the extensions collected on first read. */
     private class State {
         val open = AtomicInteger(1)
+        private var collected: CollectedExtensions? = null
+
+        @Synchronized
+        fun extensions(
+            checks: List<OwnedCheckRecipe>,
+            configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe>,
+            providers: OwnedProviderRegistry,
+        ): ExtensionCatalog =
+            (
+                collected
+                    ?: CollectedExtensions { collectExtensions(checks, configuration, providers) }.also { collected = it }
+            ).value
+
+        @Synchronized
+        fun close() {
+            collected?.close()
+        }
     }
 }
 

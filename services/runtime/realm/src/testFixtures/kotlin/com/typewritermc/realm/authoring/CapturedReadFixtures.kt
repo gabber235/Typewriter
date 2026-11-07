@@ -6,7 +6,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.types.fields
@@ -58,9 +57,12 @@ internal suspend fun <T> captured(
     block: (AuthoringLease) -> T,
 ): T = RealmFixture.of(catalog, resources).use { realm -> realm.views.capture().use(block) }
 
-/** The inputs the reads [read] makes on a projection depend on, as each read observed them. */
+/**
+ * The record facts the reads [read] makes on a projection depend on, as each read observed them. Every read also reads
+ * the catalog, which is the same for every read of one generation.
+ */
 internal suspend fun dependenciesOf(read: (CapturedAuthoringReads) -> Unit): Set<InputIdentity> =
     projection { reads ->
         read(reads)
-        reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
+        reads.observedInputs().filterNotTo(linkedSetOf()) { it is InputIdentity.Catalog }
     }

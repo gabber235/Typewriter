@@ -59,6 +59,8 @@ import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.compiled_content.CompiledArtifactReference
 import skirout.editor.v1.compiled_content.PublishedContent
@@ -377,19 +379,27 @@ class FormulaReads internal constructor() {
 val RealmFixture.formulas: FormulaReads get() = FormulaReads()
 
 /** The error findings whose primary location is on [resource], after the checks settled. */
-fun RealmFixture.errorsOn(resource: ResourceId): List<Diagnostic> = TODO("findings by resource")
+fun RealmFixture.errorsOn(resource: ResourceId): List<Diagnostic> =
+    checks.findings().flatMap { set -> set.findings + set.failures() }.filter {
+        it.primary?.resource == resource && it.severity == DiagnosticSeverity.ERROR
+    }
 
 /** How often the graph computed each CheckRun so far, per check instance, counting an equal rerun too. */
-fun RealmFixture.settledRuns(): Map<CheckInstanceId, Long> = TODO("graph run counts")
+suspend fun RealmFixture.settledRuns(): Map<CheckInstanceId, Long> {
+    settle()
+    return graphRuns.checkRuns()
+}
 
 /** The check instances the graph computed again since [before]. */
-fun RealmFixture.rerunSince(before: Map<CheckInstanceId, Long>): Set<CheckInstanceId> = TODO("graph reruns")
+fun RealmFixture.rerunSince(before: Map<CheckInstanceId, Long>): Set<CheckInstanceId> = graphRuns.checkRuns().grewFrom(before)
 
 /** The resources these check instances judge. */
-fun Set<CheckInstanceId>.resources(): Set<ResourceId> = TODO("check instance resources")
+fun Set<CheckInstanceId>.resources(): Set<ResourceId> = mapTo(linkedSetOf()) { it.location.resource }
 
 /** Waits until every check the last commit started has finished. */
-suspend fun RealmFixture.settle(): Unit = TODO("check settling")
+suspend fun RealmFixture.settle(): Unit = checks.drain()
+
+private fun FindingSet.failures(): List<Diagnostic> = (outcome as? CheckOutcome.FailedWrapper)?.value.orEmpty()
 
 /** Changes the type of the Definition [resource] to [to] with the repair the preview proposes, as the panel commits it. */
 suspend fun RealmFixture.commitPreparedTypeChange(

@@ -673,6 +673,6 @@ private fun occurrenceKey(value: LinkOccurrence): String =
         value.id.location.path,
     )}:${value.target.resource.value}"
 
-private fun projectionKey(value: LinkProjection): String =
+internal fun projectionKey(value: LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}:" +
         "${value.firstLocation?.let(ValuePath.serializer::toJsonCode)}:${value.secondLocation?.let(ValuePath.serializer::toJsonCode)}"

@@ -5,6 +5,7 @@ package com.typewritermc.services.libs.telemetry
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.logs.Logger
+import io.opentelemetry.api.metrics.LongCounter
 import io.opentelemetry.api.trace.Tracer
 
 /**
@@ -57,6 +58,12 @@ class ServiceTelemetry(
         duration.record(durationSeconds, attributes)
     }
 
+    /** A counter named [name] in [unit], each add tagged with its attributes. */
+    fun counter(
+        name: String,
+        unit: String,
+    ): TelemetryCounter = TelemetryCounter(meter.counterBuilder(name).setUnit(unit).build())
+
     internal val tracer: Tracer =
         openTelemetry
             .tracerBuilder(instrumentation.name)
@@ -73,6 +80,15 @@ class ServiceTelemetry(
                 instrumentation.version?.let(::setInstrumentationVersion)
                 instrumentation.schemaUrl?.let(::setSchemaUrl)
             }.build()
+}
+
+/** A monotonic count of something a service did, split by string attributes. */
+class TelemetryCounter internal constructor(
+    private val counter: LongCounter,
+) {
+    fun add(vararg attributes: Pair<String, String>) {
+        counter.add(1, Attributes.builder().apply { attributes.forEach { (key, value) -> put(key, value) } }.build())
+    }
 }
 
 /** Creates a facade using one instrumentation name; version and schema metadata apply to traces and logs. */

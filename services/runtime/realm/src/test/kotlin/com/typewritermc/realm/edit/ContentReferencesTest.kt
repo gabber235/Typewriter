@@ -19,6 +19,8 @@ import com.typewritermc.realm.testing.delete
 import com.typewritermc.realm.testing.entryRef
 import com.typewritermc.realm.testing.expectRefused
 import com.typewritermc.realm.testing.formulaPage
+import com.typewritermc.realm.testing.graphLinkRuns
+import com.typewritermc.realm.testing.graphLinksOf
 import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.listType
 import com.typewritermc.realm.testing.listValue
@@ -33,6 +35,7 @@ import com.typewritermc.realm.testing.setGiver
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.shouldBeRejected
 import com.typewritermc.realm.testing.shouldContainLocation
+import com.typewritermc.realm.testing.usageRuns
 import com.typewritermc.realm.testing.usagesOf
 import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.withSetup
@@ -101,6 +104,34 @@ val ContentReferencesTest by testSuite {
                     plainVar(it.use, listValue(entryRef, contentLink(demo.smith), contentLink(demo.smith)))
                 }.created()
             usagesOf(demo.smith) shouldContain id
+        }
+    }
+
+    test("linksOf does not list a content reference, and a check over it does not rerun when one appears") {
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            graphLinksOf(demo.smith)
+            val runs = graphLinkRuns(demo.smith)
+            val id =
+                commitDefinition("givers", plainType(listType(entryRef))) {
+                    plainVar(it.use, listValue(entryRef, contentLink(demo.smith)))
+                }.created()
+
+            graphLinksOf(demo.smith) shouldNotContain id
+            graphLinkRuns(demo.smith) shouldBe runs
+        }
+    }
+
+    test("usages list a content reference, and a check over usages reruns when one appears") {
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            usagesOf(demo.smith)
+            val runs = usageRuns(demo.smith)
+            val id =
+                commitDefinition("givers", plainType(listType(entryRef))) {
+                    plainVar(it.use, listValue(entryRef, contentLink(demo.smith)))
+                }.created()
+
+            usagesOf(demo.smith) shouldContain id
+            usageRuns(demo.smith) shouldBe runs + 1
         }
     }
 

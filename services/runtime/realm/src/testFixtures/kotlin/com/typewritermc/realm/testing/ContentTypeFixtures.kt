@@ -20,6 +20,10 @@ import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.RealmGraphReads
+import com.typewritermc.realm.authoring.RealmQuery
+import com.typewritermc.realm.authoring.RealmReads
+import com.typewritermc.realm.authoring.RelationReads
+import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.code
 import com.typewritermc.realm.catalog.over
 import com.typewritermc.realm.edit.WorkingViewEditContext
@@ -274,16 +278,40 @@ fun setReference(
  * The resources that hold a content reference to [target], as a check reads them through the graph: one step back
  * along the content references relation.
  */
-fun RealmFixture.usagesOf(target: ResourceId): List<ResourceId> =
-    views.capture().use { lease ->
-        with(CapturedAuthoringReads(lease.originalView())) {
+fun RealmFixture.usagesOf(target: ResourceId): List<ResourceId> = views.pin().use { it.reads.read(UsagesOf(target)) }
+
+/** How often the graph computed the usages of [target] so far. */
+internal fun RealmFixture.usageRuns(target: ResourceId): Long = graphRuns.runsOf(UsagesOf(target))
+
+/** The resources [target] is graph linked with, read through the graph as a check over its links reads them. */
+internal fun RealmFixture.graphLinksOf(target: ResourceId): List<ResourceId> = views.pin().use { it.reads.read(GraphLinksOf(target)) }
+
+/** How often the graph computed the graph links of [target] so far. */
+internal fun RealmFixture.graphLinkRuns(target: ResourceId): Long = graphRuns.runsOf(GraphLinksOf(target))
+
+/** A check over graph links: the other end of each graph link [target] holds or is the target of. */
+internal data class GraphLinksOf(
+    val target: ResourceId,
+) : RealmQuery<List<ResourceId>> {
+    context(reads: RealmReads)
+    override fun compute(): List<ResourceId> =
+        RelationReads(tracked()).linksOf(target).map { if (it.source == target) it.target.resource else it.source }
+}
+
+/** A check over usages: the resources whose content names [target], read through the graph. */
+internal data class UsagesOf(
+    val target: ResourceId,
+) : RealmQuery<List<ResourceId>> {
+    context(reads: RealmReads)
+    override fun compute(): List<ResourceId> =
+        with(tracked()) {
             RealmGraphReads
                 .reachable(ReachabilityQuery(setOf(target.toResourceId()), ContentReferences.id.reverse(), ResourceDrafts, maxDepth = 1))
                 .resources
                 .map { it.id.toSkir() }
                 .filter { it != target }
         }
-    }
+}
 
 /** A Definition's value written plainly as [value], stored as the value of a Definition of [type]. */
 fun plainVar(

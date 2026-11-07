@@ -43,25 +43,25 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
         )
 
     test("a changed value conflicts with exactly the value expectation it violates and returning to it clears the conflict") {
-        CapturedAuthoringValues(mapOf(resource to record(name = "Story")), emptyList()).conflicts(expected) shouldBe
+        CapturedAuthoringValues(mapOf(resource to record(name = "Story"))) { emptyList() }.conflicts(expected) shouldBe
             listOf(
                 ExpectationConflict(
                     expected = EditExpectation.createValue(at = at, expected = DataValue.StringValueWrapper("Quest")),
                     actual = EditExpectation.createValue(at = at, expected = DataValue.StringValueWrapper("Story")),
                 ),
             )
-        CapturedAuthoringValues(mapOf(resource to original), emptyList()).conflicts(expected).shouldBeEmpty()
+        CapturedAuthoringValues(mapOf(resource to original)) { emptyList() }.conflicts(expected).shouldBeEmpty()
     }
 
     test("unrelated fields do not conflict with a focused field expectation") {
         val changed = original.with("description", DataValue.StringValueWrapper("Changed"))
-        CapturedAuthoringValues(mapOf(resource to changed), emptyList()).conflicts(expected).shouldBeEmpty()
-        CapturedAuthoringValues(mapOf(resource to changed), emptyList())
+        CapturedAuthoringValues(mapOf(resource to changed)) { emptyList() }.conflicts(expected).shouldBeEmpty()
+        CapturedAuthoringValues(mapOf(resource to changed)) { emptyList() }
             .conflicts(listOf(EditExpectation.createResource(id = resource, expected = original))) shouldHaveSize 1
     }
 
     test("missing values are distinct from authored null values") {
-        val empty = CapturedAuthoringValues(emptyMap(), emptyList())
+        val empty = CapturedAuthoringValues(emptyMap()) { emptyList() }
         empty.actual(EditExpectation.createValue(at = at, expected = DataValue.NULL)) shouldBe
             EditExpectation.createValue(at = at, expected = null)
         empty.conflicts(listOf(EditExpectation.createValue(at = at, expected = DataValue.NULL))) shouldHaveSize 1
@@ -100,16 +100,18 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
                 ),
             )
         val values =
-            CapturedAuthoringValues(mapOf(resource to AuthoringRecord.of(original.configuration, mapOf("chapter" to changed))), emptyList())
+            CapturedAuthoringValues(
+                mapOf(resource to AuthoringRecord.of(original.configuration, mapOf("chapter" to changed))),
+            ) { emptyList() }
         values.conflicts(expected).shouldBeEmpty()
         val retagged =
             DataValue.named(TypeDefinitionId.qualified("test", "other_chapter").namedUse(), changed.payload)
-        CapturedAuthoringValues(mapOf(resource to AuthoringRecord.of(original.configuration, mapOf("chapter" to retagged))), emptyList())
+        CapturedAuthoringValues(mapOf(resource to AuthoringRecord.of(original.configuration, mapOf("chapter" to retagged)))) { emptyList() }
             .conflicts(expected) shouldHaveSize 1
     }
 
     test("resource directory expectations notice new candidates") {
-        val values = CapturedAuthoringValues(mapOf(resource to original), emptyList())
+        val values = CapturedAuthoringValues(mapOf(resource to original)) { emptyList() }
         values.conflicts(listOf(EditExpectation.resourceIds(emptySet()))) shouldHaveSize 1
     }
 
@@ -117,7 +119,7 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
         val relation = RelationId(value = "ownership")
         val child = ResourceId(value = "child")
         val edge = LinkProjection(contract = relation, first = resource, second = child, firstLocation = null, secondLocation = null)
-        val values = CapturedAuthoringValues(mapOf(resource to original), listOf(edge, edge))
+        val values = CapturedAuthoringValues(mapOf(resource to original)) { listOf(edge, edge) }
         values.links(resource, relation, TraversalDirection.FORWARD) shouldBe setOf(edge)
         values.links(resource, relation, TraversalDirection.REVERSE).shouldBeEmpty()
         values.conflicts(listOf(EditExpectation.links(resource, relation, TraversalDirection.FORWARD, setOf(edge)))).shouldBeEmpty()

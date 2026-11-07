@@ -2,7 +2,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.GraphEndpoint
 import com.typewritermc.authoring.GraphStep
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.LinkInspectionResult
@@ -29,7 +28,6 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.record
 import com.typewritermc.types.toResourceId
@@ -38,9 +36,7 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
-import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection
-import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -203,16 +199,19 @@ private class CapturedGraph(
 ) {
     private val view = reads.view
     private val root = view.original
-    private val index = view.graphIndex(selection)
+    private val links = reads.graphLinks
     private val reportedProblems = mutableSetOf<ValueProblem>()
 
     init {
         reads.observeInput(InputIdentity.Catalog(root.catalog.generation))
     }
 
+    private fun at(resource: ResourceId): NodeLinks = links.at(resource, selection)
+
     fun observeAt(resource: ResourceId) {
         reads.observeInput(InputIdentity.Existence(resource))
-        index.projectionProblems[resource].orEmpty().forEach { problem ->
+        val node = at(resource)
+        node.problems.forEach { problem ->
             if (reportedProblems.add(problem)) {
                 reads.recordFailure(
                     EvaluationDiagnostic(
@@ -223,35 +222,33 @@ private class CapturedGraph(
                 )
             }
         }
-        index.contracts.forEach { contract ->
+        node.contracts.forEach { contract ->
             reads.observeInput(InputIdentity.Incoming(resource, contract.id))
         }
     }
 
-    fun edgesFrom(resource: ResourceId): List<DirectedEdge> = index.outgoing[resource].orEmpty()
+    fun edgesFrom(resource: ResourceId): List<DirectedEdge> = at(resource).outgoing
 
-    fun edgesInto(resource: ResourceId): List<DirectedEdge> = index.incoming[resource].orEmpty()
+    fun edgesInto(resource: ResourceId): List<DirectedEdge> = at(resource).incoming
 
-    fun occurrencesAt(resource: ResourceId): List<LinkOccurrence> =
-        index.occurrencesBySource[resource].orEmpty().sortedBy { ValuePath.serializer.toJsonCode(it.id.location.path) }
+    fun occurrencesAt(resource: ResourceId): List<LinkOccurrence> = at(resource).occurrences
 
     fun unresolvedAt(resource: ResourceId): List<UnresolvedLink> {
+        val node = at(resource)
         return buildList {
-            index.unavailableBySource[resource].orEmpty().forEach { occurrence ->
+            node.unavailable.forEach { occurrence ->
                 observeUnavailableTarget(occurrence)
                 add(UnresolvedLink.UnavailableTarget(occurrence.id, occurrence.target.resource.toResourceId()))
             }
-            index.selectedEndpoints.forEach endpointLoop@{ endpoint ->
-                val record = view.resources[resource] ?: return@endpointLoop
-                val evidence = index.declaredEvidence.getValue(resource).getValue(endpoint)
+            val record = view.resources[resource] ?: return@buildList
+            val known = (node.occurrences + node.unavailable).mapTo(hashSetOf(), LinkOccurrence::id)
+            node.declared.forEach { (endpoint, evidence) ->
                 evidence.memberships.forEach { reads.observeInput(InputIdentity.Membership(it)) }
                 evidence.forms.forEach { reads.observeInput(InputIdentity.Form(it)) }
                 evidence.values.forEach locationLoop@{ location ->
                     reads.observeInput(InputIdentity.Value(location))
                     val occurrence = LinkOccurrenceId(endpoint = endpoint, location = location)
-                    if (occurrence in index.occurrenceIds || occurrence in index.unavailableOccurrenceIds) {
-                        return@locationLoop
-                    }
+                    if (occurrence in known) return@locationLoop
                     val value = rawValue(record, location.path)
                     if (value == DataValue.UNFILLED) add(UnresolvedLink.Unfilled(occurrence))
                 }
@@ -260,8 +257,8 @@ private class CapturedGraph(
     }
 
     fun undecidedIncoming(target: ResourceId): List<UndecidedCandidate> =
-        index.unavailableByTarget[target]
-            .orEmpty()
+        at(target)
+            .unavailableInto
             .asSequence()
             .onEach(::observeUnavailableTarget)
             .groupBy(LinkOccurrence::source)
@@ -334,71 +331,6 @@ private class CapturedGraph(
     }
 }
 
-internal class CapturedGraphIndex(
-    private val view: AuthoredReadView,
-    selection: RelationSelection,
-) {
-    private val root = view.original
-    private val capabilities = LinkSchemaCapabilities(root.catalog.checked)
-    val contracts = selectedContracts(root.catalog.relations, selection)
-    private val contractById = contracts.associateBy(RelationContract::id)
-    val selectedEndpoints = contracts.flatMapTo(linkedSetOf()) { listOf(it.first.id, it.second.id) }
-    private val occurrences = view.links.values.filter { it.id.endpoint in selectedEndpoints }
-    val occurrenceIds = occurrences.mapTo(hashSetOf(), LinkOccurrence::id)
-    val occurrencesBySource = occurrences.groupBy { it.source }
-    val unavailableOccurrences = occurrences.filterTo(linkedSetOf(), ::hasUnavailableTarget)
-    val unavailableBySource = unavailableOccurrences.groupBy { it.source }
-    val unavailableByTarget = unavailableOccurrences.groupBy { it.target.resource }
-    val unavailableOccurrenceIds = unavailableOccurrences.mapTo(hashSetOf(), LinkOccurrence::id)
-    val declaredEvidence =
-        view.resources.mapValues { (resource, record) ->
-            selectedEndpoints.associateWith { endpoint ->
-                ResourceValueMapper.declaredEvidence(endpoint, resource, record, root.catalog.checked, capabilities)
-            }
-        }
-    val projectionProblems: Map<ResourceId, List<ValueProblem>>
-    val outgoing: Map<ResourceId, List<DirectedEdge>>
-    val incoming: Map<ResourceId, List<DirectedEdge>>
-
-    init {
-        val result =
-            ResourceValueMapper.project(
-                occurrences,
-                view.resources,
-                contracts,
-                root.catalog.checked,
-            )
-        projectionProblems =
-            result.problems
-                .filterNot { problem ->
-                    unavailableOccurrences.any { it.id.location == problem.location }
-                }.groupBy { it.location.resource }
-        val directed =
-            result.projections.flatMap { projection ->
-                projection.directed(contractById.getValue(projection.contract), direction(selection))
-            }
-        outgoing = directed.groupBy(DirectedEdge::from)
-        incoming = directed.groupBy(DirectedEdge::to)
-    }
-
-    private fun hasUnavailableTarget(occurrence: LinkOccurrence): Boolean {
-        val target = view.resources[occurrence.target.resource] ?: return true
-        return when (val selected = target.configuration) {
-            is TypeSelection.PendingWrapper -> {
-                true
-            }
-
-            is TypeSelection.CompleteWrapper -> {
-                root.catalog.checked.resolve(selected.use.use) !is Resolution.Ready
-            }
-
-            else -> {
-                unknownVariant(selected)
-            }
-        }
-    }
-}
-
 private sealed interface BoundMatch<out D> {
     data class Match<D>(
         val value: D,
@@ -411,65 +343,11 @@ private sealed interface BoundMatch<out D> {
     data object No : BoundMatch<Nothing>
 }
 
-internal data class DirectedEdge(
-    val from: ResourceId,
-    val to: ResourceId,
-    val step: GraphStep,
-)
-
 private data class RouteState(
     val resource: ResourceId,
     val steps: List<GraphStep>,
     val visited: Set<ResourceId>,
 )
-
-private fun LinkProjection.directed(
-    contract: RelationContract,
-    direction: TraversalDirection,
-): List<DirectedEdge> =
-    buildList {
-        if (direction != TraversalDirection.REVERSE) add(forward(contract))
-        if (direction != TraversalDirection.FORWARD) add(reverse(contract))
-    }
-
-private fun LinkProjection.forward(contract: RelationContract): DirectedEdge =
-    DirectedEdge(
-        first,
-        second,
-        GraphStep(
-            contract.id,
-            GraphEndpoint(first.toResourceId(), contract.first.id, firstLocation),
-            GraphEndpoint(second.toResourceId(), contract.second.id, secondLocation),
-        ),
-    )
-
-private fun LinkProjection.reverse(contract: RelationContract): DirectedEdge =
-    DirectedEdge(
-        second,
-        first,
-        GraphStep(
-            contract.id,
-            GraphEndpoint(second.toResourceId(), contract.second.id, secondLocation),
-            GraphEndpoint(first.toResourceId(), contract.first.id, firstLocation),
-        ),
-    )
-
-private fun selectedContracts(
-    contracts: List<RelationContract>,
-    selection: RelationSelection,
-): List<RelationContract> =
-    when (selection) {
-        is RelationSelection.All -> contracts
-        is RelationSelection.Contracts -> contracts.filter { it.id in selection.ids }
-        is RelationSelection.Family -> contracts.filter { selection.id in it.families }
-    }
-
-private fun direction(selection: RelationSelection): TraversalDirection =
-    when (selection) {
-        is RelationSelection.All -> selection.direction
-        is RelationSelection.Contracts -> selection.direction
-        is RelationSelection.Family -> selection.direction
-    }
 
 private fun rawValue(
     record: AuthoringRecord?,

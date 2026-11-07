@@ -8,13 +8,13 @@ import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.RealmServices
 import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.TestDraftType
 import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.realm.checking.RealmSelectionPredicateEvaluator
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.checksOf
@@ -39,7 +39,7 @@ val PublicationAcceptanceTest by testSuite {
 
         val assessment =
             RealmFixture.of(catalog, mapOf(firstResource to record(name = "ready"))).use { realm ->
-                RealmCheckRuntime(realm.views, selectionPredicates = RealmSelectionPredicateEvaluator()).use { checks ->
+                RealmCheckRuntime(realm.views).use { checks ->
                     val acceptance = AuthoringAcceptance(realm.views, checks)
                     acceptance.capture().use { captured -> acceptance.evaluate(captured) }
                 }
@@ -79,12 +79,17 @@ val PublicationAcceptanceTest by testSuite {
             }
 
         val assessment =
-            RealmFixture.of(catalog, mapOf(firstResource to record(name = "ready"))).use { realm ->
-                RealmCheckRuntime(realm.views, selectionPredicates = traversalLimit).use { checks ->
-                    val acceptance = AuthoringAcceptance(realm.views, checks)
-                    acceptance.capture().use { captured -> acceptance.evaluate(captured) }
+            RealmFixture
+                .of(
+                    catalog,
+                    mapOf(firstResource to record(name = "ready")),
+                    services = RealmServices(predicates = traversalLimit),
+                ).use { realm ->
+                    RealmCheckRuntime(realm.views).use { checks ->
+                        val acceptance = AuthoringAcceptance(realm.views, checks)
+                        acceptance.capture().use { captured -> acceptance.evaluate(captured) }
+                    }
                 }
-            }
 
         assessment.resources.getValue(firstResource).shouldBeInstanceOf<ResourceReadiness.Ready>()
         assessment.findings.map { it.code to it.message } shouldBe

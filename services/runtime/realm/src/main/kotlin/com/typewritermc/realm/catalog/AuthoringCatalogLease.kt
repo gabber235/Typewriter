@@ -40,6 +40,12 @@ interface AuthoringCatalogLease : AutoCloseable {
     /** The published placement field of each declared type that has one; other types are absent. */
     val placementFields: Map<TypeDefinitionId, ValuePath>
 
+    /**
+     * What extension code contributes to this code catalog, collected on first read. Every lease of one code catalog
+     * answers with the same instance, and it stays open while any lease of the catalog does.
+     */
+    val extensions: ExtensionCatalog
+
     /** The resource displays that name resources; a catalog without declared displays names none. */
     val displays: ResourceDisplayCatalog
         get() = ResourceDisplayCatalog()

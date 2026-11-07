@@ -3,13 +3,16 @@ package com.typewritermc.services.libs.telemetry.testing
 import com.typewritermc.services.libs.telemetry.InstrumentationScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.context.Context
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.common.CompletableResultCode
 import io.opentelemetry.sdk.logs.SdkLoggerProvider
 import io.opentelemetry.sdk.logs.data.LogRecordData
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor
+import io.opentelemetry.sdk.metrics.SdkMeterProvider
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter
+import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import io.opentelemetry.sdk.trace.ReadableSpan
@@ -36,6 +39,7 @@ class TelemetryTestHarness private constructor(
     private val provider: SdkTracerProvider,
     private val loggerProvider: SdkLoggerProvider,
     private val trackingProcessor: TrackingSpanProcessor,
+    private val metrics: InMemoryMetricReader,
 ) : AutoCloseable {
     private val closed = AtomicBoolean()
 
@@ -59,11 +63,13 @@ class TelemetryTestHarness private constructor(
                     .builder()
                     .addLogRecordProcessor(SimpleLogRecordProcessor.create(logExporter))
                     .build()
+            val metrics = InMemoryMetricReader.create()
             val sdk =
                 OpenTelemetrySdk
                     .builder()
                     .setTracerProvider(provider)
                     .setLoggerProvider(loggerProvider)
+                    .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metrics).build())
                     .build()
             return TelemetryTestHarness(
                 sdk,
@@ -73,9 +79,22 @@ class TelemetryTestHarness private constructor(
                 provider,
                 loggerProvider,
                 trackingProcessor,
+                metrics,
             )
         }
     }
+
+    /** The current sum of counter [metric] per value of [attribute]; empty while nothing was counted. */
+    fun counts(
+        metric: String,
+        attribute: String,
+    ): Map<String?, Long> =
+        metrics
+            .collectAllMetrics()
+            .filter { it.name == metric }
+            .flatMap { it.longSumData.points }
+            .groupingBy { it.attributes.get(AttributeKey.stringKey(attribute)) }
+            .fold(0L) { sum, point -> sum + point.value }
 
     fun finishedSpans(): List<SpanData> = exporter.finishedSpanItems
 

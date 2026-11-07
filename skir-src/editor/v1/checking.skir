@@ -6,7 +6,6 @@ import { EditExpectation } from "editor/v1/authoring_facts.skir";
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   CatalogGeneration,
-  CheckExecutionId,
   RuleId,
   ValueLocation,
 } from "editor/v1/type_catalog.skir";
@@ -30,16 +29,13 @@ struct CheckInstanceId(84080003) {
   location: ValueLocation = 1;
 }
 
-/// Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.
-/// Current finding admission rejects results from executions superseded for the same instance.
+/// A rule occurrence and the catalog generation it ran with. An equal rerun gives an equal ticket.
 struct CheckTicket(84080004) {
   instance: CheckInstanceId = 0;
-  incarnation: string = 1;
-  execution: CheckExecutionId = 2;
-  catalog: CatalogGeneration = 3;
+  catalog: CatalogGeneration = 1;
 }
 
-/// Findings with the execution and original facts they describe. Status records freshness;
+/// Findings with the run and original facts they describe. Status records freshness;
 /// consumers retain the evidence needed to compare them with saved or local working values.
 struct FindingSet(84080005) {
   ticket: CheckTicket = 0;

@@ -1,5 +1,6 @@
 package com.typewritermc.realm.authoring
 
+import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
 
@@ -12,11 +13,18 @@ internal fun FindingSet.judgedAgainst(view: AuthoringView): FindingSet = withSta
 
 /**
  * This set marked current only while the check runtime still holds it current and [view] supports it. Publication
- * gates a release on the set, so one the runtime already marked outdated (a rerun pending, discovery incomplete, a
- * catalog reload) stays outdated even when its evidence still matches [view].
+ * gates a release on the set, so one the runtime already marked outdated (discovery incomplete, a failed pass) stays
+ * outdated even when its evidence still matches [view].
  */
 internal fun FindingSet.judgedForRelease(view: AuthoringView): FindingSet =
     withStatus(status == FindingStatus.CURRENT && view.supports(this))
+
+/**
+ * This set as a reply carries it: its evidence only when it has something to report, since a reader compares
+ * evidence only for the findings and outcome it shows. Judge it first, which needs the evidence.
+ */
+internal fun FindingSet.forReply(): FindingSet =
+    if (findings.isEmpty() && outcome == CheckOutcome.FINISHED) copy(expectations = emptyList()) else this
 
 /** Whether [set] was checked against this view's catalog and the values it read are still saved in this view. */
 private fun AuthoringView.supports(set: FindingSet): Boolean =
