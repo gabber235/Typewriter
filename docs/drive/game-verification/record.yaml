@@ -7,7 +7,7 @@ goal: Prove what a player experiences in a real Minecraft client, as tests that 
 pieces:
   - id: paper-topology
     status: figuring-out
-    open: Do concurrent attempts share one stepped Paper, or does each attempt get a Paper of its own?
+    open: Pick the topology from P1; then how to make a restart requirement cheap, since restarts dominate suite time
     tries:
       - id: d1-one-client
         what: One client runs requirements in sequence
@@ -28,24 +28,35 @@ pieces:
       - id: shared-stepped-paper
         parent: d2-shared-paper
         what: Every attempt shares one Paper whose next tick waits for every claimed client and every claimed player's work
-        taught: Drafted in the old plan only. Needs a chat fence, regions, a drain and reboot on hung work, approximate coverage, and leaves layer 4 content isolation open
+        taught: >-
+          P1: 14 to 17 s per 1,000 requirements without restarts, 0 wrong verdicts in 36,000. One
+          attempt's async work holds every attempt's tick (about 100 ms per attempt hit). Needs a fence,
+          regions and approximate coverage. Lessons: count only acks of ticks after the stimulus (a stale
+          ack passed a broken requirement), switch the client clock on the render thread.
         state: trying
-        evidence: [docs/plans/game-verification/decisions/step-driver.yaml, docs/plans/game-verification/decisions/pool.yaml]
+        evidence: [docs/plans/game-verification/decisions/step-driver.yaml, "branch proto/gv-topology 1ec7bef6f: prototypes/game-verification/RESULTS.md", CI run 42345155973]
       - id: paper-per-attempt
         parent: d3-paper-per-group
         what: 4 long lived Papers, one per running attempt, wiped and reused; clients move for a group claim
-        taught: Not tried yet. Would make the fence, regions, coverage spans, the side Paper and content isolation unnecessary; costs memory and a reconnect per group claim
+        taught: >-
+          P1: 2.3 times faster than shared with no groups and no restarts (6 s per 1,000), but every group
+          claim moves clients (0.33 to 0.95 s each, holding that Paper): +390% at 10% groups, +777% at
+          30%. Restart boots compete with three busy Papers: +41% at 1% restarts. An idle stepped Paper
+          needs a keepalive tick or the watchdog stops it.
         state: trying
-        evidence: []
+        evidence: ["branch proto/gv-topology 1ec7bef6f: prototypes/game-verification/RESULTS.md", CI runs 42345155973 42339156447]
       - id: fresh-paper-per-attempt
         parent: d3-paper-per-group
         what: A fresh Paper per requirement, booted ahead while others run
-        taught: A boot costs about 9.5 s on the runner against about 30 ms per requirement; P1 computes the number of booters this would need
+        taught: P1 computed it. A boot costs 22 to 39 CPU s, so 1,000 requirements take 1.5 to 2.8 hours on 4 vCPU; matching shared would need about 850 booters
         state: trying
         evidence: [docs/design/game-verification/spikes/k-restarts.md, docs/design/game-verification/spikes/c-speed.md]
       - id: k-own-paper-for-restarts
         what: A requirement that kills Paper runs on a Paper of its own
-        taught: A kill drops every client on that Paper
+        taught: >-
+          A kill drops every client on that Paper. P1: at 1% restart requirements, restarts are 82 to 89%
+          of suite time (boot 8 to 14 s each, CPU bound, so parallel boots do not help); the other 990
+          requirements finish in 20 to 27 s. AppCDS needs -XX:+AllowArchivingWithJavaAgent with the agent
         state: picked
         why: Decided by the developer from spike K
         evidence: [docs/design/game-verification/spikes/k-restarts.md]
