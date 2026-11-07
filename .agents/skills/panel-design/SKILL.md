@@ -156,35 +156,39 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Shadow | Menus and toasts, then dialogs. Nothing else |
 | Icons | Material Symbols, bundled. 16 px inline, 20 px in controls |
 
-| Token | Curve | Duration | Landing |
-|---|---|---|---|
-| `panelIn` | Strike | 420 ms | 10% overshoot |
-| `surfaceIn` | Spring | Stiffness 280, damping 17 | Position and size go from the opener to the surface |
-| `paneFocus` | Spring | Stiffness 300, damping 13 | Active pane scale 1.03, others 0.985 |
-| `dialogIn` | Strike | 340 ms | 14% overshoot; the page behind scales to 0.98 |
-| `focusMove` | Strike | 170 ms | 5% overshoot |
-| `hoverIn` | Strike | 220 ms | Rises 2 px, scale 1.012, one overshoot |
-| `capIn` | Strike | 240 ms | Rises 9 px, one overshoot |
-| `loadIn` | Strike | 190 ms per row | Rises 14 px; the last visible row starts within 150 ms |
-| `rowIn` | Carriage | 280 ms | 6% recoil, hit at `h = 0.42` |
-| `press` | Spring | Stiffness 300, damping 12 | Sinks 4 px, scale 0.93, big bounce back |
-| `hoverOut` | Exit | 90 ms | None |
-| `panelOut` | Exit | 200 ms | None |
-| `dialogOut` | Exit | 150 ms | None |
-| `listOut` | Spring | Stiffness 380, damping 30 | Height, vertical scale, and opacity go to 0 together |
-| `hold` | Spring | 800 ms | The fill leads and settles |
-| `ripple` | Ease in and out | 620 ms, 42 ms between letters | Letters rise 3 px, looping |
-| `wave` | Spring per letter | 420 ms, 34 ms between letters | Each letter rises 4 px, turns brand blue, and switches as it passes |
-| `waveSlow` | Ease in and out | 1000 ms, 60 ms between letters | As `wave`, 2 px |
-| `drain` | Linear | 6 s | The one linear move, since it shows real time |
-| `type` | Stepped | 36 ms per letter | None |
-| `ink` | Ease out | 900 ms fade; 2 s for changes by others | None |
-| `jam` | Judder | 400 ms | 4 cycles, 9 px and decaying, with a red flash that fades in 1.5 s |
+| Token | Curve | Duration | Landing | Reduced |
+|---|---|---|---|---|
+| `panelIn` | Strike | 420 ms | 10% overshoot | jump |
+| `surfaceIn` | Spring | Stiffness 280, damping 17 | Position and size go from the opener to the surface | jump |
+| `paneFocus` | Spring | Stiffness 300, damping 13 | Active pane scale 1.03, others 0.985 | jump |
+| `dialogIn` | Strike | 340 ms | 14% overshoot; the page behind scales to 0.98 | jump |
+| `focusMove` | Strike | 170 ms | 5% overshoot | jump |
+| `hoverIn` | Strike | 220 ms | Rises 2 px, scale 1.012, one overshoot | still: a control brightens one step |
+| `capIn` | Strike | 240 ms | Rises 9 px, one overshoot | still: appears in place |
+| `loadIn` | Strike | 190 ms per row | Rises 14 px; the last visible row starts within 150 ms | jump |
+| `rowIn` | Carriage | 280 ms | 6% recoil, hit at `h = 0.42` | jump |
+| `press` | Spring | Stiffness 300, damping 12 | Sinks 4 px, scale 0.93, big bounce back | still: a control darkens while down |
+| `hoverOut` | Exit | 90 ms | None | still |
+| `panelOut` | Exit | 200 ms | None | jump |
+| `dialogOut` | Exit | 150 ms | None | jump |
+| `listOut` | Spring | Stiffness 380, damping 30 | Height, vertical scale, and opacity go to 0 together | jump |
+| `hold` | Spring | Settles in 800 ms | The fill leads and settles; the clock decides | paced: fills in place |
+| `ripple` | Ease in and out | 620 ms, 42 ms between letters | Letters rise 3 px, looping | still |
+| `skeleton` | Linear | 1000 ms per sweep | A skeleton's shimmer, looping | still: placeholders stay still |
+| `wave` | Spring per letter | Settles in 420 ms, 34 ms between letters | Each letter rises 4 px, turns brand blue, and switches as it passes | jump |
+| `waveSlow` | Ease in and out | 1000 ms, 60 ms between letters | As `wave`, 2 px | jump |
+| `drain` | Linear | 6 s | The one linear move, since it shows real time | paced: empties in place |
+| `type` | Stepped | 36 ms per letter | None | paced: still types |
+| `ink` | Ease out | 900 ms fade; 2 s for changes by others | None | paced |
+| `jam` | Judder | 400 ms | 4 cycles, 9 px and decaying, with a red flash that fades in 1.5 s | still: keeps the red flash without the shake |
 
 - **Arrivals:** reach the final position within 150 ms; the landing plays after that.
 - **Strike:** `1 - e^(-z*w*t) * (cos(wd*t) + (z*w/wd) * sin(wd*t))`, `t` from 0 to 1, `w = 5/z`, `wd = w*sqrt(1 - z*z)`, `z = -ln(o) / sqrt(pi^2 + ln(o)^2)`, `o` the overshoot.
 - **Carriage:** `1 - (1 - t/h)^1.6` until `h`, then `1 - a * sin(pi*p) * (1 - p)^1.2`, `p = (t - h) / (1 - h)`, `a` the recoil.
 - **Exit:** `Cubic(0.4, 0, 0.2, 1)`.
+- **Spring:** mass 1, given as stiffness and damping or as a settle time and damping ratio. A spring settles when it stays within 1% of its travel. A sent duration keeps the damping ratio; a sent spring ignores the duration.
+- **Reduced:** `jump` lands at once; `still` never starts the travel, and a control (not a row) shows the state as its fill; `paced` keeps its time with no travel. Only `resolveMotion` applies it.
+- **Repeats:** a move that repeats in the same direction before it finished shortens in proportion, and jumps when it repeats within a quarter of its time. A move that turns back continues from where it is at full length.
 - **Feel:** when judging a move, open `docs/design/panel-design/demos/experience.html` in a browser.
 
 | Key language | Meaning |
@@ -208,6 +212,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 
 | When you need | Use | Never |
 |---|---|---|
+| A move | `useMotion` or `MotionController` with a token through `resolveMotion`; `Rise`, `Enter` with `EnterRun`, `Leave`, `HoldFill` with `HoldClock`, `Ring` with `RingTarget`; `motionTimeline` for framework APIs that take a Duration and a Curve | A literal duration or curve, `AnimationController` with its own timing, `flutter_animate` |
 | A busy button | `LoadingButton`, `LoadingIconButton` | A private spinner |
 | A wait | `ripple` on the status word, `Shimmer` | `CircularProgressIndicator` |
 | A menu or popover | `AnchoredPopup`, `ContextMenuRegion` | `PopupMenuButton`, `MenuAnchor` |

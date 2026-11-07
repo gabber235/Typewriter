@@ -12,6 +12,7 @@ export "focused_change.dart";
 export "forward_animation.dart";
 export "global_key.dart";
 export "menu_controller.dart";
+export "motion.dart";
 export "refresh_at.dart";
 export "rive.dart";
 export "text_size.dart";
