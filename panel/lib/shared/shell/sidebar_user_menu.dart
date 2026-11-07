@@ -131,10 +131,11 @@ class UserMenu extends HookConsumerWidget {
           childFocusNode: focusNode,
           controller: controller,
           child: Material(
-            child: InkWell(
-              onTap: ContextMenuRegion.onPress(controller),
-              borderRadius: context.shapes.mediumBorderRadius,
+            child: Button(
+              face: ButtonFace.bare,
+              label: "Account menu",
               focusNode: focusNode,
+              onPressed: ContextMenuRegion.onPress(controller),
               child: Padding(
                 padding: EdgeInsets.all(
                   compact ? context.spacing.space2 : context.spacing.space3,

@@ -55,7 +55,8 @@ class TimelineKeyframeSurface extends HookConsumerWidget {
         },
         child: Center(
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
+            duration: motionTimeline(context, MotionToken.ink).duration,
+            curve: motionTimeline(context, MotionToken.ink).curve,
             width: style.keyframeSize,
             height: style.keyframeSize,
             transform: Matrix4.rotationZ(pi / 4),

@@ -23,6 +23,7 @@ class ConfirmationDialogue extends HookWidget {
     this.body,
     this.content,
     this.onCancel,
+    this.confirmBusyText,
     super.key,
   }) : assert(
          content != null || body != null,
@@ -47,6 +48,10 @@ class ConfirmationDialogue extends HookWidget {
 
   /// Label for the action that commits the confirmation.
   final String confirmText;
+
+  /// The word the confirm button types while [onConfirm] runs: Deleting.
+  /// Without one the confirm label ripples.
+  final String? confirmBusyText;
 
   /// Icon identifier displayed beside [confirmText].
   final String confirmIcon;
@@ -82,7 +87,7 @@ class ConfirmationDialogue extends HookWidget {
   Widget build(BuildContext context) {
     final secondsLeft = useState(delayConfirm.inSeconds);
     final canConfirm = secondsLeft.value <= 0;
-    final confirmController = useLoadingButtonController();
+    final confirmController = useButtonController();
     useListenable(confirmController);
 
     useTimer(1.seconds, (timer) {
@@ -134,29 +139,23 @@ class ConfirmationDialogue extends HookWidget {
         ),
         content: body ?? Text(content!),
         actions: [
-          TextButton.icon(
+          Button(
             autofocus: !canConfirm,
-            icon: Icones(
-              cancelIcon,
-              color: Theme.of(context).textTheme.bodySmall?.color,
-            ),
-            label: Text(cancelText),
+            icon: Icones(cancelIcon),
+            label: cancelText,
             onPressed: cancel,
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).textTheme.bodySmall?.color,
-            ),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
-          LoadingButton.filledIcon(
+          Button(
+            face: ButtonFace.filled,
             controller: confirmController,
             autofocus: canConfirm,
-            style: FilledButton.styleFrom(
-              backgroundColor: confirmColor,
-              foregroundColor: onConfirmColor,
-            ),
+            color: confirmColor,
             icon: Icones(confirmIcon, size: 16),
-            label: Text(
-              canConfirm ? confirmText : "$confirmText (${secondsLeft.value})",
-            ),
+            label: canConfirm
+                ? confirmText
+                : "$confirmText (${secondsLeft.value})",
+            busyLabel: confirmBusyText,
             onPressed: canConfirm ? confirm : null,
           ),
         ],
@@ -178,6 +177,7 @@ Future<bool> showConfirmationDialogue({
   String? content = "This action cannot be undone.",
   Widget? body,
   String confirmText = "Confirm",
+  String? confirmBusyText,
   String confirmIcon = Fa6Solid.trash,
   Color? confirmColor,
   Color? onConfirmColor,
@@ -208,6 +208,7 @@ Future<bool> showConfirmationDialogue({
           content: body != null ? null : content,
           body: body,
           confirmText: confirmText,
+          confirmBusyText: confirmBusyText,
           confirmIcon: confirmIcon,
           confirmColor: confirmColor ?? Theme.of(context).colorScheme.error,
           onConfirmColor:

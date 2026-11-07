@@ -40,61 +40,16 @@ class LoadingScreen extends StatelessWidget {
   }
 }
 
-/// Shows rotating connection messages beneath a [LoadingScreen] heading.
-///
-/// The messages are shuffled when this widget is built, so they are
-/// illustrative status copy rather than a progress report.
+/// The one status line beneath a [LoadingScreen] heading: it ripples while
+/// the connection is pending.
 class ConnectionScroller extends StatelessWidget {
   const ConnectionScroller({this.style, super.key});
 
-  /// Text style passed to the rotating status messages.
+  /// Text style of the status line.
   final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
-    return TextScroller(
-      texts: [
-        "Establishing interstellar connection",
-        "Tuning communication frequency",
-        "Initiating communication protocol",
-        "Negotiating connection parameters",
-        "Analyzing network traffic",
-        "Establishing telepathic link",
-        "Activating quantum communication",
-        "Setting up virtual private connection",
-        "Checking for network interference",
-        "Hacking into the Matrix",
-        "Summoning the interdimensional portal",
-        "Opening the gateway to the astral plane",
-        "Establishing connection to the other side",
-        "Connecting to the cosmic mind",
-        "Contacting extraterrestrial intelligence",
-        "Dialing up the time-space continuum",
-        "Downloading thoughts from the future",
-        "Establishing link to parallel universe",
-        "Establishing link to the universal consciousness",
-        "Tuning into the cosmic frequency",
-        "Initiating intergalactic communication",
-        "Bending the fabric of reality",
-        "Syncing with the cosmic clock",
-        "Activating the trans-dimensional relay",
-        "Establishing telekinetic connection",
-        "Channeling the universal energy",
-        "Unlocking the secrets of the universe",
-        "Contacting the all-seeing eye",
-        "Teleporting through time and space",
-        "Tuning into the higher dimensions",
-        "Connecting to the great beyond",
-        "Downloading knowledge from the Akashic Records",
-        "Establishing a psychic link",
-        "Activating the cosmic gateway",
-        "Syncing with the universe's frequency",
-        "Tuning into the cosmic vibration",
-        "Connecting to the quantum field",
-        "Establishing a connection to the divine",
-        "Channeling the universal wisdom",
-      ]..shuffle(),
-      style: style,
-    );
+    return MotionLabel("Connecting to the realm", rippling: true, style: style);
   }
 }

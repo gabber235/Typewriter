@@ -60,7 +60,10 @@ class _CreateOrganization extends HookConsumerWidget {
               token: MotionToken.loadIn,
               child: SizedBox(
                 width: double.infinity,
-                child: LoadingButton.filled(
+                child: Button(
+                  face: ButtonFace.filled,
+                  label: "Create",
+                  busyLabel: "Creating",
                   onPressed: () => _createOrganization(
                     context: context,
                     ref: ref,
@@ -68,7 +71,6 @@ class _CreateOrganization extends HookConsumerWidget {
                     nameController: nameController,
                     seed: randomSeed.value,
                   ),
-                  child: const Text("Create"),
                 ),
               ),
             ),
@@ -154,9 +156,10 @@ class _OrganizationIconPicker extends StatelessWidget {
 
     return Material(
       borderRadius: context.shapes.largeBorderRadius,
-      child: InkWell(
-        borderRadius: context.shapes.largeBorderRadius,
-        onTap: onRandomize,
+      child: Button(
+        face: ButtonFace.bare,
+        label: "Randomize icon",
+        onPressed: onRandomize,
         child: Padding(
           padding: EdgeInsets.all(context.spacing.space3),
           child: Row(

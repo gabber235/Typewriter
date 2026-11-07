@@ -13,7 +13,7 @@ AppBarItem textAppBarItem(
 }) => AppBarItem.adaptive(
   key: ValueKey(label),
   collapseOrder: collapseOrder,
-  child: AppBarControl.text(
+  child: AppBarControl(
     contentBuilder: (context, compact) =>
         AppBarControlContent(compact: compact, icon: Icon(icon), label: label),
     tooltip: label,

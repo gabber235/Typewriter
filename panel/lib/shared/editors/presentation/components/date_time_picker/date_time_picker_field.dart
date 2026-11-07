@@ -307,21 +307,18 @@ class DateTimePickerField extends HookConsumerWidget {
               children: [
                 if (decoration?.suffixIcon != null) decoration!.suffixIcon!,
                 if (!readOnly && showPicker)
-                  IconButton(
-                    focusNode: pickerFocus,
-                    tooltip: open.value ? "Close picker" : "Open picker",
-                    constraints: const BoxConstraints.tightFor(
-                      width: 30,
-                      height: 36,
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: enabled ? toggle : null,
+                  Button(
+                    face: ButtonFace.icon,
                     icon: Icones(
                       includeDate
                           ? MaterialSymbols.calendar_month_rounded
                           : MaterialSymbols.schedule_rounded,
                       size: 18,
                     ),
+                    label: open.value ? "Close picker" : "Open picker",
+                    tooltip: open.value ? "Close picker" : "Open picker",
+                    focusNode: pickerFocus,
+                    onPressed: enabled ? toggle : null,
                   ),
               ],
             ),

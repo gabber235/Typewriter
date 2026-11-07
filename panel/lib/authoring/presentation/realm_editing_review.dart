@@ -51,9 +51,9 @@ final class RealmEditingReview extends HookWidget {
               ),
               onResolved: onResolved,
             ),
-          TextButton(
+          Button(
+            label: "Refresh review",
             onPressed: () => workspace.refreshConflictReview(id),
-            child: const Text("Refresh review"),
           ),
         ],
       );

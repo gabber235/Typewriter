@@ -115,11 +115,18 @@ class SlidingChoiceControl<T extends Object> extends StatelessWidget {
         );
     if (children.length < 2) {
       final entry = children.entries.firstOrNull;
-      return TextButton(
-        onPressed: entry != null && enabled && !disabled.contains(entry.key)
-            ? () => onSelected(entry.key)
-            : null,
-        child: entry?.value ?? const Text("No options available"),
+      final onPressed =
+          entry != null && enabled && !disabled.contains(entry.key)
+          ? () => onSelected(entry.key)
+          : null;
+      return Button(
+        face: ButtonFace.bare,
+        label: entry == null ? "No options available" : "Choose",
+        onPressed: onPressed,
+        child: Padding(
+          padding: contentPadding,
+          child: entry?.value ?? const Text("No options available"),
+        ),
       );
     }
     return CupertinoSlidingSegmentedControl<T>(

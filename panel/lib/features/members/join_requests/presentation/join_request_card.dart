@@ -152,9 +152,10 @@ class JoinRequestCard extends HookConsumerWidget {
           },
         ),
       ],
-      child: InkWell(
-        onTap: () => onSelectionChanged(!isSelected),
-        borderRadius: context.shapes.mediumBorderRadius,
+      child: Button(
+        face: ButtonFace.bare,
+        label: isSelected ? "Deselect request" : "Select request",
+        onPressed: () => onSelectionChanged(!isSelected),
         child: Padding(
           padding: EdgeInsets.all(context.spacing.space4),
           child: isDesktop
@@ -222,24 +223,19 @@ class JoinRequestCard extends HookConsumerWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            LoadingButton.outlined(
+            Button(
+              face: ButtonFace.outlined,
               onPressed: () => _confirmDeclineRequest(context, ref),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.colors.dangerText,
-                side: BorderSide(
-                  color: theme.colorScheme.error.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Text("Decline"),
+              color: context.colors.dangerText,
+              label: "Decline",
+              busyLabel: "Declining",
             ),
             SizedBox(width: context.spacing.space2),
-            LoadingButton.filled(
-              onPressed: () {
-                expansibleController.toggle();
-              },
-              child: Text(
-                expansibleController.isExpanded ? "Cancel" : "Accept",
-              ),
+            Button(
+              face: ButtonFace.filled,
+              onPressed: expansibleController.toggle,
+              label: expansibleController.isExpanded ? "Cancel" : "Accept",
+              busyLabel: "Accepting",
             ),
           ],
         ),

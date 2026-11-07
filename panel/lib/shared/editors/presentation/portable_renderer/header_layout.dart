@@ -94,9 +94,12 @@ final class _PortableHeaderOverflow extends HookWidget {
             ),
           ),
       ],
-      builder: (context, menu, child) => IconButton(
-        focusNode: triggerFocus,
+      builder: (context, menu, child) => Button(
+        face: ButtonFace.icon,
+        icon: const Icon(Icons.more_horiz),
+        label: "More actions",
         tooltip: "More actions",
+        focusNode: triggerFocus,
         onPressed: () {
           if (menu.isOpen) {
             menu.close();
@@ -105,7 +108,6 @@ final class _PortableHeaderOverflow extends HookWidget {
           captured.value = row?.focus?.captureOrigin(row.row);
           menu.open();
         },
-        icon: const Icon(Icons.more_horiz),
       ),
     );
   }

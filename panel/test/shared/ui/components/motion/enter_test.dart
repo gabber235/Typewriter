@@ -34,6 +34,16 @@ void main() {
     expect(panel.opacityOf("row 2 role"), 1);
   });
 
+  testWidgets("a row removed before its turn never starts", (tester) async {
+    await tester.mountComponent(const EnterStage(rows: 12));
+    await tester.runFrames(const Duration(milliseconds: 32));
+    await tester.showComponent(const EnterStage(rows: 1), settle: false);
+
+    await tester.runFrames(const Duration(milliseconds: 200));
+
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets("an Enter that joins later shows at once", (tester) async {
     final panel = await tester.mountComponent(const EnterStage(rows: 1));
     await tester.runFrames(const Duration(milliseconds: 32));

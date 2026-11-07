@@ -76,9 +76,11 @@ class _JoinOrganization extends HookConsumerWidget {
                     ),
                   ),
                   SizedBox(width: context.spacing.space3),
-                  LoadingButton.filled(
+                  Button(
+                    face: ButtonFace.filled,
                     onPressed: hasReachedLimit ? null : submitJoinRequest,
-                    child: const Text("Join"),
+                    label: "Join",
+                    busyLabel: "Joining",
                   ),
                 ],
               ),
@@ -258,13 +260,13 @@ class _PendingJoinRequestTile extends StatelessWidget {
                     onExpired: onExpire,
                   ),
                   SizedBox(width: context.spacing.space2),
-                  IconButton(
+                  Button(
+                    face: ButtonFace.icon,
                     icon: const Icon(Icons.close, size: 20),
-                    onPressed: onCancel,
+                    label: "Cancel request",
                     tooltip: "Cancel request",
-                    style: IconButton.styleFrom(
-                      foregroundColor: context.colors.dangerText,
-                    ),
+                    color: context.colors.dangerText,
+                    onPressed: onCancel,
                   ),
                 ],
               ),

@@ -34,9 +34,10 @@ Widget realmSuspensionBarrierUseCase(BuildContext context) {
           onRetry: retry ? () {} : null,
           child: Card(
             child: Center(
-              child: FilledButton(
+              child: Button(
+                face: ButtonFace.filled,
+                label: "Edit dialogue",
                 onPressed: () {},
-                child: const Text("Edit dialogue"),
               ),
             ),
           ),

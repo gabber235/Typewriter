@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/architecture.dart";
 import "package:typewriter_testkit/testing.dart";
 
 final exemptions = <Exemption>[
@@ -170,42 +171,9 @@ final layoutSpacingExemptions = <Exemption>[
 
 final _anyMotion = RegExp(".");
 
-/// Files whose literal motion a later PR still moves onto tokens. Each PR
-/// empties its own entries; nothing else may be added.
+/// Files whose literal motion the surfaces PR still moves onto tokens. It
+/// empties this list; nothing else may be added.
 final motionExemptions = <Exemption>[
-  for (final path in [
-    // PR 6, controls: the last PR with literal motion in each file.
-    "lib/shared/ui/components/elastic_switcher.dart",
-    "lib/shared/ui/components/elastic_transition.dart",
-    "lib/shared/ui/components/elastic_message_switcher.dart",
-    "lib/shared/ui/components/elastic_message_transition.dart",
-    "lib/shared/ui/components/animated_status_content.dart",
-    "lib/shared/ui/components/action_row.dart",
-    "lib/shared/ui/components/blur_reveal.dart",
-    "lib/shared/ui/components/grid_selectable_card.dart",
-    "lib/shared/ui/components/labeled_message.dart",
-    "lib/shared/ui/components/loading_indicator.dart",
-    "lib/shared/ui/components/secret_field_displays.dart",
-    "lib/shared/ui/components/shortcut_display.dart",
-    "lib/shared/ui/components/text_scroller.dart",
-    "lib/shared/ui/input/validated_text_field.dart",
-    "lib/shared/ui/screens/error_screen.dart",
-    "lib/shared/selectables/presentation/selector.dart",
-    "lib/shared/search/presentation/search_result_card.dart",
-    "lib/shared/search/presentation/search_result_visuals.dart",
-    "lib/shared/search/presentation/search_tree_section_header.dart",
-    "lib/shared/editors/presentation/portable_search_input.dart",
-    "lib/shared/editors/presentation/portable_renderer/collection_editor.dart",
-    "lib/shared/editors/presentation/portable_renderer/diagnostic_chrome.dart",
-    "lib/shared/editors/presentation/components/resource_item_chrome.dart",
-    "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar.dart",
-    "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar_selection_grid.dart",
-    "lib/shared/editors/presentation/timeline/presentation/timeline_keyframe_surface.dart",
-    "lib/shared/utilities/animation.dart",
-    // Deleted by PR 6 once search_tree_results.dart leaves useForwardAnimation.
-    "lib/shared/hooks/forward_animation.dart",
-  ])
-    Exemption(path, _anyMotion, "controls PR moves this onto tokens"),
   for (final path in [
     // PR 7, surfaces, and flutter_animate effects, which leave in PR 7.
     "lib/shared/ui/components/admonition.dart",
@@ -234,12 +202,6 @@ final motionExemptions = <Exemption>[
     "lib/shared/theme/component_themes.dart",
   ])
     Exemption(path, _anyMotion, "surfaces PR moves this onto tokens"),
-  // PR 6: the drag lift of an editor collection item; PR 5 moved its rows.
-  Exemption(
-    "lib/shared/editors/presentation/portable_renderer/collection_rows.dart",
-    RegExp(r"^Curves\.easeInOut$"),
-    "controls PR moves the drag lift onto a token",
-  ),
 ];
 
 /// Durations that keep time outside motion and that no skip rule can tell
@@ -281,28 +243,11 @@ const motionEngine = [
 /// Files that still use a banned API, grouped by the PR that removes it.
 /// Each entry names the pattern it excuses; a PR empties its own group.
 final bannedExemptions = <Exemption>[
-  // PR 6, controls.
-  for (final path in [
-    "lib/shared/ui/components/elastic_switcher.dart",
-    "lib/shared/ui/components/elastic_message_switcher.dart",
-  ])
-    Exemption(
-      path,
-      bannedDisableAnimations,
-      "controls PR reads reduced motion through resolveMotion",
-    ),
-  for (final path in [
-    "lib/shared/ui/components/elastic_switcher.dart",
-    "lib/shared/ui/components/elastic_transition.dart",
-  ])
-    Exemption(path, bannedIntervals, "controls PR moves this onto tokens"),
   // PR 7, surfaces: the group its banned surface API entry deletes.
   for (final path in [
     "lib/features/realms/presentation/realm_suspension.dart",
     "lib/shared/editors/presentation/portable_location_reveal.dart",
-    "lib/shared/editors/presentation/portable_renderer/diagnostic_chrome.dart",
     "lib/shared/editors/presentation/portable_renderer/header.dart",
-    "lib/shared/editors/presentation/portable_search_input.dart",
     "lib/shared/ui/components/anchored_popup.dart",
     "lib/shared/ui/components/content_size_tab_bar_view.dart",
     "lib/shared/ui/components/directional_content_switcher.dart",
@@ -343,7 +288,6 @@ final bannedExemptions = <Exemption>[
     "lib/authoring/application/authoring_subject_role.dart",
     "lib/authoring/application/resource_operations.dart",
     "lib/authoring/presentation/resource_issue_badge.dart",
-    "lib/authoring/presentation/resource_operation_button.dart",
     "lib/shared/editors/presentation/portable_renderer/actions.dart",
     "lib/shared/editors/presentation/portable_renderer/choice_inputs.dart",
     "lib/shared/editors/presentation/portable_renderer/content.dart",
@@ -351,10 +295,6 @@ final bannedExemptions = <Exemption>[
     "lib/shared/editors/presentation/portable_renderer/header.dart",
     "lib/shared/editors/presentation/portable_renderer/reorder_handle.dart",
     "lib/shared/editors/presentation/portable_search_input.dart",
-    "lib/shared/ui/components/action_row.dart",
-    "lib/shared/ui/components/appbar_control.dart",
-    "lib/shared/ui/components/loading_button/loading_button.dart",
-    "lib/shared/ui/components/loading_button/loading_icon_button.dart",
   ])
     Exemption(path, bannedTooltip, "surfaces PR moves this onto PanelTooltip"),
   for (final path in [
@@ -512,6 +452,21 @@ void main() {
       expect(violations, isEmpty, reason: violations.join("\n"));
     },
   );
+
+  test("buttons are built on the widgets layer", () {
+    final material = RegExp(
+      r"\b(TextButton|FilledButton|OutlinedButton|ElevatedButton|IconButton|FloatingActionButton|InkWell|InkResponse)(\.[a-z]+)?\(",
+    );
+    final violations = <String>[
+      for (final file in dartFiles("lib"))
+        for (final match in material.allMatches(file.readAsStringSync()))
+          "${file.path}: ${match.group(0)}",
+      for (final file in dartFiles("lib/shared/ui/components/button"))
+        if (file.readAsStringSync().contains("package:flutter/material.dart"))
+          "${file.path}: imports Material",
+    ];
+    expect(violations, isEmpty, reason: violations.join("\n"));
+  });
 
   test("the panel uses only Lilex and IBM Plex Sans", () {
     const allowed = {"Lilex", "IBMPlexSans"};

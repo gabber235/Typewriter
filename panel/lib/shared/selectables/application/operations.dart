@@ -180,11 +180,12 @@ Future<void> showOperationErrorsPopup(
         title: Row(
           children: [
             Expanded(child: Text("$operationName errors")),
-            IconButton(
-              autofocus: true,
-              splashRadius: 18,
+            Button(
+              face: ButtonFace.icon,
               icon: const Icon(Icons.close),
+              label: "Close",
               tooltip: "Close",
+              autofocus: true,
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],

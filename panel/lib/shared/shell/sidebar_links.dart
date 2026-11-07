@@ -68,18 +68,17 @@ class SidebarLink extends HookConsumerWidget {
       child: Material(
         color: backgroundColor,
         borderRadius: context.shapes.mediumBorderRadius,
-        child: InkWell(
+        child: Button(
+          face: ButtonFace.bare,
+          label: "",
           focusNode: focusNode,
-          onTap: router != null
+          onPressed: router != null
               ? () {
                   if (!selected) {
                     router.navigate(route);
                   }
                 }
               : null,
-          hoverColor: Theme.of(context).colorScheme.onSurface
-              .withValues(alpha: 0.1),
-          borderRadius: context.shapes.mediumBorderRadius,
           child: Padding(
             padding: EdgeInsets.symmetric(
               vertical: context.spacing.space2,
@@ -145,11 +144,10 @@ class ExternalSidebarLink extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         borderRadius: context.shapes.mediumBorderRadius,
-        child: InkWell(
-          onTap: uri.launchExternally,
-          hoverColor: Theme.of(context).colorScheme.onSurface
-              .withValues(alpha: 0.1),
-          borderRadius: context.shapes.mediumBorderRadius,
+        child: Button(
+          face: ButtonFace.bare,
+          label: "",
+          onPressed: uri.launchExternally,
           child: Padding(
             padding: EdgeInsets.symmetric(
               vertical: context.spacing.space2,

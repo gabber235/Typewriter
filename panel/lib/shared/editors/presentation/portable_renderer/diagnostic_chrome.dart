@@ -125,9 +125,8 @@ class PortableDiagnosticFrame extends HookWidget {
             ),
             if (hasLabel) const SizedBox(height: 6),
             AnimatedContainer(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 120),
+              duration: motionTimeline(context, MotionToken.ink).duration,
+              curve: motionTimeline(context, MotionToken.ink).curve,
               decoration: BoxDecoration(
                 color: fill ?? context.colors.surface.withValues(alpha: 0),
                 borderRadius: context.shapes.mediumBorderRadius,
@@ -326,26 +325,13 @@ class PortablePresentationChrome extends HookWidget {
                   message: diagnostics.map((item) => item.message).join("\n"),
                   triggerMode: TooltipTriggerMode.manual,
                   excludeFromSemantics: true,
-                  child: Semantics(
+                  child: Button(
+                    face: ButtonFace.icon,
+                    focusNode: focus,
                     label: label,
-                    child: IconButton(
-                      focusNode: focus,
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size.square(20),
-                        maximumSize: const Size.square(20),
-                        fixedSize: const Size.square(20),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.standard,
-                        padding: const EdgeInsets.all(2),
-                      ),
-                      onPressed: () =>
-                          tooltip.currentState?.ensureTooltipVisible(),
-                      icon: Icon(
-                        icon,
-                        size: 16,
-                        color: severity?.color(context),
-                      ),
-                    ),
+                    onPressed: () =>
+                        tooltip.currentState?.ensureTooltipVisible(),
+                    icon: Icon(icon, size: 16, color: severity?.color(context)),
                   ),
                 ),
               ),

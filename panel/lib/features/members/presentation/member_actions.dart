@@ -25,7 +25,6 @@ class BulkMemberActions extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     void onClearSelection() => onUnselect(selectedIds);
-    final theme = Theme.of(context);
     final bulkRoles = useState<List<skir.OrganizationRole>>([]);
     final isApplying = useState(false);
 
@@ -105,21 +104,18 @@ class BulkMemberActions extends HookConsumerWidget {
           if (context.isMobile) roleDropdown else Flexible(child: roleDropdown),
 
           if (bulkRoles.value.isNotEmpty)
-            FilledButton.icon(
-              onPressed: isApplying.value ? null : applyRoles,
+            Button(
+              face: ButtonFace.filled,
               icon: const Icon(Icons.check, size: 18),
-              label: const Text("Apply"),
+              label: "Apply",
+              onPressed: isApplying.value ? null : applyRoles,
             ),
-          OutlinedButton.icon(
-            onPressed: onRemove,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.colors.dangerText,
-              side: BorderSide(
-                color: theme.colorScheme.error.withValues(alpha: 0.5),
-              ),
-            ),
+          Button(
+            face: ButtonFace.outlined,
             icon: const Icon(Icons.person_remove_outlined, size: 18),
-            label: const Text("Remove"),
+            label: "Remove",
+            color: context.colors.dangerText,
+            onPressed: onRemove,
           ),
         ],
       ),

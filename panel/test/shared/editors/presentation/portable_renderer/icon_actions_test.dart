@@ -39,7 +39,15 @@ void main() {
       await panel.activateWithKeyboard(find.tooltip("Reveal"));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(panel.shows("Loading"), isTrue);
+      // While it runs the action is heard as unavailable.
+      expect(
+        tester
+            .getSemantics(find.tooltip("Reveal"))
+            .getSemanticsData()
+            .flagsCollection
+            .isEnabled,
+        Tristate.isFalse,
+      );
 
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.tap(find.tooltip("Reveal"), warnIfMissed: false);
@@ -47,7 +55,14 @@ void main() {
       reveal.complete(const PortablePresentationWriteApplied());
       await panel.settle();
 
-      expect(panel.shows("Loading"), isFalse);
+      expect(
+        tester
+            .getSemantics(find.tooltip("Reveal"))
+            .getSemanticsData()
+            .flagsCollection
+            .isEnabled,
+        Tristate.isTrue,
+      );
       expect(runs, 1);
     },
   );

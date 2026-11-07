@@ -80,9 +80,10 @@ class _OrganizationListTile extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: context.shapes.mediumBorderRadius,
         ),
-        child: InkWell(
-          onTap: () => _openOrganization(context),
-          borderRadius: context.shapes.mediumBorderRadius,
+        child: Button(
+          face: ButtonFace.bare,
+          label: "",
+          onPressed: () => _openOrganization(context),
           child: ListTile(
             leading: OrganizationLogo(logoUrl: organization.logoUrl, size: 40),
             title: Text(organization.name.formatted),

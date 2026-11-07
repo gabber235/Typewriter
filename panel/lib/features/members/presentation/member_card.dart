@@ -101,11 +101,12 @@ class MemberTabletCard extends HookConsumerWidget {
                       : _confirmRemoveMember(context, ref),
                 ),
               ],
-              child: InkWell(
-                onTap: expansibleController.toggle,
-                borderRadius: BorderRadius.vertical(
-                  top: context.shapes.mediumRadius,
-                ),
+              child: Button(
+                face: ButtonFace.bare,
+                label: expansibleController.isExpanded
+                    ? "Hide member details"
+                    : "Show member details",
+                onPressed: expansibleController.toggle,
                 child: Padding(
                   padding: EdgeInsets.all(context.spacing.space3),
                   child: Row(
@@ -215,21 +216,15 @@ class MemberTabletCard extends HookConsumerWidget {
                         SizedBox(height: context.spacing.space4),
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _confirmRemoveMember(context, ref),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: context.colors.dangerText,
-                              side: BorderSide(
-                                color: theme.colorScheme.error.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                            ),
+                          child: Button(
+                            face: ButtonFace.outlined,
                             icon: const Icon(
                               Icons.person_remove_outlined,
                               size: 18,
                             ),
-                            label: const Text("Remove Member"),
+                            label: "Remove Member",
+                            color: context.colors.dangerText,
+                            onPressed: () => _confirmRemoveMember(context, ref),
                           ),
                         ),
                       ],

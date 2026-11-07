@@ -142,6 +142,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Keyboard behaviour is new or changed | A widget test proves the key path and where focus lands | 3 |
 | No rule or demo settles how something should feel | Build three live options and let a maintainer pick. Add what you learn here as a general rule, not as that element's design | 2 |
 | You must break a rule | Ask a maintainer. If approved, add it to the exceptions in the `panel-review` skill | 3 |
+| Building a control | Build it on Flutter's widgets layer: `FocusableActionDetector`, `WidgetStatesController`, `Semantics`, gestures, its own painting. Use Material only where Flutter has no primitive: text input, selection, `Scaffold`, tabs | 2 |
 
 ## Values
 
@@ -218,8 +219,11 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When you need | Use | Never |
 |---|---|---|
 | A move | `useMotion` or `MotionController` with a token through `resolveMotion`; `Rise`, `Enter` with `EnterRun`, `Leave`, `HoldFill` with `HoldClock`, `Ring` with `RingTarget`; `motionTimeline` for framework APIs that take a Duration and a Curve | A literal duration or curve, `AnimationController` with its own timing, `flutter_animate` |
-| A busy button | `LoadingButton`, `LoadingIconButton` | A private spinner |
-| A wait | `ripple` on the status word, `Shimmer` | `CircularProgressIndicator` |
+| A button, busy or not | `Button` with its face and a busy word; `dense` for authored compact density | `TextButton`, `FilledButton`, `OutlinedButton`, `ElevatedButton`, `IconButton`, `FloatingActionButton`, `InkWell`, a private spinner |
+| A row or card activated as a whole | `Button` with the bare face | `InkWell` |
+| A wait | `MotionLabel` rippling the status word, `Shimmer` | `CircularProgressIndicator` |
+| A failure at a control | `Jam` around it; `Button` does this itself | A shake of your own, a red border |
+| Text that changes or appears | `MotionLabel` | Swapping the whole text |
 | A menu or popover | `AnchoredPopup`, `ContextMenuRegion` | `PopupMenuButton`, `MenuAnchor` |
 | A select | `Dropdown`, `MultiselectDropdown` | `DropdownButtonFormField` |
 | A dialog | The one dialog component | `AlertDialog` |
