@@ -68,7 +68,7 @@ class ErrorScreen extends StatelessWidget {
                           desktop: 40,
                         ),
                         fontWeight: FontWeight.bold,
-                        color: colors.error,
+                        color: context.colors.dangerText,
                       ),
                     )
                     .animate()
@@ -77,7 +77,7 @@ class ErrorScreen extends StatelessWidget {
                 Text(
                       "Something went wrong, please report this to the Typewriter discord.",
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      style: context.text.sentence.copyWith(
                         fontSize: context.responsive(
                           mobile: 14,
                           tablet: 16,
@@ -93,7 +93,7 @@ class ErrorScreen extends StatelessWidget {
                   SelectableText(
                         message,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        style: context.text.sentence.copyWith(
                           fontSize: context.responsive(
                             mobile: 12,
                             tablet: 14,
@@ -172,7 +172,7 @@ class SmallErrorScreen extends ErrorScreen {
                   desktop: 18,
                 ),
                 fontWeight: FontWeight.bold,
-                color: context.colors.danger,
+                color: context.colors.dangerText,
               ),
             )
             .animate()
@@ -181,7 +181,7 @@ class SmallErrorScreen extends ErrorScreen {
         Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              style: context.text.sentence.copyWith(
                 fontSize: context.responsive(
                   mobile: 10,
                   tablet: 12,

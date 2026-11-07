@@ -195,7 +195,7 @@ class JoinCodeCard extends HookConsumerWidget {
                       OutlinedButton.icon(
                         onPressed: () => _copyToClipboard(context, fullUrl),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.primary,
+                          foregroundColor: context.colors.brandText,
                           side: BorderSide(
                             color: theme.colorScheme.primary.withValues(
                               alpha: 0.5,
@@ -208,7 +208,7 @@ class JoinCodeCard extends HookConsumerWidget {
                       OutlinedButton.icon(
                         onPressed: () => _confirmRevokeCode(context, ref),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error,
+                          foregroundColor: context.colors.dangerText,
                           side: BorderSide(
                             color: theme.colorScheme.error.withValues(
                               alpha: 0.5,

@@ -113,7 +113,7 @@ class BulkMemberActions extends HookConsumerWidget {
           OutlinedButton.icon(
             onPressed: onRemove,
             style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
+              foregroundColor: context.colors.dangerText,
               side: BorderSide(
                 color: theme.colorScheme.error.withValues(alpha: 0.5),
               ),

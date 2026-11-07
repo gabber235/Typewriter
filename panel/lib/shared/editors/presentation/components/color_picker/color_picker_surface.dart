@@ -116,7 +116,10 @@ class ColorPickerSurface extends HookConsumerWidget {
                     spacing: context.spacing.space3,
                     children: [
                       if (replacing)
-                        const Text("Choose one replacement color."),
+                        Text(
+                          "Choose one replacement color.",
+                          style: context.text.sentence,
+                        ),
                       SizedBox(
                         height: 180,
                         child: ClipRRect(
@@ -216,9 +219,10 @@ class ColorPickerSurface extends HookConsumerWidget {
                         ],
                       ),
                       if (warnsAboutAlpha)
-                        const Admonition.warning(
+                        Admonition.warning(
                           child: Text(
                             "This opaque editor will set alpha to FF when the color changes.",
+                            style: context.text.sentence,
                           ),
                         ),
                       ColorFields(

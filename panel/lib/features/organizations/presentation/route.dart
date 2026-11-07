@@ -28,7 +28,6 @@ class IndexPage extends ConsumerWidget {
           builder: (joinRequests) => Pane(
             id: "index",
             primary: true,
-            highlightOnFocus: false,
             trapFocus: false,
             child: _IndexPageContent(
               organizations: organizations,
@@ -64,7 +63,6 @@ class IndexPage extends ConsumerWidget {
           bottom: 8,
           child: Pane(
             id: "footer",
-            highlightOnFocus: false,
             trapFocus: false,
             child: FooterSidebarLinks(expand: false),
           ),

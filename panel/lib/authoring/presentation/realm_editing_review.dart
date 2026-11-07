@@ -30,8 +30,9 @@ final class RealmEditingReview extends HookWidget {
         children: [
           if (reading) const Text("Loading current saved values"),
           if (reviewed is EditReviewFailed)
-            const Text(
+            Text(
               "Current saved values are unavailable. Your edits are retained.",
+              style: context.text.sentence,
             ),
           if (review != null)
             AuthoringConflictComparison(
@@ -67,7 +68,7 @@ final class RealmEditingReview extends HookWidget {
       skir.ResourceId resource,
       String absent,
     ) => document?.entry(resource) == null
-        ? Text(absent)
+        ? Text(absent, style: context.text.sentence)
         : AuthoredResourceEditor(
             resource: resource,
             document: document!,

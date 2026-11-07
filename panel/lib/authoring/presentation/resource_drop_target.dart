@@ -440,7 +440,7 @@ class DropChooser extends StatelessWidget {
                   child: Text(
                     "Drop to",
                     style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: context.colors.contentDisabled),
+                        ?.copyWith(color: context.colors.contentSecondary),
                   ),
                 ),
                 for (final (index, offer) in offers.indexed)

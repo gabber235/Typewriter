@@ -27,7 +27,7 @@ class RealmSelector extends HookConsumerWidget {
             Icons.cloud,
             size: 16,
             color: selected == null
-                ? context.colors.contentDisabled
+                ? context.colors.contentSecondary
                 : realmServiceRoleColor,
           ),
           SizedBox(width: context.spacing.space2),

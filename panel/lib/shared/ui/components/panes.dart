@@ -250,7 +250,6 @@ class Pane extends StatefulWidget {
     required this.child,
     this.primary = false,
     this.enabled = true,
-    this.highlightOnFocus = true,
     this.trapFocus = true,
     this.margin = const EdgeInsets.all(8),
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
@@ -260,7 +259,6 @@ class Pane extends StatefulWidget {
   final Widget child;
   final bool primary;
   final bool enabled;
-  final bool highlightOnFocus;
   final bool trapFocus;
   final EdgeInsetsGeometry? margin;
   final BorderRadiusGeometry? borderRadius;
@@ -273,7 +271,6 @@ class _PaneState extends State<Pane> {
   late final _PaneScopeNode _scope;
   late final _PaneRegistration _registration;
   _PaneCoordinator? _coordinator;
-  FocusType _focusType = FocusType.none;
 
   @override
   void initState() {
@@ -330,31 +327,21 @@ class _PaneState extends State<Pane> {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = FocusScope(
-      node: _scope,
-      // Explicit, since the widget otherwise copies the node's computed
-      // skipTraversal back into it and an empty first frame would stick.
-      skipTraversal: false,
-      onFocusChange: (focused) {
-        if (focused) _coordinator?.markActive(_registration);
-        final type = FocusHighlighting.primaryAndChild(_scope);
-        if (mounted && type != _focusType) setState(() => _focusType = type);
-      },
-      child: widget.child,
+    // The ring wraps the pane only while the scope itself holds focus, as
+    // an empty pane does; a focused descendant is ringed by its own target.
+    Widget result = RingTarget(
+      borderRadius: widget.borderRadius ?? BorderRadius.zero,
+      child: FocusScope(
+        node: _scope,
+        // Explicit, since the widget otherwise copies the node's computed
+        // skipTraversal back into it and an empty first frame would stick.
+        skipTraversal: false,
+        onFocusChange: (focused) {
+          if (focused) _coordinator?.markActive(_registration);
+        },
+        child: widget.child,
+      ),
     );
-    if (widget.highlightOnFocus) {
-      result = FocusHighlight(
-        type: _focusType,
-        borderRadius: widget.borderRadius,
-        size: widget.enabled ? 2 : 0,
-        child: result,
-      );
-    } else if (widget.borderRadius != null) {
-      result = DecoratedBox(
-        decoration: BoxDecoration(borderRadius: widget.borderRadius),
-        child: result,
-      );
-    }
     result = _PaneGeometryMarker(registration: _registration, child: result);
     if (widget.margin != null) {
       result = Padding(padding: widget.margin!, child: result);

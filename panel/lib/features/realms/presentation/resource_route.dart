@@ -245,7 +245,10 @@ class _SurfaceState extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (ref.watch(workingAuthoringDocumentProvider(scope))) {
       AsyncValue(:final error?) => Center(
-        child: Text("Authoring is unavailable: $error"),
+        child: Text(
+          "Authoring is unavailable: $error",
+          style: context.text.sentence,
+        ),
       ),
       AsyncValue(hasValue: false) => const Center(
         child: CircularProgressIndicator(),
@@ -330,8 +333,8 @@ class ResourceHeading extends ConsumerWidget {
                       Text(
                         description,
                         overflow: TextOverflow.ellipsis,
-                        style: context.theme.textTheme.bodySmall?.copyWith(
-                          color: context.colors.contentDisabled,
+                        style: context.text.sentenceSmall.copyWith(
+                          color: context.colors.contentSecondary,
                         ),
                       ),
                   ],

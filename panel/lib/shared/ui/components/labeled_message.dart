@@ -46,7 +46,7 @@ class LabeledMessage extends StatelessWidget {
                 message!,
                 style:
                     messageStyle ??
-                    theme.textTheme.bodySmall?.copyWith(
+                    context.text.sentenceSmall.copyWith(
                       color: textColor?.withValues(alpha: 0.7),
                     ),
               )

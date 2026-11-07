@@ -74,7 +74,10 @@ class Admonition extends StatelessWidget {
         border: Border.all(color: color, width: 1),
         borderRadius: context.shapes.mediumBorderRadius,
       ),
-      foreground: color,
+      foreground: context.colors.textOf(
+        color,
+        over: Color.alphaBlend(backgroundColor, Surface.colorOf(context)),
+      ),
       child: Builder(
         builder: (context) => Material(
           color: Colors.transparent,

@@ -137,7 +137,7 @@ class _ActivityDetails extends StatelessWidget {
                         if (resource.canDiscard)
                           TextButton(
                             style: TextButton.styleFrom(
-                              foregroundColor: context.theme.colorScheme.error,
+                              foregroundColor: context.colors.dangerText,
                             ),
                             onPressed: resource.canDiscard
                                 ? () => controller.discard(resource.id)

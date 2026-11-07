@@ -42,7 +42,7 @@ class SelectorPopup<T> extends ConsumerWidget {
         );
       },
       loading: (_) => _SelectorLoading(name: name),
-      error: (title, error) => Text(error),
+      error: (title, error) => Text(error, style: context.text.sentence),
     );
   }
 }
@@ -81,11 +81,11 @@ class SelectorPopupWithSelection<T> extends ConsumerWidget {
             );
           },
           loading: (_) => _SelectorLoading(name: name),
-          error: (title, error) => Text(error),
+          error: (title, error) => Text(error, style: context.text.sentence),
         );
       },
       loading: (_) => _SelectorLoading(name: name),
-      error: (title, error) => Text(error),
+      error: (title, error) => Text(error, style: context.text.sentence),
     );
   }
 }
