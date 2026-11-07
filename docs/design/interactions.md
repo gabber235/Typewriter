@@ -281,8 +281,8 @@ data class StepRules(
 enum class OnClash { Drop, Queue, Replace }
 enum class OnRejoin { Drop, RestartStep, RestartInteraction }
 
-interface StepContext : MemberContext { val elapsed: Duration }
-interface QueuedContext : MemberContext { val waited: Duration }
+interface StepContext : MemberContext { val elapsed: Ticks }
+interface QueuedContext : MemberContext { val waited: Ticks }
 
 // Most creators never open this. giveUp is hidden when the entry can never queue.
 object StepRulesInspector : StepRulesPresentation {
@@ -308,10 +308,7 @@ data class Running<E : StepEntry>(
     val entry: E,
     val subject: Holder,
     val context: ChainContext,
-    val startedAt: Instant,
-) : Stored {
-    val elapsed: Duration get() = now - startedAt
-}
+) : Stored
 
 data class Queued<E : StepEntry>(
     @Key val step: Step,
@@ -319,8 +316,16 @@ data class Queued<E : StepEntry>(
     val entry: E,
     val subject: Holder,
     val context: ChainContext,
-    val queuedAt: Instant,
+    val queuedAt: Instant,   // orders the queue only
 ) : Stored
+
+// Live on each engine with a member of the subject, written on Added<Running> or Added<Queued>.
+data class StepClock(@Key val step: Step, val startedAt: GameTick) : Live {
+    val elapsed: Ticks get() = tick - startedAt
+}
+data class QueueClock(@Key val step: Step, val queuedAt: GameTick) : Live {
+    val waited: Ticks get() = tick - queuedAt
+}
 
 data class InteractionStart(
     @Key val interaction: Interaction,
@@ -328,6 +333,10 @@ data class InteractionStart(
     val context: ChainContext,
 ) : Stored
 ```
+
+Step timing counts engine ticks, not wall time (decided 2026-11-07), so a scene, typing, or a queue wait slows down under server lag instead of skipping, and a test that steps ticks decides it exactly. `tick: GameTick` is the engine's tick count, a provider like `now`. Authors still write durations; a `Duration` becomes `Ticks` at 20 ticks per second when the step reads it.
+
+The stored rows carry no step time. A tick count belongs to one engine, so each engine with a member of the subject keeps its own `StepClock` from the tick it saw `Added<Running>`. Every reader of step time (scene end, dialogue typing, `protected`, `giveUp`) runs on a member's engine, and no step continues across engines ([Leaving and rejoining](#leaving-and-rejoining)). Group members on two engines therefore start a few ticks apart, by the realm commit latency. Stored only handlers cannot read `elapsed`. Timers that must survive engines stay on the realm's wall clock through `Due` ([stored-data.md](stored-data.md#due)), such as a delay step.
 
 What an extension writes for the smallest step:
 
@@ -355,7 +364,7 @@ Other steps use the same row:
 
 | Need | Code |
 | --- | --- |
-| A scene ends | `Tick<EveryTick>` comparing `running.elapsed` with its length |
+| A scene ends | `Tick<EveryTick>` comparing `clock.elapsed` with its length in ticks |
 | A delay | `Added<Running<DelayEntry>>` writes `DelayDue(step, at) : Due`, and `Elapsed<DelayDue>` completes the step |
 | A search and a click | An event handler that takes `Running<E>` and completes it |
 | A skip | `Skipped(@Key step, at) : Stored`, removed with the step |
@@ -463,7 +472,7 @@ fun <E : StepEntry> Triggered<E>.start(
     val ahead = waiting.any {
         it.interaction != interaction && (holdTypes(it.entry) intersect types).isNotEmpty()
     }
-    val row = Running(step, interaction, entry, subject, context, now)
+    val row = Running(step, interaction, entry, subject, context)
     val _ = when (val decision = decideClash(entry.rules, entry.priority, others, ahead)) {
         Decision.Begin -> BeginStep(row, siblingsOf(mine, types, interaction))
         Decision.Queue -> QueueStep(Queued(step, interaction, entry, subject, context, now))
@@ -546,17 +555,17 @@ fun Added<Ready>.begin(row: Queued<*>) {
 @Transaction context(tx: Transaction)
 fun beginQueued(row: Queued<*>) {
     queued(row.step).clear()
-    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context, now))
+    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context))
 }
 
 @Transaction context(tx: Transaction)
 fun replaceAndBeginQueued(ended: List<Interaction>, row: Queued<*>) {
     ended.forEach { interactionStart(it).clear() }
     queued(row.step).clear()
-    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context, now))
+    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context))
 }
 
-// waited reads now, so this rechecks on the timer.
+// waited reads the QueueClock, so this rechecks each tick while queued.
 data class GaveUp(@Key val step: Step) : Live
 @Derive fun Queued<*>.gaveUp(context: QueuedContext) = if (entry.rules.giveUp(context)) GaveUp(step) else null
 
@@ -571,7 +580,7 @@ fun leaveQueue(step: Step) {
 }
 ```
 
-- A queued step never drops: it begins, replaces, or waits. Only `giveUp` removes it, for example `waited > 10s || !protagonist.inRegion(arena)`. It also ends when its book stops applying or its interaction ends.
+- A queued step never drops: it begins, replaces, or waits. Only `giveUp` removes it, for example `waited > 10s || !protagonist.inRegion(arena)`, where `10s` is 200 ticks. It also ends when its book stops applying or its interaction ends.
 - The oldest queued step for a Hold type goes first, whatever its priority.
 
 ### Clashes: not proven
@@ -587,6 +596,7 @@ Nothing compiled or ran.
 - **Chain settle** needs a counter across guard waits.
 - **Static needs are cautious.** A camera used only at minute 5 clashes at the start.
 - **Realm latency** on every step start, skip, and end.
+- **Clock lifetime.** A `StepClock` written by a handler on `Added<Running>` and removed with the row; the plan decides whether core writes it.
 
 ## Leaving and rejoining
 
@@ -595,7 +605,7 @@ The step rule `onRejoin` says what happens to running steps when the protagonist
 | Value | Effect |
 | --- | --- |
 | `Drop` (default) | The step ends on leave, like legacy teardown on quit |
-| `RestartStep` | The step starts again with its stored context, a new `Step`, and a new `startedAt` |
+| `RestartStep` | The step starts again with its stored context and a new `Step`, so its clocks start again |
 | `RestartInteraction` | The interaction starts again from its start |
 
 With several branches running, the strictest wins: `Drop`, then `RestartInteraction`, then `RestartStep`.

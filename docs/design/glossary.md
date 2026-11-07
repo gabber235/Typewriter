@@ -246,6 +246,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## G
 
+**`GameTick`**: a point in one engine's tick count; `tick` is the current one, a provider like `now`. Step timing uses it. See [interactions.md](interactions.md#steps).
+
 **`GeneratedProviderLoader`**: loads the KSP generated formula providers. See [formula-language.md](formula-language.md#members-and-providers).
 
 **Generation**: counter on steps and interactions so events and writes for a finished owner are dropped. See [stored-data.md](stored-data.md#identities-end).
@@ -488,6 +490,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Queue (clash)**: an incoming step waits until it can start, giving up through a formula, when its book stops applying, or when its interaction ends. See [interactions.md](interactions.md#clashes).
 
+**`QueueClock`**: live value on each engine with a member of a queued step, giving `waited` in ticks to `giveUp`. See [interactions.md](interactions.md#steps).
+
 **`Queued<E>`**: stored row of a step waiting for its holds. See [interactions.md](interactions.md#the-queue).
 
 ## R
@@ -518,7 +522,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Routing**: an event goes where a handler can run; realm owned data goes through the realm; events and live effects about a protagonist go to its protagonist subject, and session subjects serve only targets that are one connection. See [live-data.md](live-data.md#routing).
 
-**`Running<E>`**: stored row of a running step: its entry, subject, context, and `startedAt`. Handlers and derives take it as a parameter. See [interactions.md](interactions.md#steps).
+**`Running<E>`**: stored row of a running step: its entry, subject, and context. Handlers and derives take it as a parameter. See [interactions.md](interactions.md#steps).
 
 **`Runtime`**: a mutable local object on one server, never saved, with a creator lifetime; created by returning it from a handler. See [interactions.md](interactions.md#runtime-objects).
 
@@ -564,6 +568,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Step**: an entry that takes time inside an interaction, started by firing into a `StepEntry`, and an identity with a new id at each start. See [interactions.md](interactions.md#steps).
 
+**`StepClock`**: live value on each engine with a member of a running step, from the tick that engine saw it start; gives `elapsed` in ticks. See [interactions.md](interactions.md#steps).
+
 **`StepEntry`**: entry that takes time; firing into it starts a step. See [interactions.md](interactions.md#steps).
 
 **`StepRules`**: the step's rules: `onClash`, `onRejoin`, `protected`, `giveUp`. Collapsed in the inspector, and `giveUp` hidden when the entry cannot queue. See [interactions.md](interactions.md#steps).
@@ -591,6 +597,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Tick pipeline**: how chains run: starts queue and merge during a tick, one worker runs them at tick end, world changes share one owner visit, and only `require` guards wait for the realm. See [events-and-handlers.md](events-and-handlers.md#tick-pipeline).
 
 **`Tick<C : TickConfig>`**: configured capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+
+**`Ticks`**: a length of step time in engine ticks; a creator's `Duration` converts at 20 ticks per second. See [interactions.md](interactions.md#steps).
 
 **Trigger**: an ordinary handler on a world event that fires an entry's links. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 

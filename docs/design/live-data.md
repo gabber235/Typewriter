@@ -459,7 +459,7 @@ Not on streams: stored data and `Due` (transactions, exactly once, realm owned) 
 
 Content is a tracked input. Publishing new content reruns whatever read it; there is no `Republished` event.
 
-- Step data the protagonist sees is a derive over the `Running` row plus the entry. The row stores only moments (`startedAt`), so text is live and a publish updates it in place.
+- Step data the protagonist sees is a derive over the `Running` row plus the entry. The row stores no text and no time (step time is the engine's `StepClock`), so text is live and a publish updates it in place.
 - Configured event configurations and `Candidate<E>` entries are live across hot publish.
 - An identity defined by an entry ends when that entry is removed, and with it every value keyed by it.
 

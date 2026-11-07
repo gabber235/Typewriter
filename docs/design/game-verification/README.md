@@ -93,7 +93,8 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   (`interactions.md:311`) and `optionDelay = 100.milliseconds` (`dialogue.md:96`) become ticks;
   authors may still write durations, converted at 20 ticks per second. The realm's clock stays wall
   time (`Due`, `stored-data.md:460`), and tests of realm timers need a realm clock the test can
-  advance. Those design docs still need this change.
+  advance. Applied 2026-11-07: each engine keeps a live `StepClock` per step from the tick it saw
+  the step start, and the stored rows carry no step time (`interactions.md`, `dialogue.md`).
 - **Group behaviour must be testable** (group chat, shared audiences, world groups), and requirements
   share a **pool of 4 warm clients**: a requirement claims as many as it needs and the rest keep
   running other requirements (2026-11-06). Books scoped per player are expected to remove most
@@ -152,7 +153,8 @@ recorded below with the developer's later decisions above. The prototype code an
 workflow are removed again; they remain in git history at commit `86724c794`
 (`prototypes/game-verification/` and `.github/workflows/game-verification-prototype.yml`), which the
 Rerun and Reuse sections of J, K and N refer to; spikes before J refer to `9c9275f22`. Spikes L (a
-1.21.4 client next to 26.3) and M (dialogue redraws on the chat screen) wait for their layers. Next
+1.21.4 client next to 26.3) and M (dialogue redraws on the chat screen) are deferred past the first
+working version of the framework and run once their layers exist. Next
 is the framework plan, built in full before L3.
 
 ## Results

@@ -93,8 +93,8 @@ Shared by the dialogue kinds, not core. `doneAt` and `render` belong to dialogue
 interface DialogueView : Live {
     val step: Step
     val who: Protagonist
-    val doneAt: Instant
-    fun render(at: Instant): RichText
+    val doneAt: GameTick
+    fun render(at: GameTick): RichText
 }
 
 // Exists only while animating, so the every tick handler has nothing to run otherwise.
@@ -104,10 +104,10 @@ data class Animating(
     val view: DialogueView,
 ) : Live
 
-@Derive fun DialogueView.animating() = Animating(step, who, this).takeIf { now < doneAt }
+@Derive fun DialogueView.animating() = Animating(step, who, this).takeIf { tick < doneAt }
 
 fun HasChat.draw(view: DialogueView, history: ChatHistory) =
-    sendPacket(history.over(view.render(now)))
+    sendPacket(history.over(view.render(tick)))
 
 @Handler
 fun <V : DialogueView> Added<V>.draw(chat: HasChat, history: ChatHistory) = chat.draw(value, history)
@@ -134,7 +134,7 @@ data class ShownOptions(@Key val step: Step, @Key val who: Protagonist,
 data class Selected(@Key val step: Step, @Key val who: Protagonist,
     val index: Int, val among: List<Int>) : Live
 data class TypingSkipped(@Key val step: Step, @Key val who: Protagonist,
-    val at: Instant) : Live
+    val at: GameTick) : Live
 
 data class OptionView(
     @Key override val step: Step,
@@ -146,13 +146,13 @@ data class OptionView(
     val shown: List<Int>,
     val selected: Int,
     val key: ConfirmationKey?,
-    val typingFrom: Instant,
-    val typedAt: Instant,
-    val optionDelay: Duration,
+    val typingFrom: GameTick,
+    val typedAt: GameTick,
+    val optionDelay: Ticks,
 ) : DialogueView {
     override val doneAt get() = typedAt + optionDelay * min(4, options.size)
 
-    override fun render(at: Instant): RichText {
+    override fun render(at: GameTick): RichText {
         val fraction =
             if (typedAt <= typingFrom) 1.0 else (at - typingFrom) / (typedAt - typingFrom)
         val count = ((at - typedAt) / optionDelay).toInt().coerceIn(0, 4)
@@ -171,8 +171,8 @@ fun Running<OptionDialogueEntry>.shown(who: Protagonist, context: MemberContext)
     ShownOptions(step, who, entry.options.indices.filter { entry.options[it].available(context) })
 
 @Derive
-fun Running<OptionDialogueEntry>.offer(who: Protagonist) =
-    KeyOffer(who, step, preferred = null, since = startedAt)
+fun Running<OptionDialogueEntry>.offer(who: Protagonist, clock: StepClock) =
+    KeyOffer(who, step, preferred = null, since = clock.startedAt)
 
 // A changed list resets the selection, as legacy does.
 fun Selected?.indexIn(shown: ShownOptions): Int =
@@ -188,6 +188,7 @@ fun Running<OptionDialogueEntry>.view(
     selected: Selected?,
     key: OfferedKey?,
     skipped: TypingSkipped?,
+    clock: StepClock,
     context: MemberContext,
 ) = OptionView(
     step = step,
@@ -199,11 +200,13 @@ fun Running<OptionDialogueEntry>.view(
     shown = shown.options,
     selected = selected.indexIn(shown),
     key = key?.key,
-    typingFrom = startedAt,
-    typedAt = skipped?.at ?: (startedAt + typingTime(text, duration)),
-    optionDelay = entry.config.value.optionDelay(context),
+    typingFrom = clock.startedAt,
+    typedAt = skipped?.at ?: (clock.startedAt + typingTime(text, duration).toTicks()),
+    optionDelay = entry.config.value.optionDelay(context).toTicks(),
 )
 ```
+
+Typing counts engine ticks ([interactions.md](interactions.md#steps)); the creator's durations convert at 20 ticks per second. Legacy used wall time (`PlayerSession.kt:61`).
 
 `typed`, `typingTime`, and `optionLines` port legacy `asPartialFormattedMini`, `totalDuration`, and `formatOptions`.
 
@@ -249,7 +252,7 @@ data class ConfirmationConfiguration(val key: ConfirmationKey = ConfirmationKey.
 
 // Asked for by a step.
 data class KeyOffer(@Key val who: Protagonist, @Key val step: Step,
-    val preferred: ConfirmationKey?, val since: Instant) : Live
+    val preferred: ConfirmationKey?, val since: GameTick) : Live
 
 // What a camera or a lock leaves usable.
 data class KeysLeft(@Key val who: Protagonist, @Key val step: Step,
@@ -306,11 +309,11 @@ Paper 26.2's `handlePlayerInput` fires `PlayerInputEvent` with no game mode chec
 // First press finishes the typing, the next one chooses.
 @Handler
 fun Confirm.skipTyping(view: OptionView): TypingSkipped? =
-    if (now < view.doneAt) TypingSkipped(step, who, now) else null
+    if (tick < view.doneAt) TypingSkipped(step, who, tick) else null
 
 @Handler
 suspend fun Confirm.choose(running: Running<OptionDialogueEntry>, view: OptionView) {
-    if (now < view.doneAt || view.shown.isEmpty()) return
+    if (tick < view.doneAt || view.shown.isEmpty()) return
     val index = view.shown[view.selected]
     running.complete(
         links = listOf(running.entry, running.entry.options[index]),   // both, as legacy
@@ -372,8 +375,8 @@ fun Running<OptionDialogueEntry>.noOptions(shown: List<ShownOptions>) =
 ```kotlin
 // Timed: legacy holds a confirmation only while canSkip. An offer follows the same formula.
 @Derive
-fun Running<TimedDialogueEntry>.offer(who: Protagonist, canSkip: Boolean) =
-    KeyOffer(who, step, null, startedAt).takeIf { canSkip }
+fun Running<TimedDialogueEntry>.offer(who: Protagonist, canSkip: Boolean, clock: StepClock) =
+    KeyOffer(who, step, null, clock.startedAt).takeIf { canSkip }
 
 // Input: one holder, so no routing is needed. Raw event, hold, and a handler on the raw event.
 data class TypedInput(@Key val who: Protagonist) : Hold
@@ -394,7 +397,7 @@ data class TypedInput(@Key val who: Protagonist) : Hold
 
 Nothing compiled or ran. The key table comes from Paper 26.2 jar classes; spectator input was not run in game.
 
-- **`now` in a derive body.** The docs promise a timer recheck for formulas. A derive and its rate are assumed.
+- **`tick` in a derive body.** `animating` must rerun each tick while typing. A derive that reads `tick` rerunning per tick is assumed.
 - **Generic handlers over a `Live` interface** (`<V : DialogueView>`). Precedents use events and `Elapsed`.
 - **One view per player.** `view: OptionView` has a free `step` key. One run only because `ChatHold` clashes.
 - **Order at start.** The view may draw just before the Hold starts blocking.
