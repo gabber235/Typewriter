@@ -410,8 +410,8 @@ void main() {
             ),
           )
           .requireAccepted();
-      await tester.pump();
-      await tester.pump();
+      // The removed row keeps its focus until it has left.
+      await tester.pumpAndSettle();
       final frameworkFallback = FocusManager.instance.primaryFocus;
       gate.complete(false);
       await tester.pumpAndSettle();
@@ -469,8 +469,8 @@ void main() {
       await host.sourceResult.future,
       isA<PortablePresentationWriteApplied>(),
     );
-    await tester.pump();
-    await tester.pump();
+    // The removed row keeps its focus until it has left.
+    await tester.pumpAndSettle();
     expect(scenario.value.authoredItems, hasLength(1));
     final frameworkFallback = FocusManager.instance.primaryFocus;
     settlement.complete();

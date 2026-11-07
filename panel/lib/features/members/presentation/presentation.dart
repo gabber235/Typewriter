@@ -11,3 +11,4 @@ export "role_multiselect_dropdown.dart";
 export "route.dart";
 export "selectable_avatar.dart";
 export "selected_chip.dart";
+export "selection_table.dart";

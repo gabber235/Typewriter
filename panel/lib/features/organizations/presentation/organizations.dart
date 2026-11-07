@@ -21,8 +21,9 @@ class _OrganizationsSelector extends HookWidget {
 
     return SliverMainAxisGroup(
       slivers: [
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Text(
               "Select organization",
               style: Theme.of(context).textTheme.headlineMedium,
@@ -30,8 +31,9 @@ class _OrganizationsSelector extends HookWidget {
           ),
         ),
         spacer(context),
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: EditorTextField(
               decoration: const InputDecoration(
                 hintText: "Search Organization",
