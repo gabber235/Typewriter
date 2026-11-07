@@ -20,7 +20,7 @@ jobs:
   measure:
     name: ${{ matrix.plan }} ${{ matrix.backend }} ${{ matrix.runner }} ${{ matrix.repeat }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 100
     strategy:
       fail-fast: false
       matrix:
@@ -73,6 +73,7 @@ jobs:
         continue-on-error: true
         env:
           MATRIX_REPEAT: ${{ matrix.repeat }}
+          CI_BUDGET_S: "5100"
         run: /usr/bin/python3 orchestrator/ci.py plan ${{ matrix.plan }} --backend ${{ matrix.backend }}
       - name: Upload results and frames
         if: always()

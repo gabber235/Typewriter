@@ -103,7 +103,8 @@ class TPaper(K.KPaper):
     def __init__(self, run_dir, name, stepped=True):
         super().__init__(run_dir)
         self.name, self.stepped, self.gen = name, stepped, 0
-        self.jvm.append(f"-javaagent:{AGENT}=lag=tick")
+        # The archive is dumped with the agent loaded; the same diagnostic flag must be set to map it.
+        self.jvm += ["-XX:+UnlockDiagnosticVMOptions", "-XX:+AllowArchivingWithJavaAgent", f"-javaagent:{AGENT}=lag=tick"]
         self.tl = threading.local()
         setup = self.setup
 
@@ -459,6 +460,7 @@ class PerSlot(Topology):
     def __init__(self, label):
         super().__init__(label)
         self.P = [TPaper(self.run / f"paper{i}", f"P{i}") for i in range(4)]
+        self.restart_slots, self.restarting = 1, 0
         for p in self.P:
             p.busy = False
 
@@ -488,6 +490,8 @@ class PerSlot(Topology):
         k = req["players"]
         if not free_p or len(free_c) < k:
             return None
+        if req["kind"] == "restart" and self.restarting >= self.restart_slots:
+            return None  # boots in parallel on 4 vCPU are slower than one after another (measured)
         # The free Paper that already holds the most free clients; ties go to the lower index.
         p = max(free_p, key=lambda p: (sum(1 for c in free_c if c.at is p), -self.P.index(p)))
         here = [c for c in free_c if c.at is p]
@@ -498,6 +502,8 @@ class PerSlot(Topology):
         for c, _ in plan["move"]:
             c.at = p  # where it will be; a restart must not count it as a rider of its old Paper
         if req["kind"] == "restart":
+            self.restarting += 1
+            plan["restart"] = True
             # A kill drops every client on the Paper: they ride along and reconnect after the boot.
             plan["riders"] = [c for c in free_c if c.at is p and c not in cs]
         p.busy = True
@@ -507,6 +513,8 @@ class PerSlot(Topology):
 
     def release(self, plan):
         plan["paper"].busy = False
+        if plan.get("restart"):
+            self.restarting -= 1
         for c in plan["clients"] + plan.get("riders", []):
             c.busy = False
 
@@ -571,6 +579,8 @@ def cmd_run(a):
     T = {"A": Shared, "B": PerSlot}[a.topo]
     mixes = [float(x) for x in a.mixes.split(",")]
     with T(f"{a.label}-{a.topo}") as topo:
+        if a.topo == "B":
+            topo.restart_slots = a.restart_slots
         pids = lambda: [p.proc.p.pid for p in topo.papers() if p.proc and p.proc.alive()] + client_pids(topo.clients)
         record("setup", label=a.label, topo=a.topo, boot=topo.boot, joins={c.name: c.join_s for c in topo.clients},
                rss_mb={str(p): R.rss_mb(p) for p in pids() if p})
@@ -589,6 +599,7 @@ def cmd_run(a):
             b1 = machine_busy()
             s = summarize(a.topo, mix, seed, rows, wall, mem, b0, b1, a.warm)
             s["restart_share"] = share
+            s["restart_slots"] = getattr(topo, "restart_slots", 1)
             s["moves"] = {k: stat([m for kk, m in topo.moves if kk == k]) for k in sorted({kk for kk, _ in topo.moves})}
             s["move_each_s"] = stat([m for _, m in topo.moves])
             s["stats"] = topo.stats_all()
@@ -603,7 +614,7 @@ def cmd_prep(a):
     K.JSA.unlink(missing_ok=True)
     run = RUNS / f"topo-prep-{int(time.time())}"
     s = TPaper(run / "s", "prep", stepped=False)
-    s.jvm += ["-XX:+UnlockDiagnosticVMOptions", "-XX:+AllowArchivingWithJavaAgent", f"-XX:ArchiveClassesAtExit={K.JSA}"]
+    s.jvm.append(f"-XX:ArchiveClassesAtExit={K.JSA}")
     s.start()
     s.wait_done()
     s.stop_slow()
@@ -622,6 +633,7 @@ def main(argv=None):
     r.add_argument("--seed", type=int, default=1)
     r.add_argument("--warm", type=int, default=100)
     r.add_argument("--restart", default="0.01")
+    r.add_argument("--restart-slots", type=int, default=1, help="B: restarts at once (A has one extra Paper)")
     r.add_argument("--label", default="mac")
     r.add_argument("--keep-rows", type=int, default=0)
     a = ap.parse_args(argv)
