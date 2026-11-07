@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "probe.mod.observe.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["GuiRenderStateMixin", "GuiTextAccessor", "GuiGraphicsItemMixin", "LevelExtractorMixin", "EntityDispatcherMixin", "SubmitMixin", "SoundEngineMixin", "HudMixin", "LevelRendererAccessor", "BossAccessor", "DeltaPinMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "probe.mod.input.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["MouseGrabAccessor", "FocusMixin", "TickHookMixin", "SendTraceMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

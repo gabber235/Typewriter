@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "probe.mod.k.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["UserAccessor"],
+  "injectors": { "defaultRequire": 1 }
+}
