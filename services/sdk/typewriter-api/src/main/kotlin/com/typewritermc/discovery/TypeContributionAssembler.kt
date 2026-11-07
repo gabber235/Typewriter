@@ -177,7 +177,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         }
     val symbolicDiagnostics =
         definitionIndex.values.flatMap { definition -> definition.templateFields(definitionIndex).diagnostics }
-    val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks)
+    val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks, dynamics, formulas)
     val structural = DefaultCheckedCatalog(context.generation, definitions, quarantine = reservedDiagnostics)
     val resourceTypes = assembledDeclarations.filter { it.searchKey != null }.mapTo(linkedSetOf()) { it.definition.id }
     val publishedRelations = (relations + context.relations).distinctBy(RelationContract::id)

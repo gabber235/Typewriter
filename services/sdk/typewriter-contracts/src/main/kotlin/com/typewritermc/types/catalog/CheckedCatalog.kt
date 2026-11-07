@@ -294,9 +294,19 @@ class DefaultCheckedCatalog private constructor(
 
     override fun resolve(candidate: TypeUse): Resolution<CheckedType> {
         val layer = content ?: return resolveHere(candidate)
-        if (!candidate.mentionsContent()) return layer.base.resolve(candidate)
+        if (!candidate.mentionsContent()) return layer.base.resolve(candidate).resolvingHere()
         return resolveHere(layer.expandFieldKeys(candidate, emptySet()))
     }
+
+    /**
+     * The code catalog's answer, resolving what it holds through this catalog: a code type can hold content, such as a
+     * `Type` value naming a declaration, so its nested values must reach the content this catalog sees.
+     */
+    private fun Resolution<CheckedType>.resolvingHere(): Resolution<CheckedType> =
+        when (this) {
+            is Resolution.Ready -> Resolution.Ready(CheckedType(value.catalog, value.use, value.schema, this@DefaultCheckedCatalog))
+            is Resolution.Invalid -> this
+        }
 
     /**
      * A part of a use [resolve] already expanded. Expanding it again would unfold an alias that contains itself one level

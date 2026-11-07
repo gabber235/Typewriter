@@ -39,7 +39,15 @@ object DefaultCanonicalValueEquality : CanonicalValueEquality {
  * This key ignores collection item and row identities. It does not certify that the value is complete or valid for
  * any schema.
  */
-fun DataValue.canonicalValueKey(): String =
+fun DataValue.canonicalValueKey(): String = key(withOpposites = true)
+
+/**
+ * Returns the key two authored values share when they are the same value: the [canonicalValueKey] with a link's
+ * opposite left out, as `Ref` equality ignores it. Set values and map keys repeat when their identity keys match.
+ */
+fun DataValue.identityKey(): String = key(withOpposites = false)
+
+private fun DataValue.key(withOpposites: Boolean): String =
     when (this) {
         DataValue.UNFILLED -> {
             "unfilled"
@@ -49,6 +57,51 @@ fun DataValue.canonicalValueKey(): String =
             "null"
         }
 
+        is DataValue.RecordWrapper -> {
+            fields
+                .sortedBy { it.name }
+                .map { field -> listOf(field.name, field.value.key(withOpposites)).framed("field") }
+                .framed("record")
+        }
+
+        is DataValue.NamedWrapper -> {
+            listOf(actualType.use.semanticForm(), payload.key(withOpposites)).framed("named")
+        }
+
+        is DataValue.ListValueWrapper -> {
+            items.map { it.value.key(withOpposites) }.framed("list")
+        }
+
+        is DataValue.SetValueWrapper -> {
+            items.map { it.value.key(withOpposites) }.sorted().framed("set")
+        }
+
+        is DataValue.MapValueWrapper -> {
+            rows
+                .map { listOf(it.key.key(withOpposites), it.value.key(withOpposites)).framed("row") }
+                .sorted()
+                .framed("map")
+        }
+
+        is DataValue.LinkWrapper -> {
+            val opposite =
+                value.target.opposite
+                    ?.takeIf { withOpposites }
+                    ?.let(ValuePath.serializer::toJsonCode) ?: "null"
+            listOf(value.endpoint.value, value.target.resource.value, opposite).framed("link")
+        }
+
+        is DataValue.TypeUseWrapper -> {
+            listOf(value.semanticForm()).framed("type")
+        }
+
+        else -> {
+            scalarKey()
+        }
+    }
+
+private fun DataValue.scalarKey(): String =
+    when (this) {
         DataValue.UNIT -> {
             "unit"
         }
@@ -83,41 +136,6 @@ fun DataValue.canonicalValueKey(): String =
 
         is DataValue.DurationWrapper -> {
             "duration:$duration"
-        }
-
-        is DataValue.RecordWrapper -> {
-            fields
-                .sortedBy { it.name }
-                .map { field -> listOf(field.name, field.value.canonicalValueKey()).framed("field") }
-                .framed("record")
-        }
-
-        is DataValue.NamedWrapper -> {
-            listOf(actualType.use.semanticForm(), payload.canonicalValueKey()).framed("named")
-        }
-
-        is DataValue.ListValueWrapper -> {
-            items.map { it.value.canonicalValueKey() }.framed("list")
-        }
-
-        is DataValue.SetValueWrapper -> {
-            items.map { it.value.canonicalValueKey() }.sorted().framed("set")
-        }
-
-        is DataValue.MapValueWrapper -> {
-            rows
-                .map { listOf(it.key.canonicalValueKey(), it.value.canonicalValueKey()).framed("row") }
-                .sorted()
-                .framed("map")
-        }
-
-        is DataValue.LinkWrapper -> {
-            val opposite = value.target.opposite?.let(ValuePath.serializer::toJsonCode) ?: "null"
-            listOf(value.endpoint.value, value.target.resource.value, opposite).framed("link")
-        }
-
-        is DataValue.TypeUseWrapper -> {
-            listOf(value.semanticForm()).framed("type")
         }
 
         else -> {

@@ -1030,6 +1030,12 @@ class CapturedAuthoringReads internal constructor(
         if (++reads > limits.maxReads) markIncomplete("authored read limit exceeded")
     }
 
+    /** Every resource id of the view, in id order, observed as the realm's resource ids fact. */
+    internal fun resourceIds(): List<ResourceId> {
+        observe(RESOURCE_SELECTION_INPUT)
+        return view.resources.keys.sortedBy { it.value }
+    }
+
     /** The whole record of [id], observed as one fact. */
     internal fun record(id: ResourceId): AuthoringRecord? {
         observe(InputIdentity.Resource(id))

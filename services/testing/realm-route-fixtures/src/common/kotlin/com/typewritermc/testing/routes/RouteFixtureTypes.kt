@@ -13,6 +13,7 @@ import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.pages.StaticEntry
 import com.typewritermc.engine.pages.StaticPage
+import com.typewritermc.formula.Var
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.Page
@@ -70,6 +71,20 @@ data class FixtureStaticEntry(
     override val page: Ref<PageElements.Element, StaticPage>,
     override val placement: GraphPlacement,
     override val name: String = "",
+) : StaticEntry
+
+/** What a formula of a [FixtureContextEntry] reads from where it runs: a number only the engine can give. */
+interface FixtureChainContext {
+    val chain: Int
+}
+
+/** An entry of the core static page whose value may be computed from a context the realm cannot fill. */
+@TypewriterType(id = "8e41c2d07a5b4f39b1c6e2a49d0f7b35")
+data class FixtureContextEntry(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val chained: Var<Int, FixtureChainContext> = Var.Value(0),
 ) : StaticEntry
 
 /** The payload and result of the fixture capabilities: a text the capability echoes or reacts to. */

@@ -6,6 +6,7 @@ import com.typewritermc.checking.DiagnosticReporter
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.ViewReadHealth
 import com.typewritermc.realm.catalog.CheckPlan
+import com.typewritermc.realm.formula.ContentFinding
 import com.typewritermc.services.libs.utils.runExtension
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
@@ -14,6 +15,7 @@ import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 
 /**
  * Evaluates one check subject over the reads it is given, which record what it read. Its diagnostics are numbered in
@@ -21,6 +23,8 @@ import skirout.editor.v1.type_catalog.ValueLocation
  */
 internal class CheckEvaluator(
     private val checkInputs: RealmCheckInputs,
+    /** What the content rule found on a resource; the realm reads it through the graph. */
+    private val contentFindings: (ResourceId) -> List<ContentFinding>,
 ) {
     private val expressions = RealmExpressionRuntime()
 
@@ -83,6 +87,13 @@ internal class CheckEvaluator(
 
             is CheckPlan.RegistrationFailure -> {
                 CheckOutcome.FailedWrapper(listOf(plan.diagnostic))
+            }
+
+            is CheckPlan.Content -> {
+                contentFindings(subject.location.resource).forEach { finding ->
+                    report(diagnostics.error(plan.rule.origin, finding.code, finding.message, finding.at, finding.related))
+                }
+                null
             }
 
             is CheckPlan.DiscoveryFailure -> {

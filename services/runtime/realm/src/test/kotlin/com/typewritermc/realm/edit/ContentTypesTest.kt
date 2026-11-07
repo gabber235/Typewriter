@@ -889,6 +889,15 @@ val ContentTypesTest by testSuite {
         }
     }
 
+    test("a custom type and a record of it pass publication") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val reward = commitTypeDefinition("Reward", gold).created()
+            val user = commitRecordUser("first", reward, "gold" to DataValue.integer(1))
+            publicationBlockers().mapNotNull { it.primary?.resource } shouldNotContain reward
+            publicationBlockers().mapNotNull { it.primary?.resource } shouldNotContain user
+        }
+    }
+
     test("a declaration edit between two publications uses the new schema") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
             val reward =

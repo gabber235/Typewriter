@@ -58,6 +58,9 @@ inline fun <T, R> Availability<T>.map(transform: (T) -> R): Availability<R> =
         is Availability.Failed -> this
     }
 
+/** The value, or null when it is unavailable or failed. */
+fun <T> Availability<T>.orNull(): T? = (this as? Availability.Available)?.value
+
 inline fun <T, R> Availability<T>.flatMap(transform: (T) -> Availability<R>): Availability<R> =
     when (this) {
         is Availability.Available -> transform(value)

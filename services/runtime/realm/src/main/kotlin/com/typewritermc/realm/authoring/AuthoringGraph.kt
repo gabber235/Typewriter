@@ -11,9 +11,13 @@ import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.formula.graph.UntrackedEnvironment
 import com.typewritermc.realm.catalog.ExtensionCatalog
 import com.typewritermc.realm.catalog.code
+import com.typewritermc.types.ownsResources
+import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 
 /** What realm queries read: one immutable view, and services that stay the same for the realm's lifetime. */
@@ -126,6 +130,14 @@ internal data class LinksAt(
     override fun compute(): NodeLinks = tracked().linksAt(resource, reads.read(ProjectionAt(resource)), selection)
 }
 
+/** The links [resource] itself stores, unjudged: they change only with its record. */
+internal data class OwnLinks(
+    val resource: ResourceId,
+) : RealmQuery<List<LinkOccurrence>> {
+    context(reads: RealmReads)
+    override fun compute(): List<LinkOccurrence> = reads.read(LinksInput(resource)).own
+}
+
 // The only opt ins outside Fact. Each builds a tracked reader, or reads what only a new generation changes, and a new
 // generation resets the graph.
 
@@ -144,6 +156,19 @@ internal fun tracked(): CapturedAuthoringReads =
 @OptIn(UntrackedEnvironment::class)
 context(reads: RealmReads)
 internal val extensions: ExtensionCatalog get() = reads.environment.view.catalog.code.extensions
+
+/** The code types formulas name by their display name. */
+@OptIn(UntrackedEnvironment::class)
+context(reads: RealmReads)
+internal val formulaTypeNames: Map<String, List<TypeUse>> get() = reads.environment.view.catalog.code.formulaTypeNames
+
+/** The relations of the view's catalog that own resources. */
+@OptIn(UntrackedEnvironment::class)
+context(reads: RealmReads)
+internal val ownershipRelations: List<RelationContract>
+    get() =
+        reads.environment.view.catalog.relations
+            .filter { it.ownsResources }
 
 /** The generation of the view's catalog. */
 @OptIn(UntrackedEnvironment::class)

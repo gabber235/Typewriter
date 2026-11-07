@@ -12,6 +12,7 @@ import com.typewritermc.types.catalog.unavailableCode
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
+import com.typewritermc.types.identityKey
 import com.typewritermc.types.isCanonicalDecimal
 import com.typewritermc.types.items
 import com.typewritermc.types.payload
@@ -379,6 +380,9 @@ private class ValueInspection(
         }
         val duplicateIds = items.groupBy { it.id }.filterValues { it.size > 1 }.keys
         duplicateIds.forEach { id -> problem(at.item(id), "duplicate_item_id") }
+        if (representation.kind == CollectionKind.SET) {
+            items.repeatsBy { it.value.identityKey() }.forEach { item -> problem(at.item(item.id), "duplicate_set_value") }
+        }
         items.forEach { item -> validateUse(item.value, representation.item, at.item(item.id), depth + 1) }
     }
 
@@ -395,6 +399,7 @@ private class ValueInspection(
         }
         val duplicateIds = rows.groupBy { it.id }.filterValues { it.size > 1 }.keys
         duplicateIds.forEach { id -> problem(at.item(id), "duplicate_item_id") }
+        rows.repeatsBy { it.key.identityKey() }.forEach { row -> problem(at.item(row.id).mapKey(), "duplicate_map_key") }
         rows.forEach { row ->
             validateUse(row.key, representation.key, at.item(row.id).mapKey(), depth + 1)
             validateUse(row.value, representation.value, at.item(row.id).mapValue(), depth + 1)
@@ -505,3 +510,9 @@ private fun DeclarationDiagnostic.asValueProblem(at: ValueLocation) = ValueProbl
 private val AUTHORING_ROOT = ResourceId("authoring")
 
 private const val MAX_AUTHORED_VALUE_DEPTH = 512
+
+/** Every element after the first whose [key] an earlier element already has. */
+private fun <T> List<T>.repeatsBy(key: (T) -> String): List<T> {
+    val seen = hashSetOf<String>()
+    return filterNot { seen.add(key(it)) }
+}

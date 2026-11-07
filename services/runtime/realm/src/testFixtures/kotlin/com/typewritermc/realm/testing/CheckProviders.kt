@@ -3,6 +3,8 @@ package com.typewritermc.realm.testing
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedConfiguration
+import com.typewritermc.discovery.OwnedDynamic
+import com.typewritermc.discovery.OwnedFormulaFunction
 import com.typewritermc.discovery.OwnedNativeBinding
 import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedProviderRegistry
@@ -33,6 +35,7 @@ fun checksOf(
 class TestCheckProviders(
     private val ownedChecks: List<OwnedCheck>,
     private val failOnRetain: Int? = null,
+    private val ownedDynamics: List<OwnedDynamic> = emptyList(),
 ) : OwnedProviderRegistry {
     val openLeases = AtomicInteger()
     private val retainCalls = AtomicInteger()
@@ -59,6 +62,10 @@ class TestCheckProviders(
     override fun nativeBindings(): List<OwnedNativeBinding> = emptyList()
 
     override fun checks(): List<OwnedCheck> = ownedChecks
+
+    override fun dynamics(): List<OwnedDynamic> = ownedDynamics
+
+    override fun formulas(): List<OwnedFormulaFunction> = emptyList()
 }
 
 /** The provider origin every check of [checksOf] is registered under. */

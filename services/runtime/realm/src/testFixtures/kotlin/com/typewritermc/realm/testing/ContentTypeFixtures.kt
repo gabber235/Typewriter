@@ -40,11 +40,13 @@ import com.typewritermc.types.catalog.unavailableCode
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
 import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.record
+import com.typewritermc.types.setValue
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
@@ -61,6 +63,7 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -257,6 +260,36 @@ fun listValue(
     DataValue.named(
         checkNotNull(listType(item).named),
         DataValue.listValue(items.mapIndexed { index, value -> ListItem(id = ItemId(value = "item-$index"), value = value) }),
+    )
+
+/** A set of [item]. */
+fun setType(item: TypeUse): TypeUse = StandardTypes.set.namedUse(listOf(item)).use
+
+/** A map from [key] to [value]. */
+fun mapType(
+    key: TypeUse,
+    value: TypeUse,
+): TypeUse = StandardTypes.map.namedUse(listOf(key, value)).use
+
+/** A set value of a set of [item] holding [items] as authored, repeats included, each under an item id named after its position. */
+fun setValue(
+    item: TypeUse,
+    vararg items: DataValue,
+): DataValue =
+    DataValue.named(
+        checkNotNull(setType(item).named),
+        DataValue.setValue(items.mapIndexed { index, value -> ListItem(id = ItemId(value = "item-$index"), value = value) }),
+    )
+
+/** A map value from [key] to [value] holding [rows] as authored, repeated keys included, each under a row id named after its position. */
+fun mapValue(
+    key: TypeUse,
+    value: TypeUse,
+    vararg rows: Pair<DataValue, DataValue>,
+): DataValue =
+    DataValue.named(
+        checkNotNull(mapType(key, value).named),
+        DataValue.mapValue(rows.mapIndexed { index, (k, v) -> MapRow(id = ItemId(value = "row-$index"), key = k, value = v) }),
     )
 
 /** Points the field [field] of the record a Definition [resource] of [type] holds plainly at [target]. */

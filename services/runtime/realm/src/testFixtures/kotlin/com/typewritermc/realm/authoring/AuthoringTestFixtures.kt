@@ -160,6 +160,10 @@ internal data object EmptyProviders : OwnedProviderRegistry {
     override fun nativeBindings(): List<OwnedNativeBinding> = emptyList()
 
     override fun checks(): List<com.typewritermc.discovery.OwnedCheck> = emptyList()
+
+    override fun dynamics(): List<com.typewritermc.discovery.OwnedDynamic> = emptyList()
+
+    override fun formulas(): List<com.typewritermc.discovery.OwnedFormulaFunction> = emptyList()
 }
 
 internal fun record(

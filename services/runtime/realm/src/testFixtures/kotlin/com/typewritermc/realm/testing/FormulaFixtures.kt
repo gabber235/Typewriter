@@ -27,6 +27,8 @@ import com.typewritermc.engine.pages.staticPage
 import com.typewritermc.engine.runtime.ResourceGraphContentGateway
 import com.typewritermc.formula.DefinitionScope
 import com.typewritermc.formula.Formula
+import com.typewritermc.formula.FormulaReference
+import com.typewritermc.formula.TextSpan
 import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.library.book
@@ -43,9 +45,11 @@ import com.typewritermc.realm.publication.CompilationInputs
 import com.typewritermc.realm.publication.ResourceGraphArtifactProducer
 import com.typewritermc.setup.SetupList
 import com.typewritermc.setup.SetupRoot
+import com.typewritermc.testing.routes.fixtureContextEntry
 import com.typewritermc.testing.routes.fixtureStaticEntry
 import com.typewritermc.testkit.complete
 import com.typewritermc.testkit.ready
+import com.typewritermc.types.Ref
 import com.typewritermc.types.Type
 import com.typewritermc.types.function
 import com.typewritermc.types.functionUse
@@ -78,6 +82,7 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.typed_value.PortableValue
 import skirout.kernel.v1.resource_id.ResourceId
+import com.typewritermc.types.ResourceId as AuthorResourceId
 
 /*
  * The formula demos' kit: one static page of Definitions, formulas and custom types, committed through the stored forms
@@ -210,18 +215,76 @@ fun SetupRoot.formulaPage(block: FormulaPageBuilder.() -> Unit): FormulaPage =
         }
     }
 
+/**
+ * A library of static pages holding what [block] declares, returning the handles of every book, page and element by
+ * key. Elements of every page share one key space, so two elements of one name take different keys.
+ */
+fun SetupRoot.formulaLibrary(block: FormulaLibraryBuilder.() -> Unit): FormulaPage {
+    val declared = FormulaLibraryBuilder().apply(block)
+    val named = linkedMapOf<String, ResourceId>()
+    library {
+        declared.books.forEach { (bookKey, pagesOfBook) ->
+            books.book(bookKey) {
+                named[bookKey] = handle.id.toSkir()
+                pagesOfBook.forEach { (pageKey, page) ->
+                    pages.staticPage(pageKey) {
+                        named[pageKey] = handle.id.toSkir()
+                        FormulaPageBuilder(elements, named).apply(page)
+                    }
+                }
+            }
+        }
+    }
+    return FormulaPage(
+        named.getValue(
+            declared.books
+                .first()
+                .second
+                .first()
+                .first,
+        ),
+        named.toMap(),
+    )
+}
+
+/** The books of a formula library, each with its static pages, in order. */
+class FormulaLibraryBuilder internal constructor() {
+    internal val books = mutableListOf<Pair<String, List<Pair<String, FormulaPageBuilder.() -> Unit>>>>()
+
+    /** A book keyed [key] holding the pages [block] declares. */
+    fun book(
+        key: String,
+        block: FormulaBookBuilder.() -> Unit,
+    ) {
+        books += key to FormulaBookBuilder().apply(block).pages
+    }
+}
+
+/** The static pages of one book of a formula library. */
+class FormulaBookBuilder internal constructor() {
+    internal val pages = mutableListOf<Pair<String, FormulaPageBuilder.() -> Unit>>()
+
+    /** A static page keyed [key] holding what [block] declares. */
+    fun page(
+        key: String,
+        block: FormulaPageBuilder.() -> Unit,
+    ) {
+        pages += key to block
+    }
+}
+
 /** Declares Definitions, formulas, custom types and entries on one static page. */
 class FormulaPageBuilder internal constructor(
     private val elements: SetupList<StaticEntry>,
+    private val named: MutableMap<String, ResourceId> = linkedMapOf(),
 ) {
-    private val named = linkedMapOf<String, ResourceId>()
-
     /** A Definition named [name] of [type] holding the plain Kotlin [value]. */
     fun definition(
         name: String,
         type: TypeUse,
         value: Any?,
-    ): ResourceId = add(name, type, plain(value))
+        key: String = name,
+    ): ResourceId = add(name, type, plain(value), key)
 
     /**
      * A Definition named [name] of [type] whose value is the formula [source]: the body itself when [type] is a function
@@ -231,7 +294,34 @@ class FormulaPageBuilder internal constructor(
         name: String,
         type: TypeUse,
         source: String,
-    ): ResourceId = add(name, type, if (type.function != null) plain(Formula(source)) else computed(source))
+        key: String = name,
+    ): ResourceId = add(name, type, if (type.function != null) plain(Formula(source)) else computed(source), key)
+
+    /**
+     * A Definition named [name] of the plain type [type] computed by [source], whose references already point each name
+     * of [references] at its resource, as the commit binder would have saved them. A null target is a reference a
+     * delete emptied.
+     */
+    fun bound(
+        name: String,
+        type: TypeUse,
+        source: String,
+        references: Map<String, ResourceId>,
+        key: String = name,
+    ): ResourceId = add(name, type, Var.Computed<Any?, DefinitionScope>(boundFormula(source, references)), key)
+
+    /** A FixtureContextEntry named [name] whose value is computed by [source] in a context only the engine gives. */
+    fun contextual(
+        name: String,
+        source: String,
+    ): ResourceId =
+        elements
+            .fixtureContextEntry(name) {
+                this.name = name
+                chained = Var.Computed(Formula(source))
+            }.id
+            .toSkir()
+            .also { named[name] = it }
 
     /** A Definition named [name] of the content type [type] declares, holding the value [value] builds from that type. */
     fun definition(
@@ -254,16 +344,19 @@ class FormulaPageBuilder internal constructor(
         build: TypeDefinitionBuilder.() -> Unit,
     ): ResourceId = declared(name, declares { record(build = build) }) { typeUse to Type(it.use) }
 
-    /** A FixtureStaticEntry named [name], a real entry next to the Definitions. */
-    fun smith(name: String = "smith"): ResourceId =
+    /** A FixtureStaticEntry named [name] under [key], a real entry next to the Definitions. */
+    fun smith(
+        name: String = "smith",
+        key: String = name,
+    ): ResourceId =
         elements
-            .fixtureStaticEntry(name) { this.name = name }
+            .fixtureStaticEntry(key) { this.name = name }
             .id
             .toSkir()
-            .also { named[name] = it }
+            .also { named[key] = it }
 
-    /** The resource this page declared as [name]. */
-    fun named(name: String): ResourceId = named[name] ?: error("The formula page declares no $name yet.")
+    /** The resource this library declared as [key] so far. */
+    fun named(key: String): ResourceId = named[key] ?: error("The formula page declares no $key yet.")
 
     internal fun page(id: ResourceId): FormulaPage = FormulaPage(id, named.toMap())
 
@@ -289,16 +382,17 @@ class FormulaPageBuilder internal constructor(
         name: String,
         type: TypeUse,
         value: Var<*, DefinitionScope>,
+        key: String = name,
     ): ResourceId {
         @Suppress("UNCHECKED_CAST")
         val held = value as Var<Any?, DefinitionScope>
         return elements
-            .definition<Any?>(name, type) {
+            .definition<Any?>(key, type) {
                 this.name = name
                 this.value = held
             }.id
             .toSkir()
-            .also { named[name] = it }
+            .also { named[key] = it }
     }
 }
 
@@ -418,6 +512,27 @@ fun RealmFixture.value(
     resource: ResourceId,
     vararg path: String,
 ): DataValue? = record(resource).valueAt(path.fold(ValuePath.root, ValuePath::field))
+
+/**
+ * The formula [source] with a reference at every whole word occurrence of each name of [references], pointing at its
+ * resource.
+ */
+fun boundFormula(
+    source: String,
+    references: Map<String, ResourceId>,
+): Formula =
+    Formula(
+        source,
+        references
+            .flatMap { (name, target) ->
+                Regex("\\b${Regex.escape(name)}\\b").findAll(source).map { match ->
+                    FormulaReference(
+                        TextSpan(match.range.first, match.range.last + 1),
+                        Ref(AuthorResourceId(target.value)),
+                    )
+                }
+            }.sortedBy { it.at.start },
+    )
 
 /** The resources the formula references of [resource] point at. */
 fun RealmFixture.referenceTargets(resource: ResourceId): List<ResourceId> = TODO("formula reference targets")

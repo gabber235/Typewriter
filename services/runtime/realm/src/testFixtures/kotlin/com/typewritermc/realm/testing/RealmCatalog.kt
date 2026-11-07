@@ -6,10 +6,13 @@ import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.discovery.OwnedConfiguration
+import com.typewritermc.discovery.OwnedDynamic
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
 import com.typewritermc.engine.pages.StaticPage
+import com.typewritermc.formula.DynamicProvider
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.library.Book
@@ -18,18 +21,24 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.types.qualified
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.nio.file.Path
 import kotlin.reflect.KClass
 
 /**
- * What a test Realm loads: the core typewriter artifact, the extension [artifacts], and test only [declarations] and
- * [operations] added with the core artifact's origin before assembly.
+ * What a test Realm loads: the core typewriter artifact, the extension [artifacts], and test only [declarations],
+ * [operations], [configurations] and [dynamics] added with the core artifact's origin before assembly, as an
+ * extension's own registrations are.
  */
 data class RealmCatalog(
     val artifacts: List<GeneratedProviderArtifact> = emptyList(),
     val declarations: (CatalogContributions) -> List<OwnedTypeDeclaration> = { emptyList() },
     val operations: (ProviderOrigin) -> List<OperationDeclaration> = { emptyList() },
+    val configurations: (ProviderOrigin) -> List<OwnedConfiguration> = { emptyList() },
+    val dynamics: List<DynamicProvider> = emptyList(),
 ) : FixtureCatalog {
     override fun activate(generation: String): ActiveCatalog {
         val store = RealmCatalogStore().apply { replace(incarnation(generation)) }
@@ -51,6 +60,16 @@ data class RealmCatalog(
             loaded.copy(
                 declarations = loaded.declarations + declarations(loaded),
                 operations = loaded.operations + operations(origin),
+                configurations = loaded.configurations + configurations(origin),
+                dynamics =
+                    loaded.dynamics +
+                        dynamics.mapIndexed { index, provider ->
+                            OwnedDynamic(
+                                origin,
+                                RuleOrigin(owner = TypeDefinitionId.qualified("test-dynamic", "provider-$index"), ordinal = 0),
+                                provider,
+                            )
+                        },
             )
         val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = generation)))
         check(assembly.operations.failures.isEmpty()) { assembly.operations.failures.joinToString { it.cause.stackTraceToString() } }

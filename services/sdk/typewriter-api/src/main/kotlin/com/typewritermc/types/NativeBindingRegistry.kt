@@ -703,7 +703,7 @@ private class SetNativeBinding(
 
     override fun decode(value: CompleteValue): Set<*> {
         val authored = value.payload<DataValue.SetValueWrapper>().items.map { it.value }
-        if (authored.map(DataValue::canonicalValueKey).distinct().size != authored.size) {
+        if (authored.map(DataValue::identityKey).distinct().size != authored.size) {
             throw NativeBindingException("duplicate_set_value", "A native Set cannot preserve duplicate authored values.")
         }
         val decoded = authored.map { row -> item.decodeAuthoredAny(row) }
@@ -739,7 +739,7 @@ private class MapNativeBinding(
 
     override fun decode(value: CompleteValue): Map<*, *> {
         val authored = value.payload<DataValue.MapValueWrapper>().rows
-        if (authored.map { it.key.canonicalValueKey() }.distinct().size != authored.size) {
+        if (authored.map { it.key.identityKey() }.distinct().size != authored.size) {
             throw NativeBindingException("duplicate_map_key", "A native Map cannot preserve duplicate authored keys.")
         }
         val rows =

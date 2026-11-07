@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:CanonicalValueEquality.kt:fun DataValue.canonicalValueKey: String</ID>
     <ID>CyclomaticComplexMethod:CheckedCatalog.kt:DefaultCheckedCatalog$private fun infer: Boolean</ID>
     <ID>CyclomaticComplexMethod:CheckedCatalog.kt:DefaultCheckedCatalog$private fun isTemplateReadableAs: Boolean</ID>
     <ID>CyclomaticComplexMethod:CheckedCatalog.kt:DefaultCheckedCatalog$private fun knownPendingApplications: Set&lt;NamedTypeUse&gt;</ID>
@@ -17,7 +16,6 @@
     <ID>CyclomaticComplexMethod:PresentationMaterial.kt:private fun PresentationNode.decorations: List&lt;PresentationNode&gt;</ID>
     <ID>CyclomaticComplexMethod:PresentationMaterial.kt:private fun PresentationNode.writesWithinOwner: Boolean</ID>
     <ID>CyclomaticComplexMethod:PresentationMaterial.kt:private fun SearchProvider.nodes: List&lt;PresentationNode&gt;</ID>
-    <ID>CyclomaticComplexMethod:RelativeFieldPattern.kt:fun ResolvedRepresentation.kind: RepresentationKind</ID>
     <ID>CyclomaticComplexMethod:ValueAdmission.kt:ValueInspection$private fun validateScalar</ID>
     <ID>CyclomaticComplexMethod:ValueAdmission.kt:ValueInspection$private fun validateUse</ID>
     <ID>TooGenericExceptionCaught:SkirColdProbeMain.kt:SkirColdProbeMain$failure: Throwable</ID>

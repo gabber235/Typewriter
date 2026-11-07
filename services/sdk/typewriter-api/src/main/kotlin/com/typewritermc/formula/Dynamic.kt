@@ -1,0 +1,70 @@
+package com.typewritermc.formula
+
+import com.typewritermc.authoring.AuthoredReads
+import com.typewritermc.authoring.FieldPath
+import com.typewritermc.checking.DraftType
+import com.typewritermc.dsl.TypewriterDsl
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.kernel.v1.resource_id.ResourceId
+
+/**
+ * Says what content means: which names the formulas of a resource can see, and what others get when they name it.
+ * Hooks register per draft type, as realm checks do, so a hook on a parent contract also runs for its subtypes in
+ * other artifacts. A provider object carries `@TypewriterDynamicProvider`, and codegen emits its adapter.
+ */
+interface DynamicProvider {
+    fun Dynamics.register()
+}
+
+@TypewriterDsl
+interface Dynamics {
+    /** A hook for every resource that [type] matches, reading it through its draft. */
+    fun <D> each(
+        type: DraftType<D>,
+        dynamic: DynamicBuilder.(D) -> Unit,
+    )
+
+    /**
+     * A hook for every resource of [definition], whatever its type arguments, such as any `Definition<T>`. It matches
+     * by definition alone, as a draft type's match does, so it reads no type argument.
+     */
+    fun each(
+        definition: TypeDefinitionId,
+        dynamic: DynamicBuilder.(ResourceId) -> Unit,
+    )
+}
+
+/** What one hook says about one resource. It reads authored content through its own receiver. */
+@TypewriterDsl
+interface DynamicBuilder : AuthoredReads {
+    /** What the formulas of one own field can see. It wins over every container's contents. */
+    fun scope(
+        field: FieldPath,
+        block: ScopeBuilder.() -> Unit,
+    )
+
+    /** What the formulas of this resource's contents can see. */
+    fun scopeContents(block: ScopeBuilder.() -> Unit)
+
+    /** What others get when they name this resource. Without exports, naming it gives a reference to it. */
+    fun exports(block: ExportBuilder.() -> Unit)
+}
+
+/** One level of names. Two resources under one name on one level are an ambiguity where a formula uses that name. */
+@TypewriterDsl
+interface ScopeBuilder : AuthoredReads {
+    /** [name] means the resource [id], so a formula naming it can hold a reference to it. */
+    fun resource(
+        name: String,
+        id: ResourceId,
+    )
+}
+
+@TypewriterDsl
+interface ExportBuilder {
+    /** Naming this resource gives the value of [field]; a field holding a `Var<T, _>` reads as its `T`. */
+    fun value(field: FieldPath)
+}
+
+/** The provider codegen emits for one `@TypewriterDynamicProvider` object. */
+interface GeneratedDynamicProvider : DynamicProvider
