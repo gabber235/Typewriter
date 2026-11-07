@@ -147,7 +147,6 @@ class _SimpleNode<D extends GraphDragData> extends HookWidget {
           maxSimultaneousDrags: 1,
           dragAnchorStrategy: (widget, context, position) =>
               dragSource.anchor(offered, widget, context, position),
-          onDragStarted: () => dragSource.begin(offered),
           onDragUpdate: (details) => dragSource.update(offered, details),
           onDragEnd: (_) => dragSource.end(offered),
           feedback: HookBuilder(
