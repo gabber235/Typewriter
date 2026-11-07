@@ -35,6 +35,14 @@ internal class RuntimeCollectionAppearance(
         target.itemTransition = value.transition?.requireValid()
         target.itemShadows = value.shadows.map { it.wire(state) }
     }
+
+    override fun itemArrival(value: MoveOverride) {
+        target.itemArrival = value.wire()
+    }
+
+    override fun itemLeave(value: MoveOverride) {
+        target.itemLeave = value.wire()
+    }
 }
 
 internal class CollectionOperationsDraft {

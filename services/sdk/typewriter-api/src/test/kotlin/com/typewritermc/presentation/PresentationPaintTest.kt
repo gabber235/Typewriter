@@ -22,14 +22,16 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationAlignment
-import skirout.editor.v1.presentation.PresentationCurve
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationInteractionState
 import skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED
 import skirout.editor.v1.presentation.PresentationInteractionState.HOVERED
 import skirout.editor.v1.presentation.PresentationInteractionState.SELECTED
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationSpring
+import skirout.editor.v1.presentation.PresentationTimedTransition
 import skirout.editor.v1.presentation.PresentationTransition
+import skirout.editor.v1.presentation.PresentationTransitionPolicy
 import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -47,41 +49,73 @@ val PresentationPaintTest by testSuite {
         }.message shouldContain "two horizontal bounds"
     }
 
-    test("a state transition picks the rule of the entered state and otherwise its fallback") {
+    test("a presentation with no overrides leaves every move to the panel") {
+        moveOverrides() shouldBe PresentationTransitionPolicy(hovered = null, focused = null, pressed = null, selected = null)
+    }
+
+    test("an override is keyed by the state whose move it changes and names no move") {
         val policy =
-            stateTransition(fallback = transition(DisplayDelay(120), curve = PresentationCurve.EASE_OUT)) {
-                whenAll(
-                    SELECTED,
-                    excluded = setOf(HOVERED),
-                    transition = transition(DisplayDelay(480), curve = PresentationCurve.ElasticOutWrapper(0.5)),
-                )
-            }
+            moveOverrides(
+                hovered = MoveOverride.Timed(length = DisplayDelay(120)),
+                selected = MoveOverride.Spring(300.0, 12.0),
+            )
 
-        policy.fallback shouldBe PresentationTransition(milliseconds = 120, curve = PresentationCurve.EASE_OUT)
-        policy.rules
-            .single()
-            .match.required shouldBe listOf(SELECTED)
-        policy.rules
-            .single()
-            .match.excluded shouldBe listOf(HOVERED)
-        policy.rules.single().transition shouldBe
-            PresentationTransition(milliseconds = 480, curve = PresentationCurve.ElasticOutWrapper(0.5))
+        policy.hovered shouldBe
+            PresentationTransition.TimedWrapper(PresentationTimedTransition(milliseconds = 120, curve = null))
+        policy.selected shouldBe
+            PresentationTransition.SpringWrapper(PresentationSpring(stiffness = 300.0, damping = 12.0))
+        policy.focused shouldBe null
+        policy.pressed shouldBe null
     }
 
-    test("a transition cannot be given a negative length") {
-        shouldThrow<IllegalArgumentException> { transition(DisplayDelay(-1)) }.message shouldBe "Display delays must be nonnegative."
+    test("an override cannot be given a negative length") {
+        shouldThrow<IllegalArgumentException> { MoveOverride.Timed(length = DisplayDelay(-1)) }.message shouldBe
+            "Display delays must be nonnegative."
     }
 
-    test("a state transition built from a negative wire transition is refused") {
+    test("a timed override that replaces nothing is refused") {
+        shouldThrow<IllegalArgumentException> { MoveOverride.Timed() }.message shouldBe
+            "A timed override replaces a length, a curve or both."
+    }
+
+    test("curve and spring values outside their family are refused") {
+        shouldThrow<IllegalArgumentException> { TimedCurve.Strike(1.0) }.message shouldBe "Strike overshoot must be between 0 and 1."
+        shouldThrow<IllegalArgumentException> { TimedCurve.Carriage(-0.1) }.message shouldBe
+            "Carriage recoil must be at least 0 and below 1."
+        shouldThrow<IllegalArgumentException> { MoveOverride.Spring(0.0, 12.0) }.message shouldBe
+            "Spring stiffness and damping must be finite and positive."
+    }
+
+    test("hand built wire overrides meet the same rules") {
         shouldThrow<IllegalArgumentException> {
-            stateTransition(fallback = PresentationTransition(milliseconds = -1, curve = PresentationCurve.LINEAR))
+            PresentationTransition.TimedWrapper(PresentationTimedTransition(milliseconds = -1, curve = null)).requireValid()
         }.message shouldBe "Presentation transitions cannot have a negative duration."
+        shouldThrow<IllegalArgumentException> {
+            PresentationTransitionPolicy(
+                hovered = null,
+                focused = null,
+                pressed = PresentationTransition.SpringWrapper(PresentationSpring(stiffness = Double.NaN, damping = 12.0)),
+                selected = null,
+            ).requireValid()
+        }.message shouldBe "Spring stiffness and damping must be finite and positive."
     }
 
-    test("an elastic transition whose period is not positive is refused") {
-        shouldThrow<IllegalArgumentException> {
-            transition(DisplayDelay(10), curve = PresentationCurve.ElasticOutWrapper(0.0))
-        }.message shouldBe "Elastic curve periods must be finite and positive."
+    test("a collection sends no item motion unless it overrides one") {
+        val appearance = collectionAppearance {}
+        appearance.itemArrival shouldBe null
+        appearance.itemLeave shouldBe null
+    }
+
+    test("a collection may override how items arrive and leave without naming a move") {
+        val appearance =
+            collectionAppearance {
+                itemArrival(MoveOverride.Timed(length = DisplayDelay(400)))
+                itemLeave(MoveOverride.Spring(380.0, 30.0))
+            }
+        appearance.itemArrival shouldBe
+            PresentationTransition.TimedWrapper(PresentationTimedTransition(milliseconds = 400, curve = null))
+        appearance.itemLeave shouldBe
+            PresentationTransition.SpringWrapper(PresentationSpring(stiffness = 380.0, damping = 30.0))
     }
 
     test("a size encodes the bounds it was given and leaves the others open") {
@@ -110,7 +144,7 @@ val PresentationPaintTest by testSuite {
                             perspective = 0.002,
                             rotateY = stateNumber(fallback = 0.0) { whenAll(SELECTED, excluded = setOf(HOVERED), value = 0.05) },
                             translateX = number(3.0),
-                            transition = selectMotion,
+                            transition = moveOverrides(selected = MoveOverride.Timed(DisplayDelay(750))),
                         ),
                     ) {}
                 }
@@ -140,7 +174,8 @@ val PresentationPaintTest by testSuite {
             .value
             .literalFloat() shouldBe 0.05
         transform.translateX?.literalFloat() shouldBe 3.0
-        transform.transition shouldBe selectMotion
+        transform.transition?.selected shouldBe
+            PresentationTransition.TimedWrapper(PresentationTimedTransition(milliseconds = 750, curve = null))
     }
 
     test("a container shadow encodes its color, blur and offsets, with unset offsets and spread at zero") {

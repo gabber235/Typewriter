@@ -33,25 +33,15 @@ void main() {
     required_: [skir.PresentationInteractionState.hovered],
     excluded: const [],
   );
-  final selectMotion = skir.PresentationTransitionPolicy(
-    rules: [
-      skir.PresentationStateTransitionRule(
-        match: selected,
-        transition: skir.PresentationTransition(
-          milliseconds: 750,
-          curve: skir.PresentationCurve.wrapElasticOut(0.9),
-        ),
-      ),
-    ],
-    fallback: skir.PresentationTransition(
-      milliseconds: 300,
-      curve: skir.PresentationCurve.emphasized,
+  final selectMotion = transitionOverrides(
+    selected: skir.PresentationTransition.wrapSpring(
+      skir.PresentationSpring(stiffness: 280, damping: 17),
     ),
   );
   final label = presentationText("label", textLiteral("Cover"));
 
   testWidgets(
-    "positioned stack children follow state and animate with the entered state's transition",
+    "positioned stack children follow state and play the service's override for the selection move",
     (tester) async {
       final root = presentationNode(
         "stack",
@@ -91,29 +81,27 @@ void main() {
       expect(inset(), (10, 0));
       expect(tester.getSize(find.text("Spine")).width, 30);
 
-      // Entering the selected state moves with its own elastic transition:
-      // 750 ms that overshoots the target before settling.
+      // Entering the selected state plays ink with the service's spring: it
+      // overshoots before settling.
       interact(const PresentationInteraction(selected: true));
       await tester.pump();
       var overshoot = false;
-      for (var elapsed = 0; elapsed < 750; elapsed += 25) {
+      while (tester.hasRunningAnimations) {
         await tester.pump(const Duration(milliseconds: 25));
         if (inset().$1 > 15.01) overshoot = true;
       }
       expect(overshoot, isTrue);
-      await tester.pumpAndSettle();
       expect(inset().$1, closeTo(15, 0.01));
       expect(inset().$2, closeTo(14, 0.01));
 
-      // Leaving it uses the 300 ms fallback, which lands without overshoot.
+      // Leaving it plays ink again with the same spring: it is on its way
+      // back at once, and settles in its own place.
       interact(const PresentationInteraction());
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 150));
-      final halfway = inset().$1;
-      expect(halfway, inExclusiveRange(10, 15));
-      await tester.pump(const Duration(milliseconds: 160));
-      expect(inset().$1, closeTo(10, 0.01));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(inset().$1, inExclusiveRange(10, 15));
       await tester.pumpAndSettle();
+      expect(inset().$1, closeTo(10, 0.01));
       expect(tester.takeException(), isNull);
     },
   );
@@ -293,7 +281,8 @@ void main() {
 
       update(() => interaction = const PresentationInteraction(hovered: true));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 150));
+      // A quarter of the way through hoverIn, before its overshoot.
+      await tester.pump(tester.tokenTime(MotionToken.hoverIn) ~/ 4);
       final halfway = matrix().getMaxScaleOnAxis();
       expect(halfway, greaterThan(1));
       expect(halfway, lessThan(2));
@@ -387,7 +376,7 @@ void main() {
       expect(dark.resolve(color, scope).toARGB32(), Colors.black.toARGB32());
     });
 
-    test("numbers and motions use the first matching state rule", () {
+    test("numbers use the first matching state rule", () {
       final idle = light;
       final picked = idle.copyWith(
         interaction: const PresentationInteraction(selected: true),
@@ -396,21 +385,214 @@ void main() {
       expect(idle.number(value, scope), 1);
       expect(picked.number(value, scope), 0.9);
       expect(
-        idle.motion(selectMotion, scope).duration,
-        const Duration(milliseconds: 300),
-      );
-      expect(
-        picked.motion(selectMotion, scope).duration,
-        const Duration(milliseconds: 750),
-      );
-      expect(idle.motion(null, scope), PresentationMotion.immediate);
-      expect(
         () => idle.number(
           skir.PresentationNumber.wrapValue(textLiteral("wide")),
           scope,
         ),
         throwsA(isA<PresentationValueFailure>()),
       );
+    });
+
+    test("a selection override reads as the spring the service sent", () {
+      expect(
+        selectMotion.reading,
+        const MotionReading.read(
+          MoveOverrides(
+            selected: MotionOverride(
+              curve: MotionShape.spring(stiffness: 280, damping: 17),
+            ),
+          ),
+        ),
+      );
+    });
+  });
+
+  group("service motion", () {
+    testWidgets(
+      "hovering a selected card plays hoverIn as tuned, not the selection override",
+      (tester) async {
+        final (:interact, :scale, :riser) = await tester.stateTransform(
+          policy: transitionOverrides(
+            selected: skir.PresentationTransition.wrapSpring(
+              skir.PresentationSpring(stiffness: 60, damping: 4),
+            ),
+          ),
+          hovered: 1.05,
+          withPanelRiser: true,
+        );
+        interact(const PresentationInteraction(selected: true));
+        await tester.pumpAndSettle();
+        interact(const PresentationInteraction(selected: true, hovered: true));
+        riser.hover();
+        for (var frame = 0; frame < 12; frame++) {
+          await tester.pump(const Duration(milliseconds: 20));
+          expect((scale() - 1) / 0.05, closeTo(riser.progress(), 0.01));
+        }
+      },
+    );
+
+    testWidgets(
+      "a hovered presentation with no motion code rises in step with the panel's own hover",
+      (tester) async {
+        final (:interact, :scale, :riser) = await tester.stateTransform(
+          policy: null,
+          hovered: 1.05,
+          withPanelRiser: true,
+        );
+        interact(const PresentationInteraction(hovered: true));
+        riser.hover();
+        for (var frame = 0; frame < 12; frame++) {
+          await tester.pump(const Duration(milliseconds: 20));
+          // Same progress along the same token, though the travel differs.
+          expect((scale() - 1) / 0.05, closeTo(riser.progress(), 0.01));
+        }
+      },
+    );
+
+    testWidgets(
+      "a duration the service sends for hover is the one that plays",
+      (tester) async {
+        final (:interact, :scale, riser: _) = await tester.stateTransform(
+          policy: transitionOverrides(
+            hovered: timedTransition(milliseconds: 750),
+          ),
+          hovered: 1.05,
+        );
+        final own = tester.tokenTime(MotionToken.hoverIn);
+        interact(const PresentationInteraction(hovered: true));
+        await tester.pump();
+        await tester.pump(own + const Duration(milliseconds: 20));
+        // The panel's own hoverIn has landed by now; the sent 750 ms has not.
+        expect(tester.hasRunningAnimations, isTrue);
+        await tester.pump(const Duration(milliseconds: 750) - own);
+        expect(scale(), closeTo(1.05, 0.0005));
+        expect(tester.hasRunningAnimations, isFalse);
+      },
+    );
+
+    testWidgets(
+      "reduced motion lands at once even with a sent duration and curve",
+      (tester) async {
+        tester.platformDispatcher.accessibilityFeaturesTestValue =
+            const FakeAccessibilityFeatures(disableAnimations: true);
+        addTearDown(
+          tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+        );
+        final (:interact, :scale, riser: _) = await tester.stateTransform(
+          policy: transitionOverrides(
+            hovered: timedTransition(
+              milliseconds: 750,
+              curve: skir.PresentationTimedCurve.wrapStrike(0.2),
+            ),
+          ),
+          hovered: 1.05,
+        );
+        interact(const PresentationInteraction(hovered: true));
+        await tester.pump();
+        expect(scale(), 1.05);
+        expect(tester.hasRunningAnimations, isFalse);
+      },
+    );
+
+    testWidgets("a sent spring settles by itself", (tester) async {
+      final (:interact, :scale, riser: _) = await tester.stateTransform(
+        policy: transitionOverrides(
+          hovered: skir.PresentationTransition.wrapSpring(
+            skir.PresentationSpring(stiffness: 120, damping: 8),
+          ),
+        ),
+        hovered: 1.05,
+      );
+      interact(const PresentationInteraction(hovered: true));
+      await tester.pump();
+      await tester.pump(tester.tokenTime(MotionToken.hoverIn));
+      // Still settling after the panel's own hover would have landed.
+      expect(tester.hasRunningAnimations, isTrue);
+      await tester.pumpAndSettle();
+      expect(scale(), closeTo(1.05, 0.0005));
+    });
+
+    testWidgets(
+      "a press given only a duration settles then with the same bounce",
+      (tester) async {
+        Future<(double peak, Duration settled)> run(int? milliseconds) async {
+          final (:interact, :scale, riser: _) = await tester.stateTransform(
+            policy: milliseconds == null
+                ? null
+                : transitionOverrides(
+                    pressed: timedTransition(milliseconds: milliseconds),
+                  ),
+            pressed: 0.93,
+          );
+          interact(const PresentationInteraction(pressed: true));
+          return tester.peakAndSettle(scale, target: 0.93);
+        }
+
+        final own = await run(null);
+        final slow = await run(1200);
+        final tuned = tester.tokenTime(MotionToken.press);
+        // Overshoot is a fraction of the travel, so the same damping ratio
+        // gives the same peak.
+        expect(slow.$1, lessThan(0.93));
+        expect(slow.$1, closeTo(own.$1, 0.0005));
+        // The sent time stretches the whole settle by the same factor.
+        expect(slow.$2, greaterThan(own.$2));
+        expect(
+          slow.$2.inMicroseconds / own.$2.inMicroseconds,
+          closeTo(1200 / tuned.inMilliseconds, 0.03),
+        );
+      },
+    );
+
+    testWidgets(
+      "a new state mid move continues from where the paint is, with its speed",
+      (tester) async {
+        final (:interact, :scale, riser: _) = await tester.stateTransform(
+          policy: null,
+          hovered: 1.05,
+          focused: 1.1,
+        );
+        interact(const PresentationInteraction(hovered: true));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 60));
+        final before = scale();
+        await tester.pump(const Duration(milliseconds: 16));
+        final step = scale() - before;
+        interact(const PresentationInteraction(hovered: true, focused: true));
+        await tester.pump();
+        final retargeted = scale();
+        await tester.pump(const Duration(milliseconds: 16));
+        // No jump back, and no restart from rest: the next frame moves at
+        // least as far.
+        expect(retargeted, closeTo(before + step, 0.0005));
+        expect(scale() - retargeted, greaterThanOrEqualTo(step));
+      },
+    );
+
+    testWidgets("a value changed by new data, not by the user, lands at once", (
+      tester,
+    ) async {
+      final (:scale, :setIdleScale) = await tester.stateTransformWithData(
+        idle: 1,
+      );
+      setIdleScale(1.2);
+      await tester.pump();
+      expect(scale(), 1.2);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
+    testWidgets("a malformed override shows the presentation diagnostic", (
+      tester,
+    ) async {
+      await tester.stateTransform(
+        policy: transitionOverrides(focused: timedTransition(milliseconds: -1)),
+        hovered: 1.05,
+      );
+      expect(
+        find.text("Presentation duration cannot be negative"),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 }
