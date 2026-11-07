@@ -56,6 +56,7 @@ export "package:duration/duration.dart";
 export "package:expandable_page_view/expandable_page_view.dart";
 export "package:flutter/foundation.dart";
 export "package:flutter/gestures.dart";
+export "package:flutter/physics.dart";
 export "package:flutter/rendering.dart" hide Selectable;
 export "package:flutter/scheduler.dart";
 export "package:flutter/semantics.dart";

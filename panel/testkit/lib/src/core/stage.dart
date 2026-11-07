@@ -133,13 +133,14 @@ class _ComponentShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final motion = ref.watch(motionTableProvider);
     return WorkSessionUnloadBoundary(
       child: EagerInitialization(
         child: MaterialApp(
           title: "Typewriter",
           debugShowCheckedModeBanner: false,
-          theme: buildTheme(Brightness.light),
-          darkTheme: buildTheme(Brightness.dark),
+          theme: buildTheme(Brightness.light, motion: motion),
+          darkTheme: buildTheme(Brightness.dark, motion: motion),
           themeMode: ref.watch(appearanceProvider),
           shortcuts: typewriterShortcuts,
           scrollBehavior: GlobalCustomScrollBehavior(),

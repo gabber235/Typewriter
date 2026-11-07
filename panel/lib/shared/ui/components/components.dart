@@ -43,6 +43,7 @@ export "labeled_message.dart";
 export "loading_button/loading_button.dart";
 export "loading_indicator.dart";
 export "modal_header.dart";
+export "motion/motion.dart";
 export "multiselect_dropdown.dart";
 export "page_heading.dart";
 export "panes.dart";

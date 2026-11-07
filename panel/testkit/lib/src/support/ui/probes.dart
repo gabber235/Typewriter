@@ -82,11 +82,12 @@ extension LabeledGeometry on ComponentDriver {
     ),
   );
 
-  /// How opaque the [LabeledBox] named [label] is drawn: the opacity of the
-  /// nearest fade or opacity around it, or 1 when none is.
+  /// How opaque the [LabeledBox] named [label] is drawn: the product of
+  /// every fade and opacity around it, or 1 when none is.
   double opacityOf(String label) {
     final target = box(label);
     expect(target, findsOneWidget);
+    var opacity = 1.0;
     for (final type in [
       SliverFadeTransition,
       SliverOpacity,
@@ -94,16 +95,17 @@ extension LabeledGeometry on ComponentDriver {
       Opacity,
     ]) {
       final around = find.ancestor(of: target, matching: find.byType(type));
-      if (around.evaluate().isEmpty) continue;
-      return switch (tester.widget(around.first)) {
-        SliverFadeTransition(:final opacity) => opacity.value,
-        SliverOpacity(:final opacity) => opacity,
-        FadeTransition(:final opacity) => opacity.value,
-        Opacity(:final opacity) => opacity,
-        _ => 1,
-      };
+      for (final element in around.evaluate()) {
+        opacity *= switch (element.widget) {
+          SliverFadeTransition(:final opacity) => opacity.value,
+          SliverOpacity(:final opacity) => opacity,
+          FadeTransition(:final opacity) => opacity.value,
+          Opacity(:final opacity) => opacity,
+          _ => 1,
+        };
+      }
     }
-    return 1;
+    return opacity;
   }
 
   /// Whether this component reads [part] to assistive technology inside any
