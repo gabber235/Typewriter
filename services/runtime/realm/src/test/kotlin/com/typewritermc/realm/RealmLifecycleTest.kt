@@ -67,16 +67,19 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
@@ -98,6 +101,7 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.kernel.v1.resource_id.ResourceId
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -152,6 +156,44 @@ val RealmLifecycleTest by testSuite {
             fixture.databaseOpen shouldBe false
             session.transport.activeSubscriptionCount shouldBe 0
             fixture.close()
+        }
+    }
+
+    test("a Realm finishes starting while a check is blocked") {
+        runTest {
+            RealmCheckGate.reset()
+            val fixture = RealmLifecycleFixture(this, catalog = blockedCheckCatalog("blocked_check"))
+            try {
+                val session = fixture.session(1)
+                fixture.messaging.value = session.session
+
+                // The check is released only after start returns, so a start that waited for checks never returns.
+                fixture.start()
+
+                RealmCheckGate.entered.await(10, TimeUnit.SECONDS) shouldBe true
+                session.transport.activeRealmRoutes() shouldBe realmRoutes
+            } finally {
+                RealmCheckGate.release.countDown()
+                fixture.close()
+            }
+        }
+    }
+
+    test("a started Realm counts its check graph's computations in telemetry") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                fixture.messaging.value = fixture.session(1).session
+                fixture.start()
+
+                withContext(Dispatchers.Default) {
+                    eventually(10.seconds) {
+                        fixture.counts("typewriter.realm.graph.computed", "query.kind")["CheckSubjects"] shouldBe 1L
+                    }
+                }
+            } finally {
+                fixture.close()
+            }
         }
     }
 

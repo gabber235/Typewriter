@@ -12,11 +12,13 @@ import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
+import com.typewritermc.checking.RealmChecks
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
+import com.typewritermc.discovery.GeneratedCheckProvider
 import com.typewritermc.discovery.GeneratedPresentationProvider
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderDeployment
@@ -205,6 +207,8 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import kotlin.io.path.extension
@@ -803,6 +807,12 @@ internal class RealmLifecycleFixture(
         realm.shutdown()
     }
 
+    /** The current sum of counter [metric] per value of [attribute], as the Realm reported it to telemetry. */
+    fun counts(
+        metric: String,
+        attribute: String,
+    ): Map<String?, Long> = telemetry.counts(metric, attribute)
+
     suspend fun close() {
         try {
             realm.shutdown()
@@ -964,6 +974,65 @@ internal fun cycleIn(graph: Map<String, Set<String>>): List<String>? {
 
 internal val EXTENSION = ArtifactId("fixture:extension")
 
+/** The providers of the common fixture extension: one of each kind Realm binds, and parts it must never construct. */
+internal val REALM_COMMON_PROVIDERS =
+    listOf(
+        Triple("type", RealmCommonTypeProvider::class.java, "common"),
+        Triple("nativeBinding", RealmCommonBindingProvider::class.java, "common"),
+        Triple("presentation", RealmCommonPresentationProvider::class.java, "common"),
+        Triple("registrar", RealmCommonRegistrarProvider::class.java, "common"),
+        Triple("registrar", RealmExecutionRegistrarProvider::class.java, "common"),
+        Triple("type", RealmTargetedTypeProvider::class.java, "paper"),
+    )
+
+/**
+ * A catalog [generation] whose extension has one realm check that waits in [RealmCheckGate], loaded from a jar as a
+ * deployed extension is.
+ */
+internal fun blockedCheckCatalog(generation: String): RealmCatalogIncarnation {
+    val providers =
+        listOf(
+            Triple("type", RealmCommonTypeProvider::class.java, "common"),
+            Triple("check", BlockedRealmCheckProvider::class.java, "common"),
+        )
+    val deployment =
+        GeneratedProviderLoader().load(
+            extensionPackage(providers = providers).artifacts,
+            DeploymentFacts(),
+            DiscoveryDomains.Realm,
+        )
+    val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = generation)))
+    return RealmCatalogIncarnation(assembly, deployment)
+}
+
+/** Where [BlockedRealmCheckProvider]'s check waits. It lives outside the extension jar, so the test and the check share it. */
+object RealmCheckGate {
+    @Volatile
+    var entered = CountDownLatch(1)
+        private set
+
+    @Volatile
+    var release = CountDownLatch(1)
+        private set
+
+    fun reset() {
+        entered = CountDownLatch(1)
+        release = CountDownLatch(1)
+    }
+}
+
+/** A realm check that waits until [RealmCheckGate] releases it, as a slow extension check does. */
+class BlockedRealmCheckProvider : GeneratedCheckProvider {
+    override val target = RealmProviderFixture.type
+
+    override fun RealmChecks.register() {
+        realm {
+            RealmCheckGate.entered.countDown()
+            RealmCheckGate.release.await(30, TimeUnit.SECONDS)
+        }
+    }
+}
+
 /** A Realm runtime and one extension with a common part of [disposition] and a paper engine part. */
 internal class ExtensionPackage(
     val artifacts: List<GeneratedProviderArtifact>,
@@ -974,22 +1043,13 @@ internal class ExtensionPackage(
 
 internal fun extensionPackage(
     disposition: SourcePartDisposition = SourcePartDisposition.Ineligible(listOf("No local engine is available.")),
+    providers: List<Triple<String, Class<*>, String>> = REALM_COMMON_PROVIDERS,
 ): ExtensionPackage {
     val directory = Files.createTempDirectory("realm-common-providers")
     val runtime = directory.resolve("realm.jar").also { providerJar(it, emptyList()) }
     val extension =
         directory.resolve("extension.jar").also {
-            providerJar(
-                it,
-                listOf(
-                    Triple("type", RealmCommonTypeProvider::class.java, "common"),
-                    Triple("nativeBinding", RealmCommonBindingProvider::class.java, "common"),
-                    Triple("presentation", RealmCommonPresentationProvider::class.java, "common"),
-                    Triple("registrar", RealmCommonRegistrarProvider::class.java, "common"),
-                    Triple("registrar", RealmExecutionRegistrarProvider::class.java, "common"),
-                    Triple("type", RealmTargetedTypeProvider::class.java, "paper"),
-                ),
-            )
+            providerJar(it, providers)
         }
     val manifest =
         ExtensionManifest(

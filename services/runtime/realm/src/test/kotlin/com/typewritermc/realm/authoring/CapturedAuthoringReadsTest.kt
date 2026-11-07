@@ -14,8 +14,6 @@ import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.field
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.realm.checking.DefaultReverseDependencyIndex
-import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.checking.outcome
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
@@ -315,7 +313,7 @@ val CapturedAuthoringReadsTest by testSuite {
                     listItemAt(resource, "numbers", "a"),
                     listItemAt(resource, "numbers", "b"),
                 )
-            reads.observations().any { InputIdentity.Value(location(resource, "numbers")) in it.dependencies() } shouldBe true
+            (InputIdentity.Membership(location(resource, "numbers")) in reads.observedInputs()) shouldBe true
         }
     }
 
@@ -328,59 +326,6 @@ val CapturedAuthoringReadsTest by testSuite {
             val outcome = reads.health().outcome(RuleOrigin(owner = TEST_TYPE, ordinal = 0))
 
             outcome shouldBe CheckOutcome.IncompleteWrapper("graph traversal limit exceeded")
-        }
-    }
-
-    test("rechecking only the checks an edit affects gives the same results as rechecking all") {
-        val resource = ResourceId(value = "page")
-        val root = ValueLocation.of(resource)
-        val name = location(resource, "name")
-        val count = location(resource, "count")
-        val initial = record(name = "alpha", count = 1)
-        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(resource to initial)).use { realm ->
-            val nameId =
-                CheckInstanceId(rule = RuleId(origin = RuleOrigin(owner = TEST_TYPE, ordinal = 0), localIndex = 0), location = name)
-            val countId =
-                CheckInstanceId(rule = RuleId(origin = RuleOrigin(owner = TEST_TYPE, ordinal = 1), localIndex = 0), location = count)
-            val index = DefaultReverseDependencyIndex()
-            val incremental = linkedMapOf<CheckInstanceId, Boolean>()
-
-            val evaluate: (CheckInstanceId) -> Pair<Boolean, List<skirout.editor.v1.authoring_facts.EditExpectation>> = { id ->
-                realm.views.capture().use {
-                    val reads = CapturedAuthoringReads(it.originalView())
-                    val accepted =
-                        when (id) {
-                            nameId -> reads.read(boundPath<String>(name, TEXT_USE)).available().startsWith("a")
-                            countId -> reads.read(boundPath<Int>(count, INT_USE)).available() < 10
-                            else -> error("Unknown check instance.")
-                        }
-                    accepted to reads.observations()
-                }
-            }
-
-            listOf(nameId, countId).forEach { id ->
-                val (value, observations) = evaluate(id)
-                incremental[id] = value
-                index.replace(id, observations)
-            }
-
-            val edits =
-                listOf(
-                    count to DataValue.integer(BigInteger.valueOf(20)),
-                    name to DataValue.StringValueWrapper("beta"),
-                    name to DataValue.StringValueWrapper("alpha"),
-                )
-            edits.forEach { (changedLocation, value) ->
-                realm.commit(EditIntent.createSetValue(at = changedLocation, value = value)).shouldBeCommitted()
-                val changed = setOf(InputIdentity.Value(changedLocation))
-                index.affectedBy(changed).forEach { id ->
-                    val (result, observations) = evaluate(id)
-                    incremental[id] = result
-                    index.replace(id, observations)
-                }
-                val full = listOf(nameId, countId).associateWith { evaluate(it).first }
-                incremental shouldBe full
-            }
         }
     }
 }

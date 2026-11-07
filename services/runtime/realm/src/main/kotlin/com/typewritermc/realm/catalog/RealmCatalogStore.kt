@@ -132,6 +132,7 @@ class RealmCatalogStore : AutoCloseable {
         override val operations: OperationCatalog get() = assembly.operations
         override val placementFields: Map<TypeDefinitionId, ValuePath> get() = assembly.placementFields
         override val displays: ResourceDisplayCatalog get() = assembly.displays
+        override val extensions: ExtensionCatalog get() = retention.extensions.value
         override val editorCatalog: EditorCatalog get() = assembly.editorCatalog
         override val capabilities: List<RealmCapabilityProvider>
             get() =
@@ -158,10 +159,12 @@ class RealmCatalogStore : AutoCloseable {
         var current: Boolean,
     ) : AutoCloseable {
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)
+        val extensions =
+            CollectedExtensions { collectExtensions(incarnation.assembly.checks, incarnation.assembly.configuration, providers) }
         var leases = 0
 
         override fun close() {
-            incarnation.deployment.close()
+            listOf(extensions, incarnation.deployment).closeAll()
         }
     }
 }

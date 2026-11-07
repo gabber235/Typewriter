@@ -107,6 +107,31 @@ void main() {
     },
   );
 
+  test("a document with an unsaved create keeps a saved finding current", () {
+    // The Realm's evidence is exactly what the check read: the saved title,
+    // not which resources exist.
+    final set = findingSet(
+      realmDiagnostic("title", at),
+      expectations: [textExpectation(at, "Harbor")],
+    );
+    final other = skir.ResourceId(value: "book:other");
+    final working = base.changedRemotely(
+      (edit) => edit.create(other, base.resource(id)!),
+    );
+
+    final issues = ResourceIssues.evaluate(
+      document: working,
+      publication: RealmPublicationView.checking(
+        display: skir.PublicationStatus.createChecking(
+          baseline: skir.PublicationBaseline.initial,
+          findings: [set],
+        ),
+      ),
+    );
+
+    expect(issues.savedFor(id).single.current, isTrue);
+  });
+
   test("missing witnesses never make saved findings current", () {
     final issues = ResourceIssues.evaluate(
       document: base,

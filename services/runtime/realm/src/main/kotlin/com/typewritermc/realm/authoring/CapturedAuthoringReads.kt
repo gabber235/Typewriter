@@ -59,13 +59,13 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring_facts.EditExpectation
-import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldPatternSegment
@@ -109,9 +109,9 @@ data class ViewReadHealth(
  * must inspect that health before treating collected evidence as complete. Each evaluation owns its recorder
  * and mutable counters, so this reader requires serialized use.
  */
-class CapturedAuthoringReads(
+class CapturedAuthoringReads internal constructor(
     internal val view: AuthoredReadView,
-    private val recorder: ObservationRecorder = DefaultObservationRecorder(),
+    internal val recorder: ObservationRecorder = DefaultObservationRecorder(),
     private val predicates: SelectionPredicateEvaluator = MissingSelectionPredicateEvaluator,
     private val limits: ViewReadLimits = ViewReadLimits(),
     override val readContext: ReadContext = view.readContext,
@@ -630,7 +630,18 @@ class CapturedAuthoringReads(
 
     fun health(): ViewReadHealth = ViewReadHealth(missing.toList(), failures.toList(), incomplete.toList())
 
-    fun observations(): List<EditExpectation> = recorder.captured()
+    /**
+     * The commit guard expectations for every fact this reader read, witnessed by the view's original. Only a reader
+     * outside a query keeps them; inside one, the graph holds what it read.
+     */
+    fun observations(): List<EditExpectation> = observedInputs().flatMap { view.original.expectations(it) }.distinct()
+
+    /** Every fact this reader read, in read order. Only a reader outside a query keeps them. */
+    internal fun observedInputs(): Set<InputIdentity> =
+        checkNotNull(recorder as? DefaultObservationRecorder) { "A tracked reader keeps no observations." }.inputs
+
+    /** Where graph reads of this reader read a node. */
+    internal val graphLinks: GraphLinks by lazy { recorder.graphLinks(this) }
 
     internal fun observeInput(identity: InputIdentity) {
         observe(identity)
@@ -1014,66 +1025,15 @@ class CapturedAuthoringReads(
     }
 
     private fun observe(identity: InputIdentity) {
-        if (++reads > limits.maxReads) {
-            markIncomplete("authored read limit exceeded")
-            return
-        }
-        val original = view.original
-        val values = original.values
-        when (identity) {
-            is InputIdentity.Value -> {
-                recorder.observe(EditExpectation.createValue(at = identity.at, expected = values.value(identity.at)))
-            }
-
-            is InputIdentity.Form -> {
-                recorder.observe(EditExpectation.createConfiguration(at = identity.at, expected = values.configuration(identity.at)))
-            }
-
-            is InputIdentity.Membership -> {
-                recorder.observe(EditExpectation.createValue(at = identity.at, expected = values.value(identity.at)))
-            }
-
-            is InputIdentity.Order -> {
-                recorder.observe(EditExpectation.createValue(at = identity.at, expected = values.value(identity.at)))
-            }
-
-            is InputIdentity.Existence -> {
-                recorder.observe(
-                    EditExpectation.createResourceExists(
-                        id = identity.resource,
-                        expected = values.resource(identity.resource) != null,
-                    ),
-                )
-            }
-
-            is InputIdentity.Selection -> {
-                recorder.observe(EditExpectation.resourceIds(values.resourceIds()))
-            }
-
-            is InputIdentity.Incoming -> {
-                observeIncoming(identity)
-            }
-
-            is InputIdentity.Types -> {
-                recorder.observe(EditExpectation.createTypes(resource = identity.resource, expected = values.types(identity.resource)))
-            }
-
-            is InputIdentity.Catalog -> {}
-        }
+        // Every read is recorded, also past the limit, so a query never misses what it depends on.
+        recorder.observe(identity)
+        if (++reads > limits.maxReads) markIncomplete("authored read limit exceeded")
     }
 
-    private fun observeIncoming(identity: InputIdentity.Incoming) {
-        val original = view.original
-        original.catalog.relations.filter { identity.relation == null || it.id == identity.relation }.forEach { contract ->
-            recorder.observe(
-                EditExpectation.links(
-                    identity.resource,
-                    contract.id,
-                    TraversalDirection.BOTH,
-                    original.values.links(identity.resource, contract.id, TraversalDirection.BOTH),
-                ),
-            )
-        }
+    /** The whole record of [id], observed as one fact. */
+    internal fun record(id: ResourceId): AuthoringRecord? {
+        observe(InputIdentity.Resource(id))
+        return view.resources[id]
     }
 
     private fun unavailable(location: ValueLocation): Availability.Unavailable =

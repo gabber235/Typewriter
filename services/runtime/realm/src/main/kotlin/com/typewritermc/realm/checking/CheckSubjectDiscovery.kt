@@ -4,8 +4,9 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.reason
-import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.catalog.CheckPlan
+import com.typewritermc.realm.catalog.ExtensionCatalog
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.type_catalog.RuleId
@@ -13,17 +14,15 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** Discovers the current subjects of every plan in this catalog over [lease]. */
-internal fun ActiveCatalog.discoverSubjects(
-    lease: AuthoringLease,
-    captureReads: (AuthoringLease) -> CapturedAuthoringReads,
-    diagnostics: CheckDiagnosticIds,
-): SubjectDiscovery {
-    if (lease.root.catalog.generation != generation) return SubjectDiscovery(emptyList(), emptySet())
+/**
+ * Discovers the current subjects of every plan of these extensions. Each plan reads the view only through a reader
+ * [newReads] gives it, so its reads and its health are its own.
+ */
+internal fun ExtensionCatalog.discoverSubjects(newReads: () -> CapturedAuthoringReads): SubjectDiscovery {
     val subjects = mutableListOf<CheckSubject>()
     val incompleteRules = linkedSetOf<RuleId>()
     plans.forEach { plan ->
-        val reads = captureReads(lease)
+        val reads = newReads()
         subjects +=
             when (plan) {
                 is CheckPlan.Simple -> {
@@ -66,7 +65,7 @@ internal fun ActiveCatalog.discoverSubjects(
             val findings =
                 if (outcome is CheckOutcome.IncompleteWrapper) {
                     listOf(
-                        diagnostics.error(
+                        CheckRunDiagnostics.of(plan.rule, "discovery").error(
                             plan.rule.origin,
                             "check_discovery_incomplete",
                             outcome.reason,
@@ -82,7 +81,6 @@ internal fun ActiveCatalog.discoverSubjects(
                         rule = plan.rule,
                         outcome = outcome,
                         findings = findings,
-                        observed = reads.observations().flatMap { it.dependencies() },
                     ).subject(DISCOVERY_SUBJECT_KEY)
         }
     }

@@ -11,9 +11,11 @@ import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.RealmGraphTelemetry
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.edit.AuthoringRepository
 import com.typewritermc.realm.edit.RealmAuthoringOwner
 import com.typewritermc.realm.edit.RealmStructureProvisioning
@@ -111,13 +113,13 @@ internal class Realm(
             val catalog = catalogs.captureCurrent()
             val storage = SurrealAuthoringStorage(connected)
             val seed = storage.readCoherent()
-            val viewStore = InMemoryAuthoringViewStore(catalog, seed)
+            val viewStore = InMemoryAuthoringViewStore(catalog, seed, checkingServices(), RealmGraphTelemetry(telemetry))
             views = viewStore
             val authoring = RealmAuthoringOwner(storage, viewStore, findings = { checks?.findings().orEmpty() })
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
-            val checkRuntime = RealmCheckRuntime(viewStore)
+            val checkRuntime = RealmCheckRuntime(viewStore, telemetry = telemetry)
             checks = checkRuntime
             val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
             val compilation = CompiledArtifactProducerRegistry(listOf(ResourceGraphArtifactProducer))
@@ -138,8 +140,8 @@ internal class Realm(
             this.publication = publisher
             val editorUpdates = EditorUpdatePublisher(viewStore, publisher, checkRuntime.findingChanges, telemetry, scope)
             this.editorUpdates = editorUpdates
-            checkRuntime.reloadCatalog()
-            val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, editorUpdates)
+            checkRuntime.start()
+            val routedAuthoring = HintingAuthoringRepository(authoring, editorUpdates)
             RealmStructureProvisioning(routedAuthoring).ensure(viewStore)
             publisher.recoverInterrupted()
             publisher.start(scope, viewStore.changes)
@@ -306,9 +308,9 @@ private object DefaultRealmCatalogActivator : RealmCatalogActivator {
     }
 }
 
-private class CheckingAuthoringRepository(
+/** Sends editors a change hint after every committed edit. Checks rerun on their own, from the view store. */
+private class HintingAuthoringRepository(
     private val delegate: AuthoringRepository,
-    private val checks: RealmCheckRuntime,
     private val events: EditorUpdatePublisher,
 ) : AuthoringRepository {
     override suspend fun commit(
@@ -316,10 +318,7 @@ private class CheckingAuthoringRepository(
         submission: SubmissionKey,
     ): CommitPreparedEditResponse =
         delegate.commit(edit, submission).also { result ->
-            if (result is CommitPreparedEditResponse.CommittedWrapper) {
-                checks.invalidateCurrent()
-                events.committed()
-            }
+            if (result is CommitPreparedEditResponse.CommittedWrapper) events.committed()
         }
 }
 

@@ -15,7 +15,6 @@ import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CapturedCheckReport
-import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
@@ -142,8 +141,7 @@ internal class AuthoringAcceptance(
     override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
         val snapshot = capture
         return run {
-            val target = CheckAdmissionTarget.CapturedAcceptance(snapshot.root)
-            val report = checks.evaluateCapture(target)
+            val report = checks.evaluateCapture(snapshot.root)
             val evidence = linkedMapOf<DiagnosticId, DiagnosticEvidence>()
             val findings =
                 report.results

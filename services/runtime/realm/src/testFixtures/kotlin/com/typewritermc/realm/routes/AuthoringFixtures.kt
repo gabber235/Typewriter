@@ -5,6 +5,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.library.Book
 import com.typewritermc.realm.authoring.valueAt
+import com.typewritermc.realm.publication.compilationDiagnostic
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.setup.SetupHandle
 import com.typewritermc.types.qualified
@@ -17,7 +18,6 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
-import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.RuleId
@@ -60,7 +60,7 @@ internal fun duplicateTitles() =
         FieldValue(name = "title", value = DataValue.StringValueWrapper("second")),
     )
 
-/** A finding of a check that read the saved title of [book] under the current catalog, stored as [status]. */
+/** A finding at the saved title of [book] by a check that read it under the current catalog, stored as [status]. */
 internal fun RealmFixture.titleFinding(
     book: SetupHandle<Book>,
     status: FindingStatus,
@@ -74,13 +74,11 @@ internal fun RealmFixture.titleFinding(
                         rule = RuleId(origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "rule"), ordinal = 0), localIndex = 0),
                         location = title,
                     ),
-                incarnation = "catalog:1",
-                execution = CheckExecutionId(value = "execution"),
                 catalog = generation,
             ),
         expectations = listOf(EditExpectation.createValue(at = title, expected = resources.getValue(book.resource).valueAt(title.path))),
         outcome = CheckOutcome.FINISHED,
-        findings = emptyList(),
+        findings = listOf(compilationDiagnostic("title_check", "The title needs attention.", location = title)),
         status = status,
     )
 }

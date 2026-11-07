@@ -365,63 +365,60 @@ struct RelativeFieldPattern(84180069) {
 struct NativeBindingId(84180070) {
   value: string = 0;
 }
-struct CheckExecutionId(84180071) {
+struct DiagnosticId(84180071) {
   value: string = 0;
 }
-struct DiagnosticId(84180072) {
+struct SelectionId(84180072) {
   value: string = 0;
 }
-struct SelectionId(84180073) {
+struct PublicationId(84180073) {
   value: string = 0;
 }
-struct PublicationId(84180074) {
+struct CanonicalValueHash(84180074) {
   value: string = 0;
 }
-struct CanonicalValueHash(84180075) {
+struct RelationId(84180075) {
   value: string = 0;
 }
-struct RelationId(84180076) {
-  value: string = 0;
-}
-struct RelationFamilyId(84180077) {
+struct RelationFamilyId(84180076) {
   value: string = 0;
 }
 
-struct ScalarResolvedRepresentation(84180078) {
+struct ScalarResolvedRepresentation(84180077) {
   kind: ScalarKind = 0;
 }
-struct ResolvedClosedCases(84180079) {
+struct ResolvedClosedCases(84180078) {
   cases: [NamedTypeUse] = 0;
 }
-enum ResolvedRecordForm(84180080) {
+enum ResolvedRecordForm(84180079) {
   concrete = 1;
   open = 2;
   closed: ResolvedClosedCases = 3;
 }
-struct RecordResolvedRepresentation(84180081) {
+struct RecordResolvedRepresentation(84180080) {
   fields: [ResolvedField|key] = 0;
   form: ResolvedRecordForm = 1;
 }
-struct SequenceResolvedRepresentation(84180082) {
+struct SequenceResolvedRepresentation(84180081) {
   item: TypeUse = 0;
   kind: CollectionKind = 1;
 }
-struct MappingResolvedRepresentation(84180083) {
+struct MappingResolvedRepresentation(84180082) {
   key: TypeUse = 0;
   value: TypeUse = 1;
 }
-struct LinkResolvedRepresentation(84180084) {
+struct LinkResolvedRepresentation(84180083) {
   endpoint: EndpointId = 0;
   target: TypeUse = 1;
 }
-enum ResolvedRepresentation(84180085) {
+enum ResolvedRepresentation(84180084) {
   scalar: ScalarResolvedRepresentation = 1;
   record: RecordResolvedRepresentation = 2;
   sequence: SequenceResolvedRepresentation = 3;
   mapping: MappingResolvedRepresentation = 4;
   link: LinkResolvedRepresentation = 5;
 }
-struct ResolvedField(84180086) {
+struct ResolvedField(84180085) {
   key: string = 0;
   declaration_owner: TypeDefinitionId = 1;
   type: TypeUse = 2;
@@ -429,7 +426,7 @@ struct ResolvedField(84180086) {
   /// Whether a constructor may leave this field out, from the declaration that resolved it.
   has_constructor_default: bool = 4;
 }
-struct AppliedSchema(84180087) {
+struct AppliedSchema(84180086) {
   use: TypeUse = 0;
   representation: ResolvedRepresentation = 1;
   fields: [ResolvedField|key] = 2;
@@ -437,48 +434,48 @@ struct AppliedSchema(84180087) {
 }
 /// Applied type evidence bound to a specific checked catalog generation.
 /// A resolved schema is separate from proving that a particular authored value is complete.
-struct CheckedType(84180088) {
+struct CheckedType(84180087) {
   catalog: CatalogGeneration = 0;
   use: TypeUse = 1;
   schema: AppliedSchema = 2;
 }
-struct ArgumentLocation(84180089) {
+struct ArgumentLocation(84180088) {
   index: int32 = 0;
 }
-struct DependentField(84180090) {
+struct DependentField(84180089) {
   owner: FieldOwner = 0;
   type: TypeTemplate = 1;
   missing: [ParameterKey] = 2;
 }
-struct PartialSchema(84180091) {
+struct PartialSchema(84180090) {
   known_fields: [ResolvedField|key] = 0;
   dependent_fields: [DependentField] = 1;
   pending_arguments: [ArgumentLocation] = 2;
 }
 
-struct ContributionSourceId(84180092) {
+struct ContributionSourceId(84180091) {
   value: string = 0;
 }
-struct ProducerId(84180093) {
+struct ProducerId(84180092) {
   value: string = 0;
 }
-struct ContributionName(84180094) {
+struct ContributionName(84180093) {
   value: string = 0;
 }
-struct ContributionKey(84180095) {
+struct ContributionKey(84180094) {
   source: ContributionSourceId = 0;
   source_part: string = 1;
   producer: ProducerId = 2;
   name: ContributionName = 3;
 }
-struct DeclarationOwner(84180096) {
+struct DeclarationOwner(84180095) {
   source: ContributionKey = 0;
   local_identity: string = 1;
 }
 
 /// Which resources a display or operation applies to: every application of one type template,
 /// or every resource when nothing more specific is declared.
-enum ResourceTarget(84180097) {
+enum ResourceTarget(84180096) {
   type: TypeTemplate = 1;
   any_resource = 2;
 }

@@ -11,6 +11,11 @@ sealed interface InputIdentity {
         val at: ValueLocation,
     ) : InputIdentity
 
+    /** The whole record of [resource]: its existence, configuration, values and declarations. */
+    data class Resource(
+        val resource: ResourceId,
+    ) : InputIdentity
+
     data class Existence(
         val resource: ResourceId,
     ) : InputIdentity

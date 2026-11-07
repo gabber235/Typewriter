@@ -1,33 +1,20 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.RelationSelection
-import com.typewritermc.authoring.field
-import com.typewritermc.authoring.item
-import com.typewritermc.authoring.mapKey
-import com.typewritermc.authoring.mapValue
-import com.typewritermc.authoring.of
-import com.typewritermc.authoring.payload
-import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
+import com.typewritermc.formula.graph.GraphListener
+import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.over
-import com.typewritermc.types.field
-import com.typewritermc.types.fields
+import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.immutableMapCopy
-import com.typewritermc.types.items
-import com.typewritermc.types.payload
-import com.typewritermc.types.record
-import com.typewritermc.types.rows
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.SelectionId
-import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 import java.util.IdentityHashMap
 import java.util.UUID
@@ -51,20 +38,37 @@ data class AuthoringView internal constructor(
         UUID
             .randomUUID()
             .toString(),
+    /** Each resource's stored links. A view prepared from another shares every slice its change did not touch. */
+    internal val linkSlices: Map<ResourceId, LinkSlice> = links.values.slices(),
 ) {
     internal val readContext = ReadContext(catalog.generation)
-    internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
-    internal val projection by lazy {
-        ResourceValueMapper.project(
-            links.values,
-            resources,
-            catalog.relations,
-            catalog.checked,
-        )
-    }
+    private val judgements =
+        JudgedSlices { resource ->
+            CapturedAuthoringReads(AuthoredReadView.Original(this)).judge(resource, linkSlice(resource))
+        }
+
+    internal fun linkSlice(resource: ResourceId): LinkSlice = linkSlices[resource] ?: LinkSlice.EMPTY
+
+    /** [resource]'s slice judged once for this view with a plain reader over it. */
+    internal fun judged(resource: ResourceId): ResourceProjection = judgements[resource]
+
+    /** Every judged slice folded together; the planner, publication and relation reads read it, a check pass never does. */
+    internal val projection by lazy { linkSlices.keys.map(::judged).fold() }
+
     internal val values by lazy {
-        CapturedAuthoringValues(resources, projection.projections)
+        CapturedAuthoringValues(resources) { id -> judged(id).projections }
     }
+}
+
+/** Judgements of slices, each computed once on first read. */
+private class JudgedSlices(
+    private val judge: (ResourceId) -> ResourceProjection,
+) {
+    private val judged = ConcurrentHashMap<ResourceId, ResourceProjection>()
+
+    // Not computeIfAbsent: judging reads the catalog, and a reader may ask this map again on the same thread.
+    operator fun get(resource: ResourceId): ResourceProjection =
+        judged[resource] ?: judge(resource).let { judged.putIfAbsent(resource, it) ?: it }
 }
 
 data class AuthoringViewDelta(
@@ -106,6 +110,12 @@ sealed interface AuthoredReadView {
         override val resources get() = original.resources
         override val links get() = original.links
         override val readContext get() = original.readContext
+
+        internal fun linkSlice(resource: ResourceId) = original.linkSlice(resource)
+
+        internal fun judged(resource: ResourceId) = original.judged(resource)
+
+        internal val projection get() = original.projection
     }
 
     class Staged internal constructor(
@@ -114,7 +124,14 @@ sealed interface AuthoredReadView {
         override val links: Map<LinkOccurrenceId, LinkOccurrence>,
     ) : AuthoredReadView {
         override val readContext = ReadContext(original.catalog.generation)
-        internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
+        private val slices by lazy { links.values.slices() }
+        private val judgements = JudgedSlices { resource -> CapturedAuthoringReads(this).judge(resource, linkSlice(resource)) }
+
+        internal fun linkSlice(resource: ResourceId) = slices[resource] ?: LinkSlice.EMPTY
+
+        internal fun judged(resource: ResourceId) = judgements[resource]
+
+        internal val projection by lazy { slices.keys.map(::judged).fold() }
     }
 
     /** A request owned staged graph whose evidence remains attached to its immutable baseline. */
@@ -127,7 +144,7 @@ sealed interface AuthoredReadView {
         override val links: Map<LinkOccurrenceId, LinkOccurrence>
             get() = cachedLinks ?: discoverLinks(resources).immutableMapCopy().also { cachedLinks = it }
         override val readContext = original.readContext
-        internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
+        private var derived: Derived? = null
 
         /**
          * Counts the staged writes applied so far. A writer may replace the graph with the same map instance it
@@ -136,21 +153,54 @@ sealed interface AuthoredReadView {
         var revision: Long = 0
             private set
 
+        internal fun linkSlice(resource: ResourceId) = derived().slices[resource] ?: LinkSlice.EMPTY
+
+        internal fun judged(resource: ResourceId) = derived().judgements[resource]
+
+        internal val projection: ProjectionResult get() = derived().projection
+
         fun replace(next: Map<ResourceId, AuthoringRecord>) {
             resources = next
             cachedLinks = null
-            graphIndexes.clear()
+            derived = null
             revision++
+        }
+
+        private fun derived(): Derived = derived ?: Derived().also { derived = it }
+
+        /** What this view derives from its links, built on first read after each replace. */
+        private inner class Derived {
+            val slices = links.values.slices()
+            val judgements = JudgedSlices { resource -> CapturedAuthoringReads(this@Working).judge(resource, linkSlice(resource)) }
+            val projection by lazy { slices.keys.map(::judged).fold() }
         }
     }
 }
 
-internal fun AuthoredReadView.graphIndex(selection: RelationSelection): CapturedGraphIndex =
+/** [resource]'s stored links in this view. */
+internal fun AuthoredReadView.linkSlice(resource: ResourceId): LinkSlice =
     when (this) {
-        is AuthoredReadView.Original -> original.graphIndexes.computeIfAbsent(selection) { CapturedGraphIndex(this, selection) }
-        is AuthoredReadView.Staged -> graphIndexes.computeIfAbsent(selection) { CapturedGraphIndex(this, selection) }
-        is AuthoredReadView.Working -> graphIndexes.computeIfAbsent(selection) { CapturedGraphIndex(this, selection) }
+        is AuthoredReadView.Original -> linkSlice(resource)
+        is AuthoredReadView.Staged -> linkSlice(resource)
+        is AuthoredReadView.Working -> linkSlice(resource)
     }
+
+/** [resource]'s slice judged once per view with a plain reader over it. */
+internal fun AuthoredReadView.judged(resource: ResourceId): ResourceProjection =
+    when (this) {
+        is AuthoredReadView.Original -> judged(resource)
+        is AuthoredReadView.Staged -> judged(resource)
+        is AuthoredReadView.Working -> judged(resource)
+    }
+
+/** Every judged slice of this view folded together, built lazily. */
+internal val AuthoredReadView.projection: ProjectionResult
+    get() =
+        when (this) {
+            is AuthoredReadView.Original -> projection
+            is AuthoredReadView.Staged -> projection
+            is AuthoredReadView.Working -> projection
+        }
 
 /**
  * Owns the current saved authoring view and retains retired views while readers still lease them.
@@ -159,16 +209,28 @@ internal fun AuthoredReadView.graphIndex(selection: RelationSelection): Captured
  * [changes] is an invalidation signal, so consumers capture current state rather than treating its counter
  * as a database revision. Invalidated storage reloads on the next read or capture. Store operations are
  * serialized internally; the repository owns serialization across a complete edit admission and persistence.
+ *
+ * The store owns the [graph] realm queries run on, and advances it inside [install], so an installed view and the
+ * graph's revision change together.
  */
 interface AuthoringViewStore : AutoCloseable {
     /** Signals installed or invalidated saved input. Readers still capture a retained view. */
     val changes: StateFlow<Long>
+
+    /** The query graph over the current view. */
+    val graph: AuthoringGraph
 
     fun <T> read(block: (AuthoringView) -> T): T
 
     fun capture(): AuthoringLease
 
     fun retain(context: ReadContext): AuthoringLease
+
+    /** A lease on the current view and graph reads pinned to it, taken together. The view's catalog stays open with the lease. */
+    fun pin(): PinnedReads
+
+    /** A graph that reads exactly [view], starting from the live graph's results where it can. */
+    fun forkAt(view: AuthoringView): AuthoringGraph
 
     fun prepare(delta: AuthoringViewDelta): AuthoringView
 
@@ -177,9 +239,15 @@ interface AuthoringViewStore : AutoCloseable {
     fun invalidate(reload: () -> AuthoringSeed)
 }
 
+/**
+ * The view store of one realm. [services] are what every query reads besides the view, and [listener] hears what the
+ * live graph computes; a fork reports to no one.
+ */
 class InMemoryAuthoringViewStore(
     catalog: AuthoringCatalogLease,
     seed: AuthoringSeed,
+    private val services: RealmServices = RealmServices(),
+    listener: GraphListener = GraphListener.NONE,
 ) : AuthoringViewStore {
     private val lock = Any()
     private val changed = MutableStateFlow(0L)
@@ -188,6 +256,7 @@ class InMemoryAuthoringViewStore(
     private var closed = false
     private var reload: (() -> AuthoringSeed)? = null
     private var current = createRoot(catalog, seed.resources).also { roots[it.root.readContext] = it }
+    override val graph: AuthoringGraph = TrackedGraph(RealmEnvironment(current.root, services), listener = listener)
 
     override fun <T> read(block: (AuthoringView) -> T): T =
         synchronized(lock) {
@@ -209,6 +278,24 @@ class InMemoryAuthoringViewStore(
             retain(requireNotNull(roots[context]) { "The original read view is no longer retained." })
         }
 
+    override fun pin(): PinnedReads =
+        synchronized(lock) {
+            ensureOpen()
+            ensureCurrent()
+            PinnedReads(retain(current), graph.pin())
+        }
+
+    override fun forkAt(view: AuthoringView): AuthoringGraph =
+        synchronized(lock) {
+            val environment = RealmEnvironment(view, services)
+            if (view.catalog.generation != current.root.catalog.generation) {
+                // Another generation shares nothing with the live graph.
+                TrackedGraph(environment)
+            } else {
+                graph.fork(environment, view.changesFrom(current.root))
+            }
+        }
+
     override fun prepare(delta: AuthoringViewDelta): AuthoringView =
         read { before ->
             require(
@@ -216,9 +303,12 @@ class InMemoryAuthoringViewStore(
                     .intersect(delta.removedResources)
                     .isEmpty(),
             )
-            val catalog = delta.catalog ?: before.catalog
             val resources = before.resources + delta.upsertedResources - delta.removedResources
-            createRoot(catalog.retain(), resources).root
+            if (delta.catalog != null) {
+                createRoot(delta.catalog.retain(), resources).root
+            } else {
+                derive(before, delta, resources)
+            }
         }
 
     override fun install(view: AuthoringView) =
@@ -230,6 +320,12 @@ class InMemoryAuthoringViewStore(
             roots[view.readContext] = current
             before.current = false
             prune(before)
+            val environment = RealmEnvironment(view, services)
+            if (view.catalog.generation != before.root.catalog.generation) {
+                graph.reset(environment)
+            } else {
+                graph.advance(environment, view.changesFrom(before.root))
+            }
             changed.value += 1
         }
 
@@ -259,6 +355,39 @@ class InMemoryAuthoringViewStore(
         reload = null
     }
 
+    /**
+     * The view [before] becomes with [delta]: its links and slices follow from [before]'s, so every record and slice
+     * the change did not touch keeps its identity, which is how install finds what changed.
+     */
+    private fun derive(
+        before: AuthoringView,
+        delta: AuthoringViewDelta,
+        merged: Map<ResourceId, AuthoringRecord>,
+    ): AuthoringView {
+        val holders = delta.upsertedResources.keys + delta.removedResources
+        val dropped = holders.flatMap { before.linkSlice(it).own }
+        val added = ResourceValueMapper.discover(delta.upsertedResources)
+        val links = (before.links - dropped.map(LinkOccurrence::id).toSet() + added.associateBy(LinkOccurrence::id)).immutableMapCopy()
+        // A slice holds what a resource holds and what targets it, so both ends of each old and new link are touched.
+        val touched = holders + dropped.map { it.target.resource } + added.map { it.target.resource }
+        val addedBySource = added.groupBy(LinkOccurrence::source)
+        val addedByTarget = added.groupBy { it.target.resource }
+        val slices = HashMap(before.linkSlices)
+        touched.forEach { id ->
+            val own = if (id in holders) addedBySource[id].orEmpty() else before.linkSlice(id).own
+            val into = before.linkSlice(id).into.filter { it.source !in holders } + addedByTarget[id].orEmpty()
+            if (own.isEmpty() && into.isEmpty()) slices.remove(id) else slices[id] = LinkSlice(own, into)
+        }
+        val catalog = before.catalog.retain()
+        try {
+            val immutable = merged.immutableMapCopy()
+            return AuthoringView(catalog.over(immutable), immutable, links, linkSlices = slices.immutableMapCopy())
+        } catch (failure: Throwable) {
+            catalog.closeAfter(failure)
+            throw failure
+        }
+    }
+
     private fun createRoot(
         catalog: AuthoringCatalogLease,
         resources: Map<ResourceId, AuthoringRecord>,
@@ -267,11 +396,7 @@ class InMemoryAuthoringViewStore(
             val immutable = immutableResources(resources)
             return RootRetention(AuthoringView(catalog.over(immutable), immutable, discoverLinks(immutable).immutableMapCopy()))
         } catch (failure: Throwable) {
-            try {
-                catalog.close()
-            } catch (closing: Throwable) {
-                failure.addSuppressed(closing)
-            }
+            catalog.closeAfter(failure)
             throw failure
         }
     }
@@ -302,6 +427,8 @@ class InMemoryAuthoringViewStore(
     )
 }
 
+private fun AuthoringCatalogLease.closeAfter(failure: Throwable) = listOf(this).closeAll(failure)
+
 private class DefaultAuthoringLease(
     override val root: AuthoringView,
     private val release: () -> Unit,
@@ -322,60 +449,6 @@ private class DefaultAuthoringLease(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) release()
-    }
-}
-
-internal fun requiredAuthoringInputs(resources: Map<ResourceId, AuthoringRecord>): Set<InputIdentity> =
-    buildSet {
-        add(RESOURCE_SELECTION_INPUT)
-        resources.forEach { (id, record) ->
-            add(InputIdentity.Existence(id))
-            add(InputIdentity.Form(ValueLocation.of(id)))
-            add(InputIdentity.Types(id))
-            collectValueInputs(DataValue.RecordWrapper(record.payload), ValueLocation.of(id), this)
-        }
-    }
-
-private fun collectValueInputs(
-    value: DataValue,
-    at: ValueLocation,
-    inputs: MutableSet<InputIdentity>,
-) {
-    inputs += InputIdentity.Value(at)
-    when (value) {
-        is DataValue.NamedWrapper -> {
-            inputs += InputIdentity.Form(at)
-            collectValueInputs(value.payload, at, inputs)
-        }
-
-        is DataValue.RecordWrapper -> {
-            value.fields.forEach { field -> collectValueInputs(field.value, at.field(field.name), inputs) }
-        }
-
-        is DataValue.ListValueWrapper -> {
-            inputs += InputIdentity.Membership(at)
-            inputs += InputIdentity.Order(at)
-            value.items.forEach { collectValueInputs(it.value, at.item(it.id), inputs) }
-        }
-
-        is DataValue.SetValueWrapper -> {
-            inputs += InputIdentity.Membership(at)
-            inputs += InputIdentity.Order(at)
-            value.items.forEach { collectValueInputs(it.value, at.item(it.id), inputs) }
-        }
-
-        is DataValue.MapValueWrapper -> {
-            inputs += InputIdentity.Membership(at)
-            inputs += InputIdentity.Order(at)
-            value.rows.forEach { row ->
-                collectValueInputs(row.key, at.item(row.id).mapKey(), inputs)
-                collectValueInputs(row.value, at.item(row.id).mapValue(), inputs)
-            }
-        }
-
-        else -> {
-            Unit
-        }
     }
 }
 

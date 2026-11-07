@@ -11,6 +11,6 @@ internal fun AuthoringView.savedState(findings: List<FindingSet>): AuthoringStat
         generation = catalog.generation,
         resources = resources.entries.sortedBy { it.key.value }.map { (id, record) -> AuthoringResource(id = id, content = record) },
         links = ResourceValueMapper.project(links.values, resources, catalog.relations).projections,
-        findings = findings.map { it.judgedAgainst(this) },
+        findings = findings.map { it.judgedAgainst(this).forReply() },
         confirmedObservation = AuthoringObservationId(value = observationId),
     )

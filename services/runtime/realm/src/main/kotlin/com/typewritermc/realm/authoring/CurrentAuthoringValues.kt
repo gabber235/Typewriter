@@ -2,6 +2,7 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.links
 import com.typewritermc.authoring.resourceIds
+import com.typewritermc.checking.InputIdentity
 import com.typewritermc.types.actualType
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
@@ -41,9 +42,10 @@ internal interface CurrentAuthoringValues {
     ): Set<LinkProjection>
 }
 
+/** Values of one view. Links are read per node from [projectionsAt], so reading one node's links judges only that node. */
 internal class CapturedAuthoringValues(
     private val resources: Map<ResourceId, AuthoringRecord>,
-    private val projections: Collection<LinkProjection>,
+    private val projectionsAt: (ResourceId) -> Collection<LinkProjection>,
 ) : CurrentAuthoringValues {
     override fun value(at: ValueLocation): DataValue? = resources[at.resource]?.valueAt(at.path)
 
@@ -56,7 +58,7 @@ internal class CapturedAuthoringValues(
         contract: RelationId,
         direction: TraversalDirection,
     ): Set<LinkProjection> =
-        projections.filterTo(linkedSetOf()) { projection ->
+        projectionsAt(resource).filterTo(linkedSetOf()) { projection ->
             projection.contract == contract &&
                 when (direction) {
                     TraversalDirection.FORWARD -> projection.first == resource
@@ -66,6 +68,58 @@ internal class CapturedAuthoringValues(
                 }
         }
 }
+
+/** The commit guard expectations a read of [identity] stands for in this view. */
+internal fun AuthoringView.expectations(identity: InputIdentity): List<EditExpectation> =
+    when (identity) {
+        is InputIdentity.Value, is InputIdentity.Membership, is InputIdentity.Order -> {
+            val at = identity.locationOf()
+            listOf(EditExpectation.createValue(at = at, expected = values.value(at)))
+        }
+
+        is InputIdentity.Form -> {
+            listOf(EditExpectation.createConfiguration(at = identity.at, expected = values.configuration(identity.at)))
+        }
+
+        is InputIdentity.Existence -> {
+            listOf(EditExpectation.createResourceExists(id = identity.resource, expected = values.resource(identity.resource) != null))
+        }
+
+        is InputIdentity.Resource -> {
+            listOf(EditExpectation.createResource(id = identity.resource, expected = values.resource(identity.resource)))
+        }
+
+        is InputIdentity.Selection -> {
+            listOf(EditExpectation.resourceIds(values.resourceIds()))
+        }
+
+        is InputIdentity.Incoming -> {
+            catalog.relations.filter { identity.relation == null || it.id == identity.relation }.map { contract ->
+                EditExpectation.links(
+                    identity.resource,
+                    contract.id,
+                    TraversalDirection.BOTH,
+                    values.links(identity.resource, contract.id, TraversalDirection.BOTH),
+                )
+            }
+        }
+
+        is InputIdentity.Types -> {
+            listOf(EditExpectation.createTypes(resource = identity.resource, expected = values.types(identity.resource)))
+        }
+
+        is InputIdentity.Catalog -> {
+            emptyList()
+        }
+    }
+
+private fun InputIdentity.locationOf(): ValueLocation =
+    when (this) {
+        is InputIdentity.Value -> at
+        is InputIdentity.Membership -> at
+        is InputIdentity.Order -> at
+        else -> error("$this has no value location.")
+    }
 
 internal fun CurrentAuthoringValues.actual(expected: EditExpectation): EditExpectation =
     when (expected) {

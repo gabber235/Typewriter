@@ -3,12 +3,16 @@ package com.typewritermc.realm.testing
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.SubmissionKey
+import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.RealmServices
+import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.edit.AuthoringMutationPlan
 import com.typewritermc.realm.edit.AuthoringMutationPlanner
 import com.typewritermc.realm.edit.AuthoringPlanRejected
@@ -28,6 +32,11 @@ import com.typewritermc.setup.Setup
 import com.typewritermc.testkit.CatalogEncoder
 import com.typewritermc.testkit.setup.SetupApplier
 import com.typewritermc.types.toResourceIds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
@@ -40,6 +49,7 @@ import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Where a [RealmFixture] saves authoring: in memory, or in an embedded SurrealDB with the Realm schema. */
 enum class RealmStorage { Memory, Surreal }
@@ -84,9 +94,15 @@ class RealmFixture private constructor(
     private val database: Surreal?,
     private var catalog: FixtureCatalog,
     private val storage: AuthoringStorage,
+    private val services: RealmServices = checkingServices(),
+    private val listener: GraphListener = GraphListener.NONE,
 ) : AutoCloseable {
     private val authors = mutableListOf<RealmAuthor>()
     private var activation: AutoCloseable? = null
+    private var runtime: RealmCheckRuntime? = null
+
+    /** What the realm's query graph computed, as its listener hears it. A restart keeps counting. */
+    internal val graphRuns = GraphRuns()
     private var generations = 0
     private var edits = 0
 
@@ -97,6 +113,42 @@ class RealmFixture private constructor(
 
     /** The check findings committed replies carry, as the Realm reads them from its check runtime; none by default. */
     internal var findings: () -> List<FindingSet> = { emptyList() }
+
+    /**
+     * The realm's check runtime on real threads, started on first use as Realm start starts it: from then on every
+     * commit runs a check pass. A restart starts a new one on first use.
+     */
+    internal val checks: RealmCheckRuntime
+        get() =
+            runtime ?: RealmCheckRuntime(views).also { runtime = it }.apply {
+                hearHints(this)
+                start()
+            }
+
+    private val hintCount = AtomicInteger()
+    private var hintListener: Job? = null
+
+    /** How many finding hints the check runtimes sent so far. A restart keeps counting. */
+    internal val hints: Int get() = hintCount.get()
+
+    private fun hearHints(runtime: RealmCheckRuntime) {
+        hintListener =
+            CoroutineScope(Dispatchers.Unconfined).launch(start = CoroutineStart.UNDISPATCHED) {
+                runtime.findingChanges.collect { hintCount.incrementAndGet() }
+            }
+    }
+
+    /**
+     * Commits [intents] as one edit that must commit. Every commit starts a check pass; once the realm's own checks
+     * run, this waits until they settled.
+     */
+    internal suspend fun commitChecked(vararg intents: EditIntent) {
+        commit(*intents).shouldBeCommitted()
+        runtime?.drain()
+    }
+
+    /** Reads the saved authoring from storage again, as the Realm does after a failed persist. */
+    internal fun reloadFromStorage() = views.invalidate(storage::readCoherent)
 
     /** Saved resources by id, as the Realm reads them now. */
     val resources: Map<ResourceId, AuthoringRecord> get() = views.read { it.resources }
@@ -119,7 +171,7 @@ class RealmFixture private constructor(
         closeViews()
         val active = catalog.activate("realm-${++generations}")
         activation = active.owner
-        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent())
+        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns + listener)
         owner = RealmAuthoringOwner(storage, views, findings = { findings() })
         provision()
     }
@@ -256,6 +308,10 @@ class RealmFixture private constructor(
     }
 
     private fun closeViews() {
+        runtime?.close()
+        runtime = null
+        hintListener?.cancel()
+        hintListener = null
         authors.forEach(RealmAuthor::close)
         authors.clear()
         if (::views.isInitialized) views.close()
@@ -304,7 +360,9 @@ class RealmFixture private constructor(
             catalog: DefinitionCatalog,
             seed: Map<ResourceId, AuthoringRecord> = emptyMap(),
             storage: MemoryAuthoringStorage = MemoryAuthoringStorage(AuthoringSeed(seed)),
-        ): RealmFixture = start(RealmFixture(null, catalog, storage))
+            services: RealmServices = checkingServices(),
+            listener: GraphListener = GraphListener.NONE,
+        ): RealmFixture = start(RealmFixture(null, catalog, storage, services, listener))
 
         /**
          * A Realm on [catalog] whose authoring is saved in an embedded SurrealDB with the Realm schema, starting with

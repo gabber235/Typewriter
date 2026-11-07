@@ -12,7 +12,7 @@ import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.expectedType
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.services.libs.utils.runExtension
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
@@ -25,7 +25,6 @@ import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
-import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Evaluates declarative check inputs within the tracked captured reads of one check execution.
@@ -34,13 +33,13 @@ import java.util.concurrent.atomic.AtomicLong
  * unrelated tuples. Missing values defer the check, failures remain diagnostic outcomes, and tuple limits
  * contribute incomplete read health so publication cannot treat truncated evaluation as success.
  */
-class RealmCheckInputs(
-    private val ids: () -> DiagnosticId = defaultDiagnosticIdFactory(),
-) {
+class RealmCheckInputs {
+    /** Evaluates [recipe] on [subject], drawing each diagnostic's id from [ids], so an equal rerun gives equal ids. */
     context(reads: CapturedAuthoringReads)
     fun evaluate(
         recipe: CheckRecipe,
         subject: DraftBinding,
+        ids: () -> DiagnosticId,
     ): CheckEvaluation {
         val candidates =
             recipe.inputs.map { input ->
@@ -69,27 +68,25 @@ class RealmCheckInputs(
                 }
             values.filterIsInstance<Availability.Unavailable>().flatMapTo(missing, Availability.Unavailable::locations)
             val failure = values.filterIsInstance<Availability.Failed>().firstOrNull()
-            if (failure != null) return failed(recipe, failure.diagnostic)
+            if (failure != null) return failed(recipe, failure.diagnostic, ids)
             if (values.any { it !is Availability.Available }) return@forEach
             val complete = values.map { (it as Availability.Available).value }
             if (tuple.candidates.zip(complete).any { (candidate, value) -> candidate.input.skipNull && value.value == DataValue.NULL }) {
                 return@forEach
             }
-            try {
-                if (!recipe.predicate.invoke(complete)) {
-                    findings += finding(recipe, subject, tuple, reads)
+            val holds =
+                runExtension({ recipe.predicate.invoke(complete) }) { failure ->
+                    return failed(
+                        recipe,
+                        EvaluationDiagnostic(
+                            failure = HostFailure.CheckCallbackFailed,
+                            message = failure.message ?: failure::class.simpleName.orEmpty(),
+                            locations = tuple.candidates.map(InputCandidate::location),
+                        ),
+                        ids,
+                    )
                 }
-            } catch (failure: Exception) {
-                failure.rethrowExceptional()
-                return failed(
-                    recipe,
-                    EvaluationDiagnostic(
-                        failure = HostFailure.CheckCallbackFailed,
-                        message = failure.message ?: failure::class.simpleName.orEmpty(),
-                        locations = tuple.candidates.map(InputCandidate::location),
-                    ),
-                )
-            }
+            if (!holds) findings += finding(recipe, subject, tuple, reads, ids)
         }
         if (missing.isNotEmpty()) return CheckEvaluation(CheckOutcome.NeedsInputWrapper(missing.toList()), findings)
         return CheckEvaluation(CheckOutcome.FINISHED, findings)
@@ -100,6 +97,7 @@ class RealmCheckInputs(
         subject: DraftBinding,
         tuple: InputTuple,
         reads: CapturedAuthoringReads,
+        ids: () -> DiagnosticId,
     ): Diagnostic {
         val targets =
             recipe.diagnostic.targets
@@ -123,6 +121,7 @@ class RealmCheckInputs(
     private fun failed(
         recipe: CheckRecipe,
         failure: EvaluationDiagnostic,
+        ids: () -> DiagnosticId,
     ): CheckEvaluation {
         val diagnostic =
             Diagnostic(
@@ -197,9 +196,4 @@ private fun occurrenceBindings(
         prefix += segment
     }
     return bindings
-}
-
-private fun defaultDiagnosticIdFactory(): () -> DiagnosticId {
-    val next = AtomicLong()
-    return { DiagnosticId(value = "realm:${next.getAndIncrement()}") }
 }

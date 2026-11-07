@@ -9,7 +9,12 @@ import com.typewritermc.authoring.TraversalBudget
 import com.typewritermc.authoring.UnresolvedLink
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.checking.InputIdentity
+import com.typewritermc.formula.graph.TrackedGraph
+import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
@@ -23,6 +28,13 @@ import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.arbitrary
+import io.kotest.property.arbitrary.boolean
+import io.kotest.property.arbitrary.int
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -44,6 +56,8 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
 internal fun graphRecord(
@@ -238,4 +252,84 @@ internal fun List<UnresolvedLink>.unfilled(): List<Pair<ResourceId, EndpointId>>
             occurrence.location.resource to
                 occurrence.endpoint
         }
+    }
+
+/** Whether these reads observed what [location] holds: its value, or which members a collection there has. */
+internal fun CapturedAuthoringReads.observedContentAt(location: ValueLocation): Boolean =
+    observedInputs().any { it == InputIdentity.Value(location) || it == InputIdentity.Membership(location) }
+
+/** A graph read as a check runs it: the resources [seed] reaches forward over the edge relation, read through the graph. */
+internal data class Reach(
+    val seed: ResourceId,
+) : RealmQuery<Set<ResourceId>> {
+    context(reads: RealmReads)
+    override fun compute(): Set<ResourceId> =
+        tracked()
+            .reachable(seed, RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.FORWARD), maxDepth = 5)
+            .resources
+            .mapTo(linkedSetOf()) { it.id.toSkir() }
+}
+
+/** Reads [query] at the realm's current revision, as a check pass does. */
+internal fun <T> RealmFixture.readNow(query: RealmQuery<T>): T = views.pin().use { it.reads.read(query) }
+
+/** The evidence of [query] at the realm's current revision: every fact it read. */
+internal fun RealmFixture.evidenceNow(query: RealmQuery<*>): List<EditExpectation> =
+    views.pin().use { pinned ->
+        with(pinned.reads) {
+            read(query)
+            query.factsRead { false }
+        }
+    }
+
+/** Points [source]'s edges at [targets] instead, as one value edit. */
+internal fun relink(
+    source: ResourceId,
+    targets: List<ResourceId>,
+): EditIntent {
+    val outgoing = ValuePath.root.field("outgoing")
+    return EditIntent.createSetValue(
+        at = ValueLocation.of(source, outgoing),
+        value = checkNotNull(graphRecord(source, targets).valueAt(outgoing)),
+    )
+}
+
+/** The nodes a generated graph edit touches. */
+internal val GRAPH_NODES = (0 until 5).map { ResourceId(value = "n$it") }
+
+/** One drawn edit of a graph of [GRAPH_NODES]: which node, and the bit set of nodes it links to. */
+internal data class GraphEdit(
+    val delete: Boolean,
+    val node: Int,
+    val targets: Int,
+)
+
+internal val graphEdits: Arb<GraphEdit> =
+    arbitrary { GraphEdit(Arb.boolean().bind(), Arb.int(GRAPH_NODES.indices).bind(), Arb.int(0 until (1 shl GRAPH_NODES.size)).bind()) }
+
+/**
+ * Commits [edit] as it fits the realm: a missing node is created with its links to present nodes, a present one is
+ * deleted or relinked. A refused edit changes nothing, which is a valid step too.
+ */
+internal suspend fun RealmFixture.apply(edit: GraphEdit) {
+    val node = GRAPH_NODES[edit.node]
+    val present = resources.keys
+    val targets = GRAPH_NODES.filterIndexed { index, target -> edit.targets and (1 shl index) != 0 && target in present }
+    commit(
+        when {
+            node !in present -> EditIntent.createCreateResource(id = node, record = graphRecord(node, targets))
+            edit.delete -> EditIntent.createDeleteResource(id = node)
+            else -> relink(node, targets)
+        },
+    )
+}
+
+/** [query]'s answer and evidence from the realm's live graph at its current revision. */
+internal fun <T> RealmFixture.liveNow(query: RealmQuery<T>): Pair<T, Set<EditExpectation>> =
+    views.pin().use { pinned -> with(pinned.reads) { read(query) to query.factsRead { false }.toSet() } }
+
+/** [query]'s answer and evidence from a new graph over the current view, which remembers nothing. */
+internal fun <T> RealmFixture.freshNow(query: RealmQuery<T>): Pair<T, Set<EditExpectation>> =
+    views.pin().use { pinned ->
+        with(TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin()) { read(query) to query.factsRead { false }.toSet() }
     }

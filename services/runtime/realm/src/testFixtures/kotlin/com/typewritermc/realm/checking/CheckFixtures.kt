@@ -25,17 +25,9 @@ import com.typewritermc.testkit.ready
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.use
-import skirout.editor.v1.authoring_facts.EditExpectation
-import skirout.editor.v1.checking.CheckInstanceId
-import skirout.editor.v1.checking.CheckOutcome
-import skirout.editor.v1.checking.CheckResult
-import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.diagnostic.DiagnosticTemplate
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.CheckExecutionId
-import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RuleId
@@ -45,49 +37,6 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
-
-internal val page = ResourceId(value = "page")
-internal val instance =
-    CheckInstanceId(
-        rule = RuleId(origin = RuleOrigin(owner = TEST_TYPE, ordinal = 0), localIndex = 0),
-        location = ValueLocation.of(page),
-    )
-internal val catalog = CatalogGeneration(value = "catalog")
-internal val first =
-    CheckTicket(instance = instance, incarnation = "catalog", execution = CheckExecutionId(value = "first"), catalog = catalog)
-
-/** A finished check result of [ticket] that read the page name as [name]. */
-internal fun resultOf(
-    ticket: CheckTicket = first,
-    name: String = "Quest",
-    outcome: CheckOutcome = CheckOutcome.FINISHED,
-) = CheckResult(
-    ticket = ticket,
-    outcome = outcome,
-    expectations = listOf(EditExpectation.createValue(at = location(page, "name"), expected = DataValue.StringValueWrapper(name))),
-    findings = emptyList(),
-)
-
-/** Runs [test] with a view store whose page is named [name], admitting against [current] as the latest execution. */
-internal fun admitting(
-    name: String = "Quest",
-    current: CheckTicket = first,
-    test: (InMemoryAuthoringViewStore, DefaultCheckAdmission) -> Unit,
-) {
-    InMemoryAuthoringViewStore(TestCatalogLease(catalog), AuthoringSeed(mapOf(page to record(name = name)))).use { store ->
-        val executions =
-            object : CurrentCheckExecutions {
-                override fun ticket(instance: CheckInstanceId) = current
-            }
-        test(store, DefaultCheckAdmission(store, executions))
-    }
-}
-
-/** Admits [result] as current findings and reports whether it was installed. */
-internal fun DefaultCheckAdmission.publish(result: CheckResult): Pair<AdmissionResult, Boolean> {
-    var installed = false
-    return requireCurrentExecutionAndInputs(result) { installed = true } to installed
-}
 
 /** Evaluates [recipe] on [record] saved as [RESOURCE], returning the evaluation and the health of its reads. */
 internal fun evaluate(
@@ -108,7 +57,13 @@ internal fun evaluate(
                     DraftExpectation.Complete(catalog.checked.ready(TEST_TYPE.use())),
                     TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
                 )
-            with(reads) { RealmCheckInputs().evaluate(recipe, binding) } to reads.health()
+            with(reads) {
+                RealmCheckInputs().evaluate(
+                    recipe,
+                    binding,
+                    CheckRunDiagnostics.of(RuleId(origin = recipe.owner, localIndex = 0), "test")::next,
+                )
+            } to reads.health()
         }
     }
 }
