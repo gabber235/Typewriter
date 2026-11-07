@@ -1052,7 +1052,8 @@ def cmd_topology(backend):
     step("topo prep", run_topo, topo, "prep")
     order = ("A", "B") if rep % 2 == 0 else ("B", "A")
     for name in order:
-        step(f"topo {name}", run_topo, topo, "run", "--topo", name, "--seed", str(rep + 1), "--restart", "0.01,0", "--label", f"ci{rep}")
+        extra = ["--parallel-moves", "1"] if name == "B" else []
+        step(f"topo {name}", run_topo, topo, "run", "--topo", name, "--seed", str(rep + 1), "--restart", "0.01,0", "--label", f"ci{rep}", *extra)
 
 
 def main():

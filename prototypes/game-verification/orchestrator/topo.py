@@ -460,7 +460,7 @@ class PerSlot(Topology):
     def __init__(self, label):
         super().__init__(label)
         self.P = [TPaper(self.run / f"paper{i}", f"P{i}") for i in range(4)]
-        self.restart_slots, self.restarting = 1, 0
+        self.restart_slots, self.restarting, self.parallel_moves = 1, 0, False
         for p in self.P:
             p.busy = False
 
@@ -521,10 +521,22 @@ class PerSlot(Topology):
     def execute(self, req, plan):
         p, cs = plan["paper"], plan["clients"]
         mt = 0.0
-        for c, src in plan["move"]:
-            m = move(c, p)
-            self.moves.append((f"{src.name}>{p.name}", m))
-            mt += m
+        t0 = time.perf_counter()
+        if self.parallel_moves and len(plan["move"]) > 1:
+            out = {}
+            ts = [threading.Thread(target=lambda c=c: out.__setitem__(c.name, move(c, p))) for c, _ in plan["move"]]
+            for t in ts:
+                t.start()
+            for t in ts:
+                t.join()
+            for c, src in plan["move"]:
+                if c.name not in out:
+                    raise RuntimeError(f"move of {c.name} failed")
+                self.moves.append((f"{src.name}>{p.name}", out[c.name]))
+        else:
+            for c, src in plan["move"]:
+                self.moves.append((f"{src.name}>{p.name}", move(c, p)))
+        mt = time.perf_counter() - t0
         if req["kind"] != "restart":
             r = attempt(p, cs, req)
             return {"pass": r["pass"], "ticks": r["ticks"], "seen": r["seen"], "wall_ms": r["wallMicros"] / 1000,
@@ -581,6 +593,7 @@ def cmd_run(a):
     with T(f"{a.label}-{a.topo}") as topo:
         if a.topo == "B":
             topo.restart_slots = a.restart_slots
+            topo.parallel_moves = bool(a.parallel_moves)
         pids = lambda: [p.proc.p.pid for p in topo.papers() if p.proc and p.proc.alive()] + client_pids(topo.clients)
         record("setup", label=a.label, topo=a.topo, boot=topo.boot, joins={c.name: c.join_s for c in topo.clients},
                rss_mb={str(p): R.rss_mb(p) for p in pids() if p})
@@ -600,6 +613,7 @@ def cmd_run(a):
             s = summarize(a.topo, mix, seed, rows, wall, mem, b0, b1, a.warm)
             s["restart_share"] = share
             s["restart_slots"] = getattr(topo, "restart_slots", 1)
+            s["parallel_moves"] = getattr(topo, "parallel_moves", False)
             s["moves"] = {k: stat([m for kk, m in topo.moves if kk == k]) for k in sorted({kk for kk, _ in topo.moves})}
             s["move_each_s"] = stat([m for _, m in topo.moves])
             s["stats"] = topo.stats_all()
@@ -633,6 +647,7 @@ def main(argv=None):
     r.add_argument("--seed", type=int, default=1)
     r.add_argument("--warm", type=int, default=100)
     r.add_argument("--restart", default="0.01")
+    r.add_argument("--parallel-moves", type=int, default=0, help="B: move the clients of a group claim at the same time")
     r.add_argument("--restart-slots", type=int, default=1, help="B: restarts at once (A has one extra Paper)")
     r.add_argument("--label", default="mac")
     r.add_argument("--keep-rows", type=int, default=0)
