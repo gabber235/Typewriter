@@ -293,8 +293,18 @@ pieces:
 
   - id: build
     status: figuring-out
-    open: Fabric Loom inside the services Gradle build, the Paper jar from run-paper's download service, and the gameTest task kept out of check are inferred, never built
-    tries: []
+    open: Which of P3's build file fixes to adopt, and how CI caches Loom (about 700 MB) and the patched Paper (about 216 MB)
+    tries:
+      - id: one-services-build
+        what: Loom client mod, patched Paper jar, framework plugin, agent and gameTest all inside the services Gradle build
+        taught: >-
+          P3: works, no included build, configuration time unchanged (new projects 31 ms), configuration
+          cache holds. Needed three existing build file changes: run-task in build-logic (detekt puts an
+          old kotlinx-serialization on every project's parent loader, and two run-paper projects clash),
+          Kover must skip gameTest (koverVerify depends on every Test task), coverage-merge must add only
+          Kover projects. Patching Paper stays in check while the plugin compiles against it.
+        state: working
+        evidence: ["branch proto/gv-build abad68436: services/playtest/FINDINGS.md, services/playtest/evidence/"]
 
 decided:
   - id: real-clients-only
@@ -350,4 +360,4 @@ open:
 
 slices: []
 
-next: P1, P3 and P4 running; P5 (goldens on devenv Mesa) then P6 (pool process) start as slots free. Check in with each result.
+next: P1 and P4 running, P5 (goldens on devenv Mesa) started after P3; P6 (pool process) starts when a slot frees. Check in with each result.
