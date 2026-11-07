@@ -1056,10 +1056,49 @@ def cmd_topology(backend):
         step(f"topo {name}", run_topo, topo, "run", "--topo", name, "--seed", str(rep + 1), "--restart", "0.01,0", "--label", f"ci{rep}", *extra)
 
 
+# ---------- boot prototype: how far a restart requirement's boot can be cut ----------
+
+BOOT_ALL = ["base", "nocache", "xshareoff", "cdsjoin", "aot", "aotfull", "aotnolink", "aotnojoin", "slim", "c1", "serial",
+            "parallel", "fastjvm", "jar", "cold", "best", "bestcds"]
+BOOT_PAR = ["base", "aot", "fastjvm", "best"]
+
+
+def boot_hooks(backend):
+    k = k_hooks(backend)  # boot.py builds on k.py's clients: the same Xvfb, renderer assertion and evidence copy
+    import boot
+    boot.hooks["cleanup"] = k.hooks["cleanup"]
+    return boot
+
+
+def rotated(names, rep):
+    """The same variants in another order per repeat, so a slow stretch of the runner does not always hit one."""
+    r = (rep * 5) % len(names)
+    return names[r:] + names[:r]
+
+
+def cmd_boot(backend, part):
+    boot = boot_hooks(backend)
+    rep = int(os.environ.get("MATRIX_REPEAT", "0") or 0)
+    names = os.environ.get("BOOT_VARIANTS", "").split(",") if os.environ.get("BOOT_VARIANTS") else None
+    deadline = str(JOB_T0 + BUDGET_S)
+    # The actions cache may carry caches from an earlier run; every variant trains its own on this runner.
+    for f in boot.AOT.glob("boot-*"):
+        f.unlink()
+    if part == "seq":
+        v = names or rotated(BOOT_ALL, rep)
+        step("boot seq", boot.main, ["run", "--variants", ",".join(v), "--n", "1", "--par", "1", "--after", "20", "--label", f"ci{rep}", "--deadline", deadline])
+    elif part == "par":
+        v = names or rotated(BOOT_PAR, rep)
+        step("boot par", boot.main, ["run", "--variants", ",".join(v), "--n", "1", "--par", "4", "--label", f"ci{rep}", "--deadline", deadline])
+    else:
+        for v in names or ["base", "aot", "best", "slim", "fastjvm"]:
+            step(f"boot phases {v}", boot.main, ["phases", "--variant", v, "--label", f"ci{rep}"])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "topology"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "topology", "bootseq", "bootpar", "bootphases"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -1110,6 +1149,8 @@ def main():
             cmd_breakstep(a.backend)
         elif a.plan == "topology":
             cmd_topology(a.backend)
+        elif a.plan.startswith("boot"):
+            cmd_boot(a.backend, a.plan[4:])
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

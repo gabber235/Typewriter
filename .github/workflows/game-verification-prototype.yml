@@ -4,7 +4,7 @@ name: Game verification prototype
 
 on:
   push:
-    branches: [proto/gv-topology]
+    branches: [proto/gv-boot]
     paths:
       - prototypes/game-verification/**
       - .github/workflows/game-verification-prototype.yml
@@ -13,21 +13,26 @@ permissions:
   contents: read
 
 concurrency:
-  group: game-verification-topology
+  group: game-verification-boot
   cancel-in-progress: true
 
 jobs:
   measure:
-    name: ${{ matrix.plan }} ${{ matrix.backend }} ${{ matrix.runner }} ${{ matrix.repeat }}
+    name: ${{ matrix.plan }} java ${{ matrix.java }} ${{ matrix.runner }} ${{ matrix.repeat }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 100
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 0 }
+          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 1 }
+          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 2 }
+          - { plan: bootpar, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 0 }
+          - { plan: bootpar, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 1 }
+          - { plan: bootpar, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 2 }
+          - { plan: bootphases, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 0 }
+          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "26", repeat: 3, variants: "base,aot,aotfull,best" }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -43,7 +48,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "25"
+          java-version: ${{ matrix.java }}
       - name: Install Xvfb and the software renderers
         run: |
           date +%T
@@ -73,13 +78,14 @@ jobs:
         continue-on-error: true
         env:
           MATRIX_REPEAT: ${{ matrix.repeat }}
+          BOOT_VARIANTS: ${{ matrix.variants }}
           CI_BUDGET_S: "5100"
         run: /usr/bin/python3 orchestrator/ci.py plan ${{ matrix.plan }} --backend ${{ matrix.backend }}
       - name: Upload results and frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: h-${{ matrix.plan }}-${{ matrix.backend }}-${{ runner.arch }}-${{ matrix.repeat }}
+          name: h-${{ matrix.plan }}-java${{ matrix.java }}-${{ runner.arch }}-${{ matrix.repeat }}
           retention-days: 14
           if-no-files-found: warn
           path: |
@@ -105,3 +111,5 @@ jobs:
             prototypes/game-verification/runs/n.jsonl
             prototypes/game-verification/runs/n-logs
             prototypes/game-verification/runs/topo.jsonl
+            prototypes/game-verification/runs/boot.jsonl
+            prototypes/game-verification/runs/boot-phases
