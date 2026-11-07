@@ -29,29 +29,34 @@ class LabeledMessage extends StatelessWidget {
 
     final textColor = textStyle.color;
 
+    final grow = motionTimeline(context, MotionToken.loadIn);
+    final content = _LabeledMessageRender(
+      label: hasLabel
+          ? Text(
+              label!,
+              style:
+                  labelStyle ??
+                  theme.textTheme.titleSmall?.copyWith(color: textColor),
+            )
+          : null,
+      message: hasMessage
+          ? Text(
+              message!,
+              style:
+                  messageStyle ??
+                  context.text.sentenceSmall.copyWith(
+                    color: textColor?.withValues(alpha: 0.7),
+                  ),
+            )
+          : null,
+    );
+    // A zero length size change would land inside layout.
+    if (grow.duration == Duration.zero) return content;
     return AnimatedSize(
       alignment: Alignment.topLeft,
-      duration: 200.ms,
-      child: _LabeledMessageRender(
-        label: hasLabel
-            ? Text(
-                label!,
-                style:
-                    labelStyle ??
-                    theme.textTheme.titleSmall?.copyWith(color: textColor),
-              )
-            : null,
-        message: hasMessage
-            ? Text(
-                message!,
-                style:
-                    messageStyle ??
-                    context.text.sentenceSmall.copyWith(
-                      color: textColor?.withValues(alpha: 0.7),
-                    ),
-              )
-            : null,
-      ),
+      duration: grow.duration,
+      curve: grow.curve,
+      child: content,
     );
   }
 }

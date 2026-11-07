@@ -105,30 +105,43 @@ class _SelectorStory extends HookConsumerWidget {
               id: "boxes",
               borderRadius: BorderRadius.circular(12),
               margin: EdgeInsets.only(top: 8, left: 8),
-              child: FloatingButton(
-                icon: const Icon(Icons.add),
-                onPressed: () {
-                  final count = selectables.value.length;
-                  selectables.value = [
-                    ...selectables.value,
-                    _selectable("Page ${count + 1}", count),
-                  ];
-                },
-                child: Section(
-                  margin: EdgeInsets.zero,
-                  child: Center(
-                    child: Wrap(
-                      spacing: 24,
-                      runSpacing: 24,
-                      children: List.generate(
-                        selectables.value.length,
-                        (index) => _SelectableCard(
-                          selectable: selectables.value[index],
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Section(
+                      margin: EdgeInsets.zero,
+                      child: Center(
+                        child: Wrap(
+                          spacing: 24,
+                          runSpacing: 24,
+                          children: List.generate(
+                            selectables.value.length,
+                            (index) => _SelectableCard(
+                              selectable: selectables.value[index],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    right: context.spacing.space2,
+                    bottom: context.spacing.space2,
+                    child: Button(
+                      face: ButtonFace.floating,
+                      icon: const Icon(Icons.add),
+                      label: "Add page",
+
+                      onPressed: () {
+                        final count = selectables.value.length;
+                        selectables.value = [
+                          ...selectables.value,
+                          _selectable("Page ${count + 1}", count),
+                        ];
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

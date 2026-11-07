@@ -84,8 +84,10 @@ class Admonition extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: context.shapes.mediumBorderRadius,
           ),
-          child: InkWell(
-            onTap: onTap,
+          child: Button(
+            face: ButtonFace.bare,
+            label: "Show details",
+            onPressed: onTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: Row(

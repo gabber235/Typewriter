@@ -23,18 +23,27 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text("Action 0"));
+      final chip = find.bySemanticsLabel(RegExp("^Action 0"));
+      await tester.tap(chip);
       await tester.pump();
 
-      // The spinner's label joins the action's own in what the user hears.
-      expect(find.bySemanticsLabel(RegExp("Loading")), findsOneWidget);
+      // While it runs the chip is heard as unavailable and its word ripples.
+      expect(
+        tester.getSemantics(chip).getSemanticsData().flagsCollection.isEnabled,
+        Tristate.isFalse,
+      );
+      expect(find.text("Action 0"), findsNothing);
 
-      await tester.tap(find.text("Action 0"), warnIfMissed: false);
+      await tester.tap(chip, warnIfMissed: false);
       await tester.pump();
       finish.complete();
       await panel.settle();
 
-      expect(find.bySemanticsLabel(RegExp("Loading")), findsNothing);
+      expect(
+        tester.getSemantics(chip).getSemanticsData().flagsCollection.isEnabled,
+        Tristate.isTrue,
+      );
+      expect(find.text("Action 0"), findsOneWidget);
       expect(runs, 1);
     },
   );

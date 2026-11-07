@@ -101,11 +101,12 @@ class JoinCodeCard extends HookConsumerWidget {
                     : _confirmRevokeCode(context, ref),
               ),
             ],
-            child: InkWell(
-              onTap: expansibleController.toggle,
-              borderRadius: BorderRadius.vertical(
-                top: context.shapes.mediumRadius,
-              ),
+            child: Button(
+              face: ButtonFace.bare,
+              label: expansibleController.isExpanded
+                  ? "Hide join code details"
+                  : "Show join code details",
+              onPressed: expansibleController.toggle,
               child: Padding(
                 padding: EdgeInsets.all(context.spacing.space3),
                 child: Row(
@@ -192,31 +193,19 @@ class JoinCodeCard extends HookConsumerWidget {
                     spacing: context.spacing.space2,
                     runSpacing: context.spacing.space2,
                     children: [
-                      OutlinedButton.icon(
-                        onPressed: () => _copyToClipboard(context, fullUrl),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.colors.brandText,
-                          side: BorderSide(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        ),
+                      Button(
+                        face: ButtonFace.outlined,
                         icon: const Icon(Icons.copy, size: 18),
-                        label: const Text("Copy Join Code"),
+                        label: "Copy Join Code",
+                        color: context.colors.brandText,
+                        onPressed: () => _copyToClipboard(context, fullUrl),
                       ),
-                      OutlinedButton.icon(
-                        onPressed: () => _confirmRevokeCode(context, ref),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: context.colors.dangerText,
-                          side: BorderSide(
-                            color: theme.colorScheme.error.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        ),
+                      Button(
+                        face: ButtonFace.outlined,
                         icon: const Icon(Icons.link_off, size: 18),
-                        label: const Text("Revoke"),
+                        label: "Revoke",
+                        color: context.colors.dangerText,
+                        onPressed: () => _confirmRevokeCode(context, ref),
                       ),
                     ],
                   ),

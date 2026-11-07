@@ -143,9 +143,10 @@ class _SelectorButton<T> extends StatelessWidget {
     shape: RoundedRectangleBorder(
       borderRadius: context.shapes.mediumBorderRadius,
     ),
-    child: InkWell(
-      onTap: show,
-      borderRadius: context.shapes.mediumBorderRadius,
+    child: Button(
+      face: ButtonFace.bare,
+      label: "",
+      onPressed: show,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         child: buttonBuilder(selected),

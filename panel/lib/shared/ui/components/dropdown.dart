@@ -199,13 +199,14 @@ class Dropdown<T extends Object> extends HookWidget {
                   padding: inputDecorationTheme?.isCollapsed == true
                       ? EdgeInsets.zero
                       : EdgeInsets.all(context.spacing.space1),
-                  child: IconButton(
+                  child: Button(
+                    face: ButtonFace.icon,
                     focusNode: toggleFocusNode,
-                    isSelected: menu.isOpen,
+                    label: menu.isOpen ? "Close choices" : "Open choices",
                     tooltip: menu.isOpen ? "Close choices" : "Open choices",
-                    constraints: inputDecorationTheme?.suffixIconConstraints,
-                    icon: trailingIcon ?? const Icon(Icons.arrow_drop_down),
-                    selectedIcon: const Icon(Icons.arrow_drop_up),
+                    icon: menu.isOpen
+                        ? const Icon(Icons.arrow_drop_up)
+                        : trailingIcon ?? const Icon(Icons.arrow_drop_down),
                     onPressed: !enabled
                         ? null
                         : () {

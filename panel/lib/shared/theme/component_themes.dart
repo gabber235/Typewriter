@@ -57,7 +57,8 @@ ThemeData applyComponentThemes(
     ),
     helperStyle: text.sentenceSmall.copyWith(color: colors.contentSecondary),
   );
-  ButtonStyle button(Color foreground) => ButtonStyle(
+  // Menus keep Material until the surfaces PR moves them to RawMenuAnchor.
+  ButtonStyle menuItem(Color foreground) => ButtonStyle(
     // Unavailable text keeps 4.5:1.
     foregroundColor: WidgetStateProperty.resolveWith(
       (values) => values.contains(WidgetState.disabled)
@@ -71,13 +72,13 @@ ThemeData applyComponentThemes(
   );
   return base.copyWith(
     scaffoldBackgroundColor: colors.canvas,
-    hoverColor: colors.contentPrimary.withValues(alpha: states.hoverOpacity),
-    // Focus is the ring layer's ring, never a wash.
+    // The Material that stays draws no ink: a press is the Button's move and
+    // focus is the ring layer's ring, never a wash.
+    splashFactory: NoSplash.splashFactory,
+    hoverColor: Colors.transparent,
     focusColor: Colors.transparent,
-    highlightColor: colors.contentPrimary.withValues(
-      alpha: states.pressedOpacity,
-    ),
-    splashColor: colors.contentPrimary.withValues(alpha: states.pressedOpacity),
+    highlightColor: Colors.transparent,
+    splashColor: Colors.transparent,
     inputDecorationTheme: input,
     appBarTheme: AppBarTheme(
       backgroundColor: colors.canvas,
@@ -143,53 +144,8 @@ ThemeData applyComponentThemes(
       textColor: colors.contentPrimary,
       iconColor: colors.contentSecondary,
     ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: button(colors.onBrand).copyWith(
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (values) => values.contains(WidgetState.disabled)
-              ? colors.brand.withValues(alpha: states.disabledContainerOpacity)
-              : colors.brand,
-        ),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: button(colors.onBrand).copyWith(
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (values) => values.contains(WidgetState.disabled)
-              ? colors.brand.withValues(alpha: states.disabledContainerOpacity)
-              : colors.brand,
-        ),
-        elevation: WidgetStateProperty.resolveWith(
-          (values) => values.contains(WidgetState.disabled) ? 0 : 1,
-        ),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(style: button(colors.brandText)),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: button(colors.brandText).copyWith(
-        side: WidgetStateProperty.resolveWith(
-          (values) => BorderSide(
-            color: values.contains(WidgetState.disabled)
-                ? colors.brand.withValues(
-                    alpha: states.disabledContainerOpacity,
-                  )
-                : colors.brand,
-          ),
-        ),
-      ),
-    ),
-    iconButtonTheme: IconButtonThemeData(
-      style: button(colors.contentPrimary)
-          .copyWith(padding: const WidgetStatePropertyAll(EdgeInsets.zero)),
-    ),
-    floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: colors.brandContainer,
-      foregroundColor: colors.onBrandContainer,
-      disabledElevation: 0,
-      shape: shapes.largeShape,
-    ),
     menuButtonTheme: MenuButtonThemeData(
-      style: button(colors.contentPrimary).copyWith(
+      style: menuItem(colors.contentPrimary).copyWith(
         shape: WidgetStatePropertyAll(shapes.smallShape),
         padding: WidgetStatePropertyAll(
           EdgeInsets.symmetric(
@@ -242,7 +198,7 @@ ThemeData applyComponentThemes(
       ),
       indicatorAnimation: TabIndicatorAnimation.elastic,
       splashBorderRadius: BorderRadius.circular(100),
-      splashFactory: InkSplash.splashFactory,
+      splashFactory: NoSplash.splashFactory,
       labelPadding: EdgeInsets.symmetric(horizontal: spacing.space2),
     ),
     cardTheme: CardThemeData(

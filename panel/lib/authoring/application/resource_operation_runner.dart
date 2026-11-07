@@ -326,13 +326,14 @@ final class ResourceOperationRunner {
             title: Text(warning.title),
             content: Text(warning.message),
             actions: [
-              TextButton(
+              Button(
+                label: "Cancel",
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text("Cancel"),
               ),
-              FilledButton(
+              Button(
+                face: ButtonFace.filled,
+                label: warning.confirmationLabel,
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text(warning.confirmationLabel),
               ),
             ],
           ),
@@ -411,13 +412,14 @@ final class ResourceOperationRunner {
                 ),
               ),
               actions: [
-                TextButton(
+                Button(
+                  label: "Cancel",
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text("Cancel"),
                 ),
-                FilledButton(
+                Button(
+                  face: ButtonFace.filled,
+                  label: retryMessage == null ? "Submit" : "Retry",
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(retryMessage == null ? "Submit" : "Retry"),
                 ),
               ],
             ),
@@ -501,10 +503,10 @@ final class ResourceOperationRunner {
       title: Text(label),
       content: Text(message),
       actions: [
-        TextButton(
+        Button(
+          label: "Close",
           autofocus: true,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text("Close"),
         ),
       ],
     ),

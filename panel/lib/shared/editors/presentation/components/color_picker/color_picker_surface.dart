@@ -188,7 +188,12 @@ class ColorPickerSurface extends HookConsumerWidget {
                           ),
                           const Spacer(),
                           if (showCopyAction)
-                            IconButton(
+                            Button(
+                              face: ButtonFace.icon,
+                              icon: const Icones(
+                                MaterialSymbols.content_copy_rounded,
+                              ),
+                              label: "Copy color",
                               tooltip: "Copy color",
                               onPressed: () => Clipboard.setData(
                                 ClipboardData(
@@ -197,11 +202,17 @@ class ColorPickerSurface extends HookConsumerWidget {
                                   ),
                                 ),
                               ),
-                              icon: const Icones(
-                                MaterialSymbols.content_copy_rounded,
-                              ),
                             ),
-                          IconButton(
+                          Button(
+                            face: ButtonFace.icon,
+                            icon: Icones(
+                              library.favorites.contains(color.argbValue)
+                                  ? MaterialSymbols.star_rounded
+                                  : MaterialSymbols.star_outline_rounded,
+                            ),
+                            label: library.favorites.contains(color.argbValue)
+                                ? "Remove from favorites"
+                                : "Add to favorites",
                             tooltip: library.favorites.contains(color.argbValue)
                                 ? "Remove from favorites"
                                 : "Add to favorites",
@@ -210,11 +221,6 @@ class ColorPickerSurface extends HookConsumerWidget {
                                     color.argbValue,
                                   )
                                 : null,
-                            icon: Icones(
-                              library.favorites.contains(color.argbValue)
-                                  ? MaterialSymbols.star_rounded
-                                  : MaterialSymbols.star_outline_rounded,
-                            ),
                           ),
                         ],
                       ),

@@ -96,15 +96,16 @@ final class AuthoringConflictComparison extends HookWidget {
         Wrap(
           spacing: context.spacing.space2,
           children: [
-            TextButton(
+            Button(
+              label: "Use saved",
               onPressed: enabled ? () => resolve(onUseSaved) : null,
-              child: const Text("Use saved"),
             ),
-            FilledButton(
+            Button(
+              face: ButtonFace.filled,
+              label: "Keep mine",
               onPressed: !enabled || onKeepMine == null
                   ? null
                   : () => resolve(onKeepMine!),
-              child: const Text("Keep mine"),
             ),
           ],
         ),

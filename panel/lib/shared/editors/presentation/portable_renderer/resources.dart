@@ -683,12 +683,13 @@ class _ResourceTreeGroupHeader extends StatelessWidget {
       padding: EdgeInsetsDirectional.only(start: depth * _treeIndent),
       child: Row(
         children: [
-          IconButton(
-            visualDensity: VisualDensity.compact,
+          Button(
+            face: ButtonFace.icon,
+            icon: Icon(expanded ? Icons.expand_more : Icons.chevron_right),
+            label: expanded ? "Collapse ${group.name}" : "Expand ${group.name}",
             tooltip: expanded
                 ? "Collapse ${group.name}"
                 : "Expand ${group.name}",
-            icon: Icon(expanded ? Icons.expand_more : Icons.chevron_right),
             onPressed: onToggle,
           ),
           Expanded(child: header),

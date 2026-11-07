@@ -177,9 +177,10 @@ class MotionLab extends HookWidget {
                 children: [
                   Text(token.name, style: base.textTheme.titleLarge),
                   const Spacer(),
-                  FilledButton(
+                  Button(
+                    face: ButtonFace.filled,
+                    label: "Replay",
                     onPressed: () => replay.value++,
-                    child: const Text("Replay"),
                   ),
                 ],
               ),
@@ -286,7 +287,11 @@ class _HoverDemo extends HookWidget {
             ? const ShortcutDisplay(
                 shortcut: SingleActivator(LogicalKeyboardKey.keyD),
               )
-            : FilledButton(onPressed: () {}, child: const Text("Publish")),
+            : const ButtonContent(
+                face: ButtonFace.filled,
+                unavailable: false,
+                label: Text("Publish"),
+              ),
       ),
     );
   }
@@ -381,9 +386,10 @@ class _RowsDemo extends HookWidget {
         for (var code = 1; code <= codes.value; code++)
           Enter(key: ValueKey(code), child: _LabRow("Join code $code")),
         SizedBox(height: context.spacing.space2),
-        OutlinedButton(
+        Button(
+          face: ButtonFace.outlined,
+          label: "Add join code",
           onPressed: codes.value < 4 ? () => codes.value++ : null,
-          child: const Text("Add join code"),
         ),
       ],
     );
@@ -407,9 +413,10 @@ class _RemoveDemo extends HookWidget {
         Leave(progress: progress, child: const _LabRow("Ben")),
         const _LabRow("Cleo"),
         SizedBox(height: context.spacing.space2),
-        OutlinedButton(
+        Button(
+          face: ButtonFace.outlined,
+          label: gone ? "Restore Ben" : "Remove Ben",
           onPressed: () => removed.value = !gone,
-          child: Text(gone ? "Restore Ben" : "Remove Ben"),
         ),
       ],
     );
@@ -523,18 +530,19 @@ class _HoldDemo extends HookWidget {
           onPointerDown: (_) => clock.press(hold),
           onPointerUp: (_) => clock.release(),
           onPointerCancel: (_) => clock.release(),
-          child: OutlinedButton(
+          child: Button(
+            face: ButtonFace.outlined,
+            label: "Hold to remove",
             onPressed: () {},
-            child: const Text("Hold to remove"),
           ),
         ),
         if (removed.value)
-          TextButton(
+          Button(
+            label: "Bring Ada back",
             onPressed: () {
               clock.reset();
               removed.value = false;
             },
-            child: const Text("Bring Ada back"),
           ),
       ],
     );
@@ -596,9 +604,10 @@ class _PressDemo extends HookWidget {
     final resolved = resolveMotion(context, MotionToken.press);
     final value = useMotion(MotionToken.press, down ? 1 : 0).value;
     final landing = resolved.landing;
-    Widget button = FilledButton(
-      onPressed: () {},
-      child: const Text("Publish"),
+    Widget button = const ButtonContent(
+      face: ButtonFace.filled,
+      unavailable: false,
+      label: Text("Publish"),
     );
     if (resolved.still && down) {
       button = DecoratedBox(
@@ -710,7 +719,11 @@ class _SurfaceDemo extends HookWidget {
           scale: behind,
           child: Align(
             alignment: Alignment.topLeft,
-            child: OutlinedButton(onPressed: () {}, child: const Text("Open")),
+            child: const ButtonContent(
+              face: ButtonFace.outlined,
+              unavailable: false,
+              label: Text("Open"),
+            ),
           ),
         ),
         if (value > 0)
@@ -862,9 +875,10 @@ class _TypeDemo extends HookWidget {
     final count = useTyping(text);
     return Align(
       alignment: Alignment.topLeft,
-      child: FilledButton(
-        onPressed: () {},
-        child: Text(text.substring(0, count)),
+      child: ButtonContent(
+        face: ButtonFace.filled,
+        unavailable: false,
+        label: Text(text.substring(0, count)),
       ),
     );
   }
@@ -996,7 +1010,11 @@ class _JamDemo extends HookWidget {
             color: context.colors.danger.withValues(alpha: 0.6 * shown),
             borderRadius: BorderRadius.circular(context.shapes.medium),
           ),
-          child: FilledButton(onPressed: () {}, child: const Text("Publish")),
+          child: const ButtonContent(
+            face: ButtonFace.filled,
+            unavailable: false,
+            label: Text("Publish"),
+          ),
         ),
       ),
     );

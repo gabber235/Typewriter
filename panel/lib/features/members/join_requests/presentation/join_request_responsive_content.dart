@@ -76,22 +76,19 @@ class JoinRequestResponsiveContent extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
+              child: Button(
+                face: ButtonFace.outlined,
+                label: "Decline",
+                color: context.colors.dangerText,
                 onPressed: onDecline,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: context.colors.dangerText,
-                  side: BorderSide(
-                    color: theme.colorScheme.error.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Text("Decline"),
               ),
             ),
             SizedBox(width: context.spacing.space2),
             Expanded(
-              child: FilledButton(
+              child: Button(
+                face: ButtonFace.filled,
+                label: isExpanded ? "Cancel" : "Accept",
                 onPressed: onToggle,
-                child: Text(isExpanded ? "Cancel" : "Accept"),
               ),
             ),
           ],

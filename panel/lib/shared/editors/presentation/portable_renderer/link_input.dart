@@ -243,18 +243,13 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                   _operationAppearance(
                     control.content,
                     scope,
-                    (states, buttonStyle) => IconButton(
-                      focusNode: row.recoveryFocus,
-                      statesController: states,
+                    (states, buttonStyle) => _linkChooseButton(
+                      scope,
+                      control,
+                      linked: link != null,
+                      states: states,
                       style: buttonStyle,
-                      tooltip: _operationText(
-                        scope,
-                        control.content?.operationTooltip ??
-                            control.content?.chooseLabel,
-                        link == null
-                            ? "Choose linked resource"
-                            : "Change linked resource",
-                      ),
+                      focusNode: row.recoveryFocus,
                       onPressed: enabled
                           ? () => runDirectLinkChange(
                               context: context,
@@ -265,11 +260,6 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                               candidateDefinition: candidateDefinition,
                             )
                           : null,
-                      icon: _operationGlyph(
-                        control.content?.chooseIcon,
-                        scope,
-                        Icon(link == null ? Icons.link : Icons.edit_outlined),
-                      ),
                     ),
                     tooltip: false,
                   ),
@@ -372,14 +362,11 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
     build: (context) => _operationAppearance(
       control.content,
       scope,
-      (states, style) => IconButton(
-        statesController: states,
+      (states, style) => _linkClearButton(
+        scope,
+        control,
+        states: states,
         style: style,
-        tooltip: _operationText(
-          scope,
-          control.content?.operationTooltip ?? control.content?.unlinkLabel,
-          "Clear link",
-        ),
         onPressed: scope.canExecuteAction && scope.host is PortableLinkHost
             ? () => runCollectionClear(
                 row: row,
@@ -388,11 +375,6 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
                 occurrence: occurrence,
               )
             : null,
-        icon: _operationGlyph(
-          control.content?.unlinkIcon,
-          scope,
-          const Icon(Icons.link_off),
-        ),
       ),
       tooltip: false,
     ),
@@ -472,17 +454,12 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
               _operationAppearance(
                 control.content,
                 scope,
-                (states, style) => IconButton(
-                  statesController: states,
+                (states, style) => _linkChooseButton(
+                  scope,
+                  control,
+                  linked: link != null,
+                  states: states,
                   style: style,
-                  tooltip: _operationText(
-                    scope,
-                    control.content?.operationTooltip ??
-                        control.content?.chooseLabel,
-                    link == null
-                        ? "Choose linked resource"
-                        : "Change linked resource",
-                  ),
                   onPressed: enabled
                       ? () => _chooseLink(
                           context: context,
@@ -493,11 +470,6 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                           candidateDefinition: candidateDefinition,
                         )
                       : null,
-                  icon: _operationGlyph(
-                    control.content?.chooseIcon,
-                    scope,
-                    Icon(link == null ? Icons.link : Icons.edit_outlined),
-                  ),
                 ),
                 tooltip: false,
               ),
@@ -505,15 +477,11 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                 _operationAppearance(
                   control.content,
                   scope,
-                  (states, style) => IconButton(
-                    statesController: states,
+                  (states, style) => _linkClearButton(
+                    scope,
+                    control,
+                    states: states,
                     style: style,
-                    tooltip: _operationText(
-                      scope,
-                      control.content?.operationTooltip ??
-                          control.content?.unlinkLabel,
-                      "Clear link",
-                    ),
                     onPressed: enabled
                         ? () {
                             unawaited(
@@ -531,11 +499,6 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                             );
                           }
                         : null,
-                    icon: _operationGlyph(
-                      control.content?.unlinkIcon,
-                      scope,
-                      const Icon(Icons.link_off),
-                    ),
                   ),
                   tooltip: false,
                 ),
@@ -601,4 +564,66 @@ final class _MissingLinkTarget extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The icon button that chooses a linked resource, or changes it once one
+/// is [linked].
+Widget _linkChooseButton(
+  PortablePresentationScope scope,
+  skir.LinkControl control, {
+  required bool linked,
+  required WidgetStatesController states,
+  required ButtonStyle style,
+  required VoidCallback? onPressed,
+  FocusNode? focusNode,
+}) {
+  final text = _operationText(
+    scope,
+    control.content?.operationTooltip ?? control.content?.chooseLabel,
+    linked ? "Change linked resource" : "Choose linked resource",
+  );
+  return Button(
+    face: ButtonFace.icon,
+    icon: _operationGlyph(
+      control.content?.chooseIcon,
+      scope,
+      Icon(linked ? Icons.edit_outlined : Icons.link),
+    ),
+    label: text,
+    tooltip: text,
+    color: _accentOf(style, null),
+    dense: _denseOf(style),
+    statesController: states,
+    focusNode: focusNode,
+    onPressed: onPressed,
+  );
+}
+
+/// The icon button that clears a link.
+Widget _linkClearButton(
+  PortablePresentationScope scope,
+  skir.LinkControl control, {
+  required WidgetStatesController states,
+  required ButtonStyle style,
+  required VoidCallback? onPressed,
+}) {
+  final text = _operationText(
+    scope,
+    control.content?.operationTooltip ?? control.content?.unlinkLabel,
+    "Clear link",
+  );
+  return Button(
+    face: ButtonFace.icon,
+    icon: _operationGlyph(
+      control.content?.unlinkIcon,
+      scope,
+      const Icon(Icons.link_off),
+    ),
+    label: text,
+    tooltip: text,
+    color: _accentOf(style, null),
+    dense: _denseOf(style),
+    statesController: states,
+    onPressed: onPressed,
+  );
 }

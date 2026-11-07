@@ -104,9 +104,10 @@ final class _AuthoredPresentationHeader extends HookWidget {
             ),
           ),
           color: context.colors.surface.withValues(alpha: 0),
-          child: InkWell(
-            onTap: collapsible && scope.enabled ? toggleExpanded : null,
-            borderRadius: context.shapes.mediumBorderRadius,
+          child: Button(
+            face: ButtonFace.bare,
+            label: "",
+            onPressed: collapsible && scope.enabled ? toggleExpanded : null,
             child: Padding(
               padding: header.headerPadding == null
                   ? EdgeInsets.symmetric(
@@ -251,11 +252,13 @@ final class _AuthoredPresentationHeader extends HookWidget {
   }
 
   Widget _expandButton(bool expanded, VoidCallback toggleExpanded) {
-    return IconButton(
-      focusNode: collectionDisclosureFocusNode ?? collectionRecoveryFocusNode,
-      tooltip: expanded ? "Collapse" : "Expand",
-      onPressed: scope.enabled ? toggleExpanded : null,
+    return Button(
+      face: ButtonFace.icon,
       icon: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
+      label: expanded ? "Collapse" : "Expand",
+      tooltip: expanded ? "Collapse" : "Expand",
+      focusNode: collectionDisclosureFocusNode ?? collectionRecoveryFocusNode,
+      onPressed: scope.enabled ? toggleExpanded : null,
     );
   }
 
@@ -362,35 +365,28 @@ final class _AuthoredPresentationHeader extends HookWidget {
                   ? const Icon(Icons.more_horiz, size: 18)
                   : Icones(iconName, size: 18);
               if (pinned) {
-                return IconButton(
+                return Button(
+                  face: ButtonFace.icon,
                   focusNode: focusNode,
                   tooltip: tooltip,
                   onPressed: enabled ? activate : null,
-                  style: destructive
-                      ? IconButton.styleFrom(
-                          foregroundColor: context.colors.dangerText,
-                        )
-                      : null,
-                  icon: Semantics(label: label, child: icon),
+                  color: destructive ? context.colors.dangerText : null,
+                  icon: icon,
+                  label: label,
                 );
               }
-              return TextButton.icon(
+              return Button(
                 onPressed: enabled ? activate : null,
-                style: destructive
-                    ? TextButton.styleFrom(
-                        foregroundColor: context.colors.dangerText,
-                      )
-                    : null,
+                color: destructive ? context.colors.dangerText : null,
+                tooltip: tooltip,
                 icon: icon,
-                label: Text(label),
+                label: label,
               );
             },
           );
           resolved.add(
             _AuthoredHeaderItem(
-              widget: pinned
-                  ? button
-                  : Tooltip(message: tooltip, child: button),
+              widget: button,
               placement: placement,
               priority: _priority(value.priority),
               order: currentOrder,
@@ -674,18 +670,15 @@ final class _AuthoredPresentationHeader extends HookWidget {
           title: Text(title),
           content: Text(message),
           actions: [
-            TextButton(
+            Button(
+              label: "Cancel",
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text("Cancel"),
             ),
-            FilledButton(
+            Button(
+              face: ButtonFace.filled,
               onPressed: () => Navigator.of(context).pop(true),
-              style: destructive
-                  ? FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    )
-                  : null,
-              child: Text(label),
+              color: destructive ? Theme.of(context).colorScheme.error : null,
+              label: label,
             ),
           ],
         ),

@@ -90,9 +90,10 @@ class _SecretFieldContent extends StatelessWidget {
         prefix: prefix,
         hasPrefix: hasPrefix,
       ),
-      SecretFieldLoading() => _TypewriterLoadingDisplay(
+      SecretFieldLoading() => _ConcealedDisplay(
         prefix: prefix,
         hasPrefix: hasPrefix,
+        loading: true,
       ),
       SecretFieldRevealed(:final value) => _RevealedDisplay(
         prefix: prefix,
@@ -169,36 +170,24 @@ class _SecretFieldContent extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.end,
           children: [
             if (canCopy)
-              LoadingButton.textIcon(
+              Button(
                 onPressed: onCopy,
                 icon: const Icones(
                   MaterialSymbols.content_copy_rounded,
                   size: 16,
                 ),
-                label: Text(copyButtonText),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.spacing.space3,
-                    vertical: context.spacing.space2,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                ),
+                label: copyButtonText,
+                busyLabel: "Copying",
               ),
-            LoadingButton.filledIcon(
+            Button(
+              face: ButtonFace.filled,
               onPressed: onGenerate,
               icon: const Icones(MaterialSymbols.autorenew_rounded, size: 16),
-              label: Text(
-                isIdle || isError ? generateButtonText : regenerateButtonText,
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: isError ? colorScheme.error : null,
-                foregroundColor: isError ? colorScheme.onError : null,
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space4,
-                  vertical: context.spacing.space2,
-                ),
-                visualDensity: VisualDensity.compact,
-              ),
+              label: isIdle || isError
+                  ? generateButtonText
+                  : regenerateButtonText,
+              busyLabel: "Generating",
+              color: isError ? colorScheme.error : null,
             ),
           ],
         ),

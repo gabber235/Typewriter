@@ -158,15 +158,14 @@ class Selector extends HookConsumerWidget {
       return () => active = false;
     }, [pendingContextPosition.value, selection, selected, source]);
 
-    final focusAnimation = useAnimationController(
-      duration: 200.ms,
-      initialValue: 0.0,
-    );
-
+    // Gaining focus presses the item in and lets it come back, with press.
+    final press = resolveMotion(context, MotionToken.press);
+    final focusPulse = useMotionController();
     useEffect(() {
-      if (!isFocused.value) return null;
-      if (focusAnimation.isAnimating) return null;
-      focusAnimation.forward(from: 0.0);
+      if (!isFocused.value || !focusPulse.settled) return null;
+      focusPulse.to(1, press).whenCompleteOrCancel(() {
+        if (context.mounted) focusPulse.to(0, press);
+      });
       return null;
     }, [isFocused.value]);
 
@@ -246,22 +245,7 @@ class Selector extends HookConsumerWidget {
                     ),
                   },
                   child: PixelScaleTransition(
-                    pixelScale: TweenSequence<double>([
-                      TweenSequenceItem<double>(
-                        tween: Tween<double>(
-                          begin: 0,
-                          end: 15,
-                        ).curved(Curves.easeInOutCubicEmphasized),
-                        weight: .5,
-                      ),
-                      TweenSequenceItem<double>(
-                        tween: Tween<double>(
-                          begin: 15,
-                          end: 0,
-                        ).curved(Curves.easeInOut),
-                        weight: .5,
-                      ),
-                    ]).animate(focusAnimation),
+                    pixelScale: focusPulse.drive(Tween(begin: 0, end: 15)),
                     child: HookBuilder(
                       builder: (context) {
                         return builder(

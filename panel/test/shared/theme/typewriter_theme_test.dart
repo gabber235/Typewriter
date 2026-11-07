@@ -117,7 +117,8 @@ void main() {
         );
         expect(
           states.layer(color, {WidgetState.pressed, WidgetState.focused}),
-          color.withValues(alpha: states.pressedOpacity),
+          isNull,
+          reason: "a press sinks the control, never a fill",
         );
         expect(
           states.layer(color, {WidgetState.dragged, WidgetState.focused}),
@@ -130,7 +131,8 @@ void main() {
         );
         expect(
           states.layer(color, {WidgetState.focused, WidgetState.hovered}),
-          color.withValues(alpha: states.hoverOpacity),
+          isNull,
+          reason: "hover raises the control, never a fill",
         );
       });
     });
