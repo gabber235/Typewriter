@@ -34,7 +34,7 @@ class JoinCodeTypeBadges extends StatelessWidget {
           TypeBadge(
             icon: Icons.flash_on_rounded,
             label: "Auto-accept",
-            color: theme.colorScheme.primary,
+            color: context.colors.brandText,
             backgroundColor: theme.colorScheme.primaryContainer,
           ),
       ],

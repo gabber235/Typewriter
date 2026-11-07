@@ -25,21 +25,29 @@ class ModeDisplayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final background =
+        backgroundColor ??
+        color.withValues(alpha: context.isDarkMode ? .1 : .2);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.space2,
         vertical: context.spacing.space1,
       ),
       decoration: BoxDecoration(
-        color:
-            backgroundColor ??
-            color.withValues(alpha: context.isDarkMode ? .1 : .2),
+        color: background,
         borderRadius: context.shapes.smallBorderRadius,
       ),
       child: Text(
         label.toUpperCase(),
-        style: Theme.of(context).textTheme.bodyMedium!
-            .copyWith(fontSize: 12, color: color, fontWeight: FontWeight.w500),
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+          fontSize: 12,
+          // A mode colour is an authored hue, so its text tone is derived.
+          color: context.colors.textOf(
+            color,
+            over: Color.alphaBlend(background, context.colors.surface),
+          ),
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

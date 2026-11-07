@@ -9,7 +9,8 @@ typedef _ColorFamily = ({
 
 const _brandColor = Color(0xFF009FFF);
 const _accentColor = Colors.orange;
-const _infoColor = Colors.blue;
+// Violet, OKLCH about (0.58, 0.25, 288): brand stays the only blue.
+const _infoColor = Color(0xFF7C4DFF);
 const _successColor = Colors.green;
 const _warningColor = Colors.orange;
 const _dangerColor = Colors.redAccent;
@@ -31,21 +32,9 @@ _ColorFamily _family(Color color, Brightness brightness, Color surface) {
 }
 
 Color _contrastingForeground(Color background) {
-  final blackContrast = _contrast(background, Colors.black);
-  final whiteContrast = _contrast(background, Colors.white);
+  final blackContrast = background.contrastWith(Colors.black);
+  final whiteContrast = background.contrastWith(Colors.white);
   return blackContrast >= whiteContrast ? Colors.black : Colors.white;
-}
-
-double _contrast(Color first, Color second) {
-  final firstLuminance = first.computeLuminance();
-  final secondLuminance = second.computeLuminance();
-  final lighter = firstLuminance > secondLuminance
-      ? firstLuminance
-      : secondLuminance;
-  final darker = firstLuminance > secondLuminance
-      ? secondLuminance
-      : firstLuminance;
-  return (lighter + 0.05) / (darker + 0.05);
 }
 
 /// Builds the semantic colors consumed by the panel design system.
@@ -53,8 +42,24 @@ double _contrast(Color first, Color second) {
 /// Identity colors remain stable across brightnesses. Neutral surfaces and
 /// their derived containers adapt to [brightness], and each semantic family
 /// includes a contrasting foreground for use on its color and container.
+/// Each status hue also gets a text twin that reads at 4.5:1 on every
+/// surface and on its own container.
 TypewriterColors buildTypewriterColors(Brightness brightness) {
   final neutral = _scheme(const Color(0xFF62646A), brightness);
+  final dark = brightness == Brightness.dark;
+  final canvas = neutral.surface;
+  final panel = dark ? neutral.surface : neutral.surfaceContainerLow;
+  final surface = dark
+      ? neutral.surfaceContainerLow
+      : neutral.surfaceContainerLowest;
+  final textSurfaces = [
+    canvas,
+    panel,
+    surface,
+    neutral.surfaceContainer,
+    neutral.surfaceContainerHigh,
+    neutral.surfaceContainerHighest,
+  ];
   final brand = _family(_brandColor, brightness, neutral.surface);
   final accent = _family(_accentColor, brightness, neutral.surface);
   final info = _family(_infoColor, brightness, neutral.surface);
@@ -62,9 +67,13 @@ TypewriterColors buildTypewriterColors(Brightness brightness) {
   final warning = _family(_warningColor, brightness, neutral.surface);
 
   final danger = _family(_dangerColor, brightness, neutral.surface);
+  Color text(_ColorFamily family) =>
+      family.color.textTone(brightness, [...textSurfaces, family.container]);
+  final brandText = text(brand);
 
   return TypewriterColors(
     brand: brand.color,
+    brandText: brandText,
     onBrand: brand.onColor,
     brandContainer: brand.container,
     onBrandContainer: brand.onContainer,
@@ -72,13 +81,9 @@ TypewriterColors buildTypewriterColors(Brightness brightness) {
     onAccent: accent.onColor,
     accentContainer: accent.container,
     onAccentContainer: accent.onContainer,
-    canvas: neutral.surface,
-    panel: brightness == Brightness.dark
-        ? neutral.surface
-        : neutral.surfaceContainerLow,
-    surface: brightness == Brightness.dark
-        ? neutral.surfaceContainerLow
-        : neutral.surfaceContainerLowest,
+    canvas: canvas,
+    panel: panel,
+    surface: surface,
     surfaceContainer: neutral.surfaceContainer,
     surfaceRaised: neutral.surfaceContainerHigh,
     surfaceEmphasized: neutral.surfaceContainerHighest,
@@ -89,7 +94,7 @@ TypewriterColors buildTypewriterColors(Brightness brightness) {
     border: neutral.outline,
     borderSubtle: neutral.outlineVariant,
     divider: neutral.outlineVariant,
-    focusRing: neutral.outline,
+    focusRing: dark ? _brandColor : brandText,
     selection: brand.color,
     onSelection: brand.onColor,
     selectionContainer: brand.container,
@@ -97,18 +102,22 @@ TypewriterColors buildTypewriterColors(Brightness brightness) {
     shadow: neutral.shadow,
     scrim: neutral.scrim,
     info: info.color,
+    infoText: text(info),
     onInfo: info.onColor,
     infoContainer: info.container,
     onInfoContainer: info.onContainer,
     success: success.color,
+    successText: text(success),
     onSuccess: success.onColor,
     successContainer: success.container,
     onSuccessContainer: success.onContainer,
     warning: warning.color,
+    warningText: text(warning),
     onWarning: warning.onColor,
     warningContainer: warning.container,
     onWarningContainer: warning.onContainer,
     danger: danger.color,
+    dangerText: text(danger),
     onDanger: danger.onColor,
     dangerContainer: danger.container,
     onDangerContainer: danger.onContainer,

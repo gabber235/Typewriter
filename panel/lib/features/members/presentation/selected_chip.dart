@@ -33,7 +33,6 @@ class SelectedChip extends HookWidget {
       deleteIconColor: theme.colorScheme.onPrimaryContainer,
       onDeleted: onClearSelection,
       deleteButtonTooltipMessage: "Unselect all",
-      side: FocusHighlight.stateBorder(context),
     );
   }
 }

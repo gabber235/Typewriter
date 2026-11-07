@@ -2,8 +2,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Applies panel wide Material component defaults to [base].
 ///
-/// [colors], [spacing], [shapes], and [states] must come from the same theme
-/// build. Keeping these inputs explicit prevents component defaults from
+/// [colors], [spacing], [shapes], [states], and [text] must come from the
+/// same theme build. Keeping these inputs explicit prevents component defaults from
 /// silently diverging from the extensions exposed to widgets.
 ThemeData applyComponentThemes(
   ThemeData base,
@@ -11,8 +11,17 @@ ThemeData applyComponentThemes(
   TypewriterSpacing spacing,
   TypewriterShapes shapes,
   TypewriterStateTokens states,
+  TypewriterText text,
 ) {
   final surfaceColor = colors.surface;
+  final ring = BorderSide(color: colors.focusRing, width: shapes.ringWidth);
+  // An empty check box or radio outlines in secondary content, never in the
+  // focus colour; the ring layer shows focus.
+  final unselectedSide = WidgetStateBorderSide.resolveWith(
+    (values) => values.contains(WidgetState.selected)
+        ? null
+        : BorderSide(color: colors.contentSecondary, width: 2),
+  );
   final input = InputDecorationTheme(
     contentPadding: EdgeInsets.symmetric(horizontal: spacing.space3),
     border: OutlineInputBorder(
@@ -27,9 +36,15 @@ ThemeData applyComponentThemes(
     ),
     filled: true,
     hoverColor: colors.shadow.withValues(alpha: 0.1),
-    errorStyle: base.textTheme.bodySmall?.copyWith(color: colors.danger),
+    errorStyle: text.sentenceSmall.copyWith(color: colors.dangerText),
     hintStyle: base.textTheme.bodyLarge?.copyWith(
-      color: colors.contentPrimary.withValues(alpha: 0.6),
+      color: colors.contentSecondary,
+    ),
+    // The ring layer hides while a field is typed in, so the field shows
+    // its own focused border.
+    focusedBorder: OutlineInputBorder(
+      borderRadius: shapes.mediumBorderRadius,
+      borderSide: ring,
     ),
     prefixIconColor: colors.contentPrimary.withValues(alpha: 0.6),
     errorBorder: OutlineInputBorder(
@@ -40,17 +55,13 @@ ThemeData applyComponentThemes(
       borderRadius: shapes.mediumBorderRadius,
       borderSide: BorderSide(color: colors.danger, width: 2),
     ),
-    helperStyle: base.textTheme.bodySmall?.copyWith(
-      color: colors.contentDisabled,
-      fontVariations: [.weight(300)],
-      fontStyle: .italic,
-      letterSpacing: 0.3,
-    ),
+    helperStyle: text.sentenceSmall.copyWith(color: colors.contentSecondary),
   );
   ButtonStyle button(Color foreground) => ButtonStyle(
+    // Unavailable text keeps 4.5:1.
     foregroundColor: WidgetStateProperty.resolveWith(
       (values) => values.contains(WidgetState.disabled)
-          ? colors.contentDisabled
+          ? colors.contentSecondary
           : foreground,
     ),
     overlayColor: states.overlay(foreground),
@@ -61,7 +72,8 @@ ThemeData applyComponentThemes(
   return base.copyWith(
     scaffoldBackgroundColor: colors.canvas,
     hoverColor: colors.contentPrimary.withValues(alpha: states.hoverOpacity),
-    focusColor: colors.focusRing.withValues(alpha: states.focusOpacity),
+    // Focus is the ring layer's ring, never a wash.
+    focusColor: Colors.transparent,
     highlightColor: colors.contentPrimary.withValues(
       alpha: states.pressedOpacity,
     ),
@@ -79,6 +91,7 @@ ThemeData applyComponentThemes(
     dialogTheme: DialogThemeData(
       backgroundColor: colors.surfaceRaised,
       shape: shapes.largeShape,
+      contentTextStyle: text.sentence.copyWith(color: colors.contentPrimary),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: colors.surfaceRaised,
@@ -87,9 +100,7 @@ ThemeData applyComponentThemes(
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: colors.surfaceEmphasized,
-      contentTextStyle: base.textTheme.bodyMedium?.copyWith(
-        color: colors.contentPrimary,
-      ),
+      contentTextStyle: text.sentence.copyWith(color: colors.contentPrimary),
       shape: shapes.mediumShape,
       behavior: SnackBarBehavior.floating,
     ),
@@ -115,9 +126,7 @@ ThemeData applyComponentThemes(
         ],
         borderRadius: shapes.mediumBorderRadius,
       ),
-      textStyle: base.textTheme.bodySmall?.copyWith(
-        color: colors.contentPrimary,
-      ),
+      textStyle: text.sentenceSmall.copyWith(color: colors.contentPrimary),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: colors.brand,
@@ -155,9 +164,9 @@ ThemeData applyComponentThemes(
         ),
       ),
     ),
-    textButtonTheme: TextButtonThemeData(style: button(colors.brand)),
+    textButtonTheme: TextButtonThemeData(style: button(colors.brandText)),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: button(colors.brand).copyWith(
+      style: button(colors.brandText).copyWith(
         side: WidgetStateProperty.resolveWith(
           (values) => BorderSide(
             color: values.contains(WidgetState.disabled)
@@ -257,6 +266,7 @@ ThemeData applyComponentThemes(
       ),
       overlayColor: states.overlay(colors.brand),
       shape: shapes.smallShape,
+      side: unselectedSide,
     ),
     radioTheme: RadioThemeData(
       fillColor: WidgetStateProperty.resolveWith((values) {
@@ -270,6 +280,7 @@ ThemeData applyComponentThemes(
             : colors.contentSecondary;
       }),
       overlayColor: states.overlay(colors.brand),
+      side: unselectedSide,
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((values) {

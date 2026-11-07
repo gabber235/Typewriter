@@ -16,7 +16,10 @@ final class AuthoringConflictNotice extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text("Saved values changed", style: context.theme.textTheme.titleSmall),
-        const Text("Your edits are still here. Review them before saving."),
+        Text(
+          "Your edits are still here. Review them before saving.",
+          style: context.text.sentence,
+        ),
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton(

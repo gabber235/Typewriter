@@ -11,6 +11,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class TypewriterColors extends ThemeExtension<TypewriterColors> {
   const TypewriterColors({
     required this.brand,
+    required this.brandText,
     required this.onBrand,
     required this.brandContainer,
     required this.onBrandContainer,
@@ -39,18 +40,22 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
     required this.shadow,
     required this.scrim,
     required this.info,
+    required this.infoText,
     required this.onInfo,
     required this.infoContainer,
     required this.onInfoContainer,
     required this.success,
+    required this.successText,
     required this.onSuccess,
     required this.successContainer,
     required this.onSuccessContainer,
     required this.warning,
+    required this.warningText,
     required this.onWarning,
     required this.warningContainer,
     required this.onWarningContainer,
     required this.danger,
+    required this.dangerText,
     required this.onDanger,
     required this.dangerContainer,
     required this.onDangerContainer,
@@ -65,6 +70,10 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
   });
 
   final Color brand;
+
+  /// [brand] as text: 4.5:1 on every surface and on its container, at the
+  /// most chroma its lightness allows.
+  final Color brandText;
   final Color onBrand;
   final Color brandContainer;
   final Color onBrandContainer;
@@ -80,11 +89,16 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
   final Color surfaceEmphasized;
   final Color contentPrimary;
   final Color contentSecondary;
+
+  /// For marks that are not text, such as a disabled check or thumb.
+  /// Unavailable text uses [contentSecondary], which keeps 4.5:1.
   final Color contentDisabled;
   final Color contentInverse;
   final Color border;
   final Color borderSubtle;
   final Color divider;
+
+  /// The 2 px focus ring: at least 3:1 on every surface.
   final Color focusRing;
   final Color selection;
   final Color onSelection;
@@ -93,18 +107,34 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
   final Color shadow;
   final Color scrim;
   final Color info;
+
+  /// [info] as text: 4.5:1 on every surface and on its container, at the
+  /// most chroma its lightness allows.
+  final Color infoText;
   final Color onInfo;
   final Color infoContainer;
   final Color onInfoContainer;
   final Color success;
+
+  /// [success] as text: 4.5:1 on every surface and on its container, at the
+  /// most chroma its lightness allows.
+  final Color successText;
   final Color onSuccess;
   final Color successContainer;
   final Color onSuccessContainer;
   final Color warning;
+
+  /// [warning] as text: 4.5:1 on every surface and on its container, at the
+  /// most chroma its lightness allows.
+  final Color warningText;
   final Color onWarning;
   final Color warningContainer;
   final Color onWarningContainer;
   final Color danger;
+
+  /// [danger] as text: 4.5:1 on every surface and on its container, at the
+  /// most chroma its lightness allows.
+  final Color dangerText;
   final Color onDanger;
   final Color dangerContainer;
   final Color onDangerContainer;
@@ -120,6 +150,7 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
   @override
   TypewriterColors copyWith({
     Color? brand,
+    Color? brandText,
     Color? onBrand,
     Color? brandContainer,
     Color? onBrandContainer,
@@ -148,18 +179,22 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
     Color? shadow,
     Color? scrim,
     Color? info,
+    Color? infoText,
     Color? onInfo,
     Color? infoContainer,
     Color? onInfoContainer,
     Color? success,
+    Color? successText,
     Color? onSuccess,
     Color? successContainer,
     Color? onSuccessContainer,
     Color? warning,
+    Color? warningText,
     Color? onWarning,
     Color? warningContainer,
     Color? onWarningContainer,
     Color? danger,
+    Color? dangerText,
     Color? onDanger,
     Color? dangerContainer,
     Color? onDangerContainer,
@@ -173,6 +208,7 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
     Color? onOfflineContainer,
   }) => TypewriterColors(
     brand: brand ?? this.brand,
+    brandText: brandText ?? this.brandText,
     onBrand: onBrand ?? this.onBrand,
     brandContainer: brandContainer ?? this.brandContainer,
     onBrandContainer: onBrandContainer ?? this.onBrandContainer,
@@ -201,18 +237,22 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
     shadow: shadow ?? this.shadow,
     scrim: scrim ?? this.scrim,
     info: info ?? this.info,
+    infoText: infoText ?? this.infoText,
     onInfo: onInfo ?? this.onInfo,
     infoContainer: infoContainer ?? this.infoContainer,
     onInfoContainer: onInfoContainer ?? this.onInfoContainer,
     success: success ?? this.success,
+    successText: successText ?? this.successText,
     onSuccess: onSuccess ?? this.onSuccess,
     successContainer: successContainer ?? this.successContainer,
     onSuccessContainer: onSuccessContainer ?? this.onSuccessContainer,
     warning: warning ?? this.warning,
+    warningText: warningText ?? this.warningText,
     onWarning: onWarning ?? this.onWarning,
     warningContainer: warningContainer ?? this.warningContainer,
     onWarningContainer: onWarningContainer ?? this.onWarningContainer,
     danger: danger ?? this.danger,
+    dangerText: dangerText ?? this.dangerText,
     onDanger: onDanger ?? this.onDanger,
     dangerContainer: dangerContainer ?? this.dangerContainer,
     onDangerContainer: onDangerContainer ?? this.onDangerContainer,
@@ -232,6 +272,7 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
     Color l(Color a, Color b) => Color.lerp(a, b, t)!;
     return copyWith(
       brand: l(brand, other.brand),
+      brandText: l(brandText, other.brandText),
       onBrand: l(onBrand, other.onBrand),
       brandContainer: l(brandContainer, other.brandContainer),
       onBrandContainer: l(onBrandContainer, other.onBrandContainer),
@@ -260,18 +301,22 @@ class TypewriterColors extends ThemeExtension<TypewriterColors> {
       shadow: l(shadow, other.shadow),
       scrim: l(scrim, other.scrim),
       info: l(info, other.info),
+      infoText: l(infoText, other.infoText),
       onInfo: l(onInfo, other.onInfo),
       infoContainer: l(infoContainer, other.infoContainer),
       onInfoContainer: l(onInfoContainer, other.onInfoContainer),
       success: l(success, other.success),
+      successText: l(successText, other.successText),
       onSuccess: l(onSuccess, other.onSuccess),
       successContainer: l(successContainer, other.successContainer),
       onSuccessContainer: l(onSuccessContainer, other.onSuccessContainer),
       warning: l(warning, other.warning),
+      warningText: l(warningText, other.warningText),
       onWarning: l(onWarning, other.onWarning),
       warningContainer: l(warningContainer, other.warningContainer),
       onWarningContainer: l(onWarningContainer, other.onWarningContainer),
       danger: l(danger, other.danger),
+      dangerText: l(dangerText, other.dangerText),
       onDanger: l(onDanger, other.onDanger),
       dangerContainer: l(dangerContainer, other.dangerContainer),
       onDangerContainer: l(onDangerContainer, other.onDangerContainer),

@@ -202,7 +202,7 @@ class PortableDiagnosticMessages extends StatelessWidget {
                       for (final diagnostic in diagnostics)
                         Text(
                           diagnostic.message,
-                          style: context.theme.textTheme.bodySmall?.copyWith(
+                          style: context.text.sentenceSmall.copyWith(
                             color: Color.alphaBlend(
                               diagnostic.severity
                                   .color(context)

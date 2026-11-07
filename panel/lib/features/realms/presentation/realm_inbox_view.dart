@@ -458,9 +458,7 @@ class RealmInboxView extends StatelessWidget {
         children: [
           Text(
             issue.message,
-            style: context.theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: context.text.sentence.copyWith(fontWeight: FontWeight.w600),
           ),
           if (issue.primary case final location?) ...[
             SizedBox(height: context.spacing.space1),

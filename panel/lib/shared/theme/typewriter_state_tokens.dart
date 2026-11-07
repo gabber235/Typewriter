@@ -1,16 +1,15 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Opacity and focus tokens used to resolve interactive widget states.
+/// Opacity tokens used to resolve interactive widget states.
 ///
 /// Disabled states return no overlay from [layer], allowing the component's
 /// disabled colors to remain authoritative. Other states are resolved in
-/// priority order, from pressed through dragged, focused, and hovered.
+/// priority order, from pressed through dragged and hovered. Focus adds no
+/// fill: the FocusRingLayer draws it as a ring.
 @immutable
 class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
   const TypewriterStateTokens({
-    required this.focusRing,
     this.hoverOpacity = 0.08,
-    this.focusOpacity = 0.12,
     this.pressedOpacity = 0.12,
     this.draggedOpacity = 0.16,
     this.disabledForegroundOpacity = 0.38,
@@ -18,12 +17,10 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
   });
 
   final double hoverOpacity;
-  final double focusOpacity;
   final double pressedOpacity;
   final double draggedOpacity;
   final double disabledForegroundOpacity;
   final double disabledContainerOpacity;
-  final Color focusRing;
 
   /// Resolves the interaction layer for a set of [WidgetState] values.
   ///
@@ -38,9 +35,6 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
     if (states.contains(WidgetState.dragged)) {
       return foreground.withValues(alpha: draggedOpacity);
     }
-    if (states.contains(WidgetState.focused)) {
-      return focusRing.withValues(alpha: focusOpacity);
-    }
     if (states.contains(WidgetState.hovered)) {
       return foreground.withValues(alpha: hoverOpacity);
     }
@@ -48,28 +42,34 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
   }
 
   /// Creates a Material state property backed by [layer].
+  ///
+  /// A focused control with no other state resolves to transparent rather
+  /// than null, so Material's own focus wash never fills it.
   WidgetStateProperty<Color?> overlay(Color foreground) =>
-      WidgetStateProperty.resolveWith((states) => layer(foreground, states));
+      WidgetStateProperty.resolveWith(
+        (states) =>
+            layer(foreground, states) ??
+            (states.contains(WidgetState.focused) &&
+                    !states.contains(WidgetState.disabled)
+                ? Colors.transparent
+                : null),
+      );
 
   @override
   TypewriterStateTokens copyWith({
     double? hoverOpacity,
-    double? focusOpacity,
     double? pressedOpacity,
     double? draggedOpacity,
     double? disabledForegroundOpacity,
     double? disabledContainerOpacity,
-    Color? focusRing,
   }) => TypewriterStateTokens(
     hoverOpacity: hoverOpacity ?? this.hoverOpacity,
-    focusOpacity: focusOpacity ?? this.focusOpacity,
     pressedOpacity: pressedOpacity ?? this.pressedOpacity,
     draggedOpacity: draggedOpacity ?? this.draggedOpacity,
     disabledForegroundOpacity:
         disabledForegroundOpacity ?? this.disabledForegroundOpacity,
     disabledContainerOpacity:
         disabledContainerOpacity ?? this.disabledContainerOpacity,
-    focusRing: focusRing ?? this.focusRing,
   );
 
   @override
@@ -78,7 +78,6 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
     double l(double a, double b) => a + (b - a) * t;
     return TypewriterStateTokens(
       hoverOpacity: l(hoverOpacity, other.hoverOpacity),
-      focusOpacity: l(focusOpacity, other.focusOpacity),
       pressedOpacity: l(pressedOpacity, other.pressedOpacity),
       draggedOpacity: l(draggedOpacity, other.draggedOpacity),
       disabledForegroundOpacity: l(
@@ -89,7 +88,6 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
         disabledContainerOpacity,
         other.disabledContainerOpacity,
       ),
-      focusRing: Color.lerp(focusRing, other.focusRing, t)!,
     );
   }
 }

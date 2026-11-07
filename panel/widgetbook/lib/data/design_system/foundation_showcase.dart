@@ -23,9 +23,12 @@ class FoundationShowcase extends StatelessWidget {
       "Label large": theme.textTheme.labelLarge,
       "Label medium": theme.textTheme.labelMedium,
       "Label small": theme.textTheme.labelSmall,
+      "A sentence reads in IBM Plex Sans.": theme.text.sentence,
+      "A small sentence sits under a control.": theme.text.sentenceSmall,
     };
     final palette = <String, Color>{
       "Brand": colors.brand,
+      "Brand text": colors.brandText,
       "Accent": colors.accent,
       "Canvas": colors.canvas,
       "Panel": colors.panel,
@@ -41,9 +44,13 @@ class FoundationShowcase extends StatelessWidget {
       "Focus": colors.focusRing,
       "Selection": colors.selection,
       "Info": colors.info,
+      "Info text": colors.infoText,
       "Success": colors.success,
+      "Success text": colors.successText,
       "Warning": colors.warning,
+      "Warning text": colors.warningText,
       "Danger": colors.danger,
+      "Danger text": colors.dangerText,
       "Online": colors.online,
       "Offline": colors.offline,
     };

@@ -503,7 +503,7 @@ class _EmptyResources extends StatelessWidget {
     child: Text(
       "Nothing here yet",
       style: context.theme.textTheme.bodySmall?.copyWith(
-        color: context.colors.contentDisabled,
+        color: context.colors.contentSecondary,
       ),
     ),
   );

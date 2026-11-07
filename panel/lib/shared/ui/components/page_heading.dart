@@ -55,10 +55,9 @@ class PageHeading extends StatelessWidget {
             child: Text(
               subtext,
               textAlign: TextAlign.start,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: context.text.sentenceSmall.copyWith(
+                color: context.colors.contentSecondary,
                 fontSize: context.responsive(mobile: 10, tablet: 12),
-                fontVariations: [FontVariation.weight(50)],
               ),
             ),
           ),

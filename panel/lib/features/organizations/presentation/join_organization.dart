@@ -46,7 +46,7 @@ class _JoinOrganization extends HookConsumerWidget {
           sliver: SliverToBoxAdapter(
             child: Text(
               "Enter an invite URL or code to request to join an organization.",
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: context.text.sentence.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
@@ -89,8 +89,8 @@ class _JoinOrganization extends HookConsumerWidget {
                     padding: EdgeInsets.only(top: context.spacing.space2),
                     child: Text(
                       "You have reached the maximum of $_maxPendingRequests pending requests. Please wait for approval or cancel an existing request.",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.error,
+                      style: context.text.sentenceSmall.copyWith(
+                        color: context.colors.dangerText,
                       ),
                     ),
                   ),
@@ -233,34 +233,39 @@ class _PendingJoinRequestTile extends StatelessWidget {
             onInvoke: (_) => onCancel(),
           ),
         ],
-        child: ManagedFocusHighlight(
+        child: RingTarget(
           borderRadius: context.shapes.mediumBorderRadius,
-          child: ListTile(
-            leading: OrganizationLogo(
-              logoUrl: request.organizationLogoUrl,
-              size: 40,
-            ),
-            title: Text(request.organizationName.formatted),
-            subtitle: Text(
-              "Awaiting approval",
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+          child: Focus(
+            child: ListTile(
+              leading: OrganizationLogo(
+                logoUrl: request.organizationLogoUrl,
+                size: 40,
               ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CountdownBadge(endDate: request.expiresAt, onExpired: onExpire),
-                SizedBox(width: context.spacing.space2),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20),
-                  onPressed: onCancel,
-                  tooltip: "Cancel request",
-                  style: IconButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
-                  ),
+              title: Text(request.organizationName.formatted),
+              subtitle: Text(
+                "Awaiting approval",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-              ],
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CountdownBadge(
+                    endDate: request.expiresAt,
+                    onExpired: onExpire,
+                  ),
+                  SizedBox(width: context.spacing.space2),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: onCancel,
+                    tooltip: "Cancel request",
+                    style: IconButton.styleFrom(
+                      foregroundColor: context.colors.dangerText,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -964,7 +964,7 @@ MarkdownStyleSheet _markdownStyleSheet(
     backgroundColor: colors.surfaceContainerHighest,
   );
   return MarkdownStyleSheet(
-    a: body.copyWith(color: colors.primary),
+    a: body.copyWith(color: context.colors.brandText),
     p: body,
     pPadding: EdgeInsets.zero,
     code: code,
@@ -985,7 +985,7 @@ MarkdownStyleSheet _markdownStyleSheet(
     del: body.copyWith(decoration: TextDecoration.lineThrough),
     blockquote: body,
     img: body,
-    checkbox: body.copyWith(color: colors.primary),
+    checkbox: body.copyWith(color: context.colors.brandText),
     blockSpacing: spacing.space2,
     listIndent: spacing.space6,
     listBullet: body,

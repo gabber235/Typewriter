@@ -83,7 +83,7 @@ class UserMenu extends HookConsumerWidget {
       MenuItem(
         label: "Logout",
         icon: Icones(MaterialSymbols.logout),
-        color: Theme.of(context).colorScheme.error,
+        color: context.colors.dangerText,
         onPressed: () async {
           try {
             await ref.signOutVoluntarily(context);

@@ -88,12 +88,16 @@ final class _AuthoredTypeArgumentEditorState
                 padding: EdgeInsets.only(top: context.spacing.space2),
                 child: Text(
                   "This unfinished selection can be saved. Existing independent fields remain editable.",
+                  style: context.text.sentence,
                 ),
               ),
             if (!widget.enabled && widget.disabledMessage != null)
               Padding(
                 padding: EdgeInsets.only(top: context.spacing.space2),
-                child: Text(widget.disabledMessage!),
+                child: Text(
+                  widget.disabledMessage!,
+                  style: context.text.sentence,
+                ),
               ),
             if (_error case final error?)
               Padding(
@@ -102,8 +106,8 @@ final class _AuthoredTypeArgumentEditorState
                   liveRegion: true,
                   child: Text(
                     error,
-                    style: context.theme.textTheme.bodyMedium?.copyWith(
-                      color: context.colors.danger,
+                    style: context.text.sentence.copyWith(
+                      color: context.colors.dangerText,
                     ),
                   ),
                 ),

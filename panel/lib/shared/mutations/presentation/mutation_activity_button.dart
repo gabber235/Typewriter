@@ -88,7 +88,7 @@ class MutationActivityView extends StatelessWidget {
                     label: label,
                   ),
                   style: TextButton.styleFrom(
-                    foregroundColor: color,
+                    foregroundColor: phase.textColor(context),
                     backgroundColor: color.withValues(alpha: .12),
                   ),
                   onPressed: show,
@@ -152,14 +152,26 @@ extension _ActivityAppearance on MutationActivityPhase {
 
   Color color(BuildContext context) => switch (this) {
     MutationActivityPhase.needsAttention ||
-    MutationActivityPhase.savingWithAttention =>
-      context.theme.colorScheme.error,
+    MutationActivityPhase.savingWithAttention => context.colors.danger,
     MutationActivityPhase.needsInput ||
     MutationActivityPhase.drafts => context.colors.warning,
     MutationActivityPhase.saved => context.colors.success,
     MutationActivityPhase.saving ||
-    MutationActivityPhase.pending => context.theme.colorScheme.primary,
+    MutationActivityPhase.pending => context.colors.brand,
     MutationActivityPhase.idle => context.colors.contentSecondary,
+  };
+
+  /// The label colour: the phase hue as text, 4.5:1 on every surface and on
+  /// the 12% tint behind it.
+  Color textColor(BuildContext context) => switch (this) {
+    MutationActivityPhase.idle => context.colors.contentSecondary,
+    _ => context.colors.textOf(
+      color(context),
+      over: Color.alphaBlend(
+        color(context).withValues(alpha: .12),
+        context.colors.surface,
+      ),
+    ),
   };
 
   IconData get icon => switch (this) {

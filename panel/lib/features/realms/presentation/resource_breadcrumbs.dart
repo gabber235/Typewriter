@@ -19,7 +19,7 @@ class ResourceBreadcrumbs extends ConsumerWidget {
             Icon(
               Icons.chevron_right,
               size: 16,
-              color: context.colors.contentDisabled,
+              color: context.colors.contentSecondary,
             ),
           ResourceCrumbSelector(scope: scope, crumb: crumb),
         ],
@@ -63,7 +63,7 @@ class ResourceCrumbSelector extends ConsumerWidget {
                 size: 16,
                 color:
                     selected?.appearance.accentColor ??
-                    context.colors.contentDisabled,
+                    context.colors.contentSecondary,
               ),
               SizedBox(width: context.spacing.space2),
               Text(

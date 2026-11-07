@@ -61,8 +61,8 @@ class EmptyState extends HookConsumerWidget {
               Text(
                 description,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: textColor.withValues(alpha: 0.7),
+                style: context.text.sentence.copyWith(
+                  color: context.colors.contentSecondary,
                 ),
               ),
             ],

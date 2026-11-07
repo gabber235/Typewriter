@@ -57,9 +57,7 @@ Widget _connectionDiagnostics(List<String> diagnostics) => Builder(
       padding: EdgeInsets.all(context.spacing.space2),
       child: Text(
         diagnostics.join("\n"),
-        style: context.theme.textTheme.bodyMedium?.copyWith(
-          color: context.colors.danger,
-        ),
+        style: context.text.sentence.copyWith(color: context.colors.dangerText),
       ),
     ),
   ),

@@ -193,7 +193,7 @@ class _ConnectionCard extends StatelessWidget {
                   SizedBox(height: context.spacing.space2),
                   Text(
                     content.description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: context.text.sentence.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),

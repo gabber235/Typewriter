@@ -153,7 +153,6 @@ class JoinCodesTable extends HookConsumerWidget {
     ValueNotifier<skir.RecordId?> focusedCodeId,
     ThemeData theme,
   ) {
-    final isFocused = focusedCodeId.value == code.code;
     final fullUrl = joinCodeUrl(code.code);
 
     void toggleSelection() {
@@ -190,12 +189,9 @@ class JoinCodesTable extends HookConsumerWidget {
     return TableRow(
       key: ValueKey(code.code),
       decoration: BoxDecoration(
+        // Fill means selected; the ring layer shows focus.
         color: isSelected
-            ? theme.colorScheme.primaryContainer.withValues(
-                alpha: isFocused ? 0.24 : 0.12,
-              )
-            : isFocused
-            ? theme.colorScheme.secondaryContainer.withValues(alpha: 0.12)
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.12)
             : Colors.transparent,
       ),
       children: [

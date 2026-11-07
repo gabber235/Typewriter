@@ -96,7 +96,6 @@ void main() {
         child: Pane(
           id: "main",
           primary: true,
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: const Text("main"),
         ),
@@ -108,7 +107,6 @@ void main() {
         height: 500,
         child: Pane(
           id: "sidebar",
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: const Text("sidebar"),
         ),
@@ -120,7 +118,6 @@ void main() {
         height: 58,
         child: Pane(
           id: "appbar",
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: const Text("appbar"),
         ),
@@ -161,7 +158,6 @@ void main() {
                   height: 80,
                   child: const Pane(
                     id: "target",
-                    highlightOnFocus: false,
                     margin: EdgeInsets.zero,
                     child: Text("target"),
                   ),
@@ -225,7 +221,6 @@ void main() {
           child: Pane(
             id: "source",
             primary: true,
-            highlightOnFocus: false,
             margin: EdgeInsets.zero,
             child: Column(
               children: [
@@ -289,7 +284,6 @@ void main() {
         child: Pane(
           id: "source",
           primary: true,
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: Align(
             alignment: Alignment.topLeft,
@@ -381,7 +375,6 @@ void main() {
                   id: "pane",
                   primary: true,
                   trapFocus: trap,
-                  highlightOnFocus: false,
                   margin: EdgeInsets.zero,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -459,7 +452,6 @@ void main() {
         child: Pane(
           id: label,
           primary: true,
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: Center(child: Text(label)),
         ),
@@ -515,7 +507,6 @@ void main() {
           child: Pane(
             id: "one",
             primary: true,
-            highlightOnFocus: false,
             margin: EdgeInsets.zero,
             child: ElevatedButton(onPressed: () {}, child: const Text("one")),
           ),

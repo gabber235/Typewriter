@@ -82,7 +82,12 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
               : _confirmRevokeCode(context, ref),
         ),
       ],
-      child: Focus(onFocusChange: onFocusChange, child: child),
+      // Focus on any cell rings the whole row; a control inside a cell is
+      // ringed by itself.
+      child: RingTarget(
+        bounds: RingBounds.tableRow,
+        child: Focus(onFocusChange: onFocusChange, child: child),
+      ),
     );
   }
 
