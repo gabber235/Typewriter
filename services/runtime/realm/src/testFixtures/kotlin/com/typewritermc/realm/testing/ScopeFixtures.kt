@@ -183,6 +183,18 @@ suspend fun RealmFixture.formulaChecksSince(before: Map<ValueLocation, Long>): S
     return graphRuns.formulaChecks().grewFrom(before).mapTo(linkedSetOf()) { it.resource }
 }
 
+/** How often each value was evaluated so far, after the checks settled. */
+suspend fun RealmFixture.settledEvaluations(): Map<ValueLocation, Long> {
+    settle()
+    return graphRuns.evaluations()
+}
+
+/** The resources whose values were evaluated again since [before], after the checks settled. */
+suspend fun RealmFixture.evaluationsSince(before: Map<ValueLocation, Long>): Set<ResourceId> {
+    settle()
+    return graphRuns.evaluations().grewFrom(before).mapTo(linkedSetOf()) { it.resource }
+}
+
 /** The evidence of the content rule's finding set on [resource] once the checks settled. */
 suspend fun RealmFixture.contentEvidence(resource: ResourceId): List<EditExpectation> = contentSet(resource).expectations
 

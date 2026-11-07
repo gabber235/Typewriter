@@ -9,6 +9,8 @@ import com.typewritermc.formula.syntax.Literal
 import com.typewritermc.formula.syntax.LiteralValue
 import com.typewritermc.formula.syntax.Unary
 import com.typewritermc.formula.syntax.UnaryOperator
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.mentionsContent
 import skirout.editor.v1.type_catalog.TypeUse
 import com.typewritermc.formula.syntax.SafeCast as SafeCastNode
 import com.typewritermc.formula.syntax.TypeTest as TypeTestNode
@@ -137,11 +139,23 @@ private fun Checker.equality(
     return Equals(first, second, negated, BOOLEAN, span)
 }
 
-/** Whether a value of [a] can ever equal one of [b]: one fits the other, apart from null. */
+/**
+ * Whether a value of [a] can ever equal one of [b]: one fits the other, apart from null. An alias stands for the type
+ * it names, so a record built through an alias compares with one stored at its target.
+ */
 internal fun Checker.comparable(
     a: TypeUse,
     b: TypeUse,
-): Boolean = a == NULL || b == NULL || fits(a.nonNull(), b.nonNull()) || fits(b.nonNull(), a.nonNull())
+): Boolean {
+    if (a == NULL || b == NULL) return true
+    val first = expanded(a.nonNull())
+    val second = expanded(b.nonNull())
+    return fits(first, second) || fits(second, first)
+}
+
+/** [use] with every content field key replaced by what its field holds, or [use] itself when it does not resolve. */
+private fun Checker.expanded(use: TypeUse): TypeUse =
+    if (use.mentionsContent()) (environment.resolve(use) as? Resolution.Ready)?.value?.use ?: use else use
 
 private fun Checker.elvis(
     binary: Binary,

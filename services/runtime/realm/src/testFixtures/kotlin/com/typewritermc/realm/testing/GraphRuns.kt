@@ -6,6 +6,7 @@ import com.typewritermc.realm.authoring.LinksAt
 import com.typewritermc.realm.authoring.ProjectionAt
 import com.typewritermc.realm.checking.CheckRun
 import com.typewritermc.realm.formula.CheckFormula
+import com.typewritermc.realm.formula.Evaluate
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -39,6 +40,9 @@ class GraphRuns : GraphListener {
 
     /** How often the formula at each location was checked so far. */
     internal fun formulaChecks(): Map<ValueLocation, Long> = counts { (it as? CheckFormula)?.at }
+
+    /** How often the value at each location was evaluated so far. */
+    internal fun evaluations(): Map<ValueLocation, Long> = counts { (it as? Evaluate)?.at }
 
     /** How often the links of each node were judged for a graph read so far. */
     internal fun linkReads(): Map<ResourceId, Long> = counts { (it as? LinksAt)?.resource }

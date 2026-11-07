@@ -14,6 +14,7 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.testkit.singleFixed
+import com.typewritermc.types.EvaluationValues
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.NativeBindingResolver
@@ -57,6 +58,16 @@ internal object OpaqueBinding : NativeBinding<Any?> {
     override fun encode(value: Any?): DataValue = error("Opaque arguments are not encoded here.")
 
     override fun decode(value: CompleteValue): Any? = error("Opaque arguments are not decoded here.")
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = error("Opaque arguments are not converted here.")
+
+    override fun toValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = error("Opaque arguments are not converted here.")
 }
 
 /** Whether a condition over the configured segment holds for a segment from [start] to [end]. */

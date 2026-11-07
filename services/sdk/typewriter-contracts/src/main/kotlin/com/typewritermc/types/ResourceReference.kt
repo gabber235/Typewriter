@@ -72,7 +72,12 @@ data class Ref<Endpoint : RelationshipEndpoint<*, *>, out T : Resource>(
     val target: ResourceId,
     @Serializable(with = OppositePathSerializer::class)
     val opposite: ValuePath? = null,
-)
+) {
+    /** Equal by [target] alone: [opposite] is how the link is stored, not which resource it names. */
+    override fun equals(other: Any?): Boolean = other is Ref<*, *> && other.target == target
+
+    override fun hashCode(): Int = target.hashCode()
+}
 
 /** Embeds the readable Skir JSON of a link's opposite path; decoding checks the path like every other entry point. */
 @OptIn(ExperimentalSerializationApi::class)

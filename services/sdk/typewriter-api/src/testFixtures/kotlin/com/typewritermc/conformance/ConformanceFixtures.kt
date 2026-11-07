@@ -288,6 +288,8 @@ internal class SamplingPlan(
         return failure?.let { CaptureResult.Unavailable(listOf(it)) }
             ?: CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
     }
+
+    override fun construct(supplied: Map<FieldOwner, Any?>): Any = error("Initialization sampling builds no instance.")
 }
 
 internal class PlanFactory(

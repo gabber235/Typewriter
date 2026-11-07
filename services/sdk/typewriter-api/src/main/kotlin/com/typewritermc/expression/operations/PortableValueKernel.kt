@@ -6,13 +6,16 @@ import com.typewritermc.types.bigInteger
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.duration
 import com.typewritermc.types.enumCaseName
+import com.typewritermc.types.integer
 import com.typewritermc.types.named
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable
+import com.typewritermc.types.timestamp
 import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.ZoneOffset
@@ -106,6 +109,34 @@ internal object PortableValueKernel : ValueKernel {
             failure.message ?: "The text is not canonical value JSON.",
         )
 }
+
+/**
+ * A Kotlin scalar of an evaluation, or null, as a rule template shows it: encoded as its native binding encodes it, then
+ * the kernel's text. A value that is not a scalar fails.
+ */
+fun portableScalarText(value: Any?): String = PortableValueKernel.toText(scalarData(value))
+
+private fun scalarData(value: Any?): DataValue =
+    when (value) {
+        null -> DataValue.NULL
+        Unit -> DataValue.UNIT
+        is Boolean -> DataValue.BooleanWrapper(value)
+        is String -> DataValue.StringValueWrapper(value)
+        is Number -> numberData(value)
+        is kotlin.time.Instant -> DataValue.timestamp(value)
+        is kotlin.time.Duration -> DataValue.duration(value)
+        else -> throw IllegalArgumentException("${value::class.simpleName} is not a scalar.")
+    }
+
+private fun numberData(value: Number): DataValue =
+    when (value) {
+        is Byte, is Short, is Int, is Long -> DataValue.integer(value.toLong())
+        is BigInteger -> DataValue.integer(value)
+        is Float -> DataValue.FloatWrapper(value.toDouble())
+        is Double -> DataValue.FloatWrapper(value)
+        is BigDecimal -> DataValue.DecimalWrapper(value.toPlainString())
+        else -> throw IllegalArgumentException("${value::class.simpleName} is not a scalar.")
+    }
 
 /**
  * The portable order: text by code point sequence, numbers by value within one family, false before true, timestamps

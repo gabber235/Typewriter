@@ -4,6 +4,7 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
+import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.realm.edit.PAIR_FIRST
 import com.typewritermc.realm.edit.PAIR_SECOND
 import com.typewritermc.realm.edit.link
@@ -17,6 +18,7 @@ import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.commitDefinition
 import com.typewritermc.realm.testing.commitPreparedTypeChange
 import com.typewritermc.realm.testing.commitRecordUser
+import com.typewritermc.realm.testing.commitSilverPurseUser
 import com.typewritermc.realm.testing.commitTypeDefinition
 import com.typewritermc.realm.testing.computedVar
 import com.typewritermc.realm.testing.contentJudged
@@ -29,6 +31,7 @@ import com.typewritermc.realm.testing.errorsOn
 import com.typewritermc.realm.testing.fieldKey
 import com.typewritermc.realm.testing.formulaChecksSince
 import com.typewritermc.realm.testing.formulaPage
+import com.typewritermc.realm.testing.formulas
 import com.typewritermc.realm.testing.hookCatalog
 import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.mapType
@@ -89,9 +92,11 @@ val FormulaFindingsTest by testSuite {
     }
 
     test("a formula with a context the realm cannot fill gives no finding here and is not evaluated") {
-        // Evaluation arrives with the interpreter; here the context only has to reach the checker.
         val page = setup("findings-context") { formulaPage { contextual("chained", "chain + 1") } }
-        withSetup(page, catalog = routeFixtureCatalog) { demo -> errorCodesOn(demo.named("chained")).shouldBeEmpty() }
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            errorCodesOn(demo.named("chained")).shouldBeEmpty()
+            formulas.evaluation(demo.named("chained")) shouldBe Evaluation.NotEvaluated
+        }
     }
 
     test("one broken name gives one finding, with no cascade from the error type") {
@@ -312,15 +317,7 @@ val FormulaFindingsTest by testSuite {
 
     test("a value whose type is missing shows only the missing type finding, not one per old field") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val purse =
-                declares {
-                    record {
-                        field("gold", intUse)
-                        field("silver", intUse)
-                    }
-                }
-            val reward = commitTypeDefinition("Reward", purse).created()
-            val user = commitRecordUser("first", reward, "gold" to DataValue.integer(1), "silver" to DataValue.integer(2))
+            val (reward, user) = commitSilverPurseUser()
             commit(delete(reward)).shouldBeCommitted()
 
             errorCodesOn(user) shouldBe listOf("content_type_missing")

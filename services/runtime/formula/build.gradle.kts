@@ -11,7 +11,7 @@ dependencies {
     implementation(project(":internal-utils"))
     testImplementation(libs.kotest.property)
     // The tests' code records and providers get real bindings and invocations.
-    kspTest(project(":typewriter-codegen"))
+    kspTestFixtures(project(":typewriter-codegen"))
 }
 
 ksp {

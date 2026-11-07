@@ -2,6 +2,7 @@ package com.typewritermc.formula.stdlib
 
 import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.FormulaFailureException
+import com.typewritermc.formula.FormulaLimits
 import com.typewritermc.formula.TypewriterFormulaName
 import com.typewritermc.formula.TypewriterFormulaProvider
 
@@ -33,9 +34,15 @@ object NumberFormulas {
     @TypewriterFormulaName("compareTo")
     fun Int.compare(other: Int): Int = compareTo(other)
 
-    /** `1..4` is every Int from this to [last], both included; empty when [last] is smaller. */
+    /**
+     * `1..4` is every Int from this to [last], both included; empty when [last] is smaller. Each item costs a step, so
+     * a range longer than the step limit fails with StepLimit before it is built.
+     */
     @TypewriterFormulaName("rangeTo")
-    fun Int.upTo(last: Int): List<Int> = (this..last).toList()
+    fun Int.upTo(last: Int): List<Int> {
+        if (last.toLong() - this >= FormulaLimits.MAX_STEPS) throw FormulaFailureException(FormulaFailure.StepLimit)
+        return (this..last).toList()
+    }
 
     @TypewriterFormulaName("toLong")
     fun Int.widen(): Long = toLong()
