@@ -97,8 +97,8 @@ data class FixtureContextEntry(
 
 /**
  * A code record holding Vars, references and a list of Vars, as an extension's record would. A content reference
- * in a resource needs a collection on its path, so the references are a list. The code types formulas build carry a
- * one word display name, since a formula names a catalog type by its display name.
+ * in a resource needs a collection on its path, so the references are a list. Its display name differs from its class
+ * name, which is the name formulas write.
  */
 @TypewriterType(id = "4061a95fbcca42ab8e7dd4824049faaf")
 @TypewriterDisplay(name = "Loot")
@@ -111,7 +111,6 @@ data class FixtureLoot(
 
 /** A code union whose other case holds a Var. */
 @TypewriterType(id = "c25dd9f1c4a3403cb94b110e85d77abd")
-@TypewriterDisplay(name = "Signal")
 sealed interface FixtureSignal {
     data object Quiet : FixtureSignal
 
@@ -122,7 +121,6 @@ sealed interface FixtureSignal {
 
 /** A code generic, which may hold a content type. */
 @TypewriterType(id = "dc79aeb4b5f8449d8fe2df2f04a53983")
-@TypewriterDisplay(name = "Box")
 data class FixtureBox<T>(
     val x: T,
 )
@@ -136,7 +134,6 @@ internal object FixtureTypeImports
 
 /** The open type's one subtype in this extension. */
 @TypewriterType(id = "3720f680942d42d2a304e54d11f7f539")
-@TypewriterDisplay(name = "CoinPrize")
 data class FixtureCoinPrize(
     val coins: Int,
 ) : FixturePrize

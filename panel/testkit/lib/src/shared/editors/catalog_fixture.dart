@@ -114,6 +114,7 @@ skir.PublishedType publishedType(
   String? searchKey,
   skir.ValuePath? placementField,
 }) => skir.PublishedType(
+  name: "",
   definition: skir.TypeDefinition(
     id: id,
     parameters: parameters,

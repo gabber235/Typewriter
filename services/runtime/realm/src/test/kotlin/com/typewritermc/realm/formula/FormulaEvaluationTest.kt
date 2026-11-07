@@ -449,7 +449,7 @@ val FormulaEvaluationTest by testSuite {
             setup("evaluate-stored-code-record") {
                 formulaPage {
                     definition("loot", lootUse, FixtureLoot(gold = Var.Value(3)))
-                    formula("same", booleanUse, "loot == Loot(gold = 3)")
+                    formula("same", booleanUse, "loot == FixtureLoot(gold = 3)")
                 }
             }
         withSetup(page, catalog = routeFixtureCatalog) { demo -> formulas.value(demo.named("same")) shouldBe true }
@@ -464,7 +464,7 @@ val FormulaEvaluationTest by testSuite {
                     definition("signal", signalUse, FixtureSignal.Quiet)
                     formula("same", booleanUse, "signal == Quiet()")
                     formula("stored_arm", intUse, "when (signal) { is Quiet -> 1\n is Tuned -> 2 }")
-                    formula("built_arm", intUse, "let built: Signal = Quiet()\nwhen (built) { is Quiet -> 1\n is Tuned -> 2 }")
+                    formula("built_arm", intUse, "let built: FixtureSignal = Quiet()\nwhen (built) { is Quiet -> 1\n is Tuned -> 2 }")
                 }
             }
         withSetup(page, catalog = routeFixtureCatalog) { demo ->
@@ -555,7 +555,7 @@ val FormulaEvaluationTest by testSuite {
                 formulaPage {
                     definition("signal", signalUse, FixtureSignal.Tuned(Var.Value(2)))
                     formula("stored_arm", intUse, "when (signal) { is Tuned -> 1\n is Quiet -> 2 }")
-                    formula("built_arm", intUse, "let built: Signal = Quiet()\nwhen (built) { is Tuned -> 1\n is Quiet -> 2 }")
+                    formula("built_arm", intUse, "let built: FixtureSignal = Quiet()\nwhen (built) { is Tuned -> 1\n is Quiet -> 2 }")
                 }
             }
         withSetup(page, catalog = routeFixtureCatalog) { demo ->

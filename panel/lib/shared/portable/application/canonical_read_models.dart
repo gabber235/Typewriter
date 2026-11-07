@@ -58,7 +58,12 @@ final class CanonicalReadModels {
         skir.RepresentationTemplate_recordWrapper(:final value) => value.fields,
         _ => const <skir.FieldDeclaration>[],
       };
+      final name =
+          _frameworkReadNames[definition.id] ??
+          definition.id.memberName ??
+          _readIdName(definition.id).split(":").last;
       _published[definition.id] = skir.PublishedType(
+        name: name,
         placementField: null,
         definition: definition,
         status: skir.DeclarationStatus.ready,
@@ -72,11 +77,7 @@ final class CanonicalReadModels {
             ),
         ],
         ancestorTemplates: definition.parents,
-        display: defaultTypeDisplay(
-          _frameworkReadNames[definition.id] ??
-              definition.id.memberName ??
-              _readIdName(definition.id).split(":").last,
-        ),
+        display: defaultTypeDisplay(name),
         searchKey: null,
       );
     }

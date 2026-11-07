@@ -65,8 +65,9 @@ import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.ValuePath
 
 /**
- * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
- * [searchKey] of every resource type; a declaration without a display publishes one derived from its type id.
+ * One contributed type declaration. Codegen supplies the source [name] and complete [display] of every declared type
+ * and the [searchKey] of every resource type; a declaration without a name or display publishes one derived from its
+ * type id.
  */
 data class OwnedTypeDeclaration(
     val origin: ProviderOrigin,
@@ -74,6 +75,7 @@ data class OwnedTypeDeclaration(
     val display: TypeDisplay? = null,
     val nativeClass: kotlin.reflect.KClass<*>? = null,
     val searchKey: String? = null,
+    val name: String? = null,
 )
 
 data class CatalogAssemblyContext(
@@ -266,6 +268,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 display = (owned.first().display ?: id.derivedDisplay()).toWire(),
                 searchKey = scopeKeys[id]?.takeUnless { id in conflictingKeys },
                 placementField = placementField,
+                name = owned.first().name ?: id.derivedName(),
             )
         }
     val publishedPresentations =
@@ -381,20 +384,18 @@ private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
 private fun CheckedCatalog.isRealmStructure(id: TypeDefinitionId): Boolean =
     id == RealmRootDefinition.id || isNominalSubtype(id, RealmRootDefinition.id) || isNominalSubtype(id, RealmSectionDefinition.id)
 
-/** The display of a declaration codegen did not supply one for: its name from the type id, default icon and color. */
+/** The name of a declaration codegen did not supply one for, from its type id: the last part of a qualified name, a case's name. */
+private fun TypeDefinitionId.derivedName(): String =
+    when (val id = typeId) {
+        is TypeId.QualifiedWrapper -> id.value.name.substringAfterLast('.')
+        is TypeId.DeclaredWrapper -> "Type"
+        is TypeId.MemberWrapper -> id.value.name
+        else -> unknownVariant(id)
+    }
+
+/** The display of a declaration codegen did not supply one for: its derived name, default icon and color. */
 private fun TypeDefinitionId.derivedDisplay(): TypeDisplay =
-    TypeDisplay(
-        name =
-            when (val id = typeId) {
-                is TypeId.QualifiedWrapper -> id.value.name.substringAfterLast('.')
-                is TypeId.DeclaredWrapper -> "Type"
-                is TypeId.MemberWrapper -> id.value.name
-                else -> unknownVariant(id)
-            },
-        description = "",
-        icon = TypeDisplay.DEFAULT_ICON,
-        color = TypeDisplay.DEFAULT_COLOR,
-    )
+    TypeDisplay(name = derivedName(), description = "", icon = TypeDisplay.DEFAULT_ICON, color = TypeDisplay.DEFAULT_COLOR)
 
 /**
  * The single effective field typed as a [com.typewritermc.authoring.Placement], or null when there is none.

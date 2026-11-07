@@ -453,6 +453,7 @@ class GeneratedProviderLoader {
                             provider.display,
                             provider.nativeClass,
                             provider.searchKey,
+                            provider.name,
                         )
                     provider.cases.forEach { case -> declarations += OwnedTypeDeclaration(origin, case.requireValid()) }
                 }

@@ -94,6 +94,7 @@ val CanonicalReadModelsTest by testSuite {
                     TypeDisplay(name = "Book", description = "", icon = Icon.SvgWrapper("<svg/>"), color = Color(argb = -1)),
                 searchKey = "book",
                 placementField = null,
+                name = "Book",
             )
         CanonicalReadModels.publishedType.decode(CanonicalReadModels.publishedType.encode(published)) shouldBe published
     }

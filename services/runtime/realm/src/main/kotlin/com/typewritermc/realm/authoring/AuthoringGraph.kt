@@ -157,7 +157,7 @@ internal fun tracked(): CapturedAuthoringReads =
 context(reads: RealmReads)
 internal val extensions: ExtensionCatalog get() = reads.environment.view.catalog.code.extensions
 
-/** The code types formulas name by their display name. */
+/** The code types formulas name by their source name. */
 @OptIn(UntrackedEnvironment::class)
 context(reads: RealmReads)
 internal val formulaTypeNames: Map<String, List<TypeUse>> get() = reads.environment.view.catalog.code.formulaTypeNames

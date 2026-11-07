@@ -163,7 +163,7 @@ class RealmCatalogStore : AutoCloseable {
     ) : AutoCloseable {
         val typeNames: Map<String, List<TypeUse>> by lazy {
             incarnation.assembly.editorCatalog.types
-                .groupBy({ it.display.name }, { it.definition.id.use() })
+                .groupBy({ it.name }, { it.definition.id.use() })
         }
 
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)

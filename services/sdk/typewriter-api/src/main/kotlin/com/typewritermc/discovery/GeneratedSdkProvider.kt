@@ -20,6 +20,10 @@ interface GeneratedTypeProvider {
     val nativeClass: KClass<*>?
         get() = null
 
+    /** The name the source gives the type, its Kotlin class name; null only for providers codegen does not own. */
+    val name: String?
+        get() = null
+
     /** The complete display codegen fills for every declared type; null only for providers codegen does not own. */
     val display: TypeDisplay?
         get() = null

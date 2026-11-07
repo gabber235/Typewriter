@@ -75,7 +75,12 @@ internal object DefinitionEmitter : SdkEmitter {
                                 ).build(),
                         )
                     }
-                }.addProperty(declaration.displayProperty)
+                }.addProperty(
+                    PropertySpec
+                        .builder("name", STRING, KModifier.OVERRIDE)
+                        .initializer("%S", declaration.source.simpleName.asString())
+                        .build(),
+                ).addProperty(declaration.displayProperty)
                 .apply { declaration.searchKeyProperty?.let(::addProperty) }
                 .addFunction(
                     FunSpec

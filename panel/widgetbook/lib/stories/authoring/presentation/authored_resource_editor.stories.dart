@@ -76,6 +76,7 @@ messageFixture({bool unfilled = false}) {
     required bool open,
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
+    name: "",
     searchKey: null,
     placementField: null,
     display: display ?? defaultTypeDisplay(""),
@@ -118,6 +119,7 @@ messageFixture({bool unfilled = false}) {
       generation: generation,
       types: [
         skir.PublishedType(
+          name: "",
           searchKey: null,
           placementField: null,
           display: defaultTypeDisplay(""),
