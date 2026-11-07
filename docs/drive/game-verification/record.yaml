@@ -33,10 +33,16 @@ pieces:
         evidence: [docs/plans/game-verification/decisions/step-driver.yaml, docs/plans/game-verification/decisions/pool.yaml]
       - id: paper-per-attempt
         parent: d3-paper-per-group
-        what: Every running attempt gets a Paper of its own; clients move to it for a group claim
+        what: 4 long lived Papers, one per running attempt, wiped and reused; clients move for a group claim
         taught: Not tried yet. Would make the fence, regions, coverage spans, the side Paper and content isolation unnecessary; costs memory and a reconnect per group claim
         state: trying
         evidence: []
+      - id: fresh-paper-per-attempt
+        parent: d3-paper-per-group
+        what: A fresh Paper per requirement, booted ahead while others run
+        taught: A boot costs about 9.5 s on the runner against about 30 ms per requirement; P1 computes the number of booters this would need
+        state: trying
+        evidence: [docs/design/game-verification/spikes/k-restarts.md, docs/design/game-verification/spikes/c-speed.md]
       - id: k-own-paper-for-restarts
         what: A requirement that kills Paper runs on a Paper of its own
         taught: A kill drops every client on that Paper
@@ -301,17 +307,20 @@ decided:
     what: Requirements are declared in testBalloon with a needs header; the framework scheduler runs them and writes TestRun
   - id: one-gametest-task
     what: One root gameTest task runs every module's requirements in one JVM; cargo xtask e2e game runs it
+  - id: topology-by-speed
+    what: Prototype both topologies, then decide. The prototypes report how much slower each is at 1,000 to 2,000 tests; 10% slower is fine, 20% is already rough, over 50% is probably a no go
+    why: Thousands of small tests; slow feedback makes every later drive worse over time
+  - id: all-prototypes-in-waves
+    what: Run all proposed prototypes (P1 to P5), just not all at the same time
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
 open:
   - id: paper-topology
-    ask: Share one stepped Paper across concurrent attempts, or give every attempt a Paper of its own?
-  - id: next-prototypes
-    ask: Which prototypes run first?
+    ask: Shared stepped Paper or a Paper per attempt, decided from P1's numbers
   - id: quiet-hook
     ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
 
 slices: []
 
-next: Check in with the status view, ask the topology question and which prototypes to run; nothing is built until directions are picked.
+next: Wave 1 runs P1 (topology speed on CI), P2 (testBalloon fit) and P3 (build fit); wave 2 runs P4 (live stream) and P5 (goldens on devenv Mesa). Check in with each result.
