@@ -51,7 +51,7 @@ void main() {
       final selection = EditSelectionControl([
         for (final owner in owners) boundControl(owner),
       ]);
-      addTearDown(selection.dispose);
+      endWithTest(selection.dispose);
       final panel = await tester.pumpPanel(
         const [],
         at: PanelLocation.component(
@@ -151,7 +151,7 @@ void main() {
         boundControl(automatic),
         boundControl(manual),
       ]);
-      addTearDown(selection.dispose);
+      endWithTest(selection.dispose);
       final panel = await tester.pumpPanel(
         const [],
         at: PanelLocation.component(

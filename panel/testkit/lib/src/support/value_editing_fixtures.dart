@@ -35,7 +35,7 @@ ValueEditing titleDraft(
     snapshot: savedTitleSnapshot(),
     commitPolicy: policy,
   ).acquire(workspace);
-  addTearDown(
+  endWithTest(
     workspace.lease(WorkDriverId(domain: "value", scope: resource.key)).release,
   );
   source.update(
@@ -145,7 +145,7 @@ ValueEditing savedTextOwner({
     workspace: session,
     commit: commit,
   );
-  addTearDown(owner.dispose);
+  endWithTest(owner.dispose);
   return owner;
 }
 
@@ -171,7 +171,7 @@ final class AutosavingOwner {
 /// The bound control of [owner], released with the test.
 EditControl boundControl(ValueEditing owner) {
   final control = owner.bindControl();
-  addTearDown(control.dispose);
+  endWithTest(control.dispose);
   return control;
 }
 
@@ -203,7 +203,7 @@ ValueEditing identifiedOwner(
   final lease = session.lease(
     WorkDriverId(domain: "value", scope: boundary.key),
   );
-  addTearDown(lease.release);
+  endWithTest(lease.release);
   return owner;
 }
 
