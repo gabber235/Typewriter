@@ -7,7 +7,7 @@ goal: Prove what a player experiences in a real Minecraft client, as tests that 
 pieces:
   - id: paper-topology
     status: figuring-out
-    open: Pick the topology from P1; then how to make a restart requirement cheap, since restarts dominate suite time
+    open: How to make a restart requirement cheap, since restarts dominate suite time (P7 T1 faster boot, T2 checkpoint and restore)
     tries:
       - id: d1-one-client
         what: One client runs requirements in sequence
@@ -33,7 +33,8 @@ pieces:
           attempt's async work holds every attempt's tick (about 100 ms per attempt hit). Needs a fence,
           regions and approximate coverage. Lessons: count only acks of ticks after the stimulus (a stale
           ack passed a broken requirement), switch the client clock on the render thread.
-        state: trying
+        state: picked
+        why: Picked by the developer from P1
         evidence: [docs/plans/game-verification/decisions/step-driver.yaml, "branch proto/gv-topology 1ec7bef6f: prototypes/game-verification/RESULTS.md", CI run 42345155973]
       - id: paper-per-attempt
         parent: d3-paper-per-group
@@ -43,13 +44,15 @@ pieces:
           claim moves clients (0.33 to 0.95 s each, holding that Paper): +390% at 10% groups, +777% at
           30%. Restart boots compete with three busy Papers: +41% at 1% restarts. An idle stepped Paper
           needs a keepalive tick or the watchdog stops it.
-        state: trying
+        state: dropped
+        why: 41 to 777% slower once groups or restarts appear
         evidence: ["branch proto/gv-topology 1ec7bef6f: prototypes/game-verification/RESULTS.md", CI runs 42345155973 42339156447]
       - id: fresh-paper-per-attempt
         parent: d3-paper-per-group
         what: A fresh Paper per requirement, booted ahead while others run
         taught: P1 computed it. A boot costs 22 to 39 CPU s, so 1,000 requirements take 1.5 to 2.8 hours on 4 vCPU; matching shared would need about 850 booters
-        state: trying
+        state: dropped
+        why: Hours per 1,000 requirements
         evidence: [docs/design/game-verification/spikes/k-restarts.md, docs/design/game-verification/spikes/c-speed.md]
       - id: k-own-paper-for-restarts
         what: A requirement that kills Paper runs on a Paper of its own
@@ -59,7 +62,19 @@ pieces:
           requirements finish in 20 to 27 s. AppCDS needs -XX:+AllowArchivingWithJavaAgent with the agent
         state: picked
         why: Decided by the developer from spike K
-        evidence: [docs/design/game-verification/spikes/k-restarts.md]
+        evidence: [docs/design/game-verification/spikes/k-restarts.md, CI run 42345155973]
+      - id: faster-boot
+        parent: k-own-paper-for-restarts
+        what: Cut Paper's boot with Java 25's AOT cache, AppCDS with the agent, a slim world and only needed plugins
+        taught: Not tried
+        state: trying
+        evidence: []
+      - id: checkpoint-restore
+        parent: k-own-paper-for-restarts
+        what: Restore a snapshot of a booted, empty Paper instead of booting
+        taught: Not tried
+        state: trying
+        evidence: []
 
   - id: stepped-ticks
     status: figuring-out
@@ -368,17 +383,20 @@ decided:
     what: Run all proposed prototypes (P1 to P5), just not all at the same time
   - id: p6-pool-process
     what: Prototype a separate pool process that every test JVM (modules, extensions, IDE runs) submits to, faked without Minecraft
+  - id: shared-topology
+    what: "A: shared stepped Paper"
+    why: P1, a Paper per attempt is 41 to 777% slower once groups or restarts appear
+  - id: p7-restart-tries
+    what: Prototype T1 faster boot and T2 checkpoint and restore for restart requirements
   - id: tests-beside-code
     what: Tests are placed where it makes sense; in the future each extension and every entry is tested
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
 open:
-  - id: paper-topology
-    ask: Shared stepped Paper or a Paper per attempt, decided from P1's numbers
   - id: quiet-hook
     ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
 
 slices: []
 
-next: P1 and P4 running, P6 (pool process) started after P5. Check in with each result.
+next: P4 and P6 running; P7 T1 (faster boot) started; P7 T2 (checkpoint and restore) starts when a slot frees. Check in with each result.
