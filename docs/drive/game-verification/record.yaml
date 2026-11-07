@@ -1,0 +1,317 @@
+# docs/drive/game-verification/record.yaml: the working state of the in-game verification framework.
+# Spike details: docs/design/game-verification/README.md and spikes/. Prototype code: git 86724c794
+# (spikes J, K, N) and 9c9275f22 (earlier spikes). Old plan drafts (input only, git ignored):
+# docs/plans/game-verification/ (design.md, directions.md, research-*.md, decisions/*.yaml).
+goal: Prove what a player experiences in a real Minecraft client, as tests that run on every pull request, built in full before L3.
+
+pieces:
+  - id: paper-topology
+    status: figuring-out
+    open: Do concurrent attempts share one stepped Paper, or does each attempt get a Paper of its own?
+    tries:
+      - id: d1-one-client
+        what: One client runs requirements in sequence
+        taught: Simple, but the throughput is that of a single client
+        state: dropped
+        why: The pool of 4 warm clients was decided for group behaviour and throughput
+        evidence: [docs/design/game-verification/spikes/d-clients.md]
+      - id: d2-shared-paper
+        what: Several clients run separate requirements on one Paper
+        taught: Scales linearly when gated; wrong verdicts came only from broadcast chat and titles, fixed by per player effects and regions 1024 blocks apart. Tick rate, main thread lag and coverage still leak between attempts
+        state: working
+        evidence: [docs/design/game-verification/spikes/d-clients.md, CI runs 42184657603 42187755498]
+      - id: d3-paper-per-group
+        what: One Paper per few clients
+        taught: The only way to isolate tick rate, main thread lag and coverage; best throughput was 2 Papers with 4 clients each
+        state: working
+        evidence: [docs/design/game-verification/spikes/d-clients.md]
+      - id: shared-stepped-paper
+        parent: d2-shared-paper
+        what: Every attempt shares one Paper whose next tick waits for every claimed client and every claimed player's work
+        taught: Drafted in the old plan only. Needs a chat fence, regions, a drain and reboot on hung work, approximate coverage, and leaves layer 4 content isolation open
+        state: trying
+        evidence: [docs/plans/game-verification/decisions/step-driver.yaml, docs/plans/game-verification/decisions/pool.yaml]
+      - id: paper-per-attempt
+        parent: d3-paper-per-group
+        what: Every running attempt gets a Paper of its own; clients move to it for a group claim
+        taught: Not tried yet. Would make the fence, regions, coverage spans, the side Paper and content isolation unnecessary; costs memory and a reconnect per group claim
+        state: trying
+        evidence: []
+      - id: k-own-paper-for-restarts
+        what: A requirement that kills Paper runs on a Paper of its own
+        taught: A kill drops every client on that Paper
+        state: picked
+        why: Decided by the developer from spike K
+        evidence: [docs/design/game-verification/spikes/k-restarts.md]
+
+  - id: stepped-ticks
+    status: figuring-out
+    open: Stepping is proven for one subject. How it behaves with several attempts depends on paper-topology
+    tries:
+      - id: c2-faster-rate
+        what: Run Paper faster than 20 TPS
+        taught: Rate is server wide, and a tick window shrinks with the rate while wall clock async work does not
+        state: dropped
+        why: Replaced by stepped ticks
+        evidence: [docs/design/game-verification/spikes/c-speed.md, docs/design/game-verification/spikes/d-clients.md]
+      - id: wall-clock-fail-rule
+        what: Fail only when the window barrier arrived and the player's counted work is quiet, at a fixed rate
+        taught: Correct, but kept wall clock in the rule
+        state: dropped
+        why: Stepped ticks carry the rule inside the step
+        evidence: [docs/design/game-verification/spikes/d-clients.md]
+      - id: n1-vanilla-freeze
+        what: Paper's tick manager frozen and stepped
+        taught: Plugin tasks, players and the block break clock keep running on wall clock
+        state: dropped
+        why: Not a real freeze
+        evidence: [docs/design/game-verification/spikes/n-stepped-ticks.md]
+      - id: n2-step-agent
+        what: A Java agent makes Paper's main loop wait for a permit; the client moves one tick per step ping
+        taught: Exact windows, async work passes with no wall clock window, hung work fails at the 1 s limit, a few ms per requirement. Packet limiter, read timeout and watchdog must be relaxed
+        state: picked
+        why: Decided by the developer, as an agent on the stock Paper jar
+        evidence: [docs/design/game-verification/spikes/n-stepped-ticks.md, CI runs 42304863563 42310014228]
+
+  - id: perception
+    status: figuring-out
+    open: The live stream to the test JVM was never built (the spikes judged traces afterwards); its size and the HUD element names on drawn text are unmeasured
+    tries:
+      - id: a1-client-state
+        what: Read the client's state
+        taught: Many false positives on lying scenes
+        state: dropped
+        why: Only arranges scenes and names causes
+        evidence: [docs/design/game-verification/spikes/a-observers.md]
+      - id: a3-pixels
+        what: Pixels in a region
+        taught: Good for frames and goldens, weak as a verdict
+        state: dropped
+        why: Kept for goldens only
+        evidence: [docs/design/game-verification/spikes/a-observers.md]
+      - id: a2-drawn-plus-a4-visible
+        what: "Seen means drawn legibly plus owns visible pixels"
+        taught: Every verdict right on the lying battery, gated or rendered; new kinds cost no observer code
+        state: picked
+        why: The only honest pair
+        evidence: [docs/design/game-verification/spikes/a-observers.md]
+
+  - id: readiness-and-done
+    status: figuring-out
+    open: Which side counts Typewriter's work for the done signal (Paper only, or Paper plus a test side hook); decided with layers 3 and 6
+    tries:
+      - id: e-bare-barrier-and-chunk-signals
+        what: A bare echo barrier, or chunk and mesh signals
+        taught: A bare barrier is wrong when effects are delayed; chunk signals fire early
+        state: dropped
+        why: Wrong verdicts
+        evidence: [docs/design/game-verification/spikes/e-readiness.md]
+      - id: e3t-window-barrier
+        what: Read the fact every client loop, pass when it holds, fail at a barrier after the window in ticks
+        taught: No wrong verdicts; a pass costs nothing beyond the truth
+        state: picked
+        evidence: [docs/design/game-verification/spikes/e-readiness.md, CI run 42174196154]
+      - id: per-subject-work
+        what: Engine and realm count work per player; the step waits until it is quiet; hung work is reported after 1 s and never cancelled
+        taught: Replaces server wide quiet and counted dispatchers
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/d-clients.md, docs/design/game-verification/spikes/i-coverage.md]
+
+  - id: input
+    status: figuring-out
+    open: Moving XTest from the runner into the client mod (through Java's foreign function API) is untried
+    tries:
+      - id: j-packets-and-game-actions
+        what: Send packets, or call the game's own actions
+        taught: Packets miss aim and get kicked when walking; game actions never match typed tab completion
+        state: dropped
+        why: Not what a player does
+        evidence: [docs/design/game-verification/spikes/j-input.md]
+      - id: j-window-events
+        what: Real window events (XTest on Linux, SDL queue push on the Mac)
+        taught: Same server events as direct handler calls on all 17 inputs, gated or rendered; typed suggestions sometimes get no reply
+        state: picked
+        evidence: [docs/design/game-verification/spikes/j-input.md, CI runs 42211818480 42215647584 42218505138]
+
+  - id: client-pool
+    status: figuring-out
+    open: How a claim moves clients between Papers depends on paper-topology
+    tries:
+      - id: fresh-client-per-requirement
+        what: Boot a client per requirement
+        taught: A boot costs far more than a requirement
+        state: dropped
+        why: Unaffordable
+        evidence: [docs/design/game-verification/spikes/s0-real-client-on-paper.md, docs/design/game-verification/spikes/c-speed.md]
+      - id: fresh-identity
+        what: A new player identity per requirement
+        taught: Leaked nothing but costs a join per requirement
+        state: dropped
+        why: Replaced by the full wipe
+        evidence: [docs/design/game-verification/spikes/k-restarts.md]
+      - id: full-wipe
+        what: Wipe all 17 kinds of player state between requirements, on warm clients
+        taught: Leaked nothing; the obvious partial wipe leaked 11 kinds
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/k-restarts.md, CI run 42235574190]
+      - id: leave-like-pause-menu
+        what: Reconnect by leaving like the pause menu, then joining
+        taught: The earlier client side close made Paper keep the old player for about 30 s
+        state: picked
+        evidence: [docs/design/game-verification/spikes/k-restarts.md]
+
+  - id: requirement-shape
+    status: figuring-out
+    open: Direction C was chosen from sketches; testBalloon's concurrency, filters, IDE runs and failure stacks with a framework scheduler are untried
+    tries:
+      - id: fabric-client-gametest
+        what: Fabric's client game test API as the runner
+        taught: Test code runs inside one client, sequentially, against an in process server; no external server API
+        state: dropped
+        why: Conflicts with real Paper, several clients and a test JVM
+        evidence: [docs/design/game-verification/research/real-client-precedent.md]
+      - id: g2-await-and-g3-timeline-only
+        what: Await style, or judge only the recorded timeline afterwards
+        taught: Await silently grows limits; timeline only waits its whole recording on every pass
+        state: dropped
+        evidence: [docs/design/game-verification/spikes/g-requirement-shape.md]
+      - id: g1-windows-plus-timeline
+        what: Every check in a within(n.ticks) window from the last stimulus; order and gaps from the timeline
+        taught: Fits one mechanism, the streamed perception with the barrier inside it
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/g-requirement-shape.md]
+      - id: runner-a-and-b
+        what: Tests in a pool (A), or requirement values run by the framework (B)
+        taught: A shows flaky as green; B loses the IDE gutter and test filters
+        state: dropped
+        evidence: [docs/plans/game-verification/directions.md]
+      - id: runner-c-testballoon
+        what: Declared in testBalloon with a needs header; a framework scheduler runs, retries and reports
+        taught: Sketch only; testBalloon 1.1.0 has the needed hooks (compartment, aroundAll, concurrent invocation)
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/plans/game-verification/directions.md, docs/plans/game-verification/decisions/requirement.yaml]
+
+  - id: video
+    status: figuring-out
+    open: Rendering several frames per stepped tick (Frames.Motion) was never tried; video and stepping both drive the client clock
+    tries:
+      - id: b2-window-capture
+        what: Capture the window
+        taught: Up to 16 frames off, no sync
+        state: dropped
+        evidence: [docs/design/game-verification/spikes/b-video.md]
+      - id: b3-packet-replay
+        what: Record packets, render offline on demand
+        taught: Not worth building
+        state: dropped
+        evidence: [docs/design/game-verification/spikes/b-video.md]
+      - id: b1-readback-demo-rerun
+        what: In client readback to ffmpeg, recorded in a demo rerun, never in the gated suite
+        taught: Clip lines up with facts; same verdict in every rerun
+        state: picked
+        evidence: [docs/design/game-verification/spikes/b-video.md, CI run 42111131229]
+
+  - id: goldens
+    status: figuring-out
+    open: Determinism was measured on Ubuntu's Mesa 25.2.8; devenv gives Mesa 26.2.5, not measured yet
+    tries:
+      - id: tolerant-compare
+        what: SSIM, blur or threshold comparison
+        taught: Every tolerant method missed a colour off by 3
+        state: dropped
+        evidence: [docs/design/game-verification/spikes/f-goldens.md]
+      - id: exact-on-pinned-runner
+        what: Exact comparison, approved from the runner's own frames, hash in the repo and PNG on the evidence branch
+        taught: Zero differing pixels across repeats and CPU models with the knobs on
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/f-goldens.md]
+
+  - id: coverage
+    status: figuring-out
+    open: Attribution with several attempts on one Paper is approximate; exact with a Paper per attempt (paper-topology)
+    tries:
+      - id: plain-or-tcp-dump
+        what: Dump after each requirement, or over TCP
+        taught: Late work goes to the wrong requirement; TCP costs 41 ms
+        state: dropped
+        evidence: [docs/design/game-verification/spikes/i-coverage.md]
+      - id: i3-read-reset-in-plugin
+        what: JaCoCo limited to plugin classes, read and reset inside the plugin after work is idle
+        taught: Correct attribution at no measurable cost
+        state: picked
+        evidence: [docs/design/game-verification/spikes/i-coverage.md, CI run 42162248604]
+
+  - id: results-and-ci
+    status: figuring-out
+    open: none beyond the pieces above; the TestRun additions follow from them
+    tries:
+      - id: xtask-reruns
+        what: Let xtask rerun failed requirements as for other suites
+        taught: Each rerun would boot the clients again (results.rs:174)
+        state: dropped
+        why: Retries run inside the test JVM on warm clients
+        evidence: [docs/plans/game-verification/research-xtask.md]
+      - id: free-runner
+        what: The free GitHub runner, 4 vCPU, software rendering
+        taught: Holds the gated clients with the same throughput as the Mac
+        state: picked
+        evidence: [docs/design/game-verification/spikes/h-ci-runner.md]
+
+  - id: build
+    status: figuring-out
+    open: Fabric Loom inside the services Gradle build, the Paper jar from run-paper's download service, and the gameTest task kept out of check are inferred, never built
+    tries: []
+
+decided:
+  - id: real-clients-only
+    what: Real clients only, no packet level tier; stimuli are player input or API, not chat commands; full suite on every pull request
+  - id: framework-holds-no-typewriter
+    what: The framework holds no Typewriter code and may later move out
+  - id: tick-clock
+    what: Cinematics, sequences and engine step timing count ticks, not wall clock; each engine keeps a live StepClock per step
+  - id: groups-and-pool
+    what: Group behaviour must be testable, and requirements share a pool of 4 warm clients
+  - id: full-wipe
+    what: Each requirement gets a full wipe of its player; the realm gets a general purge of a subject's data
+  - id: runner-steps-ticks
+    what: The test runner decides when a tick happens, as a Java agent on the stock Paper jar
+  - id: retries
+    what: A failed requirement is retried later, up to 3 times; a pass on a retry is flaky and blocks the pull request like every suite; lossy inputs may repeat inside the window
+  - id: full-framework-first
+    what: The full framework is built first, before L3
+  - id: per-subject-done
+    what: Done and fail signals use a per subject view; hung work is reported by a 1 s wall clock limit, never cancelled
+  - id: clips
+    what: Video clips go to failing requirements plus requirements the pull request touches, from coverage
+  - id: goldens
+    what: A frame that differs from its golden fails; goldens are exact on the pinned runner; the repo holds a hash, the PNG lives on the evidence branch; approve takes the PR's CI frames
+    why: Mesa or Minecraft upgrades rebuild the goldens in the weekly upgrade pull request
+  - id: windows
+    what: Requirements are G1 windows plus the recorded timeline; a window counts from the last action or probe call
+  - id: never-needs-positive
+    what: never checks are broad, and a requirement needs one positive check
+  - id: test-jvm
+    what: Requirement code runs in a test JVM; the client streams what its player perceived
+  - id: testballoon-runner
+    what: Requirements are declared in testBalloon with a needs header; the framework scheduler runs them and writes TestRun
+  - id: one-gametest-task
+    what: One root gameTest task runs every module's requirements in one JVM; cargo xtask e2e game runs it
+  - id: deferred-l-m
+    what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
+
+open:
+  - id: paper-topology
+    ask: Share one stepped Paper across concurrent attempts, or give every attempt a Paper of its own?
+  - id: next-prototypes
+    ask: Which prototypes run first?
+  - id: quiet-hook
+    ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
+
+slices: []
+
+next: Check in with the status view, ask the topology question and which prototypes to run; nothing is built until directions are picked.

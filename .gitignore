@@ -160,6 +160,7 @@ plans/
 /docs/*
 !/docs/vision/
 !/docs/design/
+!/docs/drive/
 AGENTS.local.md
 
 # devenv shell state; devenv.lock is committed
