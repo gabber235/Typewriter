@@ -24,6 +24,19 @@ val StdlibTest by testSuite {
         callFormula("map", listOf(1, 2, 3), { item: Any? -> (item as Int) * 10 }) shouldBe listOf(10, 20, 30)
         callFormula("filter", listOf(3, 1, 2), { item: Any? -> (item as Int) > 1 }) shouldBe listOf(3, 2)
     }
+    test("a range holds both ends and every Int between, and is empty when it runs backwards") {
+        callFormula("rangeTo", 1, 4) shouldBe listOf(1, 2, 3, 4)
+        callFormula("rangeTo", 3, 2) shouldBe emptyList<Int>()
+    }
+    test("a set and a map answer whether they hold an item or key") {
+        callFormula("contains", setOf("a", "b"), "b") shouldBe true
+        callFormula("contains", setOf("a"), "c") shouldBe false
+        callFormula("contains", mapOf("sword" to 50), "sword") shouldBe true
+        callFormula("contains", mapOf("sword" to 50), 50) shouldBe false
+    }
+    test(
+        "distinct keeps the first of each equal item, in order",
+    ) { callFormula("distinct", listOf(2, 1, 2, 3, 1)) shouldBe listOf(2, 1, 3) }
     test("String length counts code points, like portable text") { callFormula("length", "😀a") shouldBe 2 }
     test("substring counts code points, like portable text") { callFormula("substring", "😀ab", 1, 2) shouldBe "a" }
     test("a template joins its parts") { callFormula("template", listOf("Total: ", "3")) shouldBe "Total: 3" }

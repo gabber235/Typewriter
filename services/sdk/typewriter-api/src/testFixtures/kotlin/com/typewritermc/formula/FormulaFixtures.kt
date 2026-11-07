@@ -128,17 +128,21 @@ fun callFormula(
     return function.invoke(KotlinValues, arguments.toList())
 }
 
+/** Whether this value can fill a slot of [type]; any value fills a type parameter. */
 private fun Any?.fits(type: TypeTemplate): Boolean =
-    when (this) {
-        is Int -> type == integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
-        is Long -> type == integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).template
-        is Double -> type == floatScalar(FloatWidth.SIXTY_FOUR).template
-        is String -> type == ScalarKind.TEXT.template
-        is Boolean -> type == ScalarKind.BOOLEAN.template
-        is List<*> -> type.named?.definition == StandardTypes.list
-        is Function<*> -> type is TypeTemplate.FunctionWrapper
-        else -> false
-    }
+    type is TypeTemplate.ParameterWrapper ||
+        when (this) {
+            is Int -> type == integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
+            is Long -> type == integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).template
+            is Double -> type == floatScalar(FloatWidth.SIXTY_FOUR).template
+            is String -> type == ScalarKind.TEXT.template
+            is Boolean -> type == ScalarKind.BOOLEAN.template
+            is List<*> -> type.named?.definition == StandardTypes.list
+            is Set<*> -> type.named?.definition == StandardTypes.set
+            is Map<*, *> -> type.named?.definition == StandardTypes.map
+            is Function<*> -> type is TypeTemplate.FunctionWrapper
+            else -> false
+        }
 
 /** A formula call over values that are already their Kotlin form. */
 private object KotlinValues : FormulaCall {
