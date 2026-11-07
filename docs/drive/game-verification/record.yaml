@@ -246,13 +246,23 @@ pieces:
 
   - id: goldens
     status: figuring-out
-    open: Determinism was measured on Ubuntu's Mesa 25.2.8; devenv gives Mesa 26.2.5, not measured yet
+    open: CI setup cost of the devenv e2e shell (300 to 480 s per job on an uncached branch)
     tries:
       - id: tolerant-compare
         what: SSIM, blur or threshold comparison
         taught: Every tolerant method missed a colour off by 3
         state: dropped
         evidence: [docs/design/game-verification/spikes/f-goldens.md]
+      - id: devenv-mesa
+        parent: exact-on-pinned-runner
+        what: The same goldens on devenv's Mesa 26.2.5
+        taught: >-
+          P5: one hash per scene across 6 CPU models on Vulkan and 4 on OpenGL, 0 differing identical
+          pairs, every small break caught. The Mesa upgrade changed all 18 goldens (off by 1 level at
+          far edges), so upgrades rebuild goldens as decided. The profile also needs libglvnd and the X
+          libraries; building the devenv shell cost 300 to 480 s per job without the Nix cache.
+        state: working
+        evidence: ["branch proto/gv-goldens 82b1cdf0a: prototypes/game-verification/RESULTS.md", CI runs 42343076555 42344338415]
       - id: exact-on-pinned-runner
         what: Exact comparison, approved from the runner's own frames, hash in the repo and PNG on the evidence branch
         taught: Zero differing pixels across repeats and CPU models with the knobs on
@@ -360,4 +370,4 @@ open:
 
 slices: []
 
-next: P1 and P4 running, P5 (goldens on devenv Mesa) started after P3; P6 (pool process) starts when a slot frees. Check in with each result.
+next: P1 and P4 running, P6 (pool process) started after P5. Check in with each result.
