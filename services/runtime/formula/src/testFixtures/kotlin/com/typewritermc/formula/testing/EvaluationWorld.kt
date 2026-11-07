@@ -75,6 +75,12 @@ val evaluationResources: List<EvaluationResource> =
         EvaluationResource("aliasedPrize", prizeAliasUse, RecordValue(prizeUse, mapOf("gold" to 5))),
         EvaluationResource("Prize", ScalarKind.TYPE.use, null, typeValue = prizeAliasUse),
         EvaluationResource("Award", ScalarKind.TYPE.use, null, typeValue = awardUse),
+        EvaluationResource("storedBounty", bountyUse, RecordValue(rewardUse, mapOf("gold" to 5, "chest" to false))),
+        EvaluationResource(
+            "storedChest",
+            rewardBoxUse,
+            RecordValue(BoxDefinition.id.use(listOf(rewardUse)), mapOf("x" to RecordValue(rewardUse, mapOf("gold" to 7, "chest" to true)))),
+        ),
         EvaluationResource(
             "smith",
             refType(smithUse),

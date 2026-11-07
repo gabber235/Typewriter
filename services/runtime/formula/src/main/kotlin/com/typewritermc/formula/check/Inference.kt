@@ -127,8 +127,17 @@ internal fun Checker.join(
         else -> null
     }
 
-/** Binds the free parameters of [template] so that [actual] fits it. False when it cannot fit. */
+/**
+ * Binds the free parameters of [template] so that [actual] fits it. False when it cannot fit. An alias in [actual]
+ * stands for the type it names, so a parameter binds to that type.
+ */
 internal fun Checker.unify(
+    template: TypeTemplate,
+    actual: TypeUse,
+    solved: MutableMap<ParameterKey, TypeUse>,
+): Boolean = unifyExpanded(template, environment.expand(actual), solved)
+
+private fun Checker.unifyExpanded(
     template: TypeTemplate,
     actual: TypeUse,
     solved: MutableMap<ParameterKey, TypeUse>,
@@ -136,7 +145,7 @@ internal fun Checker.unify(
     when {
         actual == ERROR -> true
         template is TypeTemplate.ParameterWrapper -> unifyParameter(template.value, actual, solved)
-        template is TypeTemplate.NullableWrapper -> unify(template.value.value, actual.nonNull(), solved)
+        template is TypeTemplate.NullableWrapper -> unifyExpanded(template.value.value, actual.nonNull(), solved)
         template is TypeTemplate.NamedWrapper -> unifyNamed(template.value, actual, solved)
         template is TypeTemplate.FunctionWrapper -> actual.function?.let { unifyFunction(template.value, it, solved) } == true
         template is TypeTemplate.ScalarWrapper -> fits(actual, template.value.use)
@@ -170,7 +179,7 @@ private fun Checker.unifyNamed(
     val matching = if (own.definition == wanted.definition) own else ancestors(actual).firstOrNull { it.definition == wanted.definition }
     return matching != null &&
         matching.arguments.size == wanted.arguments.size &&
-        matching.arguments.zip(wanted.arguments).all { (argument, slot) -> unify(slot, argument, solved) }
+        matching.arguments.zip(wanted.arguments).all { (argument, slot) -> unifyExpanded(slot, argument, solved) }
 }
 
 private fun Checker.unifyFunction(
@@ -180,8 +189,8 @@ private fun Checker.unifyFunction(
 ): Boolean =
     actual.context.size == wanted.context.size &&
         actual.parameters.size == wanted.parameters.size &&
-        actual.slots.zip(wanted.allSlots).all { (mine, slot) -> unify(slot.type, mine.type, solved) } &&
-        unify(wanted.result, actual.result, solved)
+        actual.slots.zip(wanted.allSlots).all { (mine, slot) -> unifyExpanded(slot.type, mine.type, solved) } &&
+        unifyExpanded(wanted.result, actual.result, solved)
 
 /** [template] with [solved] applied, or null while it still has a free parameter. */
 internal fun TypeTemplate.applied(solved: Map<ParameterKey, TypeUse>): TypeUse? =
