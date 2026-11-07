@@ -196,7 +196,7 @@ pieces:
 
   - id: requirement-shape
     status: figuring-out
-    open: Pick between the root compilation and the pool process (P6); IDE single runs unchecked
+    open: "Pool process design: detach it on purpose, replace a stale idle pool, a lease deadline, a report that survives a pool crash; IDE single runs unchecked"
     tries:
       - id: fabric-client-gametest
         what: Fabric's client game test API as the runner
@@ -219,13 +219,15 @@ pieces:
         parent: runner-c-testballoon
         what: One root compilation reads every module's gameTest folder
         taught: P2 proved 200 tests, one JVM, one scheduler; works only inside one Gradle build, so not for extensions built elsewhere
-        state: working
+        state: dropped
+        why: Services build only, and every run boots the clients again
         evidence: ["branch proto/gv-testballoon: services/prototypes/gv-testballoon/evidence/root"]
       - id: classloader-per-compilation
         parent: runner-c-testballoon
         what: One JVM loads each compilation in its own class loader and runs testBalloon per loader; scheduler and pool in the shared parent loader
         taught: Not tried
-        state: trying
+        state: dropped
+        why: The pool process covers it, plus extensions and warm single runs
         evidence: []
       - id: pool-process
         parent: runner-c-testballoon
@@ -237,7 +239,8 @@ pieces:
           pool and version mismatch all fail clearly. Open: detach the pool on purpose (it survives only
           by process group luck), replace a stale idle pool automatically, a heartbeat or lease deadline
           for a stuck pool, keep the report safe from a pool crash. About 590 lines against 217.
-        state: working
+        state: picked
+        why: Picked by the developer; modules and extensions share warm clients, single runs take 2 s
         evidence: ["branch proto/gv-pool-process 968f7babb: services/prototypes/gv-pool-process/FINDINGS.md"]
       - id: runner-a-and-b
         what: Tests in a pool (A), or requirement values run by the framework (B)
@@ -394,6 +397,9 @@ decided:
     why: P1, a Paper per attempt is 41 to 777% slower once groups or restarts appear
   - id: p7-restart-tries
     what: Prototype T1 faster boot and T2 checkpoint and restore for restart requirements
+  - id: pool-process
+    what: Test JVMs share a separate pool process
+    why: Modules and extensions share warm clients; single runs take 2 s, not 20 s
   - id: tests-beside-code
     what: Tests are placed where it makes sense; in the future each extension and every entry is tested
   - id: deferred-l-m
@@ -405,4 +411,4 @@ open:
 
 slices: []
 
-next: P4 and P7 T1 running, P7 T2 (checkpoint and restore) started after P6. Ask the developer to pick between root compilation and pool process.
+next: P4, P7 T1 and P7 T2 running. Check in with each result; then show the overall direction and propose the first build slice.
