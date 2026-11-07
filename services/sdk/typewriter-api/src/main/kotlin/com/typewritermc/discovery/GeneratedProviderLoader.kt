@@ -1,7 +1,7 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.capability.RealmCapabilityProvider
-import com.typewritermc.formula.FormulaFunction
+import com.typewritermc.formula.GeneratedDynamicProvider
 import com.typewritermc.formula.GeneratedFormulaProvider
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
@@ -9,9 +9,11 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.requireValid
 import com.typewritermc.types.NativeBindingFactory
+import com.typewritermc.types.qualified
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Files
@@ -46,18 +48,11 @@ data class OwnedCollectionProjection(
     val specification: com.typewritermc.presentation.CollectionProjectionSpec,
 )
 
-/** A formula function and the provider that declares it. */
-data class OwnedFormulaFunction(
-    val origin: ProviderOrigin,
-    val function: FormulaFunction,
-)
-
 data class LoadedGeneratedProviders(
     val contributions: CatalogContributions,
     val capabilities: List<OwnedRealmCapability>,
     val registrars: List<OwnedRuntimeRegistrar>,
     val collectionProjections: List<OwnedCollectionProjection>,
-    val formula: List<OwnedFormulaFunction>,
 )
 
 /**
@@ -135,6 +130,10 @@ class RetainedOwnedProviderRegistry(
     override fun nativeBindings(): List<OwnedNativeBinding> = delegate.nativeBindings()
 
     override fun checks(): List<OwnedCheck> = delegate.checks()
+
+    override fun dynamics(): List<OwnedDynamic> = delegate.dynamics()
+
+    override fun formulas(): List<OwnedFormulaFunction> = delegate.formulas()
 }
 
 private class CombinedProviderLease(
@@ -250,6 +249,7 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.ResourceOperation -> GeneratedResourceOperationProvider::class.java
                 GeneratedProviderKind.ResourceDisplay -> GeneratedResourceDisplayProvider::class.java
                 GeneratedProviderKind.Formula -> GeneratedFormulaProvider::class.java
+                GeneratedProviderKind.Dynamic -> GeneratedDynamicProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
             "Generated ${kind.key} provider ${providerClass.name} must implement ${expected.name}."
@@ -438,7 +438,8 @@ class GeneratedProviderLoader {
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
         val displays = mutableListOf<OwnedResourceDisplay>()
-        val formula = mutableListOf<OwnedFormulaFunction>()
+        val formulas = mutableListOf<OwnedFormulaFunction>()
+        val dynamics = mutableListOf<OwnedDynamic>()
 
         loaded.forEach { loadedProvider ->
             val origin = loadedProvider.origin
@@ -515,7 +516,13 @@ class GeneratedProviderLoader {
                 }
 
                 GeneratedProviderKind.Formula -> {
-                    formula += loadedProvider.require<GeneratedFormulaProvider>().functions.map { OwnedFormulaFunction(origin, it) }
+                    formulas += loadedProvider.require<GeneratedFormulaProvider>().functions.map { OwnedFormulaFunction(origin, it) }
+                }
+
+                GeneratedProviderKind.Dynamic -> {
+                    val ruleOrigin =
+                        RuleOrigin(owner = TypeDefinitionId.qualified("dynamic", loadedProvider.entry.providerClass), ordinal = 0)
+                    dynamics += OwnedDynamic(origin, ruleOrigin, loadedProvider.require<GeneratedDynamicProvider>())
                 }
 
                 GeneratedProviderKind.CollectionProjection -> {
@@ -545,11 +552,12 @@ class GeneratedProviderLoader {
                     checks = ownedChecks,
                     operations = operations,
                     displays = displays,
+                    dynamics = dynamics,
+                    formulas = formulas,
                 ),
             capabilities = capabilities,
             registrars = registrars,
             collectionProjections = collectionProjections,
-            formula = formula,
         )
     }
 }

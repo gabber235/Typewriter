@@ -12,6 +12,7 @@ import com.typewritermc.presentation.CollectionProjectionSpec
 import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.use
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -20,6 +21,7 @@ import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -134,6 +136,7 @@ class RealmCatalogStore : AutoCloseable {
         override val displays: ResourceDisplayCatalog get() = assembly.displays
         override val extensions: ExtensionCatalog get() = retention.extensions.value
         override val editorCatalog: EditorCatalog get() = assembly.editorCatalog
+        override val formulaTypeNames: Map<String, List<TypeUse>> get() = retention.typeNames
         override val capabilities: List<RealmCapabilityProvider>
             get() =
                 incarnation.deployment.providers.capabilities
@@ -158,6 +161,11 @@ class RealmCatalogStore : AutoCloseable {
         val incarnation: RealmCatalogIncarnation,
         var current: Boolean,
     ) : AutoCloseable {
+        val typeNames: Map<String, List<TypeUse>> by lazy {
+            incarnation.assembly.editorCatalog.types
+                .groupBy({ it.display.name }, { it.definition.id.use() })
+        }
+
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)
         val extensions =
             CollectedExtensions { collectExtensions(incarnation.assembly.checks, incarnation.assembly.configuration, providers) }

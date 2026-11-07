@@ -84,10 +84,13 @@ internal class Checker(
 
     fun run(
         parsed: Parsed<Expression>,
-        result: TypeUse?,
+        expected: TypeUse?,
     ): CheckedFormula {
         for (problem in parsed.problems) report(problem.span, "formula_syntax", problem.message)
-        val tree = infer(parsed.root, result, Scope.root(context, parameters))
+        // A position whose content type is gone has the error type, so its body adds nothing to that type's finding.
+        val result = expected?.let { normalize(it) }
+        val scope = Scope.root(context.map { it.copy(type = normalize(it.type)) }, parameters.map { it.copy(type = normalize(it.type)) })
+        val tree = infer(parsed.root, result, scope)
         if (result != null) expect(tree, result)
         val all = Trace()
         collect(trace, all)

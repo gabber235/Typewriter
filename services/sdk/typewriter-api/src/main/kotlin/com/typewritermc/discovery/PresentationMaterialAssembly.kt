@@ -8,6 +8,7 @@ import com.typewritermc.authoring.root
 import com.typewritermc.capability.id
 import com.typewritermc.configuration.field
 import com.typewritermc.configuration.name
+import com.typewritermc.configuration.representationKind
 import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
@@ -427,18 +428,7 @@ private fun TypeDefinition.presentationKind(definitions: Map<TypeDefinitionId, T
 private fun RepresentationTemplate.presentationKind(): RepresentationKind =
     when (this) {
         is RepresentationTemplate.ScalarWrapper -> {
-            when (val kind = value.kind) {
-                ScalarKind.UNIT -> RepresentationKind.UNIT
-                ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
-                ScalarKind.TEXT -> RepresentationKind.TEXT
-                ScalarKind.BYTES -> RepresentationKind.BYTES
-                is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
-                is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
-                ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
-                ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
-                ScalarKind.DURATION -> RepresentationKind.DURATION
-                else -> unknownVariant(kind)
-            }
+            value.kind.representationKind() ?: unknownVariant(value.kind)
         }
 
         is RepresentationTemplate.RecordWrapper -> {

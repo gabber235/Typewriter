@@ -68,7 +68,8 @@ internal suspend fun RealmFixture.createElement(
     val (id, writes) = elementWrites(record)
     val edit =
         views.capture().use { lease ->
-            WorkingViewEditContext(lease.root, name).run {
+            // The edit's name seeds its item ids, so it names the new element: two entries of one name stay two items.
+            WorkingViewEditContext(lease.root, "$name:${id.value}").run {
                 writes()
                 finish()
             }
@@ -85,9 +86,15 @@ internal suspend fun RealmFixture.commitElement(record: (ResourceId) -> Authorin
 /** The id of the element [record] builds on the static page, and the writes that create it and place it there. */
 internal fun RealmFixture.elementWrites(
     record: (ResourceId) -> AuthoringRecord,
+): Pair<ResourceId, suspend WorkingViewEditContext.() -> Unit> = elementWrites(ResourceId(value = "entry-${UUID.randomUUID()}"), record)
+
+/** The writes that create the element [record] builds as [id] on the static page and place it there. */
+internal fun RealmFixture.elementWrites(
+    id: ResourceId,
+    record: (ResourceId) -> AuthoringRecord,
 ): Pair<ResourceId, suspend WorkingViewEditContext.() -> Unit> {
     val page = resources.typesOf(StaticPageDefinition.id).single()
-    val entry = AuthorResourceId("entry-${UUID.randomUUID()}")
+    val entry = AuthorResourceId(id.value)
     val created = record(ResourceId(value = entry.value))
     val pageField = ValuePath.root.field("page")
     val item =

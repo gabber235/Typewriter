@@ -150,6 +150,16 @@ class RealmFixture private constructor(
     /** Reads the saved authoring from storage again, as the Realm does after a failed persist. */
     internal fun reloadFromStorage() = views.invalidate(storage::readCoherent)
 
+    /**
+     * Saves [records] by hand, past admission, and reads storage again: content no author could commit, such as a
+     * value an older catalog accepted. Needs memory storage.
+     */
+    internal fun saveByHand(records: Map<ResourceId, AuthoringRecord>) {
+        val memory = storage as MemoryAuthoringStorage
+        memory.seed = AuthoringSeed(memory.seed.resources + records)
+        reloadFromStorage()
+    }
+
     /** Saved resources by id, as the Realm reads them now. */
     val resources: Map<ResourceId, AuthoringRecord> get() = views.read { it.resources }
 

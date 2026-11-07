@@ -14,6 +14,7 @@ import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
 
 /**
@@ -49,6 +50,10 @@ interface AuthoringCatalogLease : AutoCloseable {
     /** The resource displays that name resources; a catalog without declared displays names none. */
     val displays: ResourceDisplayCatalog
         get() = ResourceDisplayCatalog()
+
+    /** The code types formulas name by their display name; a catalog that publishes no displays names none. */
+    val formulaTypeNames: Map<String, List<TypeUse>>
+        get() = emptyMap()
 
     fun retain(): AuthoringCatalogLease
 }

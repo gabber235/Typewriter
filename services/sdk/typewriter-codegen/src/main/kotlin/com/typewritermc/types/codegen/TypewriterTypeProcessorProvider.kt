@@ -50,6 +50,7 @@ import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
+import com.typewritermc.formula.codegen.DynamicProviderProcessor
 import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
 import com.typewritermc.types.Color
@@ -163,6 +164,7 @@ private class TypewriterTypeProcessor(
             it.qualifiedName?.asString() in
                 explicitlyImportedTypes
         }
+    private val dynamicProviders = DynamicProviderProcessor(output, logger)
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
@@ -227,6 +229,7 @@ private class TypewriterTypeProcessor(
             }
         }
         deferred += formulaProviders.process(resolver)
+        deferred += dynamicProviders.process(resolver)
         return deferred.distinct()
     }
 

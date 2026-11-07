@@ -16,9 +16,13 @@ import skirout.kernel.v1.resource_id.ResourceId
 
 /**
  * Discovers the current subjects of every plan of these extensions. Each plan reads the view only through a reader
- * [newReads] gives it, so its reads and its health are its own.
+ * [newReads] gives it, so its reads and its health are its own. [contentSubjects] gives the resources that have
+ * something for the content rule to report.
  */
-internal fun ExtensionCatalog.discoverSubjects(newReads: () -> CapturedAuthoringReads): SubjectDiscovery {
+internal fun ExtensionCatalog.discoverSubjects(
+    newReads: () -> CapturedAuthoringReads,
+    contentSubjects: () -> List<ResourceId>,
+): SubjectDiscovery {
     val subjects = mutableListOf<CheckSubject>()
     val incompleteRules = linkedSetOf<RuleId>()
     plans.forEach { plan ->
@@ -53,6 +57,10 @@ internal fun ExtensionCatalog.discoverSubjects(newReads: () -> CapturedAuthoring
 
                 is CheckPlan.RegistrationFailure -> {
                     listOf(plan.subject(REALM_SUBJECT_KEY))
+                }
+
+                is CheckPlan.Content -> {
+                    contentSubjects().map { resource -> plan.subject(ValueLocation.of(resource)) }
                 }
 
                 is CheckPlan.DiscoveryFailure -> {
@@ -108,7 +116,7 @@ internal data class CheckSubject(
     val findingLocation: ValueLocation?
         get() =
             when (plan) {
-                is CheckPlan.Simple, is CheckPlan.Portable, is CheckPlan.Each<*> -> location
+                is CheckPlan.Simple, is CheckPlan.Portable, is CheckPlan.Each<*>, is CheckPlan.Content -> location
                 is CheckPlan.Realm, is CheckPlan.RegistrationFailure, is CheckPlan.DiscoveryFailure -> null
             }
 }

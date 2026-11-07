@@ -8,6 +8,8 @@ import com.typewritermc.realm.authoring.extensions
 import com.typewritermc.realm.authoring.factsRead
 import com.typewritermc.realm.authoring.generation
 import com.typewritermc.realm.authoring.tracked
+import com.typewritermc.realm.formula.ContentFindings
+import com.typewritermc.realm.formula.HoldsContent
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
@@ -20,7 +22,8 @@ import skirout.editor.v1.diagnostic.Diagnostic
 /** Which check occurrences exist. Discovery reads every record through tracked readers, so a new resource reruns it. */
 internal data object CheckSubjects : RealmQuery<SubjectDiscovery> {
     context(reads: RealmReads)
-    override fun compute(): SubjectDiscovery = extensions.discoverSubjects { tracked() }
+    override fun compute(): SubjectDiscovery =
+        extensions.discoverSubjects({ tracked() }) { tracked().resourceIds().filter { reads.read(HoldsContent(it)) } }
 }
 
 /**
@@ -41,7 +44,8 @@ internal data class CheckRun(
     context(reads: RealmReads)
     override fun compute(): CheckRunResult {
         val subject = checkNotNull(reads.read(SubjectOf(instance))) { "A check run was read for an unknown instance." }
-        return CheckEvaluator(RealmCheckInputs()).evaluate(subject, CheckTicket(instance = instance, catalog = generation), tracked())
+        val evaluator = CheckEvaluator(RealmCheckInputs()) { resource -> reads.read(ContentFindings(resource)) }
+        return evaluator.evaluate(subject, CheckTicket(instance = instance, catalog = generation), tracked())
     }
 
     /** Every fact this run read at this revision, also through a memo. Which checks exist is not what a check read. */

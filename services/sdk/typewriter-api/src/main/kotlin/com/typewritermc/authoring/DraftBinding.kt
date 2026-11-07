@@ -330,7 +330,7 @@ private fun <V> projectionFailure(
 ): Availability<V> = Availability.Failed(EvaluationDiagnostic(failure = failure, message = message, locations = listOf(location)))
 
 class GenericField<Owner>(
-    val owner: TypeDefinitionId,
-    val path: ValuePath,
+    override val owner: TypeDefinitionId,
+    override val path: ValuePath,
     val template: TypeTemplate,
-)
+) : FieldPath

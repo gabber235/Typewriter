@@ -427,15 +427,34 @@ internal class RealmModel(
         }
 
     /**
-     * The code the realm must refuse [action] for, or null when it must commit it. A tag named twice on a book or as a
-     * parent commits: authoring keeps the duplicate and publication reports it, so the model holds both.
+     * The code the realm must refuse [action] for, or null when it must commit it. Tags and parents are sets, so naming
+     * a tag a second time on a book or as a parent is refused as a repeated set value.
      */
     fun refusal(action: Action): String? =
         when (action) {
-            is Action.ParentTag -> "relation_cycle".takeIf { action.child == action.parent || action.child in ancestors(action.parent) }
-            is Action.UnlistPage -> "owner_required"
-            is Action.DeleteSection -> "singleton_required"
-            else -> null
+            is Action.TagBook -> {
+                "duplicate_set_value".takeIf { action.tag in books.getValue(action.book) }
+            }
+
+            is Action.ParentTag -> {
+                when {
+                    action.child == action.parent || action.child in ancestors(action.parent) -> "relation_cycle"
+                    action.parent in tags.getValue(action.child) -> "duplicate_set_value"
+                    else -> null
+                }
+            }
+
+            is Action.UnlistPage -> {
+                "owner_required"
+            }
+
+            is Action.DeleteSection -> {
+                "singleton_required"
+            }
+
+            else -> {
+                null
+            }
         }
 
     fun apply(action: Action) {
@@ -903,7 +922,8 @@ internal val ALLOWED: Map<String, Set<String>> =
         "catalog" to setOf(),
         "authoring" to setOf("catalog"),
         "search" to setOf("authoring", "catalog", "storage"),
-        "checking" to setOf("authoring", "catalog"),
+        "formula" to setOf("authoring", "catalog"),
+        "checking" to setOf("formula", "authoring", "catalog"),
         "edit" to setOf("authoring", "catalog", "search", "storage"),
         "operation" to setOf("edit", "checking", "authoring", "catalog"),
         "publication" to setOf("checking", "authoring", "catalog", "storage"),

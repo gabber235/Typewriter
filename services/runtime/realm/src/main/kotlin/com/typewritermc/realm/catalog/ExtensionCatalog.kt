@@ -3,24 +3,29 @@ package com.typewritermc.realm.catalog
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
+import com.typewritermc.formula.CoreFormulas
+import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.services.libs.utils.closeAll
 import skirout.editor.v1.catalog.ConfigurationRecipe
 
 /**
- * What extension code contributes to one code catalog: its check plans, and the provider retains they need. It is
- * collected once, from that catalog alone, and closed with the catalog's last lease. Later decisions add hooks and
- * functions here, so a new generation is one install and no reader can mix two generations.
+ * What extension code contributes to one code catalog: its check plans, its dynamic hooks, the formula functions
+ * formulas can call, and the provider retains they need. It is collected once, from that catalog alone, and closed
+ * with the catalog's last lease, so a new generation is one install and no reader can mix two generations.
  */
 class ExtensionCatalog internal constructor(
     internal val plans: List<CheckPlan>,
+    internal val hooks: List<DynamicHook>,
+    /** The loaded formula providers' functions and the core functions, by name. */
+    internal val functions: Map<String, List<FormulaFunction>>,
     private val leases: List<ProviderLease>,
 ) : AutoCloseable {
     override fun close() = leases.asReversed().closeAll()
 }
 
 /**
- * Collects the extensions of a code catalog, retaining every provider its plans call into. A collection that fails
- * releases every retain it took, so the next read can try again.
+ * Collects the extensions of a code catalog, retaining every provider its plans, hooks and functions call into. A
+ * collection that fails releases every retain it took, so the next read can try again.
  */
 internal fun collectExtensions(
     checks: List<OwnedCheckRecipe>,
@@ -28,8 +33,18 @@ internal fun collectExtensions(
     providers: OwnedProviderRegistry,
 ): ExtensionCatalog {
     val leases = mutableListOf<ProviderLease>()
-    return runCatching { ExtensionCatalog(collectPlans(checks, configuration, providers, leases), leases) }
-        .onFailure { failure -> leases.asReversed().closeAll(failure) }
+    return runCatching {
+        val plans = collectPlans(checks, configuration, providers, leases)
+        val dynamics = collectDynamics(providers, leases)
+        val formulas = providers.formulas()
+        formulas.map { it.origin }.distinct().forEach { leases += providers.retain(it) }
+        ExtensionCatalog(
+            plans = plans + dynamics.failures + CheckPlan.Content(CONTENT_RULE),
+            hooks = dynamics.hooks,
+            functions = (formulas.map { it.function } + CoreFormulas.functions).groupBy { it.name },
+            leases = leases,
+        )
+    }.onFailure { failure -> leases.asReversed().closeAll(failure) }
         .getOrThrow()
 }
 

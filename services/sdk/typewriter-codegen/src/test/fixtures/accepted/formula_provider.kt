@@ -85,7 +85,7 @@ fun main(args: Array<String>) {
             // The host sees the fixture's classes, so a Gold built here is the Gold the provider receives.
             parentClassLoader = Gold::class.java.classLoader,
         ).use { deployment ->
-            val functions = deployment.providers.formula.associate { it.function.name to it.function }
+            val functions = deployment.providers.contributions.formulas.associate { it.function.name to it.function }
             functions.keys shouldBe setOf("plus", "count2", "greeting", "seconds", "doubled")
 
             fun call(

@@ -17,6 +17,7 @@ import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.mapCode
 import com.typewritermc.configuration.name
+import com.typewritermc.configuration.representationKind
 import com.typewritermc.configuration.root
 import com.typewritermc.types.nullable
 import com.typewritermc.types.parts
@@ -588,19 +589,7 @@ private fun ScalarKind.presentationControl(native: TypeName): TypeName =
     }
 
 internal val ScalarKind.representationKind: RepresentationKind
-    get() =
-        when (this) {
-            ScalarKind.UNIT -> RepresentationKind.UNIT
-            ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
-            ScalarKind.TEXT -> RepresentationKind.TEXT
-            ScalarKind.BYTES -> RepresentationKind.BYTES
-            is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
-            is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
-            ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
-            ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
-            ScalarKind.DURATION -> RepresentationKind.DURATION
-            else -> unknownVariant(this)
-        }
+    get() = representationKind() ?: unknownVariant(this)
 
 /** A generic draft projection is a function named like the projection object of a non generic declaration. */
 internal val SdkNames.draftProjectionFunction: MemberName

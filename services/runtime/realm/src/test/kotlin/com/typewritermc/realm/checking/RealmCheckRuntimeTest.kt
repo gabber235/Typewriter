@@ -29,6 +29,7 @@ import com.typewritermc.realm.authoring.ViewReadLimits
 import com.typewritermc.realm.authoring.conflicts
 import com.typewritermc.realm.authoring.location
 import com.typewritermc.realm.authoring.record
+import com.typewritermc.realm.catalog.CONTENT_RULE
 import com.typewritermc.realm.publication.ResourceReadiness
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
@@ -47,6 +48,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -516,7 +518,10 @@ val RealmCheckRuntimeTest by testSuite {
 
                     report.catalog shouldBe CatalogGeneration(value = "snapshot")
                     report.results.flatMap { result -> result.findings.map { it.code } } shouldBe listOf("name_rule")
-                    current.results.flatMap { result -> result.findings.map { it.code } } shouldBe emptyList()
+                    // The replacement no longer fits the saved record, which the content rule reports on its own.
+                    current.results
+                        .filter { it.ticket.instance.rule != CONTENT_RULE }
+                        .flatMap { result -> result.findings.map { it.code } } shouldBe emptyList()
                 }
                 runtime.close()
             }
@@ -550,7 +555,7 @@ val RealmCheckRuntimeTest by testSuite {
         }
     }
 
-    test("captured acceptance rejects canonically duplicate set values and map keys at the exact items") {
+    test("captured acceptance blocks canonically duplicate set values and map keys with one fit finding at each exact item") {
         runTest {
             val repeated =
                 DataValue.named(
@@ -611,8 +616,8 @@ val RealmCheckRuntimeTest by testSuite {
                 val assessment = capturedAcceptance(realm.views, runtime)
 
                 assessment.findings
-                    .filter { it.code in setOf("duplicate_set_value", "duplicate_map_key") }
-                    .map { it.code to it.primary } shouldBe
+                    .filter { it.code == "value_mismatch" }
+                    .map { it.message.substringAfter('(').substringBefore(')') to it.primary } shouldContainExactlyInAnyOrder
                     listOf(
                         "duplicate_map_key" to
                             ValueLocation.of(

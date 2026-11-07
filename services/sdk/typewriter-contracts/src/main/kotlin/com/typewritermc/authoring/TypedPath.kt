@@ -90,11 +90,17 @@ fun ValueLocation.mapKey(): ValueLocation = copy(path = path.mapKey())
 
 fun ValueLocation.mapValue(): ValueLocation = copy(path = path.mapValue())
 
+/** A field of a definition: where its value sits inside every resource of [owner]. */
+interface FieldPath {
+    val owner: TypeDefinitionId
+    val path: ValuePath
+}
+
 class TypedPath<Owner, Value> internal constructor(
-    val owner: TypeDefinitionId,
-    val path: ValuePath,
+    override val owner: TypeDefinitionId,
+    override val path: ValuePath,
     internal val expected: TypeUse,
-)
+) : FieldPath
 
 class BoundPath<Value> internal constructor(
     val location: ValueLocation,

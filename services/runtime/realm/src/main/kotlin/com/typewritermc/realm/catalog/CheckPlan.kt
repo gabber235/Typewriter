@@ -16,6 +16,7 @@ import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
 
 /**
  * The check plans of one code catalog, adding to [leases] every provider they call into. A provider whose register
@@ -42,26 +43,31 @@ internal fun collectPlans(
             runExtension({
                 owned.provider.run { collector.register() }
                 collector.plans
-            }) { failure ->
-                val rule = RuleId(origin = owned.ruleOrigin, localIndex = 0)
-                listOf(
-                    CheckPlan.RegistrationFailure(
-                        rule = rule,
-                        diagnostic =
-                            Diagnostic(
-                                id = DiagnosticId(value = "registration:${RuleId.serializer.toJsonCode(rule)}"),
-                                origin = owned.ruleOrigin,
-                                code = "check_registration_failed",
-                                message = failure.message ?: failure::class.simpleName.orEmpty(),
-                                severity = DiagnosticSeverity.ERROR,
-                                primary = null,
-                                related = emptyList(),
-                            ),
-                    ),
-                )
-            }
+            }) { failure -> listOf(registrationFailure(owned.ruleOrigin, "check_registration_failed", failure)) }
     }
     return plans
+}
+
+/** The plan that reports a provider whose register threw its own failure, under [origin]. */
+internal fun registrationFailure(
+    origin: RuleOrigin,
+    code: String,
+    failure: Throwable,
+): CheckPlan.RegistrationFailure {
+    val rule = RuleId(origin = origin, localIndex = 0)
+    return CheckPlan.RegistrationFailure(
+        rule = rule,
+        diagnostic =
+            Diagnostic(
+                id = DiagnosticId(value = "registration:${RuleId.serializer.toJsonCode(rule)}"),
+                origin = origin,
+                code = code,
+                message = failure.message ?: failure::class.simpleName.orEmpty(),
+                severity = DiagnosticSeverity.ERROR,
+                primary = null,
+                related = emptyList(),
+            ),
+    )
 }
 
 private class RealmCheckCollector(
@@ -115,6 +121,14 @@ internal sealed interface CheckPlan {
     data class Realm(
         override val rule: RuleId,
         val callback: CheckContext.() -> Unit,
+    ) : CheckPlan
+
+    /**
+     * The realm's own rules over one resource's content: formula problems, failed hooks and values that no longer fit
+     * their schema. One subject per resource that has something of that kind.
+     */
+    data class Content(
+        override val rule: RuleId,
     ) : CheckPlan
 
     data class RegistrationFailure(

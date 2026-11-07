@@ -3,6 +3,7 @@ package com.typewritermc.realm.checking
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.GRAPH_CATALOG
 import com.typewritermc.realm.authoring.GRAPH_NODES
+import com.typewritermc.realm.authoring.ProjectionAt
 import com.typewritermc.realm.authoring.Reach
 import com.typewritermc.realm.authoring.apply
 import com.typewritermc.realm.authoring.evidenceNow
@@ -15,12 +16,44 @@ import com.typewritermc.realm.authoring.readNow
 import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.authoring.relink
 import com.typewritermc.realm.edit.MemoryAuthoringStorage
+import com.typewritermc.realm.routeFixtureCatalog
+import com.typewritermc.realm.testing.NOT_ONE
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.checksOf
+import com.typewritermc.realm.testing.commit
+import com.typewritermc.realm.testing.commitDefinition
+import com.typewritermc.realm.testing.commitRecordUser
+import com.typewritermc.realm.testing.commitTypeDefinition
+import com.typewritermc.realm.testing.computedVar
+import com.typewritermc.realm.testing.createEntry
+import com.typewritermc.realm.testing.declares
+import com.typewritermc.realm.testing.entryRef
+import com.typewritermc.realm.testing.errorCodesOn
+import com.typewritermc.realm.testing.fieldKey
+import com.typewritermc.realm.testing.formulaPage
+import com.typewritermc.realm.testing.graphLinkRuns
+import com.typewritermc.realm.testing.graphLinksOf
 import com.typewritermc.realm.testing.grewFrom
+import com.typewritermc.realm.testing.hookCatalog
+import com.typewritermc.realm.testing.intUse
+import com.typewritermc.realm.testing.notOneRule
 import com.typewritermc.realm.testing.openCatalogLeases
+import com.typewritermc.realm.testing.plainType
+import com.typewritermc.realm.testing.plainVar
+import com.typewritermc.realm.testing.rerunSince
+import com.typewritermc.realm.testing.resources
+import com.typewritermc.realm.testing.setDefinitionValue
+import com.typewritermc.realm.testing.setTypes
 import com.typewritermc.realm.testing.settle
+import com.typewritermc.realm.testing.settledRuns
 import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.realm.testing.staticPage
+import com.typewritermc.realm.testing.textUse
+import com.typewritermc.realm.testing.typeUse
+import com.typewritermc.realm.testing.usagesOf
+import com.typewritermc.realm.testing.withSetup
+import com.typewritermc.setup.setup
+import com.typewritermc.types.integer
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.collections.shouldContain
@@ -33,6 +66,7 @@ import io.kotest.property.checkAll
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.kernel.v1.resource_id.ResourceId
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.seconds
@@ -437,6 +471,95 @@ val CheckRerunsTest by testSuite {
             realm.readNow(Reach(x)) shouldBe setOf(x, y, z)
             realm.graphRuns.linkReads().grewFrom(before) shouldBe emptySet()
             realm.evidenceNow(Reach(x)).holdsResourceIds shouldBe false
+        }
+    }
+
+    // Content: hooks, formulas and values of content types, on a real Realm.
+    val gold = declares { record { field("gold", intUse) } }
+    val silver = declares { record("k1") { field("silver", intUse) } }
+
+    test("a hook that throws during verification leaves later commits rerunning checks") {
+        withSetup(setup("reruns-hook") { formulaPage { smith("throw") } }, catalog = hookCatalog()) { page ->
+            errorCodesOn(page.named("throw")) shouldBe listOf("dynamic_failed")
+
+            commit(rename(page.named("throw"), "mended")).shouldBeCommitted()
+            errorCodesOn(page.named("throw")) shouldBe emptyList()
+        }
+    }
+
+    test("a check that read a value of a content type reruns when the declaration on another resource changes") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val reward = commitTypeDefinition("Reward", gold).created()
+            val user = commitRecordUser("first", reward, "gold" to DataValue.integer(1))
+            val before = settledRuns()
+            commit(setTypes(reward, silver)).shouldBeCommitted()
+            settle()
+
+            rerunSince(before).resources() shouldContain user
+        }
+    }
+
+    test("a graph read over a content typed value reruns when a declaration changes") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val reward = commitTypeDefinition("Reward", gold).created()
+            val user = commitRecordUser("first", reward, "gold" to DataValue.integer(1))
+            readNow(ProjectionAt(user))
+            val before = graphRuns.judgements()
+            commit(setTypes(reward, silver)).shouldBeCommitted()
+            readNow(ProjectionAt(user))
+
+            graphRuns.judgements().grewFrom(before) shouldContain user
+        }
+    }
+
+    test("a declaration edit reruns no graph read that never reached a user of it") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val reward = commitTypeDefinition("Reward", gold).created()
+            commitRecordUser("first", reward, "gold" to DataValue.integer(1))
+            val bystander = createEntry("bystander").also { commit(it).shouldBeCommitted() }.id
+            readNow(ProjectionAt(bystander))
+            val before = graphRuns.judgements()
+            commit(setTypes(reward, silver)).shouldBeCommitted()
+            readNow(ProjectionAt(bystander))
+
+            graphRuns.judgements().grewFrom(before) shouldNotContain bystander
+        }
+    }
+
+    test("changing an alias reruns a graph read over its users") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val amount = commitTypeDefinition("Amount", plainType(intUse)).created()
+            val user = commitDefinition("user", plainType(fieldKey(amount))) { plainVar(it.use, DataValue.integer(1)) }.created()
+            readNow(ProjectionAt(user))
+            val before = graphRuns.judgements()
+            commit(setDefinitionValue(amount, plainVar(typeUse, DataValue.TypeUseWrapper(textUse)))).shouldBeCommitted()
+            readNow(ProjectionAt(user))
+
+            graphRuns.judgements().grewFrom(before) shouldContain user
+        }
+    }
+
+    test("a formula naming an entry does not rerun a check over that entry's graph links") {
+        withSetup(setup("reruns-formula-names") { formulaPage { smith("smith") } }, catalog = routeFixtureCatalog) { page ->
+            val smith = page.named("smith")
+            graphLinksOf(smith)
+            val runs = graphLinkRuns(smith)
+            val giver = commitDefinition("giver", plainType(entryRef)) { computedVar(it.use, "smith", mapOf("smith" to smith)) }.created()
+
+            usagesOf(smith) shouldContain giver
+            graphLinksOf(smith) shouldNotContain giver
+            graphLinkRuns(smith) shouldBe runs
+        }
+    }
+
+    test("a portable rule over a content typed value reruns when the declaration changes") {
+        withSetup(staticPage, catalog = routeFixtureCatalog.copy(configurations = { listOf(notOneRule(it)) })) {
+            val amount = commitTypeDefinition("Amount", plainType(intUse)).created()
+            val user = commitDefinition("user", plainType(fieldKey(amount))) { plainVar(it.use, DataValue.integer(1)) }.created()
+            errorCodesOn(user) shouldContain NOT_ONE
+
+            commit(setDefinitionValue(amount, plainVar(typeUse, DataValue.TypeUseWrapper(textUse)))).shouldBeCommitted()
+            errorCodesOn(user) shouldNotContain NOT_ONE
         }
     }
 }

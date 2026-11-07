@@ -59,6 +59,7 @@ import com.typewritermc.testkit.fieldPattern
 import com.typewritermc.testkit.integerField
 import com.typewritermc.testkit.nullableTextField
 import com.typewritermc.testkit.origin
+import com.typewritermc.testkit.problemCodes
 import com.typewritermc.testkit.ready
 import com.typewritermc.testkit.recordType
 import com.typewritermc.testkit.rulePredicate
@@ -810,7 +811,7 @@ val SdkRuntimeConformanceTest by testSuite {
         (invalid as CompletenessResult.Invalid).problems.map { it.code } shouldBe listOf("missing_field")
     }
 
-    test("native set and map reject canonical duplicate non data record values") {
+    test("complete() refuses canonical duplicate non data record values in a native set and map, before any binding decodes them") {
         val origin = origin("canonical_native_duplicates")
         val assembly =
             CatalogContributions(
@@ -850,10 +851,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 ),
             )
-        val setBinding = assembly.bindings.bind(setChecked)
-        shouldThrow<NativeBindingException> {
-            setBinding.decode(setChecked.complete(setValue).complete())
-        }.code shouldBe "duplicate_set_value"
+        setChecked.complete(setValue).problemCodes() shouldBe listOf("duplicate_set_value")
 
         val mapChecked = assembly.checked.resolve(testIdentityKeyMapUse.use).ready()
         val mapValue =
@@ -878,10 +876,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 ),
             )
-        val mapBinding = assembly.bindings.bind(mapChecked)
-        shouldThrow<NativeBindingException> {
-            mapBinding.decode(mapChecked.complete(mapValue).complete())
-        }.code shouldBe "duplicate_map_key"
+        mapChecked.complete(mapValue).problemCodes() shouldBe listOf("duplicate_map_key")
     }
 
     test("float32 native binding preserves exact width and rejects precision loss") {
