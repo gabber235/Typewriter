@@ -71,7 +71,24 @@ in
       # GTK 3 on X11 makes its GL contexts through GLX, and Nix's libglvnd looks for the vendor
       # library in /run/opengl-driver, which only NixOS has; Mesa's libGLX_mesa is named here.
       __GLX_VENDOR_LIBRARY_NAME = "mesa";
-      LD_LIBRARY_PATH = "${pkgs.mesa}/lib";
+      # Prototype (proto/gv-goldens): the Minecraft client's SDL and LWJGL dlopen the X libraries,
+      # libGL through libglvnd and libvulkan by name, so they are on the path, not only Mesa.
+      LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+        pkgs.mesa
+        pkgs.libglvnd
+        pkgs.vulkan-loader
+        pkgs.libx11
+        pkgs.libxext
+        pkgs.libxcursor
+        pkgs.libxi
+        pkgs.libxrandr
+        pkgs.libxfixes
+        pkgs.libxscrnsaver
+        pkgs.libxtst
+        pkgs.libxkbcommon
+      ];
+      # Prototype: OpenAL Soft opens no audio device under Xvfb.
+      ALSOFT_DRIVERS = "null";
       # Flutter's web device looks for Chrome here; chromedriver drives the same browser.
       CHROME_EXECUTABLE = "${pkgs.chromium}/bin/chromium";
     };

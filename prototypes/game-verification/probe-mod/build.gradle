@@ -1,0 +1,64 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base { archivesName = 'probe-mod' }
+version = '0'
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+loom {
+    // Mixins are applied at dev launch; no refmap needed on unobfuscated 26.x.
+    runs {
+        client {
+            runDir = 'build/run-gradle'
+            // The orchestrator passes the same settings as a direct launch through these.
+            def jvm = System.getenv('PROBE_JVM_ARGS')
+            if (jvm) vmArgs jvm.split(' ').toList()
+            def prog = System.getenv('PROBE_CLIENT_ARGS')
+            if (prog) programArgs prog.split(' ').toList()
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach { it.options.release = 25 }
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+// Writes exactly what `runClient` would execute, so the orchestrator can launch the client
+// with plain `java` and without Gradle.
+tasks.register('writeClientLaunch') {
+    dependsOn tasks.named('classes'), tasks.named('downloadAssets'), tasks.named('configureClientLaunch')
+    def out = layout.buildDirectory.file('client-launch.json')
+    outputs.file(out)
+    outputs.upToDateWhen { false }
+    doLast {
+        def run = tasks.named('runClient').get()
+        def json = groovy.json.JsonOutput.toJson([
+            main: run.mainClass.get(),
+            classpath: run.classpath.files*.absolutePath,
+            jvmArgs: run.allJvmArgs,
+            args: run.args,
+            workingDir: run.workingDir.absolutePath,
+            environment: run.environment.findAll { k, v -> k.startsWith('FABRIC') || k.startsWith('SDL') || k.startsWith('LD_') }
+        ])
+        out.get().asFile.text = groovy.json.JsonOutput.prettyPrint(json)
+    }
+}
+
+// A bare `gradlew runClient` must never make noise on the developer's machine.
+tasks.named('runClient') {
+    doFirst {
+        def options = file('build/run-gradle/options.txt')
+        if (!options.exists()) {
+            options.parentFile.mkdirs()
+            options.text = 'version:5023\nsoundCategory_master:0.0\nsoundCategory_music:0.0\npauseOnLostFocus:false\nonboardAccessibility:false\n'
+        }
+    }
+}

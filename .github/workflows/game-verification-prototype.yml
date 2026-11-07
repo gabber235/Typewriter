@@ -1,0 +1,144 @@
+# Temporary (proto/gv-goldens). Are exact golden frames deterministic on the Mesa the devenv e2e
+# profile provides? Devenv jobs take Xvfb, Mesa, libglvnd, vulkan-loader and the JDK from the
+# profile; the apt job is the same code on Ubuntu's Mesa, as a control against spike F.
+name: Game verification prototype
+
+on:
+  push:
+    branches: [proto/gv-goldens]
+    paths:
+      - prototypes/game-verification/**
+      - .github/workflows/game-verification-prototype.yml
+      - devenv.nix
+
+permissions:
+  contents: read
+
+concurrency:
+  group: game-verification-prototype-goldens
+  cancel-in-progress: true
+
+jobs:
+  devenv:
+    name: devenv ${{ matrix.repeat }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        repeat: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/devenv
+        with:
+          profile: e2e
+      # The orchestrator's Python only; nothing here brings a renderer.
+      - name: Python packages for the orchestrator
+        run: sudo apt-get install -y -qq --no-install-recommends python3-numpy python3-pil
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            prototypes/game-verification/.gradle
+            prototypes/game-verification/cache
+          key: gvn-${{ runner.arch }}-${{ hashFiles('prototypes/game-verification/**/*.gradle', 'prototypes/game-verification/gradle.properties', 'prototypes/game-verification/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('prototypes/game-verification/orchestrator/run.py') }}
+          restore-keys: |
+            gvn-${{ runner.arch }}-
+      - name: Renderer stack facts
+        run: |
+          devenv --profile e2e shell -- bash -c 'echo "LIBGL_DRIVERS_PATH=$LIBGL_DRIVERS_PATH"; echo "VK_ICD_FILENAMES=$VK_ICD_FILENAMES"; echo "$LD_LIBRARY_PATH" | tr : "\n"; command -v java Xvfb; java -version 2>&1 | head -1'
+          lscpu | grep -E "Model name|^CPU\(s\)"
+          dpkg -l | grep -Ei 'mesa|libvulkan|libgl1|xvfb' | awk '{print $2, $3}' || true
+      - name: Fetch Paper and build the probes
+        working-directory: prototypes/game-verification
+        run: |
+          devenv --profile e2e shell -- bash -c '/usr/bin/python3 orchestrator/run.py prepare && ./gradlew --no-daemon --console=plain -q :probe-mod:writeClientLaunch :probe-mod:jar :probe-plugin:jar :coverage-tool:writeCoverageTool :step-agent:jar'
+      - name: Measure
+        continue-on-error: true
+        working-directory: prototypes/game-verification
+        env:
+          MATRIX_REPEAT: ${{ matrix.repeat }}
+          MESA_SOURCE: nix
+          EXPECT_MESA: 26.2.5
+          CI_BUDGET_S: "1500"
+        run: |
+          export JOB_T0=$(date +%s.%N)
+          devenv --profile e2e shell -- /usr/bin/python3 orchestrator/ci.py plan mesa --backend both
+      - name: Upload results and frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mesa-nix-${{ matrix.repeat }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            prototypes/game-verification/runs/h.jsonl
+            prototypes/game-verification/runs/h-evidence
+            prototypes/game-verification/runs/f-goldens.jsonl
+            prototypes/game-verification/runs/f-goldens
+
+  apt:
+    name: apt control ${{ matrix.repeat }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        repeat: [8]
+    defaults:
+      run:
+        working-directory: prototypes/game-verification
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            prototypes/game-verification
+            .github
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Install Xvfb and the software renderers
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libegl-mesa0 libgbm1 mesa-vulkan-drivers libvulkan1 \
+            python3-numpy python3-pil \
+            libx11-6 libxext6 libxcursor1 libxi6 libxrandr2 libxss1 libxfixes3 libxkbcommon0 libxkbcommon-x11-0 libasound2t64
+          dpkg -l | grep -Ei 'mesa|libvulkan' | awk '{print $2, $3}'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            prototypes/game-verification/.gradle
+            prototypes/game-verification/cache
+          key: gva-${{ runner.arch }}-${{ hashFiles('prototypes/game-verification/**/*.gradle', 'prototypes/game-verification/gradle.properties', 'prototypes/game-verification/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('prototypes/game-verification/orchestrator/run.py') }}
+          restore-keys: |
+            gva-${{ runner.arch }}-
+      - name: Fetch Paper and build the probes
+        run: |
+          /usr/bin/python3 orchestrator/run.py prepare
+          ./gradlew --no-daemon --console=plain -q :probe-mod:writeClientLaunch :probe-mod:jar :probe-plugin:jar :coverage-tool:writeCoverageTool :step-agent:jar
+      - name: Measure
+        continue-on-error: true
+        env:
+          MATRIX_REPEAT: ${{ matrix.repeat }}
+          MESA_SOURCE: apt
+          CI_BUDGET_S: "1500"
+        run: |
+          export JOB_T0=$(date +%s.%N)
+          /usr/bin/python3 orchestrator/ci.py plan mesa --backend both
+      - name: Upload results and frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mesa-apt-${{ matrix.repeat }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            prototypes/game-verification/runs/h.jsonl
+            prototypes/game-verification/runs/h-evidence
+            prototypes/game-verification/runs/f-goldens.jsonl
+            prototypes/game-verification/runs/f-goldens
