@@ -56,14 +56,22 @@ internal fun TypeUse.mentionsError(): Boolean =
             else -> false
         }
 
-/** Whether a value of [actual] may stand where [expected] is wanted. Parameter names do not matter for a function value. */
+/**
+ * Whether a value of [actual] may stand where [expected] is wanted. An alias stands for the type it names, everywhere
+ * in either type. Parameter names do not matter for a function value.
+ */
 internal fun Checker.fits(
+    actual: TypeUse,
+    expected: TypeUse,
+): Boolean = fitsExpanded(environment.expand(actual), environment.expand(expected))
+
+private fun Checker.fitsExpanded(
     actual: TypeUse,
     expected: TypeUse,
 ): Boolean =
     when {
         actual == ERROR || expected == ERROR || actual == expected -> true
-        expected is TypeUse.NullableWrapper -> fits(actual.nonNull(), expected.value.value)
+        expected is TypeUse.NullableWrapper -> fitsExpanded(actual.nonNull(), expected.value.value)
         actual is TypeUse.NamedWrapper -> expected.named?.let { fitsNamed(actual, it.definition, it.arguments) } == true
         actual is TypeUse.FunctionWrapper -> expected.function?.let { fitsFunction(actual.value, it) } == true
         else -> false
@@ -85,8 +93,8 @@ private fun Checker.fitsFunction(
 ): Boolean =
     actual.context.size == expected.context.size &&
         actual.parameters.size == expected.parameters.size &&
-        actual.slots.zip(expected.slots).all { (mine, theirs) -> fits(theirs.type, mine.type) } &&
-        fits(actual.result, expected.result)
+        actual.slots.zip(expected.slots).all { (mine, theirs) -> fitsExpanded(theirs.type, mine.type) } &&
+        fitsExpanded(actual.result, expected.result)
 
 /** Equal, apart from parts that did not check. Type arguments are invariant. */
 private fun same(

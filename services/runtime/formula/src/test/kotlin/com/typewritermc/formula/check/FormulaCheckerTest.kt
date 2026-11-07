@@ -1,5 +1,7 @@
 package com.typewritermc.formula.check
 
+import com.typewritermc.formula.testing.EvaluationWorld
+import com.typewritermc.formula.testing.awardUse
 import com.typewritermc.formula.testing.boolean
 import com.typewritermc.formula.testing.check
 import com.typewritermc.formula.testing.checkWithEmptied
@@ -13,6 +15,8 @@ import com.typewritermc.formula.testing.listType
 import com.typewritermc.formula.testing.npc
 import com.typewritermc.formula.testing.nullable
 import com.typewritermc.formula.testing.player
+import com.typewritermc.formula.testing.prizeAliasUse
+import com.typewritermc.formula.testing.prizeUse
 import com.typewritermc.formula.testing.problem
 import com.typewritermc.formula.testing.reward
 import com.typewritermc.formula.testing.row
@@ -91,6 +95,23 @@ val FormulaCheckerTest by testSuite {
         row("stock.rankAll()", int, problem("formula_type_bound")),
     )) {
         test("$source against ${expected.shown} gives $answer") { check(source, expected) shouldAnswer answer }
+    }
+
+    // An alias stands for the type it names, in both directions, inside type arguments and through another alias.
+    // Rows: what the expected type is, source, expected type, what the checker must answer.
+    for ((wanted, case) in listOf(
+        "the alias Prize" to row("let p: Prize = storedPrize\np", prizeAliasUse, type(prizeAliasUse)),
+        "the alias Prize" to row("storedPrize", prizeAliasUse, type(prizeAliasUse)),
+        "the record Prize names" to row("aliasedPrize", prizeUse, type(prizeUse)),
+        "a List of the record Prize names" to row("let ps = [aliasedPrize]\nps", listType(prizeUse), type(listType(prizeUse))),
+        "a List of the alias Prize" to row("let ps = [storedPrize]\nps", listType(prizeAliasUse), type(listType(prizeAliasUse))),
+        "the record the alias of an alias names" to row("let a: Award = storedPrize\na", prizeUse, type(prizeUse)),
+        "Int, read through the alias of an alias" to row("let a: Award = aliasedPrize\na.gold", int, type(int)),
+        "the alias Prize" to row("let p: Prize = storedGold\np", prizeAliasUse, problem("formula_type_mismatch")),
+        "a List of the alias Prize" to row("let ps = [storedGold]\nps", listType(prizeAliasUse), problem("formula_type_mismatch")),
+    )) {
+        val (source, expected, answer) = case
+        test("$source against $wanted gives $answer") { check(source, expected, EvaluationWorld().checking) shouldAnswer answer }
     }
 
     test("level is in scope in a function body") {

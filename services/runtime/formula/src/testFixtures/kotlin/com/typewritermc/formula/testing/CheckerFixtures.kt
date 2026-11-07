@@ -299,6 +299,8 @@ class CheckerWorld(
 
     override fun resolve(use: TypeUse): Resolution<CheckedType> = testCatalog.resolve(use)
 
+    override fun expand(use: TypeUse): TypeUse = testCatalog.expand(use)
+
     override fun inScope(name: String): List<ResourceId> = present.filter { it.name == name }.map(WorldResource::id)
 
     override fun functions(name: String): List<FormulaFunction> = testFunctions[name].orEmpty()

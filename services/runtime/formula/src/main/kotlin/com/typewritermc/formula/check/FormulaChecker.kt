@@ -20,6 +20,9 @@ import skirout.editor.v1.type_catalog.TypeUse
 interface FormulaEnvironment {
     fun resolve(use: TypeUse): Resolution<CheckedType>
 
+    /** [use] with every alias replaced by the type it names, all through the use. A use with no alias comes back as is. */
+    fun expand(use: TypeUse): TypeUse
+
     /** The resources [name] means at the innermost scope level that has it. Two or more is an ambiguity. */
     fun inScope(name: String): List<ResourceId>
 
