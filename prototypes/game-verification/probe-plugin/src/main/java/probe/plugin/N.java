@@ -112,7 +112,9 @@ final class N implements Listener {
         acked.merge(id, tick, Math::max);
         if (seen == 0) return;
         for (Attempt a : attempts) {
-            if (a.members.contains(id)) a.seenTick.putIfAbsent(id, tick);
+            // Only acks of ticks after the stimulus: an ack in flight from the previous attempt reports the previous
+            // token as seen (one false pass in 18,000, CI run 42342290365).
+            if (a.members.contains(id) && tick > a.startTick) a.seenTick.putIfAbsent(id, tick);
         }
     }
 

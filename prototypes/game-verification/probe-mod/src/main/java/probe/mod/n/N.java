@@ -120,16 +120,28 @@ public final class N {
         switch (name) {
             case "n.mode" -> {
                 boolean on = "1".equals(p.get("on"));
-                if (on && !stepping) {
-                    virtNanos = Util.getNanos();
-                    granted.clear();
-                    current = null;
-                    Util.setTimeSource(() -> virtNanos);
-                    stepping = true;
-                } else if (!on && stepping) {
-                    stepping = false;
-                    long offset = virtNanos - System.nanoTime();
-                    Util.setTimeSource(() -> System.nanoTime() + offset);
+                // On the render thread, between frames: switched from another thread, a frame in flight could read the
+                // real clock after the virtual one was fixed, leave the delta tracker ahead of it, and make the first
+                // step yield less than one tick, which never runs (topology spike, CI run 42342290365).
+                java.util.concurrent.CompletableFuture<Void> done = new java.util.concurrent.CompletableFuture<>();
+                mc.execute(() -> {
+                    if (on && !stepping) {
+                        virtNanos = Util.getNanos();
+                        granted.clear();
+                        current = null;
+                        Util.setTimeSource(() -> virtNanos);
+                        stepping = true;
+                    } else if (!on && stepping) {
+                        stepping = false;
+                        long offset = virtNanos - System.nanoTime();
+                        Util.setTimeSource(() -> System.nanoTime() + offset);
+                    }
+                    done.complete(null);
+                });
+                try {
+                    done.get(10, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
                 return "{\"ok\":true,\"stepping\":" + stepping + "}";
             }
