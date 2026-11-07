@@ -25,6 +25,7 @@ import com.typewritermc.types.nullable
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
@@ -388,7 +389,7 @@ private fun collectLinkEvidence(
     memberships: MutableSet<ValuePath>,
     forms: MutableSet<ValuePath>,
 ) {
-    val nonNull = if (declared is TypeUse.NullableWrapper) declared.value.value else declared
+    val nonNull = (if (declared is TypeUse.NullableWrapper) declared.value.value else declared).storedUse
     if (declared is TypeUse.NullableWrapper && value == DataValue.NULL) {
         if (capabilities.contains(nonNull, endpoint)) forms += path
         return
@@ -502,16 +503,12 @@ private fun collectLinkSlots(
     directCollection: ValuePath?,
     slots: MutableList<LinkSchemaSlot>,
 ) {
-    val nonNull = if (declared is TypeUse.NullableWrapper) declared.value.value else declared
+    val nonNull = (if (declared is TypeUse.NullableWrapper) declared.value.value else declared).storedUse
     if (value == DataValue.NULL) return
     val named = value as? DataValue.NamedWrapper
-    val effective =
-        if (named == null) {
-            nonNull
-        } else {
-            if (!catalog.isReadableAs(named.actualType.use, nonNull)) return
-            named.actualType.use
-        }
+    // A stored value declares the slots of its own type, also where its position now declares another: whether the
+    // value still fits there is judged on the value, and the links it holds keep their slots while it is kept.
+    val effective = named?.actualType?.use ?: nonNull
     val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
     val payload = named?.payload ?: value
     when (val representation = resolved.value.schema.representation) {

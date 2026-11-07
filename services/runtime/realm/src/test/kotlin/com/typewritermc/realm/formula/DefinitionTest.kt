@@ -95,8 +95,9 @@ val DefinitionTest by testSuite {
     test("previewing a type change keeps a formula") {
         withSetup(definitions, catalog = routeFixtureCatalog) { page ->
             previewTypeChange(page.total, to = stringUse).shouldBeReady().clearedLocations.shouldBeEmpty()
+            val before = varValue(page.total)
             commitPreparedTypeChange(page.total, to = stringUse).shouldBeCommitted()
-            varValue(page.total) shouldBe computed("base_reward + bonus(10)")
+            varValue(page.total) shouldBe before
         }
     }
 
@@ -120,7 +121,7 @@ val DefinitionTest by testSuite {
         withSetup(definitions, catalog = routeFixtureCatalog) { page ->
             val engine = publishToEngine()
             engine.getValue(page.baseReward).shouldBeInstanceOf<Definition<*>>().value shouldBe plain(50)
-            engine.getValue(page.total).shouldBeInstanceOf<Definition<*>>().value shouldBe computed("base_reward + bonus(10)")
+            engine.getValue(page.total).shouldBeInstanceOf<Definition<*>>().value shouldBe varValue(page.total)
         }
     }
 

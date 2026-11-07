@@ -132,10 +132,20 @@ private fun endpoint(endpoint: EndpointDefinition): EndpointDefinition =
     )
 
 /**
- * Counts the leases still open on the catalog this Realm of a [DefinitionCatalog] runs now; the count stays readable
- * after the Realm is closed, so a test can prove that closing released every lease.
+ * Counts the leases still open on the catalog this Realm runs now; the count stays readable after the Realm is closed,
+ * so a test can prove that closing released every lease.
  */
-internal fun RealmFixture.openCatalogLeases(): () -> Int {
-    val lease = views.read { it.catalog.code } as TestCatalogLease
-    return { lease.openCount }
-}
+internal fun RealmFixture.openCatalogLeases(): () -> Int =
+    when (val lease = views.read { it.catalog.code }) {
+        is TestCatalogLease -> {
+            { lease.openCount }
+        }
+
+        is CountedCatalogLease -> {
+            { lease.openCount }
+        }
+
+        else -> {
+            error("The catalog lease ${lease::class.simpleName} counts no leases.")
+        }
+    }

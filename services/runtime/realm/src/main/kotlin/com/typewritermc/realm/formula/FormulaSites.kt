@@ -6,12 +6,11 @@ import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
-import com.typewritermc.formula.Formula
-import com.typewritermc.formula.FormulaReference
 import com.typewritermc.formula.TextSpan
 import com.typewritermc.formula.VarComputedDefinition
 import com.typewritermc.formula.VarDefinition
-import com.typewritermc.types.Ref
+import com.typewritermc.formula.check.StoredFormula
+import com.typewritermc.formula.check.StoredReference
 import com.typewritermc.types.bigInteger
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
@@ -20,6 +19,7 @@ import com.typewritermc.types.items
 import com.typewritermc.types.named
 import com.typewritermc.types.payload
 import com.typewritermc.types.rows
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -31,34 +31,6 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
-
-/** One stored reference of a formula. [target] is null once a delete emptied it. */
-data class StoredReference(
-    val at: TextSpan,
-    val target: ResourceId?,
-)
-
-/** A formula as stored: its source and its references, emptied ones included. */
-data class StoredFormula(
-    val source: String,
-    val references: List<StoredReference>,
-) {
-    /** The text the reference at [span] covers. */
-    fun textAt(span: TextSpan): String = source.substring(span.start.coerceIn(0, source.length), span.end.coerceIn(0, source.length))
-
-    /**
-     * The formula the checker reads. An emptied reference keeps its span and points at [EMPTIED_TARGET], which no
-     * resource has, so the checker sees a name whose target is gone and stays silent about it.
-     */
-    fun toFormula(): Formula =
-        Formula(
-            source,
-            references.map { FormulaReference(it.at, Ref(com.typewritermc.types.ResourceId((it.target ?: EMPTIED_TARGET).value))) },
-        )
-}
-
-/** Where an emptied reference points for the checker: an id the realm never gives a resource. */
-internal val EMPTIED_TARGET = ResourceId(value = "typewriter.emptied-reference")
 
 /**
  * One formula a resource stores. [expected] is the function type it is the body of. [computedAtFunction] marks a
@@ -163,20 +135,4 @@ private class FormulaWalk(
             }
         }
     }
-}
-
-/** The formula a stored Formula value holds, or null when it is not one. */
-private fun DataValue.storedFormula(): StoredFormula? {
-    val record = unwrapNamed() as? DataValue.RecordWrapper ?: return null
-    val source = (record.field("source") as? DataValue.StringValueWrapper)?.value ?: return null
-    val references =
-        (record.field("references")?.unwrapNamed() as? DataValue.ListValueWrapper)?.items.orEmpty().mapNotNull { item ->
-            val reference = item.value.unwrapNamed() as? DataValue.RecordWrapper ?: return@mapNotNull null
-            val span = reference.field("at")?.unwrapNamed() as? DataValue.RecordWrapper ?: return@mapNotNull null
-            val start = (span.field("start") as? DataValue.IntegerWrapper)?.bigInteger?.toInt() ?: return@mapNotNull null
-            val end = (span.field("end") as? DataValue.IntegerWrapper)?.bigInteger?.toInt() ?: return@mapNotNull null
-            val target = (reference.field("target")?.unwrapNamed() as? DataValue.LinkWrapper)?.value?.target?.resource
-            StoredReference(TextSpan(start, end), target)
-        }
-    return StoredFormula(source, references)
 }

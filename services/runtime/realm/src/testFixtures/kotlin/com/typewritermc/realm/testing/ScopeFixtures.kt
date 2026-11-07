@@ -29,6 +29,10 @@ import com.typewritermc.types.record
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring_facts.EditExpectation
@@ -40,7 +44,12 @@ import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.seconds
 
 /*
  * The scope kit: hooks whose behaviour a test picks by naming a resource, and the reads that show what a name means
@@ -49,8 +58,10 @@ import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Hooks a test drives by name. A FixtureStaticEntry named `throw`, `recurse`, `linkage` or `cancel` makes its hook
- * fail in that way. A Definition named `with_own_scope` gives its value field a scope of its own, where `smith` means
- * each element of its page named `own_smith`.
+ * fail in that way; one named `gated` holds its hook at [HookGate]; one named `counted` counts its hook runs in
+ * [CountedHook]. A Definition named `with_own_scope` gives its value field a scope of its own, where `smith` means
+ * each element of its page named `own_smith`; one named `ghost_scope` gives its value a scope where `ghost` means a
+ * resource that does not exist, as a broken extension might.
  */
 object FixtureHooks : DynamicProvider {
     override fun Dynamics.register() {
@@ -60,11 +71,15 @@ object FixtureHooks : DynamicProvider {
                 "recurse" -> recurse(0)
                 "linkage" -> throw NoClassDefFoundError("com/example/RemovedClass")
                 "cancel" -> throw IllegalStateException("A wrapped cancellation.", CancellationException("cancelled"))
+                "gated" -> HookGate.pass()
+                "counted" -> CountedHook.runs.incrementAndGet()
             }
         }
         each(DefinitionDefinition.id) { id ->
             val resource = id.toResourceId()
-            if (read(DefinitionFields.name.bind(resource)).orNull() != "with_own_scope") return@each
+            val name = read(DefinitionFields.name.bind(resource)).orNull()
+            if (name == "ghost_scope") scope(DefinitionFields.value) { resource("ghost", ResourceId(value = "ghost-resource")) }
+            if (name != "with_own_scope") return@each
             val page = read(DefinitionFields.page.bind(resource)).orNull()?.target ?: return@each
             scope(DefinitionFields.value) {
                 read(PageFields.elements.bind(page)).orNull().orEmpty().forEach { element ->
@@ -75,6 +90,40 @@ object FixtureHooks : DynamicProvider {
     }
 
     private fun recurse(depth: Int): Int = recurse(depth + 1) + 1
+}
+
+/** How often the hook of an entry named `counted` ran, in a check pass or in a commit's binding. */
+object CountedHook {
+    val runs = AtomicInteger()
+}
+
+/**
+ * Holds the next hook run of an entry named `gated`, wherever it runs, until the test releases it. A hold ends by
+ * itself after 30 seconds, so a failing test cannot hang the suite.
+ */
+object HookGate {
+    private val armed = AtomicReference<Gate?>()
+
+    /** Arms the gate for the next hook run of a `gated` entry. */
+    fun arm(): Gate = Gate().also(armed::set)
+
+    internal fun pass() {
+        val gate = armed.getAndSet(null) ?: return
+        gate.entered.complete(Unit)
+        gate.released.await(30, TimeUnit.SECONDS)
+    }
+}
+
+/** One armed hold of [HookGate]. */
+class Gate internal constructor() {
+    internal val entered = CompletableDeferred<Unit>()
+    internal val released = CountDownLatch(1)
+
+    /** Waits until a hook run is held here. */
+    suspend fun awaitHeld() = withContext(Dispatchers.Default) { withTimeout(30.seconds) { entered.await() } }
+
+    /** Lets the held hook return. */
+    fun release() = released.countDown()
 }
 
 /** A dynamic provider whose register throws. */

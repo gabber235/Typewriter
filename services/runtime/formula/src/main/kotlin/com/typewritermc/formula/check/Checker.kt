@@ -1,6 +1,5 @@
 package com.typewritermc.formula.check
 
-import com.typewritermc.formula.FormulaReference
 import com.typewritermc.formula.TextSpan
 import com.typewritermc.formula.syntax.Binary
 import com.typewritermc.formula.syntax.Call
@@ -69,11 +68,11 @@ internal class Shared(
  */
 internal class Checker(
     val environment: FormulaEnvironment,
-    references: List<FormulaReference>,
+    references: List<StoredReference>,
     private val context: List<FunctionParameterUse>,
     private val parameters: List<FunctionParameterUse>,
 ) {
-    val referenceAt: Map<TextSpan, FormulaReference> = references.associateBy { it.at }
+    val referenceAt: Map<TextSpan, StoredReference> = references.associateBy { it.at }
     var trace = Trace()
     val schemas = mutableMapOf<TypeUse, AppliedSchema?>()
 

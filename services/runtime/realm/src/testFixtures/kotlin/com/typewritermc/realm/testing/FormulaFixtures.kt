@@ -344,6 +344,12 @@ class FormulaPageBuilder internal constructor(
         build: TypeDefinitionBuilder.() -> Unit,
     ): ResourceId = declared(name, declares { record(build = build) }) { typeUse to Type(it.use) }
 
+    /** A Definition named [name] holding the type [of], an alias its users name by its value field. */
+    fun alias(
+        name: String,
+        of: TypeUse,
+    ): ResourceId = declared(name, plainType(of)) { typeUse to Type(it.use) }
+
     /** A FixtureStaticEntry named [name] under [key], a real entry next to the Definitions. */
     fun smith(
         name: String = "smith",
@@ -455,7 +461,9 @@ class FormulaPage internal constructor(
 }
 
 /** What the realm computed for formulas: a value at a path, the text as an author reads it, and the checked type. */
-class FormulaReads internal constructor() {
+class FormulaReads internal constructor(
+    private val realm: RealmFixture,
+) {
     /** The evaluated value of [resource], or of the field at [path] inside it, as a plain Kotlin value. */
     fun value(
         resource: ResourceId,
@@ -463,14 +471,14 @@ class FormulaReads internal constructor() {
     ): Any? = TODO("formula evaluation")
 
     /** The formula text of [resource] with references shown by their targets' current names. */
-    fun display(resource: ResourceId): String = TODO("formula display")
+    fun display(resource: ResourceId): String = realm.displayOf(resource)
 
     /** The checked type of [resource]'s value. */
     fun type(resource: ResourceId): TypeUse = TODO("formula type")
 }
 
 /** The formula reads on this realm. */
-val RealmFixture.formulas: FormulaReads get() = FormulaReads()
+val RealmFixture.formulas: FormulaReads get() = FormulaReads(this)
 
 /** The error findings whose primary location is on [resource], after the checks settled. */
 fun RealmFixture.errorsOn(resource: ResourceId): List<Diagnostic> =
@@ -534,9 +542,6 @@ fun boundFormula(
             }.sortedBy { it.at.start },
     )
 
-/** The resources the formula references of [resource] point at. */
-fun RealmFixture.referenceTargets(resource: ResourceId): List<ResourceId> = TODO("formula reference targets")
-
 /** The findings that block publishing now. */
 suspend fun RealmFixture.publicationBlockers(): List<Diagnostic> =
     views
@@ -565,12 +570,6 @@ fun setGiver(
     gift: ResourceId,
     to: ResourceId,
 ): EditIntent = setReference(gift, "giver", to)
-
-/** Replaces the formula text of [resource] with [source]. */
-fun setFormula(
-    resource: ResourceId,
-    source: String,
-): EditIntent = TODO("set formula intent")
 
 /** Adds the field [name] holding [type] to the custom type the Definition [type] declares. */
 fun addField(

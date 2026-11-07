@@ -2,10 +2,8 @@ package com.typewritermc.formula.testing
 
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.CoreFormulas
-import com.typewritermc.formula.Formula
 import com.typewritermc.formula.FormulaDefinition
 import com.typewritermc.formula.FormulaFunction
-import com.typewritermc.formula.FormulaReference
 import com.typewritermc.formula.FormulaReferenceDefinition
 import com.typewritermc.formula.TextSpan
 import com.typewritermc.formula.TextSpanDefinition
@@ -15,11 +13,12 @@ import com.typewritermc.formula.VarValueDefinition
 import com.typewritermc.formula.check.CheckedFormula
 import com.typewritermc.formula.check.FormulaEnvironment
 import com.typewritermc.formula.check.NameMeaning
+import com.typewritermc.formula.check.StoredFormula
+import com.typewritermc.formula.check.StoredReference
 import com.typewritermc.formula.check.checkFormula
 import com.typewritermc.formula.stdlib.CollectionFormulasGeneratedFormulaProvider
 import com.typewritermc.formula.stdlib.NumberFormulasGeneratedFormulaProvider
 import com.typewritermc.formula.stdlib.TextFormulasGeneratedFormulaProvider
-import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceDefinition
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
@@ -318,31 +317,40 @@ fun check(
     world: CheckerWorld = CheckerWorld(),
 ): CheckedFormula = checkBound(bind(source, expected, world), expected, world)
 
-/** As [check], after every resource the formula references was deleted. */
+/** As [check], with every reference the commit bound emptied, as a delete of its target leaves it stored. */
 fun checkWithEmptied(
     source: String,
     expected: TypeUse?,
 ): CheckedFormula {
     val bound = bind(source, expected, CheckerWorld())
-    val emptied = bound.references.map { it.target.target }.toSet()
-    return checkBound(bound, expected, CheckerWorld(deleted = emptied))
+    return checkBound(bound.copy(references = bound.references.map { it.copy(target = null) }), expected, CheckerWorld())
+}
+
+/** As [check], with every reference the commit bound still filled while its target gives no type. */
+fun checkWithTargetsGone(
+    source: String,
+    expected: TypeUse?,
+): CheckedFormula {
+    val bound = bind(source, expected, CheckerWorld())
+    val gone = bound.references.mapNotNull { it.target }.toSet()
+    return checkBound(bound, expected, CheckerWorld(deleted = gone))
 }
 
 private fun bind(
     source: String,
     expected: TypeUse?,
     world: CheckerWorld,
-): Formula {
-    val unbound = checkBound(Formula(source), expected, world)
+): StoredFormula {
+    val unbound = checkBound(StoredFormula(source), expected, world)
     val references =
         unbound.names
             .filter { it.meaning == NameMeaning.Unknown || it.meaning == NameMeaning.Provider || it.meaning == NameMeaning.CatalogType }
-            .mapNotNull { answer -> answer.candidates.singleOrNull()?.let { FormulaReference(answer.span, Ref(it)) } }
-    return Formula(source, references)
+            .mapNotNull { answer -> answer.candidates.singleOrNull()?.let { StoredReference(answer.span, it) } }
+    return StoredFormula(source, references)
 }
 
 private fun checkBound(
-    formula: Formula,
+    formula: StoredFormula,
     expected: TypeUse?,
     world: CheckerWorld,
 ): CheckedFormula =

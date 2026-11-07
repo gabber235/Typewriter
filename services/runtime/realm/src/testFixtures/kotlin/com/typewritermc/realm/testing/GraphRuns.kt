@@ -12,13 +12,24 @@ import skirout.kernel.v1.resource_id.ResourceId
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-/** Counts what a realm's query graph computes, also a rerun that gives an equal result. */
+/** Counts what a realm's query graph computes, also a rerun that gives an equal result, and what it evicts. */
 class GraphRuns : GraphListener {
     private val computed = ConcurrentHashMap<GraphKey<*>, AtomicLong>()
+    private val evictions = AtomicLong()
 
     override fun computed(key: GraphKey<*>) {
         computed.computeIfAbsent(key) { AtomicLong() }.incrementAndGet()
     }
+
+    override fun evicted(key: GraphKey<*>) {
+        evictions.incrementAndGet()
+    }
+
+    /** How many computations the graph ran so far, over every key. */
+    fun totalRuns(): Long = computed.values.sumOf { it.get() }
+
+    /** How many memos the graph evicted so far. */
+    fun evicted(): Long = evictions.get()
 
     /** How often [key] was computed so far. */
     fun runsOf(key: GraphKey<*>): Long = computed[key]?.get() ?: 0

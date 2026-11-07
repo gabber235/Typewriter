@@ -248,15 +248,18 @@ val FormulaFindingsTest by testSuite {
     }
 
     test("fixing a holder's own misfit clears its finding, and the reply judges it current") {
-        // The reply half: the content rule no longer judges the fixed holder, so no finding set of it can be stale.
         withSetup(staticPage, catalog = routeFixtureCatalog) {
+            findings = checks::findings
             val reward = commitTypeDefinition("Reward", gold).created()
             val user = commitRecordUser("first", reward, "gold" to DataValue.integer(1))
             commit(setTypes(reward, goldAsText)).shouldBeCommitted()
             errorCodesOn(user) shouldBe listOf("value_mismatch")
 
             val fixed = plainVar(fieldKey(reward), recordValue(fieldKey(reward), "gold" to DataValue.StringValueWrapper("one")))
-            commit(setDefinitionValue(user, fixed)).shouldBeCommitted()
+            val reply = commit(setDefinitionValue(user, fixed)).shouldBeCommitted()
+            reply.findings
+                .filter { set -> set.status == FindingStatus.CURRENT && set.findings.any { it.primary?.resource == user } }
+                .shouldBeEmpty()
             errorCodesOn(user).shouldBeEmpty()
             contentJudged() shouldNotContain user
         }
