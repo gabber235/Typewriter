@@ -7,6 +7,7 @@ extension TypewriterThemeDataX on ThemeData {
   TypewriterSpacing get spacing => extension<TypewriterSpacing>()!;
   TypewriterShapes get shapes => extension<TypewriterShapes>()!;
   TypewriterStateTokens get states => extension<TypewriterStateTokens>()!;
+  TypewriterMotion get motion => extension<TypewriterMotion>()!;
 }
 
 /// Provides the current theme and Typewriter design tokens to a widget.
@@ -19,4 +20,8 @@ extension TypewriterThemeContextX on BuildContext {
   TypewriterSpacing get spacing => theme.spacing;
   TypewriterShapes get shapes => theme.shapes;
   TypewriterStateTokens get stateTokens => theme.states;
+
+  /// The raw token table. Play a token through `resolveMotion`, which
+  /// applies reduced motion; read this only to show or change the table.
+  TypewriterMotion get motion => theme.motion;
 }

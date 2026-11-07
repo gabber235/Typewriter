@@ -21,6 +21,7 @@ export "timeline_cues.dart";
 export "ui/animated_items.dart";
 export "ui/probes.dart";
 export "ui/stagger.dart";
+export "ui/motion.dart";
 export "ui/reduced_motion.dart";
 export "ui/resizable_pane.dart";
 export "ui/loading_buttons.dart";
