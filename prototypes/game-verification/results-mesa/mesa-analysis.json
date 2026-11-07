@@ -1,0 +1,3281 @@
+{
+ "renderers": {
+  "apt 25.2.8 (spike F) / opengl": [
+   "llvmpipe (LLVM 20.1.2, 256 bits) | 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4"
+  ],
+  "apt 25.2.8 (spike F) / vulkan": [
+   "llvmpipe (LLVM 20.1.2, 256 bits) | 1.4.318 llvmpipe Mesa 25.2.8-0ubuntu0.24.04.4 (LLVM 20.1.2)"
+  ],
+  "apt (this run) / opengl": [
+   "llvmpipe (LLVM 20.1.2, 256 bits) | 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4"
+  ],
+  "apt (this run) / vulkan": [
+   "llvmpipe (LLVM 20.1.2, 256 bits) | 1.4.318 llvmpipe Mesa 25.2.8-0ubuntu0.24.04.4 (LLVM 20.1.2)"
+  ],
+  "nix 26.2.5 / vulkan": [
+   "llvmpipe (LLVM 21.1.8, 256 bits) | 1.4.354 llvmpipe Mesa 26.2.5 (LLVM 21.1.8)"
+  ],
+  "nix 26.2.5 / opengl": [
+   "llvmpipe (LLVM 21.1.8, 256 bits) | 4.6 (Core Profile) Mesa 26.2.5"
+  ]
+ },
+ "determinism": [
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "break-block",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "18f11e35f1e2": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "18f11e35f1e2"
+    ],
+    "epyc9V7480Core": [
+     "18f11e35f1e2"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "break-color10",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "fb594cd62f0a": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "fb594cd62f0a"
+    ],
+    "epyc9V7480Core": [
+     "fb594cd62f0a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "break-color3",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "4849b25f72a3": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "4849b25f72a3"
+    ],
+    "epyc9V7480Core": [
+     "4849b25f72a3"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "break-dy1px",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "60f490a7d07f": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "60f490a7d07f"
+    ],
+    "epyc9V7480Core": [
+     "60f490a7d07f"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "break-entity",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "addbce46d883": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "addbce46d883"
+    ],
+    "epyc9V7480Core": [
+     "addbce46d883"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "break-item",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "ef5e38c07f0b": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "ef5e38c07f0b"
+    ],
+    "epyc9V7480Core": [
+     "ef5e38c07f0b"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "break-text",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "d39c5203de6d": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "d39c5203de6d"
+    ],
+    "epyc9V7480Core": [
+     "d39c5203de6d"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "terrain",
+   "frames": 18,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "291cd07e55fd": 18
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "291cd07e55fd"
+    ],
+    "epyc9V7480Core": [
+     "291cd07e55fd"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 72,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 36,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "void",
+   "frames": 27,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "4856fea09e11": 27
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "4856fea09e11"
+    ],
+    "epyc9V7480Core": [
+     "4856fea09e11"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 48,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 60,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 162,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 81,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "break-block",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "d239fdc645d8": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "d239fdc645d8"
+    ],
+    "epyc9V7480Core": [
+     "d239fdc645d8"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "break-color10",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "f245e158539d": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "f245e158539d"
+    ],
+    "epyc9V7480Core": [
+     "f245e158539d"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "break-color3",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "f03e3178869a": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "f03e3178869a"
+    ],
+    "epyc9V7480Core": [
+     "f03e3178869a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "break-dy1px",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "fcbedface30a": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "fcbedface30a"
+    ],
+    "epyc9V7480Core": [
+     "fcbedface30a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "break-entity",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "dbb0950b4df1": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "dbb0950b4df1"
+    ],
+    "epyc9V7480Core": [
+     "dbb0950b4df1"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "break-item",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "871165442d77": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "871165442d77"
+    ],
+    "epyc9V7480Core": [
+     "871165442d77"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "break-text",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "dbcd1a9edb5a": 9
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "dbcd1a9edb5a"
+    ],
+    "epyc9V7480Core": [
+     "dbcd1a9edb5a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "terrain",
+   "frames": 18,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "e1f4274ab98b": 18
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "e1f4274ab98b"
+    ],
+    "epyc9V7480Core": [
+     "e1f4274ab98b"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 18,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 72,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 36,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "void",
+   "frames": 27,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "IntelXeon6973P",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "8ebfc5858651": 27
+   },
+   "hash_by_cpu": {
+    "IntelXeon6973P": [
+     "8ebfc5858651"
+    ],
+    "epyc9V7480Core": [
+     "8ebfc5858651"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 48,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 60,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 162,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 81,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "break-block",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "18f11e35f1e2": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "18f11e35f1e2"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 1,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 2,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "break-color10",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "fb594cd62f0a": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "fb594cd62f0a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 1,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 2,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "break-color3",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "4849b25f72a3": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "4849b25f72a3"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 1,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 2,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "break-dy1px",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "60f490a7d07f": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "60f490a7d07f"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 1,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 2,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "break-entity",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "addbce46d883": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "addbce46d883"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 1,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 2,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "break-item",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "ef5e38c07f0b": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "ef5e38c07f0b"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 1,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 2,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "break-text",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "d39c5203de6d": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "d39c5203de6d"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 1,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 2,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "terrain",
+   "frames": 3,
+   "jobs": 1,
+   "clients": 1,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "291cd07e55fd": 3
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "291cd07e55fd"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "void",
+   "frames": 8,
+   "jobs": 1,
+   "clients": 2,
+   "cpus": [
+    "epyc776364Core"
+   ],
+   "hashes": {
+    "4856fea09e11": 8
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "4856fea09e11"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 12,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "break-block",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "d239fdc645d8": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "d239fdc645d8"
+    ],
+    "epyc9V4596Core": [
+     "d239fdc645d8"
+    ],
+    "xeon8370CCPU28": [
+     "d239fdc645d8"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "break-color10",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "f245e158539d": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "f245e158539d"
+    ],
+    "epyc9V4596Core": [
+     "f245e158539d"
+    ],
+    "xeon8370CCPU28": [
+     "f245e158539d"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "break-color3",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "f03e3178869a": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "f03e3178869a"
+    ],
+    "epyc9V4596Core": [
+     "f03e3178869a"
+    ],
+    "xeon8370CCPU28": [
+     "f03e3178869a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "break-dy1px",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "fcbedface30a": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "fcbedface30a"
+    ],
+    "epyc9V4596Core": [
+     "fcbedface30a"
+    ],
+    "xeon8370CCPU28": [
+     "fcbedface30a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "break-entity",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "dbb0950b4df1": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "dbb0950b4df1"
+    ],
+    "epyc9V4596Core": [
+     "dbb0950b4df1"
+    ],
+    "xeon8370CCPU28": [
+     "dbb0950b4df1"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "break-item",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "871165442d77": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "871165442d77"
+    ],
+    "epyc9V4596Core": [
+     "871165442d77"
+    ],
+    "xeon8370CCPU28": [
+     "871165442d77"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "break-text",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "dbcd1a9edb5a": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "dbcd1a9edb5a"
+    ],
+    "epyc9V4596Core": [
+     "dbcd1a9edb5a"
+    ],
+    "xeon8370CCPU28": [
+     "dbcd1a9edb5a"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 3,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 6,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "terrain",
+   "frames": 9,
+   "jobs": 3,
+   "clients": 3,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "e1f4274ab98b": 9
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "e1f4274ab98b"
+    ],
+    "epyc9V4596Core": [
+     "e1f4274ab98b"
+    ],
+    "xeon8370CCPU28": [
+     "e1f4274ab98b"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 9,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 27,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "void",
+   "frames": 24,
+   "jobs": 3,
+   "clients": 6,
+   "cpus": [
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "8ebfc5858651": 24
+   },
+   "hash_by_cpu": {
+    "epyc776364Core": [
+     "8ebfc5858651"
+    ],
+    "epyc9V4596Core": [
+     "8ebfc5858651"
+    ],
+    "xeon8370CCPU28": [
+     "8ebfc5858651"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 36,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 48,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 192,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "break-block",
+   "frames": 24,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "ffe099c5b0c4": 24
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "ffe099c5b0c4"
+    ],
+    "epyc776364Core": [
+     "ffe099c5b0c4"
+    ],
+    "epyc9V4596Core": [
+     "ffe099c5b0c4"
+    ],
+    "epyc9V7480Core": [
+     "ffe099c5b0c4"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 8,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 189,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 63,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "break-color10",
+   "frames": 24,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "243722c1ee0f": 24
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "243722c1ee0f"
+    ],
+    "epyc776364Core": [
+     "243722c1ee0f"
+    ],
+    "epyc9V4596Core": [
+     "243722c1ee0f"
+    ],
+    "epyc9V7480Core": [
+     "243722c1ee0f"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 8,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 189,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 63,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "break-color3",
+   "frames": 24,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "06103f2715e6": 24
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "06103f2715e6"
+    ],
+    "epyc776364Core": [
+     "06103f2715e6"
+    ],
+    "epyc9V4596Core": [
+     "06103f2715e6"
+    ],
+    "epyc9V7480Core": [
+     "06103f2715e6"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 8,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 189,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 63,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "break-dy1px",
+   "frames": 24,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "dba70fda8697": 24
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "dba70fda8697"
+    ],
+    "epyc776364Core": [
+     "dba70fda8697"
+    ],
+    "epyc9V4596Core": [
+     "dba70fda8697"
+    ],
+    "epyc9V7480Core": [
+     "dba70fda8697"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 8,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 189,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 63,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "break-entity",
+   "frames": 24,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "e228d852daea": 24
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "e228d852daea"
+    ],
+    "epyc776364Core": [
+     "e228d852daea"
+    ],
+    "epyc9V4596Core": [
+     "e228d852daea"
+    ],
+    "epyc9V7480Core": [
+     "e228d852daea"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 8,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 189,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 63,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "break-item",
+   "frames": 24,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "7314e71eabcd": 24
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "7314e71eabcd"
+    ],
+    "epyc776364Core": [
+     "7314e71eabcd"
+    ],
+    "epyc9V4596Core": [
+     "7314e71eabcd"
+    ],
+    "epyc9V7480Core": [
+     "7314e71eabcd"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 8,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 189,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 63,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "break-text",
+   "frames": 24,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "24240c1a69dc": 24
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "24240c1a69dc"
+    ],
+    "epyc776364Core": [
+     "24240c1a69dc"
+    ],
+    "epyc9V4596Core": [
+     "24240c1a69dc"
+    ],
+    "epyc9V7480Core": [
+     "24240c1a69dc"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 8,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 189,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 63,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "terrain",
+   "frames": 48,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "e5cd4d633092": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "e5cd4d633092"
+    ],
+    "epyc776364Core": [
+     "e5cd4d633092"
+    ],
+    "epyc9V4596Core": [
+     "e5cd4d633092"
+    ],
+    "epyc9V7480Core": [
+     "e5cd4d633092"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 48,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 72,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 756,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 252,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "void",
+   "frames": 72,
+   "jobs": 8,
+   "clients": 16,
+   "cpus": [
+    "INTELXEONPLATI",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core"
+   ],
+   "hashes": {
+    "81792870fe88": 72
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "81792870fe88"
+    ],
+    "epyc776364Core": [
+     "81792870fe88"
+    ],
+    "epyc9V4596Core": [
+     "81792870fe88"
+    ],
+    "epyc9V7480Core": [
+     "81792870fe88"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 128,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 160,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 1701,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 567,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "break-block",
+   "frames": 48,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "c464b09310c0": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "c464b09310c0"
+    ],
+    "IntelXeon6973P": [
+     "c464b09310c0"
+    ],
+    "epyc776364Core": [
+     "c464b09310c0"
+    ],
+    "epyc9V4596Core": [
+     "c464b09310c0"
+    ],
+    "epyc9V7480Core": [
+     "c464b09310c0"
+    ],
+    "xeon8370CCPU28": [
+     "c464b09310c0"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 32,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 882,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 198,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "break-color10",
+   "frames": 48,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "69717fbdf9ed": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "69717fbdf9ed"
+    ],
+    "IntelXeon6973P": [
+     "69717fbdf9ed"
+    ],
+    "epyc776364Core": [
+     "69717fbdf9ed"
+    ],
+    "epyc9V4596Core": [
+     "69717fbdf9ed"
+    ],
+    "epyc9V7480Core": [
+     "69717fbdf9ed"
+    ],
+    "xeon8370CCPU28": [
+     "69717fbdf9ed"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 32,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 882,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 198,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "break-color3",
+   "frames": 48,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "bc387eab136c": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "bc387eab136c"
+    ],
+    "IntelXeon6973P": [
+     "bc387eab136c"
+    ],
+    "epyc776364Core": [
+     "bc387eab136c"
+    ],
+    "epyc9V4596Core": [
+     "bc387eab136c"
+    ],
+    "epyc9V7480Core": [
+     "bc387eab136c"
+    ],
+    "xeon8370CCPU28": [
+     "bc387eab136c"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 32,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 882,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 198,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "break-dy1px",
+   "frames": 48,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "23ddc5ec9b47": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "23ddc5ec9b47"
+    ],
+    "IntelXeon6973P": [
+     "23ddc5ec9b47"
+    ],
+    "epyc776364Core": [
+     "23ddc5ec9b47"
+    ],
+    "epyc9V4596Core": [
+     "23ddc5ec9b47"
+    ],
+    "epyc9V7480Core": [
+     "23ddc5ec9b47"
+    ],
+    "xeon8370CCPU28": [
+     "23ddc5ec9b47"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 32,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 882,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 198,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "break-entity",
+   "frames": 48,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "b670249c6884": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "b670249c6884"
+    ],
+    "IntelXeon6973P": [
+     "b670249c6884"
+    ],
+    "epyc776364Core": [
+     "b670249c6884"
+    ],
+    "epyc9V4596Core": [
+     "b670249c6884"
+    ],
+    "epyc9V7480Core": [
+     "b670249c6884"
+    ],
+    "xeon8370CCPU28": [
+     "b670249c6884"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 32,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 882,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 198,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "break-item",
+   "frames": 48,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "86c516b60425": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "86c516b60425"
+    ],
+    "IntelXeon6973P": [
+     "86c516b60425"
+    ],
+    "epyc776364Core": [
+     "86c516b60425"
+    ],
+    "epyc9V4596Core": [
+     "86c516b60425"
+    ],
+    "epyc9V7480Core": [
+     "86c516b60425"
+    ],
+    "xeon8370CCPU28": [
+     "86c516b60425"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 32,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 882,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 198,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "break-text",
+   "frames": 48,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "3b9a3cd464de": 48
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "3b9a3cd464de"
+    ],
+    "IntelXeon6973P": [
+     "3b9a3cd464de"
+    ],
+    "epyc776364Core": [
+     "3b9a3cd464de"
+    ],
+    "epyc9V4596Core": [
+     "3b9a3cd464de"
+    ],
+    "epyc9V7480Core": [
+     "3b9a3cd464de"
+    ],
+    "xeon8370CCPU28": [
+     "3b9a3cd464de"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 16,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 32,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 882,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 198,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "terrain",
+   "frames": 96,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "943d98e292b0": 96
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "943d98e292b0"
+    ],
+    "IntelXeon6973P": [
+     "943d98e292b0"
+    ],
+    "epyc776364Core": [
+     "943d98e292b0"
+    ],
+    "epyc9V4596Core": [
+     "943d98e292b0"
+    ],
+    "epyc9V7480Core": [
+     "943d98e292b0"
+    ],
+    "xeon8370CCPU28": [
+     "943d98e292b0"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 96,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 144,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 3528,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 792,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "void",
+   "frames": 144,
+   "jobs": 16,
+   "clients": 32,
+   "cpus": [
+    "INTELXEONPLATI",
+    "IntelXeon6973P",
+    "epyc776364Core",
+    "epyc9V4596Core",
+    "epyc9V7480Core",
+    "xeon8370CCPU28"
+   ],
+   "hashes": {
+    "eb6dba15cfea": 144
+   },
+   "hash_by_cpu": {
+    "INTELXEONPLATI": [
+     "eb6dba15cfea"
+    ],
+    "IntelXeon6973P": [
+     "eb6dba15cfea"
+    ],
+    "epyc776364Core": [
+     "eb6dba15cfea"
+    ],
+    "epyc9V4596Core": [
+     "eb6dba15cfea"
+    ],
+    "epyc9V7480Core": [
+     "eb6dba15cfea"
+    ],
+    "xeon8370CCPU28": [
+     "eb6dba15cfea"
+    ]
+   },
+   "pairs": {
+    "same client": {
+     "pairs": 256,
+     "fired": 0,
+     "max_px": 0
+    },
+    "fresh client, same job": {
+     "pairs": 320,
+     "fired": 0,
+     "max_px": 0
+    },
+    "other CPU model": {
+     "pairs": 7938,
+     "fired": 0,
+     "max_px": 0
+    },
+    "same CPU model, other job": {
+     "pairs": 1782,
+     "fired": 0,
+     "max_px": 0
+    }
+   }
+  }
+ ],
+ "breaks": [
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "break": "block",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 1809,
+   "px_max": 1809
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "break": "color10",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "break": "color3",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "break": "dy1px",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 2400,
+   "px_max": 2400
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "break": "entity",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 5426,
+   "px_max": 5426
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "break": "item",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 552,
+   "px_max": 552
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "break": "text",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 320,
+   "px_max": 320
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "break": "block",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 1809,
+   "px_max": 1809
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "break": "color10",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "break": "color3",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "break": "dy1px",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 2400,
+   "px_max": 2400
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "break": "entity",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 5426,
+   "px_max": 5426
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "break": "item",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 552,
+   "px_max": 552
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "break": "text",
+   "comparisons": 243,
+   "caught": 243,
+   "px_min": 320,
+   "px_max": 320
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "break": "block",
+   "comparisons": 24,
+   "caught": 24,
+   "px_min": 1809,
+   "px_max": 1809
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "break": "color10",
+   "comparisons": 24,
+   "caught": 24,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "break": "color3",
+   "comparisons": 24,
+   "caught": 24,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "break": "dy1px",
+   "comparisons": 24,
+   "caught": 24,
+   "px_min": 2400,
+   "px_max": 2400
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "break": "entity",
+   "comparisons": 24,
+   "caught": 24,
+   "px_min": 5426,
+   "px_max": 5426
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "break": "item",
+   "comparisons": 24,
+   "caught": 24,
+   "px_min": 552,
+   "px_max": 552
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "break": "text",
+   "comparisons": 24,
+   "caught": 24,
+   "px_min": 320,
+   "px_max": 320
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "break": "block",
+   "comparisons": 216,
+   "caught": 216,
+   "px_min": 1809,
+   "px_max": 1809
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "break": "color10",
+   "comparisons": 216,
+   "caught": 216,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "break": "color3",
+   "comparisons": 216,
+   "caught": 216,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "break": "dy1px",
+   "comparisons": 216,
+   "caught": 216,
+   "px_min": 2400,
+   "px_max": 2400
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "break": "entity",
+   "comparisons": 216,
+   "caught": 216,
+   "px_min": 5426,
+   "px_max": 5426
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "break": "item",
+   "comparisons": 216,
+   "caught": 216,
+   "px_min": 552,
+   "px_max": 552
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "break": "text",
+   "comparisons": 216,
+   "caught": 216,
+   "px_min": 320,
+   "px_max": 320
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "break": "block",
+   "comparisons": 1728,
+   "caught": 1728,
+   "px_min": 1808,
+   "px_max": 1808
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "break": "color10",
+   "comparisons": 1728,
+   "caught": 1728,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "break": "color3",
+   "comparisons": 1728,
+   "caught": 1728,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "break": "dy1px",
+   "comparisons": 1728,
+   "caught": 1728,
+   "px_min": 2400,
+   "px_max": 2400
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "break": "entity",
+   "comparisons": 1728,
+   "caught": 1728,
+   "px_min": 5426,
+   "px_max": 5426
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "break": "item",
+   "comparisons": 1728,
+   "caught": 1728,
+   "px_min": 552,
+   "px_max": 552
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "break": "text",
+   "comparisons": 1728,
+   "caught": 1728,
+   "px_min": 320,
+   "px_max": 320
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "break": "block",
+   "comparisons": 6912,
+   "caught": 6912,
+   "px_min": 1808,
+   "px_max": 1808
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "break": "color10",
+   "comparisons": 6912,
+   "caught": 6912,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "break": "color3",
+   "comparisons": 6912,
+   "caught": 6912,
+   "px_min": 18880,
+   "px_max": 18880
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "break": "dy1px",
+   "comparisons": 6912,
+   "caught": 6912,
+   "px_min": 2400,
+   "px_max": 2400
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "break": "entity",
+   "comparisons": 6912,
+   "caught": 6912,
+   "px_min": 5426,
+   "px_max": 5426
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "break": "item",
+   "comparisons": 6912,
+   "caught": 6912,
+   "px_min": 552,
+   "px_max": 552
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "break": "text",
+   "comparisons": 6912,
+   "caught": 6912,
+   "px_min": 320,
+   "px_max": 320
+  }
+ ],
+ "cross": [
+  {
+   "a": "apt (this run) opengl",
+   "b": "apt (this run) vulkan",
+   "scene": "terrain",
+   "px": 377,
+   "max": 18,
+   "over8": 2
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "apt 25.2.8 (spike F) opengl",
+   "scene": "terrain",
+   "px": 0,
+   "max": 0,
+   "over8": 0
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "apt 25.2.8 (spike F) vulkan",
+   "scene": "terrain",
+   "px": 377,
+   "max": 18,
+   "over8": 2
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "nix 26.2.5 opengl",
+   "scene": "terrain",
+   "px": 2533,
+   "max": 185,
+   "over8": 22
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "terrain",
+   "px": 2844,
+   "max": 185,
+   "over8": 24
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "apt (this run) vulkan",
+   "scene": "void",
+   "px": 304,
+   "max": 1,
+   "over8": 0
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "apt 25.2.8 (spike F) opengl",
+   "scene": "void",
+   "px": 0,
+   "max": 0,
+   "over8": 0
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "apt 25.2.8 (spike F) vulkan",
+   "scene": "void",
+   "px": 304,
+   "max": 1,
+   "over8": 0
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "nix 26.2.5 opengl",
+   "scene": "void",
+   "px": 1260,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "apt (this run) opengl",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "void",
+   "px": 1578,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "apt 25.2.8 (spike F) opengl",
+   "scene": "terrain",
+   "px": 377,
+   "max": 18,
+   "over8": 2
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "apt 25.2.8 (spike F) vulkan",
+   "scene": "terrain",
+   "px": 0,
+   "max": 0,
+   "over8": 0
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "nix 26.2.5 opengl",
+   "scene": "terrain",
+   "px": 2849,
+   "max": 185,
+   "over8": 24
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "terrain",
+   "px": 2729,
+   "max": 185,
+   "over8": 22
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "apt 25.2.8 (spike F) opengl",
+   "scene": "void",
+   "px": 304,
+   "max": 1,
+   "over8": 0
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "apt 25.2.8 (spike F) vulkan",
+   "scene": "void",
+   "px": 0,
+   "max": 0,
+   "over8": 0
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "nix 26.2.5 opengl",
+   "scene": "void",
+   "px": 1543,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "apt (this run) vulkan",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "void",
+   "px": 1351,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "apt 25.2.8 (spike F) opengl",
+   "b": "apt 25.2.8 (spike F) vulkan",
+   "scene": "terrain",
+   "px": 377,
+   "max": 18,
+   "over8": 2
+  },
+  {
+   "a": "apt 25.2.8 (spike F) opengl",
+   "b": "nix 26.2.5 opengl",
+   "scene": "terrain",
+   "px": 2533,
+   "max": 185,
+   "over8": 22
+  },
+  {
+   "a": "apt 25.2.8 (spike F) opengl",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "terrain",
+   "px": 2844,
+   "max": 185,
+   "over8": 24
+  },
+  {
+   "a": "apt 25.2.8 (spike F) opengl",
+   "b": "apt 25.2.8 (spike F) vulkan",
+   "scene": "void",
+   "px": 304,
+   "max": 1,
+   "over8": 0
+  },
+  {
+   "a": "apt 25.2.8 (spike F) opengl",
+   "b": "nix 26.2.5 opengl",
+   "scene": "void",
+   "px": 1260,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "apt 25.2.8 (spike F) opengl",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "void",
+   "px": 1578,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "apt 25.2.8 (spike F) vulkan",
+   "b": "nix 26.2.5 opengl",
+   "scene": "terrain",
+   "px": 2849,
+   "max": 185,
+   "over8": 24
+  },
+  {
+   "a": "apt 25.2.8 (spike F) vulkan",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "terrain",
+   "px": 2729,
+   "max": 185,
+   "over8": 22
+  },
+  {
+   "a": "apt 25.2.8 (spike F) vulkan",
+   "b": "nix 26.2.5 opengl",
+   "scene": "void",
+   "px": 1543,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "apt 25.2.8 (spike F) vulkan",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "void",
+   "px": 1351,
+   "max": 12,
+   "over8": 1
+  },
+  {
+   "a": "nix 26.2.5 opengl",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "terrain",
+   "px": 345,
+   "max": 18,
+   "over8": 2
+  },
+  {
+   "a": "nix 26.2.5 opengl",
+   "b": "nix 26.2.5 vulkan",
+   "scene": "void",
+   "px": 354,
+   "max": 1,
+   "over8": 0
+  }
+ ],
+ "capture": [
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "terrain",
+   "n": 18,
+   "median_s": 0.511,
+   "p90_s": 0.772,
+   "max_s": 0.958,
+   "grabs_median": 3.0,
+   "unstable": 0
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "opengl",
+   "scene": "void",
+   "n": 27,
+   "median_s": 0.184,
+   "p90_s": 0.221,
+   "max_s": 0.293,
+   "grabs_median": 2,
+   "unstable": 0
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "terrain",
+   "n": 18,
+   "median_s": 0.523,
+   "p90_s": 0.726,
+   "max_s": 0.878,
+   "grabs_median": 3.0,
+   "unstable": 0
+  },
+  {
+   "source": "apt (this run)",
+   "backend": "vulkan",
+   "scene": "void",
+   "n": 27,
+   "median_s": 0.185,
+   "p90_s": 0.223,
+   "max_s": 0.279,
+   "grabs_median": 2,
+   "unstable": 0
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "terrain",
+   "n": 3,
+   "median_s": 0.56,
+   "p90_s": 0.56,
+   "max_s": 0.731,
+   "grabs_median": 3,
+   "unstable": 0
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "opengl",
+   "scene": "void",
+   "n": 8,
+   "median_s": 0.193,
+   "p90_s": 0.238,
+   "max_s": 0.338,
+   "grabs_median": 2.0,
+   "unstable": 0
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "terrain",
+   "n": 9,
+   "median_s": 0.769,
+   "p90_s": 0.854,
+   "max_s": 0.979,
+   "grabs_median": 3,
+   "unstable": 0
+  },
+  {
+   "source": "apt 25.2.8 (spike F)",
+   "backend": "vulkan",
+   "scene": "void",
+   "n": 24,
+   "median_s": 0.197,
+   "p90_s": 0.245,
+   "max_s": 0.326,
+   "grabs_median": 2.0,
+   "unstable": 0
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "terrain",
+   "n": 48,
+   "median_s": 0.457,
+   "p90_s": 0.762,
+   "max_s": 0.871,
+   "grabs_median": 2.0,
+   "unstable": 0
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "opengl",
+   "scene": "void",
+   "n": 72,
+   "median_s": 0.192,
+   "p90_s": 0.242,
+   "max_s": 0.354,
+   "grabs_median": 2.0,
+   "unstable": 0
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "terrain",
+   "n": 96,
+   "median_s": 0.531,
+   "p90_s": 0.827,
+   "max_s": 1.014,
+   "grabs_median": 3.0,
+   "unstable": 0
+  },
+  {
+   "source": "nix 26.2.5",
+   "backend": "vulkan",
+   "scene": "void",
+   "n": 144,
+   "median_s": 0.195,
+   "p90_s": 0.25,
+   "max_s": 0.347,
+   "grabs_median": 2.0,
+   "unstable": 0
+  }
+ ]
+}
