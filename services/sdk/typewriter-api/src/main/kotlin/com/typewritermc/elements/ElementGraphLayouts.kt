@@ -4,7 +4,6 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
 import com.typewritermc.presentation.ContainerStyle
-import com.typewritermc.presentation.DisplayDelay
 import com.typewritermc.presentation.IconOptions
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBorder
@@ -19,9 +18,7 @@ import com.typewritermc.presentation.literalColor
 import com.typewritermc.presentation.monochromeOn
 import com.typewritermc.presentation.on
 import com.typewritermc.presentation.stateColor
-import com.typewritermc.presentation.stateTransition
 import com.typewritermc.presentation.textParagraph
-import com.typewritermc.presentation.transition
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import skirout.editor.v1.presentation.PresentationAlignment
@@ -53,7 +50,6 @@ fun Layout.entryNode(
                 ContainerStyle(
                     border = PresentationBorder.All(width = 3.0, color = outline),
                     radius = PresentationRadius.Small,
-                    transition = stateTransition(transition(DisplayDelay(400))),
                 ),
             ) {
                 adaptiveLeading {

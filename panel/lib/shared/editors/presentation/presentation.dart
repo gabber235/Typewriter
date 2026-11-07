@@ -10,6 +10,7 @@ export "portable_presentation_renderer.dart";
 export "portable_resources_interaction_scope.dart";
 export "presentation_color.dart";
 export "presentation_environment.dart";
+export "presentation_motion.dart";
 export "presentation_value_environment.dart";
 export "reference_picker.dart";
 export "timeline/timeline.dart";

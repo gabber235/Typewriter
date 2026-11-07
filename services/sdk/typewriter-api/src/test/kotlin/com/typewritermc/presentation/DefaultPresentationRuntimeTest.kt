@@ -555,7 +555,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         background = fill,
                         foreground = ambientBackground().on(),
                         radius = PresentationRadius.Large,
-                        transition = stateTransition(transition(DisplayDelay(100))),
+                        transition = moveOverrides(hovered = MoveOverride.Timed(length = DisplayDelay(100))),
                     ),
                 ) {
                     align(PresentationAlignment.CENTER) { text(literal("Adventure")) }
@@ -574,7 +574,11 @@ val DefaultPresentationRuntimeTest by testSuite {
             skirout.editor.v1.presentation.PresentationColor.AmbientWrapper(
                 skirout.editor.v1.presentation.PresentationAmbientColor.BACKGROUND,
             )
-        container.transition?.fallback?.milliseconds shouldBe 100
+        container.transition?.hovered shouldBe
+            skirout.editor.v1.presentation.PresentationTransition.TimedWrapper(
+                skirout.editor.v1.presentation
+                    .PresentationTimedTransition(milliseconds = 100, curve = null),
+            )
         val alignment = (container.child.singleFixed().element as PresentationElement.AlignWrapper).value
         alignment.alignment shouldBe skirout.editor.v1.presentation.PresentationAlignment.CENTER
     }

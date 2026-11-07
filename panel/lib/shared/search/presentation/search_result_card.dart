@@ -43,8 +43,11 @@ class SearchResultCard extends HookWidget {
     final borderColor = selected ? color : Colors.transparent;
 
     return SurfaceContainer(
-      duration: 180.ms,
-      curve: Curves.easeOutCubic,
+      motion: ResolvedMotion(
+        motion: CurveMotion(Curves.easeOutCubic, 180.ms),
+        landing: const NoLanding(),
+        repeatFloor: 0,
+      ),
       decoration: BoxDecoration(
         color: focused ? color : color.withValues(alpha: color.a * alpha),
         borderRadius: context.shapes.mediumBorderRadius,

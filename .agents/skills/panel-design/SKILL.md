@@ -84,7 +84,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A pane gains focus | It lifts forward and brightens while the others sink back, with `paneFocus` | 2 |
 | A move repeats fast or would go off screen | Make it smaller, down to none. A held key makes the ring jump | 2 |
 | Several moves would play together | Only the user's latest action moves. Everything else changes without motion | 2 |
-| A service or realm sends motion for something it presents | Play the named move it gives by default. When it also sends a duration or curve, use those. Missing values fall back to the token | 2 |
+| Something a service or realm presents changes state | The panel picks the move from the change: hovered on `hoverIn`, off `hoverOut`, focused `focusMove`, pressed `press`, selected `ink`, a collection item added `rowIn` and leaving `listOut`. The service may override how each plays, keyed by that state or by the item's arrival or leave: a timed override (duration, curve or both: strike, carriage, exit, ease out, linear) or a spring. A duration alone on a spring move keeps its damping ratio. Reduced motion applies after the override | 2 |
 | You cannot name what a move tells the user | Do not add it. Only rippling busy words and skeletons may loop | 2 |
 | Any move runs | Input still works, and the move can retarget from where it is | 3 |
 | Reduced motion is on | Keep every result and remove the travel, in the tokens, not per widget | 3 |

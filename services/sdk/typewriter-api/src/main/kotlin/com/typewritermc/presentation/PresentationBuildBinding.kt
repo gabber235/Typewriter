@@ -345,8 +345,8 @@ interface AxisLayout : Layout {
 interface StackLayout : Layout {
     /**
      * Places [body] by insets and sizes in logical pixels relative to the stack. At most two of [start], [end] and
-     * [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically. [transition] animates
-     * changes of the insets and sizes.
+     * [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically. Changes of the insets and
+     * sizes play the panel's moves; [transition] overrides how they play.
      */
     fun positioned(
         top: PresentationNumber? = null,
@@ -415,7 +415,7 @@ data class ContainerStyle(
     val foreground: PresentationColor? = null,
     val border: PresentationBorder? = null,
     val radius: PresentationRadius = PresentationRadius.None,
-    /** Animates changes of the colors, border and shadows; they apply at once when null. */
+    /** Overrides how changes of the colors, border and shadows play; the panel's moves play when null. */
     val transition: PresentationTransitionPolicy? = null,
     /** Painted below the container in declaration order. */
     val shadows: List<PresentationShadow> = emptyList(),
