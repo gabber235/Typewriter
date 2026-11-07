@@ -335,6 +335,8 @@ decided:
     why: Thousands of small tests; slow feedback makes every later drive worse over time
   - id: all-prototypes-in-waves
     what: Run all proposed prototypes (P1 to P5), just not all at the same time
+  - id: p6-pool-process
+    what: Prototype a separate pool process that every test JVM (modules, extensions, IDE runs) submits to, faked without Minecraft
   - id: tests-beside-code
     what: Tests are placed where it makes sense; in the future each extension and every entry is tested
   - id: deferred-l-m
@@ -343,11 +345,9 @@ decided:
 open:
   - id: paper-topology
     ask: Shared stepped Paper or a Paper per attempt, decided from P1's numbers
-  - id: shared-pool-across-compilations
-    ask: Prototype how several test compilations share one warm pool (root compilation, a class loader per module, or a pool process)?
   - id: quiet-hook
     ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
 
 slices: []
 
-next: P1 and P3 running, P4 (live stream) started after P2; P5 (goldens on devenv Mesa) starts when a slot frees. Check in with each result.
+next: P1, P3 and P4 running; P5 (goldens on devenv Mesa) then P6 (pool process) start as slots free. Check in with each result.
