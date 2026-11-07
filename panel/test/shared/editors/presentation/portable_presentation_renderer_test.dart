@@ -170,6 +170,8 @@ void main() {
           itemRadius: null,
           itemTransition: null,
           itemShadows: const [],
+          itemArrival: null,
+          itemLeave: null,
         ),
         content: skir.CollectionContent(
           removeLabel: textLiteral("Remove coordinate"),

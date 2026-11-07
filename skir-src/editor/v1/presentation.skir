@@ -1663,8 +1663,13 @@ struct CollectionAppearance(84140223) {
   item_foreground: PresentationColor? = 3;
   item_border: PresentationBorder? = 4;
   item_radius: PresentationRadius? = 5;
+  /// Overrides the item surface's paint moves.
   item_transition: PresentationTransitionPolicy? = 6;
   item_shadows: [PresentationShadow] = 7;
+  /// Overrides how an added item plays rowIn. Absent: rowIn as tuned.
+  item_arrival: PresentationTransition? = 8;
+  /// Overrides how a removed item plays listOut. Absent: listOut as tuned.
+  item_leave: PresentationTransition? = 9;
 }
 
 struct CollectionContent(84140224) {
@@ -1837,37 +1842,55 @@ struct PresentationStateNumberRule(84140245) {
   value: ExpressionNode = 1;
 }
 
-/// How an animated change progresses over its duration.
-enum PresentationCurve(84140246) {
-  linear = 1;
-  ease_in_out = 2;
-  ease_out = 3;
-  /// Quick start and long settle, for movement that should feel deliberate.
-  emphasized = 4;
-  /// Springs past the target and settles. The value is the overshoot period, in curve
-  /// progress units (Flutter ElasticOutCurve.period).
-  elastic_out: float64 = 5;
+/// A curve that runs over a duration.
+enum PresentationTimedCurve(84140246) {
+  /// Arrives early and overshoots once. The value is the overshoot, a fraction of the
+  /// travel between 0 and 1.
+  strike: float64;
+  /// Hits the target and recoils once. The value is the recoil, a fraction of the travel
+  /// from 0 up to 1.
+  carriage: float64;
+  /// Leaves quickly: Cubic(0.4, 0, 0.2, 1).
+  exit;
+  ease_out;
+  linear;
 }
 
-struct PresentationTransition(84140247) {
-  milliseconds: int32 = 0;
-  curve: PresentationCurve = 1;
+/// Replaces the time, the curve, or both, of the panel's move. A spring move given only
+/// [milliseconds] settles in that time with its own damping ratio; 0 lands at once.
+struct PresentationTimedTransition(84140247) {
+  milliseconds: int32?;
+  curve: PresentationTimedCurve?;
 }
 
-/// Chooses the transition for a change by the state being entered: the first rule matching
-/// the new interaction state animates the change; otherwise [fallback] does.
-struct PresentationTransitionPolicy(84140248) {
-  rules: [PresentationStateTransitionRule] = 0;
-  fallback: PresentationTransition = 1;
+/// The stiffness and damping of a spring of unit mass. It settles by itself.
+struct PresentationSpring(84140248) {
+  stiffness: float64;
+  damping: float64;
 }
 
-struct PresentationStateTransitionRule(84140249) {
-  match: PresentationStateMatch = 0;
-  transition: PresentationTransition = 1;
+/// Replaces how one of the panel's moves plays.
+enum PresentationTransition(84140249) {
+  timed: PresentationTimedTransition;
+  spring: PresentationSpring;
+}
+
+/// Overrides of the panel's moves, by the state whose change the move belongs to. The panel
+/// picks one move per change (press over focus over selection over hover) and applies the
+/// override of that state. Absent: the move plays as tuned.
+struct PresentationTransitionPolicy(84140250) {
+  /// hoverIn and hoverOut.
+  hovered: PresentationTransition?;
+  /// focusMove.
+  focused: PresentationTransition?;
+  /// press.
+  pressed: PresentationTransition?;
+  /// ink.
+  selected: PresentationTransition?;
 }
 
 /// Blur, spread and offsets in logical pixels.
-struct PresentationShadow(84140250) {
+struct PresentationShadow(84140251) {
   color: PresentationColor = 0;
   blur: float64 = 1;
   spread: float64 = 2;
@@ -1877,19 +1900,19 @@ struct PresentationShadow(84140250) {
 
 /// Moves [source] in OkLch. Both adjustments range from minus one to one: negative lightness moves toward
 /// black and positive toward white; negative chroma desaturates and positive saturates.
-struct PresentationAdjustedColor(84140251) {
+struct PresentationAdjustedColor(84140252) {
   source: PresentationColor = 0;
   lightness: float64 = 1;
   chroma: float64 = 2;
 }
 
 /// Picks a color by the brightness of the editor theme.
-struct PresentationBrightnessColor(84140252) {
+struct PresentationBrightnessColor(84140253) {
   light: PresentationColor = 0;
   dark: PresentationColor = 1;
 }
 
-enum StackChild(84140253) {
+enum StackChild(84140254) {
   /// Sized and aligned by the stack.
   flow: PresentationNode = 1;
   positioned: PositionedStackChild = 2;
@@ -1897,7 +1920,7 @@ enum StackChild(84140253) {
 
 /// Insets and sizes in logical pixels relative to the stack. At most two of [start], [end]
 /// and [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically.
-struct PositionedStackChild(84140254) {
+struct PositionedStackChild(84140255) {
   child: PresentationNode = 0;
   top: PresentationNumber? = 1;
   start: PresentationNumber? = 2;
@@ -1910,7 +1933,7 @@ struct PositionedStackChild(84140254) {
 }
 
 /// Constrains [child] in logical pixels. An exact width or height overrides its bounds.
-struct SizeLayout(84140255) {
+struct SizeLayout(84140256) {
   child: PresentationNode = 0;
   width: ExpressionNode? = 1;
   height: ExpressionNode? = 2;
@@ -1923,7 +1946,7 @@ struct SizeLayout(84140255) {
 /// Paints [child] transformed around [origin]. Paint only: layout and the host hit region keep
 /// the untransformed bounds. Rotations are in turns, translations in logical pixels, and
 /// [perspective] is the Matrix4 entry (3, 2); zero keeps the transform flat.
-struct TransformLayout(84140256) {
+struct TransformLayout(84140257) {
   child: PresentationNode = 0;
   origin: PresentationAlignment = 1;
   perspective: float64 = 2;

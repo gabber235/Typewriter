@@ -10,6 +10,7 @@ export "renderer_workspace.dart";
 export "shown_component.dart";
 export "shown_fields.dart";
 export "shown_presentation.dart";
+export "service_motion.dart";
 export "shown_search_input.dart";
 export "tag_graph.dart";
 export "timeline_dsl.dart";

@@ -64,7 +64,6 @@ fun Layout.searchChip(
             background = background,
             foreground = foreground,
             radius = PresentationRadius.Custom(literal(1000.0)),
-            transition = stateTransition(transition(DisplayDelay(300))),
         ),
     ) {
         padding(PresentationInsets(Spacing(7.0), Spacing(3.0), Spacing(7.0), Spacing(3.0))) {

@@ -2,8 +2,8 @@ part of "../portable_presentation_renderer.dart";
 
 /// Renders stacks, sizes and transforms. Values that follow interaction state
 /// resolve through [PresentationValueEnvironment], so they change with the
-/// nearest [PresentationInteractionScope] and animate with the transition the
-/// presentation declares for the entered state.
+/// nearest [PresentationInteractionScope] and play the panel's move for each
+/// interaction change, with the presentation's override for that move.
 extension _PortablePaintRendering on PortablePresentationNodeRenderer {
   Widget _renderStack(
     skir.StackChildrenElement element,
@@ -112,8 +112,8 @@ extension _PortablePaintRendering on PortablePresentationNodeRenderer {
 }
 
 /// A stack child placed by insets that follow interaction state. Changes
-/// animate with the duration and curve the transition policy chooses for the
-/// entered state.
+/// play the panel's move for the interaction change, with the service's
+/// override for that move.
 final class _PortablePositioned extends StatelessWidget {
   const _PortablePositioned({required this.child, required this.scope});
 
@@ -138,16 +138,23 @@ final class _PortablePositioned extends StatelessWidget {
           "A positioned child declares at most two bounds per axis",
         );
       }
-      final motion = environment.motion(child.transition, scope);
-      return AnimatedPositionedDirectional(
-        duration: motion.duration,
-        curve: motion.curve,
-        start: start,
-        end: end,
-        width: width,
-        top: top,
-        bottom: bottom,
-        height: height,
+      final overrides = switch (child.transition.reading) {
+        MotionRead(:final value) => value,
+        MotionReadFailed(:final message) => throw PresentationValueFailure(
+          message,
+        ),
+      };
+      return _MovingPositioned(
+        target: _Bounds(
+          start: start,
+          end: end,
+          width: width,
+          top: top,
+          bottom: bottom,
+          height: height,
+        ),
+        interaction: environment.interaction,
+        overrides: overrides,
         child: PortablePresentationNodeRenderer(
           node: child.child,
           scope: scope,
@@ -157,6 +164,74 @@ final class _PortablePositioned extends StatelessWidget {
     } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     }
+  }
+}
+
+/// Positioned bounds; a missing bound stays missing.
+@freezed
+abstract class _Bounds with _$Bounds {
+  const factory _Bounds({
+    double? start,
+    double? end,
+    double? width,
+    double? top,
+    double? bottom,
+    double? height,
+  }) = __Bounds;
+
+  const _Bounds._();
+
+  /// A bound present on only one side jumps to [to]'s value.
+  _Bounds lerp(_Bounds to, double t) {
+    double? bound(double? a, double? b) =>
+        a == null || b == null ? b : lerpDouble(a, b, t);
+    return _Bounds(
+      start: bound(start, to.start),
+      end: bound(end, to.end),
+      width: bound(width, to.width),
+      top: bound(top, to.top),
+      bottom: bound(bottom, to.bottom),
+      height: bound(height, to.height),
+    );
+  }
+}
+
+/// Plays the panel's move toward [target] bounds and retargets from the
+/// displayed bounds and velocity when the target changes.
+final class _MovingPositioned extends HookWidget {
+  const _MovingPositioned({
+    required this.target,
+    required this.interaction,
+    required this.overrides,
+    required this.child,
+  });
+
+  final _Bounds target;
+  final PresentationInteraction interaction;
+  final MoveOverrides overrides;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final motion = usePresentationMotion(
+      target: target,
+      interaction: interaction,
+      overrides: overrides,
+    );
+    final bounds = useMotionValue(
+      motion,
+      target,
+      lerp: (from, to, t) => from.lerp(to, t),
+    );
+    return PositionedDirectional(
+      start: bounds.start,
+      end: bounds.end,
+      width: bounds.width,
+      top: bounds.top,
+      bottom: bounds.bottom,
+      height: bounds.height,
+      child: child,
+    );
   }
 }
 
@@ -195,13 +270,6 @@ abstract class _TransformValues with _$TransformValues {
   }
 }
 
-final class _TransformTween extends Tween<_TransformValues> {
-  _TransformTween({super.end});
-
-  @override
-  _TransformValues lerp(double t) => begin!.lerp(end!, t);
-}
-
 /// Paints its child transformed by values that follow interaction state.
 /// Layout and hit testing keep the untransformed bounds, so the host's hover
 /// and press region does not move with the paint.
@@ -227,30 +295,69 @@ final class _PortableTransform extends StatelessWidget {
           "Transform perspective must be finite",
         );
       }
-      final target = _TransformValues(
-        scale: value(layout.scale, 1),
-        rotateX: value(layout.rotateX, 0),
-        rotateY: value(layout.rotateY, 0),
-        rotateZ: value(layout.rotateZ, 0),
-        translateX: value(layout.translateX, 0),
-        translateY: value(layout.translateY, 0),
-      );
-      final motion = environment.motion(layout.transition, scope);
-      final origin = _presentationAlignment(layout.origin);
-      return TweenAnimationBuilder<_TransformValues>(
-        tween: _TransformTween(end: target),
-        duration: motion.duration,
-        curve: motion.curve,
-        child: child,
-        builder: (context, values, child) => Transform(
-          alignment: origin.resolve(Directionality.of(context)),
-          transform: values.matrix(layout.perspective),
-          transformHitTests: false,
-          child: child,
+      final overrides = switch (layout.transition.reading) {
+        MotionRead(:final value) => value,
+        MotionReadFailed(:final message) => throw PresentationValueFailure(
+          message,
         ),
+      };
+      return _MovingTransform(
+        target: _TransformValues(
+          scale: value(layout.scale, 1),
+          rotateX: value(layout.rotateX, 0),
+          rotateY: value(layout.rotateY, 0),
+          rotateZ: value(layout.rotateZ, 0),
+          translateX: value(layout.translateX, 0),
+          translateY: value(layout.translateY, 0),
+        ),
+        interaction: environment.interaction,
+        overrides: overrides,
+        origin: _presentationAlignment(layout.origin),
+        perspective: layout.perspective,
+        child: child,
       );
     } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     }
+  }
+}
+
+/// Plays the panel's move toward [target] and retargets from the displayed
+/// value and velocity when the target changes.
+final class _MovingTransform extends HookWidget {
+  const _MovingTransform({
+    required this.target,
+    required this.interaction,
+    required this.overrides,
+    required this.origin,
+    required this.perspective,
+    required this.child,
+  });
+
+  final _TransformValues target;
+  final PresentationInteraction interaction;
+  final MoveOverrides overrides;
+  final AlignmentGeometry origin;
+  final double perspective;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final motion = usePresentationMotion(
+      target: target,
+      interaction: interaction,
+      overrides: overrides,
+    );
+    final values = useMotionValue(
+      motion,
+      target,
+      lerp: (from, to, t) => from.lerp(to, t),
+    );
+    return Transform(
+      alignment: origin.resolve(Directionality.of(context)),
+      transform: values.matrix(perspective),
+      transformHitTests: false,
+      child: child,
+    );
   }
 }

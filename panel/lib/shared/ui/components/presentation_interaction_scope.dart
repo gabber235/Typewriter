@@ -36,6 +36,16 @@ abstract class PresentationInteraction with _$PresentationInteraction {
         pressed: states.contains(WidgetState.pressed),
         disabled: states.contains(WidgetState.disabled),
       );
+
+  /// The widget states this interaction holds, the inverse of
+  /// [fromWidgetStates]. The engine's move table reads them.
+  Set<WidgetState> get widgetStates => {
+    if (selected) WidgetState.selected,
+    if (hovered) WidgetState.hovered,
+    if (focused) WidgetState.focused,
+    if (pressed) WidgetState.pressed,
+    if (disabled) WidgetState.disabled,
+  };
 }
 
 /// Publishes an owner's observed state without inheriting another owner's flags.

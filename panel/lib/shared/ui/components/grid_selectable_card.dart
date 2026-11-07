@@ -103,8 +103,11 @@ class GridSelectableCard extends StatelessWidget {
     final backgroundColor = _backgroundColor();
 
     final card = SurfaceContainer(
-      duration: animationDuration,
-      curve: animationCurve,
+      motion: ResolvedMotion(
+        motion: CurveMotion(animationCurve, animationDuration),
+        landing: const NoLanding(),
+        repeatFloor: 0,
+      ),
       foreground: isSelected ? onBase : baseColor,
       width: width,
       height: height,

@@ -121,13 +121,7 @@ void main() {
           skir.PresentationElement.createContainer(
             backgroundColor: fill,
             foregroundColor: foreground,
-            transition: skir.PresentationTransitionPolicy(
-              rules: const [],
-              fallback: skir.PresentationTransition(
-                milliseconds: 100,
-                curve: skir.PresentationCurve.linear,
-              ),
-            ),
+            transition: null,
             shadows: const [],
             border: null,
             radius: skir.PresentationRadius.large,

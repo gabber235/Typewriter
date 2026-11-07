@@ -5,10 +5,11 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.presentation.PresentationAlignment
-import skirout.editor.v1.presentation.PresentationCurve
 import skirout.editor.v1.presentation.PresentationInteractionState
+import skirout.editor.v1.presentation.PresentationSpring
 import skirout.editor.v1.presentation.PresentationStateMatch
-import skirout.editor.v1.presentation.PresentationStateTransitionRule
+import skirout.editor.v1.presentation.PresentationTimedCurve
+import skirout.editor.v1.presentation.PresentationTimedTransition
 import skirout.editor.v1.presentation.PresentationTransition
 import skirout.editor.v1.presentation.PresentationTransitionPolicy
 import skirout.editor.v1.presentation.PresentationNumber as WireNumber
@@ -17,7 +18,7 @@ import skirout.editor.v1.presentation.PresentationStateNumberRule as WireStateNu
 
 /**
  * Holds when every [required] state is active and no [excluded] state is. The panel owns the states; presentations
- * only declare which values apply in which of them. Colors, numbers and transitions share this match.
+ * only declare which values apply in which of them. Colors and numbers share this match.
  */
 internal fun stateMatch(
     required: Set<PresentationInteractionState>,
@@ -81,65 +82,156 @@ fun stateNumber(
     configure: PresentationStateNumberScope.() -> Unit,
 ): PresentationNumber = stateNumber(literal(fallback), configure)
 
-/**
- * An animated change of [length] that progresses along [curve], such as
- * `transition(DisplayDelay(750), PresentationCurve.ElasticOutWrapper(0.9))` for a spring whose overshoot period is 0.9.
- */
-fun transition(
-    length: DisplayDelay,
-    curve: PresentationCurve = PresentationCurve.LINEAR,
-): PresentationTransition = PresentationTransition(milliseconds = length.milliseconds, curve = curve).requireValid()
-
-/** Rejects negative durations, elastic periods that are not finite and positive, and unknown curves. */
-internal fun PresentationTransition.requireValid(): PresentationTransition =
-    apply {
-        require(milliseconds >= 0) { "Presentation transitions cannot have a negative duration." }
-        when (val curve = curve) {
-            PresentationCurve.LINEAR, PresentationCurve.EASE_IN_OUT, PresentationCurve.EASE_OUT, PresentationCurve.EMPHASIZED -> {
-                Unit
-            }
-
-            is PresentationCurve.ElasticOutWrapper -> {
-                require(curve.value.isFinite() && curve.value > 0.0) { "Elastic curve periods must be finite and positive." }
-            }
-
-            else -> {
-                throw IllegalArgumentException("Presentation transition curve is unknown.")
-            }
+/** A curve that runs over a duration, replacing the panel move's own. */
+sealed interface TimedCurve {
+    /** Arrives early and overshoots once by [overshoot], a fraction of the travel. */
+    data class Strike(
+        val overshoot: Double,
+    ) : TimedCurve {
+        init {
+            require(overshoot.isFinite() && overshoot > 0.0 && overshoot < 1.0) { "Strike overshoot must be between 0 and 1." }
         }
     }
 
-/** Validates every transition of the policy where it enters the presentation wire form. */
-internal fun PresentationTransitionPolicy.requireValid(): PresentationTransitionPolicy =
-    apply {
-        rules.forEach { rule -> rule.transition.requireValid() }
-        fallback.requireValid()
+    /** Hits the target and recoils once by [recoil], a fraction of the travel. */
+    data class Carriage(
+        val recoil: Double,
+    ) : TimedCurve {
+        init {
+            require(recoil.isFinite() && recoil >= 0.0 && recoil < 1.0) { "Carriage recoil must be at least 0 and below 1." }
+        }
     }
 
-class PresentationStateTransitionScope internal constructor() {
-    internal val rules = mutableListOf<PresentationStateTransitionRule>()
+    /** Leaves quickly, with no bounce. */
+    data object Exit : TimedCurve
 
-    fun whenAll(
-        vararg required: PresentationInteractionState,
-        excluded: Set<PresentationInteractionState> = emptySet(),
-        transition: PresentationTransition,
-    ) {
-        rules +=
-            PresentationStateTransitionRule(match = stateMatch(required.toSet(), excluded), transition = transition.requireValid())
+    data object EaseOut : TimedCurve
+
+    data object Linear : TimedCurve
+}
+
+/** Replaces how one of the panel's moves plays. Reduced motion still applies after it. */
+sealed interface MoveOverride {
+    /**
+     * Replaces the [length], the [curve], or both. A spring move given only a length settles in that time with its
+     * own damping ratio; a length of 0 lands at once.
+     */
+    data class Timed(
+        val length: DisplayDelay? = null,
+        val curve: TimedCurve? = null,
+    ) : MoveOverride {
+        init {
+            require(length != null || curve != null) { "A timed override replaces a length, a curve or both." }
+        }
+    }
+
+    /** Plays a spring of [stiffness] and [damping] at unit mass; it settles by itself. */
+    data class Spring(
+        val stiffness: Double,
+        val damping: Double,
+    ) : MoveOverride {
+        init {
+            require(stiffness.isFinite() && stiffness > 0.0 && damping.isFinite() && damping > 0.0) {
+                "Spring stiffness and damping must be finite and positive."
+            }
+        }
     }
 }
+
+private fun TimedCurve.wire(): PresentationTimedCurve =
+    when (this) {
+        is TimedCurve.Strike -> PresentationTimedCurve.StrikeWrapper(overshoot)
+        is TimedCurve.Carriage -> PresentationTimedCurve.CarriageWrapper(recoil)
+        TimedCurve.Exit -> PresentationTimedCurve.EXIT
+        TimedCurve.EaseOut -> PresentationTimedCurve.EASE_OUT
+        TimedCurve.Linear -> PresentationTimedCurve.LINEAR
+    }
+
+internal fun MoveOverride.wire(): PresentationTransition =
+    when (this) {
+        is MoveOverride.Timed -> {
+            PresentationTransition.TimedWrapper(
+                PresentationTimedTransition(milliseconds = length?.milliseconds, curve = curve?.wire()),
+            )
+        }
+
+        is MoveOverride.Spring -> {
+            PresentationTransition.SpringWrapper(PresentationSpring(stiffness = stiffness, damping = damping))
+        }
+    }
 
 /**
- * Declares how changes animate by the state being entered, such as a spring when a card becomes selected and an
- * ease back otherwise. Without rules, every change uses [fallback].
+ * Overrides how the panel's own moves play, by the state whose change the move belongs to: [hovered] for hoverIn
+ * and hoverOut, [focused] for focusMove, [pressed] for press, [selected] for ink. Without it, or for a state left
+ * null, the panel's move plays as tuned. Example: `moveOverrides(selected = MoveOverride.Spring(280.0, 17.0))`.
  */
-fun stateTransition(
-    fallback: PresentationTransition,
-    configure: PresentationStateTransitionScope.() -> Unit = {},
-): PresentationTransitionPolicy {
-    val scope = PresentationStateTransitionScope().apply(configure)
-    return PresentationTransitionPolicy(rules = scope.rules, fallback = fallback.requireValid())
+fun moveOverrides(
+    hovered: MoveOverride? = null,
+    focused: MoveOverride? = null,
+    pressed: MoveOverride? = null,
+    selected: MoveOverride? = null,
+): PresentationTransitionPolicy =
+    PresentationTransitionPolicy(
+        hovered = hovered?.wire(),
+        focused = focused?.wire(),
+        pressed = pressed?.wire(),
+        selected = selected?.wire(),
+    )
+
+/**
+ * Rejects what the wire can still carry but the panel cannot play: a negative duration, a curve value outside its
+ * family, a spring that is not finite and positive, and unknown variants. Hand built wire values reach the layout
+ * encoders, so they meet the same rules as the builders.
+ */
+internal fun PresentationTransition.requireValid(): PresentationTransition =
+    apply {
+        when (val transition = this) {
+            is PresentationTransition.TimedWrapper -> transition.value.requireValid()
+            is PresentationTransition.SpringWrapper -> transition.value.requireValid()
+            else -> throw IllegalArgumentException("Presentation transition is unknown.")
+        }
+    }
+
+private fun PresentationTimedTransition.requireValid() {
+    milliseconds?.let { require(it >= 0) { "Presentation transitions cannot have a negative duration." } }
+    curve?.requireValid()
 }
+
+private fun PresentationTimedCurve.requireValid() {
+    when (val curve = this) {
+        PresentationTimedCurve.EXIT, PresentationTimedCurve.EASE_OUT, PresentationTimedCurve.LINEAR -> {
+            Unit
+        }
+
+        is PresentationTimedCurve.StrikeWrapper -> {
+            require(curve.value.isFinite() && curve.value > 0.0 && curve.value < 1.0) {
+                "Strike overshoot must be between 0 and 1."
+            }
+        }
+
+        is PresentationTimedCurve.CarriageWrapper -> {
+            require(curve.value.isFinite() && curve.value >= 0.0 && curve.value < 1.0) {
+                "Carriage recoil must be at least 0 and below 1."
+            }
+        }
+
+        else -> {
+            throw IllegalArgumentException("Presentation transition curve is unknown.")
+        }
+    }
+}
+
+private fun PresentationSpring.requireValid() {
+    require(stiffness.isFinite() && stiffness > 0.0 && damping.isFinite() && damping > 0.0) {
+        "Spring stiffness and damping must be finite and positive."
+    }
+}
+
+/** Validates every override of the policy where it enters the presentation wire form. */
+internal fun PresentationTransitionPolicy.requireValid(): PresentationTransitionPolicy =
+    apply {
+        listOfNotNull(hovered, focused, pressed, selected).forEach { it.requireValid() }
+    }
 
 /** A shadow below a container. Blur, spread and offsets are in logical pixels. */
 data class PresentationShadow(
