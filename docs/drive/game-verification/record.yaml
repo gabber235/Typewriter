@@ -170,7 +170,7 @@ pieces:
 
   - id: requirement-shape
     status: figuring-out
-    open: Direction C was chosen from sketches; testBalloon's concurrency, filters, IDE runs and failure stacks with a framework scheduler are untried
+    open: Where requirement code lives, since one JVM takes one test compilation; IDE single runs unchecked
     tries:
       - id: fabric-client-gametest
         what: Fabric's client game test API as the runner
@@ -196,10 +196,15 @@ pieces:
         evidence: [docs/plans/game-verification/directions.md]
       - id: runner-c-testballoon
         what: Declared in testBalloon with a needs header; a framework scheduler runs, retries and reports
-        taught: Sketch only; testBalloon 1.1.0 has the needed hooks (compartment, aroundAll, concurrent invocation)
+        taught: >-
+          P2: works. 200 mirror tests submit at once (1.08 of ideal), flaky shows as failed, --tests
+          selects before submission (testBalloon path syntax), finish runs after every test. One JVM
+          holds one test compilation only (fixed JvmEntryPoint class name), so every module's
+          requirements must compile together. A failure in finish is silent in testBalloon; xtask
+          must gate on TestRun being written. The flaky error must carry the body's frame first.
         state: picked
         why: Decided by the developer
-        evidence: [docs/plans/game-verification/directions.md, docs/plans/game-verification/decisions/requirement.yaml]
+        evidence: [docs/plans/game-verification/directions.md, "branch proto/gv-testballoon 7a77e7ba3: services/prototypes/gv-testballoon/FINDINGS.md"]
 
   - id: video
     status: figuring-out
@@ -318,9 +323,11 @@ decided:
 open:
   - id: paper-topology
     ask: Shared stepped Paper or a Paper per attempt, decided from P1's numbers
+  - id: requirement-home
+    ask: One game-tests module for every requirement, or gameTest folders beside each module compiled together?
   - id: quiet-hook
     ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
 
 slices: []
 
-next: Wave 1 runs P1 (topology speed on CI), P2 (testBalloon fit) and P3 (build fit); wave 2 runs P4 (live stream) and P5 (goldens on devenv Mesa). Check in with each result.
+next: P1 and P3 running, P4 (live stream) started after P2; P5 (goldens on devenv Mesa) starts when a slot frees. Check in with each result.
