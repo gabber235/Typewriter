@@ -158,9 +158,10 @@ def assert_renderer(client, want_backend):
     assert "llvmpipe" in (r["gpu"] + " " + r["driver"]).lower() or "lavapipe" in (r["gpu"] + " " + r["driver"]).lower(), f"not a software renderer: {r}"
     # proto/gv-goldens: a Mesa version the renderer names must be the one this job meant to load.
     want = os.environ.get("EXPECT_MESA")
-    seen = re.search(r"Mesa ([0-9][0-9.]*)", " ".join(str(r.get(k, "")) for k in ("gpu", "vendor", "driver")))
-    if want and seen:
-        assert seen[1] == want, f"asked Mesa {want}, renderer says {seen[1]}: {r}"
+    # The vendor field is the bare word Mesa, so only the driver string names a version.
+    seen = re.findall(r"Mesa ([0-9]+\.[0-9]+\.[0-9]+)", str(r.get("driver", "")))
+    if want:
+        assert seen and all(v == want for v in seen), f"asked Mesa {want}, renderer says {seen}: {r}"
     return r
 
 
