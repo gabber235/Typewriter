@@ -72,7 +72,9 @@ val evaluationResources: List<EvaluationResource> =
         EvaluationResource("storedGold", goldUse, RecordValue(goldUse, mapOf("amount" to 5))),
         EvaluationResource("storedPrize", prizeUse, RecordValue(prizeUse, mapOf("gold" to 5))),
         EvaluationResource("storedReward", rewardUse, RecordValue(rewardUse, mapOf("gold" to 5, "chest" to false))),
+        EvaluationResource("aliasedPrize", prizeAliasUse, RecordValue(prizeUse, mapOf("gold" to 5))),
         EvaluationResource("Prize", ScalarKind.TYPE.use, null, typeValue = prizeAliasUse),
+        EvaluationResource("Award", ScalarKind.TYPE.use, null, typeValue = awardUse),
         EvaluationResource(
             "smith",
             refType(smithUse),
@@ -146,6 +148,8 @@ class EvaluationWorld(
     val checking: FormulaEnvironment =
         object : FormulaEnvironment {
             override fun resolve(use: TypeUse): Resolution<CheckedType> = evaluationCatalog.resolve(use)
+
+            override fun expand(use: TypeUse): TypeUse = evaluationCatalog.expand(use)
 
             override fun inScope(name: String): List<ResourceId> = resources.filter { it.name == name }.map(EvaluationResource::id)
 

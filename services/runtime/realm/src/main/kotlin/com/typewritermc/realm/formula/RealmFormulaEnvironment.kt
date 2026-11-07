@@ -47,6 +47,8 @@ internal class RealmFormulaEnvironment(
 
     override fun resolve(use: TypeUse): Resolution<CheckedType> = checked.resolve(use)
 
+    override fun expand(use: TypeUse): TypeUse = checked.expand(use)
+
     override fun inScope(name: String): List<AuthorResourceId> = reads.read(NameAt(at, name)).map { it.toResourceId() }
 
     override fun functions(name: String): List<FormulaFunction> = functions[name].orEmpty()

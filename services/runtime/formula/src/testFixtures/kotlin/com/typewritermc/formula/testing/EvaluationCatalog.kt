@@ -55,6 +55,9 @@ val prizeUse: TypeUse = prizeId.use()
 /** An alias of Prize: the type the field `alias` of the declaring resource holds. */
 val prizeAliasUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "alias").use()
 
+/** An alias of the alias of Prize: the type the field `award` of the declaring resource holds. */
+val awardUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "award").use()
+
 private val prizeDeclaration: TypeDefinition =
     TypeDefinition.partial(
         id = prizeId,
@@ -92,7 +95,7 @@ private val codeCatalog: DefaultCheckedCatalog =
             ) + SeasonDefinition.cases,
     )
 
-/** The code catalog plus Prize and its alias. */
+/** The code catalog plus Prize, its alias and an alias of that alias. */
 val evaluationCatalog: CheckedCatalog =
     codeCatalog.withContent(
         object : ContentSource {
@@ -108,7 +111,13 @@ val evaluationCatalog: CheckedCatalog =
             override fun heldType(
                 owner: ResourceId,
                 field: String,
-            ): TypeUse? = if (owner == contentOwner && field == "alias") prizeUse else null
+            ): TypeUse? =
+                when {
+                    owner != contentOwner -> null
+                    field == "alias" -> prizeUse
+                    field == "award" -> prizeAliasUse
+                    else -> null
+                }
         },
     )
 
