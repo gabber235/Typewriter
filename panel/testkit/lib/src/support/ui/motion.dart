@@ -582,3 +582,23 @@ extension MotionOnPage on PanelDriver {
     return resolveMotion(tester.element(page.first), token);
   }
 }
+
+/// How long motion tokens take in the shown panel.
+extension MotionTimes on WidgetTester {
+  /// The time [token] takes from 0 to 1 in the shown panel, overrides and
+  /// reduced motion aside: one period for a loop, otherwise until its
+  /// simulation is done.
+  Duration settleTimeOf(MotionToken<Landing> token) {
+    final page = find.byType(Overlay).first;
+    final resolved = resolveMotion(element(page), token);
+    if (resolved.motion case LoopMotion(:final period)) return period;
+    final simulation = resolved.simulate(from: 0, to: 1);
+    const step = Duration(milliseconds: 1);
+    var elapsed = Duration.zero;
+    while (!simulation.isDone(elapsed.inMicroseconds / 1e6) &&
+        elapsed < const Duration(seconds: 10)) {
+      elapsed += step;
+    }
+    return elapsed;
+  }
+}

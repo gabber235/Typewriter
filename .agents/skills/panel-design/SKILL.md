@@ -136,6 +136,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When | Then | Sev |
 |---|---|---|
 | A shared component does the job | Use it. If none does, build it once in `panel/lib/shared` | 2 |
+| Rows arrive or leave | Use `AnimatedSliverList`, `AnimatedTable`, `SliverAnimatedContent` or, for editor collections, `CollectionSequence`; pass content only. They play `loadIn`, `rowIn` and `listOut` and keep on screen rows still when rows above the screen change | 2 |
+| Writing a Duration, curve or `.ms` for motion | Use a token instead; `design_system_guardrails_test.dart` fails on literal motion in UI code and only shrinks its exemption list | 2 |
 | A surface is new or changed | Its story shows every state that applies: default, hover, focus, active, disabled, loading, empty, error, offline, compact | 2 |
 | Keyboard behaviour is new or changed | A widget test proves the key path and where focus lands | 3 |
 | No rule or demo settles how something should feel | Build three live options and let a maintainer pick. Add what you learn here as a general rule, not as that element's design | 2 |

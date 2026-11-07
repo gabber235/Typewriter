@@ -139,14 +139,21 @@ final class MotionController extends Animation<double>
     );
     final running = _controller.animateWith(simulation);
     if (simulation is SpringSimulation) {
+      // The web engine can dispose the owner between a frame's two halves,
+      // before this lands.
       running.then((_) {
-        if (_target == target) _controller.value = target;
+        if (!_disposed && _target == target) _controller.value = target;
       });
     }
     return running;
   }
 
-  void dispose() => _controller.dispose();
+  void dispose() {
+    _disposed = true;
+    _controller.dispose();
+  }
+
+  bool _disposed = false;
 }
 
 /// A controller that starts at [initial] and lives as long as the widget.

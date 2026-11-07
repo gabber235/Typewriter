@@ -66,19 +66,6 @@ class JoinRequestsList extends HookConsumerWidget {
       return null;
     }, [requests, selectedIds]);
 
-    final animation = useSliverAnimatedList(
-      items: requests,
-      identity: (item) => item.requestId,
-      removedItemBuilder: (context, item, animation) => _child(
-        context,
-        item,
-        selectedIds,
-        declineSelection,
-        animation,
-        deleting: true,
-      ),
-    );
-
     if (requests.isEmpty) {
       return SliverFillRemaining(
         child: EmptyState(
@@ -103,88 +90,79 @@ class JoinRequestsList extends HookConsumerWidget {
       }
     }
 
-    return SliverStaggerScope(
-      sliver: SliverMainAxisGroup(
-        slivers: [
-          SliverFloatingHeader(
-            child: Container(
-              color: Surface.colorOf(context),
-              padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
-              child: Flex(
-                direction: context.responsive(
-                  mobile: Axis.vertical,
-                  tablet: Axis.horizontal,
-                ),
-                spacing: context.spacing.space2,
-                crossAxisAlignment: context.responsive(
-                  mobile: CrossAxisAlignment.start,
-                  tablet: CrossAxisAlignment.center,
-                ),
-                children: [
-                  StaggerEntrance(
-                    child: SizedBox(
-                      height: 52,
-                      child: GestureDetector(
-                        onTap: handleSelectAll,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: allSelected
-                                  ? true
-                                  : (someSelected ? null : false),
-                              tristate: true,
-                              onChanged: (value) => handleSelectAll(),
-                            ),
-                            Text(
-                              "Select all",
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(
-                                    fontVariations: [.weight(500)],
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverFloatingHeader(
+          child: Container(
+            color: Surface.colorOf(context),
+            padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
+            child: Flex(
+              direction: context.responsive(
+                mobile: Axis.vertical,
+                tablet: Axis.horizontal,
+              ),
+              spacing: context.spacing.space2,
+              crossAxisAlignment: context.responsive(
+                mobile: CrossAxisAlignment.start,
+                tablet: CrossAxisAlignment.center,
+              ),
+              children: [
+                Enter(
+                  token: MotionToken.loadIn,
+                  child: SizedBox(
+                    height: 52,
+                    child: GestureDetector(
+                      onTap: handleSelectAll,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: allSelected
+                                ? true
+                                : (someSelected ? null : false),
+                            tristate: true,
+                            onChanged: (value) => handleSelectAll(),
+                          ),
+                          Text(
+                            "Select all",
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(
+                                  fontVariations: [.weight(500)],
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  if (context.isMobile)
-                    BulkJoinRequestActions(
+                ),
+                if (context.isMobile)
+                  BulkJoinRequestActions(
+                    selectedCount: selectedIds.value.length,
+                    selectedIds: selectedIds.value,
+                    onClearSelection: () => selectedIds.value = {},
+                    onDecline: declineSelection,
+                  )
+                else
+                  Flexible(
+                    child: BulkJoinRequestActions(
                       selectedCount: selectedIds.value.length,
                       selectedIds: selectedIds.value,
                       onClearSelection: () => selectedIds.value = {},
                       onDecline: declineSelection,
-                    )
-                  else
-                    Flexible(
-                      child: BulkJoinRequestActions(
-                        selectedCount: selectedIds.value.length,
-                        selectedIds: selectedIds.value,
-                        onClearSelection: () => selectedIds.value = {},
-                        onDecline: declineSelection,
-                      ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
-          SliverAnimatedRows(
-            key: animation.key,
-            initialItemCount: animation.items.length,
-            itemBuilder: (context, index, animation) {
-              final request = requests[index];
-              return _child(
-                context,
-                request,
-                selectedIds,
-                declineSelection,
-                animation,
-              );
-            },
-          ),
-        ],
-      ),
+        ),
+        AnimatedSliverList<skir.OrganizationJoinRequest>(
+          items: requests,
+          identity: (request) => request.requestId,
+          itemBuilder: (context, request) =>
+              _child(context, request, selectedIds, declineSelection),
+        ),
+      ],
     );
   }
 
@@ -193,38 +171,27 @@ class JoinRequestsList extends HookConsumerWidget {
     skir.OrganizationJoinRequest request,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
     Future<void> Function() onDeclineSelection,
-    Animation<double> animation, {
-    bool deleting = false,
-  }) {
-    return ExcludeInteraction(
-      key: ValueKey(request.requestId),
-      excluding: deleting,
-      child: ElasticTransition(
-        animation: animation,
-        child: StaggerEntrance(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: context.spacing.space3),
-            child: JoinRequestCard(
-              request: request,
-              isSelected: selectedIds.value.contains(request.requestId),
-              onSelectionChanged: (selected) {
-                if (selected) {
-                  selectedIds.value = {...selectedIds.value, request.requestId};
-                } else {
-                  selectedIds.value = selectedIds.value
-                      .where((id) => id != request.requestId)
-                      .toSet();
-                }
-              },
-              onSelectAll: () => selectedIds.value = requests
-                  .map((request) => request.requestId)
-                  .toSet(),
-              onClearSelection: () => selectedIds.value = {},
-              hasSelection: selectedIds.value.isNotEmpty,
-              onDeclineSelection: onDeclineSelection,
-            ),
-          ),
-        ),
+  ) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.spacing.space3),
+      child: JoinRequestCard(
+        request: request,
+        isSelected: selectedIds.value.contains(request.requestId),
+        onSelectionChanged: (selected) {
+          if (selected) {
+            selectedIds.value = {...selectedIds.value, request.requestId};
+          } else {
+            selectedIds.value = selectedIds.value
+                .where((id) => id != request.requestId)
+                .toSet();
+          }
+        },
+        onSelectAll: () => selectedIds.value = requests
+            .map((request) => request.requestId)
+            .toSet(),
+        onClearSelection: () => selectedIds.value = {},
+        hasSelection: selectedIds.value.isNotEmpty,
+        onDeclineSelection: onDeclineSelection,
       ),
     );
   }

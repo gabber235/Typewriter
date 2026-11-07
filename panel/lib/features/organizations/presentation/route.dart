@@ -94,36 +94,40 @@ class _IndexPageContent extends StatelessWidget {
       child: CustomScrollView(
         primary: true,
         slivers: [
-          SliverStaggerScope(
-            sliver: CenteredSliverMainAxisGroup(
-              slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.spacing.space4,
-                    vertical: context.spacing.space6,
-                  ),
-                  sliver: SliverMainAxisGroup(
-                    slivers: [
-                      if (organizations.isNotEmpty) ...[
-                        _OrganizationsSelector(organizations: organizations),
-                        spacer(context),
-                        const SliverStaggerEntrance(
-                          sliver: SliverToBoxAdapter(child: LabeledDivider()),
-                        ),
-                        spacer(context),
-                      ],
-                      _JoinOrganization(joinRequests: joinRequests),
+          CenteredSliverMainAxisGroup(
+            slivers: [
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space4,
+                  vertical: context.spacing.space6,
+                ),
+                sliver: SliverMainAxisGroup(
+                  slivers: [
+                    if (organizations.isNotEmpty) ...[
+                      _OrganizationsSelector(organizations: organizations),
                       spacer(context),
-                      const SliverStaggerEntrance(
-                        sliver: SliverToBoxAdapter(child: LabeledDivider()),
+                      const SliverToBoxAdapter(
+                        child: Enter(
+                          token: MotionToken.loadIn,
+                          child: LabeledDivider(),
+                        ),
                       ),
                       spacer(context),
-                      const _CreateOrganization(),
                     ],
-                  ),
+                    _JoinOrganization(joinRequests: joinRequests),
+                    spacer(context),
+                    const SliverToBoxAdapter(
+                      child: Enter(
+                        token: MotionToken.loadIn,
+                        child: LabeledDivider(),
+                      ),
+                    ),
+                    spacer(context),
+                    const _CreateOrganization(),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

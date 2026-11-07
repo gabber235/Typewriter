@@ -5,31 +5,20 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Mobile presentation of the active join code projection.
 ///
 /// Selection is shared with the route so bulk actions behave identically on
-/// mobile and desktop. Animated removal is visual only. Revocation and expiry
+/// mobile and desktop. It renders the rows [JoinCodesTab] owns. Revocation and expiry
 /// visibility comes from the shared activity and local expiry projections.
 class JoinCodesCardList extends HookConsumerWidget {
-  const JoinCodesCardList({
-    required this.codes,
-    required this.selectedCodes,
-    required this.onRevokeSelection,
-    super.key,
-  });
+  const JoinCodesCardList({required this.selection, super.key});
 
-  final List<skir.JoinCode> codes;
-  final ValueNotifier<Set<skir.RecordId>> selectedCodes;
-  final Future<void> Function() onRevokeSelection;
+  final SelectableRows<skir.JoinCode> selection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final animated = useSliverAnimatedList(
-      items: codes,
-      identity: (code) => code.code,
-      removedItemBuilder: (context, code, animation) =>
-          _child(context, code, animation, deleting: true),
-    );
+    final codes = selection.rows.items;
 
-    if (codes.isEmpty) {
+    // The empty state shows once the last leaving row is gone.
+    if (selection.rows.entries.isEmpty) {
       return const SliverFillRemaining(
         hasScrollBody: false,
         child: EmptyState(
@@ -40,11 +29,11 @@ class JoinCodesCardList extends HookConsumerWidget {
       );
     }
 
-    final allSelected = selectedCodes.value.length == codes.length;
-    final someSelected = selectedCodes.value.isNotEmpty && !allSelected;
+    final allSelected = selection.selectedIds.value.length == codes.length;
+    final someSelected = selection.selectedIds.value.isNotEmpty && !allSelected;
 
     void handleSelectAll() {
-      selectedCodes.value = allSelected || someSelected
+      selection.selectedIds.value = allSelected || someSelected
           ? {}
           : codes.map((code) => code.code).toSet();
     }
@@ -55,7 +44,8 @@ class JoinCodesCardList extends HookConsumerWidget {
           child: Container(
             color: Surface.colorOf(context),
             padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
-            child: StaggerEntrance(
+            child: Enter(
+              token: MotionToken.loadIn,
               child: GestureDetector(
                 onTap: handleSelectAll,
                 child: Row(
@@ -76,11 +66,9 @@ class JoinCodesCardList extends HookConsumerWidget {
             ),
           ),
         ),
-        SliverAnimatedRows(
-          key: animated.key,
-          initialItemCount: animated.items.length,
-          itemBuilder: (context, index, animation) =>
-              _child(context, animated.items[index], animation),
+        SliverAnimatedRows<skir.JoinCode>(
+          rows: selection.rows,
+          itemBuilder: (context, entry) => _child(context, entry.item, codes),
         ),
       ],
     );
@@ -89,34 +77,24 @@ class JoinCodesCardList extends HookConsumerWidget {
   Widget _child(
     BuildContext context,
     skir.JoinCode code,
-    Animation<double> animation, {
-    bool deleting = false,
-  }) => ExcludeInteraction(
-    key: ValueKey(code.code),
-    excluding: deleting,
-    child: ElasticTransition(
-      animation: animation,
-      child: StaggerEntrance(
-        child: Padding(
-          padding: EdgeInsets.only(bottom: context.spacing.space2),
-          child: JoinCodeCard(
-            code: code,
-            isSelected: selectedCodes.value.contains(code.code),
-            onSelectionChanged: (selected) {
-              selectedCodes.value = selected
-                  ? {...selectedCodes.value, code.code}
-                  : selectedCodes.value
-                        .where((item) => item != code.code)
-                        .toSet();
-            },
-            onSelectAll: () =>
-                selectedCodes.value = codes.map((code) => code.code).toSet(),
-            onClearSelection: () => selectedCodes.value = {},
-            hasSelection: selectedCodes.value.isNotEmpty,
-            onRevokeSelection: onRevokeSelection,
-          ),
-        ),
-      ),
+    List<skir.JoinCode> codes,
+  ) => Padding(
+    padding: EdgeInsets.only(bottom: context.spacing.space2),
+    child: JoinCodeCard(
+      code: code,
+      isSelected: selection.selectedIds.value.contains(code.code),
+      onSelectionChanged: (selected) {
+        selection.selectedIds.value = selected
+            ? {...selection.selectedIds.value, code.code}
+            : selection.selectedIds.value
+                  .where((item) => item != code.code)
+                  .toSet();
+      },
+      onSelectAll: () =>
+          selection.selectedIds.value = codes.map((code) => code.code).toSet(),
+      onClearSelection: () => selection.selectedIds.value = {},
+      hasSelection: selection.selectedIds.value.isNotEmpty,
+      onRevokeSelection: selection.onRemoveSelection,
     ),
   );
 }

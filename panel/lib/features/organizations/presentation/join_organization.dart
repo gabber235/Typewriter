@@ -33,8 +33,9 @@ class _JoinOrganization extends HookConsumerWidget {
 
     return SliverMainAxisGroup(
       slivers: [
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Text(
               "Join organization",
               style: theme.textTheme.headlineMedium,
@@ -42,8 +43,9 @@ class _JoinOrganization extends HookConsumerWidget {
           ),
         ),
         spacer(8),
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Text(
               "Enter an invite URL or code to request to join an organization.",
               style: context.text.sentence.copyWith(
@@ -53,8 +55,9 @@ class _JoinOrganization extends HookConsumerWidget {
           ),
         ),
         spacer(16),
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Form(
               key: formKey,
               child: Row(
@@ -84,7 +87,8 @@ class _JoinOrganization extends HookConsumerWidget {
         ),
         SliverAnimatedContent(
           child: hasReachedLimit
-              ? StaggerEntrance(
+              ? Enter(
+                  token: MotionToken.loadIn,
                   child: Padding(
                     padding: EdgeInsets.only(top: context.spacing.space2),
                     child: Text(
@@ -98,15 +102,13 @@ class _JoinOrganization extends HookConsumerWidget {
               : null,
         ),
         spacer(hasActiveRequests ? 24 : 0),
-        SliverStaggerEntrance(
-          sliver: SliverAnimatedContent(
-            child: hasActiveRequests
-                ? Align(
-                    alignment: .centerLeft,
-                    child: SectionTitle(title: "Pending requests"),
-                  )
-                : null,
-          ),
+        SliverAnimatedContent(
+          child: hasActiveRequests
+              ? Align(
+                  alignment: .centerLeft,
+                  child: SectionTitle(title: "Pending requests"),
+                )
+              : null,
         ),
         spacer(hasActiveRequests ? 8 : 0),
         AnimatedSliverList<skir.UserJoinRequest>(

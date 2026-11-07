@@ -286,8 +286,8 @@ class RealmInboxView extends StatelessWidget {
                           context.spacing.space5,
                           context.spacing.space5,
                         ),
-                        sliver: SliverStaggerScope(
-                          sliver: SliverMainAxisGroup(
+                        sliver: EnterRun(
+                          child: SliverMainAxisGroup(
                             slivers: [
                               SliverAnimatedContent(
                                 child: state.issues.isEmpty
