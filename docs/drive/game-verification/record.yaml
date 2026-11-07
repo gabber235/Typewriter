@@ -71,7 +71,7 @@ pieces:
         evidence: []
       - id: checkpoint-restore
         parent: k-own-paper-for-restarts
-        what: Restore a snapshot of a booted, empty Paper instead of booting
+        what: Restore a snapshot of a booted, empty Paper instead of booting (Azul Zulu 25 CRaC, Linux only)
         taught: Not tried
         state: trying
         evidence: []
@@ -196,7 +196,7 @@ pieces:
 
   - id: requirement-shape
     status: figuring-out
-    open: How several test compilations (modules, later extensions) share one warm pool, since one JVM takes one testBalloon compilation; IDE single runs unchecked
+    open: Pick between the root compilation and the pool process (P6); IDE single runs unchecked
     tries:
       - id: fabric-client-gametest
         what: Fabric's client game test API as the runner
@@ -230,9 +230,15 @@ pieces:
       - id: pool-process
         parent: runner-c-testballoon
         what: The warm pool and scheduler run as their own process; every test JVM (module, extension, IDE run) submits to it
-        taught: Not tried; would also let an IDE run reuse warm clients instead of booting them
-        state: trying
-        evidence: []
+        taught: >-
+          P6: works. Two test JVMs shared one pool of 4; the first JVM starts the pool, a lock file keeps
+          it single; a warm single requirement takes 2 s of Gradle time against 20 s cold. The pool must
+          rotate between test JVMs (325 ms against 4,071 ms for a late single). Killed test JVM, killed
+          pool and version mismatch all fail clearly. Open: detach the pool on purpose (it survives only
+          by process group luck), replace a stale idle pool automatically, a heartbeat or lease deadline
+          for a stuck pool, keep the report safe from a pool crash. About 590 lines against 217.
+        state: working
+        evidence: ["branch proto/gv-pool-process 968f7babb: services/prototypes/gv-pool-process/FINDINGS.md"]
       - id: runner-a-and-b
         what: Tests in a pool (A), or requirement values run by the framework (B)
         taught: A shows flaky as green; B loses the IDE gutter and test filters
@@ -399,4 +405,4 @@ open:
 
 slices: []
 
-next: P4 and P6 running; P7 T1 (faster boot) started; P7 T2 (checkpoint and restore) starts when a slot frees. Check in with each result.
+next: P4 and P7 T1 running, P7 T2 (checkpoint and restore) started after P6. Ask the developer to pick between root compilation and pool process.
