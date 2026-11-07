@@ -14,6 +14,7 @@ export "package:typewriter_panel/shared/theme/typewriter_spacing.dart";
 export "package:typewriter_panel/shared/theme/typewriter_state_tokens.dart";
 export "package:typewriter_panel/shared/theme/typewriter_text.dart";
 export "package:typewriter_panel/shared/theme/typewriter_theme_access.dart";
+export "package:typewriter_panel/shared/theme/typewriter_timing.dart";
 export "package:typewriter_panel/shared/theme/typography.dart";
 
 /// Builds the panel theme for [brightness].
@@ -49,6 +50,7 @@ ThemeData buildTheme(Brightness brightness, {TypewriterMotion? motion}) {
       states,
       text,
       motion ?? TypewriterMotion.standard(),
+      const TypewriterTiming(),
     ],
   );
   return applyComponentThemes(base, colors, spacing, shapes, states, text);

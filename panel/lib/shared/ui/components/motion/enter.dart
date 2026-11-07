@@ -34,6 +34,9 @@ class Enter extends HookWidget {
     final arrived = useRef(!resolved.travels);
     final slot = useRef<Object>(group ?? Object());
 
+    // A loadIn row on a page a move reached comes from the move's side, and
+    // joins the run again when a new move reaches the page.
+    final arrival = PageArrival.maybeOf(context);
     useEffect(() {
       if (progress != null || !resolved.travels) return null;
       if (token != MotionToken.loadIn) {
@@ -44,6 +47,8 @@ class Enter extends HookWidget {
         own.jumpTo(1);
         return null;
       }
+      // A new move to a kept page starts the row over.
+      if (arrival != null) own.jumpTo(0);
       return run.join(
         slot: slot.value,
         context: context,
@@ -57,10 +62,12 @@ class Enter extends HookWidget {
         },
         late: () => own.jumpTo(1),
       );
-    }, const []);
+    }, [arrival?.serial]);
 
     final shown = progress ?? own;
-    final from = resolved.landing.from;
+    final from = token == MotionToken.loadIn
+        ? resolved.landing.from.towards(arrival?.direction)
+        : resolved.landing.from;
     return AnimatedBuilder(
       animation: shown,
       child: child,
@@ -88,7 +95,14 @@ class EnterRun extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final run = useMemoized(() => _LoadRun(context));
+    final serial = PageArrival.maybeOf(context)?.serial;
     useEffect(() => run.dispose, [run]);
+    // A new move reopens the run for one frame, so the rows that rejoin
+    // start in visual order again; effects run parent first.
+    useEffect(() {
+      if (serial != null) run.reopen();
+      return null;
+    }, [serial]);
     return _EnterRunScope(run: run, child: child);
   }
 }
@@ -101,6 +115,9 @@ final class _LoadRun {
   final _waiting = <Object, List<_Joined>>{};
   bool _open = true;
   bool _scheduled = false;
+
+  /// Opens the run until its next launch.
+  void reopen() => _open = true;
   final _cancels = <VoidCallback>[];
 
   /// Joins the run; returns the cleanup for the joiner's effect.
@@ -128,6 +145,7 @@ final class _LoadRun {
 
   void _launch() {
     _open = false;
+    _scheduled = false;
     if (!context.mounted) return;
     final box = context.findRenderObject();
     final slots =
@@ -193,4 +211,18 @@ class _EnterRunScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_EnterRunScope oldWidget) => oldWidget.run != run;
+}
+
+extension on Offset {
+  /// The loadIn offset (rows rise from below) turned to come from the side a
+  /// page move gives; the distance stays the landing's.
+  Offset towards(PageDirection? direction) {
+    final reach = distance;
+    return switch (direction) {
+      PageDirection.deeper => Offset(reach, 0),
+      PageDirection.back => Offset(-reach, 0),
+      PageDirection.down || null => Offset(0, reach),
+      PageDirection.up => Offset(0, -reach),
+    };
+  }
 }

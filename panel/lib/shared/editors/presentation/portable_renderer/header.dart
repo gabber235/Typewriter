@@ -93,10 +93,10 @@ final class _AuthoredPresentationHeader extends HookWidget {
                 vertical: context.spacing.space1,
               )
             : _presentationInsets(header.contentPadding);
+        // Colour and shape changes fade with ink.
+        final ink = motionTimeline(context, MotionToken.ink);
         final headerWidget = Material(
-          animationDuration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 120),
+          animationDuration: ink.duration,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(
               top: context.shapes.mediumRadius,
@@ -196,9 +196,8 @@ final class _AuthoredPresentationHeader extends HookWidget {
           ],
         );
         final content = AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 120),
+          duration: ink.duration,
+          curve: ink.curve,
           decoration: BoxDecoration(
             color:
                 fill?.withValues(alpha: 0.18) ??
@@ -212,31 +211,11 @@ final class _AuthoredPresentationHeader extends HookWidget {
             bottom: severity != null && expanded ? context.spacing.space1 : 0,
           ),
           child: collapsible
-              ? Expansible(
+              ? GrowingCard(
                   controller: controller,
-                  animationStyle: AnimationStyle(
-                    duration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 240),
-                    curve: Curves.easeOut,
-                  ),
                   maintainState: true,
-                  headerBuilder: (context, animation) {
-                    return headerContent;
-                  },
-                  bodyBuilder: (context, animation) {
-                    return ExcludeFocus(
-                      excluding: !expanded,
-                      child: bodyWidget,
-                    );
-                  },
-                  expansibleBuilder: (context, header, body, animation) {
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [header, body],
-                    );
-                  },
+                  header: (context, _) => headerContent,
+                  body: (context) => bodyWidget,
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,
@@ -446,12 +425,12 @@ final class _AuthoredPresentationHeader extends HookWidget {
             _AuthoredHeaderItem(
               widget: value.tooltip == null
                   ? enabledResult is _ResolvedFailure<bool>
-                        ? Tooltip(
+                        ? PanelTooltip(
                             message: enabledResult.message,
                             child: checkbox,
                           )
                         : checkbox
-                  : Tooltip(
+                  : PanelTooltip(
                       message: switch (_string(scope, value.tooltip!)) {
                         _ResolvedValue(:final value) => value,
                         _ResolvedFailure(:final message) => message,
@@ -550,7 +529,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
     skir.HeaderActionPlacement placement,
     int order,
   ) => _AuthoredHeaderItem(
-    widget: Tooltip(
+    widget: PanelTooltip(
       message: message,
       child: Icon(
         Icons.warning_amber_rounded,

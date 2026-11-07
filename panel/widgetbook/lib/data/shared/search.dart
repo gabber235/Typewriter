@@ -272,7 +272,7 @@ final class MockSearchSource implements SearchSource {
   Future<SearchPreviewRequestResult> preview(
     SearchPreviewRequest request,
   ) async {
-    await Future<void>.delayed(2.seconds);
+    await Future<void>.delayed(const Duration(seconds: 2));
     return previewResults[request.resultId] ??
         const SearchPreviewRequestResult.error(
           message: "No preview data found",

@@ -80,20 +80,14 @@ class _OrganizationListTile extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: context.shapes.mediumBorderRadius,
         ),
-        // One node for assistive technology: the name and the tap together.
-        child: MergeSemantics(
-          child: Button(
-            face: ButtonFace.bare,
-            label: "",
-            onPressed: () => _openOrganization(context),
-            child: ListTile(
-              leading: OrganizationLogo(
-                logoUrl: organization.logoUrl,
-                size: 40,
-              ),
-              title: Text(organization.name.formatted),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-            ),
+        child: Button(
+          face: ButtonFace.bare,
+          label: "",
+          onPressed: () => _openOrganization(context),
+          child: PanelRow(
+            leading: OrganizationLogo(logoUrl: organization.logoUrl, size: 40),
+            title: Text(organization.name.formatted),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
           ),
         ),
       ),

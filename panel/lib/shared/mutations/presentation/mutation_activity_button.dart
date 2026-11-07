@@ -31,11 +31,8 @@ class MutationActivityView extends StatelessWidget {
   final LocalWorkCommands controller;
 
   Future<void> _showMobileActivity(BuildContext context) =>
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => SafeArea(
+      context.showPanelSheet<void>(
+        (context) => SafeArea(
           minimum: EdgeInsets.all(context.spacing.space3),
           child: Material(
             color: context.theme.colorScheme.surfaceContainer,

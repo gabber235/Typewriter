@@ -559,7 +559,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
             : now.toLocal();
         final description = display.describeRelativeTo(now: displayNow);
         useRefreshAt(description.nextRefreshAt, now: clock.now);
-        final tooltipKey = useMemoized(GlobalKey<TooltipState>.new);
+        final tooltipKey = useMemoized(GlobalKey<RawTooltipState>.new);
         final label = content.style == skir.RelativeTimeStyle.compact
             ? description.compact
             : description.natural;
@@ -567,13 +567,13 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
           "yyyy/MM/dd HH:mm:ss",
           Localizations.localeOf(context).toLanguageTag(),
         ).format(display);
-        return Tooltip(
-          key: tooltipKey,
+        return PanelTooltip(
+          tooltipKey: tooltipKey,
           message: exact,
           child: Focus(
             onFocusChange: (focused) {
               if (!focused) {
-                Tooltip.dismissAllToolTips();
+                RawTooltip.dismissAllToolTips();
                 return;
               }
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -619,14 +619,6 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     }
 
     final border = style.decoration.border;
-    final theme = Theme.of(context);
-    final native = theme.tooltipTheme;
-    final nativeDecoration = native.decoration is BoxDecoration
-        ? native.decoration! as BoxDecoration
-        : BoxDecoration(
-            color: context.colors.surfaceRaised,
-            borderRadius: context.shapes.mediumBorderRadius,
-          );
     final hasPaint =
         _hasControlAppearance(childScope, options?.appearance, (a) => a.fill) ||
         _hasControlAppearance(
@@ -637,7 +629,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
         _hasControlAppearance(childScope, options?.appearance, (a) => a.radius);
     final decoration = !hasPaint
         ? null
-        : nativeDecoration.copyWith(
+        : BoxDecoration(
             color: style.decoration.fillColor,
             border:
                 _hasControlAppearance(
@@ -657,33 +649,28 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
                 ? border.borderRadius
                 : null,
           );
-    final nativeText =
-        native.textStyle ??
-        theme.textTheme.bodyMedium!.copyWith(
-          color: context.colors.contentPrimary,
-        );
     final text = _nativeAppearanceTextStyle(
       childScope,
       options?.appearance,
       style,
     );
-    final tooltipKey = GlobalKey<TooltipState>();
-    return Tooltip(
-      key: tooltipKey,
+    final tooltipKey = GlobalKey<RawTooltipState>();
+    return PanelTooltip(
+      tooltipKey: tooltipKey,
       message: (message as _ResolvedValue<String>).value,
-      textStyle: text == null ? null : nativeText.merge(text),
+      textStyle: text,
       padding:
           style.padding ??
           (style.dense == true ? const EdgeInsets.all(6) : null),
       decoration: decoration,
-      waitDuration: duration(options?.waitMilliseconds),
-      showDuration: duration(options?.showMilliseconds),
+      wait: duration(options?.waitMilliseconds),
+      showFor: duration(options?.showMilliseconds),
       preferBelow: options?.preferBelow,
       child: Focus(
         skipTraversal: _hasFocusableContent(tooltip.child),
         onFocusChange: (focused) {
           if (!focused) {
-            Tooltip.dismissAllToolTips();
+            RawTooltip.dismissAllToolTips();
             return;
           }
           WidgetsBinding.instance.addPostFrameCallback(

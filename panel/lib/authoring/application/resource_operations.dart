@@ -314,7 +314,7 @@ final class ResourceOpenOperation extends IntentShortcutOperation {
   );
   @override
   Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) => Tooltip(
+    builder: (context, ref, _) => PanelTooltip(
       message: description,
       child: Button(
         icon: const Icon(Icons.open_in_new, size: 16),

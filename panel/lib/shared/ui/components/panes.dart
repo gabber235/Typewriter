@@ -71,6 +71,9 @@ class _PaneCoordinator extends ChangeNotifier {
 
   int get eligibleCount => _eligibleCount;
 
+  /// The pane that last held focus, which lifts while others sink back.
+  final active = ValueNotifier<_PaneRegistration?>(null);
+
   void register(_PaneRegistration pane) {
     if (!_registrations.add(pane)) return;
     pane
@@ -83,6 +86,12 @@ class _PaneCoordinator extends ChangeNotifier {
     if (!_registrations.remove(pane)) return;
     if (identical(pane.coordinator, this)) pane.coordinator = null;
     if (identical(_lastActive, pane)) _lastActive = null;
+    if (identical(active.value, pane)) {
+      // A pane leaves while the tree tears down; the others settle after.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed && identical(active.value, pane)) active.value = null;
+      });
+    }
     scheduleNotification();
   }
 
@@ -91,7 +100,9 @@ class _PaneCoordinator extends ChangeNotifier {
   }
 
   void markActive(_PaneRegistration pane) {
-    if (_registrations.contains(pane)) _lastActive = pane;
+    if (!_registrations.contains(pane)) return;
+    _lastActive = pane;
+    active.value = pane;
   }
 
   void scheduleNotification() {
@@ -166,6 +177,7 @@ class _PaneCoordinator extends ChangeNotifier {
     _disposed = true;
     _pendingDirections.clear();
     _registrations.clear();
+    active.dispose();
     super.dispose();
   }
 }
@@ -343,6 +355,15 @@ class _PaneState extends State<Pane> {
         child: EnterRun(child: widget.child),
       ),
     );
+    // The ring target sits inside the lift, so the ring scales with the pane.
+    if (_coordinator case final coordinator?) {
+      result = _PaneLift(
+        coordinator: coordinator,
+        registration: _registration,
+        borderRadius: widget.borderRadius,
+        child: result,
+      );
+    }
     result = _PaneGeometryMarker(registration: _registration, child: result);
     if (widget.margin != null) {
       result = Padding(padding: widget.margin!, child: result);
@@ -503,5 +524,58 @@ class NavigationAction extends Action<NavigatePaneIntent> {
   Object? invoke(NavigatePaneIntent intent) {
     callback(intent.direction);
     return null;
+  }
+}
+
+/// Lifts the focused pane by paneFocus and sinks the others back, once two
+/// or more panes can take focus. It only paints: hit testing and the
+/// geometry directional navigation reads keep the layout rect.
+class _PaneLift extends HookWidget {
+  const _PaneLift({
+    required this.coordinator,
+    required this.registration,
+    required this.borderRadius,
+    required this.child,
+  });
+
+  final _PaneCoordinator coordinator;
+  final _PaneRegistration registration;
+  final BorderRadiusGeometry? borderRadius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = useValueListenable(coordinator.active);
+    useListenable(coordinator);
+    final lifts = coordinator.eligibleCount > 1 && active != null;
+    final isActive = identical(active, registration);
+    final landing = context.motion.spec(MotionToken.paneFocus).landing;
+    final scale = useMotion(
+      MotionToken.paneFocus,
+      !lifts
+          ? 1.0
+          : isActive
+          ? landing.active
+          : landing.inactive,
+      initial: 1.0,
+    );
+    final wash = useMotion(
+      MotionToken.paneFocus,
+      lifts && isActive ? 1.0 : 0.0,
+      initial: 0.0,
+    );
+    return Transform.scale(
+      scale: scale.value,
+      child: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+          color: context.colors.contentPrimary.withValues(
+            alpha: landing.wash * wash.value.clamp(0.0, 1.0),
+          ),
+        ),
+        child: child,
+      ),
+    );
   }
 }

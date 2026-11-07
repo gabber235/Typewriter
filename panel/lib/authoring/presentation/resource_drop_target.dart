@@ -468,19 +468,34 @@ Future<DropOffer?> showDropChooser(
   BuildContext context,
   Offset position,
   List<DropOffer> offers,
-) => showGeneralDialog<DropOffer>(
-  context: context,
-  barrierDismissible: true,
-  barrierLabel: "Cancel drop",
-  barrierColor: Colors.transparent,
-  pageBuilder: (dialogContext, _, _) => CustomSingleChildLayout(
-    delegate: _DropChooserLayout(position),
-    child: DropChooser(
-      offers: offers,
-      onChoose: (offer) => Navigator.of(dialogContext).pop(offer),
+) {
+  final navigator = Navigator.of(context, rootNavigator: true);
+  final screen = MediaQuery.sizeOf(context);
+  // The chooser grows out of the pointer corner: the layer scales about
+  // the pointer, where the chooser's corner sits.
+  final pointer = FractionalOffset(
+    screen.width == 0 ? 0 : position.dx / screen.width,
+    screen.height == 0 ? 0 : position.dy / screen.height,
+  );
+  return navigator.push(
+    MotionDialogRoute<DropOffer>(
+      arrive: motionTimeline(context, MotionToken.panelIn),
+      leave: motionTimeline(context, MotionToken.panelOut),
+      originScale: context.motion.spec(MotionToken.panelIn).landing.originScale,
+      origin: pointer,
+      barrierLabel: "Cancel drop",
+      barrierColor: null,
+      themes: InheritedTheme.capture(from: context, to: navigator.context),
+      builder: (dialogContext) => CustomSingleChildLayout(
+        delegate: _DropChooserLayout(position),
+        child: DropChooser(
+          offers: offers,
+          onChoose: (offer) => Navigator.of(dialogContext).pop(offer),
+        ),
+      ),
     ),
-  ),
-);
+  );
+}
 
 /// Places the chooser at the pointer, kept inside the screen.
 class _DropChooserLayout extends SingleChildLayoutDelegate {

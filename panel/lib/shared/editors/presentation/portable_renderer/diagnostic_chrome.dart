@@ -230,7 +230,7 @@ class PortableDiagnosticHeaderMarker extends StatelessWidget {
     final label = count == 1
         ? "1 field diagnostic"
         : "$count field diagnostics";
-    return Tooltip(
+    return PanelTooltip(
       message: label,
       child: Semantics(
         label: label,
@@ -262,7 +262,7 @@ class PortablePresentationChrome extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tooltip = useMemoized(GlobalKey<TooltipState>.new);
+    final tooltip = useMemoized(GlobalKey<RawTooltipState>.new);
     final placement = PortableDiagnosticScope.of(context).placement;
     final expanded =
         role == skir.PresentationRole.workspace ||
@@ -289,7 +289,7 @@ class PortablePresentationChrome extends HookWidget {
       if (hasFocus && diagnostics.isNotEmpty) {
         tooltip.currentState?.ensureTooltipVisible();
       } else {
-        Tooltip.dismissAllToolTips();
+        RawTooltip.dismissAllToolTips();
       }
     }, [focus, diagnostics]);
     if (expanded) {
@@ -320,8 +320,8 @@ class PortablePresentationChrome extends HookWidget {
               visible: diagnostics.isNotEmpty,
               maintainState: true,
               child: IgnorePointer(
-                child: Tooltip(
-                  key: tooltip,
+                child: PanelTooltip(
+                  tooltipKey: tooltip,
                   message: diagnostics.map((item) => item.message).join("\n"),
                   triggerMode: TooltipTriggerMode.manual,
                   excludeFromSemantics: true,

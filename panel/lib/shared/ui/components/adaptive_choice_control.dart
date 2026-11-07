@@ -45,7 +45,7 @@ class AdaptiveChoiceControl<T extends Object> extends StatelessWidget {
         defaultValue: defaultValue,
         dropdownMenuEntries: [
           for (final MapEntry(key: value, value: label) in choices.entries)
-            DropdownMenuEntry(value: value, label: label),
+            MenuChoice(value: value, label: label),
         ],
         enabled: enabled,
         initialization: initialization,

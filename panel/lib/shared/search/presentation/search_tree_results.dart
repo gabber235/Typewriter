@@ -309,12 +309,13 @@ class _SearchTreeResultRow extends HookConsumerWidget {
                 onFocusChange: (hasFocus) {
                   focused.value = hasFocus;
                   if (!hasFocus) return;
+                  final move = motionTimeline(context, MotionToken.focusMove);
                   Scrollable.ensureVisible(
                     context,
                     alignment: 0.5,
                     alignmentPolicy: .explicit,
-                    duration: 300.ms,
-                    curve: Curves.easeOutCubic,
+                    duration: move.duration,
+                    curve: move.curve,
                   );
                   controller.preview(result);
                 },

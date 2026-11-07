@@ -57,7 +57,7 @@ ThemeData applyComponentThemes(
     ),
     helperStyle: text.sentenceSmall.copyWith(color: colors.contentSecondary),
   );
-  // Menus keep Material until the surfaces PR moves them to RawMenuAnchor.
+  // The query suggestions and the drop chooser still list MenuItemButtons.
   ButtonStyle menuItem(Color foreground) => ButtonStyle(
     // Unavailable text keeps 4.5:1.
     foregroundColor: WidgetStateProperty.resolveWith(
@@ -111,24 +111,6 @@ ThemeData applyComponentThemes(
       selectionColor: colors.selectionContainer,
       selectionHandleColor: colors.selection,
     ),
-    tooltipTheme: TooltipThemeData(
-      preferBelow: false,
-      triggerMode: TooltipTriggerMode.longPress,
-      verticalOffset: spacing.space8,
-      waitDuration: 100.ms,
-      decoration: BoxDecoration(
-        color: colors.surfaceRaised,
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.16),
-            blurRadius: spacing.space1,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        borderRadius: shapes.mediumBorderRadius,
-      ),
-      textStyle: text.sentenceSmall.copyWith(color: colors.contentPrimary),
-    ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: colors.brand,
       linearTrackColor: colors.surfaceEmphasized,
@@ -157,17 +139,7 @@ ThemeData applyComponentThemes(
         textStyle: WidgetStatePropertyAll(base.textTheme.labelSmall),
       ),
     ),
-    menuTheme: MenuThemeData(
-      style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(colors.surfaceRaised),
-        shape: WidgetStatePropertyAll(shapes.mediumShape),
-        elevation: const WidgetStatePropertyAll(1),
-        visualDensity: VisualDensity.defaultDensityForPlatform(
-          defaultTargetPlatform,
-        ),
-        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-      ),
-    ),
+    // The query bar's suggestion list reads this menu style.
     dropdownMenuTheme: DropdownMenuThemeData(
       inputDecorationTheme: input,
       menuStyle: MenuStyle(

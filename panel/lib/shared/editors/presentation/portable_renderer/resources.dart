@@ -296,7 +296,7 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
               ),
             ),
           ),
-          PopupMenuButton<_ResourceMemberAction>(
+          _ResourceMemberMenu(
             enabled: editable,
             onSelected: (action) => _reportResourcesWrite(
               childScope,
@@ -306,16 +306,6 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
                 context: childScope.invocation,
               ),
             ),
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: _ResourceMemberAction.disconnect,
-                child: Text("Disconnect"),
-              ),
-              PopupMenuItem(
-                value: _ResourceMemberAction.delete,
-                child: Text("Delete resource"),
-              ),
-            ],
           ),
         ],
       ),
@@ -896,4 +886,53 @@ TimelineStyle _resourceTimelineStyle(
       textMuted: color(appearance.textMutedColor, palette.textMuted),
     ),
   );
+}
+
+/// The disconnect and delete choices of one member in a resource list.
+final class _ResourceMemberMenu extends HookWidget {
+  const _ResourceMemberMenu({required this.enabled, required this.onSelected});
+
+  final bool enabled;
+  final ValueChanged<_ResourceMemberAction> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = useMemoized(AnchoredPopupController.new);
+    useEffect(() => controller.dispose, [controller]);
+    return AnchoredPopup(
+      controller: controller,
+      opensOnHover: false,
+      targetAnchor: Alignment.bottomRight,
+      popupAnchor: Alignment.topRight,
+      popupBuilder: (context, close) => IntrinsicWidth(
+        child: Padding(
+          padding: EdgeInsets.all(context.spacing.space1),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (action, label) in const [
+                (_ResourceMemberAction.disconnect, "Disconnect"),
+                (_ResourceMemberAction.delete, "Delete resource"),
+              ])
+                PanelMenuItem(
+                  label: label,
+                  onPressed: () {
+                    onSelected(action);
+                    close();
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+      builder: (context, show) => Button(
+        face: ButtonFace.icon,
+        label: "Member actions",
+        tooltip: "Member actions",
+        icon: const Icon(Icons.more_vert),
+        onPressed: enabled ? show : null,
+      ),
+    );
+  }
 }

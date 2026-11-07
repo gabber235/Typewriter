@@ -3,25 +3,33 @@ part of "multiselect_dropdown.dart";
 class _MultiselectDropdownController<T extends Object> {
   const _MultiselectDropdownController({
     required this.dropdown,
-    required this.menuController,
+    required this.popupController,
     required this.anchorKey,
     required this.inputFieldController,
     required this.textController,
     required this.filteredEntries,
     required this.fakeFocusIndex,
     required this.isCollapsed,
-    required this.effectiveMenuStyle,
+    required this.tapGroup,
   });
 
   final MultiselectDropdown<T> dropdown;
-  final MenuController menuController;
+  final AnchoredPopupController popupController;
   final GlobalKey anchorKey;
   final InputFieldController inputFieldController;
   final _MultiSelectTextEditingController textController;
-  final List<DropdownMenuEntry<T>> filteredEntries;
+  final List<MenuChoice<T>> filteredEntries;
   final ValueNotifier<int?> fakeFocusIndex;
   final bool isCollapsed;
-  final MenuStyle effectiveMenuStyle;
+
+  /// Joins the field and its choices, so a tap on a choice keeps the field.
+  final Object tapGroup;
+
+  /// The field's width, which the choices match.
+  double get fieldWidth => dropdown.getWidth(anchorKey) ?? _kMinimumWidth;
+
+  /// Shows the choices while focus stays in the field, which filters them.
+  void open() => popupController.preview();
 
   FocusNode get focusNode => inputFieldController.inputFocusNode;
   FocusNode get surroundingFocusNode =>
@@ -30,7 +38,7 @@ class _MultiselectDropdownController<T extends Object> {
   Object? previous() {
     if (!dropdown.enabled ||
         filteredEntries.none((entry) => entry.enabled) ||
-        !menuController.isOpen) {
+        !popupController.isOpen) {
       return null;
     }
     fakeFocusIndex.value ??= 0;
@@ -45,7 +53,7 @@ class _MultiselectDropdownController<T extends Object> {
   Object? next() {
     if (!dropdown.enabled ||
         filteredEntries.none((entry) => entry.enabled) ||
-        !menuController.isOpen) {
+        !popupController.isOpen) {
       return null;
     }
     fakeFocusIndex.value ??= -1;
@@ -59,7 +67,7 @@ class _MultiselectDropdownController<T extends Object> {
 
   void enter() {
     if (!dropdown.enabled ||
-        !menuController.isOpen ||
+        !popupController.isOpen ||
         fakeFocusIndex.value == null) {
       return;
     }
@@ -79,7 +87,7 @@ class _MultiselectDropdownController<T extends Object> {
 
   void openAfterFocus() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (focusNode.hasPrimaryFocus) menuController.open();
+      if (focusNode.hasPrimaryFocus) open();
     });
   }
 }
@@ -88,7 +96,10 @@ _MultiselectDropdownController<T> _useMultiselectDropdownController<
   T extends Object
 >(BuildContext context, MultiselectDropdown<T> dropdown) {
   final theme = Theme.of(context);
-  final menuController = useMenuController();
+  final popupController = useMemoized(AnchoredPopupController.new);
+  useEffect(() => popupController.dispose, [popupController]);
+  useListenable(popupController);
+  final tapGroup = useMemoized(Object.new);
   final anchorKey = useGlobalKey();
   final randomSeed = useState(random.nextDouble());
   final selected = useMemoized(
@@ -109,7 +120,7 @@ _MultiselectDropdownController<T> _useMultiselectDropdownController<
     if (entry != null && dropdown.itemBuilder != null) {
       return dropdown.itemBuilder!(entry.value);
     }
-    if (entry?.labelWidget != null) return entry!.labelWidget!;
+    if (entry?.content != null) return entry!.content!;
     return Text(
       label,
       style: Theme.of(context).textTheme.bodyMedium!
@@ -146,6 +157,20 @@ _MultiselectDropdownController<T> _useMultiselectDropdownController<
   final inputFieldController =
       dropdown.inputFieldController ?? defaultInputFieldController;
   final focusNode = inputFieldController.inputFocusNode;
+  // Closing the choices from the field hands focus back to the surrounding
+  // field, as leaving the insert interaction does.
+  final wasOpen = useRef(false);
+  useEffect(() {
+    void closed() {
+      if (wasOpen.value && !popupController.isOpen && focusNode.hasFocus) {
+        inputFieldController.surroundingFocusNode.requestFocus();
+      }
+      wasOpen.value = popupController.isOpen;
+    }
+
+    popupController.addListener(closed);
+    return () => popupController.removeListener(closed);
+  }, [popupController, focusNode]);
 
   useEffect(() {
     textController.value = textController.value.copyWith(text: currentLabel);
@@ -179,27 +204,15 @@ _MultiselectDropdownController<T> _useMultiselectDropdownController<
     return null;
   }, [searchText, filteredEntries]);
 
-  var effectiveMenuStyle =
-      dropdown.menuStyle ?? theme.dropdownMenuTheme.menuStyle ?? MenuStyle();
-  effectiveMenuStyle = effectiveMenuStyle.copyWith(
-    minimumSize: WidgetStateProperty.resolveWith<Size?>((states) {
-      final width = dropdown.getWidth(anchorKey) ?? _kMinimumWidth;
-      final maximumWidth = effectiveMenuStyle.maximumSize
-          ?.resolve(states)
-          ?.width;
-      return Size(min(width, maximumWidth ?? width), 0.0);
-    }),
-  );
-
   return _MultiselectDropdownController(
     dropdown: dropdown,
-    menuController: menuController,
+    popupController: popupController,
     anchorKey: anchorKey,
     inputFieldController: inputFieldController,
     textController: textController,
     filteredEntries: filteredEntries,
     fakeFocusIndex: fakeFocusIndex,
     isCollapsed: theme.inputDecorationTheme.isCollapsed,
-    effectiveMenuStyle: effectiveMenuStyle,
+    tapGroup: tapGroup,
   );
 }

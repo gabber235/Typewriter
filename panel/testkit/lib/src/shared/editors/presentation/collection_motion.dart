@@ -184,8 +184,7 @@ extension ShowCollectionMotion on WidgetTester {
     final center = text.center;
     final handles = find.byWidgetPredicate(
       (widget) =>
-          widget is Tooltip &&
-          (widget.message?.startsWith("Reorder item") ?? false),
+          widget is PanelTooltip && widget.message.startsWith("Reorder item"),
     );
     // The handle in the same row is the nearest one on the vertical axis.
     final handle = handles

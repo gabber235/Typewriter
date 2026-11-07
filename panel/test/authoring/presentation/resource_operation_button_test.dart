@@ -83,9 +83,9 @@ void main() {
         expect(tester.widget<Icones>(find.byType(Icones)).icon, _icon);
         await tester.tap(buttonFinder, buttons: kSecondaryMouseButton);
         await tester.pumpAndSettle();
-        final menu = tester.widget<MenuItemButton>(find.byType(MenuItemButton));
-        expect(menu.leadingIcon, isA<Icones>());
-        expect((menu.leadingIcon! as Icones).icon, _icon);
+        final menu = tester.widget<PanelMenuItem>(find.byType(PanelMenuItem));
+        expect(menu.leading, isA<Icones>());
+        expect((menu.leading! as Icones).icon, _icon);
         expect(tester.takeException(), isNull);
       },
     );

@@ -33,25 +33,32 @@ class _DirectionalContentSwitcherState
   @override
   Widget build(BuildContext context) {
     assert(widget.child.key != null);
+    // Incoming content enters from its side with loadIn; outgoing content
+    // leaves at once. The size grows with surfaceIn and shrinks with
+    // panelOut.
+    final enter = motionTimeline(context, MotionToken.loadIn);
+    final grow = motionTimeline(context, MotionToken.surfaceIn);
+    final shrink = motionTimeline(context, MotionToken.panelOut);
     // Without motion the new content replaces the old at once. A zero
     // duration AnimatedSize would restart its animation during layout and
     // fail as soon as the content changes size.
-    if (MediaQuery.disableAnimationsOf(context)) return widget.child;
-    const transitionDuration = Duration(milliseconds: 240);
-    const sizeDuration = Duration(milliseconds: 300);
+    if (enter.duration == Duration.zero || grow.duration == Duration.zero) {
+      return widget.child;
+    }
     final currentKey = widget.child.key;
     final direction = _direction.toDouble();
 
     return AnimatedSize(
-      duration: sizeDuration,
-      curve: Curves.easeOutCubic,
+      duration: grow.duration,
+      reverseDuration: shrink.duration,
+      curve: grow.curve,
       alignment: Alignment.topCenter,
       clipBehavior: Clip.hardEdge,
       child: ClipRect(
         child: AnimatedSwitcher(
-          duration: transitionDuration,
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
+          duration: enter.duration,
+          reverseDuration: Duration.zero,
+          switchInCurve: enter.curve,
           layoutBuilder: (currentChild, previousChildren) => Stack(
             alignment: AlignmentDirectional.topStart,
             children: [

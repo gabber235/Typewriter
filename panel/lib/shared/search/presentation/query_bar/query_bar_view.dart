@@ -11,8 +11,9 @@ class _QueryBarView extends StatelessWidget {
     return ManagedActionSet(
       shortcuts: controller.shortcuts,
       child: AnimatedSize(
-        duration: 300.ms,
-        curve: Curves.easeInOut,
+        duration: motionTimeline(context, MotionToken.surfaceIn).duration,
+        reverseDuration: motionTimeline(context, MotionToken.panelOut).duration,
+        curve: motionTimeline(context, MotionToken.surfaceIn).curve,
         alignment: Alignment.topCenter,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -107,13 +108,8 @@ class _QueryBarHelperRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRect(
-      child: AnimatedSwitcher(
-        duration: 420.ms,
-        reverseDuration: 180.ms,
-        switchInCurve: Curves.linear,
-        switchOutCurve: Curves.linear,
-        transitionBuilder: (child, animation) =>
-            ElasticMessageTransition(animation: animation, child: child),
+      child: PanelSwitcher(
+        alignment: Alignment.topLeft,
         child: !visible
             ? null
             : Padding(

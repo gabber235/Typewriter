@@ -51,7 +51,7 @@ Future<skir.TypeUse?> showAuthoredTypeUsePicker(
     AuthoredTypeSelectionCandidate(:final selection) => switch (selection) {
       skir.TypeSelection_completeWrapper(:final value) =>
         skir.TypeUse.wrapNamed(value),
-      skir.TypeSelection_pendingWrapper() => showDialog<skir.TypeUse>(
+      skir.TypeSelection_pendingWrapper() => showAdvancedDialog<skir.TypeUse>(
         context: context,
         barrierDismissible: false,
         builder: (context) => SelectionOperationsRoot(

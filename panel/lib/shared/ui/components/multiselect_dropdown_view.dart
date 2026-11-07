@@ -17,24 +17,35 @@ class _MultiselectDropdownView<T extends Object> extends StatelessWidget {
       inputActions: dropdown.menuActions,
       surroundingActions: dropdown.surroundingActions,
       onInputFocus: controller.openAfterFocus,
-      onDismiss: controller.menuController.close,
-      child: MenuAnchor(
-        controller: controller.menuController,
-        style: controller.effectiveMenuStyle,
-        menuChildren: controller.filteredEntries.indexed
-            .map(
-              (entry) => _buildMenuItem(
-                context,
-                entry.$2,
-                controller.effectiveMenuStyle,
-                isFakeFocused: controller.fakeFocusIndex.value == entry.$1,
-              ),
-            )
-            .toList(growable: false),
-        childFocusNode: controller.focusNode,
-        onClose: controller.surroundingFocusNode.requestFocus,
-        crossAxisUnconstrained: false,
-        child: Actions(
+      onDismiss: controller.popupController.close,
+      child: AnchoredPopup(
+        controller: controller.popupController,
+        // Focus stays in the field while it filters; it opens the choices.
+        opensOnHover: false,
+        minWidth: controller.fieldWidth,
+        maxWidth: controller.fieldWidth,
+        popupBuilder: (context, close) => TapRegion(
+          groupId: controller.tapGroup,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (index, entry) in controller.filteredEntries.indexed)
+                  PanelMenuItem(
+                    label: entry.label,
+                    leading: entry.leading,
+                    trailing: entry.trailing,
+                    enabled: entry.enabled,
+                    highlighted: controller.fakeFocusIndex.value == index,
+                    onPressed: () => controller.toggle(entry.value),
+                    child: entry.content,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        builder: (context, show) => Actions(
           actions: {
             _NextIntent: CallbackAction<_NextIntent>(
               onInvoke: (_) => controller.next(),
@@ -79,6 +90,7 @@ class _MultiselectDropdownView<T extends Object> extends StatelessWidget {
             },
             child: TextField(
               key: controller.anchorKey,
+              groupId: controller.tapGroup,
               focusNode: controller.focusNode,
               controller: controller.textController,
               enabled: dropdown.enabled,
@@ -94,7 +106,7 @@ class _MultiselectDropdownView<T extends Object> extends StatelessWidget {
                       ? EdgeInsets.zero
                       : EdgeInsets.all(context.spacing.space1),
                   child: Icon(
-                    controller.menuController.isOpen
+                    controller.popupController.isOpen
                         ? Icons.arrow_drop_up
                         : Icons.arrow_drop_down,
                   ),
@@ -109,76 +121,11 @@ class _MultiselectDropdownView<T extends Object> extends StatelessWidget {
                   .copyWith(height: 1.7),
               maxLines: null,
               onEditingComplete: controller.enter,
-              onChanged: (_) => controller.menuController.open(),
-              onTap: dropdown.enabled ? controller.menuController.open : null,
+              onChanged: (_) => controller.open(),
+              onTap: dropdown.enabled ? controller.open : null,
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(
-    BuildContext context,
-    DropdownMenuEntry<T> entry,
-    MenuStyle effectiveMenuStyle, {
-    bool isFakeFocused = false,
-  }) {
-    final menuPadding = effectiveMenuStyle.padding!.resolve({})!.horizontal;
-    final width =
-        effectiveMenuStyle.minimumSize!.resolve({})!.width - menuPadding;
-    final themeStyle = MenuButtonTheme.of(context).style;
-    final foreground =
-        entry.style?.foregroundColor ?? themeStyle?.foregroundColor;
-
-    final icon = entry.style?.iconColor ?? themeStyle?.iconColor;
-
-    final overlay = entry.style?.overlayColor ?? themeStyle?.overlayColor;
-    final background =
-        entry.style?.backgroundColor ?? themeStyle?.backgroundColor;
-    var style = entry.style ?? MenuItemButton.styleFrom();
-
-    // Simulate focus because traversal keeps focus on the text field.
-    if (entry.enabled && isFakeFocused) {
-      final defaultStyle = const MenuItemButton().defaultStyleOf(context);
-      Color? focused(WidgetStateProperty<Color?>? property) =>
-          property?.resolve(<WidgetState>{WidgetState.focused});
-      final focusedForeground = focused(
-        foreground ?? defaultStyle.foregroundColor!,
-      )!;
-      final focusedIcon = focused(icon ?? defaultStyle.iconColor!)!;
-
-      final focusedOverlay = focused(overlay ?? defaultStyle.overlayColor!)!;
-
-      // The default background is transparent, so use the focused surface.
-      final focusedBackground =
-          focused(background) ??
-          Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
-      style = style.copyWith(
-        backgroundColor: WidgetStatePropertyAll<Color>(focusedBackground),
-        foregroundColor: WidgetStatePropertyAll<Color>(focusedForeground),
-        iconColor: WidgetStatePropertyAll<Color>(focusedIcon),
-        overlayColor: WidgetStatePropertyAll<Color>(focusedOverlay),
-      );
-    } else {
-      style = style.copyWith(
-        backgroundColor: background,
-        foregroundColor: foreground,
-        iconColor: icon,
-        overlayColor: overlay,
-      );
-    }
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(minWidth: width),
-      child: MenuItemButton(
-        style: style,
-        leadingIcon: entry.leadingIcon,
-        trailingIcon: entry.trailingIcon,
-        closeOnActivate: false,
-        onPressed: entry.enabled ? () => controller.toggle(entry.value) : null,
-        requestFocusOnHover: false,
-        child: entry.labelWidget ?? Text(entry.label),
       ),
     );
   }

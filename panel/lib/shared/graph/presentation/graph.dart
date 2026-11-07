@@ -128,9 +128,7 @@ class Graph extends HookConsumerWidget {
               () => center(baseLayout, constraints.biggest),
               [baseLayout, constraints.biggest],
             );
-            final tickerProvider = useSingleTickerProvider();
             final viewportController = useGraphViewportController(
-              tickerProvider: tickerProvider,
               initialTransform: Matrix4.identity()
                 ..translateByDouble(centerOffset.dx, centerOffset.dy, 0, 1),
             );

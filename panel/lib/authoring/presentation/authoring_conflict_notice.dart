@@ -24,7 +24,7 @@ final class AuthoringConflictNotice extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Button(
             label: "Review changes",
-            onPressed: () => showDialog<void>(
+            onPressed: () => showAdvancedDialog<void>(
               context: context,
               builder: (dialogContext) => AlertDialog(
                 title: const Text("Review changes"),

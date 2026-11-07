@@ -155,17 +155,11 @@ class _SelectorButton<T> extends StatelessWidget {
   );
 
   void _showMobileMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.colors.surface.withValues(alpha: 0),
-      builder: (ctx) => UncontrolledProviderScope(
-        container: ProviderScope.containerOf(context),
-        child: _MobileMenu<T>(
-          contentBuilder: contentBuilder,
-          items: items,
-          selected: selected,
-        ),
+    context.showPanelSheet<void>(
+      (_) => _MobileMenu<T>(
+        contentBuilder: contentBuilder,
+        items: items,
+        selected: selected,
       ),
     );
   }

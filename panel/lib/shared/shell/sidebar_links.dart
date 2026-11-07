@@ -51,6 +51,19 @@ class SidebarLink extends HookConsumerWidget {
       debugLabel: "SidebarLink-${text.snakeCase()}",
     );
     ref.watch(currentRouteProvider);
+    // Places the link in sidebar order, so a move between siblings comes
+    // from above or below.
+    final routeName = route.flattened.last.routeName;
+    final order = ref.read(sidebarOrderProvider);
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final box = context.mounted ? context.findRenderObject() : null;
+        if (box is RenderBox && box.hasSize) {
+          order.place(routeName, box.localToGlobal(Offset.zero).dy);
+        }
+      });
+      return () => order.remove(routeName);
+    }, [routeName]);
     final scope = StackRouterScope.of(context, watch: true);
     final router = scope?.controller;
     final selected =

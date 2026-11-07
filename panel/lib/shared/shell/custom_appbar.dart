@@ -98,15 +98,7 @@ class SidebarMenuButton extends StatelessWidget {
       label: tooltip,
       tooltip: tooltip,
       onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (ctx) => UncontrolledProviderScope(
-            container: ProviderScope.containerOf(context),
-            child: _MobileSidebarMenu(child: sidebar),
-          ),
-        );
+        context.showPanelSheet<void>((_) => _MobileSidebarMenu(child: sidebar));
       },
     );
   }

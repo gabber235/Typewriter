@@ -108,7 +108,8 @@ class UserMenu extends HookConsumerWidget {
         );
     final currentThemeMode = ref.watch(appearanceProvider);
 
-    final controller = useMenuController();
+    final controller = useMemoized(AnchoredPopupController.new);
+    useEffect(() => controller.dispose, [controller]);
     final focusNode = useFocusNode(debugLabel: "UserMenu");
 
     return userInfoAsync(
@@ -128,7 +129,6 @@ class UserMenu extends HookConsumerWidget {
         return ContextMenuRegion(
           items: _buildMenuItems(context, ref, currentThemeMode),
           enableGestures: false,
-          childFocusNode: focusNode,
           controller: controller,
           child: Material(
             child: Button(

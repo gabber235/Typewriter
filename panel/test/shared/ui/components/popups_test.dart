@@ -150,4 +150,42 @@ void main() {
     expect(panel.container.read(selectionProvider), isEmpty);
     expect(find.text("Inside"), findsOneWidget);
   });
+
+  testWidgets("the page behind a dialog sinks back and returns", (
+    tester,
+  ) async {
+    await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(DialogBackdropPage()),
+    );
+    final measured = tester.getRect(find.text("Page heading"));
+
+    await tester.tap(find.text("Open"));
+    await tester.pumpAndSettle();
+    final sunk = tester.getRect(find.text("Page heading"));
+    expect(sunk.width, lessThan(measured.width));
+    expect(
+      sunk.center.dx,
+      closeTo(tester.getCenter(find.byType(DialogBackdrop)).dx, 1),
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text("Dialog title"), findsNothing);
+    expect(tester.getRect(find.text("Page heading")), measured);
+  });
+
+  testWidgets("reduced motion: a dialog appears at once", (tester) async {
+    await tester.pumpPanel(const [
+      reducedMotion,
+    ], at: const PanelLocation.component(DialogBackdropPage()));
+
+    await tester.tap(find.text("Open"));
+    await tester.pump();
+    await tester.pump();
+    final first = tester.getRect(find.text("Dialog title"));
+    await tester.pumpAndSettle();
+
+    expect(first, tester.getRect(find.text("Dialog title")));
+  });
 }

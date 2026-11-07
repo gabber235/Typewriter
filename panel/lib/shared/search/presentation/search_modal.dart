@@ -24,38 +24,46 @@ Future<T?> showSearchModal<T>(
   Map<String, SearchResultPreviewBuilder> previewRenderers = const {},
 }) {
   final navigator = Navigator.of(context);
-  final route = _PopupRoute<T>(
-    themes: InheritedTheme.capture(
-      from: context,
-      to: Navigator.of(context).context,
-    ),
-    barrierColor:
-        DialogTheme.of(context).barrierColor ??
-        Theme.of(context).dialogTheme.barrierColor ??
-        context.colors.scrim,
-    traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
-    child: UncontrolledProviderScope(
-      container: ProviderScope.containerOf(context),
-      child: SelectionOperationsRoot(
-        source: SelectionOperationsRoot.of(context),
-        child: GlobalModeShortcut(
-          child: GlobalOperationShortcuts(
-            child: PopupFocusHold(
-              child: SearchModal(
-                contributionBuilder: contributionBuilder,
-                onBack: onBack,
-                onQueryChanged: onQueryChanged,
-                searchHint: searchHint,
-                surfaceStyle: surfaceStyle,
-                queryDecoration: queryDecoration,
-                queryStyle: queryStyle,
-                queryAlignment: queryAlignment,
-                useDefaultQueryIcon: useDefaultQueryIcon,
-                rowRenderers: rowRenderers,
-                previewRenderers: previewRenderers,
-              ),
+  final content = UncontrolledProviderScope(
+    container: ProviderScope.containerOf(context),
+    child: SelectionOperationsRoot(
+      source: SelectionOperationsRoot.of(context),
+      child: GlobalModeShortcut(
+        child: GlobalOperationShortcuts(
+          child: PopupFocusHold(
+            child: SearchModal(
+              contributionBuilder: contributionBuilder,
+              onBack: onBack,
+              onQueryChanged: onQueryChanged,
+              searchHint: searchHint,
+              surfaceStyle: surfaceStyle,
+              queryDecoration: queryDecoration,
+              queryStyle: queryStyle,
+              queryAlignment: queryAlignment,
+              useDefaultQueryIcon: useDefaultQueryIcon,
+              rowRenderers: rowRenderers,
+              previewRenderers: previewRenderers,
             ),
           ),
+        ),
+      ),
+    ),
+  );
+  // A choice surface, not a dialog: it grows from the top and the page
+  // behind keeps still.
+  final route = MotionDialogRoute<T>(
+    arrive: motionTimeline(context, MotionToken.panelIn),
+    leave: motionTimeline(context, MotionToken.panelOut),
+    originScale: context.motion.spec(MotionToken.panelIn).landing.originScale,
+    origin: Alignment.topCenter,
+    barrierColor: context.colors.scrim,
+    traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
+    themes: InheritedTheme.capture(from: context, to: navigator.context),
+    builder: (context) => SafeArea(
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(context.spacing.space6),
+          child: content,
         ),
       ),
     ),
@@ -177,62 +185,5 @@ final class _BuildContextSearchPromptHost implements SearchPromptHost {
   Future<R?> show<R>(SearchPrompt<R> prompt) {
     if (!context.mounted) return Future.value();
     return prompt(context);
-  }
-}
-
-class _PopupRoute<T> extends PopupRoute<T> {
-  _PopupRoute({
-    required this.child,
-    required this.themes,
-    required this.barrierColor,
-    super.traversalEdgeBehavior,
-  });
-
-  final Widget child;
-  final CapturedThemes themes;
-
-  @override
-  final Color barrierColor;
-
-  @override
-  bool get barrierDismissible => true;
-
-  @override
-  String? get barrierLabel => null;
-
-  @override
-  Duration get transitionDuration => 500.ms;
-
-  @override
-  Widget buildPage(
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-  ) {
-    final curvedAnimation = CurvedAnimation(
-      parent: animation,
-      curve: ElasticOutCurve(0.8),
-      reverseCurve: Curves.easeInCubic,
-    );
-
-    return themes.wrap(
-      SafeArea(
-        child: Center(
-          child: FadeTransition(
-            opacity: curvedAnimation,
-            child: ScaleTransition(
-              scale: Tween<double>(
-                begin: 0.96,
-                end: 1,
-              ).animate(curvedAnimation),
-              child: Padding(
-                padding: EdgeInsets.all(context.spacing.space6),
-                child: child,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

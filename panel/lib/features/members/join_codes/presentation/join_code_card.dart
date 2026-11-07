@@ -47,15 +47,9 @@ class JoinCodeCard extends HookConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: Surface(
         color: backgroundColor,
-        child: Expansible(
+        child: GrowingCard(
           controller: expansibleController,
-          animationStyle: AnimationStyle(
-            duration: 500.ms,
-            curve: ElasticOutCurve(0.9),
-            reverseDuration: 20.ms,
-            reverseCurve: Curves.easeInCubic,
-          ),
-          headerBuilder: (context, animation) => ManagedActionSet(
+          header: (context, animation) => ManagedActionSet(
             shortcuts: [
               ActionShortcut.intent(
                 id: "select_join_code_${code.code}",
@@ -73,14 +67,16 @@ class JoinCodeCard extends HookConsumerWidget {
                 priority: 1,
                 onInvoke: (_) => onSelectAll(),
               ),
-              ActionShortcut.intent(
-                id: "clear_join_code_selection_${code.code}",
-                label: "Clear selection",
-                description: "Clear selected join codes",
-                intent: DismissIntent,
-                priority: 1,
-                onInvoke: (_) => onClearSelection(),
-              ),
+              // Esc steps out one level: first the card, then the selection.
+              if (!expansibleController.isExpanded)
+                ActionShortcut.intent(
+                  id: "clear_join_code_selection_${code.code}",
+                  label: "Clear selection",
+                  description: "Clear selected join codes",
+                  intent: DismissIntent,
+                  priority: 1,
+                  onInvoke: (_) => onClearSelection(),
+                ),
               if (!hasSelection)
                 ActionShortcut(
                   id: "copy_join_code_${code.code}",
@@ -176,42 +172,37 @@ class JoinCodeCard extends HookConsumerWidget {
               ),
             ),
           ),
-          bodyBuilder: (context, animation) => ElasticMessageTransition(
-            animation: animation,
-            child: Column(
-              children: [
-                Divider(
-                  height: 1,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.3,
-                  ),
+          body: (context) => Column(
+            children: [
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+              ),
+              Padding(
+                padding: EdgeInsets.all(context.spacing.space3),
+                child: Wrap(
+                  alignment: .center,
+                  spacing: context.spacing.space2,
+                  runSpacing: context.spacing.space2,
+                  children: [
+                    Button(
+                      face: ButtonFace.outlined,
+                      icon: const Icon(Icons.copy, size: 18),
+                      label: "Copy Join Code",
+                      color: context.colors.brandText,
+                      onPressed: () => _copyToClipboard(context, fullUrl),
+                    ),
+                    Button(
+                      face: ButtonFace.outlined,
+                      icon: const Icon(Icons.link_off, size: 18),
+                      label: "Revoke",
+                      color: context.colors.dangerText,
+                      onPressed: () => _confirmRevokeCode(context, ref),
+                    ),
+                  ],
                 ),
-                Padding(
-                  padding: EdgeInsets.all(context.spacing.space3),
-                  child: Wrap(
-                    alignment: .center,
-                    spacing: context.spacing.space2,
-                    runSpacing: context.spacing.space2,
-                    children: [
-                      Button(
-                        face: ButtonFace.outlined,
-                        icon: const Icon(Icons.copy, size: 18),
-                        label: "Copy Join Code",
-                        color: context.colors.brandText,
-                        onPressed: () => _copyToClipboard(context, fullUrl),
-                      ),
-                      Button(
-                        face: ButtonFace.outlined,
-                        icon: const Icon(Icons.link_off, size: 18),
-                        label: "Revoke",
-                        color: context.colors.dangerText,
-                        onPressed: () => _confirmRevokeCode(context, ref),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

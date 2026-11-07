@@ -206,29 +206,14 @@ class _SheetPreviewLayout extends HookWidget {
   final Widget? preview;
 
   Future<void> _animateSheet(
+    BuildContext context,
     DraggableScrollableController controller,
     bool visible,
     ValueNotifier<bool> animating,
   ) async {
-    if (!controller.isAttached) {
-      animating.value = false;
-      return;
-    }
-
-    final target = visible ? _sheetPeekSize : 0.0;
-    if ((controller.size - target).abs() < 0.01) {
-      animating.value = false;
-      return;
-    }
     animating.value = true;
-    await controller.animateTo(
-      target,
-      duration: visible ? 750.ms : 400.ms,
-      curve: visible
-          ? const ElasticOutCurve(0.8)
-          : Curves.fastEaseInToSlowEaseOut,
-    );
-    animating.value = false;
+    await controller.settleTo(context, visible ? _sheetPeekSize : 0.0);
+    if (context.mounted) animating.value = false;
   }
 
   @override
@@ -240,7 +225,7 @@ class _SheetPreviewLayout extends HookWidget {
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!context.mounted) return;
-        _animateSheet(controller, visible, animating);
+        _animateSheet(context, controller, visible, animating);
       });
       return null;
     }, [controller, visible, MediaQuery.sizeOf(context).width]);
@@ -252,11 +237,13 @@ class _SheetPreviewLayout extends HookWidget {
           children: [
             LayoutBuilder(
               builder: (context, constraints) {
+                final pad = motionTimeline(
+                  context,
+                  visible ? MotionToken.surfaceIn : MotionToken.panelOut,
+                );
                 return AnimatedPadding(
-                  duration: visible ? 750.ms : 400.ms,
-                  curve: visible
-                      ? const ElasticOutCurve(0.8)
-                      : Curves.fastEaseInToSlowEaseOut,
+                  duration: pad.duration,
+                  curve: pad.curve,
                   padding: EdgeInsets.only(
                     bottom: visible
                         ? constraints.maxHeight * _sheetPeekSize
@@ -358,27 +345,23 @@ class _InlinePreviewSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final preview = this.preview;
 
+    final arrive = motionTimeline(context, MotionToken.surfaceIn);
+    final leave = motionTimeline(context, MotionToken.panelOut);
     return AnimatedSwitcher(
-      duration: 420.ms,
-      reverseDuration: 180.ms,
-      switchInCurve: Curves.linear,
-      switchOutCurve: Curves.linear,
-      transitionBuilder: (child, animation) {
-        final elastic = CurvedAnimation(
-          parent: animation,
-          curve: const ElasticOutCurve(0.82),
-          reverseCurve: Curves.easeInCubic,
-        );
-
-        return ClipRect(
-          child: SizeTransition(
-            sizeFactor: elastic,
-            axis: Axis.horizontal,
-            alignment: AlignmentDirectional.topStart,
-            child: child,
+      duration: arrive.duration,
+      reverseDuration: leave.duration,
+      transitionBuilder: (child, animation) => ClipRect(
+        child: SizeTransition(
+          sizeFactor: CurvedAnimation(
+            parent: animation,
+            curve: arrive.curve,
+            reverseCurve: leave.curve.flipped,
           ),
-        );
-      },
+          axis: Axis.horizontal,
+          alignment: AlignmentDirectional.topStart,
+          child: child,
+        ),
+      ),
       child: preview == null
           ? const SizedBox(key: ValueKey("no-inline-preview"))
           : ConstrainedBox(
@@ -402,27 +385,8 @@ class _ExternalPreviewSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final preview = this.preview;
 
-    return AnimatedSwitcher(
-      duration: 460.ms,
-      reverseDuration: 180.ms,
-      switchInCurve: Curves.linear,
-      switchOutCurve: Curves.linear,
-      transitionBuilder: (child, animation) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: const ElasticOutCurve(0.5),
-          reverseCurve: Curves.easeInCubic,
-        );
-
-        return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.88, end: 1).animate(curved),
-            alignment: Alignment.centerLeft,
-            child: child,
-          ),
-        );
-      },
+    return PanelSwitcher(
+      alignment: Alignment.centerLeft,
       child: preview == null
           ? const SizedBox(key: ValueKey("no-external-preview"))
           : ConstrainedBox(
@@ -458,59 +422,62 @@ class _BottomPreviewSheet extends StatelessWidget {
           }
           return false;
         },
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.0,
-          minChildSize: 0.0,
-          maxChildSize: _sheetMaxSize,
-          shouldCloseOnMinExtent: false,
-          snap: visible,
-          snapSizes: visible ? const [_sheetPeekSize, _sheetMaxSize] : null,
-          controller: controller,
-          snapAnimationDuration: 200.ms,
-          builder: (context, scrollController) {
-            final surfaceColor = Theme.of(context).colorScheme.surface;
+        child: NotificationListener<ScrollEndNotification>(
+          // A released drag settles with the same tokens, not the
+          // framework's snap curve.
+          onNotification: (_) {
+            if (visible && !animating) {
+              controller.settleNearest(context, const [
+                _sheetPeekSize,
+                _sheetMaxSize,
+              ]);
+            }
+            return false;
+          },
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.0,
+            minChildSize: 0.0,
+            maxChildSize: _sheetMaxSize,
+            shouldCloseOnMinExtent: false,
+            controller: controller,
+            builder: (context, scrollController) {
+              final surfaceColor = Theme.of(context).colorScheme.surface;
 
-            return Surface(
-              color: surfaceColor,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: context.shapes.mediumBorderRadius,
-                ),
-                child: Section(
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainer,
-                  child: CustomScrollView(
-                    controller: scrollController,
-                    slivers: [
-                      const SliverPersistentHeader(
-                        pinned: true,
-                        delegate: DraggableSheetHandleDelegate(),
-                      ),
-                      SliverPadding(
-                        padding: EdgeInsets.only(
-                          left: context.spacing.space2,
-                          right: context.spacing.space2,
-                          bottom: context.spacing.space2,
+              return Surface(
+                color: surfaceColor,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: context.shapes.mediumBorderRadius,
+                  ),
+                  child: Section(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainer,
+                    child: CustomScrollView(
+                      controller: scrollController,
+                      slivers: [
+                        const SliverPersistentHeader(
+                          pinned: true,
+                          delegate: DraggableSheetHandleDelegate(),
                         ),
-                        sliver: SliverToBoxAdapter(
-                          child: AnimatedSwitcher(
-                            duration: 180.ms,
-                            reverseDuration: 750.ms,
-                            switchInCurve: Curves.linear,
-                            switchOutCurve: Curves.linear,
+                        SliverPadding(
+                          padding: EdgeInsets.only(
+                            left: context.spacing.space2,
+                            right: context.spacing.space2,
+                            bottom: context.spacing.space2,
+                          ),
+                          sliver: SliverToBoxAdapter(
                             child: preview ?? const SizedBox.shrink(),
-                            transitionBuilder: (child, _) => child,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

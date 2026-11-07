@@ -107,8 +107,16 @@ class JoinCodeSettings extends HookConsumerWidget {
         ),
 
         AnimatedSize(
-          duration: 200.ms,
-          curve: Curves.easeInOut,
+          // Grows with surfaceIn and shrinks with panelOut.
+          duration: motionTimeline(context, MotionToken.surfaceIn).duration,
+          reverseDuration: motionTimeline(
+            context,
+            MotionToken.panelOut,
+          ).duration,
+          curve: motionTimeline(
+            context,
+            isExpanded.value ? MotionToken.surfaceIn : MotionToken.panelOut,
+          ).curve,
           alignment: Alignment.topLeft,
           child: isExpanded.value
               ? Container(
@@ -140,7 +148,7 @@ class JoinCodeSettings extends HookConsumerWidget {
                           value: !_isNeverExpires(options.value.expiration),
                           onChanged: (enabled) {
                             if (enabled) {
-                              updateDuration(7.days);
+                              updateDuration(const Duration(days: 7));
                             } else {
                               updateOptions(
                                 options.value.copyWith(
@@ -236,7 +244,7 @@ class JoinCodeSettings extends HookConsumerWidget {
 
   bool _hasNonDefaultOptions(JoinCodeOptions options) {
     return !options.singleUse ||
-        !_isDuration(options.expiration, 7.days) ||
+        !_isDuration(options.expiration, const Duration(days: 7)) ||
         options.autoAcceptRoleIds.isNotEmpty;
   }
 
