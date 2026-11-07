@@ -127,6 +127,10 @@ val InterpreterTest by testSuite {
         run("Prize(gold = 5) == storedPrize", boolean) shouldBe Evaluation.Value(true)
     }
 
+    test("a provider typed with a code record receives that record when given a value through an alias of it") {
+        run("bonusOf(storedBounty) + [storedBounty].totalGold() + storedChest.get().gold", int) shouldBe Evaluation.Value(22)
+    }
+
     test("a lambda a provider returns unchanged is called as the formula's own") {
         run("let add = pass { x: Int -> x + 1 }\nadd(2)", int) shouldBe Evaluation.Value(3)
     }

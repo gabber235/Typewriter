@@ -109,6 +109,10 @@ val FormulaCheckerTest by testSuite {
         "Int, read through the alias of an alias" to row("let a: Award = aliasedPrize\na.gold", int, type(int)),
         "the alias Prize" to row("let p: Prize = storedGold\np", prizeAliasUse, problem("formula_type_mismatch")),
         "a List of the alias Prize" to row("let ps = [storedGold]\nps", listType(prizeAliasUse), problem("formula_type_mismatch")),
+        "Int, from a Reward parameter given an alias of Reward" to row("bonusOf(storedBounty)", int, type(int)),
+        "Int, from a List<Reward> receiver given a List of an alias of Reward" to row("[storedBounty].totalGold()", int, type(int)),
+        "Int, from Box<T>.get() given an alias of Box<Reward>" to row("storedChest.get().gold", int, type(int)),
+        "Int, from a Reward parameter given a Gold" to row("bonusOf(storedGold)", int, problem("formula_type_mismatch")),
     )) {
         val (source, expected, answer) = case
         test("$source against $wanted gives $answer") { check(source, expected, EvaluationWorld().checking) shouldAnswer answer }

@@ -58,6 +58,12 @@ val prizeAliasUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "alias"
 /** An alias of the alias of Prize: the type the field `award` of the declaring resource holds. */
 val awardUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "award").use()
 
+/** An alias of the code record Reward: the type the field `bounty` of the declaring resource holds. */
+val bountyUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "bounty").use()
+
+/** An alias of `Box<Reward>`: the type the field `chest` of the declaring resource holds. */
+val rewardBoxUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "chest").use()
+
 private val prizeDeclaration: TypeDefinition =
     TypeDefinition.partial(
         id = prizeId,
@@ -95,7 +101,7 @@ private val codeCatalog: DefaultCheckedCatalog =
             ) + SeasonDefinition.cases,
     )
 
-/** The code catalog plus Prize, its alias and an alias of that alias. */
+/** The code catalog plus Prize, its alias, an alias of that alias, and aliases of code types. */
 val evaluationCatalog: CheckedCatalog =
     codeCatalog.withContent(
         object : ContentSource {
@@ -116,6 +122,8 @@ val evaluationCatalog: CheckedCatalog =
                     owner != contentOwner -> null
                     field == "alias" -> prizeUse
                     field == "award" -> prizeAliasUse
+                    field == "bounty" -> RewardDefinition.id.use()
+                    field == "chest" -> BoxDefinition.id.use(listOf(RewardDefinition.id.use()))
                     else -> null
                 }
         },

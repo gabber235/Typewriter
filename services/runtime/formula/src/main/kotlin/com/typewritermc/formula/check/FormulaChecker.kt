@@ -32,7 +32,7 @@ interface FormulaEnvironment {
     /** What naming [target] gives, or null when it gives no type, which its own finding reports. */
     fun reference(target: ResourceId): TypeUse?
 
-    /** Code types with this display name. A content type's name is a reference to its Definition instead. */
+    /** Code types with this source name. A content type's name is a reference to its Definition instead. */
     fun catalogTypeNamed(name: String): List<TypeUse>
 
     /** The type a `Definition<Type>` resource holds, or null when it holds no plain type. */

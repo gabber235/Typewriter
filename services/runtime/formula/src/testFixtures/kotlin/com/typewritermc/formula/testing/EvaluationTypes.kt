@@ -137,6 +137,9 @@ object EvaluationFormulas {
 
     fun reward(gold: Int): Reward = Reward(gold)
 
+    /** Twice the gold of [reward]; fails unless it got a Kotlin Reward. */
+    fun bonusOf(reward: Reward): Int = reward.gold * 2
+
     /** Gives back the function it got. */
     fun <T, R> pass(transform: (T) -> R): (T) -> R = transform
 

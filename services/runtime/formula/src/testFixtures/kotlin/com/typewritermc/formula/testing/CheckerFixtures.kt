@@ -199,7 +199,7 @@ private val testCatalog =
             ),
     )
 
-/** The code types formulas name by their display name. */
+/** The code types formulas name by their source name. */
 private val catalogNames: Map<String, List<TypeUse>> =
     listOf(entityId, namedId, npcId, playerId, itemId, rewardId, doorId, paymentId, animalId, catId, townId)
         .groupBy({ (it.typeId as TypeId.QualifiedWrapper).value.name }, { it.use() })
