@@ -111,10 +111,6 @@ class DeleteOperationButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final foregroundColor = scheme.onError;
-    final backgroundColor = scheme.error;
-
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.space2),
       child: OperationButton.filledIcon(
@@ -122,14 +118,10 @@ class DeleteOperationButton extends HookConsumerWidget {
         onPressed: () async {
           await operation.executeOn(ref);
         },
-        style: FilledButton.styleFrom(
-          foregroundColor: foregroundColor,
-          backgroundColor: backgroundColor,
-        ),
+        color: Theme.of(context).colorScheme.error,
         icon: const Icon(Icons.delete_outline, size: 16),
-        label: Text(
-          selection.length > 1 ? "Delete (${selection.length})" : "Delete",
-        ),
+        label: selection.length > 1 ? "Delete (${selection.length})" : "Delete",
+        busyLabel: "Deleting",
       ),
     );
   }

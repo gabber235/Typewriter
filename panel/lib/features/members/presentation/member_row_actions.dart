@@ -24,14 +24,16 @@ class MemberRowActions extends HookConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
-      child: IconButton(
+      child: Button(
+        face: ButtonFace.icon,
         icon: Icon(
           Icons.person_remove_outlined,
           size: 20,
           color: theme.colorScheme.error,
         ),
-        onPressed: () => _confirmRemoveMember(context, ref, isRemoving),
+        label: "Remove member",
         tooltip: "Remove member",
+        onPressed: () => _confirmRemoveMember(context, ref, isRemoving),
       ),
     );
   }

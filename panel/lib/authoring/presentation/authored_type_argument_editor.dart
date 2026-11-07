@@ -116,11 +116,12 @@ final class _AuthoredTypeArgumentEditorState
               SizedBox(height: context.spacing.space2),
               Align(
                 alignment: AlignmentDirectional.centerEnd,
-                child: FilledButton(
+                child: Button(
+                  face: ButtonFace.filled,
+                  label: _working ? "Checking" : "Review type change",
                   onPressed: _working || !widget.enabled
                       ? null
                       : () => _preview(_selection),
-                  child: Text(_working ? "Checking" : "Review type change"),
                 ),
               ),
             ],
@@ -146,22 +147,24 @@ final class _AuthoredTypeArgumentEditorState
         children: [
           SizedBox(width: 120, child: Text(parameter.name)),
           Expanded(
-            child: OutlinedButton(
-              onPressed: _working || !widget.enabled
-                  ? null
-                  : () => _choose(index, parameter.name),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  chosen == null
-                      ? "Choose a type"
-                      : widget.catalog.typeUseName(chosen),
-                ),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Button(
+                face: ButtonFace.outlined,
+                onPressed: _working || !widget.enabled
+                    ? null
+                    : () => _choose(index, parameter.name),
+                label: chosen == null
+                    ? "Choose a type"
+                    : widget.catalog.typeUseName(chosen),
               ),
             ),
           ),
           if (chosen != null)
-            IconButton(
+            Button(
+              face: ButtonFace.icon,
+              icon: const Icon(Icons.close),
+              label: "Clear ${parameter.name}",
               tooltip: "Clear ${parameter.name}",
               onPressed: _working || !widget.enabled
                   ? null
@@ -172,7 +175,6 @@ final class _AuthoredTypeArgumentEditorState
                       );
                       _error = null;
                     }),
-              icon: const Icon(Icons.close),
             ),
         ],
       ),
@@ -283,13 +285,14 @@ final class _TypeRepairReview extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        Button(
+          label: "Cancel",
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text("Cancel"),
         ),
-        FilledButton(
+        Button(
+          face: ButtonFace.filled,
+          label: "Apply type change",
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text("Apply type change"),
         ),
       ],
     );

@@ -120,7 +120,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     if (element case skir.PresentationElement_sectionWrapper(:final value)) {
       child = _decorateSection(context, value, childScope, child);
     }
-    return nodeEnvelope(child, available);
+    return nodeEnvelope(context, child, available);
   }
 
   Widget _renderElement(

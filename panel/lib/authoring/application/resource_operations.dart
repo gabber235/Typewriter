@@ -316,10 +316,10 @@ final class ResourceOpenOperation extends IntentShortcutOperation {
   Widget inspectorButton(List<Selectable> selection) => Consumer(
     builder: (context, ref, _) => Tooltip(
       message: description,
-      child: TextButton.icon(
-        onPressed: () => executeOn(ref),
+      child: Button(
         icon: const Icon(Icons.open_in_new, size: 16),
-        label: Text(name),
+        label: name,
+        onPressed: () => executeOn(ref),
       ),
     ),
   );

@@ -134,11 +134,12 @@ class JoinCodesTable extends HookConsumerWidget {
                     ),
                   ),
                   SizedBox(width: context.spacing.space2),
-                  IconButton(
+                  Button(
+                    face: ButtonFace.icon,
                     icon: const Icon(Icons.copy, size: 16),
-                    onPressed: () => _copyToClipboard(context, fullUrl),
+                    label: "Copy Join Code",
                     tooltip: "Copy Join Code",
-                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _copyToClipboard(context, fullUrl),
                   ),
                 ],
               ),

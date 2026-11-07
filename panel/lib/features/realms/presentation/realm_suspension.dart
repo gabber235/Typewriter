@@ -180,10 +180,11 @@ class _ConnectionCard extends StatelessWidget {
                                   RealmConnectionState.unavailable) &&
                           onRetry != null) ...[
                         SizedBox(height: context.spacing.space4),
-                        OutlinedButton.icon(
-                          onPressed: onRetry,
+                        Button(
+                          face: ButtonFace.outlined,
                           icon: const Icon(Icons.refresh),
-                          label: const Text("Check again"),
+                          label: "Check again",
+                          onPressed: onRetry,
                         ),
                       ],
                     ],

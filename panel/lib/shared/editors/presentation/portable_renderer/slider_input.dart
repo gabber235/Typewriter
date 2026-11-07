@@ -57,19 +57,17 @@ extension _PortableSliderInputRendering on PortablePresentationNodeRenderer {
               .toFrozen(),
           (context, states, style, resolved) => Align(
             alignment: AlignmentDirectional.centerStart,
-            child: OutlinedButton.icon(
-              key: ValueKey("${node.nodeId}.input"),
+            child: Button(
+              face: ButtonFace.outlined,
+              icon: const Icon(Icons.tune),
+              label: "Set to ${_displayNumber(minimum)}",
+              color: _accentOf(style, skir.ButtonVariant.outlined),
+              dense: _denseOf(style),
               statesController: states,
-              style: style,
               onPressed: childScope.enabled && !childScope.readOnly
                   ? () =>
                         childScope.writePayload(slider.control.binding, initial)
                   : null,
-              icon: const Icon(Icons.tune),
-              label: Text(
-                "Set to ${_displayNumber(minimum)}",
-                textAlign: resolved.alignment,
-              ),
             ),
           ),
           enabled: childScope.enabled && !childScope.readOnly,

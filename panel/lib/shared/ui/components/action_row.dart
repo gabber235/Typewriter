@@ -185,85 +185,53 @@ class _ActionShortcutButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useLoadingButtonController();
+    final controller = useButtonController();
     useListenable(controller);
-    useEffect(() {
-      final invoke = action.onInvoke;
-      controller.bind(
-        onPressed: invoke == null ? null : () => invoke(ref),
-        onError: (error) {
-          if (!context.mounted) return;
-          if (ScaffoldMessenger.maybeOf(context) != null) {
-            showErrorSnackBar(context, error);
-          }
-        },
-      );
-      return null;
-    }, [controller, action]);
+    final invoke = action.onInvoke;
     final loading = controller.isLoading;
-    final hasInvoke = action.canInvoke && !loading;
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: context.spacing.space2,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (loading)
-          const SizedBox.square(
-            dimension: 12,
-            child: CircularProgressIndicator(
-              semanticsLabel: "Loading",
-              strokeWidth: 2,
-            ),
-          )
-        else if (action.icon != null)
-          action.icon!,
-        Flexible(child: Text(action.label, overflow: TextOverflow.ellipsis)),
-        RotatingShortcuts(
-          shortcuts: action.shortcuts,
-          size: 9,
-          interval: 5.seconds,
+    final pill = Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.space2,
+        vertical: context.spacing.space1,
+      ),
+      child: DefaultTextStyle(
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 12,
         ),
-      ],
-    );
-
-    final pill = AnimatedOpacity(
-      duration: 150.ms,
-      opacity: loading ? 0.7 : 1.0,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: DefaultTextStyle(
-          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+        child: IconTheme(
+          data: IconThemeData(
+            size: 12,
             color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 12,
           ),
-          child: IconTheme(
-            data: IconThemeData(
-              size: 12,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            child: content,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: context.spacing.space2,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ?action.icon,
+              Flexible(child: MotionLabel(action.label, rippling: loading)),
+              if (action.shortcuts.isNotEmpty)
+                ShortcutDisplay(shortcut: action.shortcuts.first, size: 9),
+            ],
           ),
         ),
       ),
     );
 
-    if (!hasInvoke) {
-      return Tooltip(message: action.description, child: pill);
-    }
-
-    return Material(
-      shape: const StadiumBorder(),
-      child: Tooltip(
-        message: action.description,
-        child: Semantics(
-          button: true,
-          child: InkWell(
-            customBorder: const StadiumBorder(),
-            onTap: controller.handlePress,
-            child: pill,
-          ),
-        ),
+    // The pill's own label and shortcut name the button.
+    return Semantics(
+      button: true,
+      child: Button(
+        face: ButtonFace.bare,
+        label: "",
+        tooltip: action.description,
+        controller: controller,
+        onPressed: action.canInvoke && invoke != null
+            ? () => invoke(ref)
+            : null,
+        child: pill,
       ),
     );
   }

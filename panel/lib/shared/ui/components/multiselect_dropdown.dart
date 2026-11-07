@@ -149,9 +149,10 @@ class SmallChip extends HookWidget {
             ),
           ),
           if (onDelete != null)
-            InkWell(
-              onTap: onDelete,
-              borderRadius: BorderRadius.circular(100),
+            Button(
+              face: ButtonFace.bare,
+              label: "Remove $label",
+              onPressed: onDelete,
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.spacing.space2,

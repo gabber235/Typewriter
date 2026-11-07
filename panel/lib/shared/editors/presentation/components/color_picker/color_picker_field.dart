@@ -340,48 +340,43 @@ class ColorPickerField extends HookConsumerWidget {
               children: [
                 if (decoration?.suffixIcon != null) decoration!.suffixIcon!,
                 if (showCopyAction)
-                  IconButton(
-                    tooltip: "Copy color",
-                    constraints: const BoxConstraints.tightFor(
-                      width: 30,
-                      height: 36,
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: enabled ? copyColor : null,
+                  Button(
+                    face: ButtonFace.icon,
                     icon: const Icones(
                       MaterialSymbols.content_copy_rounded,
                       size: 18,
                     ),
+                    label: "Copy color",
+                    tooltip: "Copy color",
+                    onPressed: enabled ? copyColor : null,
                   ),
-                IconButton(
-                  tooltip: isFavorite
-                      ? "Remove from favorites"
-                      : "Add to favorites",
-                  constraints: const BoxConstraints.tightFor(
-                    width: 30,
-                    height: 36,
-                  ),
-                  padding: EdgeInsets.zero,
-                  onPressed: editable ? toggleFavorite : null,
+                Button(
+                  face: ButtonFace.icon,
                   icon: Icones(
                     isFavorite
                         ? MaterialSymbols.star_rounded
                         : MaterialSymbols.star_outline_rounded,
                     size: 18,
                   ),
+                  label: isFavorite
+                      ? "Remove from favorites"
+                      : "Add to favorites",
+                  tooltip: isFavorite
+                      ? "Remove from favorites"
+                      : "Add to favorites",
+                  onPressed: editable ? toggleFavorite : null,
                 ),
-                IconButton(
-                  focusNode: pickerFocus,
+                Button(
+                  face: ButtonFace.icon,
+                  icon: const Icones(MaterialSymbols.palette, size: 18),
+                  label: open.value
+                      ? "Close color picker"
+                      : "Open color picker",
                   tooltip: open.value
                       ? "Close color picker"
                       : "Open color picker",
-                  constraints: const BoxConstraints.tightFor(
-                    width: 30,
-                    height: 36,
-                  ),
-                  padding: EdgeInsets.zero,
+                  focusNode: pickerFocus,
                   onPressed: enabled ? toggle : null,
-                  icon: const Icones(MaterialSymbols.palette, size: 18),
                 ),
               ],
             ),

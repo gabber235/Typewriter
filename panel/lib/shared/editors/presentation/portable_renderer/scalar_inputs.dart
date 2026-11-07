@@ -397,7 +397,10 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (final direction in [-1, 1])
-                  IconButton(
+                  Button(
+                    face: ButtonFace.icon,
+                    icon: Icon(direction < 0 ? Icons.remove : Icons.add),
+                    label: direction < 0 ? "Decrease" : "Increase",
                     tooltip: direction < 0 ? "Decrease" : "Increase",
                     onPressed: scope.enabled && !scope.readOnly
                         ? () => mutate((fresh) {
@@ -461,7 +464,6 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                             return replacement;
                           })
                         : null,
-                    icon: Icon(direction < 0 ? Icons.remove : Icons.add),
                   ),
               ],
             )
@@ -533,14 +535,14 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
           }),
         if (scope.read(input.control.binding)?.authoredPayload ==
             skir.DataValue.unfilled)
-          TextButton(
+          Button(
+            label: "Use empty bytes",
             onPressed: scope.enabled && !scope.readOnly
                 ? () => scope.writePayload(
                     input.control.binding,
                     skir.DataValue.wrapBytes(skir.ByteString.empty),
                   )
                 : null,
-            child: const Text("Use empty bytes"),
           ),
       ],
     );

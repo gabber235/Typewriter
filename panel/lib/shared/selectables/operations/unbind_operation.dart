@@ -103,21 +103,15 @@ class UnbindOperationButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final backgroundColor = Colors.orange;
-    final foregroundColor = backgroundColor.on(context);
     return OperationButton.filledIcon(
       operation: operation,
       onPressed: () async {
         await operation.executeOn(ref);
       },
-      style: FilledButton.styleFrom(
-        foregroundColor: foregroundColor,
-        backgroundColor: backgroundColor,
-      ),
+      color: Colors.orange,
       icon: const Icon(Icons.link_off, size: 16),
-      label: Text(
-        selection.length > 1 ? "Unbind (${selection.length})" : "Unbind",
-      ),
+      label: selection.length > 1 ? "Unbind (${selection.length})" : "Unbind",
+      busyLabel: "Unbinding",
     );
   }
 }

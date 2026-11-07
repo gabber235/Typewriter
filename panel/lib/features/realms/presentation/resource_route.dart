@@ -140,15 +140,25 @@ class ResourceSurface extends ConsumerWidget {
               ),
               Expanded(
                 child: switch (creation) {
-                  final creation? => FloatingButton(
-                    icon: const Icon(Icons.add),
-                    label: creation.label,
-                    onPressed: () => ref.createSelectedResource(
-                      context: context,
-                      type: creation.type,
-                      owner: creation.owner,
-                    ),
-                    child: content,
+                  final creation? => Stack(
+                    children: [
+                      Positioned.fill(child: content),
+                      Positioned(
+                        right: context.spacing.space2,
+                        bottom: context.spacing.space2,
+                        child: Button(
+                          face: ButtonFace.floating,
+                          icon: const Icon(Icons.add),
+                          label: creation.label,
+                          busyLabel: "Creating",
+                          onPressed: () => ref.createSelectedResource(
+                            context: context,
+                            type: creation.type,
+                            owner: creation.owner,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   null => content,
                 },

@@ -92,9 +92,11 @@ class SidebarMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
+    return Button(
+      face: ButtonFace.icon,
       icon: icon,
+      label: tooltip,
+      tooltip: tooltip,
       onPressed: () {
         showModalBottomSheet(
           context: context,

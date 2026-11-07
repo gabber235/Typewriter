@@ -41,13 +41,17 @@ class JoinCodeSettings extends HookConsumerWidget {
     }
 
     final isCustomized = _hasNonDefaultOptions(options.value);
+    final chipStyle = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onPrimaryContainer,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: () => isExpanded.value = !isExpanded.value,
-          borderRadius: context.shapes.mediumBorderRadius,
+        Button(
+          face: ButtonFace.bare,
+          label: "",
+          onPressed: () => isExpanded.value = !isExpanded.value,
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
             child: Row(
@@ -65,32 +69,38 @@ class JoinCodeSettings extends HookConsumerWidget {
                   ),
                 ),
                 SizedBox(width: context.spacing.space2),
-                Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: context.shapes.smallBorderRadius,
-                      ),
-                      child: Text(
-                        "Customized",
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer,
+                // The chip keeps its width; its word types in when the
+                // options leave their defaults, and it is empty otherwise.
+                AnimatedContainer(
+                  duration: motionTimeline(context, MotionToken.ink).duration,
+                  curve: motionTimeline(context, MotionToken.ink).curve,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isCustomized
+                        ? theme.colorScheme.primaryContainer
+                        : context.colors.clear,
+                    borderRadius: context.shapes.smallBorderRadius,
+                  ),
+                  child: Stack(
+                    children: [
+                      ExcludeSemantics(
+                        child: Opacity(
+                          opacity: 0,
+                          child: Text("Customized", style: chipStyle),
                         ),
                       ),
-                    )
-                    .animate(target: isCustomized ? 1.0 : 0.0)
-                    .scaleXY(
-                      begin: 0.7,
-                      end: 1.0,
-                      duration: isCustomized ? 750.ms : 400.ms,
-                      curve: isCustomized
-                          ? ElasticOutCurve(0.4)
-                          : Curves.fastOutSlowIn,
-                    )
-                    .fade(begin: 0.0, end: 1.0, duration: 400.ms),
+                      if (isCustomized)
+                        MotionLabel(
+                          "Customized",
+                          typesIn: true,
+                          style: chipStyle,
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

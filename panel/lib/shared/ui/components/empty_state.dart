@@ -68,10 +68,11 @@ class EmptyState extends HookConsumerWidget {
             ],
             if (buttonText != null) ...[
               SizedBox(height: context.spacing.space4),
-              FilledButton.icon(
-                onPressed: onPressed,
+              Button(
+                face: ButtonFace.filled,
                 icon: const Icones(Fa6Solid.plus),
-                label: Text(buttonText!),
+                label: buttonText!,
+                onPressed: onPressed,
               ),
             ],
           ],

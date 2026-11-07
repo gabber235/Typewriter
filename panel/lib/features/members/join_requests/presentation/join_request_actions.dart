@@ -24,7 +24,6 @@ class BulkJoinRequestActions extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final bulkRoles = useState<List<skir.OrganizationRole>>([]);
     final isAccepting = useState(false);
 
@@ -103,23 +102,22 @@ class BulkJoinRequestActions extends HookConsumerWidget {
                     roleDropdown
                   else
                     Flexible(child: roleDropdown),
-                  LoadingButton.filledIcon(
+                  Button(
+                    face: ButtonFace.filled,
                     onPressed: bulkRoles.value.isEmpty || isAccepting.value
                         ? null
                         : acceptSelected,
                     icon: const Icon(Icons.check, size: 18),
-                    label: const Text("Accept All"),
+                    label: "Accept All",
+                    busyLabel: "Accepting",
                   ),
-                  LoadingButton.outlinedIcon(
+                  Button(
+                    face: ButtonFace.outlined,
                     onPressed: onDecline,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: context.colors.dangerText,
-                      side: BorderSide(
-                        color: theme.colorScheme.error.withValues(alpha: 0.5),
-                      ),
-                    ),
+                    color: context.colors.dangerText,
                     icon: const Icon(Icons.close, size: 18),
-                    label: const Text("Decline All"),
+                    label: "Decline All",
+                    busyLabel: "Declining",
                   ),
                 ],
               ),

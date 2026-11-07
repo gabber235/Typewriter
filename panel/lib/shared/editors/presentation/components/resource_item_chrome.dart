@@ -16,8 +16,10 @@ enum ResourceItemDensity {
 
 /// Host chrome for a resource whose type declares no item presentation: its
 /// icon and label in its accent. Selection, hover, focus and the routed state
-/// come from the nearest [PresentationInteractionScope].
-class ResourceItemChrome extends StatelessWidget {
+/// come from the nearest [PresentationInteractionScope]. Hover raises the
+/// item, focus is the ring, and the fill means selected, routed or drop
+/// accepted; it changes with the move the token table picks.
+class ResourceItemChrome extends HookWidget {
   const ResourceItemChrome({
     required this.appearance,
     this.density = ResourceItemDensity.row,
@@ -35,8 +37,6 @@ class ResourceItemChrome extends StatelessWidget {
         interaction.selected || interaction.routed || interaction.dropAccepted;
     final background = emphasized
         ? accent.withValues(alpha: 0.18)
-        : interaction.hovered || interaction.focused
-        ? accent.withValues(alpha: 0.08)
         : accent.withValues(alpha: 0);
     final label = Text(
       appearance.label,
@@ -78,25 +78,30 @@ class ResourceItemChrome extends StatelessWidget {
         width: emphasized ? 2 : 1,
       ),
     };
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.space3,
-        vertical: density == ResourceItemDensity.row
-            ? context.spacing.space1
-            : context.spacing.space2,
+    final decoration = BoxDecoration(
+      color: density == ResourceItemDensity.row
+          ? background
+          : Color.alphaBlend(
+              background,
+              context.theme.colorScheme.surfaceContainerHighest,
+            ),
+      borderRadius: context.shapes.mediumBorderRadius,
+      border: border,
+    );
+    final motion = useStateMotion(interaction.widgetStates, target: decoration);
+    return Rise(
+      raised: interaction.hovered,
+      child: SurfaceContainer(
+        decoration: decoration,
+        motion: motion,
+        padding: EdgeInsets.symmetric(
+          horizontal: context.spacing.space3,
+          vertical: density == ResourceItemDensity.row
+              ? context.spacing.space1
+              : context.spacing.space2,
+        ),
+        child: content,
       ),
-      decoration: BoxDecoration(
-        color: density == ResourceItemDensity.row
-            ? background
-            : Color.alphaBlend(
-                background,
-                context.theme.colorScheme.surfaceContainerHighest,
-              ),
-        borderRadius: context.shapes.mediumBorderRadius,
-        border: border,
-      ),
-      child: content,
     );
   }
 }

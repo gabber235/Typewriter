@@ -140,7 +140,8 @@ class RealmInboxButton extends HookConsumerWidget {
     }, [mobile, popup]);
     Widget trigger(VoidCallback open) => Semantics(
       liveRegion: true,
-      child: AppBarControl.filled(
+      child: AppBarControl(
+        face: ButtonFace.filled,
         contentBuilder: (context, compact) => AnimatedStatusContent(
           compact: compact,
           icon: Icon(
@@ -153,7 +154,7 @@ class RealmInboxButton extends HookConsumerWidget {
         ),
         tooltip: "Realm inbox (Shift + P in Normal mode)",
         semanticLabel: displayed.semanticLabel,
-        style: displayed.buttonStyle(context),
+        color: displayed.buttonColor(context),
         onPressed: open,
       ),
     );

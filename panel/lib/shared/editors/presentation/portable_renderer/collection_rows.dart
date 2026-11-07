@@ -275,21 +275,28 @@ _SuppliedHeaderControl? _collectionAdd({
     build: (context) => _operationAppearance(
       content,
       mutationScope,
-      (states, style) => IconButton(
-        focusNode: focusNode,
-        statesController: states,
-        style: style,
-        tooltip: _operationText(
-          mutationScope,
-          content?.operationTooltip ?? content?.addLabel,
-          fallbackLabel,
-        ),
-        onPressed: mutationScope.canExecuteAction ? () => add(context) : null,
+      (states, style) => Button(
+        face: ButtonFace.icon,
         icon: _operationGlyph(
           content?.addIcon,
           mutationScope,
           Icon(fallbackIcon),
         ),
+        label: _operationText(
+          mutationScope,
+          content?.operationTooltip ?? content?.addLabel,
+          fallbackLabel,
+        ),
+        tooltip: _operationText(
+          mutationScope,
+          content?.operationTooltip ?? content?.addLabel,
+          fallbackLabel,
+        ),
+        color: _accentOf(style, null),
+        dense: _denseOf(style),
+        statesController: states,
+        focusNode: focusNode,
+        onPressed: mutationScope.canExecuteAction ? () => add(context) : null,
       ),
       tooltip: false,
     ),
@@ -470,7 +477,12 @@ class CollectionSequence extends HookWidget {
           animation: animation,
           child: child,
           builder: (context, child) => Material(
-            elevation: 6 * Curves.easeInOut.transform(animation.value),
+            elevation:
+                6 *
+                motionTimeline(
+                  context,
+                  MotionToken.press,
+                ).curve.transform(animation.value),
             child: child,
           ),
         ),
@@ -728,10 +740,21 @@ extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
     build: (context) => _operationAppearance(
       content,
       scope,
-      (states, style) => IconButton(
-        statesController: states,
-        style: style,
-        focusNode: row.recoveryFocus,
+      (states, style) => Button(
+        face: ButtonFace.icon,
+        icon: _operationGlyph(
+          content?.removeIcon,
+          scope,
+          const Icon(Icons.delete_outline),
+        ),
+        label: _operationText(
+          scope,
+          content?.operationTooltip ?? content?.removeLabel,
+          action is skir.EditorAction_localWrapper &&
+                  action.value is skir.LocalEditorAction_removeMapRowWrapper
+              ? "Remove row"
+              : "Remove item",
+        ),
         tooltip: _operationText(
           scope,
           content?.operationTooltip ?? content?.removeLabel,
@@ -740,14 +763,13 @@ extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
               ? "Remove row"
               : "Remove item",
         ),
+        color: _accentOf(style, null),
+        dense: _denseOf(style),
+        statesController: states,
+        focusNode: row.recoveryFocus,
         onPressed: scope.canExecuteAction
             ? () => runGeneratedRemove(row: row, scope: scope, action: action)
             : null,
-        icon: _operationGlyph(
-          content?.removeIcon,
-          scope,
-          const Icon(Icons.delete_outline),
-        ),
       ),
       tooltip: false,
     ),

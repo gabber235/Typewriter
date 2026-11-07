@@ -32,9 +32,16 @@ class SearchResultCard extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final states = useWidgetStatesController();
-    final surfaceColor = Surface.colorOf(context);
     final alpha = selected ? 0.22 : 0.06;
-    final borderColor = selected ? color : Colors.transparent;
+    final borderColor = selected ? color : color.withValues(alpha: 0);
+    final decoration = BoxDecoration(
+      color: color.withValues(alpha: color.a * alpha),
+      borderRadius: context.shapes.mediumBorderRadius,
+      border: Border.all(color: borderColor, width: 1.4),
+    );
+    final motion = useStateMotion({
+      if (selected) WidgetState.selected,
+    }, target: decoration);
 
     // The cursor is the layer's travelling ring; selection keeps its fill
     // and hue edge.
@@ -42,39 +49,21 @@ class SearchResultCard extends HookWidget {
       active: focused,
       borderRadius: context.shapes.mediumBorderRadius,
       child: SurfaceContainer(
-        motion: ResolvedMotion(
-          motion: CurveMotion(Curves.easeOutCubic, 180.ms),
-          landing: const NoLanding(),
-          repeatFloor: 0,
-        ),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: color.a * alpha),
-          borderRadius: context.shapes.mediumBorderRadius,
-          border: Border.all(color: borderColor, width: 1.4),
-        ),
+        motion: motion,
+        decoration: decoration,
         foregroundFor: (context, displayed) => context.colors.contentPrimary,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: context.shapes.mediumBorderRadius,
-          // The selection shows as a border; assistive technology and
-          // keyboard users read it as the row's selected state.
-          child: Semantics(
-            container: true,
-            selected: selected,
-            child: InkWell(
+        // The selection shows as a border; assistive technology and
+        // keyboard users read it as the row's selected state.
+        child: Semantics(
+          container: true,
+          selected: selected,
+          child: GestureDetector(
+            onLongPress: onLongPress,
+            child: Button(
+              face: ButtonFace.bare,
+              label: "",
               statesController: states,
-              borderRadius: context.shapes.mediumBorderRadius,
-              onTap: onTap,
-              onLongPress: onLongPress,
-              hoverColor: Color.alphaBlend(
-                color.withValues(alpha: alpha + 0.1),
-                surfaceColor,
-              ),
-              splashColor: Color.alphaBlend(
-                color.withValues(alpha: alpha + 0.3),
-                surfaceColor,
-              ),
-              highlightColor: Colors.transparent,
+              onPressed: onTap,
               child: ValueListenableBuilder<Set<WidgetState>>(
                 valueListenable: states,
                 builder: (context, value, _) => PresentationInteractionScope(

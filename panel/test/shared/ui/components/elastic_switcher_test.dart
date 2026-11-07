@@ -55,7 +55,7 @@ void main() {
 
     second.value = true;
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(tester.settleTimeOf(MotionToken.loadIn) ~/ 4);
     final mid = tester.getSize(find.byType(ElasticSwitcher));
     expect(mid.width, allOf(greaterThan(_small.width), lessThan(_large.width)));
     expect(

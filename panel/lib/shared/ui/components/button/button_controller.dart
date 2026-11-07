@@ -1,7 +1,6 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Owns asynchronous execution state for one [LoadingButton] or
-/// [LoadingIconButton].
+/// Owns asynchronous execution state for one [Button].
 ///
 /// The widget that binds the controller is responsible for keeping the bound
 /// callback current. The controller serializes execution and never disposes
@@ -11,7 +10,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// running, [canTrigger] is false and listeners observe [isLoading]. Exceptions
 /// are converted to [lastError] and passed to the bound error callback; the
 /// callback is always released from loading afterward.
-class LoadingButtonController extends ChangeNotifier {
+class ButtonController extends ChangeNotifier {
   bool _isLoading = false;
   String? _lastError;
   FutureOr<void> Function()? _onPressed;
@@ -22,6 +21,11 @@ class LoadingButtonController extends ChangeNotifier {
 
   /// The most recent callback error, cleared when a new execution starts.
   String? get lastError => _lastError;
+
+  int _failures = 0;
+
+  /// How many runs have failed; each failure jams the button once.
+  int get failures => _failures;
 
   /// Whether a bound callback can start without overlapping an execution.
   bool get canTrigger => _onPressed != null && !_isLoading;
@@ -61,6 +65,7 @@ class LoadingButtonController extends ChangeNotifier {
     try {
       await _onPressed!();
     } on Exception catch (error) {
+      _failures++;
       _setError(error.toString());
     } finally {
       _setLoading(false);

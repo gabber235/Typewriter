@@ -102,7 +102,11 @@ class _Error extends ConsumerWidget {
       home: Scaffold(
         body: ErrorScreen(
           message: "$error",
-          child: ElevatedButton(onPressed: retry, child: const Text("Retry")),
+          child: Button(
+            face: ButtonFace.filled,
+            label: "Retry",
+            onPressed: retry,
+          ),
         ),
       ),
     );

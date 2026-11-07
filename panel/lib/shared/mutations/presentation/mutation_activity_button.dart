@@ -60,13 +60,7 @@ class MutationActivityView extends StatelessWidget {
     final drafts = state.entries.values.toList();
     final phase = MutationActivityPhase.resolve(state.submissions, drafts);
     final label = phase.label(drafts.length);
-    final color = phase.color(context);
-    final icon = phase.isSaving
-        ? SizedBox.square(
-            dimension: 16,
-            child: CircularProgressIndicator(strokeWidth: 2, color: color),
-          )
-        : Icon(phase.icon, size: 18);
+    final icon = Icon(phase.icon, size: 18);
     Widget trigger(BuildContext context, VoidCallback show) => ElasticSwitcher(
       child: phase == MutationActivityPhase.idle
           ? null
@@ -79,18 +73,17 @@ class MutationActivityView extends StatelessWidget {
               // when its label changes.
               child: Semantics(
                 liveRegion: true,
-                child: AppBarControl.text(
+                child: AppBarControl(
+                  face: ButtonFace.outlined,
                   tooltip: label,
                   semanticLabel: label,
                   contentBuilder: (context, compact) => AppBarControlContent(
                     compact: compact,
                     icon: icon,
                     label: label,
+                    rippling: phase.isSaving,
                   ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: phase.textColor(context),
-                    backgroundColor: color.withValues(alpha: .12),
-                  ),
+                  color: phase.textColor(context),
                   onPressed: show,
                 ),
               ),

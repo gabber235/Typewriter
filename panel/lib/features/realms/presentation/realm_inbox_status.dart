@@ -59,18 +59,10 @@ extension RealmInboxStatusAppearance on RealmInboxStatus {
     _ => context.colors.contentSecondary,
   };
 
-  ButtonStyle buttonStyle(BuildContext context) => FilledButton.styleFrom(
-    foregroundColor: switch (this) {
-      QuietInboxStatus() => context.colors.contentSecondary,
-      AttentionInboxStatus() => context.colors.onWarningContainer,
-      _ => context.colors.onBrandContainer,
-    },
-    backgroundColor: switch (this) {
-      QuietInboxStatus() => context.colors.surfaceRaised,
-      AttentionInboxStatus() => context.colors.warningContainer,
-      _ => context.colors.brandContainer,
-    },
-    side: BorderSide(color: iconColor(context).withValues(alpha: .22)),
-    shape: context.shapes.mediumShape,
-  );
+  /// The fill of the inbox control for this status.
+  Color buttonColor(BuildContext context) => switch (this) {
+    QuietInboxStatus() => context.colors.surfaceRaised,
+    AttentionInboxStatus() => context.colors.warningContainer,
+    _ => context.colors.brandContainer,
+  };
 }

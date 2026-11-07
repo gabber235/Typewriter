@@ -71,10 +71,12 @@ class JoinRequestApproval extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    LoadingButton.filledIcon(
+                    Button(
+                      face: ButtonFace.filled,
                       onPressed: selectedRoles.isEmpty ? null : onConfirm,
                       icon: const Icon(Icons.check, size: 18),
-                      label: Text("Confirm & Add Member"),
+                      label: "Confirm & Add Member",
+                      busyLabel: "Adding",
                     ),
                   ],
                 ),

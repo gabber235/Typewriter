@@ -101,7 +101,12 @@ class DateTimePickerSurface extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     for (final direction in [-1, 1])
-                      IconButton(
+                      Button(
+                        face: ButtonFace.icon,
+                        icon: Icon(direction < 0 ? Icons.remove : Icons.add),
+                        label: direction < 0
+                            ? "Decrease time"
+                            : "Increase time",
                         tooltip: direction < 0
                             ? "Decrease time"
                             : "Increase time",
@@ -129,7 +134,6 @@ class DateTimePickerSurface extends StatelessWidget {
                                 }
                               }
                             : null,
-                        icon: Icon(direction < 0 ? Icons.remove : Icons.add),
                       ),
                   ],
                 ),

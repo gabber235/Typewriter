@@ -17,8 +17,6 @@ class BulkJoinCodeActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return ManagedActionSet(
       shortcuts: [
         ActionShortcut.intent(
@@ -46,16 +44,13 @@ class BulkJoinCodeActions extends StatelessWidget {
             selectedCount: selectedCount,
             onClearSelection: onClearSelection,
           ),
-          LoadingButton.outlinedIcon(
+          Button(
+            face: ButtonFace.outlined,
             onPressed: onRevoke,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.colors.dangerText,
-              side: BorderSide(
-                color: theme.colorScheme.error.withValues(alpha: 0.5),
-              ),
-            ),
+            color: context.colors.dangerText,
             icon: const Icon(Icons.link_off, size: 18),
-            label: const Text("Revoke All"),
+            label: "Revoke All",
+            busyLabel: "Revoking",
           ),
         ],
       ),

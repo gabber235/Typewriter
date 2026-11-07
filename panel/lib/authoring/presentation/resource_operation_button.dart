@@ -20,65 +20,36 @@ class ResourceOperationButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final onPressed = disabledReason == null ? onInvoke : null;
     final destructive = presentation.tone == skir.HeaderActionTone.destructive;
-    final scheme = Theme.of(context).colorScheme;
     final icon = presentation.icon.isEmpty
         ? null
         : Icones(presentation.icon, size: 16);
-    // The destructive tone is more than a colour: the hint announces it.
-    final label = Semantics(
-      hint: destructive ? "Destructive" : null,
-      child: Text(
-        presentation.label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
     final variant = switch (presentation.inspector) {
       skir.OperationInspector_buttonWrapper(:final value) => value,
       _ => skir.ButtonVariant.outlined,
     };
-    final button = switch (variant) {
-      skir.ButtonVariant.filled => FilledButton.icon(
-        style: destructive
-            ? FilledButton.styleFrom(
-                foregroundColor: scheme.onError,
-                backgroundColor: scheme.error,
-              )
-            : null,
-        onPressed: onPressed,
-        icon: icon,
-        label: label,
+    final (face, color) = switch (variant) {
+      skir.ButtonVariant.filled => (
+        ButtonFace.filled,
+        destructive ? context.colors.danger : null,
       ),
-      skir.ButtonVariant.text => TextButton.icon(
-        style: destructive
-            ? TextButton.styleFrom(foregroundColor: context.colors.dangerText)
-            : null,
-        onPressed: onPressed,
-        icon: icon,
-        label: label,
+      skir.ButtonVariant.text => (
+        ButtonFace.quiet,
+        destructive ? context.colors.dangerText : null,
       ),
-      _ => OutlinedButton.icon(
-        style: destructive
-            ? OutlinedButton.styleFrom(
-                foregroundColor: context.colors.dangerText,
-              ).copyWith(
-                side: WidgetStateProperty.resolveWith(
-                  (states) => BorderSide(
-                    color: states.contains(WidgetState.disabled)
-                        ? scheme.onSurface.withValues(alpha: 0.12)
-                        : scheme.error,
-                  ),
-                ),
-              )
-            : null,
-        onPressed: onPressed,
-        icon: icon,
-        label: label,
+      _ => (
+        ButtonFace.outlined,
+        destructive ? context.colors.dangerText : null,
       ),
     };
-    return Tooltip(
-      message: disabledReason ?? presentation.description,
-      child: button,
+    // The destructive tone is more than a colour: the hint announces it.
+    return Button(
+      hint: destructive ? "Destructive" : null,
+      face: face,
+      color: color,
+      onPressed: onPressed,
+      icon: icon,
+      label: presentation.label,
+      tooltip: disabledReason ?? presentation.description,
     );
   }
 }

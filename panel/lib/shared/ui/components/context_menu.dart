@@ -277,7 +277,7 @@ class ContextMenuRegion extends HookWidget {
             children: [
               Expanded(child: Text(menuItem.label, maxLines: 1)),
               if (menuItem.shortcuts.isNotEmpty) ...[
-                RotatingShortcuts(shortcuts: menuItem.shortcuts),
+                ShortcutDisplay(shortcut: menuItem.shortcuts.first),
               ],
             ],
           ),

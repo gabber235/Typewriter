@@ -12,14 +12,15 @@ Future<bool> showWorkSessionLossConfirmation(BuildContext context) async =>
           "or organization will discard it.",
         ),
         actions: [
-          TextButton(
+          Button(
+            label: "Stay",
             autofocus: true,
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("Stay"),
           ),
-          FilledButton(
+          Button(
+            face: ButtonFace.filled,
+            label: "Leave",
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Leave"),
           ),
         ],
       ),

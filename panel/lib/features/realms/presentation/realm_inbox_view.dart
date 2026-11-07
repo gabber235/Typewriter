@@ -72,15 +72,16 @@ class RealmInboxView extends StatelessWidget {
           child: Text("Realm inbox", style: context.theme.textTheme.titleLarge),
         ),
         SizedBox(width: context.spacing.space2),
-        IconButton(
-          onPressed: onClose,
-          tooltip: "Close",
-          visualDensity: VisualDensity.compact,
+        Button(
+          face: ButtonFace.icon,
           icon: Icon(
             Icons.close,
             size: 20,
             color: context.colors.contentSecondary,
           ),
+          label: "Close",
+          tooltip: "Close",
+          onPressed: onClose,
         ),
       ],
     ),
@@ -119,11 +120,12 @@ class RealmInboxView extends StatelessWidget {
     ReadyRealmPublication(:final command) => Padding(
       key: const ValueKey("ready"),
       padding: EdgeInsets.only(top: context.spacing.space4),
-      child: LoadingButton.filledIcon(
-        icon: const Icon(Icons.publish_rounded, size: 20),
+      child: Button(
+        face: ButtonFace.filled,
+        icon: const Icon(Icons.publish_rounded),
+        label: "Publish",
+        busyLabel: "Publishing",
         onPressed: () => _publish(context, command),
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
-        label: const Text("Publish"),
       ),
     ),
     BlockedRealmPublication() => Padding(
@@ -415,13 +417,11 @@ class RealmInboxView extends StatelessWidget {
         title: Text(submission.label),
         subtitle: Text(issue.message),
         trailing: submission.integrationFailed || submission.canReplay
-            ? TextButton(
+            ? Button(
+                label: submission.integrationFailed
+                    ? "Refresh result"
+                    : "Retry request",
                 onPressed: () => work.retrySubmission(submission.id),
-                child: Text(
-                  submission.integrationFailed
-                      ? "Refresh result"
-                      : "Retry request",
-                ),
               )
             : null,
       );
@@ -480,9 +480,9 @@ class RealmInboxView extends StatelessWidget {
             Wrap(
               children: [
                 for (final location in issue.related)
-                  TextButton(
+                  Button(
+                    label: "Related: ${resourceLabel(location.resource)}",
                     onPressed: () => openLocation(location),
-                    child: Text("Related: ${resourceLabel(location.resource)}"),
                   ),
               ],
             ),
@@ -547,7 +547,8 @@ class RealmInboxView extends StatelessWidget {
       Wrap(
         children: [
           if (entry.canReview)
-            TextButton(
+            Button(
+              label: "Review draft",
               onPressed: () async {
                 final review = work.review(entry.id);
                 if (review == null) {
@@ -565,9 +566,9 @@ class RealmInboxView extends StatelessWidget {
                         ),
                       ),
                       actions: [
-                        TextButton(
+                        Button(
+                          label: "Close",
                           onPressed: () => Navigator.pop(context),
-                          child: const Text("Close"),
                         ),
                       ],
                     ),
@@ -576,23 +577,17 @@ class RealmInboxView extends StatelessWidget {
                   review.release();
                 }
               },
-              child: const Text("Review draft"),
             ),
           if (entry.canSave)
-            TextButton(
-              onPressed: () => work.save(entry.id),
-              child: const Text("Apply"),
-            ),
+            Button(label: "Apply", onPressed: () => work.save(entry.id)),
           if (entry.canRetry)
-            TextButton(
+            Button(
+              label: "Retry",
+              busyLabel: "Retrying",
               onPressed: () => work.retry(entry.id),
-              child: const Text("Retry"),
             ),
           if (entry.canDiscard)
-            TextButton(
-              onPressed: () => work.discard(entry.id),
-              child: const Text("Discard"),
-            ),
+            Button(label: "Discard", onPressed: () => work.discard(entry.id)),
         ],
       ),
     ],
