@@ -63,6 +63,7 @@ final class N implements Listener {
     private static long limitMs = 1000, autoMinNanos = 1_000_000L;
     private static int awaiting = -1, autoRefs, hung, stepsTotal, pingsSent, acksReceived;
     private static long lastPass, lastAutoGrant;
+    private static int idleTicks;
     private static final Map<UUID, Integer> acked = new HashMap<>();
     private static final Map<UUID, Long> busySince = new HashMap<>();
     private static final List<Attempt> attempts = new ArrayList<>();
@@ -150,7 +151,16 @@ final class N implements Listener {
         long now = System.nanoTime(), dt = lastPass == 0 ? 0 : Math.min(now - lastPass, 5_000_000L);
         lastPass = now;
         if (!Step.on || Step.permits() > 0) return;
-        if (attempts.isEmpty() && autoRefs == 0) return;
+        if (attempts.isEmpty() && autoRefs == 0) {
+            // Idle keepalive: without ticks Paper's watchdog stops the server after 60 s and keepalives (sent from
+            // the tick) stop, so a Paper with no attempt still ticks once a second. No attempt counts these ticks.
+            if (now - lastAutoGrant >= 1_000_000_000L) {
+                lastAutoGrant = now;
+                idleTicks++;
+                Step.grant(1);
+            }
+            return;
+        }
         // Attempts whose members are caught up and quiet may end now, before any further tick.
         for (Iterator<Attempt> it = attempts.iterator(); it.hasNext(); ) {
             Attempt a = it.next();
@@ -268,6 +278,18 @@ final class N implements Listener {
                 r.put("hung", hung);
                 r.put("idleMs", Step.idleNanos() / 1_000_000);
                 r.put("work", work.size());
+                r.put("idleTicks", idleTicks);
+                r.put("permits", Step.permits());
+                StringBuilder b = new StringBuilder();
+                for (Attempt a : attempts) {
+                    b.append(a.names).append(" start=").append(a.startTick).append(" max=").append(a.max).append(" seen=").append(a.seenTick.size());
+                    for (UUID m : a.members) b.append(" [acked=").append(acked.get(m)).append(" online=").append(online(m)).append(" busy=").append(busy(m)).append(']');
+                    b.append("; ");
+                }
+                r.put("detail", b.toString());
+                StringBuilder o = new StringBuilder();
+                for (Player pl : Bukkit.getOnlinePlayers()) o.append(pl.getName()).append('=').append(acked.get(pl.getUniqueId())).append(' ');
+                r.put("acked", o.toString());
             }
             default -> {
                 return false;

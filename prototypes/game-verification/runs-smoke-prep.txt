@@ -1,0 +1,11 @@
+load 9.66
+Traceback (most recent call last):
+  File "/Users/thijs/.t3/worktrees/TypewriterV1/t3-ae70302c/prototypes/game-verification/orchestrator/topo.py", line 629, in <module>
+    main()
+  File "/Users/thijs/.t3/worktrees/TypewriterV1/t3-ae70302c/prototypes/game-verification/orchestrator/topo.py", line 622, in main
+    {"run": cmd_run, "prep": cmd_prep}[a.cmd](a)
+  File "/Users/thijs/.t3/worktrees/TypewriterV1/t3-ae70302c/prototypes/game-verification/orchestrator/topo.py", line 600, in cmd_prep
+    s.wait_done()
+  File "/Users/thijs/.t3/worktrees/TypewriterV1/t3-ae70302c/prototypes/game-verification/orchestrator/run.py", line 197, in wait_done
+    raise RuntimeError("Paper exited before Done, see " + str(self.proc.log_path))
+RuntimeError: Paper exited before Done, see /Users/thijs/.t3/worktrees/TypewriterV1/t3-ae70302c/prototypes/game-verification/runs/topo-prep-1794022522/s/server.log

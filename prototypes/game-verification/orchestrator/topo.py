@@ -229,7 +229,7 @@ def attempt(paper, cs, req):
         c.C("clearChat")
         c.C("n.watch", needle=tok)
     r = paper.D("n.att", players=",".join(c.name for c in cs), max=req["w"], kind=req["kind"], token=tok,
-                late=req.get("late", 0), asyncMs=req.get("asyncMs", 0), broken=int(req["broken"]))
+                late=req.get("late", 0), asyncMs=req.get("asyncMs", 0), broken=int(req["broken"]), timeoutMs=20000)
     for c in cs:
         c.C("n.watch", needle="")
     return r
@@ -365,6 +365,14 @@ class Topology:
         except Exception as e:
             row.update(error=str(e)[:300], wrong=None)
             print("attempt error:", req, e, file=sys.stderr, flush=True)
+            try:
+                for p in self.papers():
+                    if p.stepped:
+                        print("  stats", p.name, json.dumps(p.D("n.stats")), file=sys.stderr, flush=True)
+                for c in plan["clients"]:
+                    print("  client", c.name, json.dumps(c.C("n.stats")), file=sys.stderr, flush=True)
+            except Exception as e2:
+                print("  diag failed:", e2, file=sys.stderr, flush=True)
         row["s"] = round(time.perf_counter() - t0, 4)
         row["end_s"] = round(time.perf_counter() - self.t0, 3)
         rows.append(row)
@@ -595,7 +603,7 @@ def cmd_prep(a):
     K.JSA.unlink(missing_ok=True)
     run = RUNS / f"topo-prep-{int(time.time())}"
     s = TPaper(run / "s", "prep", stepped=False)
-    s.jvm.append(f"-XX:ArchiveClassesAtExit={K.JSA}")
+    s.jvm += ["-XX:+UnlockDiagnosticVMOptions", "-XX:+AllowArchivingWithJavaAgent", f"-XX:ArchiveClassesAtExit={K.JSA}"]
     s.start()
     s.wait_done()
     s.stop_slow()
