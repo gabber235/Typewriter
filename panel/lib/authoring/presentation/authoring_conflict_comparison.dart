@@ -33,8 +33,9 @@ final class AuthoringConflictComparison extends HookWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           "Compare your complete editing group with the saved values.",
+          style: context.text.sentence,
         ),
         for (final fact in review.comparisonFacts) ...[
           SizedBox(height: context.spacing.space3),
@@ -76,13 +77,21 @@ final class AuthoringConflictComparison extends HookWidget {
           ),
         ],
         if (review.evidence.facts.isEmpty)
-          const Text("The saved values now match the original expectations."),
-        if (review.unavailableReason case final reason?) Text(reason),
+          Text(
+            "The saved values now match the original expectations.",
+            style: context.text.sentence,
+          ),
+        if (review.unavailableReason case final reason?)
+          Text(reason, style: context.text.sentence),
         if (status.value case final message?)
-          Semantics(liveRegion: true, child: Text(message)),
+          Semantics(
+            liveRegion: true,
+            child: Text(message, style: context.text.sentence),
+          ),
         SizedBox(height: context.spacing.space3),
-        const Text(
+        Text(
           "These actions apply to all unsent changes in this editing group. Other groups keep their changes.",
+          style: context.text.sentence,
         ),
         Wrap(
           spacing: context.spacing.space2,

@@ -105,7 +105,6 @@ final exemptions = <Exemption>[
     "lib/features/organizations/presentation/join_organization.dart",
     "lib/shared/ui/components/grid_selectable_card.dart",
     "lib/shared/mutations/presentation/mutation_activity_button.dart",
-    "lib/shared/ui/components/focus_highlight.dart",
     "lib/shared/ui/components/depth_box.dart",
     "lib/shared/search/presentation/search_body.dart",
     "lib/features/realms/presentation/realm_suspension.dart",
@@ -228,6 +227,44 @@ void main() {
       expect(violations, isEmpty, reason: violations.join("\n"));
     },
   );
+
+  test("the panel uses only Lilex and IBM Plex Sans", () {
+    const allowed = {"Lilex", "IBMPlexSans"};
+    for (final brightness in Brightness.values) {
+      final theme = buildTheme(brightness);
+      final t = theme.textTheme;
+      final styles = [
+        t.displayLarge,
+        t.displayMedium,
+        t.displaySmall,
+        t.headlineLarge,
+        t.headlineMedium,
+        t.headlineSmall,
+        t.titleLarge,
+        t.titleMedium,
+        t.titleSmall,
+        t.bodyLarge,
+        t.bodyMedium,
+        t.bodySmall,
+        t.labelLarge,
+        t.labelMedium,
+        t.labelSmall,
+        theme.text.sentence,
+        theme.text.sentenceSmall,
+      ];
+      expect({
+        for (final style in styles) style!.fontFamily,
+      }, everyElement(isIn(allowed)));
+      expect(theme.text.sentence.fontFamily, "IBMPlexSans");
+      expect(t.labelLarge!.fontFamily, "Lilex");
+    }
+    for (final pubspec in ["pubspec.yaml", "widgetbook/pubspec.yaml"]) {
+      final families = RegExp(r"- family: (\w+)")
+          .allMatches(File(pubspec).readAsStringSync())
+          .map((match) => match.group(1));
+      expect(families.toSet(), allowed, reason: pubspec);
+    }
+  });
 
   test("a foreground chosen for any color stays readable on it", () {
     // Presentation and search colors come from authored content, so any

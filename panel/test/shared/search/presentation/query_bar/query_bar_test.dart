@@ -342,7 +342,7 @@ void main() {
       tester,
     ) async {
       final bar = await tester.showQueryBar(query: "id:1 id:2");
-      final error = _colors.error;
+      final error = buildTheme(Brightness.light).colors.dangerText;
 
       final idStyles = bar.stylesOf("id");
       expect(idStyles, hasLength(greaterThanOrEqualTo(2)));

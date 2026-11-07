@@ -5,14 +5,13 @@ const searchResultWorkingSemanticLabel = "Working";
 
 /// Shows the icon or loading state that identifies a search result.
 ///
-/// [icon] is supplied by the result renderer. [focused] changes contrast for the
-/// active row, while [loading] replaces the icon without changing row identity.
+/// [icon] is supplied by the result renderer. [loading] replaces the icon
+/// without changing row identity.
 class SearchResultIconTile extends StatelessWidget {
   const SearchResultIconTile({
     required this.color,
     required this.onColor,
     required this.icon,
-    this.focused = false,
     this.loading = false,
     this.padding,
     super.key,
@@ -21,23 +20,18 @@ class SearchResultIconTile extends StatelessWidget {
   final Color color;
   final Color onColor;
   final Widget icon;
-  final bool focused;
   final bool loading;
 
   final EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor = Surface.colorOf(context);
-    final surfaceBrightness = ThemeData.estimateBrightnessForColor(
-      surfaceColor,
-    );
     return AnimatedContainer(
       duration: 180.ms,
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color: focused ? color.onBrightness(surfaceBrightness.inverted) : color,
+        color: color,
         borderRadius: context.shapes.smallBorderRadius,
         boxShadow: [
           BoxShadow(
@@ -52,11 +46,11 @@ class SearchResultIconTile extends StatelessWidget {
         child: loading
             ? CircularProgressIndicator(
                 semanticsLabel: searchResultWorkingSemanticLabel,
-                color: focused ? color : onColor,
+                color: onColor,
                 padding: EdgeInsets.all(context.spacing.space1),
               )
             : IconTheme(
-                data: IconThemeData(color: focused ? color : onColor),
+                data: IconThemeData(color: onColor),
                 child: icon,
               ),
       ),

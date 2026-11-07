@@ -34,12 +34,14 @@ Widget _buildSuggestionPanel({
     color: backgroundColor,
     shape: shape,
     clipBehavior: Clip.antiAlias,
-    child: Padding(
-      padding: padding,
-      child: Semantics(
-        label: querySuggestionsSemanticLabel,
-        container: true,
-        explicitChildNodes: true,
+    // The list is named over the whole panel, so it reads as wide as the
+    // field it hangs from.
+    child: Semantics(
+      label: querySuggestionsSemanticLabel,
+      container: true,
+      explicitChildNodes: true,
+      child: Padding(
+        padding: padding,
         child: ListView.builder(
           shrinkWrap: true,
           itemCount: suggestions.length + (warning == null ? 0 : 1),

@@ -146,8 +146,11 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Colour | Value |
 |---|---|
 | Brand fill | `#009FFF` with black text |
-| Brand text | `#33AEFF` on dark, `#006FB8` on light |
-| Focus ring | 2 px, `#009FFF` on dark, `#006FB8` on light, at least 3:1, at every window size |
+| Brand text | `brandText`: about `#20A3FF` on dark, `#0062CA` on light |
+| Status text | `dangerText`, `successText`, `warningText`, `infoText`, derived by `text_tone.dart`: 4.5:1 on every surface, most chroma the gamut allows; dark keeps the hue, light turns it up to 10 degrees. About danger `#FF6F69` and `#CD0006`, success `#00B628` and `#067600`, warning `#E88A00` and `#9F4F00` (dark, light) |
+| Info | Violet, OKLCH hue about 288 (`#7C4DFF` fill). Brand is the only blue |
+| Any other hue as text | `colors.textOf(hue, over: tint)` |
+| Focus ring | 2 px, `#009FFF` on dark, light brand text on light, at least 3:1, at every window size. Never a fill |
 
 | Other | Value |
 |---|---|
@@ -223,6 +226,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A heading | `PageHeading`, `SectionTitle` at theme sizes | Local size or weight overrides |
 | A status | `StatusIndicator`, one chip | `TypeBadge`, `SmallChip`, `PresetChip` as separate styles |
 | A pane | `Pane` | Local pane colours |
+| Showing focus | The one `FocusRingLayer`; a `RingTarget` where the ring should wrap more than the focused node | `FocusHighlight`, a focus border, a focus fill |
 
 | Moment | Write |
 |---|---|

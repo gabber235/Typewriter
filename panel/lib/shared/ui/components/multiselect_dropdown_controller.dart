@@ -113,7 +113,7 @@ _MultiselectDropdownController<T> _useMultiselectDropdownController<
     return Text(
       label,
       style: Theme.of(context).textTheme.bodyMedium!
-          .copyWith(color: Theme.of(context).colorScheme.primary),
+          .copyWith(color: context.colors.brandText),
     );
   }
 

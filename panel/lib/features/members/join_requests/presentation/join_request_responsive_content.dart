@@ -79,7 +79,7 @@ class JoinRequestResponsiveContent extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: onDecline,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
+                  foregroundColor: context.colors.dangerText,
                   side: BorderSide(
                     color: theme.colorScheme.error.withValues(alpha: 0.5),
                   ),

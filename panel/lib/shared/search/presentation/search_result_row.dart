@@ -66,42 +66,47 @@ final class SearchResultRow extends StatelessWidget {
           children: details,
         ),
       };
-      return ListTile(
-        dense: true,
-        minTileHeight: 44,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: context.spacing.space3,
+      // The cursor is the layer's travelling ring, never a selected fill.
+      return RingCursor(
+        active: row.focused,
+        borderRadius: context.shapes.mediumBorderRadius,
+        child: ListTile(
+          dense: true,
+          minTileHeight: 44,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: context.spacing.space3,
+          ),
+          selected: row.selected,
+          selectedTileColor: color.withValues(alpha: 0.10),
+          leading: row.loading
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(
+                    semanticsLabel: searchResultWorkingSemanticLabel,
+                    strokeWidth: 2,
+                  ),
+                )
+              : leading == null
+              ? null
+              : decorative(
+                  IconTheme.merge(
+                    data: IconThemeData(color: color),
+                    child: leading!,
+                  ),
+                ),
+          title: decorative(heading ?? subtitle!),
+          subtitle: heading == null || subtitle == null
+              ? null
+              : decorative(subtitle),
+          trailing: kindLabel.isEmpty
+              ? null
+              : SearchResultSuffix(
+                  label: kindLabel,
+                  shortcutActivator: row.shortcutActivator,
+                  selected: row.selected,
+                ),
+          onTap: row.onTap,
         ),
-        selected: row.selected || row.focused,
-        selectedTileColor: color.withValues(alpha: 0.10),
-        leading: row.loading
-            ? const SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(
-                  semanticsLabel: searchResultWorkingSemanticLabel,
-                  strokeWidth: 2,
-                ),
-              )
-            : leading == null
-            ? null
-            : decorative(
-                IconTheme.merge(
-                  data: IconThemeData(color: color),
-                  child: leading!,
-                ),
-              ),
-        title: decorative(heading ?? subtitle!),
-        subtitle: heading == null || subtitle == null
-            ? null
-            : decorative(subtitle),
-        trailing: kindLabel.isEmpty
-            ? null
-            : SearchResultSuffix(
-                label: kindLabel,
-                shortcutActivator: row.shortcutActivator,
-                selected: row.selected,
-              ),
-        onTap: row.onTap,
       );
     }
     return SearchResultCard(
@@ -114,7 +119,6 @@ final class SearchResultRow extends StatelessWidget {
           : SearchResultIconTile(
               color: color,
               onColor: color.on(context),
-              focused: row.focused,
               loading: row.loading,
               icon: decorative(leading ?? const SizedBox.shrink()),
             ),

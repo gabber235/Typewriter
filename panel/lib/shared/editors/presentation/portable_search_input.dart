@@ -203,9 +203,9 @@ final class PortableSearchInput extends HookWidget {
                             borderRadius: context.shapes.mediumBorderRadius,
                           ))
                       .copyWith(
-                        borderSide: FocusHighlight.focusBorder(
-                          context,
-                          FocusType.focus,
+                        borderSide: BorderSide(
+                          color: context.colors.focusRing,
+                          width: context.shapes.ringWidth,
                         ),
                       ),
               suffixIcon: inputContent?.leading == skir.InputAdornment.none
@@ -488,8 +488,8 @@ final class _PortableSearchSurface extends ConsumerWidget {
                 padding: EdgeInsets.all(context.spacing.space2),
                 child: Text(
                   feedback,
-                  style: context.theme.textTheme.bodySmall?.copyWith(
-                    color: context.colors.danger,
+                  style: context.text.sentenceSmall.copyWith(
+                    color: context.colors.dangerText,
                   ),
                 ),
               ),

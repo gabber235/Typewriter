@@ -15,7 +15,8 @@ final class ApplyControls extends HookWidget {
       children: [
         if (state.status != null)
           Semantics(liveRegion: true, child: Text(state.status!)),
-        for (final diagnostic in state.diagnostics) Text(diagnostic.message),
+        for (final diagnostic in state.diagnostics)
+          Text(diagnostic.message, style: context.text.sentence),
         Wrap(
           spacing: context.spacing.space2,
           children: [

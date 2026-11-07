@@ -41,8 +41,8 @@ class GridSelectableCard extends StatelessWidget {
   /// Selection state. When true, the background becomes `baseColor`.
   final bool isSelected;
 
-  /// Focus state. When true, the border is highlighted in `baseColor` and
-  /// selected background gets a slight transparency shift.
+  /// Focus state, for callers that style text. The card draws no focus
+  /// itself: the focus ring layer rings it.
   final bool isFocused;
 
   /// Drives the hover scale and the [PresentationInteractionScope] observation.
@@ -87,9 +87,6 @@ class GridSelectableCard extends StatelessWidget {
 
   Color _backgroundColor() {
     if (isSelected) {
-      if (isFocused) {
-        return baseColor.withValues(alpha: baseColor.a * 0.70);
-      }
       return baseColor;
     }
     return baseColor.withValues(alpha: baseColor.a * 0.15);
@@ -114,10 +111,7 @@ class GridSelectableCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: .circular(borderRadius),
-        border: .all(
-          width: 2,
-          color: isFocused ? baseColor : Colors.transparent,
-        ),
+        border: .all(width: 2, color: Colors.transparent),
       ),
       padding: padding,
       child: Builder(

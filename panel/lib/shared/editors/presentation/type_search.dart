@@ -191,7 +191,6 @@ final class _TypeSearchResultItem extends StatelessWidget {
         icon: icon?.iconValue == null
             ? const Icon(Icons.category_outlined)
             : ResourceIcon(icon: icon),
-        focused: focused,
       ),
       selected: selected,
       focused: focused,

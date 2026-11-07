@@ -134,7 +134,15 @@ class SmallChip extends HookWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              color: color,
+              // A role colour is an authored hue, so its text tone is derived,
+              // including the chip's own tint.
+              color: context.colors.textOf(
+                color,
+                over: Color.alphaBlend(
+                  color.withValues(alpha: 0.15),
+                  Surface.colorOf(context),
+                ),
+              ),
               fontSize: 12,
               fontVariations: [FontVariation.weight(500)],
               height: 1.2,

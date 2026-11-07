@@ -91,7 +91,6 @@ class CreateOrganizationSearchResultItem extends StatelessWidget {
         color: color,
         onColor: color.on(context),
         icon: const Icon(Icons.add_rounded),
-        focused: focused,
         loading: loading,
       ),
       selected: selected,

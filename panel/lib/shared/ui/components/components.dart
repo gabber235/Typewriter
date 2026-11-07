@@ -33,7 +33,6 @@ export "empty_screen.dart";
 export "empty_state.dart";
 export "exclude_interaction.dart";
 export "floating_button.dart";
-export "focus_highlight.dart";
 export "grid_selectable_card.dart";
 export "icon_value.dart";
 export "icons.dart";

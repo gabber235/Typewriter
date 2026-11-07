@@ -23,8 +23,10 @@ final class RingGeometry {
   (Rect, Rect)? measure(RenderBox scope) {
     final context = _context;
     if (context == null) {
-      final rect = _node?.rect;
-      if (rect == null) return null;
+      final node = _node;
+      // A node whose widget left the tree has no rect to ring.
+      if (node == null || !(node.context?.mounted ?? false)) return null;
+      final rect = node.rect;
       final origin = scope.localToGlobal(Offset.zero);
       return (rect.shift(-origin), Rect.largest);
     }
@@ -84,9 +86,29 @@ class RingTarget extends StatelessWidget {
   final BorderRadiusGeometry borderRadius;
   final RingBounds bounds;
 
+  /// The ring geometry of the nearest RingTarget at or above [context], or
+  /// null when there is none.
+  static RingGeometry? geometryAt(BuildContext context) {
+    var found = context.widget is _RingTargetMarker ? context : null;
+    if (found == null) {
+      context.visitAncestorElements((element) {
+        if (element.widget is! _RingTargetMarker) return true;
+        found = element;
+        return false;
+      });
+    }
+    if (found case final BuildContext target) {
+      final marker = target.widget as _RingTargetMarker;
+      return RingGeometry._(target, null, marker.bounds, marker.borderRadius);
+    }
+    return null;
+  }
+
   /// The ring geometry for [node]: the nearest RingTarget between the
   /// node's own element and its parent node's element, else the node's
-  /// own rect with the control radius.
+  /// own rect with the control radius. A scope without a RingTarget, such
+  /// as a route or the root, has none: only a marked scope, a pane, is
+  /// ringed.
   static RingGeometry? geometryOf(
     FocusNode node, {
     BorderRadiusGeometry? fallbackRadius,
@@ -107,6 +129,7 @@ class RingTarget extends StatelessWidget {
       final marker = target.widget as _RingTargetMarker;
       return RingGeometry._(target, null, marker.bounds, marker.borderRadius);
     }
+    if (node is FocusScopeNode) return null;
     return RingGeometry._(
       null,
       node,

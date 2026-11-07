@@ -152,8 +152,6 @@ class MembersTable extends HookConsumerWidget {
     ValueNotifier<skir.RecordId?> focusedMemberId,
     ThemeData theme,
   ) {
-    final isFocused = focusedMemberId.value == member.userId;
-
     void toggleSelection() {
       if (isSelected) {
         selectedIds.value = selectedIds.value
@@ -191,12 +189,9 @@ class MembersTable extends HookConsumerWidget {
     return TableRow(
       key: ValueKey(member.userId),
       decoration: BoxDecoration(
+        // Fill means selected; the ring layer shows focus.
         color: isSelected
-            ? theme.colorScheme.primaryContainer.withValues(
-                alpha: isFocused ? 0.24 : 0.12,
-              )
-            : isFocused
-            ? theme.colorScheme.secondaryContainer.withValues(alpha: 0.12)
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.12)
             : Colors.transparent,
       ),
       children: [

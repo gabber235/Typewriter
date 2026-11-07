@@ -280,7 +280,5 @@ extension on LocalWorkScope {
 
 Widget _diagnostic(BuildContext context, String message) => Text(
   message,
-  style: context.theme.textTheme.bodyMedium?.copyWith(
-    color: context.colors.danger,
-  ),
+  style: context.text.sentence.copyWith(color: context.colors.dangerText),
 );

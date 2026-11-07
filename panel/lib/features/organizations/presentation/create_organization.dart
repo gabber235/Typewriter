@@ -164,7 +164,7 @@ class _OrganizationIconPicker extends StatelessWidget {
                     SizedBox(height: context.spacing.space1),
                     Text(
                       "For now, generated and can be randomized again by clicking the icon.",
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: context.text.sentence.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),

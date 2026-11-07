@@ -27,6 +27,7 @@ export "realms/realm_inbox.dart";
 export "search/query_bar_driver.dart";
 export "search/search_driver.dart";
 export "semantics.dart";
+export "shared/ring_driver.dart";
 export "services/organization_services.dart";
 export "services/services_driver.dart";
 export "shared/field_driver.dart";
