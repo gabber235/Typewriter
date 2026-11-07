@@ -33,6 +33,10 @@ object NumberFormulas {
     @TypewriterFormulaName("compareTo")
     fun Int.compare(other: Int): Int = compareTo(other)
 
+    /** `1..4` is every Int from this to [last], both included; empty when [last] is smaller. */
+    @TypewriterFormulaName("rangeTo")
+    fun Int.upTo(last: Int): List<Int> = (this..last).toList()
+
     @TypewriterFormulaName("toLong")
     fun Int.widen(): Long = toLong()
 

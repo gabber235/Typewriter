@@ -739,7 +739,7 @@ class DefaultCheckedCatalog private constructor(
             if (missing.isEmpty()) {
                 val applied = field.type.apply(bindings)
                 if (applied is Resolution.Invalid) return applied
-                known += resolvedField(field.owner, (applied as Resolution.Ready).value)
+                known += resolvedField(field, (applied as Resolution.Ready).value)
             } else {
                 dependent += DependentField(owner = field.owner, type = field.type, missing = missing)
             }
@@ -818,7 +818,7 @@ class DefaultCheckedCatalog private constructor(
                 return invalid(affected, "invalid_field_narrowing")
             }
             merged[field.owner.name] =
-                resolvedField(field.owner, applied.value, inheritedFields.flatMap(ResolvedField::guarantees).distinct())
+                resolvedField(field, applied.value, inheritedFields.flatMap(ResolvedField::guarantees).distinct())
         }
         for ((name, inheritedFields) in inheritedByName) {
             val distinctOwners = inheritedFields.map(ResolvedField::declarationOwner).distinct()
@@ -1488,10 +1488,16 @@ private fun TypeDefinition.exceedsTypeDepth(): Boolean {
 private val TYPE_USE_DIAGNOSTIC_OWNER = TypeDefinitionId.qualified("typewriter", "TypeUse")
 
 private fun resolvedField(
-    owner: FieldOwner,
+    declaration: FieldDeclaration,
     type: TypeUse,
     guarantees: List<skirout.editor.v1.type_catalog.RuleId> = emptyList(),
-) = ResolvedField(key = owner.name, declarationOwner = owner.definition, type = type, guarantees = guarantees)
+) = ResolvedField(
+    key = declaration.owner.name,
+    declarationOwner = declaration.owner.definition,
+    type = type,
+    guarantees = guarantees,
+    hasConstructorDefault = declaration.hasConstructorDefault,
+)
 
 private fun <T, R> Resolution<T>.flatMap(transform: (T) -> Resolution<R>): Resolution<R> =
     when (this) {

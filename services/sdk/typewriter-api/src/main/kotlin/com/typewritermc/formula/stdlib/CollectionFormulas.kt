@@ -4,7 +4,7 @@ import com.typewritermc.formula.TypewriterFormulaName
 import com.typewritermc.formula.TypewriterFormulaProvider
 
 /**
- * List and map functions. Sums are checked like the arithmetic operators. Kotlin's own collection functions of these
+ * List, set and map functions. Sums are checked like the arithmetic operators. Kotlin's own collection functions of these
  * names would hide or be shadowed by them, so each function has another Kotlin name.
  */
 @TypewriterFormulaProvider
@@ -27,6 +27,10 @@ object CollectionFormulas {
 
     @TypewriterFormulaName("firstOrNull")
     fun <T> List<T>.firstItem(): T? = firstOrNull()
+
+    /** The list without repeats, keeping the first of each equal item. */
+    @TypewriterFormulaName("distinct")
+    fun <T> List<T>.withoutRepeats(): List<T> = distinct()
 
     @TypewriterFormulaName("map")
     fun <T, R> List<T>.mapped(transform: (T) -> R): List<R> = map(transform)
@@ -54,6 +58,13 @@ object CollectionFormulas {
 
     @TypewriterFormulaName("plus")
     fun <T> List<T>.joined(other: List<T>): List<T> = this + other
+
+    @TypewriterFormulaName("contains")
+    fun <T> Set<T>.holds(item: T): Boolean = item in this
+
+    /** Whether the map has [key]; `key in map`. */
+    @TypewriterFormulaName("contains")
+    fun <K, V> Map<K, V>.holdsKey(key: K): Boolean = key in this
 
     /** The value at [key], or null when the map has none. */
     @TypewriterFormulaName("get")

@@ -157,6 +157,29 @@ val TypeSystemFoundationTest by testSuite {
         invalid.diagnostics.map { it.code } shouldContainExactly listOf("argument_bound")
     }
 
+    test("a resolved field says whether a constructor may leave it out, through inheritance and overrides") {
+        val parentId = id("defaults_parent")
+        val parent =
+            recordDefinition(
+                "defaults_parent",
+                field("defaults_parent", "level", TEXT_TEMPLATE).copy(hasConstructorDefault = true),
+                field("defaults_parent", "title", TEXT_TEMPLATE).copy(hasConstructorDefault = true),
+            )
+        val childId = id("defaults_child")
+        val child =
+            recordDefinition(
+                "defaults_child",
+                field("defaults_child", "title", TEXT_TEMPLATE).copy(overrides = listOf(FieldOwner(definition = parentId, name = "title"))),
+                field("defaults_child", "name", TEXT_TEMPLATE),
+            ).copy(parents = listOf(parentId.namedTemplate()))
+
+        val resolved = catalog(parent, child).resolve(childId.use()) as Resolution.Ready
+
+        resolved.value.schema.fields
+            .associate { it.key to it.hasConstructorDefault } shouldBe
+            mapOf("level" to true, "title" to false, "name" to false)
+    }
+
     test("nominal declaration ancestry does not fabricate generic arguments") {
         val resource = resourceDefinition()
         val variable = variableDefinition(resource.id)

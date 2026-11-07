@@ -426,6 +426,8 @@ struct ResolvedField(84180086) {
   declaration_owner: TypeDefinitionId = 1;
   type: TypeUse = 2;
   guarantees: [RuleId] = 3;
+  /// Whether a constructor may leave this field out, from the declaration that resolved it.
+  has_constructor_default: bool = 4;
 }
 struct AppliedSchema(84180087) {
   use: TypeUse = 0;
