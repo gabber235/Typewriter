@@ -4,6 +4,8 @@ import com.typewritermc.types.EvaluationValues
 import skirout.editor.v1.type_catalog.FunctionTypeTemplate
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 
 /**
  * One function formulas can call, generated from a `@TypewriterFormulaProvider` member or written by core.
@@ -70,9 +72,33 @@ sealed interface FormulaFailure {
     data object RecursionLimit : FormulaFailure
 
     data object StepLimit : FormulaFailure
+
+    /** Definitions that read each other, sorted, so every member of the loop gives the same failure. */
+    data class Cycle(
+        val through: List<ResourceId>,
+    ) : FormulaFailure
+
+    /** A value needed what is not filled in yet at [at], which has its own finding. */
+    data class Unfilled(
+        val at: ValueLocation,
+    ) : FormulaFailure
+
+    /** A value read from [on] could not be read, which has its own finding there. */
+    data class Dependency(
+        val on: ResourceId,
+    ) : FormulaFailure
 }
 
 /** What a provider throws to fail one evaluation with a stated [reason]. */
 class FormulaFailureException(
     val reason: FormulaFailure,
 ) : RuntimeException(reason.toString())
+
+/** The bounds every evaluation runs within, which the standard library respects too. */
+object FormulaLimits {
+    /** How deep user functions may call each other. */
+    const val MAX_DEPTH: Int = 256
+
+    /** How many steps one evaluation may take; a collection a provider builds costs one step per item. */
+    const val MAX_STEPS: Int = 1_000_000
+}

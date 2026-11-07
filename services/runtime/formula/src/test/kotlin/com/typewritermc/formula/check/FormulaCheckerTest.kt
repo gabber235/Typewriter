@@ -64,6 +64,7 @@ val FormulaCheckerTest by testSuite {
         row("needsPlayer()", int, problem("formula_context_unfillable")),
         row("{ x -> x }", null, problem("formula_cannot_infer")),
         row("\"Total: \${1 + 2}\"", string, type(string)),
+        row("\"Maybe: \${maybe}\"", string, type(string)),
         row("\"Total: \${missing}\"", string, problem("formula_unknown_name")),
         row("let f(n: Int) = f(n)\nf(1)", int, problem("formula_recursive_needs_result")),
         row("let f(n: Int): Int = f(n)\nf(1)", int, type(int)),

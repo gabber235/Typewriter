@@ -3,13 +3,22 @@ package com.typewritermc.realm.formula
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.FieldPath
 import com.typewritermc.authoring.append
+import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.ExportBuilder
+import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.ScopeBuilder
+import com.typewritermc.formula.VarValueDefinition
+import com.typewritermc.formula.check.CheckedBinding
 import com.typewritermc.formula.check.CheckedFormula
 import com.typewritermc.formula.check.check
+import com.typewritermc.formula.eval.Evaluation
+import com.typewritermc.formula.eval.FailedEvaluation
+import com.typewritermc.formula.eval.FunctionValue
+import com.typewritermc.formula.eval.evaluate
+import com.typewritermc.formula.graph.GraphKey
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.Fact
 import com.typewritermc.realm.authoring.OwnLinks
@@ -20,6 +29,8 @@ import com.typewritermc.realm.authoring.ownershipRelations
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.DynamicHook
 import com.typewritermc.services.libs.utils.runExtension
+import com.typewritermc.types.field
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -258,4 +269,66 @@ internal data class CheckFormula(
         if (site.computedAtFunction) return null
         return with(RealmFormulaEnvironment(at, reads)) { site.formula.check(site.expected) }
     }
+}
+
+/**
+ * The value at [at]: a plain value as stored, a computed one by running its formula, and a function's body as a
+ * function value without running it, whose reads land on whoever calls it. The one boundary: every evaluation failure
+ * becomes [Evaluation.Failed], so it is memoized and never escapes to a reader. A formula with problems, or one that
+ * needs a context the realm cannot fill, is not evaluated.
+ */
+internal data class Evaluate(
+    val at: ValueLocation,
+) : RealmQuery<Evaluation<Any?>> {
+    context(reads: RealmReads)
+    override fun compute(): Evaluation<Any?> =
+        try {
+            evaluate()
+        } catch (failed: FailedEvaluation) {
+            Evaluation.Failed(at, failed.reason)
+        }
+
+    context(reads: RealmReads)
+    private fun evaluate(): Evaluation<Any?> {
+        val site = reads.read(FormulasOf(at.resource)).firstOrNull { it.holder == at } ?: return Evaluation.Value(stored())
+        if (site.computedAtFunction) return Evaluation.NotEvaluated
+        val checked = reads.read(CheckFormula(site.at)) ?: return Evaluation.NotEvaluated
+        if (checked.problems.isNotEmpty() || site.expected.context.isNotEmpty() || !checked.reads.isPure) return Evaluation.NotEvaluated
+        if (site.body) {
+            val parameters = site.expected.parameters.map { CheckedBinding.Named(it.name, it.type) }
+            return Evaluation.Value(FunctionValue(checked.tree, parameters, emptyMap(), at))
+        }
+        return with(RealmEvaluationEnvironment(reads, at)) { checked.tree.evaluate(emptyMap(), at) }
+    }
+
+    /** The plain value stored at [at], through the walk. A plain Var gives its value, which keeps T in its value field. */
+    context(reads: RealmReads)
+    private fun stored(): Any? {
+        val authored = tracked()
+        val catalog = authored.viewCatalog.checked
+        val record = authored.record(at.resource) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
+        val (type, value) = record.storedAt(at.path, catalog) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
+        if (value == DataValue.UNFILLED) throw FailedEvaluation(FormulaFailure.Unfilled(at))
+        val plain = (value as? DataValue.NamedWrapper)?.value?.takeIf { it.actualType.definition == VarValueDefinition.id }
+        if (plain == null) {
+            if (type.isVar()) throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
+            return value.toFormulaValue(type, at, catalog)
+        }
+        val held = plain.actualType.arguments.first()
+        val inner = (plain.payload as? DataValue.RecordWrapper)?.field("value") ?: DataValue.UNFILLED
+        return inner.toFormulaValue(held, at.field("value"), catalog)
+    }
+
+    /** Sorted, so the value is equal whichever member a pass entered first, and readers keep early cutoff. */
+    override fun onCycle(members: List<GraphKey<*>>): Evaluation<Any?> =
+        Evaluation.Failed(
+            at,
+            FormulaFailure.Cycle(
+                members
+                    .filterIsInstance<Evaluate>()
+                    .map { it.at.resource }
+                    .distinct()
+                    .sortedBy { it.value },
+            ),
+        )
 }

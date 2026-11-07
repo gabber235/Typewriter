@@ -14,6 +14,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
 import com.typewritermc.checking.DraftType
+import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedPublishedContent
@@ -25,17 +26,30 @@ import com.typewritermc.engine.pages.StaticEntry
 import com.typewritermc.engine.pages.definition
 import com.typewritermc.engine.pages.staticPage
 import com.typewritermc.engine.runtime.ResourceGraphContentGateway
+import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.DefinitionScope
 import com.typewritermc.formula.Formula
+import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.FormulaReference
+import com.typewritermc.formula.RecordValue
 import com.typewritermc.formula.TextSpan
 import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
+import com.typewritermc.formula.eval.Evaluation
+import com.typewritermc.formula.eval.EvaluationEnvironment
 import com.typewritermc.library.book
 import com.typewritermc.library.library
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.RealmReads
+import com.typewritermc.realm.authoring.readNow
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.formula.CheckFormula
+import com.typewritermc.realm.formula.DynamicOf
+import com.typewritermc.realm.formula.Evaluate
+import com.typewritermc.realm.formula.FormulaSite
+import com.typewritermc.realm.formula.FormulasOf
+import com.typewritermc.realm.formula.RealmEvaluationEnvironment
 import com.typewritermc.realm.operation.prepare
 import com.typewritermc.realm.operation.preview
 import com.typewritermc.realm.operation.shouldBePrepared
@@ -43,10 +57,18 @@ import com.typewritermc.realm.operation.shouldBeReady
 import com.typewritermc.realm.publication.AuthoringAcceptance
 import com.typewritermc.realm.publication.CompilationInputs
 import com.typewritermc.realm.publication.ResourceGraphArtifactProducer
+import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.setup.SetupList
 import com.typewritermc.setup.SetupRoot
+import com.typewritermc.testing.routes.FixtureBoxDefinition
+import com.typewritermc.testing.routes.FixtureLoot
+import com.typewritermc.testing.routes.FixtureLootDefinition
+import com.typewritermc.testing.routes.FixturePrizeDefinition
+import com.typewritermc.testing.routes.FixtureSignalDefinition
+import com.typewritermc.testing.routes.FixtureStockEntry
 import com.typewritermc.testing.routes.fixtureContextEntry
 import com.typewritermc.testing.routes.fixtureStaticEntry
+import com.typewritermc.testing.routes.fixtureStockEntry
 import com.typewritermc.testkit.complete
 import com.typewritermc.testkit.ready
 import com.typewritermc.types.Ref
@@ -55,8 +77,11 @@ import com.typewritermc.types.function
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
 import com.typewritermc.types.toSkir
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
 import io.kotest.matchers.collections.shouldContain
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
@@ -72,10 +97,16 @@ import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.type_catalog.RecordForm
+import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -310,6 +341,13 @@ class FormulaPageBuilder internal constructor(
         key: String = name,
     ): ResourceId = add(name, type, Var.Computed<Any?, DefinitionScope>(boundFormula(source, references)), key)
 
+    /** A Definition named [name] of the function type [type] whose value is computed by [source], where a body belongs. */
+    fun computedFunction(
+        name: String,
+        type: TypeUse,
+        source: String,
+    ): ResourceId = add(name, type, computed(source))
+
     /** A FixtureContextEntry named [name] whose value is computed by [source] in a context only the engine gives. */
     fun contextual(
         name: String,
@@ -322,6 +360,40 @@ class FormulaPageBuilder internal constructor(
             }.id
             .toSkir()
             .also { named[name] = it }
+
+    /** A FixtureContextEntry named [name] whose value is plainly [value]. */
+    fun contextual(
+        name: String,
+        value: Int,
+    ): ResourceId =
+        elements
+            .fixtureContextEntry(name) {
+                this.name = name
+                chained = Var.Value(value)
+            }.id
+            .toSkir()
+            .also { named[name] = it }
+
+    /** A FixtureStockEntry named [name], which exports its [stock], holding [loot]. */
+    fun stock(
+        name: String,
+        stock: Var<Int, DefinitionScope> = Var.Value(0),
+        loot: FixtureLoot = FixtureLoot(),
+    ): ResourceId =
+        elements
+            .fixtureStockEntry(name) {
+                this.name = name
+                this.stock = stock
+                this.loot = loot
+            }.id
+            .toSkir()
+            .also { named[name] = it }
+
+    /** The type the custom type [build] declares on the Definition [name], as its values name it. */
+    fun customTypeUse(
+        name: String,
+        build: TypeDefinitionBuilder.() -> Unit,
+    ): TypeUse = declares { record(build = build) }.on(elements.idOf(name).toSkir()).use
 
     /** A Definition named [name] of the content type [type] declares, holding the value [value] builds from that type. */
     fun definition(
@@ -464,18 +536,69 @@ class FormulaPage internal constructor(
 class FormulaReads internal constructor(
     private val realm: RealmFixture,
 ) {
-    /** The evaluated value of [resource], or of the field at [path] inside it, as a plain Kotlin value. */
+    /**
+     * The evaluated value of [resource], or of the field at [path] inside it, with everything inside evaluated: a
+     * scalar as its Kotlin value, a record as its RecordValue. Fails when the evaluation did not give a value.
+     */
     fun value(
         resource: ResourceId,
         vararg path: String,
-    ): Any? = TODO("formula evaluation")
+    ): Any? =
+        realm.views.pin().use { pinned ->
+            with(pinned.reads) {
+                val environment = RealmEvaluationEnvironment(this, null)
+                val evaluated = read(Evaluate(siteOf(resource)))
+                val value = (evaluated as? Evaluation.Value)?.value
+                if (evaluated !is Evaluation.Value) throw AssertionError("${resource.value} gave $evaluated, not a value.")
+                environment.force(path.fold<String, Any?>(value) { holder, field -> environment.fieldIn(holder, field) })
+            }
+        }
+
+    /** What evaluating [resource] gave: its exported value, or the value its one formula computes. */
+    fun evaluation(resource: ResourceId): Evaluation<Any?> = realm.readNow(Evaluate(realm.evaluationSite(resource)))
+
+    /** Where the formula [source] stored on [resource] sits, and the value it computes. */
+    fun site(
+        resource: ResourceId,
+        source: String,
+    ): FormulaSite = realm.readNow(FormulasOf(resource)).single { it.formula.source == source }
+
+    /** What evaluating the value the formula [source] on [resource] computes gave. */
+    fun evaluation(
+        resource: ResourceId,
+        source: String,
+    ): Evaluation<Any?> = realm.readNow(Evaluate(site(resource, source).holder))
+
+    /** Why evaluating [resource] failed, or null when it did not fail. */
+    fun failure(resource: ResourceId): FormulaFailure? = (evaluation(resource) as? Evaluation.Failed)?.reason
 
     /** The formula text of [resource] with references shown by their targets' current names. */
     fun display(resource: ResourceId): String = realm.displayOf(resource)
 
-    /** The checked type of [resource]'s value. */
-    fun type(resource: ResourceId): TypeUse = TODO("formula type")
+    /** The checked type of [resource]'s formula. */
+    fun type(resource: ResourceId): TypeUse? = realm.readNow(CheckFormula(realm.readNow(FormulasOf(resource)).single().at))?.type
 }
+
+/** Where evaluating [resource] starts: its export, or the value its one formula computes. */
+private fun RealmFixture.evaluationSite(resource: ResourceId): ValueLocation =
+    readNow(DynamicOf(resource)).exports ?: readNow(FormulasOf(resource)).single().holder
+
+context(reads: RealmReads)
+private fun siteOf(resource: ResourceId): ValueLocation =
+    reads.read(DynamicOf(resource)).exports ?: reads.read(FormulasOf(resource)).single().holder
+
+/** Field [field] of an evaluated record, or of the resource a reference names, as a formula's field read gives it. */
+private fun EvaluationEnvironment.fieldIn(
+    holder: Any?,
+    field: String,
+): Any? =
+    resolve(
+        when (holder) {
+            is RecordValue -> holder.fields[field]
+            is Ref<*, *> -> fieldOf(holder.target, field)
+            else -> throw AssertionError("$holder has no field $field.")
+        },
+    )
 
 /** The formula reads on this realm. */
 val RealmFixture.formulas: FormulaReads get() = FormulaReads(this)
@@ -571,9 +694,115 @@ fun setGiver(
     to: ResourceId,
 ): EditIntent = setReference(gift, "giver", to)
 
-/** Adds the field [name] holding [type] to the custom type the Definition [type] declares. */
-fun addField(
+/** Adds the field [name] holding [field] to the one custom type the Definition [type] declares. */
+fun RealmFixture.addField(
     type: ResourceId,
     name: String,
     field: TypeUse,
-): EditIntent = TODO("add field intent")
+): EditIntent {
+    val declaration = declaredTypes(type).single()
+    val record = (declaration.representation as RepresentationTemplate.RecordWrapper).value
+    val added =
+        FieldDeclaration(
+            owner = FieldOwner(definition = declaration.id, name = name),
+            type = field.toTemplate(),
+            overrides = emptyList(),
+            hasConstructorDefault = false,
+        )
+    val representation = RepresentationTemplate.createRecord(fields = record.fields + added, form = record.form)
+    return setTypes(
+        type,
+        listOf(
+            TypeDefinition(
+                id = declaration.id,
+                parameters = declaration.parameters,
+                representation = representation,
+                parents = declaration.parents,
+            ),
+        ),
+    )
+}
+
+/** The code record the route fixtures declare, holding Vars and references. */
+val lootUse: TypeUse = FixtureLootDefinition.id.use()
+
+/** The code union the route fixtures declare, whose other case holds a Var. */
+val signalUse: TypeUse = FixtureSignalDefinition.id.use()
+
+/** The open type the route fixtures declare. */
+val prizeUse: TypeUse = FixturePrizeDefinition.id.use()
+
+/** The code generic the route fixtures declare, holding [item]. */
+fun boxOf(item: TypeUse): TypeUse = FixtureBoxDefinition.id.use(listOf(item))
+
+/** A reference to the stock entry [target], as a loot's givers hold it. */
+fun stockRef(target: ResourceId): Ref<ContentReferences.Source, FixtureStockEntry> = Ref(AuthorResourceId(target.value))
+
+/** The error findings on each of [resources] after the checks settled. */
+suspend fun RealmFixture.errorSet(vararg resources: ResourceId): Set<Diagnostic> {
+    settle()
+    return resources.flatMapTo(linkedSetOf()) { errorsOn(it) }
+}
+
+/**
+ * The route fixtures plus a second extension's subtype of the open prize type, a record holding a Var, as a later
+ * generation would add it.
+ */
+val prizeExtensionCatalog: RealmCatalog =
+    routeFixtureCatalog.copy(
+        declarations = { loaded ->
+            val treasure = TypeDefinitionId.qualified("prize-extension", "treasure")
+            listOf(
+                OwnedTypeDeclaration(
+                    loaded.declarations.first().origin,
+                    TypeDefinition.partial(
+                        id = treasure,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = treasure, name = "gold"),
+                                            type = definitionValueUse(intUse).toTemplate(),
+                                        ),
+                                    ),
+                                form = RecordForm.CONCRETE,
+                            ),
+                        parents = listOf(FixturePrizeDefinition.id.namedTemplate()),
+                    ),
+                ),
+            )
+        },
+    )
+
+private val changingCode: TypeDefinitionId = TypeDefinitionId.qualified("generation-test", "purse")
+
+/** A code record no Kotlin class backs, whose fields [changingCodeCatalog] picks per generation. */
+val changingCodeUse: TypeUse = changingCode.use()
+
+/** The route fixtures plus [changingCodeUse] holding gold, and silver when [withSilver]. */
+fun changingCodeCatalog(withSilver: Boolean): RealmCatalog =
+    routeFixtureCatalog.copy(
+        declarations = { loaded ->
+            val names = if (withSilver) listOf("gold", "silver") else listOf("gold")
+            listOf(
+                OwnedTypeDeclaration(
+                    loaded.declarations.first().origin,
+                    TypeDefinition.partial(
+                        id = changingCode,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    names.map {
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = changingCode, name = it),
+                                            type = intUse.toTemplate(),
+                                        )
+                                    },
+                                form = RecordForm.CONCRETE,
+                            ),
+                    ),
+                ),
+            )
+        },
+    )

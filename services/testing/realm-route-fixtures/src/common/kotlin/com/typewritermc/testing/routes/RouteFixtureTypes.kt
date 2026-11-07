@@ -13,13 +13,21 @@ import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.pages.StaticEntry
 import com.typewritermc.engine.pages.StaticPage
+import com.typewritermc.formula.ContentReferences
+import com.typewritermc.formula.DefinitionScope
+import com.typewritermc.formula.DynamicProvider
+import com.typewritermc.formula.Dynamics
+import com.typewritermc.formula.TypewriterDynamicProvider
+import com.typewritermc.formula.TypewriterFormulaProvider
 import com.typewritermc.formula.Var
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.Ref
+import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.TypewriterTypeImports
 import skirout.editor.v1.capability.NotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction
 
@@ -86,6 +94,77 @@ data class FixtureContextEntry(
     override val name: String = "",
     val chained: Var<Int, FixtureChainContext> = Var.Value(0),
 ) : StaticEntry
+
+/**
+ * A code record holding Vars, references and a list of Vars, as an extension's record would. A content reference
+ * in a resource needs a collection on its path, so the references are a list. The code types formulas build carry a
+ * one word display name, since a formula names a catalog type by its display name.
+ */
+@TypewriterType(id = "4061a95fbcca42ab8e7dd4824049faaf")
+@TypewriterDisplay(name = "Loot")
+data class FixtureLoot(
+    val gold: Var<Int, DefinitionScope> = Var.Value(0),
+    val bonus: Var<Int, DefinitionScope> = Var.Value(0),
+    val givers: List<Ref<ContentReferences.Source, FixtureStockEntry>> = emptyList(),
+    val extras: List<Var<Int, DefinitionScope>> = emptyList(),
+)
+
+/** A code union whose other case holds a Var. */
+@TypewriterType(id = "c25dd9f1c4a3403cb94b110e85d77abd")
+@TypewriterDisplay(name = "Signal")
+sealed interface FixtureSignal {
+    data object Quiet : FixtureSignal
+
+    data class Tuned(
+        val level: Var<Int, DefinitionScope>,
+    ) : FixtureSignal
+}
+
+/** A code generic, which may hold a content type. */
+@TypewriterType(id = "dc79aeb4b5f8449d8fe2df2f04a53983")
+@TypewriterDisplay(name = "Box")
+data class FixtureBox<T>(
+    val x: T,
+)
+
+/** An open type, which another extension may give more subtypes. */
+interface FixturePrize
+
+/** Gives the open [FixturePrize] its catalog type. */
+@TypewriterTypeImports(FixturePrize::class)
+internal object FixtureTypeImports
+
+/** The open type's one subtype in this extension. */
+@TypewriterType(id = "3720f680942d42d2a304e54d11f7f539")
+@TypewriterDisplay(name = "CoinPrize")
+data class FixtureCoinPrize(
+    val coins: Int,
+) : FixturePrize
+
+/** An entry of the core static page that exports its stock, so a formula naming it reads that field. */
+@TypewriterType(id = "bc6081e04a5a40cf8ae9fe98216c33b1")
+data class FixtureStockEntry(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val stock: Var<Int, DefinitionScope> = Var.Value(0),
+    val loot: FixtureLoot = FixtureLoot(),
+) : StaticEntry
+
+/** A stock entry's export: its stock. */
+@TypewriterDynamicProvider
+object FixtureStockExports : DynamicProvider {
+    override fun Dynamics.register() {
+        each(FixtureStockEntryDefinition.id) { exports { value(FixtureStockEntryFields.stock) } }
+    }
+}
+
+/** Providers formula tests pass the route fixtures' code types to. */
+@TypewriterFormulaProvider
+object FixtureFormulas {
+    /** The worth of a prize; a coin prize is worth its coins. */
+    fun FixturePrize.worth(): Int = (this as? FixtureCoinPrize)?.coins ?: 0
+}
 
 /** The payload and result of the fixture capabilities: a text the capability echoes or reacts to. */
 @TypewriterType(id = "5b0f7e2a9c3d4e1f8a6b2c4d6e8f0a12")

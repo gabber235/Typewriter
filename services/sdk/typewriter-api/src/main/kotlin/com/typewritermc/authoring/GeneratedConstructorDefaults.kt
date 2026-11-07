@@ -142,6 +142,18 @@ private class GeneratedNativeConstructionPlan<T : Any>(
             )
         }
     }
+
+    override fun construct(supplied: Map<FieldOwner, Any?>): Any {
+        val callArguments =
+            buildMap<KParameter, Any?> {
+                fields.forEachIndexed { index, field -> if (field.owner in supplied) put(parameters[index], supplied[field.owner]) }
+            }
+        return try {
+            constructor.callBy(callArguments)
+        } catch (failure: InvocationTargetException) {
+            throw failure.invocationCause()
+        }
+    }
 }
 
 private tailrec fun Throwable.invocationCause(): Throwable =

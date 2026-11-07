@@ -4,9 +4,12 @@ import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.complete
+import com.typewritermc.formula.NamedValue
+import com.typewritermc.formula.RecordValue
 import com.typewritermc.types.catalog.CheckedType
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -49,15 +52,25 @@ class GeneratedRecordNativeBinding<T>(
     GeneratedCheckedNativeBinding {
     override val actualType: TypeUse = checked.use
 
+    /** A fieldless object case, which the catalog declares as a unit case and stores with a unit payload. */
+    private val unitCase: Boolean get() = checked.schema.representation is ResolvedRepresentation.ScalarWrapper
+
     override fun encode(value: T): DataValue =
         DataValue.named(
             actualType = (checked.use as TypeUse.NamedWrapper).value,
-            payload = DataValue.record(fields.associate { it.name to it.binding.encodeGenerated(it.read(value)) }),
+            payload =
+                if (unitCase) {
+                    DataValue.UNIT
+                } else {
+                    DataValue.record(fields.associate { it.name to it.binding.encodeGenerated(it.read(value)) })
+                },
         )
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T {
+        val payload = value.value.namedPayload()
+        if (unitCase && payload == DataValue.UNIT) return construct(emptyMap())
         val record =
-            value.value.namedPayload() as? DataValue.RecordWrapper
+            payload as? DataValue.RecordWrapper
                 ?: throw NativeBindingException("wrong_native_representation", "Expected a named record value.")
         return construct(
             fields.associate { field ->
@@ -67,6 +80,31 @@ class GeneratedRecordNativeBinding<T>(
                 field.name to field.binding.decodeGenerated(fieldValue)
             },
         )
+    }
+
+    /** Builds the instance from a RecordValue, converting each field through its own binding; a fieldless object case needs none. */
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): T {
+        val resolved = values.resolve(value)
+        if (resolved is NamedValue && fields.isEmpty()) return construct(emptyMap())
+        val record = resolved as? RecordValue ?: values.fail("Expected a record of ${actualType.canonicalText}, got $resolved.")
+        return construct(
+            fields.associate { field ->
+                if (field.name !in record.fields) values.fail("The record has no field ${field.name}.")
+                field.name to field.binding.fromValueAny(values.resolve(record.fields[field.name]), values)
+            },
+        )
+    }
+
+    /** The RecordValue of [value] at this binding's applied type; a fieldless object case is a NamedValue, as the walk gives it. */
+    override fun toValue(
+        value: T,
+        values: EvaluationValues,
+    ): Any? {
+        if (unitCase) return NamedValue(actualType, Unit)
+        return RecordValue(actualType, fields.associate { it.name to it.binding.toValueAny(it.read(value), values) })
     }
 }
 
@@ -88,6 +126,19 @@ class GeneratedScalarNativeBinding<T>(
 
     override fun decode(value: com.typewritermc.authoring.CompleteValue): T =
         construct(representation.decodeGenerated(value.value.namedPayload()))
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): T {
+        val named = values.resolve(value) as? NamedValue ?: values.fail("Expected a ${actualType.canonicalText}.")
+        return construct(representation.fromValueAny(named.value, values))
+    }
+
+    override fun toValue(
+        value: T,
+        values: EvaluationValues,
+    ): Any? = NamedValue(actualType, representation.toValueAny(unwrap(value), values))
 }
 
 @GeneratedSdkApi
@@ -111,6 +162,26 @@ class GeneratedEnumNativeBinding<T>(
                 ?: throw NativeBindingException("wrong_native_representation", "Expected a named enum case.")
         return construct(case)
     }
+
+    /** The constant of the case a NamedValue names by its own type. */
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): T {
+        val named = values.resolve(value) as? NamedValue
+        val case =
+            named
+                ?.type
+                ?.named
+                ?.definition
+                ?.memberName ?: values.fail("Expected a case of ${actualType.canonicalText}.")
+        return construct(case)
+    }
+
+    override fun toValue(
+        value: T,
+        values: EvaluationValues,
+    ): Any? = NamedValue((checked.use as TypeUse.NamedWrapper).value.member(key(value)).use, Unit)
 }
 
 private fun DataValue.namedPayload(): DataValue = (this as? DataValue.NamedWrapper)?.payload ?: this

@@ -10,6 +10,7 @@ import com.typewritermc.formula.syntax.Literal
 import com.typewritermc.formula.syntax.MapLiteral
 import com.typewritermc.formula.syntax.Member
 import com.typewritermc.formula.syntax.Name
+import com.typewritermc.formula.syntax.NameBinding
 import com.typewritermc.formula.syntax.Shorthand
 import com.typewritermc.formula.syntax.Unary
 import com.typewritermc.types.functionUse
@@ -276,14 +277,24 @@ private fun Checker.argument(
     return node
 }
 
-/** An argument where a function is wanted: its parameter types must be known, while its result may still be solved from it. */
+/**
+ * An argument where a function is wanted: its parameter types must be known, while its result may still be solved
+ * from it. A parameter type the other arguments and the receiver left open comes from the lambda's own declaration,
+ * as `pass { x: Int -> x + 1 }` solves `T` as Int.
+ */
 private fun Checker.functionArgument(
     argument: CallArgument.Written,
     slot: TypeTemplate.FunctionWrapper,
-    solved: Map<ParameterKey, TypeUse>,
+    solved: MutableMap<ParameterKey, TypeUse>,
     scope: Scope,
 ): CheckedExpression {
     val function = slot.value
+    val lambda = argument.value as? Lambda
+    function.parameters.forEachIndexed { index, parameter ->
+        if (parameter.type.applied(solved) != null) return@forEachIndexed
+        val declared = (lambda?.parameters?.getOrNull(index) as? NameBinding)?.type ?: return@forEachIndexed
+        unify(parameter.type, lower(declared, scope), solved)
+    }
     val parameters = function.parameters.map { it.name to (it.type.applied(solved) ?: return cannotInfer(argument)) }
     val context = function.context.map { it.name to (it.type.applied(solved) ?: return cannotInfer(argument)) }
     return infer(argument.value, functionUse(context, parameters, function.result.applied(solved) ?: ERROR), scope)
@@ -338,10 +349,12 @@ internal fun Checker.callFunctions(
     scope: Scope,
     operator: String? = null,
 ): CheckedExpression {
-    if (blocked(receiver, arguments, safe, scope)) return Invalid(ERROR, span)
-    val receiverType = receiver?.type?.nonNull()
+    val nullRead = receiver != null && receiver.type.isNullable && !safe
+    val candidates = if (nullRead) functions.filter { it.takesNullReceiver } else functions
+    if (blocked(receiver, arguments, nullRead && candidates.isEmpty(), scope)) return Invalid(ERROR, span)
+    val receiverType = if (nullRead) receiver?.type else receiver?.type?.nonNull()
     val wanted = if (safe) expected?.nonNull() else expected
-    val trials = functions.map { it to attempt(it.callSignature, receiver, receiverType, arguments, wanted, span, scope) }
+    val trials = candidates.map { it to attempt(it.callSignature, receiver, receiverType, arguments, wanted, span, scope) }
     val (function, trial) = choose(trials, operator, receiverType, span) ?: return Invalid(ERROR, span)
     absorb(trial.trace)
     if (trial.trace.problems.isNotEmpty()) return Invalid(ERROR, span)
@@ -350,11 +363,24 @@ internal fun Checker.callFunctions(
     return FunctionCall(function, trial.solved, trial.arguments, safe, result, span)
 }
 
-/** True when an operand already failed or a nullable receiver is read without `?.`; the call then adds no problem of its own. */
+/**
+ * Whether [this] takes any receiver, null included, because its receiver is an unbounded type parameter, as the
+ * generic `interpolate` is, so `${maybe}` shows "null".
+ */
+private val FormulaFunction.takesNullReceiver: Boolean
+    get() {
+        val receiver = signature.context.firstOrNull()?.type as? TypeTemplate.ParameterWrapper ?: return false
+        return typeParameters.any { it.key == receiver.value && it.bounds.isEmpty() }
+    }
+
+/**
+ * True when an operand already failed or a nullable receiver is read without `?.` by a call that cannot take null
+ * ([nullRead]); the call then adds no problem of its own.
+ */
 private fun Checker.blocked(
     receiver: CheckedExpression?,
     arguments: List<CallArgument>,
-    safe: Boolean,
+    nullRead: Boolean,
     scope: Scope,
 ): Boolean {
     val written = arguments.filterIsInstance<CallArgument.Written>()
@@ -363,7 +389,7 @@ private fun Checker.blocked(
         for (argument in written.filter { isFlexible(it.value) && !isFunctionLike(it.value) }) infer(argument.value, null, scope)
         return true
     }
-    if (receiver != null && receiver.type.isNullable && !safe) {
+    if (receiver != null && nullRead) {
         report(receiver.span, "formula_nullable_read", "This may be null; use `?.` or `?:`")
         return true
     }

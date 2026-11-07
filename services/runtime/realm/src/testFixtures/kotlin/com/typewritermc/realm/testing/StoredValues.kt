@@ -41,7 +41,9 @@ val storedCase: Arb<StoredCase> =
     }
 
 private val keyUses = listOf(intUse, textUse)
-private val booleanUse: TypeUse = ScalarKind.BOOLEAN.use
+
+/** The Boolean type, as a field or a Definition declares it. */
+val booleanUse: TypeUse = ScalarKind.BOOLEAN.use
 private val scalarUses = keyUses + booleanUse
 
 private fun Random.typeUse(depth: Int): TypeUse =

@@ -156,19 +156,25 @@ val smithType: TypeUse = smithId.use()
 /** A `Var` holding [value] whose formulas read nothing, as `Var<T>` lowers. */
 fun varType(value: TypeUse): TypeUse = VarDefinition.id.use(listOf(value, functionUse(result = value)))
 
+/** The definitions every formula test catalog holds: the standard types, resources, references, Vars and formulas. */
+val formulaCoreDefinitions: List<TypeDefinition> =
+    StandardTypes.definitions +
+        listOf(
+            ResourceDefinition.definition,
+            ContentReferences.Source.Definition.definition,
+            VarDefinition.definition,
+            VarValueDefinition.definition,
+            VarComputedDefinition.definition,
+            FormulaDefinition.definition,
+            FormulaReferenceDefinition.definition,
+            TextSpanDefinition.definition,
+        )
+
 private val testCatalog =
     DefaultCheckedCatalog(
         CatalogGeneration(value = "formula checker test"),
-        StandardTypes.definitions +
+        formulaCoreDefinitions +
             listOf(
-                ResourceDefinition.definition,
-                ContentReferences.Source.Definition.definition,
-                VarDefinition.definition,
-                VarValueDefinition.definition,
-                VarComputedDefinition.definition,
-                FormulaDefinition.definition,
-                FormulaReferenceDefinition.definition,
-                TextSpanDefinition.definition,
                 record(entityId, form = RecordForm.OPEN),
                 record(namedId, form = RecordForm.OPEN),
                 record(npcId, listOf("name" to string), parents = listOf(entityId, namedId)),
@@ -314,7 +320,7 @@ class CheckerWorld(
 fun check(
     source: String,
     expected: TypeUse?,
-    world: CheckerWorld = CheckerWorld(),
+    world: FormulaEnvironment = CheckerWorld(),
 ): CheckedFormula = checkBound(bind(source, expected, world), expected, world)
 
 /** As [check], with every reference the commit bound emptied, as a delete of its target leaves it stored. */
@@ -339,7 +345,7 @@ fun checkWithTargetsGone(
 private fun bind(
     source: String,
     expected: TypeUse?,
-    world: CheckerWorld,
+    world: FormulaEnvironment,
 ): StoredFormula {
     val unbound = checkBound(StoredFormula(source), expected, world)
     val references =
@@ -352,9 +358,9 @@ private fun bind(
 private fun checkBound(
     formula: StoredFormula,
     expected: TypeUse?,
-    world: CheckerWorld,
+    world: FormulaEnvironment,
 ): CheckedFormula =
-    with(world as FormulaEnvironment) {
+    with(world) {
         val body = expected?.let { (it as? TypeUse.FunctionWrapper)?.value }
         if (body != null) {
             checkFormula(formula, body.context, body.parameters, body.result)

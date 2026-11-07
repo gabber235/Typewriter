@@ -1,5 +1,7 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.formula.FormulaFailure
+import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -16,7 +18,9 @@ data class ContentFinding(
 /**
  * What a creator sees of one resource's content. One reporter per fact: a hook that failed on it, an owner chain that
  * loops, each value that does not fit its schema, each emptied reference once per distinct name at a formula, and
- * each problem the checker found. The checker stays silent on an emptied reference, so it is reported once, here.
+ * each problem the checker found, and each formula whose evaluation failed by itself. The checker stays silent on an
+ * emptied reference, so it is reported once, here; a value that needed something missing or broken elsewhere is silent,
+ * since that source has its own finding.
  */
 internal data class ContentFindings(
     val resource: ResourceId,
@@ -47,6 +51,20 @@ internal data class ContentFindings(
                     .distinct()
                     .forEach { name -> add(ContentFinding("formula_deleted_reference", "`$name` was deleted.", site.at)) }
                 reads.read(CheckFormula(site.at))?.problems?.forEach { add(ContentFinding(it.code, it.message, site.at)) }
+                failureOf(reads.read(Evaluate(site.holder)))?.let { add(ContentFinding("formula_failed", it, site.at)) }
             }
         }
 }
+
+/** What a creator reads about a failed evaluation, or null when it did not fail by itself. */
+private fun failureOf(evaluation: Evaluation<Any?>): String? =
+    when (val reason = (evaluation as? Evaluation.Failed)?.reason) {
+        null, is FormulaFailure.Unfilled, is FormulaFailure.Dependency -> null
+        is FormulaFailure.ProviderThrew -> "This formula failed: ${reason.message}"
+        FormulaFailure.Overflow -> "This formula failed: a number got too large."
+        FormulaFailure.DivisionByZero -> "This formula failed: it divides by zero."
+        FormulaFailure.NotFinite -> "This formula failed: a number is not finite."
+        FormulaFailure.RecursionLimit -> "This formula failed: its functions call each other too deeply."
+        FormulaFailure.StepLimit -> "This formula failed: it takes too many steps."
+        is FormulaFailure.Cycle -> "These values read each other: ${reason.through.joinToString { it.value }}."
+    }

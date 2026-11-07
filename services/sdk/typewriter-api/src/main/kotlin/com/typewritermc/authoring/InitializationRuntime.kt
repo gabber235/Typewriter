@@ -11,6 +11,12 @@ interface NativeConstructionPlan {
         arguments: AppliedNativeArguments,
         supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult
+
+    /**
+     * Runs the Kotlin constructor with the [supplied] Kotlin values, every omitted field taking its Kotlin default.
+     * What the constructor throws, an init check among it, reaches the caller unwrapped.
+     */
+    fun construct(supplied: Map<FieldOwner, Any?>): Any
 }
 
 sealed interface CaptureResult {

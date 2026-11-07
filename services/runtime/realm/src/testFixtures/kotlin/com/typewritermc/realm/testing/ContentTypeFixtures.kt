@@ -39,6 +39,7 @@ import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.catalog.unavailableCode
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.functionUse
+import com.typewritermc.types.integer
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
 import com.typewritermc.types.member
@@ -497,6 +498,22 @@ suspend fun RealmFixture.commitRecordUser(
     type: ResourceId,
     vararg fields: Pair<String, DataValue>,
 ): ResourceId = commitDefinition(name, plainType(fieldKey(type))) { plainVar(it.use, recordValue(it.use, *fields)) }.created()
+
+/**
+ * Commits the custom type Reward with the fields gold and silver, and a Definition first of it holding gold 1 and silver
+ * 2; returns the type's and the user's ids.
+ */
+suspend fun RealmFixture.commitSilverPurseUser(): Pair<ResourceId, ResourceId> {
+    val purse =
+        declares {
+            record {
+                field("gold", intUse)
+                field("silver", intUse)
+            }
+        }
+    val reward = commitTypeDefinition("Reward", purse).created()
+    return reward to commitRecordUser("first", reward, "gold" to DataValue.integer(1), "silver" to DataValue.integer(2))
+}
 
 /** Creates and commits a Definition of Type named [name] holding the type [held] builds on it: an alias, or a named custom type. */
 suspend fun RealmFixture.commitTypeDefinition(

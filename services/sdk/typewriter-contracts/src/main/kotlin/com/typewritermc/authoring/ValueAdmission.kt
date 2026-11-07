@@ -93,17 +93,18 @@ fun AuthoringRecord.structuralMisfits(
 
 private fun AuthoringRecord.inspectStructure(catalog: CheckedCatalog): ValueInspection {
     val root = ValueLocation.of(AUTHORING_ROOT)
-    val inspection = ValueInspection(catalog)
+    val inspection = ValueInspection()
+    val walk = ValueWalk(catalog, inspection)
     when (val configuration = configuration) {
         is TypeSelection.CompleteWrapper -> {
             when (val resolved = catalog.resolve(configuration.use.use)) {
                 is Resolution.Invalid -> inspection.problems += resolved.diagnostics.map { it.asValueProblem(root) }
-                is Resolution.Ready -> inspection.validatePayload(DataValue.RecordWrapper(payload), resolved.value, root)
+                is Resolution.Ready -> walk.walkPayload(DataValue.RecordWrapper(payload), resolved.value, root)
             }
         }
 
         is TypeSelection.PendingWrapper -> {
-            inspectPending(configuration, inspection, root)
+            inspectPending(configuration, catalog, walk, inspection, root)
         }
 
         else -> {
@@ -115,9 +116,9 @@ private fun AuthoringRecord.inspectStructure(catalog: CheckedCatalog): ValueInsp
 
 /** Admits a complete value for native use, distinguishing unfinished locations from structurally invalid content. */
 fun CheckedType.complete(value: DataValue): CompletenessResult {
-    val inspection = ValueInspection(resolver)
+    val inspection = ValueInspection()
     val root = ValueLocation.of(AUTHORING_ROOT)
-    inspection.validateCheckedValue(value, this, root)
+    ValueWalk(resolver, inspection).walkChecked(value, this, root)
     return when {
         inspection.problems.isNotEmpty() -> CompletenessResult.Invalid(inspection.problems)
         inspection.unfinished.isNotEmpty() -> CompletenessResult.Unfinished(inspection.unfinished)
@@ -127,10 +128,12 @@ fun CheckedType.complete(value: DataValue): CompletenessResult {
 
 private fun AuthoringRecord.inspectPending(
     selection: TypeSelection.PendingWrapper,
+    catalog: CheckedCatalog,
+    walk: ValueWalk<Unit>,
     inspection: ValueInspection,
     root: ValueLocation,
 ) {
-    val partial = inspection.catalog!!.resolvePartial(selection)
+    val partial = catalog.resolvePartial(selection)
     if (partial is Resolution.Invalid) {
         inspection.problems += partial.diagnostics.map { it.asValueProblem(root) }
         return
@@ -145,7 +148,7 @@ private fun AuthoringRecord.inspectPending(
     (expectedKeys - present).forEach { key -> problems += ValueProblem(location = root.field(key), code = "missing_field") }
     known.forEach { (name, field) ->
         val value = field(name) ?: return@forEach
-        inspection.validateUse(value, field.type, root.field(name))
+        walk.walk(value, field.type, root.field(name))
     }
     dependent.forEach { (name, _) ->
         val value = field(name) ?: return@forEach
@@ -154,58 +157,136 @@ private fun AuthoringRecord.inspectPending(
     inspection.problems += problems
 }
 
-private class ValueInspection(
-    val catalog: CheckedCatalog?,
+/**
+ * What the one schema walk does at each node it reaches. Inspection records a problem and goes on; evaluation stops at
+ * the first. Every node sees a non null type: a nullable use around a value walks its inner type.
+ */
+interface ValueVisitor<R> {
+    /** A check failed at [at]; [type] is the type it is about when that type is gone or invalid. */
+    fun problem(
+        at: ValueLocation,
+        code: String,
+        type: TypeDefinitionId? = null,
+    )
+
+    /** What a node that failed a check stands for, so inspection can go on. A visitor that throws in [problem] never reaches it. */
+    fun placeholder(at: ValueLocation): R
+
+    fun unfinished(at: ValueLocation): R
+
+    fun nullValue(at: ValueLocation): R
+
+    fun scalar(
+        value: DataValue,
+        kind: ScalarKind,
+        at: ValueLocation,
+    ): R
+
+    fun link(
+        link: DataValue.LinkWrapper,
+        at: ValueLocation,
+    ): R
+
+    fun sequence(
+        kind: CollectionKind,
+        items: List<R>,
+        at: ValueLocation,
+    ): R
+
+    fun mapping(
+        rows: List<Pair<R, R>>,
+        at: ValueLocation,
+    ): R
+
+    /** A named record; [actual] is the stored value's own type, expanded and applied, never a field key. */
+    fun record(
+        actual: TypeUse,
+        fields: Map<String, R>,
+        at: ValueLocation,
+    ): R
+
+    /** Any other named value, an enum case or a value class, with its payload's answer. */
+    fun named(
+        actual: TypeUse,
+        payload: R,
+        at: ValueLocation,
+    ): R
+
+    /** True for a Var or function typed position this visitor reads later; the walk then calls [deferred] and does not descend. */
+    fun defers(use: TypeUse): Boolean = false
+
+    fun deferred(
+        value: DataValue,
+        use: TypeUse,
+        at: ValueLocation,
+    ): R = error("This visitor reads every position now.")
+}
+
+/**
+ * The one schema walk over a stored value, so fit, evaluation and the formula sites cannot drift apart. It resolves each
+ * node's type, checks it, and hands the node to [visitor]: one set of locations (item ids, map key and value), one
+ * nullable rule, one actual type rule (a named value's own type decides its record), and the collection rules by
+ * identity key. A content type that is gone or invalid is a problem at the named value or stored type use that names it.
+ */
+class ValueWalk<R>(
+    private val catalog: CheckedCatalog?,
+    private val visitor: ValueVisitor<R>,
 ) {
-    val problems = mutableListOf<ValueProblem>()
-    val unfinished = mutableListOf<ValueLocation>()
+    /** [value] at the declared [use]. */
+    fun walk(
+        value: DataValue,
+        use: TypeUse,
+        at: ValueLocation,
+    ): R = validateUse(value, use, at, 0)
 
-    /** Uses of a type that is gone or invalid, each at its own location; only misfits read them. */
-    val typed = mutableListOf<Misfit>()
+    /** The payload [value] of [checked], such as a resource's fields under its configuration. */
+    fun walkPayload(
+        value: DataValue,
+        checked: CheckedType,
+        at: ValueLocation,
+    ): R = validatePayload(value, checked, checked.use, at, 0)
 
-    /** Records each content type [use] names that stands in as the error type, at [at]. */
+    /** [value] admitted against the applied [checked] type itself. */
+    fun walkChecked(
+        value: DataValue,
+        checked: CheckedType,
+        at: ValueLocation,
+    ): R = validateCheckedValue(value, checked, at, 0)
+
+    /** Reports each content type [use] names that stands in as the error type, at [at]. */
     private fun noteUnavailable(
         use: TypeUse,
         at: ValueLocation,
     ) {
         val resolver = catalog ?: return
         use.referencedDefinitions().distinct().filter { it.contentOwner() != null }.forEach { id ->
-            resolver.unavailableCode(id)?.let { typed += Misfit(ValueProblem(location = at, code = it), id) }
+            resolver.unavailableCode(id)?.let { visitor.problem(at, it, id) }
         }
     }
-
-    fun validateCheckedValue(
-        value: DataValue,
-        checked: CheckedType,
-        at: ValueLocation,
-    ) = validateCheckedValue(value, checked, at, 0)
 
     private fun validateCheckedValue(
         value: DataValue,
         checked: CheckedType,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        if (value == DataValue.UNFILLED) {
-            unfinished += at
-            return
-        }
-        when (val use = checked.use) {
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (visitor.defers(checked.use)) return visitor.deferred(value, checked.use, at)
+        if (value == DataValue.UNFILLED) return visitor.unfinished(at)
+        return when (val use = checked.use) {
             is TypeUse.NullableWrapper -> {
-                if (value == DataValue.NULL) return
-                validateUseWithResolver(value, use.value.value, at, depth + 1)
+                if (value == DataValue.NULL) {
+                    visitor.nullValue(at)
+                } else {
+                    validateUseWithResolver(value, use.value.value, at, depth + 1)
+                }
             }
 
             is TypeUse.NamedWrapper -> {
-                val named = value as? DataValue.NamedWrapper
-                if (named == null) {
-                    problem(at, "expected_named")
-                    return
-                }
+                val named = value as? DataValue.NamedWrapper ?: return problem(at, "expected_named")
                 if (named.actualType == use.value) {
                     noteUnavailable(named.actualType.use, at)
-                    validatePayload(named.payload, checked, at, depth + 1)
+                    validatePayload(named.payload, checked, expanded(named.actualType.use), at, depth + 1)
                 } else {
                     validateUse(value, use, at, depth)
                 }
@@ -225,27 +306,18 @@ private class ValueInspection(
         }
     }
 
-    fun validateUse(
-        value: DataValue,
-        expected: TypeUse,
-        at: ValueLocation,
-    ) = validateUse(value, expected, at, 0)
-
     private fun validateUse(
         value: DataValue,
         expected: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        if (value == DataValue.UNFILLED) {
-            unfinished += at
-            return
-        }
-        when (expected) {
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (visitor.defers(expected)) return visitor.deferred(value, expected, at)
+        if (value == DataValue.UNFILLED) return visitor.unfinished(at)
+        return when (expected) {
             is TypeUse.NullableWrapper -> {
-                if (value == DataValue.NULL) return
-                validateUse(value, expected.value.value, at, depth + 1)
+                if (value == DataValue.NULL) visitor.nullValue(at) else validateUse(value, expected.value.value, at, depth + 1)
             }
 
             is TypeUse.ScalarWrapper -> {
@@ -253,25 +325,7 @@ private class ValueInspection(
             }
 
             is TypeUse.NamedWrapper -> {
-                val named = value as? DataValue.NamedWrapper
-                if (named == null) {
-                    problem(at, "expected_named")
-                    return
-                }
-                val resolver = catalog
-                if (resolver == null) {
-                    if (named.actualType != expected.value) problem(at, "wrong_actual_type")
-                    return
-                }
-                if (!resolver.isReadableAs(named.actualType.use, expected)) {
-                    problem(at, "unreadable_actual_type")
-                    return
-                }
-                noteUnavailable(named.actualType.use, at)
-                when (val actual = resolver.resolve(named.actualType.use)) {
-                    is Resolution.Invalid -> problems += actual.diagnostics.map { it.asValueProblem(at) }
-                    is Resolution.Ready -> validatePayload(named.payload, actual.value, at, depth + 1)
-                }
+                validateNamed(value, expected, at, depth)
             }
 
             is TypeUse.FunctionWrapper -> {
@@ -284,26 +338,45 @@ private class ValueInspection(
         }
     }
 
-    fun validatePayload(
+    /** A value at a named position: it carries its own type, which must be readable as [expected]. */
+    private fun validateNamed(
         value: DataValue,
-        checked: CheckedType,
+        expected: TypeUse.NamedWrapper,
         at: ValueLocation,
-    ) = validatePayload(value, checked, at, 0)
+        depth: Int,
+    ): R {
+        val named = value as? DataValue.NamedWrapper ?: return problem(at, "expected_named")
+        val resolver = catalog
+        if (resolver == null) {
+            return if (named.actualType != expected.value) problem(at, "wrong_actual_type") else visitor.placeholder(at)
+        }
+        if (!resolver.isReadableAs(named.actualType.use, expected)) return problem(at, "unreadable_actual_type")
+        noteUnavailable(named.actualType.use, at)
+        return when (val actual = resolver.resolve(named.actualType.use)) {
+            is Resolution.Invalid -> {
+                actual.diagnostics.forEach { visitor.problem(at, it.code) }
+                visitor.placeholder(at)
+            }
 
+            is Resolution.Ready -> {
+                validatePayload(named.payload, actual.value, expanded(named.actualType.use), at, depth + 1)
+            }
+        }
+    }
+
+    /** [actual] is the named value's own type; a record answers through it, a scalar representation as a named value. */
     private fun validatePayload(
         value: DataValue,
         checked: CheckedType,
+        actual: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        if (value == DataValue.UNFILLED) {
-            unfinished += at
-            return
-        }
-        when (val representation = checked.schema.representation) {
-            is ResolvedRepresentation.ScalarWrapper -> validateScalar(value, representation.value.kind, at)
-            is ResolvedRepresentation.RecordWrapper -> validateRecord(value, representation.value, at, depth)
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (value == DataValue.UNFILLED) return visitor.unfinished(at)
+        return when (val representation = checked.schema.representation) {
+            is ResolvedRepresentation.ScalarWrapper -> visitor.named(actual, validateScalar(value, representation.value.kind, at), at)
+            is ResolvedRepresentation.RecordWrapper -> validateRecord(value, representation.value, actual, at, depth)
             is ResolvedRepresentation.SequenceWrapper -> validateSequence(value, representation.value, at, depth)
             is ResolvedRepresentation.MappingWrapper -> validateMapping(value, representation.value, at, depth)
             is ResolvedRepresentation.LinkWrapper -> validateLink(value, representation.value, at)
@@ -316,28 +389,24 @@ private class ValueInspection(
         use: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        val resolver = catalog
-        if (resolver != null) {
-            validateUse(value, use, at, depth)
-        } else {
-            when (use) {
-                is TypeUse.ScalarWrapper -> {
-                    validateScalar(value, use.value, at)
-                }
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (catalog != null) return validateUse(value, use, at, depth)
+        return when (use) {
+            is TypeUse.ScalarWrapper -> {
+                validateScalar(value, use.value, at)
+            }
 
-                is TypeUse.NullableWrapper -> {
-                    if (value != DataValue.NULL) validateUseWithResolver(value, use.value.value, at, depth + 1)
-                }
+            is TypeUse.NullableWrapper -> {
+                if (value != DataValue.NULL) validateUseWithResolver(value, use.value.value, at, depth + 1) else visitor.nullValue(at)
+            }
 
-                is TypeUse.NamedWrapper, is TypeUse.FunctionWrapper -> {
-                    problem(at, "catalog_required_for_nested_named")
-                }
+            is TypeUse.NamedWrapper, is TypeUse.FunctionWrapper -> {
+                problem(at, "catalog_required_for_nested_named")
+            }
 
-                else -> {
-                    unknownVariant(use)
-                }
+            else -> {
+                unknownVariant(use)
             }
         }
     }
@@ -345,21 +414,20 @@ private class ValueInspection(
     private fun validateRecord(
         value: DataValue,
         representation: RecordResolvedRepresentation,
+        actual: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        val record = value as? DataValue.RecordWrapper
-        if (record == null) {
-            problem(at, "expected_record")
-            return
-        }
+    ): R {
+        val record = value as? DataValue.RecordWrapper ?: return problem(at, "expected_record")
         val fields = representation.fields.associateBy { it.key }
         val present = record.fields.mapView
-        (present.keys - fields.keys).forEach { name -> problem(at.field(name), "unknown_field") }
-        (fields.keys - present.keys).forEach { name -> problem(at.field(name), "missing_field") }
-        fields.forEach { (name, field) ->
-            present[name]?.let { validateUse(it.value, field.type, at.field(name), depth + 1) }
-        }
+        (present.keys - fields.keys).forEach { name -> visitor.problem(at.field(name), "unknown_field") }
+        (fields.keys - present.keys).forEach { name -> visitor.problem(at.field(name), "missing_field") }
+        val answers =
+            fields.entries.mapNotNull { (name, field) ->
+                present[name]?.let { name to validateUse(it.value, field.type, at.field(name), depth + 1) }
+            }
+        return visitor.record(actual, answers.toMap(), at)
     }
 
     private fun validateSequence(
@@ -367,23 +435,23 @@ private class ValueInspection(
         representation: SequenceResolvedRepresentation,
         at: ValueLocation,
         depth: Int,
-    ) {
+    ): R {
         val items =
             when (representation.kind) {
                 CollectionKind.LIST -> (value as? DataValue.ListValueWrapper)?.items
                 CollectionKind.SET -> (value as? DataValue.SetValueWrapper)?.items
                 else -> unknownVariant(representation.kind)
-            }
-        if (items == null) {
-            problem(at, if (representation.kind == CollectionKind.LIST) "expected_list" else "expected_set")
-            return
-        }
+            } ?: return problem(at, if (representation.kind == CollectionKind.LIST) "expected_list" else "expected_set")
         val duplicateIds = items.groupBy { it.id }.filterValues { it.size > 1 }.keys
-        duplicateIds.forEach { id -> problem(at.item(id), "duplicate_item_id") }
+        duplicateIds.forEach { id -> visitor.problem(at.item(id), "duplicate_item_id") }
         if (representation.kind == CollectionKind.SET) {
-            items.repeatsBy { it.value.identityKey() }.forEach { item -> problem(at.item(item.id), "duplicate_set_value") }
+            items.repeatsBy { it.value.identityKey() }.forEach { item -> visitor.problem(at.item(item.id), "duplicate_set_value") }
         }
-        items.forEach { item -> validateUse(item.value, representation.item, at.item(item.id), depth + 1) }
+        return visitor.sequence(
+            representation.kind,
+            items.map { item -> validateUse(item.value, representation.item, at.item(item.id), depth + 1) },
+            at,
+        )
     }
 
     private fun validateMapping(
@@ -391,85 +459,93 @@ private class ValueInspection(
         representation: MappingResolvedRepresentation,
         at: ValueLocation,
         depth: Int,
-    ) {
-        val rows = (value as? DataValue.MapValueWrapper)?.rows
-        if (rows == null) {
-            problem(at, "expected_map")
-            return
-        }
+    ): R {
+        val rows = (value as? DataValue.MapValueWrapper)?.rows ?: return problem(at, "expected_map")
         val duplicateIds = rows.groupBy { it.id }.filterValues { it.size > 1 }.keys
-        duplicateIds.forEach { id -> problem(at.item(id), "duplicate_item_id") }
-        rows.repeatsBy { it.key.identityKey() }.forEach { row -> problem(at.item(row.id).mapKey(), "duplicate_map_key") }
-        rows.forEach { row ->
-            validateUse(row.key, representation.key, at.item(row.id).mapKey(), depth + 1)
-            validateUse(row.value, representation.value, at.item(row.id).mapValue(), depth + 1)
-        }
+        duplicateIds.forEach { id -> visitor.problem(at.item(id), "duplicate_item_id") }
+        rows.repeatsBy { it.key.identityKey() }.forEach { row -> visitor.problem(at.item(row.id).mapKey(), "duplicate_map_key") }
+        return visitor.mapping(
+            rows.map { row ->
+                validateUse(row.key, representation.key, at.item(row.id).mapKey(), depth + 1) to
+                    validateUse(row.value, representation.value, at.item(row.id).mapValue(), depth + 1)
+            },
+            at,
+        )
     }
 
     private fun validateLink(
         value: DataValue,
         representation: LinkResolvedRepresentation,
         at: ValueLocation,
-    ) {
-        val link = value as? DataValue.LinkWrapper
-        if (link == null) {
-            problem(at, "expected_link")
-            return
-        }
-        if (link.endpoint != representation.endpoint) problem(at, "wrong_endpoint")
+    ): R {
+        val link = value as? DataValue.LinkWrapper ?: return problem(at, "expected_link")
+        if (link.endpoint != representation.endpoint) return problem(at, "wrong_endpoint")
+        return visitor.link(link, at)
     }
 
     private fun validateScalar(
         value: DataValue,
         kind: ScalarKind,
         at: ValueLocation,
-    ) {
-        if (
-            kind is ScalarKind.FloatWrapper &&
+    ): R {
+        if (losesFloat32Precision(value, kind)) return problem(at, "float32_precision_loss")
+        if (!scalarFits(value, kind)) return problem(at, "wrong_scalar")
+        if (value is DataValue.TypeUseWrapper && !validateHeldType(value.value, at)) return visitor.placeholder(at)
+        return visitor.scalar(value, kind, at)
+    }
+
+    /** A finite float stored at a 32 bit position that a Float cannot hold exactly. */
+    private fun losesFloat32Precision(
+        value: DataValue,
+        kind: ScalarKind,
+    ): Boolean =
+        kind is ScalarKind.FloatWrapper &&
             kind.value.width == FloatWidth.THIRTY_TWO &&
             value is DataValue.FloatWrapper &&
             value.value.isFinite() &&
             value.value.toFloat().toDouble() != value.value
-        ) {
-            problem(at, "float32_precision_loss")
-            return
-        }
-        val valid =
-            when (kind) {
-                ScalarKind.UNIT -> value == DataValue.UNIT
-                ScalarKind.BOOLEAN -> value is DataValue.BooleanWrapper
-                ScalarKind.TEXT -> value is DataValue.StringValueWrapper
-                ScalarKind.BYTES -> value is DataValue.BytesWrapper
-                is ScalarKind.IntegerWrapper -> value is DataValue.IntegerWrapper && value.fits(kind.value.width)
-                is ScalarKind.FloatWrapper -> value is DataValue.FloatWrapper && value.fits(kind.value.width)
-                ScalarKind.DECIMAL -> value is DataValue.DecimalWrapper && value.value.isCanonicalDecimal()
-                ScalarKind.TIMESTAMP -> value is DataValue.TimestampWrapper
-                ScalarKind.DURATION -> value is DataValue.DurationWrapper
-                ScalarKind.TYPE -> value is DataValue.TypeUseWrapper
-                else -> unknownVariant(kind)
-            }
-        if (!valid) {
-            problem(at, "wrong_scalar")
-            return
-        }
-        if (value is DataValue.TypeUseWrapper) validateHeldType(value.value, at)
-    }
 
-    /** A held type must resolve; a content type it names that is gone or invalid is its own misfit here. */
+    /** Whether [value] has the form of a [kind] scalar. */
+    private fun scalarFits(
+        value: DataValue,
+        kind: ScalarKind,
+    ): Boolean =
+        when (kind) {
+            is ScalarKind.IntegerWrapper -> value is DataValue.IntegerWrapper && value.fits(kind.value.width)
+            is ScalarKind.FloatWrapper -> value is DataValue.FloatWrapper && value.fits(kind.value.width)
+            ScalarKind.DECIMAL -> value is DataValue.DecimalWrapper && value.value.isCanonicalDecimal()
+            else -> plainScalarForms[kind]?.invoke(value) ?: unknownVariant(kind)
+        }
+
+    /** A held type must resolve; a content type it names that is gone or invalid is its own problem here. False when one was found. */
     private fun validateHeldType(
         use: TypeUse,
         at: ValueLocation,
-    ) {
-        val resolver = catalog ?: return
-        (resolver.resolve(use) as? Resolution.Invalid)?.let { invalid -> problems += invalid.diagnostics.map { it.asValueProblem(at) } }
-        noteUnavailable(use, at)
+    ): Boolean {
+        val resolver = catalog ?: return true
+        var fits = true
+        (resolver.resolve(use) as? Resolution.Invalid)?.let { invalid ->
+            fits = false
+            invalid.diagnostics.forEach { visitor.problem(at, it.code) }
+        }
+        use.referencedDefinitions().distinct().filter { it.contentOwner() != null }.forEach { id ->
+            resolver.unavailableCode(id)?.let {
+                fits = false
+                visitor.problem(at, it, id)
+            }
+        }
+        return fits
     }
+
+    /** The named value's own type with every field key expanded, as the visitor receives it. */
+    private fun expanded(use: TypeUse): TypeUse = catalog?.expand(use) ?: use
 
     private fun problem(
         at: ValueLocation,
         code: String,
-    ) {
-        problems += ValueProblem(location = at, code = code)
+    ): R {
+        visitor.problem(at, code)
+        return visitor.placeholder(at)
     }
 
     private fun withinDepth(
@@ -477,9 +553,75 @@ private class ValueInspection(
         depth: Int,
     ): Boolean {
         if (depth <= MAX_AUTHORED_VALUE_DEPTH) return true
-        problem(at, "value_depth_limit")
+        visitor.problem(at, "value_depth_limit")
         return false
     }
+}
+
+/**
+ * complete(), validateStructure and the misfits: the walk as a visitor that collects. A problem about a type that is
+ * gone or invalid is a typed misfit, which only misfits read; every other one is a structural problem.
+ */
+private class ValueInspection : ValueVisitor<Unit> {
+    val problems = mutableListOf<ValueProblem>()
+    val unfinished = mutableListOf<ValueLocation>()
+    val typed = mutableListOf<Misfit>()
+
+    override fun problem(
+        at: ValueLocation,
+        code: String,
+        type: TypeDefinitionId?,
+    ) {
+        if (type ==
+            null
+        ) {
+            problems += ValueProblem(location = at, code = code)
+        } else {
+            typed += Misfit(ValueProblem(location = at, code = code), type)
+        }
+    }
+
+    override fun placeholder(at: ValueLocation) = Unit
+
+    override fun unfinished(at: ValueLocation) {
+        unfinished += at
+    }
+
+    override fun nullValue(at: ValueLocation) = Unit
+
+    override fun scalar(
+        value: DataValue,
+        kind: ScalarKind,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun link(
+        link: DataValue.LinkWrapper,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun sequence(
+        kind: CollectionKind,
+        items: List<Unit>,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun mapping(
+        rows: List<Pair<Unit, Unit>>,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun record(
+        actual: TypeUse,
+        fields: Map<String, Unit>,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun named(
+        actual: TypeUse,
+        payload: Unit,
+        at: ValueLocation,
+    ) = Unit
 }
 
 private fun DataValue.IntegerWrapper.fits(width: IntegerWidth): Boolean = value.toBigIntegerOrNull()?.fits(width) == true
@@ -516,3 +658,15 @@ private fun <T> List<T>.repeatsBy(key: (T) -> String): List<T> {
     val seen = hashSetOf<String>()
     return filterNot { seen.add(key(it)) }
 }
+
+/** The form of each scalar kind that has no width or canonical text to check. */
+private val plainScalarForms: Map<ScalarKind, (DataValue) -> Boolean> =
+    mapOf(
+        ScalarKind.UNIT to { value -> value == DataValue.UNIT },
+        ScalarKind.BOOLEAN to { value -> value is DataValue.BooleanWrapper },
+        ScalarKind.TEXT to { value -> value is DataValue.StringValueWrapper },
+        ScalarKind.BYTES to { value -> value is DataValue.BytesWrapper },
+        ScalarKind.TIMESTAMP to { value -> value is DataValue.TimestampWrapper },
+        ScalarKind.DURATION to { value -> value is DataValue.DurationWrapper },
+        ScalarKind.TYPE to { value -> value is DataValue.TypeUseWrapper },
+    )
