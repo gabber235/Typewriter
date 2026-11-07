@@ -97,7 +97,10 @@ private fun Checker.lowerNamed(
         answer(name, NameMeaning.Case, emptyList())
         return case
     }
-    storedTarget(name)?.let { target -> return lowerStored(node, name, target, arguments) }
+    referenceAt[name.span]?.let { stored ->
+        return stored.target?.let { lowerStored(node, name, it, arguments) }
+            ?: emptied(name).let { ERROR }
+    }
     return lowerByText(node, name, arguments)
 }
 
@@ -122,12 +125,8 @@ private fun Checker.lowerStored(
     target: ResourceId,
     arguments: List<TypeUse>,
 ): TypeUse {
-    val naming = environment.reference(target)
-    if (naming == null) {
-        answer(name, NameMeaning.Deleted(name.text), emptyList())
-        return ERROR
-    }
     answer(name, NameMeaning.Resource(target), emptyList())
+    val naming = environment.reference(target) ?: return ERROR
     if (naming != TYPE_VALUE) {
         report(name.span, "formula_not_a_type", "`${name.text}` is not a type")
         return ERROR

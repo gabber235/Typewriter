@@ -196,9 +196,11 @@ internal class AuthoringPlanningSession(
     fun finish(): Pair<PreparedEdit, AuthoringMutationPlan> {
         val edit = PreparedEdit(catalog = baseline.catalog.generation, expectations = emptyList(), intents = intents)
         val plan = accepted(planner.plan(edit))
-        // Commit drops declarations nothing reaches any more, so the staged graph is compared after the same rule.
+        // Commit normalizes formula references and drops declarations nothing reaches any more, so the staged graph is
+        // compared after the same rules.
+        val normalized = resources.toMutableMap().also { planner.normalize(it, baseline.resources) }
         val expected =
-            resources.mapValues { (id, record) ->
+            normalized.mapValues { (id, record) ->
                 if (baseline.resources[id] !=
                     record
                 ) {

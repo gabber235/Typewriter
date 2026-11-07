@@ -256,6 +256,6 @@ internal data class CheckFormula(
     override fun compute(): CheckedFormula? {
         val site = reads.read(FormulasOf(at.resource)).firstOrNull { it.at == at } ?: return null
         if (site.computedAtFunction) return null
-        return with(RealmFormulaEnvironment(at, reads)) { site.formula.toFormula().check(site.expected) }
+        return with(RealmFormulaEnvironment(at, reads)) { site.formula.check(site.expected) }
     }
 }

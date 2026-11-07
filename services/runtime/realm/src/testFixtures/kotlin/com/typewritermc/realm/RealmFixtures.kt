@@ -924,7 +924,7 @@ internal val ALLOWED: Map<String, Set<String>> =
         "search" to setOf("authoring", "catalog", "storage"),
         "formula" to setOf("authoring", "catalog"),
         "checking" to setOf("formula", "authoring", "catalog"),
-        "edit" to setOf("authoring", "catalog", "search", "storage"),
+        "edit" to setOf("formula", "authoring", "catalog", "search", "storage"),
         "operation" to setOf("edit", "checking", "authoring", "catalog"),
         "publication" to setOf("checking", "authoring", "catalog", "storage"),
         "routes" to setOf("operation", "publication", "edit", "checking", "search", "authoring", "catalog"),

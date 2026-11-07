@@ -24,10 +24,12 @@ import com.typewritermc.realm.edit.RealmStructureProvisioning
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.realm.edit.requiredExpectations
+import com.typewritermc.realm.formula.commitRepairs
 import com.typewritermc.realm.operation.RuntimeOperationPreparation
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.storage.MigrationResources
 import com.typewritermc.realm.storage.openTestDatabase
+import com.typewritermc.services.libs.telemetry.testing.InMemoryTelemetry
 import com.typewritermc.setup.Setup
 import com.typewritermc.testkit.CatalogEncoder
 import com.typewritermc.testkit.setup.SetupApplier
@@ -50,6 +52,8 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 
 /** Where a [RealmFixture] saves authoring: in memory, or in an embedded SurrealDB with the Realm schema. */
 enum class RealmStorage { Memory, Surreal }
@@ -101,6 +105,14 @@ class RealmFixture private constructor(
     private var activation: AutoCloseable? = null
     private var runtime: RealmCheckRuntime? = null
 
+    /** Where the realm's commits log, read back in tests. A restart keeps it. */
+    internal val telemetry = InMemoryTelemetry()
+
+    private val repairFault = AtomicReference<RepairFault?>()
+
+    /** How long commits spent reading the query graph to find their realm owned writes so far, in nanoseconds. */
+    internal val bindingNanos = AtomicLong()
+
     /** What the realm's query graph computed, as its listener hears it. A restart keeps counting. */
     internal val graphRuns = GraphRuns()
     private var generations = 0
@@ -147,6 +159,18 @@ class RealmFixture private constructor(
         runtime?.drain()
     }
 
+    /**
+     * Makes the next commit's realm owned writes fail with [failure]: before the names are bound, or after, once the
+     * writes that would follow are known.
+     */
+    internal fun failNextRepair(
+        failure: Throwable,
+        afterBinding: Boolean = false,
+    ) = repairFault.set(RepairFault(failure, afterBinding))
+
+    /** The bodies of the log records the realm emitted so far. */
+    internal fun logLines(): List<String> = telemetry.logs().map { it.bodyValue?.asString().orEmpty() }
+
     /** Reads the saved authoring from storage again, as the Realm does after a failed persist. */
     internal fun reloadFromStorage() = views.invalidate(storage::readCoherent)
 
@@ -182,7 +206,17 @@ class RealmFixture private constructor(
         val active = catalog.activate("realm-${++generations}")
         activation = active.owner
         views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns + listener)
-        owner = RealmAuthoringOwner(storage, views, findings = { findings() })
+        val binding = views.commitRepairs()
+        owner =
+            RealmAuthoringOwner(storage, views, findings = { findings() }, telemetry.telemetry) { saved, candidate, changed ->
+                val fault = repairFault.getAndSet(null)
+                if (fault?.afterBinding == false) throw fault.failure
+                val started = System.nanoTime()
+                binding.intents(saved, candidate, changed).also {
+                    bindingNanos.addAndGet(System.nanoTime() - started)
+                    if (fault != null) throw fault.failure
+                }
+            }
         provision()
     }
 
@@ -315,6 +349,7 @@ class RealmFixture private constructor(
     override fun close() {
         closeViews()
         database?.close()
+        telemetry.close()
     }
 
     private fun closeViews() {
@@ -347,6 +382,11 @@ class RealmFixture private constructor(
 
         override fun close() = lease.close()
     }
+
+    private class RepairFault(
+        val failure: Throwable,
+        val afterBinding: Boolean,
+    )
 
     companion object {
         /** A provisioned Realm on [catalog], saving into [storage]. */

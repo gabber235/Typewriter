@@ -3,6 +3,7 @@ package com.typewritermc.formula.check
 import com.typewritermc.formula.testing.boolean
 import com.typewritermc.formula.testing.check
 import com.typewritermc.formula.testing.checkWithEmptied
+import com.typewritermc.formula.testing.checkWithTargetsGone
 import com.typewritermc.formula.testing.decimal
 import com.typewritermc.formula.testing.door
 import com.typewritermc.formula.testing.function
@@ -135,6 +136,18 @@ val FormulaCheckerTest by testSuite {
     test("an emptied reference is silent here and gives no cascade") {
         checkWithEmptied("smith.name", string).problems shouldBe emptyList()
         checkWithEmptied("smith.name + 1", string).problems shouldBe emptyList()
+    }
+
+    test("an emptied reference means a deleted name and offers what scope has for its text") {
+        val answer = checkWithEmptied("smith.name", string).names.single()
+        answer.meaning shouldBe NameMeaning.Deleted("smith")
+        answer.candidates.map { it.value } shouldBe listOf("smith")
+    }
+
+    test("a filled reference whose target gives no type keeps its target and is silent") {
+        val checked = checkWithTargetsGone("smith.name", string)
+        checked.problems shouldBe emptyList()
+        (checked.names.single().meaning as NameMeaning.Resource).id.value shouldBe "smith"
     }
 
     test("a name whose type is gone is silent and gives no cascade") {

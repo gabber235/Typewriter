@@ -19,6 +19,7 @@ import com.typewritermc.realm.testing.listType
 import com.typewritermc.realm.testing.meaningOf
 import com.typewritermc.realm.testing.namingType
 import com.typewritermc.realm.testing.record
+import com.typewritermc.realm.testing.referenceTargets
 import com.typewritermc.realm.testing.relinked
 import com.typewritermc.realm.testing.rename
 import com.typewritermc.realm.testing.rerunSince
@@ -282,10 +283,11 @@ val ScopeLookupTest by testSuite {
     }
 
     test("a hook that selects with a predicate gives one scope in a pass and in a commit's binding") {
-        // The commit's binding half arrives with the commit binder; a pass gives the selected resource alone its scope.
         withSetup(library, catalog = catalog) { lib ->
             meaningOf(lib.named("with_own_scope"), "smith") shouldBe listOf(lib.named("own_smith"))
             meaningOf(lib.named("user"), "smith") shouldBe listOf(lib.named("smith"))
+            referenceTargets(lib.named("with_own_scope")) shouldBe listOf(lib.named("own_smith"))
+            referenceTargets(lib.named("user")) shouldBe listOf(lib.named("smith"))
         }
     }
 

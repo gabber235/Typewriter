@@ -1,6 +1,5 @@
 package com.typewritermc.formula.check
 
-import com.typewritermc.formula.Formula
 import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.formula.TextSpan
 import com.typewritermc.formula.syntax.parseExpression
@@ -27,7 +26,7 @@ interface FormulaEnvironment {
     /** Every formula function called [name]: providers and core functions. */
     fun functions(name: String): List<FormulaFunction>
 
-    /** What naming [target] gives, or null when it is gone. */
+    /** What naming [target] gives, or null when it gives no type, which its own finding reports. */
     fun reference(target: ResourceId): TypeUse?
 
     /** Code types with this display name. A content type's name is a reference to its Definition instead. */
@@ -72,7 +71,7 @@ sealed interface NameMeaning {
         val id: ResourceId,
     ) : NameMeaning
 
-    /** A stored reference whose target is gone. Silent here: the reference has its own finding. */
+    /** A stored reference a delete emptied. Silent here: the reference has its own finding. */
     data class Deleted(
         val text: String,
     ) : NameMeaning
@@ -88,8 +87,8 @@ sealed interface NameMeaning {
 }
 
 /**
- * What one name in the source means. [candidates] are the resources scope offers for a name with no stored
- * reference, which binding reads; they stay empty for a name with a stored reference or a local meaning.
+ * What one name in the source means. [candidates] are the resources scope offers for a name with no stored target,
+ * unbound or emptied, which binding reads; they stay empty for a name with a filled reference or a local meaning.
  */
 data class NameAnswer(
     val span: TextSpan,
@@ -112,7 +111,8 @@ data class CheckedFormula(
  * parameters are in scope, and the body checks against its result.
  */
 context(environment: FormulaEnvironment)
-fun Formula.check(expected: FunctionTypeUse): CheckedFormula = checkFormula(this, expected.context, expected.parameters, expected.result)
+fun StoredFormula.check(expected: FunctionTypeUse): CheckedFormula =
+    checkFormula(this, expected.context, expected.parameters, expected.result)
 
 /**
  * Checks [formula] with [context] and [parameters] in scope against [result], or infers its type when [result] is
@@ -120,7 +120,7 @@ fun Formula.check(expected: FunctionTypeUse): CheckedFormula = checkFormula(this
  */
 context(environment: FormulaEnvironment)
 fun checkFormula(
-    formula: Formula,
+    formula: StoredFormula,
     context: List<FunctionParameterUse>,
     parameters: List<FunctionParameterUse>,
     result: TypeUse?,

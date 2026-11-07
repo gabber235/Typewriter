@@ -512,3 +512,14 @@ private const val UNCLOSED_HOLE = "This hole is never closed with }"
 
 private val escapes =
     mapOf('n' to '\n', 't' to '\t', 'r' to '\r', 'b' to '\b', '"' to '"', '\'' to '\'', '\\' to '\\', '$' to '$')
+
+/** [name] as formula source writes it: bare when it reads back as one identifier, between backticks otherwise. */
+fun writtenName(name: String): String {
+    val codePoints = name.codePoints().toArray()
+    val bare =
+        codePoints.isNotEmpty() &&
+            name !in keywords &&
+            (Character.isLetter(codePoints[0]) || codePoints[0] == '_'.code) &&
+            codePoints.all { Character.isLetterOrDigit(it) || it == '_'.code }
+    return if (bare) name else "`$name`"
+}

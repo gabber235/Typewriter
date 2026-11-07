@@ -9,6 +9,7 @@ import com.typewritermc.authoring.record
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.valueAt
+import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.catalog.misfiledDeclarations
@@ -61,12 +62,24 @@ internal class AuthoringMutationPlanner(
     private val catalog: CheckedCatalog get() = saved.catalog.checked
     private val contracts: List<RelationContract> get() = saved.catalog.relations
 
-    fun plan(edit: PreparedEdit): MutationPlanningResult {
+    /**
+     * Plans [edit], then [repairs]: realm owned writes that follow it, judged by the same rule, refusing only what the
+     * commit made worse. What a client sent for formula references is normalized away between the two.
+     */
+    fun plan(
+        edit: PreparedEdit,
+        repairs: List<EditIntent> = emptyList(),
+    ): MutationPlanningResult {
         val latestResources = saved.resources
         val resources = latestResources.toMutableMap()
         val removed = linkedSetOf<ResourceId>()
         val problems = replayStaged(resources, removed, edit).toMutableList()
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
+        normalize(resources, latestResources)
+        if (repairs.isNotEmpty()) {
+            problems += replayStaged(resources, removed, edit.copy(expectations = emptyList(), intents = repairs))
+            if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
+        }
 
         // A misfiled declaration is refused even when unused, so it is judged before unused ones are dropped.
         problems +=
@@ -104,6 +117,21 @@ internal class AuthoringMutationPlanner(
                 relations = relations,
             ),
         )
+    }
+
+    /**
+     * What the realm owns in a record: formula references. [plan] applies it after replay, and the planning session
+     * compares against it. A saved record is already normalized, and replay rewrites any record whose reference
+     * target it removed, so an untouched record is skipped.
+     */
+    fun normalize(
+        resources: MutableMap<ResourceId, AuthoringRecord>,
+        saved: Map<ResourceId, AuthoringRecord>,
+    ) {
+        val removed = saved.keys - resources.keys
+        resources.replaceAll { id, record ->
+            if (record === saved[id]) record else record.withRealmReferences(saved[id], removed, resources::containsKey)
+        }
     }
 
     /** Applies ordered mutations to a request owned graph without rebuilding global projections. */

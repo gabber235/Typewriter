@@ -20,12 +20,15 @@ import com.typewritermc.operations.OperationDeclaration
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
+import com.typewritermc.realm.catalog.RealmCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.types.qualified
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 /**
@@ -42,7 +45,7 @@ data class RealmCatalog(
 ) : FixtureCatalog {
     override fun activate(generation: String): ActiveCatalog {
         val store = RealmCatalogStore().apply { replace(incarnation(generation)) }
-        return ActiveCatalog(store.captureCurrent(), store)
+        return ActiveCatalog(CountedCatalogLease(store.captureCurrent(), AtomicInteger(1)), store)
     }
 
     /** The catalog discovery assembles from these artifacts, as Realm activation does. */
@@ -93,3 +96,21 @@ private fun KClass<*>.codeSource(): Path =
         java.protectionDomain.codeSource.location
             .toURI(),
     )
+
+/** A lease on a Realm's catalog that counts how many of its retains are still open, so a test can see one leak. */
+internal class CountedCatalogLease(
+    private val delegate: RealmCatalogLease,
+    private val open: AtomicInteger,
+) : RealmCatalogLease by delegate {
+    private val closed = AtomicBoolean(false)
+
+    /** How many leases of this catalog are open now. */
+    val openCount: Int get() = open.get()
+
+    override fun retain(): RealmCatalogLease = CountedCatalogLease(delegate.retain() as RealmCatalogLease, open.apply { incrementAndGet() })
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) open.decrementAndGet()
+        delegate.close()
+    }
+}

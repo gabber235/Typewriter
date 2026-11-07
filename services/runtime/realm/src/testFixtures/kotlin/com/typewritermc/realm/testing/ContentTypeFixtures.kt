@@ -408,6 +408,38 @@ suspend fun RealmFixture.commitDefinition(
 }
 
 /**
+ * Sends a Definition as [commitDefinition] makes it, but with the value [value] gives placed into the create intent
+ * after the edit context wrote it, as a client that never ran those write checks sends it. So admission alone decides.
+ */
+suspend fun RealmFixture.sendDefinition(
+    name: String,
+    declared: ContentTypes,
+    value: (DeclaredTypes) -> DataValue,
+): Creation {
+    lateinit var sent: DataValue
+    val (id, writes) =
+        elementWrites { id ->
+            val types = declared.on(id)
+            sent = value(types)
+            definitionRecord(name, types.use, DataValue.UNFILLED, types.types)
+        }
+    val written =
+        views.capture().use { lease ->
+            WorkingViewEditContext(lease.root, "edit:sent-${id.value}").run {
+                writes()
+                finish()
+            }
+        }
+    val intents =
+        written.intents.map { intent ->
+            val create = (intent as? EditIntent.CreateResourceWrapper)?.value?.takeIf { it.id == id } ?: return@map intent
+            val record = create.record.copy(fields = create.record.fields.map { if (it.name == "value") it.copy(value = sent) else it })
+            EditIntent.createCreateResource(id = id, record = record)
+        }
+    return Creation(id, commit(prepare(intents)))
+}
+
+/**
  * What an operation reads of the value of the Definition named [name] it has just created with the types [declared]
  * builds and the value [value], inside the same edit before anything commits, beside the types it declared.
  */

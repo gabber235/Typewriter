@@ -108,7 +108,7 @@ internal fun Checker.lookup(
 ): Named {
     val found = scope.find(name.text)
     found.bound?.let { bound -> return local(name, bound, found.narrowed) }
-    storedTarget(name)?.let { target -> return resource(name, target, found.narrowed) }
+    referenceAt[name.span]?.let { stored -> return stored.target?.let { resource(name, it, found.narrowed) } ?: emptied(name) }
     val candidates = environment.inScope(name.text)
     caseNamed(name.text, expected)?.let { case ->
         answer(name, NameMeaning.Case, candidates)
@@ -161,12 +161,9 @@ private fun Checker.resource(
     target: ResourceId,
     narrowed: TypeUse?,
 ): Named {
-    val naming = environment.reference(target)?.let(::normalize)
-    if (naming == null) {
-        answer(name, NameMeaning.Deleted(name.text), emptyList())
-        return Named.Nothing
-    }
     answer(name, NameMeaning.Resource(target), emptyList())
+    // A target that gives no type has its own finding, as a missing type does.
+    val naming = environment.reference(target)?.let(::normalize) ?: return Named.Nothing
     if (naming == TYPE_VALUE) {
         val held = environment.typeValue(target)?.let(::normalize)
         if (held == null) {
@@ -178,8 +175,14 @@ private fun Checker.resource(
     return Named.Value(ResourceRead(target, narrowed ?: naming, name.span))
 }
 
-/** The resource the source's stored reference at [name] points at. */
-internal fun Checker.storedTarget(name: Name): ResourceId? = referenceAt[name.span]?.target?.target
+/**
+ * A name whose stored reference a delete emptied: silent, since the reference has its own finding, and offering what
+ * scope has for its text, so a commit can bind it again.
+ */
+internal fun Checker.emptied(name: Name): Named {
+    answer(name, NameMeaning.Deleted(name.text), environment.inScope(name.text))
+    return Named.Nothing
+}
 
 internal fun Checker.unknown(
     name: Name,
