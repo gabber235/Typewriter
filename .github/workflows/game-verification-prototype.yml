@@ -1,10 +1,10 @@
-# Temporary. Measures the game verification prototypes on a free runner. Only the prototype branch
+# Temporary. Measures the game verification prototypes (restore prototype) on a free runner. Only the prototype branch
 # triggers it, and it is removed when the search ends. Change matrix.include to pick what runs.
 name: Game verification prototype
 
 on:
   push:
-    branches: [proto/gv-topology]
+    branches: [proto/gv-restore]
     paths:
       - prototypes/game-verification/**
       - .github/workflows/game-verification-prototype.yml
@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: game-verification-topology
+  group: game-verification-restore
   cancel-in-progress: true
 
 jobs:
@@ -25,9 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: restore, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -40,10 +38,21 @@ jobs:
           sparse-checkout: |
             prototypes/game-verification
             .github
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "25"
+      # Full CRaC needs Azul's Zulu CRaC bundle (not in setup-java's list); CRIU must be setuid root.
+      - name: Install Zulu 25 CRaC
+        working-directory: .
+        run: |
+          url=$(curl -fsS 'https://api.azul.com/metadata/v1/zulu/packages/?java_version=25&os=linux&arch=x64&crac_supported=true&java_package_type=jdk&archive_type=tar.gz&latest=true&release_status=ga&availability_types=CA&page_size=1' | python3 -c 'import json,sys; print(json.load(sys.stdin)[0]["download_url"])')
+          echo "$url"
+          curl -fsSL "$url" -o /tmp/zulu.tgz
+          sudo mkdir -p /opt/zulu && sudo tar zxf /tmp/zulu.tgz -C /opt/zulu --strip-components=1
+          sudo chown root:root /opt/zulu/lib/criu && sudo chmod u+s /opt/zulu/lib/criu
+          ls -l /opt/zulu/lib/criu
+          echo "JAVA_HOME=/opt/zulu" >> "$GITHUB_ENV"
+          echo "/opt/zulu/bin" >> "$GITHUB_PATH"
+          /opt/zulu/bin/java -version
+          findmnt -T /opt/zulu || true
+          systemctl is-active nscd || true
       - name: Install Xvfb and the software renderers
         run: |
           date +%T
@@ -105,3 +114,5 @@ jobs:
             prototypes/game-verification/runs/n.jsonl
             prototypes/game-verification/runs/n-logs
             prototypes/game-verification/runs/topo.jsonl
+            prototypes/game-verification/runs/restore.jsonl
+            prototypes/game-verification/runs/image-*.log

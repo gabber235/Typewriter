@@ -998,6 +998,50 @@ def cmd_restarts(backend):
         step("iso I1 4 clients r20", run_k, k, "iso", "--mode", "I1", "--n", "60", "--rate", "20", "--clients", "4", "--label", lbl)
 
 
+# ---------- restore prototype: CRaC instead of a boot ----------
+
+def cmd_restore(backend):
+    """Images at each checkpoint point (strict, then with policies), boot against restore, parallel, restart scenes."""
+    k_hooks(backend)
+    import restore as RS
+    RS.hooks["record"] = record
+    rep = int(os.environ.get("MATRIX_REPEAT", "0") or 0)
+    step("r prep", RS.main, ["prep"])
+
+    def image(point, engine, policy, opts=""):
+        argv = ["image", "--point", point, "--engine", engine, "--policy", policy]
+        if opts:
+            argv += ["--opts", opts]
+        return step(f"image {point} {engine} {policy} {opts}", RS.main, argv) or {}
+
+    def first_ok(*cands):
+        for c in cands:
+            r = image(*c)
+            if r.get("ok"):
+                return r["name"]
+        return None
+
+    boot = first_ok(("boot", "warp", "none"), ("boot", "warp", "boot"))
+    data = first_ok(("data", "warp", "boot"))
+    done = first_ok(("done", "warp", "none"), ("done", "warp", "done"))
+    criu = first_ok(("boot", "criuengine", "boot"))
+    comp = first_ok(("boot", "warp", "boot", "compression=true"))
+    record("restore_images", boot=boot, data=data, done=done, criu=criu, comp=comp)
+    if boot:
+        step("compare boot", RS.main, ["compare", "--image", boot, "--n", "5"])
+        step("parallel 2", RS.main, ["parallel", "--image", boot, "--k", "2"])
+        step("parallel 4", RS.main, ["parallel", "--image", boot, "--k", "4"])
+    for name in (criu, comp):
+        if name:
+            step(f"compare {name}", RS.main, ["compare", "--image", name, "--n", "3"])
+    if done:
+        step("compare done", RS.main, ["compare", "--image", done, "--n", "3"])
+    n = "3" if rep == 0 else "2"
+    for name in (boot, "boot", data, done):
+        if name:
+            step(f"scenes {name}", RS.main, ["scenes", "--image", name, "--n", n])
+
+
 # ---------- spike N: the runner steps ticks ----------
 
 def run_n(n, *argv):
@@ -1059,7 +1103,7 @@ def cmd_topology(backend):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "topology"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "topology", "restore"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -1110,6 +1154,8 @@ def main():
             cmd_breakstep(a.backend)
         elif a.plan == "topology":
             cmd_topology(a.backend)
+        elif a.plan == "restore":
+            cmd_restore(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

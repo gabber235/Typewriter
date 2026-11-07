@@ -42,6 +42,7 @@ public final class Agent {
                     return switch (name) {
                         case "net/minecraft/server/MinecraftServer" -> rewrite(loader, bytes, server());
                         case "net/minecraft/server/level/ServerLevel" -> rewrite(loader, bytes, level());
+                        case "net/minecraft/util/Util" -> rewrite(loader, bytes, crac("startTimerHackThread()V", "boot"));
                         default -> null;
                     };
                 } catch (Throwable t) {
@@ -84,10 +85,23 @@ public final class Agent {
                     cb.invokestatic(STEP, "idle", MethodTypeDesc.of(ConstantDescs.CD_void));
                     cb.return_();
                 }),
+                "spin(Ljava/util/function/Function;)Lnet/minecraft/server/MinecraftServer;", b -> cracAt(b, "data"),
                 "haveTime()Z", b -> guarded(b, "on", cb -> {
                     cb.invokestatic(STEP, "haveTime", MethodTypeDesc.of(ConstantDescs.CD_boolean));
                     cb.ireturn();
                 })));
+    }
+
+    private static final ClassDesc CRAC = ClassDesc.of("probe.agent.Crac");
+
+    /** Restore prototype: Crac.at(point) first; it checkpoints only when -Dprobe.crac.at names that point. */
+    private static ClassTransform crac(String method, String point) {
+        return prefixes(Map.of(method, b -> cracAt(b, point)));
+    }
+
+    private static void cracAt(CodeBuilder b, String point) {
+        b.ldc(point);
+        b.invokestatic(CRAC, "at", MethodTypeDesc.of(ConstantDescs.CD_void, ConstantDescs.CD_String));
     }
 
     private static ClassTransform level() {

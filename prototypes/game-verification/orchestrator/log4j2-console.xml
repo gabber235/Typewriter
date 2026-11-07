@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Restore prototype: Paper's log to stdout only, so no log file is open at a checkpoint. -->
+<Configuration status="WARN" shutdownHook="disable">
+    <Appenders>
+        <Console name="Out" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss.SSS} %level]: %msg{nolookups}%n%xEx{full}" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <filters>
+                <MarkerFilter marker="NETWORK_PACKETS" onMatch="DENY" onMismatch="NEUTRAL" />
+            </filters>
+            <AppenderRef ref="Out"/>
+        </Root>
+    </Loggers>
+</Configuration>

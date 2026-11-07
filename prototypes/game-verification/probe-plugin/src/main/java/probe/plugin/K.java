@@ -286,6 +286,17 @@ final class K implements Listener {
                 r.put("same", live != k ? 0 : 1);
             }
             case "k.files" -> k.files(r);
+            case "k.wset" -> {
+                // Restore prototype: a value in the overworld's data (level.dat), saved only when asked.
+                org.bukkit.World w = Bukkit.getWorlds().get(0);
+                w.getPersistentDataContainer().set(k.pdcKey, PersistentDataType.STRING, q.get("tok"));
+                if ("1".equals(q.get("save"))) w.save();
+            }
+            case "k.wget" -> r.put("tok", Bukkit.getWorlds().get(0).getPersistentDataContainer().getOrDefault(k.pdcKey, PersistentDataType.STRING, ""));
+            case "k.checkpoint" -> {
+                Thread t = new Thread(() -> probe.agent.Crac.checkpointNow("done"), "probe-crac");
+                t.start();
+            }
             default -> throw new IllegalArgumentException("unknown " + name);
         }
         return true;
