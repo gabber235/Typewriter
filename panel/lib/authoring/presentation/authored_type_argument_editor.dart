@@ -209,7 +209,7 @@ final class _AuthoredTypeArgumentEditorState
       if (!mounted) return;
       switch (result) {
         case skir.PreviewTypeArgumentChangeResponse_readyWrapper(:final value):
-          final accepted = await showDialog<bool>(
+          final accepted = await showAdvancedDialog<bool>(
             context: context,
             builder: (context) =>
                 _TypeRepairReview(preview: value, catalog: widget.catalog),

@@ -68,7 +68,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 |---|---|---|
 | The user causes something to arrive | It comes from where it was caused and lands with its token | 2 |
 | Something exists before and after a change | Move it to its new place instead of replacing it. Opening a row turns that row into the page heading; the rest ripple in, and Back reverses | 2 |
-| Moving between pages with nothing to carry over | Rows ripple in, from the right going deeper, from the left going back | 2 |
+| Moving between pages with nothing to carry over | The page swaps at once and its rows ripple in with `loadIn`: from the right going deeper, from the left going back. Between sibling pages they come by sidebar order: from below going down the sidebar, from above going up | 2 |
 | Showing any state on something | Change the thing itself: its fill, its letters, its depth. Never add a border, line, spinner, or second control. Add an element only for information not otherwise visible, such as who did it, and it must arrive with motion | 2 |
 | Anything changes state | The move performs the change: the value switches as the motion passes, never first. Animate inside the component: label, width, colour. Nothing swaps. Shared letters stay and only the different letters type: Publish, Publishing, Published | 2 |
 | Anything grows or responds over time: a hold, a fill, progress, a press | Drive it with a spring so it has weight. Nothing moves linearly | 2 |
@@ -164,10 +164,10 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 
 | Token | Curve | Duration | Landing | Reduced |
 |---|---|---|---|---|
-| `panelIn` | Strike | 420 ms | 10% overshoot | jump |
+| `panelIn` | Strike | 420 ms | 10% overshoot from scale 0.92 | jump |
 | `surfaceIn` | Spring | Stiffness 280, damping 17 | Position and size go from the opener to the surface | jump |
-| `paneFocus` | Spring | Stiffness 300, damping 13 | Active pane scale 1.03, others 0.985 | jump |
-| `dialogIn` | Strike | 340 ms | 14% overshoot; the page behind scales to 0.98 | jump |
+| `paneFocus` | Spring | Stiffness 300, damping 13 | Active pane scale 1.03, others 0.985, and brightens with a 4% wash | jump |
+| `dialogIn` | Strike | 340 ms | 14% overshoot from scale 0.94; the page behind scales to 0.98 | jump |
 | `focusMove` | Strike | 170 ms | 5% overshoot | jump |
 | `hoverIn` | Strike | 220 ms | Rises 2 px, scale 1.012, one overshoot | still: a control brightens one step |
 | `capIn` | Strike | 240 ms | Rises 9 px, one overshoot | still: appears in place |
@@ -224,9 +224,14 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A wait | `MotionLabel` rippling the status word, `Shimmer` | `CircularProgressIndicator` |
 | A failure at a control | `Jam` around it; `Button` does this itself | A shake of your own, a red border |
 | Text that changes or appears | `MotionLabel` | Swapping the whole text |
-| A menu or popover | `AnchoredPopup`, `ContextMenuRegion` | `PopupMenuButton`, `MenuAnchor` |
+| A menu or popover | `AnchoredPopup`, `ContextMenuRegion` (on `RawMenuAnchor`) | `PopupMenuButton`, `MenuAnchor`, `DropdownMenu` |
+| A tooltip | `PanelTooltip` | `Tooltip`, a button's `tooltip:` |
 | A select | `Dropdown`, `MultiselectDropdown` | `DropdownButtonFormField` |
-| A dialog | The one dialog component | `AlertDialog` |
+| A dialog | `showAdvancedDialog` (on `RawDialogRoute`) | `AlertDialog` alone, `showDialog`, `showGeneralDialog` |
+| An animation | A motion token | `flutter_animate` |
+| A sheet | `showPanelSheet` | `showModalBottomSheet` |
+| A row that grows | `GrowingCard` (on `Expansible`) | `ExpansionTile`, `Expansible` with its own style |
+| A wait before something happens | `context.timing` | A literal `Duration` |
 | A permanent action | The hold component | `showConfirmationDialogue` |
 | A message | Snackbar helpers | `ScaffoldMessenger` |
 | A heading | `PageHeading`, `SectionTitle` at theme sizes | Local size or weight overrides |

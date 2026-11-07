@@ -50,15 +50,9 @@ class JoinRequestCard extends HookConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: Surface(
         color: backgroundColor,
-        child: Expansible(
+        child: GrowingCard(
           controller: expansibleController,
-          animationStyle: AnimationStyle(
-            duration: 500.ms,
-            curve: ElasticOutCurve(0.9),
-            reverseDuration: 20.ms,
-            reverseCurve: Curves.easeInCubic,
-          ),
-          headerBuilder: (context, animation) {
+          header: (context, animation) {
             return _buildMainContent(
               context,
               ref,
@@ -67,26 +61,23 @@ class JoinRequestCard extends HookConsumerWidget {
               expansibleController,
             );
           },
-          bodyBuilder: (context, animation) {
-            return ElasticMessageTransition(
-              animation: animation,
-              child: JoinRequestApproval(
-                request: request,
-                selectedRoles: selectedRoles.value,
-                rolesAsync: rolesAsync,
-                onRolesChanged: (roles) => selectedRoles.value = roles,
-                onConfirm: () {
-                  onSelectionChanged(false);
-                  return ref
-                      .executeMembership(
-                        ref.membershipCommands.approve([
-                          request.requestId,
-                        ], selectedRoles.value),
-                        (response) => response.requireAccepted(),
-                      )
-                      .catchApiExceptionsAndDisplay(context);
-                },
-              ),
+          body: (context) {
+            return JoinRequestApproval(
+              request: request,
+              selectedRoles: selectedRoles.value,
+              rolesAsync: rolesAsync,
+              onRolesChanged: (roles) => selectedRoles.value = roles,
+              onConfirm: () {
+                onSelectionChanged(false);
+                return ref
+                    .executeMembership(
+                      ref.membershipCommands.approve([
+                        request.requestId,
+                      ], selectedRoles.value),
+                      (response) => response.requireAccepted(),
+                    )
+                    .catchApiExceptionsAndDisplay(context);
+              },
             );
           },
         ),
@@ -119,7 +110,8 @@ class JoinRequestCard extends HookConsumerWidget {
           priority: 1,
           onInvoke: (_) => onSelectAll(),
         ),
-        if (hasSelection)
+        // Esc steps out one level: first the card, then the selection.
+        if (hasSelection && !expansibleController.isExpanded)
           ActionShortcut.intent(
             id: "clear_join_request_selection_${request.requestId}",
             label: "Clear selection",

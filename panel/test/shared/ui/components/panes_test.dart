@@ -530,4 +530,34 @@ void main() {
     expect(FocusScope.of(tester.element(find.text("three"))).hasFocus, isTrue);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets("the focused pane lifts and the others sink back", (
+    tester,
+  ) async {
+    final panes = await tester.showPanes([
+      sourcePane,
+      PlacedPane(id: "right", button: "right", left: 300, top: 0),
+    ]);
+    await tester.pump();
+
+    await panes.navigate(AxisDirection.right);
+    await tester.pumpAndSettle();
+
+    double painted(String button) => tester.getRect(find.text(button)).width;
+    double laidOut(String button) => tester.getSize(find.text(button)).width;
+    expect(painted("right"), greaterThan(laidOut("right")));
+    expect(painted("source"), lessThan(laidOut("source")));
+  });
+
+  testWidgets("a lone pane keeps its size when focused", (tester) async {
+    await tester.showPanes([sourcePane]);
+    await tester.pump();
+    FocusScope.of(tester.element(find.text("source"))).requestFocus();
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getRect(find.text("source")).width,
+      tester.getSize(find.text("source")).width,
+    );
+  });
 }

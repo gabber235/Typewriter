@@ -625,7 +625,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
                   };
                   return _PortableSearchResult(
                     highlighted: row.focused,
-                    child: Tooltip(
+                    child: PanelTooltip(
                       message: row.result.title ?? "",
                       child: result,
                     ),

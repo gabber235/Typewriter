@@ -10,7 +10,6 @@ export "delayed_execution.dart";
 export "disable_context_menu.dart";
 export "focused_change.dart";
 export "global_key.dart";
-export "menu_controller.dart";
 export "motion.dart";
 export "refresh_at.dart";
 export "rive.dart";

@@ -62,7 +62,6 @@ export "package:flutter/scheduler.dart";
 export "package:flutter/semantics.dart";
 export "package:flutter/services.dart";
 export "package:flutter/widgets.dart" hide Page, Title;
-export "package:flutter_animate/flutter_animate.dart";
 export "package:flutter_hooks/flutter_hooks.dart";
 export "package:flutter_markdown_plus/flutter_markdown_plus.dart";
 export "package:flutter_reorderable_grid_view/widgets/widgets.dart";

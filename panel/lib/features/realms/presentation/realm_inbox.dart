@@ -102,36 +102,32 @@ class RealmInboxButton extends HookConsumerWidget {
         }
         sheetOpen = true;
         unawaited(
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: context.theme.colorScheme.surfaceContainer
-                .withValues(alpha: 0),
-            builder: (context) {
-              sheetContext = context;
-              return SafeArea(
-                minimum: EdgeInsets.all(context.spacing.space3),
-                child: Material(
-                  color: context.theme.colorScheme.surfaceContainer,
-                  borderRadius: context.shapes.largeBorderRadius,
-                  clipBehavior: Clip.antiAlias,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.sizeOf(context).height * .8,
-                    ),
-                    child: RealmInboxContent(
-                      scope: scope,
-                      onClose: () => Navigator.pop(context),
+          context
+              .showPanelSheet<void>((context) {
+                sheetContext = context;
+                return SafeArea(
+                  minimum: EdgeInsets.all(context.spacing.space3),
+                  child: Material(
+                    color: context.theme.colorScheme.surfaceContainer,
+                    borderRadius: context.shapes.largeBorderRadius,
+                    clipBehavior: Clip.antiAlias,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(context).height * .8,
+                      ),
+                      child: RealmInboxContent(
+                        scope: scope,
+                        onClose: () => Navigator.pop(context),
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ).whenComplete(() {
-            sheetOpen = false;
-            sheetContext = null;
-            if (context.mounted) popup.close();
-          }),
+                );
+              })
+              .whenComplete(() {
+                sheetOpen = false;
+                sheetContext = null;
+                if (context.mounted) popup.close();
+              }),
         );
       }
 

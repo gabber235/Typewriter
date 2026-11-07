@@ -119,8 +119,9 @@ class _CrumbMenu extends HookWidget {
             itemCount: filtered.length,
             itemBuilder: (context, index) {
               final choice = filtered[index];
-              return ListTile(
+              return PanelRow(
                 dense: true,
+                label: choice.appearance.label,
                 selected: choice.resource == selected?.resource,
                 leading: ResourceIcon(
                   icon: choice.appearance.icon,
@@ -128,7 +129,7 @@ class _CrumbMenu extends HookWidget {
                   size: 20,
                 ),
                 title: Text(choice.appearance.label),
-                onTap: () => onChoose(choice),
+                onPressed: () => onChoose(choice),
               );
             },
           ),

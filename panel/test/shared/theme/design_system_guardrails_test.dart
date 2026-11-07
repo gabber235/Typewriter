@@ -169,41 +169,6 @@ final layoutSpacingExemptions = <Exemption>[
   ),
 ];
 
-final _anyMotion = RegExp(".");
-
-/// Files whose literal motion the surfaces PR still moves onto tokens. It
-/// empties this list; nothing else may be added.
-final motionExemptions = <Exemption>[
-  for (final path in [
-    // PR 7, surfaces, and flutter_animate effects, which leave in PR 7.
-    "lib/shared/ui/components/admonition.dart",
-    "lib/shared/ui/components/anchored_popup.dart",
-    "lib/shared/ui/components/content_size_tab_bar_view.dart",
-    "lib/shared/ui/components/directional_content_switcher.dart",
-    "lib/shared/ui/components/drag_handle.dart",
-    "lib/shared/graph/presentation/resizable_element.dart",
-    "lib/shared/inspector/presentation/inspector.dart",
-    "lib/shared/search/presentation/search_frame.dart",
-    "lib/shared/search/presentation/search_modal.dart",
-    "lib/shared/search/presentation/search_command_info.dart",
-    "lib/shared/search/presentation/search_tree_results.dart",
-    "lib/shared/search/presentation/query_bar/query_bar_view.dart",
-    "lib/shared/mutations/presentation/mutation_activity_card.dart",
-    "lib/shared/editors/presentation/portable_location_reveal.dart",
-    "lib/shared/editors/presentation/portable_renderer/header.dart",
-    "lib/features/members/presentation/member_card.dart",
-    "lib/features/members/join_requests/presentation/join_request_card.dart",
-    "lib/features/members/join_codes/presentation/join_code_card.dart",
-    "lib/features/members/join_codes/presentation/join_code_settings.dart",
-    "lib/features/realms/presentation/realm_suspension.dart",
-    "lib/shared/shell/sidebar_shell.dart",
-    "lib/shared/graph/application/graph_viewport_controller.dart",
-    // The tooltip wait moves to TypewriterTiming with tooltipTheme.
-    "lib/shared/theme/component_themes.dart",
-  ])
-    Exemption(path, _anyMotion, "surfaces PR moves this onto tokens"),
-];
-
 /// Durations that keep time outside motion and that no skip rule can tell
 /// apart. They stay exempt for good.
 final timingExemptions = <Exemption>[
@@ -243,100 +208,6 @@ const motionEngine = [
 /// Files that still use a banned API, grouped by the PR that removes it.
 /// Each entry names the pattern it excuses; a PR empties its own group.
 final bannedExemptions = <Exemption>[
-  // PR 7, surfaces: the group its banned surface API entry deletes.
-  for (final path in [
-    "lib/features/realms/presentation/realm_suspension.dart",
-    "lib/shared/editors/presentation/portable_location_reveal.dart",
-    "lib/shared/editors/presentation/portable_renderer/header.dart",
-    "lib/shared/ui/components/anchored_popup.dart",
-    "lib/shared/ui/components/content_size_tab_bar_view.dart",
-    "lib/shared/ui/components/directional_content_switcher.dart",
-  ])
-    Exemption(
-      path,
-      bannedDisableAnimations,
-      "surfaces PR reads reduced motion through resolveMotion",
-    ),
-  for (final path in [
-    "lib/features/members/join_codes/presentation/join_code_card.dart",
-    "lib/features/members/join_requests/presentation/join_request_card.dart",
-    "lib/features/members/presentation/member_card.dart",
-    "lib/shared/editors/presentation/portable_renderer/header.dart",
-    "lib/shared/mutations/presentation/mutation_activity_card.dart",
-  ])
-    Exemption(
-      path,
-      bannedAnimationStyle,
-      "surfaces PR moves this onto GrowingCard",
-    ),
-  for (final path in [
-    "lib/shared/editors/presentation/portable_renderer/actions.dart",
-    "lib/shared/editors/presentation/portable_renderer/header_layout.dart",
-    "lib/shared/editors/presentation/portable_renderer/resources.dart",
-    "lib/shared/editors/presentation/portable_renderer/choice_inputs.dart",
-    "lib/shared/ui/components/context_menu.dart",
-    "lib/shared/ui/components/multiselect_dropdown_view.dart",
-    "lib/shared/ui/components/dropdown.dart",
-    "lib/shared/ui/input/input_field_container.dart",
-  ])
-    Exemption(
-      path,
-      bannedMaterialMenus,
-      "surfaces PR moves this onto AnchoredPopup",
-    ),
-  for (final path in [
-    "lib/authoring/application/authoring_subject_role.dart",
-    "lib/authoring/application/resource_operations.dart",
-    "lib/authoring/presentation/resource_issue_badge.dart",
-    "lib/shared/editors/presentation/portable_renderer/actions.dart",
-    "lib/shared/editors/presentation/portable_renderer/choice_inputs.dart",
-    "lib/shared/editors/presentation/portable_renderer/content.dart",
-    "lib/shared/editors/presentation/portable_renderer/diagnostic_chrome.dart",
-    "lib/shared/editors/presentation/portable_renderer/header.dart",
-    "lib/shared/editors/presentation/portable_renderer/reorder_handle.dart",
-    "lib/shared/editors/presentation/portable_search_input.dart",
-  ])
-    Exemption(path, bannedTooltip, "surfaces PR moves this onto PanelTooltip"),
-  for (final path in [
-    "lib/authoring/presentation/authored_type_argument_editor.dart",
-    "lib/authoring/presentation/authored_type_picker.dart",
-    "lib/authoring/presentation/authoring_conflict_notice.dart",
-    "lib/authoring/presentation/resource_drop_target.dart",
-    "lib/shared/editing/editing_group_panel.dart",
-    "lib/shared/mutations/presentation/work_session_loss_confirmation.dart",
-    "lib/shared/ui/components/popups.dart",
-    "lib/features/realms/presentation/realm_inbox.dart",
-    "lib/shared/mutations/presentation/mutation_activity_button.dart",
-    "lib/shared/selectables/presentation/selector_popup.dart",
-    "lib/shared/shell/custom_appbar.dart",
-  ])
-    Exemption(
-      path,
-      bannedMaterialRoutes,
-      "surfaces PR moves this onto MotionDialogRoute or showPanelSheet",
-    ),
-  for (final path in [
-    "lib/features/organizations/presentation/join_organization.dart",
-    "lib/features/organizations/presentation/organizations.dart",
-    "lib/features/organizations/presentation/organization_selector.dart",
-    "lib/features/realms/presentation/realm_inbox_view.dart",
-    "lib/features/realms/presentation/realm_selector.dart",
-    "lib/features/realms/presentation/resource_breadcrumbs.dart",
-    "lib/features/realms/presentation/resource_navigator.dart",
-    "lib/shared/search/presentation/search_result_renderers.dart",
-    "lib/shared/search/presentation/search_result_row.dart",
-  ])
-    Exemption(path, bannedListTile, "surfaces PR moves this onto Button"),
-  Exemption(
-    "lib/dependencies.dart",
-    bannedFlutterAnimate,
-    "surfaces PR removes flutter_animate",
-  ),
-  Exemption(
-    "lib/shared/graph/application/graph_viewport_controller.dart",
-    bannedControllers,
-    "surfaces PR moves the camera onto focusMove",
-  ),
   // PR 9, hold: the advanced settings dialog leaves with the hold.
   Exemption(
     "lib/shared/editors/presentation/portable_renderer/header.dart",
@@ -357,7 +228,7 @@ void main() {
     "every motion and banned API exemption names a file that still needs it",
     () {
       expect([
-        for (final exemption in [...motionExemptions, ...timingExemptions])
+        for (final exemption in timingExemptions)
           if (!File(exemption.path).existsSync() ||
               motionLiteralViolations(
                 exemption.path,
@@ -439,12 +310,7 @@ void main() {
         }
         final source = file.readAsStringSync();
         violations
-          ..addAll(
-            motionLiteralViolations(path, source, [
-              ...motionExemptions,
-              ...timingExemptions,
-            ]),
-          )
+          ..addAll(motionLiteralViolations(path, source, timingExemptions))
           ..addAll(
             bannedApiViolations(path, source, bannedPatterns, bannedExemptions),
           );

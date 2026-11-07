@@ -133,11 +133,11 @@ class _RealmMenuItem extends HookConsumerWidget {
               ? onColor.withValues(alpha: 0.7)
               : null,
           child: Builder(
-            builder: (context) => ListTileTheme.merge(
-              textColor: Surface.foregroundOf(context),
-              iconColor: Surface.foregroundOf(context),
-              child: ListTile(
+            builder: (context) => IconTheme.merge(
+              data: IconThemeData(color: Surface.foregroundOf(context)),
+              child: PanelRow(
                 dense: true,
+                label: realm.ownerHost.name.formatted,
                 leading: Icon(
                   Icons.cloud,
                   size: 20,
@@ -157,7 +157,7 @@ class _RealmMenuItem extends HookConsumerWidget {
                   textColor: Surface.secondaryForegroundOf(context),
                 ),
                 trailing: Icon(Icons.arrow_forward_ios, size: 14),
-                onTap: () {
+                onPressed: () {
                   final orgId = ref.read(organizationIdProvider);
                   if (orgId == null) return;
                   context.router.navigate(

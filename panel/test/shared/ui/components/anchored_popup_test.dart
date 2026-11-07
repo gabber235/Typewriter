@@ -465,4 +465,42 @@ void main() {
     expect(panel.field("Reason").value, "late");
     expect(panel.field("Reason").isFocused, isTrue);
   });
+
+  testWidgets("a popover leaves faster than it arrived", (tester) async {
+    await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(PopoverChip()),
+    );
+    await tester.tap(find.text("Running"));
+    final arriving = await tester.pumpAndSettle(
+      const Duration(milliseconds: 5),
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(find.text("Stopped"), findsOneWidget, reason: "it leaves");
+    final leaving = await tester.pumpAndSettle(const Duration(milliseconds: 5));
+
+    expect(find.text("Stopped"), findsNothing);
+    expect(leaving, lessThan(arriving));
+  });
+
+  testWidgets("a popover opens at its control", (tester) async {
+    await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(PopoverChip()),
+    );
+    final control = tester.getRect(find.text("Running").first);
+    await tester.tap(find.text("Running"));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
+    final growing = tester.getRect(find.text("Stopped"));
+    await tester.pumpAndSettle();
+    final settled = tester.getRect(find.text("Stopped"));
+
+    expect(growing.width, lessThan(settled.width));
+    expect(growing.top, closeTo(settled.top, 1));
+    expect(growing.left, closeTo(settled.left, 1));
+    expect(settled.top, greaterThanOrEqualTo(control.bottom - 1));
+  });
 }

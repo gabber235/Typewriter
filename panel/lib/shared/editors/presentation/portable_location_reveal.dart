@@ -141,13 +141,13 @@ class PortableLocationTarget extends HookWidget {
       if (controller == null || location == null) return null;
       controller._register(identity, location!, () {
         if (!context.mounted) return;
+        final move = motionTimeline(context, MotionToken.focusMove);
         unawaited(
           Scrollable.ensureVisible(
             context,
             alignment: .25,
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 250),
+            duration: move.duration,
+            curve: move.curve,
           ),
         );
         final target = focus.traversalDescendants.firstOrNull;

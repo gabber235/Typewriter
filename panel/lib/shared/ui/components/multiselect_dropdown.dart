@@ -33,7 +33,6 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
     this.actions,
     this.menuActions,
     this.surroundingActions,
-    this.menuStyle,
     this.placeholder,
     this.itemBuilder,
     super.key,
@@ -43,7 +42,7 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
   final InputFieldController? inputFieldController;
 
   /// All available items to select from.
-  final List<DropdownMenuEntry<T>> dropdownMenuEntries;
+  final List<MenuChoice<T>> dropdownMenuEntries;
 
   /// Currently selected items.
   final List<T> selectedItems;
@@ -63,14 +62,12 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
   /// Actions available when the surrounding has focus.
   final List<ActionShortcut>? surroundingActions;
 
-  /// Style of the dropdown menu.
-  final MenuStyle? menuStyle;
-
   /// Placeholder text for the dropdown's input.
   final String? placeholder;
 
   /// Optional builder to create a widget for each selected item.
-  /// If not provided, falls back to the entry's labelWidget, then to default styled text.
+  /// If not provided, falls back to the choice's content, then to default
+  /// styled text.
   final Widget Function(T item)? itemBuilder;
 
   double? getWidth(GlobalKey key) {

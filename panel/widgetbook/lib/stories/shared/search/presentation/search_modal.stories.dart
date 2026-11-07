@@ -46,7 +46,7 @@ _SearchStoryConfig _configFromKnobs(BuildContext context) {
 
   final searchDelay = context.knobs.duration(
     label: "Search delay",
-    initialValue: 750.ms,
+    initialValue: const Duration(milliseconds: 750),
   );
 
   return _SearchStoryConfig(
@@ -117,7 +117,7 @@ SearchSource _sourceFromConfig(_SearchStoryConfig config) {
     selectors: [],
     searchDelay: config.searchDelay,
   );
-  return source.debounced(250.ms).cached();
+  return source.debounced(const Duration(milliseconds: 250)).cached();
 }
 
 class _SearchStoryConfig {

@@ -2,22 +2,22 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "context_menu.freezed.dart";
 
+/// What assistive technology calls an open context menu.
+const contextMenuSemanticLabel = "Context menu";
+
 /// Adds a platform aware context menu to a child widget.
 ///
 /// Secondary click and long press open the menu at the pointer position when
 /// [enableGestures] is true. On Apple platforms, a control click opens it;
 /// other taps can be delegated through the static [onTapUp] helper's `orElse`
-/// callback. Supply [builder]
-/// when the child must be built with the menu controller.
-/// What assistive technology calls an open context menu.
-const contextMenuSemanticLabel = "Context menu";
-
+/// callback. Supply [builder] when the child must be built with the menu
+/// controller. The menu sits on [AnchoredPopup], so it grows out of the
+/// pointer with panelIn and leaves with panelOut.
 class ContextMenuRegion extends HookWidget {
   const ContextMenuRegion({
     required this.items,
     this.enableGestures = true,
     this.controller,
-    this.childFocusNode,
     this.onClose,
     this.child,
     this.builder,
@@ -30,37 +30,42 @@ class ContextMenuRegion extends HookWidget {
   final List<MenuItem> items;
   final bool enableGestures;
 
-  final MenuController? controller;
-  final FocusNode? childFocusNode;
+  final AnchoredPopupController? controller;
   final VoidCallback? onClose;
 
   final Widget? child;
-  final Widget Function(BuildContext, MenuController, Widget?)? builder;
+  final Widget Function(BuildContext, AnchoredPopupController, Widget?)?
+  builder;
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return child ?? const SizedBox.shrink();
 
-    final controller = this.controller ?? useMenuController();
+    final owned = useMemoized(AnchoredPopupController.new);
+    useEffect(() => owned.dispose, [owned]);
+    final controller = this.controller ?? owned;
+    final wasOpen = useRef(controller.isOpen);
+    useEffect(() {
+      void closed() {
+        if (wasOpen.value && !controller.isOpen) onClose?.call();
+        wasOpen.value = controller.isOpen;
+      }
 
-    final anchor = MenuAnchor(
-      menuChildren: [
-        for (final (index, item) in items.indexed)
-          _buildMenuItem(
-            context,
-            item,
-            isFirst: index == 0,
-            isLast: index == items.length - 1,
-          ),
-      ],
+      controller.addListener(closed);
+      return () => controller.removeListener(closed);
+    }, [controller, onClose]);
+
+    final anchor = AnchoredPopup(
       controller: controller,
-      onClose: onClose,
+      opensOnHover: false,
       // Names the open menu for assistive technology, which reads it out
       // before its entries.
       semanticLabel: contextMenuSemanticLabel,
-      childFocusNode: childFocusNode,
-      builder: builder,
-      child: child,
+      builder: (context, show) =>
+          builder?.call(context, controller, child) ??
+          child ??
+          const SizedBox.shrink(),
+      popupBuilder: (context, close) => _MenuItems(items: items, close: close),
     );
 
     final menu = Shortcuts(
@@ -74,7 +79,7 @@ class ContextMenuRegion extends HookWidget {
         actions: {
           SelectorContextMenuIntent: CallbackAction<SelectorContextMenuIntent>(
             onInvoke: (_) {
-              controller.open();
+              controller.openFocused();
               return null;
             },
           ),
@@ -97,30 +102,26 @@ class ContextMenuRegion extends HookWidget {
 
   /// Creates a secondary click handler that opens [controller] at the pointer.
   static void Function(TapUpDetails) onSecondaryTapUp(
-    MenuController controller,
+    AnchoredPopupController controller,
   ) {
-    return (details) {
-      controller.open(position: details.localPosition);
-    };
+    return (details) => controller.openAt(details.localPosition);
   }
 
   /// Creates a long press handler that opens [controller] at the pointer.
   static void Function(LongPressStartDetails) onLongPressStart(
-    MenuController controller,
+    AnchoredPopupController controller,
   ) {
-    return (details) {
-      controller.open(position: details.localPosition);
-    };
+    return (details) => controller.openAt(details.localPosition);
   }
 
   /// Creates a toggle handler for controls that open the menu themselves.
-  static void Function() onPress(MenuController controller) {
+  static void Function() onPress(AnchoredPopupController controller) {
     return () {
       if (controller.isOpen) {
         controller.close();
         return;
       }
-      controller.open();
+      controller.openFocused();
     };
   }
 
@@ -129,7 +130,7 @@ class ContextMenuRegion extends HookWidget {
   /// [onContextTap] replaces menu opening on an Apple Control click. It must
   /// resolve the target and open the menu itself if needed.
   static void Function(TapUpDetails) onTapUp(
-    MenuController controller, {
+    AnchoredPopupController controller, {
     Function(TapUpDetails)? orElse,
     ValueChanged<TapUpDetails>? onContextTap,
   }) {
@@ -159,7 +160,7 @@ class ContextMenuRegion extends HookWidget {
             if (onContextTap != null) {
               onContextTap(details);
             } else {
-              controller.open(position: details.localPosition);
+              controller.openAt(details.localPosition);
             }
           } else {
             orElse?.call(details);
@@ -167,124 +168,119 @@ class ContextMenuRegion extends HookWidget {
       }
     };
   }
+}
 
-  Widget _buildMenuItem(
-    BuildContext context,
-    MenuItem item, {
-    required bool isFirst,
-    required bool isLast,
-  }) {
-    final padding = EdgeInsets.only(
-      left: context.spacing.space1,
-      right: context.spacing.space1,
-      top: isFirst ? context.spacing.space1 : 0,
-      bottom: isLast ? context.spacing.space1 : 0,
-    );
-    return switch (item) {
-      final MenuItemSubmenu submenu => Padding(
-        padding: padding,
-        child: SubmenuButton(
-          leadingIcon: submenu.icon,
-          style: MenuItemButton.styleFrom(
-            foregroundColor: submenu.color,
-            iconColor: submenu.color,
-          ),
-          menuChildren: [
-            for (final (index, item) in submenu.items.indexed)
-              _buildMenuItem(
-                context,
-                item,
-                isFirst: index == 0,
-                isLast: index == submenu.items.length - 1,
-              ),
-          ],
-          child: Text(submenu.label),
-        ),
-      ),
-      final MenuItemSection section => Padding(
-        padding: padding,
+/// The entries of one menu level; choosing an entry runs its action, then
+/// closes the whole menu through [close].
+class _MenuItems extends StatelessWidget {
+  const _MenuItems({required this.items, required this.close});
+
+  final List<MenuItem> items;
+  final VoidCallback close;
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicWidth(
+      child: Padding(
+        padding: EdgeInsets.all(context.spacing.space1),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (section.label != null)
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  context.spacing.space2,
-                  context.spacing.space1,
-                  context.spacing.space2,
-                  context.spacing.space1,
-                ),
-                child: DefaultTextStyle(
-                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                    color:
-                        section.color ??
-                        Theme.of(context).colorScheme.onSurface
-                            .withValues(alpha: 0.6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (section.icon != null) ...[
-                        IconTheme(
-                          data: IconThemeData(
-                            size: 14,
-                            color:
-                                section.color ??
-                                Theme.of(context).colorScheme.onSurface
-                                    .withValues(alpha: 0.6),
-                          ),
-                          child: section.icon!,
-                        ),
-                        SizedBox(width: context.spacing.space1),
-                      ],
-                      Text(section.label!),
-                    ],
-                  ),
-                ),
-              ),
-            for (final (index, item) in section.items.indexed)
-              _buildMenuItem(
-                context,
-                item,
-                isFirst: index == 0,
-                isLast: index == section.items.length - 1,
-              ),
-          ],
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [for (final item in items) _item(context, item)],
         ),
       ),
-      MenuItemDivider() => Divider(
-        radius: BorderRadiusGeometry.circular(20),
-        indent: 4,
-        endIndent: 4,
-        height: 8,
-      ),
-      final _MenuItem menuItem => Padding(
-        padding: padding,
-        child: MenuItemButton(
-          autofocus: isFirst,
-          leadingIcon: menuItem.icon,
-          onPressed: menuItem.onPressed,
-          style: MenuItemButton.styleFrom(
-            foregroundColor: menuItem.color,
-            iconColor: menuItem.color,
-            disabledIconColor: menuItem.color?.withValues(alpha: 0.6),
-            disabledForegroundColor: menuItem.color?.withValues(alpha: 0.6),
-            disabledMouseCursor: SystemMouseCursors.forbidden,
+    );
+  }
+
+  Widget _item(BuildContext context, MenuItem item) => switch (item) {
+    final MenuItemSubmenu submenu => _Submenu(submenu: submenu, close: close),
+    final MenuItemSection section => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (section.label != null)
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: context.spacing.space1,
+            ),
+            child: DefaultTextStyle(
+              style: context.theme.textTheme.labelSmall!.copyWith(
+                color: section.color ?? context.colors.contentSecondary,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: context.spacing.space1,
+                children: [
+                  if (section.icon != null)
+                    IconTheme(
+                      data: IconThemeData(
+                        size: 14,
+                        color: section.color ?? context.colors.contentSecondary,
+                      ),
+                      child: section.icon!,
+                    ),
+                  Text(section.label!),
+                ],
+              ),
+            ),
           ),
-          child: Row(
-            spacing: context.spacing.space2,
-            children: [
-              Expanded(child: Text(menuItem.label, maxLines: 1)),
-              if (menuItem.shortcuts.isNotEmpty) ...[
-                ShortcutDisplay(shortcut: menuItem.shortcuts.first),
-              ],
-            ],
-          ),
+        for (final item in section.items) _item(context, item),
+      ],
+    ),
+    MenuItemDivider() => Padding(
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
+      child: SizedBox(
+        height: 1,
+        child: ColoredBox(
+          color: context.colors.contentSecondary.withValues(alpha: 0.2),
         ),
       ),
-      MenuItem _ => const SizedBox.shrink(),
-    };
+    ),
+    final _MenuItem entry => PanelMenuItem(
+      label: entry.label,
+      leading: entry.icon,
+      color: entry.color,
+      enabled: entry.onPressed != null,
+      trailing: entry.shortcuts.isEmpty
+          ? null
+          : ShortcutDisplay(shortcut: entry.shortcuts.first),
+      // The action runs first: closing ends the menu's context targets.
+      onPressed: () {
+        entry.onPressed?.call();
+        close();
+      },
+    ),
+    MenuItem _ => const SizedBox.shrink(),
+  };
+}
+
+/// A submenu row: it previews its entries beside it on hover and opens them
+/// focused when chosen; RawMenuAnchor closes it with its parent.
+class _Submenu extends HookWidget {
+  const _Submenu({required this.submenu, required this.close});
+
+  final MenuItemSubmenu submenu;
+  final VoidCallback close;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = useMemoized(AnchoredPopupController.new);
+    useEffect(() => controller.dispose, [controller]);
+    return AnchoredPopup(
+      controller: controller,
+      targetAnchor: Alignment.topRight,
+      popupAnchor: Alignment.topLeft,
+      builder: (context, show) => PanelMenuItem(
+        label: submenu.label,
+        leading: submenu.icon,
+        color: submenu.color,
+        trailing: const Icon(Icons.chevron_right),
+        onPressed: show,
+      ),
+      popupBuilder: (context, _) =>
+          _MenuItems(items: submenu.items, close: close),
+    );
   }
 }
 

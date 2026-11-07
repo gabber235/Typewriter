@@ -91,7 +91,8 @@ class Selector extends HookConsumerWidget {
     final isSelected = ref.watch(isSelectedProvider(selectableId));
     final isFocused = useState(false);
     final isHovered = useState(false);
-    final controller = useMenuController();
+    final controller = useMemoized(AnchoredPopupController.new);
+    useEffect(() => controller.dispose, [controller]);
     final anchorKey = useGlobalKey();
     final pendingContextPosition = useState<Offset?>(null);
     final contextTargets = useState<List<SelectableIdentifier>?>(null);
@@ -153,7 +154,7 @@ class Selector extends HookConsumerWidget {
         if (selected.hasError || operations.isEmpty) return;
         final anchor = anchorKey.currentContext?.findRenderObject();
         if (anchor is! RenderBox || !anchor.attached) return;
-        controller.open(position: anchor.globalToLocal(position));
+        controller.openAt(anchor.globalToLocal(position));
       });
       return () => active = false;
     }, [pendingContextPosition.value, selection, selected, source]);
@@ -181,7 +182,6 @@ class Selector extends HookConsumerWidget {
           selected: isSelected,
           child: ContextMenuRegion(
             key: anchorKey,
-            childFocusNode: focusNode,
             onClose: () => contextTargets.value = null,
             items: selectionOperationMenuItems(operations, ref),
             enableGestures: false,

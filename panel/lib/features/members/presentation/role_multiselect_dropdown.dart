@@ -30,10 +30,10 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
           inputFieldController: field,
           dropdownMenuEntries: [
             for (final role in availableRoles)
-              DropdownMenuEntry(
+              MenuChoice(
                 value: role,
                 label: role.name,
-                labelWidget: _roleMenuEntry(context, role),
+                content: _roleMenuEntry(context, role),
                 enabled: role.assignable,
               ),
           ],

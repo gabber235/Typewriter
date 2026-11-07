@@ -9,6 +9,7 @@ extension TypewriterThemeDataX on ThemeData {
   TypewriterStateTokens get states => extension<TypewriterStateTokens>()!;
   TypewriterMotion get motion => extension<TypewriterMotion>()!;
   TypewriterText get text => extension<TypewriterText>()!;
+  TypewriterTiming get timing => extension<TypewriterTiming>()!;
 }
 
 /// Provides the current theme and Typewriter design tokens to a widget.
@@ -28,4 +29,18 @@ extension TypewriterThemeContextX on BuildContext {
   /// The raw token table. Play a token through `resolveMotion`, which
   /// applies reduced motion; read this only to show or change the table.
   TypewriterMotion get motion => theme.motion;
+
+  /// The waits before something happens; see [TypewriterTiming].
+  TypewriterTiming get timing => theme.timing;
+}
+
+/// The one shadow of floating surfaces: menus, popovers, tooltips, toasts.
+extension MenuShadow on BuildContext {
+  List<BoxShadow> get menuShadow => [
+    BoxShadow(
+      color: colors.shadow.withValues(alpha: 0.16),
+      blurRadius: spacing.space1,
+      offset: const Offset(0, 2),
+    ),
+  ];
 }

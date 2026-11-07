@@ -18,7 +18,7 @@ _SecretFieldController _useSecretFieldController(
 ) {
   final state = useState<SecretFieldState>(const SecretFieldIdle());
 
-  useTimer(1.seconds, (_) {
+  useTimer(const Duration(seconds: 1), (_) {
     final currentState = state.value;
     if (currentState is! SecretFieldRevealed || currentState.neverExpires) {
       return;

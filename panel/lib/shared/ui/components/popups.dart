@@ -90,7 +90,7 @@ class ConfirmationDialogue extends HookWidget {
     final confirmController = useButtonController();
     useListenable(confirmController);
 
-    useTimer(1.seconds, (timer) {
+    useTimer(const Duration(seconds: 1), (timer) {
       secondsLeft.value--;
       if (secondsLeft.value <= 0) {
         timer.cancel();
@@ -223,57 +223,69 @@ Future<bool> showConfirmationDialogue({
       false;
 }
 
-/// Shows a dialog with Typewriter's provider, responsive, and keyboard context.
-///
-/// Unlike calling [showDialog] directly, the builder can access the existing
-/// Riverpod container and the panel's global shortcuts. The returned future
-/// carries the route result, or null when no result was supplied.
+/// Shows the panel's one dialog, with Typewriter's provider, responsive and
+/// keyboard context: it arrives with dialogIn, leaves with dialogOut, and
+/// the page behind sinks back while it is open. The returned future carries
+/// the route result, or null when no result was supplied.
 Future<T?> showAdvancedDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool barrierDismissible = true,
-  Color? barrierColor,
-  String? barrierLabel,
-  bool useSafeArea = true,
-  bool useRootNavigator = true,
-  RouteSettings? routeSettings,
-  Offset? anchorPoint,
-  TraversalEdgeBehavior? traversalEdgeBehavior,
-  bool fullscreenDialog = false,
-  bool? requestFocus,
-  AnimationStyle? animationStyle,
 }) {
   // Read once: the dialog outlives [context] while it closes, such as when
   // the dialog's action removed the resource it was opened from.
   final container = ProviderScope.containerOf(context);
-  return showDialog<T>(
-    context: context,
-    builder: (ctx) => UncontrolledProviderScope(
-      container: container,
-      child: Consumer(
-        builder: (context, ref, child) {
-          return Shortcuts(
-            shortcuts: typewriterShortcuts,
-            child: GlobalModeShortcut(
-              child: ManagedActionSet(
-                shortcuts: ref.watch(dialogShortcutsProvider),
-                child: Responsive(child: builder(context)),
+  final navigator = Navigator.of(context, rootNavigator: true);
+  return navigator.push(
+    MotionDialogRoute<T>(
+      arrive: motionTimeline(context, MotionToken.dialogIn),
+      leave: motionTimeline(context, MotionToken.dialogOut),
+      originScale: context.motion
+          .spec(MotionToken.dialogIn)
+          .landing
+          .originScale,
+      sinksPage: true,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: "Close dialog",
+      barrierColor: context.colors.scrim,
+      themes: InheritedTheme.capture(from: context, to: navigator.context),
+      builder: (_) => SafeArea(
+        child: UncontrolledProviderScope(
+          container: container,
+          child: Consumer(
+            builder: (context, ref, child) => Shortcuts(
+              shortcuts: typewriterShortcuts,
+              child: GlobalModeShortcut(
+                child: ManagedActionSet(
+                  shortcuts: ref.watch(dialogShortcutsProvider),
+                  child: Responsive(child: builder(context)),
+                ),
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     ),
-    barrierDismissible: barrierDismissible,
-    barrierColor: barrierColor,
-    barrierLabel: barrierLabel,
-    useSafeArea: useSafeArea,
-    useRootNavigator: useRootNavigator,
-    routeSettings: routeSettings,
-    anchorPoint: anchorPoint,
-    traversalEdgeBehavior: traversalEdgeBehavior,
-    fullscreenDialog: fullscreenDialog,
-    requestFocus: requestFocus,
-    animationStyle: animationStyle,
   );
+}
+
+/// The panel's one bottom sheet: surfaceIn up from the bottom edge,
+/// panelOut back down, with the caller's provider scope.
+extension PanelSheet on BuildContext {
+  Future<T?> showPanelSheet<T>(WidgetBuilder builder) {
+    final container = ProviderScope.containerOf(this);
+    return showModalBottomSheet<T>(
+      context: this,
+      isScrollControlled: true,
+      backgroundColor: colors.surface.withValues(alpha: 0),
+      sheetAnimationStyle: motionTimeline(
+        this,
+        MotionToken.surfaceIn,
+      ).styleWith(motionTimeline(this, MotionToken.panelOut)),
+      builder: (sheetContext) => UncontrolledProviderScope(
+        container: container,
+        child: builder(sheetContext),
+      ),
+    );
+  }
 }

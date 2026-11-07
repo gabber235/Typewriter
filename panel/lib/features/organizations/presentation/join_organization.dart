@@ -240,7 +240,7 @@ class _PendingJoinRequestTile extends StatelessWidget {
         child: RingTarget(
           borderRadius: context.shapes.mediumBorderRadius,
           child: Focus(
-            child: ListTile(
+            child: PanelRow(
               leading: OrganizationLogo(
                 logoUrl: request.organizationLogoUrl,
                 size: 40,

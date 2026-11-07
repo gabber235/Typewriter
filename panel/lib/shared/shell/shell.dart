@@ -6,4 +6,5 @@ export "appbar_item.dart";
 export "custom_appbar.dart";
 export "custom_appbar_layout.dart";
 export "sidebar.dart";
+export "sidebar_order.dart";
 export "sign_out_button.dart";

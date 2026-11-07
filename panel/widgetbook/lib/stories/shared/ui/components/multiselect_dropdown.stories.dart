@@ -54,8 +54,7 @@ class _RolePicker extends HookWidget {
       inputFieldController: field,
       enabled: enabled,
       dropdownMenuEntries: [
-        for (final role in _roles.keys)
-          DropdownMenuEntry(value: role, label: role),
+        for (final role in _roles.keys) MenuChoice(value: role, label: role),
       ],
       selectedItems: selected.value,
       onSelectionChanged: (roles) => selected.value = roles,

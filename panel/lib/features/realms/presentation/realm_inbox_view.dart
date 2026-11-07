@@ -342,8 +342,8 @@ class RealmInboxView extends StatelessWidget {
                               AnimatedSliverList<skir.CompilationRoot>(
                                 items: state.pendingRoots,
                                 identity: (root) => root,
-                                itemBuilder: (context, root) => ListTile(
-                                  contentPadding: EdgeInsets.zero,
+                                itemBuilder: (context, root) => PanelRow(
+                                  padding: EdgeInsets.zero,
                                   leading: _icon(
                                     context,
                                     Icons.hourglass_empty,
@@ -407,8 +407,8 @@ class RealmInboxView extends StatelessWidget {
       return _workRow(context, entry);
     }
     if (issue case RealmInboxSubmissionIssue(:final submission)) {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
+      return PanelRow(
+        padding: EdgeInsets.zero,
         leading: Icon(
           Icons.error_outline,
           size: 18,
@@ -511,17 +511,20 @@ class RealmInboxView extends StatelessWidget {
       skir.PublicationChange_rootRemovedWrapper() => context.colors.danger,
       _ => context.colors.brand,
     };
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
+    final title = switch (change) {
+      skir.PublicationChange_rootRemovedWrapper(:final value) => removedLabel(
+        value,
+      ),
+      _ => root == null ? label : resourceLabel(root.resource),
+    };
+    return PanelRow(
+      padding: EdgeInsets.zero,
+      label: title,
       leading: _icon(context, Icons.article_outlined, color),
-      title: Text(switch (change) {
-        skir.PublicationChange_rootRemovedWrapper(:final value) => removedLabel(
-          value,
-        ),
-        _ => root == null ? label : resourceLabel(root.resource),
-      }, style: context.theme.textTheme.titleSmall),
+      title: Text(title, style: context.theme.textTheme.titleSmall),
       trailing: root == null ? null : _badge(context, label, color),
-      onTap: root == null || change is skir.PublicationChange_rootRemovedWrapper
+      onPressed:
+          root == null || change is skir.PublicationChange_rootRemovedWrapper
           ? null
           : () => openLocation(
               skir.ValueLocation(
@@ -535,8 +538,8 @@ class RealmInboxView extends StatelessWidget {
   Widget _workRow(BuildContext context, WorkEntryState entry) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      ListTile(
-        contentPadding: EdgeInsets.zero,
+      PanelRow(
+        padding: EdgeInsets.zero,
         leading: Icon(
           entry.needsAttention ? Icons.error_outline : Icons.edit_outlined,
           size: 18,

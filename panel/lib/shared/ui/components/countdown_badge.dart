@@ -26,7 +26,7 @@ class CountdownBadge extends HookWidget {
     final remaining = useState(endDate!.difference(clock.now()));
     final isUrgent = remaining.value <= urgentThreshold;
 
-    useTimer(1.seconds, (timer) {
+    useTimer(const Duration(seconds: 1), (timer) {
       final duration = endDate!.difference(clock.now());
       if (duration.isNegative) {
         remaining.value = Duration.zero;

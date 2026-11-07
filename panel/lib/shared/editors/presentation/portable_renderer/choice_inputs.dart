@@ -205,7 +205,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
             final reason = _controlString(override?.disabledReason, scope);
             return reason == null || available(id)
                 ? child
-                : Tooltip(message: reason, child: child);
+                : PanelTooltip(message: reason, child: child);
           }
 
           void choose(String? id) {
@@ -301,12 +301,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
             },
           );
           final externalSuffix = _interactiveAdornment(content?.suffix);
-          // DropdownMenu replaces its component themes when overrides are
-          // supplied. Apply authored properties over the panel defaults.
-          final dropdownTheme = DropdownMenuTheme.of(context);
-          final inputTheme =
-              dropdownTheme.inputDecorationTheme ??
-              Theme.of(context).inputDecorationTheme;
+          final inputTheme = Theme.of(context).inputDecorationTheme;
           final dropdown = Dropdown<String>(
             key: ValueKey("${node.nodeId}.input"),
             selected: selected,
@@ -334,32 +329,20 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
                 hintStyle: style.decoration.hintStyle,
               ),
             ),
-            menuStyle: (dropdownTheme.menuStyle ?? const MenuStyle()).copyWith(
-              backgroundColor: popup?.fill == null
-                  ? null
-                  : WidgetStatePropertyAll(colors.resolve(popup!.fill!, scope)),
-              shape: shape == null ? null : WidgetStatePropertyAll(shape),
-              padding: popup?.padding == null
-                  ? null
-                  : WidgetStatePropertyAll(_presentationInsets(popup!.padding)),
-              minimumSize: popupConstraints == null
-                  ? null
-                  : WidgetStatePropertyAll(Size(popupConstraints.minWidth, 0)),
-              maximumSize: popupConstraints == null
-                  ? null
-                  : WidgetStatePropertyAll(
-                      Size(
-                        popupConstraints.maxWidth,
-                        popupConstraints.maxHeight,
-                      ),
-                    ),
-            ),
+            popupColor: popup?.fill == null
+                ? null
+                : colors.resolve(popup!.fill!, scope),
+            popupShape: shape,
+            popupPadding: popup?.padding == null
+                ? null
+                : _presentationInsets(popup!.padding),
+            popupConstraints: popupConstraints,
             dropdownMenuEntries: [
               for (final choice in choices)
-                DropdownMenuEntry(
+                MenuChoice(
                   value: choice.id,
                   label: choice.label,
-                  labelWidget: label(choice.id, choice.label),
+                  content: label(choice.id, choice.label),
                   enabled: available(choice.id),
                 ),
             ],

@@ -6,116 +6,43 @@ void main() {
   testWidgets("a higher index enters from the right, a lower from the left", (
     tester,
   ) async {
-    final panel = await tester.showComponent(
-      const DirectionalContentSwitcher(
-        index: 0,
-        child: SizedBox(
-          key: ValueKey(0),
-          width: 200,
-          height: 80,
-          child: Text("Page 0"),
-        ),
-      ),
-    );
+    final panel = await tester.showComponent(switcherPage(0));
     double left(String page) => tester.getTopLeft(find.text(page)).dx;
     final rest = left("Page 0");
 
-    await tester.showComponent(
-      const DirectionalContentSwitcher(
-        index: 1,
-        child: SizedBox(
-          key: ValueKey(1),
-          width: 200,
-          height: 80,
-          child: Text("Page 1"),
-        ),
-      ),
-      settle: false,
-    );
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.showComponent(switcherPage(1), settle: false);
+    await tester.pump(const Duration(milliseconds: 16));
     expect(left("Page 1"), greaterThan(rest));
-    expect(left("Page 0"), lessThan(rest));
 
     await panel.settle();
-    await tester.showComponent(
-      const DirectionalContentSwitcher(
-        index: 0,
-        child: SizedBox(
-          key: ValueKey(0),
-          width: 200,
-          height: 80,
-          child: Text("Page 0"),
-        ),
-      ),
-      settle: false,
-    );
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.showComponent(switcherPage(0), settle: false);
+    await tester.pump(const Duration(milliseconds: 16));
     expect(left("Page 0"), lessThan(rest));
-    expect(left("Page 1"), greaterThan(rest));
   });
 
   testWidgets("animates its height to match the current page", (tester) async {
-    final panel = await tester.showComponent(
-      const DirectionalContentSwitcher(
-        index: 0,
-        child: SizedBox(
-          key: ValueKey(0),
-          width: 200,
-          height: 40,
-          child: Text("Page 0"),
-        ),
-      ),
-    );
+    final panel = await tester.showComponent(switcherPage(0, height: 40));
     double height() =>
         tester.getSize(find.byType(DirectionalContentSwitcher)).height;
     expect(height(), 40);
 
-    await tester.showComponent(
-      const DirectionalContentSwitcher(
-        index: 1,
-        child: SizedBox(
-          key: ValueKey(1),
-          width: 200,
-          height: 120,
-          child: Text("Page 1"),
-        ),
-      ),
-      settle: false,
-    );
+    await tester.showComponent(switcherPage(1, height: 120), settle: false);
     await tester.pump(const Duration(milliseconds: 150));
-    expect(height(), allOf(greaterThan(40), lessThan(120)));
+    // surfaceIn may carry the height a little past the page before it rests.
+    expect(height(), allOf(greaterThan(40), isNot(120)));
 
     await panel.settle();
     expect(height(), 120);
   });
 
-  testWidgets("keeps both pages during the transition", (tester) async {
-    final panel = await tester.showComponent(
-      const DirectionalContentSwitcher(
-        index: 0,
-        child: SizedBox(
-          key: ValueKey(0),
-          width: 200,
-          height: 120,
-          child: Text("Page 0"),
-        ),
-      ),
-    );
+  testWidgets("the old page leaves at once while the new one enters", (
+    tester,
+  ) async {
+    final panel = await tester.showComponent(switcherPage(0, height: 120));
 
-    await tester.showComponent(
-      const DirectionalContentSwitcher(
-        index: 1,
-        child: SizedBox(
-          key: ValueKey(1),
-          width: 200,
-          height: 40,
-          child: Text("Page 1"),
-        ),
-      ),
-      settle: false,
-    );
+    await tester.showComponent(switcherPage(1, height: 40), settle: false);
     await tester.pump(const Duration(milliseconds: 150));
-    expect(panel.shows("Page 0"), isTrue);
+    expect(panel.shows("Page 0"), isFalse);
     expect(panel.shows("Page 1"), isTrue);
 
     await panel.settle();
@@ -127,31 +54,11 @@ void main() {
     tester,
   ) async {
     final panel = await tester.showComponent(
-      const ReducedMotion(
-        child: DirectionalContentSwitcher(
-          index: 0,
-          child: SizedBox(
-            key: ValueKey(0),
-            width: 200,
-            height: 40,
-            child: Text("Page 0"),
-          ),
-        ),
-      ),
+      ReducedMotion(child: switcherPage(0, height: 40)),
     );
 
     await tester.showComponent(
-      const ReducedMotion(
-        child: DirectionalContentSwitcher(
-          index: 1,
-          child: SizedBox(
-            key: ValueKey(1),
-            width: 200,
-            height: 120,
-            child: Text("Page 1"),
-          ),
-        ),
-      ),
+      ReducedMotion(child: switcherPage(1, height: 120)),
       settle: false,
     );
     await tester.pump();

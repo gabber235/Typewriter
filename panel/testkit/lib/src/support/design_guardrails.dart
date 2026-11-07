@@ -272,6 +272,9 @@ final bannedPatterns = <BannedPattern>[
     "open dialogs with MotionDialogRoute and sheets with showPanelSheet",
     allowedIn: {
       "lib/shared/ui/components/popups.dart": RegExp(r"^showModalBottomSheet$"),
+      "lib/shared/ui/components/motion_dialog_route.dart": RegExp(
+        r"^RawDialogRoute$",
+      ),
     },
   ),
   BannedPattern(bannedListTile, "build the row with Button"),

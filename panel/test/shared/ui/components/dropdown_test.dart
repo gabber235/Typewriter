@@ -113,4 +113,43 @@ void main() {
       expect(panel.shows("Beta"), isTrue);
     },
   );
+
+  testWidgets("typing jumps to a choice", (tester) async {
+    final controller = InputFieldController();
+    addTearDown(controller.dispose);
+    String? chosen;
+    final panel = await tester.showComponent(
+      SizedBox(
+        width: 360,
+        child: Dropdown<String>(
+          inputFieldController: controller,
+          selected: "alpha",
+          dropdownMenuEntries: const [
+            MenuChoice(value: "alpha", label: "Alpha"),
+            MenuChoice(value: "beta", label: "Beta"),
+            MenuChoice(value: "gamma", label: "Gamma"),
+          ],
+          onSelected: (value) => chosen = value,
+        ),
+      ),
+    );
+    await panel.tapOn(find.text("Alpha"));
+    await tester.enterText(find.text("Alpha"), "g");
+    await panel.settle();
+
+    // The one match is the choice Enter takes, marked for assistive
+    // technology as well as drawn.
+    expect(
+      find.semantics.byPredicate(
+        (node) =>
+            node.spoken == "Gamma" &&
+            node.getSemanticsData().flagsCollection.isSelected ==
+                Tristate.isTrue,
+      ),
+      findsOne,
+    );
+    await panel.press(LogicalKeyboardKey.enter);
+    expect(chosen, "gamma");
+    expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
+  });
 }

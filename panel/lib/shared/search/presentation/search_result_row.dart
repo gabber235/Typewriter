@@ -70,14 +70,10 @@ final class SearchResultRow extends StatelessWidget {
       return RingCursor(
         active: row.focused,
         borderRadius: context.shapes.mediumBorderRadius,
-        child: ListTile(
+        child: PanelRow(
           dense: true,
-          minTileHeight: 44,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: context.spacing.space3,
-          ),
           selected: row.selected,
-          selectedTileColor: color.withValues(alpha: 0.10),
+          selectedColor: color,
           leading: row.loading
               ? const SizedBox.square(
                   dimension: 20,
@@ -105,7 +101,7 @@ final class SearchResultRow extends StatelessWidget {
                   shortcutActivator: row.shortcutActivator,
                   selected: row.selected,
                 ),
-          onTap: row.onTap,
+          onPressed: row.onTap,
         ),
       );
     }

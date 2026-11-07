@@ -186,16 +186,8 @@ class MembersTable extends HookConsumerWidget {
               ),
               child: RoleMultiselectDropdown(
                 selectedRoles: member.roles.toList(),
-                onRolesChanged: (newRoles) {
-                  ref
-                      .executeMembership(
-                        ref.membershipCommands.updateRoles([
-                          member.userId,
-                        ], newRoles),
-                        (response) => response.requireAccepted(),
-                      )
-                      .catchApiExceptionsAndDisplay(context);
-                },
+                onRolesChanged: (newRoles) =>
+                    ref.assignMemberRoles(context, member.userId, newRoles),
                 placeholder: "Select roles",
               ),
             ),
@@ -204,5 +196,19 @@ class MembersTable extends HookConsumerWidget {
         TableCell(child: withShortcuts(MemberRowActions(member: member))),
       ],
     );
+  }
+}
+
+/// Gives one member a new set of roles, showing a failure where it happened.
+extension MemberRoleAssignment on WidgetRef {
+  void assignMemberRoles(
+    BuildContext context,
+    skir.RecordId memberId,
+    List<skir.OrganizationRole> roles,
+  ) {
+    executeMembership(
+      membershipCommands.updateRoles([memberId], roles),
+      (response) => response.requireAccepted(),
+    ).catchApiExceptionsAndDisplay(context);
   }
 }

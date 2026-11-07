@@ -44,15 +44,9 @@ class MemberTabletCard extends HookConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: Surface(
         color: backgroundColor,
-        child: Expansible(
+        child: GrowingCard(
           controller: expansibleController,
-          animationStyle: AnimationStyle(
-            duration: 500.ms,
-            curve: ElasticOutCurve(0.9),
-            reverseDuration: 20.ms,
-            reverseCurve: Curves.easeInCubic,
-          ),
-          headerBuilder: (context, animation) {
+          header: (context, animation) {
             return ManagedActionSet(
               shortcuts: [
                 ActionShortcut.intent(
@@ -71,7 +65,9 @@ class MemberTabletCard extends HookConsumerWidget {
                   priority: 1,
                   onInvoke: (_) => onSelectAll(),
                 ),
-                if (hasSelection)
+                // Esc steps out one level: first the card, then the
+                // selection.
+                if (hasSelection && !expansibleController.isExpanded)
                   ActionShortcut.intent(
                     id: "clear_member_selection_${member.userId}",
                     label: "Clear selection",
@@ -165,73 +161,64 @@ class MemberTabletCard extends HookConsumerWidget {
               ),
             );
           },
-          bodyBuilder: (context, animation) {
-            return ElasticMessageTransition(
-              animation: animation,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Divider(
-                    height: 1,
-                    color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.3,
-                    ),
+          body: (context) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Divider(
+                  height: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(context.spacing.space3),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Roles",
-                          style: Theme.of(context).textTheme.bodyMedium!
-                              .copyWith(
-                                fontVariations: [.weight(500)],
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 12,
-                              ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(context.spacing.space3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Roles",
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontVariations: [.weight(500)],
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 12,
                         ),
-                        SizedBox(height: context.spacing.space2),
-                        ref
-                            .watch(organizationRolesProvider)
-                            .when(
-                              data: (allRoles) => RoleMultiselectChips(
-                                availableRoles: allRoles,
-                                selectedRoles: member.roles.toList(),
-                                onRolesChanged: (newRoles) {
-                                  ref
-                                      .executeMembership(
-                                        ref.membershipCommands.updateRoles([
-                                          member.userId,
-                                        ], newRoles),
-                                        (response) =>
-                                            response.requireAccepted(),
-                                      )
-                                      .catchApiExceptionsAndDisplay(context);
-                                },
-                              ),
-                              loading: () => const SizedBox.shrink(),
-                              error: (_, _) => const SizedBox.shrink(),
+                      ),
+                      SizedBox(height: context.spacing.space2),
+                      ref
+                          .watch(organizationRolesProvider)
+                          .when(
+                            data: (allRoles) => RoleMultiselectChips(
+                              availableRoles: allRoles,
+                              selectedRoles: member.roles.toList(),
+                              onRolesChanged: (newRoles) =>
+                                  ref.assignMemberRoles(
+                                    context,
+                                    member.userId,
+                                    newRoles,
+                                  ),
                             ),
-                        SizedBox(height: context.spacing.space4),
-                        SizedBox(
-                          width: double.infinity,
-                          child: Button(
-                            face: ButtonFace.outlined,
-                            icon: const Icon(
-                              Icons.person_remove_outlined,
-                              size: 18,
-                            ),
-                            label: "Remove Member",
-                            color: context.colors.dangerText,
-                            onPressed: () => _confirmRemoveMember(context, ref),
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, _) => const SizedBox.shrink(),
                           ),
+                      SizedBox(height: context.spacing.space4),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Button(
+                          face: ButtonFace.outlined,
+                          icon: const Icon(
+                            Icons.person_remove_outlined,
+                            size: 18,
+                          ),
+                          label: "Remove Member",
+                          color: context.colors.dangerText,
+                          onPressed: () => _confirmRemoveMember(context, ref),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           },
         ),

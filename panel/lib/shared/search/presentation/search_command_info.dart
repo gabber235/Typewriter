@@ -53,13 +53,6 @@ class SearchCommandInfo extends HookConsumerWidget {
       ),
     };
 
-    return AnimatedSwitcher(
-      duration: 750.ms,
-      switchInCurve: Curves.linear,
-      switchOutCurve: Curves.linear,
-      transitionBuilder: (child, animation) =>
-          ElasticTransition(animation: animation, child: child),
-      child: child,
-    );
+    return PanelSwitcher(child: child);
   }
 }

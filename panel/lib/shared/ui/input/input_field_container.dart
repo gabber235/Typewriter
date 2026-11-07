@@ -87,7 +87,7 @@ class InputFieldContainer extends HookConsumerWidget {
   /// Coordinates the focus nodes; its creator retains disposal responsibility.
   final InputFieldController controller;
 
-  /// The actual input widget to render (e.g. TextField, DropdownMenu).
+  /// The actual input widget to render (e.g. TextField).
   final Widget child;
 
   /// Actions available whenever either surrounding or input has focus.

@@ -82,7 +82,7 @@ final class _AuthoredReorderHandleState extends State<_AuthoredReorderHandle> {
       ),
     },
     onShowFocusHighlight: (focused) => setState(() => _focused = focused),
-    child: Tooltip(
+    child: PanelTooltip(
       message: widget.label,
       child: ReorderableDragStartListener(
         index: widget.index,

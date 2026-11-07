@@ -120,7 +120,9 @@ class CommandController with ChangeNotifier {
   Future<void> _clearAutoReset() async {
     if (_disposed) return;
     await Future<void>.delayed(
-      _state is SearchCommandFailed ? 10.seconds : 3.seconds,
+      _state is SearchCommandFailed
+          ? const Duration(seconds: 10)
+          : const Duration(seconds: 3),
     );
     if (_disposed || _state is SearchCommandRunning) return;
     _state = const SearchCommandExecutionState.idle();

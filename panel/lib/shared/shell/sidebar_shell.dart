@@ -20,7 +20,7 @@ class Sidebar extends HookConsumerWidget {
   }
 }
 
-class _SidebarView extends StatelessWidget {
+class _SidebarView extends HookWidget {
   const _SidebarView({required this.child, required this.controller});
 
   final Widget child;
@@ -28,12 +28,26 @@ class _SidebarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = controller.effectiveSize;
+    final previous = usePrevious(width) ?? width;
+    // The direction of the latest change; a rebuild without one keeps it,
+    // so a running shrink never takes the grow curve.
+    final grows = useRef(true);
+    if (width != previous) grows.value = width > previous;
+    // Growing overshoots with surfaceIn; shrinking never goes below its
+    // target, since panelOut has no overshoot. A drag follows the pointer.
+    final timeline = controller.isDragging.value
+        ? MotionTimeline.instant
+        : motionTimeline(
+            context,
+            grows.value ? MotionToken.surfaceIn : MotionToken.panelOut,
+          );
     return ManagedActionSet(
       shortcuts: controller.shortcuts,
       child: AnimatedContainer(
-        duration: controller.isDragging.value ? 0.ms : 1000.ms,
-        curve: ElasticOutCurve(0.9),
-        width: controller.effectiveSize,
+        duration: timeline.duration,
+        curve: timeline.curve,
+        width: width,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -2,7 +2,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Asks whether protected local work may be discarded with its current scope.
 Future<bool> showWorkSessionLossConfirmation(BuildContext context) async =>
-    await showDialog<bool>(
+    await showAdvancedDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(

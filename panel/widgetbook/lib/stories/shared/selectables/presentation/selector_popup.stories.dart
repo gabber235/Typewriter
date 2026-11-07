@@ -164,12 +164,12 @@ class _BookMenu extends HookWidget {
           for (final section in sections.entries) ...[
             SelectorSectionHeader(title: section.key),
             for (final book in section.value)
-              ListTile(
+              PanelRow(
                 dense: true,
                 selected: book.id == selected?.id,
                 leading: Icon(Icons.menu_book, color: book.color),
                 title: Text(book.title),
-                onTap: () => onSelect(book),
+                onPressed: () => onSelect(book),
               ),
           ],
           const SizedBox(height: 8),

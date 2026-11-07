@@ -29,7 +29,7 @@ final class EditingGroupPanel<S, E> extends HookWidget {
         if (review != null)
           Button(
             label: "View changes",
-            onPressed: () => showDialog<void>(
+            onPressed: () => showAdvancedDialog<void>(
               context: context,
               builder: (context) => AlertDialog(
                 title: Text(group.label),
