@@ -339,7 +339,8 @@ class _PaneState extends State<Pane> {
         onFocusChange: (focused) {
           if (focused) _coordinator?.markActive(_registration);
         },
-        child: widget.child,
+        // Each pane runs the load of its content once.
+        child: EnterRun(child: widget.child),
       ),
     );
     result = _PaneGeometryMarker(registration: _registration, child: result);

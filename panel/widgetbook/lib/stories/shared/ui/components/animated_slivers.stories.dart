@@ -50,39 +50,37 @@ class AnimatedSectionsStory extends HookWidget {
           Expanded(
             child: CustomScrollView(
               slivers: [
-                SliverStaggerScope(
-                  sliver: SliverMainAxisGroup(
-                    slivers: [
-                      SliverAnimatedContent(
-                        child: items.value.isEmpty
-                            ? null
-                            : const SectionTitle(title: "Join requests"),
-                      ),
-                      SliverAnimatedGap(extent: items.value.isEmpty ? 0 : gap),
-                      AnimatedSliverList<int>(
-                        items: items.value,
-                        identity: (item) => item,
-                        itemBuilder: (context, item) => ListTile(
-                          title: Text("Join request $item"),
-                          trailing: IconButton(
-                            tooltip: "Remove",
-                            onPressed: () => items.value = items.value
-                                .where((value) => value != item)
-                                .toList(),
-                            icon: const Icon(Icons.close),
-                          ),
+                SliverMainAxisGroup(
+                  slivers: [
+                    SliverAnimatedContent(
+                      child: items.value.isEmpty
+                          ? null
+                          : const SectionTitle(title: "Join requests"),
+                    ),
+                    SliverAnimatedGap(extent: items.value.isEmpty ? 0 : gap),
+                    AnimatedSliverList<int>(
+                      items: items.value,
+                      identity: (item) => item,
+                      itemBuilder: (context, item) => ListTile(
+                        title: Text("Join request $item"),
+                        trailing: IconButton(
+                          tooltip: "Remove",
+                          onPressed: () => items.value = items.value
+                              .where((value) => value != item)
+                              .toList(),
+                          icon: const Icon(Icons.close),
                         ),
                       ),
-                      SliverAnimatedContent(
-                        child: items.value.isEmpty
-                            ? const EmptyState(
-                                title: "No join requests",
-                                description: "Requests to join appear here",
-                              )
-                            : null,
-                      ),
-                    ],
-                  ),
+                    ),
+                    SliverAnimatedContent(
+                      child: items.value.isEmpty
+                          ? const EmptyState(
+                              title: "No join requests",
+                              description: "Requests to join appear here",
+                            )
+                          : null,
+                    ),
+                  ],
                 ),
               ],
             ),

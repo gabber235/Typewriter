@@ -347,13 +347,35 @@ extension CollectionMovement on PortablePresentationScope {
   }
 }
 
-class CollectionSequence extends StatelessWidget {
+/// The items of one editor collection on row entries: added items slide in
+/// with rowIn, removed ones squash shut with listOut, and a reorder moves
+/// items in place. [arrival] and [leave] are the service's item moves, read
+/// by the collection input before this widget builds. A leaving item stays
+/// as an extra, undraggable item, so visual and item indices differ while it
+/// leaves; data that arrives during a drag waits for the drop.
+/// Builds an entry's content while it stays and keeps its last content
+/// while it leaves: a removed item is no longer in the scope, so building
+/// it again would show a diagnostic instead of the item.
+Widget Function(RowEntry<T> entry, Widget Function() build) _useLastBuilt<T>(
+  List<RowEntry<T>> entries,
+) {
+  final built = useRef(<Object, Widget>{}).value;
+  final ids = {for (final entry in entries) entry.id};
+  built.removeWhere((id, _) => !ids.contains(id));
+  return (entry, build) => entry.phase == RowPhase.leaving
+      ? built[entry.id] ?? const SizedBox.shrink()
+      : built[entry.id] = build();
+}
+
+class CollectionSequence extends HookWidget {
   const CollectionSequence({
     required this.scope,
     required this.collection,
     required this.items,
     required this.allowReorder,
     required this.entryBuilder,
+    this.arrival,
+    this.leave,
     super.key,
   });
   final PortablePresentationScope scope;
@@ -361,41 +383,87 @@ class CollectionSequence extends StatelessWidget {
   final List<skir.ListItem> items;
   final bool allowReorder;
   final Widget Function(BuildContext, skir.ListItem, int) entryBuilder;
-
-  // ReorderableListView promotes this stable source key to its own global
-  // child key, preserving the editor through moves into its drag proxy.
-  Widget _entry(int index) => KeyedSubtree(
-    key: ValueKey(items[index].id.value),
-    child: Builder(
-      builder: (context) => entryBuilder(context, items[index], index),
-    ),
-  );
-
-  void _move(BuildContext context, skir.ItemId item, int destination) {
-    if (!allowReorder || !scope.canExecuteAction) return;
-    _CollectionInteractionScope.invalidateAncestors(context);
-    scope.moveCollectionItem(
-      collection: collection,
-      items: items,
-      item: item,
-      destination: destination,
-    );
-  }
+  final MotionOverride? arrival;
+  final MotionOverride? leave;
 
   @override
   Widget build(BuildContext context) {
+    // Data that arrives during a drag waits for the drop, so drag indices
+    // stay valid.
+    final dragging = useState(false);
+    final shown = useRef(items);
+    if (!dragging.value) shown.value = items;
+    final rows = useAnimatedRows(
+      items: shown.value,
+      identity: (item) => item.id.value,
+      arrival: arrival,
+      leave: leave,
+    );
+    final entries = rows.entries;
+    final lastBuilt = _useLastBuilt(entries);
+
+    // A visual index counts only items that stay.
+    int activeIndexAt(int visualIndex) => entries
+        .take(visualIndex)
+        .where((entry) => entry.phase != RowPhase.leaving)
+        .length;
+
+    void move(skir.ItemId item, int destination) {
+      if (!allowReorder || !scope.canExecuteAction) return;
+      final order = rows.items;
+      if (destination < 0 || destination >= order.length) return;
+      _CollectionInteractionScope.invalidateAncestors(context);
+      scope.moveCollectionItem(
+        collection: collection,
+        items: order,
+        item: item,
+        destination: destination,
+      );
+    }
+
+    // ReorderableListView promotes the stable entry key to its own global
+    // child key, preserving the editor through moves into its drag proxy.
+    Widget visual(BuildContext context, int visualIndex) {
+      final entry = entries[visualIndex];
+      return _SequenceEntry(
+        key: ValueKey(entry.id),
+        visualIndex: visualIndex,
+        leaving: entry.phase == RowPhase.leaving,
+        move: (destination) => move(entry.item.id, destination),
+        // The editor owns its scroll, so rows have no SliverRowAnchor.
+        child: entry.motion(
+          entry.row(
+            Builder(
+              builder: (context) => lastBuilt(
+                entry,
+                () => entryBuilder(
+                  context,
+                  entry.item,
+                  activeIndexAt(visualIndex),
+                ),
+              ),
+            ),
+          ),
+          anchors: false,
+        ),
+      );
+    }
+
     if (!allowReorder) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [for (var i = 0; i < items.length; i++) _entry(i)],
+        children: [
+          for (var index = 0; index < entries.length; index++)
+            visual(context, index),
+        ],
       );
     }
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
-      itemBuilder: (_, index) => _entry(index),
+      itemCount: entries.length,
+      itemBuilder: visual,
       proxyDecorator: (child, _, animation) => _collectionDragScopes(
         context,
         AnimatedBuilder(
@@ -407,35 +475,73 @@ class CollectionSequence extends StatelessWidget {
           ),
         ),
       ),
-      onReorderStart: (_) =>
-          _CollectionInteractionScope.invalidateAncestors(context),
-      onReorderItem: (from, to) => _move(context, items[from].id, to),
+      onReorderStart: (_) {
+        dragging.value = true;
+        _CollectionInteractionScope.invalidateAncestors(context);
+      },
+      onReorderEnd: (_) => dragging.value = false,
+      onReorderItem: (from, to) {
+        final entry = entries[from];
+        if (entry.phase == RowPhase.leaving) return;
+        move(entry.item.id, activeIndexAt(to));
+      },
     );
   }
 
+  /// The reorder handle for the entry being built. Its drag index is the
+  /// entry's visual index, which differs from [index] while items leave.
   Widget handle(
     BuildContext context,
     int index,
     PortablePresentationScope itemScope, {
     Widget? icon,
     String? label,
-  }) => _AuthoredReorderHandle(
-    index: index,
-    label: label ?? "Reorder item ${index + 1}",
-    icon: icon,
-    enabled:
-        allowReorder && scope.canExecuteAction && itemScope.canExecuteAction,
-    canMoveEarlier: index > 0,
-    canMoveLater: index + 1 < items.length,
-    onMoveEarlier: () {
-      if (!itemScope.canExecuteAction) return;
-      _move(context, items[index].id, index - 1);
-    },
-    onMoveLater: () {
-      if (!itemScope.canExecuteAction) return;
-      _move(context, items[index].id, index + 1);
+  }) => Builder(
+    builder: (context) {
+      final entry = _SequenceEntry.of(context);
+      return _AuthoredReorderHandle(
+        index: entry.visualIndex,
+        label: label ?? "Reorder item ${index + 1}",
+        icon: icon,
+        enabled:
+            allowReorder &&
+            scope.canExecuteAction &&
+            itemScope.canExecuteAction &&
+            !entry.leaving,
+        canMoveEarlier: index > 0,
+        canMoveLater: index + 1 < items.length,
+        onMoveEarlier: () {
+          if (!itemScope.canExecuteAction) return;
+          entry.move(index - 1);
+        },
+        onMoveLater: () {
+          if (!itemScope.canExecuteAction) return;
+          entry.move(index + 1);
+        },
+      );
     },
   );
+}
+
+/// The entry's place in the visual list, read by its reorder handle.
+class _SequenceEntry extends InheritedWidget {
+  const _SequenceEntry({
+    required this.visualIndex,
+    required this.leaving,
+    required this.move,
+    required super.child,
+    super.key,
+  });
+  final int visualIndex;
+  final bool leaving;
+  final void Function(int destination) move;
+
+  static _SequenceEntry of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_SequenceEntry>()!;
+
+  @override
+  bool updateShouldNotify(_SequenceEntry oldWidget) =>
+      oldWidget.visualIndex != visualIndex || oldWidget.leaving != leaving;
 }
 
 // Flutter transports themes for a drag proxy, but portable scopes are not

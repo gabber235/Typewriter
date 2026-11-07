@@ -83,86 +83,89 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
           ),
         ),
         headerBuilder: headerBuilder,
-        buildBody: (context) {
-          late final CollectionSequence sequence;
-          sequence = CollectionSequence(
-            scope: childScope,
-            collection: control.control.binding,
-            items: items,
-            allowReorder: control.allowReorder,
-            entryBuilder: (context, item, index) {
-              final reference = skir.BindingRef(
-                bindingId: control.control.binding.bindingId,
-                path: skir.ValuePath(
-                  segments: [
-                    ...control.control.binding.path.segments,
-                    skir.PathSegment.createItem(id: item.id),
-                  ],
-                ),
-              );
-              final itemLocation = skir.ValueLocation(
-                resource: location.resource,
-                path: skir.ValuePath(
-                  segments: [
-                    ...location.path.segments,
-                    skir.PathSegment.createItem(id: item.id),
-                  ],
-                ),
-              );
-              return directLinkEntry(
-                item: item,
-                reference: reference,
-                location: itemLocation,
+        buildBody: (context) =>
+            _withItemMotion(control.appearance, (arrival, leave) {
+              late final CollectionSequence sequence;
+              sequence = CollectionSequence(
                 scope: childScope,
-                owner: node,
-                control: rowControl,
-                candidates: candidates,
-                candidateDefinition: candidateDefinition,
-                fallbackHeader: () =>
-                    _generatedEntryHeader("Item ${index + 1}"),
-                movementControls: [
-                  if (control.allowReorder)
-                    _SuppliedHeaderControl(
-                      command: _CollectionCommand.reorder(
-                        childScope.diagnosticTarget(reference),
-                      ),
-                      build: (context) => sequence.handle(
-                        context,
-                        index,
-                        childScope,
-                        label: "Reorder linked resource ${index + 1}",
-                        icon: _operationGlyph(
-                          control.content?.reorderIcon,
-                          childScope,
-                          const Icon(Icons.drag_handle),
-                        ),
-                      ),
+                collection: control.control.binding,
+                items: items,
+                allowReorder: control.allowReorder,
+                arrival: arrival,
+                leave: leave,
+                entryBuilder: (context, item, index) {
+                  final reference = skir.BindingRef(
+                    bindingId: control.control.binding.bindingId,
+                    path: skir.ValuePath(
+                      segments: [
+                        ...control.control.binding.path.segments,
+                        skir.PathSegment.createItem(id: item.id),
+                      ],
                     ),
-                ],
+                  );
+                  final itemLocation = skir.ValueLocation(
+                    resource: location.resource,
+                    path: skir.ValuePath(
+                      segments: [
+                        ...location.path.segments,
+                        skir.PathSegment.createItem(id: item.id),
+                      ],
+                    ),
+                  );
+                  return directLinkEntry(
+                    item: item,
+                    reference: reference,
+                    location: itemLocation,
+                    scope: childScope,
+                    owner: node,
+                    control: rowControl,
+                    candidates: candidates,
+                    candidateDefinition: candidateDefinition,
+                    fallbackHeader: () =>
+                        _generatedEntryHeader("Item ${index + 1}"),
+                    movementControls: [
+                      if (control.allowReorder)
+                        _SuppliedHeaderControl(
+                          command: _CollectionCommand.reorder(
+                            childScope.diagnosticTarget(reference),
+                          ),
+                          build: (context) => sequence.handle(
+                            context,
+                            index,
+                            childScope,
+                            label: "Reorder linked resource ${index + 1}",
+                            icon: _operationGlyph(
+                              control.content?.reorderIcon,
+                              childScope,
+                              const Icon(Icons.drag_handle),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               );
-            },
-          );
-          return _controlFrame(
-            control.control,
-            control.inputAppearance == null
-                ? childScope
-                : childScope.withAppearance(control.inputAppearance!),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (items.isEmpty)
-                  _collectionEmpty(
-                    context,
-                    childScope,
-                    control.content,
-                    "No linked resources",
-                  ),
-                sequence,
-              ],
-            ),
-            renderPrefix: true,
-          );
-        },
+              return _controlFrame(
+                control.control,
+                control.inputAppearance == null
+                    ? childScope
+                    : childScope.withAppearance(control.inputAppearance!),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (items.isEmpty)
+                      _collectionEmpty(
+                        context,
+                        childScope,
+                        control.content,
+                        "No linked resources",
+                      ),
+                    sequence,
+                  ],
+                ),
+                renderPrefix: true,
+              );
+            }),
       ),
     );
   }

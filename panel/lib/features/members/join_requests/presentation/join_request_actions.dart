@@ -85,53 +85,44 @@ class BulkJoinRequestActions extends HookConsumerWidget {
           onInvoke: (_) => onClearSelection(),
         ),
       ],
-      child: AnimatedSize(
-        duration: 500.ms,
-        alignment: .topLeft,
-        curve: context.responsive(
-          mobile: ElasticOutCurve(0.9),
-          tablet: Curves.easeOutCubic,
-        ),
-        child: AnimatedSwitcher(
-          duration: 100.ms,
-          child: selectedIds.isEmpty
-              ? null
-              : Flex(
-                  direction: context.responsive(
-                    mobile: Axis.vertical,
-                    tablet: Axis.horizontal,
-                  ),
-                  spacing: context.responsive(mobile: 8.0, tablet: 4.0),
-                  crossAxisAlignment: context.responsive(
-                    mobile: CrossAxisAlignment.end,
-                    tablet: CrossAxisAlignment.center,
-                  ),
-                  children: [
-                    if (context.isMobile)
-                      roleDropdown
-                    else
-                      Flexible(child: roleDropdown),
-                    LoadingButton.filledIcon(
-                      onPressed: bulkRoles.value.isEmpty || isAccepting.value
-                          ? null
-                          : acceptSelected,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text("Accept All"),
-                    ),
-                    LoadingButton.outlinedIcon(
-                      onPressed: onDecline,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.colors.dangerText,
-                        side: BorderSide(
-                          color: theme.colorScheme.error.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      icon: const Icon(Icons.close, size: 18),
-                      label: const Text("Decline All"),
-                    ),
-                  ],
+      child: AnimatedPresence(
+        child: selectedIds.isEmpty
+            ? null
+            : Flex(
+                direction: context.responsive(
+                  mobile: Axis.vertical,
+                  tablet: Axis.horizontal,
                 ),
-        ),
+                spacing: context.responsive(mobile: 8.0, tablet: 4.0),
+                crossAxisAlignment: context.responsive(
+                  mobile: CrossAxisAlignment.end,
+                  tablet: CrossAxisAlignment.center,
+                ),
+                children: [
+                  if (context.isMobile)
+                    roleDropdown
+                  else
+                    Flexible(child: roleDropdown),
+                  LoadingButton.filledIcon(
+                    onPressed: bulkRoles.value.isEmpty || isAccepting.value
+                        ? null
+                        : acceptSelected,
+                    icon: const Icon(Icons.check, size: 18),
+                    label: const Text("Accept All"),
+                  ),
+                  LoadingButton.outlinedIcon(
+                    onPressed: onDecline,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.colors.dangerText,
+                      side: BorderSide(
+                        color: theme.colorScheme.error.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    icon: const Icon(Icons.close, size: 18),
+                    label: const Text("Decline All"),
+                  ),
+                ],
+              ),
       ),
     );
   }

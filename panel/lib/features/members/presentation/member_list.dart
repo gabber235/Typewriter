@@ -16,6 +16,14 @@ class MembersTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final membersAsync = ref.watch(organizationMembersProvider);
+    // One rows handle per tab, above the data builder: the table, the tablet
+    // list and the bulk bar's removeSelection share it. Members present when
+    // the data first arrives join the load run.
+    final rows = useAnimatedRows(
+      items: membersAsync.value ?? const <skir.OrganizationMember>[],
+      identity: (member) => member.userId,
+      ready: membersAsync.hasValue,
+    );
     final selectedIds = useState<Set<skir.RecordId>>({});
     final liveMembers = useRef<List<skir.OrganizationMember>>([]);
     final isRemovingSelection = useRef(false);
@@ -53,9 +61,14 @@ class MembersTab extends HookConsumerWidget {
             final succeeded = <skir.RecordId>{};
             for (final id in idsToRemove) {
               try {
-                await ref.executeMembership(
-                  ref.membershipCommands.remove(id),
-                  (response) => response.requireAccepted(),
+                // The row stays struck through while the command runs; the
+                // removal event then takes it out with listOut.
+                await rows.sending(
+                  [id],
+                  () => ref.executeMembership(
+                    ref.membershipCommands.remove(id),
+                    (response) => response.requireAccepted(),
+                  ),
                 );
                 succeeded.add(id);
               } on ApiException catch (error) {
@@ -74,6 +87,11 @@ class MembersTab extends HookConsumerWidget {
       }
     }
 
+    final selection = SelectableRows(
+      rows: rows,
+      selectedIds: selectedIds,
+      onRemoveSelection: removeSelection,
+    );
     return SliverMainAxisGroup(
       slivers: [
         SliverPadding(
@@ -87,23 +105,17 @@ class MembersTab extends HookConsumerWidget {
                 ),
               ),
               PinnedHeaderSliver(
-                child: AnimatedSize(
-                  duration: 800.ms,
-                  alignment: .topLeft,
-                  curve: ElasticOutCurve(0.9),
-                  child: AnimatedSwitcher(
-                    duration: 400.ms,
-                    child: selectedIds.value.isEmpty
-                        ? const SizedBox.shrink()
-                        : BulkMemberActions(
-                            selectedCount: selectedIds.value.length,
-                            selectedIds: selectedIds.value,
-                            onRemove: removeSelection,
-                            onUnselect: (ids) => selectedIds.value = selectedIds
-                                .value
-                                .difference(ids),
-                          ),
-                  ),
+                child: AnimatedPresence(
+                  child: selectedIds.value.isEmpty
+                      ? null
+                      : BulkMemberActions(
+                          selectedCount: selectedIds.value.length,
+                          selectedIds: selectedIds.value,
+                          onRemove: removeSelection,
+                          onUnselect: (ids) => selectedIds.value = selectedIds
+                              .value
+                              .difference(ids),
+                        ),
                 ),
               ),
             ],
@@ -113,19 +125,9 @@ class MembersTab extends HookConsumerWidget {
           name: "Members",
           builder: (members) {
             liveMembers.value = members;
-            return SliverStaggerScope(
-              sliver: context.isDesktop
-                  ? MembersTable(
-                      members: members,
-                      selectedIds: selectedIds,
-                      onRemoveSelection: removeSelection,
-                    )
-                  : MembersTabletList(
-                      members: members,
-                      selectedIds: selectedIds,
-                      onRemoveSelection: removeSelection,
-                    ),
-            );
+            return context.isDesktop
+                ? MembersTable(selection: selection)
+                : MembersTabletList(selection: selection);
           },
           loading: (_) => const _MembersLoadingShimmer(),
           error: (title, message) => SliverFillRemaining(

@@ -98,13 +98,15 @@ extension _PortableCollectionInputRendering
         ),
       ),
       headerBuilder: headerBuilder,
-      buildBody: (context) {
+      buildBody: (context) => _withItemMotion(appearance, (arrival, leave) {
         late final CollectionSequence sequence;
         sequence = CollectionSequence(
           scope: childScope,
           collection: control.binding,
           items: items,
           allowReorder: allowReorder,
+          arrival: arrival,
+          leave: leave,
           entryBuilder: (context, item, index) {
             final reference = skir.BindingRef(
               bindingId: control.binding.bindingId,
@@ -186,7 +188,7 @@ extension _PortableCollectionInputRendering
             ],
           ),
         );
-      },
+      }),
     );
     return linkControl == null && !_linksItems(childScope, control.binding)
         ? rendered
@@ -255,6 +257,30 @@ extension _PortableCollectionInputRendering
     await childScope.addCollectionItem(control.binding);
   }
 
+  /// Reads the service's item moves in the collection input's own build,
+  /// outside any hook build, so a bad override shows the presentation
+  /// diagnostic instead of Flutter's error widget.
+  Widget _withItemMotion(
+    skir.CollectionAppearance? appearance,
+    Widget Function(MotionOverride? arrival, MotionOverride? leave) build,
+  ) {
+    MotionReading<MotionOverride?> read(skir.PresentationTransition? move) =>
+        switch (move?.reading) {
+          null => const MotionReading.read(null),
+          MotionRead(:final value) => MotionReading.read(value),
+          MotionReadFailed(:final message) => MotionReading.failed(message),
+        };
+    return switch ((
+      read(appearance?.itemArrival),
+      read(appearance?.itemLeave),
+    )) {
+      (MotionReadFailed(:final message), _) ||
+      (_, MotionReadFailed(:final message)) => _diagnostic(message),
+      (MotionRead(value: final arrival), MotionRead(value: final leave)) =>
+        build(arrival, leave),
+    };
+  }
+
   Widget _renderMapInput(
     BuildContext context,
     skir.MapControl control,
@@ -291,29 +317,30 @@ extension _PortableCollectionInputRendering
       addIcon: Icons.add,
       add: (context) => childScope.addMapRow(control.control.binding),
       headerBuilder: headerBuilder,
-      buildBody: (context) => _decorateCollection(
-        control.control,
-        childScope,
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (rows.isEmpty)
-              _collectionEmpty(
-                context,
-                childScope,
-                control.content,
-                "No entries",
-              ),
-            for (final (index, row) in rows.indexed)
-              _renderMapRow(
-                context,
-                control,
-                row,
-                collection,
-                childScope,
-                rowIndex: index,
-              ),
-          ],
+      buildBody: (context) => _withItemMotion(
+        control.appearance,
+        (arrival, leave) => _decorateCollection(
+          control.control,
+          childScope,
+          _MapRows(
+            rows: rows,
+            arrival: arrival,
+            leave: leave,
+            empty: (context) => _collectionEmpty(
+              context,
+              childScope,
+              control.content,
+              "No entries",
+            ),
+            rowBuilder: (context, row, index) => _renderMapRow(
+              context,
+              control,
+              row,
+              collection,
+              childScope,
+              rowIndex: index,
+            ),
+          ),
         ),
       ),
     );
@@ -537,3 +564,62 @@ Widget _operationAppearance(
       action(states, _operationButtonStyle(content)?.merge(style) ?? style),
   enabled: scope.enabled && !scope.readOnly,
 );
+
+/// Map rows on row entries: [CollectionSequence] without reordering.
+class _MapRows extends HookWidget {
+  const _MapRows({
+    required this.rows,
+    required this.arrival,
+    required this.leave,
+    required this.empty,
+    required this.rowBuilder,
+  });
+  final List<skir.MapRow> rows;
+  final MotionOverride? arrival;
+  final MotionOverride? leave;
+  final WidgetBuilder empty;
+  final Widget Function(BuildContext context, skir.MapRow row, int index)
+  rowBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final animated = useAnimatedRows(
+      items: rows,
+      identity: (row) => row.id,
+      arrival: arrival,
+      leave: leave,
+    );
+    final entries = animated.entries;
+    final lastBuilt = _useLastBuilt(entries);
+    // A row's index counts only rows that stay.
+    int activeIndexAt(int visualIndex) => entries
+        .take(visualIndex)
+        .where((entry) => entry.phase != RowPhase.leaving)
+        .length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // The empty state shows once the last leaving row is gone.
+        if (entries.isEmpty) empty(context),
+        for (final (visualIndex, entry) in entries.indexed)
+          KeyedSubtree(
+            key: ValueKey(entry.id),
+            // The editor owns its scroll, so rows have no SliverRowAnchor.
+            child: entry.motion(
+              entry.row(
+                lastBuilt(
+                  entry,
+                  () => rowBuilder(
+                    context,
+                    entry.item,
+                    activeIndexAt(visualIndex),
+                  ),
+                ),
+              ),
+              anchors: false,
+            ),
+          ),
+      ],
+    );
+  }
+}

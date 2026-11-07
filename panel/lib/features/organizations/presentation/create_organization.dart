@@ -24,15 +24,20 @@ class _CreateOrganization extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            StaggerEntrance(
+            Enter(
+              token: MotionToken.loadIn,
               child: Text(
                 "Create organization",
                 style: theme.textTheme.headlineMedium,
               ),
             ),
             SizedBox(height: context.spacing.space6),
-            const StaggerEntrance(child: SectionTitle(title: "Name")),
-            StaggerEntrance(
+            const Enter(
+              token: MotionToken.loadIn,
+              child: SectionTitle(title: "Name"),
+            ),
+            Enter(
+              token: MotionToken.loadIn,
               child: EditorTextField(
                 controller: nameController,
                 inputFormatters: identifierInputFormatters,
@@ -43,14 +48,16 @@ class _CreateOrganization extends HookConsumerWidget {
               ),
             ),
             SizedBox(height: context.spacing.space6),
-            StaggerEntrance(
+            Enter(
+              token: MotionToken.loadIn,
               child: _OrganizationIconPicker(
                 iconUrl: iconUrl,
                 onRandomize: () => randomSeed.value = _generateSeed(),
               ),
             ),
             SizedBox(height: context.spacing.space8),
-            StaggerEntrance(
+            Enter(
+              token: MotionToken.loadIn,
               child: SizedBox(
                 width: double.infinity,
                 child: LoadingButton.filled(
