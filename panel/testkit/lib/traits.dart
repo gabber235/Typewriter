@@ -4,7 +4,6 @@ export "src/traits/animations.dart";
 export "src/traits/authoring/realm.dart";
 export "src/traits/authoring/publication_over_nats.dart";
 export "src/traits/authoring/realm_answers.dart";
-export "src/traits/backend.dart";
 export "src/traits/connection.dart";
 export "src/traits/connection_states.dart";
 export "src/traits/members/membership.dart";

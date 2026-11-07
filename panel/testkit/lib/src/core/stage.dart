@@ -106,12 +106,20 @@ class _PanelStageState extends State<PanelStage> {
 
   @override
   Widget build(BuildContext context) {
-    return UncontrolledProviderScope(
+    final panel = UncontrolledProviderScope(
       container: _world.container,
       child: switch (widget.at) {
         ComponentLocation(:final child) => _ComponentShell(child: child),
         _ => const TypewriterPanel(),
       },
+    );
+    if (!_world.reducedMotion) return panel;
+    final platform =
+        MediaQuery.maybeOf(context) ??
+        MediaQueryData.fromView(View.of(context));
+    return MediaQuery(
+      data: platform.copyWith(disableAnimations: true),
+      child: panel,
     );
   }
 }

@@ -603,7 +603,6 @@ class ResourceDragSource extends HookConsumerWidget {
           dropCandidatesProvider(offered.value),
           (_, _) {},
         );
-        dragSource.begin(offered);
       },
       onDragUpdate: (details) => dragSource.update(offered, details),
       onDragEnd: (_) {
