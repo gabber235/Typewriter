@@ -199,6 +199,7 @@ Future<void> showOperationErrorsPopup(
               children: [
                 Text(
                   "Failed to ${operationName.toLowerCase()} ${errors.length} item(s). Others were ${operationName.toLowerCase()}d successfully.",
+                  style: context.text.sentence,
                 ),
                 for (final (selectable, err) in errors)
                   Padding(
@@ -218,11 +219,10 @@ Future<void> showOperationErrorsPopup(
                         ),
                         Text(
                           err.toString(),
-                          style: Theme.of(context).textTheme.bodyMedium!
-                              .copyWith(
-                                color: Theme.of(context).colorScheme.error,
-                                fontSize: 12,
-                              ),
+                          style: context.text.sentence.copyWith(
+                            color: context.colors.dangerText,
+                            fontSize: 12,
+                          ),
                         ),
                         const Divider(height: 8),
                       ],

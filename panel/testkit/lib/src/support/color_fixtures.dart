@@ -50,3 +50,12 @@ class NonlinearTextScaler extends TextScaler {
   @override
   double get textScaleFactor => 1.4;
 }
+
+/// Comparing OKLCH hues.
+extension OklchHueDistance on Oklch {
+  /// The shortest angle between this hue and [other]'s, in degrees.
+  double hueDistanceDegrees(Oklch other) {
+    final turn = ((hue - other.hue) * 180 / pi).abs() % 360;
+    return turn > 180 ? 360 - turn : turn;
+  }
+}

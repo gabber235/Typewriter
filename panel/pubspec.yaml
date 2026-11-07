@@ -125,13 +125,19 @@ flutter:
     - assets/robot_island.riv
     - assets/tour.riv
   fonts:
-    - family: JetBrainsMono
-      fonts:
-        - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf
-        - asset: assets/fonts/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf
-          style: italic
     - family: Lilex
       fonts:
         - asset: assets/fonts/Lilex/Lilex-VariableFont_wght.ttf
         - asset: assets/fonts/Lilex/Lilex-Italic-VariableFont_wght.ttf
           style: italic
+    - family: IBMPlexSans
+      fonts:
+        - asset: assets/fonts/IBM_Plex_Sans/IBMPlexSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBM_Plex_Sans/IBMPlexSans-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/IBM_Plex_Sans/IBMPlexSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBM_Plex_Sans/IBMPlexSans-Bold.ttf
+          weight: 700

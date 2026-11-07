@@ -88,27 +88,29 @@ void main() {
     );
   });
 
-  testWidgets("selection restores a visible field focus highlight", (
-    tester,
-  ) async {
-    final controller = InputFieldController();
-    addTearDown(controller.dispose);
-    final panel = await tester.showComponent(ChoiceDropdown(controller));
-    await panel.tapOn(find.text("Alpha"));
+  testWidgets(
+    "selection returns focus to the field, ringed once a key is pressed",
+    (tester) async {
+      final controller = InputFieldController();
+      addTearDown(controller.dispose);
+      final panel = await tester.showComponent(ChoiceDropdown(controller));
+      await panel.tapOn(find.text("Alpha"));
 
-    await panel.tapOn(find.text("Beta").last);
+      await panel.tapOn(find.text("Beta").last);
 
-    expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
-    final highlight = tester.widget<FocusHighlight>(
-      find
-          .descendant(
-            of: find.byType(InputFieldContainer),
-            matching: find.byType(FocusHighlight),
-          )
-          .first,
-    );
-    expect(highlight.type, FocusType.focus);
-    expect(panel.shows("Unavailable"), isFalse);
-    expect(panel.shows("Beta"), isTrue);
-  });
+      expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
+      expect(
+        panel.ring.visible,
+        isFalse,
+        reason: "pointer focus shows no ring",
+      );
+      await panel.press(LogicalKeyboardKey.shiftLeft);
+      expect(
+        panel.ring.rect,
+        panel.rectOf(find.byType(InputFieldContainer).first),
+      );
+      expect(panel.shows("Unavailable"), isFalse);
+      expect(panel.shows("Beta"), isTrue);
+    },
+  );
 }

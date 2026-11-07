@@ -51,7 +51,7 @@ class ResourceOperationButton extends StatelessWidget {
       ),
       skir.ButtonVariant.text => TextButton.icon(
         style: destructive
-            ? TextButton.styleFrom(foregroundColor: scheme.error)
+            ? TextButton.styleFrom(foregroundColor: context.colors.dangerText)
             : null,
         onPressed: onPressed,
         icon: icon,
@@ -59,7 +59,9 @@ class ResourceOperationButton extends StatelessWidget {
       ),
       _ => OutlinedButton.icon(
         style: destructive
-            ? OutlinedButton.styleFrom(foregroundColor: scheme.error).copyWith(
+            ? OutlinedButton.styleFrom(
+                foregroundColor: context.colors.dangerText,
+              ).copyWith(
                 side: WidgetStateProperty.resolveWith(
                   (states) => BorderSide(
                     color: states.contains(WidgetState.disabled)

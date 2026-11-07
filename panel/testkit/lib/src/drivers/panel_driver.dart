@@ -9,6 +9,7 @@ import "package:typewriter_testkit/src/drivers/graph/graph_driver.dart";
 import "package:typewriter_testkit/src/drivers/inspector_driver.dart";
 import "package:typewriter_testkit/src/drivers/semantics.dart";
 import "package:typewriter_testkit/src/drivers/shared/field_driver.dart";
+import "package:typewriter_testkit/src/drivers/shared/ring_driver.dart";
 import "package:typewriter_testkit/src/drivers/shared/selectable_driver.dart";
 
 /// The whole panel as its user sees it, over the [world] it runs against.
@@ -50,6 +51,33 @@ final class PanelDriver extends ComponentDriver {
 
   /// The dialog in front of the panel.
   DialogDriver get dialog => DialogDriver(tester);
+
+  /// The theme the panel draws with.
+  ThemeData get theme => Theme.of(tester.element(find.byType(Scaffold).first));
+
+  /// The focus ring over the panel.
+  RingDriver get ring => RingDriver(tester);
+
+  /// Where the one widget [target] finds is on screen.
+  Rect rectOf(Finder target) => tester.getRect(target);
+
+  /// The style [text] is drawn with, as a label or inside a field.
+  TextStyle renderedStyle(String text) {
+    final paragraph = find.byWidgetPredicate(
+      (widget) => widget is RichText && widget.text.toPlainText() == text,
+    );
+    if (paragraph.evaluate().isNotEmpty) {
+      return tester.widget<RichText>(paragraph.first).text.style!;
+    }
+    final field = find.byWidgetPredicate(
+      (widget) => widget is EditableText && widget.controller.text == text,
+    );
+    if (field.evaluate().isEmpty) throw TestFailure("Nothing shows $text");
+    return tester.widget<EditableText>(field.first).style;
+  }
+
+  /// The font family [text] is drawn in.
+  String? renderedFont(String text) => renderedStyle(text).fontFamily;
 
   /// What assistive technology reads for the control that has keyboard
   /// focus, or null.

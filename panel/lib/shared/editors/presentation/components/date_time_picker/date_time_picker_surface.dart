@@ -60,7 +60,10 @@ class DateTimePickerSurface extends StatelessWidget {
               if (replacing)
                 Padding(
                   padding: EdgeInsets.all(context.spacing.space2),
-                  child: const Text("Choose one replacement value."),
+                  child: Text(
+                    "Choose one replacement value.",
+                    style: context.text.sentence,
+                  ),
                 ),
               if (includeDate)
                 DateTimeCalendar(

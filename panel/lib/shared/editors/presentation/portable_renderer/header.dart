@@ -368,7 +368,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
                   onPressed: enabled ? activate : null,
                   style: destructive
                       ? IconButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
+                          foregroundColor: context.colors.dangerText,
                         )
                       : null,
                   icon: Semantics(label: label, child: icon),
@@ -378,7 +378,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
                 onPressed: enabled ? activate : null,
                 style: destructive
                     ? TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
+                        foregroundColor: context.colors.dangerText,
                       )
                     : null,
                 icon: icon,

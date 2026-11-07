@@ -136,10 +136,9 @@ class _ActivityCardState extends State<_ActivityCard> {
                                   overflow: isExpanded
                                       ? TextOverflow.visible
                                       : TextOverflow.ellipsis,
-                                  style: context.theme.textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: context.colors.contentSecondary,
-                                      ),
+                                  style: context.text.sentenceSmall.copyWith(
+                                    color: context.colors.contentSecondary,
+                                  ),
                                 ),
                               ],
                             ),

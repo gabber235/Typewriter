@@ -374,7 +374,7 @@ class _StateText extends HookWidget {
               child: Text(
                 value ?? state.cast<_Valid>()?.message ?? "",
                 style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: context.colors.success),
+                    ?.copyWith(color: context.colors.successText),
               ),
             )
             .animate()

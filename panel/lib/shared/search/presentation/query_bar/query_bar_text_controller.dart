@@ -50,7 +50,7 @@ class _QueryBarTextEditingController extends TextEditingController {
       decorationColor: theme.colorScheme.tertiary,
     );
     final errorStyle = baseStyle.copyWith(
-      color: theme.colorScheme.error,
+      color: context.colors.dangerText,
       decoration: TextDecoration.underline,
       decorationStyle: TextDecorationStyle.wavy,
       decorationColor: theme.colorScheme.error,
