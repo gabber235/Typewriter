@@ -11,8 +11,8 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 class RealmGraphTelemetry(
     telemetry: ServiceTelemetry,
 ) : GraphListener {
-    private val computed = telemetry.counter("typewriter.realm.graph.computed", "{computation}")
-    private val evicted = telemetry.counter("typewriter.realm.graph.evicted", "{memo}")
+    private val computed = telemetry.counter("typewriter.graph.computed", "{computation}")
+    private val evicted = telemetry.counter("typewriter.graph.evicted", "{memo}")
 
     override fun computed(key: GraphKey<*>) = computed.add("query.kind" to key.kind)
 

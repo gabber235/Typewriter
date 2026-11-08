@@ -19,11 +19,11 @@ val RealmGraphTelemetryTest by testSuite {
             RealmFixture.of(rerunCatalog(), mapOf(first to record(name = "bad")), listener = listener).use { realm ->
                 realm.checks
                 realm.settle()
-                harness.counts("typewriter.realm.graph.computed", "query.kind")["CheckRun"] shouldBe 4L
+                harness.counts("typewriter.graph.computed", "query.kind")["CheckRun"] shouldBe 4L
 
                 realm.commitChecked(rename(first, "valid"))
                 realm.commitChecked(renumber(first))
-                harness.counts("typewriter.realm.graph.computed", "query.kind")["CheckRun"] shouldBe 5L
+                harness.counts("typewriter.graph.computed", "query.kind")["CheckRun"] shouldBe 5L
             }
         }
     }
