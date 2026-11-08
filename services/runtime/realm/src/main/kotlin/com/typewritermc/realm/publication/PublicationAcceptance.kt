@@ -234,9 +234,13 @@ internal class AuthoringAcceptance(
                     is CompletenessResult.Invalid -> {
                         // The content rule's fit finding reports each such problem and blocks publish, because
                         // complete() and fit share one structural validation. So publication adds none of its own.
-                        val fit = checkFindings.filter { it.primary?.resource == id }
-                        check(fit.isNotEmpty()) { "A value complete() refuses on ${id.value} has no fit finding: ${complete.problems}." }
-                        resources[id] = ResourceReadiness.Blocked(fit + findings.drop(firstFinding))
+                        // Holds by construction: a misfit makes the resource a content subject, whose run reports its
+                        // fit findings there, or a check_callback_failed there when the run fails.
+                        val atResource = checkFindings.filter { it.primary?.resource == id }
+                        check(atResource.isNotEmpty()) {
+                            "A value complete() refuses on ${id.value} has no check finding at that resource: ${complete.problems}."
+                        }
+                        resources[id] = ResourceReadiness.Blocked(atResource + findings.drop(firstFinding))
                         return@forEach
                     }
 
