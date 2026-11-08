@@ -368,16 +368,7 @@ class InMemoryAuthoringViewStore(
         val dropped = holders.flatMap { before.linkSlice(it).own }
         val added = ResourceValueMapper.discover(delta.upsertedResources)
         val links = (before.links - dropped.map(LinkOccurrence::id).toSet() + added.associateBy(LinkOccurrence::id)).immutableMapCopy()
-        // A slice holds what a resource holds and what targets it, so both ends of each old and new link are touched.
-        val touched = holders + dropped.map { it.target.resource } + added.map { it.target.resource }
-        val addedBySource = added.groupBy(LinkOccurrence::source)
-        val addedByTarget = added.groupBy { it.target.resource }
-        val slices = HashMap(before.linkSlices)
-        touched.forEach { id ->
-            val own = if (id in holders) addedBySource[id].orEmpty() else before.linkSlice(id).own
-            val into = before.linkSlice(id).into.filter { it.source !in holders } + addedByTarget[id].orEmpty()
-            if (own.isEmpty() && into.isEmpty()) slices.remove(id) else slices[id] = LinkSlice(own, into)
-        }
+        val slices = before.linkSlices.after(holders, added)
         val catalog = before.catalog.retain()
         try {
             val immutable = merged.immutableMapCopy()

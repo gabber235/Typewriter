@@ -15,11 +15,14 @@ import com.typewritermc.types.catalog.misfits
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
+import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -46,11 +49,11 @@ internal class AuthoringSnapshotValidator(
         before: Map<ResourceId, AuthoringRecord>,
         resources: Map<ResourceId, AuthoringRecord>,
         affected: Set<ResourceId>,
-        projection: ProjectionResult = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, contracts, catalog),
-        savedProjection: ProjectionResult =
-            ResourceValueMapper.project(ResourceValueMapper.discover(before), before, contracts, savedCatalog),
+        links: PlannedLinks,
+        savedFit: (ResourceId) -> List<ValueProblem>,
     ): List<ValueProblem> {
         val problems = mutableListOf<ValueProblem>()
+        val touching = links.touching
         resources.filterKeys { it in affected }.forEach { (id, record) ->
             problems += record.misfiledDeclarations(id)
             val old = before[id]
@@ -64,22 +67,17 @@ internal class AuthoringSnapshotValidator(
                                 catalog.withContent(contentSourceOf((resources + (id to record.copy(types = previous.types)))::get))
                             }
                         val alone = projectAlone(id, previous, resources, ownAsBefore)
-                        previous.misfits(id, savedCatalog) { savedProjection.fit.on(id) } +
+                        previous.misfits(id, savedCatalog) { savedFit(id) } +
                             previous.misfits(id, ownAsBefore) { alone.fit.on(id) }
                     }.orEmpty()
                     .toSet()
-            problems += record.misfits(id, catalog) { projection.fit.on(id) }.filterNot { it in baseline }.map { it.problem }
+            problems += record.misfits(id, catalog) { touching.fit.on(id) }.filterNot { it in baseline }.map { it.problem }
         }
-        val affectedLocations =
-            ResourceValueMapper
-                .discover(resources)
-                .filter { it.source in affected || it.target.resource in affected }
-                .mapTo(hashSetOf()) { it.id.location }
-        problems += projection.problems.filter { it.location in affectedLocations }
-        validateOwnership(projection.projections, contracts, affected, problems)
-        validateRealmStructure(before, resources, affected, projection.projections, contracts, catalog, problems)
-        validateCardinality(projection.projections, contracts, affected, problems)
-        validateAcyclic(projection.projections, contracts, affected, problems)
+        problems += touching.problems
+        validateOwnership(links, contracts, problems)
+        validateRealmStructure(before, resources, affected, links, contracts, catalog, problems)
+        validateCardinality(links, contracts, problems)
+        validateAcyclic(links, contracts, affected, problems)
         return problems.distinct()
     }
 
@@ -98,18 +96,18 @@ internal class AuthoringSnapshotValidator(
 /** The problems located on [resource]. */
 private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = filter { it.location.resource == resource }
 
+/** A resource with more than one owner, where one of its ownership links has an affected end. */
 private fun validateOwnership(
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
-    affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
 ) {
-    val ownership =
-        contracts.filter { it.ownsResources }.mapTo(hashSetOf(), RelationContract::id)
-    val owned = projections.filter { it.contract in ownership }.groupBy { it.second }
-    owned
-        .filterValues { links -> links.size > 1 && links.any { it.first in affected || it.second in affected } }
-        .forEach { (resource, _) -> problems += problem(resource, "multiple_immediate_owners") }
+    val ownership = contracts.filter { it.ownsResources }
+    links.touching.projections
+        .filter { link -> ownership.any { it.id == link.contract } }
+        .mapTo(linkedSetOf()) { it.second }
+        .filter { owned -> ownership.sumOf { links.at(owned, it.id, EndpointSlot.SECOND).size } > 1 }
+        .forEach { resource -> problems += problem(resource, "multiple_immediate_owners") }
 }
 
 /**
@@ -123,7 +121,7 @@ private fun validateRealmStructure(
     before: Map<ResourceId, AuthoringRecord>,
     resources: Map<ResourceId, AuthoringRecord>,
     affected: Set<ResourceId>,
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
     catalog: CheckedCatalog,
     problems: MutableList<ValueProblem>,
@@ -143,7 +141,8 @@ private fun validateRealmStructure(
 
     val ownership = contracts.filter { it.ownsResources }
     val members = ownership.map { it.second.resource.definition }
-    val owned = projections.filter { projection -> ownership.any { it.id == projection.contract } }.mapTo(hashSetOf()) { it.second }
+
+    fun ResourceId.isOwned() = ownership.any { links.at(this, it.id, EndpointSlot.SECOND).isNotEmpty() }
 
     fun AuthoringRecord.isOwnable() =
         configuration.definition.let { type -> members.any { it == type || catalog.isNominalSubtype(type, it) } }
@@ -158,7 +157,7 @@ private fun validateRealmStructure(
             .map { it.second }
     (affected + formerlyOwned)
         .distinct()
-        .filter { id -> resources[id]?.let { !it.isRealmRoot() && it.isOwnable() } == true && id !in owned }
+        .filter { id -> resources[id]?.let { !it.isRealmRoot() && it.isOwnable() } == true && !id.isOwned() }
         .forEach { id -> problems += problem(id, "owner_required") }
     val singletons = resources.entries.groupBy({ it.value.singletonKey() }, { it.key })
     singletons
@@ -174,30 +173,26 @@ private fun validateRealmStructure(
         }
 }
 
+/** An end of a link with an affected end that holds more links of its relation than its endpoint allows. */
 private fun validateCardinality(
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
-    affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
 ) {
-    val byContract = projections.groupBy { it.contract }
+    val touching = links.touching.projections.groupBy { it.contract }
     contracts.forEach { contract ->
-        val links = byContract[contract.id].orEmpty()
+        val touched = touching[contract.id].orEmpty()
         if (contract.first.cardinality == EndpointCardinality.ONE) {
-            links
-                .groupBy { it.second }
-                .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
-                .forEach { (resource, _) ->
-                    problems += problem(resource, "first_endpoint_cardinality_exceeded")
-                }
+            touched
+                .mapTo(linkedSetOf()) { it.second }
+                .filter { links.at(it, contract.id, EndpointSlot.SECOND).size > 1 }
+                .forEach { resource -> problems += problem(resource, "first_endpoint_cardinality_exceeded") }
         }
         if (contract.second.cardinality == EndpointCardinality.ONE) {
-            links
-                .groupBy { it.first }
-                .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
-                .forEach { (resource, _) ->
-                    problems += problem(resource, "second_endpoint_cardinality_exceeded")
-                }
+            touched
+                .mapTo(linkedSetOf()) { it.first }
+                .filter { links.at(it, contract.id, EndpointSlot.FIRST).size > 1 }
+                .forEach { resource -> problems += problem(resource, "second_endpoint_cardinality_exceeded") }
         }
     }
 }
@@ -209,14 +204,13 @@ private fun validateCardinality(
  * once per contract.
  */
 private fun validateAcyclic(
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
     affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
 ) {
-    val byContract = projections.groupBy { it.contract }
     contracts.filter { it.isAcyclic }.forEach { contract ->
-        val next = byContract[contract.id].orEmpty().groupBy({ it.first }, { it.second })
+        val next = { id: ResourceId -> links.at(id, contract.id, EndpointSlot.FIRST).map { it.second } }
         val finished = hashSetOf<ResourceId>()
         affected.forEach root@{ root ->
             val active = hashSetOf<ResourceId>()
@@ -234,8 +228,50 @@ private fun validateAcyclic(
                     return@root
                 }
                 stack.addLast(id to true)
-                next[id].orEmpty().forEach { stack.addLast(it to false) }
+                next(id).forEach { stack.addLast(it to false) }
             }
         }
+    }
+}
+
+/**
+ * The links of the state a change proposes, as the rules read them: every link with an affected end, judged with its
+ * problems and misfits, and any resource's links of one relation at one end, which a rule asks for by name.
+ */
+internal interface PlannedLinks {
+    /** The judged links with an affected end: only these can change, so only their problems refuse a change. */
+    val touching: ProjectionResult
+
+    /** The links of [contract] in which [resource] is the [slot] end. */
+    fun at(
+        resource: ResourceId,
+        contract: RelationId,
+        slot: EndpointSlot,
+    ): List<LinkProjection>
+}
+
+/** The links of a whole judged state, for a change to [affected] read from its [occurrences]. */
+internal fun ProjectionResult.planned(
+    occurrences: Collection<LinkOccurrence>,
+    affected: Set<ResourceId>,
+): PlannedLinks {
+    val locations = occurrences.filter { it.source in affected || it.target.resource in affected }.mapTo(hashSetOf()) { it.id.location }
+    val touching =
+        ProjectionResult(
+            projections = projections.filter { it.first in affected || it.second in affected },
+            problems = problems.filter { it.location in locations },
+            fit = fit,
+        )
+    val byEnd =
+        projections.groupBy { Triple(it.contract, EndpointSlot.FIRST, it.first) } +
+            projections.groupBy { Triple(it.contract, EndpointSlot.SECOND, it.second) }
+    return object : PlannedLinks {
+        override val touching = touching
+
+        override fun at(
+            resource: ResourceId,
+            contract: RelationId,
+            slot: EndpointSlot,
+        ) = byEnd[Triple(contract, slot, resource)].orEmpty()
     }
 }
