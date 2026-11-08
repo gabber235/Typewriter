@@ -239,9 +239,12 @@ internal fun KSClassDeclaration.scalarRepresentation(): ScalarRepresentation? {
     return ScalarRepresentation(kind, stored.toTypeName(parameters))
 }
 
-/** Interfaces and abstract classes, whose values are always one of their concrete subtypes. */
+/**
+ * Interfaces, abstract and sealed classes, whose values are always one of their concrete subtypes. KSP reports only
+ * the modifiers written in source, so a sealed class carries SEALED without ABSTRACT.
+ */
 internal val KSClassDeclaration.isAbstractDeclaration: Boolean
-    get() = classKind == ClassKind.INTERFACE || Modifier.ABSTRACT in modifiers
+    get() = classKind == ClassKind.INTERFACE || Modifier.ABSTRACT in modifiers || Modifier.SEALED in modifiers
 
 /**
  * This type with every type parameter replaced by its first non Any bound, or `Any?` without one.

@@ -34,6 +34,7 @@ import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.erasedTypeName
 import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.template
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -48,7 +49,7 @@ import com.typewritermc.codegen.TypewriterApi as Api
 /** `XNativeBindingFactory`: converts between portable values and instances of a concrete declaration. */
 internal object NativeBindingEmitter : SdkEmitter {
     override fun FileSpec.Builder.emit(declaration: SdkDeclaration) {
-        if (!declaration.source.supportsNativeBinding()) return
+        if (!declaration.hasNativeBinding) return
         context(declaration.references) { addType(declaration.factory()) }
     }
 
@@ -285,12 +286,17 @@ private fun TypeTemplate.nativeAppliedCode(owner: TypeDefinitionId): CodeBlock {
     return context(bindings) { appliedUseCode() }
 }
 
-/** Interfaces, abstract and private classes, and parameters with several compiled bounds have no native binding. */
-internal fun KSClassDeclaration.supportsNativeBinding(): Boolean =
-    classKind != ClassKind.INTERFACE &&
-        Modifier.ABSTRACT !in modifiers &&
-        Modifier.PRIVATE !in modifiers &&
-        typeParameters.none { parameter -> parameter.compiledBounds().count() > 1 }
+/**
+ * Whether this declaration has a native binding factory. A record its converted representation never instantiates (an
+ * open or closed record) binds through its cases' own bindings instead, except a Kotlin enum, whose unit cases have no
+ * class of their own. Abstract declarations, private classes and parameters with several compiled bounds have none.
+ */
+internal val SdkDeclaration.hasNativeBinding: Boolean
+    get() =
+        (enumeration || definition.representation.isInstantiable()) &&
+            !abstract &&
+            Modifier.PRIVATE !in source.modifiers &&
+            source.typeParameters.none { parameter -> parameter.compiledBounds().count() > 1 }
 
 private val KSClassDeclaration.serialKey: String
     get() = serialName ?: simpleName.asString()
