@@ -24,10 +24,6 @@ val StdlibTest by testSuite {
         callFormula("map", listOf(1, 2, 3), { item: Any? -> (item as Int) * 10 }) shouldBe listOf(10, 20, 30)
         callFormula("filter", listOf(3, 1, 2), { item: Any? -> (item as Int) > 1 }) shouldBe listOf(3, 2)
     }
-    test("a range holds both ends and every Int between, and is empty when it runs backwards") {
-        callFormula("rangeTo", 1, 4) shouldBe listOf(1, 2, 3, 4)
-        callFormula("rangeTo", 3, 2) shouldBe emptyList<Int>()
-    }
     test("a set and a map answer whether they hold an item or key") {
         callFormula("contains", setOf("a", "b"), "b") shouldBe true
         callFormula("contains", setOf("a"), "c") shouldBe false

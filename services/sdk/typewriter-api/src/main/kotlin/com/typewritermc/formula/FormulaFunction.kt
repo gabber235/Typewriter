@@ -53,6 +53,9 @@ interface FormulaCall : EvaluationValues {
 
     /** [value] as creator text. */
     fun display(value: Any?): String
+
+    /** How many steps the evaluation making this call has left; a call outside an evaluation has no bound. */
+    val remainingSteps: Int get() = Int.MAX_VALUE
 }
 
 /** Why one evaluation failed. The interpreter adds the failures only it can detect. */
