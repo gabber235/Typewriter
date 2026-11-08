@@ -1,5 +1,7 @@
 package com.typewritermc.realm.checking
 
+import com.typewritermc.formula.graph.StaleRevision
+import com.typewritermc.library.BookDefinition
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.GRAPH_CATALOG
 import com.typewritermc.realm.authoring.GRAPH_NODES
@@ -10,6 +12,7 @@ import com.typewritermc.realm.authoring.evidenceNow
 import com.typewritermc.realm.authoring.freshNow
 import com.typewritermc.realm.authoring.graphEdits
 import com.typewritermc.realm.authoring.graphRecord
+import com.typewritermc.realm.authoring.liveAndFreshUnderOnePin
 import com.typewritermc.realm.authoring.liveNow
 import com.typewritermc.realm.authoring.location
 import com.typewritermc.realm.authoring.readNow
@@ -17,14 +20,18 @@ import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.authoring.relink
 import com.typewritermc.realm.edit.MemoryAuthoringStorage
 import com.typewritermc.realm.routeFixtureCatalog
+import com.typewritermc.realm.routes.resource
 import com.typewritermc.realm.testing.NOT_ONE
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.TestCheckProviders
+import com.typewritermc.realm.testing.UsagesOf
 import com.typewritermc.realm.testing.checksOf
 import com.typewritermc.realm.testing.commit
 import com.typewritermc.realm.testing.commitDefinition
 import com.typewritermc.realm.testing.commitRecordUser
 import com.typewritermc.realm.testing.commitTypeDefinition
 import com.typewritermc.realm.testing.computedVar
+import com.typewritermc.realm.testing.contentLink
 import com.typewritermc.realm.testing.createEntry
 import com.typewritermc.realm.testing.declares
 import com.typewritermc.realm.testing.entryRef
@@ -58,27 +65,40 @@ import com.typewritermc.setup.setup
 import com.typewritermc.types.integer
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.property.Arb
 import io.kotest.property.PropTestConfig
 import io.kotest.property.arbitrary.list
 import io.kotest.property.checkAll
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 import java.lang.ref.WeakReference
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
 val CheckRerunsTest by testSuite {
     val first = ResourceId(value = "first")
     val second = ResourceId(value = "second")
+    val third = ResourceId(value = "third")
     val seed = mapOf(first to record(name = "bad"))
 
     test("start runs every check once") {
@@ -420,6 +440,86 @@ val CheckRerunsTest by testSuite {
         }
     }
 
+    test("a pass overtaken during discovery does not remove the instance of a newer resource") {
+        reruns(seed) {
+            DiscoveryGate.arm()
+            commit(create(third)).shouldBeCommitted()
+            DiscoveryGate.awaitEntered()
+            commit(create(second)).shouldBeCommitted()
+            eventually(10.seconds) { checks.findings().map { it.ticket.instance.label } shouldContain "name@second" }
+            DiscoveryGate.release()
+            settle()
+
+            checks.findings().map { it.ticket.instance.label } shouldContain "name@second"
+        }
+    }
+
+    test("a slow query does not block reading findings") {
+        reruns(mapOf(first to record(name = "valid"))) {
+            val before = checks.findings()
+            commit(rename(first, "gated")).shouldBeCommitted()
+            RerunGate.awaitEntered()
+
+            CompletableFuture.supplyAsync { checks.findings() }.get(5, TimeUnit.SECONDS) shouldBe before
+            RerunGate.release()
+        }
+    }
+
+    test("a check stuck outside the graph does not hold back findings of a later commit") {
+        reruns(mapOf(first to record(name = "valid"))) {
+            commit(rename(first, "gated")).shouldBeCommitted()
+            RerunGate.awaitEntered()
+            commit(recount(first, -1)).shouldBeCommitted()
+
+            eventually(10.seconds) { reportedByLabel() shouldContain ("count@first" to "Count is negative.") }
+            RerunGate.release()
+        }
+    }
+
+    test("a drain that is waiting ends when the runtime closes") {
+        reruns(mapOf(first to record(name = "valid"))) {
+            commit(rename(first, "gated")).shouldBeCommitted()
+            RerunGate.awaitEntered()
+            coroutineScope {
+                val drained = async(Dispatchers.Default) { checks.drain() }
+                delay(200)
+                drained.isCompleted shouldBe false
+
+                val closed = waitingOn { checks.close() }
+                withTimeout(5.seconds) { drained.await() }
+                RerunGate.release()
+                closed()
+            }
+        }
+    }
+
+    test("a reply lists a clean set its view outdates, and leaves out a check that has not run yet") {
+        reruns(mapOf(first to record(name = "valid"))) {
+            findings = checks::findings
+            val reply = commit(rename(first, "gated"), create(second, name = "gated")).shouldBeCommitted()
+            RerunGate.awaitEntered()
+            RerunGate.release()
+
+            reply.findings.single { it.ticket.instance.label == "name@first" }.status shouldBe FindingStatus.OUTDATED
+            reply.findings.map { it.ticket.instance.label } shouldNotContain "name@second"
+        }
+    }
+
+    test("publication of another generation releases its lease when a provider fails to retain") {
+        val providers = TestCheckProviders(checksOf(30, RerunChecks).checks(), failOnRetain = 1)
+        RealmFixture.of(rerunCatalog(providers), seed).use { realm ->
+            val leases = realm.openCatalogLeases()
+            realm.views.capture().use { earlier ->
+                realm.owner.activateCatalog(rerunCatalog().lease(CatalogGeneration(value = "next")), {}, {})
+
+                shouldThrow<IllegalStateException> { realm.checks.evaluateCapture(earlier.root) }.message shouldBe
+                    "provider retain failed"
+            }
+            leases() shouldBe 0
+            providers.openLeases.get() shouldBe 0
+        }
+    }
+
     test("after any value edit, every graph read equals a fresh computation, answer and evidence") {
         checkAll(PropTestConfig(seed = 5_310_227_101L, iterations = 40), Arb.list(graphEdits, 1..6)) { edits ->
             val start =
@@ -437,6 +537,20 @@ val CheckRerunsTest by testSuite {
         }
     }
 
+    test("after any declaration edit, every graph read equals a fresh computation, answer and evidence") {
+        checkAll(PropTestConfig(seed = 7_204_118_530L, iterations = 12), Arb.list(declarationEdits, 1..5)) { edits ->
+            withSetup(setup("reruns-declarations") { formulaPage { smith("smith") } }, catalog = routeFixtureCatalog) { page ->
+                val world = declarationWorld(page.named("smith"))
+                val gone = mutableMapOf<ResourceId, AuthoringRecord>()
+                declarationReads(world).forEach { liveNow(it) }
+                edits.forEach { edit ->
+                    apply(edit, world, gone)
+                    declarationReads(world).forEach { read -> liveNow(read) shouldBe freshNow(read) }
+                }
+            }
+        }
+    }
+
     // Graph reads, through a query that reads as a check does.
     val x = ResourceId(value = "x")
     val y = ResourceId(value = "y")
@@ -449,6 +563,33 @@ val CheckRerunsTest by testSuite {
             z to graphRecord(z, emptyList()),
             w to graphRecord(w, emptyList()),
         )
+
+    test("a commit between capture and pin never mixes two views") {
+        RealmFixture.of(GRAPH_CATALOG, chain).use { realm ->
+            realm.readNow(Reach(x)) shouldBe setOf(x, y, z)
+            realm.views.pin().use { pinned ->
+                realm.commit(relink(y, listOf(w))).shouldBeCommitted()
+
+                // Read under the older pin: the answer of the pinned view, or a refusal as stale, never the newer links.
+                val read = runCatching { pinned.reads.read(Reach(x)) }
+                read.exceptionOrNull()?.shouldBeInstanceOf<StaleRevision>()
+                read.getOrNull()?.shouldBe(setOf(x, y, z))
+            }
+            coroutineScope {
+                val commits =
+                    launch(Dispatchers.Default) {
+                        repeat(100) { realm.commit(relink(y, if (it % 2 == 0) listOf(z) else listOf(w))).shouldBeCommitted() }
+                    }
+                while (commits.isActive) {
+                    val read = runCatching { realm.liveAndFreshUnderOnePin(Reach(x)) }
+                    read.exceptionOrNull()?.shouldBeInstanceOf<StaleRevision>()
+                    read.getOrNull()?.let { (live, fresh) -> live shouldBe fresh }
+                    yield()
+                }
+            }
+            realm.liveAndFreshUnderOnePin(Reach(x)) shouldBe (setOf(x, y, w) to setOf(x, y, w))
+        }
+    }
 
     test("a commit that changes one link reruns LinksAt only at its two ends") {
         RealmFixture.of(GRAPH_CATALOG, chain).use { realm ->
@@ -476,6 +617,17 @@ val CheckRerunsTest by testSuite {
             realm.readNow(Reach(x)) shouldBe setOf(x, y, z)
             realm.graphRuns.linkReads().grewFrom(before) shouldBe emptySet()
             realm.evidenceNow(Reach(x)).holdsResourceIds shouldBe false
+        }
+    }
+
+    test("a check that read incoming links reruns when a link to it appears") {
+        RealmFixture.of(GRAPH_CATALOG, chain).use { realm ->
+            realm.readNow(Reach(w)) shouldBe setOf(w)
+            val before = realm.graphRuns.runsOf(Reach(w))
+            realm.commit(relink(z, listOf(w))).shouldBeCommitted()
+            realm.readNow(Reach(w))
+
+            realm.graphRuns.runsOf(Reach(w)) shouldBe before + 1
         }
     }
 
@@ -621,6 +773,33 @@ val CheckRerunsTest by testSuite {
 
             commit(setDefinitionValue(amount, plainVar(typeUse, DataValue.TypeUseWrapper(textUse)))).shouldBeCommitted()
             errorCodesOn(user) shouldNotContain NOT_ONE
+        }
+    }
+
+    test("a graph read over Book.pages and Page.book sees each owning link once, with no projection problem") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) { page ->
+            val book = singleOf(BookDefinition.id)
+            val atBook = readNow(ProjectionAt(book))
+            val atPage = readNow(ProjectionAt(page.resource))
+            val joining = atBook.projections.filter { setOf(it.first, it.second) == setOf(book, page.resource) }
+
+            joining.size shouldBe 1
+            atPage.projections.filter { setOf(it.first, it.second) == setOf(book, page.resource) } shouldBe joining
+            (atBook.problems + atBook.fit + atPage.problems + atPage.fit) shouldBe emptyList()
+        }
+    }
+
+    test("a state reply marks a graph read finding outdated after a declaration commit") {
+        withSetup(setup("reruns-usage-reply") { formulaPage { smith("smith") } }, catalog = routeFixtureCatalog) { page ->
+            val smith = page.named("smith")
+            val gift = commitTypeDefinition("Gift", declares { record { field("giver", entryRef) } }).created()
+            commitRecordUser("first", gift, "giver" to contentLink(smith))
+            val usages = findingOver(UsagesOf(smith))
+            stateReply(listOf(usages)).single().status shouldBe FindingStatus.CURRENT
+
+            commit(setTypes(gift, declares { record { field("giver", intUse) } })).shouldBeCommitted()
+
+            stateReply(listOf(usages)).single().status shouldBe FindingStatus.OUTDATED
         }
     }
 }

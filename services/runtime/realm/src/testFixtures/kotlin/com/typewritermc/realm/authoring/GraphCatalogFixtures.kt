@@ -334,3 +334,9 @@ internal fun <T> RealmFixture.freshNow(query: RealmQuery<T>): Pair<T, Set<EditEx
     views.pin().use { pinned ->
         with(TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin()) { read(query) to query.factsRead { false }.toSet() }
     }
+
+/** [query]'s answer from the live graph and from a new graph over the view pinned with it, both under one pin. */
+internal fun <T> RealmFixture.liveAndFreshUnderOnePin(query: RealmQuery<T>): Pair<T, T> =
+    views.pin().use { pinned ->
+        pinned.reads.read(query) to TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin().read(query)
+    }
