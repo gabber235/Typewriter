@@ -198,7 +198,13 @@ internal fun ViewReadHealth.outcome(
         failures.isNotEmpty() -> {
             CheckOutcome.FailedWrapper(
                 failures.map { failure ->
-                    diagnostics.error(origin, failure.failure.value, failure.message, failure.locations.firstOrNull(), failure.locations.drop(1))
+                    diagnostics.error(
+                        origin,
+                        failure.failure.value,
+                        failure.message,
+                        at = failure.locations.firstOrNull(),
+                        related = failure.locations.drop(1),
+                    )
                 },
             )
         }
