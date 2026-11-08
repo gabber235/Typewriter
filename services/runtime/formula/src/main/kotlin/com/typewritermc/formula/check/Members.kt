@@ -86,7 +86,7 @@ internal fun Checker.caseNamed(
 ): TypeUse? {
     val owner = expected?.nonNull()?.takeUnless { it == ERROR } ?: return null
     val cases = schema(owner)?.representation?.closedCases() ?: return null
-    val named = environment.catalogTypeNamed(name)
+    val named = environment.catalogTypeNamed(name).map { it.type }
     return cases.firstOrNull { it.definition.memberName == name || it.use in named }?.use
 }
 

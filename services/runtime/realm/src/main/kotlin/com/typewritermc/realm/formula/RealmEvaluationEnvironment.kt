@@ -6,6 +6,7 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.formula.Deferred
 import com.typewritermc.formula.FormulaFailure
+import com.typewritermc.formula.check.CatalogType
 import com.typewritermc.formula.eval.CatalogEvaluationEnvironment
 import com.typewritermc.formula.eval.FailedEvaluation
 import com.typewritermc.formula.eval.refTo
@@ -33,7 +34,7 @@ internal class RealmEvaluationEnvironment private constructor(
     /** The environment of the evaluation at [evaluating], or of a read outside any evaluation when it is null. */
     constructor(reads: RealmReads, evaluating: ValueLocation?) : this(reads, evaluating, with(reads) { tracked() })
 
-    private val typeNames: Map<String, List<TypeUse>> by lazy { with(reads) { formulaTypeNames } }
+    private val typeNames: Map<String, List<CatalogType>> by lazy { with(reads) { formulaTypeNames } }
 
     override fun evaluateDeferred(value: Deferred): Any? = with(reads) { value.value(evaluating) }
 
@@ -66,12 +67,8 @@ internal class RealmEvaluationEnvironment private constructor(
 
     override fun typeName(id: TypeDefinitionId): String? =
         typeNames.entries
-            .firstOrNull { (_, uses) ->
-                uses.any {
-                    it.named?.definition ==
-                        id
-                }
-            }?.key
+            .firstOrNull { (_, types) -> types.any { it.type.named?.definition == id } }
+            ?.key
 
     /** The name a creator gave [id], or its id when it has none. */
     override fun resourceName(id: ResourceId): String {

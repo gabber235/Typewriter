@@ -26,7 +26,8 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 
 // Written types: scalars by their Kotlin names, the standard collections, `Ref<T>`, catalog types by source name,
-// and content types through the Definition a stored reference names. Formula text names types; it cannot declare one.
+// qualified by extension when two share one, and content types through the Definition a stored reference names.
+// Formula text names types; it cannot declare one.
 
 private val scalars: Map<String, TypeUse> =
     mapOf(
@@ -109,13 +110,8 @@ private fun Checker.lowerQualified(
     node: NamedType,
     arguments: List<TypeUse>,
 ): TypeUse {
-    val text = node.name.joinToString(".") { it.text }
-    val types = environment.catalogTypeNamed(text)
-    return when (types.size) {
-        1 -> applyArguments(node, types.single(), arguments)
-        0 -> unknownType(node, text)
-        else -> ambiguousType(node, text)
-    }
+    val type = catalogType(node.name.dropLast(1).map { it.text }, node.name.last().text, node.span) ?: ERROR
+    return applyArguments(node, type, arguments)
 }
 
 /** A type name with a stored reference: the type its `Definition<Type>` holds. */
@@ -151,11 +147,10 @@ private fun Checker.lowerByText(
         answer(name, NameMeaning.CatalogType, candidates)
         return builtin
     }
-    val types = environment.catalogTypeNamed(name.text)
-    answer(name, if (types.isEmpty()) NameMeaning.Unknown else NameMeaning.CatalogType, candidates)
+    val type = catalogType(emptyList(), name.text, node.span)
+    answer(name, if (type == null) NameMeaning.Unknown else NameMeaning.CatalogType, candidates)
     return when {
-        types.size == 1 -> applyArguments(node, types.single(), arguments)
-        types.size > 1 -> ambiguousType(node, name.text)
+        type != null -> applyArguments(node, type, arguments)
         candidates.size > 1 -> unknown(name, candidates).let { ERROR }
         else -> unknownType(node, name.text)
     }
@@ -200,13 +195,5 @@ private fun Checker.unknownType(
     text: String,
 ): TypeUse {
     report(node.span, "formula_unknown_type", "There is no type `$text`")
-    return ERROR
-}
-
-private fun Checker.ambiguousType(
-    node: NamedType,
-    text: String,
-): TypeUse {
-    report(node.span, "formula_ambiguous_type", "Several types are named `$text`; qualify it by its extension")
     return ERROR
 }

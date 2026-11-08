@@ -123,14 +123,10 @@ internal fun Checker.lookup(
         answer(name, NameMeaning.CatalogType, candidates)
         return Named.Type(type)
     }
-    val types = environment.catalogTypeNamed(name.text)
-    if (types.isNotEmpty()) {
+    val type = catalogType(emptyList(), name.text, name.span)
+    if (type != null) {
         answer(name, NameMeaning.CatalogType, candidates)
-        if (types.size > 1) {
-            report(name.span, "formula_ambiguous_type", "Several types are named `${name.text}`; qualify it by its extension")
-            return Named.Nothing
-        }
-        return Named.Type(types.single())
+        return if (type == ERROR) Named.Nothing else Named.Type(type)
     }
     answer(name, NameMeaning.Unknown, candidates)
     unknown(name, candidates)

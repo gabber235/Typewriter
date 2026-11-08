@@ -582,6 +582,25 @@
             "kind": "scalar",
             "value": "text"
           }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/catalog.skir:PublishedType"
+                }
+              },
+              "revision": 1
+            },
+            "name": "extension"
+          },
+          "type": {
+            "kind": "scalar",
+            "value": "text"
+          }
         }
       ],
       "form": "concrete"

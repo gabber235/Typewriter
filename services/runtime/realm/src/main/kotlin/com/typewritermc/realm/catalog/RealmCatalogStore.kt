@@ -7,6 +7,8 @@ import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.RetainedOwnedProviderRegistry
+import com.typewritermc.formula.check.CatalogType
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.presentation.CollectionProjectionSpec
 import com.typewritermc.services.libs.utils.closeAll
@@ -136,7 +138,8 @@ class RealmCatalogStore : AutoCloseable {
         override val displays: ResourceDisplayCatalog get() = assembly.displays
         override val extensions: ExtensionCatalog get() = retention.extensions.value
         override val editorCatalog: EditorCatalog get() = assembly.editorCatalog
-        override val formulaTypeNames: Map<String, List<TypeUse>> get() = retention.typeNames
+        override val formulaTypeNames: Map<String, List<CatalogType>> get() = retention.typeNames
+        override val formulaExtensions: Set<ExtensionName> get() = retention.typeExtensions
         override val capabilities: List<RealmCapabilityProvider>
             get() =
                 incarnation.deployment.providers.capabilities
@@ -161,10 +164,12 @@ class RealmCatalogStore : AutoCloseable {
         val incarnation: RealmCatalogIncarnation,
         var current: Boolean,
     ) : AutoCloseable {
-        val typeNames: Map<String, List<TypeUse>> by lazy {
+        val typeNames: Map<String, List<CatalogType>> by lazy {
             incarnation.assembly.editorCatalog.types
-                .groupBy({ it.name }, { it.definition.id.use() })
+                .groupBy({ it.name }, { CatalogType(it.definition.id.use(), ExtensionName.of(it.extension)) })
         }
+
+        val typeExtensions: Set<ExtensionName> by lazy { typeNames.values.flatMapTo(linkedSetOf()) { types -> types.map { it.extension } } }
 
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)
         val extensions =

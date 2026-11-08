@@ -95,6 +95,7 @@ val CanonicalReadModelsTest by testSuite {
                 searchKey = "book",
                 placementField = null,
                 name = "Book",
+                extension = "example:books",
             )
         CanonicalReadModels.publishedType.decode(CanonicalReadModels.publishedType.encode(published)) shouldBe published
     }

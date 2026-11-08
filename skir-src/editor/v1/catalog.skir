@@ -120,6 +120,9 @@ struct PublishedType(84060009) {
   /// The name the type's source gives it, such as the Kotlin class name Reward, which formulas
   /// write to name the type. The display name is for editors only.
   name: string = 7;
+  /// The artifact id of the extension that declares the type, such as typewritermc:basic. Formulas
+  /// qualify a source name two extensions share by it, as in basic.Npc.
+  extension: string = 8;
 }
 
 struct TypeDisplay(84060010) {

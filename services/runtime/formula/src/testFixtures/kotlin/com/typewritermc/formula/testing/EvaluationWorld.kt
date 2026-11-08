@@ -8,6 +8,8 @@ import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.formula.NamedValue
 import com.typewritermc.formula.RecordValue
+import com.typewritermc.formula.check.CatalogType
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.formula.check.FormulaEnvironment
 import com.typewritermc.formula.eval.CatalogEvaluationEnvironment
 import com.typewritermc.formula.eval.Evaluation
@@ -125,6 +127,9 @@ private val evaluationFunctions: Map<String, List<FormulaFunction>> =
             CoreFormulas.functions
     ).groupBy(FormulaFunction::name)
 
+/** The one extension that declares the evaluation world's code types. */
+private val EVALUATION_EXTENSION = ExtensionName.of("formula-test:evaluation")
+
 private val typeNames: Map<String, TypeDefinitionId> =
     mapOf(
         "Gold" to GoldDefinition.id,
@@ -163,7 +168,10 @@ class EvaluationWorld(
 
             override fun reference(target: ResourceId): TypeUse? = resources.firstOrNull { it.id == target }?.naming
 
-            override fun catalogTypeNamed(name: String): List<TypeUse> = listOfNotNull(typeNames[name]?.use())
+            override fun catalogTypeNamed(name: String): List<CatalogType> =
+                listOfNotNull(typeNames[name]?.let { CatalogType(it.use(), EVALUATION_EXTENSION) })
+
+            override fun extensions(): Set<ExtensionName> = setOf(EVALUATION_EXTENSION)
 
             override fun typeValue(target: ResourceId): TypeUse? = resources.firstOrNull { it.id == target }?.typeValue
 
