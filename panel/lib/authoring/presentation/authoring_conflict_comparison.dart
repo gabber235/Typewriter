@@ -29,6 +29,39 @@ final class AuthoringConflictComparison extends HookWidget {
       }
     }
 
+    // Use saved throws away the unsent changes, so it holds. No rows: the
+    // Use saved button owns the hold, and a refusal jams it with the
+    // message.
+    final useSaved = useMemoized(
+      () => ActionShortcut(
+        id: "conflict_use_saved_${identityHashCode(review)}",
+        label: "Use saved",
+        description: "Replace your unsent changes with the saved values",
+        activators: const [],
+        priority: 1,
+        show: false,
+        run: ActionRun.hold(
+          HoldPlan<AuthoringConflictReview>(
+            targets: (_) => {review},
+            verb: "Use saved",
+            outcome: (_) => review.comparisonFacts.length == 1
+                ? "Use saved? Your change to 1 value in this group is lost."
+                : "Use saved? Your changes to "
+                      "${review.comparisonFacts.length} values in this "
+                      "group are lost.",
+            each: (_, _) {
+              final result = onUseSaved();
+              if (result case EditStageRejected(:final message)) {
+                throw HoldRefused(message);
+              }
+              onResolved?.call();
+            },
+          ),
+        ),
+      ),
+      [review, onUseSaved, onResolved],
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -96,9 +129,10 @@ final class AuthoringConflictComparison extends HookWidget {
         Wrap(
           spacing: context.spacing.space2,
           children: [
-            Button(
+            CommandButton(
+              command: useSaved,
+              enabled: enabled,
               label: "Use saved",
-              onPressed: enabled ? () => resolve(onUseSaved) : null,
             ),
             Button(
               face: ButtonFace.filled,

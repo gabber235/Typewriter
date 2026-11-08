@@ -56,10 +56,14 @@ interface OperationSpec<D : ResourceDraft, I> {
     /** Menu, inspector and drop appearance. The label defaults to the object name in sentence case. */
     fun appearance(body: OperationAppearanceScope.() -> Unit)
 
-    /** Asks before staging the prepared edit. */
+    /**
+     * The panel holds to confirm, showing the outcome line while the user holds: [one] for a
+     * single subject, [many] for several, where "{count}" stands for the number of subjects.
+     * Each line starts with the operation label, which the panel types as the verb.
+     */
     fun confirm(
-        message: String,
-        body: OperationConfirmScope.() -> Unit = {},
+        one: String,
+        many: String,
     )
 
     /** How input fields are offered by pickers and filled by drops. */
@@ -101,15 +105,6 @@ interface OperationAppearanceScope {
 
     /** Inspector presence: a button with an emphasis, or hidden (menus, shortcuts and drops only). */
     fun inspector(value: OperationInspector)
-}
-
-@TypewriterDsl
-interface OperationConfirmScope {
-    /** Defaults to the label. */
-    fun title(value: String)
-
-    /** Confirm button text; defaults to the label. */
-    fun action(value: String)
 }
 
 @TypewriterDsl

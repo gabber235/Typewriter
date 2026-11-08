@@ -129,38 +129,6 @@ final class RecordingShortcutOperation extends ActivatorShortcutOperation {
       MenuItem(label: name, onPressed: () => executeOn(ref));
 }
 
-/// A selectable whose only capability deletes it, counting nothing itself:
-/// the test passes the callback that records the deletion.
-final class DeletableSelectableIdentifier extends SelectableIdentifier {
-  DeletableSelectableIdentifier(this.onDelete);
-
-  final VoidCallback onDelete;
-
-  @override
-  String get id => "deletable";
-
-  @override
-  AsyncValue<Selectable> create(Ref ref) =>
-      AsyncData(DeletableSelectable(this));
-}
-
-/// The selectable a [DeletableSelectableIdentifier] resolves to.
-final class DeletableSelectable
-    extends Selectable<DeletableSelectableIdentifier> {
-  const DeletableSelectable(this.id);
-
-  @override
-  final DeletableSelectableIdentifier id;
-
-  @override
-  String get name => id.id;
-
-  @override
-  List<SelectionCapability> get capabilities => [
-    DeleteSelectionCapability(onDelete: id.onDelete),
-  ];
-}
-
 /// A shortcut operation whose activators are supplied by the test.
 final class ShortcutTestOperation extends ActivatorShortcutOperation {
   const ShortcutTestOperation({required this.activators});

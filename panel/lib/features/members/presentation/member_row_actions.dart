@@ -2,61 +2,36 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Desktop row action that confirms and delegates membership removal.
+/// Desktop row control that removes one member with a hold.
 ///
-/// The local flag removes the action after confirmation begins, preventing
-/// repeated clicks while shared local work submits the repository command.
-/// This flag is not reset on failure; the action remains hidden until this
-/// widget state is recreated. Errors use the shared submission handling.
-class MemberRowActions extends HookConsumerWidget {
-  const MemberRowActions({required this.member, super.key});
+/// While the remove sends the row stays in place, struck through; a refusal
+/// leaves it in place with its message, and success lets the removal event
+/// take it out.
+class MemberRowActions extends StatelessWidget {
+  const MemberRowActions({required this.member, required this.rows, super.key});
 
   final skir.OrganizationMember member;
 
+  /// The members rows the tab owns.
+  final AnimatedRows<Object?> rows;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isRemoving = useState(false);
-
-    if (isRemoving.value) {
-      return const SizedBox.shrink();
-    }
-
+  Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
-      child: Button(
+      child: CommandButton(
         face: ButtonFace.icon,
-        icon: Icon(
-          Icons.person_remove_outlined,
-          size: 20,
-          color: theme.colorScheme.error,
-        ),
+        color: context.colors.danger,
+        icon: const Icon(Icons.person_remove_outlined, size: 20),
         label: "Remove member",
-        tooltip: "Remove member",
-        onPressed: () => _confirmRemoveMember(context, ref, isRemoving),
+        command: memberRemoval(
+          id: "remove_table_member_${member.userId}",
+          label: "Remove member",
+          targets: () => {member.userId},
+          nameOf: (_) => member.name,
+          rows: rows,
+        ),
       ),
-    );
-  }
-
-  Future<void> _confirmRemoveMember(
-    BuildContext context,
-    WidgetRef ref,
-    ValueNotifier<bool> isRemoving,
-  ) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Remove ${member.name}?",
-      content:
-          "Are you sure you want to remove this member from the organization?",
-      confirmText: "Remove",
-      confirmIcon: Fa6Solid.user_minus,
-      onConfirm: () async {
-        isRemoving.value = true;
-        await ref.executeMembership(
-          ref.membershipCommands.remove(member.userId),
-          (response) => response.requireAccepted(),
-        );
-      },
     );
   }
 }

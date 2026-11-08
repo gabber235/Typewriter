@@ -23,17 +23,6 @@ class RealmInboxView extends StatelessWidget {
   /// content no longer holds it.
   final String Function(skir.PublishedRoot) removedLabel;
 
-  Future<void> _publish(
-    BuildContext context,
-    RealmPublishCommand command,
-  ) async {
-    try {
-      await command.invoke();
-    } on Object catch (error) {
-      if (context.mounted) showErrorSnackBar(context, error.toString());
-    }
-  }
-
   Widget _badge(BuildContext context, String text, Color color) => DecoratedBox(
     decoration: BoxDecoration(
       color: color.withValues(alpha: .18),
@@ -116,81 +105,86 @@ class RealmInboxView extends StatelessWidget {
     child: EmptyState(title: title, description: ""),
   );
 
-  Widget _publication(BuildContext context) => switch (state.publication) {
-    ReadyRealmPublication(:final command) => Padding(
-      key: const ValueKey("ready"),
-      padding: EdgeInsets.only(top: context.spacing.space4),
-      child: Button(
-        face: ButtonFace.filled,
-        icon: const Icon(Icons.publish_rounded),
-        label: "Publish",
-        busyLabel: "Publishing",
-        onPressed: () => _publish(context, command),
-      ),
-    ),
-    BlockedRealmPublication() => Padding(
-      key: const ValueKey("blocked"),
-      padding: EdgeInsets.only(top: context.spacing.space4),
-      child: Row(
-        children: [
-          Icon(Icons.block, size: 18, color: context.colors.contentSecondary),
-          SizedBox(width: context.spacing.space2),
-          Text(
-            "Publish blocked",
-            style: context.theme.textTheme.bodySmall?.copyWith(
-              color: context.colors.contentSecondary,
-            ),
+  Widget _publication(BuildContext context, ActionShortcut? publish) =>
+      switch (state.publication) {
+        ReadyRealmPublication() => Padding(
+          key: const ValueKey("ready"),
+          padding: EdgeInsets.only(top: context.spacing.space4),
+          child: CommandButton(
+            command: publish!,
+            face: ButtonFace.filled,
+            icon: const Icon(Icons.publish_rounded),
+            label: "Publish",
+            busyLabel: "Publishing",
           ),
-        ],
-      ),
-    ),
-    CheckingRealmPublication() => _message(
-      context,
-      "checking",
-      "Checking saved content",
-      null,
-      Icons.sync,
-    ),
-    PublishingRealmPublication(:final data) => _message(
-      context,
-      "publishing",
-      data.phase == skir.PublicationActivationPhase.storing
-          ? "Preparing release"
-          : "Activating release",
-      null,
-      Icons.cloud_upload_outlined,
-    ),
-    RequestActiveRealmPublication() => _message(
-      context,
-      "request",
-      "Waiting for publication",
-      null,
-      Icons.sync,
-    ),
-    UncertainRealmPublication(:final message) => _message(
-      context,
-      "uncertain",
-      "Publication outcome unknown",
-      message,
-      Icons.help_outline,
-      context.colors.warning,
-    ),
-    UnavailableRealmPublication(:final message) => _message(
-      context,
-      "unavailable",
-      "Publication review unavailable",
-      message,
-      Icons.error_outline,
-      context.theme.colorScheme.error,
-    ),
-    CurrentRealmPublication()
-        when state.issues.isEmpty && state.localWork.isEmpty =>
-      _empty(context, id: "current", title: "Everything is published"),
-    EmptyRealmPublication()
-        when state.issues.isEmpty && state.localWork.isEmpty =>
-      _empty(context, id: "empty", title: "No saved content to publish"),
-    _ => const SizedBox.shrink(key: ValueKey("quiet")),
-  };
+        ),
+        BlockedRealmPublication() => Padding(
+          key: const ValueKey("blocked"),
+          padding: EdgeInsets.only(top: context.spacing.space4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.block,
+                size: 18,
+                color: context.colors.contentSecondary,
+              ),
+              SizedBox(width: context.spacing.space2),
+              Text(
+                "Publish blocked",
+                style: context.theme.textTheme.bodySmall?.copyWith(
+                  color: context.colors.contentSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        CheckingRealmPublication() => _message(
+          context,
+          "checking",
+          "Checking saved content",
+          null,
+          Icons.sync,
+        ),
+        PublishingRealmPublication(:final data) => _message(
+          context,
+          "publishing",
+          data.phase == skir.PublicationActivationPhase.storing
+              ? "Preparing release"
+              : "Activating release",
+          null,
+          Icons.cloud_upload_outlined,
+        ),
+        RequestActiveRealmPublication() => _message(
+          context,
+          "request",
+          "Waiting for publication",
+          null,
+          Icons.sync,
+        ),
+        UncertainRealmPublication(:final message) => _message(
+          context,
+          "uncertain",
+          "Publication outcome unknown",
+          message,
+          Icons.help_outline,
+          context.colors.warning,
+        ),
+        UnavailableRealmPublication(:final message) => _message(
+          context,
+          "unavailable",
+          "Publication review unavailable",
+          message,
+          Icons.error_outline,
+          context.theme.colorScheme.error,
+        ),
+        CurrentRealmPublication()
+            when state.issues.isEmpty && state.localWork.isEmpty =>
+          _empty(context, id: "current", title: "Everything is published"),
+        EmptyRealmPublication()
+            when state.issues.isEmpty && state.localWork.isEmpty =>
+          _empty(context, id: "empty", title: "No saved content to publish"),
+        _ => const SizedBox.shrink(key: ValueKey("quiet")),
+      };
 
   Widget _message(
     BuildContext context,
@@ -246,18 +240,21 @@ class RealmInboxView extends StatelessWidget {
     final local = state.localWork
         .where((entry) => !entry.needsAttention && !entry.needsInput)
         .toList();
+    // One command for the key and the button, offered only while Publish
+    // shows. A failure lets CommandRuns jam the button and tell the author.
+    final publish = switch (state.publication) {
+      ReadyRealmPublication(:final command) => ActionShortcut.intent(
+        id: "realm_inbox_publish",
+        label: "Publish",
+        description: "Publish the reviewed saved changes",
+        intent: PrimaryActionIntent,
+        priority: 100,
+        run: ActionRun.press((_) => command.invoke()),
+      ),
+      _ => null,
+    };
     return ManagedActionSet(
-      shortcuts: [
-        if (state.publication case ReadyRealmPublication(:final command))
-          ActionShortcut.intent(
-            id: "realm_inbox_publish",
-            label: "Publish",
-            description: "Publish the reviewed saved changes",
-            intent: PrimaryActionIntent,
-            priority: 100,
-            onInvoke: (_) => _publish(context, command),
-          ),
-      ],
+      shortcuts: [?publish],
       child: Surface(
         color: context.colors.surface,
         foreground: context.colors.contentPrimary,
@@ -396,7 +393,7 @@ class RealmInboxView extends StatelessWidget {
                                 ),
                               ),
                               SliverAnimatedContent(
-                                child: _publication(context),
+                                child: _publication(context, publish),
                               ),
                             ],
                           ),
@@ -601,7 +598,14 @@ class RealmInboxView extends StatelessWidget {
               onPressed: () => work.retry(entry.id),
             ),
           if (entry.canDiscard)
-            Button(label: "Discard", onPressed: () => work.discard(entry.id)),
+            CommandButton(
+              command: discardWork(
+                entry: entry.id,
+                label: entry.label,
+                discard: work.discard,
+              ),
+              label: "Discard",
+            ),
         ],
       ),
     ],

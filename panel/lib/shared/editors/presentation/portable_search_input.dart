@@ -276,7 +276,7 @@ final class PortableSearchInput extends HookWidget {
                     const SingleActivator(LogicalKeyboardKey.space),
                   ],
                   priority: 100,
-                  onInvoke: (_) => openSearch(),
+                  run: ActionRun.press((_) => openSearch()),
                 ),
             ],
             child: grows
@@ -521,7 +521,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
                       ),
                     ],
                     show: false,
-                    onInvoke: (_) => navigate(direction),
+                    run: ActionRun.press((_) => navigate(direction)),
                   ),
               ],
               queryStyle: style.valueStyle,

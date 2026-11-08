@@ -83,7 +83,7 @@ class DurationInput extends HookWidget {
                     ),
                   ),
                 ],
-                onInvoke: (_) => onDurationChanged(duration),
+                run: ActionRun.press((_) => onDurationChanged(duration)),
                 priority: 10,
               ),
           ],

@@ -45,6 +45,9 @@ final class AnimatedItemSource {
   /// The rows the collection renders, as of its last build.
   late AnimatedRows<AnimatedItem> rows;
 
+  /// The ref of the collection, for a command that runs over its rows.
+  late WidgetRef ref;
+
   /// The ids of the rows a tap reached, in order.
   final tapped = <String>[];
 
@@ -76,7 +79,7 @@ enum AnimatedItemsLayout { sliverList, table }
 /// [useAnimatedRows], rendered as [layout]. Each row is 48 px high, one
 /// focus stop holding a small field, and records taps in
 /// [AnimatedItemSource.tapped].
-final class AnimatedItems extends HookWidget {
+final class AnimatedItems extends HookConsumerWidget {
   /// Shows [source] as [layout], with [columns] cells per table row.
   const AnimatedItems({
     required this.source,
@@ -111,7 +114,8 @@ final class AnimatedItems extends HookWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    source.ref = ref;
     useValueListenable(source._revision);
     final visible = useValueListenable(source.visible);
     final rows = useAnimatedRows<AnimatedItem>(
@@ -309,13 +313,14 @@ extension ShowActiveRowTable on WidgetTester {
   }
 }
 
-final class _EmptyingTable extends HookWidget {
+final class _EmptyingTable extends HookConsumerWidget {
   const _EmptyingTable({required this.source});
 
   final AnimatedItemSource source;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    source.ref = ref;
     useValueListenable(source._revision);
     final rows = useAnimatedRows<AnimatedItem>(
       items: List.of(source.items),

@@ -116,7 +116,7 @@ class SearchBody extends HookConsumerWidget {
                           ],
                           priority: 1500,
                           show: false,
-                          onInvoke: (_) => submit(),
+                          run: ActionRun.press((_) => submit()),
                         ),
                       ],
                       selectAllOnFocus: selectAllOnFocus,

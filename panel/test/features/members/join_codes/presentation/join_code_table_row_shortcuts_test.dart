@@ -11,7 +11,8 @@ void main() {
     (false, LogicalKeyboardKey.keyC, false, ["copy"]),
     (true, LogicalKeyboardKey.escape, false, ["clear"]),
     (true, LogicalKeyboardKey.keyC, false, <String>[]),
-    (true, LogicalKeyboardKey.delete, false, ["revoke selection"]),
+    (true, LogicalKeyboardKey.delete, false, <String>[]),
+    (false, LogicalKeyboardKey.delete, false, <String>[]),
   ]) {
     testWidgets("${keyName(key, shifted: shifted)} on "
         "${selected ? "a selected" : "an unselected"} join code row invokes "
@@ -25,14 +26,22 @@ void main() {
     });
   }
 
-  testWidgets("Delete on an unselected join code row asks before revoking", (
-    tester,
-  ) async {
-    final row = await tester.pumpJoinCodeRow(_code, selected: false);
+  for (final (selected, outcome) in [
+    (true, "Revoke 2 join codes? Nobody new can join with them."),
+    (false, "Revoke this join code? Nobody new can join with it."),
+  ]) {
+    testWidgets(
+      "holding Delete on ${selected ? "a selected" : "an "
+                "unselected"} join code row holds: $outcome",
+      (tester) async {
+        final row = await tester.pumpJoinCodeRow(_code, selected: selected);
 
-    await row.press(LogicalKeyboardKey.delete);
+        await row.panel.keyDown(LogicalKeyboardKey.delete);
+        await row.panel.holdFor(0.3);
 
-    expect(row.panel.dialog.showing("Revoke this join code?"), isTrue);
-    expect(row.invoked, isEmpty);
-  });
+        expect(row.panel.commandRuns.session.value?.attempt.outcome, outcome);
+        await row.panel.keyUp(LogicalKeyboardKey.delete);
+      },
+    );
+  }
 }

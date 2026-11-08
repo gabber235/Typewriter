@@ -40,6 +40,9 @@ final class WorldBuilder {
   /// Whether the user asked the platform for reduced motion.
   bool reducedMotion = false;
 
+  /// Where the hold's outcome line sits, for the layout trial.
+  HoldLineLayout holdLineLayout = HoldLineLayout.over;
+
   /// Whether the organization projections the panel watches over NATS are
   /// replaced by [FakeOrganizations]; false leaves the real projections
   /// reading [World.nats], where the test registers replies.
@@ -120,6 +123,7 @@ final class World {
     required this.realm,
     required this.window,
     required this.reducedMotion,
+    required this.holdLineLayout,
     required this._builder,
   }) {
     container = ProviderContainer(
@@ -207,6 +211,7 @@ final class World {
       realm: realm,
       window: builder.window,
       reducedMotion: builder.reducedMotion,
+      holdLineLayout: builder.holdLineLayout,
       builder: builder,
     );
   }
@@ -231,6 +236,9 @@ final class World {
 
   /// Whether the panel renders for a user who asked for reduced motion.
   final bool reducedMotion;
+
+  /// Where the hold's outcome line sits, for the layout trial.
+  final HoldLineLayout holdLineLayout;
 
   final WorldBuilder _builder;
 

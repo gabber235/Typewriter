@@ -51,7 +51,7 @@ final _unselectSelection = ActionShortcut.intent(
   intent: DismissIntent,
   priority: -11,
   show: false,
-  onInvoke: (ref) {
+  run: ActionRun.press((ref) {
     final focused = SelectableScope.primaryFocusedId();
     if (focused == null) {
       ref.read(selectionProvider.notifier).clear();
@@ -65,5 +65,5 @@ final _unselectSelection = ActionShortcut.intent(
       return;
     }
     ref.read(selectionProvider.notifier).select(focused, isMultiSelect: false);
-  },
+  }),
 );

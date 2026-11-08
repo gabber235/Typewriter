@@ -113,7 +113,9 @@ class MembersTabletList extends HookConsumerWidget {
             .toSet(),
         onClearSelection: () => selection.selectedIds.value = {},
         hasSelection: selection.selectedIds.value.isNotEmpty,
-        onRemoveSelection: selection.onRemoveSelection,
+        rows: selection.rows,
+        selectedIds: selection.selectedIds.value,
+        nameOf: (id) => selection.rows[id]?.item.name,
       ),
     );
   }

@@ -76,7 +76,8 @@ class JoinCodesTable extends HookConsumerWidget {
           onCopy: () => _copyToClipboard(context, fullUrl),
           isSelected: isSelected,
           hasSelection: selection.selectedIds.value.isNotEmpty,
-          onRevokeSelection: selection.onRemoveSelection,
+          rows: selection.rows,
+          selectedIds: selection.selectedIds.value,
           // Inside the shortcuts, so they answer while the row is focused.
           child: RowStop(
             role: role,
@@ -174,7 +175,11 @@ class JoinCodesTable extends HookConsumerWidget {
             ),
           ),
         ),
-        TableCell(child: withShortcuts(JoinCodeRowActions(code: code))),
+        TableCell(
+          child: withShortcuts(
+            JoinCodeRowActions(code: code, rows: selection.rows),
+          ),
+        ),
       ],
     );
   }

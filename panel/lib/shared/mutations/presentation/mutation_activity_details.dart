@@ -134,12 +134,14 @@ class _ActivityDetails extends StatelessWidget {
                             onPressed: () => _review(context, resource),
                           ),
                         if (resource.canDiscard)
-                          Button(
-                            label: "Discard",
+                          CommandButton(
+                            command: discardWork(
+                              entry: resource.id,
+                              label: resource.label,
+                              discard: controller.discard,
+                            ),
                             color: context.colors.dangerText,
-                            onPressed: resource.canDiscard
-                                ? () => controller.discard(resource.id)
-                                : null,
+                            label: "Discard",
                           ),
                       ],
                     );

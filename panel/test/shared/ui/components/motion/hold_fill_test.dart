@@ -1,4 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
@@ -47,4 +48,31 @@ void main() {
     expect(panel.says("Removed 1"), isTrue);
     await gesture.up();
   });
+
+  for (final reduced in [false, true]) {
+    testWidgets("a table row's hold fill decoration "
+        "${reduced ? "tints in place under reduced motion" : "sweeps from the leading edge"} "
+        "and repaints without a rebuild as its amount moves", (tester) async {
+      final amount = ValueNotifier(0.0);
+      addTearDown(amount.dispose);
+      final builds = <void>[];
+      await tester.mountComponent(
+        reduced
+            ? ReducedMotion(
+                child: HoldTableStage(amount: amount, builds: builds),
+              )
+            : HoldTableStage(amount: amount, builds: builds),
+      );
+      final before = builds.length;
+
+      amount.value = 0.5;
+      await tester.pump();
+
+      expect(builds, hasLength(before));
+      expect(
+        tester.holdTableFill,
+        reduced ? holdTableRow : const Rect.fromLTWH(0, 0, 100, 40),
+      );
+    });
+  }
 }

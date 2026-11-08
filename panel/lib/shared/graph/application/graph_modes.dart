@@ -30,7 +30,9 @@ class GraphMoveMode extends InteractionMode
             activators: [SingleActivator(key)],
             priority: 20,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "graph_move",
@@ -92,7 +94,9 @@ class GraphResizeMode extends InteractionMode
             activators: [SingleActivator(key)],
             priority: 0,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "graph_resize",

@@ -325,13 +325,8 @@ final class _AuthoredPresentationHeader extends HookWidget {
           landingPlaced = landingPlaced || landing;
           final button = Builder(
             builder: (buttonContext) {
-              void activate() => _invokeAction(
-                context,
-                buttonContext,
-                value.action,
-                value.confirmation,
-                destructive: destructive,
-              );
+              void activate() =>
+                  _invokeAction(context, buttonContext, value.action);
               final icon = iconName == null
                   ? const Icon(Icons.more_horiz, size: 18)
                   : Icones(iconName, size: 18);
@@ -403,12 +398,8 @@ final class _AuthoredPresentationHeader extends HookWidget {
                 semanticLabel: labelValue,
                 visualDensity: VisualDensity.compact,
                 onChanged: enabled
-                    ? (_) => _invokeAction(
-                        context,
-                        checkboxContext,
-                        value.action,
-                        value.confirmation,
-                      )
+                    ? (_) =>
+                          _invokeAction(context, checkboxContext, value.action)
                     : null,
               ),
             ),
@@ -589,61 +580,20 @@ final class _AuthoredPresentationHeader extends HookWidget {
     BuildContext declarationContext,
     BuildContext occurrenceContext,
     skir.EditorAction action,
-    skir.HeaderActionConfirmation? confirmation, {
-    bool destructive = false,
-  }) {
+  ) {
     final menu = _CollectionMenuInvocation.maybeOf(occurrenceContext);
-    unawaited(
-      _runAction(
-        declarationContext,
-        action,
-        confirmation,
-        destructive: destructive,
-        closeMenu: menu?.close,
-      ),
-    );
+    unawaited(_runAction(declarationContext, action, closeMenu: menu?.close));
   }
 
   Future<void> _runAction(
     BuildContext context,
-    skir.EditorAction editorAction,
-    skir.HeaderActionConfirmation? confirmation, {
-    bool destructive = false,
+    skir.EditorAction editorAction, {
     VoidCallback? closeMenu,
   }) async {
     closeMenu?.call();
-    if (confirmation != null) {
-      final title = _resolvedString(confirmation.title);
-      final message = _resolvedString(confirmation.message);
-      final label = _resolvedString(confirmation.confirmationLabel);
-      if (title == null || message == null || label == null) {
-        scope.reportStatus?.call("The action confirmation is unavailable");
-        return;
-      }
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            Button(
-              label: "Cancel",
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-            Button(
-              face: ButtonFace.filled,
-              onPressed: () => Navigator.of(context).pop(true),
-              color: destructive ? Theme.of(context).colorScheme.error : null,
-              label: label,
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    }
     if (!context.mounted) return;
     // A removal moves focus when its row leaves (RowFocus), after the menu
-    // or confirmation handed focus back.
+    // handed focus back.
     await scope.executeAction(editorAction);
   }
 }

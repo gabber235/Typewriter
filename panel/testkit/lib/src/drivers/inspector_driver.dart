@@ -99,35 +99,6 @@ final class InspectorDriver extends ComponentDriver {
     await tester.tapAt(_button(label).screenRect.center);
     await settle();
   }
-
-  /// Presses the operation button [label] and confirms it with the button
-  /// [confirm], [label] by default, of the dialog asking [question].
-  ///
-  /// The confirmation keeps animating, so this lets frames pass instead of
-  /// waiting for the panel to settle.
-  Future<void> runConfirmed(
-    String label, {
-    required String question,
-    String? confirm,
-  }) async {
-    Future<void> frames() async {
-      for (var frame = 0; frame < 30; frame++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
-    }
-
-    await tester.tapAt(_button(label).screenRect.center);
-    await frames();
-    final dialog =
-        find.semantics
-            .byPredicate((node) => node.spoken.contains(question))
-            .evaluate()
-            .lastOrNull
-            ?.route ??
-        (throw TestFailure("No dialog asks \"$question\""));
-    await tester.tapAt(dialog.button(confirm ?? label).screenRect.center);
-    await frames();
-  }
 }
 
 /// An inspector beside a page on a desktop.

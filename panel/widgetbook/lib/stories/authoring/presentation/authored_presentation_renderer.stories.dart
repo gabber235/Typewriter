@@ -343,13 +343,6 @@ skir.PresentationNode _interactionGallery(
         visibleIf: null,
         enabledIf: null,
         tone: skir.HeaderActionTone.destructive,
-        confirmation: skir.HeaderActionConfirmation(
-          title: textLiteral("Archive quest?"),
-          message: textLiteral(
-            "The quest will no longer be available to players.",
-          ),
-          confirmationLabel: textLiteral("Archive"),
-        ),
         placement: skir.HeaderActionPlacement.end,
       ),
       _statusHeaderButton(
@@ -396,7 +389,6 @@ skir.PresentationNode _interactionGallery(
         visibleIf: null,
         enabledIf: null,
         tone: skir.HeaderActionTone.neutral,
-        confirmation: null,
         placement: skir.HeaderActionPlacement.end,
       ),
     ],
@@ -427,7 +419,6 @@ skir.HeaderItem _statusHeaderButton(
   visibleIf: null,
   enabledIf: null,
   tone: skir.HeaderActionTone.neutral,
-  confirmation: null,
   placement: placement,
 );
 

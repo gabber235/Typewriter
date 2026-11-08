@@ -118,10 +118,12 @@ class ResourceSurface extends ConsumerWidget {
                 ],
                 priority: 100,
                 icon: const Icon(Icons.add),
-                onInvoke: (_) => ref.createSelectedResource(
-                  context: context,
-                  type: creation.type,
-                  owner: creation.owner,
+                run: ActionRun.press(
+                  (_) => ref.createSelectedResource(
+                    context: context,
+                    type: creation.type,
+                    owner: creation.owner,
+                  ),
                 ),
               ),
           ],

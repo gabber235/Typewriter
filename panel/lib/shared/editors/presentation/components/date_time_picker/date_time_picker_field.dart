@@ -281,7 +281,7 @@ class DateTimePickerField extends HookConsumerWidget {
                   ),
                 ],
                 priority: 1000,
-                onInvoke: (_) => copyValue(),
+                run: ActionRun.press((_) => copyValue()),
               ),
             if (enabled && showPicker)
               ActionShortcut(
@@ -292,7 +292,7 @@ class DateTimePickerField extends HookConsumerWidget {
                     : "Open the date and time picker",
                 activators: [AdaptiveSingleActivator(LogicalKeyboardKey.keyP)],
                 priority: 1001,
-                onInvoke: (_) => toggle(),
+                run: ActionRun.press((_) => toggle()),
               ),
           ],
           decoration: (decoration ?? const InputDecoration()).copyWith(

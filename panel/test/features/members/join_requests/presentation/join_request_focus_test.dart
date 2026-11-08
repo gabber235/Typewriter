@@ -21,9 +21,7 @@ void main() {
       signedIn(ada, organization: acme),
       membershipService(joinRequests: [dennis, erin]),
     ], at: membersPage(const JoinRequestsRoute()));
-    await panel.press(LogicalKeyboardKey.delete);
-    // The dialog until the hold replaces it.
-    await panel.press(LogicalKeyboardKey.enter);
+    await panel.holdKey(LogicalKeyboardKey.delete);
     await panel.eventually(() => expect(panel.focused, contains("Erin")));
   });
 

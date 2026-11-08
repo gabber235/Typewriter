@@ -22,7 +22,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
     this.example = CollectionEditorExample.textList,
     bool longTitles = false,
     bool empty = false,
-    this.confirmRemoval = false,
+    this.removeStep = false,
     this.capabilities = const PortablePresentationCapabilities(),
     skir.PresentationNode Function(skir.PresentationNode)? transformLayout,
   }) {
@@ -99,7 +99,9 @@ final class CollectionEditorScenario extends ChangeNotifier {
   /// The type of the owning resource, the configured value of the layout.
   static final ownerType = _use("Owner");
   final CollectionEditorExample example;
-  final bool confirmRemoval;
+
+  /// Whether each step's header pins an authored Remove step action.
+  final bool removeStep;
   final PortablePresentationCapabilities capabilities;
   final submissions = ScopedWorkSession();
   late final CheckedEditorCatalog catalog;
@@ -129,7 +131,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
             .toFrozen();
     final item = example == CollectionEditorExample.authoredSteps
         ? _authoredStep(reference)
-        : example == CollectionEditorExample.nestedLists && confirmRemoval
+        : example == CollectionEditorExample.nestedLists && removeStep
         ? _authoredStep(reference, title: textLiteral("Nested steps"))
         : null;
     final element = switch (example) {
@@ -213,7 +215,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
                 )
                 ..initiallyExpanded = false
                 ..items = [
-                  if (confirmRemoval)
+                  if (removeStep)
                     skir.HeaderItem.createButton(
                       itemId: skir.HeaderItemId(
                         namespace: "fixture",
@@ -234,13 +236,6 @@ final class CollectionEditorScenario extends ChangeNotifier {
                       visibleIf: null,
                       enabledIf: null,
                       tone: skir.HeaderActionTone.destructive,
-                      confirmation: skir.HeaderActionConfirmation(
-                        title: textLiteral("Remove this step?"),
-                        message: textLiteral(
-                          "The step will be removed from this draft.",
-                        ),
-                        confirmationLabel: textLiteral("Remove step"),
-                      ),
                       placement: skir.HeaderActionPlacement.end,
                     ),
                 ])

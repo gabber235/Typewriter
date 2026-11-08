@@ -158,3 +158,4 @@ Review in this order. Story paths are below `.xtask/results/stories/`.
 Do not report these:
 
 - The colour picker's spectrum and checkerboard use raw colours.
+- A key cap does not glow during a hold; the glow arrives with the shared key cap work.

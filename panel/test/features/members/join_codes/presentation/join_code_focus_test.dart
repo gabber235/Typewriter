@@ -33,9 +33,7 @@ void main() {
       signedIn(ada, organization: acme),
       membershipService(joinCodes: [first, second]),
     ], at: membersPage(const JoinCodesRoute()));
-    await panel.press(LogicalKeyboardKey.delete);
-    // The dialog until the hold replaces it.
-    await panel.press(LogicalKeyboardKey.enter);
+    await panel.holdKey(LogicalKeyboardKey.delete);
     await panel.eventually(() => expect(panel.focusedRow, second));
   });
 

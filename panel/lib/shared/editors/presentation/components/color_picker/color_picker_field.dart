@@ -300,7 +300,7 @@ class ColorPickerField extends HookConsumerWidget {
                   ),
                 ],
                 priority: 1000,
-                onInvoke: (_) => copyColor(),
+                run: ActionRun.press((_) => copyColor()),
               ),
             if (editable && currentColor != null)
               ActionShortcut(
@@ -311,7 +311,7 @@ class ColorPickerField extends HookConsumerWidget {
                     : "Add the current color to favorites",
                 activators: [AdaptiveSingleActivator(LogicalKeyboardKey.keyF)],
                 priority: 1001,
-                onInvoke: (_) => toggleFavorite(),
+                run: ActionRun.press((_) => toggleFavorite()),
               ),
             if (enabled)
               ActionShortcut(
@@ -322,7 +322,7 @@ class ColorPickerField extends HookConsumerWidget {
                     : "Open the color picker",
                 activators: [AdaptiveSingleActivator(LogicalKeyboardKey.keyP)],
                 priority: 1002,
-                onInvoke: (_) => toggle(),
+                run: ActionRun.press((_) => toggle()),
               ),
           ],
           decoration: (decoration ?? const InputDecoration()).copyWith(

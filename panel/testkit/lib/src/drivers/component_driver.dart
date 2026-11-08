@@ -60,11 +60,18 @@ abstract class ComponentDriver {
   ///
   /// Without [settle] the panel has not reacted yet when this returns, so
   /// the test can act again in the same frame, as a fast user does.
+  ///
+  /// With [repeated], the button may be heard twice because the action row
+  /// repeats the focused surface's command; the first one heard is used.
   Future<void> activateWithScreenReader(
     String label, {
     bool settle = true,
+    bool repeated = false,
   }) async {
-    final button = semanticsButton(label);
+    final button = switch ((repeated, semanticsButtons(label))) {
+      (true, [final first, _]) => first,
+      _ => semanticsButton(label),
+    };
     expect(
       button.isTappable,
       isTrue,

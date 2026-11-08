@@ -29,6 +29,7 @@ export "ui/resizable_pane.dart";
 export "ui/buttons.dart";
 export "ui/pointing.dart";
 export "work_sessions.dart";
+export "pending_join_request.dart";
 export "scripted_save.dart";
 export "ui/choice_dropdown.dart";
 export "ui/panes.dart";

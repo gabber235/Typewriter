@@ -66,7 +66,7 @@ val OperationDeclarationTest by testSuite {
                         inspector(OperationInspector.ButtonWrapper(variant))
                     }
                     gestures { shortcut(OperationShortcut.DELETE) }
-                    confirm("Remove these?") { action("Remove") }
+                    confirm(one = "Remove this?", many = "Remove {count} of these?")
                     prepare { }
                 }
             val appearance = bind(declaration).single().presentation
@@ -75,16 +75,31 @@ val OperationDeclarationTest by testSuite {
         }
     }
 
-    test("a confirmation is titled with the operation label and confirms with the declared action") {
+    test("a declared confirmation publishes its one and many lines unchanged") {
         val declaration =
             collect<Unit> {
-                confirm("Remove these?") { action("Remove") }
+                confirm(one = "Remove this?", many = "Remove {count} of these?")
                 prepare { }
             }
         val confirmation = requireNotNull(bind(declaration).single().presentation.confirmation)
 
-        confirmation.title shouldBe "Example operation"
-        confirmation.confirmationLabel shouldBe "Remove"
+        confirmation.outcomeOne shouldBe "Remove this?"
+        confirmation.outcomeMany shouldBe "Remove {count} of these?"
+    }
+
+    test("a blank confirmation line, or a many line without {count}, is rejected at declaration") {
+        listOf(
+            Triple("", "Remove {count} of these?", "states its outcome"),
+            Triple("Remove this?", " ", "states its outcome"),
+            Triple("Remove this?", "Remove these?", "{count}"),
+        ).forEach { (one, many, reason) ->
+            val declaration =
+                collect<Unit> {
+                    confirm(one = one, many = many)
+                    prepare { }
+                }
+            declaration.failure?.message!! shouldContain reason
+        }
     }
 
     test("the core catalog publishes every core operation for any resource with labels from object names") {

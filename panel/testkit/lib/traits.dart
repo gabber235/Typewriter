@@ -6,6 +6,7 @@ export "src/traits/authoring/publication_over_nats.dart";
 export "src/traits/authoring/realm_answers.dart";
 export "src/traits/connection.dart";
 export "src/traits/connection_states.dart";
+export "src/traits/hold_line.dart";
 export "src/traits/members/membership.dart";
 export "src/traits/members/membership_backend.dart";
 export "src/traits/members/membership_data.dart";

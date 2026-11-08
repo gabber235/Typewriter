@@ -16,7 +16,9 @@ class MemberTabletCard extends HookConsumerWidget {
     required this.onSelectAll,
     required this.onClearSelection,
     required this.hasSelection,
-    required this.onRemoveSelection,
+    required this.rows,
+    required this.selectedIds,
+    required this.nameOf,
     super.key,
   });
 
@@ -26,13 +28,27 @@ class MemberTabletCard extends HookConsumerWidget {
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
   final bool hasSelection;
-  final Future<void> Function() onRemoveSelection;
+
+  /// The members rows [MembersTab] owns; the remove hold sends and refuses
+  /// on them.
+  final AnimatedRows<Object?> rows;
+  final Set<skir.RecordId> selectedIds;
+  final String? Function(skir.RecordId member) nameOf;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     final expansibleController = useExpansibleController();
+    // One command for the card's key and its Remove button; it acts on the
+    // selection when the selection contains this member.
+    final removal = memberRemoval(
+      id: "remove_member_key_${member.userId}",
+      label: hasSelection && isSelected ? "Remove members" : "Remove member",
+      targets: () => hasSelection && isSelected ? selectedIds : {member.userId},
+      nameOf: nameOf,
+      rows: rows,
+    );
 
     final backgroundColor = isSelected
         ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
@@ -55,7 +71,7 @@ class MemberTabletCard extends HookConsumerWidget {
                   description: "Toggle selection for this member",
                   intent: ActivateIntent,
                   priority: 1,
-                  onInvoke: (_) => onSelectionChanged(!isSelected),
+                  run: ActionRun.press((_) => onSelectionChanged(!isSelected)),
                 ),
                 ActionShortcut.intent(
                   id: "select_all_members_${member.userId}",
@@ -63,7 +79,7 @@ class MemberTabletCard extends HookConsumerWidget {
                   description: "Select all visible members",
                   intent: ActivateAllIntent,
                   priority: 1,
-                  onInvoke: (_) => onSelectAll(),
+                  run: ActionRun.press((_) => onSelectAll()),
                 ),
                 // Esc steps out one level: first the card, then the
                 // selection.
@@ -74,9 +90,9 @@ class MemberTabletCard extends HookConsumerWidget {
                     description: "Clear selected members",
                     intent: DismissIntent,
                     priority: 1,
-                    onInvoke: (_) {
+                    run: ActionRun.press((_) {
                       onClearSelection();
-                    },
+                    }),
                   ),
                 ActionShortcut(
                   id: "expand_member_${member.userId}",
@@ -84,18 +100,9 @@ class MemberTabletCard extends HookConsumerWidget {
                   description: "Toggle member details",
                   activators: const [SingleActivator(LogicalKeyboardKey.space)],
                   priority: 1,
-                  onInvoke: (_) => expansibleController.toggle(),
+                  run: ActionRun.press((_) => expansibleController.toggle()),
                 ),
-                ActionShortcut.intent(
-                  id: "remove_member_key_${member.userId}",
-                  label: "Remove member",
-                  description: "Remove this member",
-                  intent: DeleteIntent,
-                  priority: 1,
-                  onInvoke: (_) => hasSelection && isSelected
-                      ? onRemoveSelection()
-                      : _confirmRemoveMember(context, ref),
-                ),
+                removal,
               ],
               // Inside the shortcuts, so they answer while the card is
               // focused. Enter opens the details, as the header did.
@@ -198,15 +205,15 @@ class MemberTabletCard extends HookConsumerWidget {
                         SizedBox(height: context.spacing.space4),
                         SizedBox(
                           width: double.infinity,
-                          child: Button(
+                          child: CommandButton(
+                            command: removal,
                             face: ButtonFace.outlined,
                             icon: const Icon(
                               Icons.person_remove_outlined,
                               size: 18,
                             ),
-                            label: "Remove Member",
+                            label: "Remove member",
                             color: context.colors.dangerText,
-                            onPressed: () => _confirmRemoveMember(context, ref),
                           ),
                         ),
                       ],
@@ -218,24 +225,6 @@ class MemberTabletCard extends HookConsumerWidget {
           },
         ),
       ),
-    );
-  }
-
-  Future<void> _confirmRemoveMember(BuildContext context, WidgetRef ref) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Remove ${member.name}?",
-      content:
-          "Are you sure you want to remove this member from the organization?",
-      confirmText: "Remove",
-      confirmIcon: Fa6Solid.user_minus,
-      onConfirm: () async {
-        onSelectionChanged(false);
-        await ref.executeMembership(
-          ref.membershipCommands.remove(member.userId),
-          (response) => response.requireAccepted(),
-        );
-      },
     );
   }
 }

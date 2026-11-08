@@ -2747,7 +2747,6 @@ final _overflowHeaderNode = skir.PresentationNode(
           visibleIf: null,
           enabledIf: null,
           tone: skir.HeaderActionTone.neutral,
-          confirmation: null,
           placement: skir.HeaderActionPlacement.end,
         ),
     ],

@@ -181,23 +181,11 @@ class _JoinOrganization extends HookConsumerWidget {
     required WidgetRef ref,
     required skir.UserJoinRequest request,
   }) async {
-    final confirmed = await showConfirmationDialogue(
-      context: context,
-      title: "Cancel join request?",
-      content:
-          "Are you sure you want to cancel your request to join ${request.organizationName.formatted}?",
-      confirmText: "Cancel Request",
-      confirmIcon: Fa6Solid.xmark,
-      onConfirm: () async {
-        await ref
-            .read(userJoinRequestsProvider.notifier)
-            .cancelRequest(request.requestId);
-      },
-    );
-
-    if (!confirmed || !context.mounted) {
-      return;
-    }
+    // One press: the person can simply ask again.
+    await ref
+        .read(userJoinRequestsProvider.notifier)
+        .cancelRequest(request.requestId);
+    if (!context.mounted) return;
     showSuccessSnackBar(context, "Join request canceled.");
   }
 }
@@ -214,12 +202,21 @@ class _PendingJoinRequestTile extends StatelessWidget {
   });
 
   final skir.UserJoinRequest request;
-  final VoidCallback onCancel;
+  final Future<void> Function() onCancel;
   final VoidCallback onExpire;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // One command for the key and the button.
+    final cancel = ActionShortcut.intent(
+      id: "cancel_join_request_${request.requestId}",
+      label: "Cancel request",
+      description: "Cancel your request to join",
+      intent: DeleteIntent,
+      priority: 2,
+      run: ActionRun.press((_) => onCancel()),
+    );
 
     return Material(
       color: Colors.transparent,
@@ -227,16 +224,7 @@ class _PendingJoinRequestTile extends StatelessWidget {
         borderRadius: context.shapes.mediumBorderRadius,
       ),
       child: ManagedActionSet(
-        shortcuts: [
-          ActionShortcut.intent(
-            id: "revoke_join_request",
-            label: "Revoke request",
-            description: "Cancel the join request",
-            intent: DeleteIntent,
-            priority: 2,
-            onInvoke: (_) => onCancel(),
-          ),
-        ],
+        shortcuts: [cancel],
         child: RingTarget(
           borderRadius: context.shapes.mediumBorderRadius,
           child: Focus(
@@ -260,13 +248,12 @@ class _PendingJoinRequestTile extends StatelessWidget {
                     onExpired: onExpire,
                   ),
                   SizedBox(width: context.spacing.space2),
-                  Button(
+                  CommandButton(
+                    command: cancel,
                     face: ButtonFace.icon,
+                    color: context.colors.dangerText,
                     icon: const Icon(Icons.close, size: 20),
                     label: "Cancel request",
-                    tooltip: "Cancel request",
-                    color: context.colors.dangerText,
-                    onPressed: onCancel,
                   ),
                 ],
               ),

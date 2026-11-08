@@ -86,7 +86,7 @@ class PrimarySearchShortcut extends ConsumerWidget {
           intent: OpenSearchIntent,
           priority: -12,
           icon: const Icon(Icons.search_rounded),
-          onInvoke: (ref) => openPrimarySearch(context, ref),
+          run: ActionRun.press((ref) => openPrimarySearch(context, ref)),
         ),
       ],
       child: child,

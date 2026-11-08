@@ -3,7 +3,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 const coreSelectionOperations = <SelectionOperation>[
   OpenOperation(),
   UnbindOperation(),
-  DeleteOperation(),
 ];
 
 /// Defines an action available for the current resolved selection.
@@ -11,8 +10,8 @@ const coreSelectionOperations = <SelectionOperation>[
 /// Instances are registered through a [SelectionOperationSource]. Availability is
 /// evaluated against the resolved selection, while execution reads the latest
 /// provider state at invocation so menus, shortcuts and inspector controls share
-/// one operation implementation. An operation may retain that captured batch
-/// while awaiting confirmation.
+/// one operation implementation. A held operation captures its targets when
+/// the hold starts.
 abstract class SelectionOperation {
   const SelectionOperation();
 
@@ -39,9 +38,13 @@ abstract class SelectionOperation {
   ///
   /// Implementations may mutate model state, emit provider changes, or trigger
   /// UI effects. The caller may await the returned [Future]. Availability is
-  /// checked before invocation. A confirmation flow can retain the selection
-  /// captured when the operation begins.
+  /// checked before invocation.
   FutureOr<void> executeOn(WidgetRef ref);
+
+  /// What pressing does: a press runs [executeOn]; a hold runs its work
+  /// after the fill, and every path (key, menu, inspector) reaches it
+  /// through the operation's shortcut. Null when the operation cannot run.
+  ActionRun? get run => ActionRun.press(executeOn);
 
   /// Builds the context menu item that invokes this operation.
   ///
@@ -75,8 +78,8 @@ abstract class ActivatorShortcutOperation extends ShortcutableOperation {
     label: name,
     description: description,
     activators: activators,
-    onInvoke: executeOn,
     priority: 10,
+    run: run,
   );
 }
 
@@ -92,8 +95,8 @@ abstract class IntentShortcutOperation extends ShortcutableOperation {
     label: name,
     description: description,
     intent: intent,
-    onInvoke: executeOn,
     priority: 10,
+    run: run,
   );
 }
 
@@ -155,85 +158,4 @@ List<MenuItem> selectionOperationMenuItems(
     items.add(operation.menuItem(ref));
   }
   return items;
-}
-
-/// Shows per item failures collected during a batch operation.
-///
-/// Successful items are handled by the operation before this dialog opens.
-/// The dialog reports only failures and leaves recovery decisions to the
-/// operation's caller.
-Future<void> showOperationErrorsPopup(
-  BuildContext context,
-  List<(Selectable, Object)> errors,
-  String operationName,
-) async {
-  await showAdvancedDialog<void>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        titlePadding: const EdgeInsets.only(
-          left: 24,
-          top: 16,
-          right: 8,
-          bottom: 0,
-        ),
-        title: Row(
-          children: [
-            Expanded(child: Text("$operationName errors")),
-            Button(
-              face: ButtonFace.icon,
-              icon: const Icon(Icons.close),
-              label: "Close",
-              tooltip: "Close",
-              autofocus: true,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 8,
-              children: [
-                Text(
-                  "Failed to ${operationName.toLowerCase()} ${errors.length} item(s). Others were ${operationName.toLowerCase()}d successfully.",
-                  style: context.text.sentence,
-                ),
-                for (final (selectable, err) in errors)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 2,
-                      children: [
-                        Text(
-                          selectable.name,
-                          style: Theme.of(context).textTheme.bodyMedium!
-                              .copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontSize: 13,
-                              ),
-                        ),
-                        Text(
-                          err.toString(),
-                          style: context.text.sentence.copyWith(
-                            color: context.colors.dangerText,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const Divider(height: 8),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  );
 }

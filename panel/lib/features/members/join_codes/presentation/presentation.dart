@@ -5,6 +5,7 @@ export "join_code_badges.dart";
 export "join_code_card.dart";
 export "join_code_duration_input.dart";
 export "join_code_list.dart";
+export "join_code_revocation.dart";
 export "join_code_row_actions.dart";
 export "join_code_settings.dart";
 export "join_code_table.dart";

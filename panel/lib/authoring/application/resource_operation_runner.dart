@@ -2,10 +2,10 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Owns one captured invocation through input, confirmation and local admission.
+/// Owns one captured invocation through input and local admission.
 /// Target identity is independent of subsequent changes to global selection.
 /// Realm previews are proposals over a captured saved observation and local
-/// overlay. Confirmation precedes local staging; selection and route recovery
+/// overlay. A declared hold precedes the invocation; selection and route recovery
 /// run only after staging succeeds. Navigation, catalog and access changes
 /// expire prompts, while invocation and input revisions reject unrelated replies.
 final class ResourceOperationRunner {
@@ -219,11 +219,6 @@ final class ResourceOperationRunner {
             retryMessage = null;
           case skir.AuthoringActionResult_previewWrapper(:final value):
             _requireResponse(value.invocationId, value.inputRevision, revision);
-            final confirmationRevision = input?.revision;
-            if (!await _confirm(value.confirmation)) return;
-            if (!mutationAllowed || input?.revision != confirmationRevision) {
-              continue;
-            }
             final before = workspace.document;
             final group = workspace.workspace.createGroup(
               label: label,
@@ -314,32 +309,6 @@ final class ResourceOperationRunner {
       default:
         throw StateError("The selection effect is unavailable");
     }
-  }
-
-  /// The Realm preview carries the operation's declared confirmation.
-  Future<bool> _confirm(skir.OperationConfirmation? warning) async {
-    if (warning == null) return mutationAllowed;
-    final confirmed =
-        await _showOwnedDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(warning.title),
-            content: Text(warning.message),
-            actions: [
-              Button(
-                label: "Cancel",
-                onPressed: () => Navigator.of(context).pop(false),
-              ),
-              Button(
-                face: ButtonFace.filled,
-                label: warning.confirmationLabel,
-                onPressed: () => Navigator.of(context).pop(true),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-    return confirmed;
   }
 
   Future<bool> _showInput({

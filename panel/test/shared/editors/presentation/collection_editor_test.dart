@@ -278,27 +278,27 @@ void main() {
 
   for (final (name, example) in [
     (
-      "cancelling authored removal leaves the actual draft untouched",
+      "pressing an authored removal removes the step with no dialog",
       CollectionEditorExample.authoredSteps,
     ),
     (
-      "cancelling a nested collection header removal preserves both owners",
+      "pressing a nested collection header removal removes the step with no "
+          "dialog",
       CollectionEditorExample.nestedLists,
     ),
   ]) {
     testWidgets(name, (tester) async {
       final scenario = CollectionEditorScenario(
         example: example,
-        confirmRemoval: true,
+        removeStep: true,
       );
       addTearDown(scenario.dispose);
       final panel = await scenario.show(tester);
       final before = scenario.value;
       await panel.tapOn(find.tooltip("Remove step").first);
-      expect(panel.dialog.showing("Remove this step?"), isTrue);
-      await panel.dialog.choose("Cancel", message: "Remove this step?");
-      expect(scenario.value, before);
-      expect(scenario.workspace.hasPendingWork, isFalse);
+
+      expect(panel.dialog.showing("Remove this step?"), isFalse);
+      expect(scenario.value, isNot(before));
       expect(tester.takeException(), isNull);
     });
   }

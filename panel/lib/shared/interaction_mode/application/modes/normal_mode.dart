@@ -40,7 +40,9 @@ class NormalMode extends InteractionMode
             activators: [SingleActivator(key)],
             priority: -10,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
 
       // Display
@@ -105,10 +107,10 @@ ActionShortcut escapeToNormalAction({Function(WidgetRef ref)? onInvoke}) {
     description: "Return to normal mode",
     activators: const [SingleActivator(LogicalKeyboardKey.escape)],
     priority: 1000,
-    onInvoke: (ref) {
+    run: ActionRun.press((ref) {
       if (GlobalModeShortcut.dismissFocused()) return;
       onInvoke?.call(ref);
       ref.read(currentInteractionModeProvider.notifier).normal();
-    },
+    }),
   );
 }

@@ -17,7 +17,7 @@ ActionShortcut numberedAction(int i, {ActionInvoke? onInvoke}) {
     description: "Action $i description",
     activators: [SingleActivator(_keys[i])],
     priority: i,
-    onInvoke: onInvoke,
+    run: onInvoke == null ? null : ActionRun.press(onInvoke),
   );
 }
 

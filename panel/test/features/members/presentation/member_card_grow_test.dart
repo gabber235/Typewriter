@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
@@ -16,14 +18,21 @@ void main() {
       at: PanelLocation.component(
         SizedBox(
           width: 400,
-          child: MemberTabletCard(
-            member: _ada,
-            isSelected: false,
-            onSelectionChanged: (_) {},
-            onSelectAll: () {},
-            onClearSelection: () {},
-            hasSelection: false,
-            onRemoveSelection: () async {},
+          child: HookBuilder(
+            builder: (context) => MemberTabletCard(
+              member: _ada,
+              isSelected: false,
+              onSelectionChanged: (_) {},
+              onSelectAll: () {},
+              onClearSelection: () {},
+              hasSelection: false,
+              rows: useAnimatedRows<skir.OrganizationMember>(
+                items: [_ada],
+                identity: (member) => member.userId,
+              ),
+              selectedIds: const {},
+              nameOf: (_) => "Ada",
+            ),
           ),
         ),
       ),
@@ -45,7 +54,7 @@ void main() {
     await tabTo("Show member details");
     await panel.press(LogicalKeyboardKey.space);
     expect(tester.getSize(card).height, greaterThan(rowHeight));
-    await tabTo("Remove Member");
+    await tabTo("Remove member");
     await panel.press(LogicalKeyboardKey.escape);
 
     expect(tester.getSize(card).height, rowHeight);

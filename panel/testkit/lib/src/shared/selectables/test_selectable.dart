@@ -26,16 +26,11 @@ skir.DataValue? testData(Ref ref, String id) =>
     ref.watch(testSelectableDataProvider)[id];
 
 class TestSelectableIdentifier extends SelectableIdentifier {
-  TestSelectableIdentifier({
-    required this.id,
-    this.color = Colors.redAccent,
-    this.onDelete,
-  });
+  TestSelectableIdentifier({required this.id, this.color = Colors.redAccent});
 
   @override
   final String id;
   final Color color;
-  final VoidCallback? onDelete;
 
   @override
   int get hashCode => id.hashCode;
@@ -92,13 +87,7 @@ class TestSelectableIdentifier extends SelectableIdentifier {
       },
     );
     return AsyncValue.data(
-      TestSelectable(
-        resource: resource,
-        id: this,
-        data: data,
-        color: color,
-        onDelete: onDelete,
-      ),
+      TestSelectable(resource: resource, id: this, data: data, color: color),
     );
   }
 
@@ -112,7 +101,6 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
     required this.id,
     required this.data,
     required this.color,
-    required this.onDelete,
   });
 
   final ValueEditPersistence resource;
@@ -122,7 +110,6 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
 
   final skir.DataValue data;
   final Color color;
-  final VoidCallback? onDelete;
 
   late final EditorDocument document = EditorDocument(
     rootType: skir.TypeUse.wrapNamed(_testSelectableUse),
@@ -132,9 +119,7 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   );
 
   @override
-  List<SelectionCapability> get capabilities => [
-    if (onDelete != null) DeleteSelectionCapability(onDelete: onDelete!),
-  ];
+  List<SelectionCapability> get capabilities => const [];
 
   SelectableIdentifier get targetId => id;
 

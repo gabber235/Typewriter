@@ -48,10 +48,12 @@ _SidebarController _useSidebarController(BuildContext context, WidgetRef ref) {
         const SingleActivator(LogicalKeyboardKey.comma, shift: true),
       ],
       priority: -1,
-      onInvoke: (_) => resize.by(
-        HardwareKeyboard.instance.isShiftPressed
-            ? -kSidebarResizeLargeStep
-            : -kSidebarResizeSmallStep,
+      run: ActionRun.press(
+        (_) => resize.by(
+          HardwareKeyboard.instance.isShiftPressed
+              ? -kSidebarResizeLargeStep
+              : -kSidebarResizeSmallStep,
+        ),
       ),
       show: false,
     ),
@@ -66,10 +68,12 @@ _SidebarController _useSidebarController(BuildContext context, WidgetRef ref) {
         const SingleActivator(LogicalKeyboardKey.period, shift: true),
       ],
       priority: -1,
-      onInvoke: (_) => resize.by(
-        HardwareKeyboard.instance.isShiftPressed
-            ? kSidebarResizeLargeStep
-            : kSidebarResizeSmallStep,
+      run: ActionRun.press(
+        (_) => resize.by(
+          HardwareKeyboard.instance.isShiftPressed
+              ? kSidebarResizeLargeStep
+              : kSidebarResizeSmallStep,
+        ),
       ),
       show: false,
     ),

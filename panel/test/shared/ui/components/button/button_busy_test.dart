@@ -115,12 +115,12 @@ void main() {
   group("ButtonController", () {
     testWidgets("triggers a button like a press", (tester) async {
       final action = SteppedAction();
-      final controller = ButtonController();
+      final controller = ownedRun(action.run);
       final panel = await tester.showComponent(
         busyButton(
           ButtonFace.filled,
           controller: controller,
-          onPressed: action.run,
+          onPressed: controller.trigger,
         ),
       );
 
@@ -138,7 +138,7 @@ void main() {
     });
 
     testWidgets("refuses to trigger a disabled button", (tester) async {
-      final controller = ButtonController();
+      final controller = ownedRun(null);
       await tester.showComponent(
         busyButton(
           ButtonFace.filled,
@@ -156,12 +156,12 @@ void main() {
       tester,
     ) async {
       final action = SteppedAction();
-      final controller = ButtonController();
+      final controller = ownedRun(action.run);
       final panel = await tester.showComponent(
         busyButton(
           ButtonFace.filled,
           controller: controller,
-          onPressed: action.run,
+          onPressed: controller.trigger,
         ),
       );
 
@@ -176,14 +176,14 @@ void main() {
     });
 
     testWidgets("counts every failure, the same one twice too", (tester) async {
-      final controller = ButtonController();
+      final controller = ownedRun(() => throw Exception("Boom"));
       final panel = await tester.showComponent(
         busyButton(
           ButtonFace.filled,
           controller: controller,
           label: "Fail",
           busyLabel: "Failing",
-          onPressed: () => throw Exception("Boom"),
+          onPressed: controller.trigger,
         ),
       );
 
@@ -198,14 +198,14 @@ void main() {
 
     testWidgets("reports whether the button is running", (tester) async {
       final completer = Completer<void>();
-      final controller = ButtonController();
+      final controller = ownedRun(() => completer.future);
       final panel = await tester.showComponent(
         busyButton(
           ButtonFace.filled,
           controller: controller,
           label: "Test",
           busyLabel: "Testing",
-          onPressed: () => completer.future,
+          onPressed: controller.trigger,
         ),
       );
       expect(controller.isLoading, isFalse);
@@ -223,5 +223,38 @@ void main() {
       expect(controller.isLoading, isFalse);
       expect(controller.canTrigger, isTrue);
     });
+    testWidgets(
+      "a button given a run another widget owns shows its busy word and jams "
+      "with it, and a tap asks its owner without binding it",
+      (tester) async {
+        final action = SteppedAction();
+        final controller = ownedRun(action.run);
+        var asked = 0;
+        final panel = await tester.showComponent(
+          busyButton(
+            ButtonFace.filled,
+            controller: controller,
+            onPressed: () => asked++,
+          ),
+        );
+
+        await tester.tap(find.byType(Button));
+        await tester.pump();
+        expect(asked, 1);
+        expect(action.steps, isEmpty, reason: "the button never binds it");
+
+        controller.trigger();
+        await panel.eventually(() => expect(panel.says("Going"), isTrue));
+        action.finish();
+        await panel.settle();
+        expect(panel.says("Going"), isFalse);
+
+        controller
+          ..bind(onPressed: () => throw Exception("Boom"), onError: null)
+          ..trigger();
+        await panel.settle();
+        expect(tester.widget<Jam>(find.byType(Jam)).failures, 1);
+      },
+    );
   });
 }

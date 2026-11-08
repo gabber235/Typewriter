@@ -6,8 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The input list is the provider's read model. This widget owns only selected
 /// identifiers and list animation. It keeps selection intersected with visible
-/// requests, confirms bulk decline, and executes prepared repository commands
-/// through shared local work.
+/// requests. Bulk decline holds over the selected requests of the list's rows
+/// and tries every request; each refusal shows under its row.
 class JoinRequestsList extends HookConsumerWidget {
   const JoinRequestsList({required this.requests, super.key});
 
@@ -17,45 +17,23 @@ class JoinRequestsList extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIds = useState<Set<skir.RecordId>>({});
     final theme = Theme.of(context);
-    final isDecliningSelection = useRef(false);
-
-    /// Confirms and declines the currently selected visible requests.
-    ///
-    /// Decline is intentionally issued one request at a time because the wire
-    /// contract exposes a single request operation. A failed or uncertain
-    /// submission stops the loop. Pending removal visibility belongs to the
-    /// shared activity projection, rather than mutating the observed list.
-    Future<void> declineSelection() async {
-      if (isDecliningSelection.value) return;
-      final requestIds = requests.map((request) => request.requestId).toSet();
-      final idsToDecline = selectedIds.value.intersection(requestIds);
-      if (idsToDecline.isEmpty) {
-        selectedIds.value = {};
-        return;
-      }
-
-      isDecliningSelection.value = true;
-      try {
-        await showConfirmationDialogue(
-          context: context,
-          title: "Decline ${idsToDecline.length} request(s)?",
-          content: "Are you sure you want to decline these join requests?",
-          confirmText: "Decline All",
-          confirmIcon: Fa6Solid.xmark,
-          onConfirm: () async {
-            for (final id in idsToDecline) {
-              await ref.executeMembership(
-                ref.membershipCommands.decline(id),
-                (response) => response.requireAccepted(),
-              );
-            }
-            selectedIds.value = {};
-          },
-        );
-      } finally {
-        isDecliningSelection.value = false;
-      }
-    }
+    // One rows handle for the list and the bulk bar's decline hold.
+    final rows = useAnimatedRows(
+      items: requests,
+      identity: (request) => request.requestId,
+    );
+    String? nameOf(skir.RecordId id) =>
+        rows[id]?.item.userName ?? rows[id]?.item.userEmail;
+    final decline = joinRequestDecline(
+      id: "decline_bulk_join_requests_key",
+      label: "Decline requests",
+      priority: 2,
+      targets: () => selectedIds.value.intersection({
+        for (final request in rows.items) request.requestId,
+      }),
+      nameOf: nameOf,
+      rows: rows,
+    );
 
     useEffect(() {
       final requestIds = requests.map((request) => request.requestId).toSet();
@@ -141,7 +119,7 @@ class JoinRequestsList extends HookConsumerWidget {
                     selectedCount: selectedIds.value.length,
                     selectedIds: selectedIds.value,
                     onClearSelection: () => selectedIds.value = {},
-                    onDecline: declineSelection,
+                    decline: decline,
                   )
                 else
                   Flexible(
@@ -149,18 +127,17 @@ class JoinRequestsList extends HookConsumerWidget {
                       selectedCount: selectedIds.value.length,
                       selectedIds: selectedIds.value,
                       onClearSelection: () => selectedIds.value = {},
-                      onDecline: declineSelection,
+                      decline: decline,
                     ),
                   ),
               ],
             ),
           ),
         ),
-        AnimatedSliverList<skir.OrganizationJoinRequest>(
-          items: requests,
-          identity: (request) => request.requestId,
-          itemBuilder: (context, request) =>
-              _child(context, request, selectedIds, declineSelection),
+        SliverAnimatedRows(
+          rows: rows,
+          itemBuilder: (context, entry) =>
+              _child(context, entry.item, selectedIds, rows, nameOf),
         ),
       ],
     );
@@ -170,7 +147,8 @@ class JoinRequestsList extends HookConsumerWidget {
     BuildContext context,
     skir.OrganizationJoinRequest request,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
-    Future<void> Function() onDeclineSelection,
+    AnimatedRows<skir.OrganizationJoinRequest> rows,
+    String? Function(skir.RecordId request) nameOf,
   ) {
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.space3),
@@ -191,7 +169,9 @@ class JoinRequestsList extends HookConsumerWidget {
             .toSet(),
         onClearSelection: () => selectedIds.value = {},
         hasSelection: selectedIds.value.isNotEmpty,
-        onDeclineSelection: onDeclineSelection,
+        rows: rows,
+        selectedIds: selectedIds.value,
+        nameOf: nameOf,
       ),
     );
   }

@@ -4,11 +4,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Binds row focus to the standard selection, copy, and revoke actions.
 ///
-/// Delete delegates to the bulk action when this row is selected alongside an
-/// existing selection. Otherwise it opens confirmation for this code only.
-/// Selection and copy use table callbacks. Single code revocation submits its
-/// own repository command through shared local work after confirmation.
-class JoinCodeTableRowShortcuts extends ConsumerWidget {
+/// Holding Delete revokes the whole selection when this row is selected, and
+/// this code alone otherwise. Selection and copy use table callbacks.
+class JoinCodeTableRowShortcuts extends StatelessWidget {
   const JoinCodeTableRowShortcuts({
     required this.code,
     required this.onToggleSelection,
@@ -17,7 +15,8 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
     required this.onCopy,
     required this.isSelected,
     required this.hasSelection,
-    required this.onRevokeSelection,
+    required this.rows,
+    required this.selectedIds,
     required this.child,
     super.key,
   });
@@ -29,11 +28,15 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
   final VoidCallback onCopy;
   final bool isSelected;
   final bool hasSelection;
-  final Future<void> Function() onRevokeSelection;
+
+  /// The join code rows the tab owns; the revoke hold sends and refuses on
+  /// them.
+  final AnimatedRows<Object?> rows;
+  final Set<skir.RecordId> selectedIds;
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return ManagedActionSet(
       shortcuts: [
         ActionShortcut.intent(
@@ -42,7 +45,7 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
           description: "Toggle selection for this join code",
           intent: ActivateIntent,
           priority: 1,
-          onInvoke: (_) => onToggleSelection(),
+          run: ActionRun.press((_) => onToggleSelection()),
         ),
         ActionShortcut.intent(
           id: "select_all_table_join_codes_${code.code}",
@@ -50,7 +53,7 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
           description: "Select all visible join codes",
           intent: ActivateAllIntent,
           priority: 1,
-          onInvoke: (_) => onSelectAll(),
+          run: ActionRun.press((_) => onSelectAll()),
         ),
         ActionShortcut.intent(
           id: "clear_table_join_code_selection_${code.code}",
@@ -58,7 +61,7 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
           description: "Clear selected join codes",
           intent: DismissIntent,
           priority: 1,
-          onInvoke: (_) => onClearSelection(),
+          run: ActionRun.press((_) => onClearSelection()),
         ),
         if (!hasSelection)
           ActionShortcut(
@@ -67,34 +70,18 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
             description: "Copy this join code",
             activators: const [SingleActivator(LogicalKeyboardKey.keyC)],
             priority: 1,
-            onInvoke: (_) => onCopy(),
+            run: ActionRun.press((_) => onCopy()),
           ),
-        ActionShortcut.intent(
+        joinCodeRevocation(
           id: "revoke_table_join_code_${code.code}",
-          label: "Revoke join code",
-          description: "Revoke this join code",
-          intent: DeleteIntent,
-          priority: 1,
-          onInvoke: (_) => hasSelection && isSelected
-              ? onRevokeSelection()
-              : _confirmRevokeCode(context, ref),
+          label: hasSelection && isSelected
+              ? "Revoke join codes"
+              : "Revoke join code",
+          targets: () => hasSelection && isSelected ? selectedIds : {code.code},
+          rows: rows,
         ),
       ],
       child: child,
-    );
-  }
-
-  Future<void> _confirmRevokeCode(BuildContext context, WidgetRef ref) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Revoke this join code?",
-      content: "Are you sure you want to revoke this join code? It will no longer work for new members.",
-      confirmText: "Revoke",
-      confirmIcon: Fa6Solid.link_slash,
-      onConfirm: () => ref.executeMembership(
-        ref.membershipCommands.revoke(code.code),
-        (response) => response.requireAccepted(),
-      ),
     );
   }
 }

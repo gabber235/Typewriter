@@ -256,7 +256,7 @@ class DesktopInspector extends HookConsumerWidget {
                     ),
                   ],
                   priority: -1,
-                  onInvoke: (ref) {
+                  run: ActionRun.press((ref) {
                     final step = HardwareKeyboard.instance.isShiftPressed
                         ? kInspectorResizeLargeStep
                         : kInspectorResizeSmallStep;
@@ -265,7 +265,7 @@ class DesktopInspector extends HookConsumerWidget {
                       maxSize,
                     );
                     ref.read(inspectorSizeProvider.notifier).size(newSize);
-                  },
+                  }),
                   show: false,
                 ),
                 ActionShortcut(
@@ -282,7 +282,7 @@ class DesktopInspector extends HookConsumerWidget {
                     ),
                   ],
                   priority: -1,
-                  onInvoke: (ref) {
+                  run: ActionRun.press((ref) {
                     final step = HardwareKeyboard.instance.isShiftPressed
                         ? kInspectorResizeLargeStep
                         : kInspectorResizeSmallStep;
@@ -291,7 +291,7 @@ class DesktopInspector extends HookConsumerWidget {
                       maxSize,
                     );
                     ref.read(inspectorSizeProvider.notifier).size(newSize);
-                  },
+                  }),
                   show: false,
                 ),
                 ActionShortcut(

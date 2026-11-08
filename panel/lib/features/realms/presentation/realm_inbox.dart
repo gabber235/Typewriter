@@ -51,7 +51,7 @@ class RealmInboxShortcut extends HookConsumerWidget {
           description: "Review realm issues and saved changes",
           intent: OpenRealmInboxIntent,
           priority: 20,
-          onInvoke: (_) => popup.openFocused(),
+          run: ActionRun.press((_) => popup.openFocused()),
         ),
     ];
     return RegisteredActionShortcuts(

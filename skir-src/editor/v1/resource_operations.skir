@@ -13,7 +13,6 @@ import {
 } from "editor/v1/authoring.skir";
 import { InvocationId } from "editor/v1/capability.skir";
 import {
-  OperationConfirmation,
   ResolvedResourceOperations,
   ResourceOperationId,
 } from "editor/v1/operation.skir";
@@ -154,13 +153,12 @@ struct AuthoringActionNeedsInput(84160018) {
 }
 
 /// Proposed edit and client effects after preparation. Selection replacement applies when the
-/// preview is staged; confirmation describes the proposed action and does not persist it.
+/// preview is staged. The panel holds before preparing, so the preview carries no confirmation.
 struct AuthoringActionPreview(84160019) {
   invocation_id: InvocationId = 0;
   input_revision: int32 = 1;
   edit: PreparedEdit = 2;
-  confirmation: OperationConfirmation? = 3;
-  selection: OperationSelectionEffect = 4;
+  selection: OperationSelectionEffect = 3;
 }
 
 /// Separates missing interactive input from a usable preview, stale baseline, unavailable action,

@@ -32,13 +32,15 @@ List<ActionShortcut> buildTimelineShortcuts({
         description: "Go to Move Mode",
         activators: [SingleActivator(shift: true, LogicalKeyboardKey.keyM)],
         icon: Icones(Ion.md_move),
-        onInvoke: (ref) => _invokeTimelineMoveModeActivate(
-          ref: ref,
-          controller: controller,
-          placement: placement,
-          viewport: viewport,
-          resolveMovePreviews: resolveMovePreviews,
-          totalDelta: totalDelta,
+        run: ActionRun.press(
+          (ref) => _invokeTimelineMoveModeActivate(
+            ref: ref,
+            controller: controller,
+            placement: placement,
+            viewport: viewport,
+            resolveMovePreviews: resolveMovePreviews,
+            totalDelta: totalDelta,
+          ),
         ),
         priority: 10,
       ),
@@ -51,13 +53,15 @@ List<ActionShortcut> buildTimelineShortcuts({
         description: "Resize the selected segments start",
         activators: [SingleActivator(shift: true, LogicalKeyboardKey.keyS)],
         icon: Icones(Lucide.move_diagonal_2),
-        onInvoke: (ref) => _invokeTimelineResizeStartModeActivate(
-          ref: ref,
-          controller: controller,
-          placement: placement,
-          viewport: viewport,
-          resolveResizePreviews: resolveResizePreviews,
-          totalDelta: totalDelta,
+        run: ActionRun.press(
+          (ref) => _invokeTimelineResizeStartModeActivate(
+            ref: ref,
+            controller: controller,
+            placement: placement,
+            viewport: viewport,
+            resolveResizePreviews: resolveResizePreviews,
+            totalDelta: totalDelta,
+          ),
         ),
         priority: 10,
       ),
@@ -70,13 +74,15 @@ List<ActionShortcut> buildTimelineShortcuts({
         description: "Resize the selected segments end",
         activators: [SingleActivator(shift: true, LogicalKeyboardKey.keyE)],
         icon: Icones(Lucide.move_diagonal_2),
-        onInvoke: (ref) => _invokeTimelineResizeEndModeActivate(
-          ref: ref,
-          controller: controller,
-          placement: placement,
-          viewport: viewport,
-          resolveResizePreviews: resolveResizePreviews,
-          totalDelta: totalDelta,
+        run: ActionRun.press(
+          (ref) => _invokeTimelineResizeEndModeActivate(
+            ref: ref,
+            controller: controller,
+            placement: placement,
+            viewport: viewport,
+            resolveResizePreviews: resolveResizePreviews,
+            totalDelta: totalDelta,
+          ),
         ),
         priority: 10,
       ),
@@ -103,10 +109,12 @@ List<ActionShortcut> buildTimelineShortcuts({
         ],
       ],
       priority: -2,
-      onInvoke: (_) => _invokeTimelineZoomIn(
-        planeGlobalKey: planeGlobalKey,
-        controller: controller,
-        style: style,
+      run: ActionRun.press(
+        (_) => _invokeTimelineZoomIn(
+          planeGlobalKey: planeGlobalKey,
+          controller: controller,
+          style: style,
+        ),
       ),
     ),
     ActionShortcut(
@@ -131,10 +139,12 @@ List<ActionShortcut> buildTimelineShortcuts({
         ],
       ],
       priority: -2,
-      onInvoke: (_) => _invokeTimelineZoomOut(
-        planeGlobalKey: planeGlobalKey,
-        controller: controller,
-        style: style,
+      run: ActionRun.press(
+        (_) => _invokeTimelineZoomOut(
+          planeGlobalKey: planeGlobalKey,
+          controller: controller,
+          style: style,
+        ),
       ),
     ),
     ActionShortcut(
@@ -151,11 +161,13 @@ List<ActionShortcut> buildTimelineShortcuts({
         ],
       ],
       priority: -2,
-      onInvoke: (_) => _invokeTimelineZoomReset(
-        controller: controller,
-        style: style,
-        viewport: viewport,
-        layout: layout,
+      run: ActionRun.press(
+        (_) => _invokeTimelineZoomReset(
+          controller: controller,
+          style: style,
+          viewport: viewport,
+          layout: layout,
+        ),
       ),
     ),
 
@@ -173,7 +185,9 @@ List<ActionShortcut> buildTimelineShortcuts({
             ],
             priority: 1,
             show: false,
-            onInvoke: (ref) => _invokeTimelinePlaneMove(direction, controller),
+            run: ActionRun.press(
+              (ref) => _invokeTimelinePlaneMove(direction, controller),
+            ),
           ),
 
       ActionShortcut(

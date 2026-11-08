@@ -36,10 +36,14 @@ enum OperationGroup(84130003) {
   destructive = 3;
 }
 
+/// A declared hold: the one line the panel shows while the user holds,
+/// stating the outcome with a real plural. outcome_many carries "{count}",
+/// which the panel fills with the number of targets.
+/// Example: "Delete this resource and what it owns?" and
+/// "Delete {count} resources and what they own?".
 struct OperationConfirmation(84130004) {
-  title: string = 0;
-  message: string = 1;
-  confirmation_label: string = 2;
+  outcome_one: string = 0;
+  outcome_many: string = 1;
 }
 
 struct OperationPresentation(84130005) {

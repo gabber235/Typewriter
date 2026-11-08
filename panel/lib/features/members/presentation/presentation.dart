@@ -2,6 +2,7 @@ export "member_actions.dart";
 export "member_card.dart";
 export "member_list.dart";
 export "member_list_route.dart";
+export "member_removal.dart";
 export "member_row_actions.dart";
 export "member_table.dart";
 export "member_table_row_shortcuts.dart";

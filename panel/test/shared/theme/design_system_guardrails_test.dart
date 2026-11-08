@@ -19,11 +19,6 @@ final exemptions = <Exemption>[
     RegExp(r"Colors\.green"),
     "editor mode identity color",
   ),
-  Exemption(
-    "lib/shared/selectables/operations/unbind_operation.dart",
-    RegExp(r"Colors\."),
-    "editor operation identity color",
-  ),
   for (final path in [
     "lib/shared/editors/presentation/portable_renderer/expression_resolution.dart",
   ])
@@ -207,14 +202,7 @@ const motionEngine = [
 
 /// Files that still use a banned API, grouped by the PR that removes it.
 /// Each entry names the pattern it excuses; a PR empties its own group.
-final bannedExemptions = <Exemption>[
-  // PR 9, hold: the advanced settings dialog leaves with the hold.
-  Exemption(
-    "lib/shared/editors/presentation/portable_renderer/header.dart",
-    bannedMaterialRoutes,
-    "hold PR replaces its showDialog",
-  ),
-];
+final bannedExemptions = <Exemption>[];
 
 void main() {
   test("every exemption names an existing source file", () {

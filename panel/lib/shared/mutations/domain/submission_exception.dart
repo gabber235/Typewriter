@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The submission remains available for inspection and possible replay. This
 /// exception is for callers that need a feature level mutation result, not a
 /// generic transport error.
-final class SubmissionException<T> implements Exception {
+final class SubmissionException<T> implements UnconfirmedFailure {
   const SubmissionException(this.submission);
 
   final MutationSubmission<T> submission;

@@ -9,109 +9,83 @@ class UnbindSelectionCapability extends SelectionCapability {
   final FutureOr<void> Function() onUnbind;
 }
 
-/// Unbinds the selected items when every item supports unbinding.
+/// Unbinds the selected items with a hold on D, Delete or Backspace.
 ///
-/// Successful items are removed from canonical selection. Failed items remain
-/// selected and are reported together after the batch completes.
-class UnbindOperation extends ActivatorShortcutOperation {
+/// Successful items leave the selection. Refused items stay selected, and the
+/// Unbind button and menu entry jam with the first refusal.
+class UnbindOperation extends IntentShortcutOperation {
   const UnbindOperation();
 
   @override
   String get name => "Unbind";
 
   @override
-  String get description => "Unbind selected items";
+  String get description => "Disconnect the selected services";
 
   @override
-  List<ShortcutActivator> get activators => [
-    AdaptiveSingleActivator(LogicalKeyboardKey.backspace, control: true),
-  ];
+  Type get intent => DeleteIntent;
 
   @override
   bool canExecuteOn(List<Selectable> selection) =>
       selection.allHaveCapability<UnbindSelectionCapability>();
 
+  // Service rows are not AnimatedRows: no rows, so a refusal jams the Unbind
+  // button and menu entry, and the refused service stays selected.
   @override
-  FutureOr<void> executeOn(WidgetRef ref) async {
-    final selection = ref.read(selectedProvider).requireValue;
+  ActionRun get run => ActionRun.hold(
+    HoldPlan<SelectableIdentifier>(
+      // A selection that failed to resolve offers nothing to unbind; the
+      // preview runs while the button builds, so it never throws.
+      targets: (ref) => {
+        for (final selectable
+            in ref.read(selectedProvider).value ?? const <Selectable>[])
+          selectable.id,
+      },
+      verb: "Unbind",
+      outcome: (targets) => targets.length == 1
+          ? "Unbind this service? It disconnects straight away."
+          : "Unbind ${targets.length} services? "
+                "They disconnect straight away.",
+      each: _unbindOne,
+    ),
+  );
 
-    final context = ref.context;
-    final backgroundColor = Colors.orange;
-    final foregroundColor = backgroundColor.on(context);
-
-    final confirmed = await showConfirmationDialogue(
-      context: context,
-      title: "Unbind ${selection.length} item(s)?",
-      content: "This will disconnect the selected items.",
-      confirmText: "Unbind",
-      confirmColor: backgroundColor,
-      onConfirmColor: foregroundColor,
-    );
-    if (!confirmed) return;
-
-    final callbacks = <(Selectable, Future<void> Function())>[];
-    for (final (s, op)
-        in selection
-            .collectCapabilitiesWithSelectables<UnbindSelectionCapability>()) {
-      callbacks.add((s, () async => await op.onUnbind()));
+  /// Unbinds one captured service and lets it leave the selection.
+  static Future<void> _unbindOne(WidgetRef ref, SelectableIdentifier id) async {
+    final selection = ref.read(selectedProvider).value ?? const [];
+    final capability = selection
+        .where((selectable) => selectable.id == id)
+        .collectCapabilitiesWithSelectables<UnbindSelectionCapability>()
+        .firstOrNull
+        ?.$2;
+    if (capability == null) return;
+    await capability.onUnbind();
+    if (ref.context.mounted) {
+      ref.read(selectionProvider.notifier).unselectAll([id]);
     }
-
-    final errors = <(Selectable, Object)>[];
-    for (final (selectable, callback) in callbacks) {
-      try {
-        await callback();
-      } on Object catch (e) {
-        errors.add((selectable, e));
-      }
-    }
-
-    if (!ref.context.mounted) return;
-    final removed = selection
-        .map((s) => s.id)
-        .where((id) => errors.none((e) => e.$1.id == id))
-        .toList();
-    ref.read(selectionProvider.notifier).unselectAll(removed);
-    if (errors.isEmpty) return;
-    await showOperationErrorsPopup(ref.context, errors, "Unbind");
   }
+
+  /// The shortcut, menu and inspector run the hold; nothing calls this
+  /// without one.
+  @override
+  FutureOr<void> executeOn(WidgetRef ref) =>
+      throw StateError("Unbind runs only through its hold.");
 
   @override
   MenuItem menuItem(WidgetRef ref) {
-    return MenuItem(
+    return MenuItem.command(
+      command: shortcut,
       icon: const Icon(Icons.link_off),
-      label: "Unbind",
-      color: Colors.orange,
-      onPressed: () => executeOn(ref),
     );
   }
 
   @override
-  Widget inspectorButton(List<Selectable> selection) =>
-      UnbindOperationButton(selection: selection, operation: this);
-}
-
-/// Inspector control for [UnbindOperation], including confirmation and count.
-class UnbindOperationButton extends HookConsumerWidget {
-  const UnbindOperationButton({
-    required this.selection,
-    required this.operation,
-    super.key,
-  });
-
-  final List<Selectable> selection;
-  final UnbindOperation operation;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return OperationButton.filledIcon(
-      operation: operation,
-      onPressed: () async {
-        await operation.executeOn(ref);
-      },
-      color: Colors.orange,
+  Widget inspectorButton(List<Selectable> selection) {
+    return CommandButton(
+      command: shortcut,
+      face: ButtonFace.filled,
       icon: const Icon(Icons.link_off, size: 16),
-      label: selection.length > 1 ? "Unbind (${selection.length})" : "Unbind",
-      busyLabel: "Unbinding",
+      label: selection.length > 1 ? "Unbind ${selection.length}" : "Unbind",
     );
   }
 }
