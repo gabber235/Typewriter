@@ -1030,6 +1030,8 @@ def cmd_restore(backend):
     record("restore_images", boot=boot, warm=warm, data=data, done=done, criu=criu, comp=comp)
     if warm:
         step("compare warm", RS.main, ["compare", "--image", warm, "--n", "5"])
+    if data:
+        step("compare data", RS.main, ["compare", "--image", data, "--n", "3"])
     if boot:
         step("compare boot", RS.main, ["compare", "--image", boot, "--n", "5"])
         step("parallel 2", RS.main, ["parallel", "--image", boot, "--k", "2"])
@@ -1037,10 +1039,12 @@ def cmd_restore(backend):
     for name in (criu, comp):
         if name:
             step(f"compare {name}", RS.main, ["compare", "--image", name, "--n", "3"])
+    if criu:
+        step("parallel criu 2", RS.main, ["parallel", "--image", criu, "--k", "2", "--kinds", "restore"])
     if done:
         step("compare done", RS.main, ["compare", "--image", done, "--n", "3"])
     n = "3" if rep == 0 else "2"
-    for name in (boot, "boot", data, done):
+    for name in (warm or boot, "boot", data, done):
         if name:
             step(f"scenes {name}", RS.main, ["scenes", "--image", name, "--n", n])
 

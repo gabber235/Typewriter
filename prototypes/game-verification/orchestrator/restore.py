@@ -178,6 +178,9 @@ class RPaper(K.KPaper):
             # Ports and folder are baked into a done image: the restore runs in the image's own folder.
             self.dir = img.srv
             self.port, self.control, self.line = img.meta["port"], img.meta["control"], img.meta["line"]
+        elif img and img.point == "data":
+            # server.properties is read before the data point: the restored Paper listens on the image's port.
+            self.port = img.meta["port"]
 
     def start(self):
         if self.img is None:
@@ -192,6 +195,25 @@ class RPaper(K.KPaper):
         return self
 
     def wait_done(self, timeout=240):
+        try:
+            return self._wait_done(timeout)
+        except Exception as e:
+            keep = RUNS / f"fail-{self.dir.name}-{int(time.time())}.log"
+            try:
+                keep.write_text(pathlib.Path(self.proc.log_path).read_text(errors="replace")[-40000:])
+                for f in sorted(self.img.dir.glob("*.log"))[-3:] if self.img else []:
+                    keep.with_suffix("." + f.name).write_text(f.read_text(errors="replace")[-40000:])
+            except Exception:
+                pass
+            raise RuntimeError(f"{e}; log kept at {keep}") from e
+
+    def restored_s(self):
+        """Spawn to the restored JVM's first line (the engine's restore alone)."""
+        text = pathlib.Path(self.proc.log_path).read_text(errors="replace")
+        m = re.findall(r"\[crac\] restored at \w+ wall=(\d+)", text)
+        return round(int(m[-1]) / 1000 - self.proc.spawn_micros / 1e6, 3) if m else None
+
+    def _wait_done(self, timeout):
         if not self.img or self.img.point != "done":
             return super().wait_done(timeout)
         # A done image printed Done before the checkpoint: ready is the plugin answering a tick dispatched call.
@@ -333,7 +355,7 @@ def one_start(paper):
     paper.wait_done()
     wall = round(time.time() - t0, 3)
     f = paper.facts()
-    return {"wall_s": wall, **f}
+    return {"wall_s": wall, "restored_s": paper.restored_s() if paper.img else None, **f}
 
 
 def cmd_compare(a):
@@ -357,7 +379,7 @@ def cmd_compare(a):
         shutil.rmtree(run, ignore_errors=True)
     out = {"image": a.image, "point": img.point, "engine": img.engine}
     for kind, rs in rows.items():
-        out[kind] = {m: stat([r.get(m) for r in rs]) for m in ("wall_s", "cpu_s", "rss", "pss", "private_dirty")}
+        out[kind] = {m: stat([r.get(m) for r in rs]) for m in ("wall_s", "restored_s", "cpu_s", "rss", "pss", "private_dirty")}
     out["rows"] = rows
     record("compare", **out)
 
@@ -416,6 +438,7 @@ def trial(rig, scene, broken, i, after):
             mail.write_text(tok + "\n")
     t = K.restart(rig, "K1", c, before)
     t["facts"] = rig.paper.facts()
+    t["restored_s"] = rig.paper.restored_s() if rig.paper.img else None
     S = rig.paper.S
     c.barrier(S)
     lines = K.chat_lines(c)
@@ -474,7 +497,7 @@ def cmd_scenes(a):
         by.setdefault(f"{r['scene']}-{'broken' if r['broken'] else 'good'}", []).append(r)
     record("scenes", image=a.image, point=img.point if img else "boot-plain", engine=img.engine if img else None,
            ready_s=stat([r["ready_s"] for r in rows]), done_s=stat([r["done_s"] for r in rows]), level_s=stat([r["level_s"] for r in rows]),
-           chunks_s=stat([r.get("chunks_s") for r in rows]), stop_s=stat([r["stop_s"] for r in rows]),
+           chunks_s=stat([r.get("chunks_s") for r in rows]), restored_s=stat([r.get("restored_s") for r in rows]), stop_s=stat([r["stop_s"] for r in rows]),
            cpu_s=stat([r["facts"]["cpu_s"] for r in rows]), rss=stat([r["facts"].get("rss") for r in rows]),
            wrong=sum(r["wrong"] for r in rows), trials=len(rows), after_wrong=sum(r["after_wrong"] for r in rows),
            wrong_by={k: f"{sum(r['wrong'] for r in v)}/{len(v)}" for k, v in sorted(by.items())},

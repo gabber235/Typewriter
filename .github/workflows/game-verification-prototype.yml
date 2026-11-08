@@ -116,3 +116,4 @@ jobs:
             prototypes/game-verification/runs/topo.jsonl
             prototypes/game-verification/runs/restore.jsonl
             prototypes/game-verification/runs/image-*.log
+            prototypes/game-verification/runs/fail-*

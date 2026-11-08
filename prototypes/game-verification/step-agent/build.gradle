@@ -8,4 +8,10 @@ jar {
     manifest { attributes('Premain-Class': 'probe.agent.Agent', 'Can-Retransform-Classes': 'false') }
 }
 
+// Restore prototype: Warm calls Paper directly (resolved at run time from Paper's class path).
+dependencies {
+    compileOnly fileTree("${rootDir}/cache/patched/versions") { include '**/*.jar' }
+    compileOnly fileTree("${rootDir}/cache/patched/libraries") { include '**/*.jar' }
+}
+
 tasks.withType(JavaCompile).configureEach { it.options.release = 25 }

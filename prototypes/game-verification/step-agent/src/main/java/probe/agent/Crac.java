@@ -40,7 +40,19 @@ public final class Crac {
             } catch (ClassNotFoundException e) {
                 System.err.println("[crac] warm failed: " + e);
             }
-            System.err.println("[crac] warmed in " + (System.nanoTime() - t0) / 1_000_000 + " ms");
+            System.err.println("[crac] warmed converters in " + (System.nanoTime() - t0) / 1_000_000 + " ms");
+            if (Boolean.getBoolean("probe.crac.warmPacks")) {
+                for (int i = 0; i < Integer.getInteger("probe.crac.warmPacksTimes", 1); i++) {
+                    long t1 = System.nanoTime();
+                    try {
+                        Warm.datapacks();
+                    } catch (Throwable e) {
+                        System.err.println("[crac] warm packs failed: " + e);
+                        e.printStackTrace();
+                    }
+                    System.err.println("[crac] warmed data packs in " + (System.nanoTime() - t1) / 1_000_000 + " ms");
+                }
+            }
         }
         checkpointNow(point);
     }
