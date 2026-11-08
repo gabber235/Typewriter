@@ -3,8 +3,8 @@ package com.typewritermc.codegen
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName
+import com.typewritermc.types.catalog.referencedDefinitions
 import com.typewritermc.types.named
-import com.typewritermc.types.parts
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DeclaredTypeId
@@ -490,61 +490,12 @@ internal fun TypeDefinition.kotlinCode(): CodeBlock =
         ),
     )
 
-/** Every definition id a definition mentions: its own, parents, field types, overrides, parameter bounds and links. */
-internal fun TypeDefinition.referencedIds(): Set<TypeDefinitionId> {
-    val ids = linkedSetOf(id)
-
-    fun visit(template: TypeTemplate) {
-        when (template) {
-            is TypeTemplate.NamedWrapper -> {
-                ids += template.value.definition
-                template.value.arguments.forEach(::visit)
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                visit(template.value.value)
-            }
-
-            is TypeTemplate.ParameterWrapper -> {
-                ids += template.value.owner
-            }
-
-            is TypeTemplate.FunctionWrapper -> {
-                template.value.parts.forEach(::visit)
-            }
-
-            else -> {
-                Unit
-            }
+/**
+ * Every definition id the code of a definition mentions: its own, what it is written with (parents, bounds, field
+ * types, closed cases and links) and its fields' owners and overrides.
+ */
+internal fun TypeDefinition.referencedIds(): Set<TypeDefinitionId> =
+    linkedSetOf(id) + referencedDefinitions() +
+        (representation as? RepresentationTemplate.RecordWrapper)?.value?.fields.orEmpty().flatMap { field ->
+            listOf(field.owner.definition) + field.overrides.map(FieldOwner::definition)
         }
-    }
-    parameters.forEach { parameter -> parameter.bounds.forEach(::visit) }
-    parents.forEach { parent -> visit(TypeTemplate.NamedWrapper(parent)) }
-    when (val representation = representation) {
-        is RepresentationTemplate.RecordWrapper -> {
-            representation.value.fields.forEach { field ->
-                ids += field.owner.definition
-                ids += field.overrides.map(FieldOwner::definition)
-                visit(field.type)
-            }
-        }
-
-        is RepresentationTemplate.SequenceWrapper -> {
-            visit(representation.value.item)
-        }
-
-        is RepresentationTemplate.MappingWrapper -> {
-            visit(representation.value.key)
-            visit(representation.value.value)
-        }
-
-        is RepresentationTemplate.LinkWrapper -> {
-            visit(representation.value.target)
-        }
-
-        else -> {
-            Unit
-        }
-    }
-    return ids
-}

@@ -30,8 +30,8 @@ import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.types.canonicalText
+import com.typewritermc.types.catalog.referencedDefinitions
 import com.typewritermc.types.codegen.DefinitionOwners
-import com.typewritermc.types.codegen.referencedIds
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import skirout.editor.v1.capability.CommandCapabilityDefinition
@@ -138,7 +138,7 @@ internal class CapabilityProviderProcessor(
         val references =
             owners.references(
                 request.conversion.declarations + resultUse?.conversion?.declarations.orEmpty(),
-                request.use.referencedIds() + resultUse?.use?.referencedIds().orEmpty(),
+                request.use.referencedDefinitions() + resultUse?.use?.referencedDefinitions().orEmpty(),
                 function,
             ) ?: return null
         return CapabilityDeclaration(

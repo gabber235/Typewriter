@@ -7,7 +7,6 @@ import com.typewritermc.types.bytes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.directUses
 import com.typewritermc.types.duration
 import com.typewritermc.types.enumCases
 import com.typewritermc.types.field
@@ -29,6 +28,7 @@ import com.typewritermc.types.setValue
 import com.typewritermc.types.storedUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.walk
 import skirout.editor.v1.catalog.InputAnswer
 import skirout.editor.v1.catalog.PreparationDraft
 import skirout.editor.v1.catalog.PreparationOperation
@@ -884,15 +884,7 @@ private class DefaultInitializationContext(
     }
 }
 
-private fun TypeUse.strictlyContains(candidate: TypeUse): Boolean {
-    val pending = ArrayDeque(directUses)
-    while (pending.isNotEmpty()) {
-        val current = pending.removeFirst()
-        if (current == candidate) return true
-        pending.addAll(current.directUses)
-    }
-    return false
-}
+private fun TypeUse.strictlyContains(candidate: TypeUse): Boolean = walk().drop(1).any { it == candidate }
 
 private const val MAX_DEFAULT_DEPTH = 512
 
