@@ -77,12 +77,9 @@ class MembersTable extends HookConsumerWidget {
           onClearSelection: () => selection.selectedIds.value = {},
           isSelected: isSelected,
           hasSelection: selection.selectedIds.value.isNotEmpty,
-          onRemoveSelection: selection.onRemoveSelection,
-          onRemoveFromSelection: () => selection.selectedIds.value = selection
-              .selectedIds
-              .value
-              .where((id) => id != member.userId)
-              .toSet(),
+          rows: selection.rows,
+          selectedIds: selection.selectedIds.value,
+          nameOf: (id) => selection.rows[id]?.item.name,
           // Inside the shortcuts, so they answer while the row is focused.
           child: RowStop(
             role: role,
@@ -150,30 +147,36 @@ class MembersTable extends HookConsumerWidget {
                       horizontal: context.spacing.space2,
                       vertical: context.spacing.space3,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (member.name != null)
-                          Text(
-                            member.name!,
-                            style: theme.textTheme.bodyMedium!.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        if (member.email != null)
-                          BlurReveal(
-                            blurSigma: 3,
-                            child: Text(
-                              member.email!,
-                              style: theme.textTheme.bodyMedium!.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 13,
-                              ),
+                    // Read the theme here, inside the row, so a sending row's
+                    // struck text theme reaches the name and email.
+                    child: Builder(
+                      builder: (context) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (member.name != null)
+                            Text(
+                              member.name!,
+                              style: Theme.of(context).textTheme.bodyMedium!
+                                  .copyWith(fontWeight: FontWeight.w500),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                      ],
+                          if (member.email != null)
+                            BlurReveal(
+                              blurSigma: 3,
+                              child: Text(
+                                member.email!,
+                                style: Theme.of(context).textTheme.bodyMedium!
+                                    .copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -197,7 +200,11 @@ class MembersTable extends HookConsumerWidget {
             ),
           ),
         ),
-        TableCell(child: withShortcuts(MemberRowActions(member: member))),
+        TableCell(
+          child: withShortcuts(
+            MemberRowActions(member: member, rows: selection.rows),
+          ),
+        ),
       ],
     );
   }

@@ -32,7 +32,9 @@ class TimelineMoveMode extends InteractionMode
             ],
             priority: 20,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "timeline_move",
@@ -97,7 +99,9 @@ class TimelineResizeMode extends InteractionMode
             ],
             priority: 0,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "timeline_resize",

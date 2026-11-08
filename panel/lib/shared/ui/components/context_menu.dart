@@ -251,8 +251,42 @@ class _MenuItems extends StatelessWidget {
         close();
       },
     ),
+    final MenuItemCommand entry => _CommandEntry(entry: entry, close: close),
     MenuItem _ => const SizedBox.shrink(),
   };
+}
+
+/// A menu row that presses its command through a [CommandButton], so a hold
+/// fills the entry. The menu closes once the command starts running: at
+/// once for a press, and only when the fill completes for a hold.
+class _CommandEntry extends HookWidget {
+  const _CommandEntry({required this.entry, required this.close});
+
+  final MenuItemCommand entry;
+  final VoidCallback close;
+
+  @override
+  Widget build(BuildContext context) {
+    final runs = CommandRunsScope.of(context);
+    final state = runs.of(entry.command);
+    useEffect(() {
+      void closeOnRun() {
+        if (state.isLoading) close();
+      }
+
+      state.addListener(closeOnRun);
+      return () => state.removeListener(closeOnRun);
+    }, [state, close]);
+    return CommandButton(
+      command: entry.command,
+      face: ButtonFace.quiet,
+      icon: entry.icon,
+      color: entry.color,
+      label: entry.disabledReason == null
+          ? entry.command.label
+          : "${entry.command.label} (${entry.disabledReason})",
+    );
+  }
 }
 
 /// A submenu row: it previews its entries beside it on hover and opens them
@@ -299,6 +333,16 @@ abstract class MenuItem with _$MenuItem {
     VoidCallback? onPressed,
     @Default([]) List<ShortcutActivator> shortcuts,
   }) = _MenuItem;
+
+  /// A menu entry that presses [command]. A hold fills the entry and the
+  /// menu closes only when the hold completes. A command with no run is
+  /// unavailable, with [disabledReason] after its label.
+  const factory MenuItem.command({
+    required ActionShortcut command,
+    Widget? icon,
+    Color? color,
+    String? disabledReason,
+  }) = MenuItemCommand;
 
   @Assert("label != \"\"", "Label must not be empty.")
   @Assert("items.length > 0", "Items must not be empty.")

@@ -295,12 +295,12 @@ class _SearchTreeResultRow extends HookConsumerWidget {
                   ],
                   priority: 0,
                   show: false,
-                  onInvoke:
+                  run:
                       controller.isBusy ||
                           controller.activationState(result)
                               is! SearchActivationEnabled
                       ? null
-                      : (_) => controller.activate(result),
+                      : ActionRun.press((_) => controller.activate(result)),
                 ),
               ],
               child: Focus(

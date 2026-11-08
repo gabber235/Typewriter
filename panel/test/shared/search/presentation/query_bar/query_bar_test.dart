@@ -242,7 +242,7 @@ void main() {
             description: "Activate the containing input",
             intent: ActivateIntent,
             priority: 1,
-            onInvoke: (_) => containingActivations++,
+            run: ActionRun.press((_) => containingActivations++),
           ),
         ],
       );

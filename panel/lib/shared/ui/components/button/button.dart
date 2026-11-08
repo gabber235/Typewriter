@@ -83,7 +83,8 @@ class Button extends HookWidget {
   final FocusNode? focusNode;
   final bool autofocus;
 
-  /// Async state another widget may trigger; the button owns one otherwise.
+  /// Run state owned elsewhere; its owner binds it, and [onPressed] asks
+  /// the owner for a run. The button owns and binds one otherwise.
   final ButtonController? controller;
 
   /// Receives the hovered, pressed and focused states, for a caller that
@@ -105,10 +106,14 @@ class Button extends HookWidget {
       "A bare button needs a child to show.",
     );
     final owned = useButtonController();
+    // A supplied controller is owned elsewhere (CommandRuns for a command):
+    // its owner binds and runs it, and this button only reads its state.
+    final bound = controller != null;
     final run = controller ?? owned;
     useListenable(run);
     useEffect(() {
-      run.bind(
+      if (bound) return null;
+      owned.bind(
         onPressed: onPressed,
         onError: (error) {
           if (context.mounted && ScaffoldMessenger.maybeOf(context) != null) {
@@ -117,7 +122,7 @@ class Button extends HookWidget {
         },
       );
       return null;
-    }, [run, onPressed]);
+    }, [bound, owned, onPressed]);
 
     final ownedStates = useMemoized(WidgetStatesController.new);
     useEffect(() => ownedStates.dispose, [ownedStates]);
@@ -125,7 +130,7 @@ class Button extends HookWidget {
     final current = useValueListenable(states);
 
     final busy = run.isLoading;
-    final enabled = run.canTrigger;
+    final enabled = bound ? onPressed != null && !busy : run.canTrigger;
     final unavailable = !enabled && !busy;
     // A press held while the button stops taking presses ends with it.
     useEffect(() {
@@ -137,7 +142,12 @@ class Button extends HookWidget {
     final hovered = !pressed && current.contains(WidgetState.hovered);
 
     void activate() {
-      if (run.canTrigger) run.handlePress();
+      if (!enabled) return;
+      if (bound) {
+        onPressed!();
+      } else {
+        run.handlePress();
+      }
     }
 
     // Keys: pressed from key down to key up; the intent runs on key down.

@@ -94,7 +94,8 @@ class JoinCodesCardList extends HookConsumerWidget {
           selection.selectedIds.value = codes.map((code) => code.code).toSet(),
       onClearSelection: () => selection.selectedIds.value = {},
       hasSelection: selection.selectedIds.value.isNotEmpty,
-      onRevokeSelection: selection.onRemoveSelection,
+      rows: selection.rows,
+      selectedIds: selection.selectedIds.value,
     ),
   );
 }

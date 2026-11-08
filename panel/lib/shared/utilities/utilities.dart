@@ -13,6 +13,7 @@ export "color.dart";
 export "color_converter.dart";
 export "context.dart";
 export "error_titles.dart";
+export "failures.dart";
 export "fonts.dart";
 export "globals.dart";
 export "identifier_input_formatter.dart";

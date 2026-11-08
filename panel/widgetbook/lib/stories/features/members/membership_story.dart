@@ -21,6 +21,7 @@ Widget membershipStory(
   BuildContext context, {
   required PageRouteInfo page,
   required MembershipList varied,
+  List<Trait> traits = const [],
 }) {
   final label = switch (varied) {
     MembershipList.members => "Members",
@@ -79,5 +80,10 @@ Widget membershipStory(
       "Desktop": const [],
       "Compact": const [compact],
     }),
+    ...context.knobs.traits("Motion", {
+      "Full": const [],
+      "Reduced": const [reducedMotion],
+    }),
+    ...traits,
   ], at: PanelLocation.route(organizationPage(MembersRoute(children: [page]))));
 }

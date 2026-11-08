@@ -19,7 +19,14 @@ void main() {
 
     final entries = await panel.resources.row("First").operations.open();
 
-    expect(entries, ["Open", "Inspect", "Duplicate", "Move to", "Delete"]);
+    // Delete holds, so it is heard as the outcome it states.
+    expect(entries, [
+      "Open",
+      "Inspect",
+      "Duplicate",
+      "Move to",
+      "Delete this resource and what it owns?",
+    ]);
   });
 
   testWidgets("the inspector offers the operations declared as buttons", (
@@ -33,8 +40,10 @@ void main() {
 
     await panel.resources.row("First").select();
 
-    expect(panel.inspector.operations, ["Open", "Duplicate", "Delete"]);
-    expect(panel.inspector.isEnabled("Delete"), isTrue);
+    // Delete holds, so it is heard as the outcome it states.
+    const heardDelete = "Delete this resource and what it owns?";
+    expect(panel.inspector.operations, ["Open", "Duplicate", heardDelete]);
+    expect(panel.inspector.isEnabled(heardDelete), isTrue);
   });
 
   final openings = <String, Future<void> Function(PanelDriver panel)>{
@@ -79,31 +88,59 @@ void main() {
     expect(panel.focused, "title");
   });
 
-  testWidgets("the Delete key asks for the confirmation the Realm returns "
-      "and deletes only once confirmed", (tester) async {
+  testWidgets("Delete held on First deletes it and keeps Second", (
+    tester,
+  ) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
       operations(const [reveal, move, delete]),
     ]);
-    const question = "Delete the selected resources?";
 
     await panel.resources.row("First").select();
-    await panel.press(LogicalKeyboardKey.delete);
-    expect(panel.dialog.showing(question), isTrue);
-    await panel.dialog.choose("Cancel", message: question);
-    expect(panel.resources.showing("First"), isTrue);
+    await panel.holdKey(LogicalKeyboardKey.delete);
 
-    await panel.press(LogicalKeyboardKey.delete);
-    await panel.dialog.choose("Delete", message: question);
-
-    expect(panel.resources.showing("First"), isFalse);
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
     expect(panel.resources.showing("Second"), isTrue);
+    expect(find.byType(AlertDialog), findsNothing);
     await panel.eventually(
       () => expect(
         panel.world.requireRealm.document.resource(first.bookId),
         isNull,
       ),
+    );
+  });
+
+  testWidgets("Delete released early keeps First and never asks the Realm "
+      "to prepare", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+
+    await panel.resources.row("First").select();
+    await panel.holdKey(LogicalKeyboardKey.delete, share: 0.4);
+
+    expect(panel.resources.showing("First"), isTrue);
+    expect(panel.world.requireRealm.prepares, 0);
+  });
+
+  testWidgets("Delete with two selected resources reads \"Delete 2 "
+      "resources and what they own?\" before the hold", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+    await panel.resources.row("First").select();
+    await panel.resources.selectOnly([first.bookId, second.bookId]);
+
+    expect(
+      panel.holdHint("Delete 2 resources and what they own?"),
+      "Destructive. Long press to confirm",
     );
   });
 
@@ -152,16 +189,14 @@ void main() {
     );
   });
 
-  testWidgets("a screen reader selects a Book in the Library and deletes it", (
-    tester,
-  ) async {
+  testWidgets("a screen reader selects a Book in the Library and its long "
+      "press on Delete deletes it", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
       operations(const [reveal, move, delete]),
     ]);
     await panel.openSurface(libraryId);
-    const question = "Delete the selected resources?";
 
     await panel.activateWithScreenReader("First");
 
@@ -170,9 +205,12 @@ void main() {
       Tristate.isTrue,
     );
     expect(panel.resources.selected, [first.bookId]);
-    await panel.activateWithScreenReader("Delete");
-    await panel.dialog.choose("Delete", message: question);
-    expect(panel.resources.showing("First"), isFalse);
+    await panel.longPressWithScreenReader(
+      "Delete this resource and what it owns?",
+    );
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
     expect(panel.resources.showing("Second"), isTrue);
   });
 

@@ -5,8 +5,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Expandable mobile card for one invitation code.
 ///
 /// The code URL is deliberately blurred until the user chooses to copy or
-/// inspect it. Selection belongs to the route. Revocation submits a prepared
-/// repository command through shared local work after confirmation.
+/// inspect it. Selection belongs to the route. Revoking holds, over the
+/// selection when it contains this code.
 class JoinCodeCard extends HookConsumerWidget {
   const JoinCodeCard({
     required this.code,
@@ -15,7 +15,8 @@ class JoinCodeCard extends HookConsumerWidget {
     required this.onSelectAll,
     required this.onClearSelection,
     required this.hasSelection,
-    required this.onRevokeSelection,
+    required this.rows,
+    required this.selectedIds,
     super.key,
   });
 
@@ -25,13 +26,25 @@ class JoinCodeCard extends HookConsumerWidget {
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
   final bool hasSelection;
-  final Future<void> Function() onRevokeSelection;
+
+  /// The join code rows the tab owns.
+  final AnimatedRows<Object?> rows;
+  final Set<skir.RecordId> selectedIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final expansibleController = useExpansibleController();
     final fullUrl = joinCodeUrl(code.code);
+    // One command for the card's key and its Revoke button.
+    final revocation = joinCodeRevocation(
+      id: "revoke_join_code_key_${code.code}",
+      label: hasSelection && isSelected
+          ? "Revoke join codes"
+          : "Revoke join code",
+      targets: () => hasSelection && isSelected ? selectedIds : {code.code},
+      rows: rows,
+    );
 
     useListenable(expansibleController);
 
@@ -57,7 +70,7 @@ class JoinCodeCard extends HookConsumerWidget {
                 description: "Toggle selection for this join code",
                 intent: ActivateIntent,
                 priority: 1,
-                onInvoke: (_) => onSelectionChanged(!isSelected),
+                run: ActionRun.press((_) => onSelectionChanged(!isSelected)),
               ),
               ActionShortcut.intent(
                 id: "select_all_join_codes_${code.code}",
@@ -65,7 +78,7 @@ class JoinCodeCard extends HookConsumerWidget {
                 description: "Select all visible join codes",
                 intent: ActivateAllIntent,
                 priority: 1,
-                onInvoke: (_) => onSelectAll(),
+                run: ActionRun.press((_) => onSelectAll()),
               ),
               // Esc steps out one level: first the card, then the selection.
               if (!expansibleController.isExpanded)
@@ -75,7 +88,7 @@ class JoinCodeCard extends HookConsumerWidget {
                   description: "Clear selected join codes",
                   intent: DismissIntent,
                   priority: 1,
-                  onInvoke: (_) => onClearSelection(),
+                  run: ActionRun.press((_) => onClearSelection()),
                 ),
               if (!hasSelection)
                 ActionShortcut(
@@ -84,18 +97,11 @@ class JoinCodeCard extends HookConsumerWidget {
                   description: "Copy this join code",
                   activators: const [SingleActivator(LogicalKeyboardKey.keyC)],
                   priority: 1,
-                  onInvoke: (_) => _copyToClipboard(context, fullUrl),
+                  run: ActionRun.press(
+                    (_) => _copyToClipboard(context, fullUrl),
+                  ),
                 ),
-              ActionShortcut.intent(
-                id: "revoke_join_code_key_${code.code}",
-                label: "Revoke join code",
-                description: "Revoke this join code",
-                intent: DeleteIntent,
-                priority: 1,
-                onInvoke: (_) => hasSelection && isSelected
-                    ? onRevokeSelection()
-                    : _confirmRevokeCode(context, ref),
-              ),
+              revocation,
             ],
             // Inside the shortcuts, so they answer while the card is
             // focused. Enter opens the details, as the header did.
@@ -208,12 +214,12 @@ class JoinCodeCard extends HookConsumerWidget {
                         color: context.colors.brandText,
                         onPressed: () => _copyToClipboard(context, fullUrl),
                       ),
-                      Button(
+                      CommandButton(
+                        command: revocation,
                         face: ButtonFace.outlined,
                         icon: const Icon(Icons.link_off, size: 18),
                         label: "Revoke",
                         color: context.colors.dangerText,
-                        onPressed: () => _confirmRevokeCode(context, ref),
                       ),
                     ],
                   ),
@@ -229,22 +235,5 @@ class JoinCodeCard extends HookConsumerWidget {
   void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text));
     showSuccessSnackBar(context, "Join code copied to clipboard");
-  }
-
-  Future<void> _confirmRevokeCode(BuildContext context, WidgetRef ref) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Revoke this join code?",
-      content: "Are you sure you want to revoke this join code? It will no longer work for new members.",
-      confirmText: "Revoke",
-      confirmIcon: Fa6Solid.link_slash,
-      onConfirm: () async {
-        onSelectionChanged(false);
-        await ref.executeMembership(
-          ref.membershipCommands.revoke(code.code),
-          (response) => response.requireAccepted(),
-        );
-      },
-    );
   }
 }

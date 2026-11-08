@@ -39,7 +39,7 @@ void main() {
   testWidgets("discarding a draft clears it from the activity", (tester) async {
     final (:panel, :draft) = await tester.openDraftActivity(host);
 
-    await panel.tapOn(panel.labeled("Discard").first);
+    await panel.holdButton("Discard");
 
     expect(panel.shows("1 draft"), isFalse);
     expect(

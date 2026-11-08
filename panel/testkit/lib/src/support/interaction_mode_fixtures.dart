@@ -16,7 +16,7 @@ class CountingMode extends InteractionMode with ModeShortcut {
       description: "Counts each press",
       activators: [SingleActivator(LogicalKeyboardKey.keyR)],
       priority: 0,
-      onInvoke: (_) => runs++,
+      run: ActionRun.press((_) => runs++),
     ),
   ];
 }

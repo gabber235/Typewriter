@@ -4,16 +4,17 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Mobile and tablet body for one join request card.
 ///
-/// This widget adapts layout only. Selection, expiry cleanup, decline
-/// confirmation, and expansion remain callbacks owned by the card and list so
-/// responsive rendering cannot create a second state owner.
+/// This widget adapts layout only. Selection, expiry cleanup and expansion
+/// remain callbacks owned by the card and list, and the decline hold is the
+/// card's command, so responsive rendering cannot create a second state
+/// owner.
 class JoinRequestResponsiveContent extends StatelessWidget {
   const JoinRequestResponsiveContent({
     required this.request,
     required this.isSelected,
     required this.isExpanded,
     required this.onExpired,
-    required this.onDecline,
+    required this.decline,
     required this.onToggle,
     super.key,
   });
@@ -21,7 +22,7 @@ class JoinRequestResponsiveContent extends StatelessWidget {
   final bool isSelected;
   final bool isExpanded;
   final VoidCallback onExpired;
-  final VoidCallback onDecline;
+  final ActionShortcut decline;
   final VoidCallback onToggle;
   @override
   Widget build(BuildContext context) {
@@ -56,11 +57,11 @@ class JoinRequestResponsiveContent extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Button(
+              child: CommandButton(
+                command: decline,
                 face: ButtonFace.outlined,
                 label: "Decline",
                 color: context.colors.dangerText,
-                onPressed: onDecline,
               ),
             ),
             SizedBox(width: context.spacing.space2),

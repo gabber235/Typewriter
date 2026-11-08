@@ -1,3 +1,4 @@
+import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -82,5 +83,34 @@ extension EditingDrivers on PanelDriver {
   Future<void> closeAbove() async {
     container.read(appRouterProvider).navigatorKey.currentState!.pop();
     await settle();
+  }
+
+  /// Types "Mine" into [fixture]'s first field, lets its save be refused
+  /// because someone else saved "Theirs" meanwhile, and opens the review of
+  /// the refused save. Returns the panel's editing.
+  Future<RealmEditing> reviewRefusedSave(AuthoredDraft fixture) async {
+    final editing = await inspectDraft(fixture);
+    final saved = world.requireRealm;
+    await fieldAt(0).type("Mine");
+    await tester.pump(const Duration(milliseconds: 250));
+    await settle();
+    // The panel learns of "Theirs" only by reading the saved values again,
+    // which reports them to everything that shows them, as the Realm's
+    // session does.
+    saved.answerRefresh = () {
+      saved.remoteChange(
+        (edit) => edit.set(
+          authoredFieldLocation(fixture.resource, ["title"]),
+          skir.DataValue.wrapStringValue("Theirs"),
+        ),
+      );
+      return Future.value(saved.document);
+    };
+    saved.saves.single.reject(
+      skir.CommitPreparedEditResponse.wrapConflictError(const []),
+    );
+    await settle();
+    await tapOn(find.text("Review changes"));
+    return editing;
   }
 }

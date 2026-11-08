@@ -261,7 +261,6 @@ skir.HeaderItem headerButton(
   visibleIf: null,
   enabledIf: null,
   tone: skir.HeaderActionTone.neutral,
-  confirmation: null,
   placement: skir.HeaderActionPlacement.end,
 );
 

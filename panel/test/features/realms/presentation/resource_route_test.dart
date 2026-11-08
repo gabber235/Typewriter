@@ -134,7 +134,7 @@ void main() {
     // Search opens before the realm's new navigator pushes Library, which it
     // does a frame later, once its guards ran.
     await panel.activateWithScreenReader("Library", settle: false);
-    await panel.activateWithScreenReader("Search");
+    await panel.activateWithScreenReader("Search", repeated: true);
 
     expect(panel.routedResource, libraryId.value);
     expect(panel.queryBar.isFocused, isTrue, reason: "search keeps focus");

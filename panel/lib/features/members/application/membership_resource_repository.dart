@@ -37,15 +37,11 @@ final class MembershipResourceRepository {
   final _codes = StreamController<skir.OrganizationJoinCodesChanged>.broadcast(
     sync: true,
   );
-  final _removals = <Object, (MembershipRemovalKind, skir.RecordId)>{};
   var _disposed = false;
 
   Stream<skir.OrganizationMembersChanged> get members => _members.stream;
   Stream<skir.OrganizationJoinRequestsChanged> get requests => _requests.stream;
   Stream<skir.OrganizationJoinCodesChanged> get codes => _codes.stream;
-
-  (MembershipRemovalKind, skir.RecordId)? removalFor(Object submission) =>
-      _removals[submission];
 
   void checkActive() {
     session.checkActive();
@@ -91,7 +87,6 @@ final class MembershipResourceRepository {
     final request = skir.DeclineOrganizationJoinRequestRequest(
       requestId: requestId,
     );
-    _removals[submissionId] = (MembershipRemovalKind.joinRequest, requestId);
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
       submissionId: submissionId,
@@ -146,7 +141,6 @@ final class MembershipResourceRepository {
   ) {
     final submissionId = uuid.v4();
     final request = skir.RevokeOrganizationJoinCodeRequest(codeId: codeId);
-    _removals[submissionId] = (MembershipRemovalKind.joinCode, codeId);
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
       submissionId: submissionId,
@@ -214,11 +208,8 @@ final class MembershipResourceRepository {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    _removals.clear();
     unawaited(_members.close());
     unawaited(_requests.close());
     unawaited(_codes.close());
   }
 }
-
-enum MembershipRemovalKind { joinRequest, joinCode }

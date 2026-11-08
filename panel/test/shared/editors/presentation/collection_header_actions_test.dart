@@ -37,7 +37,7 @@ void main() {
   ) async {
     final scenario = CollectionEditorScenario(
       example: CollectionEditorExample.authoredSteps,
-      confirmRemoval: true,
+      removeStep: true,
       transformLayout: (node) => withListItemHeader(
         node,
         (header) =>
@@ -71,12 +71,11 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets("aliased removal keeps one pinned action and its confirmation", (
-    tester,
-  ) async {
+  testWidgets("aliased removal keeps one pinned action that removes with one "
+      "press", (tester) async {
     final scenario = CollectionEditorScenario(
       example: CollectionEditorExample.authoredSteps,
-      confirmRemoval: true,
+      removeStep: true,
       transformLayout: (root) {
         final alias = skir.ExpressionBindingId(
           value: "fixture.collectionAlias",
@@ -127,12 +126,8 @@ void main() {
     final remove = find.tooltip("Remove step").first;
     expect(remove.hitTestable(), findsOneWidget);
     await panel.tapOn(remove);
-    expect(panel.dialog.showing("Remove this step?"), isTrue);
-    await panel.dialog.choose("Cancel", message: "Remove this step?");
-    expect(scenario.value.authoredItems, hasLength(2));
 
-    await panel.tapOn(find.tooltip("Remove step").first);
-    await panel.dialog.choose("Remove step", message: "Remove this step?");
+    expect(panel.dialog.showing("Remove this step?"), isFalse);
     expect(
       scenario.value.authoredItems!.single.id,
       CollectionEditorScenario.second,

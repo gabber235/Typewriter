@@ -287,6 +287,50 @@ final class HoldStage extends HookWidget {
   }
 }
 
+/// Where the one row of a [HoldTableStage] sits.
+const holdTableRow = Rect.fromLTWH(0, 0, 200, 40);
+
+/// A one row table, 200 by 40, whose row decoration is the hold fill at
+/// [amount]; every build adds an entry to [builds].
+final class HoldTableStage extends StatelessWidget {
+  const HoldTableStage({required this.amount, required this.builds, super.key});
+
+  final ValueListenable<double> amount;
+  final List<void> builds;
+
+  @override
+  Widget build(BuildContext context) {
+    builds.add(null);
+    return SizedBox(
+      width: holdTableRow.width,
+      child: Table(
+        children: [
+          TableRow(
+            decoration: HoldFillDecoration.of(context, amount: amount),
+            children: [SizedBox(height: holdTableRow.height)],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Reading the fill a [HoldTableStage] paints.
+extension HoldTablePainting on WidgetTester {
+  /// The rectangle the hold fill paints over the table, or null when it
+  /// paints none.
+  Rect? get holdTableFill {
+    final canvas = TestRecordingCanvas();
+    renderObject(find.byType(Table))
+        .paint(TestRecordingPaintingContext(canvas), Offset.zero);
+    return [
+      for (final call in canvas.invocations)
+        if (call.invocation.memberName == #drawRect)
+          call.invocation.positionalArguments.first as Rect,
+    ].lastOrNull;
+  }
+}
+
 /// Rows "Ada" and "Ben" from the top of a fixed area; while [leaving], Ada
 /// plays listOut through Leave.
 final class LeaveStage extends HookWidget {

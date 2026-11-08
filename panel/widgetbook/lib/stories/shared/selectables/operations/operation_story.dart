@@ -18,8 +18,8 @@ enum OperationOutcome {
 /// The inspector operations of [count] selected resources, each offering
 /// the capability [capability] builds around the outcome its knobs chose.
 ///
-/// The resources start selected, so the inspector buttons, confirmations
-/// and failure messages are the production ones.
+/// The resources start selected, so the inspector buttons, holds and
+/// refusals are the production ones.
 Widget operationStory(
   BuildContext context,
   SelectionCapability Function(Future<void> Function() run) capability,
@@ -43,7 +43,10 @@ Widget operationStory(
         capability(() async {
           await Future<void>.delayed(const Duration(milliseconds: 400));
           if (outcome == OperationOutcome.partlyFails && index == count - 1) {
-            throw StateError("$name is still used by another page");
+            throw ApiException(
+              code: 409,
+              message: "$name is still used by another page",
+            );
           }
         }),
       ),

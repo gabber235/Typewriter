@@ -106,12 +106,15 @@ class _PanelStageState extends State<PanelStage> {
 
   @override
   Widget build(BuildContext context) {
-    final panel = UncontrolledProviderScope(
-      container: _world.container,
-      child: switch (widget.at) {
-        ComponentLocation(:final child) => _ComponentShell(child: child),
-        _ => const TypewriterPanel(),
-      },
+    final panel = HoldLineLayoutScope(
+      layout: _world.holdLineLayout,
+      child: UncontrolledProviderScope(
+        container: _world.container,
+        child: switch (widget.at) {
+          ComponentLocation(:final child) => _ComponentShell(child: child),
+          _ => const TypewriterPanel(),
+        },
+      ),
     );
     if (!_world.reducedMotion) return panel;
     final platform =

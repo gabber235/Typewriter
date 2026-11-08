@@ -5,10 +5,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Coordinates the live member projection with shared selection state.
 ///
 /// Selection is local UI state and is intersected with the last rendered member
-/// ids. Bulk removal captures that intersection before confirmation and submits
-/// each repository command through shared local work. Failures leave later
-/// members eligible for removal; successful ids are cleared from selection.
-/// This widget also chooses the table or tablet list and projection error UI.
+/// ids, so removed members leave it and refused members stay selected. The
+/// bulk remove holds over the selected members of the tab's rows, which show
+/// each send and refusal. This widget also chooses the table or tablet list
+/// and projection error UI.
 class MembersTab extends HookConsumerWidget {
   const MembersTab({super.key});
 
@@ -17,7 +17,7 @@ class MembersTab extends HookConsumerWidget {
     final theme = Theme.of(context);
     final membersAsync = ref.watch(organizationMembersProvider);
     // One rows handle per tab, above the data builder: the table, the tablet
-    // list and the bulk bar's removeSelection share it. Members present when
+    // list and the bulk bar's remove hold share it. Members present when
     // the data first arrives join the load run.
     final rows = useAnimatedRows(
       items: membersAsync.value ?? const <skir.OrganizationMember>[],
@@ -26,7 +26,6 @@ class MembersTab extends HookConsumerWidget {
     );
     final selectedIds = useState<Set<skir.RecordId>>({});
     final liveMembers = useRef<List<skir.OrganizationMember>>([]);
-    final isRemovingSelection = useRef(false);
 
     useEffect(() {
       final memberIds = liveMembers.value
@@ -38,60 +37,20 @@ class MembersTab extends HookConsumerWidget {
       return null;
     }, [liveMembers.value, selectedIds.value]);
 
-    Future<void> removeSelection() async {
-      if (isRemovingSelection.value) return;
-      final memberIds = liveMembers.value
-          .map((member) => member.userId)
-          .toSet();
-      final idsToRemove = selectedIds.value.intersection(memberIds);
-      if (idsToRemove.isEmpty) {
-        selectedIds.value = {};
-        return;
-      }
-
-      isRemovingSelection.value = true;
-      try {
-        await showConfirmationDialogue(
-          context: context,
-          title: "Remove ${idsToRemove.length} member(s)?",
-          content: "Are you sure you want to remove these members from the organization?",
-          confirmText: "Remove",
-          confirmIcon: Fa6Solid.user_minus,
-          onConfirm: () async {
-            final succeeded = <skir.RecordId>{};
-            for (final id in idsToRemove) {
-              try {
-                // The row stays struck through while the command runs; the
-                // removal event then takes it out with listOut.
-                await rows.sending(
-                  [id],
-                  () => ref.executeMembership(
-                    ref.membershipCommands.remove(id),
-                    (response) => response.requireAccepted(),
-                  ),
-                );
-                succeeded.add(id);
-              } on ApiException catch (error) {
-                if (context.mounted) showErrorSnackBar(context, error.message);
-              } on SubmissionException {
-                continue;
-              }
-            }
-            if (context.mounted) {
-              selectedIds.value = selectedIds.value.difference(succeeded);
-            }
-          },
-        );
-      } finally {
-        isRemovingSelection.value = false;
-      }
-    }
-
-    final selection = SelectableRows(
+    // The bulk bar's key and Remove button hold over the tab's rows, so the
+    // targets' order, sending look and focus come from the lists' rows.
+    final removal = memberRemoval(
+      id: "remove_bulk_members_key",
+      label: "Remove members",
+      priority: 2,
+      targets: () => selectedIds.value.intersection({
+        for (final member in rows.items) member.userId,
+      }),
+      nameOf: (id) => rows[id]?.item.name,
       rows: rows,
-      selectedIds: selectedIds,
-      onRemoveSelection: removeSelection,
     );
+
+    final selection = SelectableRows(rows: rows, selectedIds: selectedIds);
     return SliverMainAxisGroup(
       slivers: [
         SliverPadding(
@@ -111,7 +70,7 @@ class MembersTab extends HookConsumerWidget {
                       : BulkMemberActions(
                           selectedCount: selectedIds.value.length,
                           selectedIds: selectedIds.value,
-                          onRemove: removeSelection,
+                          removal: removal,
                           onUnselect: (ids) => selectedIds.value = selectedIds
                               .value
                               .difference(ids),

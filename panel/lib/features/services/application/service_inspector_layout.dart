@@ -345,7 +345,6 @@ skir.PresentationNode _inspectorWorkload(
           priority: null,
           visibleIf: null,
           enabledIf: null,
-          confirmation: null,
           placement: skir.HeaderActionPlacement.beforeTitle,
         ),
       ],

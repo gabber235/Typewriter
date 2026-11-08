@@ -83,6 +83,13 @@ List<SemanticsNode> semanticsButtons(String label) => find.semantics
     .evaluate()
     .toList();
 
+/// The visible buttons whose label reads [text] among other words, such as
+/// a busy button whose surface names itself first.
+List<SemanticsNode> semanticsButtonsReading(String text) => find.semantics
+    .byPredicate((node) => node.isButton && node.spoken.contains(text))
+    .evaluate()
+    .toList();
+
 /// The one visible button the user hears as [label]; fails the test when
 /// there is none or more than one.
 SemanticsNode semanticsButton(String label) =>

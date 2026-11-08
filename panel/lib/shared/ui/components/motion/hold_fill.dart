@@ -186,3 +186,85 @@ class _HoldFillPainter extends CustomPainter {
       old.inPlace != inPlace ||
       old.direction != direction;
 }
+
+/// [HoldFill] as a decoration, for a TableRow, which is not a widget.
+///
+/// It paints the same sweep, or the in place tint under reduced motion, with
+/// the same painter. Its box painter listens to [amount] and asks the table
+/// to repaint, so a hold repaints the table and rebuilds nothing.
+class HoldFillDecoration extends Decoration {
+  const HoldFillDecoration({
+    required this.amount,
+    required this.color,
+    required this.inPlace,
+    this.base,
+  });
+
+  /// HoldFill's colour and reduced motion, resolved from [context].
+  factory HoldFillDecoration.of(
+    BuildContext context, {
+    required ValueListenable<double> amount,
+    Decoration? base,
+  }) {
+    return HoldFillDecoration(
+      amount: amount,
+      color: context.colors.danger.withValues(
+        alpha: context.stateTokens.pressedOpacity,
+      ),
+      inPlace:
+          resolveMotion(context, MotionToken.hold).reduced == ReducedKind.paced,
+      base: base,
+    );
+  }
+
+  final ValueListenable<double> amount;
+  final Color color;
+  final bool inPlace;
+
+  /// The row's own decoration, painted under the fill.
+  final Decoration? base;
+
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) {
+    return _HoldFillBoxPainter(this, onChanged);
+  }
+}
+
+class _HoldFillBoxPainter extends BoxPainter {
+  _HoldFillBoxPainter(this.decoration, super.onChanged)
+    : _base = onChanged == null
+          ? decoration.base?.createBoxPainter()
+          : decoration.base?.createBoxPainter(onChanged) {
+    if (onChanged case final repaint?) decoration.amount.addListener(repaint);
+  }
+
+  final HoldFillDecoration decoration;
+  final BoxPainter? _base;
+
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
+    _base?.paint(canvas, offset, configuration);
+    final size = configuration.size;
+    if (size == null) return;
+    canvas
+      ..save()
+      ..translate(offset.dx, offset.dy);
+    _HoldFillPainter(
+      amount: decoration.amount.value.clamp(0.0, 1.0),
+      color: decoration.color,
+      radius: BorderRadius.zero,
+      inPlace: decoration.inPlace,
+      direction: configuration.textDirection ?? TextDirection.ltr,
+    ).paint(canvas, size);
+    canvas.restore();
+  }
+
+  @override
+  void dispose() {
+    if (onChanged case final repaint?) {
+      decoration.amount.removeListener(repaint);
+    }
+    _base?.dispose();
+    super.dispose();
+  }
+}

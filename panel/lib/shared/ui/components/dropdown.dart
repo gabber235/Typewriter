@@ -313,11 +313,11 @@ class Dropdown<T extends Object> extends HookWidget {
                   control: true,
                 ),
               ],
-              onInvoke: (_) {
+              run: ActionRun.press((_) {
                 if (enabled && controller.text.isNotEmpty) {
                   onCustomValue!(controller.text);
                 }
-              },
+              }),
             ),
         ],
         surroundingActions: surroundingActions,

@@ -173,7 +173,7 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
     private var order = 0
     private var inspector: OperationInspector = OperationInspector.ButtonWrapper(ButtonVariant.OUTLINED)
     private var shortcut: OperationShortcut? = null
-    private var confirmation: ConfirmBuilder? = null
+    private var confirmation: OperationConfirmation? = null
     private var cardinality: OperationCardinality = OperationCardinality.SELECTION
     private var form: PresentationReference? = null
     private val fields = mutableListOf<OperationFieldBuilder<D, *>>()
@@ -183,11 +183,11 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
     override fun appearance(body: OperationAppearanceScope.() -> Unit) = body()
 
     override fun confirm(
-        message: String,
-        body: OperationConfirmScope.() -> Unit,
+        one: String,
+        many: String,
     ) {
         require(confirmation == null) { "An operation declares at most one confirmation." }
-        confirmation = ConfirmBuilder(message).apply(body)
+        confirmation = OperationConfirmation(outcomeOne = one, outcomeMany = many).requireValid()
     }
 
     override fun input(body: OperationInputScope<D, I>.() -> Unit) = body()
@@ -272,7 +272,7 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
                     group = group,
                     order = order,
                     tone = group.tone,
-                    confirmation = confirmation?.build(label),
+                    confirmation = confirmation,
                     inspector = inspector,
                     shortcut = shortcut,
                 ).requireValid(),
@@ -333,22 +333,4 @@ internal class OperationFieldBuilder<D : ResourceDraft, V>(
                 },
         )
     }
-}
-
-private class ConfirmBuilder(
-    private val message: String,
-) : OperationConfirmScope {
-    private var title: String? = null
-    private var action: String? = null
-
-    override fun title(value: String) {
-        title = value
-    }
-
-    override fun action(value: String) {
-        action = value
-    }
-
-    fun build(label: String) =
-        OperationConfirmation(title = title ?: label, message = message, confirmationLabel = action ?: label).requireValid()
 }

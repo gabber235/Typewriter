@@ -5,8 +5,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Coordinates join code generation, live projection display, selection, and
 /// bulk revocation for the route. It keeps transient UI intent locally while
 /// [OrganizationJoinCodes] remains the owner of server backed code state.
-/// Bulk revocation submits captured visible ids sequentially and stops at the
-/// first failed or uncertain reply. Local work owns each submission separately.
+/// Bulk revocation holds over the selected codes of the tab's rows and tries
+/// every code; each refusal shows under its row.
 class JoinCodesTab extends HookConsumerWidget {
   const JoinCodesTab({super.key});
 
@@ -15,7 +15,7 @@ class JoinCodesTab extends HookConsumerWidget {
     final theme = Theme.of(context);
     final codesAsync = ref.watch(visibleOrganizationJoinCodesProvider);
     // One rows handle per tab, above the data builder: the table, the card
-    // list and the bulk bar's revokeSelection share it.
+    // list and the bulk bar's revoke hold share it.
     // Generate announces its code here, before or after the code arrives.
     final codeFocus = useRowFocus(debugLabel: "Join codes");
     final rows = useAnimatedRows(
@@ -28,8 +28,6 @@ class JoinCodesTab extends HookConsumerWidget {
     final selectedCodes = useState<Set<skir.RecordId>>({});
     final joinCodeOptions = useState(const JoinCodeOptions());
     final liveCodes = useRef<List<skir.JoinCode>>([]);
-
-    final isRevokingSelection = useRef(false);
 
     // The card reveals the code it generated until the code leaves the
     // authoritative list, by revocation or by its single use; a new key then
@@ -56,48 +54,18 @@ class JoinCodesTab extends HookConsumerWidget {
       return null;
     }, [liveCodes.value, selectedCodes.value]);
 
-    Future<void> revokeSelection() async {
-      if (isRevokingSelection.value) return;
-      final codeIds = liveCodes.value.map((code) => code.code).toSet();
-      final codesToRevoke = selectedCodes.value.intersection(codeIds);
-      if (codesToRevoke.isEmpty) {
-        selectedCodes.value = {};
-        return;
-      }
-
-      isRevokingSelection.value = true;
-      try {
-        await showConfirmationDialogue(
-          context: context,
-          title: "Revoke ${codesToRevoke.length} join code(s)?",
-          content: "Are you sure you want to revoke these join codes? They will no longer work.",
-          confirmText: "Revoke All",
-          confirmIcon: Fa6Solid.link_slash,
-          onConfirm: () async {
-            for (final code in codesToRevoke) {
-              // The row stays struck through until the revoke event takes it
-              // out with listOut.
-              await rows.sending(
-                [code],
-                () => ref.executeMembership(
-                  ref.membershipCommands.revoke(code),
-                  (response) => response.requireAccepted(),
-                ),
-              );
-            }
-            selectedCodes.value = {};
-          },
-        );
-      } finally {
-        isRevokingSelection.value = false;
-      }
-    }
-
-    final selection = SelectableRows(
+    // The bulk bar's key and Revoke all button hold over the tab's rows.
+    final revocation = joinCodeRevocation(
+      id: "revoke_bulk_join_codes_key",
+      label: "Revoke join codes",
+      priority: 2,
+      targets: () => selectedCodes.value.intersection({
+        for (final code in rows.items) code.code,
+      }),
       rows: rows,
-      selectedIds: selectedCodes,
-      onRemoveSelection: revokeSelection,
     );
+
+    final selection = SelectableRows(rows: rows, selectedIds: selectedCodes);
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
@@ -169,7 +137,7 @@ class JoinCodesTab extends HookConsumerWidget {
                       ? null
                       : BulkJoinCodeActions(
                           selectedCount: selectedCodes.value.length,
-                          onRevoke: revokeSelection,
+                          revocation: revocation,
                           onClearSelection: () => selectedCodes.value = {},
                         ),
                 ),

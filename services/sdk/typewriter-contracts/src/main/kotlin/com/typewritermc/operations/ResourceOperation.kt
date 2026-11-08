@@ -41,7 +41,10 @@ fun ResourceOperationId.requireValid(): ResourceOperationId =
     apply { require(listOf(artifact, sourcePart, declaration).all(String::isNotBlank)) }
 
 fun OperationConfirmation.requireValid(): OperationConfirmation =
-    apply { require(title.isNotBlank() && message.isNotBlank() && confirmationLabel.isNotBlank()) }
+    apply {
+        require(outcomeOne.isNotBlank() && outcomeMany.isNotBlank()) { "A confirmation states its outcome." }
+        require("{count}" in outcomeMany) { "The many outcome names its count with {count}." }
+    }
 
 /** The tone of an operation in this group: destructive operations look destructive everywhere. */
 val OperationGroup.tone: HeaderActionTone

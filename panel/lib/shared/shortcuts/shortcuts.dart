@@ -1,7 +1,9 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+export "action_run.dart";
 export "action_shortcuts.dart";
 export "adaptive_single_activator.dart";
+export "command_runner.dart";
 export "shortcut.dart";
 
 /// The panel wide keyboard map used by `MaterialApp.router` and action sets.
@@ -81,11 +83,6 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyD): DeleteIntent(),
   SingleActivator(LogicalKeyboardKey.backspace): DeleteIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.keyX): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.keyD, shift: true): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.backspace, shift: true): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.delete, shift: true): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.keyX, shift: true): DeleteIntent(),
 };
 
 final movementShortcuts = {

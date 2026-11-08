@@ -49,9 +49,7 @@ void main() {
     ]);
     // Operations act on the selection: Space selects the focused card.
     await panel.press(LogicalKeyboardKey.space);
-    await panel.pressPrimary(LogicalKeyboardKey.backspace);
-    // The dialog until the hold replaces it.
-    await panel.press(LogicalKeyboardKey.enter);
+    await panel.holdKey(LogicalKeyboardKey.backspace);
     await panel.eventually(() => expect(panel.focused, contains("Minecraft")));
   });
 }

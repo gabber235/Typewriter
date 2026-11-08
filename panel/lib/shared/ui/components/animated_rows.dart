@@ -1,5 +1,6 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "animated_rows.freezed.dart";
 part "row_focus.dart";
 
 /// How a row came to be on screen; fixed for the row's life.
@@ -33,6 +34,16 @@ enum RowRun {
   /// the item yet. The row is struck through and busy, and stays so while
   /// it leaves.
   sending,
+
+  /// The last hold on the row was refused; the row stays in place with its
+  /// message until it sends again.
+  refused,
+}
+
+/// Why the last hold on a row was refused.
+@freezed
+abstract class HoldFailure with _$HoldFailure {
+  const factory HoldFailure({required String message}) = _HoldFailure;
 }
 
 /// One row of an animated list, keyed by its item's identity.
@@ -78,9 +89,19 @@ final class RowEntry<T> {
   RowPhase get phase => _phase;
   RowPhase _phase;
 
-  /// The user's command on the row; only [AnimatedRows.sending] moves it.
+  /// The user's command on the row; only [AnimatedRows.sending] and
+  /// [AnimatedRows.refuse] move it.
   RowRun get run => _run;
   RowRun _run = RowRun.idle;
+
+  /// The last refusal; set with [RowRun.refused], cleared when the row
+  /// sends.
+  HoldFailure? get failure => _failure;
+  HoldFailure? _failure;
+
+  /// How many times this row has jammed; [Jam] shakes once per increase.
+  int get jams => _jams;
+  int _jams = 0;
 
   /// Whether the row was still arriving when it started to leave.
   bool get leftWhileArriving => _leftWhileArriving;
@@ -115,7 +136,7 @@ typedef AnimatedTableRowBuilder<T> = TableRow Function(
 /// The rows of one animated list in screen order, leaving rows where they
 /// were. [useAnimatedRows] owns it; [AnimatedTable], [SliverAnimatedRows]
 /// and the editor collections render it.
-final class AnimatedRows<T> {
+final class AnimatedRows<T> implements HoldRows {
   AnimatedRows._(this._hook);
 
   final _AnimatedRowsHookState<T> _hook;
@@ -139,13 +160,29 @@ final class AnimatedRows<T> {
   /// Where focus goes when rows of this list leave or arrive.
   RowFocus get focus => _hook._focus;
 
+  @override
+  List<Object> get order => focus.order;
+
+  @override
+  Object? get focusedId => focus.focusedId;
+
+  @override
+  void focusId(Object id) => focus.focusId(id);
+
   /// Runs [command] with the rows of [ids] sending: they stay in place,
   /// struck through and busy, and ignore input. When [command] fails their
   /// run returns to idle with no motion and the error is rethrown. When it
   /// succeeds they stay sending until their items leave the data, then play
   /// listOut.
+  @override
   Future<R> sending<R>(Iterable<Object> ids, Future<R> Function() command) =>
       _hook._sending(ids.toSet(), command);
+
+  /// Refuses the rows in [messages] in one rebuild: each leaves sending,
+  /// shows its message, and the first in screen order jams. Rows that are
+  /// gone or leaving are skipped.
+  @override
+  void refuse(Map<Object, String> messages) => _hook._refuse(messages);
 }
 
 /// Keeps one entry per identity of [items]. Rows present when [ready] is
@@ -373,7 +410,10 @@ class _AnimatedRowsHookState<T>
     }
     setState(() {
       for (final entry in sent) {
-        entry._run = RowRun.sending;
+        // A new send clears the row's last refusal.
+        entry
+          .._run = RowRun.sending
+          .._failure = null;
       }
     });
     try {
@@ -388,6 +428,24 @@ class _AnimatedRowsHookState<T>
       }
       rethrow;
     }
+  }
+
+  void _refuse(Map<Object, String> messages) {
+    if (_disposed) return;
+    setState(() {
+      var jammed = false;
+      for (final entry in _entries) {
+        final message = messages[entry.id];
+        if (message == null || entry.phase == RowPhase.leaving) continue;
+        entry
+          .._run = RowRun.refused
+          .._failure = HoldFailure(message: message);
+        if (!jammed) {
+          entry._jams++;
+          jammed = true;
+        }
+      }
+    });
   }
 
   @override
@@ -437,14 +495,38 @@ extension RowEntryMotion on RowEntry<Object?> {
   }
 
   /// The per row hook point: applied exactly once per row by every list
-  /// renderer, inside [motion], around the whole row.
-  Widget row(Widget child) =>
-      _SendingFill(sending: run == RowRun.sending, child: child);
+  /// renderer, inside [motion], around the whole row: the sending look and
+  /// the hold (fill, outcome line, jam and refusal message).
+  Widget row(Widget child) {
+    return HoldRow(
+      entry: this,
+      child: _SendingFill(sending: run == RowRun.sending, child: child),
+    );
+  }
 
   /// The per row hook point of a table, whose rows are not widgets: the
-  /// TableRow decoration. [AnimatedTable] applies it once per row.
+  /// TableRow decoration. [AnimatedTable] applies it once per row. It
+  /// carries the sending look and the hold fill.
   Decoration? rowDecoration(BuildContext context, Decoration? source) {
-    if (run != RowRun.sending) return source;
+    final base = run == RowRun.sending
+        ? _sendingDecoration(context, source)
+        : source;
+    final runs = CommandRunsScope.maybeOf(context);
+    if (runs == null) return base;
+    return HoldFillDecoration.of(
+      context,
+      amount: RowHoldAmount(runs, id),
+      base: base,
+    );
+  }
+
+  /// The rest of a table row's hold (outcome line, jam, refusal message),
+  /// applied once per row by [AnimatedTable] to the cell its lineColumn
+  /// names.
+  Widget rowLine(Widget content) =>
+      HoldRow(entry: this, paintsFill: false, child: content);
+
+  Decoration? _sendingDecoration(BuildContext context, Decoration? source) {
     final fill = Theme.of(context).colorScheme.onSurface
         .withValues(alpha: context.stateTokens.pressedOpacity);
     return switch (source) {
@@ -471,17 +553,32 @@ class _SendingText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-    return DefaultTextStyle.merge(
-      style: sending
-          ? DefaultTextStyle.of(context).style.copyWith(
-              decoration: TextDecoration.lineThrough,
-              color: onSurface.withValues(
-                alpha: context.stateTokens.disabledForegroundOpacity,
+    final theme = Theme.of(context);
+    final faded = theme.colorScheme.onSurface.withValues(
+      alpha: context.stateTokens.disabledForegroundOpacity,
+    );
+    // Text styled from the text theme does not inherit the default style,
+    // so the text theme strikes too. The Theme stays in the tree either way:
+    // adding it only while sending would remount the row and drop its focus.
+    return Theme(
+      data: sending
+          ? theme.copyWith(
+              textTheme: theme.textTheme.apply(
+                decoration: TextDecoration.lineThrough,
+                bodyColor: faded,
+                displayColor: faded,
               ),
             )
-          : null,
-      child: child,
+          : theme,
+      child: DefaultTextStyle.merge(
+        style: sending
+            ? DefaultTextStyle.of(context).style.copyWith(
+                decoration: TextDecoration.lineThrough,
+                color: faded,
+              )
+            : null,
+        child: child,
+      ),
     );
   }
 }

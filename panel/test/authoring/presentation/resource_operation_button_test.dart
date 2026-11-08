@@ -83,9 +83,11 @@ void main() {
         expect(tester.widget<Icones>(find.byType(Icones)).icon, _icon);
         await tester.tap(buttonFinder, buttons: kSecondaryMouseButton);
         await tester.pumpAndSettle();
-        final menu = tester.widget<PanelMenuItem>(find.byType(PanelMenuItem));
-        expect(menu.leading, isA<Icones>());
-        expect((menu.leading! as Icones).icon, _icon);
+        // The button and the menu entry both show the declared icon.
+        expect(
+          tester.widgetList<Icones>(find.byType(Icones)).map((i) => i.icon),
+          [_icon, _icon],
+        );
         expect(tester.takeException(), isNull);
       },
     );
@@ -115,7 +117,15 @@ void main() {
                   tone: tone,
                 ),
                 disabledReason: disabledReason,
-                onInvoke: () => invocations++,
+                command: ActionShortcut(
+                  id: "resource_operation_button_test",
+                  label: "An operation with a long label",
+                  description: "Run this operation",
+                  activators: const [],
+                  priority: 0,
+                  show: false,
+                  run: ActionRun.press((_) => invocations++),
+                ),
               ),
             ),
           ),

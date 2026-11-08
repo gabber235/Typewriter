@@ -63,29 +63,11 @@ class OpenOperation extends IntentShortcutOperation {
   }
 
   @override
-  Widget inspectorButton(List<Selectable> selection) =>
-      OpenOperationButton(selection: selection, operation: this);
-}
-
-/// Inspector control for [OpenOperation].
-class OpenOperationButton extends HookConsumerWidget {
-  const OpenOperationButton({
-    required this.selection,
-    required this.operation,
-    super.key,
-  });
-
-  final List<Selectable> selection;
-  final OpenOperation operation;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return OperationButton.filledIcon(
-      operation: operation,
-      onPressed: () => operation.executeOn(ref),
-      icon: const Icon(Icons.open_in_new, size: 16),
-      label: selection.length > 1 ? "Open (${selection.length})" : "Open",
-      busyLabel: "Opening",
-    );
-  }
+  Widget inspectorButton(List<Selectable> selection) => CommandButton(
+    command: shortcut,
+    face: ButtonFace.filled,
+    icon: const Icon(Icons.open_in_new, size: 16),
+    label: selection.length > 1 ? "Open (${selection.length})" : "Open",
+    busyLabel: "Opening",
+  );
 }

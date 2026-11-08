@@ -17,7 +17,10 @@ object Delete : ResourceOperation<Unit> {
             group(OperationGroup.DESTRUCTIVE)
             inspector(OperationInspector.ButtonWrapper(ButtonVariant.FILLED))
         }
-        confirm("Delete the selected resources and their owned contents?") { title("Delete resources") }
+        confirm(
+            one = "Delete this resource and what it owns?",
+            many = "Delete {count} resources and what they own?",
+        )
         gestures { shortcut(OperationShortcut.DELETE) }
         availableWhen { if (subjects.any { it.isSingleton }) OperationAvailability.HIDDEN else OperationAvailability.ENABLED }
         return prepare { subjects.delete() }

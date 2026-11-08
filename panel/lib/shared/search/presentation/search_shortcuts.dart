@@ -72,9 +72,9 @@ class SearchShortcuts extends HookConsumerWidget {
             description: "",
             activators: [?resolved.command.presentation.shortcut],
             priority: resolved.command.presentation.priority,
-            onInvoke: commandsBusy || resolved.state is! SearchCommandEnabled
+            run: commandsBusy || resolved.state is! SearchCommandEnabled
                 ? null
-                : (_) => execute(resolved.command.id),
+                : ActionRun.press((_) => execute(resolved.command.id)),
           ),
         ActionShortcut(
           id: "search_result_${currentPreview.id}_select",
@@ -84,7 +84,9 @@ class SearchShortcuts extends HookConsumerWidget {
           description: "Toggle selection for this result",
           activators: [SingleActivator(LogicalKeyboardKey.space)],
           priority: 0,
-          onInvoke: (_) => controller.toggleSelected(currentPreview.id),
+          run: ActionRun.press(
+            (_) => controller.toggleSelected(currentPreview.id),
+          ),
         ),
       ];
     }
@@ -116,9 +118,9 @@ class SearchShortcuts extends HookConsumerWidget {
             ],
             priority: 0,
             show: false,
-            onInvoke: controller.isBusy
+            run: controller.isBusy
                 ? null
-                : (_) => controller.activate(result),
+                : ActionRun.press((_) => controller.activate(result)),
           );
         })
         .nonNulls

@@ -7,6 +7,8 @@ import "package:typewriter_testkit/testing.dart";
 const _scope = "cloud.to.user.ada.organization.acme";
 const _updateSubject = "$_scope.services.update";
 const _configureSubject = "$_scope.topology.configure";
+const _unbindSubject = "$_scope.services.unbind";
+const _unbindOne = "Unbind this service? It disconnects straight away.";
 const _nameRule =
     "Use at least three lowercase letters or digits separated by underscores";
 
@@ -207,7 +209,9 @@ void main() {
         for (final field in visibleTextFields())
           if (field.spoken.startsWith("Name")) field.spoken,
       ], hasLength(1));
-      expect(panel.inspector.operations, ["Unbind (2)"]);
+      expect(panel.inspector.operations, [
+        "Unbind 2 services? They disconnect straight away.",
+      ]);
 
       await panel.inspector.toggle("Host a Realm");
 
@@ -216,6 +220,62 @@ void main() {
         isTrue,
         reason: "The shared configuration drafts a change for each host",
       );
+    });
+  });
+
+  group("unbind", () {
+    testWidgets("holding Delete on a selected service unbinds it and it "
+        "leaves the selection", (tester) async {
+      final panel = await tester.pumpPanel(_gabbe);
+      skir.UnbindServiceRequest? sent;
+      panel.world.nats.registerHandler(_unbindSubject, (data) {
+        sent = skir.UnbindServiceRequest.serializer.fromBytes(data);
+        return skir.UnbindServiceResponse.serializer.toBytes(
+          skir.UnbindServiceResponse.createSuccess(),
+        );
+      });
+      await panel.services.card("Paper host", "Gabbe").select();
+
+      await panel.holdKey(LogicalKeyboardKey.delete);
+
+      await panel.eventually(() => expect(sent?.serviceId, "paper"));
+      expect(panel.container.read(selectionProvider), isEmpty);
+    });
+
+    testWidgets("a refused unbind jams Unbind with its message and keeps "
+        "the service selected", (tester) async {
+      final panel = await tester.pumpPanel(_gabbe);
+      panel.world.nats.registerHandler(
+        _unbindSubject,
+        (_) => skir.UnbindServiceResponse.serializer.toBytes(
+          skir.UnbindServiceResponse.createServiceNotFoundError(),
+        ),
+      );
+      await panel.services.card("Paper host", "Gabbe").select();
+
+      await panel.holdKey(LogicalKeyboardKey.delete);
+
+      expect(panel.refusalOn(_unbindOne), "Service not found");
+      expect(panel.container.read(selectionProvider), isNotEmpty);
+    });
+
+    testWidgets("Ctrl+Backspace no longer unbinds", (tester) async {
+      final panel = await tester.pumpPanel(_gabbe);
+      var sent = false;
+      panel.world.nats.registerHandler(_unbindSubject, (_) {
+        sent = true;
+        return skir.UnbindServiceResponse.serializer.toBytes(
+          skir.UnbindServiceResponse.createSuccess(),
+        );
+      });
+      await panel.services.card("Paper host", "Gabbe").select();
+
+      await panel.pressPrimary(LogicalKeyboardKey.backspace);
+      await panel.holdFor(1);
+      await panel.settle();
+
+      expect(sent, isFalse);
+      expect(panel.container.read(selectionProvider), isNotEmpty);
     });
   });
 

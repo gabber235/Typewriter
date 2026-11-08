@@ -565,7 +565,6 @@ final class AuthoredGraphFixture {
       invocationId: request.invocation.invocationId,
       inputRevision: request.inputRevision,
       edit: edit.prepare(),
-      confirmation: null,
       selection: skir.OperationSelectionEffect.unchanged,
     );
   }

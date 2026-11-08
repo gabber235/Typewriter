@@ -28,9 +28,7 @@ void main() {
       signedIn(ada, organization: acme),
       membershipService(members: [grace, linus]),
     ], at: membersPage());
-    await panel.press(LogicalKeyboardKey.delete);
-    // The dialog until the hold replaces it.
-    await panel.press(LogicalKeyboardKey.enter);
+    await panel.holdKey(LogicalKeyboardKey.delete);
     await panel.eventually(() => expect(panel.focusedRow, linus));
   });
 

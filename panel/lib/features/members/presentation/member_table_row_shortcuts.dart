@@ -5,9 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Adds the member row's keyboard contract without changing its rendering.
 ///
 /// Selection commands operate on the same transient set as pointer controls.
-/// Delete removes the whole current selection when this row is selected;
-/// otherwise it confirms removal for this member alone.
-class MemberTableRowShortcuts extends ConsumerWidget {
+/// Holding Delete removes the whole current selection when this row is
+/// selected; otherwise it removes this member alone.
+class MemberTableRowShortcuts extends StatelessWidget {
   const MemberTableRowShortcuts({
     required this.member,
     required this.onToggleSelection,
@@ -15,8 +15,9 @@ class MemberTableRowShortcuts extends ConsumerWidget {
     required this.onClearSelection,
     required this.isSelected,
     required this.hasSelection,
-    required this.onRemoveSelection,
-    required this.onRemoveFromSelection,
+    required this.rows,
+    required this.selectedIds,
+    required this.nameOf,
     required this.child,
     super.key,
   });
@@ -27,12 +28,16 @@ class MemberTableRowShortcuts extends ConsumerWidget {
   final VoidCallback onClearSelection;
   final bool isSelected;
   final bool hasSelection;
-  final Future<void> Function() onRemoveSelection;
-  final VoidCallback onRemoveFromSelection;
+
+  /// The members rows the tab owns; the remove hold sends and refuses on
+  /// them.
+  final AnimatedRows<Object?> rows;
+  final Set<skir.RecordId> selectedIds;
+  final String? Function(skir.RecordId member) nameOf;
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return ManagedActionSet(
       shortcuts: [
         ActionShortcut.intent(
@@ -41,7 +46,7 @@ class MemberTableRowShortcuts extends ConsumerWidget {
           description: "Toggle selection for this member",
           intent: ActivateIntent,
           priority: 1,
-          onInvoke: (_) => onToggleSelection(),
+          run: ActionRun.press((_) => onToggleSelection()),
         ),
         ActionShortcut.intent(
           id: "select_all_table_members_${member.userId}",
@@ -49,7 +54,7 @@ class MemberTableRowShortcuts extends ConsumerWidget {
           description: "Select all visible members",
           intent: ActivateAllIntent,
           priority: 1,
-          onInvoke: (_) => onSelectAll(),
+          run: ActionRun.press((_) => onSelectAll()),
         ),
         if (hasSelection)
           ActionShortcut.intent(
@@ -58,40 +63,24 @@ class MemberTableRowShortcuts extends ConsumerWidget {
             description: "Clear selected members",
             intent: DismissIntent,
             priority: 1,
-            onInvoke: (_) {
+            run: ActionRun.press((_) {
               onClearSelection();
-            },
+            }),
           ),
-        ActionShortcut.intent(
+        memberRemoval(
           id: "remove_table_member_${member.userId}",
-          label: "Remove member",
-          description: "Remove this member",
-          intent: DeleteIntent,
-          priority: 1,
-          onInvoke: (_) => hasSelection && isSelected
-              ? onRemoveSelection()
-              : _confirmRemoveMember(context, ref),
+          label: hasSelection && isSelected
+              ? "Remove members"
+              : "Remove member",
+          // Act on the selection if it contains the focused row, otherwise
+          // on the row.
+          targets: () =>
+              hasSelection && isSelected ? selectedIds : {member.userId},
+          nameOf: nameOf,
+          rows: rows,
         ),
       ],
       child: child,
-    );
-  }
-
-  Future<void> _confirmRemoveMember(BuildContext context, WidgetRef ref) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Remove ${member.name}?",
-      content:
-          "Are you sure you want to remove this member from the organization?",
-      confirmText: "Remove",
-      confirmIcon: Fa6Solid.user_minus,
-      onConfirm: () {
-        onRemoveFromSelection();
-        return ref.executeMembership(
-          ref.membershipCommands.remove(member.userId),
-          (response) => response.requireAccepted(),
-        );
-      },
     );
   }
 }

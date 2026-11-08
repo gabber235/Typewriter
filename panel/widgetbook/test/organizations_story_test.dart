@@ -49,7 +49,8 @@ void main() {
   ) async {
     final panel = await tester.pumpStory(primarySearchButtonUseCase);
 
-    await tester.tap(panel.labeled("Search"));
+    // The action row repeats Search; both open the same search.
+    await tester.tap(panel.labeled("Search").first);
     await tester.runStory();
 
     await tester.enterText(find.byType(EditableText).last, "westeros");

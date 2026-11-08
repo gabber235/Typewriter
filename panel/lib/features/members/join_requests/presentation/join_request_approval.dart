@@ -35,7 +35,7 @@ class JoinRequestApproval extends StatelessWidget {
             description: "Confirm adding member",
             intent: PrimaryActionIntent,
             priority: 1,
-            onInvoke: (ref) => onConfirm(),
+            run: ActionRun.press((ref) => onConfirm()),
           ),
       ],
       child: Column(

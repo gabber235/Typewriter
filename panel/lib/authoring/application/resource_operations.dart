@@ -147,11 +147,12 @@ enum ResourceOperationMenuGroup { navigation, edit, organize, destructive }
 
 /// Carries immutable targets into menus, inspector controls and shortcuts.
 /// Every catalog operation prepares an authored edit through its capability.
-class ResourceSelectionOperation extends SelectionOperation {
+class ResourceSelectionOperation extends ShortcutableOperation {
   const ResourceSelectionOperation({
     required this.scope,
     required this.invocation,
     required this.operation,
+    this.intent,
     this.canMutate,
   });
 
@@ -161,25 +162,23 @@ class ResourceSelectionOperation extends SelectionOperation {
     required skir.OperationInvocation invocation,
     required skir.ResolvedResourceOperation operation,
     bool Function()? canMutate,
-  }) => switch (operation.definition.presentation.shortcut) {
-    skir.OperationShortcut.delete => _ShortcutResourceSelectionOperation(
-      scope: scope,
-      invocation: invocation,
-      operation: operation,
-      canMutate: canMutate,
-      intent: DeleteIntent,
-    ),
-    _ => ResourceSelectionOperation(
-      scope: scope,
-      invocation: invocation,
-      operation: operation,
-      canMutate: canMutate,
-    ),
-  };
+  }) => ResourceSelectionOperation(
+    scope: scope,
+    invocation: invocation,
+    operation: operation,
+    canMutate: canMutate,
+    intent: switch (operation.definition.presentation.shortcut) {
+      skir.OperationShortcut.delete => DeleteIntent,
+      _ => null,
+    },
+  );
 
   final AuthoringScope scope;
   final skir.OperationInvocation invocation;
   final skir.ResolvedResourceOperation operation;
+
+  /// The declared key's intent, or null.
+  final Type? intent;
   final bool Function()? canMutate;
   bool get enabled =>
       operation.availability == skir.OperationAvailability.enabled &&
@@ -241,49 +240,73 @@ class ResourceSelectionOperation extends SelectionOperation {
     }
   }
 
+  /// A declared confirmation makes the operation a hold; its outcome is the
+  /// line the Realm declared in its one or many form, with the count filled
+  /// from the captured targets, known before the fill moves. Disabled, the
+  /// command has no run.
   @override
-  MenuItem menuItem(WidgetRef ref) => MenuItem(
-    label: disabledReason == null ? name : "$name ($disabledReason)",
+  ActionRun? get run => _run(null);
+
+  /// The run, with every step on [owner] when given: a menu entry closes
+  /// when the run starts, so it runs on the ref of the region that opened
+  /// the menu, which outlives the entry and owns the input form.
+  ActionRun? _run(WidgetRef? owner) {
+    if (!enabled) return null;
+    return switch (operation.definition.presentation.confirmation) {
+      // One Realm operation over every target; no rows, and the runner
+      // reports its own failures.
+      final confirmation? => ActionRun.hold(
+        HoldPlan<skir.ResourceId>.all(
+          targets: (_) => invocation.targets.toSet(),
+          verb: name,
+          outcome: (targets) => targets.length == 1
+              ? confirmation.outcomeOne
+              : confirmation.outcomeMany.replaceAll(
+                  "{count}",
+                  "${targets.length}",
+                ),
+          work: (ref, _) => executeOn(owner ?? ref),
+        ),
+      ),
+      null => ActionRun.press((ref) => executeOn(owner ?? ref)),
+    };
+  }
+
+  /// The one command for key, menu and inspector; its key is registered,
+  /// and the action row shows it, only when the Realm declared one.
+  @override
+  ActionShortcut get shortcut => _command(null);
+
+  ActionShortcut _command(WidgetRef? owner) => ActionShortcut.intent(
+    id: "resource_operation_${operation.definition.id.declaration}",
+    label: name,
+    description: description,
+    intent: intent ?? PrimaryActionIntent,
+    priority: 10,
+    registerShortcut: intent != null,
+    show: intent != null,
+    run: _run(owner),
+  );
+
+  @override
+  MenuItem menuItem(WidgetRef ref) => MenuItem.command(
+    command: _command(ref),
+    disabledReason: disabledReason,
     icon: operation.definition.presentation.icon.isEmpty
         ? null
         : Icones(operation.definition.presentation.icon),
     color:
         operation.definition.presentation.tone ==
             skir.HeaderActionTone.destructive
-        ? Theme.of(ref.context).colorScheme.error
+        ? ref.context.colors.dangerText
         : null,
-    onPressed: enabled ? () => executeOn(ref) : null,
   );
 
   @override
-  Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) => ResourceOperationButton(
-      presentation: operation.definition.presentation,
-      disabledReason: disabledReason,
-      onInvoke: enabled ? () => executeOn(ref) : null,
-    ),
-  );
-}
-
-final class _ShortcutResourceSelectionOperation
-    extends ResourceSelectionOperation
-    implements ShortcutableOperation {
-  const _ShortcutResourceSelectionOperation({
-    required super.scope,
-    required super.invocation,
-    required super.operation,
-    required this.intent,
-    super.canMutate,
-  });
-  final Type intent;
-  @override
-  ActionShortcut get shortcut => ActionShortcut.intent(
-    id: "resource_operation_${operation.definition.id.declaration}",
-    label: name,
-    description: description,
-    intent: intent,
-    priority: 10,
-    onInvoke: enabled ? executeOn : (_) {},
+  Widget inspectorButton(List<Selectable> selection) => ResourceOperationButton(
+    presentation: operation.definition.presentation,
+    disabledReason: disabledReason,
+    command: shortcut,
   );
 }
 

@@ -178,61 +178,20 @@ class _RenderActionRowLayout extends RenderBox
   }
 }
 
-class _ActionShortcutButton extends HookConsumerWidget {
+class _ActionShortcutButton extends StatelessWidget {
   const _ActionShortcutButton({required this.action, super.key});
 
   final ActionShortcut action;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useButtonController();
-    useListenable(controller);
-    final invoke = action.onInvoke;
-    final loading = controller.isLoading;
-    final pill = Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.space2,
-        vertical: context.spacing.space1,
-      ),
-      child: DefaultTextStyle(
-        style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 12,
-        ),
-        child: IconTheme(
-          data: IconThemeData(
-            size: 12,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: context.spacing.space2,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ?action.icon,
-              Flexible(child: MotionLabel(action.label, rippling: loading)),
-              if (action.shortcuts.isNotEmpty)
-                ShortcutDisplay(shortcut: action.shortcuts.first, size: 9),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    // The pill's own label and shortcut name the button.
-    return Semantics(
-      button: true,
-      child: Button(
-        face: ButtonFace.bare,
-        label: "",
-        tooltip: action.description,
-        controller: controller,
-        onPressed: action.canInvoke && invoke != null
-            ? () => invoke(ref)
-            : null,
-        child: pill,
-      ),
+  Widget build(BuildContext context) {
+    // The pill presses the command through CommandRuns, so it shares busy,
+    // refusal and jam with the command's key.
+    return CommandButton(
+      command: action,
+      face: ButtonFace.quiet,
+      icon: action.icon,
+      label: action.label,
     );
   }
 }

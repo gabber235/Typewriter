@@ -26,6 +26,7 @@ class AnimatedTable<T> extends HookWidget {
     this.border,
     this.defaultVerticalAlignment = TableCellVerticalAlignment.top,
     this.textBaseline,
+    this.lineColumn = 0,
     super.key,
   });
 
@@ -41,6 +42,10 @@ class AnimatedTable<T> extends HookWidget {
   final TableCellVerticalAlignment defaultVerticalAlignment;
   final TextBaseline? textBaseline;
 
+  /// The cell that shows a row's hold line and refusal message: the row's
+  /// main text column.
+  final int lineColumn;
+
   TableRow _row(BuildContext context, RowEntry<T> entry) {
     final source = rowBuilder(context, entry);
     return TableRow(
@@ -48,13 +53,15 @@ class AnimatedTable<T> extends HookWidget {
       // The per row hook point; cells stay unaffected.
       decoration: entry.rowDecoration(context, source.decoration),
       children: [
-        for (final child in source.children)
+        for (final (column, child) in source.children.indexed)
           _cell(
             child,
             (content) => RowEntryScope(
               entry: entry,
               partsTraversable: false,
-              child: entry.motion(content),
+              child: entry.motion(
+                column == lineColumn ? entry.rowLine(content) : content,
+              ),
             ),
           ),
       ],

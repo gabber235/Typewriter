@@ -108,7 +108,6 @@ private abstract class RuntimeHeaderActionScope(
     var priority: skirout.editor.v1.expression.ExpressionNode? = null
     var visibleIf: skirout.editor.v1.expression.ExpressionNode? = null
     var enabledIf: skirout.editor.v1.expression.ExpressionNode? = null
-    var confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation? = null
     var placement: HeaderActionPlacement = HeaderActionPlacement.END
 
     fun setTooltip(value: Expr<String, Handled>) {
@@ -125,10 +124,6 @@ private abstract class RuntimeHeaderActionScope(
 
     fun setEnabledIf(value: Expr<Boolean, Handled>) {
         enabledIf = state.lower(value, BOOLEAN_SLOT)
-    }
-
-    fun setConfirmation(value: HeaderActionConfirmation) {
-        confirmation = value.wire(state)
     }
 }
 
@@ -166,8 +161,6 @@ private class RuntimeHeaderButtonScope(
         tone = value
     }
 
-    override fun confirmation(value: HeaderActionConfirmation) = setConfirmation(value)
-
     override fun placement(value: HeaderActionPlacement) {
         placement = value
     }
@@ -183,7 +176,6 @@ private class RuntimeHeaderButtonScope(
             visibleIf = visibleIf,
             enabledIf = enabledIf,
             tone = tone,
-            confirmation = confirmation,
             placement = placement,
         )
 }
@@ -217,8 +209,6 @@ private class RuntimeHeaderToggleScope(
 
     override fun enabledIf(value: Expr<Boolean, Handled>) = setEnabledIf(value)
 
-    override fun confirmation(value: HeaderActionConfirmation) = setConfirmation(value)
-
     override fun placement(value: HeaderActionPlacement) {
         placement = value
     }
@@ -233,7 +223,6 @@ private class RuntimeHeaderToggleScope(
             priority = priority,
             visibleIf = visibleIf,
             enabledIf = enabledIf,
-            confirmation = confirmation,
             placement = placement,
         )
 }
@@ -282,13 +271,6 @@ private class RuntimeHeaderReorderScope(
 private fun HeaderItemId.wire(): skirout.editor.v1.presentation.HeaderItemId =
     skirout.editor.v1.presentation
         .HeaderItemId(namespace = "generated", name = value)
-
-private fun HeaderActionConfirmation.wire(state: PresentationBuildState): skirout.editor.v1.presentation.HeaderActionConfirmation =
-    skirout.editor.v1.presentation.HeaderActionConfirmation(
-        title = state.lower(title, TEXT_SLOT),
-        message = state.lower(message, TEXT_SLOT),
-        confirmationLabel = state.lower(confirmationLabel, TEXT_SLOT),
-    )
 
 private fun skirout.editor.v1.presentation.HeaderItem.itemName(): String =
     when (this) {

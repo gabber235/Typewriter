@@ -215,6 +215,65 @@ void main() {
     });
   }
 
+  group("a refused row", () {
+    testWidgets(
+      "refusing two sending rows ends their sending look together, shows "
+      "both messages and jams only the first in screen order",
+      (tester) async {
+        final source = await tester.showAnimatedItems(numberedItems(3));
+        final command = Completer<void>();
+        final sent = source.rows.sending(["1", "2"], () => command.future);
+        await tester.pump();
+
+        command.complete();
+        await sent;
+        source.rows.refuse({"2": "Two refused", "1": "One refused"});
+        await tester.pump();
+
+        for (final row in ["Row 1", "Row 2"]) {
+          expect(
+            tester.textDecorationOf(find.text(row)),
+            isNot(TextDecoration.lineThrough),
+          );
+        }
+        expect(find.text("One refused"), findsOneWidget);
+        expect(find.text("Two refused"), findsOneWidget);
+        expect(source.rows["1"]!.jams, 1);
+        expect(source.rows["2"]!.jams, 0);
+      },
+    );
+
+    testWidgets("sending a refused row again clears its message", (
+      tester,
+    ) async {
+      final source = await tester.showAnimatedItems(numberedItems(2));
+      await source.rows.sending(["0"], () async {});
+      source.rows.refuse({"0": "Refused"});
+      await tester.pump();
+
+      final again = Completer<void>();
+      final sent = source.rows.sending(["0"], () => again.future);
+      await tester.pump();
+
+      expect(find.text("Refused"), findsNothing);
+      again.complete();
+      await sent;
+    });
+
+    testWidgets("refusing a leaving row changes nothing", (tester) async {
+      final source = await tester.showAnimatedItems(numberedItems(2));
+      source.update(numberedItems(2).sublist(1));
+      await tester.pump();
+
+      source.rows.refuse({"0": "Refused"});
+      await tester.pump();
+
+      expect(find.text("Refused"), findsNothing);
+      await tester.pumpAndSettle();
+      expect(find.text("Row 0"), findsNothing);
+    });
+  });
+
   group("the load", () {
     testWidgets(
       "rows present when content loads ripple in once, and all are visible after the ripple",

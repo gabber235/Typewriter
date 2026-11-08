@@ -13,14 +13,16 @@ class BulkJoinRequestActions extends HookConsumerWidget {
     required this.selectedCount,
     required this.selectedIds,
     required this.onClearSelection,
-    required this.onDecline,
+    required this.decline,
     super.key,
   });
 
   final int selectedCount;
   final Set<skir.RecordId> selectedIds;
   final VoidCallback onClearSelection;
-  final Future<void> Function() onDecline;
+
+  /// The decline hold over the selected requests.
+  final ActionShortcut decline;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,23 +67,16 @@ class BulkJoinRequestActions extends HookConsumerWidget {
             description: "Accept selected join requests",
             activators: const [SingleActivator(LogicalKeyboardKey.keyA)],
             priority: 2,
-            onInvoke: (_) => acceptSelected(),
+            run: ActionRun.press((_) => acceptSelected()),
           ),
-        ActionShortcut.intent(
-          id: "decline_bulk_join_requests_key",
-          label: "Decline requests",
-          description: "Decline selected join requests",
-          intent: DeleteIntent,
-          priority: 2,
-          onInvoke: (_) => onDecline(),
-        ),
+        decline,
         ActionShortcut.intent(
           id: "clear_bulk_join_requests",
           label: "Clear selection",
           description: "Clear selected join requests",
           intent: DismissIntent,
           priority: 2,
-          onInvoke: (_) => onClearSelection(),
+          run: ActionRun.press((_) => onClearSelection()),
         ),
       ],
       child: AnimatedPresence(
@@ -111,13 +106,12 @@ class BulkJoinRequestActions extends HookConsumerWidget {
                     label: "Accept All",
                     busyLabel: "Accepting",
                   ),
-                  Button(
+                  CommandButton(
+                    command: decline,
                     face: ButtonFace.outlined,
-                    onPressed: onDecline,
                     color: context.colors.dangerText,
                     icon: const Icon(Icons.close, size: 18),
-                    label: "Decline All",
-                    busyLabel: "Declining",
+                    label: "Decline all",
                   ),
                 ],
               ),

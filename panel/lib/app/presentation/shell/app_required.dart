@@ -24,8 +24,12 @@ class AppRequiredWidgets extends HookWidget {
           child: GlobalPaneNavigator(
             child: FocusRingLayer(
               child: GlobalActionsManager(
-                child: GlobalModeShortcut(
-                  child: GlobalOperationShortcuts(child: Shimmer(child: child)),
+                child: CommandRunsScope(
+                  child: GlobalModeShortcut(
+                    child: GlobalOperationShortcuts(
+                      child: Shimmer(child: child),
+                    ),
+                  ),
                 ),
               ),
             ),
