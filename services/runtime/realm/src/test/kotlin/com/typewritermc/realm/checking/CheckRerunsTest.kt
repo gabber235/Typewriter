@@ -38,12 +38,14 @@ import com.typewritermc.realm.testing.hookCatalog
 import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.notOneRule
 import com.typewritermc.realm.testing.openCatalogLeases
+import com.typewritermc.realm.testing.plain
 import com.typewritermc.realm.testing.plainType
 import com.typewritermc.realm.testing.plainVar
 import com.typewritermc.realm.testing.rerunSince
 import com.typewritermc.realm.testing.resources
 import com.typewritermc.realm.testing.setDefinitionValue
 import com.typewritermc.realm.testing.setTypes
+import com.typewritermc.realm.testing.setVar
 import com.typewritermc.realm.testing.settle
 import com.typewritermc.realm.testing.settledRuns
 import com.typewritermc.realm.testing.shouldBeCommitted
@@ -57,6 +59,7 @@ import com.typewritermc.types.integer
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
@@ -509,6 +512,20 @@ val CheckRerunsTest by testSuite {
             readNow(ProjectionAt(user))
 
             graphRuns.judgements().grewFrom(before) shouldContain user
+        }
+    }
+
+    test("a value edit that keeps a resource's links rejudges no other resource's links") {
+        val page = setup("reruns-kept-links") { formulaPage { repeat(3) { definition("n$it", intUse, it) } } }
+        withSetup(page, catalog = hookCatalog()) { seeded ->
+            val edited = seeded.named("n0")
+            val linked = resources.keys.filter { readNow(ProjectionAt(it)).projections.isNotEmpty() }
+            val before = graphRuns.judgements()
+            commit(setVar(edited, intUse, plain(5))).shouldBeCommitted()
+            linked.forEach { readNow(ProjectionAt(it)) }
+
+            linked.shouldNotBeEmpty()
+            graphRuns.judgements().grewFrom(before) - edited shouldBe emptySet()
         }
     }
 
