@@ -293,6 +293,8 @@ final class K implements Listener {
                 if ("1".equals(q.get("save"))) w.save();
             }
             case "k.wget" -> r.put("tok", Bukkit.getWorlds().get(0).getPersistentDataContainer().getOrDefault(k.pdcKey, PersistentDataType.STRING, ""));
+            case "k.cached" -> r.put("found", Bukkit.getOfflinePlayerIfCached(q.get("name")) != null ? 1 : 0);
+            case "k.isop" -> r.put("found", Bukkit.getOperators().stream().anyMatch(o -> o.getUniqueId().toString().equals(q.get("uuid"))) ? 1 : 0);
             case "k.checkpoint" -> {
                 Thread t = new Thread(() -> probe.agent.Crac.checkpointNow("done"), "probe-crac");
                 t.start();

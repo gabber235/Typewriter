@@ -418,7 +418,7 @@ def trial(rig, scene, broken, i, after):
     """K's trial with a fourth scene: a value in the overworld's level data, saved (good) or not (broken)."""
     c = rig.clients[0]
     S = rig.paper.S
-    K.scene_cfg(rig, scene if scene != "world" else "reward", False if scene == "world" else broken)
+    K.scene_cfg(rig, scene if scene in ("grace", "reward", "mail") else "reward", broken if scene in ("grace", "reward", "mail") else False)
     S("k.wipe", player=c.name, scope="full")
     c.C("clearChat")
     tok = f"{scene[0]}{i}x{__import__('random').randrange(10**5)}"
@@ -431,6 +431,23 @@ def trial(rig, scene, broken, i, after):
         c.barrier(S)
     elif scene == "world":
         S("k.wset", player=c.name, tok=tok, save=int(not broken))
+    elif scene in ("cache", "ops"):
+        # Written while Paper is down; a fresh boot reads it. Broken: never written, so it must not be found.
+        ghost, gid = f"g{tok}"[:16], str(__import__("uuid").uuid4())
+
+        def before():
+            if broken:
+                return
+            if scene == "cache":
+                f = rig.paper.dir / "usercache.json"
+                old = json.loads(f.read_text()) if f.exists() else []
+                old.append({"name": ghost, "uuid": gid, "expiresOn": "2030-01-01 00:00:00 +0000"})
+                f.write_text(json.dumps(old))
+            else:
+                f = rig.paper.dir / "ops.json"
+                old = json.loads(f.read_text()) if f.exists() else []
+                old.append({"uuid": gid, "name": ghost, "level": 4, "bypassesPlayerLimit": False})
+                f.write_text(json.dumps(old))
     elif scene == "mail":
         def before():
             mail = rig.paper.dir / "plugins/Probe/k/mail" / f"{uuid}.txt"
@@ -451,6 +468,10 @@ def trial(rig, scene, broken, i, after):
         inv = c.C("k.inv", name="R" + tok)
         out["count"] = inv["count"]
         passed = inv["count"] == 1
+    elif scene == "cache":
+        passed = S("k.cached", player=c.name, name=ghost)["found"] == 1
+    elif scene == "ops":
+        passed = S("k.isop", player=c.name, uuid=gid)["found"] == 1
     elif scene == "world":
         got = S("k.wget", player=c.name)["tok"]
         out["got"] = got
@@ -485,6 +506,7 @@ def cmd_scenes(a):
     for c in rig.clients:
         c.paper = rig.paper
     rows = []
+    srv_mtime = max((f.stat().st_mtime for f in img.srv.glob("world/**/*") if f.is_file()), default=None) if img else None
     with rig:
         rig.paper.S("tickrate", rate=20)
         for i in range(a.n):
@@ -492,6 +514,8 @@ def cmd_scenes(a):
                 for broken in (False, True):
                     rows.append(trial(rig, scene, broken, i, a.after))
                     print(json.dumps(rows[-1])[:500], flush=True)
+        # Inside the rig: the run folder is removed when it closes.
+        where = {"world_in_run_dir": any((rig.paper.dir / "world").glob("**/level.dat"))}
     by = {}
     for r in rows:
         by.setdefault(f"{r['scene']}-{'broken' if r['broken'] else 'good'}", []).append(r)
@@ -501,6 +525,7 @@ def cmd_scenes(a):
            cpu_s=stat([r["facts"]["cpu_s"] for r in rows]), rss=stat([r["facts"].get("rss") for r in rows]),
            wrong=sum(r["wrong"] for r in rows), trials=len(rows), after_wrong=sum(r["after_wrong"] for r in rows),
            wrong_by={k: f"{sum(r['wrong'] for r in v)}/{len(v)}" for k, v in sorted(by.items())},
+           where={**where, "image_srv_world_mtime_unchanged": (max((f.stat().st_mtime for f in img.srv.glob("world/**/*") if f.is_file()), default=None) == srv_mtime) if img else None},
            rows=[{k: v for k, v in r.items() if k != "facts"} for r in rows])
 
 
@@ -541,7 +566,7 @@ def main(argv=None):
     s = sub.add_parser("scenes")
     s.add_argument("--image", required=True)
     s.add_argument("--n", type=int, default=3)
-    s.add_argument("--scenes", default="grace,reward,mail,world")
+    s.add_argument("--scenes", default="grace,reward,mail,world,cache,ops")
     s.add_argument("--after", type=int, default=3)
     a = ap.parse_args(argv)
     try:

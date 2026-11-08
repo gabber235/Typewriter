@@ -1024,27 +1024,26 @@ def cmd_restore(backend):
     boot = first_ok(("boot", "warp", "none"), ("boot", "warp", "boot"))
     warm = first_ok(("boot", "warp", "boot", "", 1))
     data = first_ok(("data", "warp", "data"))
-    done = first_ok(("done", "warp", "done"))
-    criu = first_ok(("boot", "criuengine", "boot"))
-    comp = first_ok(("boot", "criuengine", "boot", "compression=true"))
+    done = first_ok(("done", "warp", "done")) if rep == 0 else None
+    criu = first_ok(("boot", "criuengine", "boot")) if rep == 0 else None
+    comp = first_ok(("boot", "criuengine", "boot", "compression=true")) if rep == 0 else None
     record("restore_images", boot=boot, warm=warm, data=data, done=done, criu=criu, comp=comp)
-    if warm:
-        step("compare warm", RS.main, ["compare", "--image", warm, "--n", "5"])
-    if data:
-        step("compare data", RS.main, ["compare", "--image", data, "--n", "3"])
+    for name in (boot, warm, data):
+        if name:
+            step(f"compare {name}", RS.main, ["compare", "--image", name, "--n", "5"])
     if boot:
-        step("compare boot", RS.main, ["compare", "--image", boot, "--n", "5"])
         step("parallel 2", RS.main, ["parallel", "--image", boot, "--k", "2"])
         step("parallel 4", RS.main, ["parallel", "--image", boot, "--k", "4"])
-    for name in (criu, comp):
-        if name:
-            step(f"compare {name}", RS.main, ["compare", "--image", name, "--n", "3"])
-    if criu:
-        step("parallel criu 2", RS.main, ["parallel", "--image", criu, "--k", "2", "--kinds", "restore"])
-    if done:
-        step("compare done", RS.main, ["compare", "--image", done, "--n", "3"])
+    if rep == 0:
+        if data:
+            step("parallel data 2", RS.main, ["parallel", "--image", data, "--k", "2", "--kinds", "restore"])
+        for name in (criu, comp, done):
+            if name:
+                step(f"compare {name}", RS.main, ["compare", "--image", name, "--n", "3"])
+        if criu:
+            step("parallel criu 2", RS.main, ["parallel", "--image", criu, "--k", "2", "--kinds", "restore"])
     n = "3" if rep == 0 else "2"
-    for name in (warm or boot, "boot", data, done):
+    for name in (warm or boot, "boot", data):
         if name:
             step(f"scenes {name}", RS.main, ["scenes", "--image", name, "--n", n])
 

@@ -26,6 +26,8 @@ jobs:
       matrix:
         include:
           - { plan: restore, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: restore, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: restore, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
     defaults:
       run:
         working-directory: prototypes/game-verification
