@@ -36,6 +36,7 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
 
 // The interpreter's test world: resources with stored values over the evaluation catalog, checked and run the way a
@@ -73,6 +74,7 @@ fun setType(item: TypeUse): TypeUse = StandardTypes.set.use(listOf(item))
 
 private val crewUse = CrewDefinition.id.use()
 private val moodUse = MoodDefinition.id.use()
+private val measureUse = MeasureDefinition.id.use()
 
 /** The resources every interpreter case sees. */
 val evaluationResources: List<EvaluationResource> =
@@ -142,6 +144,8 @@ val evaluationResources: List<EvaluationResource> =
             listOf(deferredItem("brokenScores", "value", "a"), deferredItem("brokenScores", "value", "b")),
         ),
         EvaluationResource("wait", ScalarKind.DURATION.use, 90.seconds),
+        EvaluationResource("storedMeasure", measureUse, RecordValue(measureUse, mapOf("ratio" to 0.5f))),
+        EvaluationResource("price", ScalarKind.DECIMAL.use, BigDecimal("1.10")),
         EvaluationResource("maybe", nullable(int), null),
         EvaluationResource("some", nullable(int), 4),
     )

@@ -1,6 +1,7 @@
 package com.typewritermc.formula.syntax
 
 import com.typewritermc.formula.TextSpan
+import java.math.BigDecimal
 
 // The expression grammar: a Pratt parser for operators, recursive descent for everything else.
 
@@ -237,7 +238,7 @@ private val primaryRules: Map<TokenKind, FormulaParser.() -> Expression> =
     mapOf(
         TokenKind.Identifier to { name(advance()) },
         TokenKind.Integer to { parseInteger() },
-        TokenKind.Decimal to { advance().let { Literal(LiteralValue.Decimal(it.text.toDouble()), it.span) } },
+        TokenKind.Decimal to { advance().let { Literal(LiteralValue.Decimal(BigDecimal(it.text)), it.span) } },
         TokenKind.True to { Literal(LiteralValue.Bool(true), advance().span) },
         TokenKind.False to { Literal(LiteralValue.Bool(false), advance().span) },
         TokenKind.Null to { Literal(LiteralValue.Null, advance().span) },

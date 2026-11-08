@@ -3,10 +3,13 @@ package com.typewritermc.formula.eval
 import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.testing.EvaluationWorld
 import com.typewritermc.formula.testing.boolean
+import com.typewritermc.formula.testing.decimal
 import com.typewritermc.formula.testing.double
 import com.typewritermc.formula.testing.failure
+import com.typewritermc.formula.testing.float
 import com.typewritermc.formula.testing.int
 import com.typewritermc.formula.testing.listType
+import com.typewritermc.formula.testing.long
 import com.typewritermc.formula.testing.nullable
 import com.typewritermc.formula.testing.onSmallStack
 import com.typewritermc.formula.testing.rewardUse
@@ -15,6 +18,7 @@ import com.typewritermc.formula.testing.setType
 import com.typewritermc.formula.testing.string
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import java.math.BigDecimal
 
 val InterpreterTest by testSuite {
     for ((source, expected, value) in listOf(
@@ -197,5 +201,21 @@ val InterpreterTest by testSuite {
     test("a provider that returns a record holding an unevaluated formula fails with its message") {
         run("brokenMood().levelOf()", int).failure shouldBe
             FormulaFailure.ProviderThrew("A provider returned a formula where a value was expected.")
+    }
+
+    test("a Float literal is the Float a stored value of that number is, in ==, is, a record and a provider call") {
+        run("storedMeasure.ratio == 0.5", boolean) shouldBe Evaluation.Value(true)
+        run("let r: Float = 0.5\nr is Float", boolean) shouldBe Evaluation.Value(true)
+        run("Measure(ratio = 0.5) == storedMeasure", boolean) shouldBe Evaluation.Value(true)
+        run("half(0.5)", float) shouldBe Evaluation.Value(0.25f)
+    }
+
+    test("a Decimal literal keeps the digits and scale it is written with, as a stored Decimal does") {
+        run("price == 1.10", boolean) shouldBe Evaluation.Value(true)
+        run("12345678901234567890.123456789", decimal) shouldBe Evaluation.Value(BigDecimal("12345678901234567890.123456789"))
+    }
+
+    test("a Long literal beyond 2^53 keeps every digit") {
+        run("9007199254740993", long) shouldBe Evaluation.Value(9_007_199_254_740_993L)
     }
 }
