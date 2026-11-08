@@ -485,6 +485,9 @@ class DefaultCheckedCatalog private constructor(
                 .mapNotNull { case -> (resolve(case.use) as? Resolution.Ready)?.value }
                 .flatMap { case -> if (case.schema.representation.isInstantiable()) listOf(case) else concreteForms(case) }
                 .distinct()
+                // A case of a generic union may fix its parent's arguments (`Count : Result<Int>`), so it is a form of
+                // only the applications it reads as.
+                .filter { case -> isResolvedReadableAs(case.use, expected.use, case.schema) }
         }
         return definitions.values
             .filter { it.size == 1 }
