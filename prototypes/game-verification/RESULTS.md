@@ -1,218 +1,193 @@
-# Topology spike: shared stepped Paper (A) against a Paper per attempt slot (B)
+# Restore prototype: a CRaC checkpoint of Paper instead of a boot for restart requirements
 
-Question: how much slower is each Paper topology at 1,000 requirements on GitHub's free runner? Thresholds from the
-developer: 10 percent slower is fine, 20 percent is rough, over 50 percent is a no go.
+Question: can a restart requirement restore a checkpointed Paper 26.3 in about a second instead of booting it, and
+still read the state the killed Paper left behind?
 
 ## Answer
 
-- **B (a stepped Paper per attempt slot) is a no go once requirements claim groups.** Without groups B is 2.3 times
-  *faster* than A. At 10 percent groups it is 4.9 times slower (+390 %), at 30 percent 8.8 times (+777 %), because every
-  group claim moves clients between Papers (0.3 to 1.0 s per move, p50) and the move holds the Paper. Moving a group's
-  clients at the same time did not help (moves are CPU bound on the runner).
-- **With 1 percent restart requirements B is also no go at every group mix** (+41 %, +104 %, +182 % at 0, 10 and 30
-  percent groups): B's restart boots compete with four stepped Papers and four clients for 4 vCPU (boot 9 to 32 s
-  against 8 to 14 s in A).
-- **A pays for async work globally.** One attempt's 50 to 150 ms of async work stops the tick for every attempt on the
-  shared Paper: 10 to 26 s of other attempts' time per 1,000 requirements, about 100 ms each time an attempt is hit.
-  That is why B wins at 0 percent groups.
-- **Restarts dominate both.** 10 restart requirements (1 percent) take 82 to 89 percent of A's wall time; the other
-  990 requirements are done after 20 to 27 s.
-- **B-fresh (a fresh Paper per requirement) is not feasible**: a boot costs 22 to 39 CPU seconds, so 4 vCPU boot at most
-  0.10 to 0.18 Papers a second; 1,000 requirements take 1.5 to 2.8 hours against A's 13 to 15 s.
-- **Verdicts right**: 0 wrong in 36,000 requirements of the final run (3,600 deliberately broken, 4,776 group
-  requirements, 3,600 with 50 to 150 ms async work, 180 restart requirements). Before the final run the rig had one
-  false pass in 18,000 (a stale ack, see Surprises); fixed and rerun.
+- **It works, at the boot point, and it is never wrong: 0 wrong verdicts in 84 restart trials** (spike K's three
+  scenes plus three new ones, good and broken, 3 jobs). The checkpoint is taken in Paper's `Main` right after
+  `Bootstrap.validate`, before anything reads the server folder; the restore moves the process into the requirement's
+  folder before the boot continues. Everything a requirement can check (player data, world, plugin data,
+  `usercache.json`, `ops.json`) is read after the restore, from the killed Paper's folder.
+- **It is not a second.** Warp's restore itself takes **0.06 to 0.10 s**, but the boot after the point still runs:
+  **restore to Done 3.9 to 4.9 s against 8.0 to 8.6 s for a boot** (minus 45 to 50 percent), **13.5 to 16.7 CPU s
+  against 25.7 to 27.7** (minus 40 to 47 percent). With clients running (the restart requirement itself): **client
+  rejoined and ready 8.8 to 9.1 s after the kill, against 13.9 to 14.5 s** (minus 37 percent), 21 against 34 CPU s.
+- **A later point is faster and wrong**, exactly like spike K's standby:
+  - **data point** (after `level.dat` and the data packs, before `MinecraftServer.spin`): restore to Done **1.8 to
+    2.2 s**, ready **5.6 to 6.1 s**, but **wrong in every good usercache trial (7 of 7)**: `usercache.json` is loaded
+    in `Main` before the point, so the restored Paper never sees names cached while it was down. It also bakes
+    `server.properties` (the restored Paper listens on the image's port: 2 restores at once fail with "FAILED TO BIND
+    TO PORT"), and (**inferred** from `Main`'s code) the Bukkit, Spigot and Paper configs and the data pack selection.
+  - **done point** (after Done): the image is created (once listeners reopen, sockets close, files are ignored), but
+    the restored Paper dies (watchdog thread dump, then "Bad file descriptor" on every region file) or never answers.
+    By design it would also bake everything read at boot (the plugin's config and persisted sessions, the standby's
+    failure), so it was not pursued further.
+- **Warp, not CRIU.** Warp (Zulu's default engine) needs no root, restores in the launching process with a new PID,
+  so parallel restores just work. CRIU restores the image's PID: **"Can't fork for 4423: File exists"** as soon as
+  that PID is taken, serially and in parallel.
+- **Parallel**: 4 restores at once reach Done in 25.5 to 26.0 s against 36.4 to 41.9 s for 4 boots, use 1.9 to
+  2.3 GB against 2.9 to 3.1 GB (pages of the image are shared: PSS 545 to 776 MB against 722 to 829 MB), but each
+  restore then costs about 25 CPU s instead of 16: the boot after the point is CPU bound and 4 vCPU are shared.
 
-Machine: GitHub hosted `ubuntu-24.04`, x86, 4 vCPU, 16 GB, Vulkan on lavapipe, gated clients (render gate 2),
-854x480, render distance 2, void world, Paper 26.3 build 242 with the step agent and a dynamic AppCDS archive
-(159 MB, dumped and mapped with the agent). One job per repeat runs both topologies on the same runner with the same
-seeds, order alternating with the repeat. Final run CPUs: jobs 0 and 1 AMD EPYC 7763, job 2 AMD EPYC 9V45. Load
-average 6 to 19 on 4 vCPU during runs: the rig itself saturates the runner; nothing else ran. Measured unless marked
-**inferred**.
-
-Evidence:
+Machines: GitHub hosted `ubuntu-24.04`, 4 vCPU, 16 GB, Vulkan on lavapipe for the client. Final run
+[42432909519](https://github.com/gabber235/Typewriter/actions/runs/42432909519): job 0 Intel Xeon Platinum 8370C,
+jobs 1 and 2 AMD EPYC 7763. Azul Zulu 25.0.4.1 CRaC (`zulu25.36.205-ca-crac-jdk25.0.4.1-linux_x64`) for every JVM,
+boots and restores alike. Paper 26.3 build 242, K's direct trimmed launch, step agent, probe plugin, void world,
+dynamic AppCDS archive (157 MB, dumped with the same flags), log to stdout only. Measured unless marked **inferred**.
 
 | Run | What |
 |---|---|
-| [42345155973](https://github.com/gabber235/Typewriter/actions/runs/42345155973) | **final**: A against B with parallel moves, 3 jobs, 36 runs of 1,000, 0 wrong |
-| [42339156447](https://github.com/gabber235/Typewriter/actions/runs/42339156447) | A against B with moves one after another, 3 jobs, 36 runs of 1,000, 0 wrong |
-| [42342290365](https://github.com/gabber235/Typewriter/actions/runs/42342290365) | first parallel moves run: 1 false pass (stale ack) and 1 stalled client (clock switch race); superseded |
-| [42336500003](https://github.com/gabber235/Typewriter/actions/runs/42336500003) | cancelled; job 1 holds the B run with 4 restarts at once and the archive not mapped |
+| [42432909519](https://github.com/gabber235/Typewriter/actions/runs/42432909519) | **final**: 3 jobs, all tables below |
+| [42430503770](https://github.com/gabber235/Typewriter/actions/runs/42430503770) | data scenes without usercache and ops (0 wrong), CRIU and done failure logs |
+| [42428577188](https://github.com/gabber235/Typewriter/actions/runs/42428577188) | first working images; data image listening on the baked port |
+| [42427417144](https://github.com/gabber235/Typewriter/actions/runs/42427417144) | every image refused (the list below) |
 
-Raw rows: artifact `h-topology-vulkan-X64-<repeat>`, file `topo.jsonl`, one summary row per run of 1,000.
+Raw rows: artifact `h-restore-vulkan-X64-<repeat>`, files `restore.jsonl` and `h.jsonl`; refusal logs `image-*.log`,
+failed restores `fail-*`.
 
-## The workload
+## Restore against boot (final run)
 
-Synthetic requirements in the style of spikes D and N, generated from a seed (`topo.py generate`), the same seeds for
-both topologies (seed = repeat + 1). Every requirement: full wipe of every claimed player (`k.wipe scope=full`, K's 17
-kinds), the client watches a fresh token, one probe call as the stimulus (`n.att`), then the window check closed by the
-E3t barrier (pass at the first step ack after the stimulus in which every member saw the token; fail once the
-window's ticks have run with every member acked and quiet).
+Restart into the same folder (the first start makes the world, the second is measured), seconds from spawn to Done.
+Per job: Xeon 8370C / EPYC 7763 / EPYC 7763; median of 5 (3 for CRIU).
 
-| Share | Kind |
-|---|---|
-| 1 percent | restart: K's reward scene (item given and saved, SIGKILL, boot, reconnect, item there exactly once) |
-| 10 percent | async: Bukkit async work of 50 to 150 ms, then the chat line through a sync task, window 4 |
-| rest, half | chat now, window 2 |
-| rest, half | chat 1 to 8 ticks later, window late + 2 |
-| 0, 10 or 30 percent of the non restart ones | group: 2 or 3 players, the token goes to every member |
-| 10 percent, across all kinds | broken: the last member never gets the effect (restart: no save before the kill) |
-
-Restarts are scheduled first (the longest work). The scheduler starts requirements in order as resources free up; a
-normal requirement that cannot start holds its place (a group reserves the clients it waits for), a restart that
-cannot start is passed over. Both topologies run one restart at a time (A has one extra Paper; B is capped, see
-Surprises). 99 warm up requirements run on each rig before the measured runs.
-
-## Overhead of B against A (final run)
-
-Per job, same runner and seed; median of 3 jobs (range). Wall time for 1,000 requirements.
-
-| Restarts | Groups | A wall s | B wall s | B against A | Verdict |
-|---|---|---|---|---|---|
-| 0 | 0 % | 14.0 (12.8 to 14.7) | 6.0 (4.4 to 6.1) | **−59 %** (−66 to −56) | B faster |
-| 0 | 10 % | 14.9 (14.1 to 15.2) | 73.1 (40.4 to 84.3) | **+390 %** (+186 to +454) | no go |
-| 0 | 30 % | 17.3 (15.3 to 17.6) | 151.6 (89.2 to 159.8) | **+777 %** (+482 to +810) | no go |
-| 1 % | 0 % | 217.8 (124.8 to 222.9) | 307.2 (128.9 to 426.4) | **+41 %** (+3 to +91) | rough to no go |
-| 1 % | 10 % | 197.2 (119.6 to 202.9) | 401.9 (193.9 to 532.7) | **+104 %** (+62 to +163) | no go |
-| 1 % | 30 % | 200.0 (125.9 to 202.9) | 572.2 (252.2 to 580.5) | **+182 %** (+100 to +190) | no go |
-
-The fast EPYC 9V45 job is always the low end of B's range; the overhead holds on every CPU.
-
-### B with moves one after another (run 42339156447)
-
-| Restarts | Groups | A wall s | B wall s | B against A |
+| Start | Wall to Done | Restore alone | CPU s | RSS MB |
 |---|---|---|---|---|
-| 0 | 0 % | 13.7 (11.9 to 13.8) | 5.1 (4.3 to 5.8) | −63 % (−64 to −58) |
-| 0 | 10 % | 13.9 (12.8 to 14.8) | 70.7 (43.8 to 77.2) | +407 % (+242 to +421) |
-| 0 | 30 % | 16.6 (13.8 to 16.8) | 137.0 (83.6 to 158.4) | +716 % (+506 to +853) |
-| 1 % | 0 % | 187.9 (128.1 to 217.6) | 293.5 (106.2 to 368.2) | +35 % (−17 to +96) |
-| 1 % | 10 % | 175.2 (115.5 to 198.1) | 396.7 (189.5 to 457.8) | +100 % (+64 to +161) |
-| 1 % | 30 % | 172.8 (104.4 to 196.5) | 494.3 (228.9 to 556.9) | +186 % (+119 to +186) |
+| boot (plain, AppCDS) | 7.98 / 8.28 / 8.58 | | 25.7 / 26.1 / 27.7 | 780 to 800 |
+| **restore, boot point** | 4.66 / 4.55 / 4.90 | 0.065 / 0.090 / 0.082 | 15.7 / 16.0 / 16.7 | 725 to 746 |
+| **restore, boot point, converters warmed** | **3.94 / 4.24 / 4.29** | 0.056 / 0.072 / 0.071 | **13.5 / 14.0 / 14.1** | 773 to 784 |
+| restore, data point (wrong, see scenes) | 1.82 / 1.97 / 2.18 | 0.059 / 0.072 / 0.080 | 5.5 / 6.3 / 7.0 | 681 to 730 |
+| restore, boot point, CRIU compressed (job 0) | 4.65 | 0.343 | 15.4 | 757 |
+| restore, boot point, CRIU (job 0) | failed: PID of the image taken | | | |
+| restore, done point (job 0) | failed: never answered | | | |
 
-CPUs EPYC 7763, 9V74, 9V45. Parallel moves change nothing beyond the noise: a move draws the client until ready
-(lavapipe, CPU) and several at once only share the same 4 vCPU.
+"Converters warmed": DataConverter's type registry (`MCTypeRegistry`, pure code, 0.25 to 0.5 s) is initialised
+before the checkpoint. Restore alone: spawn of `java -XX:CRaCRestoreFrom` to the restored JVM's first line.
 
-## Requirement time (final run)
+## Restart requirements (final run)
 
-Milliseconds from the moment the requirement starts (claim) to its verdict, moves and restarts included. Median of the
-3 jobs' p50 and p95.
+K's restart scenes on a Paper with one warm client (gated, rate 20). Seconds from the start of the restart (kill)
+to Paper Done and to the client rejoined and ready (E's start signal, hands settled). Per job, median (p95).
 
-| Restarts | Groups | A p50 | A p95 | B p50 | B p95 |
+| Paper | Trials | **Wrong** | Done | **Ready** | CPU s at Done |
 |---|---|---|---|---|---|
-| 0 | 0 % | 23 | 174 | 11 | 109 |
-| 0 | 10 % | 22 | 157 | 20 | 1,034 |
-| 0 | 30 % | 18 | 152 | 25 | 1,306 |
-| 1 % | 0 % | 46 | 196 | 31 | 137 |
-| 1 % | 10 % | 35 | 173 | 28 | 1,694 |
-| 1 % | 30 % | 30 | 159 | 27 | 1,462 |
+| boot | 36 / 24 / 24 | **0** | 11.16 / 11.42 / 11.79 | 13.88 (14.40) / 14.12 (14.80) / 14.54 (15.22) | 33.0 / 33.9 / 34.3 |
+| **restore, boot point, warmed** | 36 / 24 / 24 | **0** | 6.06 / 6.07 / 6.27 | **8.78 (9.13) / 8.84 (9.37) / 9.11 (9.32)** | 20.9 / 20.8 / 21.1 |
+| restore, data point | 36 / 24 / 24 | **3 / 2 / 2, all usercache good** | 2.81 / 3.21 / 3.30 | 5.64 (5.96) / 5.98 (6.28) / 6.12 (6.46) | 12.0 / 12.9 / 13.1 |
 
-- A's p95 is the async kinds (async p50 120 to 140 ms, p95 180 to 270 ms: the work itself plus waits on other
-  attempts' async work). A group requirement costs the same as a single one (p50 17 to 39 ms).
-- B's p95 with groups is the moves: group requirements p50 0.03 to 1.4 s, p95 0.8 to 3.0 s; singles that move away
-  from a crowded Paper or wait behind a group have p95 0.3 to 0.9 s; async requirements wait behind moves too (p95 up to
-  2.1 s).
-- Restart requirements p50: A 11.4 to 20.8 s (boot 7.7 to 14.0 s), B 11.8 to 41.7 s (boot 9.1 to 31.8 s).
+The kill takes 0.07 to 0.12 s. After every restart 3 ordinary chat requirements ran: 0 wrong in all rows. The world
+of every restored Paper was in the requirement's folder, and the image's own folder was never written
+(`world_in_run_dir`, `image_srv_world_mtime_unchanged` in the rows). Scenes, each good and deliberately broken; a wrong
+verdict is a pass on broken or a fail on good:
 
-## Moves, boots and memory (final run)
-
-| Measure | Value |
-|---|---|
-| Move a client between stepped Papers (B: leave like the pause menu, connect, facts ready, step again) | p50 0.33 to 0.95 s, p95 0.53 to 2.55 s |
-| Move a client to the unstepped extra Paper or back (A restart) | p50 0.56 to 1.42 s, p95 0.9 to 4.6 s |
-| Boot of 4 Papers in parallel (B setup) | 27.2 s (9V45), 39.4 and 39.9 s (7763); each 26 to 39 CPU s |
-| Boot of 2 Papers in parallel (A setup) | 11.4 s (9V45), 18.2 and 18.6 s (7763); each 22 to 35 CPU s |
-| Restart boot while the other attempts run | A 7.7 to 14.0 s, B 9.1 to 31.8 s (p50 per run) |
-| Kill to ready (facts) | A 9.8 to 17.7 s, B 11.4 to 39.1 s |
-| Paper RSS after boot | 0.83 to 0.86 GB |
-| Client RSS | 1.35 to 1.50 GB |
-| **Peak memory used, whole runner** (MemTotal − MemAvailable) | **A 8.3 to 8.5 GB, B 10.1 to 11.1 GB** of 16 |
-| Busy vCPU over a run, no restarts | A 1.4 to 2.0, B 2.7 to 3.5 |
-| Busy vCPU over a run with restarts | A 3.6 to 3.8, B 3.6 to 4.0 |
-
-## A: time lost to another attempt's async work (final run)
-
-The step policy attributes every idle pass between ticks to each running attempt: its own member lags or is busy,
-or another attempt's member is busy (lost to async) or lags (lost to ack). Totals per run of 1,000.
-
-| Run | Lost to others' async, total s | Attempts hit | Loss per attempt hit, median ms | Lost to others' acks, total s | Own async wait, total s |
-|---|---|---|---|---|---|
-| no restarts, 0 % groups | 24.8 to 26.2 | 240 to 253 | 95 to 105 | 2.3 to 3.9 | 9.3 to 9.9 |
-| no restarts, 10 % groups | 21.2 to 22.7 | 213 to 215 | 94 to 98 | 1.9 to 2.7 | 9.3 to 9.8 |
-| no restarts, 30 % groups | 13.6 to 14.6 | 131 to 147 | 93 to 100 | 1.3 to 1.9 | 9.6 to 9.9 |
-| 1 % restarts, 0 % groups | 17.0 to 17.4 | 177 to 190 | 88 to 99 | 4.5 to 7.3 | 9.1 to 9.5 |
-| 1 % restarts, 30 % groups | 9.5 to 10.2 | 102 to 108 | 90 to 93 | 1.8 to 2.9 | 9.3 to 9.5 |
-
-- The totals add over attempts that run at the same time, so they exceed wall time. On wall time: the 100 async
-  requirements (about 100 ms each) stop the shared Paper for about 10 s, most of A's 13 to 17 s.
-- Groups lower the loss because fewer attempts run at once (a group claims 2 or 3 of the 4 clients).
-- Waiting on other clients' acks costs little (1 to 7 s summed per 1,000).
-- On a shared Paper this loss shrinks only by keeping async work from holding the tick, or by running async heavy
-  requirements on their own Paper (**inferred**).
-
-## B-fresh: a fresh Paper per requirement, booted ahead (computed, not built)
-
-Inputs, final run on the runner (4 vCPU, 16 GB): boot costs 22 to 39 CPU s per Paper (22 to 27 on the 9V45, 35 to 39 on
-the 7763); 2 Papers boot together in 11 to 19 s wall, 4 in 27 to 40 s; Paper RSS 0.85 GB; 4 clients 5.6 GB; joining a
-new Paper 0.3 to 1.0 s per client.
-
-Little's law: booters in flight = rate × boot wall time; boot CPU = rate × CPU seconds per boot.
-
-| Target | Rate | CPU for boots | Booters in flight (at 12 s each) | Memory for them |
+| Scene | Good | Broken | Boot point | Data point |
 |---|---|---|---|---|
-| Match A, no restarts (1,000 in 14 s) | 71 per s | 1,560 to 2,770 vCPU | about 850 | about 720 GB |
-| Match A with 1 % restarts (1,000 in 200 s) | 5 per s | 110 to 195 vCPU | about 60 | about 51 GB |
-| Everything the runner has | 4 vCPU / 22 to 39 CPU s | 0.10 to 0.18 boots per s | 2 to 3 | 2 to 3 GB |
+| grace (K) | session ends with Paper | sessions persisted, rejoin resumes | 0 of 14 | 0 of 14 |
+| reward (K) | saved before the kill, there once | not saved, lost | 0 of 14 | 0 of 14 |
+| mail (K) | written while down, delivered once | never deleted, delivered again | 0 of 14 | 0 of 14 |
+| world | value in the overworld's level data, saved | not saved | 0 of 14 | 0 of 14 |
+| usercache | name written to `usercache.json` while down, found after | not written, not found | 0 of 14 | **7 of 7 good wrong** |
+| ops | op written to `ops.json` while down, an operator after | not written | 0 of 14 | 0 of 14 |
 
-On the free runner B-fresh is CPU bound at 0.10 to 0.18 requirements a second: 1,000 requirements take **1.5 to 2.8
-hours** (restarts come free, since every Paper is fresh), against 13 to 15 s for A without restarts and 2 to 4 minutes
-with them. Memory is not the limit (16 GB holds about 12 Papers next to 4 clients); boot CPU is. Inferred from the
-measured boot cost: a Paper boot would have to get 100 to 1,000 times cheaper to matter.
+Grace broken is the cell spike K's standby got wrong (it read the session file at its boot, before the requirement
+wrote it). The boot point reads it after the restore: 0 wrong. The world scene was added for the data point and
+passed (Paper reads each world's level data again when it loads the world, after `spin`); usercache found what the
+data point bakes.
 
-## Complexity cost
+## Images (final run)
 
-Non blank, non comment lines of the throwaway rig (`orchestrator/topo.py`, `probe-plugin/.../N.java`).
+Created once per suite: the image Paper boots to the point, checkpoints and is killed by the engine.
 
-| Part | Shared by both | A only | B only |
-|---|---|---|---|
-| Step policy widened from one subject to a set of attempts (`N.java` hook, finish, attempt registration) | about 115 (50 before) | | |
-| Idle keepalive tick (a Paper with no attempt still ticks once a second) | 8 | never triggered in practice (S always runs attempts) | required: idle Papers hit Paper's 60 s watchdog |
-| Requirement body, move, restart scene, Paper wrapper | 90 | | |
-| Scheduler and rig base | 95 | | |
-| Topology class (claims, placement, restart handling) | | 61 | 88 |
+| Point | Engine | Spawn to point s | Write s | CPU s | Image MB |
+|---|---|---|---|---|---|
+| boot | Warp | 3.5 / 4.0 / 4.1 | 0.61 to 0.64 | 11.9 / 13.8 / 14.0 | 396 to 402 |
+| boot, converters warmed | Warp | 4.5 / 4.3 / 4.4 | 0.64 to 0.66 | 15.5 to 16.2 | 414 to 424 |
+| data | Warp | 6.3 / 6.2 / 6.7 | 0.70 to 0.79 | 22.4 to 23.3 | 456 to 466 |
+| done | Warp | 10.8 | 1.03 | 37.1 | 528 |
+| boot | CRIU | 3.7 | 0.87 | 13.1 | 396 |
+| boot | CRIU, `compression=true` | 3.8 | 10.6 | 13.0 | **89** |
 
-Concepts each needs:
+Warp in this Zulu build refuses `compression` ("Unknown configure option"); CRIU compresses 4.5 times but writes 12
+times slower and restores in 0.34 s instead of 0.06 to 0.10.
 
-- **A**: one tick stream for all attempts; every claimed client acks every tick; every claimed player's async work
-  holds everyone; an extra unstepped Paper for restarts, with a move out and back; auto ticks while a client joins.
-- **B**: everything in A's policy (a group of k players still shares one Paper's ticks), plus a client location map,
-  the placement rule (free Paper with the most free clients, move the rest), clients riding along when a restart kills
-  their Paper, the idle keepalive tick, a cap on restarts at once, and stepping off and on around a restart in place.
+## Parallel restores (final run)
+
+k Papers started at once in their own folders; Done of the last one, per job.
+
+| What | k | All Done s | CPU s each | PSS MB each | Memory used, all, MB |
+|---|---|---|---|---|---|
+| restore, boot point | 2 | 12.3 / 11.9 / 13.1 | 23.4 to 26.1 | 617 to 822 | 908 / 756 / 905 |
+| boot | 2 | 18.4 / 18.0 / 19.1 | 34.6 to 36.7 | 743 to 851 | 1,286 / 1,434 / 1,450 |
+| restore, boot point | 4 | 25.5 / 25.9 / 26.0 | 24.7 to 26.3 | 545 to 776 | 2,331 / 1,973 / 1,855 |
+| boot | 4 | 36.4 / 36.4 / 41.9 | 34.9 to 41.1 | 722 to 829 | 2,911 / 3,071 / 3,123 |
+| restore, data point | 2 | second fails: port of the image in use | | | |
+| restore, CRIU | 2 | second fails: PID of the image in use | | | |
+
+On 4 vCPU parallel restores gain nothing over one after another (each 4 to 5 s alone); they only cost less memory
+than parallel boots.
+
+## What CRaC refused, and how each was handled
+
+| Refused at checkpoint | Point | Handling |
+|---|---|---|
+| Class path jars (Paper, 46 to 67 libraries, the step agent): native descriptors the JVM keeps open | all | `-XX:CRaCAllowedOpenFilePrefixes=<patched Paper dir>,<agent dir>`; policies do not cover native descriptors |
+| `plugins/probe-plugin.jar`: Paper discovers plugins before `Bootstrap` | all | policy `type: file, path: **/*.jar, action: ignore` |
+| `/tmp/ffi… (deleted)`: libffi closure page of JNA, opened before the boot point | all | allowed by prefix; Warp replaces it with `/dev/null` at restore and warns; no failure seen |
+| `logs/latest.log` (Paper's log4j file appender) | all | avoided: a console only log4j config (`-Dlog4j.configurationFile`), the framework reads stdout |
+| HTTPS connections to `api.minecraftservices.com` and `discovery.minecraftservices.com` (services discovery in `Main`) | data, done | policy `type: socket, action: close` |
+| `world/session.lock` (`FileChannel` with a lock) | data, done | policy `action: ignore`; `reopen` is unsupported for a `FileChannel` (`UnsupportedOperationException` in `reopenAfterRestore`) |
+| Netty NIO listeners: `BusySelectorException` (selector with a registered `ServerSocketChannel`), epoll descriptors | done | `use-native-transport=false` (native epoll descriptors are not the JDK's) and policy `listening: true, action: reopen`; accepted |
+| The probe plugin's line server, control HTTP server, the test process's open connection | done | listening `reopen`, connections `close`; the test process closes its side first |
+| Region files `r.*.mca` (Moonrise keeps them open) | done | `ignore` is accepted at checkpoint, but after restore every write fails with "Bad file descriptor"; unsolved |
+| Paper's watchdog | done | not refused; it fires after restore (the clock jumped), dumps threads and stops the server; unsolved |
+| Step agent state | all | nothing to do: static flags and an idle permit are plain heap |
+
+At the boot point nothing of Paper's server, world, network or plugins exists yet, so the only refusals are the class
+path, the plugin jar and libffi. The restore needs, besides the image: `probe.agent.Restored dir=<folder>
+-Dprobe.line.port=… -Dprobe.control.port=…` as the main class at restore (Warp runs it before the checkpoint call
+returns; whether `-D` on the restore command line applies was not tested), a `chdir` through FFM and a patch of the two JDK caches
+of `user.dir` (`java.io` file system `userDir`, `sun.nio.fs` `defaultDirectory`; needs `--add-opens` and
+`--enable-native-access` on the image JVM). Warp restores the launcher's working folder; the JDK caches still hold the
+image's.
 
 ## Surprises
 
-- **Without groups B beats A by 2.3 times.** Sharing costs little in ticks or acks; it costs async work, because one
-  attempt's 100 ms stops every attempt.
-- **Four restart boots at once are slower than one after another.** Uncapped, B started 4 restarts together: boot 61
-  to 77 s each (run 42336500003 job 1, Xeon 8370C, archive not mapped), against 12 to 14 s for one. Boot is CPU bound
-  (22 to 39 CPU s), so 4 vCPU give no gain from parallel boots. The measured B runs one restart at a time.
-- **An idle stepped Paper dies after 60 s.** With no attempt nothing grants a tick, so Paper's watchdog stops the
-  server and keepalives stop too. B's first CI run lost every Paper this way. Fix: one tick per second while no
-  attempt runs.
-- **A stale step ack passed a broken requirement** (1 in 18,000, run 42342290365): the previous attempt's last ack
-  (it saw the previous token) arrived after the next attempt registered and counted for it. Rule: count only acks of
-  ticks after the stimulus. Final run: 0 wrong in 36,000.
-- **Switching the client's virtual clock from another thread can freeze it** (1 of 24 client step ons, run
-  42342290365, and once on the Mac): the client never ticked its first step (`steps 0, queued 2`). Inferred cause: a
-  frame in flight read the real clock after the virtual one was fixed, so the first step gives less than one tick and
-  no further step is taken while it waits. Switching on the render thread between frames fixed it (0 stalls in the
-  final run); the cause was not traced further.
-- **The AppCDS archive did not map with the agent.** Dumping with a Java agent needs
-  `-XX:+UnlockDiagnosticVMOptions -XX:+AllowArchivingWithJavaAgent`, and the same flags at run time, or `-Xshare:auto`
-  drops the archive silently (boot 7.5 s against 5.1 s on the Mac).
-- **Boot CPU is 22 to 39 s per Paper on the runner** even with the archive mapped. The fleet varies a lot: the EPYC
-  9V45 ran restarts about twice as fast as the 7763, and decides the low end of most ranges.
-- **Restarts are 1 percent of requirements and 82 to 89 percent of A's wall time.** Whatever topology wins, restart
-  requirements decide suite time; a second extra Paper would roughly halve that part for A (**inferred**).
+- **Most of a boot comes after the safe point.** On the runner the boot point is 3.5 to 4.1 s into an 8 s boot; after
+  it come the folder configs (about 0.7 s), DataConverter (0.5), the data packs (1.9 to 2.3, cold JIT) and the server
+  to Done (1.5). That remainder is the restore time.
+- **Warming the data packs before the checkpoint fails**: a throwaway vanilla load works, but the real load then
+  throws "Registry already loaded!" (`PaperRegistryAccess.registerRegistry` binds the API registries to the first
+  load). It would need Paper internals reset; not pursued. Gain would be at most about 1.5 s (**inferred**).
+- **The data point bakes `usercache.json`**, found only by a scene written for it; world level data, ops, player
+  data and plugin data are read after it. Any state `Main` reads before `spin` is baked; the list depends on Paper's
+  version, so only the boot point is correct by construction.
+- **`ThreadLocalRandom` repeats across restores of one image** (the same first value in two restores of the data
+  image); `UUID.randomUUID` and `new Random()` differ. Anything seeded from `ThreadLocalRandom` on a thread created
+  before the checkpoint repeats per image (**inferred** for Paper code; measured for the main thread).
+- **Paper plugin bootstrappers run before the boot point** (`Initializing plugins` precedes `Bootstrap`). Plugins
+  with a `paper-plugin.yml` bootstrapper that reads its data folder would have that read baked (**inferred**; the
+  probe plugin is a Bukkit plugin and `services/` has no bootstrapper today).
+- Paper's "Done (626.619s)" after a restore counts from the image's JVM start; harmless.
+
+## What the framework would need
+
+- **JDK**: Azul Zulu 25 CRaC for Linux x64 or arm64, for every Paper the suite starts. nixpkgs has `zulu25`
+  (`zulu-ca-jdk-25.0.3`) without CRaC, so devenv would fetch the Azul tarball itself (the metadata API with
+  `crac_supported=true`, a fixed hash) and patch it for Nix. macOS has only the simulated engine: on a Mac a restart
+  requirement boots (as today) unless it runs in a Linux VM or container.
+- **Engine**: Warp. No root, no setuid, new PID per restore, parallel restores work. CRIU needs a setuid binary
+  and fails on PID reuse.
+- **Image**: about 400 MB, created in 4 to 5 s (12 to 16 CPU s) at suite start, in the suite's cache folder on the
+  machine that restores it (images are tied to the kernel and CPU features; creating per job is cheaper than moving
+  them). Invalidate on any change to: the JDK build, Paper's jars and libraries, the step agent, the plugin jars
+  (discovered before the point), the JVM flags, the AppCDS archive, the kernel or CPU.
+- **Hooks**: the checkpoint call at `Util.startTimerHackThread` (an agent prefix, as here), the restore main class
+  with folder and properties, the folder move (chdir plus two JDK caches), console only logging, the allowed prefixes
+  and the plugin jar policy. About 170 lines in this prototype (`Crac.java`, `Restored.java`, the agent prefix).
+- **Suite effect** (**inferred** from the per restart numbers): a restart requirement gets about 5 s and 13 CPU s
+  cheaper on the runner (ready 8.8 to 9.1 s against 13.9 to 14.5). In the topology spike's A, 10 restarts took 82 to
+  89 percent of 200 s; at roughly 5 s saved each that is about 50 s of 200, so restarts still dominate.
 
 ## Rerun
 
@@ -222,18 +197,14 @@ Build from the worktree root:
 cargo xtask heavy -- bash -c 'cd prototypes/game-verification && ./gradlew --console=plain -q :step-agent:jar :probe-mod:writeClientLaunch :probe-mod:jar :probe-plugin:jar'
 ```
 
-Mac, from `prototypes/game-verification`, `SDL_MAC_BACKGROUND_APP=1`, one at a time:
+CI only (full CRaC needs Linux): matrix rows `{ plan: restore, backend: vulkan, runner: ubuntu-24.04, repeat: 0|1|2 }`
+run `orchestrator/ci.py plan restore`; tables from `orchestrator/restore_report.py <h.jsonl>`. Single commands, on a
+Linux machine with Zulu CRaC on the path, from `prototypes/game-verification`:
 
 ```
 python3 orchestrator/run.py prepare
-python3 orchestrator/topo.py prep
-python3 orchestrator/topo.py run --topo A --n 1000 --mixes 0,0.1,0.3 --restart 0.01,0 --seed 1
-python3 orchestrator/topo.py run --topo B --n 1000 --mixes 0,0.1,0.3 --restart 0.01,0 --seed 1 --parallel-moves 1
-python3 orchestrator/topo_report.py runs/topo.jsonl
+python3 orchestrator/restore.py prep
+python3 orchestrator/restore.py image --point boot --engine warp --policy boot --warm 1
+python3 orchestrator/restore.py compare --image boot-warp-boot-warm --n 5
+python3 orchestrator/restore.py scenes --image boot-warp-boot-warm --n 3
 ```
-
-CI: matrix rows `{ plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 0|1|2 }` run
-`orchestrator/ci.py plan topology` (both topologies, order alternating with the repeat).
-
-Mac development runs (M1 Max, load 9 to 15 with another worktree's spike running) only checked that both topologies
-work; no Mac number is used above.
