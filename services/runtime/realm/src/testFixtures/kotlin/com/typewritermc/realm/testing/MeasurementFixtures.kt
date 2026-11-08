@@ -14,7 +14,7 @@ import kotlin.time.measureTimedValue
 
 /*
  * The seeded realm measurement: a realm of the size the layer's gates are written for, and what one commit on it
- * costs. It measures and prints; only the reply's findings size is asserted, since timings vary by machine.
+ * costs. It measures and prints; SeededRealmMeasurement asserts the gates on what it measures.
  */
 
 /**
@@ -54,6 +54,7 @@ fun seededWorkload(
 data class CommitCost(
     val label: String,
     val commit: Duration,
+    /** From the commit reply until the findings are ready; near zero when the checks finished during the commit. */
     val pass: Duration,
     val graphReads: Duration,
     val replyBytes: Int,
@@ -119,3 +120,6 @@ internal suspend fun RealmFixture.measuredCommit(
         hints = hints - hintsBefore,
     )
 }
+
+/** The middle of these timings, so one run slowed by the machine does not move a gate. */
+fun List<Duration>.median(): Duration = sorted()[size / 2]
