@@ -74,6 +74,11 @@ fun nullable(type: TypeUse): TypeUse = type.nullable()
 
 fun listType(item: TypeUse): TypeUse = StandardTypes.list.use(listOf(item))
 
+fun mapType(
+    key: TypeUse,
+    value: TypeUse,
+): TypeUse = StandardTypes.map.use(listOf(key, value))
+
 /** A reference to a resource of [target], as content and formulas see it. */
 fun refType(target: TypeUse): TypeUse =
     ContentReferences.Source.Definition.id
@@ -145,6 +150,7 @@ private val catId = typeId("Cat")
 private val smithId = typeId("Smith")
 private val townId = typeId("Town")
 private val energyId = typeId("Energy")
+private val tallyId = typeId("Tally")
 private val goneId = typeId("Gone")
 
 val npc: TypeUse = npcId.use()
@@ -194,10 +200,19 @@ private val testCatalog =
                 record(townId, listOf("name" to string), parents = listOf(ResourceDefinition.id)),
                 record(
                     smithId,
-                    listOf("name" to string, "mood" to varType(int), "home" to refType(townId.use())),
+                    listOf(
+                        "name" to string,
+                        "mood" to varType(int),
+                        "home" to refType(townId.use()),
+                        "ratings" to listType(varType(int)),
+                        "marks" to mapType(string, varType(int)),
+                        "ledger" to varType(listType(varType(int))),
+                        "tallies" to listType(tallyId.use()),
+                    ),
                     parents = listOf(ResourceDefinition.id),
                 ),
                 record(energyId, listOf("amount" to int)),
+                record(tallyId, listOf("count" to varType(int), "extras" to listType(varType(int)))),
             ),
     )
 

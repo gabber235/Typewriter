@@ -468,11 +468,13 @@ private class Interpreter(
                 is Resolution.Invalid -> error("The checker left a type argument of ${function.name} unsolved.")
             }
 
+        /** [given] at [type] for Kotlin. A stored Var anywhere inside it is worked out here, as a Var field is when read. */
         private fun into(
-            value: Any?,
+            given: Any?,
             type: TypeUse,
         ): Any? {
-            if (value === NotProvided || value == null) return value
+            if (given === NotProvided) return given
+            val value = environment.resolve(given) ?: return null
             val collection = (type as? TypeUse.NamedWrapper)?.value
             return when {
                 type is TypeUse.NullableWrapper -> {

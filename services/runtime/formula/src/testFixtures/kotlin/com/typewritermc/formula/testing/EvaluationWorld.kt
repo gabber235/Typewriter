@@ -1,6 +1,7 @@
 package com.typewritermc.formula.testing
 
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.formula.CoreFormulas
 import com.typewritermc.formula.Deferred
@@ -15,6 +16,7 @@ import com.typewritermc.formula.eval.CatalogEvaluationEnvironment
 import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.formula.eval.EvaluationEnvironment
 import com.typewritermc.formula.eval.EvaluationLimits
+import com.typewritermc.formula.eval.FailedEvaluation
 import com.typewritermc.formula.eval.evaluate
 import com.typewritermc.formula.eval.refTo
 import com.typewritermc.formula.stdlib.CollectionFormulasGeneratedFormulaProvider
@@ -29,6 +31,7 @@ import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeEmpty
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
@@ -47,6 +50,13 @@ data class EvaluationResource(
     val typeValue: TypeUse? = null,
     val id: ResourceId = ResourceId(name),
 )
+
+/** The stored, not yet evaluated item [item] of the list in [field] on the resource [resource]. */
+fun deferredItem(
+    resource: String,
+    field: String,
+    item: String,
+): Deferred = Deferred(ValueLocation.of(ResourceId(resource).toSkir()).field(field).item(ItemId(value = item)))
 
 /** The stored, not yet evaluated value of [field] on the resource [resource]. */
 fun deferredField(
@@ -105,17 +115,53 @@ val evaluationResources: List<EvaluationResource> =
         ),
         EvaluationResource("calm", moodUse, RecordValue(moodUse, mapOf("level" to deferredField("calm", "level")))),
         EvaluationResource("tags", setType(int), linkedSetOf(1, 2)),
+        EvaluationResource(
+            "tallies",
+            listType(tallyUse),
+            listOf(
+                RecordValue(
+                    tallyUse,
+                    mapOf(
+                        "counts" to listOf(deferredItem("first", "counts", "a"), deferredItem("first", "counts", "b")),
+                        "rounds" to listOf(deferredItem("first", "rounds", "a")),
+                    ),
+                ),
+                RecordValue(tallyUse, mapOf("counts" to listOf(deferredItem("second", "counts", "a")), "rounds" to emptyList<Any?>())),
+            ),
+        ),
+        // What naming a list of Vars gives reads each Var as its value, as the realm's naming does.
+        EvaluationResource("scores", listType(int), listOf(deferredItem("scores", "value", "a"), deferredItem("scores", "value", "b"))),
+        EvaluationResource(
+            "rounds",
+            listType(listType(int)),
+            listOf(deferredItem("rounds", "value", "a"), deferredItem("rounds", "value", "b")),
+        ),
+        EvaluationResource(
+            "brokenScores",
+            listType(int),
+            listOf(deferredItem("brokenScores", "value", "a"), deferredItem("brokenScores", "value", "b")),
+        ),
         EvaluationResource("wait", ScalarKind.DURATION.use, 90.seconds),
         EvaluationResource("maybe", nullable(int), null),
         EvaluationResource("some", nullable(int), 4),
     )
 
-/** What each deferred value of [evaluationResources] evaluates to. */
+/** What each deferred value of [evaluationResources] evaluates to; a [FormulaFailure] is one that fails with it. */
 val evaluationDeferred: Map<Deferred, Any?> =
     mapOf(
         deferredField("smith", "mood") to 3,
         deferredField("anvil", "mood") to 2,
         deferredField("calm", "level") to 4,
+        deferredItem("first", "counts", "a") to 1,
+        deferredItem("first", "counts", "b") to 5,
+        deferredItem("first", "rounds", "a") to listOf(2, 3),
+        deferredItem("second", "counts", "a") to 4,
+        deferredItem("scores", "value", "a") to 1,
+        deferredItem("scores", "value", "b") to 2,
+        deferredItem("rounds", "value", "a") to listOf(2, 3),
+        deferredItem("rounds", "value", "b") to emptyList<Int>(),
+        deferredItem("brokenScores", "value", "a") to 1,
+        deferredItem("brokenScores", "value", "b") to FormulaFailure.DivisionByZero,
     )
 
 private val evaluationFunctions: Map<String, List<FormulaFunction>> =
@@ -180,7 +226,8 @@ class EvaluationWorld(
 
     val evaluating: EvaluationEnvironment =
         object : CatalogEvaluationEnvironment(evaluationCatalog, evaluationBindings) {
-            override fun evaluateDeferred(value: Deferred): Any? = deferred.getValue(value)
+            override fun evaluateDeferred(value: Deferred): Any? =
+                deferred.getValue(value).also { if (it is FormulaFailure) throw FailedEvaluation(it) }
 
             override fun fieldOf(
                 resource: ResourceId,

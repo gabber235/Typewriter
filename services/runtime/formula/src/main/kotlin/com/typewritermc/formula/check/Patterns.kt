@@ -149,7 +149,7 @@ private fun Checker.caseBindings(
     val bindings =
         written.mapIndexed { index, binding ->
             val field = fields?.getOrNull(index)
-            val (checked, next) = bind(binding, field?.let { normalize(valueOf(it.type)) } ?: ERROR, inner)
+            val (checked, next) = bind(binding, field?.let { normalize(readType(it.type)) } ?: ERROR, inner)
             inner = next
             (field?.key ?: "") to checked
         }
