@@ -62,11 +62,11 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      # Generation runs Gradle and build_runner whatever the area; only the services area builds
-      # enough to be worth keeping Gradle's build outputs for.
+      # Generation runs Gradle and build_runner whatever the area; only the services and realm-scale
+      # areas build enough to be worth keeping Gradle's build outputs for.
       - uses: ./.github/actions/devenv
         with:
-          caches: gradle flutter frame-vectors ${{ matrix.area.area == 'services' && 'gradle-outputs' || '' }}
+          caches: gradle flutter frame-vectors ${{ (matrix.area.area == 'services' || matrix.area.area == 'realm-scale') && 'gradle-outputs' || '' }}
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
