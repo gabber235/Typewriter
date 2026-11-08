@@ -70,7 +70,8 @@ fun TypeTemplate.referencedDefinitions(): Set<TypeDefinitionId> = walk().flatMap
 fun TypeTemplate.storedDefinitions(): Set<TypeDefinitionId> = walk().flatMapTo(linkedSetOf()) { it.ownDefinitions(stored = true) }
 
 /** Every definition this declaration is written with: its parents, bounds, field types and closed cases. */
-fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> = templates().flatMapTo(linkedSetOf(), TypeTemplate::referencedDefinitions)
+fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> =
+    templates().flatMapTo(linkedSetOf(), TypeTemplate::referencedDefinitions)
 
 /** Every definition values of this declaration need declared: [referencedDefinitions] plus Formula for each function type. */
 fun TypeDefinition.storedDefinitions(): Set<TypeDefinitionId> = templates().flatMapTo(linkedSetOf(), TypeTemplate::storedDefinitions)

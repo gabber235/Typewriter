@@ -63,7 +63,10 @@ val ClosedRecordTest by testSuite {
                     representation =
                         RepresentationTemplate.createRecord(
                             fields = emptyList(),
-                            form = RecordForm.createClosed(cases = listOf(ok.namedTemplate(listOf(resultParameter.template)), count.namedTemplate())),
+                            form =
+                                RecordForm.createClosed(
+                                    cases = listOf(ok.namedTemplate(listOf(resultParameter.template)), count.namedTemplate()),
+                                ),
                         ),
                 ),
                 TypeDefinition.partial(

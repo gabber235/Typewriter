@@ -244,7 +244,9 @@ internal object ResourceValueMapper {
                 val sourceRecord = resources.getValue(occurrence.source)
                 val declared =
                     slotsByLocation
-                        .getOrPut(occurrence.source) { sourceRecord.linkSlots(catalog).groupBy { it.location } }[occurrence.id.location.path]
+                        .getOrPut(
+                            occurrence.source,
+                        ) { sourceRecord.linkSlots(catalog).groupBy { it.location } }[occurrence.id.location.path]
                         ?.singleOrNull()
                 if (declared != null && declared.endpoint == occurrence.id.endpoint) {
                     val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.MANY

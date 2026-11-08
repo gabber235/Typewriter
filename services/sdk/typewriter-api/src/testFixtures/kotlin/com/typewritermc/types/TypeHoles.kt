@@ -100,6 +100,7 @@ private fun <T> Random.hole(
 ): TypeHole<T> {
     if (depth == 0 || nextInt(4) == 0) return TypeHole { it }
     val inner = hole(depth - 1, forms)
+
     fun filled(): T = hole(depth - 1, forms).plug(with(forms) { leaf() })
     return when (nextInt(3)) {
         0 -> {
