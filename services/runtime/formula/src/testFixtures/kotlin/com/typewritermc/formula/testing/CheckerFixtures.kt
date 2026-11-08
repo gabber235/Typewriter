@@ -75,6 +75,8 @@ fun nullable(type: TypeUse): TypeUse = type.nullable()
 
 fun listType(item: TypeUse): TypeUse = StandardTypes.list.use(listOf(item))
 
+val intRange: TypeUse = StandardTypes.intRange.use()
+
 fun mapType(
     key: TypeUse,
     value: TypeUse,

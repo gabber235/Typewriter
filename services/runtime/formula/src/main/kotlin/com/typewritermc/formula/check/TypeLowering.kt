@@ -44,9 +44,10 @@ private val scalars: Map<String, TypeUse> =
         "Type" to ScalarKind.TYPE.use,
     )
 
-/** Generic types every formula can name, with their argument count. */
+/** Standard types every formula can name, with their argument count. */
 private val generics: Map<String, Pair<TypeDefinitionId, Int>> =
     mapOf(
+        "IntRange" to (StandardTypes.intRange to 0),
         "List" to (StandardTypes.list to 1),
         "Set" to (StandardTypes.set to 1),
         "Map" to (StandardTypes.map to 2),

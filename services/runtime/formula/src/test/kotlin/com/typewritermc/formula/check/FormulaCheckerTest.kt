@@ -11,6 +11,7 @@ import com.typewritermc.formula.testing.door
 import com.typewritermc.formula.testing.double
 import com.typewritermc.formula.testing.function
 import com.typewritermc.formula.testing.int
+import com.typewritermc.formula.testing.intRange
 import com.typewritermc.formula.testing.item
 import com.typewritermc.formula.testing.listType
 import com.typewritermc.formula.testing.npc
@@ -88,6 +89,8 @@ val FormulaCheckerTest by testSuite {
         row("Reward(chest = true)", reward, problem("formula_missing_argument")),
         row("Reward(gold = 1, chest = true)", reward, type(reward)),
         row("5 in 1..9", boolean, type(boolean)),
+        row("1..9", intRange, type(intRange)),
+        row("0..2 == [0, 1, 2]", boolean, problem("formula_type_mismatch", at = 0..17)),
         row("[\"a\": 1][\"a\"]", nullable(int), type(nullable(int))),
         row("[1, 2].distinct()", listType(int), type(listType(int))),
         row("npc.rank()", int, type(int)), // T : Entity, and an Npc is an Entity

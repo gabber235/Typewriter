@@ -55,6 +55,7 @@ internal class DefinitionOwners(
         owners[StandardTypes.list] = StandardTypes.List::class.asClassName()
         owners[StandardTypes.set] = StandardTypes.Set::class.asClassName()
         owners[StandardTypes.map] = StandardTypes.Map::class.asClassName()
+        owners[StandardTypes.intRange] = StandardTypes.IntRange::class.asClassName()
         referenced
             .filterNot(owners::containsKey)
             .forEach { id ->

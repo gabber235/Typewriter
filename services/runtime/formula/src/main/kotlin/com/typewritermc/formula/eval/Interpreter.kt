@@ -515,6 +515,10 @@ private class Interpreter(
                     }
                 }
 
+                collection?.definition == StandardTypes.intRange -> {
+                    (value as RecordValue).fields.let { IntRange(it.getValue("first") as Int, it.getValue("last") as Int) }
+                }
+
                 else -> {
                     environment.binding(type).fromValueAny(value, this)
                 }
@@ -548,6 +552,10 @@ private class Interpreter(
                     (value as Map<*, *>).entries.associateTo(LinkedHashMap()) { (key, item) ->
                         from(key, collection.arguments[0]) to from(item, collection.arguments[1])
                     }
+                }
+
+                collection?.definition == StandardTypes.intRange -> {
+                    (value as IntRange).let { RecordValue(type, mapOf("first" to it.first, "last" to it.last)) }
                 }
 
                 else -> {
