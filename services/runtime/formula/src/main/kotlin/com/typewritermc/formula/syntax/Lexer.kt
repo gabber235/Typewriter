@@ -407,7 +407,7 @@ internal class Lexer(
         }
         if (next == 'u') {
             val digits = source.substring(position + 2, minOf(position + 6, source.length))
-            val code = digits.takeIf { it.length == 4 }?.toIntOrNull(16)
+            val code = digits.takeIf { it.length == 4 && it.all(::isHexDigit) }?.toInt(16)
             if (code != null) {
                 chars.append(code.toChar())
                 position += 6
@@ -505,6 +505,8 @@ internal class Lexer(
     private fun isNameStart(codePoint: Int) = Character.isLetter(codePoint) || codePoint == '_'.code
 
     private fun isNamePart(codePoint: Int) = Character.isLetterOrDigit(codePoint) || codePoint == '_'.code
+
+    private fun isHexDigit(char: Char) = char in '0'..'9' || char in 'a'..'f' || char in 'A'..'F'
 }
 
 private const val UNCLOSED_TEXT = "This text is never closed with \""
