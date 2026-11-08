@@ -36,6 +36,17 @@ COMMON = ["-XX:+UnlockDiagnosticVMOptions", "-XX:+AllowArchivingWithJavaAgent", 
 POLICIES = {
     "none": None,
     # Files the JDK opened before the boot point that the restored JVM may keep (found by the strict run).
+    "data": """type: socket
+action: close
+---
+type: file
+path: **/*.jar
+action: ignore
+warn: false
+---
+type: file
+action: ignore
+""",
     "boot": """type: file
 path: **/*.jar
 action: ignore
@@ -65,7 +76,7 @@ action: ignore
 warn: false
 ---
 type: file
-action: reopen
+action: ignore
 ---
 type: pipe
 action: close
@@ -245,12 +256,18 @@ def log_facts(path):
 
 
 def cmd_image(a):
-    name = a.name or f"{a.point}-{a.engine}-{a.policy}" + ("-" + a.opts.replace("=", "").replace(",", "-") if a.opts else "")
+    name = a.name or f"{a.point}-{a.engine}-{a.policy}" + ("-" + a.opts.replace("=", "").replace(",", "-") if a.opts else "") + ("-warm" if a.warm else "")
     img = Image(name)
     shutil.rmtree(img.home, ignore_errors=True)
     img.home.mkdir(parents=True)
     p = RPaper(img.srv)
+    # The JVM itself keeps the class path jars open (native descriptors, not covered by policies) and JNA's libffi
+    # keeps a deleted temp file for closures.
+    allowed = [str((ROOT / "cache/patched").resolve()), str(AGENT.parent.resolve())] + (["/tmp/ffi"] if a.allow_ffi else [])
+    if a.warm:
+        p.jvm.append("-Dprobe.crac.warm=true")
     p.jvm += [f"-XX:CRaCCheckpointTo={img.dir}", f"-XX:CRaCEngine={a.engine}", "-XX:+CRaCPrintResourcesOnCheckpoint",
+              f"-XX:CRaCAllowedOpenFilePrefixes={','.join(allowed)}",
               "-Djdk.crac.collect-fd-stacktraces=true", "-Dprobe.crac.haltOnFail=true"]
     if a.opts:
         p.jvm.append(f"-XX:CRaCEngineOptions={a.opts}")
@@ -489,6 +506,8 @@ def main(argv=None):
     i.add_argument("--opts", default="")
     i.add_argument("--restore-opts", default="")
     i.add_argument("--name", default="")
+    i.add_argument("--warm", type=int, default=0)
+    i.add_argument("--allow-ffi", type=int, default=1)
     c = sub.add_parser("compare")
     c.add_argument("--image", required=True)
     c.add_argument("--n", type=int, default=5)

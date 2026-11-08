@@ -1008,8 +1008,8 @@ def cmd_restore(backend):
     rep = int(os.environ.get("MATRIX_REPEAT", "0") or 0)
     step("r prep", RS.main, ["prep"])
 
-    def image(point, engine, policy, opts=""):
-        argv = ["image", "--point", point, "--engine", engine, "--policy", policy]
+    def image(point, engine, policy, opts="", warm=0):
+        argv = ["image", "--point", point, "--engine", engine, "--policy", policy, "--warm", str(warm)]
         if opts:
             argv += ["--opts", opts]
         return step(f"image {point} {engine} {policy} {opts}", RS.main, argv) or {}
@@ -1022,11 +1022,14 @@ def cmd_restore(backend):
         return None
 
     boot = first_ok(("boot", "warp", "none"), ("boot", "warp", "boot"))
-    data = first_ok(("data", "warp", "boot"))
-    done = first_ok(("done", "warp", "none"), ("done", "warp", "done"))
+    warm = first_ok(("boot", "warp", "boot", "", 1))
+    data = first_ok(("data", "warp", "data"))
+    done = first_ok(("done", "warp", "done"))
     criu = first_ok(("boot", "criuengine", "boot"))
-    comp = first_ok(("boot", "warp", "boot", "compression=true"))
-    record("restore_images", boot=boot, data=data, done=done, criu=criu, comp=comp)
+    comp = first_ok(("boot", "criuengine", "boot", "compression=true"))
+    record("restore_images", boot=boot, warm=warm, data=data, done=done, criu=criu, comp=comp)
+    if warm:
+        step("compare warm", RS.main, ["compare", "--image", warm, "--n", "5"])
     if boot:
         step("compare boot", RS.main, ["compare", "--image", boot, "--n", "5"])
         step("parallel 2", RS.main, ["parallel", "--image", boot, "--k", "2"])

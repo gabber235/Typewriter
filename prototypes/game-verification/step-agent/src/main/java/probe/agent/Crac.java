@@ -31,7 +31,18 @@ public final class Crac {
     private Crac() {}
 
     public static void at(String point) {
-        if (point.equals(System.getProperty("probe.crac.at"))) checkpointNow(point);
+        if (!point.equals(System.getProperty("probe.crac.at"))) return;
+        if (Boolean.getBoolean("probe.crac.warm")) {
+            // Pure code, no folder reads: DataConverter's type registry builds every converter in its static init.
+            long t0 = System.nanoTime();
+            try {
+                Class.forName("ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry", true, ClassLoader.getSystemClassLoader());
+            } catch (ClassNotFoundException e) {
+                System.err.println("[crac] warm failed: " + e);
+            }
+            System.err.println("[crac] warmed in " + (System.nanoTime() - t0) / 1_000_000 + " ms");
+        }
+        checkpointNow(point);
     }
 
     public static void checkpointNow(String point) {
