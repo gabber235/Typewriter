@@ -238,6 +238,9 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A status | `StatusIndicator`, one chip | `TypeBadge`, `SmallChip`, `PresetChip` as separate styles |
 | A pane | `Pane` | Local pane colours |
 | Showing focus | The one `FocusRingLayer`; a `RingTarget` where the ring should wrap more than the focused node | `FocusHighlight`, a focus border, a focus fill |
+| Focus in a list, table or graph | `useAnimatedRows`; `RowStop` inside the row's action set; `RowLanding` in editor rows | A `FocusNode` per row, an id passed beside the row, a focus fill |
+| Focus on open | `Pane(openFocus: PaneOpenFocus.firstItem)`; `autofocus` only on a field that exists to be typed into | A post frame `requestFocus` |
+| Focus after a create | `rows.focus.expect(id)` | Focusing the row in the create callback |
 
 | Moment | Write |
 |---|---|

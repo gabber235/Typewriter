@@ -37,6 +37,8 @@ class JoinRequestCard extends HookConsumerWidget {
 
     final expansibleController = useExpansibleController();
     useListenable(expansibleController);
+    // In a list the card is the stop, so Tab passes over its header.
+    final headerFocus = useFocusNode(skipTraversal: true);
 
     final backgroundColor = isSelected
         ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
@@ -59,25 +61,30 @@ class JoinRequestCard extends HookConsumerWidget {
               theme,
               isDesktop,
               expansibleController,
+              headerFocus,
             );
           },
+          // Part of the row, so focus in it still counts as the card.
           body: (context) {
-            return JoinRequestApproval(
-              request: request,
-              selectedRoles: selectedRoles.value,
-              rolesAsync: rolesAsync,
-              onRolesChanged: (roles) => selectedRoles.value = roles,
-              onConfirm: () {
-                onSelectionChanged(false);
-                return ref
-                    .executeMembership(
-                      ref.membershipCommands.approve([
-                        request.requestId,
-                      ], selectedRoles.value),
-                      (response) => response.requireAccepted(),
-                    )
-                    .catchApiExceptionsAndDisplay(context);
-              },
+            return RowStop(
+              role: RowRole.part,
+              child: JoinRequestApproval(
+                request: request,
+                selectedRoles: selectedRoles.value,
+                rolesAsync: rolesAsync,
+                onRolesChanged: (roles) => selectedRoles.value = roles,
+                onConfirm: () {
+                  onSelectionChanged(false);
+                  return ref
+                      .executeMembership(
+                        ref.membershipCommands.approve([
+                          request.requestId,
+                        ], selectedRoles.value),
+                        (response) => response.requireAccepted(),
+                      )
+                      .catchApiExceptionsAndDisplay(context);
+                },
+              ),
             );
           },
         ),
@@ -91,7 +98,9 @@ class JoinRequestCard extends HookConsumerWidget {
     ThemeData theme,
     bool isDesktop,
     ExpansibleController expansibleController,
+    FocusNode headerFocus,
   ) {
+    final inList = RowEntryScope.maybeOf(context) != null;
     return ManagedActionSet(
       shortcuts: [
         ActionShortcut.intent(
@@ -144,24 +153,31 @@ class JoinRequestCard extends HookConsumerWidget {
           },
         ),
       ],
-      child: Button(
-        face: ButtonFace.bare,
-        label: isSelected ? "Deselect request" : "Select request",
-        onPressed: () => onSelectionChanged(!isSelected),
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.space4),
-          child: isDesktop
-              ? _buildDesktopLayout(context, ref, theme, expansibleController)
-              : JoinRequestResponsiveContent(
-                  request: request,
-                  isSelected: isSelected,
-                  isExpanded: expansibleController.isExpanded,
-                  onExpired: () {
-                    onSelectionChanged(false);
-                  },
-                  onDecline: () => _confirmDeclineRequest(context, ref),
-                  onToggle: () => expansibleController.toggle(),
-                ),
+      // Inside the shortcuts, so Decline and Accept answer while the card is
+      // focused.
+      child: RowStop(
+        borderRadius: context.shapes.mediumBorderRadius,
+        label: request.userName ?? request.userEmail ?? "Join request",
+        child: Button(
+          face: ButtonFace.bare,
+          label: isSelected ? "Deselect request" : "Select request",
+          focusNode: inList ? headerFocus : null,
+          onPressed: () => onSelectionChanged(!isSelected),
+          child: Padding(
+            padding: EdgeInsets.all(context.spacing.space4),
+            child: isDesktop
+                ? _buildDesktopLayout(context, ref, theme, expansibleController)
+                : JoinRequestResponsiveContent(
+                    request: request,
+                    isSelected: isSelected,
+                    isExpanded: expansibleController.isExpanded,
+                    onExpired: () {
+                      onSelectionChanged(false);
+                    },
+                    onDecline: () => _confirmDeclineRequest(context, ref),
+                    onToggle: () => expansibleController.toggle(),
+                  ),
+          ),
         ),
       ),
     );

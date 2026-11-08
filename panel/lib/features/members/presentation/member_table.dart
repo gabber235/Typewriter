@@ -17,7 +17,6 @@ class MembersTable extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    final focusedMemberId = useState<skir.RecordId?>(null);
     final members = selection.rows.items;
 
     return SelectionTable<skir.OrganizationMember>(
@@ -41,7 +40,6 @@ class MembersTable extends HookConsumerWidget {
         entry.item,
         members,
         selection.selectedIds.value.contains(entry.id),
-        focusedMemberId,
         theme,
       ),
     );
@@ -53,7 +51,6 @@ class MembersTable extends HookConsumerWidget {
     skir.OrganizationMember member,
     List<skir.OrganizationMember> members,
     bool isSelected,
-    ValueNotifier<skir.RecordId?> focusedMemberId,
     ThemeData theme,
   ) {
     void toggleSelection() {
@@ -69,31 +66,32 @@ class MembersTable extends HookConsumerWidget {
       };
     }
 
-    void updateFocus(bool focused) {
-      if (focused) {
-        focusedMemberId.value = member.userId;
-      } else if (focusedMemberId.value == member.userId) {
-        focusedMemberId.value = null;
-      }
-    }
-
-    Widget withShortcuts(Widget child) => MemberTableRowShortcuts(
-      member: member,
-      onToggleSelection: toggleSelection,
-      onSelectAll: () =>
-          selection.selectedIds.value = members.map((m) => m.userId).toSet(),
-      onClearSelection: () => selection.selectedIds.value = {},
-      isSelected: isSelected,
-      hasSelection: selection.selectedIds.value.isNotEmpty,
-      onRemoveSelection: selection.onRemoveSelection,
-      onRemoveFromSelection: () => selection.selectedIds.value = selection
-          .selectedIds
-          .value
-          .where((id) => id != member.userId)
-          .toSet(),
-      onFocusChange: updateFocus,
-      child: child,
-    );
+    final name = member.name ?? member.email ?? "Member";
+    Widget withShortcuts(Widget child, {RowRole role = RowRole.part}) =>
+        MemberTableRowShortcuts(
+          member: member,
+          onToggleSelection: toggleSelection,
+          onSelectAll: () => selection.selectedIds.value = members
+              .map((m) => m.userId)
+              .toSet(),
+          onClearSelection: () => selection.selectedIds.value = {},
+          isSelected: isSelected,
+          hasSelection: selection.selectedIds.value.isNotEmpty,
+          onRemoveSelection: selection.onRemoveSelection,
+          onRemoveFromSelection: () => selection.selectedIds.value = selection
+              .selectedIds
+              .value
+              .where((id) => id != member.userId)
+              .toSet(),
+          // Inside the shortcuts, so they answer while the row is focused.
+          child: RowStop(
+            role: role,
+            bounds: RingBounds.tableRow,
+            borderRadius: context.shapes.mediumBorderRadius,
+            label: role == RowRole.stop ? name : null,
+            child: child,
+          ),
+        );
 
     return TableRow(
       key: ValueKey(member.userId),
@@ -107,6 +105,7 @@ class MembersTable extends HookConsumerWidget {
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
           child: withShortcuts(
+            role: RowRole.stop,
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: context.spacing.space2,
@@ -115,18 +114,21 @@ class MembersTable extends HookConsumerWidget {
               child: Material(
                 color: Colors.transparent,
                 shape: CircleBorder(),
-                child: Button(
-                  face: ButtonFace.bare,
-                  label: isSelected
-                      ? "Deselect ${member.name ?? member.email ?? "member"}"
-                      : "Select ${member.name ?? member.email ?? "member"}",
-                  onPressed: toggleSelection,
-                  child: SelectableAvatar(
-                    avatarUrl:
-                        member.avatarUrl?.nullIfEmpty ??
-                        "$userIconUrl&seed=${member.userId}",
-                    isSelected: isSelected,
-                    radius: 16,
+                // The row stop takes Space; the avatar is no second stop.
+                child: ExcludeFocus(
+                  child: Button(
+                    face: ButtonFace.bare,
+                    label: isSelected
+                        ? "Deselect ${member.name ?? member.email ?? "member"}"
+                        : "Select ${member.name ?? member.email ?? "member"}",
+                    onPressed: toggleSelection,
+                    child: SelectableAvatar(
+                      avatarUrl:
+                          member.avatarUrl?.nullIfEmpty ??
+                          "$userIconUrl&seed=${member.userId}",
+                      isSelected: isSelected,
+                      radius: 16,
+                    ),
                   ),
                 ),
               ),
@@ -138,39 +140,41 @@ class MembersTable extends HookConsumerWidget {
             Material(
               color: Colors.transparent,
               borderRadius: context.shapes.mediumBorderRadius,
-              child: Button(
-                face: ButtonFace.bare,
-                label: "",
-                onPressed: toggleSelection,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.spacing.space2,
-                    vertical: context.spacing.space3,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (member.name != null)
-                        Text(
-                          member.name!,
-                          style: theme.textTheme.bodyMedium!.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      if (member.email != null)
-                        BlurReveal(
-                          blurSigma: 3,
-                          child: Text(
-                            member.email!,
+              child: ExcludeFocus(
+                child: Button(
+                  face: ButtonFace.bare,
+                  label: "",
+                  onPressed: toggleSelection,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.space2,
+                      vertical: context.spacing.space3,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (member.name != null)
+                          Text(
+                            member.name!,
                             style: theme.textTheme.bodyMedium!.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                    ],
+                        if (member.email != null)
+                          BlurReveal(
+                            blurSigma: 3,
+                            child: Text(
+                              member.email!,
+                              style: theme.textTheme.bodyMedium!.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 13,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

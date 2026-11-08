@@ -25,7 +25,6 @@ class JoinRequestResponsiveContent extends StatelessWidget {
   final VoidCallback onToggle;
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -40,28 +39,9 @@ class JoinRequestResponsiveContent extends StatelessWidget {
             ),
             SizedBox(width: context.spacing.space3),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 2,
-                children: [
-                  if (request.userName != null)
-                    Text(
-                      request.userName!,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontVariations: [.weight(600)],
-                        fontSize: 15,
-                      ),
-                    ),
-                  if (request.userEmail != null)
-                    Text(
-                      request.userEmail!,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
+              child: PersonSummary(
+                name: request.userName,
+                email: request.userEmail,
               ),
             ),
           ],

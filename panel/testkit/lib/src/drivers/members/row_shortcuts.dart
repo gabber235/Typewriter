@@ -28,7 +28,6 @@ extension PumpMembershipRowShortcuts on WidgetTester {
       hasSelection: selected,
       onRemoveSelection: () async => record("remove selection")(),
       onRemoveFromSelection: record("remove from selection"),
-      onFocusChange: (_) {},
       child: content,
     ),
   );
@@ -52,7 +51,6 @@ extension PumpMembershipRowShortcuts on WidgetTester {
       isSelected: selected,
       hasSelection: selected,
       onRevokeSelection: () async => record("revoke selection")(),
-      onFocusChange: (_) {},
       child: content,
     ),
   );

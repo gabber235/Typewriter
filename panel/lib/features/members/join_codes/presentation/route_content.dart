@@ -16,10 +16,13 @@ class JoinCodesTab extends HookConsumerWidget {
     final codesAsync = ref.watch(visibleOrganizationJoinCodesProvider);
     // One rows handle per tab, above the data builder: the table, the card
     // list and the bulk bar's revokeSelection share it.
+    // Generate announces its code here, before or after the code arrives.
+    final codeFocus = useRowFocus(debugLabel: "Join codes");
     final rows = useAnimatedRows(
       items: codesAsync.value ?? const <skir.JoinCode>[],
       identity: (code) => code.code,
       ready: codesAsync.hasValue,
+      focus: codeFocus,
     );
     final rolesAsync = ref.watch(organizationRolesProvider);
     final selectedCodes = useState<Set<skir.RecordId>>({});
@@ -111,14 +114,20 @@ class JoinCodesTab extends HookConsumerWidget {
                     description: "Generate a unique join code to invite new members to your organization.",
                     prefix: joinCodeUrlPrefix,
                     onGenerate: () async {
-                      final revealed = await ref.executeMembership(
+                      final code = await ref.executeMembership(
                         ref.membershipCommands.generate(
                           options: joinCodeOptions.value,
                         ),
                         (response) => response.requireAccepted(),
                       );
-                      generatedCode.value = revealed.value;
-                      return revealed;
+                      // The projection may already hold the code; expect
+                      // handles both orders.
+                      codeFocus.expect(code.code);
+                      generatedCode.value = code.code.id;
+                      return SecretFieldRevealed(
+                        value: code.code.id,
+                        expiresAt: code.expiresAt,
+                      );
                     },
                     generateButtonText: "Generate Join Code",
                     regenerateButtonText: "New Join Code",

@@ -40,7 +40,14 @@ void main() {
 
     // The confirmation and the decline keep the panel busy until the reply
     // below, so these steps wait for what they need instead of settling.
-    await tester.tap(find.text("Decline"));
+    await tester.tap(
+      // The card's own button; the focused card also lists it in the
+      // action row.
+      find.descendant(
+        of: find.byType(JoinRequestCard),
+        matching: find.text("Decline"),
+      ),
+    );
     const question = "Decline Grace's request?";
     await panel.eventually(
       () => expect(panel.dialog.showing(question), isTrue),
@@ -122,7 +129,14 @@ void main() {
       membership(roles: [_editor], joinRequests: [_request]),
     ], at: membersPage(const JoinRequestsRoute()));
 
-    await panel.tapOn(find.text("Accept"));
+    await panel.tapOn(
+      // The card's own button; the focused card also lists it in the
+      // action row.
+      find.descendant(
+        of: find.byType(JoinRequestCard),
+        matching: find.text("Accept"),
+      ),
+    );
 
     expect(semanticsLabeled("Confirm & Add Member").single.isEnabled, isFalse);
 

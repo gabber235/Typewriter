@@ -97,112 +97,129 @@ class JoinCodeCard extends HookConsumerWidget {
                     : _confirmRevokeCode(context, ref),
               ),
             ],
-            child: Button(
-              face: ButtonFace.bare,
-              label: expansibleController.isExpanded
-                  ? "Hide join code details"
-                  : "Show join code details",
-              onPressed: expansibleController.toggle,
-              child: Padding(
-                padding: EdgeInsets.all(context.spacing.space3),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => onSelectionChanged(!isSelected),
-                      child: CircleAvatar(
-                        backgroundColor: isSelected
-                            ? context.colors.success
-                            : theme.colorScheme.primaryContainer,
-                        child: Icon(
-                          isSelected ? Icons.check : Icons.link,
-                          color: isSelected
-                              ? context.colors.onSuccess
-                              : theme.colorScheme.onPrimaryContainer,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: context.spacing.space3),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          BlurReveal(
-                            blurSigma: 3,
-                            child: Text(
-                              fullUrl,
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 13,
-                                  ),
-                              overflow: TextOverflow.ellipsis,
+            // Inside the shortcuts, so they answer while the card is
+            // focused. Enter opens the details, as the header did.
+            child: RowStop(
+              borderRadius: context.shapes.mediumBorderRadius,
+              label: fullUrl,
+              onActivate: expansibleController.toggle,
+              // In a list the card is the stop; alone it is the header.
+              child: ExcludeFocus(
+                excluding: RowEntryScope.maybeOf(context) != null,
+                child: Button(
+                  face: ButtonFace.bare,
+                  label: expansibleController.isExpanded
+                      ? "Hide join code details"
+                      : "Show join code details",
+                  onPressed: expansibleController.toggle,
+                  child: Padding(
+                    padding: EdgeInsets.all(context.spacing.space3),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => onSelectionChanged(!isSelected),
+                          child: CircleAvatar(
+                            backgroundColor: isSelected
+                                ? context.colors.success
+                                : theme.colorScheme.primaryContainer,
+                            child: Icon(
+                              isSelected ? Icons.check : Icons.link,
+                              color: isSelected
+                                  ? context.colors.onSuccess
+                                  : theme.colorScheme.onPrimaryContainer,
+                              size: 20,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            crossAxisAlignment: WrapCrossAlignment.center,
+                        ),
+                        SizedBox(width: context.spacing.space3),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CountdownBadge(
-                                endDate: code.expiresAt,
-                                onExpired: () {
-                                  onSelectionChanged(false);
-                                },
+                              BlurReveal(
+                                blurSigma: 3,
+                                child: Text(
+                                  fullUrl,
+                                  style: Theme.of(context).textTheme.bodyMedium!
+                                      .copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              JoinCodeTypeBadges(code: code),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  CountdownBadge(
+                                    endDate: code.expiresAt,
+                                    onExpired: () {
+                                      onSelectionChanged(false);
+                                    },
+                                  ),
+                                  JoinCodeTypeBadges(code: code),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        RotationTransition(
+                          turns: Tween<double>(
+                            begin: 0,
+                            end: 0.5,
+                          ).animate(animation),
+                          child: Icon(
+                            Icons.expand_less_rounded,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
-                    RotationTransition(
-                      turns: Tween<double>(
-                        begin: 0,
-                        end: 0.5,
-                      ).animate(animation),
-                      child: Icon(
-                        Icons.expand_less_rounded,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-          body: (context) => Column(
-            children: [
-              Divider(
-                height: 1,
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
-              ),
-              Padding(
-                padding: EdgeInsets.all(context.spacing.space3),
-                child: Wrap(
-                  alignment: .center,
-                  spacing: context.spacing.space2,
-                  runSpacing: context.spacing.space2,
-                  children: [
-                    Button(
-                      face: ButtonFace.outlined,
-                      icon: const Icon(Icons.copy, size: 18),
-                      label: "Copy Join Code",
-                      color: context.colors.brandText,
-                      onPressed: () => _copyToClipboard(context, fullUrl),
-                    ),
-                    Button(
-                      face: ButtonFace.outlined,
-                      icon: const Icon(Icons.link_off, size: 18),
-                      label: "Revoke",
-                      color: context.colors.dangerText,
-                      onPressed: () => _confirmRevokeCode(context, ref),
-                    ),
-                  ],
+          // Part of the row, so focus in it still counts as the card.
+          body: (context) => RowStop(
+            role: RowRole.part,
+            child: Column(
+              children: [
+                Divider(
+                  height: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: EdgeInsets.all(context.spacing.space3),
+                  child: Wrap(
+                    alignment: .center,
+                    spacing: context.spacing.space2,
+                    runSpacing: context.spacing.space2,
+                    children: [
+                      Button(
+                        face: ButtonFace.outlined,
+                        icon: const Icon(Icons.copy, size: 18),
+                        label: "Copy Join Code",
+                        color: context.colors.brandText,
+                        onPressed: () => _copyToClipboard(context, fullUrl),
+                      ),
+                      Button(
+                        face: ButtonFace.outlined,
+                        icon: const Icon(Icons.link_off, size: 18),
+                        label: "Revoke",
+                        color: context.colors.dangerText,
+                        onPressed: () => _confirmRevokeCode(context, ref),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

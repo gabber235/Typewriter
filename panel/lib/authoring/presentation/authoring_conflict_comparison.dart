@@ -103,6 +103,9 @@ final class AuthoringConflictComparison extends HookWidget {
             Button(
               face: ButtonFace.filled,
               label: "Keep mine",
+              // The dialog's main action takes focus; Use saved is never
+              // first.
+              autofocus: enabled && onKeepMine != null,
               onPressed: !enabled || onKeepMine == null
                   ? null
                   : () => resolve(onKeepMine!),

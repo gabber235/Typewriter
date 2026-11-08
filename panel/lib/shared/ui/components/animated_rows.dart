@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "row_focus.dart";
+
 /// How a row came to be on screen; fixed for the row's life.
 enum RowArrival {
   /// Present when the content loaded; it joins the load run.
@@ -43,10 +45,13 @@ final class RowEntry<T> {
     required this._item,
     required this.arrival,
     required this.presence,
+    required RowFocus focusOwner,
   }) : _phase = arrival == RowArrival.load
            ? RowPhase.present
            : RowPhase.arriving,
-       _slides = arrival == RowArrival.insert;
+       _slides = arrival == RowArrival.insert {
+    focus = RowFocusNode._(this, focusOwner);
+  }
 
   /// The identity given to [useAnimatedRows]; the row's only id.
   final Object id;
@@ -57,6 +62,13 @@ final class RowEntry<T> {
   /// Presence from 0 (gone) to 1 (in place). One controller for the row's
   /// life; it ticks only while the row moves.
   final MotionController presence;
+
+  /// The row's focus node. [RowStop] puts it in the tree.
+  late final RowFocusNode focus;
+
+  // The part cells of a table row; each RowStop of the part role adds and
+  // removes its own.
+  final _parts = <_RowPartNode>[];
 
   /// The latest item with this identity; kept while the row leaves.
   T get item => _item;
@@ -80,7 +92,10 @@ final class RowEntry<T> {
   bool _slides;
   bool _squashes = false;
 
-  void _dispose() => presence.dispose();
+  void _dispose() {
+    focus.dispose();
+    presence.dispose();
+  }
 }
 
 /// Builds the content of one list row; the mechanic adds motion and the
@@ -121,6 +136,9 @@ final class AnimatedRows<T> {
   /// after the last row left, with loadIn otherwise.
   bool get everHadRows => _hook._everHadRows;
 
+  /// Where focus goes when rows of this list leave or arrive.
+  RowFocus get focus => _hook._focus;
+
   /// Runs [command] with the rows of [ids] sending: they stay in place,
   /// struck through and busy, and ignore input. When [command] fails their
   /// run returns to idle with no motion and the error is rethrown. When it
@@ -139,17 +157,19 @@ final class AnimatedRows<T> {
 /// reorder moves rows in place with no motion. [identity] must be unique
 /// among [items]; a duplicate throws an [ArgumentError] and leaves the rows
 /// as they were. [arrival] and [leave] are a service's overrides of rowIn
-/// and listOut; null plays the tokens.
+/// and listOut; null plays the tokens. [focus] is passed by a parent that
+/// announces creates from outside the list; without it the hook owns one.
 AnimatedRows<T> useAnimatedRows<T>({
   required List<T> items,
   required Object Function(T item) identity,
   bool ready = true,
   MotionOverride? arrival,
   MotionOverride? leave,
+  RowFocus? focus,
 }) {
   final vsync = useTickerProvider();
   return use(
-    _AnimatedRowsHook<T>(items, identity, ready, arrival, leave, vsync),
+    _AnimatedRowsHook<T>(items, identity, ready, arrival, leave, vsync, focus),
   );
 }
 
@@ -161,6 +181,7 @@ class _AnimatedRowsHook<T> extends Hook<AnimatedRows<T>> {
     this.arrival,
     this.leave,
     this.vsync,
+    this.focus,
   );
 
   final List<T> items;
@@ -169,6 +190,7 @@ class _AnimatedRowsHook<T> extends Hook<AnimatedRows<T>> {
   final MotionOverride? arrival;
   final MotionOverride? leave;
   final TickerProvider vsync;
+  final RowFocus? focus;
 
   @override
   _AnimatedRowsHookState<T> createState() => _AnimatedRowsHookState<T>();
@@ -188,10 +210,13 @@ class _AnimatedRowsHookState<T>
   bool _everHadRows = false;
   bool _loaded = false;
   bool _disposed = false;
+  late final RowFocus _focus = hook.focus ?? (_ownFocus = RowFocus());
+  RowFocus? _ownFocus;
 
   @override
   void initHook() {
     super.initHook();
+    _focus._rows = _rows;
     _sync();
   }
 
@@ -200,6 +225,10 @@ class _AnimatedRowsHookState<T>
   @override
   void didUpdateHook(_AnimatedRowsHook<T> oldHook) {
     super.didUpdateHook(oldHook);
+    assert(
+      identical(oldHook.focus, hook.focus),
+      "A list keeps one RowFocus for its life",
+    );
     _sync();
   }
 
@@ -221,15 +250,20 @@ class _AnimatedRowsHookState<T>
         _present(ids[index], item, arrival),
     ];
     final kept = present.toSet();
-    for (final entry in _entries) {
-      if (!kept.contains(entry) && entry.phase != RowPhase.leaving) {
-        _leave(entry);
-      }
-    }
+    final leaving = [
+      for (final entry in _entries)
+        if (!kept.contains(entry) && entry.phase != RowPhase.leaving) entry,
+    ];
+    // Focus moves before any leaving row rebuilds, against the order before
+    // the change.
+    _focus._leaving({for (final entry in leaving) entry.id});
+    leaving.forEach(_leave);
     final merged = _merge(present, kept);
     _entries
       ..clear()
       ..addAll(merged);
+    // A create announced before the row arrived, even before the load.
+    _focus._arrived();
   }
 
   RowEntry<T> _present(Object id, T item, RowArrival arrival) {
@@ -244,7 +278,9 @@ class _AnimatedRowsHookState<T>
           vsync: hook.vsync,
           value: arrival == RowArrival.load ? 1 : 0,
         ),
+        focusOwner: _focus,
       );
+      _focus._watch(added.focus);
       if (arrival == RowArrival.insert) {
         _play(added, RowPhase.arriving, MotionToken.rowIn, hook.arrival, 1);
       }
@@ -327,6 +363,14 @@ class _AnimatedRowsHookState<T>
       for (final entry in _entries)
         if (ids.contains(entry.id) && entry.phase != RowPhase.leaving) entry,
     ];
+    for (final entry in sent) {
+      final row = entry.focus;
+      // A control inside a sending row hands focus to the row, which keeps
+      // it.
+      if (row.hasFocus && !row.hasPrimaryFocus && row.canRequestFocus) {
+        row.requestFocus();
+      }
+    }
     setState(() {
       for (final entry in sent) {
         entry._run = RowRun.sending;
@@ -352,9 +396,11 @@ class _AnimatedRowsHookState<T>
   @override
   void dispose() {
     _disposed = true;
+    _focus._detach(_rows);
     for (final entry in _byId.values) {
       entry._dispose();
     }
+    _ownFocus?.dispose();
     super.dispose();
   }
 
@@ -501,24 +547,28 @@ class SliverAnimatedRows<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = rows.entries;
-    return SliverRowAnchor(
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final entry = entries[index];
-            return KeyedSubtree(
-              key: ValueKey(entry.id),
-              child: entry.motion(entry.row(itemBuilder(context, entry))),
-            );
-          },
-          childCount: entries.length,
-          // A row keeps its element when rows above it change.
-          findChildIndexCallback: (key) {
-            final index = entries.indexWhere(
-              (entry) => ValueKey(entry.id) == key,
-            );
-            return index < 0 ? null : index;
-          },
+    return RowFocusScope(
+      focus: rows.focus,
+      child: SliverRowAnchor(
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final entry = entries[index];
+              return RowEntryScope(
+                key: ValueKey(entry.id),
+                entry: entry,
+                child: entry.motion(entry.row(itemBuilder(context, entry))),
+              );
+            },
+            childCount: entries.length,
+            // A row keeps its element when rows above it change.
+            findChildIndexCallback: (key) {
+              final index = entries.indexWhere(
+                (entry) => ValueKey(entry.id) == key,
+              );
+              return index < 0 ? null : index;
+            },
+          ),
         ),
       ),
     );

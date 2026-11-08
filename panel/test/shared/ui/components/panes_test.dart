@@ -560,4 +560,52 @@ void main() {
       tester.getSize(find.text("source")).width,
     );
   });
+
+  testWidgets("a primary pane focuses its first item once the list arrives", (
+    tester,
+  ) async {
+    final items = await tester.showOpenFocusPane(fallback: "Generate");
+    expect(
+      Focus.of(tester.element(find.text("Generate"))).hasPrimaryFocus,
+      isTrue,
+    );
+    items.update([
+      const AnimatedItem(id: "a", label: "Alpha"),
+      const AnimatedItem(id: "b", label: "Beta"),
+    ]);
+    await tester.pumpAndSettle();
+    expect(AnimatedItems.focusedLabel(tester), "Alpha");
+  });
+
+  testWidgets(
+    "a key press before the list arrives keeps focus where the user put it",
+    (tester) async {
+      final items = await tester.showOpenFocusPane(fallback: "Generate");
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      final chosen = FocusManager.instance.primaryFocus;
+      items.update([
+        const AnimatedItem(id: "a", label: "Alpha"),
+        const AnimatedItem(id: "b", label: "Beta"),
+      ]);
+      await tester.pumpAndSettle();
+      expect(FocusManager.instance.primaryFocus, same(chosen));
+    },
+  );
+
+  testWidgets("focus a reveal asks for in the frame the list arrives wins", (
+    tester,
+  ) async {
+    final items = await tester.showOpenFocusPane(fallback: "Generate");
+    items.update([const AnimatedItem(id: "a", label: "Alpha")]);
+    // Runs in the same frame as the pane's open focus, before it.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => Focus.of(tester.element(find.text("Other"))).requestFocus(),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      Focus.of(tester.element(find.text("Other"))).hasPrimaryFocus,
+      isTrue,
+    );
+  });
 }

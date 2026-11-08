@@ -55,12 +55,10 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
       context,
       childScope,
       location,
-      collectionWithFocus(
+      collectionWithHeader(
         sourceScope: childScope,
         mutationScope: childScope,
         reference: control.control.binding,
-        removalKind: _CollectionRemovalKind.none,
-        renderedOrder: [for (final item in items) item.id],
         sourceHeader: node.header == null
             ? null
             : _ScopedCollectionHeader(header: node.header, scope: childScope),
@@ -186,10 +184,8 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
   }) {
     final address = scope.authoredAliases.resolve(reference);
     if (address == null) return _diagnostic("The linked item is unavailable");
-    return _MountedCollectionRow(
-      key: ValueKey(item.id.value),
-      row: item.id,
-      builder: (context, row) {
+    return Builder(
+      builder: (context) {
         final style = _controlStyle(context, scope, control.inputAppearance);
         final link = scope.read(reference)?.authoredLink;
         final enabled = scope.canExecuteAction;
@@ -249,7 +245,6 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                       linked: link != null,
                       states: states,
                       style: buttonStyle,
-                      focusNode: row.recoveryFocus,
                       onPressed: enabled
                           ? () => runDirectLinkChange(
                               context: context,
@@ -271,7 +266,6 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
         final clear = link == null
             ? null
             : directLinkClearControl(
-                row: row,
                 scope: scope,
                 control: control,
                 reference: reference,
@@ -338,7 +332,6 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
     required Map<skir.ResourceId, _AuthoredCollectionRow>? candidates,
     required skir.PresentationCollectionDefinition? candidateDefinition,
   }) {
-    _CollectionInteractionScope.invalidateAncestors(context);
     unawaited(
       _chooseLink(
         context: context,
@@ -352,7 +345,6 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
   }
 
   _SuppliedHeaderControl directLinkClearControl({
-    required _CollectionRowBinding row,
     required PortablePresentationScope scope,
     required skir.LinkControl control,
     required skir.BindingRef reference,
@@ -368,11 +360,11 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
         states: states,
         style: style,
         onPressed: scope.canExecuteAction && scope.host is PortableLinkHost
-            ? () => runCollectionClear(
-                row: row,
-                scope: scope,
-                reference: reference,
-                occurrence: occurrence,
+            ? () => unawaited(
+                scope.clearLinkedOccurrence(
+                  reference: reference,
+                  occurrence: occurrence,
+                ),
               )
             : null,
       ),
@@ -567,7 +559,8 @@ final class _MissingLinkTarget extends StatelessWidget {
 }
 
 /// The icon button that chooses a linked resource, or changes it once one
-/// is [linked].
+/// is [linked]. In a collection row it is the row's landing: after a remove,
+/// focus lands on it in the next row.
 Widget _linkChooseButton(
   PortablePresentationScope scope,
   skir.LinkControl control, {
@@ -575,27 +568,27 @@ Widget _linkChooseButton(
   required WidgetStatesController states,
   required ButtonStyle style,
   required VoidCallback? onPressed,
-  FocusNode? focusNode,
 }) {
   final text = _operationText(
     scope,
     control.content?.operationTooltip ?? control.content?.chooseLabel,
     linked ? "Change linked resource" : "Choose linked resource",
   );
-  return Button(
-    face: ButtonFace.icon,
-    icon: _operationGlyph(
-      control.content?.chooseIcon,
-      scope,
-      Icon(linked ? Icons.edit_outlined : Icons.link),
+  return RowLanding(
+    child: Button(
+      face: ButtonFace.icon,
+      icon: _operationGlyph(
+        control.content?.chooseIcon,
+        scope,
+        Icon(linked ? Icons.edit_outlined : Icons.link),
+      ),
+      label: text,
+      tooltip: text,
+      color: _accentOf(style, null),
+      dense: _denseOf(style),
+      statesController: states,
+      onPressed: onPressed,
     ),
-    label: text,
-    tooltip: text,
-    color: _accentOf(style, null),
-    dense: _denseOf(style),
-    statesController: states,
-    focusNode: focusNode,
-    onPressed: onPressed,
   );
 }
 

@@ -33,6 +33,9 @@ final class AnimatedItemSource {
   /// The items the next build reads.
   final List<AnimatedItem> items;
 
+  /// Whether the items arrived; false shows the collection still loading.
+  bool ready = true;
+
   /// Whether the collection is mounted; false unmounts it while its rows
   /// stay.
   final visible = ValueNotifier(true);
@@ -50,6 +53,7 @@ final class AnimatedItemSource {
 
   /// Replaces the items with [next] and rebuilds.
   void update(List<AnimatedItem> next) {
+    ready = true;
     items
       ..clear()
       ..addAll(next);
@@ -69,8 +73,9 @@ final class AnimatedItemSource {
 enum AnimatedItemsLayout { sliverList, table }
 
 /// A 400 by 400 scroll view of [AnimatedItemSource] items on one
-/// [useAnimatedRows], rendered as [layout]. Each row is 48 px high and
-/// records taps in [AnimatedItemSource.tapped].
+/// [useAnimatedRows], rendered as [layout]. Each row is 48 px high, one
+/// focus stop holding a small field, and records taps in
+/// [AnimatedItemSource.tapped].
 final class AnimatedItems extends HookWidget {
   /// Shows [source] as [layout], with [columns] cells per table row.
   const AnimatedItems({
@@ -90,6 +95,21 @@ final class AnimatedItems extends HookWidget {
   /// `<label> cell <n>`.
   final int columns;
 
+  /// The label of the row that holds keyboard focus, on the row itself or
+  /// in a control inside it, or null.
+  static String? focusedLabel(WidgetTester tester) {
+    for (
+      FocusNode? node = FocusManager.instance.primaryFocus;
+      node != null;
+      node = node.parent
+    ) {
+      if (node case RowFocusNode(:final entry)) {
+        return (entry.item as AnimatedItem?)?.label;
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     useValueListenable(source._revision);
@@ -97,6 +117,7 @@ final class AnimatedItems extends HookWidget {
     final rows = useAnimatedRows<AnimatedItem>(
       items: List.of(source.items),
       identity: (item) => item.id,
+      ready: source.ready,
     );
     source.rows = rows;
     if (!visible) return const SizedBox(width: 400, height: 400);
@@ -108,8 +129,9 @@ final class AnimatedItems extends HookWidget {
           switch (layout) {
             AnimatedItemsLayout.sliverList => SliverAnimatedRows(
               rows: rows,
-              itemBuilder: (context, entry) =>
-                  _tappable(entry.item, Text(entry.item.label)),
+              itemBuilder: (context, entry) => RowStop(
+                child: _tappable(entry.item, _withField(entry.item.label)),
+              ),
             ),
             AnimatedItemsLayout.table => SliverRowAnchor(
               sliver: SliverToBoxAdapter(
@@ -118,12 +140,18 @@ final class AnimatedItems extends HookWidget {
                   rowBuilder: (context, entry) => TableRow(
                     children: [
                       for (var column = 0; column < columns; column++)
-                        _tappable(
-                          entry.item,
-                          Text(
-                            columns == 1
-                                ? entry.item.label
-                                : "${entry.item.label} cell $column",
+                        RowStop(
+                          role: column == 0 ? RowRole.stop : RowRole.part,
+                          bounds: RingBounds.tableRow,
+                          child: _tappable(
+                            entry.item,
+                            column == 0
+                                ? _withField(
+                                    columns == 1
+                                        ? entry.item.label
+                                        : "${entry.item.label} cell $column",
+                                  )
+                                : Text("${entry.item.label} cell $column"),
                           ),
                         ),
                     ],
@@ -136,6 +164,20 @@ final class AnimatedItems extends HookWidget {
       ),
     );
   }
+
+  // The label and a field Tab passes over, focused by a test the way a
+  // pointer would.
+  Widget _withField(String label) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: Text(label)),
+      Focus(
+        debugLabel: "$label field",
+        skipTraversal: true,
+        child: const SizedBox(width: 8, height: 8),
+      ),
+    ],
+  );
 
   Widget _tappable(AnimatedItem item, Widget child) => GestureDetector(
     behavior: HitTestBehavior.opaque,
@@ -174,6 +216,82 @@ extension ShowAnimatedItems on WidgetTester {
     } else {
       await mountComponent(shown);
     }
+    return source;
+  }
+}
+
+/// Moving keyboard focus in an [AnimatedItems] collection, and covering it
+/// with a dialog.
+extension FocusAnimatedItems on WidgetTester {
+  AnimatedItemSource get _shownSource =>
+      widget<AnimatedItems>(find.byType(AnimatedItems)).source;
+
+  /// Focuses the row of [id], the way a pointer or a key landing on it
+  /// does.
+  Future<void> focusAnimatedItem(String id) async {
+    _shownSource.rows[id]!.focus.requestFocus();
+    await pump();
+  }
+
+  /// Focuses the field inside the row of [id].
+  Future<void> focusAnimatedItemField(String id) async {
+    final row = _shownSource.rows[id]!.focus;
+    row.descendants.last.requestFocus();
+    await pump();
+    expect(row.hasFocus && !row.hasPrimaryFocus, isTrue);
+  }
+
+  /// Opens a dialog over the collection that takes focus.
+  Future<void> openTestDialog() async {
+    unawaited(
+      showAdvancedDialog<void>(
+        context: element(find.byType(AnimatedItems)),
+        builder: (context) => Center(
+          child: Button(
+            label: "Close test dialog",
+            autofocus: true,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+      ),
+    );
+    await pumpAndSettle();
+    expect(AnimatedItems.focusedLabel(this), isNull);
+  }
+
+  /// Closes the dialog [openTestDialog] opened, the way its button does.
+  Future<void> closeTestDialog() async {
+    await tap(find.text("Close test dialog"));
+    await pumpAndSettle();
+  }
+}
+
+/// Showing a page whose primary pane opens on its first item.
+extension ShowOpenFocusPane on WidgetTester {
+  /// Shows a primary [Pane] with open focus on its first item, holding a
+  /// button labelled [fallback], an [AnimatedItems] list still loading and a
+  /// button labelled "Other", and returns the source whose
+  /// [AnimatedItemSource.update] delivers the items.
+  Future<AnimatedItemSource> showOpenFocusPane({
+    required String fallback,
+  }) async {
+    final source = AnimatedItemSource([])..ready = false;
+    await showComponent(
+      Pane(
+        id: "page",
+        primary: true,
+        openFocus: PaneOpenFocus.firstItem,
+        margin: EdgeInsets.zero,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Button(label: fallback, onPressed: () {}),
+            AnimatedItems(source: source),
+            Button(label: "Other", onPressed: () {}),
+          ],
+        ),
+      ),
+    );
     return source;
   }
 }

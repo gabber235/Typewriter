@@ -96,6 +96,7 @@ class ResourceSurface extends ConsumerWidget {
     final main = Pane(
       id: "resource",
       primary: true,
+      openFocus: PaneOpenFocus.firstItem,
       borderRadius: context.shapes.largeBorderRadius,
       margin: EdgeInsets.only(
         top: context.spacing.space2,

@@ -345,9 +345,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets("removing the only row recovers to collection Add", (
-    tester,
-  ) async {
+  testWidgets("removing the only row focuses the pane", (tester) async {
     final scenario = CollectionEditorScenario(
       example: CollectionEditorExample.textList,
     );
@@ -358,7 +356,8 @@ void main() {
     await panel.activateWithKeyboard(find.tooltip("Remove item"));
     await tester.pumpAndSettle();
     expect(scenario.value.authoredItems, isEmpty);
-    expect(panel.holdsFocus(find.tooltip("Add item")), isTrue);
+    expect(panel.holdsFocus(find.tooltip("Add item")), isFalse);
+    expect(FocusManager.instance.primaryFocus, isA<FocusScopeNode>());
     expect(tester.takeException(), isNull);
   });
 
@@ -382,7 +381,7 @@ void main() {
   });
 
   testWidgets(
-    "a removal retired by a host change plus source disappearance never recovers focus",
+    "a focused row removed by someone else hands focus to the next row",
     (tester) async {
       final scenario = CollectionEditorScenario(
         example: CollectionEditorExample.textList,
@@ -410,12 +409,11 @@ void main() {
             ),
           )
           .requireAccepted();
-      // The removed row keeps its focus until it has left.
       await tester.pumpAndSettle();
-      final frameworkFallback = FocusManager.instance.primaryFocus;
+      expect(panel.holdsFocus(find.tooltip("Remove item").first), isTrue);
       gate.complete(false);
       await tester.pumpAndSettle();
-      expect(FocusManager.instance.primaryFocus, same(frameworkFallback));
+      expect(panel.holdsFocus(find.tooltip("Remove item").first), isTrue);
       expect(tester.takeException(), isNull);
     },
   );
@@ -445,41 +443,52 @@ void main() {
     },
   );
 
-  testWidgets("focus moving within the pending row cancels removal recovery", (
+  testWidgets(
+    "removing a row while a field inside it is focused focuses the next row",
+    (tester) async {
+      final scenario = CollectionEditorScenario(
+        example: CollectionEditorExample.authoredSteps,
+      );
+
+      addTearDown(scenario.dispose);
+      final settlement = Completer<void>();
+      final (:panel, :gate, :host, stage: _) = await scenario.showGated(
+        tester,
+        settlement: settlement,
+      );
+      await panel.tapOn(find.text("Arrival"));
+      await panel.activateWithKeyboard(find.tooltip("Remove item").first);
+      await tester.pump();
+      await tester.tapAt(panel.field("name").rect.center);
+      await tester.pump();
+      expect(panel.field("name").isFocused, isTrue);
+      gate.complete(true);
+      expect(
+        await host.sourceResult.future,
+        isA<PortablePresentationWriteApplied>(),
+      );
+      settlement.complete();
+      await tester.pumpAndSettle();
+      expect(
+        scenario.value.authoredItems!.first.id,
+        CollectionEditorScenario.second,
+      );
+      // Discovery's disclosure.
+      expect(panel.holdsFocus(find.tooltip("Expand").first), isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets("removing a focused map row focuses the next row's Remove", (
     tester,
   ) async {
     final scenario = CollectionEditorScenario(
-      example: CollectionEditorExample.authoredSteps,
+      example: CollectionEditorExample.scalarMap,
     );
-
     addTearDown(scenario.dispose);
-    final settlement = Completer<void>();
-    final (:panel, :gate, :host, stage: _) = await scenario.showGated(
-      tester,
-      settlement: settlement,
-    );
-    await panel.tapOn(find.text("Arrival"));
-    await panel.activateWithKeyboard(find.tooltip("Remove item").first);
-    await tester.pump();
-    await tester.tapAt(panel.field("name").rect.center);
-    await tester.pump();
-    expect(panel.field("name").isFocused, isTrue);
-    gate.complete(true);
-    expect(
-      await host.sourceResult.future,
-      isA<PortablePresentationWriteApplied>(),
-    );
-    // The removed row keeps its focus until it has left.
+    final panel = await scenario.show(tester);
+    await panel.activateWithKeyboard(find.tooltip("Remove row").first);
     await tester.pumpAndSettle();
-    expect(scenario.value.authoredItems, hasLength(1));
-    final frameworkFallback = FocusManager.instance.primaryFocus;
-    settlement.complete();
-    await tester.pumpAndSettle();
-    expect(
-      scenario.value.authoredItems!.first.id,
-      CollectionEditorScenario.second,
-    );
-    expect(FocusManager.instance.primaryFocus, same(frameworkFallback));
-    expect(tester.takeException(), isNull);
+    expect(panel.holdsFocus(find.tooltip("Remove row").first), isTrue);
   });
 }

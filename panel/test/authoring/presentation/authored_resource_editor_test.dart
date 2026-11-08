@@ -48,8 +48,8 @@ void main() {
       expect(find.byType(AuthoringConflictComparison), findsOneWidget);
       expect(find.text("Local"), findsWidgets);
       expect(find.text("Remote"), findsWidgets);
-      Focus.of(tester.element(find.text("Keep mine"))).requestFocus();
-      await tester.pump();
+      // The review opens on its main action.
+      expect(panel.hasFocusOn("Keep mine"), isTrue);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsNothing);
@@ -59,6 +59,31 @@ void main() {
       expect(seeded.saves, isEmpty);
     },
   );
+
+  testWidgets("a review that offers no Keep mine opens on Close", (
+    tester,
+  ) async {
+    final fixture = AuthoredDraft.titled(
+      fieldName: "name",
+      initial: skir.DataValue.wrapStringValue("Saved"),
+    );
+    final panel = await tester.pumpPanel(fixture.servedHeld);
+    final workspace = await panel.inspectDraft(
+      fixture,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    final seeded = panel.world.requireRealm;
+    await panel.fieldAt(0).type("Local");
+    // The resource is gone, so keeping the local edit is not offered.
+    final removed = seeded.document.copyWith(entries: {});
+    seeded.serve(removed);
+    workspace.acceptConfirmed(removed);
+    await panel.settle();
+    await panel.activateWithKeyboard(find.text("Review changes"));
+    await panel.settle();
+    expect(find.byType(AuthoringConflictComparison), findsOneWidget);
+    expect(panel.hasFocusOn("Close"), isTrue);
+  });
 
   testWidgets("comparison rejects a stale action without losing its proposal", (
     tester,

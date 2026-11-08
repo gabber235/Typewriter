@@ -17,7 +17,6 @@ class MemberTableRowShortcuts extends ConsumerWidget {
     required this.hasSelection,
     required this.onRemoveSelection,
     required this.onRemoveFromSelection,
-    required this.onFocusChange,
     required this.child,
     super.key,
   });
@@ -30,7 +29,6 @@ class MemberTableRowShortcuts extends ConsumerWidget {
   final bool hasSelection;
   final Future<void> Function() onRemoveSelection;
   final VoidCallback onRemoveFromSelection;
-  final ValueChanged<bool> onFocusChange;
   final Widget child;
 
   @override
@@ -75,12 +73,7 @@ class MemberTableRowShortcuts extends ConsumerWidget {
               : _confirmRemoveMember(context, ref),
         ),
       ],
-      // Focus on any cell rings the whole row; a control inside a cell is
-      // ringed by itself.
-      child: RingTarget(
-        bounds: RingBounds.tableRow,
-        child: Focus(onFocusChange: onFocusChange, child: child),
-      ),
+      child: child,
     );
   }
 

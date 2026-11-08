@@ -97,128 +97,123 @@ class MemberTabletCard extends HookConsumerWidget {
                       : _confirmRemoveMember(context, ref),
                 ),
               ],
-              child: Button(
-                face: ButtonFace.bare,
-                label: expansibleController.isExpanded
-                    ? "Hide member details"
-                    : "Show member details",
-                onPressed: expansibleController.toggle,
-                child: Padding(
-                  padding: EdgeInsets.all(context.spacing.space3),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => onSelectionChanged(!isSelected),
-                        child: SelectableAvatar(
-                          avatarUrl:
-                              member.avatarUrl?.nullIfEmpty ??
-                              "$userIconUrl&seed=${member.userId}",
-                          isSelected: isSelected,
-                          radius: 20,
-                        ),
+              // Inside the shortcuts, so they answer while the card is
+              // focused. Enter opens the details, as the header did.
+              child: RowStop(
+                borderRadius: context.shapes.mediumBorderRadius,
+                label: member.name ?? member.email ?? "Member",
+                onActivate: expansibleController.toggle,
+                // In a list the card is the stop; alone it is the header.
+                child: ExcludeFocus(
+                  excluding: RowEntryScope.maybeOf(context) != null,
+                  child: Button(
+                    face: ButtonFace.bare,
+                    label: expansibleController.isExpanded
+                        ? "Hide member details"
+                        : "Show member details",
+                    onPressed: expansibleController.toggle,
+                    child: Padding(
+                      padding: EdgeInsets.all(context.spacing.space3),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => onSelectionChanged(!isSelected),
+                            child: SelectableAvatar(
+                              avatarUrl:
+                                  member.avatarUrl?.nullIfEmpty ??
+                                  "$userIconUrl&seed=${member.userId}",
+                              isSelected: isSelected,
+                              radius: 20,
+                            ),
+                          ),
+                          SizedBox(width: context.spacing.space3),
+                          Expanded(
+                            child: PersonSummary(
+                              name: member.name,
+                              email: member.email,
+                            ),
+                          ),
+                          RotationTransition(
+                            turns: Tween<double>(
+                              begin: 0.0,
+                              end: 0.5,
+                            ).animate(animation),
+                            child: Icon(
+                              Icons.expand_less_rounded,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: context.spacing.space3),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: 2,
-                          children: [
-                            if (member.name != null)
-                              Text(
-                                member.name!,
-                                style: Theme.of(context).textTheme.bodyMedium!
-                                    .copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15,
-                                    ),
-                              ),
-                            if (member.email != null)
-                              Text(
-                                member.email!,
-                                style: Theme.of(context).textTheme.bodyMedium!
-                                    .copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontSize: 13,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                          ],
-                        ),
-                      ),
-                      RotationTransition(
-                        turns: Tween<double>(
-                          begin: 0.0,
-                          end: 0.5,
-                        ).animate(animation),
-                        child: Icon(
-                          Icons.expand_less_rounded,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             );
           },
+          // Part of the row, so focus in it still counts as the card.
           body: (context) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Divider(
-                  height: 1,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.3,
+            return RowStop(
+              role: RowRole.part,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Divider(
+                    height: 1,
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.3,
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(context.spacing.space3),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Roles",
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontVariations: [.weight(500)],
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 12,
+                  Padding(
+                    padding: EdgeInsets.all(context.spacing.space3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Roles",
+                          style: Theme.of(context).textTheme.bodyMedium!
+                              .copyWith(
+                                fontVariations: [.weight(500)],
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
                         ),
-                      ),
-                      SizedBox(height: context.spacing.space2),
-                      ref
-                          .watch(organizationRolesProvider)
-                          .when(
-                            data: (allRoles) => RoleMultiselectChips(
-                              availableRoles: allRoles,
-                              selectedRoles: member.roles.toList(),
-                              onRolesChanged: (newRoles) =>
-                                  ref.assignMemberRoles(
-                                    context,
-                                    member.userId,
-                                    newRoles,
-                                  ),
+                        SizedBox(height: context.spacing.space2),
+                        ref
+                            .watch(organizationRolesProvider)
+                            .when(
+                              data: (allRoles) => RoleMultiselectChips(
+                                availableRoles: allRoles,
+                                selectedRoles: member.roles.toList(),
+                                onRolesChanged: (newRoles) =>
+                                    ref.assignMemberRoles(
+                                      context,
+                                      member.userId,
+                                      newRoles,
+                                    ),
+                              ),
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, _) => const SizedBox.shrink(),
                             ),
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, _) => const SizedBox.shrink(),
+                        SizedBox(height: context.spacing.space4),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Button(
+                            face: ButtonFace.outlined,
+                            icon: const Icon(
+                              Icons.person_remove_outlined,
+                              size: 18,
+                            ),
+                            label: "Remove Member",
+                            color: context.colors.dangerText,
+                            onPressed: () => _confirmRemoveMember(context, ref),
                           ),
-                      SizedBox(height: context.spacing.space4),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Button(
-                          face: ButtonFace.outlined,
-                          icon: const Icon(
-                            Icons.person_remove_outlined,
-                            size: 18,
-                          ),
-                          label: "Remove Member",
-                          color: context.colors.dangerText,
-                          onPressed: () => _confirmRemoveMember(context, ref),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),

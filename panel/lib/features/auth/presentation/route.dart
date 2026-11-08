@@ -10,32 +10,39 @@ class AuthPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Spacer(),
-        Expanded(
-          flex: 2,
-          child: const RiveAsset(
-            asset: "assets/game_character.riv",
-            stateMachineName: "State Machine",
+    // No items, so open focus falls back to Sign in, the only control.
+    return Pane(
+      id: "sign-in",
+      primary: true,
+      margin: null,
+      openFocus: PaneOpenFocus.firstItem,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Spacer(),
+          Expanded(
+            flex: 2,
+            child: const RiveAsset(
+              asset: "assets/game_character.riv",
+              stateMachineName: "State Machine",
+            ),
           ),
-        ),
-        Text(
-          "Your journey starts here",
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.displayLarge!
-              .copyWith(fontSize: 40, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: context.spacing.space6),
-        Button(
-          face: ButtonFace.filled,
-          label: "Sign in",
-          busyLabel: "Signing in",
-          onPressed: () => ref.read(authProvider.notifier).signIn(),
-        ),
-        Spacer(),
-      ],
+          Text(
+            "Your journey starts here",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.displayLarge!
+                .copyWith(fontSize: 40, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: context.spacing.space6),
+          Button(
+            face: ButtonFace.filled,
+            label: "Sign in",
+            busyLabel: "Signing in",
+            onPressed: () => ref.read(authProvider.notifier).signIn(),
+          ),
+          Spacer(),
+        ],
+      ),
     );
   }
 }
