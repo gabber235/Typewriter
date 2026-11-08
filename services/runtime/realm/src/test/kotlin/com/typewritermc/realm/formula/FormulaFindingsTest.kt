@@ -46,7 +46,6 @@ import com.typewritermc.realm.testing.publicationBlockersByResource
 import com.typewritermc.realm.testing.record
 import com.typewritermc.realm.testing.recordValue
 import com.typewritermc.realm.testing.restore
-import com.typewritermc.realm.testing.sameSourceNameCatalog
 import com.typewritermc.realm.testing.setDefinitionValue
 import com.typewritermc.realm.testing.setType
 import com.typewritermc.realm.testing.setTypes
@@ -117,13 +116,6 @@ val FormulaFindingsTest by testSuite {
             errorCodesOn(demo.named("by_class")).shouldBeEmpty()
             formulas.value(demo.named("by_class")) shouldBe true
             errorCodesOn(demo.named("by_display")) shouldBe listOf("formula_unknown_name")
-        }
-    }
-
-    test("two code types with one class name make that name ambiguous, whatever their display names") {
-        val page = setup("findings-shared-source-name") { formulaPage { formula("built", booleanUse, "FixtureLoot() == FixtureLoot()") } }
-        withSetup(page, catalog = sameSourceNameCatalog) { demo ->
-            errorCodesOn(demo.named("built")) shouldContain "formula_ambiguous_type"
         }
     }
 

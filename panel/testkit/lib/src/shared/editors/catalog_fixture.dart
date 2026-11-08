@@ -115,6 +115,7 @@ skir.PublishedType publishedType(
   skir.ValuePath? placementField,
 }) => skir.PublishedType(
   name: "",
+  extension_: "",
   definition: skir.TypeDefinition(
     id: id,
     parameters: parameters,

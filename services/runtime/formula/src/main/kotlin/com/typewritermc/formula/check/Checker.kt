@@ -190,6 +190,12 @@ internal class Checker(
         }
     }
 
+    private fun memberRead(
+        expression: Member,
+        expected: TypeUse?,
+        scope: Scope,
+    ): CheckedExpression = member(synthOnce(expression.target, scope), expression.name, expression.safe, expected, scope, expression.span)
+
     private fun inferValue(
         expression: Expression,
         expected: TypeUse?,
@@ -198,7 +204,7 @@ internal class Checker(
         when (expression) {
             is Literal -> literal(expression.value, expression.span, expected, negative = false)
             is Name -> name(expression, expected, scope)
-            is Member -> member(synthOnce(expression.target, scope), expression.name, expression.safe, expected, scope, expression.span)
+            is Member -> qualifiedTypeValue(expression, scope) ?: memberRead(expression, expected, scope)
             is Call -> call(expression, expected, scope)
             is Index -> index(expression, expected, scope)
             is StringTemplate -> template(expression, expected, scope)

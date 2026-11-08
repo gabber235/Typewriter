@@ -72,6 +72,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
     List<skir.NamedTypeTemplate> parents = const [],
   }) => skir.PublishedType(
     name: "",
+    extension_: "",
     searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(

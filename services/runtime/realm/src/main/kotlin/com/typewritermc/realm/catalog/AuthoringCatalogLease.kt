@@ -5,6 +5,8 @@ import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.formula.ContentReferences
+import com.typewritermc.formula.check.CatalogType
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -51,9 +53,13 @@ interface AuthoringCatalogLease : AutoCloseable {
     val displays: ResourceDisplayCatalog
         get() = ResourceDisplayCatalog()
 
-    /** The code types formulas name by their source name, such as the Kotlin class name. */
-    val formulaTypeNames: Map<String, List<TypeUse>>
+    /** The code types formulas name by their source name, such as the Kotlin class name, each with its extension. */
+    val formulaTypeNames: Map<String, List<CatalogType>>
         get() = emptyMap()
+
+    /** The extensions formulas qualify code types by: every extension that declares one. */
+    val formulaExtensions: Set<ExtensionName>
+        get() = emptySet()
 
     fun retain(): AuthoringCatalogLease
 }

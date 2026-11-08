@@ -571,6 +571,7 @@ CheckedEditorCatalog _interactionCatalog() {
     List<skir.EffectiveFieldTemplate> effective = const [],
   }) => skir.PublishedType(
     name: "",
+    extension_: "",
     searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(

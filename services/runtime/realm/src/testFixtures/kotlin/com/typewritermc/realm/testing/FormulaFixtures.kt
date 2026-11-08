@@ -37,6 +37,7 @@ import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.formula.eval.EvaluationEnvironment
+import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.book
 import com.typewritermc.library.library
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
@@ -775,14 +776,20 @@ val prizeExtensionCatalog: RealmCatalog =
         },
     )
 
-/** The route fixtures plus a second extension's record whose source name is also `FixtureLoot`. */
-val sameSourceNameCatalog: RealmCatalog =
+/**
+ * The route fixtures, whose extension is `typewritermc:realm-route-fixtures`, plus a field free record whose source name
+ * is also `FixtureLoot`, declared by the extension [extension].
+ */
+fun sameSourceNameCatalog(extension: String): RealmCatalog =
     routeFixtureCatalog.copy(
         declarations = { loaded ->
-            val twin = TypeDefinitionId.qualified("loot-extension", "FixtureLoot")
+            val twin = TypeDefinitionId.qualified(extension, "FixtureLoot")
             listOf(
                 OwnedTypeDeclaration(
-                    loaded.declarations.first().origin,
+                    loaded.declarations
+                        .first()
+                        .origin
+                        .copy(artifact = ArtifactId(extension)),
                     TypeDefinition.partial(
                         id = twin,
                         representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),

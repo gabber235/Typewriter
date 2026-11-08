@@ -10,7 +10,9 @@ import com.typewritermc.formula.TextSpanDefinition
 import com.typewritermc.formula.VarComputedDefinition
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.VarValueDefinition
+import com.typewritermc.formula.check.CatalogType
 import com.typewritermc.formula.check.CheckedFormula
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.formula.check.FormulaEnvironment
 import com.typewritermc.formula.check.NameMeaning
 import com.typewritermc.formula.check.StoredFormula
@@ -199,10 +201,11 @@ private val testCatalog =
             ),
     )
 
-/** The code types formulas name by their source name. */
-private val catalogNames: Map<String, List<TypeUse>> =
+/** The code types formulas name by their source name, each declared by the extension its id's namespace names. */
+private val catalogNames: Map<String, List<CatalogType>> =
     listOf(entityId, namedId, npcId, playerId, itemId, rewardId, doorId, paymentId, animalId, catId, townId)
-        .groupBy({ (it.typeId as TypeId.QualifiedWrapper).value.name }, { it.use() })
+        .map { (it.typeId as TypeId.QualifiedWrapper).value to it.use() }
+        .groupBy({ (id, _) -> id.name }, { (id, use) -> CatalogType(use, ExtensionName.of(id.namespace)) })
 
 /** A provider function with these slots; the checker never runs it. */
 private fun provider(
@@ -307,7 +310,9 @@ class CheckerWorld(
 
     override fun reference(target: ResourceId): TypeUse? = present.firstOrNull { it.id == target }?.naming
 
-    override fun catalogTypeNamed(name: String): List<TypeUse> = catalogNames[name].orEmpty()
+    override fun catalogTypeNamed(name: String): List<CatalogType> = catalogNames[name].orEmpty()
+
+    override fun extensions(): Set<ExtensionName> = catalogNames.values.flatMapTo(linkedSetOf()) { types -> types.map { it.extension } }
 
     override fun typeValue(target: ResourceId): TypeUse? = present.firstOrNull { it.id == target }?.typeValue
 

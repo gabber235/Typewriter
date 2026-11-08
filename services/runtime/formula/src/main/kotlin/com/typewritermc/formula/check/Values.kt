@@ -176,6 +176,7 @@ private fun Checker.callMember(
     span: TextSpan,
     scope: Scope,
 ): CheckedExpression {
+    qualifiedType(callee, scope)?.let { return construct(it, arguments, span, scope) }
     val target = synthOnce(callee.target, scope)
     if (target.type == ERROR) return construct(ERROR, arguments, span, scope)
     val field =

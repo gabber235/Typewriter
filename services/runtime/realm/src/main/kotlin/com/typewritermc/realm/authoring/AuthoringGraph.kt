@@ -3,6 +3,8 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.links
 import com.typewritermc.checking.InputIdentity
+import com.typewritermc.formula.check.CatalogType
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.formula.graph.GraphKey
 import com.typewritermc.formula.graph.InputKey
 import com.typewritermc.formula.graph.Query
@@ -157,10 +159,15 @@ internal fun tracked(): CapturedAuthoringReads =
 context(reads: RealmReads)
 internal val extensions: ExtensionCatalog get() = reads.environment.view.catalog.code.extensions
 
-/** The code types formulas name by their source name. */
+/** The code types formulas name by their source name, each with its extension. */
 @OptIn(UntrackedEnvironment::class)
 context(reads: RealmReads)
-internal val formulaTypeNames: Map<String, List<TypeUse>> get() = reads.environment.view.catalog.code.formulaTypeNames
+internal val formulaTypeNames: Map<String, List<CatalogType>> get() = reads.environment.view.catalog.code.formulaTypeNames
+
+/** The extensions formulas qualify code types by. */
+@OptIn(UntrackedEnvironment::class)
+context(reads: RealmReads)
+internal val formulaExtensions: Set<ExtensionName> get() = reads.environment.view.catalog.code.formulaExtensions
 
 /** The relations of the view's catalog that own resources. */
 @OptIn(UntrackedEnvironment::class)

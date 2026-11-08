@@ -269,6 +269,10 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 searchKey = scopeKeys[id]?.takeUnless { id in conflictingKeys },
                 placementField = placementField,
                 name = owned.first().name ?: id.derivedName(),
+                extension =
+                    owned
+                        .first()
+                        .origin.artifact.value,
             )
         }
     val publishedPresentations =

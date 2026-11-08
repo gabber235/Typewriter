@@ -60,6 +60,7 @@ skir.PublishedType _draftPublished(
   List<skir.EffectiveFieldTemplate> fields = const [],
 }) => skir.PublishedType(
   name: "",
+  extension_: "",
   searchKey: null,
   placementField: null,
   definition: skir.TypeDefinition(

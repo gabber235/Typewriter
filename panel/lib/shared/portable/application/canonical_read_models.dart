@@ -64,6 +64,7 @@ final class CanonicalReadModels {
           _readIdName(definition.id).split(":").last;
       _published[definition.id] = skir.PublishedType(
         name: name,
+        extension_: "",
         placementField: null,
         definition: definition,
         status: skir.DeclarationStatus.ready,

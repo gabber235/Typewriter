@@ -77,6 +77,7 @@ messageFixture({bool unfilled = false}) {
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
     name: "",
+    extension_: "",
     searchKey: null,
     placementField: null,
     display: display ?? defaultTypeDisplay(""),
@@ -120,6 +121,7 @@ messageFixture({bool unfilled = false}) {
       types: [
         skir.PublishedType(
           name: "",
+          extension_: "",
           searchKey: null,
           placementField: null,
           display: defaultTypeDisplay(""),

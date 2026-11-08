@@ -6,10 +6,13 @@ import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.VarValueDefinition
+import com.typewritermc.formula.check.CatalogType
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.formula.check.FormulaEnvironment
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.extensions
+import com.typewritermc.realm.authoring.formulaExtensions
 import com.typewritermc.realm.authoring.formulaTypeNames
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -43,7 +46,8 @@ internal class RealmFormulaEnvironment(
 ) : FormulaEnvironment {
     private val checked: CheckedCatalog = with(reads) { tracked().viewCatalog.checked }
     private val functions: Map<String, List<FormulaFunction>> = with(reads) { extensions.functions }
-    private val typeNames: Map<String, List<TypeUse>> = with(reads) { formulaTypeNames }
+    private val typeNames: Map<String, List<CatalogType>> = with(reads) { formulaTypeNames }
+    private val typeExtensions: Set<ExtensionName> = with(reads) { formulaExtensions }
 
     override fun resolve(use: TypeUse): Resolution<CheckedType> = checked.resolve(use)
 
@@ -55,7 +59,9 @@ internal class RealmFormulaEnvironment(
 
     override fun reference(target: AuthorResourceId): TypeUse? = reads.read(NamedAs(target.toSkir()))
 
-    override fun catalogTypeNamed(name: String): List<TypeUse> = typeNames[name].orEmpty()
+    override fun catalogTypeNamed(name: String): List<CatalogType> = typeNames[name].orEmpty()
+
+    override fun extensions(): Set<ExtensionName> = typeExtensions
 
     override fun typeValue(target: AuthorResourceId): TypeUse? = reads.read(TypeValueOf(target.toSkir()))
 
