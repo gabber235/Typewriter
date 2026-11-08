@@ -17,6 +17,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
+import com.typewritermc.types.named
 import com.typewritermc.types.payload
 import com.typewritermc.types.rows
 import com.typewritermc.types.unknownVariant
@@ -35,108 +36,108 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
 
+/**
+ * The type a value at [path] of this record has: the stored named value's own type where one is stored, else the type
+ * the schema declares. Null when no schema reaches it or the path stops at a map row.
+ */
 internal fun AuthoringRecord.authoredTypeAt(
     path: ValuePath,
     catalog: CheckedCatalog,
-): TypeUse? {
-    if (path.segments.isEmpty()) return (configuration as? TypeSelection.CompleteWrapper)?.use?.use
-    var type: TypeUse?
-    var value: DataValue?
-    var remaining: List<PathSegment>
+): TypeUse? = storedPositionAt(path, catalog)?.takeUnless { it.atMapRow }?.actual
+
+/**
+ * The position at [path] of this record, walking down from the root: each stored named value's own type decides the
+ * fields below it, as the value walk decides them, so a field of a union case is found under the case its value
+ * names. A pending selection starts at one of its known fields. Null when no schema reaches the position.
+ */
+internal fun AuthoringRecord.storedPositionAt(
+    path: ValuePath,
+    catalog: CheckedCatalog,
+): StoredPosition? {
+    var position: StoredPosition
+    var remaining = path.segments
     when (val selection = configuration) {
         is TypeSelection.CompleteWrapper -> {
-            type = selection.use.use
-            value = DataValue.RecordWrapper(payload)
-            remaining = path.segments
+            position = StoredPosition(selection.use.use, DataValue.named(selection.use, DataValue.RecordWrapper(payload)))
         }
 
         is TypeSelection.PendingWrapper -> {
-            val first = path.segments.first() as? PathSegment.FieldWrapper ?: return null
+            val first = remaining.firstOrNull() as? PathSegment.FieldWrapper ?: return null
             val partial = catalog.resolvePartial(selection) as? Resolution.Ready ?: return null
-            type = partial.value.knownFields
-                .singleOrNull { it.key == first.name }
-                ?.type ?: return null
-            value = field(first.name)
-            remaining = path.segments.drop(1)
-            value.namedPayload()?.let { named ->
-                type = named.first
-                value = named.second
-            }
+            val type = partial.value.knownFields.singleOrNull { it.key == first.name }?.type ?: return null
+            position = StoredPosition(type, field(first.name) ?: DataValue.UNFILLED)
+            remaining = remaining.drop(1)
         }
 
         else -> {
             unknownVariant(selection)
         }
     }
-    var mapRow: MapRow? = null
-    var mapping: MappingResolvedRepresentation? = null
-    for (segment in remaining) {
-        val pendingMapping = mapping
-        if (pendingMapping != null) {
-            type =
-                when (segment) {
-                    PathSegment.MAP_KEY -> pendingMapping.key
-                    PathSegment.MAP_VALUE -> pendingMapping.value
-                    else -> return null
-                }
-            value =
-                when (segment) {
-                    PathSegment.MAP_KEY -> mapRow?.key
-                    PathSegment.MAP_VALUE -> mapRow?.value
-                    is PathSegment.FieldWrapper, is PathSegment.ItemWrapper -> return null
-                }
-            mapping = null
-            mapRow = null
-            value.namedPayload()?.let { named ->
-                type = named.first
-                value = named.second
-            }
-            continue
-        }
+    for (segment in remaining) position = position.step(segment, catalog) ?: return null
+    return position
+}
 
-        val traversed = type?.traversable() ?: return null
-        val resolved = catalog.resolve(traversed) as? Resolution.Ready ?: return null
-        when (segment) {
+/**
+ * One position on the way down a stored record: the type the schema [declared] there, the [value] stored there
+ * (unfilled when nothing is), and the map whose row an item segment chose, until a key or value segment picks a part.
+ */
+internal class StoredPosition(
+    val declared: TypeUse,
+    val value: DataValue,
+    private val row: Pair<MappingResolvedRepresentation, MapRow?>? = null,
+) {
+    /** The type the value here has: a stored named value's own type, else the declared one. */
+    val actual: TypeUse get() = (value as? DataValue.NamedWrapper)?.value?.actualType?.use ?: declared
+
+    /** Whether an item segment chose a map row and the key or value segment that picks its part is still to come. */
+    val atMapRow: Boolean get() = row != null
+
+    /** The position [segment] leads to, or null when the schema here has no such part. */
+    fun step(
+        segment: PathSegment,
+        catalog: CheckedCatalog,
+    ): StoredPosition? {
+        row?.let { (mapping, chosen) ->
+            return when (segment) {
+                PathSegment.MAP_KEY -> StoredPosition(mapping.key, chosen?.key ?: DataValue.UNFILLED)
+                PathSegment.MAP_VALUE -> StoredPosition(mapping.value, chosen?.value ?: DataValue.UNFILLED)
+                else -> null
+            }
+        }
+        val schema = (catalog.resolve(catalog.expand(actual.traversable())) as? Resolution.Ready)?.value?.schema ?: return null
+        val payload = value.unwrapNamed()
+        return when (segment) {
             is PathSegment.FieldWrapper -> {
-                type = resolved.value.schema.fields
-                    .singleOrNull { it.key == segment.name }
-                    ?.type ?: return null
-                value = value?.unwrapNamed().recordField(segment.name)
+                val field = schema.fields.singleOrNull { it.key == segment.name } ?: return null
+                StoredPosition(field.type, (payload as? DataValue.RecordWrapper)?.field(segment.name) ?: DataValue.UNFILLED)
             }
 
             is PathSegment.ItemWrapper -> {
-                when (val representation = resolved.value.schema.representation) {
+                when (val representation = schema.representation) {
                     is ResolvedRepresentation.SequenceWrapper -> {
-                        type = representation.value.item
-                        value = value?.unwrapNamed().collectionItem(segment)
+                        StoredPosition(representation.value.item, payload.collectionItem(segment) ?: DataValue.UNFILLED)
                     }
 
                     is ResolvedRepresentation.MappingWrapper -> {
-                        mapping = representation.value
-                        mapRow = (value?.unwrapNamed() as? DataValue.MapValueWrapper)?.rows?.singleOrNull { it.id == segment.id }
+                        val chosen = (payload as? DataValue.MapValueWrapper)?.rows?.singleOrNull { it.id == segment.id }
+                        StoredPosition(declared, value, representation.value to chosen)
                     }
 
                     else -> {
-                        return null
+                        null
                     }
                 }
             }
 
             PathSegment.MAP_KEY, PathSegment.MAP_VALUE -> {
-                return null
+                null
             }
 
             else -> {
                 unknownVariant(segment)
             }
         }
-        value.namedPayload()?.let { named ->
-            type = named.first
-            value = named.second
-        }
     }
-    if (mapping != null) return null
-    return type
 }
 
 /**
@@ -157,14 +158,7 @@ internal fun AuthoringRecord.declaredFieldTypeAt(
 
 private fun TypeUse.traversable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value else this
 
-private fun DataValue?.namedPayload(): Pair<TypeUse, DataValue>? =
-    (this as? DataValue.NamedWrapper)?.let {
-        it.actualType.use to it.payload
-    }
-
-private fun DataValue?.recordField(name: String): DataValue? = (this as? DataValue.RecordWrapper)?.field(name)
-
-private fun DataValue?.collectionItem(segment: PathSegment.ItemWrapper): DataValue? =
+private fun DataValue.collectionItem(segment: PathSegment.ItemWrapper): DataValue? =
     when (this) {
         is DataValue.ListValueWrapper -> items.singleOrNull { it.id == segment.id }?.value
         is DataValue.SetValueWrapper -> items.singleOrNull { it.id == segment.id }?.value
