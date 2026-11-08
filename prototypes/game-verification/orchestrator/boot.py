@@ -52,6 +52,9 @@ VARIANTS = {
     "jar": {"cache": "cds", "launch": "jar", "jvm": [f"-Xbootclasspath/a:{T.AGENT}"]},
     "cold": {"cache": "cds", "cold": True, "cache_of": "base"},
     "best": {"cache": "aot", "join": True, "slim": True, "jvm": FAST, "aot": ["-XX:-AOTInvokeDynamicLinking"]},
+    # The client stays gated (draws no frames) while Paper boots and is ungated when it connects at Done.
+    "baseq": {"cache": "cds", "quiet": True, "cache_of": "base"},
+    "bestq": {"cache": "aot", "join": True, "slim": True, "jvm": FAST, "aot": ["-XX:-AOTInvokeDynamicLinking"], "quiet": True, "cache_of": "best"},
     "bestcds": {"cache": "cds", "join": True, "slim": True, "jvm": FAST},
 }
 
@@ -109,6 +112,14 @@ class StampedProc(R.Proc):
         return None
 
 
+def java_major():
+    out = subprocess.run(["java", "-version"], capture_output=True, text=True).stderr
+    return int(re.search(r'version "(\d+)', out).group(1))
+
+
+JAVA = java_major()
+
+
 def cache_file(name, v):
     owner = v.get("cache_of", name)
     return AOT / f"boot-{owner}.{'jsa' if v['cache'] == 'cds' else 'aot'}"
@@ -122,6 +133,9 @@ class BPaper(T.TPaper):
         self.vname, self.v, self.mode = name, VARIANTS[name], mode
         # TPaper inherits K's archive and its silenced cds logs; this prototype names its own cache and keeps warnings.
         self.jvm = [j for j in self.jvm if not j.startswith("-XX:SharedArchiveFile") and not j.startswith("-Xlog:cds")]
+        if JAVA >= 26:
+            # Java 26 removed the flag; an agent no longer keeps classes out of the archive.
+            self.jvm = [j for j in self.jvm if j != "-XX:+AllowArchivingWithJavaAgent"]
         self.jvm += self.v.get("jvm", [])
         c = self.v["cache"]
         f = cache_file(name, self.v) if c else None
@@ -236,7 +250,7 @@ def train(pool, i, name, run):
     leaving and joining again, and reading the scene state."""
     v = VARIANTS[name]
     f = cache_file(name, v)
-    if f.exists() or v.get("cache_of"):
+    if f.exists():
         return None
     AOT.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
@@ -316,7 +330,8 @@ def kill(paper, c, scene, tok, uuid):
     c.C("k.mark")
     paper.kill()
     c.C("k.gone", timeoutMs=20000)
-    c.C("gate", mode=0)
+    if not paper.v.get("quiet"):
+        c.C("gate", mode=0)
     if scene == "mail":
         mail = paper.dir / "plugins/Probe/k/mail" / f"{uuid}.txt"
         mail.parent.mkdir(parents=True, exist_ok=True)
@@ -324,21 +339,29 @@ def kill(paper, c, scene, tok, uuid):
 
 
 def after_reqs(paper, c, n):
-    """Ordinary requirements right after the boot (a chat line through the tick dispatch, seen on the client), to
-    see whether a flag that speeds the boot slows what runs on the booted Paper."""
-    times, wrong = [], 0
-    for j in range(n):
-        token = f"BA{j}r{random.randrange(10**6)}"
-        a0 = time.perf_counter()
-        paper.S("act", player=c.name, kind="chat", token=token)
-        seen = c.C("observe", needle=needle_for("chat", token, "STONE"), timeoutMs=3000)
-        times.append((time.perf_counter() - a0) * 1000)
-        wrong += 0 if seen.get("ok") else 1
-    if not times:
+    """Work right after the boot, to see whether a flag that speeds the boot slows what then runs on the Paper:
+    n chat requirements at tick rate 200 (so a tick wait does not hide server latency), judged on the client, and
+    5 region moves (teleport to fresh void chunks and build a 17x17 platform on the server thread, timed in Paper)."""
+    if not n:
         return {}
+    paper.S("tickrate", rate=200)
+    times, wrong, plat = [], 0, []
+    try:
+        for j in range(n):
+            token = f"BA{j}r{random.randrange(10**6)}"
+            a0 = time.perf_counter()
+            paper.S("act", player=c.name, kind="chat", token=token)
+            seen = c.C("observe", needle=needle_for("chat", token, "STONE"), timeoutMs=3000)
+            times.append((time.perf_counter() - a0) * 1000)
+            wrong += 0 if seen.get("ok") else 1
+        for j in range(5):
+            r = paper.S("region", player=c.name, idx=random.randrange(1, 10**4), chunks=8)
+            plat.append(r["platformMs"])
+    finally:
+        paper.S("tickrate", rate=20)
     times.sort()
     return {"after_n": n, "after_med_ms": round(statistics.median(times), 1), "after_p95_ms": round(times[int(len(times) * 0.95) - 1], 1),
-            "after_wrong": wrong}
+            "after_wrong": wrong, "platform_med_ms": round(statistics.median(plat), 1), "platform_max_ms": round(max(plat), 1)}
 
 
 def come_back(paper, c, scene, broken, tok, ccpu0, snap=None, after=0):
@@ -348,6 +371,8 @@ def come_back(paper, c, scene, broken, tok, ccpu0, snap=None, after=0):
     paper.wait_done()
     if snap:
         snap("done")
+    if paper.v.get("quiet"):
+        c.C("gate", mode=0)
     c.C("k.connect", addr=paper.addr)
     r = c.C("k.ready", need=K.NEED["chunks"], newLevel=1, timeoutMs=60000)
     assert r["ok"], r
@@ -411,7 +436,7 @@ def run_variant(pool, name, a):
     v = VARIANTS[name]
     run = pool.run
     if v["cache"]:
-        train(pool, 0, name, run)
+        train(pool, 0, v.get("cache_of", name), run)
         if not cache_file(name, v).exists():
             raise RuntimeError(f"no {v['cache']} cache could be built for {name}")
     papers = [BPaper(run / f"{name}-{i}", name, None) for i in range(a.par)]
@@ -457,7 +482,7 @@ def run_variant(pool, name, a):
                 if len(rr) == a.par:
                     rounds.append(max(r["t_kill"] + r["kill_to_state_s"] for r in rr) - min(r["t_kill"] for r in rr))
         summary = {**info, "label": a.label, "cpu_model": T.cpu_model(), "trials": len(rows), "wrong": sum(r["wrong"] for r in rows),
-                   **{k: stat([r.get(k) for r in rows]) for k in ("first_log_s", "done_s", "ready_s", "state_s", "kill_to_state_s", "paper_cpu_s", "client_cpu_s", "paper_rss_mb", "after_med_ms", "after_p95_ms")},
+                   **{k: stat([r.get(k) for r in rows]) for k in ("first_log_s", "done_s", "ready_s", "state_s", "kill_to_state_s", "paper_cpu_s", "client_cpu_s", "paper_rss_mb", "after_med_ms", "after_p95_ms", "platform_med_ms")},
                    "after_wrong": sum(r.get("after_wrong", 0) for r in rows),
                    "round_wall_s": stat(rounds), "peak_used_mb": mem.peak_used or None, "peak_rss_mb": mem.peak_rss}
         record("summary", **summary)
@@ -526,8 +551,11 @@ def cmd_phases(a):
         shutil.rmtree(out_dir, ignore_errors=True)
         out_dir.mkdir(parents=True)
         jfr = out_dir / "boot.jfr"
-        p.jvm += [f"-XX:StartFlightRecording=name=boot,settings=profile,filename={jfr}",
-                  f"-Xlog:class+load=info:file={out_dir}/classload.log:uptime"]
+        # JFR adds the jdk.jfr module; an AOT cache with linked classes refuses a module graph other than its own.
+        use_jfr = v["cache"] != "aot"
+        if use_jfr:
+            p.jvm.append(f"-XX:StartFlightRecording=name=boot,settings=profile,filename={jfr}")
+        p.jvm.append(f"-Xlog:class+load=info:file={out_dir}/classload.log:uptime")
         tok, uuid = arrange(p, c, "reward", False, 0)
         ccpu0 = cpu(c.client.java_pid())
         kill(p, c, "reward", tok, uuid)
@@ -535,7 +563,7 @@ def cmd_phases(a):
 
         def snap(at):
             snaps[at] = {"t": round(time.time() - p.proc.spawn_micros / 1e6, 3), "cpu_s": cpu(p.pid()), "threads": threads(p.pid())}
-            if at == "done":
+            if at == "done" and use_jfr:
                 subprocess.run(["jcmd", str(p.pid()), "JFR.dump", "name=boot", f"filename={jfr}"], capture_output=True, timeout=120)
 
         r = come_back(p, c, "reward", False, tok, ccpu0, snap=snap)
@@ -551,7 +579,7 @@ def cmd_phases(a):
             src[k] = src.get(k, 0) + 1
         top_src = dict(sorted(src.items(), key=lambda kv: -kv[1])[:12])
         views = {}
-        for view in ("hot-methods", "cpu-time-hot-methods", "gc", "class-loading", "allocation-by-class"):
+        for view in ("hot-methods", "gc", "allocation-by-class") if use_jfr else ():
             try:
                 o = subprocess.run(["jfr", "view", "--width", "160", view, str(jfr)], capture_output=True, text=True, timeout=120)
                 views[view] = (o.stdout or o.stderr)[:4000]

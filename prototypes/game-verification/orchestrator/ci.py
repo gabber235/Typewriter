@@ -1059,8 +1059,8 @@ def cmd_topology(backend):
 # ---------- boot prototype: how far a restart requirement's boot can be cut ----------
 
 BOOT_ALL = ["base", "nocache", "xshareoff", "cdsjoin", "aot", "aotfull", "aotnolink", "aotnojoin", "slim", "c1", "serial",
-            "parallel", "fastjvm", "jar", "cold", "best", "bestcds"]
-BOOT_PAR = ["base", "aot", "fastjvm", "best"]
+            "parallel", "fastjvm", "jar", "cold", "best", "bestcds", "baseq", "bestq"]
+BOOT_PAR = ["base", "aot", "fastjvm", "best", "baseq", "bestq"]
 
 
 def boot_hooks(backend):
@@ -1091,7 +1091,7 @@ def cmd_boot(backend, part):
         v = names or rotated(BOOT_PAR, rep)
         step("boot par", boot.main, ["run", "--variants", ",".join(v), "--n", "1", "--par", "4", "--label", f"ci{rep}", "--deadline", deadline])
     else:
-        for v in names or ["base", "aot", "best", "slim", "fastjvm"]:
+        for v in names or ["base", "aot", "best", "slim", "fastjvm", "c1"]:
             step(f"boot phases {v}", boot.main, ["phases", "--variant", v, "--label", f"ci{rep}"])
 
 
