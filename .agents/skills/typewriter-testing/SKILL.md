@@ -16,15 +16,16 @@ refactor that keeps the outcome.
 2. Pick the lowest layer that observes it through a public boundary.
 3. Find the harness that already builds that state, and use it.
 
-| Layer     | Proves                                                                   | Harness                               |
-|-----------|--------------------------------------------------------------------------|---------------------------------------|
-| Unit      | rules with many cases: expressions, parsing, framing, admission          | plain tests beside the code           |
-| Property  | an invariant over generated inputs                                       | proptest, bolero, kotest-property     |
-| Component | one backend component's contract on a real broker and database          | `TestContext` in backend/tests        |
-| Realm     | authoring, commit and publication rules on a real Realm                  | `setup(...)` with `withSetup`         |
-| Widget    | panel behaviour: keyboard, overlays, unsaved work, offline states        | `pumpPanel(traits)` from testkit       |
-| Scenario  | a user journey through panel, backend and Realm; failures through faults | the `Panel` driver in integration_test|
-| Harness   | CI runs the right checks, stacks clean up, evidence leaks no secret      | tests beside the xtask module         |
+| Layer     | Proves                                                                   | Harness                                                              |
+|-----------|--------------------------------------------------------------------------|----------------------------------------------------------------------|
+| Unit      | rules with many cases: expressions, parsing, framing, admission          | plain tests beside the code                                          |
+| Property  | an invariant over generated inputs                                       | proptest, bolero, kotest-property                                    |
+| Component | one backend component's contract on a real broker and database           | `TestContext` in backend/tests                                       |
+| Realm     | authoring, commit and publication rules on a real Realm                  | `setup(...)` with `withSetup`                                        |
+| Widget    | panel behaviour: keyboard, overlays, unsaved work, offline states        | `pumpPanel(traits)` from testkit                                     |
+| Scenario  | a user journey through panel, backend and Realm; failures through faults | the `Panel` driver in integration_test                               |
+| Harness   | CI runs the right checks, stacks clean up, evidence leaks no secret      | tests beside the xtask module                                        |
+| Scale     | a realm gate at full size; never in `:realm:test`                        | the seeded realm measurement, run by `cargo xtask check realm-scale` |
 
 ## What to assert
 
