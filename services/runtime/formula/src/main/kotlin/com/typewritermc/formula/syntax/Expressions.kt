@@ -1,7 +1,6 @@
 package com.typewritermc.formula.syntax
 
 import com.typewritermc.formula.TextSpan
-import java.math.BigDecimal
 
 // The expression grammar: a Pratt parser for operators, recursive descent for everything else.
 
@@ -238,7 +237,7 @@ private val primaryRules: Map<TokenKind, FormulaParser.() -> Expression> =
     mapOf(
         TokenKind.Identifier to { name(advance()) },
         TokenKind.Integer to { parseInteger() },
-        TokenKind.Decimal to { advance().let { Literal(LiteralValue.Decimal(BigDecimal(it.text)), it.span) } },
+        TokenKind.Decimal to { parseDecimal() },
         TokenKind.True to { Literal(LiteralValue.Bool(true), advance().span) },
         TokenKind.False to { Literal(LiteralValue.Bool(false), advance().span) },
         TokenKind.Null to { Literal(LiteralValue.Null, advance().span) },
@@ -256,6 +255,13 @@ private fun FormulaParser.parseInteger(): Expression {
     val token = advance()
     val value = token.text.toLongOrNull() ?: return Error("This number is too large", token.span)
     return Literal(LiteralValue.Integer(value), token.span)
+}
+
+/** The lexer reports an exponent no Decimal can hold when the token is consumed. */
+private fun FormulaParser.parseDecimal(): Expression {
+    val token = advance()
+    val value = token.text.toBigDecimalOrNull() ?: return Error("This exponent is too large", token.span)
+    return Literal(LiteralValue.Decimal(value), token.span)
 }
 
 private fun FormulaParser.parsePrimary(): Expression {

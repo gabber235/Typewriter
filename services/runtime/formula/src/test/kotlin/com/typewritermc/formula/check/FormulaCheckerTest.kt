@@ -8,6 +8,7 @@ import com.typewritermc.formula.testing.checkWithEmptied
 import com.typewritermc.formula.testing.checkWithTargetsGone
 import com.typewritermc.formula.testing.decimal
 import com.typewritermc.formula.testing.door
+import com.typewritermc.formula.testing.double
 import com.typewritermc.formula.testing.function
 import com.typewritermc.formula.testing.int
 import com.typewritermc.formula.testing.item
@@ -44,6 +45,7 @@ val FormulaCheckerTest by testSuite {
         row("1 + 2", int, type(int)),
         row("\"a\" + 1", int, problem("formula_type_mismatch", at = 0..7)),
         row("1", decimal, type(decimal)),
+        row("1e2147483648", double, problem("formula_number_out_of_range", at = 0..12)),
         row("let needed = 5 - 2\nneeded", int, type(int)),
         row("let x = 1\nlet x = \"a\"\nx", string, type(string)),
         row("if (flag) 1", int, problem("formula_if_needs_else")),
