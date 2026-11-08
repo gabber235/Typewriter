@@ -41,6 +41,7 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
+import skirout.kernel.v1.resource_id.ResourceId as SkirResourceId
 
 /** A value admitted against [schema] with no structural problems or unfinished locations. */
 class CompleteValue internal constructor(
@@ -63,13 +64,21 @@ sealed interface CompletenessResult {
 }
 
 /**
- * A way a value does not fit its schema, and the type it is about when that type is gone or invalid. Two misfits are
- * the same when their location, code and type agree, so a second use of a missing type is a new one.
+ * A way a value does not fit its schema, the type it is about when that type is gone or invalid, and the target of the
+ * link stored where it is. Two misfits are the same when their location, code, type and target agree, so a second use
+ * of a missing type is a new one.
  */
 data class Misfit(
     val problem: ValueProblem,
     val type: TypeDefinitionId? = null,
-)
+    val target: SkirResourceId? = null,
+) {
+    /**
+     * Whether a change made this misfit, given the ones the value had [before]. A link that does not fit and now points
+     * at another target is new, as a new link would be; one that was removed is not, since that leaves less misfit.
+     */
+    fun isNewAgainst(before: Set<Misfit>): Boolean = this !in before && (target != null || before.none { it.copy(target = null) == this })
+}
 
 /** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
 fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult {

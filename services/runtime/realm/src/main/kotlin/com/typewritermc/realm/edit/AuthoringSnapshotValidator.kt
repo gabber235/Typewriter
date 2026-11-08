@@ -71,7 +71,7 @@ internal class AuthoringSnapshotValidator(
                             previous.misfits(id, ownAsBefore) { alone.fit.on(id) }
                     }.orEmpty()
                     .toSet()
-            problems += record.misfits(id, catalog) { touching.fit.on(id) }.filterNot { it in baseline }.map { it.problem }
+            problems += record.misfits(id, catalog) { touching.fit.on(id) }.filter { it.isNewAgainst(baseline) }.map { it.problem }
         }
         problems += touching.problems
         validateOwnership(links, contracts, problems)

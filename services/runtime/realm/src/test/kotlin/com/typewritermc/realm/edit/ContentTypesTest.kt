@@ -46,6 +46,7 @@ import com.typewritermc.realm.testing.readJustCreated
 import com.typewritermc.realm.testing.record
 import com.typewritermc.realm.testing.recordDefinition
 import com.typewritermc.realm.testing.recordValue
+import com.typewritermc.realm.testing.refTo
 import com.typewritermc.realm.testing.rename
 import com.typewritermc.realm.testing.resolvedSchema
 import com.typewritermc.realm.testing.schemaOf
@@ -66,6 +67,7 @@ import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.viewCatalog
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
+import com.typewritermc.testing.routes.FixtureTimelinePageDefinition
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.catalog.contentOwner
@@ -1060,6 +1062,25 @@ val ContentTypesTest by testSuite {
             commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
             commit(setTypes(reward, declares { record("k1") { field("gold", intUse) } })).shouldBeCommitted()
             commit(rename(page.smith, "blacksmith")).shouldBeCommitted()
+        }
+    }
+
+    test("pointing a link that no longer fits at another target that does not fit is refused and nothing changes") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            val first = commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            val pageRef = refTo(FixtureTimelinePageDefinition.id.use())
+            val retyped =
+                declares {
+                    record("k1") {
+                        field("giver", pageRef)
+                        field("gold", intUse)
+                    }
+                }
+            commit(setTypes(reward, retyped)).shouldBeCommitted()
+            val before = record(first)
+            expectRefused(setReference(first, "giver", page.named("jones"))).codes shouldContain "unreadable_actual_type"
+            record(first) shouldBe before
         }
     }
 
