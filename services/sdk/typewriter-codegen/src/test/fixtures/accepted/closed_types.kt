@@ -1,6 +1,16 @@
 package fixture
 
+import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.complete
+import com.typewritermc.types.FactoryNativeBindingRegistry
+import com.typewritermc.types.NativeBinding
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import com.typewritermc.types.member
 import com.typewritermc.types.namedTemplate
 import kotlinx.serialization.SerialName
@@ -33,6 +43,14 @@ data object Rainy : Weather
 @TypewriterType(id = "a0000000000000000000000000000908")
 data object Cloudy : Weather
 
+// A sealed class is closed like a sealed interface: a value is always one of its cases, never the class itself.
+@TypewriterType(id = "a0000000000000000000000000000909")
+sealed class Reward {
+    data class Coins(val amount: Int) : Reward()
+
+    data object Empty : Reward()
+}
+
 // An interface that is not sealed stays open to subtypes from anywhere.
 @TypewriterType(id = "a0000000000000000000000000000904")
 interface Shape
@@ -55,4 +73,19 @@ fun main(args: Array<String>) {
     check(weather == RecordForm.createClosed(cases = listOf(SunnyDefinition.id.namedTemplate(), RainyDefinition.id.namedTemplate(), CloudyDefinition.id.namedTemplate()))) { "$weather" }
 
     check((ShapeDefinition.declaration.representation as RepresentationTemplate.RecordWrapper).value.form == RecordForm.OPEN)
+
+    val catalog =
+        DefaultCheckedCatalog(
+            CatalogGeneration(value = "closed fixture"),
+            StandardTypes.definitions + RewardDefinition.definition + RewardCoinsDefinition.definition + RewardEmptyDefinition.definition,
+        )
+    val bindings = FactoryNativeBindingRegistry(catalog, listOf(RewardCoinsNativeBindingFactory, RewardEmptyNativeBindingFactory))
+    val reward = (catalog.resolve(RewardDefinition.id.use()) as Resolution.Ready).value
+    @Suppress("UNCHECKED_CAST")
+    val binding = bindings.bind(reward) as NativeBinding<Any>
+    listOf(Reward.Coins(amount = 3), Reward.Empty).forEach { original ->
+        val encoded = binding.encode(original)
+        val complete = (reward.complete(encoded) as CompletenessResult.Complete).value
+        check(binding.decode(complete) == original) { "$original came back as ${binding.decode(complete)}" }
+    }
 }

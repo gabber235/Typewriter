@@ -86,7 +86,7 @@ import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.codegen.emit.SetupEmitter
 import com.typewritermc.types.codegen.emit.endpointBindingsFile
 import com.typewritermc.types.codegen.emit.file
-import com.typewritermc.types.codegen.emit.supportsNativeBinding
+import com.typewritermc.types.codegen.emit.hasNativeBinding
 import com.typewritermc.types.ksp.EndpointUsageValidator
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
@@ -420,7 +420,7 @@ private class TypewriterTypeProcessor(
         SDK_EMITTERS.forEach { emitter -> with(emitter) { file.emit(model) } }
         if (!output.write(file.build(), declaration)) return
         output.index(model.names.definition, GeneratedProviderKind.Type)
-        if (declaration.supportsNativeBinding()) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
+        if (model.hasNativeBinding) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
     }
 
     /** The case definitions of [owner] that no Kotlin declaration emits, such as the unit cases of an enum. */
