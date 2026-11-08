@@ -14,15 +14,10 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.RELATION_LINK_NAMESPACE
-import com.typewritermc.types.parts
-import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
-import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
-import skirout.editor.v1.type_catalog.TypeTemplate
-import skirout.editor.v1.type_catalog.TypeUse
 
 /**
  * Finds the generated object that owns each type definition id, so generated code references ids instead of
@@ -80,30 +75,6 @@ internal class DefinitionOwners(
         return references.takeIf { missing.isEmpty() }
     }
 }
-
-/** Every definition id a template mentions. */
-internal fun TypeTemplate.referencedIds(): Set<TypeDefinitionId> =
-    when (this) {
-        is TypeTemplate.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap { it.referencedIds() }
-        is TypeTemplate.NullableWrapper -> value.value.referencedIds()
-        is TypeTemplate.ParameterWrapper -> setOf(value.owner)
-        is TypeTemplate.ScalarWrapper -> emptySet()
-        is TypeTemplate.FunctionWrapper -> value.parts.flatMapTo(linkedSetOf()) { it.referencedIds() }
-        else -> unknownVariant(this)
-    }
-
-/** Every definition id a named template mentions. */
-internal fun NamedTypeTemplate.referencedIds(): Set<TypeDefinitionId> = template.referencedIds()
-
-/** Every definition id a type use mentions. */
-internal fun TypeUse.referencedIds(): Set<TypeDefinitionId> =
-    when (this) {
-        is TypeUse.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap { it.referencedIds() }
-        is TypeUse.NullableWrapper -> value.value.referencedIds()
-        is TypeUse.ScalarWrapper -> emptySet()
-        is TypeUse.FunctionWrapper -> value.parts.flatMapTo(linkedSetOf()) { it.referencedIds() }
-        else -> unknownVariant(this)
-    }
 
 /** `namespace/qualified.Name` or the declared UUID, as authors write and read type identities. */
 internal fun TypeDefinitionId.describe(): String =

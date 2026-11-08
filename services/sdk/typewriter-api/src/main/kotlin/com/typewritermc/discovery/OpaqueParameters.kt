@@ -1,11 +1,11 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.types.canonicalText
-import com.typewritermc.types.mapParts
+import com.typewritermc.types.mapTypes
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.toTemplate
-import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -52,30 +52,10 @@ internal class OpaqueParameters(
 
     /** [template] with every free parameter replaced by its opaque stand in; it has no free parameters left. */
     fun close(template: TypeTemplate): TypeTemplate =
-        when (template) {
-            is TypeTemplate.ParameterWrapper -> {
-                val id = requireNotNull(keys[template.value]) { "Type parameter ${template.value} has no declaring definition." }
+        template.mapTypes { node ->
+            (node as? TypeTemplate.ParameterWrapper)?.let { parameter ->
+                val id = requireNotNull(keys[parameter.value]) { "Type parameter ${parameter.value} has no declaring definition." }
                 TypeTemplate.NamedWrapper(id.namedTemplate())
-            }
-
-            is TypeTemplate.NamedWrapper -> {
-                TypeTemplate.NamedWrapper(template.value.copy(arguments = template.value.arguments.map(::close)))
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                TypeTemplate.createNullable(value = close(template.value.value))
-            }
-
-            is TypeTemplate.ScalarWrapper -> {
-                template
-            }
-
-            is TypeTemplate.FunctionWrapper -> {
-                TypeTemplate.FunctionWrapper(template.value.mapParts(::close))
-            }
-
-            else -> {
-                unknownVariant(template)
             }
         }
 
@@ -83,24 +63,7 @@ internal class OpaqueParameters(
     fun open(use: TypeUse): TypeTemplate = open(use.toTemplate())
 
     private fun open(template: TypeTemplate): TypeTemplate =
-        when (template) {
-            is TypeTemplate.NamedWrapper -> {
-                parameters[template.value.definition]?.let { TypeTemplate.ParameterWrapper(it) }
-                    ?: TypeTemplate.NamedWrapper(template.value.copy(arguments = template.value.arguments.map(::open)))
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                TypeTemplate.createNullable(value = open(template.value.value))
-            }
-
-            is TypeTemplate.FunctionWrapper -> {
-                TypeTemplate.FunctionWrapper(template.value.mapParts(::open))
-            }
-
-            else -> {
-                template
-            }
-        }
+        template.mapTypes { node -> node.named?.definition?.let(parameters::get)?.let { TypeTemplate.ParameterWrapper(it) } }
 
     companion object {
         /** Whether [id] belongs to the namespace reserved for opaque parameters. */

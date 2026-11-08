@@ -43,9 +43,9 @@ import com.typewritermc.codegen.setCode
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.formula.TypewriterFormulaName
 import com.typewritermc.formula.TypewriterFormulaProvider
+import com.typewritermc.types.catalog.referencedDefinitions
 import com.typewritermc.types.codegen.DefinitionOwners
 import com.typewritermc.types.codegen.SdkNames
-import com.typewritermc.types.codegen.referencedIds
 import com.typewritermc.types.ksp.KspSignatureConversion
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.parts
@@ -152,7 +152,7 @@ internal class FormulaProviderProcessor(
         if (problems.isNotEmpty() || conversion == null) return null
         val signature = member.signature(conversion)
         val referenced =
-            (signature.parts + conversion.typeParameters.flatMap { it.bounds }).flatMapTo(linkedSetOf()) { it.referencedIds() } - typeOwner
+            (signature.parts + conversion.typeParameters.flatMap { it.bounds }).flatMapTo(linkedSetOf()) { it.referencedDefinitions() } - typeOwner
         val ownerName = "owner$index"
         val references =
             owners

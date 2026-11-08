@@ -4,19 +4,17 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.VAR_TYPE_ID
 import com.typewritermc.types.declared
-import com.typewritermc.types.mapParts
+import com.typewritermc.types.mapTypes
 import com.typewritermc.types.member
-import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.named
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.ContentKey
 import skirout.editor.v1.type_catalog.ContentTypeId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.FunctionParameterUse
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RecordForm
@@ -142,70 +140,11 @@ private fun TypeId.namesFieldKey(): Boolean =
         else -> false
     }
 
-/** Every definition this use names, outermost first, including the Formula record a function type is stored as. */
-fun TypeUse.referencedDefinitions(): List<TypeDefinitionId> =
-    buildList {
-        fun visit(use: TypeUse) {
-            when (use) {
-                is TypeUse.NamedWrapper -> {
-                    add(use.value.definition)
-                    use.value.arguments.forEach(::visit)
-                }
-
-                is TypeUse.NullableWrapper -> {
-                    visit(use.value.value)
-                }
-
-                is TypeUse.ScalarWrapper -> {
-                    Unit
-                }
-
-                is TypeUse.FunctionWrapper -> {
-                    add(FORMULA_USE.definition)
-                    use.value.parts().forEach(::visit)
-                }
-
-                else -> {
-                    unknownVariant(use)
-                }
-            }
-        }
-        visit(this@referencedDefinitions)
-    }
-
 /** Whether this use names a content type anywhere. */
 fun TypeUse.mentionsContent(): Boolean = referencedDefinitions().any { it.contentOwner() != null }
 
 /** Rebuilds the use, outermost first: [replace] answers a replacement for a named use, or null to keep it and visit its arguments. */
-fun TypeUse.mapNamed(replace: (NamedTypeUse) -> TypeUse?): TypeUse =
-    when (this) {
-        is TypeUse.NamedWrapper -> {
-            replace(value) ?: TypeUse.NamedWrapper(value.copy(arguments = value.arguments.map { it.mapNamed(replace) }))
-        }
-
-        is TypeUse.NullableWrapper -> {
-            TypeUse.createNullable(value = value.value.mapNamed(replace))
-        }
-
-        is TypeUse.ScalarWrapper -> {
-            this
-        }
-
-        is TypeUse.FunctionWrapper -> {
-            TypeUse.createFunction(
-                context = value.context.map { FunctionParameterUse(name = it.name, type = it.type.mapNamed(replace)) },
-                parameters = value.parameters.map { FunctionParameterUse(name = it.name, type = it.type.mapNamed(replace)) },
-                result = value.result.mapNamed(replace),
-            )
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
-
-private fun skirout.editor.v1.type_catalog.FunctionTypeUse.parts(): List<TypeUse> =
-    context.map { it.type } + parameters.map { it.type } + result
+fun TypeUse.mapNamed(replace: (NamedTypeUse) -> TypeUse?): TypeUse = mapTypes { use -> use.named?.let(replace) }
 
 /** This id with every content resource that [copies] maps replaced by its copy, through the owner of a member. */
 fun TypeDefinitionId.remappingContent(copies: Map<ResourceId, ResourceId>): TypeDefinitionId =
@@ -233,12 +172,12 @@ private fun NamedTypeUse.remappingContent(copies: Map<ResourceId, ResourceId>): 
     (TypeUse.NamedWrapper(this).remappingContent(copies) as TypeUse.NamedWrapper).value
 
 private fun TypeTemplate.remappingContent(copies: Map<ResourceId, ResourceId>): TypeTemplate =
-    when (this) {
-        is TypeTemplate.NamedWrapper -> TypeTemplate.NamedWrapper(value.remappingContent(copies))
-        is TypeTemplate.NullableWrapper -> TypeTemplate.createNullable(value = value.value.remappingContent(copies))
-        is TypeTemplate.FunctionWrapper -> TypeTemplate.FunctionWrapper(value.mapParts { it.remappingContent(copies) })
-        is TypeTemplate.ParameterWrapper -> TypeTemplate.ParameterWrapper(value.copy(owner = value.owner.remappingContent(copies)))
-        else -> this
+    mapTypes { template ->
+        when (template) {
+            is TypeTemplate.NamedWrapper -> TypeTemplate.NamedWrapper(template.value.remappingContent(copies))
+            is TypeTemplate.ParameterWrapper -> TypeTemplate.ParameterWrapper(template.value.copy(owner = template.value.owner.remappingContent(copies)))
+            else -> null
+        }
     }
 
 private fun NamedTypeTemplate.remappingContent(copies: Map<ResourceId, ResourceId>): NamedTypeTemplate =

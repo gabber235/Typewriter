@@ -165,8 +165,14 @@ val FunctionTypeUse.parts: List<TypeUse> get() =
     context.map(FunctionParameterUse::type) + parameters.map(FunctionParameterUse::type) +
         result
 
-/** The types this use is built from one level down: a named type's arguments, a nullable's value, a function's parts. */
-val TypeUse.directUses: List<TypeUse> get() =
+/*
+ * The structure of the type algebra. Each form answers its direct child types once, in [parts], and rebuilds itself
+ * from replacements in the same order, in [withParts]; every traversal ([walk], [mapTypes]) derives from that pair, so
+ * a new form is threaded through every walker by answering these two functions.
+ */
+
+/** The types this use is built from one level down: a named type's arguments, a nullable's value, a function's context, parameters and result. */
+fun TypeUse.parts(): List<TypeUse> =
     when (this) {
         is TypeUse.NamedWrapper -> value.arguments
         is TypeUse.NullableWrapper -> listOf(value.value)
@@ -174,6 +180,77 @@ val TypeUse.directUses: List<TypeUse> get() =
         is TypeUse.FunctionWrapper -> value.parts
         else -> unknownVariant(this)
     }
+
+/** This use rebuilt from [parts], one per entry of [TypeUse.parts] in the same order, keeping its definition and slot names. */
+fun TypeUse.withParts(parts: List<TypeUse>): TypeUse {
+    require(parts.size == parts().size) { "Expected ${parts().size} parts, found ${parts.size}." }
+    return when (this) {
+        is TypeUse.NamedWrapper -> TypeUse.NamedWrapper(value.copy(arguments = parts))
+        is TypeUse.NullableWrapper -> parts.single().nullable()
+        is TypeUse.ScalarWrapper -> this
+        is TypeUse.FunctionWrapper -> {
+            val context = value.context.size
+            val parameters = value.parameters.size
+            TypeUse.createFunction(
+                context = value.context.mapIndexed { index, slot -> slot.copy(type = parts[index]) },
+                parameters = value.parameters.mapIndexed { index, slot -> slot.copy(type = parts[context + index]) },
+                result = parts[context + parameters],
+            )
+        }
+        else -> unknownVariant(this)
+    }
+}
+
+/** The types this template is built from one level down, in the order of [TypeUse.parts]; a parameter has none. */
+fun TypeTemplate.parts(): List<TypeTemplate> =
+    when (this) {
+        is TypeTemplate.NamedWrapper -> value.arguments
+        is TypeTemplate.NullableWrapper -> listOf(value.value)
+        is TypeTemplate.ScalarWrapper, is TypeTemplate.ParameterWrapper -> emptyList()
+        is TypeTemplate.FunctionWrapper -> value.parts
+        else -> unknownVariant(this)
+    }
+
+/** This template rebuilt from [parts], one per entry of [TypeTemplate.parts] in the same order. */
+fun TypeTemplate.withParts(parts: List<TypeTemplate>): TypeTemplate {
+    require(parts.size == parts().size) { "Expected ${parts().size} parts, found ${parts.size}." }
+    return when (this) {
+        is TypeTemplate.NamedWrapper -> value.copy(arguments = parts).template
+        is TypeTemplate.NullableWrapper -> parts.single().nullable()
+        is TypeTemplate.ScalarWrapper, is TypeTemplate.ParameterWrapper -> this
+        is TypeTemplate.FunctionWrapper -> {
+            val context = value.context.size
+            val parameters = value.parameters.size
+            TypeTemplate.createFunction(
+                context = value.context.mapIndexed { index, slot -> slot.copy(type = parts[index]) },
+                parameters = value.parameters.mapIndexed { index, slot -> slot.copy(type = parts[context + index]) },
+                result = parts[context + parameters],
+            )
+        }
+        else -> unknownVariant(this)
+    }
+}
+
+/** This use and every use inside it, outermost first, each part before the next part. */
+fun TypeUse.walk(): Sequence<TypeUse> =
+    sequence {
+        yield(this@walk)
+        parts().forEach { yieldAll(it.walk()) }
+    }
+
+/** This template and every template inside it, outermost first, each part before the next part. */
+fun TypeTemplate.walk(): Sequence<TypeTemplate> =
+    sequence {
+        yield(this@walk)
+        parts().forEach { yieldAll(it.walk()) }
+    }
+
+/** Rebuilds this use outermost first: [replace] answers a replacement, kept as it is, or null to keep the node and rebuild its parts. */
+fun TypeUse.mapTypes(replace: (TypeUse) -> TypeUse?): TypeUse = replace(this) ?: withParts(parts().map { it.mapTypes(replace) })
+
+/** Rebuilds this template outermost first: [replace] answers a replacement, kept as it is, or null to keep the node and rebuild its parts. */
+fun TypeTemplate.mapTypes(replace: (TypeTemplate) -> TypeTemplate?): TypeTemplate =
+    replace(this) ?: withParts(parts().map { it.mapTypes(replace) })
 
 /** The names of a function type's context slots, then of its parameters; two function types agree only on equal names. */
 val FunctionTypeUse.slotNames: Pair<List<String>, List<String>> get() =
@@ -187,14 +264,6 @@ val FunctionTypeTemplate.slotNames: Pair<List<String>, List<String>>
 /** Every type a function template mentions: context, then parameters, then its result. */
 val FunctionTypeTemplate.parts: List<TypeTemplate>
     get() = context.map(FunctionParameterTemplate::type) + parameters.map(FunctionParameterTemplate::type) + result
-
-/** This function template with [transform] applied to every type it mentions, keeping names. */
-fun FunctionTypeTemplate.mapParts(transform: (TypeTemplate) -> TypeTemplate): FunctionTypeTemplate =
-    FunctionTypeTemplate(
-        context = context.map { it.copy(type = transform(it.type)) },
-        parameters = parameters.map { it.copy(type = transform(it.type)) },
-        result = transform(result),
-    )
 
 /** The function use of this template, each part converted by [transform]; null when any part converts to null. */
 inline fun FunctionTypeTemplate.toUse(transform: (TypeTemplate) -> TypeUse?): TypeUse? {
@@ -320,26 +389,11 @@ fun FunctionTypeUse.toTemplate(): TypeTemplate =
 fun NamedTypeUse.toTemplate(): NamedTypeTemplate = definition.namedTemplate(arguments.map(TypeUse::toTemplate))
 
 /** Collects the generic parameters this template refers to, in first occurrence order. */
-fun TypeTemplate.parameterKeys(): Set<ParameterKey> =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> setOf(value)
-        is TypeTemplate.NamedWrapper -> value.arguments.flatMapTo(linkedSetOf()) { it.parameterKeys() }
-        is TypeTemplate.NullableWrapper -> value.value.parameterKeys()
-        is TypeTemplate.ScalarWrapper -> emptySet()
-        is TypeTemplate.FunctionWrapper -> value.parts.flatMapTo(linkedSetOf()) { it.parameterKeys() }
-        else -> unknownVariant(this)
-    }
+fun TypeTemplate.parameterKeys(): Set<ParameterKey> = walk().mapNotNullTo(linkedSetOf()) { (it as? TypeTemplate.ParameterWrapper)?.value }
 
 /** Replaces parameters bound in [arguments], leaving unbound parameters symbolic. */
 fun TypeTemplate.substitute(arguments: Map<ParameterKey, TypeTemplate>): TypeTemplate =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> arguments[value] ?: this
-        is TypeTemplate.NamedWrapper -> value.substitute(arguments).template
-        is TypeTemplate.NullableWrapper -> value.value.substitute(arguments).nullable()
-        is TypeTemplate.ScalarWrapper -> this
-        is TypeTemplate.FunctionWrapper -> TypeTemplate.FunctionWrapper(value.mapParts { it.substitute(arguments) })
-        else -> unknownVariant(this)
-    }
+    mapTypes { template -> (template as? TypeTemplate.ParameterWrapper)?.let { arguments[it.value] ?: it } }
 
 /** Replaces parameters bound in [arguments] within the arguments of this application. */
 fun NamedTypeTemplate.substitute(arguments: Map<ParameterKey, TypeTemplate>): NamedTypeTemplate =

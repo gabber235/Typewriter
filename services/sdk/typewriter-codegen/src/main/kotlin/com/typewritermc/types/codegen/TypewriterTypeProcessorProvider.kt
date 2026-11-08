@@ -70,6 +70,7 @@ import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterRelationFamily
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
+import com.typewritermc.types.catalog.referencedDefinitions
 import com.typewritermc.types.codegen.emit.CheckEmitter
 import com.typewritermc.types.codegen.emit.ConfigurationEmitter
 import com.typewritermc.types.codegen.emit.DefinitionEmitter
@@ -276,7 +277,7 @@ private class TypewriterTypeProcessor(
                 it
         }
         val referenced =
-            first.resourceTemplate.referencedIds() + second.resourceTemplate.referencedIds() + RELATION_LINK_TARGET_BOUND
+            first.resourceTemplate.template.referencedDefinitions() + second.resourceTemplate.template.referencedDefinitions() + RELATION_LINK_TARGET_BOUND
         val references = owners.references(endpointDeclarations, referenced, declaration) ?: return
         val relation = SdkRelation(name, id, first, second, families, references)
         output.provide(relation.file(), name, GeneratedProviderKind.Relation, declaration)
@@ -700,7 +701,7 @@ private class TypewriterTypeProcessor(
         val references =
             owners.references(
                 conversion.declarations + input.declarations,
-                conversion.definitions.flatMap(TypeDefinition::referencedIds).toSet() + application.referencedIds() + input.referenced,
+                conversion.definitions.flatMap(TypeDefinition::referencedIds).toSet() + application.referencedDefinitions() + input.referenced,
                 owner,
             ) ?: return null
         return context(references) {
@@ -730,7 +731,7 @@ private class TypewriterTypeProcessor(
             return null
         }
         val use = conversion.root as TypeUse.NamedWrapper
-        return OperationInputShape(type.toTypeName(), use.value, conversion.declarations, use.referencedIds())
+        return OperationInputShape(type.toTypeName(), use.value, conversion.declarations, use.referencedDefinitions())
     }
 
     private fun validateOptions(): Boolean {

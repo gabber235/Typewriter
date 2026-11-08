@@ -10,11 +10,10 @@ import com.typewritermc.types.MAX_TYPE_DEPTH
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.closedCases
-import com.typewritermc.types.directUses
 import com.typewritermc.types.function
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.isInstantiable
-import com.typewritermc.types.mapParts
+import com.typewritermc.types.mapTypes
 import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -29,6 +28,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.walk
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.StructuralResult
@@ -436,7 +436,8 @@ class DefaultCheckedCatalog private constructor(
         if (content == null) {
             template
         } else {
-            template.mapNamedTemplates { named ->
+            template.mapTypes { node ->
+                val named = node.named ?: return@mapTypes null
                 if (named.definition.namesFieldKey()) expand(named.definition.use()).toTemplate() else null
             }
         }
@@ -1076,7 +1077,7 @@ class DefaultCheckedCatalog private constructor(
             if (partialParent is Resolution.Invalid) return partialParent
             inherited +=
                 (partialParent as Resolution.Ready).value.map { field ->
-                    field.copy(type = field.type.substituteKnown(parentBindings))
+                    field.copy(type = field.type.substitute(parentBindings.mapValues { (_, use) -> use.toTemplate() }))
                 }
         }
         visiting -= definition.id
@@ -1157,7 +1158,7 @@ private class ValidatedDeclarations(
         if (templates.flatMap { it.parameterKeys() }.any { it !in keys }) {
             markUnavailable(definition.id, "foreign_parameter")
         }
-        templates.flatMap { it.namedTemplates() }.forEach { named ->
+        templates.flatMap { template -> template.walk().mapNotNull { it.named } }.forEach { named ->
             val target = definitions[named.definition]
             if (target == null) {
                 markUnavailable(definition.id, "unknown_dependency")
@@ -1173,7 +1174,7 @@ private class ValidatedDeclarations(
             changed = false
             definitions.values.mapNotNull(List<TypeDefinition>::singleOrNull).forEach { definition ->
                 if (definition.id in reasons) return@forEach
-                val dependencies = definition.referencedDefinitions()
+                val dependencies = definition.storedDefinitions()
                 if (dependencies.any { it in reasons }) {
                     markUnavailable(definition.id, "unavailable_dependency")
                     changed = true
@@ -1299,7 +1300,8 @@ private class ContentLayer(
     /** The declaration with every field key in its templates replaced by where its chain leads. Content declarations take no parameters. */
     fun expandFields(definition: TypeDefinition): TypeDefinition =
         definition.mapTemplates { template ->
-            template.mapNamedTemplates { named ->
+            template.mapTypes { node ->
+                val named = node.named ?: return@mapTypes null
                 if (named.definition.namesFieldKey()) expandFieldKeys(named.definition.use(), emptySet()).toTemplate() else null
             }
         }
@@ -1367,27 +1369,6 @@ private fun TypeDefinition.mapTemplates(transform: (TypeTemplate) -> TypeTemplat
         representation = representation,
     )
 }
-
-/** Rebuilds the template, outermost first: [replace] answers a replacement for a named template, or null to keep it and visit its arguments. */
-private fun TypeTemplate.mapNamedTemplates(replace: (NamedTypeTemplate) -> TypeTemplate?): TypeTemplate =
-    when (this) {
-        is TypeTemplate.NamedWrapper -> {
-            replace(value)
-                ?: value.copy(arguments = value.arguments.map { it.mapNamedTemplates(replace) }).template
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            value.value.mapNamedTemplates(replace).nullable()
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            TypeTemplate.FunctionWrapper(value.mapParts { it.mapNamedTemplates(replace) })
-        }
-
-        else -> {
-            this
-        }
-    }
 
 private fun diagnostic(
     affected: TypeDefinitionId,
@@ -1465,7 +1446,7 @@ private fun TypeUse.typeDepthFailure(): TypeDefinitionId? {
         if (depth > MAX_TYPE_DEPTH) {
             return named?.definition ?: nearestDefinition ?: TYPE_USE_DIAGNOSTIC_OWNER
         }
-        current.directUses
+        current.parts()
             .asReversed()
             .forEach { pending.addLast(it to depth + 1) }
     }
@@ -1544,23 +1525,6 @@ private fun <T, R> Iterable<T>.mapResolution(transform: (T) -> Resolution<R>): R
     return Resolution.Ready(values)
 }
 
-private fun TypeTemplate.namedTemplates(): List<NamedTypeTemplate> =
-    when (this) {
-        is TypeTemplate.NullableWrapper -> value.value.namedTemplates()
-        is TypeTemplate.NamedWrapper -> listOf(value) + value.arguments.flatMap { it.namedTemplates() }
-        is TypeTemplate.FunctionWrapper -> value.parts.flatMap { it.namedTemplates() }
-        else -> emptyList()
-    }
-
-private fun TypeTemplate.substituteKnown(bindings: Map<ParameterKey, TypeUse>): TypeTemplate =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> bindings[value]?.toTemplate() ?: this
-        is TypeTemplate.NamedWrapper -> value.copy(arguments = value.arguments.map { it.substituteKnown(bindings) }).template
-        is TypeTemplate.NullableWrapper -> value.value.substituteKnown(bindings).nullable()
-        is TypeTemplate.FunctionWrapper -> TypeTemplate.FunctionWrapper(value.mapParts { it.substituteKnown(bindings) })
-        else -> this
-    }
-
 /** Reports declaration readiness from this catalog generation's canonical quarantine. */
 fun CheckedCatalog.isReady(id: TypeDefinitionId): Boolean = definition(id) == DeclarationStatus.READY
 
@@ -1568,11 +1532,4 @@ fun CheckedCatalog.isReady(id: TypeDefinitionId): Boolean = definition(id) == De
 fun CheckedCatalog.isReady(template: NamedTypeTemplate): Boolean = isReady(template.definition) && template.arguments.all(::isReady)
 
 /** Checks referenced declarations while preserving symbolic free parameters. */
-fun CheckedCatalog.isReady(template: TypeTemplate): Boolean =
-    when (template) {
-        is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper -> true
-        is TypeTemplate.NullableWrapper -> isReady(template.value.value)
-        is TypeTemplate.NamedWrapper -> isReady(template.value)
-        is TypeTemplate.FunctionWrapper -> template.value.parts.all(::isReady)
-        else -> unknownVariant(template)
-    }
+fun CheckedCatalog.isReady(template: TypeTemplate): Boolean = template.walk().all { node -> node.named?.definition?.let(::isReady) ?: true }
