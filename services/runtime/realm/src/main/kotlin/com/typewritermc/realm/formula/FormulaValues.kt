@@ -2,9 +2,6 @@ package com.typewritermc.realm.formula
 
 import com.typewritermc.authoring.ValueVisitor
 import com.typewritermc.authoring.ValueWalk
-import com.typewritermc.authoring.id
-import com.typewritermc.authoring.name
-import com.typewritermc.authoring.payload
 import com.typewritermc.formula.Deferred
 import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.NamedValue
@@ -14,23 +11,13 @@ import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.formula.eval.FailedEvaluation
 import com.typewritermc.formula.eval.refTo
 import com.typewritermc.realm.authoring.RealmReads
+import com.typewritermc.realm.authoring.storedPositionAt
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.field
-import com.typewritermc.types.items
-import com.typewritermc.types.named
-import com.typewritermc.types.rows
 import com.typewritermc.types.scalarValue
 import com.typewritermc.types.toResourceId
-import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.ListItem
-import skirout.editor.v1.type_catalog.MapRow
-import skirout.editor.v1.type_catalog.MappingResolvedRepresentation
-import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -143,81 +130,14 @@ internal fun TypeUse.isVar(): Boolean = (this as? TypeUse.NamedWrapper)?.value?.
 
 /**
  * The type the schema declares at [path] of this record and the value stored there, or null when no schema reaches
- * it. On the way, each stored named value's own type decides its fields, as the walk decides them, so a field of a
- * union case is found under the case its value names.
+ * it or the record's type is still pending. On the way, each stored named value's own type decides its fields, as the
+ * walk decides them, so a field of a union case is found under the case its value names.
  */
 internal fun AuthoringRecord.storedAt(
     path: ValuePath,
     catalog: CheckedCatalog,
 ): Pair<TypeUse, DataValue>? {
-    val selection = (configuration as? TypeSelection.CompleteWrapper)?.value ?: return null
-    var step = StoredStep(selection.use, DataValue.named(selection, DataValue.RecordWrapper(payload)))
-    for (segment in path.segments) step = step.next(segment, catalog) ?: return null
-    return step.type to step.value
+    if (configuration !is TypeSelection.CompleteWrapper) return null
+    val position = storedPositionAt(path, catalog) ?: return null
+    return position.declared to position.value
 }
-
-/** One position on the way down a stored record: its declared type, its value, and the map row an item segment chose. */
-private class StoredStep(
-    val type: TypeUse,
-    val value: DataValue,
-    val row: Pair<MappingResolvedRepresentation, MapRow?>? = null,
-)
-
-private fun StoredStep.next(
-    segment: PathSegment,
-    catalog: CheckedCatalog,
-): StoredStep? {
-    row?.let { return it.part(segment) }
-    val named = value as? DataValue.NamedWrapper
-    val own = catalog.expand(named?.value?.actualType?.use ?: type.nonNull())
-    val payload = named?.value?.payload ?: value
-    val schema = (catalog.resolve(own) as? Resolution.Ready)?.value?.schema ?: return null
-    return when (segment) {
-        is PathSegment.FieldWrapper -> {
-            val field = schema.fields.singleOrNull { it.key == segment.name } ?: return null
-            StoredStep(field.type, (payload as? DataValue.RecordWrapper)?.field(segment.name) ?: DataValue.UNFILLED)
-        }
-
-        is PathSegment.ItemWrapper -> {
-            item(schema.representation, payload, segment)
-        }
-
-        else -> {
-            null
-        }
-    }
-}
-
-private fun StoredStep.item(
-    representation: ResolvedRepresentation,
-    payload: DataValue,
-    segment: PathSegment.ItemWrapper,
-): StoredStep? =
-    when (representation) {
-        is ResolvedRepresentation.SequenceWrapper -> {
-            val item = payload.sequenceItems().singleOrNull { it.id == segment.id }
-            StoredStep(representation.value.item, item?.value ?: DataValue.UNFILLED)
-        }
-
-        is ResolvedRepresentation.MappingWrapper -> {
-            val row = (payload as? DataValue.MapValueWrapper)?.rows?.singleOrNull { it.id == segment.id }
-            StoredStep(type, value, representation.value to row)
-        }
-
-        else -> {
-            null
-        }
-    }
-
-/** The key or the value of the chosen map row. */
-private fun Pair<MappingResolvedRepresentation, MapRow?>.part(segment: PathSegment): StoredStep? =
-    when (segment) {
-        PathSegment.MAP_KEY -> StoredStep(first.key, second?.key ?: DataValue.UNFILLED)
-        PathSegment.MAP_VALUE -> StoredStep(first.value, second?.value ?: DataValue.UNFILLED)
-        else -> null
-    }
-
-private fun DataValue.sequenceItems(): List<ListItem> =
-    (this as? DataValue.ListValueWrapper)?.items ?: (this as? DataValue.SetValueWrapper)?.items.orEmpty()
-
-private fun TypeUse.nonNull(): TypeUse = (this as? TypeUse.NullableWrapper)?.value?.value ?: this
