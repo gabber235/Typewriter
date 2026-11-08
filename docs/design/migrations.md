@@ -174,7 +174,7 @@ When a type's revision changes, the migrator is the same step as a content migra
 
 Types without a revision never migrate this way:
 
-- Types declared by content (`content(at)` ids, revision 1: creator types, inline types, a book's `V`) change through publication and content migrations; `dynamic()` rebuilds them and `ValueAdmission` flags values that no longer fit.
+- Types declared by content (`content(resource, key)` ids, revision 1: creator types and inline types on a resource's `types` list, a book's `V` derived by `bind`) change through publication and content migrations; `FitOf` flags values that no longer fit.
 - Function types are structural and have no id.
 
 ## Importer for 0.9
