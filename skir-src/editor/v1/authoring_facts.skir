@@ -60,6 +60,14 @@ enum EditExpectation(84030003) {
     resource: ResourceId = 0;
     expected: [TypeDefinition] = 1;
   } = 7;
+  /// What `name` means where the formula at `at` looks it up: the resources at the nearest scope level that has it,
+  /// none when no level does. One entry stands for the whole scope it was looked up in. Extension hooks build scopes,
+  /// so only a realm judges it; an editor keeps it as it is.
+  scope: struct {
+    at: ValueLocation = 0;
+    name: string = 1;
+    expected: [ResourceId] = 2;
+  } = 8;
 }
 
 /// Pairs a required original fact with the current saved fact so the caller can refresh before retrying.

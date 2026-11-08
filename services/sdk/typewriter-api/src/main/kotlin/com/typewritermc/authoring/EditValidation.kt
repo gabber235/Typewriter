@@ -21,6 +21,8 @@ import skirout.editor.v1.type_catalog.ListItem
 
 fun PreparedEdit.requireValid(): PreparedEdit {
     catalog.requireValid()
+    // An edit guards facts its editor read; what a name means is no such fact, since only a realm judges it.
+    require(expectations.none { it is EditExpectation.ScopeWrapper }) { "A prepared edit cannot expect what a name means." }
     return copy(expectations = expectations.map { it.requireValid() }, intents = intents.map { it.requireValid() })
 }
 
@@ -61,6 +63,13 @@ fun EditExpectation.requireValid(): EditExpectation =
         is EditExpectation.TypesWrapper -> {
             value.resource.requireValid()
             EditExpectation.createTypes(resource = value.resource, expected = value.expected.map { it.requireValid() })
+        }
+
+        is EditExpectation.ScopeWrapper -> {
+            value.at.requireValid()
+            require(value.name.isNotBlank()) { "A scope expectation names no name." }
+            value.expected.forEach { it.requireValid() }
+            this
         }
 
         else -> {

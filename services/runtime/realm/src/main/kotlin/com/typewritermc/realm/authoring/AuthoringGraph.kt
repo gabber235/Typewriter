@@ -20,6 +20,7 @@ import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
 /** What realm queries read: one immutable view, and services that stay the same for the realm's lifetime. */
@@ -30,12 +31,25 @@ class RealmEnvironment internal constructor(
 
 /**
  * Built once with the view store. A check in a pass and a reader in a commit's fork read through the same ones. The
- * realm passes the check runtime's predicate evaluator; without it, a selection predicate cannot be evaluated.
+ * realm passes the check runtime's predicate evaluator and the formula scopes' name lookup; without them, a selection
+ * predicate cannot be evaluated and a scope entry of a check's evidence cannot be judged.
  */
 class RealmServices(
     val predicates: SelectionPredicateEvaluator = MissingSelectionPredicateEvaluator,
     val limits: ViewReadLimits = ViewReadLimits(),
+    val names: NameLookup = MissingNameLookup,
 )
+
+/** The query that says what [name] means where the formula at [at] looks it up. */
+fun interface NameLookup {
+    fun at(
+        at: ValueLocation,
+        name: String,
+    ): RealmQuery<List<ResourceId>>
+}
+
+private val MissingNameLookup =
+    NameLookup { _, _ -> throw IllegalStateException("A realm without the formula scopes cannot judge what a name means.") }
 
 typealias AuthoringGraph = TrackedGraph<RealmEnvironment>
 typealias RealmQuery<T> = Query<RealmEnvironment, T>
@@ -193,6 +207,29 @@ internal fun RealmQuery<*>.factsRead(stopAt: (GraphKey<*>) -> Boolean): List<Edi
         .filterIsInstance<Fact>()
         .flatMap { reads.read(it) }
         .distinct()
+
+/** A query a check's evidence holds as one entry of its own, without the facts it read to answer. */
+internal interface EvidenceEntry {
+    context(reads: RealmReads)
+    fun entry(): EditExpectation
+}
+
+/**
+ * What this query read at this revision as a check's evidence: the facts it read, also through a memo, with each
+ * [EvidenceEntry] it read as one entry in place of what that entry read. Which checks exist is not what a check read,
+ * so it does not enter [stopAt]'s queries.
+ */
+context(reads: RealmReads)
+internal fun RealmQuery<*>.evidence(stopAt: (GraphKey<*>) -> Boolean): List<EditExpectation> =
+    reads
+        .readsOf(this) { stopAt(it) || it is EvidenceEntry }
+        .flatMap { key ->
+            when (key) {
+                is Fact -> reads.read(key)
+                is EvidenceEntry -> listOf(key.entry())
+                else -> emptyList()
+            }
+        }.distinct()
 
 /** Records each read as a fact of the running query, and reads graph links through the graph. */
 internal class TrackedRecorder(

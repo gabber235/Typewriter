@@ -199,6 +199,10 @@ internal fun EditExpectation.sameFact(other: EditExpectation): Boolean =
             other is EditExpectation.TypesWrapper && value.resource == other.value.resource
         }
 
+        is EditExpectation.ScopeWrapper -> {
+            other is EditExpectation.ScopeWrapper && value.at == other.value.at && value.name == other.value.name
+        }
+
         else -> {
             unknownVariant(this)
         }

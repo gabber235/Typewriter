@@ -104,6 +104,9 @@ abstract class AuthoringFacts with _$AuthoringFacts {
           resource: value.resource,
           expected: resources[value.resource]?.types ?? const [],
         ),
+      // What a name means comes from extension hooks, which only the realm
+      // runs, so the panel keeps the realm's answer until the realm checks again.
+      skir.EditExpectation_scopeWrapper() => expected,
       _ => throw StateError("Unknown edit expectation"),
     };
   }

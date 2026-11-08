@@ -130,6 +130,8 @@ extension _ConflictFactDisplay on skir.EditExpectation {
       "Connections of ${value.resource.label(document)}",
     skir.EditExpectation_typesWrapper(:final value) =>
       "Types of ${value.resource.label(document)}",
+    skir.EditExpectation_scopeWrapper(:final value) =>
+      "Meaning of ${value.name} at ${value.at.resource.label(document)}${value.at.path.diagnosticLabel.substring(1)}",
     _ => "Unavailable fact",
   };
   String describe(AuthoringDocument document) => switch (this) {
@@ -164,6 +166,10 @@ extension _ConflictFactDisplay on skir.EditExpectation {
           : value.expected
                 .map((type) => document.catalog.typeDefinitionName(type.id))
                 .join(", "),
+    skir.EditExpectation_scopeWrapper(:final value) =>
+      value.expected.isEmpty
+          ? "Nothing"
+          : value.expected.map((id) => id.label(document)).join(", "),
     _ => "Unavailable",
   };
 }

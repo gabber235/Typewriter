@@ -3,6 +3,7 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.formula.graph.GraphListener
+import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.over
@@ -15,11 +16,13 @@ import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.SelectionId
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 import java.util.IdentityHashMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Captures saved resources and their catalog as the baseline for one authoring observation.
@@ -40,6 +43,8 @@ data class AuthoringView internal constructor(
             .toString(),
     /** Each resource's stored links. A view prepared from another shares every slice its change did not touch. */
     internal val linkSlices: Map<ResourceId, LinkSlice> = links.values.slices(),
+    /** What names mean in this view; only a view of the realm's store can say. */
+    internal val scopes: ViewScopes = ViewScopes.NONE,
 ) {
     internal val readContext = ReadContext(catalog.generation)
     private val judgements =
@@ -56,7 +61,23 @@ data class AuthoringView internal constructor(
     internal val projection by lazy { linkSlices.keys.map(::judged).fold() }
 
     internal val values by lazy {
-        CapturedAuthoringValues(resources) { id -> judged(id).projections }
+        CapturedAuthoringValues(resources, { at, name -> scopes.nameAt(this, at, name) }) { id -> judged(id).projections }
+    }
+
+    /** Reads of a graph forked at this view, made on the first name judged here once it is no longer current. */
+    internal val forkedReads = AtomicReference<RealmReads?>()
+}
+
+/** What a name means where a formula looks it up in a view, as the realm's graph answers it. */
+internal fun interface ViewScopes {
+    fun nameAt(
+        view: AuthoringView,
+        at: ValueLocation,
+        name: String,
+    ): List<ResourceId>
+
+    companion object {
+        val NONE = ViewScopes { _, _, _ -> throw IllegalStateException("Only a view of the realm's store can judge what a name means.") }
     }
 }
 
@@ -255,6 +276,17 @@ class InMemoryAuthoringViewStore(
     private val roots = IdentityHashMap<ReadContext, RootRetention>()
     private var closed = false
     private var reload: (() -> AuthoringSeed)? = null
+
+    /** Names in the current view come from the live graph, and in any other view from one fork made for it. */
+    private val scopes =
+        ViewScopes { view, at, name ->
+            val query = services.names.at(at, name)
+            val live = synchronized(lock) { graph.pin().takeIf { current.root === view } }
+            live?.let { reads -> runCatching { reads.read(query) }.getOrElse { if (it is StaleRevision) null else throw it } }
+                ?: view.forkedReads
+                    .updateAndGet { it ?: forkAt(view).pin() }!!
+                    .read(query)
+        }
     private var current = createRoot(catalog, seed.resources).also { roots[it.root.readContext] = it }
     override val graph: AuthoringGraph = TrackedGraph(RealmEnvironment(current.root, services), listener = listener)
 
@@ -372,7 +404,7 @@ class InMemoryAuthoringViewStore(
         val catalog = before.catalog.retain()
         try {
             val immutable = merged.immutableMapCopy()
-            return AuthoringView(catalog.over(immutable), immutable, links, linkSlices = slices.immutableMapCopy())
+            return AuthoringView(catalog.over(immutable), immutable, links, linkSlices = slices.immutableMapCopy(), scopes = scopes)
         } catch (failure: Throwable) {
             catalog.closeAfter(failure)
             throw failure
@@ -385,7 +417,9 @@ class InMemoryAuthoringViewStore(
     ): RootRetention {
         try {
             val immutable = immutableResources(resources)
-            return RootRetention(AuthoringView(catalog.over(immutable), immutable, discoverLinks(immutable).immutableMapCopy()))
+            return RootRetention(
+                AuthoringView(catalog.over(immutable), immutable, discoverLinks(immutable).immutableMapCopy(), scopes = scopes),
+            )
         } catch (failure: Throwable) {
             catalog.closeAfter(failure)
             throw failure
