@@ -75,14 +75,28 @@ impl Area {
     fn paths(self) -> &'static [&'static str] {
         match self {
             Self::Services => &["services/"],
-            // What the realm computes comes from its own code, the formula language, the authoring
-            // SDK with the contracts beneath it, and the generator that writes the SDK's bindings.
+            // The Gradle closure of the realm's tests: every project `:realm` reaches through its
+            // dependencies and test fixtures (the engine core and route fixtures the measurement
+            // loads among them), the build's plugins and its version catalog. A test keeps the
+            // list in step with the build files.
             Self::RealmScale => &[
                 "services/runtime/realm/",
                 "services/runtime/formula/",
+                "services/runtime/engine/api/",
+                "services/runtime/engine/core/",
+                "services/runtime/loader/api/",
                 "services/sdk/typewriter-api/",
                 "services/sdk/typewriter-contracts/",
                 "services/sdk/typewriter-codegen/",
+                "services/platform/",
+                "services/testing/typewriter-test-kit/",
+                "services/testing/realm-route-fixtures/",
+                "services/build-logic/",
+                "services/imprint/",
+                "services/build.gradle.kts",
+                "services/settings.gradle.kts",
+                "services/gradle.properties",
+                "services/libs.versions.toml",
             ],
             Self::Backend | Self::Components | Self::Gitops => &["backend/"],
             Self::Panel => &["panel/"],
@@ -785,7 +799,51 @@ mod tests {
         assert!(
             areas("services/sdk/typewriter-contracts/src/main/kotlin/A.kt").contains("realm-scale")
         );
-        assert!(!areas("services/runtime/loader/src/main/kotlin/A.kt").contains("realm-scale"));
+        assert!(areas("services/runtime/engine/core/src/main/kotlin/A.kt").contains("realm-scale"));
+        assert!(
+            !areas("services/runtime/loader/core/src/main/kotlin/A.kt").contains("realm-scale")
+        );
+    }
+
+    /// Every project the realm's tests reach in Gradle, read from the build files, lies under a
+    /// realm scale path, so a change the measurement runs cannot skip its gate.
+    #[test]
+    fn the_realm_scale_paths_cover_the_realm_tests_gradle_closure() {
+        let services = Path::new(env!("CARGO_MANIFEST_DIR")).join("../services");
+        let settings = fs::read_to_string(services.join("settings.gradle.kts")).unwrap();
+        let directory_of = |name: &str| {
+            let call = format!("includeProject(\"{name}\", \"");
+            let start = settings.find(&call).map(|at| at + call.len());
+            start.map(|start| &settings[start..start + settings[start..].find('"').unwrap()])
+        };
+        let mut pending = vec!["realm".to_owned()];
+        let mut closure = BTreeSet::new();
+        while let Some(name) = pending.pop() {
+            if !closure.insert(name.clone()) {
+                continue;
+            }
+            let directory = directory_of(&name).unwrap_or_else(|| panic!(":{name} is no project"));
+            let build = fs::read_to_string(services.join(directory).join("build.gradle.kts"));
+            let build = build.unwrap();
+            pending.extend(
+                build
+                    .split("project(\":")
+                    .skip(1)
+                    .map(|rest| rest[..rest.find('"').unwrap()].to_owned()),
+            );
+        }
+        assert!(closure.contains("engine-core") && closure.contains("realm-route-fixtures"));
+        let uncovered: Vec<_> = closure
+            .iter()
+            .map(|name| format!("services/{}/build.gradle.kts", directory_of(name).unwrap()))
+            .filter(|path| {
+                !EVERY_AREA
+                    .iter()
+                    .chain(Area::RealmScale.paths())
+                    .any(|prefix| path.starts_with(prefix))
+            })
+            .collect();
+        assert!(uncovered.is_empty(), "realm scale misses {uncovered:?}");
     }
 
     #[test]
