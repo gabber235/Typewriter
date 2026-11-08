@@ -245,6 +245,14 @@ val InterpreterTest by testSuite {
         run("12345678901234567890.123456789", decimal) shouldBe Evaluation.Value(BigDecimal("12345678901234567890.123456789"))
     }
 
+    test("Decimals compare by value, whatever number of decimals they are written with") {
+        run("price == 1.1", boolean) shouldBe Evaluation.Value(true)
+        run("price == 1.100", boolean) shouldBe Evaluation.Value(true)
+        run("price == 1.2", boolean) shouldBe Evaluation.Value(false)
+        run("[price] == [1.1]", boolean) shouldBe Evaluation.Value(true)
+        run("let p: Decimal = 1.1\n[price: \"a\", p: \"b\"] == [price: \"b\"]", boolean) shouldBe Evaluation.Value(true)
+    }
+
     test("a Long literal beyond 2^53 keeps every digit") {
         run("9007199254740993", long) shouldBe Evaluation.Value(9_007_199_254_740_993L)
     }
