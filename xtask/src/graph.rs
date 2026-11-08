@@ -75,11 +75,14 @@ impl Area {
     fn paths(self) -> &'static [&'static str] {
         match self {
             Self::Services => &["services/"],
-            // What the realm computes comes from its own code, the formula language and the authoring SDK.
+            // What the realm computes comes from its own code, the formula language, the authoring
+            // SDK with the contracts beneath it, and the generator that writes the SDK's bindings.
             Self::RealmScale => &[
                 "services/runtime/realm/",
                 "services/runtime/formula/",
                 "services/sdk/typewriter-api/",
+                "services/sdk/typewriter-contracts/",
+                "services/sdk/typewriter-codegen/",
             ],
             Self::Backend | Self::Components | Self::Gitops => &["backend/"],
             Self::Panel => &["panel/"],
@@ -779,6 +782,9 @@ mod tests {
     fn a_realm_change_runs_the_realm_scale_gates_and_another_service_change_does_not() {
         let areas = |path: &str| area_names(&affected(select(None), &[PathBuf::from(path)]));
         assert!(areas("services/runtime/realm/src/main/kotlin/A.kt").contains("realm-scale"));
+        assert!(
+            areas("services/sdk/typewriter-contracts/src/main/kotlin/A.kt").contains("realm-scale")
+        );
         assert!(!areas("services/runtime/loader/src/main/kotlin/A.kt").contains("realm-scale"));
     }
 
