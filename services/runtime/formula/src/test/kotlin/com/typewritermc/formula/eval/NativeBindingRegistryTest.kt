@@ -34,6 +34,7 @@ import com.typewritermc.formula.testing.construct
 import com.typewritermc.formula.testing.prizeUse
 import com.typewritermc.formula.testing.valuesResolving
 import com.typewritermc.types.NativeBinding
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.fromValueAny
 import com.typewritermc.types.member
 import com.typewritermc.types.named
@@ -128,6 +129,22 @@ val NativeBindingRegistryTest by testSuite {
     test("a Float field gets a Kotlin Float") {
         val measure = MeasureDefinition.id.use()
         binding(measure).fromValueAny(RecordValue(measure, mapOf("ratio" to 0.5f)), plain) shouldBe Measure(0.5f)
+    }
+
+    test("an IntRange stores and reads back as a Kotlin IntRange") {
+        val use = StandardTypes.intRange.use()
+
+        @Suppress("UNCHECKED_CAST")
+        val range = binding(use) as NativeBinding<IntRange>
+        val complete = checkedUse(use).complete(range.encode(2..5)).shouldBeInstanceOf<CompletenessResult.Complete>()
+        range.decode(complete.value) shouldBe 2..5
+    }
+
+    test("a Box of IntRange gives Kotlin an IntRange in x") {
+        val box = BoxDefinition.id.use(listOf(StandardTypes.intRange.use()))
+        val range = RecordValue(StandardTypes.intRange.use(), mapOf("first" to 2, "last" to 5))
+        binding(box).fromValueAny(RecordValue(box, mapOf("x" to range)), plain) shouldBe Box(2..5)
+        binding(box).toValueAny(Box(2..5), plain) shouldBe RecordValue(box, mapOf("x" to range))
     }
 
     test("constructing a record with a defaulted field left out takes the Kotlin default") {
