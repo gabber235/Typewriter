@@ -128,6 +128,19 @@ val ParserTest by testSuite {
         }
     }
 
+    test("a number literal no number can hold is a problem at the literal, never a thrown error") {
+        for ((source, message) in listOf(
+            "9223372036854775808" to "This number is too large",
+            "1e99999999999" to "This exponent is too large",
+            "1e-2147483649" to "This exponent is too large",
+            "1.5e-2147483649" to "This exponent is too large",
+        )) {
+            val problem = parseExpression(source).problems.single()
+            problem.message shouldBe message
+            problem.span shouldBe TextSpan(0, source.length)
+        }
+    }
+
     test("a function type names its parameters") {
         parseType("(Int) -> Int").problems.shouldNotBeEmpty()
     }

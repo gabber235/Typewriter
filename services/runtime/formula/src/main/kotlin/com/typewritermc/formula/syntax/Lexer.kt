@@ -279,7 +279,12 @@ internal class Lexer(
         val decimal = exponent() || fraction
         val text = source.substring(start, position).replace("_", "")
         val kind = if (decimal) TokenKind.Decimal else TokenKind.Integer
-        val problem = if (!decimal && text.toLongOrNull() == null) "This number is too large" else null
+        val problem =
+            when {
+                decimal -> if (text.toBigDecimalOrNull() == null) "This exponent is too large" else null
+                text.toLongOrNull() == null -> "This number is too large"
+                else -> null
+            }
         return Token(kind, start, position, text, problem = problem)
     }
 
