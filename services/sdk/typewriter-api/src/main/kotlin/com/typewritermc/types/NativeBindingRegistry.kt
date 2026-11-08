@@ -123,7 +123,7 @@ sealed interface NativeValidationResult {
  * Bindings are cached by concrete type and reject checked types from another generation. Deferred bindings allow
  * recursive record factories to refer to themselves during construction, but fail if used before initialization.
  * Nullable and container child bindings resolve only when a value or signature needs them.
- * Concrete definitions without a native factory retain [PortableValue] content; abstract records dispatch through
+ * Concrete definitions without a native factory retain [PortableValue] content; open records dispatch through
  * the actual authored type. Native sets and maps reject duplicates that their Kotlin containers would discard.
  */
 class FactoryNativeBindingRegistry(
