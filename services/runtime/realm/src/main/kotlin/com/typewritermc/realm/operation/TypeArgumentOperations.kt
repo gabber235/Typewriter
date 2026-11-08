@@ -18,7 +18,7 @@ import com.typewritermc.realm.authoring.conflicts
 import com.typewritermc.realm.edit.AuthoringMutationPlanner
 import com.typewritermc.realm.edit.MutationPlanningResult
 import com.typewritermc.realm.edit.requiredExpectations
-import com.typewritermc.realm.edit.sameFact
+import com.typewritermc.realm.edit.factKey
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
@@ -260,9 +260,7 @@ internal class DefaultTypeArgumentOperations(
                 )
             }
             val verifiedEdit = verified.edit
-            if (edit.expectations.any { expected -> verifiedEdit.expectations.none { it.sameFact(expected) } } ||
-                verifiedEdit.expectations.any { expected -> edit.expectations.none { it.sameFact(expected) } }
-            ) {
+            if (edit.expectations.mapTo(hashSetOf()) { it.factKey() } != verifiedEdit.expectations.mapTo(hashSetOf()) { it.factKey() }) {
                 return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
                     listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")),
                 )

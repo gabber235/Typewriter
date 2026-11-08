@@ -203,7 +203,8 @@ internal fun problem(
     code: String,
 ): ValueProblem = ValueProblem(location = ValueLocation.of(resource), code = code)
 
+/** The link occurrences at or below [at]: all a write at [at] can change, and what a lookup of one occurrence needs. */
 internal fun resourceLinks(
     resources: Map<ResourceId, AuthoringRecord>,
-    resource: ResourceId,
-): List<LinkOccurrence> = resources[resource]?.let { ResourceValueMapper.discover(mapOf(resource to it)) }.orEmpty()
+    at: ValueLocation,
+): List<LinkOccurrence> = resources[at.resource]?.let { ResourceValueMapper.discover(at.resource, it, at.path) }.orEmpty()

@@ -148,7 +148,8 @@ internal class RealmAuthoringOwner(
                 current.catalog.relations.mapTo(linkedSetOf()) { it.id },
                 plan,
             )
-        val missing = required.filter { fact -> edit.expectations.none { it.sameFact(fact) } }
+        val given = edit.expectations.mapTo(hashSetOf()) { it.factKey() }
+        val missing = required.filter { it.factKey() !in given }
         if (missing.isNotEmpty()) {
             return Admission.Refused(
                 CommitPreparedEditResponse.RejectedErrorWrapper(

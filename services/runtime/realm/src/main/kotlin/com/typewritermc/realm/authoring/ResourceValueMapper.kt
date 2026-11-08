@@ -1,10 +1,13 @@
 package com.typewritermc.realm.authoring
 
+import com.typewritermc.authoring.LocatedPortableValue
+import com.typewritermc.authoring.append
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.descendants
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
+import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.of
@@ -151,20 +154,47 @@ internal sealed interface CounterpartBinding {
  */
 internal object ResourceValueMapper {
     fun discover(resources: Map<ResourceId, AuthoringRecord>): List<LinkOccurrence> =
-        resources.flatMap { (source, record) ->
-            DataValue
-                .RecordWrapper(record.payload)
-                .descendants()
-                .mapNotNull { node ->
-                    val link = node.value as? DataValue.LinkWrapper ?: return@mapNotNull null
-                    val location = ValueLocation.of(source, node.path)
-                    LinkOccurrence(
-                        id = LinkOccurrenceId(endpoint = link.endpoint, location = location),
-                        source = source,
-                        target = link.value.target,
-                    )
-                }.toList()
+        resources.flatMap { (source, record) -> links(source, ValuePath.root, DataValue.RecordWrapper(record.payload)) }
+
+    /**
+     * The occurrences [discover] finds in [record] at or below [under]. A write at a location changes only what is at or
+     * below it, so this walks that part alone instead of the whole record, whose size a long list makes grow.
+     */
+    fun discover(
+        source: ResourceId,
+        record: AuthoringRecord,
+        under: ValuePath,
+    ): List<LinkOccurrence> =
+        when (val located = DataValue.RecordWrapper(record.payload).locate(under)) {
+            is LocatedPortableValue.Value -> {
+                links(source, under, located.value)
+            }
+
+            is LocatedPortableValue.Row -> {
+                links(source, under.mapKey(), located.row.key) + links(source, under.mapValue(), located.row.value)
+            }
+
+            is LocatedPortableValue.Missing, is LocatedPortableValue.Invalid -> {
+                emptyList()
+            }
         }
+
+    private fun links(
+        source: ResourceId,
+        at: ValuePath,
+        value: DataValue,
+    ): List<LinkOccurrence> =
+        value
+            .descendants()
+            .mapNotNull { node ->
+                val link = node.value as? DataValue.LinkWrapper ?: return@mapNotNull null
+                val location = ValueLocation.of(source, at.append(node.path))
+                LinkOccurrence(
+                    id = LinkOccurrenceId(endpoint = link.endpoint, location = location),
+                    source = source,
+                    target = link.value.target,
+                )
+            }.toList()
 
     fun project(
         occurrences: Collection<LinkOccurrence>,
@@ -175,6 +205,8 @@ internal object ResourceValueMapper {
         val problems = mutableListOf<ValueProblem>()
         val fit = mutableListOf<ValueProblem>()
         val structurallyValid = hashMapOf<ResourceId, Boolean>()
+        // A holder with many links is asked once for its slots, not once per link.
+        val slotsByLocation = hashMapOf<ResourceId, Map<ValuePath?, List<LinkSchemaSlot>>>()
         val byEndpoint =
             contracts
                 .flatMap { contract ->
@@ -212,7 +244,10 @@ internal object ResourceValueMapper {
                 // Whether the link fits its slot is a judgement against the holder's current schema; the link still projects.
                 // A link where the holder's type has no slot or names another endpoint is the structure's misfit at its location.
                 val sourceRecord = resources.getValue(occurrence.source)
-                val declared = sourceRecord.linkSlots(catalog).singleOrNull { it.location == occurrence.id.location.path }
+                val declared =
+                    slotsByLocation
+                        .getOrPut(occurrence.source) { sourceRecord.linkSlots(catalog).groupBy { it.location } }[occurrence.id.location.path]
+                        ?.singleOrNull()
                 if (declared != null && declared.endpoint == occurrence.id.endpoint) {
                     val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.MANY
                     if (declared.containsCollection && !expectsCollection) {
