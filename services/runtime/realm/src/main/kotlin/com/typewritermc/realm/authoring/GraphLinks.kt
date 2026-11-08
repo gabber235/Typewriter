@@ -33,6 +33,29 @@ internal data class LinkSlice(
     }
 }
 
+/**
+ * The slices of [before] once the records of [holders] are replaced by [added]'s occurrences, which they now hold. A
+ * slice holds what a resource holds and what targets it, so the slices of the holders and of both ends of each old and
+ * new link are rebuilt, and every other slice is [before]'s own object.
+ */
+internal fun Map<ResourceId, LinkSlice>.after(
+    holders: Set<ResourceId>,
+    added: List<LinkOccurrence>,
+): Map<ResourceId, LinkSlice> {
+    val slice = { id: ResourceId -> this[id] ?: LinkSlice.EMPTY }
+    val dropped = holders.flatMap { slice(it).own }
+    val touched = holders + dropped.map { it.target.resource } + added.map { it.target.resource }
+    val addedBySource = added.groupBy(LinkOccurrence::source)
+    val addedByTarget = added.groupBy { it.target.resource }
+    val slices = HashMap(this)
+    touched.forEach { id ->
+        val own = if (id in holders) addedBySource[id].orEmpty() else slice(id).own
+        val into = slice(id).into.filter { it.source !in holders } + addedByTarget[id].orEmpty()
+        if (own.isEmpty() && into.isEmpty()) slices.remove(id) else slices[id] = LinkSlice(own, into)
+    }
+    return slices
+}
+
 /** Groups links by resource once. Every view kind calls it over its own links. */
 internal fun Collection<LinkOccurrence>.slices(): Map<ResourceId, LinkSlice> {
     val own = groupBy { it.source }

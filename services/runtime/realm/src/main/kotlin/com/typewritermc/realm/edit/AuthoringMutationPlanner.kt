@@ -7,7 +7,10 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.realm.authoring.LinkSlice
+import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.after
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -23,14 +26,18 @@ import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.authoring_facts.LinkProjection
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -92,19 +99,13 @@ internal class AuthoringMutationPlanner(
                 resources.forEach { (id, record) -> if (latestResources[id] != record) add(id) }
             }
         val final = resources.toMap().let { state -> catalog.withContent(contentSourceOf(state::get)) }
-        val proposedLinks = ResourceValueMapper.discover(resources)
-        val projection = ResourceValueMapper.project(proposedLinks, resources, contracts, final)
-        val savedProjection = saved.projection
-        problems +=
-            AuthoringSnapshotValidator(
-                final,
-                catalog,
-                contracts,
-            ).validate(latestResources, resources, affected, projection, savedProjection)
+        val links = TouchedLinks(saved, resources, affected, contracts, final)
+        val validator = AuthoringSnapshotValidator(final, catalog, contracts)
+        problems += validator.validate(latestResources, resources, affected, links) { saved.judged(it).fit }
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
-        val beforeSet = savedProjection.projections.toSet()
-        val afterSet = projection.projections.toSet()
+        val beforeSet = links.savedTouching()
+        val afterSet = links.touching.projections.toSet()
         val relations =
             RelationProjectionDelta(
                 removals = (beforeSet - afterSet).sortedBy(::projectionKey),
@@ -389,3 +390,68 @@ internal class AuthoringMutationPlanner(
 private fun projectionKey(value: LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}:" +
         "${value.firstLocation?.let(ValuePath.serializer::toJsonCode)}:${value.secondLocation?.let(ValuePath.serializer::toJsonCode)}"
+
+/**
+ * The links of the state a plan proposes, judged only where the plan touched them: a link can change only when one of
+ * its ends is [affected], so the slices of the affected resources are judged once, before and after. A rule that needs
+ * another resource's links of one relation at one end judges just those, on first read.
+ */
+private class TouchedLinks(
+    private val saved: AuthoringView,
+    private val resources: Map<ResourceId, AuthoringRecord>,
+    private val affected: Set<ResourceId>,
+    private val contracts: List<RelationContract>,
+    private val catalog: CheckedCatalog,
+) : PlannedLinks {
+    private val slices = saved.linkSlices.after(affected, ResourceValueMapper.discover(resources.filterKeys { it in affected }))
+    private val endpoints = contracts.flatMap { listOf(it.first.id to it.first.slot, it.second.id to it.second.slot) }.toMap()
+    private val asked = hashMapOf<Triple<ResourceId, RelationId, EndpointSlot>, List<LinkProjection>>()
+
+    override val touching: ProjectionResult = judge(affected.flatMap { slice(it).let { slice -> slice.own + slice.into } })
+
+    /** The links with an affected end in the saved state: what [touching] replaces. */
+    fun savedTouching(): Set<LinkProjection> = affected.flatMapTo(hashSetOf()) { saved.judged(it).projections }
+
+    override fun at(
+        resource: ResourceId,
+        contract: RelationId,
+        slot: EndpointSlot,
+    ): List<LinkProjection> =
+        asked.getOrPut(Triple(resource, contract, slot)) {
+            val judged =
+                if (resource in affected) {
+                    touching
+                } else {
+                    // Only the occurrences that can form such a link: of this relation, with [resource] at [slot].
+                    val held = slice(resource).let { it.own + it.into }
+                    judge(held.filter { endOf(it, resource) == slot && it.id.endpoint in contractEndpoints(contract) })
+                }
+            judged.projections.filter { it.contract == contract && (if (slot == EndpointSlot.FIRST) it.first else it.second) == resource }
+        }
+
+    private fun slice(resource: ResourceId): LinkSlice = slices[resource] ?: LinkSlice.EMPTY
+
+    private fun contractEndpoints(contract: RelationId): Set<EndpointId> =
+        contracts.filter { it.id == contract }.flatMapTo(hashSetOf()) { listOf(it.first.id, it.second.id) }
+
+    /** The end [resource] would be of the link [occurrence] forms: its holder sits at its endpoint's slot, its target at the other. */
+    private fun endOf(
+        occurrence: LinkOccurrence,
+        resource: ResourceId,
+    ): EndpointSlot? {
+        val held = endpoints[occurrence.id.endpoint] ?: return null
+        return if (occurrence.source == resource) {
+            held
+        } else if (held == EndpointSlot.FIRST) {
+            EndpointSlot.SECOND
+        } else {
+            EndpointSlot.FIRST
+        }
+    }
+
+    private fun judge(occurrences: List<LinkOccurrence>): ProjectionResult {
+        val distinct = occurrences.distinctBy { it.id }
+        val ends = distinct.flatMap { listOf(it.source, it.target.resource) }.distinct()
+        return ResourceValueMapper.project(distinct, ends.mapNotNull { id -> resources[id]?.let { id to it } }.toMap(), contracts, catalog)
+    }
+}
