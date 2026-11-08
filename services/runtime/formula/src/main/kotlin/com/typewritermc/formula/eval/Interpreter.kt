@@ -476,6 +476,8 @@ private class Interpreter(
 
         override fun display(value: Any?): String = environment.display(value)
 
+        override val remainingSteps: Int get() = limits.maxSteps - steps
+
         private fun TypeTemplate.concrete(): TypeUse =
             when (val applied = apply(solved)) {
                 is Resolution.Ready -> applied.value

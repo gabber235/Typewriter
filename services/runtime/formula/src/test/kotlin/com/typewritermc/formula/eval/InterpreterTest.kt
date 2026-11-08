@@ -39,6 +39,8 @@ val InterpreterTest by testSuite {
         Triple("when (money) { is Money(amount) if amount > 100 -> 1\n else -> 2 }", int, 2),
         Triple("Reward(gold = 5).gold", int, 5),
         Triple("5 in 1..9", boolean, true),
+        Triple("1..4", listType(int), listOf(1, 2, 3, 4)),
+        Triple("3..2", listType(int), emptyList<Int>()),
         Triple("\"a\" == \"a\"", boolean, true),
         Triple("Reward(gold = 5) == Reward(gold = 5)", boolean, true),
     )) {
@@ -223,5 +225,9 @@ val InterpreterTest by testSuite {
         run("let x = 0.0\n-x == 0.0", boolean) shouldBe Evaluation.Value(true)
         run("let x = 0.0\n-x < 0.0", boolean) shouldBe Evaluation.Value(false)
         run("let x = 0.0\n-x >= 0.0", boolean) shouldBe Evaluation.Value(true)
+    }
+
+    test("a range longer than the default step limit is built when the evaluation's own limit allows it") {
+        run("(1..1500000).size", int, limits = EvaluationLimits(maxSteps = 2_000_000)) shouldBe Evaluation.Value(1_500_000)
     }
 }
