@@ -190,7 +190,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Derive**: a pure function over tracked inputs whose result type decides what it maintains. See [overview.md](overview.md#derive).
 
-**Derived type**: a type built by `bind`, with id `content(at)` (the field the `bind` reads) and revision 1. See [formula-language.md](formula-language.md#bind).
+**Derived type**: a type built by `bind`, with a content id like a declaration's (`content(resource, key)`, revision 1), reached through a query and never saved. See [formula-language.md](formula-language.md#bind).
 
 **Developer migrator**: the step a developer writes to convert a stored type's data between two revisions. See [migrations.md](migrations.md#developer-migrator).
 
@@ -672,11 +672,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Triggered<E>`**: event emitted per linked entry when a link fires, with the entry, the group subject, and the context. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
-**`Type`**: the value type of a type field; `Var<Type, TypeScope>` holds a type picked or written as text. See [formula-language.md](formula-language.md#type-fields).
+**`Type`**: the value type of a type field; a `TypeUse` stored as `DataValue.type_use`, whose declarations sit on the resource's `types` list. `Var<Type, TypeScope>` holds a type picked or written as text. See [formula-language.md](formula-language.md#type-fields).
 
 **Type checking**: local and bidirectional; the field pushes the expected type down and expressions infer up. See [formula-language.md](formula-language.md#type-checking).
 
-**`TypeDefinition`**: describes a named type; its id is `declared` (Kotlin), `qualified` (builtins) or `content` (types declared by content), with a revision. Structural types have none. See [formula-language.md](formula-language.md#members-and-providers).
+**`TypeDefinition`**: describes a named type; its id is `declared` (Kotlin), `qualified` (builtins), `member` (a case without its own id, `member(owner, name)`) or `content` (`content(resource, key)`: a type a resource declares by its generated key, or in a use a field key meaning whatever that field holds), with a revision. Structural types have none. See [formula-language.md](formula-language.md#members-and-providers).
 
 **`TypeScope`**: formula context for type fields; pure values only, types in scope. See [formula-language.md](formula-language.md#formula-contexts).
 
@@ -684,13 +684,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## U
 
-**Union**: catalog subtyping (an abstract record plus `parents`) narrowed with `is`, smart casts, and exhaustive `when`. See [formula-language.md](formula-language.md#unions-and-errors).
+**Union**: a closed record (`RecordForm.closed`) that lists its cases in order, narrowed with `is`, smart casts, and exhaustive `when`. An open record accepts any subtype that names it in `parents`, and `when` over it needs `else`. See [formula-language.md](formula-language.md#unions-and-errors).
 
 **Update field**: a `Var<Changes, C>` field holding change lines that the entry applies. See [formula-language.md](formula-language.md#changes-fields).
 
 ## V
 
-**`ValueAdmission`**: the existing admission that flags stored values and instances that no longer fit their type. See [formula-language.md](formula-language.md#bind).
+**`ValueAdmission`**: the structural fit of stored values to their type (misfits and completeness, `ValueAdmission.kt`); `FitOf` reports each misfit as a finding that blocks publish, on code and content records alike. See [formula-language.md](formula-language.md#bind).
 
 **`value_location`**: the representation and `DataValue` variant for a place in authored content, the portable form of `BoundPath<T>`; named so it never reads as the Minecraft `Location`. See [panel-engine-communication.md](panel-engine-communication.md#emit-without-extension-code-in-the-panel-engine-2026-11-01).
 

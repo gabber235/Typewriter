@@ -46,7 +46,7 @@ interface HasRotation<S : HasRotation<S>> { val yaw: Float; val pitch: Float; fu
 interface HasBlock<S : HasBlock<S>> { val x: Int; val y: Int; val z: Int; fun withBlock(x: Int, y: Int, z: Int): S }
 ```
 
-In the catalog the part interfaces are abstract records; the exact types list them in `parents`. Entry fields never use a part interface as their type, so the polymorphic form picker never appears for spatial fields. Formula functions may take them.
+In the catalog the part interfaces are open records; the exact types list them in `parents`. Entry fields never use a part interface as their type, so the polymorphic form picker never appears for spatial fields. Formula functions may take them.
 
 ### Exact types
 
