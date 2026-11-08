@@ -86,6 +86,7 @@ struct AuthoringState(84020009) {
   generation: CatalogGeneration = 0;
   resources: [AuthoringResource] = 1;
   links: [LinkProjection] = 2;
+  /// The finding sets with findings or an outcome other than finished. A check missing here ran and found nothing.
   findings: [FindingSet] = 3;
   confirmed_observation: AuthoringObservationId = 4;
 }

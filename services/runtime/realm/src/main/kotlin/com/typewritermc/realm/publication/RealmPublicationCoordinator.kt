@@ -435,7 +435,7 @@ internal class RealmPublicationCoordinator(
         }
     }
 
-    private fun capturedFindings(root: AuthoringView) = findings().map { it.judgedForRelease(root).forReply() }
+    private fun capturedFindings(root: AuthoringView) = findings().forReply { it.judgedForRelease(root) }
 
     private fun updateForPrepared(next: Prepared) {
         val active = releasing

@@ -121,6 +121,7 @@ enum PublicationActivationPhase(84150016) {
 
 // Later saved work can be reviewed during activation without authorizing it.
 struct PublicationPendingReview(84150017) {
+  /// The finding sets with findings or an outcome other than finished. A check missing here ran and found nothing.
   findings: [FindingSet] = 0;
   confirmed_changes: [PublicationChange] = 1;
   pending_roots: [CompilationRoot] = 2;
@@ -160,6 +161,7 @@ enum PublicationStatus(84150019) {
   } = 4;
   checking: struct {
     baseline: PublicationBaseline = 0;
+    /// The finding sets with findings or an outcome other than finished. A check missing here ran and found nothing.
     findings: [FindingSet] = 1;
   } = 5;
   publishing: struct {
@@ -171,6 +173,7 @@ enum PublicationStatus(84150019) {
   unavailable: struct {
     baseline: PublicationBaseline = 0;
     failure: PublicationFailure = 1;
+    /// The finding sets with findings or an outcome other than finished. A check missing here ran and found nothing.
     findings: [FindingSet] = 2;
   } = 7;
 }

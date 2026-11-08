@@ -20,11 +20,11 @@ internal fun FindingSet.judgedForRelease(view: AuthoringView): FindingSet =
     withStatus(status == FindingStatus.CURRENT && view.supports(this))
 
 /**
- * This set as a reply carries it: its evidence only when it has something to report, since a reader compares
- * evidence only for the findings and outcome it shows. Judge it first, which needs the evidence.
+ * The sets a reply lists, each judged by [judge]: only those with findings or an outcome other than finished. A check
+ * that ran and found nothing is left out, so an editor reads a missing set as checked and clean.
  */
-internal fun FindingSet.forReply(): FindingSet =
-    if (findings.isEmpty() && outcome == CheckOutcome.FINISHED) copy(expectations = emptyList()) else this
+internal fun List<FindingSet>.forReply(judge: (FindingSet) -> FindingSet): List<FindingSet> =
+    filter { it.findings.isNotEmpty() || it.outcome != CheckOutcome.FINISHED }.map(judge)
 
 /** Whether [set] was checked against this view's catalog and the values it read are still saved in this view. */
 private fun AuthoringView.supports(set: FindingSet): Boolean =
