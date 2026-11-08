@@ -12,11 +12,13 @@ import com.typewritermc.realm.testing.withSetup
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.ints.shouldBeLessThan
 import kotlin.time.Duration.Companion.minutes
 
 // Prints its numbers for the pull request and asserts no time. Gates, read from the printed lines: a pass after one
-// value edit under 200 ms; a commit with one unrelated broken formula under 50 ms above one with none; a reply with
-// 20 broken formulas under 1 MB.
+// value edit under 200 ms; a commit with one unrelated broken formula under 50 ms above one with none. The findings of
+// a reply with 20 broken formulas stay under 1 MB, asserted; the saved state beside them is printed only.
 val SeededRealmMeasurement by testSuite {
     // Over two thousand resources seed, bind and check for real, which outlasts the default minute.
     test(
@@ -33,7 +35,10 @@ val SeededRealmMeasurement by testSuite {
 
             val nineteen = (1..19).map { setFormula(seeded.named("f$it"), "missing_$it + 1") }
             println(measuredCommit("break nineteen more", *nineteen.toTypedArray()))
-            repeat(3) { println(measuredCommit("twenty broken formulas", setVar(seeded.named("n999"), intUse, plain(200 + it)))) }
+            val twenty = (0..2).map { measuredCommit("twenty broken formulas", setVar(seeded.named("n999"), intUse, plain(200 + it))) }
+            twenty.forEach(::println)
+
+            twenty.forAll { it.findingBytes shouldBeLessThan 1_000_000 }
         }
     }
 }
