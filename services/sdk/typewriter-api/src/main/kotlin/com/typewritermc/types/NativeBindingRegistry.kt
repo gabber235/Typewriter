@@ -684,6 +684,29 @@ private class VarNativeBinding(
 }
 
 /**
+ * The stored scalar of a Kotlin value, chosen by its class: the inverse of [scalarValue] for every scalar kind, so any
+ * value [scalarValue] returns comes back as the stored value it was read from. A value of no scalar class fails.
+ */
+fun scalarData(value: Any?): DataValue =
+    when (value) {
+        null -> DataValue.NULL
+        Unit -> DataValue.UNIT
+        is Boolean -> DataValue.BooleanWrapper(value)
+        is String -> DataValue.StringValueWrapper(value)
+        is ByteArray -> DataValue.bytes(value)
+        is Byte, is Short, is Int, is Long, is UByte, is UShort, is UInt, is ULong, is BigInteger -> {
+            DataValue.integer(value.toBigInteger(IntegerWidth.SIGNED_SIXTY_FOUR))
+        }
+        is Float -> DataValue.FloatWrapper(value.toDouble())
+        is Double -> DataValue.FloatWrapper(value)
+        is BigDecimal -> DataValue.DecimalWrapper(value.toPlainString())
+        is kotlin.time.Instant -> DataValue.timestamp(value)
+        is kotlin.time.Duration -> DataValue.duration(value)
+        is Type -> DataValue.TypeUseWrapper(value.use)
+        else -> throw IllegalArgumentException("${value::class.simpleName} is not a scalar.")
+    }
+
+/**
  * The Kotlin value of the stored scalar [this] of [kind], as its native binding decodes it: an integer at its declared
  * width, a float as Float or Double, a type as [Type]. A Float32 that would lose precision fails.
  */
