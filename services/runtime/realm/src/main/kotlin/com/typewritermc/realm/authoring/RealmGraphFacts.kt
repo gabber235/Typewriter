@@ -1,6 +1,7 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.RealmSectionDefinition
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.text
