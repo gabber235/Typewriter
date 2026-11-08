@@ -18,6 +18,7 @@ import com.typewritermc.configuration.field
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.INT_USE
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
@@ -551,6 +552,31 @@ val RealmCheckRuntimeTest by testSuite {
 
                 assessment.resources.getValue(firstResource).shouldBeInstanceOf<ResourceReadiness.Ready>()
                 assessment.findings.map { it.code to it.primary } shouldBe listOf("check_needs_input" to unavailable)
+            }
+        }
+    }
+
+    test("two rules failing on the same read each keep their failure in publication") {
+        runTest {
+            val name = location(firstResource, "name")
+            val provider =
+                object : RealmCheckProvider {
+                    override fun RealmChecks.register() {
+                        repeat(2) {
+                            realm {
+                                check(read(boundPath<Int>(name, INT_USE))) { value -> value > 0 }
+                                    .error("Name is not a number.", name)
+                            }
+                        }
+                    }
+                }
+            val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(22, provider))
+            checking(catalog, mapOf(firstResource to record(name = "text")), StandardTestDispatcher(testScheduler)) { realm, runtime ->
+                val assessment = capturedAcceptance(realm.views, runtime)
+
+                val failures = assessment.findings.filter { it.primary == name }
+                failures.map { it.code }.distinct().size shouldBe 1
+                failures.map { it.id }.distinct().size shouldBe 2
             }
         }
     }

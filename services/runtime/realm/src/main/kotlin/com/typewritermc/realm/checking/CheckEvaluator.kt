@@ -12,7 +12,6 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
-import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -48,7 +47,7 @@ internal class CheckEvaluator(
                     ),
                 )
             }
-        return CheckRunResult(ticket, mergeOutcome(explicit, reads.health().outcome(subject.plan.rule.origin)), findings)
+        return CheckRunResult(ticket, mergeOutcome(explicit, reads.health().outcome(subject.plan.rule.origin, diagnostics)), findings)
     }
 
     /** Runs [subject]'s plan, reporting each finding, and returns its outcome when the plan decides one. */
@@ -186,7 +185,11 @@ internal class CheckEvaluator(
     }
 }
 
-internal fun ViewReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
+/** The outcome these reads give a run; each failed read becomes an error numbered by [diagnostics]. */
+internal fun ViewReadHealth.outcome(
+    origin: RuleOrigin,
+    diagnostics: CheckRunDiagnostics,
+): CheckOutcome =
     when {
         incomplete.isNotEmpty() -> {
             CheckOutcome.IncompleteWrapper(incomplete.joinToString())
@@ -194,16 +197,8 @@ internal fun ViewReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
 
         failures.isNotEmpty() -> {
             CheckOutcome.FailedWrapper(
-                failures.mapIndexed { index, failure ->
-                    Diagnostic(
-                        id = DiagnosticId(value = "evaluation:$index:${failure.hashCode()}"),
-                        origin = origin,
-                        code = failure.failure.value,
-                        message = failure.message,
-                        severity = DiagnosticSeverity.ERROR,
-                        primary = failure.locations.firstOrNull(),
-                        related = failure.locations.drop(1),
-                    )
+                failures.map { failure ->
+                    diagnostics.error(origin, failure.failure.value, failure.message, failure.locations.firstOrNull(), failure.locations.drop(1))
                 },
             )
         }

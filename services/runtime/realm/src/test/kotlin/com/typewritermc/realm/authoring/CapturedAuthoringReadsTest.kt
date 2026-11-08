@@ -14,6 +14,7 @@ import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.field
 import com.typewritermc.expression.operations.HostFailure
+import com.typewritermc.realm.checking.CheckRunDiagnostics
 import com.typewritermc.realm.checking.outcome
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
@@ -323,7 +324,8 @@ val CapturedAuthoringReadsTest by testSuite {
             reads.resourceBinding(ResourceId(value = "missing"))
             reads.recordIncomplete("graph traversal limit exceeded")
 
-            val outcome = reads.health().outcome(RuleOrigin(owner = TEST_TYPE, ordinal = 0))
+            val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 0)
+            val outcome = reads.health().outcome(origin, CheckRunDiagnostics.of(RuleId(origin = origin, localIndex = 0), "test"))
 
             outcome shouldBe CheckOutcome.IncompleteWrapper("graph traversal limit exceeded")
         }
