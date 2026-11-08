@@ -9,7 +9,12 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeParameter
 
 val ClosedRecordTest by testSuite {
     val door = id("door")
@@ -41,6 +46,42 @@ val ClosedRecordTest by testSuite {
 
         catalog.concreteForms(catalog.ready(placement.use())).map { it.use } shouldContainExactly
             listOf(graph.use(), cue.member("KEYFRAME").use())
+    }
+
+    test("a generic closed union's concrete forms at one application are only the cases that read as it") {
+        val result = id("result")
+        val resultParameter = ParameterKey(owner = result, index = 0)
+        val ok = result.member("Ok")
+        val okParameter = ParameterKey(owner = ok, index = 0)
+        val count = result.member("Count")
+        val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
+        val catalog =
+            catalog(
+                TypeDefinition.partial(
+                    id = result,
+                    parameters = listOf(TypeParameter.partial(key = resultParameter, name = "T")),
+                    representation =
+                        RepresentationTemplate.createRecord(
+                            fields = emptyList(),
+                            form = RecordForm.createClosed(cases = listOf(ok.namedTemplate(listOf(resultParameter.template)), count.namedTemplate())),
+                        ),
+                ),
+                TypeDefinition.partial(
+                    id = ok,
+                    parameters = listOf(TypeParameter.partial(key = okParameter, name = "T")),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+                    parents = listOf(result.namedTemplate(listOf(okParameter.template))),
+                ),
+                TypeDefinition.partial(
+                    id = count,
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+                    parents = listOf(result.namedTemplate(listOf(integer.template))),
+                ),
+            )
+
+        catalog.concreteForms(catalog.ready(result.use(listOf(TEXT)))).map { it.use } shouldContainExactly listOf(ok.use(listOf(TEXT)))
+        catalog.concreteForms(catalog.ready(result.use(listOf(integer.use)))).map { it.use } shouldContainExactly
+            listOf(ok.use(listOf(integer.use)), count.use())
     }
 
     test("a value of a case reads as its union") {
