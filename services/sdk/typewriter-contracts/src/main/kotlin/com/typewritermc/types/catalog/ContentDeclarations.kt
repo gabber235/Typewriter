@@ -1,7 +1,10 @@
 package com.typewritermc.types.catalog
 
+import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.Misfit
+import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.structuralMisfits
 import com.typewritermc.types.closedCases
 import com.typewritermc.types.use
@@ -19,6 +22,7 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
 /*
@@ -232,10 +236,21 @@ fun AuthoringRecord.missingContent(
 /**
  * Every way this record does not fit its current schema, each problem at its own location, on any record. Under a
  * missing type the error record has no fields, so each old field is its own unknown_field: adding a field is a new
- * problem, and removing one is not. [linkFit] gives the link problems the projection judged for this record.
+ * problem, and removing one is not. [linkFit] gives the link problems the projection judged for this record. A misfit
+ * at a link names the link's target, so pointing a link that does not fit at another target is a new misfit.
  */
 fun AuthoringRecord.misfits(
     owner: ResourceId,
     catalog: CheckedCatalog,
     linkFit: () -> List<ValueProblem> = { emptyList() },
-): List<Misfit> = missingContent(owner, catalog) + structuralMisfits(owner, catalog) + linkFit().map { Misfit(it) }
+): List<Misfit> =
+    (missingContent(owner, catalog) + structuralMisfits(owner, catalog) + linkFit().map { Misfit(it) }).map { misfit ->
+        linkTargetAt(misfit.problem.location.path)?.let { misfit.copy(target = it) } ?: misfit
+    }
+
+/** The resource the link stored at [path] points at, or null when no link is stored there. */
+private fun AuthoringRecord.linkTargetAt(path: ValuePath): ResourceId? {
+    val stored = (DataValue.RecordWrapper(payload).locate(path) as? LocatedPortableValue.Value)?.value ?: return null
+    val link = ((stored as? DataValue.NamedWrapper)?.value?.payload ?: stored) as? DataValue.LinkWrapper
+    return link?.value?.target?.resource
+}
