@@ -77,8 +77,8 @@ impl Area {
             Self::Services => &["services/"],
             // The Gradle closure of the realm's tests: every project `:realm` reaches through its
             // dependencies and test fixtures (the engine core and route fixtures the measurement
-            // loads among them), the build's plugins and its version catalog. A test keeps the
-            // list in step with the build files.
+            // loads among them), the build's plugins, its version catalog and the Gradle wrapper that
+            // runs it. A test keeps the list in step with the build files.
             Self::RealmScale => &[
                 "services/runtime/realm/",
                 "services/runtime/formula/",
@@ -93,6 +93,8 @@ impl Area {
                 "services/testing/realm-route-fixtures/",
                 "services/build-logic/",
                 "services/imprint/",
+                "services/gradle/wrapper/",
+                "services/gradlew",
                 "services/build.gradle.kts",
                 "services/settings.gradle.kts",
                 "services/gradle.properties",
@@ -803,6 +805,13 @@ mod tests {
         assert!(
             !areas("services/runtime/loader/core/src/main/kotlin/A.kt").contains("realm-scale")
         );
+    }
+
+    #[test]
+    fn a_gradle_wrapper_change_runs_the_realm_scale_gates() {
+        let areas = |path: &str| area_names(&affected(select(None), &[PathBuf::from(path)]));
+        assert!(areas("services/gradle/wrapper/gradle-wrapper.properties").contains("realm-scale"));
+        assert!(areas("services/gradlew").contains("realm-scale"));
     }
 
     /// Every project the realm's tests reach in Gradle, read from the build files, lies under a

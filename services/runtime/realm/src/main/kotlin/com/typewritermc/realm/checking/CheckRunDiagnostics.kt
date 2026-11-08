@@ -43,7 +43,10 @@ internal class CheckRunDiagnostics private constructor(
         fun of(instance: CheckInstanceId): CheckRunDiagnostics =
             CheckRunDiagnostics("check:${CheckInstanceId.serializer.toJsonCode(instance)}")
 
-        /** The diagnostics a rule reports outside a run, such as its registration or its discovery, named by [part]. */
+        /**
+         * The diagnostics a rule's discovery reports outside any instance's run, under [part]. Registration does not
+         * number its diagnostic here: it has one fixed id per rule.
+         */
         fun of(
             rule: RuleId,
             part: String,
