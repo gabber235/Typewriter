@@ -16,7 +16,6 @@ class JoinCodesTable extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final focusedCodeId = useState<skir.RecordId?>(null);
     final codes = selection.rows.items;
 
     return SelectionTable<skir.JoinCode>(
@@ -42,7 +41,6 @@ class JoinCodesTable extends HookConsumerWidget {
         entry.item,
         codes,
         selection.selectedIds.value.contains(entry.id),
-        focusedCodeId,
         theme,
       ),
     );
@@ -54,7 +52,6 @@ class JoinCodesTable extends HookConsumerWidget {
     skir.JoinCode code,
     List<skir.JoinCode> codes,
     bool isSelected,
-    ValueNotifier<skir.RecordId?> focusedCodeId,
     ThemeData theme,
   ) {
     final fullUrl = joinCodeUrl(code.code);
@@ -69,27 +66,26 @@ class JoinCodesTable extends HookConsumerWidget {
       selection.selectedIds.value = {...selection.selectedIds.value, code.code};
     }
 
-    void updateFocus(bool focused) {
-      if (focused) {
-        focusedCodeId.value = code.code;
-      } else if (focusedCodeId.value == code.code) {
-        focusedCodeId.value = null;
-      }
-    }
-
-    Widget withShortcuts(Widget child) => JoinCodeTableRowShortcuts(
-      code: code,
-      onToggleSelection: toggleSelection,
-      onSelectAll: () =>
-          selection.selectedIds.value = codes.map((c) => c.code).toSet(),
-      onClearSelection: () => selection.selectedIds.value = {},
-      onCopy: () => _copyToClipboard(context, fullUrl),
-      isSelected: isSelected,
-      hasSelection: selection.selectedIds.value.isNotEmpty,
-      onRevokeSelection: selection.onRemoveSelection,
-      onFocusChange: updateFocus,
-      child: child,
-    );
+    Widget withShortcuts(Widget child, {RowRole role = RowRole.part}) =>
+        JoinCodeTableRowShortcuts(
+          code: code,
+          onToggleSelection: toggleSelection,
+          onSelectAll: () =>
+              selection.selectedIds.value = codes.map((c) => c.code).toSet(),
+          onClearSelection: () => selection.selectedIds.value = {},
+          onCopy: () => _copyToClipboard(context, fullUrl),
+          isSelected: isSelected,
+          hasSelection: selection.selectedIds.value.isNotEmpty,
+          onRevokeSelection: selection.onRemoveSelection,
+          // Inside the shortcuts, so they answer while the row is focused.
+          child: RowStop(
+            role: role,
+            bounds: RingBounds.tableRow,
+            borderRadius: context.shapes.mediumBorderRadius,
+            label: role == RowRole.stop ? fullUrl : null,
+            child: child,
+          ),
+        );
 
     return TableRow(
       key: ValueKey(code.code),
@@ -108,7 +104,14 @@ class JoinCodesTable extends HookConsumerWidget {
               vertical: context.spacing.space3,
             ),
             child: withShortcuts(
-              Checkbox(value: isSelected, onChanged: (_) => toggleSelection()),
+              role: RowRole.stop,
+              // The row stop takes Space through the row's shortcuts.
+              ExcludeFocus(
+                child: Checkbox(
+                  value: isSelected,
+                  onChanged: (_) => toggleSelection(),
+                ),
+              ),
             ),
           ),
         ),

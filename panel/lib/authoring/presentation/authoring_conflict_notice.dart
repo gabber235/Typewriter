@@ -41,6 +41,13 @@ final class AuthoringConflictNotice extends StatelessWidget {
                 actions: [
                   Button(
                     label: "Close",
+                    // Keep mine takes focus when the review offers it.
+                    autofocus:
+                        workspace
+                            .conflictReview(group)
+                            ?.comparison
+                            ?.canKeepMine !=
+                        true,
                     onPressed: () => Navigator.pop(dialogContext),
                   ),
                 ],

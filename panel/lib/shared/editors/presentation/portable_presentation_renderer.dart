@@ -8,7 +8,6 @@ part "portable_renderer/appearance.dart";
 part "portable_renderer/collection_inputs.dart";
 part "portable_renderer/collection_editor.dart";
 part "portable_renderer/collection_rows.dart";
-part "portable_renderer/collection_interaction.dart";
 part "portable_renderer/collections.dart";
 part "portable_renderer/collection_graph_projection.dart";
 part "portable_renderer/content.dart";

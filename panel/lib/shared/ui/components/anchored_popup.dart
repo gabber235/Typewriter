@@ -192,7 +192,11 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _presentation == PopupPresentation.focused) {
           if (!_focus.hasFocus) {
-            (_focus.traversalDescendants.firstOrNull ?? _entry).requestFocus();
+            // The first item, such as the first issue; Close is chrome.
+            (_focus.firstItem ??
+                    _focus.traversalDescendants.firstOrNull ??
+                    _entry)
+                .requestFocus();
           }
         }
       });

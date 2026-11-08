@@ -40,6 +40,7 @@ Widget _controlFrame(
               );
         return PortableLocationTarget(
           location: childScope.location(control.binding),
+          isEmpty: () => childScope.read(control.binding).isUnset,
           onFocusChange: (focused) =>
               states.update(WidgetState.focused, focused),
           child: PortableDiagnosticFrame(
@@ -105,6 +106,7 @@ Widget _controlAssociation(
   final semanticLabel = association.semanticLabel;
   return PortableLocationTarget(
     location: scope.location(control.binding),
+    isEmpty: () => scope.read(control.binding).isUnset,
     child: PortableDiagnosticAnchor(
       node: PortableDiagnosticNode(
         kind: PortableDiagnosticNodeKind.header,
@@ -185,4 +187,15 @@ Widget? _fieldLabel(
 ) {
   final label = scope.associationFor(control).label;
   return label == null || label.isEmpty ? null : Text(label);
+}
+
+extension on skir.DataValue? {
+  /// Whether the bound value holds nothing yet: no value, empty text or an
+  /// empty list.
+  bool get isUnset => switch (this) {
+    null || skir.DataValue_unknown() => true,
+    skir.DataValue_stringValueWrapper(:final value) => value.isEmpty,
+    skir.DataValue_listValueWrapper(:final value) => value.items.isEmpty,
+    _ => false,
+  };
 }

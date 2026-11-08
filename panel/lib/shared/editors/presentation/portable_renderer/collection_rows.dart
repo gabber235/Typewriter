@@ -143,9 +143,6 @@ class _CollectionEntry extends StatelessWidget {
           controls,
           fallbackHeader: generatedHeader,
           initiallyNeedsRepair: initiallyNeedsRepair,
-          recoveryFocus: _CollectionRowContext.maybeOf(context)?.recoveryFocus,
-          disclosureFocus: _CollectionRowContext.maybeOf(context)
-              ?.disclosureFocus,
         ),
       ),
       CollectionEntryLayout.disclosure => _GeneratedCollectionDisclosure(
@@ -235,8 +232,6 @@ Widget _headerWithCollectionOperations(
   List<_SuppliedHeaderControl> parentControls, {
   required skir.PresentationHeader Function() fallbackHeader,
   required bool initiallyNeedsRepair,
-  FocusNode? recoveryFocus,
-  FocusNode? disclosureFocus,
 }) {
   final supplied = [...root.controls, ...parentControls];
   if (root.header == null) {
@@ -254,8 +249,6 @@ Widget _headerWithCollectionOperations(
     body: body,
     contained: true,
     collectionControls: supplied,
-    collectionRecoveryFocusNode: recoveryFocus,
-    collectionDisclosureFocusNode: disclosureFocus,
   );
 }
 
@@ -267,7 +260,6 @@ _SuppliedHeaderControl? _collectionAdd({
   required String fallbackLabel,
   required IconData fallbackIcon,
   required void Function(BuildContext) add,
-  FocusNode? focusNode,
 }) {
   if (!allowAdd) return null;
   return _SuppliedHeaderControl(
@@ -296,7 +288,6 @@ _SuppliedHeaderControl? _collectionAdd({
         color: _accentOf(style, null),
         dense: _denseOf(style),
         statesController: states,
-        focusNode: focusNode,
         onPressed: mutationScope.canExecuteAction ? () => add(context) : null,
       ),
       tooltip: false,
@@ -330,10 +321,6 @@ class _GeneratedCollectionDisclosure extends HookWidget {
       scope: scope,
       contained: true,
       collectionControls: collectionControls,
-      collectionRecoveryFocusNode: _CollectionRowContext.maybeOf(context)
-          ?.recoveryFocus,
-      collectionDisclosureFocusNode: _CollectionRowContext.maybeOf(context)
-          ?.disclosureFocus,
     );
   }
 }
@@ -420,7 +407,6 @@ class CollectionSequence extends HookWidget {
       if (!allowReorder || !scope.canExecuteAction) return;
       final order = rows.items;
       if (destination < 0 || destination >= order.length) return;
-      _CollectionInteractionScope.invalidateAncestors(context);
       scope.moveCollectionItem(
         collection: collection,
         items: order,
@@ -438,66 +424,77 @@ class CollectionSequence extends HookWidget {
         visualIndex: visualIndex,
         leaving: entry.phase == RowPhase.leaving,
         move: (destination) => move(entry.item.id, destination),
-        // The editor owns its scroll, so rows have no SliverRowAnchor.
-        child: entry.motion(
-          entry.row(
-            Builder(
-              builder: (context) => lastBuilt(
-                entry,
-                () => entryBuilder(
-                  context,
-                  entry.item,
-                  activeIndexAt(visualIndex),
+        child: RowEntryScope(
+          entry: entry,
+          // The editor owns its scroll, so rows have no SliverRowAnchor.
+          child: entry.motion(
+            entry.row(
+              // Editor rows hold fields, so a row is no stop: focus lands
+              // on its RowLanding control.
+              RowStop(
+                role: RowRole.holder,
+                child: Builder(
+                  builder: (context) => lastBuilt(
+                    entry,
+                    () => entryBuilder(
+                      context,
+                      entry.item,
+                      activeIndexAt(visualIndex),
+                    ),
+                  ),
                 ),
               ),
             ),
+            anchors: false,
           ),
-          anchors: false,
         ),
       );
     }
 
     if (!allowReorder) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var index = 0; index < entries.length; index++)
-            visual(context, index),
-        ],
+      return RowFocusScope(
+        focus: rows.focus,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var index = 0; index < entries.length; index++)
+              visual(context, index),
+          ],
+        ),
       );
     }
-    return ReorderableListView.builder(
-      buildDefaultDragHandles: false,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: entries.length,
-      itemBuilder: visual,
-      proxyDecorator: (child, _, animation) => _collectionDragScopes(
-        context,
-        AnimatedBuilder(
-          animation: animation,
-          child: child,
-          builder: (context, child) => Material(
-            elevation:
-                6 *
-                motionTimeline(
-                  context,
-                  MotionToken.press,
-                ).curve.transform(animation.value),
+    return RowFocusScope(
+      focus: rows.focus,
+      child: ReorderableListView.builder(
+        buildDefaultDragHandles: false,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: entries.length,
+        itemBuilder: visual,
+        proxyDecorator: (child, _, animation) => _collectionDragScopes(
+          context,
+          AnimatedBuilder(
+            animation: animation,
             child: child,
+            builder: (context, child) => Material(
+              elevation:
+                  6 *
+                  motionTimeline(
+                    context,
+                    MotionToken.press,
+                  ).curve.transform(animation.value),
+              child: child,
+            ),
           ),
         ),
+        onReorderStart: (_) => dragging.value = true,
+        onReorderEnd: (_) => dragging.value = false,
+        onReorderItem: (from, to) {
+          final entry = entries[from];
+          if (entry.phase == RowPhase.leaving) return;
+          move(entry.item.id, activeIndexAt(to));
+        },
       ),
-      onReorderStart: (_) {
-        dragging.value = true;
-        _CollectionInteractionScope.invalidateAncestors(context);
-      },
-      onReorderEnd: (_) => dragging.value = false,
-      onReorderItem: (from, to) {
-        final entry = entries[from];
-        if (entry.phase == RowPhase.leaving) return;
-        move(entry.item.id, activeIndexAt(to));
-      },
     );
   }
 
@@ -565,14 +562,8 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
   source.visitAncestorElements((element) {
     final inherited = element.widget;
     switch (inherited) {
-      case _CollectionInteractionScope(:final owner):
-        wrappers.add(
-          (child) => _CollectionInteractionScope(owner: owner, child: child),
-        );
-      case _CollectionRowContext(:final binding):
-        wrappers.add(
-          (child) => _CollectionRowContext(binding: binding, child: child),
-        );
+      case RowFocusScope(:final focus):
+        wrappers.add((child) => RowFocusScope(focus: focus, child: child));
       case PortableDiagnosticScope(:final tree, :final placement):
         wrappers.add(
           (child) => PortableDiagnosticScope(
@@ -636,14 +627,9 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
             child: child,
           ),
         );
-      case _CollectionMenuInvocation(:final origin, :final row, :final close):
+      case _CollectionMenuInvocation(:final close):
         wrappers.add(
-          (child) => _CollectionMenuInvocation(
-            origin: origin,
-            row: row,
-            close: close,
-            child: child,
-          ),
+          (child) => _CollectionMenuInvocation(close: close, child: child),
         );
       default:
         break;
@@ -709,30 +695,8 @@ Widget _structuredMapBody({
   ],
 );
 
-extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
-  void runGeneratedRemove({
-    required _CollectionRowBinding row,
-    required PortablePresentationScope scope,
-    required skir.EditorAction action,
-  }) {
-    final origin = row.focus?.captureOrigin(row.row);
-    final recovery = row.focus;
-    if (recovery == null) {
-      unawaited(scope.executeAction(action));
-      return;
-    }
-    unawaited(
-      recovery.removeLocal(
-        row: row.row,
-        scope: scope,
-        action: action,
-        origin: origin,
-      ),
-    );
-  }
-
+extension _CollectionRowParts on PortablePresentationNodeRenderer {
   _SuppliedHeaderControl generatedRemove({
-    required _CollectionRowBinding row,
     required PortablePresentationScope scope,
     required skir.EditorAction action,
     required skir.CollectionContent? content,
@@ -741,43 +705,45 @@ extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
     build: (context) => _operationAppearance(
       content,
       scope,
-      (states, style) => Button(
-        face: ButtonFace.icon,
-        icon: _operationGlyph(
-          content?.removeIcon,
-          scope,
-          const Icon(Icons.delete_outline),
+      // After a remove, focus lands on this control in the next row.
+      (states, style) => RowLanding(
+        child: Button(
+          face: ButtonFace.icon,
+          icon: _operationGlyph(
+            content?.removeIcon,
+            scope,
+            const Icon(Icons.delete_outline),
+          ),
+          label: _operationText(
+            scope,
+            content?.operationTooltip ?? content?.removeLabel,
+            action is skir.EditorAction_localWrapper &&
+                    action.value is skir.LocalEditorAction_removeMapRowWrapper
+                ? "Remove row"
+                : "Remove item",
+          ),
+          tooltip: _operationText(
+            scope,
+            content?.operationTooltip ?? content?.removeLabel,
+            action is skir.EditorAction_localWrapper &&
+                    action.value is skir.LocalEditorAction_removeMapRowWrapper
+                ? "Remove row"
+                : "Remove item",
+          ),
+          color: _accentOf(style, null),
+          dense: _denseOf(style),
+          statesController: states,
+          onPressed: scope.canExecuteAction
+              ? () => unawaited(scope.executeAction(action))
+              : null,
         ),
-        label: _operationText(
-          scope,
-          content?.operationTooltip ?? content?.removeLabel,
-          action is skir.EditorAction_localWrapper &&
-                  action.value is skir.LocalEditorAction_removeMapRowWrapper
-              ? "Remove row"
-              : "Remove item",
-        ),
-        tooltip: _operationText(
-          scope,
-          content?.operationTooltip ?? content?.removeLabel,
-          action is skir.EditorAction_localWrapper &&
-                  action.value is skir.LocalEditorAction_removeMapRowWrapper
-              ? "Remove row"
-              : "Remove item",
-        ),
-        color: _accentOf(style, null),
-        dense: _denseOf(style),
-        statesController: states,
-        focusNode: row.recoveryFocus,
-        onPressed: scope.canExecuteAction
-            ? () => runGeneratedRemove(row: row, scope: scope, action: action)
-            : null,
       ),
       tooltip: false,
     ),
   );
 
-  Widget collectionRowWithFocus({
-    required skir.ItemId id,
+  /// The row's key is the entry id, given by CollectionSequence or _MapRows.
+  Widget collectionRow({
     required _CollectionEditorContinuation editor,
     required PortablePresentationScope scope,
     required skir.PresentationNode owner,
@@ -787,78 +753,35 @@ extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
     required skir.EditorAction? permittedRemove,
     required skir.CollectionAppearance? appearance,
     required skir.CollectionContent? content,
-  }) => _MountedCollectionRow(
-    key: ValueKey(id.value),
-    row: id,
-    builder: (context, row) => _CollectionEntry(
-      editor: editor,
-      controls: [
-        ...controls,
-        if (permittedRemove != null)
-          generatedRemove(
-            row: row,
-            // The action targets the containing collection. Child presentation
-            // bindings may shadow its binding ID, so retain the source scope
-            // while applying the effective editor permissions.
-            scope: scope
-                .withEnabled(editor.scope.enabled)
-                .withReadOnly(editor.scope.readOnly),
-            action: permittedRemove,
-            content: content,
-          ),
-      ],
-      generatedHeader: generatedHeader,
-      initiallyNeedsRepair: initiallyNeedsRepair,
-      scope: scope,
-      owner: owner,
-      appearance: appearance,
-    ),
-  );
-
-  void runCollectionAdd({
-    required BuildContext context,
-    required void Function(BuildContext) add,
-  }) {
-    _CollectionInteractionScope.invalidateAncestors(context);
-    add(context);
-  }
-
-  void runCollectionClear({
-    required _CollectionRowBinding row,
-    required PortablePresentationScope scope,
-    required skir.BindingRef reference,
-    required skir.LinkOccurrence occurrence,
-  }) {
-    final origin = row.focus?.captureOrigin(row.row);
-    final recovery = row.focus;
-    if (recovery == null) {
-      unawaited(
-        scope.clearLinkedOccurrence(
-          reference: reference,
-          occurrence: occurrence,
+  }) => _CollectionEntry(
+    editor: editor,
+    controls: [
+      ...controls,
+      if (permittedRemove != null)
+        generatedRemove(
+          // The action targets the containing collection. Child presentation
+          // bindings may shadow its binding ID, so retain the source scope
+          // while applying the effective editor permissions.
+          scope: scope
+              .withEnabled(editor.scope.enabled)
+              .withReadOnly(editor.scope.readOnly),
+          action: permittedRemove,
+          content: content,
         ),
-      );
-      return;
-    }
-    unawaited(
-      recovery.clearLink(
-        row: row.row,
-        scope: scope,
-        reference: reference,
-        occurrence: occurrence,
-        origin: origin,
-      ),
-    );
-  }
+    ],
+    generatedHeader: generatedHeader,
+    initiallyNeedsRepair: initiallyNeedsRepair,
+    scope: scope,
+    owner: owner,
+    appearance: appearance,
+  );
 }
 
-extension _CollectionHeaderFocus on PortablePresentationNodeRenderer {
-  Widget collectionWithFocus({
+extension _CollectionHeaderParts on PortablePresentationNodeRenderer {
+  Widget collectionWithHeader({
     required PortablePresentationScope sourceScope,
     required PortablePresentationScope mutationScope,
     required skir.BindingRef reference,
-    required _CollectionRemovalKind removalKind,
-    required List<skir.ItemId> renderedOrder,
     required _ScopedCollectionHeader? sourceHeader,
     required skir.PresentationHeader Function() fallbackHeader,
     required WidgetBuilder buildBody,
@@ -870,45 +793,40 @@ extension _CollectionHeaderFocus on PortablePresentationNodeRenderer {
     required void Function(BuildContext) add,
     List<_SuppliedHeaderControl> parentRowControls = const [],
     Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
-  }) => _MountedCollectionInteraction(
+  }) => KeyedSubtree(
     key: ValueKey(sourceScope.authoredAliases.resolve(reference)),
-    scope: sourceScope,
-    reference: reference,
-    removalKind: removalKind,
-    renderedOrder: renderedOrder,
-    builder: (context) {
-      final interaction = _CollectionInteractionScope.of(context);
-      final addControl = _collectionAdd(
-        allowAdd: allowAdd,
-        mutationScope: mutationScope,
-        content: content,
-        fallbackLabel: addLabel,
-        fallbackIcon: addIcon,
-        focusNode: interaction.addFocus,
-        add: (context) => runCollectionAdd(context: context, add: add),
-      );
-      // Own the header and Add inside the same mounted collection as its rows.
-      try {
-        final body = buildBody(context);
-        final scopedHeader = _ScopedCollectionHeader(
-          header: sourceHeader?.header,
-          scope: sourceHeader?.scope ?? sourceScope,
-          controls: [?addControl, ...parentRowControls],
+    child: Builder(
+      builder: (context) {
+        final addControl = _collectionAdd(
+          allowAdd: allowAdd,
+          mutationScope: mutationScope,
+          content: content,
+          fallbackLabel: addLabel,
+          fallbackIcon: addIcon,
+          add: add,
         );
-        if (headerBuilder != null) return headerBuilder(scopedHeader, body);
-        return _AuthoredPresentationHeader(
-          header: scopedHeader.header ?? fallbackHeader(),
-          scope: scopedHeader.scope,
-          body: body,
-          contained: contained,
-          collectionControls: scopedHeader.controls,
-        );
-      } on PresentationValueFailure catch (failure) {
-        return _diagnostic(failure.message);
-      } on FormatException catch (failure) {
-        return _diagnostic(failure.message);
-      }
-    },
+        try {
+          final body = buildBody(context);
+          final scopedHeader = _ScopedCollectionHeader(
+            header: sourceHeader?.header,
+            scope: sourceHeader?.scope ?? sourceScope,
+            controls: [?addControl, ...parentRowControls],
+          );
+          if (headerBuilder != null) return headerBuilder(scopedHeader, body);
+          return _AuthoredPresentationHeader(
+            header: scopedHeader.header ?? fallbackHeader(),
+            scope: scopedHeader.scope,
+            body: body,
+            contained: contained,
+            collectionControls: scopedHeader.controls,
+          );
+        } on PresentationValueFailure catch (failure) {
+          return _diagnostic(failure.message);
+        } on FormatException catch (failure) {
+          return _diagnostic(failure.message);
+        }
+      },
+    ),
   );
 }
 

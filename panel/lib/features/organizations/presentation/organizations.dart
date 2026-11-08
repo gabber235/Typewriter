@@ -80,14 +80,26 @@ class _OrganizationListTile extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: context.shapes.mediumBorderRadius,
         ),
-        child: Button(
-          face: ButtonFace.bare,
-          label: "",
-          onPressed: () => _openOrganization(context),
-          child: PanelRow(
-            leading: OrganizationLogo(logoUrl: organization.logoUrl, size: 40),
-            title: Text(organization.name.formatted),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+        // The row is the stop and Enter opens the organization.
+        child: RowStop(
+          borderRadius: context.shapes.mediumBorderRadius,
+          label: organization.name.formatted,
+          onActivate: () => _openOrganization(context),
+          child: ExcludeFocus(
+            excluding: RowEntryScope.maybeOf(context) != null,
+            child: Button(
+              face: ButtonFace.bare,
+              label: "",
+              onPressed: () => _openOrganization(context),
+              child: PanelRow(
+                leading: OrganizationLogo(
+                  logoUrl: organization.logoUrl,
+                  size: 40,
+                ),
+                title: Text(organization.name.formatted),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+              ),
+            ),
           ),
         ),
       ),

@@ -25,13 +25,17 @@ class IndexPage extends ConsumerWidget {
         name: "organizations",
         builder: (organizations) => joinRequests(
           name: "joinRequests",
-          builder: (joinRequests) => Pane(
-            id: "index",
-            primary: true,
-            trapFocus: false,
-            child: _IndexPageContent(
-              organizations: organizations,
-              joinRequests: joinRequests,
+          builder: (joinRequests) => FocusTraversalOrder(
+            order: const NumericFocusOrder(0),
+            child: Pane(
+              id: "index",
+              primary: true,
+              trapFocus: false,
+              openFocus: PaneOpenFocus.firstItem,
+              child: _IndexPageContent(
+                organizations: organizations,
+                joinRequests: joinRequests,
+              ),
             ),
           ),
         ),
@@ -54,20 +58,35 @@ class IndexPage extends ConsumerWidget {
       );
     }
 
-    return Stack(
-      children: [
-        content,
-        Positioned(top: 8, right: 8, child: MutationActivityButton()),
-        const Positioned(
-          left: 8,
-          bottom: 8,
-          child: Pane(
-            id: "footer",
-            trapFocus: false,
-            child: FooterSidebarLinks(expand: false),
+    // Tab goes through the page first, then the activity button, then the
+    // footer links.
+    return FocusTraversalGroup(
+      policy: OrderedTraversalPolicy(),
+      child: Stack(
+        children: [
+          content,
+          Positioned(
+            top: 8,
+            right: 8,
+            child: FocusTraversalOrder(
+              order: const NumericFocusOrder(1),
+              child: MutationActivityButton(),
+            ),
           ),
-        ),
-      ],
+          const Positioned(
+            left: 8,
+            bottom: 8,
+            child: FocusTraversalOrder(
+              order: NumericFocusOrder(2),
+              child: Pane(
+                id: "footer",
+                trapFocus: false,
+                child: FooterSidebarLinks(expand: false),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -120,6 +120,17 @@ class Graph extends HookConsumerWidget {
       builder: (context, constraints) {
         return HookBuilder(
           builder: (context) {
+            // The graph is a list too: element order is the row order, so a
+            // card's node lives as long as its identity and RowFocus picks
+            // the heir when it leaves. The rows' motion is not rendered.
+            final cards = useAnimatedRows(
+              items: data.elements,
+              identity: (element) => element.id,
+            );
+            useEffect(() {
+              Pane.offerOpenFocus(context);
+              return null;
+            }, [data.elements.isEmpty]);
             final baseLayout = useMemoized(
               () => const GraphLayoutEngine().build(data: data),
               [data],
@@ -260,6 +271,8 @@ class Graph extends HookConsumerWidget {
                 final primaryFocus = FocusManager.instance.primaryFocus;
                 if (primaryFocus == null) return;
                 if (ignoreCentering.value.remove(primaryFocus)) return;
+                // Opening on a card keeps the overview the page opened with.
+                if (Pane.takeOpenLanding(context, primaryFocus)) return;
                 _scheduleCenterFocused(
                   controller: viewportController,
                   viewerKey: viewerKey,
@@ -278,8 +291,11 @@ class Graph extends HookConsumerWidget {
               return box.globalToLocal(globalPosition) / data.cellSize;
             }
 
-            Widget wrapCanvas(Widget canvas) =>
-                canvasBuilder?.call(context, toGrid, canvas) ?? canvas;
+            // Cards read their focus node from the graph's rows.
+            Widget wrapCanvas(Widget canvas) => RowFocusScope(
+              focus: cards.focus,
+              child: canvasBuilder?.call(context, toGrid, canvas) ?? canvas,
+            );
 
             Offset? viewportCenter() {
               final box =
@@ -334,11 +350,15 @@ class Graph extends HookConsumerWidget {
                     final viewportRect = _quadToRect(viewport);
                     reportViewportCenter(viewportRect);
                     final focusedId = SelectableScope.primaryFocusedId()?.id;
+                    final heirId =
+                        (cards.focus.focusedId as GraphIdentifier?)?.id;
                     final visibleElements = layout
                         .visibleElements(
                           viewportRect,
                           overscan: kGraphViewportOverscan,
-                          retainedIds: {?focusedId},
+                          // The heir is built even off screen, so its node
+                          // can take focus.
+                          retainedIds: {?focusedId, ?heirId},
                         )
                         .toList(growable: false);
                     bool updateGraphMove(

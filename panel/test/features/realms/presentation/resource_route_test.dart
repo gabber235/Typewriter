@@ -141,4 +141,42 @@ void main() {
     await panel.queryBar.type("Route");
     expect(panel.queryBar.text, "Route");
   });
+
+  for (final (kind, resource, field) in [
+    ("Page", intro, "name"),
+    ("Book", route, "title"),
+  ]) {
+    testWidgets("a $kind opens on its first field", (tester) async {
+      final panel = await tester.pumpPanel([
+        ...library,
+        window(const Size(1600, 1000)),
+      ]);
+      await panel.openSurface(resource);
+      expect(panel.field(field).isFocused, isTrue);
+    });
+  }
+
+  for (final (how, create) in [
+    ("N", (PanelDriver panel) => panel.press(LogicalKeyboardKey.keyN)),
+    (
+      "New page",
+      (PanelDriver panel) =>
+          panel.activateWithKeyboard(find.text("New page").first),
+    ),
+  ]) {
+    testWidgets("$how focuses the new page's name", (tester) async {
+      final panel = await tester.pumpPanel([
+        ...library,
+        window(const Size(1600, 1000)),
+      ]);
+      await panel.openSurface(route);
+      await create(panel);
+      await panel.eventually(() {
+        expect(panel.working.relations.children[route], hasLength(2));
+        // The new page's workspace; its side inspector shows a second
+        // name field.
+        expect(panel.focused, startsWith("name"));
+      });
+    });
+  }
 }

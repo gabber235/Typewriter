@@ -2,8 +2,8 @@ part of "../portable_presentation_renderer.dart";
 
 /// Keeps authored actions in their lexical scope while merging only proven
 /// collection command equivalents. Disclosure retains the body and excludes
-/// collapsed focus. Removal focus is captured before a menu or confirmation
-/// opens, so closing it cannot invent a new recovery origin.
+/// collapsed focus. In a collection row, the disclosure and the first pinned
+/// action are its RowLanding, where focus lands after a removal.
 final class _AuthoredPresentationHeader extends HookWidget {
   const _AuthoredPresentationHeader({
     required this.header,
@@ -11,16 +11,12 @@ final class _AuthoredPresentationHeader extends HookWidget {
     required this.scope,
     this.contained = false,
     this.collectionControls = const [],
-    this.collectionRecoveryFocusNode,
-    this.collectionDisclosureFocusNode,
   });
   final skir.PresentationHeader header;
   final Widget body;
   final PortablePresentationScope scope;
   final bool contained;
   final List<_SuppliedHeaderControl> collectionControls;
-  final FocusNode? collectionRecoveryFocusNode;
-  final FocusNode? collectionDisclosureFocusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +31,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
       return null;
     }, [header.initiallyExpanded]);
     final expanded = controller.isExpanded;
-    void toggleExpanded() {
-      _CollectionInteractionScope.invalidateAncestors(context);
-      controller.toggle();
-    }
+    void toggleExpanded() => controller.toggle();
 
     return PortableDiagnosticAnchor(
       node: PortableDiagnosticNode(
@@ -231,13 +224,14 @@ final class _AuthoredPresentationHeader extends HookWidget {
   }
 
   Widget _expandButton(bool expanded, VoidCallback toggleExpanded) {
-    return Button(
-      face: ButtonFace.icon,
-      icon: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
-      label: expanded ? "Collapse" : "Expand",
-      tooltip: expanded ? "Collapse" : "Expand",
-      focusNode: collectionDisclosureFocusNode ?? collectionRecoveryFocusNode,
-      onPressed: scope.enabled ? toggleExpanded : null,
+    return RowLanding(
+      child: Button(
+        face: ButtonFace.icon,
+        icon: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
+        label: expanded ? "Collapse" : "Expand",
+        tooltip: expanded ? "Collapse" : "Expand",
+        onPressed: scope.enabled ? toggleExpanded : null,
+      ),
     );
   }
 
@@ -268,7 +262,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
   List<_AuthoredHeaderItem> _items(BuildContext context) {
     final resolved = <_AuthoredHeaderItem>[];
     var order = 0;
-    var recoveryAttached = false;
+    var landingPlaced = false;
     final contributed = collectionControls
         .map((item) => item.command)
         .nonNulls
@@ -323,14 +317,12 @@ final class _AuthoredPresentationHeader extends HookWidget {
           };
           final destructive =
               value.tone.kind == skir.HeaderActionTone_kind.destructiveConst;
-          final focusNode =
+          final landing =
               pinned &&
-                  !recoveryAttached &&
-                  header.initiallyExpanded == null &&
-                  enabled
-              ? collectionRecoveryFocusNode
-              : null;
-          recoveryAttached = recoveryAttached || focusNode != null;
+              !landingPlaced &&
+              header.initiallyExpanded == null &&
+              enabled;
+          landingPlaced = landingPlaced || landing;
           final button = Builder(
             builder: (buttonContext) {
               void activate() => _invokeAction(
@@ -344,15 +336,15 @@ final class _AuthoredPresentationHeader extends HookWidget {
                   ? const Icon(Icons.more_horiz, size: 18)
                   : Icones(iconName, size: 18);
               if (pinned) {
-                return Button(
+                final pinnedButton = Button(
                   face: ButtonFace.icon,
-                  focusNode: focusNode,
                   tooltip: tooltip,
                   onPressed: enabled ? activate : null,
                   color: destructive ? context.colors.dangerText : null,
                   icon: icon,
                   label: label,
                 );
+                return landing ? RowLanding(child: pinnedButton) : pinnedButton;
               }
               return Button(
                 onPressed: enabled ? activate : null,
@@ -570,7 +562,6 @@ final class _AuthoredPresentationHeader extends HookWidget {
     _AuthoredReorderTarget target, {
     required skir.ItemId? after,
   }) {
-    _CollectionInteractionScope.invalidateAncestors(context);
     scope.moveListItem(target.containing, target.item, after);
   }
 
@@ -602,23 +593,12 @@ final class _AuthoredPresentationHeader extends HookWidget {
     bool destructive = false,
   }) {
     final menu = _CollectionMenuInvocation.maybeOf(occurrenceContext);
-    final row = menu?.row ?? _CollectionRowContext.maybeOf(occurrenceContext);
-    final local =
-        row?.focus?.matchesLocalRemoval(row.row, scope, action) ?? false;
-    final origin = local
-        ? menu != null
-              ? menu.origin
-              : row?.focus?.captureOrigin(row.row)
-        : null;
     unawaited(
       _runAction(
         declarationContext,
         action,
         confirmation,
         destructive: destructive,
-        actionRow: row,
-        removalRow: local ? row : null,
-        removalOrigin: origin,
         closeMenu: menu?.close,
       ),
     );
@@ -629,9 +609,6 @@ final class _AuthoredPresentationHeader extends HookWidget {
     skir.EditorAction editorAction,
     skir.HeaderActionConfirmation? confirmation, {
     bool destructive = false,
-    _CollectionRowBinding? actionRow,
-    _CollectionRowBinding? removalRow,
-    _CollectionActionOrigin? removalOrigin,
     VoidCallback? closeMenu,
   }) async {
     closeMenu?.call();
@@ -665,23 +642,8 @@ final class _AuthoredPresentationHeader extends HookWidget {
       if (confirmed != true) return;
     }
     if (!context.mounted) return;
-    final recovery = removalRow?.focus;
-    if (recovery != null &&
-        recovery.matchesLocalRemoval(removalRow!.row, scope, editorAction)) {
-      if (closeMenu != null || confirmation != null) {
-        await WidgetsBinding.instance.endOfFrame;
-        if (!context.mounted) return;
-      }
-      await recovery.removeLocal(
-        row: removalRow.row,
-        scope: scope,
-        action: editorAction,
-        origin: removalOrigin,
-      );
-      return;
-    }
-    actionRow?.focus?.invalidateInteraction();
-    _CollectionInteractionScope.invalidateAncestors(context);
+    // A removal moves focus when its row leaves (RowFocus), after the menu
+    // or confirmation handed focus back.
     await scope.executeAction(editorAction);
   }
 }

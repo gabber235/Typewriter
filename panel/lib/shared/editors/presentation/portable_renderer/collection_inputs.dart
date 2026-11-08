@@ -70,12 +70,10 @@ extension _PortableCollectionInputRendering
       skir.PresentationElement_linkInputWrapper(:final value) => value,
       _ => null,
     };
-    final rendered = collectionWithFocus(
+    final rendered = collectionWithHeader(
       sourceScope: childScope,
       mutationScope: childScope,
       reference: control.binding,
-      removalKind: _CollectionRemovalKind.listItem,
-      renderedOrder: [for (final item in items) item.id],
       sourceHeader: _ScopedCollectionHeader(
         scope: childScope,
         header: node.header,
@@ -134,8 +132,7 @@ extension _PortableCollectionInputRendering
               itemBinding.id,
               itemScope,
             );
-            return collectionRowWithFocus(
-              id: item.id,
+            return collectionRow(
               editor: editor,
               scope: childScope,
               owner: node,
@@ -297,12 +294,10 @@ extension _PortableCollectionInputRendering
     if (rows == null || collection == null) {
       return _diagnostic("The map binding is unavailable");
     }
-    return collectionWithFocus(
+    return collectionWithHeader(
       sourceScope: childScope,
       mutationScope: childScope,
       reference: control.control.binding,
-      removalKind: _CollectionRemovalKind.mapRow,
-      renderedOrder: [for (final row in rows) row.id],
       sourceHeader: _ScopedCollectionHeader(
         scope: childScope,
         header: node.header,
@@ -421,8 +416,7 @@ extension _PortableCollectionInputRendering
               );
       },
     );
-    return collectionRowWithFocus(
-      id: row.id,
+    return collectionRow(
       editor: editor,
       scope: childScope,
       owner: node,
@@ -596,30 +590,38 @@ class _MapRows extends HookWidget {
         .take(visualIndex)
         .where((entry) => entry.phase != RowPhase.leaving)
         .length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // The empty state shows once the last leaving row is gone.
-        if (entries.isEmpty) empty(context),
-        for (final (visualIndex, entry) in entries.indexed)
-          KeyedSubtree(
-            key: ValueKey(entry.id),
-            // The editor owns its scroll, so rows have no SliverRowAnchor.
-            child: entry.motion(
-              entry.row(
-                lastBuilt(
-                  entry,
-                  () => rowBuilder(
-                    context,
-                    entry.item,
-                    activeIndexAt(visualIndex),
+    return RowFocusScope(
+      focus: animated.focus,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // The empty state shows once the last leaving row is gone.
+          if (entries.isEmpty) empty(context),
+          for (final (visualIndex, entry) in entries.indexed)
+            RowEntryScope(
+              key: ValueKey(entry.id),
+              entry: entry,
+              // The editor owns its scroll, so rows have no SliverRowAnchor.
+              child: entry.motion(
+                entry.row(
+                  // Map rows hold fields: focus lands on their RowLanding.
+                  RowStop(
+                    role: RowRole.holder,
+                    child: lastBuilt(
+                      entry,
+                      () => rowBuilder(
+                        context,
+                        entry.item,
+                        activeIndexAt(visualIndex),
+                      ),
+                    ),
                   ),
                 ),
+                anchors: false,
               ),
-              anchors: false,
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

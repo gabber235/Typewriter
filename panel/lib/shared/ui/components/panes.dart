@@ -255,7 +255,8 @@ class _PaneCoordinatorScope extends InheritedWidget {
 /// [enabled] to exclude the pane from directional navigation while retaining
 /// its content. [trapFocus] controls whether keyboard traversal wraps inside
 /// the pane. Navigation uses the rendered region's bounds rather than the
-/// bounds of an individual child.
+/// bounds of an individual child. [openFocus] sets where focus goes when the
+/// pane opens.
 class Pane extends StatefulWidget {
   const Pane({
     required this.id,
@@ -265,6 +266,7 @@ class Pane extends StatefulWidget {
     this.trapFocus = true,
     this.margin = const EdgeInsets.all(8),
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+    this.openFocus = PaneOpenFocus.none,
     super.key,
   });
   final String id;
@@ -274,21 +276,130 @@ class Pane extends StatefulWidget {
   final bool trapFocus;
   final EdgeInsetsGeometry? margin;
   final BorderRadiusGeometry? borderRadius;
+  final PaneOpenFocus openFocus;
+
+  /// Tells the pane around [context] that an item mounted, so a primary
+  /// pane still waiting for its first item can focus it. [RowStop],
+  /// PortableLocationTarget and the graph call it.
+  static void offerOpenFocus(BuildContext context) =>
+      context.findAncestorStateOfType<_PaneState>()?._offer();
+
+  /// Whether open focus of the pane around [context] just put focus on
+  /// [node]; answers true once. The graph uses it to keep its view still
+  /// when the page opens on a card.
+  static bool takeOpenLanding(BuildContext context, FocusNode node) =>
+      context.findAncestorStateOfType<_PaneState>()?._takeLanding(node) ??
+      false;
 
   @override
   State<Pane> createState() => _PaneState();
+}
+
+/// Where focus goes when a [Pane] opens.
+enum PaneOpenFocus {
+  /// Opening leaves focus where it is (shell panes, sidebars, footers).
+  none,
+
+  /// The first item in tree order, else the first traversable control,
+  /// until the first key or pointer press.
+  firstItem,
 }
 
 class _PaneState extends State<Pane> {
   late final _PaneScopeNode _scope;
   late final _PaneRegistration _registration;
   _PaneCoordinator? _coordinator;
+  bool _openPending = false;
+  bool _openScheduled = false;
+
+  // What open focus put focus on.
+  FocusNode? _placed;
+
+  // Focus when the page opened, such as the sidebar link pressed.
+  FocusNode? _before;
+
+  // The node open focus last moved focus to, until someone takes it.
+  FocusNode? _landing;
 
   @override
   void initState() {
     super.initState();
     _scope = _PaneScopeNode(debugLabel: "Pane-${widget.id}");
     _registration = _PaneRegistration(scope: _scope);
+    if (widget.openFocus == PaneOpenFocus.firstItem) {
+      _openPending = true;
+      _before = FocusManager.instance.primaryFocus;
+      HardwareKeyboard.instance.addHandler(_keyPressed);
+      GestureBinding.instance.pointerRouter.addGlobalRoute(_pointer);
+      _scheduleOpen();
+    }
+  }
+
+  void _offer() => _scheduleOpen();
+
+  bool _takeLanding(FocusNode node) {
+    if (_landing != node) return false;
+    _landing = null;
+    return true;
+  }
+
+  void _scheduleOpen() {
+    if (!_openPending || _openScheduled) return;
+    _openScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openScheduled = false;
+      _open();
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  void _open() {
+    if (!_openPending || !mounted) return;
+    final route = ModalRoute.of(context);
+    // Retried when the route becomes current again.
+    if (route != null && !route.isCurrent) return;
+    final primary = FocusManager.instance.primaryFocus;
+    // A request earlier in this frame already chose a node in the pane;
+    // primary focus follows it only in a microtask.
+    final chosen = _scope.focusedChild;
+    if (chosen != null && chosen != primary && chosen != _placed) {
+      return _endOpen();
+    }
+    final free =
+        primary == null ||
+        primary == _before ||
+        primary == _placed ||
+        primary == _scope ||
+        primary is FocusScopeNode && _scope.ancestors.contains(primary);
+    // A reveal, an autofocus field or a popup chose focus.
+    if (!free) return _endOpen();
+    final item = _scope.firstItem;
+    final target = item ?? _scope.traversalDescendants.firstOrNull;
+    // Content still loading; an item that mounts offers again.
+    if (target == null) return;
+    if (target != primary) {
+      _landing = target;
+      target.requestFocus();
+    }
+    _placed = target;
+    // A fallback control yields to a first item that arrives later.
+    if (item != null) _endOpen();
+  }
+
+  bool _keyPressed(KeyEvent event) {
+    if (event is KeyDownEvent) _endOpen();
+    return false;
+  }
+
+  void _pointer(PointerEvent event) {
+    if (event is PointerDownEvent) _endOpen();
+  }
+
+  void _endOpen() {
+    if (!_openPending) return;
+    _openPending = false;
+    HardwareKeyboard.instance.removeHandler(_keyPressed);
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_pointer);
   }
 
   @override
@@ -328,10 +439,13 @@ class _PaneState extends State<Pane> {
           : TraversalEdgeBehavior.parentScope
       ..directionalTraversalEdgeBehavior = TraversalEdgeBehavior.stop;
     _coordinator?.paneUpdated(_registration);
+    // The route may have become current again.
+    _scheduleOpen();
   }
 
   @override
   void dispose() {
+    _endOpen();
     _coordinator?.unregister(_registration);
     _scope.dispose();
     super.dispose();

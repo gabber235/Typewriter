@@ -6,6 +6,8 @@ export "member_row_actions.dart";
 export "member_table.dart";
 export "member_table_row_shortcuts.dart";
 export "member_tablet_list.dart";
+export "membership_page.dart";
+export "person_summary.dart";
 export "role_multiselect_chips.dart";
 export "role_multiselect_dropdown.dart";
 export "route.dart";

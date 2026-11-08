@@ -3,15 +3,16 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Wraps the assembled table without taking ownership of its rows.
 typedef AnimatedTableBuilder = Widget Function(
   BuildContext context,
-  Table table,
+  Widget table,
 );
 
 /// A table over the rows of one [useAnimatedRows]: rows that load join the
 /// load run one slot per row, rows added later slide in with rowIn, and
 /// rows that leave squash shut with listOut, all cells of a row as one.
 /// Leaving and sending rows are excluded from semantics, traversal and
-/// pointer input without losing focus. The empty state shows once the last
-/// leaving row is gone.
+/// pointer input without losing focus. Each row is one focus stop through
+/// the [RowStop] its first cell places; [RowFocusKeys] moves between rows.
+/// The empty state shows once the last leaving row is gone.
 class AnimatedTable<T> extends HookWidget {
   const AnimatedTable({
     required this.rows,
@@ -47,7 +48,15 @@ class AnimatedTable<T> extends HookWidget {
       // The per row hook point; cells stay unaffected.
       decoration: entry.rowDecoration(context, source.decoration),
       children: [
-        for (final child in source.children) _cell(child, entry.motion),
+        for (final child in source.children)
+          _cell(
+            child,
+            (content) => RowEntryScope(
+              entry: entry,
+              partsTraversable: false,
+              child: entry.motion(content),
+            ),
+          ),
       ],
     );
   }
@@ -98,7 +107,12 @@ class AnimatedTable<T> extends HookWidget {
           for (final entry in rows.entries) _row(context, entry),
         ],
       );
-      return tableBuilder?.call(context, table) ?? table;
+      // Every table row is one stop, so the table owns its row keys.
+      final focused = RowFocusScope(
+        focus: rows.focus,
+        child: RowFocusKeys(focus: rows.focus, child: table),
+      );
+      return tableBuilder?.call(context, focused) ?? focused;
     }
     // The last row has squashed shut. The empty state arrives as a row
     // would: with the load if the table started empty, otherwise from the

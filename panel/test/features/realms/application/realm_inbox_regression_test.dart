@@ -422,11 +422,21 @@ void main() {
 
     testWidgets("a reveal requested before leaving the Realm does nothing "
         "once the user returns", (tester) async {
+      // The Book's second field, so the reveal and open focus differ.
+      final icon = skir.ValueLocation(
+        resource: _book.bookId,
+        path: editorRootPath.field("icon").field("value"),
+      );
       final panel = await tester.pumpPanel(
-        adaServing(realmDocument(books: [_book])),
+        adaServing(
+          realmDocument(
+            books: [_book],
+            catalog: libraryCatalog(bookIcon: true),
+          ),
+        ),
       );
       final scope = panel.world.requireRealm.scope;
-      panel.container.read(realmLocationRevealProvider(scope)).request(_title);
+      panel.container.read(realmLocationRevealProvider(scope)).request(icon);
       await tester.pump(const Duration(milliseconds: 100));
 
       await panel.container
@@ -435,7 +445,9 @@ void main() {
       await panel.settle();
       await panel.openSurface(_book.bookId);
 
-      expect(panel.field("title").isFocused, isFalse);
+      // Open focus lands on the first field; the stale reveal moves nothing.
+      expect(panel.field("title").isFocused, isTrue);
+      expect(panel.field("icon").isFocused, isFalse);
     });
 
     for (final from in ["its surface", "the Realm home"]) {

@@ -18,7 +18,6 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
     required this.isSelected,
     required this.hasSelection,
     required this.onRevokeSelection,
-    required this.onFocusChange,
     required this.child,
     super.key,
   });
@@ -31,7 +30,6 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
   final bool isSelected;
   final bool hasSelection;
   final Future<void> Function() onRevokeSelection;
-  final ValueChanged<bool> onFocusChange;
   final Widget child;
 
   @override
@@ -82,12 +80,7 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
               : _confirmRevokeCode(context, ref),
         ),
       ],
-      // Focus on any cell rings the whole row; a control inside a cell is
-      // ringed by itself.
-      child: RingTarget(
-        bounds: RingBounds.tableRow,
-        child: Focus(onFocusChange: onFocusChange, child: child),
-      ),
+      child: child,
     );
   }
 

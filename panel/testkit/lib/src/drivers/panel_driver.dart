@@ -95,6 +95,35 @@ final class PanelDriver extends ComponentDriver {
     return nodes.isEmpty ? null : nodes.last.spoken;
   }
 
+  /// Whether the control that holds keyboard focus shows [target], for a
+  /// control that reads no name of its own.
+  bool focusShows(Finder target) {
+    final control = FocusManager.instance.primaryFocus?.context;
+    if (control == null) return false;
+    return find
+        .descendant(
+          of: find.byElementPredicate((element) => element == control),
+          matching: target,
+        )
+        .evaluate()
+        .isNotEmpty;
+  }
+
+  /// The item of the list, table or graph row that holds keyboard focus,
+  /// on the row itself or in a control inside it, or null. For a table,
+  /// whose rows lose their semantics once a row above them leaves (a
+  /// Flutter table defect), where [focused] cannot read the row.
+  Object? get focusedRow {
+    for (
+      FocusNode? node = FocusManager.instance.primaryFocus;
+      node != null;
+      node = node.parent
+    ) {
+      if (node case RowFocusNode(:final entry)) return entry.item;
+    }
+    return null;
+  }
+
   /// Whether keyboard focus is on the control [label] or on the unlabeled
   /// control around it, such as a field that holds focus before editing.
   /// An icon button named only by its tooltip counts as labeled by it.
@@ -140,6 +169,27 @@ final class PanelDriver extends ComponentDriver {
       await press(LogicalKeyboardKey.tab);
     }
     expect(hasFocusOn(label), isTrue, reason: "Tab reaches $label");
+  }
+
+  /// What Tab reaches over [limit] presses, in order: each control's label,
+  /// else its hint, else its tooltip, empty for one that reads nothing.
+  Future<List<String>> tabOrder({required int limit}) async {
+    final reached = <String>[];
+    for (var tabs = 0; tabs < limit; tabs++) {
+      await press(LogicalKeyboardKey.tab);
+      final nodes = find.semantics
+          .byPredicate((node) => node.isFocused)
+          .evaluate();
+      final data = nodes.isEmpty ? null : nodes.last.getSemanticsData();
+      reached.add(
+        [data?.label, data?.hint, data?.tooltip].firstWhere(
+              (text) => text != null && text.isNotEmpty,
+              orElse: () => "",
+            ) ??
+            "",
+      );
+    }
+    return reached;
   }
 
   /// Presses [key] on the keyboard.

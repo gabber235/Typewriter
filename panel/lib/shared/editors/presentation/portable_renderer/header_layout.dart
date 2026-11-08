@@ -56,15 +56,9 @@ final class _PortableHeaderRowState extends State<_PortableHeaderRow> {
   }
 }
 
+/// Hands the menu's close to the actions inside it.
 class _CollectionMenuInvocation extends InheritedWidget {
-  const _CollectionMenuInvocation({
-    required this.origin,
-    required this.row,
-    required this.close,
-    required super.child,
-  });
-  final _CollectionActionOrigin? origin;
-  final _CollectionRowBinding? row;
+  const _CollectionMenuInvocation({required this.close, required super.child});
   final VoidCallback close;
 
   static _CollectionMenuInvocation? maybeOf(BuildContext context) =>
@@ -72,7 +66,7 @@ class _CollectionMenuInvocation extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_CollectionMenuInvocation oldWidget) =>
-      origin != oldWidget.origin || row != oldWidget.row;
+      close != oldWidget.close;
 }
 
 final class _PortableHeaderOverflow extends HookWidget {
@@ -81,8 +75,6 @@ final class _PortableHeaderOverflow extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final row = _CollectionRowContext.maybeOf(context);
-    final captured = useState<_CollectionActionOrigin?>(null);
     final triggerFocus = useFocusNode();
     final controller = useMemoized(AnchoredPopupController.new);
     useEffect(() => controller.dispose, [controller]);
@@ -99,12 +91,7 @@ final class _PortableHeaderOverflow extends HookWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final item in items)
-                _CollectionMenuInvocation(
-                  origin: captured.value,
-                  row: row,
-                  close: close,
-                  child: item,
-                ),
+                _CollectionMenuInvocation(close: close, child: item),
             ],
           ),
         ),
@@ -115,14 +102,8 @@ final class _PortableHeaderOverflow extends HookWidget {
         label: "More actions",
         tooltip: "More actions",
         focusNode: triggerFocus,
-        onPressed: () {
-          if (controller.isOpen) {
-            controller.close();
-            return;
-          }
-          captured.value = row?.focus?.captureOrigin(row.row);
-          controller.openFocused();
-        },
+        onPressed: () =>
+            controller.isOpen ? controller.close() : controller.openFocused(),
       ),
     );
   }

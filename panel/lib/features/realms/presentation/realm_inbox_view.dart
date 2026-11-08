@@ -310,7 +310,12 @@ class RealmInboxView extends StatelessWidget {
                                         ? 0
                                         : context.spacing.space3,
                                   ),
-                                  child: _issue(context, issue),
+                                  // The row is already one control, so it
+                                  // holds; open focus lands on it.
+                                  child: RowStop(
+                                    role: RowRole.holder,
+                                    child: _issue(context, issue),
+                                  ),
                                 ),
                               ),
                               SliverAnimatedGap(
@@ -337,7 +342,10 @@ class RealmInboxView extends StatelessWidget {
                               AnimatedSliverList<skir.PublicationChange>(
                                 items: state.changes,
                                 identity: (change) => change,
-                                itemBuilder: _change,
+                                itemBuilder: (context, change) => RowStop(
+                                  role: RowRole.holder,
+                                  child: _change(context, change),
+                                ),
                               ),
                               AnimatedSliverList<skir.CompilationRoot>(
                                 items: state.pendingRoots,
@@ -382,7 +390,10 @@ class RealmInboxView extends StatelessWidget {
                               AnimatedSliverList<WorkEntryState>(
                                 items: local,
                                 identity: (entry) => entry.id,
-                                itemBuilder: _workRow,
+                                itemBuilder: (context, entry) => RowStop(
+                                  role: RowRole.holder,
+                                  child: _workRow(context, entry),
+                                ),
                               ),
                               SliverAnimatedContent(
                                 child: _publication(context),
