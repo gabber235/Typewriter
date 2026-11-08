@@ -4,11 +4,13 @@ import com.typewritermc.formula.NamedValue
 import com.typewritermc.formula.RecordValue
 import com.typewritermc.types.StandardTypes
 import skirout.editor.v1.type_catalog.TypeUse
+import java.math.BigDecimal
 
 /*
  * Formula equality, as Kotlin's `==` sees the values a formula holds. It is structural, as RecordValue's own equality
  * is, except where Kotlin's types differ from their structure: every empty range equals every other, as Kotlin's
- * IntRange does, at any depth. RecordValue stays plainly structural, since the graph and stored values must tell
+ * IntRange does, and two Decimals are equal when their values are, whatever their scale (`1.10 == 1.1`), at any
+ * depth. RecordValue stays plainly structural, since the graph and stored values must tell
  * `1..0` from `5..2`: their `first`, `last` and text differ.
  */
 
@@ -47,8 +49,13 @@ private fun same(
         left is NamedValue && right is NamedValue -> left.type == right.type && same(left.value, right.value)
         left is Collection<*> && right is Collection<*> -> sameCollection(left, right)
         left is Map<*, *> && right is Map<*, *> -> sameMap(left, right)
-        else -> left == right
+        else -> sameScalar(left, right)
     }
+
+private fun sameScalar(
+    left: Any?,
+    right: Any?,
+): Boolean = if (left is BigDecimal && right is BigDecimal) left.compareTo(right) == 0 else left == right
 
 private fun sameCollection(
     left: Collection<*>,
@@ -105,6 +112,10 @@ private fun formulaHash(value: Any?): Int =
 
         is Map<*, *> -> {
             value.keyed().entries.sumOf { (key, item) -> key.hashCode() xor formulaHash(item) }
+        }
+
+        is BigDecimal -> {
+            value.stripTrailingZeros().hashCode()
         }
 
         else -> {
