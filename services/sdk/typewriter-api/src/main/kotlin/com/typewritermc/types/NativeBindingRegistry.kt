@@ -694,16 +694,34 @@ fun scalarData(value: Any?): DataValue =
         is Boolean -> DataValue.BooleanWrapper(value)
         is String -> DataValue.StringValueWrapper(value)
         is ByteArray -> DataValue.bytes(value)
-        is Byte, is Short, is Int, is Long, is UByte, is UShort, is UInt, is ULong, is BigInteger -> {
-            DataValue.integer(value.toBigInteger(IntegerWidth.SIGNED_SIXTY_FOUR))
-        }
-        is Float -> DataValue.FloatWrapper(value.toDouble())
-        is Double -> DataValue.FloatWrapper(value)
-        is BigDecimal -> DataValue.DecimalWrapper(value.toPlainString())
         is kotlin.time.Instant -> DataValue.timestamp(value)
         is kotlin.time.Duration -> DataValue.duration(value)
         is Type -> DataValue.TypeUseWrapper(value.use)
-        else -> throw IllegalArgumentException("${value::class.simpleName} is not a scalar.")
+        else -> numberData(value) ?: throw IllegalArgumentException("${value::class.simpleName} is not a scalar.")
+    }
+
+/** The stored integer, float or decimal of a Kotlin number, or null for a value of no number class. */
+private fun numberData(value: Any): DataValue? =
+    when (value) {
+        is Byte, is Short, is Int, is Long, is UByte, is UShort, is UInt, is ULong, is BigInteger -> {
+            DataValue.integer(value.toBigInteger(IntegerWidth.SIGNED_SIXTY_FOUR))
+        }
+
+        is Float -> {
+            DataValue.FloatWrapper(value.toDouble())
+        }
+
+        is Double -> {
+            DataValue.FloatWrapper(value)
+        }
+
+        is BigDecimal -> {
+            DataValue.DecimalWrapper(value.toPlainString())
+        }
+
+        else -> {
+            null
+        }
     }
 
 /**
