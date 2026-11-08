@@ -141,6 +141,12 @@ val ParserTest by testSuite {
         }
     }
 
+    test("number literals take ASCII digits only, as Kotlin's do") {
+        for (source in listOf("\u0661\u0662", "\uFF11\uFF12", "1\u0662", "1.\u0665", "1e\u0663")) {
+            parseExpression(source).problems.shouldNotBeEmpty()
+        }
+    }
+
     test("a function type names its parameters") {
         parseType("(Int) -> Int").problems.shouldNotBeEmpty()
     }

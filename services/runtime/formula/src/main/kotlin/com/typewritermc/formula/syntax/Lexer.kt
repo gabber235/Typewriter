@@ -185,7 +185,7 @@ internal class Lexer(
             char == '\n' -> Token(TokenKind.Newline, start, ++position)
             char == '"' -> string()
             char == '`' -> quotedName()
-            char.isDigit() -> number()
+            isDigit(char) -> number()
             isNameStart(source.codePointAt(position)) -> word()
             else -> negatedWord() ?: symbol()
         }
@@ -290,7 +290,7 @@ internal class Lexer(
 
     /** `.5` after the digits; `1..5` and `5.seconds` keep their dot. */
     private fun fraction(): Boolean {
-        if (!source.startsWith(".", position) || source.getOrNull(position + 1)?.isDigit() != true) return false
+        if (!source.startsWith(".", position) || source.getOrNull(position + 1)?.let(::isDigit) != true) return false
         position++
         digits()
         return true
@@ -305,13 +305,13 @@ internal class Lexer(
     }
 
     private fun digits() {
-        while (position < source.length && (source[position].isDigit() || source[position] == '_')) position++
+        while (position < source.length && (isDigit(source[position]) || source[position] == '_')) position++
     }
 
     private fun exponentFollows(): Boolean {
         val next = position + 1
         val digit = if (next < source.length && (source[next] == '+' || source[next] == '-')) next + 1 else next
-        return digit < source.length && source[digit].isDigit()
+        return digit < source.length && isDigit(source[digit])
     }
 
     private fun string(): Token = if (source.startsWith("\"\"\"", position)) rawString() else templateString()
@@ -511,7 +511,10 @@ internal class Lexer(
 
     private fun isNamePart(codePoint: Int) = Character.isLetterOrDigit(codePoint) || codePoint == '_'.code
 
-    private fun isHexDigit(char: Char) = char in '0'..'9' || char in 'a'..'f' || char in 'A'..'F'
+    /** Number literals take ASCII digits only, as Kotlin's do. */
+    private fun isDigit(char: Char) = char in '0'..'9'
+
+    private fun isHexDigit(char: Char) = isDigit(char) || char in 'a'..'f' || char in 'A'..'F'
 }
 
 private const val UNCLOSED_TEXT = "This text is never closed with \""
