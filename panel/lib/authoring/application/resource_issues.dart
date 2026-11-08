@@ -232,8 +232,7 @@ Iterable<skir.Diagnostic> checkIssues(
 
 extension DiagnosticEvidenceApplicability on skir.DiagnosticEvidence {
   bool appliesTo(AuthoringDocument working) =>
-      catalog == working.generation &&
-      working.facts.conflicts(expectations).isEmpty;
+      catalog == working.generation && working.facts.holds(evidence);
 }
 
 extension PublicationIssueProjection on RealmPublicationView {
@@ -264,7 +263,7 @@ extension PublicationIssueProjection on RealmPublicationView {
               document != null &&
               set.status == skir.FindingStatus.current &&
               set.ticket.catalog == document.generation &&
-              document.facts.conflicts(set.expectations).isEmpty,
+              document.facts.holds(set.evidence),
         );
       }
     }

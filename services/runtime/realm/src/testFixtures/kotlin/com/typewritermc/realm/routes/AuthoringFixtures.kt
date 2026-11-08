@@ -13,6 +13,7 @@ import skirout.editor.v1.authoring.CommitPreparedEditRequest
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
@@ -76,7 +77,12 @@ internal fun RealmFixture.titleFinding(
                     ),
                 catalog = generation,
             ),
-        expectations = listOf(EditExpectation.createValue(at = title, expected = resources.getValue(book.resource).valueAt(title.path))),
+        evidence =
+            listOf(
+                CheckEvidence.FactWrapper(
+                    EditExpectation.createValue(at = title, expected = resources.getValue(book.resource).valueAt(title.path)),
+                ),
+            ),
         outcome = CheckOutcome.FINISHED,
         findings = listOf(compilationDiagnostic("title_check", "The title needs attention.", location = title)),
         status = status,

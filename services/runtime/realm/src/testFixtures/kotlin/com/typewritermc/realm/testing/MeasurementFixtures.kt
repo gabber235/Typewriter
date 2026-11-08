@@ -80,7 +80,7 @@ internal suspend fun RealmFixture.startMeasuring(): String {
     val pass = measureTime { checks.drain() }
     val sets = checks.findings()
     val codes = sets.flatMap { it.findings }.groupingBy { it.code }.eachCount()
-    return "cold pass $pass, finding sets ${sets.size}, evidence held ${sets.sumOf { it.expectations.size }}, findings $codes"
+    return "cold pass $pass, finding sets ${sets.size}, evidence held ${sets.sumOf { it.evidence.size }}, findings $codes"
 }
 
 /** Commits [intents] as one edit that must commit, waits for the check pass it starts, and measures both. */
@@ -116,7 +116,7 @@ internal suspend fun RealmFixture.measuredCommit(
             },
         computed = graphRuns.totalRuns() - computedBefore,
         evicted = graphRuns.evicted() - evictedBefore,
-        evidence = sets.sumOf { it.expectations.size },
+        evidence = sets.sumOf { it.evidence.size },
         hints = hints - hintsBefore,
     )
 }

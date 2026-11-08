@@ -18,6 +18,7 @@ import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -211,7 +212,7 @@ internal fun RealmQuery<*>.factsRead(stopAt: (GraphKey<*>) -> Boolean): List<Edi
 /** A query a check's evidence holds as one entry of its own, without the facts it read to answer. */
 internal interface EvidenceEntry {
     context(reads: RealmReads)
-    fun entry(): EditExpectation
+    fun entry(): CheckEvidence
 }
 
 /**
@@ -220,12 +221,12 @@ internal interface EvidenceEntry {
  * so it does not enter [stopAt]'s queries.
  */
 context(reads: RealmReads)
-internal fun RealmQuery<*>.evidence(stopAt: (GraphKey<*>) -> Boolean): List<EditExpectation> =
+internal fun RealmQuery<*>.evidence(stopAt: (GraphKey<*>) -> Boolean): List<CheckEvidence> =
     reads
         .readsOf(this) { stopAt(it) || it is EvidenceEntry }
         .flatMap { key ->
             when (key) {
-                is Fact -> reads.read(key)
+                is Fact -> reads.read(key).map(CheckEvidence::FactWrapper)
                 is EvidenceEntry -> listOf(key.entry())
                 else -> emptyList()
             }

@@ -27,8 +27,7 @@ internal fun List<FindingSet>.forReply(judge: (FindingSet) -> FindingSet): List<
     filter { it.findings.isNotEmpty() || it.outcome != CheckOutcome.FINISHED }.map(judge)
 
 /** Whether [set] was checked against this view's catalog and the values it read are still saved in this view. */
-private fun AuthoringView.supports(set: FindingSet): Boolean =
-    set.ticket.catalog == catalog.generation && values.conflicts(set.expectations).isEmpty()
+private fun AuthoringView.supports(set: FindingSet): Boolean = set.ticket.catalog == catalog.generation && values.holds(set.evidence)
 
 private fun FindingSet.withStatus(current: Boolean): FindingSet =
     copy(status = if (current) FindingStatus.CURRENT else FindingStatus.OUTDATED)

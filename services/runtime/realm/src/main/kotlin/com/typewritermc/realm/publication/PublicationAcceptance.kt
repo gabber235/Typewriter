@@ -33,6 +33,7 @@ import com.typewritermc.types.use
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
@@ -173,7 +174,7 @@ internal class AuthoringAcceptance(
                             evidence[finding.id] =
                                 DiagnosticEvidence(
                                     catalog = snapshot.root.catalog.generation,
-                                    expectations = (evidence[finding.id]?.expectations.orEmpty() + result.expectations).distinct(),
+                                    evidence = (evidence[finding.id]?.evidence.orEmpty() + result.evidence).distinct(),
                                 )
                         }
                         emitted
@@ -189,7 +190,7 @@ internal class AuthoringAcceptance(
                     val witness =
                         DiagnosticEvidence(
                             catalog = snapshot.root.catalog.generation,
-                            expectations = listOf(EditExpectation.createResource(id = id, expected = record)),
+                            evidence = listOf(CheckEvidence.FactWrapper(EditExpectation.createResource(id = id, expected = record))),
                         )
                     own.forEach { evidence[it.id] = witness }
                 }

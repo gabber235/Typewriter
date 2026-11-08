@@ -43,6 +43,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.DataValue
 
@@ -279,7 +280,7 @@ val ScopeLookupTest by testSuite {
 
             evidence.filter { it.subject == page.named("smith") }.shouldBeEmpty()
             evidence
-                .filterIsInstance<EditExpectation.ScopeWrapper>()
+                .filterIsInstance<CheckEvidence.ScopeWrapper>()
                 .filter { it.value.name == "new_name" }
                 .map { it.value.expected } shouldBe listOf(emptyList())
         }

@@ -26,11 +26,6 @@ Object _factKey(skir.EditExpectation expected) => switch (expected) {
     value.direction,
   ),
   skir.EditExpectation_typesWrapper(:final value) => ("types", value.resource),
-  skir.EditExpectation_scopeWrapper(:final value) => (
-    "scope",
-    value.at,
-    value.name,
-  ),
   _ => throw StateError("Unknown edit expectation"),
 };
 bool _sameExpectation(skir.EditExpectation first, skir.EditExpectation second) {

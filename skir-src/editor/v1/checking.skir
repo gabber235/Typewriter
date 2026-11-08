@@ -9,6 +9,7 @@ import {
   RuleId,
   ValueLocation,
 } from "editor/v1/type_catalog.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
 /// Evaluation completion, separate from the diagnostics it emitted. finished may still have
 /// error findings; needs_input, failed, and incomplete cannot establish publication readiness.
@@ -35,19 +36,33 @@ struct CheckTicket(84080004) {
   catalog: CatalogGeneration = 1;
 }
 
+/// One thing a check read. An editor judges a fact against its working values. What a name means
+/// comes from extension hooks, so only a realm judges a scope; an editor keeps it as it is.
+enum CheckEvidence(84080005) {
+  fact: EditExpectation = 1;
+  /// What `name` means where the formula at `at` looks it up: the resources at the nearest scope
+  /// level that has it, none when no level does. One entry stands for the whole scope it was
+  /// looked up in.
+  scope: struct {
+    at: ValueLocation = 0;
+    name: string = 1;
+    expected: [ResourceId] = 2;
+  } = 2;
+}
+
 /// Findings with the run and original facts they describe. Status records freshness;
 /// consumers retain the evidence needed to compare them with saved or local working values.
-struct FindingSet(84080005) {
+struct FindingSet(84080006) {
   ticket: CheckTicket = 0;
-  expectations: [EditExpectation] = 1;
+  evidence: [CheckEvidence] = 1;
   outcome: CheckOutcome = 2;
   findings: [Diagnostic] = 3;
   status: FindingStatus = 4;
 }
 
-struct CheckResult(84080006) {
+struct CheckResult(84080007) {
   ticket: CheckTicket = 0;
   outcome: CheckOutcome = 1;
-  expectations: [EditExpectation] = 2;
+  evidence: [CheckEvidence] = 2;
   findings: [Diagnostic] = 3;
 }

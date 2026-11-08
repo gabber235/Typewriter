@@ -10,6 +10,7 @@ import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.authoring_facts.ExpectationConflict
 import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
@@ -173,12 +174,18 @@ internal fun CurrentAuthoringValues.actual(expected: EditExpectation): EditExpec
             EditExpectation.createTypes(resource = expected.value.resource, expected = types(expected.value.resource))
         }
 
-        is EditExpectation.ScopeWrapper -> {
-            EditExpectation.ScopeWrapper(expected.value.copy(expected = scope(expected.value.at, expected.value.name)))
-        }
-
         else -> {
             unknownVariant(expected)
+        }
+    }
+
+/** Whether everything a check read still holds here: each fact as these values have it, and what each name means. */
+internal fun CurrentAuthoringValues.holds(evidence: List<CheckEvidence>): Boolean =
+    evidence.all { entry ->
+        when (entry) {
+            is CheckEvidence.FactWrapper -> actual(entry.value) == entry.value
+            is CheckEvidence.ScopeWrapper -> scope(entry.value.at, entry.value.name) == entry.value.expected
+            else -> unknownVariant(entry)
         }
     }
 

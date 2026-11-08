@@ -1117,12 +1117,16 @@ Iterable<LocatedInitializationFinding> _locatedInitializationFindings(
   };
   final evidence = skir.DiagnosticEvidence(
     catalog: generation,
-    expectations: [
-      skir.EditExpectation.createValue(at: base, expected: expected),
+    evidence: [
+      skir.CheckEvidence.wrapFact(
+        skir.EditExpectation.createValue(at: base, expected: expected),
+      ),
       if (base.path.segments.isEmpty)
-        skir.EditExpectation.createConfiguration(
-          at: base,
-          expected: record.configuration,
+        skir.CheckEvidence.wrapFact(
+          skir.EditExpectation.createConfiguration(
+            at: base,
+            expected: record.configuration,
+          ),
         ),
     ],
   );

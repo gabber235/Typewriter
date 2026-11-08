@@ -30,6 +30,7 @@ import com.typewritermc.realm.testing.delete
 import com.typewritermc.realm.testing.entryRef
 import com.typewritermc.realm.testing.errorCodesOn
 import com.typewritermc.realm.testing.errorsOn
+import com.typewritermc.realm.testing.facts
 import com.typewritermc.realm.testing.fieldKey
 import com.typewritermc.realm.testing.formulaChecksSince
 import com.typewritermc.realm.testing.formulaPage
@@ -267,7 +268,9 @@ val FormulaFindingsTest by testSuite {
 
             errorCodesOn(user) shouldBe listOf("formula_type_mismatch")
             val set = contentSet(user)
-            set.expectations.filterIsInstance<EditExpectation.TypesWrapper>().map { it.value.resource } shouldContain reward
+            set.evidence.facts
+                .filterIsInstance<EditExpectation.TypesWrapper>()
+                .map { it.value.resource } shouldContain reward
             set.status shouldBe FindingStatus.CURRENT
         }
     }

@@ -202,10 +202,6 @@ internal fun EditExpectation.factKey(): Any =
             listOf("types", value.resource)
         }
 
-        is EditExpectation.ScopeWrapper -> {
-            listOf("scope", value.at, value.name)
-        }
-
         else -> {
             unknownVariant(this)
         }

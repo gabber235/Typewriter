@@ -134,13 +134,13 @@ val CheckRerunsTest by testSuite {
 
             findingsOf("name@first") shouldBe before
             findingsOf("name@first").status shouldBe FindingStatus.CURRENT
-            findingsOf("name@first").expectations.holdsResourceIds shouldBe false
+            findingsOf("name@first").evidence.holdsResourceIds shouldBe false
         }
     }
 
     test("a check that selected resources has the resource ids fact in its evidence") {
         reruns(seed) {
-            findingsOf("selection").expectations.holdsResourceIds shouldBe true
+            findingsOf("selection").evidence.holdsResourceIds shouldBe true
         }
     }
 
@@ -198,10 +198,10 @@ val CheckRerunsTest by testSuite {
 
     test("a check's evidence lists every fact it read, also through a memo") {
         reruns(seed) {
-            val before = findingsOf("name@first").expectations
+            val before = findingsOf("name@first").evidence
             commitChecked(renumber(first))
 
-            findingsOf("name@first").expectations shouldBe before
+            findingsOf("name@first").evidence shouldBe before
             before.valueLocations() shouldContain location(first, "name")
         }
     }
