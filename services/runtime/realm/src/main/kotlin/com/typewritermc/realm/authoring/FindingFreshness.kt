@@ -20,11 +20,12 @@ internal fun FindingSet.judgedForRelease(view: AuthoringView): FindingSet =
     withStatus(status == FindingStatus.CURRENT && view.supports(this))
 
 /**
- * The sets a reply lists, each judged by [judge]: only those with findings or an outcome other than finished. A check
- * that ran and found nothing is left out, so an editor reads a missing set as checked and clean.
+ * The sets a reply lists, each judged by [judge] first: those with findings, an outcome other than finished, or an
+ * outdated status. So a clean set the reply's view outdates stays listed, and a check missing from the reply has no
+ * findings known: it is clean, or it has not run yet.
  */
 internal fun List<FindingSet>.forReply(judge: (FindingSet) -> FindingSet): List<FindingSet> =
-    filter { it.findings.isNotEmpty() || it.outcome != CheckOutcome.FINISHED }.map(judge)
+    map(judge).filter { it.findings.isNotEmpty() || it.outcome != CheckOutcome.FINISHED || it.status != FindingStatus.CURRENT }
 
 /** Whether [set] was checked against this view's catalog and the values it read are still saved in this view. */
 private fun AuthoringView.supports(set: FindingSet): Boolean = set.ticket.catalog == catalog.generation && values.holds(set.evidence)
