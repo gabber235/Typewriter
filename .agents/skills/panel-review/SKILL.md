@@ -49,8 +49,8 @@ For every action on the page:
 | Any action | Note where focus lands afterwards | The target in `panel-design` Focus | 3 |
 | Any action or state change | Name the move that should play, and find it in source | The move its Motion rule names, on tokens | 2 |
 | A create action | Run it | Focus on the new thing's first empty required field | 3 |
-| A remove action | Run it | Book content: no question, Undo offered. Anything else: a hold. Focus on the next row | 4 |
-| An action that cannot be undone | Press its key once, then press with every modifier | Nothing happens without the full hold | 4 |
+| A remove action | Run it | Book content: no question, Undo offered. Loses work or makes someone else act again: a hold. Can simply be done again: one press. Focus on the next row | 4 |
+| A held action | Press its key once, then press with every modifier | Nothing happens without the full hold | 4 |
 | A failing action | Fail it through a fake | The message stays and says what to do; the same control repeats the action | 3 |
 | A value revealed on hover | Reach it with keys, then touch | It reveals both ways | 3 |
 | A drag | Do it with keys, then with single clicks | Both give the same result | 2 |
@@ -77,7 +77,7 @@ When the rules have a gap, propose a new When and Then row under Suggestions.
 
 | Level | When | Example |
 |---|---|---|
-| 4 | Work is lost or a task is blocked | Shift+D deletes with no question and no undo |
+| 4 | Work is lost or a task is blocked | A remove runs on one key press with no hold and no undo |
 | 3 | A required path fails, or trust is damaged | A value only a pointer can reveal |
 | 2 | Friction that adds up | Title and content on different left edges |
 | 1 | Cosmetic | A gap of 13 where the scale gives 12 |

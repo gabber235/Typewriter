@@ -88,7 +88,6 @@ final exemptions = <Exemption>[
     "constructor fallback without a build context",
   ),
   for (final path in [
-    "lib/shared/shell/custom_appbar.dart",
     "lib/shared/shell/sidebar.dart",
     "lib/shared/shell/sidebar_links.dart",
     "lib/shared/graph/presentation/resizable_element.dart",
@@ -99,15 +98,11 @@ final exemptions = <Exemption>[
     "lib/features/members/presentation/role_multiselect_chips.dart",
     "lib/features/services/presentation/route.dart",
     "lib/features/organizations/presentation/join_organization.dart",
-    "lib/shared/ui/components/grid_selectable_card.dart",
-    "lib/shared/mutations/presentation/mutation_activity_button.dart",
     "lib/shared/ui/components/depth_box.dart",
     "lib/shared/search/presentation/search_body.dart",
     "lib/features/realms/presentation/realm_suspension.dart",
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar.dart",
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar_selection_grid.dart",
-    "lib/shared/search/presentation/search_result_card.dart",
-    "lib/authoring/presentation/resource_drop_target.dart",
   ])
     Exemption(path, RegExp(r"Colors\.transparent"), "intentional transparency"),
   for (final path in [
