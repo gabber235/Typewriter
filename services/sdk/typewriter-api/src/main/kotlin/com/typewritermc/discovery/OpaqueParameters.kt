@@ -22,7 +22,7 @@ const val OPAQUE_PARAMETER_NAMESPACE: String = "typewriter.parameter"
  * Opaque stand ins for the free type parameters of [definitions], so a generic template checks once as a closed type
  * that holds for every argument.
  *
- * Each parameter becomes an abstract record without fields of its own whose parents are its named bounds: an
+ * Each parameter becomes an open record without fields of its own whose parents are its named bounds: an
  * expression sees exactly what every argument guarantees (the bounds' fields and ancestry) and nothing a particular
  * argument might add. A bound that is not a named type has no record form and constrains nothing here, so such a
  * parameter checks as an unconstrained opaque value. [close] replaces parameters by their stand ins and [open] turns
@@ -37,7 +37,7 @@ internal class OpaqueParameters(
             .associateWith { key -> TypeDefinitionId.qualified(OPAQUE_PARAMETER_NAMESPACE, "${key.owner.canonicalText}#${key.index}") }
     private val parameters: Map<TypeDefinitionId, ParameterKey> = keys.entries.associate { (key, id) -> id to key }
 
-    /** One abstract record per parameter, to join the declarations a presentation checker resolves against. */
+    /** One open record per parameter, to join the declarations a presentation checker resolves against. */
     val definitions: List<TypeDefinition> =
         definitions.flatMap { definition ->
             definition.parameters.map { parameter ->

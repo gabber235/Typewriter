@@ -30,7 +30,7 @@ skir.PublishedType _publishedRecord({
 );
 
 /// A catalog where Shelves own Quest Books and each Book owns Entries, an
-/// abstract record that SimpleMessage refines; [manyEntries] adds 26 more
+/// open record that SimpleMessage refines; [manyEntries] adds 26 more
 /// Entry kinds and [reversedOwnership] declares the Book's ownership with
 /// its endpoints swapped.
 CheckedEditorCatalog shelfCatalog({

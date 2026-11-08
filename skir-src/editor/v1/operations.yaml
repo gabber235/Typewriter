@@ -1012,7 +1012,7 @@ operations:
     result: X
 
   enum.from_name:
-    doc: The case of the enumeration E with the name, or null.
+    doc: The case with the name of E, a closed record of unit cases, or null.
     profile: rule
     dsl: hand
     type_parameters: { E: any }
@@ -1021,7 +1021,7 @@ operations:
     result: E?
 
   enum.cases:
-    doc: Every case of the enumeration E in declaration order.
+    doc: Every case of E, a closed record of unit cases, in declaration order.
     profile: rule
     dsl: hand
     type_parameters: { E: any }
