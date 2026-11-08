@@ -329,8 +329,8 @@ class KspTypeGraphConverter(
     }
 
     /**
-     * `Var<T, F>` lowers to the Var record applied to `T` and the function type its formulas have: no parameters, the
-     * properties of the scope `F` as context, and `T` as result. Inside Var's own declaration `F` stays its parameter.
+     * `Var<T, C>` lowers to the Var record applied to `T` and the function type its formulas have: no parameters, the
+     * properties of the scope `C` as context, and `T` as result. Inside Var's own declaration `C` stays its parameter.
      */
     private fun varTemplate(
         type: KSType,

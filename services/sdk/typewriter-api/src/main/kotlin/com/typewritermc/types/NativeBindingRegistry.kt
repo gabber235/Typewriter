@@ -652,7 +652,7 @@ private class FactoryCheckedNativeBinding(
 }
 
 /**
- * A `Var<T, F>`: stored data through the polymorphic binding, by each value's own case. An evaluation value crosses as a
+ * A `Var<T, C>`: stored data through the polymorphic binding, by each value's own case. An evaluation value crosses as a
  * Var.Value of [value]'s Kotlin value; a function typed Var cannot cross in this layer, since its engine form is not
  * settled, and a Var.Computed coming back is a formula where a value was expected.
  */

@@ -51,24 +51,24 @@ data class Formula(
 )
 
 /**
- * A value an author either writes plainly or computes with a formula. In the catalog `Var<T, F>` is a closed record
- * whose second argument is the function type `(context of F) -> T`, so picking the plain or the formula form is
- * picking a case. [F] is only a marker in Kotlin: an interface whose properties are what the formula may read.
+ * A value an author either writes plainly or computes with a formula. In the catalog `Var<T, C>` is a closed record
+ * whose second argument is the function type `(context of C) -> T`, so picking the plain or the formula form is
+ * picking a case. [C] is only a marker in Kotlin: an interface whose properties are what the formula may read.
  */
 @Serializable
 @TypewriterType(id = VAR_TYPE_ID)
-sealed interface Var<T, F> {
+sealed interface Var<T, C> {
     /** The value as written. A function typed value stores its body here, as a [Formula]. */
     @Serializable
-    data class Value<T, F>(
+    data class Value<T, C>(
         val value: T,
-    ) : Var<T, F>
+    ) : Var<T, C>
 
-    /** The value computed by [formula], which reads the context [F] names. */
+    /** The value computed by [formula], which reads the context [C] names. */
     @Serializable
-    data class Computed<T, F>(
+    data class Computed<T, C>(
         val formula: Formula,
-    ) : Var<T, F>
+    ) : Var<T, C>
 }
 
 /** The context of a Definition's formulas: it names nothing, so they are pure by construction. */
