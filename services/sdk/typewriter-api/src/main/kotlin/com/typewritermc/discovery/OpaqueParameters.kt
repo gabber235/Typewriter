@@ -63,7 +63,12 @@ internal class OpaqueParameters(
     fun open(use: TypeUse): TypeTemplate = open(use.toTemplate())
 
     private fun open(template: TypeTemplate): TypeTemplate =
-        template.mapTypes { node -> node.named?.definition?.let(parameters::get)?.let { TypeTemplate.ParameterWrapper(it) } }
+        template.mapTypes { node ->
+            node.named
+                ?.definition
+                ?.let(parameters::get)
+                ?.let { TypeTemplate.ParameterWrapper(it) }
+        }
 
     companion object {
         /** Whether [id] belongs to the namespace reserved for opaque parameters. */

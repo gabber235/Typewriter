@@ -174,9 +174,19 @@ private fun NamedTypeUse.remappingContent(copies: Map<ResourceId, ResourceId>): 
 private fun TypeTemplate.remappingContent(copies: Map<ResourceId, ResourceId>): TypeTemplate =
     mapTypes { template ->
         when (template) {
-            is TypeTemplate.NamedWrapper -> TypeTemplate.NamedWrapper(template.value.remappingContent(copies))
-            is TypeTemplate.ParameterWrapper -> TypeTemplate.ParameterWrapper(template.value.copy(owner = template.value.owner.remappingContent(copies)))
-            else -> null
+            is TypeTemplate.NamedWrapper -> {
+                TypeTemplate.NamedWrapper(template.value.remappingContent(copies))
+            }
+
+            is TypeTemplate.ParameterWrapper -> {
+                TypeTemplate.ParameterWrapper(
+                    template.value.copy(owner = template.value.owner.remappingContent(copies)),
+                )
+            }
+
+            else -> {
+                null
+            }
         }
     }
 

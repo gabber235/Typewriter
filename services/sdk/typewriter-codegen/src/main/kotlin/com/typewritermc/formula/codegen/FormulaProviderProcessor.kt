@@ -152,7 +152,8 @@ internal class FormulaProviderProcessor(
         if (problems.isNotEmpty() || conversion == null) return null
         val signature = member.signature(conversion)
         val referenced =
-            (signature.parts + conversion.typeParameters.flatMap { it.bounds }).flatMapTo(linkedSetOf()) { it.referencedDefinitions() } - typeOwner
+            (signature.parts + conversion.typeParameters.flatMap { it.bounds }).flatMapTo(linkedSetOf()) { it.referencedDefinitions() } -
+                typeOwner
         val ownerName = "owner$index"
         val references =
             owners

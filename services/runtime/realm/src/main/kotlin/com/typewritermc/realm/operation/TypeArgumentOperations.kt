@@ -17,8 +17,8 @@ import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.conflicts
 import com.typewritermc.realm.edit.AuthoringMutationPlanner
 import com.typewritermc.realm.edit.MutationPlanningResult
-import com.typewritermc.realm.edit.requiredExpectations
 import com.typewritermc.realm.edit.factKey
+import com.typewritermc.realm.edit.requiredExpectations
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
