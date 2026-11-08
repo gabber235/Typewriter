@@ -218,4 +218,10 @@ val InterpreterTest by testSuite {
     test("a Long literal beyond 2^53 keeps every digit") {
         run("9007199254740993", long) shouldBe Evaluation.Value(9_007_199_254_740_993L)
     }
+
+    test("Double == and < follow IEEE 754, so -0.0 equals 0.0 and is not below it") {
+        run("let x = 0.0\n-x == 0.0", boolean) shouldBe Evaluation.Value(true)
+        run("let x = 0.0\n-x < 0.0", boolean) shouldBe Evaluation.Value(false)
+        run("let x = 0.0\n-x >= 0.0", boolean) shouldBe Evaluation.Value(true)
+    }
 }

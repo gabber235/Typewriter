@@ -156,7 +156,21 @@ private class Interpreter(
     private fun equals(
         node: Equals,
         locals: Map<String, Any?>,
-    ): Boolean = (environment.force(evaluate(node.left, locals)) == environment.force(evaluate(node.right, locals))) != node.negated
+    ): Boolean = same(environment.force(evaluate(node.left, locals)), environment.force(evaluate(node.right, locals))) != node.negated
+
+    /**
+     * `==`: structural, except that two floating point numbers compare as Kotlin compares Float and Double values, by
+     * IEEE 754, so -0.0 equals 0.0. Inside a record or a collection equality stays structural, as in Kotlin.
+     */
+    private fun same(
+        left: Any?,
+        right: Any?,
+    ): Boolean =
+        when {
+            left is Double && right is Double -> left == right
+            left is Float && right is Float -> left == right
+            else -> left == right
+        }
 
     private fun safeCast(
         node: SafeCast,

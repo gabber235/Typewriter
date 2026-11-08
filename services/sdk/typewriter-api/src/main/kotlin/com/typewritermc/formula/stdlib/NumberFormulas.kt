@@ -95,8 +95,9 @@ object NumberFormulas {
     @TypewriterFormulaName("unaryMinus")
     fun Double.negate(): Double = -this
 
+    /** Orders by IEEE 754, as Kotlin's `<` on Double values does, so -0.0 and 0.0 are equal; no formula value is NaN. */
     @TypewriterFormulaName("compareTo")
-    fun Double.compare(other: Double): Int = compareTo(other)
+    fun Double.compare(other: Double): Int = if (this == other) 0 else compareTo(other)
 
     /** The whole part of this number, toward zero; fails when it does not fit an Int. */
     @TypewriterFormulaName("toInt")
