@@ -72,9 +72,13 @@ pieces:
       - id: checkpoint-restore
         parent: k-own-paper-for-restarts
         what: Restore a snapshot of a booted, empty Paper instead of booting (Azul Zulu 25 CRaC, Linux only)
-        taught: Not tried
-        state: trying
-        evidence: []
+        taught: >-
+          P7 T2: works only with the checkpoint right after Paper's Bootstrap.validate, before it reads
+          the server folder; later points bake stale data (7 of 84 wrong) or die. Kill to ready 8.8 to
+          9.1 s against 13.9 to 14.5 s booting; 0 wrong of 84. Needs Azul's CRaC JDK (not in nixpkgs),
+          a 400 MB image per machine, about 170 lines of hooks; no restore on the Mac.
+        state: working
+        evidence: ["branch proto/gv-restore a7f4aaff0: prototypes/game-verification/RESULTS.md", CI run 42432909519]
 
   - id: stepped-ticks
     status: figuring-out
