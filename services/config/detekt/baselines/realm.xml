@@ -17,7 +17,6 @@
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$private fun match: TypeMatch</ID>
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$private fun valueAt: LocatedValue</ID>
     <ID>CyclomaticComplexMethod:EditExpectations.kt:internal fun CurrentAuthoringValues.requiredExpectations: List&lt;EditExpectation&gt;</ID>
-    <ID>CyclomaticComplexMethod:EditExpectations.kt:internal fun EditExpectation.sameFact: Boolean</ID>
     <ID>CyclomaticComplexMethod:GraphGroupPlacement.kt:GraphGroupPlacement$fun place: List&lt;GraphPlacement&gt;</ID>
     <ID>CyclomaticComplexMethod:OperationClonePreparation.kt:OperationClonePreparation$context(operation: OperationPreparation) suspend fun duplicateOwned: List&lt;ResourceId&gt;</ID>
     <ID>CyclomaticComplexMethod:OperationRealmPresentationSearchSource.kt:OperationRealmPresentationSearchSource$override suspend fun watch: RealmPresentationSearchUpdate</ID>

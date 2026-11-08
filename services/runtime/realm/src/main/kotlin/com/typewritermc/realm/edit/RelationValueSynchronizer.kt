@@ -235,13 +235,13 @@ internal class RelationValueSynchronizer(
     fun synchronizeValueMutation(
         before: List<LinkOccurrence>,
         resources: MutableMap<ResourceId, AuthoringRecord>,
-        source: ResourceId,
+        at: ValueLocation,
         batch: String,
         ordinal: Int,
         problems: MutableList<ValueProblem>,
     ) {
         if (problems.isNotEmpty()) return
-        val intended = resourceLinks(resources, source).associateBy(LinkOccurrence::id)
+        val intended = resourceLinks(resources, at).associateBy(LinkOccurrence::id)
         val previous = before.associateBy(LinkOccurrence::id)
         previous.values.filter { intended[it.id] != it }.forEach { occurrence ->
             clearOppositeIfPresent(resources, occurrence, problems)
@@ -284,7 +284,7 @@ internal class RelationValueSynchronizer(
     ) {
         val opposite = occurrence.target.opposite ?: return
         val location = ValueLocation(resource = occurrence.target.resource, path = opposite)
-        val current = resourceLinks(resources, location.resource).singleOrNull { it.id.location == location } ?: return
+        val current = resourceLinks(resources, location).singleOrNull { it.id.location == location } ?: return
         if (current.target.resource == occurrence.source && current.target.opposite == occurrence.id.location.path) {
             clearLocation(resources, location, problems)
         }
@@ -296,12 +296,12 @@ internal class RelationValueSynchronizer(
         target: LinkTarget,
         problems: MutableList<ValueProblem>,
     ) {
-        val current = resourceLinks(resources, proposed.source).singleOrNull { it.id == proposed.id } ?: return
+        val current = resourceLinks(resources, proposed.id.location).singleOrNull { it.id == proposed.id } ?: return
         if (current.target == target) return
         val opposite = current.target.opposite ?: return
         val location = ValueLocation(resource = current.target.resource, path = opposite)
         val other =
-            resourceLinks(resources, location.resource).singleOrNull {
+            resourceLinks(resources, location).singleOrNull {
                 it.id.location == location && it.target.resource == current.source
             }
         if (other != null) clearLocation(resources, location, problems)
@@ -404,7 +404,7 @@ internal class RelationValueSynchronizer(
         occurrence: LinkOccurrenceId,
         problems: MutableList<ValueProblem>,
     ) {
-        val current = resourceLinks(resources, occurrence.location.resource).singleOrNull { it.id == occurrence }
+        val current = resourceLinks(resources, occurrence.location).singleOrNull { it.id == occurrence }
         if (current == null) {
             problems += ValueProblem(location = occurrence.location, code = "link_occurrence_missing")
             return

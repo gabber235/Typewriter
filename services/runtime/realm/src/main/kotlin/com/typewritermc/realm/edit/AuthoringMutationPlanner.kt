@@ -168,21 +168,24 @@ internal class AuthoringMutationPlanner(
                 }
 
                 is EditIntent.SetValueWrapper -> {
-                    val before = resourceLinks(resources, intent.value.at.resource)
+                    val before = resourceLinks(resources, intent.value.at)
                     update(resources, intent.value.at, intent.value.value, problems)
-                    relations.synchronizeValueMutation(before, resources, intent.value.at.resource, batchIdentity, index, problems)
+                    relations.synchronizeValueMutation(before, resources, intent.value.at, batchIdentity, index, problems)
                 }
 
+                // An insert or a remove changes its item alone, so only the item's links are synchronized.
                 is EditIntent.InsertWrapper -> {
-                    val before = resourceLinks(resources, intent.value.at.resource)
+                    val item = intent.value.at.item(intent.value.item.id)
+                    val before = resourceLinks(resources, item)
                     insert(resources, intent, catalog, problems)
-                    relations.synchronizeValueMutation(before, resources, intent.value.at.resource, batchIdentity, index, problems)
+                    relations.synchronizeValueMutation(before, resources, item, batchIdentity, index, problems)
                 }
 
                 is EditIntent.RemoveWrapper -> {
-                    val before = resourceLinks(resources, intent.value.at.resource)
+                    val item = intent.value.at.item(intent.value.item)
+                    val before = resourceLinks(resources, item)
                     remove(resources, intent, problems)
-                    relations.synchronizeValueMutation(before, resources, intent.value.at.resource, batchIdentity, index, problems)
+                    relations.synchronizeValueMutation(before, resources, item, batchIdentity, index, problems)
                 }
 
                 is EditIntent.MoveWrapper -> {
@@ -417,17 +420,27 @@ private class TouchedLinks(
         contract: RelationId,
         slot: EndpointSlot,
     ): List<LinkProjection> =
-        asked.getOrPut(Triple(resource, contract, slot)) {
-            val judged =
-                if (resource in affected) {
-                    touching
-                } else {
-                    // Only the occurrences that can form such a link: of this relation, with [resource] at [slot].
-                    val held = slice(resource).let { it.own + it.into }
-                    judge(held.filter { endOf(it, resource) == slot && it.id.endpoint in contractEndpoints(contract) })
-                }
-            judged.projections.filter { it.contract == contract && (if (slot == EndpointSlot.FIRST) it.first else it.second) == resource }
+        if (resource in affected) {
+            touchingByEnd[Triple(resource, contract, slot)].orEmpty()
+        } else {
+            asked.getOrPut(Triple(resource, contract, slot)) {
+                // Only the occurrences that can form such a link: of this relation, with [resource] at [slot].
+                val held = slice(resource).let { it.own + it.into }
+                judge(held.filter { endOf(it, resource) == slot && it.id.endpoint in contractEndpoints(contract) })
+                    .projections
+                    .filter { it.contract == contract && (if (slot == EndpointSlot.FIRST) it.first else it.second) == resource }
+            }
         }
+
+    /** [touching] by each link's end, so asking for one affected resource's links does not scan every touching link. */
+    private val touchingByEnd by lazy(LazyThreadSafetyMode.NONE) {
+        buildMap<Triple<ResourceId, RelationId, EndpointSlot>, MutableList<LinkProjection>> {
+            touching.projections.forEach { link ->
+                getOrPut(Triple(link.first, link.contract, EndpointSlot.FIRST)) { mutableListOf() } += link
+                getOrPut(Triple(link.second, link.contract, EndpointSlot.SECOND)) { mutableListOf() } += link
+            }
+        }
+    }
 
     private fun slice(resource: ResourceId): LinkSlice = slices[resource] ?: LinkSlice.EMPTY
 
