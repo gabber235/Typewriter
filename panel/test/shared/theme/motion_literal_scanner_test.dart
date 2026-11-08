@@ -9,7 +9,7 @@ void main() {
       "AnimatedSize(duration: 800.ms, curve: ElasticOutCurve(0.9))", // member_list.dart:91
       "AnimatedContainer(duration: const Duration(milliseconds: 120))", // collection_editor.dart:483
       "final typingDelay = 50.ms;", // secret_field_displays.dart:93
-      "reverseCurve: const Interval(0, 0.9, curve: Cubic(.89, -0.01, .51, 1.11))", // elastic_transition.dart:22
+      "reverseCurve: const Interval(0, 0.9, curve: Cubic(.89, -0.01, .51, 1.11))", // a reverse curve in the style of the old elastic transition
       "_shimmerController.repeat(min: -0.5, max: 1.5, period: 1000.ms)", // shimmer.dart:109
     ]) {
       final found = motionLiteralViolations(path, snippet, const []);
