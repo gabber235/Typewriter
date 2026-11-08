@@ -31,7 +31,7 @@ import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.DynamicHook
 import com.typewritermc.services.libs.utils.runExtension
 import com.typewritermc.types.field
-import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -263,7 +263,7 @@ internal data class NameAt(
 
     /** One entry for the whole scope: a check that looked [name] up depends on its answer, not on every name beside it. */
     context(reads: RealmReads)
-    override fun entry(): EditExpectation = EditExpectation.createScope(at = at, name = name, expected = reads.read(this))
+    override fun entry(): CheckEvidence = CheckEvidence.createScope(at = at, name = name, expected = reads.read(this))
 }
 
 /** The checked formula at [at], or null when no formula is stored there or it is not checked. */

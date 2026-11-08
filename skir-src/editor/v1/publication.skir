@@ -3,8 +3,10 @@
 // storage and selection progress. Selection is a Realm decision, while each engine fetches,
 // validates, and applies the selected content through its own delivery lifecycle.
 
-import { EditExpectation } from "editor/v1/authoring_facts.skir";
-import { FindingSet } from "editor/v1/checking.skir";
+import {
+  CheckEvidence,
+  FindingSet,
+} from "editor/v1/checking.skir";
 import { CompilationRoot } from "editor/v1/compilation_root.skir";
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
@@ -67,7 +69,7 @@ enum PublicationBaseline(84150007) {
 /// Consumers compare this evidence with their working state before presenting it as current.
 struct DiagnosticEvidence(84150008) {
   catalog: CatalogGeneration = 0;
-  expectations: [EditExpectation] = 1;
+  evidence: [CheckEvidence] = 1;
 }
 
 struct PublicationDiagnosticDetails(84150009) {

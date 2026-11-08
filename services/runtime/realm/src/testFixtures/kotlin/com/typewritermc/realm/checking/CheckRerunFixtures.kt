@@ -28,11 +28,13 @@ import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.TestCheckProviders
 import com.typewritermc.realm.testing.checksOf
+import com.typewritermc.realm.testing.facts
 import com.typewritermc.realm.testing.grewFrom
 import com.typewritermc.realm.testing.settle
 import com.typewritermc.types.integer
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.FindingSet
@@ -194,11 +196,11 @@ internal val FindingSet.failureCodes: List<String>
     get() = (outcome as? CheckOutcome.FailedWrapper)?.value.orEmpty().map { it.code }
 
 /** Whether this evidence holds a fact about which resources exist. */
-internal val List<EditExpectation>.holdsResourceIds: Boolean get() = any { it is EditExpectation.ResourceIdsWrapper }
+internal val List<CheckEvidence>.holdsResourceIds: Boolean get() = facts.any { it is EditExpectation.ResourceIdsWrapper }
 
 /** The locations whose values this evidence holds. */
-internal fun List<EditExpectation>.valueLocations(): List<ValueLocation> =
-    filterIsInstance<EditExpectation.ValueWrapper>().map {
+internal fun List<CheckEvidence>.valueLocations(): List<ValueLocation> =
+    facts.filterIsInstance<EditExpectation.ValueWrapper>().map {
         it.value.at
     }
 
@@ -225,14 +227,14 @@ internal fun create(
 internal val RealmFixture.currentView: AuthoringView get() = views.read { it }
 
 /** The messages and evidence of each instance a captured check of [view] gives, by label. A lease must hold [view]. */
-internal suspend fun RealmFixture.capturedByLabel(view: AuthoringView): Map<String, Pair<List<String>, List<EditExpectation>>> =
+internal suspend fun RealmFixture.capturedByLabel(view: AuthoringView): Map<String, Pair<List<String>, List<CheckEvidence>>> =
     checks.evaluateCapture(view).results.associate { result ->
-        result.ticket.instance.label to (result.findings.map { it.message } to result.expectations)
+        result.ticket.instance.label to (result.findings.map { it.message } to result.evidence)
     }
 
 /** The live findings and evidence of each instance, by label, in the shape [capturedByLabel] gives. */
-internal fun RealmFixture.liveByLabel(): Map<String, Pair<List<String>, List<EditExpectation>>> =
-    checks.findings().associate { set -> set.ticket.instance.label to (set.findings.map { it.message } to set.expectations) }
+internal fun RealmFixture.liveByLabel(): Map<String, Pair<List<String>, List<CheckEvidence>>> =
+    checks.findings().associate { set -> set.ticket.instance.label to (set.findings.map { it.message } to set.evidence) }
 
 /** Every finding set's catalog generation. */
 internal fun RealmFixture.findingGenerations(): Set<String> = checks.findings().mapTo(sortedSetOf()) { it.ticket.catalog.value }

@@ -35,6 +35,7 @@ import com.typewritermc.realm.publication.ResourceReadiness
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.checksOf
+import com.typewritermc.realm.testing.facts
 import com.typewritermc.realm.testing.openCatalogLeases
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.testkit.definitions
@@ -683,7 +684,10 @@ val RealmCheckRuntimeTest by testSuite {
                 val blocker = assessment.findings.single()
 
                 (blocker.code to blocker.primary) shouldBe ("pending_type" to ValueLocation.of(firstResource))
-                val evidence = assessment.evidence.getValue(blocker.id).expectations
+                val evidence =
+                    assessment.evidence
+                        .getValue(blocker.id)
+                        .evidence.facts
                 realm.views.read { it.values.conflicts(evidence) }.isEmpty() shouldBe true
                 realm.commit(rename(firstResource, "renamed")).shouldBeCommitted()
                 realm.views.read { it.values.conflicts(evidence) }.isNotEmpty() shouldBe true

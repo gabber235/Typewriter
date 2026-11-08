@@ -6,6 +6,7 @@ import com.typewritermc.authoring.root
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.publication.DiagnosticEvidence
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -20,7 +21,7 @@ val PublicationViewTest by testSuite {
         val captured =
             DiagnosticEvidence(
                 catalog = CatalogGeneration(value = "catalog"),
-                expectations = listOf(EditExpectation.createValue(at = location, expected = DataValue.UNFILLED)),
+                evidence = listOf(CheckEvidence.FactWrapper(EditExpectation.createValue(at = location, expected = DataValue.UNFILLED))),
             )
 
         val details = finding.blocker(captured).details

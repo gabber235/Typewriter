@@ -36,6 +36,7 @@ import kotlinx.coroutines.withTimeout
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -196,19 +197,34 @@ suspend fun RealmFixture.evaluationsSince(before: Map<ValueLocation, Long>): Set
 }
 
 /** The evidence of the content rule's finding set on [resource] once the checks settled. */
-suspend fun RealmFixture.contentEvidence(resource: ResourceId): List<EditExpectation> = contentSet(resource).expectations
+suspend fun RealmFixture.contentEvidence(resource: ResourceId): List<CheckEvidence> = contentSet(resource).evidence
 
-/** The resource this fact is about; none for the realm wide set of resource ids. */
-val EditExpectation.subject: ResourceId?
+/** The facts of this evidence, without its scope entries. */
+val List<CheckEvidence>.facts: List<EditExpectation> get() = filterIsInstance<CheckEvidence.FactWrapper>().map { it.value }
+
+/** The resource this evidence is about: a fact's resource, or where a scope was looked up; none for the realm wide ids. */
+val CheckEvidence.subject: ResourceId?
     get() =
         when (this) {
-            is EditExpectation.ValueWrapper -> value.at.resource
-            is EditExpectation.ConfigurationWrapper -> value.at.resource
-            is EditExpectation.ResourceWrapper -> value.id
-            is EditExpectation.ResourceExistsWrapper -> value.id
-            is EditExpectation.LinksWrapper -> value.resource
-            is EditExpectation.TypesWrapper -> value.resource
-            else -> null
+            is CheckEvidence.ScopeWrapper -> {
+                value.at.resource
+            }
+
+            is CheckEvidence.FactWrapper -> {
+                when (val fact = value) {
+                    is EditExpectation.ValueWrapper -> fact.value.at.resource
+                    is EditExpectation.ConfigurationWrapper -> fact.value.at.resource
+                    is EditExpectation.ResourceWrapper -> fact.value.id
+                    is EditExpectation.ResourceExistsWrapper -> fact.value.id
+                    is EditExpectation.LinksWrapper -> fact.value.resource
+                    is EditExpectation.TypesWrapper -> fact.value.resource
+                    else -> null
+                }
+            }
+
+            else -> {
+                null
+            }
         }
 
 /** The content rule's finding set on [resource] once the checks settled. */

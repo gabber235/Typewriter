@@ -348,6 +348,5 @@ internal fun EditExpectation.location(): ValueLocation =
         is EditExpectation.LinksWrapper -> ValueLocation.of(value.resource)
         is EditExpectation.TypesWrapper -> ValueLocation.of(value.resource)
         is EditExpectation.ResourceIdsWrapper -> error("Resource id set expectations are never required for commit admission.")
-        is EditExpectation.ScopeWrapper -> error("Scope expectations are never required for commit admission.")
         else -> unknownVariant(this)
     }

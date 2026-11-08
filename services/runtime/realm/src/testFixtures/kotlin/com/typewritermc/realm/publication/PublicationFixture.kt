@@ -25,6 +25,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
@@ -176,7 +177,7 @@ internal class PublicationFixture(
                         ),
                     catalog = views.read { it.catalog.generation },
                 ),
-            expectations = expectations,
+            evidence = expectations.map(CheckEvidence::FactWrapper),
             outcome = CheckOutcome.FINISHED,
             findings = listOf(compilationDiagnostic("external_check", "An external input requires attention.", location = location)),
             status = status,

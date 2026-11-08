@@ -40,6 +40,7 @@ import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -273,12 +274,12 @@ internal data class Reach(
 /** Reads [query] at the realm's current revision, as a check pass does. */
 internal fun <T> RealmFixture.readNow(query: RealmQuery<T>): T = views.pin().use { it.reads.read(query) }
 
-/** The evidence of [query] at the realm's current revision: every fact it read. */
-internal fun RealmFixture.evidenceNow(query: RealmQuery<*>): List<EditExpectation> =
+/** The evidence of [query] at the realm's current revision, as a check records it: every fact and name it read. */
+internal fun RealmFixture.evidenceNow(query: RealmQuery<*>): List<CheckEvidence> =
     views.pin().use { pinned ->
         with(pinned.reads) {
             read(query)
-            query.factsRead { false }
+            query.evidence { false }
         }
     }
 

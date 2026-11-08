@@ -35,6 +35,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.compiled_content.PublishedContent
@@ -242,9 +243,11 @@ internal class RealmPublicationCoordinator(
                         evidence[finding.id] =
                             DiagnosticEvidence(
                                 catalog = captured.root.catalog.generation,
-                                expectations =
+                                evidence =
                                     dependencies.map { id ->
-                                        EditExpectation.createResource(id = id, expected = captured.root.resources[id])
+                                        CheckEvidence.FactWrapper(
+                                            EditExpectation.createResource(id = id, expected = captured.root.resources[id]),
+                                        )
                                     },
                             )
                     }

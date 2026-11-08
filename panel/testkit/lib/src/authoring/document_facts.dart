@@ -58,10 +58,12 @@ extension AuthoringDocumentFacts on AuthoringDocument {
   skir.DiagnosticEvidence evidenceOf(skir.ResourceId resource) =>
       skir.DiagnosticEvidence(
         catalog: generation,
-        expectations: [
-          skir.EditExpectation.createResource(
-            id: resource,
-            expected: this.resource(resource),
+        evidence: [
+          skir.CheckEvidence.wrapFact(
+            skir.EditExpectation.createResource(
+              id: resource,
+              expected: this.resource(resource),
+            ),
           ),
         ],
       );

@@ -112,7 +112,7 @@ void main() {
     // not which resources exist.
     final set = findingSet(
       realmDiagnostic("title", at),
-      expectations: [textExpectation(at, "Harbor")],
+      facts: [textExpectation(at, "Harbor")],
     );
     final other = skir.ResourceId(value: "book:other");
     final working = base.changedRemotely(
@@ -167,10 +167,12 @@ void main() {
           origin: origin,
           evidence: skir.DiagnosticEvidence(
             catalog: base.generation,
-            expectations: [
-              skir.EditExpectation.createTypes(
-                resource: id,
-                expected: const [],
+            evidence: [
+              skir.CheckEvidence.wrapFact(
+                skir.EditExpectation.createTypes(
+                  resource: id,
+                  expected: const [],
+                ),
               ),
             ],
           ),

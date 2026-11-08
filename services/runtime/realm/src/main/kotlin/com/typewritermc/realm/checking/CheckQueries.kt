@@ -11,7 +11,7 @@ import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.formula.ContentFindings
 import com.typewritermc.realm.formula.HoldsContent
 import com.typewritermc.realm.formula.NameAt
-import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckResult
@@ -51,7 +51,7 @@ internal data class CheckRun(
 
     /** What this run read at this revision, also through a memo, as its evidence. Which checks exist is not what a check read. */
     context(reads: RealmReads)
-    fun evidence(): List<EditExpectation> = evidence { it is SubjectOf }
+    fun evidence(): List<CheckEvidence> = evidence { it is SubjectOf }
 }
 
 /** What one run found. It keeps no evidence, because early cutoff could keep it while a value below changed. */
@@ -61,12 +61,12 @@ internal data class CheckRunResult(
     val findings: List<Diagnostic>,
 ) {
     fun toFindingSet(
-        evidence: List<EditExpectation>,
+        evidence: List<CheckEvidence>,
         status: FindingStatus,
-    ): FindingSet = FindingSet(ticket = ticket, expectations = evidence, outcome = outcome, findings = findings, status = status)
+    ): FindingSet = FindingSet(ticket = ticket, evidence = evidence, outcome = outcome, findings = findings, status = status)
 
-    fun toCheckResult(evidence: List<EditExpectation>): CheckResult =
-        CheckResult(ticket = ticket, outcome = outcome, expectations = evidence, findings = findings)
+    fun toCheckResult(evidence: List<CheckEvidence>): CheckResult =
+        CheckResult(ticket = ticket, outcome = outcome, evidence = evidence, findings = findings)
 }
 
 /** The result of a run that failed outside extension code: its failure finding at the subject. */

@@ -31,6 +31,7 @@ import com.typewritermc.realm.testing.entryRef
 import com.typewritermc.realm.testing.errorCodesOn
 import com.typewritermc.realm.testing.errorSet
 import com.typewritermc.realm.testing.evaluationsSince
+import com.typewritermc.realm.testing.facts
 import com.typewritermc.realm.testing.fieldKey
 import com.typewritermc.realm.testing.formulaPage
 import com.typewritermc.realm.testing.formulas
@@ -686,7 +687,7 @@ val FormulaEvaluationTest by testSuite {
             set.status shouldBe FindingStatus.CURRENT
             val stored = record(base)
             val held =
-                set.expectations.mapNotNull { fact ->
+                set.evidence.facts.mapNotNull { fact ->
                     when {
                         fact is EditExpectation.ResourceWrapper && fact.value.id == base -> {
                             fact.value.expected to stored
