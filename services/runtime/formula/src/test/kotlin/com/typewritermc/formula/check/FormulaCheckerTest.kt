@@ -118,6 +118,21 @@ val FormulaCheckerTest by testSuite {
         test("$source against $wanted gives $answer") { check(source, expected, EvaluationWorld().checking) shouldAnswer answer }
     }
 
+    // A Var reads as its value wherever it sits: in a list, a map, a Var, and a record inside a list.
+    for ((source, expected, answer) in listOf(
+        row("smith.ratings", listType(int), type(listType(int))),
+        row("smith.ratings.sumOf { it }", int, type(int)),
+        row("smith.marks[\"a\"]", nullable(int), type(nullable(int))),
+        row("smith.ledger", listType(int), type(listType(int))),
+        row("smith.tallies.sumOf { it.count + it.extras.sumOf { x -> x } }", int, type(int)),
+        row("smith.ratings == [1, 2]", boolean, type(boolean)),
+        row("smith.ratings", listType(string), problem("formula_type_mismatch")),
+    )) {
+        test("$source against ${expected.shown} reads each Var as its value and gives $answer") {
+            check(source, expected) shouldAnswer answer
+        }
+    }
+
     test("level is in scope in a function body") {
         check("level * 2", function("level" to int, result = int)) shouldAnswer type(int)
     }

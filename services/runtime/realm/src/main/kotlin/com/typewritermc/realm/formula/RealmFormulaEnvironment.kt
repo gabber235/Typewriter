@@ -4,11 +4,11 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.FormulaFunction
-import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.VarValueDefinition
 import com.typewritermc.formula.check.CatalogType
 import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.formula.check.FormulaEnvironment
+import com.typewritermc.formula.check.readType
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.extensions
@@ -20,7 +20,6 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.field
-import com.typewritermc.types.named
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unwrapNamed
@@ -68,7 +67,7 @@ internal class RealmFormulaEnvironment(
     override fun isMissing(id: TypeDefinitionId): Boolean = checked.definition(id) is DeclarationStatus.UnavailableWrapper
 }
 
-/** What naming [target] gives: the type of its exported field, a `Var<T, _>` reading as `T`, or a Ref to its type. Null when it is gone. */
+/** What naming [target] gives: the type of its exported field, each Var in it reading as its value, or a Ref to its type. Null when it is gone. */
 internal data class NamedAs(
     val target: ResourceId,
 ) : RealmQuery<TypeUse?> {
@@ -78,9 +77,7 @@ internal data class NamedAs(
         val actual = (binding.actual as? TypeSelection.CompleteWrapper)?.value ?: return null
         val export = reads.read(DynamicOf(target)).exports ?: return CONTENT_REFERENCE.use(listOf(actual.use))
         val resource = (binding.expected as? DraftExpectation.Complete)?.type ?: return null
-        val held = resource.fieldType(export.path.segments) ?: return null
-        val named = held.named
-        return if (named?.definition == VarDefinition.id) named.arguments.firstOrNull() else held
+        return resource.fieldType(export.path.segments)?.let(::readType)
     }
 }
 

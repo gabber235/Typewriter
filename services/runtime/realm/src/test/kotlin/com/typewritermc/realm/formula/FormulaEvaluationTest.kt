@@ -17,6 +17,7 @@ import com.typewritermc.realm.testing.commit
 import com.typewritermc.realm.testing.commitDefinition
 import com.typewritermc.realm.testing.commitSilverPurseUser
 import com.typewritermc.realm.testing.commitTypeDefinition
+import com.typewritermc.realm.testing.computed
 import com.typewritermc.realm.testing.computedVar
 import com.typewritermc.realm.testing.contentLink
 import com.typewritermc.realm.testing.contentSet
@@ -67,6 +68,7 @@ import com.typewritermc.testing.routes.FixtureCoinPrize
 import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.testing.routes.FixtureSignal
 import com.typewritermc.types.FORMULA_USE
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integer
 import com.typewritermc.types.nullable
@@ -502,6 +504,65 @@ val FormulaEvaluationTest by testSuite {
                 .last()
                 .shouldBeInstanceOf<PathSegment.ItemWrapper>()
             formulas.evaluation(demo.named("loot"), "2 + 3") shouldBe Evaluation.Value(5)
+        }
+    }
+
+    test("a list of Vars reads each Var as its value, in a Definition and in a record field, a Var.Computed item included") {
+        val page =
+            setup("evaluate-list-of-vars") {
+                formulaPage {
+                    definition(
+                        "scores",
+                        StandardTypes.list.use(listOf(definitionValueUse(intUse))),
+                        listOf(plain(1), computed("2 + 3")),
+                    )
+                    definition("loot", lootUse, FixtureLoot(extras = listOf(Var.Value(1), Var.Computed(Formula("2 + 3")))))
+                    formula("scores_total", intUse, "scores.sumOf { it }")
+                    formula("loot_total", intUse, "loot.extras.sumOf { it }")
+                }
+            }
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            formulas.value(demo.named("scores_total")) shouldBe 6
+            formulas.value(demo.named("loot_total")) shouldBe 6
+        }
+    }
+
+    test("a Var inside a record inside a list reads as its value") {
+        val page =
+            setup("evaluate-nested-vars") {
+                formulaPage {
+                    definition(
+                        "loots",
+                        StandardTypes.list.use(listOf(lootUse)),
+                        listOf(
+                            FixtureLoot(gold = Var.Value(2), extras = listOf(Var.Computed(Formula("1 + 2")))),
+                            FixtureLoot(gold = Var.Computed(Formula("4"))),
+                        ),
+                    )
+                    formula("sum", intUse, "loots.sumOf { it.gold + it.extras.sumOf { x -> x } }")
+                }
+            }
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            formulas.value(demo.named("sum")) shouldBe 9
+        }
+    }
+
+    test("one failing Var in a list fails the list's reader with no finding of its own") {
+        val page =
+            setup("evaluate-list-var-fails") {
+                formulaPage {
+                    definition(
+                        "scores",
+                        StandardTypes.list.use(listOf(definitionValueUse(intUse))),
+                        listOf(plain(1), computed("1 / 0")),
+                    )
+                    formula("total", intUse, "scores.sumOf { it }")
+                }
+            }
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            errorCodesOn(demo.named("scores")) shouldBe listOf("formula_failed")
+            errorCodesOn(demo.total).shouldBeEmpty()
+            formulas.failure(demo.total) shouldBe FormulaFailure.Dependency(demo.named("scores"))
         }
     }
 

@@ -64,6 +64,31 @@ val bountyUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "bounty").u
 /** An alias of `Box<Reward>`: the type the field `chest` of the declaring resource holds. */
 val rewardBoxUse: TypeUse = TypeDefinitionId.contentField(contentOwner, "chest").use()
 
+private val tallyId: TypeDefinitionId = TypeDefinitionId.content(contentOwner, "tally")
+
+/** A content record `Tally(counts: List<Var<Int>>, rounds: List<Var<List<Int>>>)`: Vars inside lists. */
+val tallyUse: TypeUse = tallyId.use()
+
+private val tallyDeclaration: TypeDefinition =
+    TypeDefinition.partial(
+        id = tallyId,
+        representation =
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = tallyId, name = "counts"),
+                            type = listType(varType(int)).toTemplate(),
+                        ),
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = tallyId, name = "rounds"),
+                            type = listType(varType(listType(int))).toTemplate(),
+                        ),
+                    ),
+                form = RecordForm.CONCRETE,
+            ),
+    )
+
 private val prizeDeclaration: TypeDefinition =
     TypeDefinition.partial(
         id = prizeId,
@@ -101,7 +126,7 @@ private val codeCatalog: DefaultCheckedCatalog =
             ) + SeasonDefinition.cases,
     )
 
-/** The code catalog plus Prize, its alias, an alias of that alias, and aliases of code types. */
+/** The code catalog plus Prize, its alias, an alias of that alias, aliases of code types, and Tally. */
 val evaluationCatalog: CheckedCatalog =
     codeCatalog.withContent(
         object : ContentSource {
@@ -109,7 +134,7 @@ val evaluationCatalog: CheckedCatalog =
                 if (owner ==
                     contentOwner
                 ) {
-                    listOf(prizeDeclaration)
+                    listOf(prizeDeclaration, tallyDeclaration)
                 } else {
                     emptyList()
                 }

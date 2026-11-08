@@ -3,6 +3,7 @@ package com.typewritermc.formula.check
 import com.typewritermc.formula.TextSpan
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.syntax.Name
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.closedCases
 import com.typewritermc.types.function
@@ -18,7 +19,7 @@ import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeUse
 
 // Members on a type: a record's fields, read through any number of references, then provider functions whose first
-// context slot takes the type. A Var field reads as its value.
+// context slot takes the type. A Var reads as its value wherever it sits in what a field holds.
 
 /** How many references a field read follows before it gives up, so a reference loop cannot hang the checker. */
 private const val MAX_REFERENCE_HOPS = 64
@@ -62,7 +63,7 @@ internal fun Checker.recordBehind(type: TypeUse): TypeUse {
     return current
 }
 
-/** The type of field [name] on a value of [type], read through references; a `Var` field reads as its value. */
+/** The type of field [name] on a value of [type], read through references; each `Var` in it reads as its value. */
 internal fun Checker.fieldType(
     type: TypeUse,
     name: String,
@@ -70,14 +71,35 @@ internal fun Checker.fieldType(
     val record = recordBehind(type)
     if (record == ERROR) return ERROR
     val field = schema(record)?.fields?.firstOrNull { it.key == name } ?: return null
-    return normalize(valueOf(field.type))
+    return normalize(readType(field.type))
 }
 
-/** What a field of [type] gives when read: a `Var`'s value type, or the type itself. */
-internal fun valueOf(type: TypeUse): TypeUse {
-    val named = type.named ?: return type
-    return if (named.definition == VarDefinition.id && named.arguments.isNotEmpty()) named.arguments.first() else type
-}
+/**
+ * What a stored value of [type] reads as: every `Var` reads as its value wherever it sits, at the top, in a list, a set
+ * or a map, or in another Var, so `List<Var<Int>>` reads as `List<Int>`. A record keeps its type; its Vars read as their
+ * values when its fields are read.
+ */
+fun readType(type: TypeUse): TypeUse =
+    when (type) {
+        is TypeUse.NullableWrapper -> {
+            readType(type.value.value).orNull()
+        }
+
+        is TypeUse.NamedWrapper -> {
+            val named = type.value
+            when {
+                named.definition == VarDefinition.id && named.arguments.isNotEmpty() -> readType(named.arguments.first())
+                named.definition in COLLECTIONS -> named.definition.use(named.arguments.map(::readType))
+                else -> type
+            }
+        }
+
+        else -> {
+            type
+        }
+    }
+
+private val COLLECTIONS = setOf(StandardTypes.list, StandardTypes.set, StandardTypes.map)
 
 /** The case of [expected]'s closed record named [name]. */
 internal fun Checker.caseNamed(
@@ -147,7 +169,7 @@ internal fun Checker.construct(
             broken = true
             return@forEachIndexed
         }
-        val wanted = normalize(valueOf(field.type))
+        val wanted = normalize(readType(field.type))
         val value =
             when (argument) {
                 is CallArgument.Written -> infer(argument.value, wanted, scope)

@@ -156,7 +156,7 @@ private fun Checker.destructure(
     val parts =
         binding.parts.mapIndexed { index, part ->
             val field = fields?.getOrNull(index)
-            val (checked, next) = bind(part, field?.let { normalize(valueOf(it.type)) } ?: ERROR, current)
+            val (checked, next) = bind(part, field?.let { normalize(readType(it.type)) } ?: ERROR, current)
             current = next
             (field?.key ?: "") to checked
         }

@@ -131,6 +131,23 @@ val InterpreterTest by testSuite {
         run("bonusOf(storedBounty) + [storedBounty].totalGold() + storedChest.get().gold", int) shouldBe Evaluation.Value(22)
     }
 
+    test("each Var in a list is worked out when read, also a Var inside a record inside a list") {
+        run("tallies.sumOf { it.counts.sumOf { c -> c } }", int) shouldBe Evaluation.Value(10)
+        run("scores.sumOf { it }", int) shouldBe Evaluation.Value(3)
+        run("scores == [1, 2]", boolean) shouldBe Evaluation.Value(true)
+        run("\"\${scores}\"", string) shouldBe Evaluation.Value("[1, 2]")
+    }
+
+    test("a Var holding a list, inside a list, is worked out before its items are read") {
+        run("rounds.map { r -> r.sumOf { x -> x } }", listType(int)) shouldBe Evaluation.Value(listOf(5, 0))
+        val nested = run("tallies.map { it.rounds.map { r -> r.sumOf { x -> x } } }", listType(listType(int)))
+        nested shouldBe Evaluation.Value(listOf(listOf(5), emptyList()))
+    }
+
+    test("a list with one failing Var fails with that Var's failure when its items are read") {
+        run("brokenScores.sumOf { it }", int).failure shouldBe FormulaFailure.DivisionByZero
+    }
+
     test("a lambda a provider returns unchanged is called as the formula's own") {
         run("let add = pass { x: Int -> x + 1 }\nadd(2)", int) shouldBe Evaluation.Value(3)
     }
