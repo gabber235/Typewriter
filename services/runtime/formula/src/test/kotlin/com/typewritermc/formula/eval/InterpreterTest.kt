@@ -39,8 +39,23 @@ val InterpreterTest by testSuite {
         Triple("when (money) { is Money(amount) if amount > 100 -> 1\n else -> 2 }", int, 2),
         Triple("Reward(gold = 5).gold", int, 5),
         Triple("5 in 1..9", boolean, true),
-        Triple("1..4", listType(int), listOf(1, 2, 3, 4)),
-        Triple("3..2", listType(int), emptyList<Int>()),
+        Triple("5 in 0..2_000_000", boolean, true),
+        Triple("10 in 0..9", boolean, false),
+        Triple("(1..4).toList()", listType(int), listOf(1, 2, 3, 4)),
+        Triple("(3..2).toList()", listType(int), emptyList<Int>()),
+        Triple("(1..0).isEmpty()", boolean, true),
+        Triple("2 in 3..1", boolean, false),
+        Triple("(5..2).first + (5..2).last", int, 7),
+        Triple("(1..5).map { it * 2 } == [2, 4, 6, 8, 10]", boolean, true),
+        Triple("(1..5).filter { it > 3 }", listType(int), listOf(4, 5)),
+        Triple("(1..4).fold(0) { total, item -> total + item }", int, 10),
+        Triple("let r: IntRange = 1..3\n2 in r", boolean, true),
+        Triple("1..3 == 1..3", boolean, true),
+        Triple("1..3 == 1..4", boolean, false),
+        Triple("\"\${1..3}\"", string, "1..3"),
+        Triple("when (7) { in 0..9 -> \"Novice\"\n else -> \"Hero\" }", string, "Novice"),
+        Triple("when (42) { in 0..9 -> \"Novice\"\n else -> \"Hero\" }", string, "Hero"),
+        Triple("[0..2_000_000_000: \"all\"][0..2_000_000_000]", nullable(string), "all"),
         Triple("\"a\" == \"a\"", boolean, true),
         Triple("Reward(gold = 5) == Reward(gold = 5)", boolean, true),
     )) {
@@ -69,8 +84,15 @@ val InterpreterTest by testSuite {
         run("(1..1000).sumOf { a -> (1..1000).sumOf { b -> 1 } }", int).failure shouldBe FormulaFailure.StepLimit
     }
 
-    test("a range larger than the step limit fails with StepLimit before it is built") {
-        run("(1..2000000000).size", int).failure shouldBe FormulaFailure.StepLimit
+    test("a range costs no steps until it is walked, and walking it costs a step per item") {
+        val small = EvaluationLimits(maxSteps = 100)
+        run("5 in 0..2_000_000", boolean, limits = small) shouldBe Evaluation.Value(true)
+        run("(1..1000).count { true }", int, limits = small).failure shouldBe FormulaFailure.StepLimit
+        run("(1..1000).map { it }", listType(int), limits = small).failure shouldBe FormulaFailure.StepLimit
+    }
+
+    test("a range longer than the steps left fails with StepLimit before its list is built") {
+        run("(1..2000000000).toList()", listType(int)).failure shouldBe FormulaFailure.StepLimit
     }
 
     test("a lambda sees the bindings around it when it was written") {
@@ -228,6 +250,6 @@ val InterpreterTest by testSuite {
     }
 
     test("a range longer than the default step limit is built when the evaluation's own limit allows it") {
-        run("(1..1500000).size", int, limits = EvaluationLimits(maxSteps = 2_000_000)) shouldBe Evaluation.Value(1_500_000)
+        run("(1..1500000).toList().size", int, limits = EvaluationLimits(maxSteps = 2_000_000)) shouldBe Evaluation.Value(1_500_000)
     }
 }

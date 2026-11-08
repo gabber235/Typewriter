@@ -671,6 +671,7 @@ private fun KSClassDeclaration.collectionIdentity(): TypeDefinitionId? =
         this isOneOf KnownTypes.lists -> StandardTypes.list
         this isOneOf KnownTypes.sets -> StandardTypes.set
         this isOneOf KnownTypes.maps -> StandardTypes.map
+        this isType KnownTypes.intRange -> StandardTypes.intRange
         else -> null
     }
 

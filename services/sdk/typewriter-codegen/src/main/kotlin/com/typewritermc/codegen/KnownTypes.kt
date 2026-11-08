@@ -13,6 +13,9 @@ internal object KnownTypes {
     /** Types authored as `typewriter/Set`. */
     val sets: Set<ClassName> = classes(COLLECTIONS, "Set", "MutableSet", "HashSet", "LinkedHashSet")
 
+    /** The type authored as `typewriter/IntRange`. */
+    val intRange: ClassName = ClassName("kotlin.ranges", "IntRange")
+
     /** Types authored as `typewriter/Map`. */
     val maps: Set<ClassName> = classes(COLLECTIONS, "Map", "MutableMap", "HashMap", "LinkedHashMap")
 

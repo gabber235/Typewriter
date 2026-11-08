@@ -4,8 +4,12 @@ import com.typewritermc.formula.TypewriterFormulaName
 import com.typewritermc.formula.TypewriterFormulaProvider
 
 /**
- * List, set and map functions. Sums are checked like the arithmetic operators. Kotlin's own collection functions of these
- * names would hide or be shadowed by them, so each function has another Kotlin name.
+ * List, set, map and Int range functions. Sums are checked like the arithmetic operators. Kotlin's own collection
+ * functions of these names would hide or be shadowed by them, so each function has another Kotlin name.
+ *
+ * A range is not a list, as in Kotlin: `in` and [IntRange.isEmpty] look at its bounds only, and the functions that walk
+ * it call their lambda once per item, so a walk costs steps per item while the range itself costs none. Its `toList` is
+ * a core function, since it must check the steps left before it builds the list.
  */
 @TypewriterFormulaProvider
 object CollectionFormulas {
@@ -81,4 +85,38 @@ object CollectionFormulas {
 
     @TypewriterFormulaName("values")
     val <K, V> Map<K, V>.valueList: List<V> get() = values.toList()
+
+    /** `1..4`: every Int from the receiver to [last], both included; empty when [last] is smaller. */
+    @TypewriterFormulaName("rangeTo")
+    fun Int.through(last: Int): IntRange = this..last
+
+    @TypewriterFormulaName("contains")
+    fun IntRange.spans(value: Int): Boolean = value in this
+
+    @TypewriterFormulaName("isEmpty")
+    fun IntRange.spansNothing(): Boolean = isEmpty()
+
+    @TypewriterFormulaName("map")
+    fun <R> IntRange.mapped(transform: (Int) -> R): List<R> = map(transform)
+
+    @TypewriterFormulaName("filter")
+    fun IntRange.kept(predicate: (Int) -> Boolean): List<Int> = filter(predicate)
+
+    @TypewriterFormulaName("count")
+    fun IntRange.counted(predicate: (Int) -> Boolean): Int = count(predicate)
+
+    @TypewriterFormulaName("any")
+    fun IntRange.anyItem(predicate: (Int) -> Boolean): Boolean = any(predicate)
+
+    @TypewriterFormulaName("all")
+    fun IntRange.everyItem(predicate: (Int) -> Boolean): Boolean = all(predicate)
+
+    @TypewriterFormulaName("sumOf")
+    fun IntRange.summed(selector: (Int) -> Int): Int = fold(0) { total, item -> Math.addExact(total, selector(item)) }
+
+    @TypewriterFormulaName("fold")
+    fun <R> IntRange.folded(
+        initial: R,
+        operation: (total: R, item: Int) -> R,
+    ): R = fold(initial, operation)
 }

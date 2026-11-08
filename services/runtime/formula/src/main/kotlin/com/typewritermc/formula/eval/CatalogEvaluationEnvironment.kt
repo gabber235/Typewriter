@@ -104,10 +104,15 @@ abstract class CatalogEvaluationEnvironment(
             else -> null
         }
 
+    /** A value as creator text; a range reads `1..5`, as in Kotlin. */
     override fun display(value: Any?): String =
         when (val forced = force(value)) {
             is RecordValue -> {
-                "${typeText(forced.type)}(${forced.fields.entries.joinToString { (name, field) -> "$name = ${display(field)}" }})"
+                if (forced.type.definition == StandardTypes.intRange) {
+                    "${forced.fields["first"]}..${forced.fields["last"]}"
+                } else {
+                    "${typeText(forced.type)}(${forced.fields.entries.joinToString { (name, field) -> "$name = ${display(field)}" }})"
+                }
             }
 
             is NamedValue -> {

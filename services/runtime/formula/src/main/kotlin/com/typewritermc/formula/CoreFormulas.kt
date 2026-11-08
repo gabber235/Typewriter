@@ -35,29 +35,28 @@ object CoreFormulas {
             defaulted = emptySet(),
         ) { arguments -> display(arguments[0]) }
 
-    private val int = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
+    private val intRange = StandardTypes.intRange.template()
 
     /**
-     * `1..4` is every Int from the receiver to the last, both included; empty when the last is smaller. Each item costs
-     * a step, so a range longer than the steps the evaluation has left fails with StepLimit before it is built.
+     * Every Int of a range as a list. Each item costs a step, so a range longer than the steps the evaluation has left
+     * fails with StepLimit before the list is built.
      */
-    val rangeTo: FormulaFunction =
+    val toList: FormulaFunction =
         FormulaFunction(
-            name = "rangeTo",
+            name = "toList",
             typeParameters = emptyList(),
             signature =
                 FunctionTypeTemplate(
-                    context = listOf(FunctionParameterTemplate(name = "this", type = int)),
-                    parameters = listOf(FunctionParameterTemplate(name = "last", type = int)),
-                    result = StandardTypes.list.template(listOf(int)),
+                    context = listOf(FunctionParameterTemplate(name = "this", type = intRange)),
+                    parameters = emptyList(),
+                    result = StandardTypes.list.template(listOf(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)),
                 ),
             defaulted = emptySet(),
         ) { arguments ->
-            val first = arguments[0] as Int
-            val last = arguments[1] as Int
-            if (last.toLong() - first >= remainingSteps) throw FormulaFailureException(FormulaFailure.StepLimit)
-            (first..last).toList()
+            val range = intoKotlin(arguments[0], intRange) as IntRange
+            if (range.last.toLong() - range.first >= remainingSteps) throw FormulaFailureException(FormulaFailure.StepLimit)
+            range.toList()
         }
 
-    val functions: List<FormulaFunction> = listOf(interpolate, rangeTo)
+    val functions: List<FormulaFunction> = listOf(interpolate, toList)
 }

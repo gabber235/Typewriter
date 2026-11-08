@@ -1,14 +1,18 @@
 package com.typewritermc.types
 
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 
 /**
- * Builtin collection definitions every catalog contains.
+ * Builtin definitions every catalog contains: the collections, and the Int range `a..b` makes.
  *
  * Each builtin is an object owning its id, the same shape as a generated `XDefinition`, so generated code
  * references `StandardTypes.List.id` like any other definition owner.
@@ -26,9 +30,15 @@ object StandardTypes {
         val id: TypeDefinitionId = TypeDefinitionId.qualified("typewriter", "Map")
     }
 
+    /** Kotlin's `IntRange`: every Int from [first] to [last], both included; empty when last is smaller. */
+    object IntRange {
+        val id: TypeDefinitionId = TypeDefinitionId.qualified("typewriter", "IntRange")
+    }
+
     val list: TypeDefinitionId get() = List.id
     val set: TypeDefinitionId get() = Set.id
     val map: TypeDefinitionId get() = Map.id
+    val intRange: TypeDefinitionId get() = IntRange.id
 
     private val listItem = parameter(list, 0, "T")
     private val setItem = parameter(set, 0, "T")
@@ -55,6 +65,24 @@ object StandardTypes {
                 representation = RepresentationTemplate.createMapping(key = mapKey.key.template, value = mapValue.key.template),
                 parents = emptyList(),
             ),
+            TypeDefinition(
+                id = intRange,
+                parameters = emptyList(),
+                representation =
+                    RepresentationTemplate.createRecord(
+                        fields = listOf("first", "last").map(::intRangeBound),
+                        form = RecordForm.CONCRETE,
+                    ),
+                parents = emptyList(),
+            ),
+        )
+
+    private fun intRangeBound(name: String) =
+        FieldDeclaration(
+            owner = FieldOwner(definition = intRange, name = name),
+            type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+            overrides = emptyList(),
+            hasConstructorDefault = false,
         )
 
     private fun parameter(
