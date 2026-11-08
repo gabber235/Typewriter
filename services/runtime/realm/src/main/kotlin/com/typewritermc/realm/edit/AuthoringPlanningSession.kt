@@ -1,5 +1,6 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
@@ -13,7 +14,6 @@ import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
-import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.over

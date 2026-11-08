@@ -1,7 +1,9 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.ValueVisitor
 import com.typewritermc.authoring.ValueWalk
+import com.typewritermc.authoring.typedAt
 import com.typewritermc.formula.Deferred
 import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.NamedValue
@@ -11,7 +13,6 @@ import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.formula.eval.FailedEvaluation
 import com.typewritermc.formula.eval.refTo
 import com.typewritermc.realm.authoring.RealmReads
-import com.typewritermc.realm.authoring.storedPositionAt
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.scalarValue
 import com.typewritermc.types.toResourceId
@@ -138,6 +139,6 @@ internal fun AuthoringRecord.storedAt(
     catalog: CheckedCatalog,
 ): Pair<TypeUse, DataValue>? {
     if (configuration !is TypeSelection.CompleteWrapper) return null
-    val position = storedPositionAt(path, catalog) ?: return null
+    val position = typedAt(path, catalog) as? TypedPosition.Value ?: return null
     return position.declared to position.value
 }

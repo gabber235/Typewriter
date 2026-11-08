@@ -1,5 +1,6 @@
 package com.typewritermc.realm.authoring
 
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use

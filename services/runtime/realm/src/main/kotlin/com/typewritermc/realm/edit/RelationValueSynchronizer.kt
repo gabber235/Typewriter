@@ -1,15 +1,16 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.TypedPosition
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
+import com.typewritermc.authoring.typedAt
 import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
-import com.typewritermc.realm.authoring.authoredTypeAt
-import com.typewritermc.realm.authoring.declaredFieldTypeAt
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -451,7 +452,8 @@ internal class RelationValueSynchronizer(
             remove(resources, EditIntent.createRemove(at = parent, item = last.id), problems)
             return
         }
-        val nullable = resources[location.resource]?.declaredFieldTypeAt(location.path, catalog) is TypeUse.NullableWrapper
+        val position = resources[location.resource]?.typedAt(location.path, catalog) as? TypedPosition.Value
+        val nullable = position?.declared is TypeUse.NullableWrapper
         update(resources, location, if (nullable) DataValue.NULL else DataValue.UNFILLED, problems)
     }
 }

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.ValueReplacement
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
@@ -9,7 +10,6 @@ import com.typewritermc.authoring.record
 import com.typewritermc.authoring.use
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.ResourceValueMapper
-import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog

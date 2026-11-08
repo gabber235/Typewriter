@@ -8,14 +8,15 @@ import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.PlacementAnchor
+import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.typedAt
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.realm.authoring.RelationReads
-import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.encodeGeneratedDefault
@@ -90,11 +91,8 @@ internal class OperationLayoutPreparation(
         val catalog = relations.catalog
         val record = relations.resources[this] ?: return null
         val location = catalog.placementLocation(this, record) ?: return null
-        // The authored value carries its actual placement kind, so the declared type comes from the containing record.
-        val field = location.path.segments.lastOrNull() as? PathSegment.FieldWrapper ?: return null
-        val container = record.authoredTypeAt(ValuePath(segments = location.path.segments.dropLast(1)), catalog.checked) ?: return null
-        val schema = (catalog.checked.resolve(container) as? Resolution.Ready)?.value?.schema ?: return null
-        val declared = schema.fields.singleOrNull { it.key == field.name }?.type ?: return null
+        // The authored value carries its actual placement kind, so the field's declared type decides.
+        val declared = (record.typedAt(location.path, catalog.checked) as? TypedPosition.Value)?.declared ?: return null
         if (!catalog.checked.isReadableAs(GraphPlacementDefinition.use.use, declared)) return null
         val checked = (catalog.checked.resolve(GraphPlacementDefinition.use.use) as Resolution.Ready).value
         val value = catalog.nativeBindings.bind(checked).encodeGeneratedDefault(GraphPlacement())
