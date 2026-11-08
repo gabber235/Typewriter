@@ -162,7 +162,8 @@ val RealmCheckInputsTest by testSuite {
 
         val (result, health) = evaluate(recipe, record(numbers = listOf("a" to 1, "b" to 2)), ViewReadLimits(maxCheckTuples = 1))
 
-        health.outcome(recipe.owner, CheckRunDiagnostics.of(RuleId(origin = recipe.owner, localIndex = 0), "test")) shouldBe CheckOutcome.IncompleteWrapper("check occurrence tuple limit exceeded")
+        health.outcome(recipe.owner, CheckRunDiagnostics.of(RuleId(origin = recipe.owner, localIndex = 0), "test")) shouldBe
+            CheckOutcome.IncompleteWrapper("check occurrence tuple limit exceeded")
         result.findings.map { it.primary } shouldBe listOf(listItemAt(RESOURCE, "numbers", "a"))
     }
 }
