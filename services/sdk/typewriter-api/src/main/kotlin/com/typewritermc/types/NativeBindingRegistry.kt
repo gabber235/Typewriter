@@ -276,7 +276,12 @@ class FactoryNativeBindingRegistry(
             }
         }
 
-    /** A named type's generated binding, or the polymorphic or portable one when no factory declares it. */
+    /**
+     * A named type's generated binding. Without a factory, a record that is never constructed itself binds through its
+     * cases' own bindings, unless it is an enum whose cases have no Kotlin class (a content or canonical enum), which
+     * crosses as a portable value. A Kotlin sealed type made only of objects is enum shaped too, but each object case
+     * has its own factory, so it binds polymorphically.
+     */
     private fun namedBinding(
         actual: CheckedType,
         use: NamedTypeUse,
@@ -284,9 +289,10 @@ class FactoryNativeBindingRegistry(
         val candidates = factoriesByDefinition[use.definition].orEmpty()
         if (candidates.isEmpty()) {
             val representation = actual.schema.representation
-            return if (representation is ResolvedRepresentation.RecordWrapper && !representation.isInstantiable() &&
-                actual.enumCases() == null
-            ) {
+            val classlessEnum =
+                actual.enumCases() != null &&
+                    representation.closedCases().orEmpty().none { case -> case.definition in factoriesByDefinition }
+            return if (representation is ResolvedRepresentation.RecordWrapper && !representation.isInstantiable() && !classlessEnum) {
                 PolymorphicNativeBinding(actual, use, catalog, this)
             } else {
                 PortableNativeBinding(actual, use)
