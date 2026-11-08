@@ -67,13 +67,14 @@ internal fun ExtensionCatalog.discoverSubjects(
                     emptyList()
                 }
             }
-        val outcome = reads.health().outcome(plan.rule.origin)
+        val diagnostics = CheckRunDiagnostics.of(plan.rule, "discovery")
+        val outcome = reads.health().outcome(plan.rule.origin, diagnostics)
         if (outcome != CheckOutcome.FINISHED) {
             incompleteRules += plan.rule
             val findings =
                 if (outcome is CheckOutcome.IncompleteWrapper) {
                     listOf(
-                        CheckRunDiagnostics.of(plan.rule, "discovery").error(
+                        diagnostics.error(
                             plan.rule.origin,
                             "check_discovery_incomplete",
                             outcome.reason,
