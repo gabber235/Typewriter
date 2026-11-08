@@ -59,8 +59,9 @@ void main() {
       await panel.startElsewhere();
       await panel.signIn("ada");
       await panel.open("Acme", "Join Requests");
-      await panel.row("grace").choose("Decline");
-      await panel.press("Decline");
+      await panel
+          .row("grace")
+          .hold("Decline grace? They must ask again to join.");
       await panel.expectHidden("grace");
 
       await panel.startElsewhere();
@@ -82,8 +83,9 @@ void main() {
       await panel.open("Acme", "Join Codes");
       await panel.press("Generate Join Code");
       final code = await panel.read(_joinCode);
-      await panel.row(code).choose("Revoke join code");
-      await panel.press("Revoke");
+      await panel
+          .row(code)
+          .hold("Revoke this join code? Nobody new can join with it.");
       await panel.expectHidden(code);
 
       await panel.startElsewhere();
