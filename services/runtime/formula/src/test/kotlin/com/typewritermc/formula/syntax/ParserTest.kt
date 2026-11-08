@@ -121,6 +121,13 @@ val ParserTest by testSuite {
         parseExpression("\"abc").problems.single().span shouldBe TextSpan(0, 4)
     }
 
+    test("a \\u escape takes exactly four hex digits, without a sign") {
+        parseExpression("\"\\u0041\"").problems.shouldBeEmpty()
+        for (source in listOf("\"\\u+041\"", "\"\\u-001\"", "\"\\u00g1\"")) {
+            parseExpression(source).problems.single().message shouldBe "Unknown escape; write \\\\ for a backslash"
+        }
+    }
+
     test("a function type names its parameters") {
         parseType("(Int) -> Int").problems.shouldNotBeEmpty()
     }
