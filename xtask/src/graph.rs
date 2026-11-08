@@ -35,6 +35,8 @@ const FAILURE_TAIL: usize = 20;
 pub enum Area {
     /// Kotlin services, including the imprint build, tests and ktlint.
     Services,
+    /// The seeded realm measurement and the realm's scale gates, minutes on their own.
+    RealmScale,
     /// Backend clippy, unit tests and the component test support crates.
     Backend,
     /// The embedded component test suite, every fixture.
@@ -57,6 +59,7 @@ impl Area {
     fn name(self) -> &'static str {
         match self {
             Self::Services => "services",
+            Self::RealmScale => "realm-scale",
             Self::Backend => "backend",
             Self::Components => "components",
             Self::Protocol => "protocol",
@@ -72,6 +75,12 @@ impl Area {
     fn paths(self) -> &'static [&'static str] {
         match self {
             Self::Services => &["services/"],
+            // What the realm computes comes from its own code, the formula language and the authoring SDK.
+            Self::RealmScale => &[
+                "services/runtime/realm/",
+                "services/runtime/formula/",
+                "services/sdk/typewriter-api/",
+            ],
             Self::Backend | Self::Components | Self::Gitops => &["backend/"],
             Self::Panel => &["panel/"],
             Self::Docs => &[DOCS_SITE],
@@ -221,6 +230,17 @@ pub const CHECKS: &[Step] = &[
     .heavy()
     .coverage("services.xml")
     .junit("services"),
+    // `:realm:test` leaves the measurement out, so it runs here alone.
+    program(
+        "realm-scale",
+        Area::RealmScale,
+        15,
+        "services",
+        "./gradlew",
+        &[":realm:realmScaleTest"],
+    )
+    .heavy()
+    .junit("services/runtime/realm"),
     program(
         "backend:lint",
         Area::Backend,
@@ -753,6 +773,13 @@ mod tests {
             )),
             BTreeSet::from(["panel", "quality"].map(String::from))
         );
+    }
+
+    #[test]
+    fn a_realm_change_runs_the_realm_scale_gates_and_another_service_change_does_not() {
+        let areas = |path: &str| area_names(&affected(select(None), &[PathBuf::from(path)]));
+        assert!(areas("services/runtime/realm/src/main/kotlin/A.kt").contains("realm-scale"));
+        assert!(!areas("services/runtime/loader/src/main/kotlin/A.kt").contains("realm-scale"));
     }
 
     #[test]

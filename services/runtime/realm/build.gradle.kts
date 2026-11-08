@@ -143,3 +143,27 @@ val verifyLoaderManagedArtifact =
 tasks.check {
     dependsOn(verifyLoaderManagedArtifact)
 }
+
+// The seeded realm measurement checks the realm's scale gates on a realm of thousands of resources and takes minutes,
+// so it runs on its own (`cargo xtask check realm-scale`) instead of in every test run.
+val seededRealmMeasurement = "com.typewritermc.realm.formula.SeededRealmMeasurement*"
+
+tasks.test {
+    filter { excludeTestsMatching(seededRealmMeasurement) }
+}
+
+tasks.register<Test>("realmScaleTest") {
+    group = "verification"
+    description = "Runs the seeded realm measurement and its scale gates"
+    val tests = sourceSets.test.get()
+    testClassesDirs = tests.output.classesDirs
+    classpath = tests.runtimeClasspath
+    filter { includeTestsMatching(seededRealmMeasurement) }
+}
+
+// Coverage comes from `test`; the merged report must not run the measurement.
+kover {
+    currentProject {
+        instrumentation { disabledForTestTasks.add("realmScaleTest") }
+    }
+}

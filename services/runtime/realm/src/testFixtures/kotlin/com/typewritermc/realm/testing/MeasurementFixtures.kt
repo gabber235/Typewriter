@@ -5,6 +5,7 @@ import com.typewritermc.setup.setup
 import com.typewritermc.types.integer
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.type_catalog.DataValue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
@@ -13,7 +14,7 @@ import kotlin.time.measureTimedValue
 
 /*
  * The seeded realm measurement: a realm of the size the layer's gates are written for, and what one commit on it
- * costs. It measures and prints; the gates are read from the printed numbers, never asserted.
+ * costs. It measures and prints; only the reply's findings size is asserted, since timings vary by machine.
  */
 
 /**
@@ -56,13 +57,16 @@ data class CommitCost(
     val pass: Duration,
     val graphReads: Duration,
     val replyBytes: Int,
+    /** The part of [replyBytes] that is the reply's finding sets; the rest is the saved state's resources and links. */
+    val findingBytes: Int,
     val computed: Long,
     val evicted: Long,
     val evidence: Int,
     val hints: Int,
 ) {
     override fun toString(): String =
-        "$label: commit $commit, pass $pass, graph reads during commit $graphReads, reply $replyBytes bytes, " +
+        "$label: commit $commit, pass $pass, graph reads during commit $graphReads, reply $replyBytes bytes " +
+            "(findings $findingBytes, saved state ${replyBytes - findingBytes}), " +
             "computed $computed, evicted $evicted, evidence held $evidence, hints $hints"
 }
 
@@ -89,7 +93,7 @@ internal suspend fun RealmFixture.measuredCommit(
     val bindingBefore = bindingNanos.get()
     val hintsBefore = hints
     val (reply, commit) = measureTimedValue { commit(edit) }
-    reply.shouldBeCommitted()
+    val saved = reply.shouldBeCommitted()
     val pass = measureTime { checks.drain() }
     val sets = checks.findings()
     return CommitCost(
@@ -102,6 +106,13 @@ internal suspend fun RealmFixture.measuredCommit(
                 .toJsonCode(reply)
                 .encodeToByteArray()
                 .size,
+        findingBytes =
+            saved.findings.sumOf {
+                FindingSet.serializer
+                    .toJsonCode(it)
+                    .encodeToByteArray()
+                    .size
+            },
         computed = graphRuns.totalRuns() - computedBefore,
         evicted = graphRuns.evicted() - evictedBefore,
         evidence = sets.sumOf { it.expectations.size },
