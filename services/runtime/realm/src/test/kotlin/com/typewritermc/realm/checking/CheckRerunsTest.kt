@@ -67,9 +67,11 @@ import io.kotest.property.PropTestConfig
 import io.kotest.property.arbitrary.list
 import io.kotest.property.checkAll
 import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.seconds
@@ -566,6 +568,46 @@ val CheckRerunsTest by testSuite {
             usagesOf(smith) shouldContain giver
             graphLinksOf(smith) shouldNotContain giver
             graphLinkRuns(smith) shouldBe runs
+        }
+    }
+
+    test("a commit's reply lists only the finding sets with something to show") {
+        withSetup(staticPage, catalog = routeFixtureCatalog.copy(configurations = { listOf(notOneRule(it)) })) {
+            findings = checks::findings
+            lateinit var use: TypeUse
+            val broken =
+                commitDefinition("broken", plainType(intUse)) {
+                    use = it.use
+                    plainVar(it.use, DataValue.integer(1))
+                }.created()
+            val clean = commitDefinition("clean", plainType(intUse)) { plainVar(it.use, DataValue.integer(2)) }.created()
+            settle()
+
+            val reply = commit(setDefinitionValue(clean, plainVar(use, DataValue.integer(3)))).shouldBeCommitted()
+
+            checks.findings().map { it.ticket.instance.location.resource } shouldContain clean
+            reply.findings.map { it.ticket.instance.location.resource } shouldContain broken
+            reply.findings.filter { it.findings.isEmpty() && it.outcome == CheckOutcome.FINISHED } shouldBe emptyList()
+        }
+    }
+
+    test("a finding set that turns clean leaves the next reply") {
+        withSetup(staticPage, catalog = routeFixtureCatalog.copy(configurations = { listOf(notOneRule(it)) })) {
+            findings = checks::findings
+            lateinit var use: TypeUse
+            val fixed =
+                commitDefinition("fixed", plainType(intUse)) {
+                    use = it.use
+                    plainVar(it.use, DataValue.integer(1))
+                }.created()
+            val other = commitDefinition("other", plainType(intUse)) { plainVar(it.use, DataValue.integer(2)) }.created()
+            errorCodesOn(fixed) shouldContain NOT_ONE
+
+            commit(setDefinitionValue(fixed, plainVar(use, DataValue.integer(2)))).shouldBeCommitted()
+            settle()
+            val reply = commit(setDefinitionValue(other, plainVar(use, DataValue.integer(3)))).shouldBeCommitted()
+
+            reply.findings.map { it.ticket.instance.location.resource } shouldNotContain fixed
         }
     }
 
