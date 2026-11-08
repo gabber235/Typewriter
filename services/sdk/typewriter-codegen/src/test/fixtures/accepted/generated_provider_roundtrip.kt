@@ -41,6 +41,9 @@ import java.math.BigInteger
 import kotlinx.serialization.Transient
 import kotlinx.serialization.SerialName
 import com.typewritermc.authoring.CaptureResult
+import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.complete
+import com.typewritermc.types.member
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -141,6 +144,23 @@ data class ExampleRow(
     val title: String,
     val value: String = "",
     val receiverExpression: String = "",
+)
+
+/** A sealed type made only of objects, beside an enum, so both kinds of unit cases cross a record field natively. */
+@TypewriterType(id = "a0000000000000000000000000000108")
+sealed interface TravelMode {
+    data object Walk : TravelMode
+
+    data object Fly : TravelMode
+}
+
+@TypewriterType(id = "a0000000000000000000000000000109")
+enum class TravelPace { SLOW, FAST }
+
+@TypewriterType(id = "a0000000000000000000000000000110")
+data class Travel(
+    val mode: TravelMode,
+    val pace: TravelPace,
 )
 
 @TypewriterType(id = "a0000000000000000000000000000098")
@@ -321,6 +341,22 @@ fun main(args: Array<String>) {
                 assembly.editorCatalog.resourceDisplays.single().target shouldBe
                     skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper(ExampleDefinition.id.template())
                 assembly.editorCatalog.types.single { it.definition.id == ExampleDefinition.id }.searchKey shouldBe "example"
+            }
+            requirement("a sealed type made only of objects and an enum read and write natively through a record field") {
+                val checked = (assembly.checked.resolve(TravelDefinition.id.use()) as Resolution.Ready).value
+                @Suppress("UNCHECKED_CAST")
+                val binding = assembly.bindings.bind(checked) as com.typewritermc.types.NativeBinding<Any>
+                val stored =
+                    DataValue.named(
+                        TravelDefinition.use,
+                        DataValue.record(
+                            "mode" to DataValue.named(TravelModeFlyDefinition.use, DataValue.UNIT),
+                            "pace" to DataValue.named(TravelPaceDefinition.use.member("FAST"), DataValue.UNIT),
+                        ),
+                    )
+                val decoded = binding.decode(checked.complete(stored).shouldBeInstanceOf<CompletenessResult.Complete>().value)
+                decoded.toString() shouldBe "Travel(mode=Fly, pace=FAST)"
+                binding.encode(decoded) shouldBe stored
             }
             requirement("a type publishes its class name as its source name, whatever its display, and a nested class its own name") {
                 val names = assembly.editorCatalog.types.associate { it.definition.id to it.name }
