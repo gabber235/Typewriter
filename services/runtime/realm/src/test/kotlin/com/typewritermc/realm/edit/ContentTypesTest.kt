@@ -1065,6 +1065,16 @@ val ContentTypesTest by testSuite {
         }
     }
 
+    test("while a custom type is gone, pointing a link in its value at another target commits") {
+        withSetup(linked, catalog = routeFixtureCatalog) { page ->
+            val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
+            val first = commitRecordUser("first", reward, "giver" to contentLink(page.smith), "gold" to DataValue.integer(1))
+            commit(delete(reward)).shouldBeCommitted()
+            commit(setReference(first, "giver", page.named("jones"))).shouldBeCommitted()
+            usagesOf(page.named("jones")) shouldContain first
+        }
+    }
+
     test("pointing a link that no longer fits at another target that does not fit is refused and nothing changes") {
         withSetup(linked, catalog = routeFixtureCatalog) { page ->
             val reward = commitTypeDefinition("Reward", rewardWithGiver).created()
