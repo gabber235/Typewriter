@@ -15,6 +15,7 @@ import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.TestDraftType
 import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.checksOf
@@ -83,7 +84,7 @@ val PublicationAcceptanceTest by testSuite {
                 .of(
                     catalog,
                     mapOf(firstResource to record(name = "ready")),
-                    services = RealmServices(predicates = traversalLimit),
+                    services = RealmServices(predicates = traversalLimit, names = checkingServices().names),
                 ).use { realm ->
                     RealmCheckRuntime(realm.views).use { checks ->
                         val acceptance = AuthoringAcceptance(realm.views, checks)

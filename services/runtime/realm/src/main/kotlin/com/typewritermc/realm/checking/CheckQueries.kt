@@ -4,12 +4,13 @@ import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.RealmServices
 import com.typewritermc.realm.authoring.ViewReadLimits
+import com.typewritermc.realm.authoring.evidence
 import com.typewritermc.realm.authoring.extensions
-import com.typewritermc.realm.authoring.factsRead
 import com.typewritermc.realm.authoring.generation
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.formula.ContentFindings
 import com.typewritermc.realm.formula.HoldsContent
+import com.typewritermc.realm.formula.NameAt
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
@@ -48,9 +49,9 @@ internal data class CheckRun(
         return evaluator.evaluate(subject, CheckTicket(instance = instance, catalog = generation), tracked())
     }
 
-    /** Every fact this run read at this revision, also through a memo. Which checks exist is not what a check read. */
+    /** What this run read at this revision, also through a memo, as its evidence. Which checks exist is not what a check read. */
     context(reads: RealmReads)
-    fun evidence(): List<EditExpectation> = factsRead { it is SubjectOf }
+    fun evidence(): List<EditExpectation> = evidence { it is SubjectOf }
 }
 
 /** What one run found. It keeps no evidence, because early cutoff could keep it while a value below changed. */
@@ -89,5 +90,9 @@ internal fun CheckSubject.failedRun(
         findings = emptyList(),
     )
 
-/** The services a realm's view store gives its queries: the check runtime's predicates, and [limits] on each read. */
-fun checkingServices(limits: ViewReadLimits = ViewReadLimits()): RealmServices = RealmServices(RealmSelectionPredicateEvaluator(), limits)
+/**
+ * The services a realm's view store gives its queries: the check runtime's predicates, [limits] on each read, and the
+ * formula scopes' name lookup.
+ */
+fun checkingServices(limits: ViewReadLimits = ViewReadLimits()): RealmServices =
+    RealmServices(RealmSelectionPredicateEvaluator(), limits) { at, name -> NameAt(at, name) }

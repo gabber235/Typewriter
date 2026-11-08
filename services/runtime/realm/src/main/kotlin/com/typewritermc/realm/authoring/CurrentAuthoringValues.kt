@@ -40,11 +40,23 @@ internal interface CurrentAuthoringValues {
         contract: RelationId,
         direction: TraversalDirection,
     ): Set<LinkProjection>
+
+    /** What [name] means where the formula at [at] looks it up. */
+    fun scope(
+        at: ValueLocation,
+        name: String,
+    ): List<ResourceId>
 }
 
-/** Values of one view. Links are read per node from [projectionsAt], so reading one node's links judges only that node. */
+/**
+ * Values of one view. Links are read per node from [projectionsAt], so reading one node's links judges only that node;
+ * what a name means comes from [scopes], which only the realm's graph can answer.
+ */
 internal class CapturedAuthoringValues(
     private val resources: Map<ResourceId, AuthoringRecord>,
+    private val scopes: (ValueLocation, String) -> List<ResourceId> = { _, _ ->
+        throw IllegalStateException("These values cannot judge what a name means.")
+    },
     private val projectionsAt: (ResourceId) -> Collection<LinkProjection>,
 ) : CurrentAuthoringValues {
     override fun value(at: ValueLocation): DataValue? = resources[at.resource]?.valueAt(at.path)
@@ -52,6 +64,11 @@ internal class CapturedAuthoringValues(
     override fun resource(id: ResourceId): AuthoringRecord? = resources[id]
 
     override fun resourceIds(): Set<ResourceId> = resources.keys
+
+    override fun scope(
+        at: ValueLocation,
+        name: String,
+    ): List<ResourceId> = scopes(at, name)
 
     override fun links(
         resource: ResourceId,
@@ -154,6 +171,10 @@ internal fun CurrentAuthoringValues.actual(expected: EditExpectation): EditExpec
 
         is EditExpectation.TypesWrapper -> {
             EditExpectation.createTypes(resource = expected.value.resource, expected = types(expected.value.resource))
+        }
+
+        is EditExpectation.ScopeWrapper -> {
+            EditExpectation.ScopeWrapper(expected.value.copy(expected = scope(expected.value.at, expected.value.name)))
         }
 
         else -> {

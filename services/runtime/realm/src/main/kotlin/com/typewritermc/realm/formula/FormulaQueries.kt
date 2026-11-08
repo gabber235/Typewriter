@@ -20,6 +20,7 @@ import com.typewritermc.formula.eval.FunctionValue
 import com.typewritermc.formula.eval.evaluate
 import com.typewritermc.formula.graph.GraphKey
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.EvidenceEntry
 import com.typewritermc.realm.authoring.Fact
 import com.typewritermc.realm.authoring.OwnLinks
 import com.typewritermc.realm.authoring.RealmQuery
@@ -30,6 +31,7 @@ import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.DynamicHook
 import com.typewritermc.services.libs.utils.runExtension
 import com.typewritermc.types.field
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -249,7 +251,8 @@ internal data class ScopeAt(
 internal data class NameAt(
     val at: ValueLocation,
     val name: String,
-) : RealmQuery<List<ResourceId>> {
+) : RealmQuery<List<ResourceId>>,
+    EvidenceEntry {
     context(reads: RealmReads)
     override fun compute(): List<ResourceId> =
         reads
@@ -257,6 +260,10 @@ internal data class NameAt(
             .levels
             .firstNotNullOfOrNull { it.names[name] }
             .orEmpty()
+
+    /** One entry for the whole scope: a check that looked [name] up depends on its answer, not on every name beside it. */
+    context(reads: RealmReads)
+    override fun entry(): EditExpectation = EditExpectation.createScope(at = at, name = name, expected = reads.read(this))
 }
 
 /** The checked formula at [at], or null when no formula is stored there or it is not checked. */

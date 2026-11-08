@@ -198,6 +198,19 @@ suspend fun RealmFixture.evaluationsSince(before: Map<ValueLocation, Long>): Set
 /** The evidence of the content rule's finding set on [resource] once the checks settled. */
 suspend fun RealmFixture.contentEvidence(resource: ResourceId): List<EditExpectation> = contentSet(resource).expectations
 
+/** The resource this fact is about; none for the realm wide set of resource ids. */
+val EditExpectation.subject: ResourceId?
+    get() =
+        when (this) {
+            is EditExpectation.ValueWrapper -> value.at.resource
+            is EditExpectation.ConfigurationWrapper -> value.at.resource
+            is EditExpectation.ResourceWrapper -> value.id
+            is EditExpectation.ResourceExistsWrapper -> value.id
+            is EditExpectation.LinksWrapper -> value.resource
+            is EditExpectation.TypesWrapper -> value.resource
+            else -> null
+        }
+
 /** The content rule's finding set on [resource] once the checks settled. */
 suspend fun RealmFixture.contentSet(resource: ResourceId): FindingSet {
     settle()

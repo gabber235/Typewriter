@@ -7,6 +7,7 @@ import com.typewritermc.realm.testing.allFindingCodes
 import com.typewritermc.realm.testing.commit
 import com.typewritermc.realm.testing.contentEvidence
 import com.typewritermc.realm.testing.contentJudged
+import com.typewritermc.realm.testing.contentSet
 import com.typewritermc.realm.testing.createEntry
 import com.typewritermc.realm.testing.entryRef
 import com.typewritermc.realm.testing.errorCodesOn
@@ -29,6 +30,7 @@ import com.typewritermc.realm.testing.settledFormulaChecks
 import com.typewritermc.realm.testing.settledRuns
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.staticPage
+import com.typewritermc.realm.testing.subject
 import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
@@ -37,8 +39,11 @@ import com.typewritermc.types.integer
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.type_catalog.DataValue
 
 val ScopeLookupTest by testSuite {
@@ -265,6 +270,53 @@ val ScopeLookupTest by testSuite {
             commit(rename(lib.named("bystander"), "passerby")).shouldBeCommitted()
 
             contentEvidence(lib.named("bound_user")) shouldBe before
+        }
+    }
+
+    test("an unknown name's evidence holds one scope entry for it and no fact of the elements in scope") {
+        withSetup(onePage, catalog = catalog) { page ->
+            val evidence = contentEvidence(page.named("naming"))
+
+            evidence.filter { it.subject == page.named("smith") }.shouldBeEmpty()
+            evidence
+                .filterIsInstance<EditExpectation.ScopeWrapper>()
+                .filter { it.value.name == "new_name" }
+                .map { it.value.expected } shouldBe listOf(emptyList())
+        }
+    }
+
+    test("renaming an element does not change an unknown name's evidence") {
+        withSetup(onePage, catalog = catalog) { page ->
+            val before = contentEvidence(page.named("naming"))
+            commit(rename(page.named("smith"), "farrier")).shouldBeCommitted()
+
+            contentEvidence(page.named("naming")) shouldBe before
+        }
+    }
+
+    test("a commit that gives an unknown name its targets marks that name's finding outdated in its reply") {
+        val twins =
+            setup("scope-twins") {
+                formulaPage {
+                    smith("first")
+                    smith("second")
+                    formula("naming", entryRef, "new_name")
+                }
+            }
+        withSetup(twins, catalog = catalog) { page ->
+            findings = checks::findings
+            val naming = page.named("naming")
+            contentSet(naming).findings.shouldNotBeEmpty()
+            val stored = record(naming)
+
+            // Two targets leave the name ambiguous, so no binding rewrites the formula and only its scope changed.
+            val reply = commit(rename(page.named("first"), "new_name"), rename(page.named("second"), "new_name")).shouldBeCommitted()
+
+            record(naming) shouldBe stored
+            reply.findings
+                .filter { set -> set.status == FindingStatus.CURRENT && set.ticket.instance.location.resource == naming }
+                .flatMap { it.findings }
+                .map { it.code } shouldNotContain "formula_unknown_name"
         }
     }
 

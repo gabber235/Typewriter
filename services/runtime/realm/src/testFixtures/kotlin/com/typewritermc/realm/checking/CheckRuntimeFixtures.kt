@@ -88,7 +88,7 @@ internal suspend fun checking(
     selectionPredicates: SelectionPredicateEvaluator = RealmSelectionPredicateEvaluator(),
     test: suspend (RealmFixture, RealmCheckRuntime) -> Unit,
 ) {
-    RealmFixture.of(catalog, seed, services = RealmServices(predicates = selectionPredicates, limits = readLimits)).use { realm ->
+    RealmFixture.of(catalog, seed, services = RealmServices(selectionPredicates, readLimits, checkingServices().names)).use { realm ->
         val runtime = RealmCheckRuntime(realm.views, dispatcher)
         realm.findings = runtime::findings
         try {
