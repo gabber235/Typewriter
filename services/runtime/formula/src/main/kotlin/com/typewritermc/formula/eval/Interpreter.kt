@@ -156,21 +156,8 @@ private class Interpreter(
     private fun equals(
         node: Equals,
         locals: Map<String, Any?>,
-    ): Boolean = same(environment.force(evaluate(node.left, locals)), environment.force(evaluate(node.right, locals))) != node.negated
-
-    /**
-     * `==`: structural, except that two floating point numbers compare as Kotlin compares Float and Double values, by
-     * IEEE 754, so -0.0 equals 0.0. Inside a record or a collection equality stays structural, as in Kotlin.
-     */
-    private fun same(
-        left: Any?,
-        right: Any?,
     ): Boolean =
-        when {
-            left is Double && right is Double -> left == right
-            left is Float && right is Float -> left == right
-            else -> left == right
-        }
+        formulaEquals(environment.force(evaluate(node.left, locals)), environment.force(evaluate(node.right, locals))) != node.negated
 
     private fun safeCast(
         node: SafeCast,
@@ -188,11 +175,11 @@ private class Interpreter(
     private fun mapValue(
         node: MapOf,
         locals: Map<String, Any?>,
-    ): Map<Any?, Any?> =
-        node.entries.associateTo(LinkedHashMap()) { (key, value) ->
-            environment.force(evaluate(key, locals)) to
-                evaluate(value, locals)
-        }
+    ): Map<Any?, Any?> {
+        val entries = LinkedHashMap<FormulaKey, Any?>()
+        node.entries.forEach { (key, value) -> entries[FormulaKey(environment.force(evaluate(key, locals)))] = evaluate(value, locals) }
+        return entries.entries.associateTo(LinkedHashMap()) { (key, value) -> key.value to value }
+    }
 
     /**
      * A user function call. The first one off the large stacks moves onto one, and every [CALLS_PER_STACK] nested calls

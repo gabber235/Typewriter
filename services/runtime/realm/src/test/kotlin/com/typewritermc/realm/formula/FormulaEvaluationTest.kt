@@ -270,6 +270,22 @@ val FormulaEvaluationTest by testSuite {
         }
     }
 
+    test("a reader of a range sees it move between two empty ranges, which formula == calls equal") {
+        val page =
+            setup("evaluate-empty-range-edit") {
+                formulaPage {
+                    formula("span", StandardTypes.intRange.use(), "1..0")
+                    formula("start", intUse, "span.first")
+                }
+            }
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            formulas.value(demo.named("start")) shouldBe 1
+            commit(setFormula(demo.named("span"), "5..2"))
+            settle()
+            formulas.value(demo.named("start")) shouldBe 5
+        }
+    }
+
     test("a field read on a reference reads the target's current value, also after a rename") {
         val page =
             setup("evaluate-reference") {
