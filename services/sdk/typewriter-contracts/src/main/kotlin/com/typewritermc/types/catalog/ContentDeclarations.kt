@@ -237,7 +237,9 @@ fun AuthoringRecord.missingContent(
  * Every way this record does not fit its current schema, each problem at its own location, on any record. Under a
  * missing type the error record has no fields, so each old field is its own unknown_field: adding a field is a new
  * problem, and removing one is not. [linkFit] gives the link problems the projection judged for this record. A misfit
- * at a link names the link's target, so pointing a link that does not fit at another target is a new misfit.
+ * of a link against the slot its position declares names the link's target, so pointing it at another target that
+ * does not fit is a new misfit. A position its type no longer declares (unknown_field, as every field under a gone
+ * type is) has no slot to misfit, so changing what it holds stays tolerated.
  */
 fun AuthoringRecord.misfits(
     owner: ResourceId,
@@ -245,8 +247,12 @@ fun AuthoringRecord.misfits(
     linkFit: () -> List<ValueProblem> = { emptyList() },
 ): List<Misfit> =
     (missingContent(owner, catalog) + structuralMisfits(owner, catalog) + linkFit().map { Misfit(it) }).map { misfit ->
+        if (misfit.problem.code == UNDECLARED_POSITION) return@map misfit
         linkTargetAt(misfit.problem.location.path)?.let { misfit.copy(target = it) } ?: misfit
     }
+
+/** The misfit of a value at a position its type does not declare. */
+private const val UNDECLARED_POSITION = "unknown_field"
 
 /** The resource the link stored at [path] points at, or null when no link is stored there. */
 private fun AuthoringRecord.linkTargetAt(path: ValuePath): ResourceId? {
