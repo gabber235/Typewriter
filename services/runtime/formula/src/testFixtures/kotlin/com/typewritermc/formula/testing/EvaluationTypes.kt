@@ -156,5 +156,8 @@ object EvaluationFormulas {
 
     fun free(): Payment = Payment.Free
 
+    /** Half of [ratio]; fails unless it got a Kotlin Float. */
+    fun half(ratio: Float): Float = ratio / 2
+
     fun brokenMood(): Mood = Mood(Var.Computed(Formula("1")))
 }

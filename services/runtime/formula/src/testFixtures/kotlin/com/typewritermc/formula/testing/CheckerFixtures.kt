@@ -65,6 +65,7 @@ import skirout.editor.v1.type_catalog.TypeUse
 
 val int: TypeUse = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
 val long: TypeUse = integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).use
+val float: TypeUse = floatScalar(FloatWidth.THIRTY_TWO).use
 val double: TypeUse = floatScalar(FloatWidth.SIXTY_FOUR).use
 val decimal: TypeUse = ScalarKind.DECIMAL.use
 val string: TypeUse = ScalarKind.TEXT.use

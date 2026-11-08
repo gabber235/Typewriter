@@ -34,7 +34,7 @@ internal fun Checker.literal(
     val scalar = (expected?.nonNull() as? TypeUse.ScalarWrapper)?.value
     return when (value) {
         is LiteralValue.Integer -> number(BigDecimal.valueOf(value.value).signed(negative), scalar, span, whole = true)
-        is LiteralValue.Decimal -> number(BigDecimal.valueOf(value.value).signed(negative), scalar, span, whole = false)
+        is LiteralValue.Decimal -> number(value.value.signed(negative), scalar, span, whole = false)
         is LiteralValue.Text -> Constant(value.value, TEXT, span)
         is LiteralValue.Bool -> Constant(value.value, BOOLEAN, span)
         LiteralValue.Null -> Constant(null, if (expected?.isNullable == true) expected else NULL, span)
@@ -43,7 +43,11 @@ internal fun Checker.literal(
 
 private fun BigDecimal.signed(negative: Boolean): BigDecimal = if (negative) negate() else this
 
-/** A number literal takes the expected numeric type; otherwise a whole number is an Int, or a Long when it must be. */
+/**
+ * A number literal takes the expected numeric type; otherwise a whole number is an Int, or a Long when it must be.
+ * Its value is the form a stored value of that type has: an exact Int or Long, the nearest Float or Double, or the
+ * Decimal exactly as written.
+ */
 private fun Checker.number(
     value: BigDecimal,
     expected: ScalarKind?,
@@ -66,7 +70,11 @@ private fun Checker.number(
             }
 
             is ScalarKind.FloatWrapper -> {
-                value.toDouble()
+                if (kind.value.width == FloatWidth.THIRTY_TWO) {
+                    value.toFloat().takeIf(Float::isFinite)
+                } else {
+                    value.toDouble().takeIf(Double::isFinite)
+                }
             }
 
             else -> {

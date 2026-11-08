@@ -1,6 +1,7 @@
 package com.typewritermc.formula.syntax
 
 import com.typewritermc.formula.TextSpan
+import java.math.BigDecimal
 
 /**
  * The syntax tree of a formula or a written type. Every node has a [span] in UTF-16 units of the source. A part
@@ -38,8 +39,9 @@ sealed interface LiteralValue {
         val value: Long,
     ) : LiteralValue
 
+    /** A number with a fraction or exponent, exactly as written, so a Decimal keeps its digits and scale. */
     data class Decimal(
-        val value: Double,
+        val value: BigDecimal,
     ) : LiteralValue
 
     data class Text(

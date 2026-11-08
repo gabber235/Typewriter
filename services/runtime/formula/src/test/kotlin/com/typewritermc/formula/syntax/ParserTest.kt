@@ -46,7 +46,7 @@ val ParserTest by testSuite {
         "x is Open" to "(is x Open)",
         "list[0]" to "(index list 0)",
         "a\n  .b\n  ?: c" to "(?: (. a b) c)",
-        "1_000 + 0.5 + 1e3" to "(+ (+ 1000 0.5) 1000.0)",
+        "1_000 + 0.5 + 1e3" to "(+ (+ 1000 0.5) 1E+3)",
         "\"\"\"raw \$x\"\"\"" to "(string \"raw \$x\")",
         "a // comment\n/* c */" to "a",
     )) {
