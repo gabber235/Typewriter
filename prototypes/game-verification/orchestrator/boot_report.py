@@ -2,12 +2,13 @@
 """Tables from boot.jsonl files: per variant and parallelism, the median over jobs of each job's median, with the
 range over jobs, and the change against the baseline measured in the same job (same runner, same CPU).
 
-  boot_report.py runs/boot.jsonl [more.jsonl ...] [--since 2026-11-08T09:00]
+  boot_report.py runs/boot.jsonl [more.jsonl ...] [--since 2026-11-08T09:00] [--base nocache]
 """
 import json, statistics, sys
 from collections import defaultdict
 
-args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and sys.argv[i - 1] != "--since"]
+args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and sys.argv[i - 1] not in ("--since", "--base")]
+BASE = next((sys.argv[i + 1] for i, a in enumerate(sys.argv) if a == "--base"), "base")
 since = next((sys.argv[i + 1] for i, a in enumerate(sys.argv) if a == "--since"), "")
 rows = []
 for path in args:
@@ -43,16 +44,16 @@ for k, rs in jobs.items():
 
 by_variant = defaultdict(list)
 for (f, label, variant, par), m in per_job.items():
-    base = per_job.get((f, label, "base", par))
+    base = per_job.get((f, label, BASE, par))
     m = dict(m)
     if base and base["state_s"] and m["state_s"]:
         m["vs_base_state"] = m["state_s"] / base["state_s"] - 1
         m["vs_base_cpu"] = m["paper_cpu_s"] / base["paper_cpu_s"] - 1 if base["paper_cpu_s"] and m["paper_cpu_s"] else None
     by_variant[(variant, par)].append(m)
 
-print("| Variant | Par | Jobs | Trials | Done s | Ready s | State s | Against base | Paper CPU s | CPU against base | Client CPU s | RSS MB | Chat at 200 ms | Platform ms | Wrong |")
-print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
-order = ["base", "nocache", "xshareoff", "cdsjoin", "aot", "aotfull", "aotnolink", "aotnojoin", "slim", "c1", "serial", "parallel", "fastjvm", "jar", "cold", "best", "bestcds", "baseq", "bestq"]
+print("| Variant | Par | Jobs | Trials | Done s | Ready s | State s | Kill to state s | Against base | Paper CPU s | CPU against base | Client CPU s | RSS MB | Chat at 200 ms | Platform ms | Wrong |")
+print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+order = ["base", "nocache", "xshareoff", "cdsjoin", "aot", "aotfull", "aotnolink", "aotnojoin", "slim", "c1", "serial", "parallel", "fastjvm", "jar", "cold", "best", "bestcds", "bestfull", "baseq", "bestq", "bestfullq"]
 for (variant, par) in sorted(by_variant, key=lambda k: (k[1], order.index(k[0]) if k[0] in order else 99)):
     ms = by_variant[(variant, par)]
 
@@ -63,7 +64,7 @@ for (variant, par) in sorted(by_variant, key=lambda k: (k[1], order.index(k[0]) 
         if pct:
             return f"{med(v) * 100:+.0f} % ({min(v) * 100:+.0f} to {max(v) * 100:+.0f})"
         return f"{fmt(med(v), d)} ({fmt(min(v), d)} to {fmt(max(v), d)})" if len(v) > 1 else fmt(v[0], d)
-    print(f"| {variant} | {par} | {len(ms)} | {sum(m['n'] for m in ms)} | {cell('done_s')} | {cell('ready_s')} | {cell('state_s')} | {cell('vs_base_state', pct=True)} | "
+    print(f"| {variant} | {par} | {len(ms)} | {sum(m['n'] for m in ms)} | {cell('done_s')} | {cell('ready_s')} | {cell('state_s')} | {cell('kill_to_state_s')} | {cell('vs_base_state', pct=True)} | "
           f"{cell('paper_cpu_s', 1)} | {cell('vs_base_cpu', pct=True)} | {cell('client_cpu_s', 1)} | {cell('paper_rss_mb', 0)} | {cell('after_med_ms', 0)} | {cell('platform_med_ms', 1)} | "
           f"{sum(m['wrong'] for m in ms)} of {sum(m['n'] for m in ms)}, after {sum(m['after_wrong'] for m in ms)} |")
 

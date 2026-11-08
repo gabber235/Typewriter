@@ -25,14 +25,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 0 }
-          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 1 }
-          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 2 }
-          - { plan: bootpar, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 0 }
-          - { plan: bootpar, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 1 }
-          - { plan: bootpar, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 2 }
-          - { plan: bootphases, backend: vulkan, runner: ubuntu-24.04, java: "25", repeat: 0 }
-          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "26", repeat: 3, variants: "base,aot,aotfull,best" }
+          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "26", repeat: 0, variants: "nocache,aot,aotfull,best,bestfull,bestfullq" }
+          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "26", repeat: 1, variants: "bestfullq,bestfull,best,aotfull,aot,nocache" }
+          - { plan: bootseq, backend: vulkan, runner: ubuntu-24.04, java: "26", repeat: 2, variants: "aotfull,nocache,bestfullq,aot,bestfull,best" }
+          - { plan: bootpar, backend: vulkan, runner: ubuntu-24.04, java: "26", repeat: 0, variants: "nocache,bestfullq" }
     defaults:
       run:
         working-directory: prototypes/game-verification

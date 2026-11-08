@@ -55,6 +55,9 @@ VARIANTS = {
     # The client stays gated (draws no frames) while Paper boots and is ungated when it connects at Done.
     "baseq": {"cache": "cds", "quiet": True, "cache_of": "base"},
     "bestq": {"cache": "aot", "join": True, "slim": True, "jvm": FAST, "aot": ["-XX:-AOTInvokeDynamicLinking"], "quiet": True, "cache_of": "best"},
+    # Java 26 archives invokedynamic sites with Minecraft's MethodType table; best with full AOT class linking.
+    "bestfull": {"cache": "aot", "join": True, "slim": True, "jvm": FAST, "aot": []},
+    "bestfullq": {"cache": "aot", "join": True, "slim": True, "jvm": FAST, "aot": [], "quiet": True, "cache_of": "bestfull"},
     "bestcds": {"cache": "cds", "join": True, "slim": True, "jvm": FAST},
 }
 
