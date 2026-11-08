@@ -36,7 +36,8 @@ internal data class LinkSlice(
 /**
  * The slices of [before] once the records of [holders] are replaced by [added]'s occurrences, which they now hold. A
  * slice holds what a resource holds and what targets it, so the slices of the holders and of both ends of each old and
- * new link are rebuilt, and every other slice is [before]'s own object.
+ * new link are rebuilt, and every other slice is [before]'s own object. An occurrence a holder still holds keeps its
+ * place in the slice it points into, so a slice whose links did not change stays equal and its judgement is reused.
  */
 internal fun Map<ResourceId, LinkSlice>.after(
     holders: Set<ResourceId>,
@@ -50,7 +51,9 @@ internal fun Map<ResourceId, LinkSlice>.after(
     val slices = HashMap(this)
     touched.forEach { id ->
         val own = if (id in holders) addedBySource[id].orEmpty() else slice(id).own
-        val into = slice(id).into.filter { it.source !in holders } + addedByTarget[id].orEmpty()
+        val arriving = addedByTarget[id].orEmpty().associateByTo(LinkedHashMap()) { it.id }
+        val kept = slice(id).into.mapNotNull { if (it.source in holders) arriving.remove(it.id) else it }
+        val into = kept + arriving.values
         if (own.isEmpty() && into.isEmpty()) slices.remove(id) else slices[id] = LinkSlice(own, into)
     }
     return slices
