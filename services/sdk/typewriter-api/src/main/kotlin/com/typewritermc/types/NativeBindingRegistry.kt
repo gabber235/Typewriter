@@ -263,7 +263,8 @@ class FactoryNativeBindingRegistry(
             }
 
             is TypeUse.NamedWrapper -> {
-                varBinding(actual, use.value) ?: collectionBinding(actual, use.value) ?: namedBinding(actual, use.value)
+                varBinding(actual, use.value) ?: rangeBinding(actual, use.value) ?: collectionBinding(actual, use.value)
+                    ?: namedBinding(actual, use.value)
             }
 
             // A function value is its stored body: the Formula record's binding reads and writes it.
@@ -313,6 +314,15 @@ class FactoryNativeBindingRegistry(
         if (use.definition != VAR_DEFINITION) return null
         val value = use.arguments.firstOrNull() ?: return null
         return VarNativeBinding(actual, PolymorphicNativeBinding(actual, use, catalog, this), value) { binding(resolve(value)) }
+    }
+
+    /** IntRange is Kotlin's own class, with no generated binding: it crosses as an IntRange wherever it appears. */
+    private fun rangeBinding(
+        actual: CheckedType,
+        use: NamedTypeUse,
+    ): NativeBinding<*>? {
+        if (use.definition != StandardTypes.intRange) return null
+        return IntRangeNativeBinding(use, actual) { binding(resolve(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use)) }
     }
 
     private fun appliedArguments(use: NamedTypeUse): com.typewritermc.authoring.AppliedNativeArguments =
@@ -917,6 +927,45 @@ private class NullableNativeBinding(
         value: Any?,
         values: EvaluationValues,
     ): Any? = value?.let { inner.toValueAny(it, values) }
+}
+
+private class IntRangeNativeBinding(
+    private val application: NamedTypeUse,
+    override val checked: CheckedType,
+    resolveBound: () -> NativeBinding<*>,
+) : NativeBinding<IntRange>,
+    CheckedNativeBinding {
+    override val actualType: TypeUse = application.use
+    override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
+    override val signature: String = "intRange"
+    override val nativeClass: kotlin.reflect.KClass<*> = IntRange::class
+    private val bound by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveBound)
+
+    override fun encode(value: IntRange): DataValue =
+        DataValue.named(application, DataValue.record("first" to bound.encodeAny(value.first), "last" to bound.encodeAny(value.last)))
+
+    override fun decode(value: CompleteValue): IntRange {
+        val record = value.payload<DataValue.RecordWrapper>()
+
+        fun bound(name: String): Int =
+            bound.decodeAuthoredAny(
+                record.field(name) ?: throw NativeBindingException("missing_native_field", "Missing native field $name."),
+            ) as Int
+        return IntRange(bound("first"), bound("last"))
+    }
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): IntRange {
+        val fields = (values.force(value) as RecordValue).fields
+        return IntRange(fields.getValue("first") as Int, fields.getValue("last") as Int)
+    }
+
+    override fun toValue(
+        value: IntRange,
+        values: EvaluationValues,
+    ): Any? = RecordValue(actualType, mapOf("first" to value.first, "last" to value.last))
 }
 
 private class ListNativeBinding(
