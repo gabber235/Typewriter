@@ -188,7 +188,7 @@ val RealmLifecycleTest by testSuite {
 
                 withContext(Dispatchers.Default) {
                     eventually(10.seconds) {
-                        fixture.counts("typewriter.realm.graph.computed", "query.kind")["CheckSubjects"] shouldBe 1L
+                        fixture.counts("typewriter.graph.computed", "query.kind")["CheckSubjects"] shouldBe 1L
                     }
                 }
             } finally {
