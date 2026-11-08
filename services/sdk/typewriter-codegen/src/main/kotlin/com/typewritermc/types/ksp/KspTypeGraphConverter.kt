@@ -2,6 +2,7 @@ package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSNode
@@ -620,10 +621,23 @@ private fun KSClassDeclaration.sealedParent(): KSClassDeclaration? =
         Modifier.SEALED in parent.modifiers && superTypes.any { it.resolve().declaration == parent }
     }
 
-/** The sealed subtypes of this declaration: nested ones in source order, then the others as KSP lists them. */
+/**
+ * The sealed subtypes of this declaration in an order that depends on the source alone, never on how KSP lists them:
+ * nested ones in source order, then the others in this file in source order, then those of other files by package,
+ * file name and line. The order is part of the catalog shape, and an enum's first case is its default.
+ */
 private fun KSClassDeclaration.casesInDeclarationOrder(): Sequence<KSClassDeclaration> {
     val nested = declarations.filterIsInstance<KSClassDeclaration>().toList()
-    return getSealedSubclasses().sortedBy { case -> nested.indexOf(case).takeIf { it >= 0 } ?: Int.MAX_VALUE }
+    return getSealedSubclasses().sortedWith(
+        compareBy(
+            { case -> nested.indexOf(case).takeIf { it >= 0 } ?: Int.MAX_VALUE },
+            { case -> case.containingFile != containingFile },
+            { case -> case.packageName.asString() },
+            { case -> case.containingFile?.fileName.orEmpty() },
+            { case -> (case.location as? FileLocation)?.lineNumber ?: Int.MAX_VALUE },
+            { case -> case.qualifiedName?.asString().orEmpty() },
+        ),
+    )
 }
 
 /** The entries of this enum class in declaration order. */

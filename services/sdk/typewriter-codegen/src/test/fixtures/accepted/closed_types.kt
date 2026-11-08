@@ -20,6 +20,19 @@ sealed interface NpcLocation {
     data object NotSpawned : NpcLocation
 }
 
+// Cases declared beside their sealed parent keep the order of the source, not of their names.
+@TypewriterType(id = "a0000000000000000000000000000905")
+sealed interface Weather
+
+@TypewriterType(id = "a0000000000000000000000000000906")
+data object Sunny : Weather
+
+@TypewriterType(id = "a0000000000000000000000000000907")
+data object Rainy : Weather
+
+@TypewriterType(id = "a0000000000000000000000000000908")
+data object Cloudy : Weather
+
 // An interface that is not sealed stays open to subtypes from anywhere.
 @TypewriterType(id = "a0000000000000000000000000000904")
 interface Shape
@@ -37,6 +50,9 @@ fun main(args: Array<String>) {
     check(NpcLocationSpawnedDefinition.id == NpcLocationDefinition.id.member("Spawned"))
     check(NpcLocationNotSpawnedDefinition.declaration.representation == RepresentationTemplate.createScalar(kind = ScalarKind.UNIT))
     check(NpcLocationSpawnedDefinition.declaration.parents == listOf(NpcLocationDefinition.id.namedTemplate()))
+
+    val weather = (WeatherDefinition.declaration.representation as RepresentationTemplate.RecordWrapper).value.form
+    check(weather == RecordForm.createClosed(cases = listOf(SunnyDefinition.id.namedTemplate(), RainyDefinition.id.namedTemplate(), CloudyDefinition.id.namedTemplate()))) { "$weather" }
 
     check((ShapeDefinition.declaration.representation as RepresentationTemplate.RecordWrapper).value.form == RecordForm.OPEN)
 }
