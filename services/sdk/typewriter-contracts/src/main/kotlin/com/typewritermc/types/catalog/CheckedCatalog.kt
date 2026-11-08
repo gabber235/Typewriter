@@ -218,6 +218,10 @@ class DefaultCheckedCatalog private constructor(
         return DefaultCheckedCatalog(generation, base.validated, ContentLayer(base, source))
     }
 
+    /** The code catalog plus [source] judged by the declaration rules alone, which a declaration's bound check resolves through. */
+    internal fun withDeclaredContent(source: ContentSource): DefaultCheckedCatalog =
+        DefaultCheckedCatalog(generation, validated, ContentLayer(this, source, checksBounds = false))
+
     override fun expand(use: TypeUse): TypeUse {
         val layer = content ?: return use
         return if (use.mentionsContent()) layer.expandFieldKeys(use, emptySet()) else use
@@ -1197,8 +1201,12 @@ private class ValidatedDeclarations(
 private class ContentLayer(
     val base: DefaultCheckedCatalog,
     val source: ContentSource,
+    private val checksBounds: Boolean = true,
 ) {
     private val problemsByOwner = ConcurrentHashMap<ResourceId, Map<TypeDefinitionId, List<String>>>()
+
+    /** The same content without bound checks, so judging a declaration's bounds never asks for its own judgement. */
+    private val declared by lazy { base.withDeclaredContent(source) }
 
     /** The one walk for every content id: a field key through its chain, a member through its owner, a generated key on its owner. */
     fun target(
@@ -1263,6 +1271,7 @@ private class ContentLayer(
             .getOrPut(owner) {
                 val declarations = source.declarations(owner)
                 val problems = declarations.declarationProblems(owner)
+                if (!checksBounds) return@getOrPut problems
                 problems +
                     declarations
                         .filter { it.id !in problems }
@@ -1274,14 +1283,14 @@ private class ContentLayer(
 
     /**
      * `argument_bound` when a code type this declaration holds applies an argument outside its parameter's bound, as
-     * `Ref<Int>` does. Code declarations resolve each use when it is read; a creator's declaration is refused up front.
+     * `Ref<Int>` and `Ref` to a content record do. Code declarations resolve each use when it is read; a creator's
+     * declaration is refused up front.
      */
     private fun TypeDefinition.boundProblems(): List<String> =
         representation
             .templates()
             .mapNotNull { (it.apply(emptyMap()) as? Resolution.Ready)?.value }
-            .filterNot { it.mentionsContent() }
-            .any { use -> (base.resolve(use) as? Resolution.Invalid)?.diagnostics?.any { it.code == "argument_bound" } == true }
+            .any { use -> (declared.resolve(use) as? Resolution.Invalid)?.diagnostics?.any { it.code == "argument_bound" } == true }
             .let { if (it) listOf("argument_bound") else emptyList() }
 
     /** The declaration with every field key in its templates replaced by where its chain leads. Content declarations take no parameters. */

@@ -188,6 +188,19 @@ val ContentReferencesTest by testSuite {
         }
     }
 
+    test("a Ref to a content record is refused as a declaration and nothing changes") {
+        withSetup(page, catalog = routeFixtureCatalog) {
+            val before = resources
+            val bad =
+                declares {
+                    val prize = record { field("amount", intUse) }
+                    record { field("giver", refTo(prize)) }
+                }
+            commitDefinition("bad", bad).reply.shouldBeRejected("argument_bound")
+            resources shouldBe before
+        }
+    }
+
     test("a One link inside a list is still refused") {
         val target = ResourceId(value = "target")
         RealmFixture.of(nodeCatalog(pairRelation(), childItem = linkType(PAIR_FIRST)), mapOf(target to node())).use { realm ->
