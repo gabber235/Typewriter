@@ -86,7 +86,9 @@ struct AuthoringState(84020009) {
   generation: CatalogGeneration = 0;
   resources: [AuthoringResource] = 1;
   links: [LinkProjection] = 2;
-  /// The finding sets with findings or an outcome other than finished. A check missing here ran and found nothing.
+  /// The finding sets with findings, an outcome other than finished, or an outdated status. A check
+  /// missing here has no findings known: it is clean, or it has not run yet; publication status says
+  /// whether checking is still running.
   findings: [FindingSet] = 3;
   confirmed_observation: AuthoringObservationId = 4;
 }

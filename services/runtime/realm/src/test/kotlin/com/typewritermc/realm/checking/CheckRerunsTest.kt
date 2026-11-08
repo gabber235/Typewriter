@@ -587,7 +587,9 @@ val CheckRerunsTest by testSuite {
 
             checks.findings().map { it.ticket.instance.location.resource } shouldContain clean
             reply.findings.map { it.ticket.instance.location.resource } shouldContain broken
-            reply.findings.filter { it.findings.isEmpty() && it.outcome == CheckOutcome.FINISHED } shouldBe emptyList()
+            val cleanAndCurrent =
+                reply.findings.filter { it.findings.isEmpty() && it.outcome == CheckOutcome.FINISHED && it.status == FindingStatus.CURRENT }
+            cleanAndCurrent shouldBe emptyList()
         }
     }
 
