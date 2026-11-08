@@ -132,6 +132,40 @@ void main() {
     expect(issues.savedFor(id).single.current, isTrue);
   });
 
+  test("a saved finding keeps the realm's answer for a scope and is judged by its facts", () {
+    // The scope names a resource this document does not hold: only the
+    // Realm knows what the name means, so the panel keeps its answer.
+    final set = findingSet(
+      realmDiagnostic("title", at),
+      facts: [textExpectation(at, "Harbor")],
+      scopes: [
+        skir.CheckEvidence_Scope(
+          at: at,
+          name: "reward",
+          expected: [skir.ResourceId(value: "item:unseen")],
+        ),
+      ],
+    );
+    final reported = RealmPublicationView.checking(
+      display: skir.PublicationStatus.createChecking(
+        baseline: skir.PublicationBaseline.initial,
+        findings: [set],
+      ),
+    );
+    final retitled = base.changedRemotely(
+      (edit) => edit.set(at, skir.DataValue.wrapStringValue("Lighthouse")),
+    );
+
+    final kept = ResourceIssues.evaluate(document: base, publication: reported);
+    final judged = ResourceIssues.evaluate(
+      document: retitled,
+      publication: reported,
+    );
+
+    expect(kept.savedFor(id).single.current, isTrue);
+    expect(judged.savedFor(id).single.current, isFalse);
+  });
+
   test("missing witnesses never make saved findings current", () {
     final issues = ResourceIssues.evaluate(
       document: base,
