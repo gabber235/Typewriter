@@ -133,7 +133,8 @@ class UserMenu extends HookConsumerWidget {
           child: Material(
             child: Button(
               face: ButtonFace.bare,
-              label: "Account menu",
+              // The signed in user's name names the menu.
+              label: "",
               focusNode: focusNode,
               onPressed: ContextMenuRegion.onPress(controller),
               child: Padding(
