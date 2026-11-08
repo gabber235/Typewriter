@@ -23,7 +23,6 @@ import com.typewritermc.operations.OperationReads
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.UnfinishedOperationInput
-import com.typewritermc.operations.asClosedUse
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.AuthoringView
@@ -34,6 +33,7 @@ import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.types.closedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceIds
 import com.typewritermc.types.toSkir
@@ -328,7 +328,7 @@ private fun AuthoringRecord.matches(
 ): Boolean =
     when (val actual = configuration) {
         is TypeSelection.CompleteWrapper -> {
-            view.catalog.checked.isReadableAs(actual.use.use, target.asClosedUse().use)
+            target.template.closedUse?.let { closed -> view.catalog.checked.isReadableAs(actual.use.use, closed) } == true
         }
 
         is TypeSelection.PendingWrapper -> {

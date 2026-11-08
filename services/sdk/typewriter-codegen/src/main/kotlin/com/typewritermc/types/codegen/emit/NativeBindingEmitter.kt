@@ -33,8 +33,8 @@ import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.erasedTypeName
 import com.typewritermc.types.codegen.parameterizedOrSelf
-import com.typewritermc.types.ksp.OwnedFieldDeclaration
 import com.typewritermc.types.isInstantiable
+import com.typewritermc.types.ksp.OwnedFieldDeclaration
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.template
 import skirout.editor.v1.type_catalog.FieldOwner

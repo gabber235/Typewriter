@@ -10,7 +10,6 @@ import com.typewritermc.types.MAX_TYPE_DEPTH
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.closedCases
-import com.typewritermc.types.function
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.mapTypes
@@ -22,13 +21,14 @@ import com.typewritermc.types.nullable
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.parts
 import com.typewritermc.types.qualified
-import com.typewritermc.types.slotNames
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.walk
+import com.typewritermc.types.zipParts
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.StructuralResult
@@ -40,7 +40,6 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DependentField
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
-import skirout.editor.v1.type_catalog.FunctionParameterUse
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -138,50 +137,10 @@ interface CheckedCatalog {
     fun expand(use: TypeUse): TypeUse
 }
 
+/** This template with each parameter replaced by its use in [arguments]; invalid at the first parameter [arguments] leaves unbound. */
 fun TypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<TypeUse> =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            val bound = arguments[value]
-            if (bound != null) {
-                Resolution.Ready(bound)
-            } else {
-                Resolution.Invalid(listOf(diagnostic(value.owner, "missing_parameter_binding")))
-            }
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            value.apply(arguments).map { it.use }
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            value.value.apply(arguments).map { it.nullable() }
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            Resolution.Ready(value.use)
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            val function = value
-            function.context
-                .mapResolution { slot ->
-                    slot.type.apply(arguments).map { FunctionParameterUse(name = slot.name, type = it) }
-                }.flatMap { context ->
-                    function.parameters
-                        .mapResolution { slot ->
-                            slot.type.apply(arguments).map { FunctionParameterUse(name = slot.name, type = it) }
-                        }.flatMap { parameters ->
-                            function.result.apply(arguments).map { result ->
-                                TypeUse.createFunction(context = context, parameters = parameters, result = result)
-                            }
-                        }
-                }
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
+    toUse(arguments::get)?.let { Resolution.Ready(it) }
+        ?: Resolution.Invalid(listOf(diagnostic(parameterKeys().first { it !in arguments }.owner, "missing_parameter_binding")))
 
 /** Applies the arguments of this template, keeping it a named application. */
 fun NamedTypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<NamedTypeUse> =
@@ -552,7 +511,7 @@ class DefaultCheckedCatalog private constructor(
      * own use, so checking sees the function and storage sees the record.
      */
     private fun resolveFunction(candidate: TypeUse.FunctionWrapper): Resolution<CheckedType> {
-        candidate.value.parts.forEach { part -> (resolveExpanded(part) as? Resolution.Invalid)?.let { return it } }
+        candidate.parts().forEach { part -> (resolveExpanded(part) as? Resolution.Invalid)?.let { return it } }
         return when (val formula = resolveNamed(FORMULA_USE)) {
             is Resolution.Invalid -> formula
             is Resolution.Ready -> Resolution.Ready(CheckedType(generation, candidate, formula.value.schema.copy(use = candidate), this))
@@ -628,29 +587,8 @@ class DefaultCheckedCatalog private constructor(
         visiting: MutableSet<NamedTypeUse> = linkedSetOf(),
     ): Resolution<Unit> {
         candidate.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
-        return when (candidate) {
-            is TypeUse.ScalarWrapper -> {
-                Resolution.Ready(Unit)
-            }
-
-            is TypeUse.NullableWrapper -> {
-                validateTypeApplication(candidate.value.value, visiting)
-            }
-
-            is TypeUse.NamedWrapper -> {
-                validateApplication(candidate.value, visiting).map { Unit }
-            }
-
-            is TypeUse.FunctionWrapper -> {
-                candidate.value.parts
-                    .mapResolution { validateTypeApplication(it, visiting) }
-                    .map { Unit }
-            }
-
-            else -> {
-                unknownVariant(candidate)
-            }
-        }
+        candidate.named?.let { named -> return validateApplication(named, visiting).map { Unit } }
+        return candidate.parts().mapResolution { validateTypeApplication(it, visiting) }.map { Unit }
     }
 
     private fun resolveNamed(candidate: NamedTypeUse): Resolution<CheckedType> {
@@ -925,44 +863,15 @@ class DefaultCheckedCatalog private constructor(
         template: TypeTemplate,
         actual: TypeUse,
         inferred: MutableMap<ParameterKey, TypeUse>,
-    ): Boolean =
-        when (template) {
-            is TypeTemplate.ParameterWrapper -> {
-                inferred[template.value]?.let { it == actual } ?: run {
-                    inferred[template.value] = actual
-                    true
-                }
-            }
-
-            is TypeTemplate.ScalarWrapper -> {
-                actual == template.value.use
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                actual is TypeUse.NullableWrapper && infer(template.value.value, actual.value.value, inferred)
-            }
-
-            is TypeTemplate.NamedWrapper -> {
-                val named = template.value
-                val actualNamed = actual.named
-                actualNamed != null &&
-                    named.definition == actualNamed.definition &&
-                    named.arguments.size == actualNamed.arguments.size &&
-                    named.arguments.zip(actualNamed.arguments).all { (left, right) -> infer(left, right, inferred) }
-            }
-
-            is TypeTemplate.FunctionWrapper -> {
-                val function = template.value
-                val actualFunction = actual.function
-                actualFunction != null &&
-                    function.slotNames == actualFunction.slotNames &&
-                    function.parts.zip(actualFunction.parts).all { (left, right) -> infer(left, right, inferred) }
-            }
-
-            else -> {
-                unknownVariant(template)
+    ): Boolean {
+        if (template is TypeTemplate.ParameterWrapper) {
+            return inferred[template.value]?.let { it == actual } ?: run {
+                inferred[template.value] = actual
+                true
             }
         }
+        return template.zipParts(actual)?.all { (part, actualPart) -> infer(part, actualPart, inferred) } == true
+    }
 
     private fun isResolvedReadableAs(
         actual: TypeUse,
@@ -1376,8 +1285,9 @@ private fun diagnostic(
 ) = DeclarationDiagnostic.of(affected, code)
 
 /**
- * Keys memoized resolutions by a structural hash computed without allocation; generated Skir hash codes build a list
- * per struct, which made every cache hit several times slower. Equality is the generated structural equality.
+ * Keys memoized resolutions by a structural hash that allocates nothing for named and scalar uses; generated Skir hash
+ * codes build a list per struct, which made every cache hit several times slower. Equality is the generated structural
+ * equality.
  */
 private class ResolutionKey(
     val use: TypeUse,
@@ -1389,17 +1299,17 @@ private class ResolutionKey(
     override fun equals(other: Any?): Boolean = other is ResolutionKey && other.hash == hash && other.use == use
 }
 
-private fun TypeUse.structuralHash(): Int =
+private fun TypeUse.structuralHash(): Int = parts().fold(ownHash()) { hash, part -> 31 * hash + part.structuralHash() }
+
+/** The hash of what this node says itself, not counting its parts: its form, definition, scalar or slot names. */
+private fun TypeUse.ownHash(): Int =
     when (this) {
         is TypeUse.NamedWrapper -> {
-            value.arguments.fold(value.definition.structuralHash()) { hash, argument ->
-                31 * hash +
-                    argument.structuralHash()
-            }
+            value.definition.structuralHash()
         }
 
         is TypeUse.NullableWrapper -> {
-            31 * value.value.structuralHash() + 1
+            kind.ordinal
         }
 
         is TypeUse.ScalarWrapper -> {
@@ -1407,12 +1317,11 @@ private fun TypeUse.structuralHash(): Int =
         }
 
         is TypeUse.FunctionWrapper -> {
-            val names = (value.context + value.parameters).fold(kind.ordinal) { hash, slot -> 31 * hash + slot.name.hashCode() }
-            value.parts.fold(names) { hash, part -> 31 * hash + part.structuralHash() }
+            (value.context + value.parameters).fold(kind.ordinal) { hash, slot -> 31 * hash + slot.name.hashCode() }
         }
 
         else -> {
-            kind.ordinal
+            unknownVariant(this)
         }
     }
 
@@ -1446,7 +1355,8 @@ private fun TypeUse.typeDepthFailure(): TypeDefinitionId? {
         if (depth > MAX_TYPE_DEPTH) {
             return named?.definition ?: nearestDefinition ?: TYPE_USE_DIAGNOSTIC_OWNER
         }
-        current.parts()
+        current
+            .parts()
             .asReversed()
             .forEach { pending.addLast(it to depth + 1) }
     }
@@ -1463,27 +1373,10 @@ private fun TypeDefinition.exceedsTypeDepth(): Boolean {
     while (pending.isNotEmpty()) {
         val (current, depth) = pending.removeLast()
         if (depth > MAX_TYPE_DEPTH) return true
-        when (current) {
-            is TypeTemplate.NamedWrapper -> {
-                current.value.arguments
-                    .asReversed()
-                    .forEach { pending.addLast(it to depth + 1) }
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                pending.addLast(current.value.value to depth + 1)
-            }
-
-            is TypeTemplate.FunctionWrapper -> {
-                current.value.parts
-                    .asReversed()
-                    .forEach { pending.addLast(it to depth + 1) }
-            }
-
-            else -> {
-                Unit
-            }
-        }
+        current
+            .parts()
+            .asReversed()
+            .forEach { pending.addLast(it to depth + 1) }
     }
     return false
 }

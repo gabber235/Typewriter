@@ -8,8 +8,6 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
-import skirout.editor.v1.type_catalog.FunctionTypeTemplate
-import skirout.editor.v1.type_catalog.FunctionTypeUse
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -203,43 +201,33 @@ val TypeTemplate.isValid: Boolean get() = runCatching { requireValid() }.isSucce
 /** Whether this named template passes [requireValid]; for values that may come from outside the runtime. */
 val NamedTypeTemplate.isValid: Boolean get() = runCatching { requireValid() }.isSuccess
 
+/** Checks what this node says itself, then each part one level deeper. */
 private fun TypeUse.requireValid(depth: Int) {
     requireTypeDepth(depth)
     when (this) {
-        is TypeUse.NamedWrapper -> value.requireValid(depth)
-        is TypeUse.NullableWrapper -> value.value.requireValid(depth + 1)
+        is TypeUse.NamedWrapper -> value.definition.requireValid()
+        is TypeUse.NullableWrapper -> Unit
         is TypeUse.ScalarWrapper -> value.requireValid()
-        is TypeUse.FunctionWrapper -> value.requireValid(depth)
+        is TypeUse.FunctionWrapper -> value.slotNames.let { (context, parameters) -> requireFunctionNames(context, parameters) }
         else -> throw IllegalArgumentException("Unknown type use variant.")
     }
+    parts().forEach { it.requireValid(depth + 1) }
 }
 
-private fun NamedTypeUse.requireValid(depth: Int) {
-    requireTypeDepth(depth)
-    definition.requireValid()
-    arguments.forEach { it.requireValid(depth + 1) }
-}
+private fun NamedTypeUse.requireValid(depth: Int) = use.requireValid(depth)
 
+/** Checks what this node says itself, then each part one level deeper. */
 private fun TypeTemplate.requireValid(depth: Int) {
     requireTypeDepth(depth)
     when (this) {
         is TypeTemplate.ParameterWrapper -> value.requireValid()
-        is TypeTemplate.NamedWrapper -> value.requireValid(depth)
-        is TypeTemplate.NullableWrapper -> value.value.requireValid(depth + 1)
+        is TypeTemplate.NamedWrapper -> value.definition.requireValid()
+        is TypeTemplate.NullableWrapper -> Unit
         is TypeTemplate.ScalarWrapper -> value.requireValid()
-        is TypeTemplate.FunctionWrapper -> value.requireValid(depth)
+        is TypeTemplate.FunctionWrapper -> value.slotNames.let { (context, parameters) -> requireFunctionNames(context, parameters) }
         else -> throw IllegalArgumentException("Unknown type template variant.")
     }
-}
-
-private fun FunctionTypeUse.requireValid(depth: Int) {
-    requireFunctionNames(context.map { it.name }, parameters.map { it.name })
-    parts.forEach { it.requireValid(depth + 1) }
-}
-
-private fun FunctionTypeTemplate.requireValid(depth: Int) {
-    requireFunctionNames(context.map { it.name }, parameters.map { it.name })
-    parts.forEach { it.requireValid(depth + 1) }
+    parts().forEach { it.requireValid(depth + 1) }
 }
 
 private fun requireFunctionNames(
@@ -252,11 +240,7 @@ private fun requireFunctionNames(
     }
 }
 
-private fun NamedTypeTemplate.requireValid(depth: Int) {
-    requireTypeDepth(depth)
-    definition.requireValid()
-    arguments.forEach { it.requireValid(depth + 1) }
-}
+private fun NamedTypeTemplate.requireValid(depth: Int) = template.requireValid(depth)
 
 private fun requireTypeDepth(depth: Int) = require(depth <= MAX_TYPE_DEPTH) { "Type expression exceeds the supported nesting depth." }
 

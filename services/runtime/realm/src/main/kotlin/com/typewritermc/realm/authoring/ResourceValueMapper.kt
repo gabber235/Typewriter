@@ -19,12 +19,12 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.closedUse
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.items
-import com.typewritermc.types.nullable
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
@@ -32,7 +32,6 @@ import com.typewritermc.types.storedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
@@ -50,7 +49,6 @@ import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeSelection
-import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -653,7 +651,7 @@ private fun AuthoringRecord.matches(
     expected: NamedTypeTemplate,
     catalog: CheckedCatalog,
 ): Boolean {
-    val expectedUse = expected.template.toUseOrNull()
+    val expectedUse = expected.template.closedUse
     return when (val selected = configuration) {
         is TypeSelection.CompleteWrapper -> {
             expectedUse?.let { catalog.isReadableAs(selected.use.use, it) }
@@ -671,34 +669,6 @@ private fun AuthoringRecord.matches(
         }
     }
 }
-
-private fun TypeTemplate.toUseOrNull(): TypeUse? =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            null
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            val applied = value.arguments.map { it.toUseOrNull() ?: return null }
-            value.definition.use(applied)
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            value.value.toUseOrNull()?.nullable()
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            value.use
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            value.toUse { it.toUseOrNull() }
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
 
 private fun occurrenceKey(value: LinkOccurrence): String =
     "${value.id.endpoint.value}:${value.source.value}:${ValuePath.serializer.toJsonCode(

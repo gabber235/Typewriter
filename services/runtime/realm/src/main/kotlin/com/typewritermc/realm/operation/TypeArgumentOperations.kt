@@ -24,18 +24,17 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.closedCases
+import com.typewritermc.types.closedUse
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
-import com.typewritermc.types.nullable
 import com.typewritermc.types.payload
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.EditIntent
@@ -56,7 +55,6 @@ import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeSelection
-import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -511,7 +509,7 @@ private fun AuthoringRecord.matches(
     expected: NamedTypeTemplate,
     catalog: CheckedCatalog,
 ): Boolean {
-    val concrete = expected.template.concreteUseOrNull()
+    val concrete = expected.template.closedUse
     if (concrete != null) return matches(concrete, catalog)
     return catalog.isNominalSubtype(configuration.definition, expected.definition)
 }
@@ -524,14 +522,3 @@ private val LinkRepairIntent.occurrence: LinkOccurrenceId
             is LinkRepairIntent.RemoveWrapper -> value
             else -> unknownVariant(this)
         }
-
-private fun TypeTemplate.concreteUseOrNull(): TypeUse? {
-    return when (this) {
-        is TypeTemplate.ParameterWrapper -> null
-        is TypeTemplate.NamedWrapper -> value.definition.use(value.arguments.map { it.concreteUseOrNull() ?: return null })
-        is TypeTemplate.NullableWrapper -> value.value.concreteUseOrNull()?.nullable()
-        is TypeTemplate.ScalarWrapper -> value.use
-        is TypeTemplate.FunctionWrapper -> value.toUse { it.concreteUseOrNull() }
-        else -> unknownVariant(this)
-    }
-}

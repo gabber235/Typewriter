@@ -15,12 +15,10 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.closedUse
 import com.typewritermc.types.fields
-import com.typewritermc.types.namedUse
-import com.typewritermc.types.nullable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.template
-import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
@@ -38,14 +36,12 @@ import skirout.editor.v1.operation.ResourceOperationDefinition
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
-import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -167,7 +163,8 @@ fun bindOperations(
             require(operations.none { it.definition.id == declaration.id }) { "Duplicate operation ${declaration.id}." }
             when (val target = declaration.target) {
                 is ResourceTarget.TypeWrapper -> {
-                    require(catalog.resolve(target.template.asClosedUse().use) is Resolution.Ready) {
+                    val closed = target.template.template.closedUse
+                    require(closed != null && catalog.resolve(closed) is Resolution.Ready) {
                         "Operation target is unavailable: ${target.template}."
                     }
                 }
@@ -281,15 +278,3 @@ private fun CheckedCatalog.isOwnedBy(
     input: CheckedType,
     owner: TypeDefinitionId,
 ): Boolean = input.use.definitionOrNull()?.let { isNominalSubtype(it, owner) } == true
-
-fun NamedTypeTemplate.asClosedUse(): NamedTypeUse = definition.namedUse(arguments.map { it.asClosedUse() })
-
-private fun TypeTemplate.asClosedUse(): TypeUse =
-    when (this) {
-        is TypeTemplate.NamedWrapper -> value.asClosedUse().use
-        is TypeTemplate.NullableWrapper -> value.value.asClosedUse().nullable()
-        is TypeTemplate.ScalarWrapper -> value.use
-        is TypeTemplate.ParameterWrapper -> error("Resource operations require closed type applications.")
-        is TypeTemplate.FunctionWrapper -> requireNotNull(value.toUse { it.asClosedUse() })
-        else -> unknownVariant(this)
-    }

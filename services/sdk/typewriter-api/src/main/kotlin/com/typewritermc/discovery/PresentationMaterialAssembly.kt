@@ -34,13 +34,13 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.parts
 import com.typewritermc.types.portableOrNull
-import com.typewritermc.types.slotNames
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
+import com.typewritermc.types.zipParts
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationMaterial
@@ -260,46 +260,34 @@ private fun TypeTemplate.isValidMaterialTemplate(
     parameterBounds: Map<ParameterKey, List<TypeTemplate>>,
     catalog: CheckedCatalog,
 ): Boolean =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            value in parameterBounds
-        }
+    parts().all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) } &&
+        when (this) {
+            is TypeTemplate.ParameterWrapper -> {
+                value in parameterBounds
+            }
 
-        is TypeTemplate.NamedWrapper -> {
-            val definition = definitions[value.definition]
-            definition != null &&
-                catalog.definition(this.value.definition) == DeclarationStatus.READY &&
-                value.arguments.size == definition.parameters.size &&
-                value.arguments.all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) } &&
-                definition.parameters.zip(value.arguments).all { (parameter, argument) ->
-                    val bindings =
-                        definition.parameters
-                            .map(TypeParameter::key)
-                            .zip(value.arguments)
-                            .toMap()
-                    parameter.bounds.all { bound ->
-                        val expected = bound.substitute(bindings)
-                        catalog.isTemplateReadableAs(argument, expected, parameterBounds)
+            is TypeTemplate.NamedWrapper -> {
+                val definition = definitions[value.definition]
+                definition != null &&
+                    catalog.definition(this.value.definition) == DeclarationStatus.READY &&
+                    value.arguments.size == definition.parameters.size &&
+                    definition.parameters.zip(value.arguments).all { (parameter, argument) ->
+                        val bindings =
+                            definition.parameters
+                                .map(TypeParameter::key)
+                                .zip(value.arguments)
+                                .toMap()
+                        parameter.bounds.all { bound ->
+                            val expected = bound.substitute(bindings)
+                            catalog.isTemplateReadableAs(argument, expected, parameterBounds)
+                        }
                     }
-                }
-        }
+            }
 
-        is TypeTemplate.NullableWrapper -> {
-            value.value.isValidMaterialTemplate(definitions, parameterBounds, catalog)
+            else -> {
+                true
+            }
         }
-
-        is TypeTemplate.ScalarWrapper -> {
-            true
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            value.parts.all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) }
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
 
 private fun TypeTemplate.acceptsLiteral(
     value: skirout.editor.v1.type_catalog.DataValue,
@@ -459,53 +447,22 @@ private fun RepresentationTemplate.presentationKind(): RepresentationKind =
 private fun TypeTemplate.matchesTemplate(
     actual: TypeTemplate,
     parameters: MutableMap<ParameterKey, TypeTemplate>,
-): Boolean =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            parameters[value]?.let { it == actual } ?: run {
-                parameters[value] = actual
-                true
-            }
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            actual == this
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            actual is TypeTemplate.NullableWrapper && value.value.matchesTemplate(actual.value.value, parameters)
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            if (actual !is TypeTemplate.NamedWrapper || value.definition != actual.value.definition ||
-                value.arguments.size != actual.value.arguments.size
-            ) {
-                false
-            } else {
-                val candidateParameters = LinkedHashMap(parameters)
-                val matches =
-                    value.arguments.zip(actual.value.arguments).all { (expected, supplied) ->
-                        expected.matchesTemplate(supplied, candidateParameters)
-                    }
-                if (matches) {
-                    parameters.clear()
-                    parameters.putAll(candidateParameters)
-                }
-                matches
-            }
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            val function = (actual as? TypeTemplate.FunctionWrapper)?.value
-            function != null &&
-                function.slotNames == value.slotNames &&
-                value.parts.zip(function.parts).all { (expected, supplied) -> expected.matchesTemplate(supplied, parameters) }
-        }
-
-        else -> {
-            unknownVariant(this)
+): Boolean {
+    if (this is TypeTemplate.ParameterWrapper) {
+        return parameters[value]?.let { it == actual } ?: run {
+            parameters[value] = actual
+            true
         }
     }
+    val pairs = zipParts(actual) ?: return false
+    val candidateParameters = LinkedHashMap(parameters)
+    val matches = pairs.all { (expected, supplied) -> expected.matchesTemplate(supplied, candidateParameters) }
+    if (matches) {
+        parameters.clear()
+        parameters.putAll(candidateParameters)
+    }
+    return matches
+}
 
 private fun TypeTemplate.presentationTemplate(
     definitions: Map<TypeDefinitionId, TypeDefinition>,

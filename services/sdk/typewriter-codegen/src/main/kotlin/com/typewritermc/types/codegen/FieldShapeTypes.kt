@@ -20,9 +20,9 @@ import com.typewritermc.configuration.name
 import com.typewritermc.configuration.representationKind
 import com.typewritermc.configuration.root
 import com.typewritermc.types.nullable
-import com.typewritermc.types.parts
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.walk
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.FieldPatternSegment
@@ -488,16 +488,7 @@ private fun FieldShape.nestedPresentationDescriptor(): CodeBlock =
     }
 
 /** Whether this value's template mentions a type parameter of its owner. */
-internal val TypeTemplate.containsParameter: Boolean
-    get() =
-        when (this) {
-            is TypeTemplate.ParameterWrapper -> true
-            is TypeTemplate.NamedWrapper -> value.arguments.any { it.containsParameter }
-            is TypeTemplate.NullableWrapper -> value.value.containsParameter
-            is TypeTemplate.ScalarWrapper -> false
-            is TypeTemplate.FunctionWrapper -> value.parts.any { it.containsParameter }
-            else -> unknownVariant(this)
-        }
+internal val TypeTemplate.containsParameter: Boolean get() = walk().any { it is TypeTemplate.ParameterWrapper }
 
 internal fun RelativeFieldPattern.kotlinCode(): CodeBlock =
     if (segments.isEmpty()) {
