@@ -56,6 +56,8 @@ val InterpreterTest by testSuite {
         Triple("[1..0] == [5..2]", boolean, true),
         Triple("[1..0: \"none\"][9..3]", nullable(string), "none"),
         Triple("(5..2).first", int, 5),
+        Triple("[1..0: 1] == [5..2: 1]", boolean, true),
+        Triple("\"\${[1..0: \"a\", 5..2: \"b\"]}\"", string, "[1..0: b]"),
         Triple("\"\${1..3}\"", string, "1..3"),
         Triple("when (7) { in 0..9 -> \"Novice\"\n else -> \"Hero\" }", string, "Novice"),
         Triple("when (42) { in 0..9 -> \"Novice\"\n else -> \"Hero\" }", string, "Hero"),
