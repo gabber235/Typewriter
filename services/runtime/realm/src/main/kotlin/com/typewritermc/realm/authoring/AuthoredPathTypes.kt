@@ -64,7 +64,10 @@ internal fun AuthoringRecord.storedPositionAt(
         is TypeSelection.PendingWrapper -> {
             val first = remaining.firstOrNull() as? PathSegment.FieldWrapper ?: return null
             val partial = catalog.resolvePartial(selection) as? Resolution.Ready ?: return null
-            val type = partial.value.knownFields.singleOrNull { it.key == first.name }?.type ?: return null
+            val type =
+                partial.value.knownFields
+                    .singleOrNull { it.key == first.name }
+                    ?.type ?: return null
             position = StoredPosition(type, field(first.name) ?: DataValue.UNFILLED)
             remaining = remaining.drop(1)
         }
@@ -97,13 +100,7 @@ internal class StoredPosition(
         segment: PathSegment,
         catalog: CheckedCatalog,
     ): StoredPosition? {
-        row?.let { (mapping, chosen) ->
-            return when (segment) {
-                PathSegment.MAP_KEY -> StoredPosition(mapping.key, chosen?.key ?: DataValue.UNFILLED)
-                PathSegment.MAP_VALUE -> StoredPosition(mapping.value, chosen?.value ?: DataValue.UNFILLED)
-                else -> null
-            }
-        }
+        row?.let { (mapping, chosen) -> return part(segment, mapping, chosen) }
         val schema = (catalog.resolve(catalog.expand(actual.traversable())) as? Resolution.Ready)?.value?.schema ?: return null
         val payload = value.unwrapNamed()
         return when (segment) {
@@ -113,20 +110,7 @@ internal class StoredPosition(
             }
 
             is PathSegment.ItemWrapper -> {
-                when (val representation = schema.representation) {
-                    is ResolvedRepresentation.SequenceWrapper -> {
-                        StoredPosition(representation.value.item, payload.collectionItem(segment) ?: DataValue.UNFILLED)
-                    }
-
-                    is ResolvedRepresentation.MappingWrapper -> {
-                        val chosen = (payload as? DataValue.MapValueWrapper)?.rows?.singleOrNull { it.id == segment.id }
-                        StoredPosition(declared, value, representation.value to chosen)
-                    }
-
-                    else -> {
-                        null
-                    }
-                }
+                item(segment, schema.representation, payload)
             }
 
             PathSegment.MAP_KEY, PathSegment.MAP_VALUE -> {
@@ -138,6 +122,39 @@ internal class StoredPosition(
             }
         }
     }
+
+    /** The key or value of the map row an item segment chose, or null for any other segment. */
+    private fun part(
+        segment: PathSegment,
+        mapping: MappingResolvedRepresentation,
+        chosen: MapRow?,
+    ): StoredPosition? =
+        when (segment) {
+            PathSegment.MAP_KEY -> StoredPosition(mapping.key, chosen?.key ?: DataValue.UNFILLED)
+            PathSegment.MAP_VALUE -> StoredPosition(mapping.value, chosen?.value ?: DataValue.UNFILLED)
+            else -> null
+        }
+
+    /** The item [segment] names in a sequence, or the map row it chooses; null under any other representation. */
+    private fun item(
+        segment: PathSegment.ItemWrapper,
+        representation: ResolvedRepresentation,
+        payload: DataValue,
+    ): StoredPosition? =
+        when (representation) {
+            is ResolvedRepresentation.SequenceWrapper -> {
+                StoredPosition(representation.value.item, payload.collectionItem(segment) ?: DataValue.UNFILLED)
+            }
+
+            is ResolvedRepresentation.MappingWrapper -> {
+                val chosen = (payload as? DataValue.MapValueWrapper)?.rows?.singleOrNull { it.id == segment.id }
+                StoredPosition(declared, value, representation.value to chosen)
+            }
+
+            else -> {
+                null
+            }
+        }
 }
 
 /**

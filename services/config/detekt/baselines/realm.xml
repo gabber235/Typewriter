@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:AuthoredPathTypes.kt:internal fun AuthoringRecord.authoredTypeAt: TypeUse?</ID>
     <ID>CyclomaticComplexMethod:AuthoredPathTypes.kt:internal fun expectedType: TypeUse?</ID>
     <ID>CyclomaticComplexMethod:AuthoringMutationPlanner.kt:AuthoringMutationPlanner$fun replayStaged: List&lt;ValueProblem&gt;</ID>
     <ID>CyclomaticComplexMethod:AuthoringMutationPlanner.kt:AuthoringMutationPlanner$private fun delete</ID>
