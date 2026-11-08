@@ -30,6 +30,7 @@ import com.typewritermc.types.floatScalar
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.isEnum
 import com.typewritermc.types.isValid
+import com.typewritermc.types.match
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.parts
@@ -40,7 +41,6 @@ import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
-import com.typewritermc.types.zipParts
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationMaterial
@@ -444,26 +444,6 @@ private fun RepresentationTemplate.presentationKind(): RepresentationKind =
         }
     }
 
-private fun TypeTemplate.matchesTemplate(
-    actual: TypeTemplate,
-    parameters: MutableMap<ParameterKey, TypeTemplate>,
-): Boolean {
-    if (this is TypeTemplate.ParameterWrapper) {
-        return parameters[value]?.let { it == actual } ?: run {
-            parameters[value] = actual
-            true
-        }
-    }
-    val pairs = zipParts(actual) ?: return false
-    val candidateParameters = LinkedHashMap(parameters)
-    val matches = pairs.all { (expected, supplied) -> expected.matchesTemplate(supplied, candidateParameters) }
-    if (matches) {
-        parameters.clear()
-        parameters.putAll(candidateParameters)
-    }
-    return matches
-}
-
 private fun TypeTemplate.presentationTemplate(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
@@ -512,7 +492,7 @@ private fun PresentationTarget.appliesTo(
 
         is PresentationTarget.NamedWrapper -> {
             actual.presentationApplications(definitions, bounds, linkedSetOf()).any { application ->
-                value.template.matchesTemplate(application.template, linkedMapOf())
+                value.template.match(application.template, linkedMapOf())
             }
         }
 

@@ -6,18 +6,17 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.match
 import com.typewritermc.types.named
 import com.typewritermc.types.storedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
-import com.typewritermc.types.zipParts
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.RoleFallback
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
@@ -163,7 +162,7 @@ internal fun PresentationTarget.matches(actual: CheckedType): Boolean =
         }
 
         is PresentationTarget.NamedWrapper -> {
-            actual.applications().any { application -> value.template.matches(application.use, linkedMapOf(), actual) }
+            actual.applications().any { application -> value.template.matches(application.use, actual) }
         }
 
         else -> {
@@ -209,41 +208,17 @@ private fun CheckedType.applications(): List<NamedTypeUse> =
         addAll(schema.ancestors)
     }
 
+/** Whether [actual] is an instance of this pattern, where a named node also matches any of the supertypes it applies. */
 private fun TypeTemplate.matches(
     actual: TypeUse,
-    parameters: MutableMap<ParameterKey, TypeUse>,
     checked: CheckedType,
 ): Boolean =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            parameters[value]?.let { it == actual } ?: run {
-                parameters[value] = actual
-                true
-            }
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            if (actual !is TypeUse.NamedWrapper) return false
-            actual.value
-                .applications(checked)
-                .filter { application -> value.definition == application.definition && value.arguments.size == application.arguments.size }
-                .any { application ->
-                    val candidateParameters = LinkedHashMap(parameters)
-                    val matches =
-                        value.arguments.zip(application.arguments).all { (expected, supplied) ->
-                            expected.matches(supplied, candidateParameters, checked)
-                        }
-                    if (matches) {
-                        parameters.clear()
-                        parameters.putAll(candidateParameters)
-                    }
-                    matches
-                }
-        }
-
-        else -> {
-            zipParts(actual)?.all { (expected, supplied) -> expected.matches(supplied, parameters, checked) } == true
-        }
+    match(actual, linkedMapOf()) { pattern, candidate, matchAll ->
+        val supplied = candidate as? TypeUse.NamedWrapper ?: return@match false
+        supplied.value
+            .applications(checked)
+            .filter { application -> pattern.definition == application.definition && pattern.arguments.size == application.arguments.size }
+            .any { application -> matchAll(pattern.arguments.zip(application.arguments)) }
     }
 
 private fun NamedTypeUse.applications(checked: CheckedType): List<NamedTypeUse> =
@@ -255,12 +230,12 @@ private fun NamedTypeUse.applications(checked: CheckedType): List<NamedTypeUse> 
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
     checked: CheckedType,
-): Boolean = subsumes(candidate, checked::isNominalSubtype, linkedMapOf())
+): Boolean = subsumes(candidate, checked::isNominalSubtype)
 
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
     catalog: CheckedCatalog,
-): Boolean = subsumes(candidate, catalog::isNominalSubtype, linkedMapOf())
+): Boolean = subsumes(candidate, catalog::isNominalSubtype)
 
 /**
  * Whether every type [candidate] stands for is one this pattern stands for: a parameter binds once, a closed named
@@ -269,21 +244,15 @@ private fun TypeTemplate.subsumes(
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
     isNominalSubtype: (TypeDefinitionId, TypeDefinitionId) -> Boolean,
-    parameters: MutableMap<ParameterKey, TypeTemplate>,
-): Boolean {
-    if (this is TypeTemplate.ParameterWrapper) {
-        return parameters[value]?.let { it == candidate } ?: run {
-            parameters[value] = candidate
-            true
+): Boolean =
+    match(candidate, linkedMapOf()) { pattern, other, _ ->
+        val named = other.named
+        if (named == null || named.definition == pattern.definition) {
+            null
+        } else {
+            pattern.arguments.isEmpty() && named.arguments.isEmpty() && isNominalSubtype(named.definition, pattern.definition)
         }
     }
-    val pattern = named
-    val other = candidate.named
-    if (pattern != null && other != null && pattern.definition != other.definition) {
-        return pattern.arguments.isEmpty() && other.arguments.isEmpty() && isNominalSubtype(other.definition, pattern.definition)
-    }
-    return zipParts(candidate)?.all { (part, candidatePart) -> part.subsumes(candidatePart, isNominalSubtype, parameters) } == true
-}
 
 fun PresentationRegistry.selectByRoleFallback(
     requested: PresentationRole,

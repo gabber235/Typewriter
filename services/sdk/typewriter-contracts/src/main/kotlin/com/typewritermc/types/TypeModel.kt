@@ -369,6 +369,69 @@ fun TypeTemplate.zipParts(other: TypeUse): List<Pair<TypeTemplate, TypeUse>>? {
     return if (mine.size == theirs.size && withUseParts(theirs) == other) mine.zip(theirs) else null
 }
 
+/**
+ * Answers a named pattern node itself, or null to match it part by part as every other node is. [matchAll] matches
+ * pattern parts against candidate parts under the same bindings; a false answer from it leaves them as they were, so
+ * a hook may try several alternatives in turn.
+ */
+fun interface NamedMatch<C> {
+    fun match(
+        pattern: NamedTypeTemplate,
+        candidate: C,
+        matchAll: (List<Pair<TypeTemplate, C>>) -> Boolean,
+    ): Boolean?
+}
+
+/**
+ * Whether [candidate] is an instance of this pattern: a parameter binds to the first candidate part it meets and must
+ * meet an equal part everywhere else, [named] may answer a named node (nominal subtyping, a supertype's application),
+ * and every other node matches a candidate of the same shape part by part. On success [bindings] holds what each
+ * parameter met; a failed match leaves [bindings] as they were.
+ */
+fun TypeTemplate.match(
+    candidate: TypeUse,
+    bindings: MutableMap<ParameterKey, TypeUse>,
+    named: NamedMatch<TypeUse>? = null,
+): Boolean = Matcher<TypeUse>(TypeTemplate::zipParts, named).matchAll(listOf(this to candidate), bindings)
+
+/** [match] against a candidate template, whose own parameters are opaque parts a pattern parameter can bind to. */
+fun TypeTemplate.match(
+    candidate: TypeTemplate,
+    bindings: MutableMap<ParameterKey, TypeTemplate>,
+    named: NamedMatch<TypeTemplate>? = null,
+): Boolean = Matcher<TypeTemplate>(TypeTemplate::zipParts, named).matchAll(listOf(this to candidate), bindings)
+
+private class Matcher<C : Any>(
+    private val zip: (TypeTemplate, C) -> List<Pair<TypeTemplate, C>>?,
+    private val named: NamedMatch<C>?,
+) {
+    /** Bindings only grow during a match, so a trial copy commits by adding what it bound. */
+    fun matchAll(
+        pairs: List<Pair<TypeTemplate, C>>,
+        bindings: MutableMap<ParameterKey, C>,
+    ): Boolean {
+        val trial = LinkedHashMap(bindings)
+        if (!pairs.all { (pattern, candidate) -> match(pattern, candidate, trial) }) return false
+        bindings.putAll(trial)
+        return true
+    }
+
+    private fun match(
+        pattern: TypeTemplate,
+        candidate: C,
+        bindings: MutableMap<ParameterKey, C>,
+    ): Boolean {
+        if (pattern is TypeTemplate.ParameterWrapper) {
+            val bound = bindings[pattern.value] ?: return true.also { bindings[pattern.value] = candidate }
+            return bound == candidate
+        }
+        pattern.named?.let { node ->
+            named?.match(node, candidate) { pairs -> matchAll(pairs, bindings) }?.let { return it }
+        }
+        return zip(pattern, candidate)?.all { (part, candidatePart) -> match(part, candidatePart, bindings) } == true
+    }
+}
+
 /** This use and every use inside it, outermost first, each part before the next part. */
 fun TypeUse.walk(): Sequence<TypeUse> =
     sequence {

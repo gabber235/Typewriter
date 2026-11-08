@@ -13,6 +13,7 @@ import com.typewritermc.types.closedCases
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.mapTypes
+import com.typewritermc.types.match
 import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -28,7 +29,6 @@ import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.walk
-import com.typewritermc.types.zipParts
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.StructuralResult
@@ -833,8 +833,11 @@ class DefaultCheckedCatalog private constructor(
             .filter { it.definition == expected.definition && it.arguments.size == expected.arguments.size }
             .mapNotNull { template ->
                 val inferred = linkedMapOf<ParameterKey, TypeUse>()
-                val matched = template.arguments.zip(expected.arguments).all { (left, right) -> infer(left, right, inferred) }
-                if (!matched || definition.parameters.any { it.key !in inferred }) return@mapNotNull null
+                if (!template.template.match(expectedUse, inferred) ||
+                    definition.parameters.any { it.key !in inferred }
+                ) {
+                    return@mapNotNull null
+                }
                 definition.id.namedUse(definition.parameters.map { inferred.getValue(it.key) })
             }.toList()
     }
@@ -857,20 +860,6 @@ class DefaultCheckedCatalog private constructor(
         }
         visiting -= definition.id
         return ancestors
-    }
-
-    private fun infer(
-        template: TypeTemplate,
-        actual: TypeUse,
-        inferred: MutableMap<ParameterKey, TypeUse>,
-    ): Boolean {
-        if (template is TypeTemplate.ParameterWrapper) {
-            return inferred[template.value]?.let { it == actual } ?: run {
-                inferred[template.value] = actual
-                true
-            }
-        }
-        return template.zipParts(actual)?.all { (part, actualPart) -> infer(part, actualPart, inferred) } == true
     }
 
     private fun isResolvedReadableAs(
