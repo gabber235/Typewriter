@@ -15,6 +15,8 @@ import io.kotest.property.checkAll
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 
 val TypeAlgebraTest by testSuite {
@@ -28,6 +30,36 @@ val TypeAlgebraTest by testSuite {
         }
         checkAll(config, Arb.useHole()) { hole ->
             hole.plug(marker.use()).walk().forEach { node -> node.withParts(node.parts()) shouldBe node }
+        }
+    }
+
+    test("a template becomes the use its parameters stand for at any position, and a use comes back from its template") {
+        val answers: (ParameterKey) -> TypeUse = { key -> if (key == parameter) marker.use() else ScalarKind.TEXT.use }
+        checkAll(config, Arb.templateHole()) { hole ->
+            hole.plug(parameter.template).toUse(answers) shouldBe hole.plug(marker.template()).toUse(answers)
+            hole.plug(parameter.template).toUse { key -> answers(key).takeUnless { key == parameter } } shouldBe null
+        }
+        checkAll(config, Arb.useHole()) { hole ->
+            val use = hole.plug(marker.use())
+            use.toTemplate().closedUse shouldBe use
+        }
+    }
+
+    test("two types match part by part exactly when every position has the same shape") {
+        fun TypeUse.matches(other: TypeUse): Boolean = zipParts(other)?.all { (mine, theirs) -> mine.matches(theirs) } == true
+
+        fun TypeTemplate.matches(other: TypeUse): Boolean = zipParts(other)?.all { (mine, theirs) -> mine.matches(theirs) } == true
+
+        fun TypeTemplate.matches(other: TypeTemplate): Boolean = zipParts(other)?.all { (mine, theirs) -> mine.matches(theirs) } == true
+        checkAll(config, Arb.useHole()) { hole ->
+            val use = hole.plug(marker.use())
+            val other = hole.plug(marker.use().nullable())
+            use.matches(use) shouldBe true
+            use.matches(other) shouldBe false
+            use.toTemplate().matches(use) shouldBe true
+            use.toTemplate().matches(other) shouldBe false
+            use.toTemplate().matches(use.toTemplate()) shouldBe true
+            use.toTemplate().matches(other.toTemplate()) shouldBe false
         }
     }
 

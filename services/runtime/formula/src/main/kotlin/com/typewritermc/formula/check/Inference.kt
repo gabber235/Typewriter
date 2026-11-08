@@ -1,14 +1,14 @@
 package com.typewritermc.formula.check
 
-import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.function
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.named
 import com.typewritermc.types.nullable
-import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.qualified
+import com.typewritermc.types.toUse
 import com.typewritermc.types.use
+import com.typewritermc.types.walk
+import com.typewritermc.types.zipParts
 import skirout.editor.v1.type_catalog.FunctionParameterUse
 import skirout.editor.v1.type_catalog.FunctionTypeTemplate
 import skirout.editor.v1.type_catalog.FunctionTypeUse
@@ -47,14 +47,7 @@ private val FunctionTypeUse.slots: List<FunctionParameterUse> get() = context + 
 
 private val FunctionTypeTemplate.allSlots get() = context + parameters
 
-internal fun TypeUse.mentionsError(): Boolean =
-    this == ERROR ||
-        when (this) {
-            is TypeUse.NamedWrapper -> value.arguments.any { it.mentionsError() }
-            is TypeUse.NullableWrapper -> value.value.mentionsError()
-            is TypeUse.FunctionWrapper -> value.slots.any { it.type.mentionsError() } || value.result.mentionsError()
-            else -> false
-        }
+internal fun TypeUse.mentionsError(): Boolean = walk().any { it == ERROR }
 
 /**
  * Whether a value of [actual] may stand where [expected] is wanted. An alias stands for the type it names, everywhere
@@ -100,15 +93,7 @@ private fun Checker.fitsFunction(
 private fun same(
     a: TypeUse,
     b: TypeUse,
-): Boolean {
-    if (a == b || a == ERROR || b == ERROR) return true
-    if (a is TypeUse.NullableWrapper && b is TypeUse.NullableWrapper) return same(a.value.value, b.value.value)
-    val first = a.named ?: return false
-    val second = b.named ?: return false
-    return first.definition == second.definition &&
-        first.arguments.size == second.arguments.size &&
-        first.arguments.zip(second.arguments).all { (x, y) -> same(x, y) }
-}
+): Boolean = a == b || a == ERROR || b == ERROR || a.zipParts(b)?.all { (x, y) -> same(x, y) } == true
 
 /** The wider of two branch types, or null when neither fits the other. */
 internal fun Checker.join(
@@ -193,5 +178,4 @@ private fun Checker.unifyFunction(
         unifyExpanded(wanted.result, actual.result, solved)
 
 /** [template] with [solved] applied, or null while it still has a free parameter. */
-internal fun TypeTemplate.applied(solved: Map<ParameterKey, TypeUse>): TypeUse? =
-    if (parameterKeys().all { it in solved }) (apply(solved) as? Resolution.Ready)?.value else null
+internal fun TypeTemplate.applied(solved: Map<ParameterKey, TypeUse>): TypeUse? = toUse(solved::get)

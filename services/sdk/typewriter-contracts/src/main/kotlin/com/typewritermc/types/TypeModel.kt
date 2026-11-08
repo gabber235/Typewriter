@@ -167,8 +167,11 @@ val FunctionTypeUse.parts: List<TypeUse> get() =
 
 /*
  * The structure of the type algebra. Each form answers its direct child types once, in [parts], and rebuilds itself
- * from replacements in the same order, in [withParts]; every traversal ([walk], [mapTypes]) derives from that pair, so
- * a new form is threaded through every walker by answering these two functions.
+ * from replacements in the same order: within its own tree in [withParts], and across the trees in
+ * [TypeTemplate.withUseParts] and [TypeUse.withTemplateParts], since a template is a use plus parameters. Every
+ * traversal derives from these: [walk] and [mapTypes] rebuild within a tree, [TypeTemplate.toUse] and [TypeUse.toTemplate]
+ * cross between them, and [zipParts] pairs the parts of two types of the same shape for structural matching. A new
+ * form is threaded through every walker by answering these functions.
  */
 
 /** The types this use is built from one level down: a named type's arguments, a nullable's value, a function's context, parameters and result. */
@@ -185,9 +188,18 @@ fun TypeUse.parts(): List<TypeUse> =
 fun TypeUse.withParts(parts: List<TypeUse>): TypeUse {
     require(parts.size == parts().size) { "Expected ${parts().size} parts, found ${parts.size}." }
     return when (this) {
-        is TypeUse.NamedWrapper -> TypeUse.NamedWrapper(value.copy(arguments = parts))
-        is TypeUse.NullableWrapper -> parts.single().nullable()
-        is TypeUse.ScalarWrapper -> this
+        is TypeUse.NamedWrapper -> {
+            TypeUse.NamedWrapper(value.copy(arguments = parts))
+        }
+
+        is TypeUse.NullableWrapper -> {
+            parts.single().nullable()
+        }
+
+        is TypeUse.ScalarWrapper -> {
+            this
+        }
+
         is TypeUse.FunctionWrapper -> {
             val context = value.context.size
             val parameters = value.parameters.size
@@ -197,7 +209,10 @@ fun TypeUse.withParts(parts: List<TypeUse>): TypeUse {
                 result = parts[context + parameters],
             )
         }
-        else -> unknownVariant(this)
+
+        else -> {
+            unknownVariant(this)
+        }
     }
 }
 
@@ -215,9 +230,18 @@ fun TypeTemplate.parts(): List<TypeTemplate> =
 fun TypeTemplate.withParts(parts: List<TypeTemplate>): TypeTemplate {
     require(parts.size == parts().size) { "Expected ${parts().size} parts, found ${parts.size}." }
     return when (this) {
-        is TypeTemplate.NamedWrapper -> value.copy(arguments = parts).template
-        is TypeTemplate.NullableWrapper -> parts.single().nullable()
-        is TypeTemplate.ScalarWrapper, is TypeTemplate.ParameterWrapper -> this
+        is TypeTemplate.NamedWrapper -> {
+            value.copy(arguments = parts).template
+        }
+
+        is TypeTemplate.NullableWrapper -> {
+            parts.single().nullable()
+        }
+
+        is TypeTemplate.ScalarWrapper, is TypeTemplate.ParameterWrapper -> {
+            this
+        }
+
         is TypeTemplate.FunctionWrapper -> {
             val context = value.context.size
             val parameters = value.parameters.size
@@ -227,8 +251,122 @@ fun TypeTemplate.withParts(parts: List<TypeTemplate>): TypeTemplate {
                 result = parts[context + parameters],
             )
         }
-        else -> unknownVariant(this)
+
+        else -> {
+            unknownVariant(this)
+        }
     }
+}
+
+/**
+ * This template as a use rebuilt from [parts], one per entry of [TypeTemplate.parts] in the same order; a parameter has
+ * no use form.
+ */
+fun TypeTemplate.withUseParts(parts: List<TypeUse>): TypeUse {
+    require(parts.size == parts().size) { "Expected ${parts().size} parts, found ${parts.size}." }
+    return when (this) {
+        is TypeTemplate.NamedWrapper -> {
+            value.definition.use(parts)
+        }
+
+        is TypeTemplate.NullableWrapper -> {
+            parts.single().nullable()
+        }
+
+        is TypeTemplate.ScalarWrapper -> {
+            value.use
+        }
+
+        is TypeTemplate.ParameterWrapper -> {
+            throw IllegalArgumentException("A parameter has no use form.")
+        }
+
+        is TypeTemplate.FunctionWrapper -> {
+            val context = value.context.size
+            val parameters = value.parameters.size
+            functionUse(
+                context = value.context.mapIndexed { index, slot -> slot.name to parts[index] },
+                parameters = value.parameters.mapIndexed { index, slot -> slot.name to parts[context + index] },
+                result = parts[context + parameters],
+            )
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
+    }
+}
+
+/** This use as a template rebuilt from [parts], one per entry of [TypeUse.parts] in the same order. */
+fun TypeUse.withTemplateParts(parts: List<TypeTemplate>): TypeTemplate {
+    require(parts.size == parts().size) { "Expected ${parts().size} parts, found ${parts.size}." }
+    return when (this) {
+        is TypeUse.NamedWrapper -> {
+            value.definition.template(parts)
+        }
+
+        is TypeUse.NullableWrapper -> {
+            parts.single().nullable()
+        }
+
+        is TypeUse.ScalarWrapper -> {
+            value.template
+        }
+
+        is TypeUse.FunctionWrapper -> {
+            val context = value.context.size
+            val parameters = value.parameters.size
+            functionTemplate(
+                context = value.context.mapIndexed { index, slot -> slot.name to parts[index] },
+                parameters = value.parameters.mapIndexed { index, slot -> slot.name to parts[context + index] },
+                result = parts[context + parameters],
+            )
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
+    }
+}
+
+/**
+ * This template as a use: [parameter] answers the use each parameter stands for, every other form is rebuilt from its
+ * converted parts. Null as soon as [parameter] answers null.
+ */
+fun TypeTemplate.toUse(parameter: (ParameterKey) -> TypeUse?): TypeUse? {
+    if (this is TypeTemplate.ParameterWrapper) return parameter(value)
+    return withUseParts(parts().map { part -> part.toUse(parameter) ?: return null })
+}
+
+/** The use this template is when it mentions no parameter, or null when it mentions one. */
+val TypeTemplate.closedUse: TypeUse? get() = toUse { null }
+
+/**
+ * The parts of this use paired with those of [other] when the two have the same shape (form, definition, scalar and
+ * slot names), else null.
+ */
+fun TypeUse.zipParts(other: TypeUse): List<Pair<TypeUse, TypeUse>>? {
+    val mine = parts()
+    val theirs = other.parts()
+    return if (mine.size == theirs.size && withParts(theirs) == other) mine.zip(theirs) else null
+}
+
+/** The parts of this template paired with those of [other] when the two have the same shape, else null. */
+fun TypeTemplate.zipParts(other: TypeTemplate): List<Pair<TypeTemplate, TypeTemplate>>? {
+    val mine = parts()
+    val theirs = other.parts()
+    return if (mine.size == theirs.size && withParts(theirs) == other) mine.zip(theirs) else null
+}
+
+/**
+ * The parts of this template paired with those of [other] when [other] has this template's shape, else null; a
+ * parameter has no shape.
+ */
+fun TypeTemplate.zipParts(other: TypeUse): List<Pair<TypeTemplate, TypeUse>>? {
+    if (this is TypeTemplate.ParameterWrapper) return null
+    val mine = parts()
+    val theirs = other.parts()
+    return if (mine.size == theirs.size && withUseParts(theirs) == other) mine.zip(theirs) else null
 }
 
 /** This use and every use inside it, outermost first, each part before the next part. */
@@ -264,13 +402,6 @@ val FunctionTypeTemplate.slotNames: Pair<List<String>, List<String>>
 /** Every type a function template mentions: context, then parameters, then its result. */
 val FunctionTypeTemplate.parts: List<TypeTemplate>
     get() = context.map(FunctionParameterTemplate::type) + parameters.map(FunctionParameterTemplate::type) + result
-
-/** The function use of this template, each part converted by [transform]; null when any part converts to null. */
-inline fun FunctionTypeTemplate.toUse(transform: (TypeTemplate) -> TypeUse?): TypeUse? {
-    val context = context.map { FunctionParameterUse(name = it.name, type = transform(it.type) ?: return null) }
-    val parameters = parameters.map { FunctionParameterUse(name = it.name, type = transform(it.type) ?: return null) }
-    return TypeUse.createFunction(context = context, parameters = parameters, result = transform(result) ?: return null)
-}
 
 /** The function type use with these named context slots, parameters and result. */
 fun functionUse(
@@ -368,22 +499,7 @@ fun integerScalar(width: IntegerWidth): ScalarKind = ScalarKind.createInteger(wi
 fun floatScalar(width: FloatWidth): ScalarKind = ScalarKind.createFloat(width = width)
 
 /** Lifts a concrete type application into a template with no free parameters. */
-fun TypeUse.toTemplate(): TypeTemplate =
-    when (this) {
-        is TypeUse.NamedWrapper -> value.toTemplate().template
-        is TypeUse.NullableWrapper -> value.value.toTemplate().nullable()
-        is TypeUse.ScalarWrapper -> value.template
-        is TypeUse.FunctionWrapper -> value.toTemplate()
-        else -> unknownVariant(this)
-    }
-
-/** Lifts a concrete function type into a template with no free parameters. */
-fun FunctionTypeUse.toTemplate(): TypeTemplate =
-    functionTemplate(
-        context = context.map { it.name to it.type.toTemplate() },
-        parameters = parameters.map { it.name to it.type.toTemplate() },
-        result = result.toTemplate(),
-    )
+fun TypeUse.toTemplate(): TypeTemplate = withTemplateParts(parts().map(TypeUse::toTemplate))
 
 /** Lifts a concrete named application into a template with no free parameters. */
 fun NamedTypeUse.toTemplate(): NamedTypeTemplate = definition.namedTemplate(arguments.map(TypeUse::toTemplate))

@@ -5,11 +5,10 @@ import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isReady
-import com.typewritermc.types.nullable
-import com.typewritermc.types.parts
-import com.typewritermc.types.toUse
-import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.closedUse
+import com.typewritermc.types.named
 import com.typewritermc.types.use
+import com.typewritermc.types.walk
 import skirout.editor.v1.catalog.TypeRecommendation
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -26,33 +25,15 @@ internal fun typeRecommendations(
     val counts = linkedMapOf<NamedTypeUse, Long>()
 
     fun count(template: TypeTemplate) {
-        when (template) {
-            is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper -> {
-                Unit
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                count(template.value.value)
-            }
-
-            is TypeTemplate.FunctionWrapper -> {
-                template.value.parts.forEach(::count)
-            }
-
-            is TypeTemplate.NamedWrapper -> {
-                val representation = definitions[template.value.definition]?.representation
-                val container =
-                    representation is RepresentationTemplate.SequenceWrapper || representation is RepresentationTemplate.MappingWrapper
-                if (!container && template.value.definition !in standard && catalog.isReady(template.value.definition)) {
-                    (template.toCompleteUse() as? TypeUse.NamedWrapper)?.takeIf { catalog.resolve(it) is Resolution.Ready }?.let { use ->
-                        counts[use.value] = counts.getOrDefault(use.value, 0) + 1
-                    }
+        template.walk().forEach { node ->
+            val named = node.named ?: return@forEach
+            val representation = definitions[named.definition]?.representation
+            val container =
+                representation is RepresentationTemplate.SequenceWrapper || representation is RepresentationTemplate.MappingWrapper
+            if (!container && named.definition !in standard && catalog.isReady(named.definition)) {
+                (node.closedUse as? TypeUse.NamedWrapper)?.takeIf { catalog.resolve(it) is Resolution.Ready }?.let { use ->
+                    counts[use.value] = counts.getOrDefault(use.value, 0) + 1
                 }
-                template.value.arguments.forEach(::count)
-            }
-
-            else -> {
-                unknownVariant(template)
             }
         }
     }
@@ -68,33 +49,5 @@ internal fun typeRecommendations(
         .take(TYPE_RECOMMENDATION_LIMIT)
         .map { (type, occurrences) -> TypeRecommendation(type = type, occurrences = occurrences) }
 }
-
-private fun TypeTemplate.toCompleteUse(): TypeUse? =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            null
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            value.use
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            value.value.toCompleteUse()?.nullable()
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            val completeArguments = value.arguments.map(TypeTemplate::toCompleteUse)
-            if (completeArguments.any { it == null }) null else value.definition.use(completeArguments.filterNotNull())
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            value.toUse(TypeTemplate::toCompleteUse)
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
 
 private const val TYPE_RECOMMENDATION_LIMIT = 10

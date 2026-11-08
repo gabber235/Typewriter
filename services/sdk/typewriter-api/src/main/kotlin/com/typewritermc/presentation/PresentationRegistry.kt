@@ -6,18 +6,19 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
-import com.typewritermc.types.parts
-import com.typewritermc.types.slotNames
+import com.typewritermc.types.named
 import com.typewritermc.types.storedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.zipParts
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.RoleFallback
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -221,14 +222,6 @@ private fun TypeTemplate.matches(
             }
         }
 
-        is TypeTemplate.ScalarWrapper -> {
-            actual == value.use
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            actual is TypeUse.NullableWrapper && value.value.matches(actual.value.value, parameters, checked)
-        }
-
         is TypeTemplate.NamedWrapper -> {
             if (actual !is TypeUse.NamedWrapper) return false
             actual.value
@@ -248,15 +241,8 @@ private fun TypeTemplate.matches(
                 }
         }
 
-        is TypeTemplate.FunctionWrapper -> {
-            val function = (actual as? TypeUse.FunctionWrapper)?.value
-            function != null &&
-                function.slotNames == value.slotNames &&
-                value.parts.zip(function.parts).all { (expected, supplied) -> expected.matches(supplied, parameters, checked) }
-        }
-
         else -> {
-            unknownVariant(this)
+            zipParts(actual)?.all { (expected, supplied) -> expected.matches(supplied, parameters, checked) } == true
         }
     }
 
@@ -269,108 +255,35 @@ private fun NamedTypeUse.applications(checked: CheckedType): List<NamedTypeUse> 
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
     checked: CheckedType,
-): Boolean = subsumes(candidate, checked, linkedMapOf())
-
-private fun TypeTemplate.subsumes(
-    candidate: TypeTemplate,
-    checked: CheckedType,
-    parameters: MutableMap<ParameterKey, TypeTemplate>,
-): Boolean =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            parameters[value]?.let { it == candidate } ?: run {
-                parameters[value] = candidate
-                true
-            }
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            candidate == this
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            candidate is TypeTemplate.NullableWrapper && value.value.subsumes(candidate.value.value, checked, parameters)
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            if (candidate !is TypeTemplate.NamedWrapper) {
-                false
-            } else if (value.definition == candidate.value.definition) {
-                value.arguments.size == candidate.value.arguments.size &&
-                    value.arguments.zip(candidate.value.arguments).all { (pattern, value) ->
-                        pattern.subsumes(value, checked, parameters)
-                    }
-            } else {
-                value.arguments.isEmpty() &&
-                    candidate.value.arguments.isEmpty() &&
-                    checked.isNominalSubtype(candidate.value.definition, value.definition)
-            }
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            val function = (candidate as? TypeTemplate.FunctionWrapper)?.value
-            function != null &&
-                function.slotNames == value.slotNames &&
-                value.parts.zip(function.parts).all { (pattern, part) -> pattern.subsumes(part, checked, parameters) }
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
+): Boolean = subsumes(candidate, checked::isNominalSubtype, linkedMapOf())
 
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
     catalog: CheckedCatalog,
-): Boolean = subsumes(candidate, catalog, linkedMapOf())
+): Boolean = subsumes(candidate, catalog::isNominalSubtype, linkedMapOf())
 
+/**
+ * Whether every type [candidate] stands for is one this pattern stands for: a parameter binds once, a closed named
+ * pattern takes a nominal subtype, and every other node matches a candidate of the same shape part by part.
+ */
 private fun TypeTemplate.subsumes(
     candidate: TypeTemplate,
-    catalog: CheckedCatalog,
+    isNominalSubtype: (TypeDefinitionId, TypeDefinitionId) -> Boolean,
     parameters: MutableMap<ParameterKey, TypeTemplate>,
-): Boolean =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            parameters[value]?.let { it == candidate } ?: run {
-                parameters[value] = candidate
-                true
-            }
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            candidate == this
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            candidate is TypeTemplate.NullableWrapper && value.value.subsumes(candidate.value.value, catalog, parameters)
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            if (candidate !is TypeTemplate.NamedWrapper) {
-                false
-            } else if (value.definition == candidate.value.definition) {
-                value.arguments.size == candidate.value.arguments.size &&
-                    value.arguments.zip(candidate.value.arguments).all { (pattern, value) ->
-                        pattern.subsumes(value, catalog, parameters)
-                    }
-            } else {
-                value.arguments.isEmpty() &&
-                    candidate.value.arguments.isEmpty() &&
-                    catalog.isNominalSubtype(candidate.value.definition, value.definition)
-            }
-        }
-
-        is TypeTemplate.FunctionWrapper -> {
-            val function = (candidate as? TypeTemplate.FunctionWrapper)?.value
-            function != null &&
-                function.slotNames == value.slotNames &&
-                value.parts.zip(function.parts).all { (pattern, part) -> pattern.subsumes(part, catalog, parameters) }
-        }
-
-        else -> {
-            unknownVariant(this)
+): Boolean {
+    if (this is TypeTemplate.ParameterWrapper) {
+        return parameters[value]?.let { it == candidate } ?: run {
+            parameters[value] = candidate
+            true
         }
     }
+    val pattern = named
+    val other = candidate.named
+    if (pattern != null && other != null && pattern.definition != other.definition) {
+        return pattern.arguments.isEmpty() && other.arguments.isEmpty() && isNominalSubtype(other.definition, pattern.definition)
+    }
+    return zipParts(candidate)?.all { (part, candidatePart) -> part.subsumes(candidatePart, isNominalSubtype, parameters) } == true
+}
 
 fun PresentationRegistry.selectByRoleFallback(
     requested: PresentationRole,

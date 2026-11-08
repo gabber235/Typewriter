@@ -29,9 +29,9 @@ import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.member
 import com.typewritermc.types.memberName
-import com.typewritermc.types.parts
+import com.typewritermc.types.named
 import com.typewritermc.types.payload
-import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.walk
 import okio.ByteString
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclaredTypeId
@@ -135,14 +135,7 @@ open class CanonicalReadModelRegistry(
 
     fun owns(id: TypeDefinitionId): Boolean = id in ownedIds
 
-    fun supports(use: TypeUse): Boolean =
-        when (use) {
-            is TypeUse.NamedWrapper -> owns(use.value.definition) || use.value.arguments.any(::supports)
-            is TypeUse.NullableWrapper -> supports(use.value.value)
-            is TypeUse.ScalarWrapper -> false
-            is TypeUse.FunctionWrapper -> use.value.parts.any(::supports)
-            else -> unknownVariant(use)
-        }
+    fun supports(use: TypeUse): Boolean = use.walk().any { node -> node.named?.definition?.let(::owns) == true }
 
     fun <T> model(serializer: Serializer<T>): CanonicalReadModel<T> = CanonicalReadModel(serializer, this)
 
