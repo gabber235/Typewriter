@@ -17,7 +17,6 @@
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$override fun binding: Availability&lt;DraftBinding&gt;</ID>
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$private fun match: TypeMatch</ID>
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$private fun valueAt: LocatedValue</ID>
-    <ID>CyclomaticComplexMethod:CheckEvaluator.kt:CheckEvaluator$fun evaluate: CheckResult</ID>
     <ID>CyclomaticComplexMethod:EditExpectations.kt:internal fun CurrentAuthoringValues.requiredExpectations: List&lt;EditExpectation&gt;</ID>
     <ID>CyclomaticComplexMethod:EditExpectations.kt:internal fun EditExpectation.sameFact: Boolean</ID>
     <ID>CyclomaticComplexMethod:GraphGroupPlacement.kt:GraphGroupPlacement$fun place: List&lt;GraphPlacement&gt;</ID>
@@ -27,9 +26,7 @@
     <ID>CyclomaticComplexMethod:OwnershipClosureCompiler.kt:OwnershipClosureCompiler$context(snapshot: AuthoringView) fun compile: ResourceGraphCompileResult</ID>
     <ID>CyclomaticComplexMethod:PreparedIntentIdentity.kt:private fun EditIntent.canonical: String</ID>
     <ID>CyclomaticComplexMethod:PublicationAcceptance.kt:AuthoringAcceptance$override suspend fun evaluate: CapturedAssessment</ID>
-    <ID>CyclomaticComplexMethod:PublicationAcceptance.kt:private fun intrinsicCollectionProblems: List&lt;IntrinsicCollectionProblem&gt;</ID>
     <ID>CyclomaticComplexMethod:RealmCheckInputs.kt:RealmCheckInputs$context(reads: CapturedAuthoringReads) fun evaluate: CheckEvaluation</ID>
-    <ID>CyclomaticComplexMethod:RealmCheckRuntime.kt:RealmCheckRuntime$private fun reconcileAndSchedule</ID>
     <ID>CyclomaticComplexMethod:RealmGraphReads.kt:CapturedGraph$fun &lt;D : ResourceDraft&gt; bind: BoundMatch&lt;D&gt;</ID>
     <ID>CyclomaticComplexMethod:RealmGraphReads.kt:RealmGraphReads$context(reads: CapturedAuthoringReads) fun &lt;D : ResourceDraft&gt; reachable: ReachabilityResult&lt;D&gt;</ID>
     <ID>CyclomaticComplexMethod:RealmGraphReads.kt:RealmGraphReads$context(reads: CapturedAuthoringReads) fun routes: RouteResult</ID>
@@ -44,14 +41,10 @@
     <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:private fun collectLinkSlots</ID>
     <ID>CyclomaticComplexMethod:TypeArgumentOperations.kt:DefaultTypeArgumentOperations$override fun preview: PreviewTypeArgumentChangeResponse</ID>
     <ID>CyclomaticComplexMethod:TypeArgumentOperations.kt:private fun collectRepairs</ID>
-    <ID>NestedBlockDepth:CheckEvaluator.kt:CheckEvaluator$fun evaluate: CheckResult</ID>
     <ID>SwallowedException:WorkingViewEditContext.kt:WorkingViewEditContext$failure: IllegalArgumentException</ID>
     <ID>TooGenericExceptionCaught:AuthoringViewStore.kt:InMemoryAuthoringViewStore$closing: Throwable</ID>
     <ID>TooGenericExceptionCaught:AuthoringViewStore.kt:InMemoryAuthoringViewStore$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:CapturedAuthoringReads.kt:CapturedAuthoringReads$failure: Exception</ID>
-    <ID>TooGenericExceptionCaught:CheckEvaluator.kt:CheckEvaluator$failure: Exception</ID>
-    <ID>TooGenericExceptionCaught:CheckPlans.kt:failure: Exception</ID>
-    <ID>TooGenericExceptionCaught:CheckPlans.kt:failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:DatabaseProvider.kt:DatabaseProvider$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:DefaultRealmRuntimeFactory.kt:DefaultRealmRuntimeFactory$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:EditorUpdatePublisher.kt:EditorUpdatePublisher$failure: Exception</ID>
@@ -61,7 +54,6 @@
     <ID>TooGenericExceptionCaught:Realm.kt:Realm$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:RealmCapabilityInvocationSource.kt:RealmCapabilityInvocationSource$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:RealmCheckInputs.kt:RealmCheckInputs$failure: Exception</ID>
-    <ID>TooGenericExceptionCaught:RealmCheckRuntime.kt:RealmCheckRuntime$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:RealmDeploymentEntrypoint.kt:RealmDeploymentRuntime$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:RealmPresentationSearchSource.kt:CapabilityRealmPresentationSearchSource$failure: Exception</ID>
     <ID>TooGenericExceptionCaught:RealmPresentationSearchSource.kt:CapabilityRealmPresentationSearchSource$failure: Throwable</ID>
