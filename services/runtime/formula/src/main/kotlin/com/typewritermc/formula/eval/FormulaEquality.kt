@@ -4,7 +4,6 @@ import com.typewritermc.formula.NamedValue
 import com.typewritermc.formula.RecordValue
 import com.typewritermc.types.StandardTypes
 import skirout.editor.v1.type_catalog.TypeUse
-import java.math.BigDecimal
 
 /*
  * Formula equality, as Kotlin's `==` sees the values a formula holds. It is structural, as RecordValue's own equality
@@ -49,13 +48,8 @@ private fun same(
         left is NamedValue && right is NamedValue -> left.type == right.type && same(left.value, right.value)
         left is Collection<*> && right is Collection<*> -> sameCollection(left, right)
         left is Map<*, *> && right is Map<*, *> -> sameMap(left, right)
-        else -> sameScalar(left, right)
+        else -> left == right
     }
-
-private fun sameScalar(
-    left: Any?,
-    right: Any?,
-): Boolean = if (left is BigDecimal && right is BigDecimal) left.compareTo(right) == 0 else left == right
 
 private fun sameCollection(
     left: Collection<*>,
@@ -112,10 +106,6 @@ private fun formulaHash(value: Any?): Int =
 
         is Map<*, *> -> {
             value.keyed().entries.sumOf { (key, item) -> key.hashCode() xor formulaHash(item) }
-        }
-
-        is BigDecimal -> {
-            value.stripTrailingZeros().hashCode()
         }
 
         else -> {

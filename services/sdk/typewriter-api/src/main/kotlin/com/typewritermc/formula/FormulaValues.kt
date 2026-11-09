@@ -2,6 +2,7 @@ package com.typewritermc.formula
 
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import java.math.BigDecimal
 
 /**
  * Every record during evaluation, code or content: its own applied type, expanded so it never names a field key, and
@@ -32,3 +33,10 @@ data class NamedValue(
 data class Deferred(
     val at: ValueLocation,
 )
+
+/**
+ * The one form a Decimal has during evaluation: no trailing zeros and never a negative scale, so `1.10`, `1.1` and
+ * `1.100` are one Kotlin value and every function, `==`, `in`, `distinct` and map keys alike, agrees on them. A
+ * Decimal takes this form wherever it enters a formula: a literal, a stored value, a provider result.
+ */
+fun BigDecimal.formulaForm(): BigDecimal = stripTrailingZeros().let { if (it.scale() < 0) it.setScale(0) else it }

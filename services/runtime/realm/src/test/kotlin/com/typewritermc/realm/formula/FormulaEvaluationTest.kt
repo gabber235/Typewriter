@@ -88,14 +88,28 @@ import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.typed_value.PortableValue
+import java.math.BigDecimal
 
 val FormulaEvaluationTest by testSuite {
+    val decimalUse = ScalarKind.DECIMAL.use
     val level = functionUse(parameters = listOf("level" to intUse), result = intUse)
 
     test("a Definition of Int with a formula evaluates it") {
         val page = setup("evaluate-int") { formulaPage { formula("total", intUse, "1 + 2 * 3") } }
         withSetup(page, catalog = routeFixtureCatalog) { demo -> formulas.value(demo.total) shouldBe 7 }
+    }
+
+    test("a stored Decimal written with trailing zeros is the same value as one written without") {
+        val page =
+            setup("evaluate-decimal") {
+                formulaPage {
+                    definition("price", decimalUse, BigDecimal("1.10"))
+                    formula("listed", booleanUse, "let p: Decimal = 1.1\np in [price]")
+                }
+            }
+        withSetup(page, catalog = routeFixtureCatalog) { demo -> formulas.value(demo.named("listed")) shouldBe true }
     }
 
     test("a Definition reads another Definition") {

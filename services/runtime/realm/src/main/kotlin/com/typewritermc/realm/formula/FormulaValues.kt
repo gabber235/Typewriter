@@ -12,6 +12,7 @@ import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.formula.eval.FailedEvaluation
 import com.typewritermc.formula.eval.refTo
+import com.typewritermc.formula.formulaForm
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.scalarValue
@@ -25,6 +26,7 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import java.math.BigDecimal
 
 /**
  * Builds evaluation values over the one schema walk. A value that does not fit its type stops the walk with
@@ -48,7 +50,7 @@ internal object FormulaValueVisitor : ValueVisitor<Any?> {
         value: DataValue,
         kind: ScalarKind,
         at: ValueLocation,
-    ): Any? = value.scalarValue(kind)
+    ): Any? = value.scalarValue(kind).let { if (it is BigDecimal) it.formulaForm() else it }
 
     override fun link(
         link: DataValue.LinkWrapper,
