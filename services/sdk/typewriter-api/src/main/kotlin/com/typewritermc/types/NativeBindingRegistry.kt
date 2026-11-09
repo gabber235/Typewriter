@@ -7,6 +7,7 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.formula.NamedValue
 import com.typewritermc.formula.RecordValue
 import com.typewritermc.formula.Var
+import com.typewritermc.formula.formulaForm
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
@@ -901,7 +902,7 @@ private class ScalarNativeBinding(
     override fun toValue(
         value: Any?,
         values: EvaluationValues,
-    ): Any? = value
+    ): Any? = if (value is BigDecimal) value.formulaForm() else value
 }
 
 private class NullableNativeBinding(

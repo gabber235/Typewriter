@@ -1,6 +1,7 @@
 package com.typewritermc.formula.check
 
 import com.typewritermc.formula.TextSpan
+import com.typewritermc.formula.formulaForm
 import com.typewritermc.formula.syntax.Argument
 import com.typewritermc.formula.syntax.Call
 import com.typewritermc.formula.syntax.Expression
@@ -46,7 +47,7 @@ private fun BigDecimal.signed(negative: Boolean): BigDecimal = if (negative) neg
 /**
  * A number literal takes the expected numeric type; otherwise a whole number is an Int, or a Long when it must be.
  * Its value is the form a stored value of that type has: an exact Int or Long, the nearest Float or Double, or the
- * Decimal exactly as written.
+ * Decimal in its one evaluation form.
  */
 private fun Checker.number(
     value: BigDecimal,
@@ -78,7 +79,7 @@ private fun Checker.number(
             }
 
             else -> {
-                value
+                value.formulaForm()
             }
         }
     if (constant == null) {

@@ -240,17 +240,17 @@ val InterpreterTest by testSuite {
         run("half(0.5)", float) shouldBe Evaluation.Value(0.25f)
     }
 
-    test("a Decimal literal keeps the digits and scale it is written with, as a stored Decimal does") {
-        run("price == 1.10", boolean) shouldBe Evaluation.Value(true)
+    test("a Decimal literal keeps every digit it is written with") {
         run("12345678901234567890.123456789", decimal) shouldBe Evaluation.Value(BigDecimal("12345678901234567890.123456789"))
     }
 
-    test("Decimals compare by value, whatever number of decimals they are written with") {
-        run("price == 1.1", boolean) shouldBe Evaluation.Value(true)
-        run("price == 1.100", boolean) shouldBe Evaluation.Value(true)
-        run("price == 1.2", boolean) shouldBe Evaluation.Value(false)
-        run("[price] == [1.1]", boolean) shouldBe Evaluation.Value(true)
-        run("let p: Decimal = 1.1\n[price: \"a\", p: \"b\"] == [price: \"b\"]", boolean) shouldBe Evaluation.Value(true)
+    test("Decimals written with a different number of decimals are one value to every function") {
+        val decimals = "let a: Decimal = 1.10\nlet b: Decimal = 1.1\n"
+        run("${decimals}a == b", boolean) shouldBe Evaluation.Value(true)
+        run("${decimals}a in [b]", boolean) shouldBe Evaluation.Value(true)
+        run("$decimals[a, b].distinct().size", int) shouldBe Evaluation.Value(1)
+        run("$decimals[a: \"found\"].get(b)", nullable(string)) shouldBe Evaluation.Value("found")
+        run("let a: Decimal = 100.00\na", decimal) shouldBe Evaluation.Value(BigDecimal("100"))
     }
 
     test("a Long literal beyond 2^53 keeps every digit") {
