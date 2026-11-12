@@ -7,7 +7,7 @@ goal: Prove what a player experiences in a real Minecraft client, as tests that 
 pieces:
   - id: paper-topology
     status: figuring-out
-    open: How to make a restart requirement cheap, since restarts dominate suite time (P7 T1 faster boot, T2 checkpoint and restore)
+    open: Pick the restart approach (T1 faster boot or T2 checkpoint and restore)
     tries:
       - id: d1-one-client
         what: One client runs requirements in sequence
@@ -66,9 +66,16 @@ pieces:
       - id: faster-boot
         parent: k-own-paper-for-restarts
         what: Cut Paper's boot with Java 25's AOT cache, AppCDS with the agent, a slim world and only needed plugins
-        taught: Not tried
-        state: trying
-        evidence: []
+        taught: >-
+          P7 T1: kill to state 5.0 s against 8.8 s today (bestq: Java 25 AOT cache trained on a boot with
+          the agent and a join, C1 only, SerialGC, and the client kept gated while Paper boots). Four at
+          once: a round of 4 in 15.5 to 23.2 s against 48 to 72 s, so overlapping restarts pay off only
+          with these flags. 0 wrong of 1,494. The two real levers are C1 only (minus 27%) and a quiet
+          client during the boot (minus 23%); the slim world buys nothing. Java 26 is no faster and
+          drops AppCDS with an agent. The cache must match JDK, Paper, plugins and module flags or the
+          JVM stops. What is left is Minecraft's bootstrap and datapack load (about 5.5 CPU s).
+        state: working
+        evidence: ["branch proto/gv-boot 0f8ed6c89: prototypes/game-verification/RESULTS.md", CI runs 42430101477 42433205261]
       - id: checkpoint-restore
         parent: k-own-paper-for-restarts
         what: Restore a snapshot of a booted, empty Paper instead of booting (Azul Zulu 25 CRaC, Linux only)
@@ -111,7 +118,7 @@ pieces:
 
   - id: perception
     status: figuring-out
-    open: The live stream to the test JVM was never built (the spikes judged traces afterwards); its size and the HUD element names on drawn text are unmeasured
+    open: "Suite speed when every client draws a frame per tick on the shared Paper (P4 doubled one client's tick; 4 clients on 4 vCPU unmeasured). Live gaps: alpha threshold for fades, needles across wrapped chat lines, grey completion text, cursor blink"
     tries:
       - id: a1-client-state
         what: Read the client's state
@@ -131,6 +138,19 @@ pieces:
         state: picked
         why: The only honest pair
         evidence: [docs/design/game-verification/spikes/a-observers.md]
+      - id: live-stream
+        parent: a2-drawn-plus-a4-visible
+        what: The client streams full perception records over TCP after every drawn frame, only when they change; barriers echoed in the stream
+        taught: >-
+          P4: works. About 3 records of 61 bytes per requirement (212 KB per 1,000), so full records, no
+          diffs. Building a record costs under 0.2 ms; the cost is the frame a gated stepped client must
+          now draw each tick: stepped tick 2.4 to 8.1 ms on the runner. Record arrives 12 ms after its
+          tick on the runner. HUD element tags 14 of 14 right. Same record counts on Mac and runner.
+          A4 pixel counts in every record double the tick, so A4 must be asked for by a check, not
+          streamed. Live gaps: fades count as legible from alpha 8, chat lines wrap into several runs,
+          grey completion text looks typed, the text cursor blink adds records.
+        state: working
+        evidence: ["branch proto/gv-stream 45481dcb1: prototypes/game-verification/RESULTS.md", CI run 42336338774]
 
   - id: readiness-and-done
     status: figuring-out
@@ -415,4 +435,4 @@ open:
 
 slices: []
 
-next: P4, P7 T1 and P7 T2 running. Check in with each result; then show the overall direction and propose the first build slice.
+next: Check in with T1, T2 and P4. Ask for the restart approach and the next prototype wave (suite speed with frames, video under stepping, input from the mod).
