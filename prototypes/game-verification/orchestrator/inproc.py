@@ -250,7 +250,7 @@ def judge_cross(names, toks, res, log, state, rep):
         chats = [e["d"] for e in mine if e["k"] == "chat"]
         r = res[i] or {}
         own = {
-            "held": held == [f"0->{i}"],
+            "held": held == [f"0->{i + 1}"],
             "sneak": [e["d"] for e in sneak] == ["true", "false"],
             "sneakTicks": (sneak[1]["st"] - sneak[0]["st"]) if len(sneak) == 2 else None,
             "chat": chats == [f"x{i + 1} {toks[i]}"],
@@ -258,9 +258,9 @@ def judge_cross(names, toks, res, log, state, rep):
             "turnOk": r.get("turned") is not None and abs(float(r.get("turned")) - 15 * (i + 1)) < 1.0,
         }
         # Content that belongs to another client, found on this player.
-        foreign = [h for h in held if h != f"0->{i}" and any(h.endswith(f"->{j}") for j in range(len(names)) if j != i)]
+        foreign = [h for h in held if h != f"0->{i + 1}" and any(h.endswith(f"->{j + 1}") for j in range(len(names)) if j != i)]
         foreign += [c for c in chats if any(toks[j] in c for j in range(len(names)) if j != i)]
-        per.append({"name": name, **own, "foreign": foreign, "slotClient": r.get("slot"), "focused": r.get("focused"), "grabbed": r.get("grabbed"),
+        per.append({"name": name, **own, "foreign": foreign, "slotClient": r.get("slot"), "ifm": r.get("ifm"), "ifmAfter": r.get("ifmAfter"), "active": r.get("active"), "movesSeen": r.get("movesSeen"), "focused": r.get("focused"), "grabbed": r.get("grabbed"),
                     "startStep": r.get("startStep"), "injectStep": r.get("injectStep"), "error": r.get("error"), "scriptOk": r.get("ok")})
     wrong = sum(len(p["foreign"]) for p in per)
     lost = sum(1 for p in per for k in ("held", "sneak", "chat", "turnOk") if not p[k])
@@ -278,7 +278,7 @@ def summarize_cross(rounds):
                                "foreign": sum(len(p["foreign"]) for p in ps), "sneakTicks": dict(collections.Counter(p["sneakTicks"] for p in ps)),
                                "turned": dict(collections.Counter(p["turned"] for p in ps).most_common(4)),
                                "focused": dict(collections.Counter(p["focused"] for p in ps)), "grabbed": dict(collections.Counter(p["grabbed"] for p in ps)),
-                               "errors": sum(1 for p in ps if p["error"])})
+                               "errors": sum(1 for p in ps if p["error"]), "ifm": dict(collections.Counter(p.get("ifm") for p in ps)), "movesSeen": dict(collections.Counter(p.get("movesSeen") for p in ps)), "active": dict(collections.Counter(p.get("active") for p in ps))})
     return {"rounds": len(rounds), "verdicts": dict(v), "wrongEvents": sum(r["wrong"] for r in rounds), "lostChecks": sum(r["lost"] for r in rounds),
             "sameStartStep": sum(r["sameStart"] for r in rounds), "perClient": per_client,
             "exampleWrong": next((r for r in rounds if r["wrong"]), None)}
@@ -360,6 +360,10 @@ CI_ROWS = {
         "cross --path XSf --setup fake --n 3 --display shared",
         "cross --path J1 --setup fake --n 3 --display shared",
         "sug --paths J2,J1,XF --setup real --n 10",
+    ],
+    "crossdbg": [
+        "cross --path XF --setup real --n 10 --display own --clients 1",
+        "cross --path XF --setup real --n 10 --display own",
     ],
     # Cross talk first: the cheap rows tell whether the long ones are worth their time.
     "crossown": [

@@ -292,7 +292,10 @@ public final class Input {
     static String handledKind;
 
     /** Head of the client's input handlers (HandledMixin); render thread. */
+    static int moves;
+
     public static void handled(String kind) {
+        if (kind.equals("move")) moves++;
         if (running == null || injectTick < 0) return;
         handledN++;
         if (handledTick >= 0) return;
@@ -857,7 +860,8 @@ public final class Input {
                 double turn = d(p, "turn");
                 String tok = p.get("tok");
                 float[] yaw0 = {0};
-                press(s, k, digit(n));
+                int[] moves0 = {0};
+                press(s, k, digit(n + 1)); // slot n: the player starts on slot 0, so every client changes slot
                 s.waitTicks(2);
                 s.now(() -> k.key(SHIFT[0], SHIFT[1], true));
                 s.waitTicks(hold);
@@ -865,13 +869,20 @@ public final class Input {
                 s.waitTicks(1);
                 s.now(() -> {
                     yaw0[0] = mc.player.getYRot();
+                    s.note("ifm", (boolean) field(net.minecraft.client.MouseHandler.class, mc.mouseHandler, "ignoreFirstMove"));
+                    s.note("active", mc.isWindowActive());
+                    moves0[0] = moves;
                     if (!path.equals("XF")) k.motion(mc.mouseHandler.xpos(), mc.mouseHandler.ypos(), 0, 0);
                     double ss = mc.options.sensitivity().get() * 0.6F + 0.2F;
                     double dx = turn / (ss * ss * ss * 8.0 * 0.15);
                     k.motion(mc.mouseHandler.xpos() + dx, mc.mouseHandler.ypos(), dx, 0);
                 });
                 s.waitTicks(2);
-                s.now(() -> s.note("turned", Math.round((mc.player.getYRot() - yaw0[0]) * 100) / 100.0));
+                s.now(() -> {
+                    s.note("turned", Math.round((mc.player.getYRot() - yaw0[0]) * 100) / 100.0);
+                    s.note("movesSeen", moves - moves0[0]);
+                    s.note("ifmAfter", (boolean) field(net.minecraft.client.MouseHandler.class, mc.mouseHandler, "ignoreFirstMove"));
+                });
                 press(s, k, T);
                 s.until("chat screen", () -> mc.gui.screen() instanceof ChatScreen, 10);
                 s.now(() -> k.text("x" + n + " " + tok));
