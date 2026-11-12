@@ -281,24 +281,59 @@ extension ShowOpenFocusPane on WidgetTester {
   }) async {
     final source = AnimatedItemSource([])..ready = false;
     await showComponent(
-      Pane(
-        id: "page",
-        primary: true,
-        openFocus: PaneOpenFocus.firstItem,
-        margin: EdgeInsets.zero,
-        child: Column(
+      _openFocusPane(source, fallback: fallback, other: "Other"),
+    );
+    return source;
+  }
+
+  /// Shows [opener] alone; [OpeningPage.open] then shows a primary [Pane]
+  /// below it with open focus on its first item, holding a button labelled
+  /// [fallback] and an [AnimatedItems] list still loading.
+  Future<OpeningPage> showOpeningPage({
+    required Widget opener,
+    required String fallback,
+  }) async {
+    final source = AnimatedItemSource([])..ready = false;
+    final shown = ValueNotifier(false);
+    addTearDown(shown.dispose);
+    await showComponent(
+      ValueListenableBuilder(
+        valueListenable: shown,
+        builder: (context, show, _) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Button(label: fallback, onPressed: () {}),
-            AnimatedItems(source: source),
-            Button(label: "Other", onPressed: () {}),
+            opener,
+            if (show) _openFocusPane(source, fallback: fallback),
           ],
         ),
       ),
     );
-    return source;
+    return (items: source, open: () => shown.value = true);
   }
 }
+
+/// A page from [ShowOpenFocusPane.showOpeningPage]: [open] shows its pane
+/// and [items] delivers its list.
+typedef OpeningPage = ({AnimatedItemSource items, VoidCallback open});
+
+Pane _openFocusPane(
+  AnimatedItemSource source, {
+  required String fallback,
+  String? other,
+}) => Pane(
+  id: "page",
+  primary: true,
+  openFocus: PaneOpenFocus.firstItem,
+  margin: EdgeInsets.zero,
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Button(label: fallback, onPressed: () {}),
+      AnimatedItems(source: source),
+      if (other != null) Button(label: other, onPressed: () {}),
+    ],
+  ),
+);
 
 /// Showing a bare animated table in the panel.
 extension ShowActiveRowTable on WidgetTester {

@@ -608,4 +608,51 @@ void main() {
       isTrue,
     );
   });
+
+  testWidgets("focus moved off the pane's first control, even back to where "
+      "it was before, stays there when the list arrives", (tester) async {
+    final page = await tester.showOpeningPage(
+      opener: Button(label: "Inspector", autofocus: true, onPressed: () {}),
+      fallback: "Generate",
+    );
+    final inspector = Focus.of(tester.element(find.text("Inspector")));
+    page.open();
+    await tester.pumpAndSettle();
+    expect(
+      Focus.of(tester.element(find.text("Generate"))).hasPrimaryFocus,
+      isTrue,
+    );
+
+    // A screen reader or a script focuses the inspector field without a key
+    // or pointer press.
+    inspector.requestFocus();
+    await tester.pumpAndSettle();
+    page.items.update([const AnimatedItem(id: "a", label: "Alpha")]);
+    await tester.pumpAndSettle();
+
+    expect(inspector.hasPrimaryFocus, isTrue);
+  });
+
+  testWidgets("a text field holding focus when a page opens keeps it while "
+      "its text is set without key presses", (tester) async {
+    final name = TextEditingController();
+    addTearDown(name.dispose);
+    final page = await tester.showOpeningPage(
+      opener: TextField(controller: name, autofocus: true),
+      fallback: "New element",
+    );
+    final field = tester
+        .widget<EditableText>(find.byType(EditableText))
+        .focusNode;
+    expect(field.hasFocus, isTrue);
+
+    // A screen reader or a script sets the text; no key is pressed.
+    page.open();
+    name.text = "Old Notes";
+    await tester.pumpAndSettle();
+    page.items.update([const AnimatedItem(id: "a", label: "Alpha")]);
+    await tester.pumpAndSettle();
+
+    expect(field.hasFocus, isTrue);
+  });
 }

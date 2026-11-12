@@ -179,4 +179,30 @@ void main() {
       });
     });
   }
+
+  testWidgets("typing a new page's name and pressing Enter keeps focus in "
+      "the name and opens nothing", (tester) async {
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(1600, 1000)),
+    ]);
+    await panel.openSurface(route);
+    await panel.press(LogicalKeyboardKey.keyN);
+    await panel.eventually(() => expect(panel.focused, startsWith("name")));
+
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: "Chapter 12",
+        selection: TextSelection.collapsed(offset: 10),
+      ),
+    );
+    await panel.settle();
+    expect(panel.focused, startsWith("name"));
+
+    await panel.press(LogicalKeyboardKey.enter);
+    await panel.settle();
+
+    expect(panel.focused, startsWith("name"));
+    expect(panel.working.relations.children[route], hasLength(2));
+  });
 }

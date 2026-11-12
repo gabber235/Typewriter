@@ -365,12 +365,19 @@ class _PaneState extends State<Pane> {
     if (chosen != null && chosen != primary && chosen != _placed) {
       return _endOpen();
     }
+    // Focus in a text field is someone writing, never focus left over from
+    // the link that opened the page.
+    final writing =
+        primary?.context?.findAncestorWidgetOfExactType<EditableText>() != null;
     final free =
-        primary == null ||
-        primary == _before ||
-        primary == _placed ||
-        primary == _scope ||
-        primary is FocusScopeNode && _scope.ancestors.contains(primary);
+        !writing &&
+        (primary == null ||
+            // Once open focus placed a node, focus back on the opener was
+            // chosen, not left over.
+            primary == _before && _placed == null ||
+            primary == _placed ||
+            primary == _scope ||
+            primary is FocusScopeNode && _scope.ancestors.contains(primary));
     // A reveal, an autofocus field or a popup chose focus.
     if (!free) return _endOpen();
     final item = _scope.firstItem;
