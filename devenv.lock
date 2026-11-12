@@ -35,14 +35,16 @@
     },
     "flutter-overlay": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": [
+          "nixpkgs"
+        ]
       },
       "locked": {
-        "lastModified": 1792971303,
-        "narHash": "sha256-tkRDTo6Zpy+7f0H5xsw55h5B6H0+XBV9OakX1fGMV1g=",
+        "lastModified": 1794457954,
+        "narHash": "sha256-j0ZtEFE8p8sI9xSTTacZZ8ti4xDUx47QS4DKt/kTpgg=",
         "owner": "gabber235",
         "repo": "flutter-overlay",
-        "rev": "72e146c7857bc1c1c7617278d647737378cd520c",
+        "rev": "72e257358e6c099f9a09f54b75e62b26c17728c9",
         "type": "github"
       },
       "original": {
@@ -88,28 +90,12 @@
         "type": "github"
       }
     },
-    "nixpkgs_2": {
-      "locked": {
-        "lastModified": 1792812153,
-        "narHash": "sha256-T2+XBfNbf9pecLUWS4+RtuVNZ3W8K5taG5QdV71mWlk=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "674a2028661e550a97400c1cc992b9cca9a668a1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "devenv": "devenv",
         "flutter-overlay": "flutter-overlay",
         "git-hooks": "git-hooks",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay"
       }
     },

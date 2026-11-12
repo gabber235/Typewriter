@@ -13,15 +13,12 @@ inputs:
     inputs:
       nixpkgs:
         follows: nixpkgs
-  # Flutter beta, rebuilt for each release and cached on gabber235.cachix.org. No `follows`:
-  # Flutter built against the overlay's own nixpkgs is what the cache holds.
+  # Flutter beta: the upstream release archive behind a launcher (devenv.nix).
   flutter-overlay:
     url: github:gabber235/flutter-overlay
-nixConfig:
-  extra-substituters:
-    - https://gabber235.cachix.org
-  extra-trusted-public-keys:
-    - gabber235.cachix.org-1:sXlzXx2H2hsyx+SA4NkiXhAVD4q0IgnditjhCEsBgXQ=
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
 require_version: ">=2.4"
 nixpkgs:
   # The 1Password CLI (`op`, devenv.nix) is the only unfree package.

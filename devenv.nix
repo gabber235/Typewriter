@@ -38,11 +38,12 @@ in
   # `flutter build macos` call Xcode's xcrun, which the Nix SDK does not provide.
   apple.sdk = null;
 
-  env = {
-    # `dart` does not know the Flutter it belongs to, so pub cannot resolve `sdk: flutter`
-    # packages (`dart run build_runner` in the panel) without being told where Flutter is.
-    FLUTTER_ROOT = "${flutter.sdk}";
+  # Unpacks the Flutter SDK into ~/.cache/flutter-overlay on first entry and exports FLUTTER_ROOT
+  # to it: `dart` does not know the Flutter it belongs to, so pub cannot resolve `sdk: flutter`
+  # packages (`dart run build_runner` in the panel) without being told where Flutter is.
+  enterShell = flutter.shellHook;
 
+  env = {
     NATS_SERVER_BIN = "${pins.nats-server}/bin/nats-server";
   };
 

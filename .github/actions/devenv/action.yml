@@ -62,7 +62,7 @@ runs:
         sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift
         df -h /
     - uses: cachix/install-nix-action@v31
-    # Reads gabber235.cachix.org (Flutter, the Rust toolchain and every other path a trusted run
+    # Reads gabber235.cachix.org (the Rust toolchain and every other path a trusted run
     # built) and the public devenv cache. Pushing is the explicit step below, with a token only
     # trusted runs can read.
     - uses: cachix/cachix-action@v17
