@@ -75,4 +75,25 @@ void main() {
 
     expect(first, tester.getRect(find.text("Dialog title")));
   });
+
+  for (final theme in [null, dark]) {
+    testWidgets("the page behind a dialog stays visible through a light veil"
+        "${theme == null ? "" : " in the dark theme"}", (tester) async {
+      await tester.pumpPanel([
+        ?theme,
+      ], at: const PanelLocation.component(DialogBackdropPage()));
+
+      await tester.tap(find.text("Open"));
+      await tester.pumpAndSettle();
+
+      final veils = tester
+          .widgetList<ModalBarrier>(find.byType(ModalBarrier))
+          .map((barrier) => barrier.color)
+          .nonNulls;
+      expect(veils, isNotEmpty);
+      for (final veil in veils) {
+        expect(veil.a, lessThanOrEqualTo(0.3));
+      }
+    });
+  }
 }

@@ -25,16 +25,20 @@ _ColorFamily _family(Color color, Brightness brightness, Color surface) {
   );
   return (
     color: color,
-    onColor: _contrastingForeground(color),
+    onColor: color.contrastingForeground,
     container: container,
-    onContainer: _contrastingForeground(container),
+    onContainer: container.contrastingForeground,
   );
 }
 
-Color _contrastingForeground(Color background) {
-  final blackContrast = background.contrastWith(Colors.black);
-  final whiteContrast = background.contrastWith(Colors.white);
-  return blackContrast >= whiteContrast ? Colors.black : Colors.white;
+/// Ink for content on a solid fill.
+extension ContrastingForeground on Color {
+  /// Black or white, whichever reads better on this colour.
+  Color get contrastingForeground {
+    final blackContrast = contrastWith(Colors.black);
+    final whiteContrast = contrastWith(Colors.white);
+    return blackContrast >= whiteContrast ? Colors.black : Colors.white;
+  }
 }
 
 /// Builds the semantic colors consumed by the panel design system.
@@ -100,7 +104,9 @@ TypewriterColors buildTypewriterColors(Brightness brightness) {
     selectionContainer: brand.container,
     onSelectionContainer: brand.onContainer,
     shadow: neutral.shadow,
-    scrim: neutral.scrim,
+    // A veil, not a curtain: the page behind a dialog stays readable while
+    // it sinks back, and the surface in front reads as the focus.
+    scrim: neutral.scrim.withValues(alpha: dark ? 0.28 : 0.14),
     info: info.color,
     infoText: text(info),
     onInfo: info.onColor,

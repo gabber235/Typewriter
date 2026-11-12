@@ -89,80 +89,63 @@ class SearchBody extends HookConsumerWidget {
         child: frameBuilder(
           queryBar: Column(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadiusGeometry.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-                child: Stack(
-                  clipBehavior: .none,
-                  children: [
-                    QueryBar(
-                      inputFieldController: inputFieldController,
-                      query: controller.query,
-                      onDismiss: onQueryDismiss,
-                      onCancel: onQueryDismiss,
-                      textFieldActions: [
-                        ...?textFieldActions,
-                        ActionShortcut(
-                          id: "submit_search_result",
-                          label: "Select result",
-                          description: "Apply the highlighted search result",
-                          activators: [
-                            const SingleActivator(LogicalKeyboardKey.enter),
-                            const SingleActivator(
-                              LogicalKeyboardKey.numpadEnter,
-                            ),
-                          ],
-                          priority: 1500,
-                          show: false,
-                          run: ActionRun.press((_) => submit()),
-                        ),
-                      ],
-                      selectAllOnFocus: selectAllOnFocus,
-                      onQueryChanged: controller.updateQuery,
-                      selectors: controller.selectors,
-                      completeSelector: controller.completeSelector,
-                      validationIssues: controller.validationIssues,
-                      autofocus: EditorTextFieldAutoFocus.textField,
-                      style: queryStyle,
-                      textAlign: queryAlignment,
-                      inputDecoration:
-                          (queryDecoration ?? const InputDecoration()).copyWith(
-                            prefixIcon:
-                                queryDecoration?.prefixIcon ??
-                                (useDefaultQueryIcon
-                                    ? Padding(
-                                        padding: EdgeInsets.only(
-                                          left: context.spacing.space1,
-                                        ),
-                                        child: const Icon(Icons.search_rounded),
-                                      )
-                                    : null),
-                            hintText: searchHint,
-                            suffixIcon:
-                                queryDecoration?.suffixIcon ??
-                                (controller.canClose
-                                    ? InputIconButton(
-                                        icon: const Icon(Icons.close_rounded),
-                                        tooltip: "Close",
-                                        onPressed: controller.close,
-                                      )
-                                    : null),
-                          ),
-                      onSubmitted: (_) => submit(),
+              QueryBar(
+                inputFieldController: inputFieldController,
+                query: controller.query,
+                onDismiss: onQueryDismiss,
+                onCancel: onQueryDismiss,
+                textFieldActions: [
+                  ...?textFieldActions,
+                  ActionShortcut(
+                    id: "submit_search_result",
+                    label: "Select result",
+                    description: "Apply the highlighted search result",
+                    activators: [
+                      const SingleActivator(LogicalKeyboardKey.enter),
+                      const SingleActivator(LogicalKeyboardKey.numpadEnter),
+                    ],
+                    priority: 1500,
+                    show: false,
+                    run: ActionRun.press((_) => submit()),
+                  ),
+                ],
+                selectAllOnFocus: selectAllOnFocus,
+                onQueryChanged: controller.updateQuery,
+                selectors: controller.selectors,
+                completeSelector: controller.completeSelector,
+                validationIssues: controller.validationIssues,
+                autofocus: EditorTextFieldAutoFocus.textField,
+                style: queryStyle,
+                textAlign: queryAlignment,
+                inputDecoration: (queryDecoration ?? const InputDecoration())
+                    .copyWith(
+                      prefixIcon:
+                          queryDecoration?.prefixIcon ??
+                          (useDefaultQueryIcon
+                              ? Padding(
+                                  padding: EdgeInsets.only(
+                                    left: context.spacing.space1,
+                                  ),
+                                  child: const Icon(Icons.search_rounded),
+                                )
+                              : null),
+                      hintText: searchHint,
+                      suffixIcon:
+                          queryDecoration?.suffixIcon ??
+                          (controller.canClose
+                              ? InputIconButton(
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: "Close",
+                                  onPressed: controller.close,
+                                )
+                              : null),
                     ),
-                    if (controller.snapshot.status == .loading &&
-                        controller.snapshot.nodes.isEmpty)
-                      Semantics(
-                        container: true,
-                        child: LinearProgressIndicator(
-                          semanticsLabel: searchLoadingSemanticLabel,
-                          backgroundColor: Colors.transparent,
-                        ),
-                      ),
-                  ],
-                ),
+                onSubmitted: (_) => submit(),
+                loadingLabel:
+                    controller.snapshot.status == .loading &&
+                        controller.snapshot.nodes.isEmpty
+                    ? searchLoadingSemanticLabel
+                    : null,
               ),
               const SearchCommandInfo(),
             ],

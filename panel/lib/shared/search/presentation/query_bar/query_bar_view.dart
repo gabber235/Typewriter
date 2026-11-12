@@ -38,45 +38,48 @@ class _QueryBarView extends StatelessWidget {
                   sharedAxisConstraintMode:
                       SharedAxisConstraintMode.matchAnchor,
                 ),
-                child: EditorTextField(
-                  inputFieldController: controller.inputFieldController,
-                  controller: controller.textController,
-                  style: bar.style,
-                  textAlign: bar.textAlign,
-                  autofocus: bar.autofocus,
-                  decoration: bar.inputDecoration.copyWith(
-                    errorText:
-                        controller.parseResult.issues.isNotEmpty ||
-                            bar.validationIssues.isNotEmpty
-                        ? [
-                            ...controller.parseResult.issues,
-                            ...bar.validationIssues,
-                          ].first.message
-                        : null,
-                    contentPadding:
-                        bar.inputDecoration.contentPadding ??
-                        EdgeInsets.symmetric(
-                          vertical: context.spacing.space3,
-                          horizontal: context.spacing.space2,
-                        ),
+                child: _LoadingEdge(
+                  label: bar.loadingLabel,
+                  child: EditorTextField(
+                    inputFieldController: controller.inputFieldController,
+                    controller: controller.textController,
+                    style: bar.style,
+                    textAlign: bar.textAlign,
+                    autofocus: bar.autofocus,
+                    decoration: bar.inputDecoration.copyWith(
+                      errorText:
+                          controller.parseResult.issues.isNotEmpty ||
+                              bar.validationIssues.isNotEmpty
+                          ? [
+                              ...controller.parseResult.issues,
+                              ...bar.validationIssues,
+                            ].first.message
+                          : null,
+                      contentPadding:
+                          bar.inputDecoration.contentPadding ??
+                          EdgeInsets.symmetric(
+                            vertical: context.spacing.space3,
+                            horizontal: context.spacing.space2,
+                          ),
+                    ),
+                    maxLines: null,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
+                    ],
+                    textFieldActions: [
+                      ...?bar.textFieldActions,
+                      ...controller.shortcuts,
+                    ],
+                    selectAllOnFocus: bar.selectAllOnFocus,
+                    enabled: bar.enabled,
+                    readOnly: bar.readOnly,
+                    onInputFocus: bar.onInputFocus,
+                    onDismiss: bar.onDismiss,
+                    onChanged: controller.onQueryChanged,
+                    onDone: bar.onDone,
+                    onEditingComplete: bar.onEditingComplete,
+                    onSubmitted: controller.onSubmitted,
                   ),
-                  maxLines: null,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
-                  ],
-                  textFieldActions: [
-                    ...?bar.textFieldActions,
-                    ...controller.shortcuts,
-                  ],
-                  selectAllOnFocus: bar.selectAllOnFocus,
-                  enabled: bar.enabled,
-                  readOnly: bar.readOnly,
-                  onInputFocus: bar.onInputFocus,
-                  onDismiss: bar.onDismiss,
-                  onChanged: controller.onQueryChanged,
-                  onDone: bar.onDone,
-                  onEditingComplete: bar.onEditingComplete,
-                  onSubmitted: controller.onSubmitted,
                 ),
                 overlayBuilder: (context, _) => _buildSuggestionPanel(
                   context: context,
@@ -161,6 +164,41 @@ class _QueryBarHelperRow extends StatelessWidget {
                 ),
               ),
       ),
+    );
+  }
+}
+
+/// Lays a thin progress bar along the bottom edge of [child] while [label] is
+/// set. The bar stays inside the straight part of the edge, so it never meets
+/// the rounded corners or the focus ring around them.
+class _LoadingEdge extends StatelessWidget {
+  const _LoadingEdge({required this.label, required this.child});
+
+  final String? label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = this.label;
+    if (label == null) return child;
+    final corner = context.shapes.largeBorderRadius.bottomLeft.x;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          left: corner,
+          right: corner,
+          bottom: 0,
+          child: Semantics(
+            container: true,
+            child: LinearProgressIndicator(
+              semanticsLabel: label,
+              minHeight: 2,
+              backgroundColor: context.colors.clear,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
