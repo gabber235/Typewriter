@@ -76,6 +76,7 @@ public final class ProbePlugin extends JavaPlugin implements Listener {
         K.start(this);
         N.start(this);
         StreamScenes.start(this);
+        VideoScenes.start(this);
         getLogger().info("probe control on " + http.getAddress().getPort());
     }
 

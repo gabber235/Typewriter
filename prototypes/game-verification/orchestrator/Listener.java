@@ -194,7 +194,9 @@ public class Listener {
             if (i > 0) j.append(',');
             j.append('[').append(q(r.in.readUTF())).append(',').append(r.in.readByte()).append(']');
         }
-        j.append("],\"health\":").append(r.in.readFloat()).append('}');
+        j.append("],\"health\":").append(r.in.readFloat());
+        if (r.in.available() > 0) j.append(",\"vx\":").append(r.in.readUTF());
+        j.append('}');
         secs.add(List.of(r.since(p)));
         return j.toString();
     }

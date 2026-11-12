@@ -74,6 +74,10 @@ public final class N {
         render = Thread.currentThread();
         if (!stepping) return;
         loops++;
+        if (probe.mod.video.Demo.on) {
+            demoLoop(mc);
+            return;
+        }
         // Handle what already arrived now rather than later in this loop, so a step ping read here ticks this loop.
         mc.packetProcessor().processQueuedPackets();
         if (current != null) return; // the granted tick has not run (no level yet); keep the clock where it is
@@ -85,6 +89,51 @@ public final class N {
             grantAt = System.nanoTime();
             if (wakeAt != 0) wakeToGrant += grantAt - wakeAt;
         }
+    }
+
+    private static Ack pendingAck;
+    public static long demoWaitLoops;
+
+    /**
+     * Demo loop: draw the next frame of the schedule if its ticks are done; otherwise hand the held ack of the
+     * last tick to the server (all its frames are drawn now) and take the next grant if it is there.
+     */
+    private static void demoLoop(Minecraft mc) {
+        probe.mod.video.Demo.ticksNow = 0;
+        probe.mod.video.Demo.frameNow = false;
+        probe.mod.video.Demo.packetsOpen = false;
+        if (current != null) return;
+        long f = probe.mod.video.Demo.frame;
+        if (probe.mod.video.Demo.ticksDone < probe.mod.video.Demo.ticksFor(f)) {
+            // Packets are applied only here, between the frames of one tick and the next tick: the server answers
+            // input between ticks (a typed command), and that answer must not reach a frame of the tick before.
+            probe.mod.video.Demo.packetsOpen = true;
+            mc.packetProcessor().processQueuedPackets();
+            if (pendingAck != null) {
+                ClientPlayNetworking.send(pendingAck);
+                acksSent++;
+                lastAckTick = pendingAck.tick;
+                lastSeen = pendingAck.seen;
+                pendingAck = null;
+            }
+            Integer t = granted.poll();
+            if (t == null) {
+                demoWaitLoops++;
+                return;
+            }
+            current = t;
+            grantAt = System.nanoTime();
+            if (wakeAt != 0) wakeToGrant += grantAt - wakeAt;
+            probe.mod.video.Demo.ticksNow = 1;
+            probe.mod.video.Demo.ticksDone++;
+            if (probe.mod.video.Demo.ticksDone < probe.mod.video.Demo.ticksFor(f)) {
+                // fps below 20 would skip a frame here; the prototype only runs 20 fps and up.
+                throw new IllegalStateException("demo needs at least one frame per tick");
+            }
+        }
+        probe.mod.video.Demo.frameNow = true;
+        probe.mod.video.Demo.partial = probe.mod.video.Demo.partialFor(f);
+        virtNanos = probe.mod.video.Demo.nanosFor(f);
     }
 
     /** Tail of Minecraft.tick. */
@@ -109,7 +158,9 @@ public final class N {
                 }
             }
         }
-        if (mc.getConnection() != null) {
+        if (mc.getConnection() != null && probe.mod.video.Demo.on) {
+            pendingAck = new Ack(t, seen, clientTicks); // sent once the last frame of this tick is drawn
+        } else if (mc.getConnection() != null) {
             ClientPlayNetworking.send(new Ack(t, seen, clientTicks));
             acksSent++;
             lastAckTick = t;
@@ -134,6 +185,33 @@ public final class N {
                     Util.setTimeSource(() -> System.nanoTime() + offset);
                 }
                 return "{\"ok\":true,\"stepping\":" + stepping + "}";
+            }
+            case "n.demo" -> {
+                boolean on = "1".equals(p.get("on"));
+                java.util.concurrent.CompletableFuture<String> r = new java.util.concurrent.CompletableFuture<>();
+                // On the render thread between loops, so the switch never lands inside a frame or a tick.
+                mc.execute(() -> {
+                    if (on && stepping && !probe.mod.video.Demo.on) {
+                        probe.mod.video.Demo.start(Integer.parseInt(p.getOrDefault("fps", "30")), virtNanos);
+                        demoWaitLoops = 0;
+                    } else if (!on && probe.mod.video.Demo.on) {
+                        probe.mod.video.Demo.on = false;
+                        if (pendingAck != null) {
+                            ClientPlayNetworking.send(pendingAck);
+                            acksSent++;
+                            lastAckTick = pendingAck.tick;
+                            pendingAck = null;
+                        }
+                        // Back on the tick grid: the next grant adds 50 ms from here.
+                    }
+                    r.complete("{\"ok\":true,\"demo\":" + probe.mod.video.Demo.on + ",\"frame\":" + probe.mod.video.Demo.frame + ",\"ticksDone\":" + probe.mod.video.Demo.ticksDone
+                        + ",\"waitLoops\":" + demoWaitLoops + ",\"virtMs\":" + virtNanos / 1_000_000 + "}");
+                });
+                try {
+                    return r.get(20, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
             case "n.watch" -> {
                 needle = p.getOrDefault("needle", "");

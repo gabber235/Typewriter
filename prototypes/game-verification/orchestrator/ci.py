@@ -1051,10 +1051,31 @@ def cmd_stream(backend):
         sys.argv = old
 
 
+def cmd_demo(backend):
+    """Video prototype: gated pass, demo reruns at 30 and 60 fps, real time reference; then a second fresh rig at
+    30 fps whose frames are compared with the first rig's."""
+    k_hooks(backend)
+    import demo
+    demo.hooks["record"] = record
+    machine = f"GitHub ubuntu-24.04 free runner, {backend} on lavapipe under Xvfb, 854x480, gate 2"
+    step("demo run a", demo.main, ["run", "--label", "ci-a", "--machine", machine])
+    step("demo run b", demo.main, ["run", "--label", "ci-b", "--machine", machine, "--fps", "30", "--reruns", "1", "--rt", ""])
+    a = sorted(RUNS.glob("demo-ci-a-*"))
+    b = sorted(RUNS.glob("demo-ci-b-*"))
+    if a and b:
+        step("demo compare", demo.main, ["compare", str(a[-1]), str(b[-1])])
+    clips = RUNS / "clips"
+    clips.mkdir(exist_ok=True)
+    for d in a[-1:]:
+        for v in sorted((d / "videos").glob("*-0.mp4")):
+            if v.name.startswith(("demo60-", "demo30-", "rt60-")):
+                shutil.copy(v, clips / v.name)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "stream"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "stream", "demo"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -1105,6 +1126,8 @@ def main():
             cmd_breakstep(a.backend)
         elif a.plan == "stream":
             cmd_stream(a.backend)
+        elif a.plan == "demo":
+            cmd_demo(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

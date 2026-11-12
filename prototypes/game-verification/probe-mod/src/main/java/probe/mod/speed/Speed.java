@@ -66,6 +66,13 @@ public final class Speed {
 
     /** Decides once per frame, at the acquire call, whether this frame draws. */
     public static boolean decideFrame() {
+        if (probe.mod.video.Demo.on) {
+            // Demo: exactly the frames of the schedule, each with a record.
+            boolean render = probe.mod.video.Demo.frameNow;
+            if (render) probe.mod.observe.Stream.demoFrame();
+            thisFrameSkipped = !render;
+            return thisFrameSkipped;
+        }
         boolean render = probe.mod.observe.Stream.frameWanted() | gateMode == 0 || framesToRender > 0;
         if (framesToRender > 0) framesToRender--;
         thisFrameSkipped = !render;
@@ -94,6 +101,7 @@ public final class Speed {
         }
         if (thisFrameSkipped && parkNanos > 0) LockSupport.parkNanos(parkNanos);
         if (!thisFrameSkipped) probe.mod.video.Video.afterFrame();
+        if (!thisFrameSkipped) probe.mod.video.Demo.frameDone();
     }
 
     /** Draws n whole frames from now, in any gate mode, then runs r on the client thread. */
@@ -180,6 +188,7 @@ public final class Speed {
             case "stats" -> "{\"fps\":" + mc.getFps() + ",\"frame\":" + latest.frame() + ",\"tick\":" + latest.tick() + ",\"at\":" + micros() + "}";
             default -> {
                 String r = probe.mod.video.Video.handle(name, p, mc);
+                if (r == null) r = probe.mod.video.Demo.handle(name, p, mc);
                 if (r == null) r = probe.mod.golden.Golden.handle(name, p, mc);
                 if (r == null) r = probe.mod.observe.Observe.handle(name, p, mc);
                 if (r == null) r = probe.mod.ready.Ready.handle(name, p, mc);

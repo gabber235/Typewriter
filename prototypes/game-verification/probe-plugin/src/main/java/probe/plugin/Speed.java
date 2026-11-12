@@ -183,7 +183,7 @@ final class Speed {
                 p.showTitle(title);
             }
             default -> {
-                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r) && !Coverage.run(name, q, p, r) && !Ready.run(name, q, p, r) && !D.run(name, q, p, r) && !Input.run(name, q, p, r) && !K.run(name, q, p, r) && !N.run(name, q, p, r) && !StreamScenes.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
+                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r) && !Coverage.run(name, q, p, r) && !Ready.run(name, q, p, r) && !D.run(name, q, p, r) && !Input.run(name, q, p, r) && !K.run(name, q, p, r) && !N.run(name, q, p, r) && !StreamScenes.run(name, q, p, r) && !VideoScenes.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
             }
         }
         if (q.containsKey("cov")) Coverage.dump(q.get("cov"), r);

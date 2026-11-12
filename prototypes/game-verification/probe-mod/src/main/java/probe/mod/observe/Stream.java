@@ -77,6 +77,7 @@ public final class Stream {
     // Input helpers driven at client tick end.
     private static double walkTarget = -1, walkX, walkZ;
     private static final StringBuilder typing = new StringBuilder();
+    private static boolean enterPending;
 
     // Counters.
     static long records, skipped, contentBytes, buildNanosSum, a4NanosSum, framesDrawn, barriersEchoed;
@@ -116,6 +117,11 @@ public final class Stream {
         if (!typing.isEmpty() && mc.gui.screen() instanceof ChatScreen cs) {
             ((ChatScreenAccessor) cs).probe$input().insertText(String.valueOf(typing.charAt(0)));
             typing.deleteCharAt(0);
+        } else if (enterPending && mc.gui.screen() instanceof ChatScreen cs) {
+            // The player presses Enter one tick after the last key, as ChatScreen.keyPressed does.
+            enterPending = false;
+            cs.handleChatInput(((ChatScreenAccessor) cs).probe$input().getValue(), true);
+            mc.gui.setScreen(null);
         }
         if (!on) return;
         serverTick = tick;
@@ -139,6 +145,14 @@ public final class Stream {
     /** Step grants wait while an A4 pair is in flight, so both frames see the same tick. */
     public static boolean holding() {
         return on && state == A4;
+    }
+
+    /** Speed.decideFrame in a demo: this frame is drawn and gets a record. */
+    public static void demoFrame() {
+        if (!on) return;
+        want = false;
+        state = BASE;
+        frameStartNanos = System.nanoTime();
     }
 
     /** Speed.decideFrame: does the stream need this frame drawn. */
@@ -400,6 +414,8 @@ public final class Stream {
             o.writeByte(Math.round(b.getProgress() * 100));
         }
         o.writeFloat(mc.player == null ? 0 : mc.player.getHealth());
+        // Video prototype: the frame's facts (camera, watched entities, particles, title alpha, boss, input).
+        o.writeUTF(probe.mod.video.Demo.facts(mc));
         return bo.toByteArray();
     }
 
@@ -555,6 +571,7 @@ public final class Stream {
                     mc.gui.setScreen(new ChatScreen("", false));
                     typing.setLength(0);
                     typing.append(p.getOrDefault("text", ""));
+                    enterPending = "1".equals(p.get("enter"));
                     return 0;
                 });
                 return "{\"ok\":true}";
@@ -563,6 +580,7 @@ public final class Stream {
                 onClient(mc, () -> {
                     mc.gui.setScreen(null);
                     typing.setLength(0);
+                    enterPending = false;
                     mc.options.keyPlayerList.setDown(false);
                     mc.options.keyUp.setDown(false);
                     walkTarget = -1;

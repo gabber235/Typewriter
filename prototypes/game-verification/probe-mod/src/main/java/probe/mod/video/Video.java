@@ -37,7 +37,7 @@ import probe.mod.speed.Speed;
  * Real time pacing is speed = server rate / 20; the server must be slowed so the renderer keeps up.
  */
 public final class Video {
-    record Pending(long slot, long frame, long tick, long at, int ping, long virtMs) {}
+    record Pending(long slot, long frame, long tick, long at, int ping, long virtMs, long virtNs, String facts) {}
 
     record Out(byte[] data, Pending meta, int dups) {}
 
@@ -56,6 +56,7 @@ public final class Video {
     private static int fps;
     private static boolean block;
     private static boolean everyFrame;
+    private static boolean demoOnly;
     private static long t0Micros;
     private static long nextSlot;
     private static long lastWrittenSlot = -1;
@@ -72,7 +73,7 @@ public final class Video {
 
     // stats
     private static long captured, skippedSlots, droppedBusy, droppedPool, issueNanos, callbackNanos, blockNanos, writeNanos, bytes, framesSeen;
-    private static long dupsWritten;
+    private static long dupsWritten, factsNanos, crcNanos;
 
     private Video() {}
 
@@ -126,6 +127,7 @@ public final class Video {
     /** Right after GameRenderer.render() in a frame that draws. Render thread. */
     public static void afterRender(Minecraft mc) {
         if (!recording) return;
+        if (demoOnly && !Demo.frameNow) return; // a frame drawn before the demo started (a reset) is not in the clip
         framesSeen++;
         long start = System.nanoTime();
         try {
@@ -165,7 +167,9 @@ public final class Video {
             int slotIdx = idx;
             busy[slotIdx] = true;
             nextSlot = slot + 1;
-            Pending meta = new Pending(slot, Probe.frames() + 1, Probe.ticks(), at, Speed.lastPing, Util.getMillis());
+            long f0 = System.nanoTime();
+            Pending meta = new Pending(slot, Probe.frames() + 1, Probe.ticks(), at, Speed.lastPing, Util.getMillis(), Util.getNanos(), Demo.facts(mc));
+            factsNanos += System.nanoTime() - f0;
             GpuBuffer buf = ring[slotIdx];
             RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(tex, buf, 0L, () -> onCopied(slotIdx, buf, meta), 0);
             captured++;
@@ -222,9 +226,14 @@ public final class Video {
                 writeNanos += System.nanoTime() - w0;
                 dupsWritten += o.dups();
                 Pending m = o.meta();
+                long c0 = System.nanoTime();
+                java.util.zip.CRC32C crc = new java.util.zip.CRC32C();
+                crc.update(o.data());
+                long crcv = crc.getValue();
+                crcNanos += System.nanoTime() - c0;
                 for (int i = o.dups(); i >= 0; i--) {
                     sidecar.write("{\"v\":" + (n++) + ",\"slot\":" + (m.slot() - i) + ",\"f\":" + m.frame() + ",\"t\":" + m.tick() + ",\"at\":" + m.at() + ",\"ping\":" + m.ping()
-                        + ",\"virtMs\":" + m.virtMs() + (i > 0 ? ",\"dup\":true" : "") + "}\n");
+                        + ",\"virtMs\":" + m.virtMs() + ",\"virtNs\":" + m.virtNs() + ",\"crc\":" + crcv + ",\"x\":" + m.facts() + (i > 0 ? ",\"dup\":true" : "") + "}\n");
                 }
                 pool.add(o.data());
             }
@@ -251,9 +260,10 @@ public final class Video {
         String enc = p.getOrDefault("enc", "x264");
         block = "step".equals(mode) || "1".equals(p.get("block"));
         everyFrame = "all".equals(mode);
+        demoOnly = "1".equals(p.get("demo"));
         Path out = Path.of(p.get("path"));
         Files.createDirectories(out.toAbsolutePath().getParent());
-        captured = skippedSlots = droppedBusy = droppedPool = issueNanos = callbackNanos = blockNanos = writeNanos = bytes = framesSeen = dupsWritten = 0;
+        captured = skippedSlots = droppedBusy = droppedPool = issueNanos = callbackNanos = blockNanos = writeNanos = bytes = framesSeen = dupsWritten = factsNanos = crcNanos = 0;
         nextSlot = 0;
         lastWrittenSlot = -1;
         writerError = null;
@@ -351,6 +361,7 @@ public final class Video {
         String r = "{\"ok\":true,\"framesSeen\":" + framesSeen + ",\"captured\":" + captured + ",\"skippedSlots\":" + skippedSlots + ",\"droppedBusy\":" + droppedBusy + ",\"droppedPool\":" + droppedPool
             + ",\"dups\":" + dupsWritten + ",\"slots\":" + nextSlot + ",\"issueUsPerCapture\":" + (captured == 0 ? 0 : issueNanos / captured / 1000.0) + ",\"callbackUsPerCapture\":" + (captured == 0 ? 0 : callbackNanos / captured / 1000.0)
             + ",\"blockMs\":" + blockNanos / 1_000_000 + ",\"writeMs\":" + writeNanos / 1_000_000 + ",\"bytes\":" + bytes + ",\"encodeTailMs\":" + encodeWaitMs + ",\"ffmpegCpuMs\":" + cpu + ",\"exit\":" + exit
+            + ",\"factsUsPerCapture\":" + (captured == 0 ? 0 : factsNanos / captured / 1000.0) + ",\"crcUsPerFrame\":" + (captured == 0 ? 0 : crcNanos / captured / 1000.0)
             + ",\"stepLagFrames\":" + lagFrames + ",\"stepMaxLagMs\":" + maxLagNanos / 1_000_000 + ",\"t0\":" + t0Micros + ",\"t1\":" + stoppedAt
             + ",\"writerError\":" + (writerError == null ? "null" : "\"" + writerError.toString().replace("\"", "'") + "\"") + "}";
         w = 0;
