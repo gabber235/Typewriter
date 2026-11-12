@@ -167,6 +167,12 @@ pieces:
         state: dropped
         why: Over the developer's 50% line even with every lever
         evidence: ["branch proto/gv-frames 6b7441deb: prototypes/game-verification/RESULTS.md", CI runs 43306724605 43320141634]
+      - id: perceive-without-drawing
+        parent: live-stream
+        what: Clients run the extract and submit stages each tick and skip the GPU draw; pixels only for A4 checks, goldens and clips
+        taught: Not tried (P11 running)
+        state: trying
+        evidence: []
 
   - id: readiness-and-done
     status: figuring-out
@@ -480,6 +486,9 @@ decided:
     why: 5.0 s kill to state on the normal Java 25, works on the Mac
   - id: p8-p9-p10
     what: Run P8 suite speed with frames, P9 video under stepping and P10 input from the client
+  - id: perception-no-drawing
+    what: "A. No drawing (Recommended)"
+    why: P8, a frame every tick is +408%, +53% with every lever
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -489,4 +498,4 @@ open:
 
 slices: []
 
-next: Step back on perception after P8. Show the ways forward and ask which to prototype (perceive without drawing, more machines, bigger runners). Check in with each result; then show the overall direction and propose the first build slice.
+next: P11 perceive without drawing running. Check in with its result; then show the overall direction and propose the first build slice. Check in with each result; then show the overall direction and propose the first build slice.
