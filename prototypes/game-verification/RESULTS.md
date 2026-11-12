@@ -1,194 +1,236 @@
-# Live perception stream: results
+# Demo rerun video under stepped ticks: results
 
-Throwaway prototype on `proto/gv-stream`. Question: can a real 26.3 client stream what its player perceives,
-loop by loop, to a test process cheaply enough? How big is the stream, and how late does it arrive?
+Throwaway prototype on `proto/gv-video`, built on the stepped client (spike N) and the live perception
+stream (`proto/gv-stream`). Question: can a demo rerun record a smooth clip while the test runner steps
+Paper's ticks, with each frame lined up with what the player perceived and the verdict unchanged?
 
 ## Answer
 
-- **Yes, and full records are fine.** A typical requirement produced **2.9 records of 61 bytes median**
-  (101 max): **about 212 KB per 1,000 requirements** on the Mac (218 KB on the runner). Diffs would have
-  cost 146 KB (69 percent; a diff after the first record is 39 percent of the full one). Saving 66 KB per
-  1,000 requirements does not pay for diff state on both ends, resync rules and a harder decoder.
-- **Building and encoding a record costs nothing that matters**: 0.01 to 0.1 ms median on the render thread
-  (p95 under 0.2 ms, one 1.5 ms outlier). **The cost is the frame**: a gated stepped client must now draw one
-  frame per tick so there is something to read, which took a stepped tick from **1.76 ms to 3.41 ms** on the
-  Mac (2.40 ms to 8.06 ms on the runner).
-- **Latency is a few milliseconds**: server tick end to the listener holding the record **4.3 ms median,
-  9.0 ms p95** (Mac, typical requirements); barrier sent to its echo received **4.0 ms median, 8.8 ms p95**.
-  Most of it is the client: from its own tick end to the listener 2.5 ms, of which the frame is 1.9 ms and the
-  socket hop 0.16 ms. Runner: 12.1 ms median, 15.2 ms p95; barrier 12.0 ms and 15.2 ms (a lavapipe frame is
-  about 6 ms).
-- **The HUD element tag is reliable**: 14 of 14 checks right, 0 untagged text runs in any scene. Seam: a tag
-  stack pushed at HEAD and popped at RETURN of each `Hud.extract*` method (and `Screen`, `CommandSuggestions`,
-  `ToastManager`, the deferred tooltip), read in `GuiRenderState.addText`.
-- **A4 does not belong in every record.** With visible pixels of two watched entities in each record while
-  walking, every tick changes the record (pixel counts move), A4 costs 9.2 ms median per record, the stepped
-  tick goes from 6.1 to 13.6 ms and the record arrives 29 ms after its tick instead of 7 ms (runner: A4
-  16.6 ms, tick 15.2 to 26.5 ms, record 51 ms instead of 22 ms).
+- **Yes, at 30 and at 60 fps.** The stepped client draws fps / 20 frames per stepped tick at evenly spaced
+  partial ticks (30 fps: 0, 1/3, 2/3; 60 fps: 0, 1/6, ... 5/6). Every frame is exactly 1/fps of game time
+  after the one before it: **zero duplicate frames, zero skipped frames, zero spread** in game time per
+  frame, in every case, on both machines.
+- **Smoother than a real time recording.** Pixel motion per frame is steadier than real time on the same
+  machine, and there is **no jump at tick boundaries** (motion across a boundary over motion inside a tick:
+  0.99 to 1.06 for camera and walk, real time 0.91 to 1.22). Real time on the runner dropped 3 to 5 frames per clip.
+- **Every frame lines up.** Each frame carries its own record, at its scheduled tick and partial, with
+  facts read on the frame it describes; 0 gaps and 0 off schedule frames in 4,320 demo frames per machine.
+  Pixels agree with the facts (walk position r = -0.9996, title 117 of 120, particles 90 of 90, boss bar
+  within 3 px).
+- **Verdicts unchanged: 12 of 12** (6 cases, each good and deliberately broken) pass or fail the same in
+  the gated run, the 30 fps demo, the 60 fps demo and the rerun, on the Mac and on the runner. First ticks
+  are equal except for facts the client interpolates (walk, boss, broken camera): one tick apart.
+- **Cost on the runner (lavapipe): 1.5 times gated at 30 fps, 2.6 times at 60 fps.** A requirement takes
+  1.31 s instead of 0.94 s at 30 fps. A real time recording takes 3.8 to 4.7 s. A stepped tick that draws 1.5
+  frames costs 17.6 ms, so a 30 fps demo runs **2.8 times faster than real time** even on a software
+  renderer.
+- **Reruns are bit identical** (same mp4 bytes) for 11 of 12 clips on one machine. **Particles** differ in
+  pixels from the first frame (client side randomness), with identical facts. Across machines (Metal and
+  lavapipe) every fact of every frame is equal and no frame's pixels are.
 
-Machines: the developer's M1 Max (OpenGL 4.1 on Metal, gated client mode 2, park 2 ms, 854x480, render
-distance 2; **load 14.9 to 18.7**, other work running) and the GitHub free runner run
-[42336338774](https://github.com/gabber235/Typewriter/actions/runs/42336338774) (`ubuntu-24.04`, x86, 4 vCPU, Vulkan on
-lavapipe under Xvfb, same client settings). Everything is measured unless marked **inferred**.
+Machines: the developer's M1 Max (OpenGL 4.1 on Metal, gated client mode 2, 854x480, render distance 2;
+load 12 to 17, other work running) and the GitHub free runner (ubuntu-24.04, Vulkan on lavapipe under
+Xvfb, 854x480; load 2 to 4).
 
 ## What was built
 
-- **Client** (`probe-mod`, `observe/Stream.java`, `observe/Tag.java`, `streammix/*`, about 600 lines):
-  after every drawn frame the render thread builds the perceived state from spike A's A2 frame record, encodes
-  it with a `DataOutputStream`, and queues it when the content bytes differ from the last record sent (exact
-  compare, no hash needed). A sender thread writes `int length, type byte, body` over TCP (no delay).
-  A gated stepped client draws one frame after each client tick and after each barrier.
-- **Record content**: legible text runs as (tag, text); chat lines added since the requirement started; on
-  screen command suggestions; watched entities (drawn, visible pixels); watched blocks (state, section visible);
-  facts (screen, HUD hidden, block position, boss bars with progress in percent, health). A header carries the
-  server tick and frame plus measurement timestamps; only 8 bytes of it (tick, frame) are counted as
-  essential.
-- **Legibility rule** ported from `orchestrator/observe.py:331` to `:416` into Java (GUI: alpha at least 8,
-  more than half on screen, not painted over by a later opaque rectangle or panel, not under the blur; world:
-  on screen, facing, alpha at least 26, not the colour of its own background; name tags: on screen).
-- **Barrier**: a vanilla ping below 2^30 (spike N's step pings stay above) is queued in `PingMixin`, forces a
-  frame, and is echoed right after the record of that frame. Step grants wait while an A4 pair is in flight so
-  both frames see the same tick.
-- **Listener** (`orchestrator/Listener.java`): a separate JVM, stamps each frame with `System.nanoTime` (one
-  monotonic clock for all processes on the machine), decodes it and prices a diff (5 framing + 8 header +
-  1 bitmap, per changed section 4 + 2 per removed item + 2 plus the bytes per added item).
-- **Paper** (`probe-plugin`, `StreamScenes.java`): the scenes as Bukkit tasks, so they follow stepped ticks;
-  tick end timestamps; barrier sends. Spike N's step agent and lockstep policy unchanged.
-- `orchestrator/stream.py run` runs everything; `ci.py plan stream` on the runner.
-
-## Mac
-
-| Scene | Ticks | Records | Records per tick | Bytes per record, median (max) | Diff over full | Build and encode ms, median (p95) | Frame ms, median | A4 ms, median | ms per stepped tick | Server tick to listener ms, median (p95) | Barrier to echo ms, median (p95) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 action bar fight, 100 ticks | 112 | 42 | 0.375 | 68 (81) | 0.7 | 0.025 (0.054) | 2.289 | - | 3.448 | 5.387 (8.323) | 5.548 (8.088) |
-| 2 title 10/40/20 | 82 | 3 | 0.037 | 44 (105) | 0.705 | 0.021 (0.083) | 1.753 | - | 3.071 | 4.415 (4.52) | 4.603 (5.237) |
-| 3 chat burst of 20 | 32 | 3 | 0.094 | 1375 (1780) | 0.588 | 0.019 (0.106) | 2.635 | - | 3.123 | 7.112 (7.256) | 4.822 (5.76) |
-| 4 boss bar, progress every tick | 112 | 102 | 0.911 | 94 (94) | 0.687 | 0.018 (0.031) | 2.043 | - | 3.087 | 4.8 (6.719) | 5.062 (6.88) |
-| 5 walk 4 blocks, A4 off | 82 | 8 | 0.098 | 231 (231) | 0.37 | 0.068 (1.536) | 2.791 | - | 6.087 | 6.99 (119.483) | 7.505 (8.908) |
-| 5 walk 4 blocks, A4 on | 82 | 38 | 0.463 | 231 (231) | 0.225 | 0.1 (0.181) | 2.959 | 9.204 | 13.608 | 28.716 (37.3) | 29.466 (34.379) |
-| 6 typing a command | 65 | 41 | 0.631 | 142 (383) | 0.467 | 0.035 (0.059) | 3.258 | - | 6.299 | 8.831 (21.322) | 6.463 (10.479) |
-| sidebar and tab list (tag check) | 32 | 3 | 0.094 | 61 (157) | 0.784 | 0.013 (0.021) | 2.881 | - | 3.629 | 5.867 (5.867) | 5.29 (5.834) |
-| typical requirements | 5005 | 2912 | 0.582 | 61 (101) | 0.392 | 0.01 (0.019) | 1.936 | - | 3.825 | 4.289 (8.954) | 3.968 (8.767) |
-
-- Bytes per record are the essential wire size: 4 length + 1 type + 8 tick and frame + content.
-- Ticks include the 2 to 20 setup ticks of each scene; "ms per stepped tick" is wall time of the steps.
-- Per 1,000 typical requirements: 2,912 records, 212 KB full, 146 KB as diffs.
-- "Diff over full" counts every record after the first of its requirement or scene.
-
-## Runner
-
-| Scene | Ticks | Records | Records per tick | Bytes per record, median (max) | Diff over full | Build and encode ms, median (p95) | Frame ms, median | A4 ms, median | ms per stepped tick | Server tick to listener ms, median (p95) | Barrier to echo ms, median (p95) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 action bar fight, 100 ticks | 112 | 42 | 0.375 | 68 (81) | 0.7 | 0.024 (0.045) | 6.308 | - | 7.851 | 14.294 (18.415) | 14.615 (19.504) |
-| 2 title 10/40/20 | 82 | 3 | 0.037 | 44 (105) | 0.705 | 0.016 (0.077) | 6.546 | - | 7.891 | 13.666 (13.756) | 14.091 (17.715) |
-| 3 chat burst of 20 | 32 | 3 | 0.094 | 1375 (1780) | 0.588 | 0.014 (0.142) | 5.751 | - | 8.644 | 11.756 (16.529) | 15.027 (16.029) |
-| 4 boss bar, progress every tick | 112 | 102 | 0.911 | 94 (94) | 0.687 | 0.018 (0.036) | 7.014 | - | 8.322 | 15.033 (19.808) | 15.57 (18.349) |
-| 5 walk 4 blocks, A4 off | 82 | 8 | 0.098 | 231 (231) | 0.37 | 0.083 (1.189) | 9.562 | - | 15.15 | 21.746 (274.86) | 18.508 (21.941) |
-| 5 walk 4 blocks, A4 on | 82 | 38 | 0.463 | 231 (231) | 0.225 | 0.099 (0.254) | 8.291 | 16.564 | 26.479 | 50.562 (97.087) | 53.002 (66.93) |
-| 6 typing a command | 65 | 41 | 0.631 | 142 (383) | 0.467 | 0.038 (0.064) | 10.382 | - | 15.377 | 25.516 (90.972) | 22.279 (34.482) |
-| sidebar and tab list (tag check) | 32 | 3 | 0.094 | 61 (157) | 0.784 | 0.012 (0.027) | 7.424 | - | 8.449 | 11.285 (11.285) | 14.376 (15.033) |
-| typical requirements | 1505 | 901 | 0.599 | 61 (101) | 0.392 | 0.011 (0.021) | 5.838 | - | 7.371 | 12.058 (15.211) | 12.036 (15.186) |
-
-- Runner: Intel Xeon 6973P-C, 4 vCPU, load 1.5 to 3.1, Vulkan on lavapipe. 300 typical requirements instead
-  of 1,000. Job 137 s, stream run 60 s, no failed step, no leaked process.
-- **Every scene produced exactly the same number of records as on the Mac** (42, 3, 3, 102, 8, 38, 41, 3):
-  under stepped ticks the stream is deterministic across machines. Tags were the same 14 of 14.
-- A lavapipe frame costs about 6 ms, so the stepped tick goes from 2.4 to 8.1 ms and a record arrives
-  12 ms after its tick (client tick end to listener 6.4 ms, socket 0.11 ms).
-
-## Full records or diffs
-
-| Case | Full | Diff | Diff over full |
-| --- | --- | --- | --- |
-| 1,000 typical requirements, Mac | 212 KB | 146 KB | 0.69 |
-| 1,000 typical requirements, runner | 218 KB | 148 KB | 0.68 |
-| Chat burst of 20, the records after the first (largest record 1,780 bytes) | 3,155 bytes | 1,856 bytes | 0.59 |
-| Boss bar, a record every tick (per record) | 94 bytes | 65 bytes | 0.69 |
-
-- The only section that grows is "chat since start": 20 long lines make a 1.8 KB record. A requirement that
-  sends 200 lines would send 18 KB per record (**inferred** from the per line size); still small next to a
-  frame, and a requirement scope resets it.
-- Diffs save bytes nobody is short of; the stream is about 1 KB per second of stepped ticks at most.
-  **Verdict: full records.**
-
-## How the HUD tag works
-
-- Every GUI text run is added to `GuiRenderState.addText` synchronously inside the extract call of the
-  element that draws it. So a static tag stack is enough: inject HEAD (push) and RETURN (pop) on
-  `Hud.extractChat` (chat), `extractOverlayMessage` (action bar), `extractTitle` (title), `extractBossOverlay`
-  (boss bar), `extractScoreboardSidebar` (sidebar), `extractTabList` (tab list), `extractSelectedItemName`,
-  `extractHotbarAndDecorations`, `extractEffects`; `Screen.extractRenderStateWithTooltipAndSubtitles`
-  (screen); `CommandSuggestions.extractRenderState` (suggestions); `ToastManager.extractRenderState` (toast);
-  `GuiGraphicsExtractor.extractDeferredElements` (tooltip, which is deferred to the end of the frame).
-  The innermost tag wins. `Hud.extractRenderState` resets the stack each frame.
-- **Title and subtitle** share `extractTitle`; a run equal to `Hud.subtitle` is tagged subtitle.
-- **World text** needs no stack: spike A's submit hooks already know it; name tags come from `submitNameTag`.
-- Checks (runs carrying the scene's text, and their tags, Mac):
-
-| Text | Wanted | Seen |
+| Piece | Where | What it does |
 | --- | --- | --- |
-| moonpetals (actionbar) | actionbar | actionbar 20 |
-| Mana  (actionbar) | actionbar | actionbar 20 |
-| The Journey Begins (title) | title | title 1 |
-| Chapter One (title) | subtitle | subtitle 1 |
-| [Keeper] Line (chat) | chat | chat 5 |
-| The Warden Awakens (boss) | bossbar | bossbar 100 |
-| Old Keeper (walk) | nametag | nametag 6 |
-| Welcome to Riverside (walk) | world | world 6 |
-| Old Keeper (walka4) | nametag | nametag 36 |
-| Welcome to Riverside (walka4) | world | world 36 |
-| /give (typing) | screen | screen 35 |
-| Quest Log (tags) | sidebar | sidebar 1 |
-| Find the keeper (tags) | sidebar | sidebar 1 |
-| probe1 (tags) | tablist | tablist 2 |
+| Demo schedule | `probe-mod/.../video/Demo.java` | Frame f is at game time f / fps: needs `floor(f*20/fps) + 1` ticks done, draws at partial `(f*20 mod fps) / fps`, virtual clock `base + f * 1e9 / fps` |
+| Partial tick | `video/mixin/TimerMixin.java` | `DeltaTracker.Timer.advanceGameTime` returns the demo's tick count and sets the exact partial (no millisecond rounding) |
+| Held packets | `video/mixin/HoldPacketsMixin.java` | Queued packets are handled only in the loop that starts the next tick, never between the frames of one tick |
+| Held ack | `n/N.java` `demoLoop` | The step ack of tick t goes out only when the client needs tick t + 1, after the last frame of tick t |
+| Facts per frame | `Demo.facts`, `observe/Stream.java` | Camera, interpolated entity positions, particle count, title alpha (the HUD's formula), boss progress, chat input, slot 0; appended to each stream record |
+| Readback | `video/Video.java` | Ring of `copyTextureToBuffer` readbacks piped to ffmpeg x264; sidecar per frame with virtual time, facts and a CRC32C of the RGBA frame |
+| Hard cases | `probe-plugin/.../VideoScenes.java` | `vd.set`, `vd.go?name&broken`, `vd.clear`; each case driven by a Bukkit task tick by tick |
+| Orchestration | `orchestrator/demo.py` | `run` (gated, demo per fps, reruns, real time per fps), `report`, `compare` |
+| CI | `.github/workflows/gv-video-prototype.yml` | Runs only on `proto/gv-video`; plan `demo` |
 
-- Not exercised: tooltips (no hover in a gated client without a fake cursor) and toasts. The seams are in and
-  load; whether a tooltip run lands under "tooltip" is **not measured**.
+The hard cases and their requirements (ticks counted from the stimulus):
 
-## What the legibility rule gets wrong live
+| Case | Good | Broken | Requirement |
+| --- | --- | --- | --- |
+| camera | text display with teleport duration 10, teleported every tick around an orbit of radius 5 at 1.8 deg per tick, player camera set to it in spectator (as cinematics do) | 0.9 deg per tick | camera yaw at least 89 by tick 70 |
+| walk | villager without AI teleported 0.15 blocks per tick in +x | walks in -x | x at least 3.5 by tick 62 |
+| title | fade in 500 ms, stay 2,000 ms, fade out 1,000 ms | stay 500 ms | title still legible from tick 45 |
+| particles | 8 end rods per tick for 60 ticks, particles set to all | none | at least 20 particles by tick 10 |
+| boss | bar fills over 100 ticks | stalls at half | progress at least 0.99 by tick 105 |
+| typing | the client types `/give @s minecraft:diamond_sword 1` and presses enter | types `diamond_swrod` | slot 0 holds a diamond sword by tick 50 |
 
-Nothing it judged offline flipped, but live streams show cases the offline battery never had:
+## Verdicts
 
-- **Fades are legible from alpha 8.** The title is legible from the first fade in tick to the second last fade
-  out tick (shown 68 of 70 ticks). Alpha 8 to about 30 of 255 is barely visible; offline frames were judged at
-  rest, never mid fade. A requirement that wants "the title was readable" needs a higher threshold, or the
-  record must carry alpha (**inferred** from the fade timing; the record does not carry alpha).
-- **Chat lines wrap into several runs.** "[Keeper] Line 16 of the old tale: the river remembers every" and
-  " step." are two runs. A needle across the wrap is never found in one run. Offline tokens were short.
-- **Ghost completion text counts as typed text.** While typing, the grey completion suffix ("amemode" after
-  "/g", "@a" after "/give ") is a separate legible run tagged screen, indistinguishable from what the player
-  typed by tag alone.
-- **The text cursor blinks.** 5 of 41 records in the typing scene changed only because "_" came or went. Not
-  wrong, but a requirement on the input text must ignore it, and it adds records.
-- **Boss bar fill is not drawn text.** Progress changes reach the stream only through the facts (client
-  state), so "the bar reads 50 percent" is a client state check, as spike A found offline.
-- **Text over text** (suggestion box over chat) is still not judged: the suggestion panel is a rectangle with
-  alpha below 240, so chat lines under it stay legible. Not exercised with chat present; carried over from A.
+Pass or fail, and the first tick the requirement held. Mac and runner gave the same table.
+
+| Case | Gated | Demo 30 | Demo 60 | Rerun 30 |
+| --- | --- | --- | --- | --- |
+| camera good | pass, 61 | pass, 61 | pass, 61 | pass, 61 |
+| camera broken | fail (reaches it at 111) | fail (111) | fail (110) | fail (111) |
+| walk good | pass, 57 | pass, **56** | pass, **56** | pass, 56 |
+| walk broken | fail | fail | fail | fail |
+| title good | pass, 45 | pass, 45 | pass, 45 | pass, 45 |
+| title broken | fail | fail | fail | fail |
+| particles good | pass, 3 | pass, 3 | pass, 3 | pass, 3 |
+| particles broken | fail | fail | fail | fail |
+| boss good | pass, 100 | pass, **101** | pass, 100 | pass, 101 |
+| boss broken | fail | fail | fail | fail |
+| typing good | pass, 36 | pass, 36 | pass, 36 | pass, 36 |
+| typing broken | fail | fail | fail | fail |
+
+The gated run judges one frame per tick at partial 0; the demo judges every frame and names the tick it
+belongs to. A fact the client interpolates between ticks (entity position, lerped boss progress, the
+camera entity's teleport interpolation) crosses a threshold at a partial, so its first frame can fall in
+the neighbouring tick. Facts set once per tick (title alpha by tick, particle count, slot, input) agree
+exactly. A requirement judged near its deadline on an interpolated fact needs a one tick margin, or the
+demo must judge only frames at partial 0.
+
+## Smoothness against real time
+
+Game ticks per frame (ideal: 0.667 at 30 fps, 0.333 at 60 fps), duplicate frames (no game time passed),
+and pixel motion per frame in the steady part of the motion (20 percent trimmed at each end): coefficient
+of variation, largest over median, and motion across a tick boundary over motion inside a tick.
+
+Runner:
+
+| Clip | Ticks per frame (mean, std, min, max) | Duplicates | Pixel motion cv | Max over median | Boundary over inside |
+| --- | --- | --- | --- | --- | --- |
+| demo 30 camera | 0.6667, 0, 0.6666, 0.6667 | 0 | 0.191 | 1.10 | 0.995 |
+| real time 30 camera | | | 0.220 | 1.42 | 1.024 |
+| demo 60 camera | 0.3333, 0, 0.3333, 0.3334 | 0 | 0.165 | 1.11 | 0.995 |
+| real time 60 camera | 0.3336, 0.100, 0, 0.86 | 5 | 0.306 | 2.36 | 1.22 |
+| demo 30 walk | 0.6667, 0, 0.6666, 0.6667 | 0 | 0.087 | 1.22 | 1.011 |
+| real time 30 walk | | | 0.121 | 1.33 | 1.117 |
+| demo 60 walk | 0.3333, 0, 0.3333, 0.3334 | 0 | 0.148 | 1.42 | 1.054 |
+| real time 60 walk | 0.3333, 0.095, 0, 0.82 | 4 | 0.324 | 1.80 | 1.064 |
+| demo 60 boss | 0.3333, 0, 0.3333, 0.3334 | 0 | fact cv 0.028 | 1.00 | 1.03 |
+| real time 60 boss | 0.3330, 0.090, 0, 0.86 | 4 | fact cv 0.293 | 2.72 | 1.168 |
+| real time 60 title, particles, typing | about 0.333, 0.08 to 0.10, 0, 0.78 to 0.86 | 3 to 4 | | | |
+
+Mac (real time 60 shown; real time 30 is similar):
+
+| Clip | Ticks per frame (std, min, max) | Duplicates | Pixel motion cv | Max over median | Boundary over inside |
+| --- | --- | --- | --- | --- | --- |
+| demo 30 camera | 0, 0.6666, 0.6667 | 0 | 0.192 | 1.09 | 0.995 |
+| demo 60 camera | 0, 0.3333, 0.3334 | 0 | 0.165 | 1.11 | 0.996 |
+| real time 60 camera | 0.019, 0.22, 0.44 | 0 | 0.184 | 1.27 | 0.992 |
+| demo 60 walk | 0, 0.3333, 0.3334 | 0 | 0.141 | 1.38 | 1.057 |
+| real time 60 walk | 0.032, 0.26, 0.40 | 0 | 0.229 | 1.45 | 0.910 |
+| real time 60 boss | 0.238, 0, 2.68 | 30 | fact cv 0.255 | 2.09 | 1.04 |
+| real time 60 typing | 1.541, 0, 14.26 | 83 | | | |
+
+Under load the Mac's real time client stalled during boss and typing (a 14 tick hole while typing); a
+demo cannot stall, because it waits for the frame before it lets the next tick run. Pixel motion cv is
+not zero in a demo because the scene itself is not uniform (pillars and the wall enter and leave the
+view); the fact cv (the camera yaw step per frame, 0.014; the walker's x step, 0.000) shows the motion
+itself is even.
+
+## Alignment
+
+Timeline: every demo frame has exactly one record; its tick and partial match the schedule.
+
+| Check (both machines) | Demo 30 | Demo 60 |
+| --- | --- | --- |
+| Frames (12 clips) | 1,440 | 2,880 |
+| Gaps in frame numbers | 0 | 0 |
+| Frames without a record | 0 | 0 |
+| Record tick off schedule | 0 | 0 |
+| Partial off schedule | 0 | 0 |
+
+Facts against pixels, per case (runner; the Mac matches within rounding):
+
+| Case | Demo 30 | Demo 60 | Real time 60 | Reading |
+| --- | --- | --- | --- | --- |
+| camera | pixel motion still 0 of 108 | still 0 of 214 | still 0 of 219 | the view moves in every frame the facts say it moves |
+| walk | r = -0.9996, residual median 0.52 px, max 8 px | r = -0.9996, 0.53 px, 8 px | r = -0.9996, 0.56 px, 8.8 px | tracked villager column against the fact x; 24.5 px per block |
+| title | 117 of 120 agree | 233 of 240 | | the disagreeing frames have alpha 8 to 34 of 255: the fact says visible, the text is below the pixel threshold |
+| particles | 90 of 90 agree | 180 of 180 | | presence of bright end rod pixels against particle count |
+| boss | max 3 px, mean 1.1 px | max 3 px, mean 1.8 px | max 4 px, mean 1.2 px | bar width decoded at full size against progress times 182 px; the drawn bar is always 0 to 3 px shorter than the fact |
+| typing | 48 agree, 2 fact only | 101 agree, 0 fact only | | typed row against the input fact, frames with the chat screen open |
+
+Clip against the record timeline: frame f of a clip is record `df = f` of the stream; its virtual time is
+`base + f / fps` and its tick `go_tick + floor(f * 20 / fps)`. Nothing is estimated: the clip is cut at
+the stimulus tick, so a requirement window maps to a frame range by arithmetic.
+
+## Cost
+
+Wall time per stepped tick (scene ticks only) and median wall time per requirement (setup, stimulus,
+case ticks, tidy). Video: all 12 clips of one pass, x264, 854x480.
+
+| Machine | Pass | ms per tick | Per requirement | Against gated | Frames | Video |
+| --- | --- | --- | --- | --- | --- | --- |
+| runner | gated | 11.7 | 0.94 s | 1.0 | | |
+| runner | demo 30 | 17.6 | 1.31 s | 1.5 (tick), 1.4 (requirement) | 1,440 | 4.05 MB |
+| runner | demo 60 | 30.9 | 2.23 s | 2.6, 2.4 | 2,880 | 4.50 MB |
+| runner | real time 30 | 50 (fixed) | 3.83 s | 4.1 | 762 | 2.30 MB |
+| runner | real time 60 | 50 (fixed) | 4.74 s | 5.0 | 1,495 | 2.59 MB |
+| Mac, load 12 | gated | 3.7 | 0.29 s | 1.0 | | |
+| Mac, load 12 | demo 30 | 5.4 | 0.41 s | 1.45, 1.4 | 1,440 | 4.04 MB |
+| Mac, load 12 | demo 60 | 8.3 | 0.63 s | 2.2, 2.1 | 2,880 | 4.45 MB |
+| Mac, load 12 | real time 30 / 60 | 50 (fixed) | 3.81 / 3.96 s | 13 | 759 / 1,483 | |
+| Mac, load 17 | gated / demo 30 / demo 60 | 4.9 / 6.9 / 21.1 | 0.39 / 0.51 / 1.08 s | 1.4, 4.3 | | |
+
+The gated pass on this branch already draws one frame per tick for the stream, so the demo adds half a
+frame per tick at 30 fps and two at 60 fps, plus the readback and the encode. The encode runs on its own
+threads and never blocked the render thread on the runner; on the loaded Mac the readback ring blocked for
+35 ms to 1.2 s per pass. The demo clip is larger than the real time clip at the same frame count because
+x264 gets no duplicate frames to compress away.
+
+## Identity of reruns
+
+| Comparison | Clips with identical frames | What differs |
+| --- | --- | --- |
+| Rerun on the same client, same machine (Mac and runner) | 11 of 12, mp4 bytes identical | particles good: pixels differ from frame 0; facts equal |
+| Two separate runs, same machine (Mac; runner) | 11 of 12 | particles good: 2 of 90 frames equal |
+| Mac against runner | 0 of 6 by pixels; facts equal in all 720 frames | Metal and lavapipe rasterize differently |
+
+What broke identity during the prototype, and what fixed it:
+
+| Cause | Symptom | Fix |
+| --- | --- | --- |
+| Client randomness in particles | particle pixels differ from frame 0 | not fixed; would need a seeded client random per run |
+| Clock origin not on a whole millisecond | boss frames differ between runs (the bar eases on `Util.getMillis`) | round the demo base up to a whole millisecond |
+| A packet handled between two frames of a tick | typing reached a different first tick (35 against 36) and a frame differed | hold queued packets until the loop that starts the next tick |
+| Random partial in the gated pass | gated first ticks differed between runs | pin the gated partial to 0 |
+| Command suggestions arrive asynchronously | one typing rerun differed in 2 frames (popup shown one frame apart) | gone after holding packets (**inferred**: the suggestion answer is a packet) |
+
+## Lessons
+
+- **Hold the ack and the packets, not only the clock.** A stepped tick with several frames is only
+  deterministic when the server cannot run ahead (held ack) and its answers cannot land between the frames
+  of one tick (held packets). Without either, the clip still looks smooth and the reruns drift.
+- **Set the partial, do not derive it.** The delta tracker is told the partial and the clock is set to the
+  matching game time, so a frame's position never depends on millisecond rounding of a wall clock.
+- **The frame rate must divide into ticks.** 30 and 60 fps give a fixed set of partials. A rate below 20
+  fps cannot work this way (the demo refuses it).
+- **Interpolated facts move the first tick.** Judging every frame finds a threshold crossing between ticks;
+  the gated run sees it at the next partial 0. Verdicts did not change here, but a requirement right at its
+  deadline could.
+- **Particles need their setting.** The gated client runs with minimal particles; the demo set them to all.
+  Particles also outlive their case (end rods live about 3 s), so the tidy must clear them, or a broken
+  case passes on the previous case's leftovers.
+- **The renderer decides the pixels.** Rerun identity holds per machine and driver; across machines only the
+  facts are equal. A golden image test across machines would need a tolerance, a fact check needs none.
 
 ## Surprises
 
-- **The frame, not the record, is the cost.** Gated stepping (spike N) drew no frames at all; streaming needs
-  one per tick, which doubles the stepped tick. A requirement that needs no perception (pure server work)
-  should switch the stream off and keep N's speed.
-- **The barrier echo waits for the gate's park.** N's wake mixin unparks the render thread only for step
-  pings; a barrier waits up to the 2 ms park. Waking on every ping would take about 1 to 2 ms off the barrier
-  echo (**inferred**).
-- **A tick that builds terrain makes its record late.** The first frame after the walk scene placed about 800
-  blocks took 55 ms (section compile), so that tick's record arrived 119 ms after the tick. Later ticks: 7 ms.
-- **A barrier frame also shows packets that arrived just after the barrier**, because the client handles all
-  queued packets at the head of its loop. The echo still means "everything before it is in the record"; it
-  can mean more.
-- **A4 pixel counts make every walking tick a new record** and need step grants held for two extra frames per
-  entity. Asking for A4 only when a requirement asks "is it visible", not in the stream, keeps the stream
-  cheap.
+- **The demo beats real time even on lavapipe.** A 6 s clip at 30 fps took about 2.1 s on the runner.
+- **Real time on the free runner drops frames** (3 to 5 per clip, gaps up to 0.86 ticks), and on a loaded
+  Mac it stalls for whole ticks. The demo cannot, so it is the better recording even for a human viewer.
+- **Title alpha below about 35 of 255 is invisible against the backdrop**, while the HUD counts it as drawn.
+  A "legible" requirement needs an alpha threshold, not "title shown".
+- **The boss bar drawn is always slightly behind the fact** (0 to 3 px of 182, in real time too). The bar
+  sprite is cut on whole pixels; the exact cause was not investigated.
 
 ## Running it
 
 ```sh
 cargo xtask heavy -- bash -c "cd prototypes/game-verification && ./gradlew -q :probe-mod:writeClientLaunch :probe-mod:jar :probe-plugin:jar :step-agent:jar"
-python3 orchestrator/stream.py run --label mac            # all scenes and 1000 typical requirements
-python3 orchestrator/stream.py report runs/stream-mac-<t>  # tables from a run directory
+python3 orchestrator/demo.py run --label mac             # gated, demo 30 and 60, two reruns, real time 30 and 60
+python3 orchestrator/demo.py report runs/demo-mac-<t>     # tables into report.json
+python3 orchestrator/demo_summary.py runs/demo-mac-<t>    # the tables printed compactly
+python3 orchestrator/demo.py compare runs/demo-a runs/demo-b   # frame identity between two runs
 ```
 
-Evidence: `runs/stream-mac-*/report.json` and `stream.jsonl` (local, not committed); the runner's artifact
-`stream-stream-vulkan-X64-0` of run 42336338774.
+Evidence: CI run 43312553335 on `proto/gv-video` (run 43311736944 was cancelled and replaced). Artifacts
+`video-results-vulkan-X64-0` (reports, sidecars, stream, logs) and `video-clips-vulkan-X64-0` (one clip per
+hard case at demo 30, demo 60 and real time 60). Mac reports: `runs/demo-mac2-*` (cost at load 12),
+`runs/demo-mac3-*` and `runs/demo-mac3b-*` (final code, identity between runs); local, not committed.
