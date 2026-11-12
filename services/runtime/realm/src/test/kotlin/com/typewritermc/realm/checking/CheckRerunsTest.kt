@@ -80,6 +80,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.EditIntent
@@ -480,8 +481,9 @@ val CheckRerunsTest by testSuite {
         reruns(mapOf(first to record(name = "valid"))) {
             commit(rename(first, "gated")).shouldBeCommitted()
             RerunGate.awaitEntered()
-            coroutineScope {
-                val drained = async(Dispatchers.Default) { checks.drain() }
+            // The drain resumes on a real thread, so the wait for it counts real time, not the test's virtual clock.
+            withContext(Dispatchers.Default) {
+                val drained = async { checks.drain() }
                 delay(200)
                 drained.isCompleted shouldBe false
 
