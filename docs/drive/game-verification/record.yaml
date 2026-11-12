@@ -120,7 +120,7 @@ pieces:
 
   - id: perception
     status: figuring-out
-    open: "Suite speed when every client draws a frame per tick on the shared Paper (P4 doubled one client's tick; 4 clients on 4 vCPU unmeasured). Live gaps: alpha threshold for fades, needles across wrapped chat lines, grey completion text, cursor blink"
+    open: "Stepped back after P8: drawing frames in the gated suite is too slow. A2 reads only the extract and submit stages, so perceiving without rasterizing is the lead idea. Live gaps: fades, wrapped chat lines, grey completion text, cursor blink"
     tries:
       - id: a1-client-state
         what: Read the client's state
@@ -153,6 +153,20 @@ pieces:
           grey completion text looks typed, the text cursor blink adds records.
         state: working
         evidence: ["branch proto/gv-stream 45481dcb1: prototypes/game-verification/RESULTS.md", CI run 42336338774]
+      - id: frame-every-tick-at-scale
+        parent: live-stream
+        what: 4 clients on the shared stepped Paper each draw a frame every tick and stream, judged from the stream
+        taught: >-
+          P8: +408% per 1,000 requirements (15.4 s to 78.6 s at 10% groups; +545% at 30%). Four lavapipe
+          clients saturate the 4 vCPU; a frame costs about 40 ms of client CPU with four against 6 ms
+          with one, and Paper idles waiting. Best levers combined (214x120 window, frames only after a
+          game packet, only while a check waits, barrier wake): +53%, and titles likely clip at that
+          size. Only the window size helps much; thread counts and waiting checks do nothing. 0 wrong
+          verdicts in 210,000. Judging from the stream itself adds about 24%. A record's tick label can
+          lag up to 4 ticks on an idle client.
+        state: dropped
+        why: Over the developer's 50% line even with every lever
+        evidence: ["branch proto/gv-frames 6b7441deb: prototypes/game-verification/RESULTS.md", CI runs 43306724605 43320141634]
 
   - id: readiness-and-done
     status: figuring-out
@@ -475,4 +489,4 @@ open:
 
 slices: []
 
-next: P8 running; P9 and P10 recorded. When P8 lands, show the overall direction and propose the first build slice. Check in with each result; then show the overall direction and propose the first build slice.
+next: Step back on perception after P8. Show the ways forward and ask which to prototype (perceive without drawing, more machines, bigger runners). Check in with each result; then show the overall direction and propose the first build slice.
