@@ -40,11 +40,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794457954,
-        "narHash": "sha256-j0ZtEFE8p8sI9xSTTacZZ8ti4xDUx47QS4DKt/kTpgg=",
+        "lastModified": 1794482786,
+        "narHash": "sha256-GfPfIVj3bHkCIrNw69OA2trKy4i0AuoQBJ7VMdWW1Qw=",
         "owner": "gabber235",
         "repo": "flutter-overlay",
-        "rev": "72e257358e6c099f9a09f54b75e62b26c17728c9",
+        "rev": "39a5d031120da7cc0eb9a26fd5a133514113214a",
         "type": "github"
       },
       "original": {
