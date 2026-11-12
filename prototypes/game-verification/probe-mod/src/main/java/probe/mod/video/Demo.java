@@ -53,7 +53,8 @@ public final class Demo {
 
     public static void start(int framesPerSecond, long virtNanos) {
         fps = framesPerSecond;
-        baseNanos = virtNanos;
+        // A whole millisecond, so Util.getMillis of every frame is the same in every rig (easing on milliseconds).
+        baseNanos = (virtNanos / 1_000_000L + 1) * 1_000_000L;
         frame = 0;
         ticksDone = 0;
         ticksNow = 0;

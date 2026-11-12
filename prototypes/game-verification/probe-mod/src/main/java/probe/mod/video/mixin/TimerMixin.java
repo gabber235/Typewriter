@@ -17,7 +17,18 @@ public class TimerMixin {
 
     @Inject(method = "advanceGameTime", at = @At("HEAD"), cancellable = true)
     private void probe$demo(long currentMs, CallbackInfoReturnable<Integer> cir) {
-        if (!Demo.on) return;
+        if (!Demo.on) {
+            if (probe.mod.n.N.stepping()) {
+                // Gated stepping: the partial tick is pinned to 0, so a gated frame shows the tick's start in every rig
+                // instead of the arbitrary phase stepping happened to begin at. Exactly one tick per 50 ms grant.
+                deltaTicks = (float) (currentMs - lastMs) / 50f;
+                lastMs = currentMs;
+                int ticks = Math.round(deltaTicks);
+                deltaTickResidual = 0f;
+                cir.setReturnValue(ticks);
+            }
+            return;
+        }
         lastMs = currentMs;
         deltaTicks = Demo.frameNow ? Demo.deltaTicks : 0f;
         if (Demo.frameNow) deltaTickResidual = Demo.partial;

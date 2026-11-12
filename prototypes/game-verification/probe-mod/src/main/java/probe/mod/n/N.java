@@ -53,6 +53,10 @@ public final class N {
 
     private N() {}
 
+    public static boolean stepping() {
+        return stepping;
+    }
+
     public static void init() {
         PayloadTypeRegistry.serverboundPlay().register(Ack.TYPE, Ack.CODEC);
     }
@@ -193,6 +197,7 @@ public final class N {
                 mc.execute(() -> {
                     if (on && stepping && !probe.mod.video.Demo.on) {
                         probe.mod.video.Demo.start(Integer.parseInt(p.getOrDefault("fps", "30")), virtNanos);
+                        virtNanos = probe.mod.video.Demo.nanosFor(0);
                         demoWaitLoops = 0;
                     } else if (!on && probe.mod.video.Demo.on) {
                         probe.mod.video.Demo.on = false;
