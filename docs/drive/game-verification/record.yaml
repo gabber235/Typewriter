@@ -7,7 +7,7 @@ goal: Prove what a player experiences in a real Minecraft client, as tests that 
 pieces:
   - id: paper-topology
     status: figuring-out
-    open: Pick the restart approach (T1 faster boot or T2 checkpoint and restore)
+    open: none; a restart Paper runs bestq (AOT cache trained in the same job, C1 only, SerialGC, clients gated while it boots)
     tries:
       - id: d1-one-client
         what: One client runs requirements in sequence
@@ -74,7 +74,8 @@ pieces:
           client during the boot (minus 23%); the slim world buys nothing. Java 26 is no faster and
           drops AppCDS with an agent. The cache must match JDK, Paper, plugins and module flags or the
           JVM stops. What is left is Minecraft's bootstrap and datapack load (about 5.5 CPU s).
-        state: working
+        state: picked
+        why: Picked by the developer; 5.0 s on the normal Java 25 and the Mac, against T2's 9.0 s with a special JDK
         evidence: ["branch proto/gv-boot 0f8ed6c89: prototypes/game-verification/RESULTS.md", CI runs 42430101477 42433205261]
       - id: checkpoint-restore
         parent: k-own-paper-for-restarts
@@ -84,7 +85,8 @@ pieces:
           the server folder; later points bake stale data (7 of 84 wrong) or die. Kill to ready 8.8 to
           9.1 s against 13.9 to 14.5 s booting; 0 wrong of 84. Needs Azul's CRaC JDK (not in nixpkgs),
           a 400 MB image per machine, about 170 lines of hooks; no restore on the Mac.
-        state: working
+        state: dropped
+        why: Slower than the faster boot and needs Azul's CRaC JDK, a 400 MB image and Linux
         evidence: ["branch proto/gv-restore a7f4aaff0: prototypes/game-verification/RESULTS.md", CI run 42432909519]
 
   - id: stepped-ticks
@@ -432,6 +434,11 @@ decided:
     why: Modules and extensions share warm clients; single runs take 2 s, not 20 s
   - id: tests-beside-code
     what: Tests are placed where it makes sense; in the future each extension and every entry is tested
+  - id: restart-faster-boot
+    what: "T1 faster boot (Recommended)"
+    why: 5.0 s kill to state on the normal Java 25, works on the Mac
+  - id: p8-p9-p10
+    what: Run P8 suite speed with frames, P9 video under stepping and P10 input from the client
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -441,4 +448,4 @@ open:
 
 slices: []
 
-next: Check in with T1, T2 and P4. Ask for the restart approach and the next prototype wave (suite speed with frames, video under stepping, input from the mod).
+next: P8, P9 and P10 running. Check in with each result; then show the overall direction and propose the first build slice.
