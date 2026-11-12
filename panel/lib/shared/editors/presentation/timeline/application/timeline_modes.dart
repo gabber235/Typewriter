@@ -12,9 +12,7 @@ class TimelineMoveMode extends InteractionMode
   String get name => "Timeline Move";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return ModeDisplayChip(label: "Move", color: context.colors.accent);
-  }
+  ModeLook look(BuildContext context) => ModeLook.move(context);
 
   @override
   List<ActionShortcut> getShortcuts() {
@@ -78,9 +76,7 @@ class TimelineResizeMode extends InteractionMode
   String get name => "Timeline Resize";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return ModeDisplayChip(label: "Resize", color: context.colors.warning);
-  }
+  ModeLook look(BuildContext context) => ModeLook.resize(context);
 
   @override
   List<ActionShortcut> getShortcuts() {

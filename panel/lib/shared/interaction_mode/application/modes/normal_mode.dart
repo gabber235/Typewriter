@@ -16,16 +16,8 @@ class NormalMode extends InteractionMode
   String get name => "Normal";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return ModeDisplayChip(
-      label: "Normal",
-      color: Theme.of(context).colorScheme.primary,
-      backgroundColor: context.isDarkMode
-          ? null
-          : Theme.of(context).colorScheme.primaryContainer
-                .withValues(alpha: 0.5),
-    );
-  }
+  ModeLook look(BuildContext context) =>
+      ModeLook(label: "Normal", tone: context.colors.brand, soft: true);
 
   @override
   List<ActionShortcut> getShortcuts() {

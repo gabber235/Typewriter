@@ -51,6 +51,8 @@ export "labeled_message.dart";
 export "loading_indicator.dart";
 export "menu_choice.dart";
 export "modal_header.dart";
+export "mode_chip.dart";
+export "mode_display.dart";
 export "motion/motion.dart";
 export "motion_dialog_route.dart";
 export "motion_label.dart";

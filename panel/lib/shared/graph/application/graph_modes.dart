@@ -13,9 +13,7 @@ class GraphMoveMode extends InteractionMode
   String get name => "Graph Move";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return const ModeDisplayChip(label: "Move", color: Colors.deepPurple);
-  }
+  ModeLook look(BuildContext context) => ModeLook.move(context);
 
   @override
   List<ActionShortcut> getShortcuts() {
@@ -74,12 +72,7 @@ class GraphResizeMode extends InteractionMode
   String get name => "Graph Resize";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return const ModeDisplayChip(
-      label: "Resize",
-      color: Colors.deepOrangeAccent,
-    );
-  }
+  ModeLook look(BuildContext context) => ModeLook.resize(context);
 
   @override
   List<ActionShortcut> getShortcuts() {

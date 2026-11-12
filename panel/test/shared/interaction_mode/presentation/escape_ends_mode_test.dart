@@ -15,11 +15,11 @@ void main() {
     );
     await panel.item("Target").select();
     await panel.enterMode(EditingTestMode());
-    expect(panel.shows("Editing"), isTrue);
+    expect(panel.shows("EDITING"), isTrue);
 
     await panel.press(LogicalKeyboardKey.escape);
 
-    expect(panel.shows("Editing"), isFalse);
+    expect(panel.shows("EDITING"), isFalse);
   });
 
   testWidgets("Escape first dismisses what the focused item can dismiss", (
@@ -47,11 +47,11 @@ void main() {
     );
     await panel.item("Target").select();
     await panel.enterMode(EditingTestMode());
-    expect(panel.shows("Editing"), isTrue);
+    expect(panel.shows("EDITING"), isTrue);
 
     await panel.press(LogicalKeyboardKey.escape);
 
     expect(dismissed, 1);
-    expect(panel.shows("Editing"), isTrue);
+    expect(panel.shows("EDITING"), isTrue);
   });
 }

@@ -2,9 +2,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Projects the current mode's optional app bar display.
 ///
-/// This widget watches `currentInteractionModeProvider` and delegates to
-/// [ModeDisplay.buildDisplay] when the current mode implements that mixin. A
-/// mode without the capability contributes a zero sized widget.
+/// This widget watches `currentInteractionModeProvider` and shows the
+/// [ModeChip] of the current mode's [ModeDisplay.look]. A mode without a look
+/// contributes a zero sized widget.
 class ModeDisplayWidget extends ConsumerWidget {
   const ModeDisplayWidget({super.key});
 
@@ -13,7 +13,7 @@ class ModeDisplayWidget extends ConsumerWidget {
     final currentMode = ref.watch(currentInteractionModeProvider);
 
     if (currentMode is ModeDisplay) {
-      return currentMode.buildDisplay(context);
+      return ModeChip(look: currentMode.look(context));
     }
 
     return const SizedBox.shrink();
