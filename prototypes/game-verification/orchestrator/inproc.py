@@ -361,6 +361,7 @@ CI_ROWS = {
         "cross --path J1 --setup fake --n 3 --display shared",
         "sug --paths J2,J1,XF --setup real --n 10",
     ],
+    "crossj1": ["cross --path J1 --setup fake --n 50 --display own"],
     "crossdbg": [
         "cross --path XF --setup real --n 10 --display own --clients 1",
         "cross --path XF --setup real --n 10 --display own",
