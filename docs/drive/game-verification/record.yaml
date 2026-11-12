@@ -303,7 +303,7 @@ pieces:
 
   - id: video
     status: figuring-out
-    open: Rendering several frames per stepped tick (Frames.Motion) was never tried; video and stepping both drive the client clock
+    open: "30 or 60 fps for clips; how a window treats facts the client smooths between ticks (one tick margin at the deadline)"
     tries:
       - id: b2-window-capture
         what: Capture the window
@@ -322,6 +322,19 @@ pieces:
         taught: Clip lines up with facts; same verdict in every rerun
         state: picked
         evidence: [docs/design/game-verification/spikes/b-video.md, CI run 42111131229]
+      - id: frames-between-steps
+        parent: b1-readback-demo-rerun
+        what: In a demo rerun the stepped client draws 2 or 3 frames per tick at even partial tick positions, each with its own record
+        taught: >-
+          P9: works at 30 and 60 fps. Exactly 1/fps game time per frame, no repeated or skipped frames,
+          no jump at tick boundaries, steadier than a real time recording (which dropped frames). Every
+          frame has its own record, so frame f is record f; pixels agree with the facts. Verdicts 12 of
+          12 the same in gated, demo 30, demo 60 and a rerun; facts the client smooths between ticks may
+          first hold one tick earlier or later, so a check right at its deadline needs a one tick margin.
+          Cost on the runner: 1.5 times gated at 30 fps, 2.6 at 60, against 4 to 5 for real time. Same
+          machine reruns give identical mp4 bytes except particles (client randomness).
+        state: working
+        evidence: ["branch proto/gv-video f1bb8683a: prototypes/game-verification/RESULTS.md", CI run 43312553335]
 
   - id: goldens
     status: figuring-out
@@ -462,4 +475,4 @@ open:
 
 slices: []
 
-next: P8 and P9 running; P10 recorded. Check in with each result; then show the overall direction and propose the first build slice.
+next: P8 running; P9 and P10 recorded. When P8 lands, show the overall direction and propose the first build slice. Check in with each result; then show the overall direction and propose the first build slice.
