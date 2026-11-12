@@ -19,8 +19,8 @@ def fmt(x, nd=1):
 def main(paths):
     jobs = [load(p) for p in paths]
     print("## Per job\n")
-    print("| job | cpu | inst | variant | groups | wall s | vs base | wrong/broken | errors | ms per step | tick p50/p95 | Paper cores | client cores (each) | echo p50/p95 ms | late srv p50/p95 ms | records | KB |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    print("| job | cpu | inst | variant | groups | wall s | vs base | wrong/broken | errors | ms per step | frames per step per client | tick p50/p95 | Paper cores | client cores (each) | echo p50/p95 ms | late srv p50/p95 ms | records | KB |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     summary = collections.defaultdict(list)
     for j, rows in enumerate(jobs):
         runs = [r for r in rows if r["kind"] == "run"]
@@ -37,7 +37,7 @@ def main(paths):
             e = r.get("echo_ms") or {}
             ls = r.get("late_srv_ms") or {}
             print(f"| {j} | {(r.get('cpu') or '')[:14]} | {r['inst']} | {r['variant']} | {r['mix']} | {r['wall_s']} | {fmt(slow)} % | {r['wrong']}/{r['broken']} | {r['errors']} | "
-                  f"{r['ms_per_step']} | {fmt(tg.get('p50'), 2)}/{fmt(tg.get('p95'), 2)} | {r['cores'].get('paper')} | {', '.join(fmt(c, 2) for c in cl)} | "
+                  f"{r['ms_per_step']} | {r.get('frames_per_step', '-')} | {fmt(tg.get('p50'), 2)}/{fmt(tg.get('p95'), 2)} | {r['cores'].get('paper')} | {', '.join(fmt(c, 2) for c in cl)} | "
                   f"{fmt(e.get('p50'))}/{fmt(e.get('p95'))} | {fmt(ls.get('p50'))}/{fmt(ls.get('p95'))} | {r['records']} | {r['stream_kb']} |")
     print("\n## Median over jobs\n")
     print("| inst | variant | groups | jobs | wall s median (range) | vs base median (range) | wrong | errors |")

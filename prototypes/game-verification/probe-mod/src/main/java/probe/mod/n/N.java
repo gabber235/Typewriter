@@ -42,6 +42,9 @@ public final class N {
 
     /** Frames spike lever: barrier pings (below BASE) wake the parked render thread too. */
     public static volatile boolean wakeBarriers;
+    /** Frames spike: game packets scheduled (not pings, keepalives or time), counted on the netty thread. */
+    public static final java.util.concurrent.ConcurrentHashMap<String, Long> kinds = new java.util.concurrent.ConcurrentHashMap<>();
+    public static final java.util.concurrent.atomic.AtomicLong arrived = new java.util.concurrent.atomic.AtomicLong();
     private static volatile boolean stepping;
     private static volatile long virtNanos;
     private static volatile Thread render;
@@ -77,7 +80,9 @@ public final class N {
         if (!stepping) return;
         loops++;
         // Handle what already arrived now rather than later in this loop, so a step ping read here ticks this loop.
+        long upTo = arrived.get();
         mc.packetProcessor().processQueuedPackets();
+        probe.mod.observe.Stream.processed = upTo; // every packet counted before the call is handled now
         if (current != null) return; // the granted tick has not run (no level yet); keep the clock where it is
         if (probe.mod.observe.Stream.holding()) return; // an A4 pair is in flight: both frames must see the same tick
         Integer t = granted.poll();
@@ -152,6 +157,12 @@ public final class N {
             case "n.wake" -> {
                 wakeBarriers = "1".equals(p.get("barriers"));
                 return "{\"ok\":true,\"barriers\":" + wakeBarriers + "}";
+            }
+            case "n.packets" -> {
+                StringBuilder b = new StringBuilder("{");
+                for (var e : kinds.entrySet()) b.append(b.length() > 1 ? "," : "").append('"').append(e.getKey()).append("\":").append(e.getValue());
+                if ("1".equals(p.get("clear"))) kinds.clear();
+                return b.append('}').toString();
             }
             case "n.watch" -> {
                 needle = p.getOrDefault("needle", "");

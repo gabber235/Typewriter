@@ -39,6 +39,9 @@ VARIANTS = {
     "demand": dict(stream=True, every=0, wake=0, verdict="stream"),
     "wake": dict(stream=True, every=1, wake=1, verdict="stream"),
     "demand+wake": dict(stream=True, every=0, wake=1, verdict="stream"),
+    "dirty": dict(stream=True, every=1, wake=0, dirty=1, verdict="stream"),
+    "demand+dirty": dict(stream=True, every=0, wake=0, dirty=1, verdict="stream"),
+    "demand+dirty+wake": dict(stream=True, every=0, wake=1, dirty=1, verdict="stream"),
 }
 HDR = struct.Struct(">qiqqqqqqqq")  # seq tick clientTick frameNo tickEnd frameStart frameEnd build a4 sent
 
@@ -208,7 +211,7 @@ class FShared(T.Shared):
                 c.C("st.on", port=self.streams[c.name].port, a4=0)
             elif not v["stream"] and self.stream_on:
                 c.C("st.off")
-            c.C("st.mode", every=v["every"])
+            c.C("st.mode", every=v["every"], dirty=v.get("dirty", 0))
             c.C("n.wake", barriers=v["wake"])
         self.stream_on = v["stream"]
         self.variant = v
@@ -300,7 +303,10 @@ def measure(topo, inst, vname, mix, seed, n, keep_rows):
     pids = pids_of(topo)
     cpu0 = {k: T.proc_cpu(p) for k, p in pids.items()}
     rec0 = {k: (s.records, s.bytes) for k, s in topo.streams.items()}
+    cs0 = {c.name: c.C("st.stats") for c in topo.clients} if topo.stream_on else {}
     b0 = T.machine_busy()
+    for c in topo.clients:
+        c.C("n.packets", clear=1)
     rows, wall = topo.run_reqs(reqs)
     b1 = T.machine_busy()
     cpu1 = {k: T.proc_cpu(p) for k, p in pids.items()}
@@ -329,8 +335,12 @@ def measure(topo, inst, vname, mix, seed, n, keep_rows):
         stream_kb=round(sum(s.bytes - rec0[k][1] for k, s in topo.streams.items()) / 1000, 1),
         late_srv_ms=stat(late_srv), late_cli_ms=stat(late_cli), echo_ms=stat([e for r in ok for e in r.get("echo_ms", [])]),
         lost_quiet_s=round(sum(r.get("lost_quiet_ms", 0) for r in ok) / 1000, 2), lost_ack_s=round(sum(r.get("lost_ack_ms", 0) for r in ok) / 1000, 2),
-        client_stats={c.name: c.C("st.stats") for c in topo.clients} if topo.stream_on else None,
+        client_stats=None, packets=topo.clients[0].C("n.packets"),
     )
+    if topo.stream_on:
+        cs1 = {c.name: c.C("st.stats") for c in topo.clients}
+        s["client_stats"] = {k: {f: cs1[k][f] - cs0[k].get(f, 0) for f in ("records", "skipped", "framesDrawn", "barriersEchoed", "buildNanos")} for k in cs1}
+        s["frames_per_step"] = round(sum(v["framesDrawn"] for v in s["client_stats"].values()) / 4 / max(1, steps), 3)
     s["cores"] = {k: (round(v / wall, 2) if v is not None else None) for k, v in s["cpu_s"].items()}
     # Per requirement, compact: id, pass, wrong, seconds, records until the verdict per member, seen tick per member, text.
     s["rows"] = [[r["id"], r.get("pass"), r.get("wrong"), r["s"], r.get("counts"), r.get("seen_ticks"), r.get("texts"), r.get("rec_ticks")] for r in sorted(ok, key=lambda r: r["id"])] if keep_rows else None

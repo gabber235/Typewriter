@@ -54,6 +54,10 @@ public final class Stream {
     // client's requirement waits for perception) and for barriers.
     static volatile boolean every = true;
     static volatile boolean demand;
+    // dirty: a tick draws only when a game packet was handled since the last frame drawn.
+    static volatile boolean dirty;
+    public static volatile long processed;
+    private static long drawnUpTo;
     static volatile int[] watchIds = new int[0];
     static volatile BlockPos[] watchBlocks = new BlockPos[0];
 
@@ -125,7 +129,7 @@ public final class Stream {
         serverTick = tick;
         clientTick++;
         tickEndNanos = System.nanoTime();
-        if (every || demand) want = true;
+        if ((every || demand) && (!dirty || processed > drawnUpTo)) want = true;
     }
 
     /** Render thread, handlePing, for a ping below 2^30. */
@@ -151,6 +155,7 @@ public final class Stream {
         if (state == IDLE && want) {
             want = false;
             state = BASE;
+            drawnUpTo = processed;
             frameStartNanos = System.nanoTime();
             return true;
         }
@@ -489,7 +494,8 @@ public final class Stream {
             }
             case "st.mode" -> {
                 every = !"0".equals(p.get("every"));
-                return "{\"ok\":true,\"every\":" + every + "}";
+                dirty = "1".equals(p.get("dirty"));
+                return "{\"ok\":true,\"every\":" + every + ",\"dirty\":" + dirty + "}";
             }
             case "st.begin" -> {
                 // A requirement starts on this client: clear the chat, reset the stream, draw from now on.

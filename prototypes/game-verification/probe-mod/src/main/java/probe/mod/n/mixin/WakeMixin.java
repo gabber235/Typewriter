@@ -15,6 +15,12 @@ import probe.mod.n.N;
 public class WakeMixin {
     @Inject(method = "scheduleIfPossible", at = @At("TAIL"))
     private <T extends PacketListener> void probe$wake(T listener, Packet<T> packet, CallbackInfo ci) {
-        if (packet instanceof ClientboundPingPacket ping && (ping.getId() >= N.BASE || N.wakeBarriers)) N.wake();
+        if (packet instanceof ClientboundPingPacket ping) {
+            if (ping.getId() >= N.BASE || N.wakeBarriers) N.wake();
+        } else if (!(packet instanceof net.minecraft.network.protocol.common.ClientboundKeepAlivePacket)
+                && !(packet instanceof net.minecraft.network.protocol.game.ClientboundSetTimePacket)) {
+            N.arrived.incrementAndGet();
+            N.kinds.merge(packet.getClass().getSimpleName(), 1L, Long::sum);
+        }
     }
 }
