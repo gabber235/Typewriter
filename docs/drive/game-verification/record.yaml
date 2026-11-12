@@ -232,6 +232,7 @@ pieces:
         what: Await style, or judge only the recorded timeline afterwards
         taught: Await silently grows limits; timeline only waits its whole recording on every pass
         state: dropped
+        why: Await silently grows limits; timeline only waits its whole recording on every pass
         evidence: [docs/design/game-verification/spikes/g-requirement-shape.md]
       - id: g1-windows-plus-timeline
         what: Every check in a within(n.ticks) window from the last stimulus; order and gaps from the timeline
@@ -270,6 +271,7 @@ pieces:
         what: Tests in a pool (A), or requirement values run by the framework (B)
         taught: A shows flaky as green; B loses the IDE gutter and test filters
         state: dropped
+        why: A shows flaky as green; B loses the IDE gutter and test filters
         evidence: [docs/plans/game-verification/directions.md]
       - id: runner-c-testballoon
         what: Declared in testBalloon with a needs header; a framework scheduler runs, retries and reports
@@ -291,11 +293,13 @@ pieces:
         what: Capture the window
         taught: Up to 16 frames off, no sync
         state: dropped
+        why: Frames drift from the facts
         evidence: [docs/design/game-verification/spikes/b-video.md]
       - id: b3-packet-replay
         what: Record packets, render offline on demand
         taught: Not worth building
         state: dropped
+        why: Not worth building
         evidence: [docs/design/game-verification/spikes/b-video.md]
       - id: b1-readback-demo-rerun
         what: In client readback to ffmpeg, recorded in a demo rerun, never in the gated suite
@@ -311,6 +315,7 @@ pieces:
         what: SSIM, blur or threshold comparison
         taught: Every tolerant method missed a colour off by 3
         state: dropped
+        why: Misses real breaks
         evidence: [docs/design/game-verification/spikes/f-goldens.md]
       - id: devenv-mesa
         parent: exact-on-pinned-runner
@@ -337,6 +342,7 @@ pieces:
         what: Dump after each requirement, or over TCP
         taught: Late work goes to the wrong requirement; TCP costs 41 ms
         state: dropped
+        why: Wrong attribution
         evidence: [docs/design/game-verification/spikes/i-coverage.md]
       - id: i3-read-reset-in-plugin
         what: JaCoCo limited to plugin classes, read and reset inside the plugin after work is idle
