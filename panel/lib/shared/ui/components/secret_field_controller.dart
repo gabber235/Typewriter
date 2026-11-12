@@ -41,16 +41,11 @@ _SecretFieldController _useSecretFieldController(
     try {
       await Clipboard.setData(ClipboardData(text: fullValue));
     } on PlatformException {
-      // A browser can refuse the page the clipboard. The value stays on screen.
-      if (context.mounted) {
-        showErrorSnackBar(context, field.copyFailedSnackbarText);
-      }
-      return;
+      // A browser can refuse the page the clipboard. The value stays on
+      // screen and the pressed button jams with this message.
+      throw _SecretFieldFailure(field.copyFailedSnackbarText);
     }
     field.onCopied?.call();
-    if (context.mounted) {
-      showSuccessSnackBar(context, field.copiedSnackbarText);
-    }
   }
 
   Future<void> generate() async {
@@ -60,16 +55,14 @@ _SecretFieldController _useSecretFieldController(
       state.value = result.isExpiredAt(clock.now())
           ? SecretFieldExpired(value: result.value)
           : result;
-      if (field.copyOnGenerate) {
-        await copy();
-      }
     } on Exception catch (error) {
       final message = error.toString();
       state.value = SecretFieldError(message: message);
-      if (context.mounted) {
-        showErrorSnackBar(context, "${field.errorSnackbarText}: $message");
-      }
+      // The generate button jams and shows this; it never says Copied.
+      throw _SecretFieldFailure("${field.errorSnackbarText}: $message");
     }
+    // The generate button then says Copied, or jams when the browser refuses.
+    if (field.copyOnGenerate) await copy();
   }
 
   return _SecretFieldController(
@@ -77,4 +70,14 @@ _SecretFieldController _useSecretFieldController(
     generate: generate,
     copy: copy,
   );
+}
+
+/// A failed generate or copy; [message] is what the pressed button shows.
+class _SecretFieldFailure implements Exception {
+  const _SecretFieldFailure(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

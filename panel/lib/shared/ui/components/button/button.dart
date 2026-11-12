@@ -45,6 +45,7 @@ class Button extends HookWidget {
     this.face = ButtonFace.quiet,
     this.icon,
     this.busyLabel,
+    this.doneLabel,
     this.tooltip,
     this.hint,
     this.color,
@@ -66,6 +67,11 @@ class Button extends HookWidget {
   /// The word it types while an async [onPressed] runs: Publishing. A button
   /// without one has a synchronous action or shows only an icon.
   final String? busyLabel;
+
+  /// The word it types once [onPressed] finished, such as Copied; it stays
+  /// long enough to read, then the label returns. Feedback stays at the
+  /// button instead of a snackbar.
+  final String? doneLabel;
 
   /// Sync or async. While a returned Future runs the button is busy and
   /// refuses another press; an Exception jams it and is reported. Null makes
@@ -111,6 +117,19 @@ class Button extends HookWidget {
     final bound = controller != null;
     final run = controller ?? owned;
     useListenable(run);
+    // A finished run shows the done word until it has been read; a run by a
+    // shortcut that shares this controller shows it too.
+    final done = useState(false);
+    final successes = run.successes;
+    final seen = useRef(successes);
+    useEffect(() {
+      if (successes == seen.value) return null;
+      seen.value = successes;
+      if (doneLabel == null) return null;
+      done.value = true;
+      final timer = Timer(_doneReadTimeout, () => done.value = false);
+      return timer.cancel;
+    }, [successes]);
     useEffect(() {
       if (bound) return null;
       owned.bind(
@@ -194,7 +213,11 @@ class Button extends HookWidget {
     );
 
     final kept = useMemoized(GlobalKey.new);
-    final shownLabel = busy && busyLabel != null ? busyLabel! : label;
+    final shownLabel = switch (doneLabel) {
+      _ when busy && busyLabel != null => busyLabel!,
+      final word? when done.value => word,
+      _ => label,
+    };
     final content = face == ButtonFace.bare
         ? child!
         : ButtonContent(
@@ -210,9 +233,13 @@ class Button extends HookWidget {
                         busy && (busyLabel == null || face == ButtonFace.icon),
                     child: icon!,
                   ),
-            label: face == ButtonFace.icon
-                ? null
-                : MotionLabel(shownLabel, rippling: busy),
+            // An icon button speaks only its done word, beside the icon.
+            label: switch (face) {
+              ButtonFace.icon when done.value && doneLabel != null =>
+                MotionLabel(doneLabel!),
+              ButtonFace.icon => null,
+              _ => MotionLabel(shownLabel, rippling: busy),
+            },
           );
 
     Widget result = Focus(
@@ -254,7 +281,7 @@ class Button extends HookWidget {
               button: label.isNotEmpty,
               enabled: enabled,
               hint: hint,
-              label: switch (busy ? (busyLabel ?? label) : label) {
+              label: switch (busy ? (busyLabel ?? label) : shownLabel) {
                 "" => null,
                 final read => read,
               },
@@ -351,3 +378,6 @@ class ButtonTooltip extends StatelessWidget {
     );
   }
 }
+
+/// How long a done word such as Copied stays before the label returns.
+const _doneReadTimeout = Duration(milliseconds: 1600);

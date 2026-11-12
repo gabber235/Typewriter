@@ -27,6 +27,12 @@ class ButtonController extends ChangeNotifier {
   /// How many runs have failed; each failure jams the button once.
   int get failures => _failures;
 
+  int _successes = 0;
+
+  /// How many runs have finished without an error; a button with a done word
+  /// types it after each one.
+  int get successes => _successes;
+
   /// Whether a bound callback can start without overlapping an execution.
   bool get canTrigger => _onPressed != null && !_isLoading;
 
@@ -64,6 +70,7 @@ class ButtonController extends ChangeNotifier {
 
     try {
       await _onPressed!();
+      _successes++;
     } on Exception catch (error) {
       _failures++;
       _setError(error.toString());

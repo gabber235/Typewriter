@@ -101,4 +101,31 @@ void main() {
       await enabled.settle();
     },
   );
+
+  testWidgets(
+    "a copy button pressed by keyboard says Copied in place, then returns",
+    (tester) async {
+      var copies = 0;
+      final panel = await tester.showComponent(
+        Button(
+          label: "Copy",
+          doneLabel: "Copied",
+          autofocus: true,
+          onPressed: () => copies++,
+        ),
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await panel.settle();
+
+      expect(copies, 1);
+      expect(find.text("Copied"), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 3));
+      await panel.settle();
+
+      expect(find.text("Copy"), findsOneWidget);
+      expect(find.text("Copied"), findsNothing);
+    },
+  );
 }

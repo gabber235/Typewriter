@@ -28,7 +28,7 @@ extension PumpFocusedRow on WidgetTester {
   ///
   /// [build] receives the content to wrap and `record`, which turns a
   /// callback name into a callback that remembers it was invoked, such as
-  /// `onCopy: record("copy")`.
+  /// `onSelectAll: record("select all")`.
   Future<FocusedRowDriver> pumpFocusedRow(
     List<Trait> traits,
     Widget Function(Widget content, VoidCallback Function(String) record) build,

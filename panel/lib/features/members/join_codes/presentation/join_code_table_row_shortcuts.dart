@@ -12,7 +12,7 @@ class JoinCodeTableRowShortcuts extends StatelessWidget {
     required this.onToggleSelection,
     required this.onSelectAll,
     required this.onClearSelection,
-    required this.onCopy,
+    required this.copy,
     required this.isSelected,
     required this.hasSelection,
     required this.rows,
@@ -25,7 +25,9 @@ class JoinCodeTableRowShortcuts extends StatelessWidget {
   final VoidCallback onToggleSelection;
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
-  final VoidCallback onCopy;
+
+  /// Copies the code; the row's Copy button runs the same command.
+  final ActionShortcut copy;
   final bool isSelected;
   final bool hasSelection;
 
@@ -63,15 +65,7 @@ class JoinCodeTableRowShortcuts extends StatelessWidget {
           priority: 1,
           run: ActionRun.press((_) => onClearSelection()),
         ),
-        if (!hasSelection)
-          ActionShortcut(
-            id: "copy_table_join_code_${code.code}",
-            label: "Copy join code",
-            description: "Copy this join code",
-            activators: const [SingleActivator(LogicalKeyboardKey.keyC)],
-            priority: 1,
-            run: ActionRun.press((_) => onCopy()),
-          ),
+        if (!hasSelection) copy,
         joinCodeRevocation(
           id: "revoke_table_join_code_${code.code}",
           label: hasSelection && isSelected

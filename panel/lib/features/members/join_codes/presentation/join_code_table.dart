@@ -55,6 +55,17 @@ class JoinCodesTable extends HookConsumerWidget {
     ThemeData theme,
   ) {
     final fullUrl = joinCodeUrl(code.code);
+    // One command for the row's C key and its Copy button.
+    final copy = ActionShortcut(
+      id: "copy_table_join_code_${code.code}",
+      label: "Copy join code",
+      description: "Copy this join code",
+      activators: const [SingleActivator(LogicalKeyboardKey.keyC)],
+      priority: 1,
+      run: ActionRun.press(
+        (_) => Clipboard.setData(ClipboardData(text: fullUrl)),
+      ),
+    );
 
     void toggleSelection() {
       if (isSelected) {
@@ -73,7 +84,7 @@ class JoinCodesTable extends HookConsumerWidget {
           onSelectAll: () =>
               selection.selectedIds.value = codes.map((c) => c.code).toSet(),
           onClearSelection: () => selection.selectedIds.value = {},
-          onCopy: () => _copyToClipboard(context, fullUrl),
+          copy: copy,
           isSelected: isSelected,
           hasSelection: selection.selectedIds.value.isNotEmpty,
           rows: selection.rows,
@@ -138,12 +149,13 @@ class JoinCodesTable extends HookConsumerWidget {
                     ),
                   ),
                   SizedBox(width: context.spacing.space2),
-                  Button(
+                  CommandButton(
+                    command: copy,
                     face: ButtonFace.icon,
                     icon: const Icon(Icons.copy, size: 16),
                     label: "Copy Join Code",
+                    doneLabel: "Copied",
                     tooltip: "Copy Join Code",
-                    onPressed: () => _copyToClipboard(context, fullUrl),
                   ),
                 ],
               ),
@@ -182,10 +194,5 @@ class JoinCodesTable extends HookConsumerWidget {
         ),
       ],
     );
-  }
-
-  void _copyToClipboard(BuildContext context, String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    showSuccessSnackBar(context, "Join code copied to clipboard");
   }
 }

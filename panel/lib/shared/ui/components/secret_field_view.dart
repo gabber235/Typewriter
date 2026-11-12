@@ -31,6 +31,7 @@ class _SecretFieldView extends StatelessWidget {
           generateButtonText: field.generateButtonText,
           regenerateButtonText: field.regenerateButtonText,
           copyButtonText: field.copyButtonText,
+          copyOnGenerate: field.copyOnGenerate,
           expiredText: field.expiredText,
           onGenerate: controller.generate,
           onCopy: controller.copy,
@@ -47,6 +48,7 @@ class _SecretFieldContent extends StatelessWidget {
     required this.generateButtonText,
     required this.regenerateButtonText,
     required this.copyButtonText,
+    required this.copyOnGenerate,
     required this.expiredText,
     required this.onGenerate,
     required this.onCopy,
@@ -57,6 +59,9 @@ class _SecretFieldContent extends StatelessWidget {
   final String generateButtonText;
   final String regenerateButtonText;
   final String copyButtonText;
+
+  /// Whether generating also copies, so the generate button says Copied.
+  final bool copyOnGenerate;
   final String expiredText;
   final Future<void> Function() onGenerate;
   final Future<void> Function() onCopy;
@@ -169,8 +174,11 @@ class _SecretFieldContent extends StatelessWidget {
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.end,
           children: [
+            // Keyed: Copy arrives in front of Generate and must not take over
+            // its run state.
             if (canCopy)
               Button(
+                key: const ValueKey("copy"),
                 onPressed: onCopy,
                 icon: const Icones(
                   MaterialSymbols.content_copy_rounded,
@@ -178,8 +186,10 @@ class _SecretFieldContent extends StatelessWidget {
                 ),
                 label: copyButtonText,
                 busyLabel: "Copying",
+                doneLabel: "Copied",
               ),
             Button(
+              key: const ValueKey("generate"),
               face: ButtonFace.filled,
               onPressed: onGenerate,
               icon: const Icones(MaterialSymbols.autorenew_rounded, size: 16),
@@ -187,6 +197,7 @@ class _SecretFieldContent extends StatelessWidget {
                   ? generateButtonText
                   : regenerateButtonText,
               busyLabel: "Generating",
+              doneLabel: copyOnGenerate ? "Copied" : null,
               color: isError ? colorScheme.error : null,
             ),
           ],

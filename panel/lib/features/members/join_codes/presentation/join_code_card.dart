@@ -36,6 +36,18 @@ class JoinCodeCard extends HookConsumerWidget {
     final theme = Theme.of(context);
     final expansibleController = useExpansibleController();
     final fullUrl = joinCodeUrl(code.code);
+    // One command for the card's C key and its Copy button, so the button
+    // says Copied whichever started it.
+    final copy = ActionShortcut(
+      id: "copy_join_code_${code.code}",
+      label: "Copy join code",
+      description: "Copy this join code",
+      activators: const [SingleActivator(LogicalKeyboardKey.keyC)],
+      priority: 1,
+      run: ActionRun.press(
+        (_) => Clipboard.setData(ClipboardData(text: fullUrl)),
+      ),
+    );
     // One command for the card's key and its Revoke button.
     final revocation = joinCodeRevocation(
       id: "revoke_join_code_key_${code.code}",
@@ -90,17 +102,7 @@ class JoinCodeCard extends HookConsumerWidget {
                   priority: 1,
                   run: ActionRun.press((_) => onClearSelection()),
                 ),
-              if (!hasSelection)
-                ActionShortcut(
-                  id: "copy_join_code_${code.code}",
-                  label: "Copy join code",
-                  description: "Copy this join code",
-                  activators: const [SingleActivator(LogicalKeyboardKey.keyC)],
-                  priority: 1,
-                  run: ActionRun.press(
-                    (_) => _copyToClipboard(context, fullUrl),
-                  ),
-                ),
+              if (!hasSelection) copy,
               revocation,
             ],
             // Inside the shortcuts, so they answer while the card is
@@ -207,12 +209,13 @@ class JoinCodeCard extends HookConsumerWidget {
                     spacing: context.spacing.space2,
                     runSpacing: context.spacing.space2,
                     children: [
-                      Button(
+                      CommandButton(
+                        command: copy,
                         face: ButtonFace.outlined,
                         icon: const Icon(Icons.copy, size: 18),
                         label: "Copy Join Code",
+                        doneLabel: "Copied",
                         color: context.colors.brandText,
-                        onPressed: () => _copyToClipboard(context, fullUrl),
                       ),
                       CommandButton(
                         command: revocation,
@@ -230,10 +233,5 @@ class JoinCodeCard extends HookConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _copyToClipboard(BuildContext context, String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    showSuccessSnackBar(context, "Join code copied to clipboard");
   }
 }

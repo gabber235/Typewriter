@@ -51,13 +51,10 @@ class _ActivityCardState extends State<_ActivityCard> {
     setState(() {});
   }
 
-  Future<void> _copyReport(BuildContext context) async {
+  Future<void> _copyReport() async {
     final report = widget.copyText;
     if (report == null) return;
     await Clipboard.setData(ClipboardData(text: report));
-    if (context.mounted) {
-      showSuccessSnackBar(context, "Problem copied to clipboard");
-    }
   }
 
   @override
@@ -206,8 +203,9 @@ class _ActivityCardState extends State<_ActivityCard> {
                             icon: const Icon(Icons.copy_outlined, size: 16),
                             label: "Copy problem report",
                             tooltip: "Copy problem report",
+                            doneLabel: "Copied",
                             color: context.colors.contentSecondary,
-                            onPressed: () => _copyReport(context),
+                            onPressed: _copyReport,
                           ),
                         ],
                       ),

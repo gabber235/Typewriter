@@ -68,4 +68,36 @@ void main() {
 
     expect(chip.isTappable, isTrue);
   });
+
+  testWidgets("a hint with several bindings shows each in turn", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ActionSurface([
+          ActionShortcut(
+            id: "focus",
+            label: "Switch Focus",
+            description: "Move focus",
+            priority: 0,
+            activators: const [
+              SingleActivator(LogicalKeyboardKey.keyH),
+              SingleActivator(LogicalKeyboardKey.keyJ),
+            ],
+            run: ActionRun.press((_) {}),
+          ),
+        ]),
+      ),
+    );
+
+    expect(find.text("H"), findsOneWidget);
+    expect(find.text("J"), findsNothing);
+
+    await tester.pump(const Duration(seconds: 5));
+    await panel.settle();
+
+    expect(find.text("J"), findsOneWidget);
+    expect(find.text("H"), findsNothing);
+  });
 }

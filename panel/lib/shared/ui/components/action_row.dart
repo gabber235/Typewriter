@@ -192,6 +192,7 @@ class _ActionShortcutButton extends StatelessWidget {
       face: ButtonFace.quiet,
       icon: action.icon,
       label: action.label,
+      rotateShortcuts: true,
     );
   }
 }

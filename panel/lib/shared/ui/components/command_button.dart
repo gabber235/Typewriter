@@ -24,9 +24,11 @@ class CommandButton extends HookConsumerWidget {
     this.face = ButtonFace.quiet,
     this.color,
     this.busyLabel,
+    this.doneLabel,
     this.hint,
     this.tooltip,
     this.enabled = true,
+    this.rotateShortcuts = false,
     super.key,
   });
 
@@ -39,12 +41,19 @@ class CommandButton extends HookConsumerWidget {
   /// The word a press run types while it runs: Publishing.
   final String? busyLabel;
 
+  /// The word a finished run types, such as Copied.
+  final String? doneLabel;
+
   /// What a screen reader hears after the label, such as "Destructive".
   final String? hint;
 
   /// What hovering the button explains.
   final String? tooltip;
   final bool enabled;
+
+  /// Shows every binding of the command in turn instead of only the first,
+  /// as the hint bar does.
+  final bool rotateShortcuts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -79,27 +88,23 @@ class CommandButton extends HookConsumerWidget {
       [runs],
     );
 
+    final capStyle = KeyStyle.outline(
+      foregroundColor: IconTheme.of(context).color,
+    );
+    Widget keyCaps(ShortcutActivator first) => rotateShortcuts
+        ? RotatingShortcuts(shortcuts: keys, style: capStyle)
+        : ShortcutDisplay(shortcut: first, style: capStyle);
+
     // The key cap sits beside the icon, as the command list lists it first;
     // a round icon button shows its icon alone.
     final shownIcon = switch ((icon, keys)) {
       (_, []) => icon,
       (_, _) when face == ButtonFace.icon => icon,
-      (null, [final first, ...]) => ShortcutDisplay(
-        shortcut: first,
-        style: KeyStyle.outline(foregroundColor: IconTheme.of(context).color),
-      ),
+      (null, [final first, ...]) => keyCaps(first),
       (final icon?, [final first, ...]) => Row(
         mainAxisSize: MainAxisSize.min,
         spacing: context.spacing.space2,
-        children: [
-          icon,
-          ShortcutDisplay(
-            shortcut: first,
-            style: KeyStyle.outline(
-              foregroundColor: IconTheme.of(context).color,
-            ),
-          ),
-        ],
+        children: [icon, keyCaps(first)],
       ),
     };
 
@@ -108,6 +113,7 @@ class CommandButton extends HookConsumerWidget {
     Widget faceWith(VoidCallback? onPressed) => Button(
       label: label,
       busyLabel: busyLabel,
+      doneLabel: doneLabel,
       icon: shownIcon,
       face: face,
       color: color,
