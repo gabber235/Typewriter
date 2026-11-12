@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        row: [crossdbg]
+        row: [crossown, crossshared, fidxf]
     defaults:
       run:
         working-directory: prototypes/game-verification

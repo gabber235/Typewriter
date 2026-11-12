@@ -292,7 +292,7 @@ public final class Input {
     static String handledKind;
 
     /** Head of the client's input handlers (HandledMixin); render thread. */
-    static int moves;
+    static int moves, nudges;
 
     public static void handled(String kind) {
         if (kind.equals("move")) moves++;
@@ -359,6 +359,12 @@ public final class Input {
             if (mc.mouseHandler.isMouseGrabbed() && !"fake".equals(grab)) {
                 int ix = (int) Math.round(dx), iy = (int) Math.round(dy);
                 if (ix == 0 && iy == 0) return; // a physical mouse sends no zero motion
+                // The game drops the first motion after it grabs the mouse (ignoreFirstMove); a person's mouse sends many
+                // small ones, so the first is never missed. In process, the driver can see the flag and nudge one pixel first.
+                if ((boolean) field(net.minecraft.client.MouseHandler.class, mc.mouseHandler, "ignoreFirstMove")) {
+                    x.fakeRelative(1, 0);
+                    nudges++;
+                }
                 x.fakeRelative(ix, iy);
             } else {
                 int[] o = x.origin(Sends.window(mc));
@@ -881,6 +887,7 @@ public final class Input {
                 s.now(() -> {
                     s.note("turned", Math.round((mc.player.getYRot() - yaw0[0]) * 100) / 100.0);
                     s.note("movesSeen", moves - moves0[0]);
+                    s.note("nudges", nudges);
                     s.note("ifmAfter", (boolean) field(net.minecraft.client.MouseHandler.class, mc.mouseHandler, "ignoreFirstMove"));
                 });
                 press(s, k, T);
