@@ -20,5 +20,6 @@ public class PingMixin {
         // Highest, not last: a window barrier still scheduled after a fast pass arrives after later barriers (spike D).
         Speed.lastPing = Math.max(Speed.lastPing, packet.getId());
         probe.mod.ready.Ready.onPing(packet.getId());
+        probe.mod.observe.Stream.onBarrier(packet.getId());
     }
 }

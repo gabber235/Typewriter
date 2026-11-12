@@ -15,6 +15,6 @@ import probe.mod.n.N;
 public class WakeMixin {
     @Inject(method = "scheduleIfPossible", at = @At("TAIL"))
     private <T extends PacketListener> void probe$wake(T listener, Packet<T> packet, CallbackInfo ci) {
-        if (packet instanceof ClientboundPingPacket ping && ping.getId() >= N.BASE) N.wake();
+        if (packet instanceof ClientboundPingPacket ping && (ping.getId() >= N.BASE || N.wakeBarriers)) N.wake();
     }
 }

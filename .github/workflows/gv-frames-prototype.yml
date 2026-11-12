@@ -1,19 +1,19 @@
 # Temporary. Measures the game verification prototypes on a free runner. Only the prototype branch
 # triggers it, and it is removed when the search ends. Change matrix.include to pick what runs.
-name: Game verification prototype
+name: Game verification frames prototype
 
 on:
   push:
-    branches: [proto/gv-topology]
+    branches: [proto/gv-frames]
     paths:
       - prototypes/game-verification/**
-      - .github/workflows/game-verification-prototype.yml
+      - .github/workflows/gv-frames-prototype.yml
 
 permissions:
   contents: read
 
 concurrency:
-  group: game-verification-topology
+  group: game-verification-frames
   cancel-in-progress: true
 
 jobs:
@@ -25,9 +25,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
-          - { plan: topology, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
+          - { plan: frames, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+          - { plan: frames, backend: vulkan, runner: ubuntu-24.04, repeat: 1 }
+          - { plan: frames, backend: vulkan, runner: ubuntu-24.04, repeat: 2 }
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -74,6 +74,8 @@ jobs:
         env:
           MATRIX_REPEAT: ${{ matrix.repeat }}
           CI_BUDGET_S: "5100"
+          FRAMES_INSTANCES: "default;lp=1;lp=2;bg=1;w=427x240;lp=1,bg=1,w=427x240;lp=2,bg=1,w=427x240"
+          FRAMES_ARGS: "--plan-other base@0.1,f@0.1,demand@0.1,demand+wake@0.1"
         run: /usr/bin/python3 orchestrator/ci.py plan ${{ matrix.plan }} --backend ${{ matrix.backend }}
       - name: Upload results and frames
         if: always()
@@ -105,3 +107,4 @@ jobs:
             prototypes/game-verification/runs/n.jsonl
             prototypes/game-verification/runs/n-logs
             prototypes/game-verification/runs/topo.jsonl
+            prototypes/game-verification/runs/frames.jsonl

@@ -55,7 +55,7 @@ public final class Drawn {
     public static long hookNanos;
     public static long framesCounted;
 
-    record GuiEl(char kind, Object ref, int[] box, int color, String extra) {}
+    record GuiEl(char kind, Object ref, int[] box, int color, String extra, String tag) {}
     static final class Ent {
         int id; String type; String name; boolean invisible; int geo; double x, y, z; final List<String> text = new ArrayList<>();
     }
@@ -98,7 +98,7 @@ public final class Drawn {
             }
             if (!on) return false;
             ScreenRectangle b = state.bounds();
-            if (b != null) cur.gui.add(new GuiEl('T', state, box(b), ((GuiTextAccessor) (Object) state).probe$color(), null));
+            if (b != null) cur.gui.add(new GuiEl('T', state, box(b), ((GuiTextAccessor) (Object) state).probe$color(), null, Tag.current()));
             return false;
         } finally {
             hookNanos += System.nanoTime() - t;
@@ -118,7 +118,7 @@ public final class Drawn {
             } else if (state instanceof BlitRenderState blit) {
                 color = blit.color();
             }
-            cur.gui.add(new GuiEl(kind, null, box(b), color, null));
+            cur.gui.add(new GuiEl(kind, null, box(b), color, null, Tag.current()));
         }
         hookNanos += System.nanoTime() - t;
     }
@@ -140,7 +140,7 @@ public final class Drawn {
     public static void onGuiItemBounds(GuiItemRenderState state) {
         if (!on) return;
         ScreenRectangle b = state.bounds();
-        if (b != null) cur.gui.add(new GuiEl('I', null, box(b), -1, pendingItem));
+        if (b != null) cur.gui.add(new GuiEl('I', null, box(b), -1, pendingItem, Tag.current()));
     }
 
     public static void onBlur() {

@@ -1056,10 +1056,28 @@ def cmd_topology(backend):
         step(f"topo {name}", run_topo, topo, "run", "--topo", name, "--seed", str(rep + 1), "--restart", "0.01,0", "--label", f"ci{rep}", *extra)
 
 
+# ---------- frames spike: frames and the perception stream on the shared stepped Paper ----------
+
+def cmd_frames(backend):
+    """One instance (client configuration) per step, so a failed instance leaves the others' numbers."""
+    k_hooks(backend)  # frames.py builds on topo.py and k.py's clients: the same Xvfb and renderer hooks
+    import topo, frames
+    topo.hooks["record"] = record
+    frames.hooks["record"] = record
+    rep = int(os.environ.get("MATRIX_REPEAT", "0") or 0)
+    step("topo prep", run_topo, topo, "prep")
+    extra = os.environ.get("FRAMES_ARGS", "").split()
+    for inst in os.environ.get("FRAMES_INSTANCES", "default").split(";"):
+        if over_budget():
+            record("skip", what=inst, reason="budget")
+            continue
+        step(f"frames {inst}", frames.main, ["run", "--instances", inst, "--label", f"ci{rep}", *extra])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["plan"])
-    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "topology"])
+    ap.add_argument("plan", choices=["smoke", "fps", "speed", "flake", "multi", "compare", "video", "goldens", "coverage", "readiness", "clients", "joins", "joins2", "cells", "scopes", "failrule", "interfere", "input", "restarts", "stepped", "breakstep", "topology", "frames"])
     ap.add_argument("--backend", default="opengl")
     ap.add_argument("--cycles", type=int, default=3)
     a = ap.parse_args()
@@ -1110,6 +1128,8 @@ def main():
             cmd_breakstep(a.backend)
         elif a.plan == "topology":
             cmd_topology(a.backend)
+        elif a.plan == "frames":
+            cmd_frames(a.backend)
         elif a.plan == "compare":
             cmd_compare(2)
     finally:

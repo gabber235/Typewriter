@@ -40,6 +40,8 @@ public final class N {
         }
     }
 
+    /** Frames spike lever: barrier pings (below BASE) wake the parked render thread too. */
+    public static volatile boolean wakeBarriers;
     private static volatile boolean stepping;
     private static volatile long virtNanos;
     private static volatile Thread render;
@@ -77,6 +79,7 @@ public final class N {
         // Handle what already arrived now rather than later in this loop, so a step ping read here ticks this loop.
         mc.packetProcessor().processQueuedPackets();
         if (current != null) return; // the granted tick has not run (no level yet); keep the clock where it is
+        if (probe.mod.observe.Stream.holding()) return; // an A4 pair is in flight: both frames must see the same tick
         Integer t = granted.poll();
         if (t != null) {
             current = t;
@@ -89,6 +92,7 @@ public final class N {
     /** Tail of Minecraft.tick. */
     public static void afterTick(Minecraft mc) {
         clientTicks++;
+        probe.mod.observe.Stream.onTick(mc, stepping && current != null ? current : -1);
         if (!stepping) return;
         if (current == null) {
             extraTicks++;
@@ -144,6 +148,10 @@ public final class N {
                     throw new RuntimeException(e);
                 }
                 return "{\"ok\":true,\"stepping\":" + stepping + "}";
+            }
+            case "n.wake" -> {
+                wakeBarriers = "1".equals(p.get("barriers"));
+                return "{\"ok\":true,\"barriers\":" + wakeBarriers + "}";
             }
             case "n.watch" -> {
                 needle = p.getOrDefault("needle", "");

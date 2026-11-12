@@ -67,6 +67,10 @@ final class N implements Listener {
     private static final Map<UUID, Integer> acked = new HashMap<>();
     private static final Map<UUID, Long> busySince = new HashMap<>();
     private static final List<Attempt> attempts = new ArrayList<>();
+    private static final Map<String, Attempt> byToken = new ConcurrentHashMap<>();
+    private static int nextBarrier = 100_000_000;
+    private static volatile boolean logTicks;
+    private static final List<long[]> tickLog = new ArrayList<>();
 
     private static final class Attempt {
         final List<UUID> members;
@@ -78,6 +82,12 @@ final class N implements Listener {
         int startTick, hung;
         long lostQuiet, lostAck, ownQuiet, ownAck;
         Map<String, Object> stim;
+        // Frames spike: the verdict comes from the perception stream. The test process ends the attempt once
+        // every member's stream showed the token (n.end); a window that runs out sends each member a barrier.
+        boolean stream;
+        String token;
+        volatile boolean endRequested;
+        final StringBuilder barriers = new StringBuilder();
 
         Attempt(List<UUID> members, List<String> names, int max) {
             this.members = members;
@@ -122,6 +132,7 @@ final class N implements Listener {
     public void onTickEnd(ServerTickEndEvent e) {
         if (!Step.on) return;
         awaiting = e.getTickNumber();
+        if (logTicks && tickLog.size() < 500_000) tickLog.add(new long[] {awaiting, System.nanoTime()});
         for (Player p : Bukkit.getOnlinePlayers()) {
             ((CraftPlayer) p).getHandle().connection.send(new ClientboundPingPacket(BASE + awaiting));
             pingsSent++;
@@ -174,9 +185,13 @@ final class N implements Listener {
                 }
             }
             if (!ready) continue;
-            boolean allSeen = a.seenTick.keySet().containsAll(a.members);
+            boolean allSeen = a.stream ? a.endRequested : a.seenTick.keySet().containsAll(a.members);
             if (allSeen || awaiting - a.startTick >= a.max) {
                 it.remove();
+                if (a.stream) {
+                    byToken.remove(a.token);
+                    if (!allSeen) sendBarriers(a);
+                }
                 finish(a, allSeen);
             }
         }
@@ -222,9 +237,27 @@ final class N implements Listener {
         stepsTotal++;
     }
 
+    /** Window ran out: a barrier (vanilla ping below 2^30) to each member; its echo closes the member's stream. */
+    private static void sendBarriers(Attempt a) {
+        a.barriers.append('{');
+        for (int i = 0; i < a.members.size(); i++) {
+            Player p = Bukkit.getPlayer(a.members.get(i));
+            if (p == null) continue;
+            int id = nextBarrier++;
+            long t = System.nanoTime();
+            ((CraftPlayer) p).getHandle().connection.send(new ClientboundPingPacket(id));
+            if (a.barriers.length() > 1) a.barriers.append(',');
+            a.barriers.append('"').append(a.names.get(i)).append("\":[").append(id).append(',').append(t).append(']');
+        }
+        a.barriers.append('}');
+    }
+
     private static void finish(Attempt a, boolean pass) {
         Map<String, Object> m = new LinkedHashMap<>(a.stim);
         m.put("pass", pass);
+        m.put("startTick", a.startTick);
+        m.put("endTick", awaiting);
+        if (a.stream) m.put("barriers", new Input.RawJson(a.barriers.length() == 0 ? "{}" : a.barriers.toString()));
         m.put("ticks", awaiting - a.startTick);
         List<Integer> seen = new ArrayList<>();
         for (UUID u : a.members) seen.add(a.seenTick.containsKey(u) ? a.seenTick.get(u) - a.startTick : -1);
@@ -267,6 +300,17 @@ final class N implements Listener {
             case "n.sync" -> {
                 acked.merge(p.getUniqueId(), awaiting, Math::max);
                 r.put("tick", awaiting);
+            }
+            case "n.ticklog" -> {
+                // Tick end nanoTimes since the last call; on from the first call.
+                StringBuilder b = new StringBuilder("[");
+                for (int i = 0; i < tickLog.size(); i++) {
+                    if (i > 0) b.append(',');
+                    b.append('[').append(tickLog.get(i)[0]).append(',').append(tickLog.get(i)[1]).append(']');
+                }
+                tickLog.clear();
+                logTicks = !"0".equals(q.get("on"));
+                r.put("ticks", new Input.RawJson(b.append(']').toString()));
             }
             case "n.stats" -> {
                 r.put("taken", Step.taken());
@@ -334,6 +378,9 @@ final class N implements Listener {
                 }
                 Attempt a = new Attempt(ids, names, Integer.parseInt(q.getOrDefault("max", "2")));
                 a.startTick = awaiting;
+                a.stream = "1".equals(q.get("stream"));
+                a.token = q.get("token");
+                if (a.stream) byToken.put(a.token, a);
                 a.stim = new LinkedHashMap<>();
                 boolean broken = "1".equals(q.get("broken"));
                 for (int i = 0; i < ps.size(); i++) {
@@ -349,6 +396,15 @@ final class N implements Listener {
         });
         Attempt a = reg.get(30, TimeUnit.SECONDS);
         return a.done.get(Long.parseLong(q.getOrDefault("timeoutMs", "60000")), TimeUnit.MILLISECONDS);
+    }
+
+    /** Any thread: the test process saw the token in every member's stream; the attempt ends between ticks. */
+    static Map<String, Object> end(Map<String, String> q) {
+        Attempt a = byToken.get(q.get("token"));
+        if (a != null) a.endRequested = true;
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("found", a != null);
+        return m;
     }
 
     private static void req(Player p, Map<String, String> q, boolean broken, Map<String, Object> r) {

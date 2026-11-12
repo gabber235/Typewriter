@@ -66,7 +66,7 @@ public final class Speed {
 
     /** Decides once per frame, at the acquire call, whether this frame draws. */
     public static boolean decideFrame() {
-        boolean render = gateMode == 0 || framesToRender > 0;
+        boolean render = probe.mod.observe.Stream.frameWanted() | gateMode == 0 || framesToRender > 0;
         if (framesToRender > 0) framesToRender--;
         thisFrameSkipped = !render;
         return thisFrameSkipped;
@@ -84,6 +84,7 @@ public final class Speed {
     public static void afterFrame(Minecraft mc, long frame, long tick, String perceived) {
         publish(frame, tick, perceived);
         probe.mod.observe.Drawn.endFrame(mc, !thisFrameSkipped);
+        probe.mod.observe.Stream.afterFrame(mc, !thisFrameSkipped);
         probe.mod.observe.Ride.onFrame(mc, !thisFrameSkipped);
         probe.mod.ready.Ready.afterFrame(mc, frame, tick, perceived, !thisFrameSkipped);
         Runnable r = afterRendered;
@@ -185,6 +186,7 @@ public final class Speed {
                 if (r == null) r = probe.mod.input.Input.handle(name, p, mc);
                 if (r == null) r = probe.mod.k.K.handle(name, p, mc);
                 if (r == null) r = probe.mod.n.N.handle(name, p, mc);
+                if (r == null) r = probe.mod.observe.Stream.handle(name, p, mc);
                 yield r != null ? r : "{\"error\":\"unknown " + name + "\"}";
             }
         };

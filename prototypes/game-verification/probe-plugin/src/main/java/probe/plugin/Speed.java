@@ -119,6 +119,7 @@ final class Speed {
         Map<String, String> q = query(qm < 0 ? "" : rest.substring(qm + 1));
         if (name.equals("covDump")) return json(Coverage.waitAndDump(q));
         if (name.equals("n.att")) return json(N.attemptBlocking(q));
+        if (name.equals("n.end")) return json(N.end(q));
         if (name.equals("n.freeze")) return json(N.freezeProbe(q));
         Callable<Map<String, Object>> call = () -> run(name, q);
         Map<String, Object> result;
@@ -183,7 +184,7 @@ final class Speed {
                 p.showTitle(title);
             }
             default -> {
-                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r) && !Coverage.run(name, q, p, r) && !Ready.run(name, q, p, r) && !D.run(name, q, p, r) && !Input.run(name, q, p, r) && !K.run(name, q, p, r) && !N.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
+                if (!Observe.run(name, q, p, r) && !Golden.run(name, q, p, r) && !Coverage.run(name, q, p, r) && !Ready.run(name, q, p, r) && !D.run(name, q, p, r) && !Input.run(name, q, p, r) && !K.run(name, q, p, r) && !N.run(name, q, p, r) && !StreamScenes.run(name, q, p, r)) throw new IllegalArgumentException("unknown " + name);
             }
         }
         if (q.containsKey("cov")) Coverage.dump(q.get("cov"), r);
