@@ -112,13 +112,14 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 |---|---|---|
 | Setting any visual value | Use a token from the tables below or the theme. Add a missing one beside `panel/lib/shared/theme/typewriter_spacing.dart`. Never write a literal | 2 |
 | Showing a state | Each signal has one meaning: fill is selected, ring is focus, brighter surface is the active pane, status colour is that status, filled button is the pane's main action. Signals combine and stay distinct | 3 |
-| Choosing an action's weight | One filled button per pane at most, in the pane header, right side. The rest are quiet. Row actions show on hover and focus, and in the context menu | 2 |
+| Choosing an action's weight | One filled button per pane at most: its main action, placed with the operations it belongs to, never floating over content. The rest are flat, or outlined for the likely next step, each with its icon. Operations sit in sections by group; danger tone gets its own section. Row actions show on hover and focus, and in the context menu | 2 |
 | Placing content | A title and its content share one left edge. Table rows are about 42 px, and at least 44 px on touch | 2 |
 | Showing many things that have details | Use a table with an inspector. The table scans, and the selected thing appears large in the inspector with its details, actions, and keys | 2 |
-| A static page feels boring | Add interest with real information, never decoration: a stable colour tile for each person or kind of thing, a small visual of real data such as activity. Keep exact values in the inspector | 2 |
+| Designing or simplifying anything a user sees | Keep its character: things look like what they are (a book is a stacked cover that springs when chosen), a thing's title is large and in its colour, the mascot and playful lines appear where nothing depends on them. When a change removes something, name the character that replaces it. Professional and fun; never sterile or corporate | 3 |
+| A static page feels boring | Add interest with real information and identity: a stable colour tile or icon for each person or kind of thing, a small visual of real data such as activity. Keep exact values in the inspector | 2 |
 | Showing the health of many things | Every item states its status in words, such as Running. Normal states may carry a small, quiet colour; what is wrong gets the strongest colour and size, so the eye finds it first | 3 |
 | Adding colour to a page | Colour always carries information: a tile per person or kind, a status, a small visual of real data. Keep it to small marks, balanced across the screen, never large fills. A page with none feels lifeless; colour everywhere overloads | 2 |
-| Styling a static page | Stay calm and familiar: soft filled shapes for controls, spaced muted labels, flat surfaces. Depth appears only in motion. Never add rules under titles, text markers such as `>`, brackets, physical key rows, or paper panes | 2 |
+| Styling a static page | Familiar and lively: soft filled shapes for controls, spaced muted labels, flat surfaces, identity marks kept. Depth appears only in motion. Never add rules under titles, text markers such as `>`, brackets, physical key rows, or paper panes | 2 |
 | Writing text | At least 4.5:1 in both themes | 3 |
 | Choosing a font | A full sentence uses IBM Plex Sans. Everything else uses Lilex, at weight 500 or 600 on labels and buttons | 2 |
 
@@ -130,6 +131,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Nothing depends on it: sign in, empty, long wait, small success, first run | A joke in simple words is welcome, beside clear text that stands alone | 2 |
 | Naming an action | One name everywhere, and its result uses the same word: Publish, Published. Sentence case, whole strings, real plurals | 2 |
 | One thing shows in several places | It carries its own name and the same status colour everywhere: card, inspector, list. Never another thing's name | 2 |
+| A word names a Typewriter concept (realm, book, page kinds, service) | Where it helps, the word opens a rich tooltip on hover or focus that explains it with a visual and a link to the docs; empty places explain what belongs there. Never a tour or a first visit popup | 2 |
 
 ## Building
 
@@ -139,7 +141,8 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Rows arrive or leave | Use `AnimatedSliverList`, `AnimatedTable`, `SliverAnimatedContent` or, for editor collections, `CollectionSequence`; pass content only. They play `loadIn`, `rowIn` and `listOut` and keep on screen rows still when rows above the screen change | 2 |
 | Writing a Duration, curve or `.ms` for motion | Use a token instead; `design_system_guardrails_test.dart` fails on literal motion in UI code and only shrinks its exemption list | 2 |
 | A surface is new or changed | Its story shows every state that applies: default, hover, focus, active, disabled, loading, empty, error, offline, compact | 2 |
-| Keyboard behaviour is new or changed | A widget test proves the key path and where focus lands | 3 |
+| An element is built or redone | A widget test uses it with the keyboard alone, without Tab: every part reached, used, confirmed and left by its keys, and where focus lands | 3 |
+| Deciding where inspector content is defined | In Kotlin whenever possible: heading, fields and their labels, operations, concepts. The panel draws what Kotlin declares, so extensions can shape it | 3 |
 | No rule or demo settles how something should feel | Build three live options and let a maintainer pick. Add what you learn here as a general rule, not as that element's design | 2 |
 | You must break a rule | Ask a maintainer. If approved, add it to the exceptions in the `panel-review` skill | 3 |
 | Building a control | Build it on Flutter's widgets layer: `FocusableActionDetector`, `WidgetStatesController`, `Semantics`, gestures, its own painting. Use Material only where Flutter has no primitive: text input, selection, `Scaffold`, tabs | 2 |

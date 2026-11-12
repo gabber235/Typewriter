@@ -25,6 +25,10 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Motion from services | Named moves as the easy default; developers keep full control over duration and curve; good motion controls in the realm make it easy to add |
 | Others' changes | Values wave slowly; adds and removes use their usual moves plus a chip with who and why, later an avatar |
 | Voice | Between plain and playful: jokes where possible, literal English when it matters |
+| Character | Professional and fun, never sterile; a change that removes something names the character that replaces it |
+| Inspector source | Headings, fields, operations and concepts are declared in Kotlin whenever possible, so extensions can shape them |
+| Keyboard tests | Every built or redone element has a widget test that uses it by keyboard alone, without Tab |
+| Teaching | Concept words explain themselves through a rich tooltip and empty states; no tours |
 | Material | Controls, popovers, tooltips, dialogs and grow or shrink are built on Flutter's widgets layer; Material stays only where Flutter has no primitive yet (text input, selection, Scaffold, tabs) and moves as each one ships |
 
 ## Choices by the author, not confirmed
