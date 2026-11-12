@@ -59,8 +59,8 @@ def stat(v):
 class Rig(K.Rig):
     """K's rig with the step agent on Paper."""
 
-    def __init__(self, label, lag="wall", gate=2):
-        super().__init__(label, clients=1, gate=gate)
+    def __init__(self, label, lag="wall", gate=2, clients=1):
+        super().__init__(label, clients=clients, gate=gate)
         self.label = f"{label}-{int(time.time())}"
         args = "lag=tick" if lag == "tick" else "lag=wall"
         self.paper.jvm.append(f"-javaagent:{AGENT}={args}")

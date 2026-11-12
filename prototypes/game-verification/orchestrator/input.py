@@ -167,13 +167,17 @@ class Bench:
         ev_async = sorted(norm(e, ent, tok) for e in body if e["k"] == "ev" and e["th"] == "async")
         late = sorted(norm(e, ent, tok) for e in after_mark)
         moves = op in ("move", "jump", "fly")
+        # Stepped runs: the client's step acks are payloads on the same connection, not input.
+        body = [e for e in body if not (e["k"] == "pk" and e["n"] == "CustomPayload" and "probe:step" in e["d"])]
         pk = collapse([norm(e, ent, tok) for e in body if e["k"] == "pk" and (moves or e["n"] != "MovePlayer")])
+        ev_st = [e.get("st") for e in body if e["k"] == "ev" and e["n"] not in ("mark", "ground", "breakSpeed") and e["th"] != "async"]
+        pk_st = [e.get("st") for e in body if e["k"] == "pk" and e["n"] not in ("MovePlayer", "CustomPayload")]
         notes = {k: v for k, v in res.items() if k not in ("ok",)}
         raw_ev = [f'{e["n"]}:{e["d"]}' for e in log if e["k"] == "ev"]
         ok = outcome(name, raw_ev, notes, tok)
         held = [int(m) for e in body for m in re.findall(r"held=(\d+)", e["d"])]
         kinds = list(dict.fromkeys(e.split(":", 1)[0] for e in ev + ev_async))
-        return {"op": name, "path": path, "ok": ok, "held": held, "kinds": kinds, "scriptOk": res.get("ok"), "ev": ev, "evAsync": ev_async, "late": late, "pk": pk, "notes": notes,
+        return {"firstEvSt": ev_st[0] if ev_st else None, "firstPkSt": pk_st[0] if pk_st else None, "op": name, "path": path, "ok": ok, "held": held, "kinds": kinds, "scriptOk": res.get("ok"), "ev": ev, "evAsync": ev_async, "late": late, "pk": pk, "notes": notes,
                 "input_s": round(t1 - t0, 4), "mark_s": round(t2 - t1, 4), "total_s": round(t2 - t0, 4),
                 "ticks": res.get("ticks"), "raw": [f'{e["tick"]} {e["th"]} {e["k"]} {e["n"]} {e["d"]}' for e in log if e["n"] not in ("MovePlayer",)], "threads": collapse([e["th"] for e in body if e["k"] == "ev"])}
 

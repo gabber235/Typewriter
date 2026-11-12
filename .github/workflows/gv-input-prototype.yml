@@ -1,30 +1,29 @@
-# Temporary. Measures the stream prototype on a free runner. Only the prototype branch triggers it.
-name: Game verification stream prototype
+# Temporary. Measures the in process input prototype on a free runner. Only the prototype branch triggers it.
+name: Game verification in process input prototype
 
 on:
   push:
-    branches: [proto/gv-stream]
+    branches: [proto/gv-input]
     paths:
       - prototypes/game-verification/**
-      - .github/workflows/gv-stream-prototype.yml
+      - .github/workflows/gv-input-prototype.yml
 
 permissions:
   contents: read
 
 concurrency:
-  group: gv-stream-prototype
+  group: gv-input-prototype
   cancel-in-progress: true
 
 jobs:
   measure:
-    name: ${{ matrix.plan }} ${{ matrix.backend }} ${{ matrix.runner }} ${{ matrix.repeat }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 25
+    name: inproc ${{ matrix.row }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { plan: stream, backend: vulkan, runner: ubuntu-24.04, repeat: 0 }
+        row: [smoke]
     defaults:
       run:
         working-directory: prototypes/game-verification
@@ -41,14 +40,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - name: Install Xvfb and the software renderers
+      - name: Install Xvfb, libXtst and the software renderers
         run: |
-          date +%T
           sudo apt-get update -qq
-          date +%T
           sudo apt-get install -y -qq --no-install-recommends \
             xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libegl-mesa0 libgbm1 mesa-vulkan-drivers libvulkan1 \
-            mesa-utils mesa-utils-bin vulkan-tools python3-numpy python3-pil python3-xlib ffmpeg \
+            mesa-utils mesa-utils-bin vulkan-tools python3-numpy python3-pil python3-xlib libxtst6 \
             libx11-6 libxext6 libxcursor1 libxi6 libxrandr2 libxss1 libxfixes3 libxkbcommon0 libxkbcommon-x11-0 libasound2t64
       - uses: actions/cache@v4
         with:
@@ -69,18 +66,18 @@ jobs:
       - name: Measure
         continue-on-error: true
         env:
-          MATRIX_REPEAT: ${{ matrix.repeat }}
-        run: /usr/bin/python3 orchestrator/ci.py plan ${{ matrix.plan }} --backend ${{ matrix.backend }}
-      - name: Upload results and frames
+          CI_BUDGET_S: "2100"
+        run: /usr/bin/python3 orchestrator/inproc.py ci --row ${{ matrix.row }} --backend vulkan
+      - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stream-${{ matrix.plan }}-${{ matrix.backend }}-${{ runner.arch }}-${{ matrix.repeat }}
+          name: inproc-${{ matrix.row }}
           retention-days: 14
           if-no-files-found: warn
           path: |
             prototypes/game-verification/runs/h.jsonl
             prototypes/game-verification/runs/h-evidence
-            prototypes/game-verification/runs/stream.jsonl
-            prototypes/game-verification/runs/stream-*
+            prototypes/game-verification/runs/inproc.jsonl
+            prototypes/game-verification/runs/inproc
             prototypes/game-verification/runs/n-logs

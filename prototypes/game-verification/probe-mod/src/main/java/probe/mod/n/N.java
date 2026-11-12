@@ -57,6 +57,12 @@ public final class N {
         PayloadTypeRegistry.serverboundPlay().register(Ack.TYPE, Ack.CODEC);
     }
 
+    /** The server tick this client tick follows while stepping, else -1. Render thread. */
+    public static int step() {
+        Integer c = current;
+        return stepping && c != null ? c : -1;
+    }
+
     /** Render thread, inside handlePing. */
     public static void onStepPing(int id) {
         granted.add(id - BASE);

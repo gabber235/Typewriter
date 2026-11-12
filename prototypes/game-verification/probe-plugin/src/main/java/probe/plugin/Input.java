@@ -115,7 +115,7 @@ final class Input implements Listener {
 
     static synchronized void add(String kind, String name, String detail) {
         String th = Bukkit.isPrimaryThread() ? "main" : Thread.currentThread().getName().startsWith("Netty") ? "net" : "async";
-        log.add("{\"seq\":" + (++seq) + ",\"tick\":" + Bukkit.getCurrentTick() + ",\"us\":" + micros() + ",\"th\":\"" + th + "\",\"k\":\"" + kind
+        log.add("{\"seq\":" + (++seq) + ",\"tick\":" + Bukkit.getCurrentTick() + ",\"st\":" + MinecraftServer.getServer().getTickCount() + ",\"tn\":" + q(Thread.currentThread().getName()) + ",\"us\":" + micros() + ",\"th\":\"" + th + "\",\"k\":\"" + kind
                 + "\",\"n\":" + q(name) + ",\"d\":" + q(detail) + "}");
     }
 
@@ -343,6 +343,22 @@ final class Input implements Listener {
                 r.put("flying", p.isFlying());
                 r.put("gt", gameTicks());
                 r.put("age", h.tickCount);
+            }
+            case "in.tabpool" -> {
+                // Suggestion probe: Paper hands every suggestion request to a 4 thread pool; 1 keeps their order.
+                var f = net.minecraft.server.network.ServerGamePacketListenerImpl.class.getDeclaredField("TAB_COMPLETE_EXECUTOR");
+                f.setAccessible(true);
+                var ex = (java.util.concurrent.ThreadPoolExecutor) f.get(null);
+                int n = Integer.parseInt(q.get("n"));
+                if (n < ex.getCorePoolSize()) {
+                    ex.setCorePoolSize(n);
+                    ex.setMaximumPoolSize(n);
+                } else {
+                    ex.setMaximumPoolSize(n);
+                    ex.setCorePoolSize(n);
+                }
+                r.put("core", ex.getCorePoolSize());
+                r.put("max", ex.getMaximumPoolSize());
             }
             case "in.log" -> r.put("log", new RawJson(since(Integer.parseInt(q.getOrDefault("since", "0")))));
             case "in.lag" -> {

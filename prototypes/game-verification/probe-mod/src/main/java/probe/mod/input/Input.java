@@ -145,6 +145,7 @@ public final class Input {
     /** Head of Minecraft.tick. */
     public static void headTick(Minecraft mc) {
         clientTicks++;
+        inTick = true;
         Script s = running;
         if (s == null) return;
         if (s.settleLeft >= 0) return;
@@ -204,12 +205,26 @@ public final class Input {
 
     /** Tail of Minecraft.tick, after the tick end packet. */
     public static void tailTick(Minecraft mc) {
+        inTick = false;
         traceTick(mc);
         Script s = running;
         if (s == null || s.settleLeft < 0) return;
         if (s.settleLeft-- > 0) return;
         running = null;
         s.note("ticks", clientTicks - s.startTick);
+        if (injectTick >= 0) {
+            s.note("injectTick", injectTick - s.startTick);
+            s.note("injectStep", injectStep);
+            s.note("injectN", injectN);
+            s.note("injectUs", injectNanos / 1000);
+            s.note("injectMaxUs", injectMaxNanos / 1000);
+        }
+        if (handledTick >= 0) {
+            s.note("handledDelay", handledTick - injectTick);
+            s.note("handledInTick", handledInTick);
+            s.note("handledFirst", handledKind);
+            s.note("handledN", handledN);
+        }
         s.note("endMicros", micros());
         if (s.markId > 0 && mc.getConnection() != null) ClientPlayNetworking.send(new Mark(s.markId));
         s.done.complete("{\"ok\":" + !s.timedOut + ",\"startMicros\":" + s.startMicros + ",\"markMicros\":" + micros() + s.info + "}");
@@ -268,9 +283,152 @@ public final class Input {
         }
     }
 
+    // ---- in process prototype: injection timing, and handler calls the injected events reach ----
+
+    public static volatile boolean inTick;
+    static int injectTick = -1, injectStep = -1, injectN, handledTick = -1, handledN;
+    static long injectNanos, injectMaxNanos;
+    static boolean handledInTick;
+    static String handledKind;
+
+    /** Head of the client's input handlers (HandledMixin); render thread. */
+    public static void handled(String kind) {
+        if (running == null || injectTick < 0) return;
+        handledN++;
+        if (handledTick >= 0) return;
+        handledTick = clientTicks;
+        handledInTick = inTick;
+        handledKind = kind;
+    }
+
+    /** Wraps a driver: when the first event of the script was injected (client tick, server step) and what each call cost. */
+    static final class Timed implements Keys {
+        final Keys k;
+        Timed(Keys k) { this.k = k; }
+        void t(Runnable r) {
+            if (injectTick < 0) {
+                injectTick = clientTicks;
+                injectStep = probe.mod.n.N.step();
+            }
+            long t0 = System.nanoTime();
+            r.run();
+            long d = System.nanoTime() - t0;
+            injectN++;
+            injectNanos += d;
+            injectMaxNanos = Math.max(injectMaxNanos, d);
+        }
+        public void key(int sc, int kc, boolean down) { t(() -> k.key(sc, kc, down)); }
+        public void text(String s) { t(() -> k.text(s)); }
+        public void button(int b, boolean down) { t(() -> k.button(b, down)); }
+        public void scroll(double y) { t(() -> k.scroll(y)); }
+        public void motion(double x, double y, double dx, double dy) { t(() -> k.motion(x, y, dx, dy)); }
+    }
+
+    /** XTest from inside the client, on its own X connection; events go where a real device's would (focus, pointer, grab). */
+    static final class XTestKeys implements Keys {
+        final Minecraft mc;
+        final X11 x = X11.get();
+        XTestKeys(Minecraft mc) { this.mc = mc; }
+        public void key(int sc, int kc, boolean down) {
+            x.fakeKey(x.keycode(X11.keysym(kc)), down);
+            x.sync();
+        }
+        public void text(String s) {
+            // A person types: one key press and release per character.
+            for (char c : s.toCharArray()) {
+                int code = x.keycode(c);
+                x.fakeKey(code, true);
+                x.fakeKey(code, false);
+            }
+            x.sync();
+        }
+        public void button(int b, boolean down) {
+            x.fakeButton(b, down);
+            x.sync();
+        }
+        public void scroll(double y) {
+            int b = y > 0 ? 4 : 5;
+            x.fakeButton(b, true);
+            x.fakeButton(b, false);
+            x.sync();
+        }
+        public void motion(double px, double py, double dx, double dy) {
+            if (mc.mouseHandler.isMouseGrabbed() && !"fake".equals(grab)) {
+                int ix = (int) Math.round(dx), iy = (int) Math.round(dy);
+                if (ix == 0 && iy == 0) return; // a physical mouse sends no zero motion
+                x.fakeRelative(ix, iy);
+            } else {
+                int[] o = x.origin(Sends.window(mc));
+                x.fakeMotion(o[0] + (int) Math.round(px), o[1] + (int) Math.round(py));
+            }
+            x.sync();
+        }
+    }
+
+    /** XSendEvent to this client's own X window: targeted, so it needs no focus or pointer position. */
+    static final class Sends implements Keys {
+        final Minecraft mc;
+        final X11 x = X11.get();
+        int state;
+        Sends(Minecraft mc) { this.mc = mc; }
+        static long window(Minecraft mc) {
+            int props = SDLVideo.SDL_GetWindowProperties(mc.getWindow().handle());
+            return org.lwjgl.sdl.SDLProperties.SDL_GetNumberProperty(props, SDLVideo.SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+        }
+        int cx() { return (int) Math.round(mc.mouseHandler.xpos()); }
+        int cy() { return (int) Math.round(mc.mouseHandler.ypos()); }
+        public void key(int sc, int kc, boolean down) {
+            int before = state;
+            if (kc == 1073742049) state = down ? state | 1 : state & ~1;
+            x.send(window(mc), down ? X11.KEY_PRESS : X11.KEY_RELEASE, cx(), cy(), before, x.keycode(X11.keysym(kc)));
+            x.sync();
+        }
+        public void text(String s) {
+            long w = window(mc);
+            for (char c : s.toCharArray()) {
+                int code = x.keycode(c);
+                x.send(w, X11.KEY_PRESS, cx(), cy(), state, code);
+                x.send(w, X11.KEY_RELEASE, cx(), cy(), state, code);
+            }
+            x.sync();
+        }
+        public void button(int b, boolean down) {
+            x.send(window(mc), down ? X11.BUTTON_PRESS : X11.BUTTON_RELEASE, cx(), cy(), state, b);
+            x.sync();
+        }
+        public void scroll(double y) {
+            int b = y > 0 ? 4 : 5;
+            long w = window(mc);
+            x.send(w, X11.BUTTON_PRESS, cx(), cy(), state, b);
+            x.send(w, X11.BUTTON_RELEASE, cx(), cy(), state, b);
+            x.sync();
+        }
+        public void motion(double px, double py, double dx, double dy) {
+            x.send(window(mc), X11.MOTION, (int) Math.round(px), (int) Math.round(py), state, 0);
+            x.sync();
+        }
+    }
+
+    static Keys driver(Minecraft mc, String path) {
+        Keys k = switch (path) {
+            case "J1" -> new Sdl(mc);
+            case "XF" -> new XTestKeys(mc);
+            case "XS", "XSf" -> new Sends(mc);
+            default -> new Handlers(mc);
+        };
+        return new Timed(k);
+    }
+
+    static boolean windowPath(String path) {
+        return switch (path) {
+            case "J1", "J2", "XF", "XS", "XSf" -> true;
+            default -> false;
+        };
+    }
+
     // SDL scancodes and keycodes.
     static final int[] T = {InputConstants.KEY_T, 't'}, SLASH = {InputConstants.KEY_SLASH, '/'}, ENTER = {InputConstants.KEY_RETURN, 13},
-            ESC = {InputConstants.KEY_ESCAPE, 27}, F = {InputConstants.KEY_F, 'f'}, E = {InputConstants.KEY_E, 'e'}, W = {InputConstants.KEY_W, 'w'},
+            ESC = {InputConstants.KEY_ESCAPE, 27}, BACKSPACE = {InputConstants.KEY_BACKSPACE, 8}, F = {InputConstants.KEY_F, 'f'}, E = {InputConstants.KEY_E, 'e'}, W = {InputConstants.KEY_W, 'w'},
             SPACE = {InputConstants.KEY_SPACE, ' '}, SHIFT = {InputConstants.KEY_LSHIFT, 1073742049};
 
     static int[] digit(int n) {
@@ -291,6 +449,34 @@ public final class Input {
                 yield "{\"ok\":true,\"focused\":" + mc.getWindow().isFocused() + ",\"grabbed\":" + mc.mouseHandler.isMouseGrabbed() + "}";
             }
             case "in.run" -> run(mc, p);
+            case "in.xsetup" -> {
+                // In process X setup: own connection, optional real focus on the own window, pointer to its middle,
+                // and an optional first click (XTest or XSendEvent) so the game takes a real grab.
+                CompletableFuture<String> f = new CompletableFuture<>();
+                mc.execute(() -> {
+                    try {
+                        X11 x = X11.get();
+                        long w = Sends.window(mc);
+                        int[] o = x.origin(w);
+                        int cx = mc.getWindow().getScreenWidth() / 2, cy = mc.getWindow().getScreenHeight() / 2;
+                        if ("1".equals(p.get("focus"))) x.focus(w);
+                        if (!"0".equals(p.get("pointer"))) x.fakeMotion(o[0] + cx, o[1] + cy);
+                        String click = p.getOrDefault("click", "");
+                        if (click.equals("xtest")) {
+                            x.fakeButton(1, true);
+                            x.fakeButton(1, false);
+                        } else if (click.equals("send")) {
+                            x.send(w, X11.BUTTON_PRESS, cx, cy, 0, 1);
+                            x.send(w, X11.BUTTON_RELEASE, cx, cy, 0, 1);
+                        }
+                        x.sync();
+                        f.complete("{\"ok\":true,\"display\":" + q(x.name) + ",\"window\":" + w + ",\"origin\":[" + o[0] + "," + o[1] + "]}");
+                    } catch (Throwable t) {
+                        f.complete("{\"ok\":false,\"error\":" + q(t.toString()) + "}");
+                    }
+                });
+                yield f.get(10, TimeUnit.SECONDS);
+            }
             case "in.state" -> {
                 CompletableFuture<String> f = new CompletableFuture<>();
                 mc.execute(() -> f.complete(state(mc, p)));
@@ -322,6 +508,9 @@ public final class Input {
         mc.execute(() -> {
             s.startTick = clientTicks;
             s.startMicros = micros();
+            injectTick = injectStep = handledTick = -1;
+            injectN = handledN = 0;
+            injectNanos = injectMaxNanos = 0;
             running = s;
         });
         return s.done.get(60, TimeUnit.SECONDS);
@@ -332,9 +521,15 @@ public final class Input {
         String op = p.get("op");
         Script s = new Script();
         s.markId = Integer.parseInt(p.getOrDefault("mark", "0"));
-        boolean keys = path.equals("J1") || path.equals("J2");
-        Keys k = path.equals("J1") ? new Sdl(mc) : new Handlers(mc);
+        boolean keys = windowPath(path);
+        Keys k = driver(mc, path);
         Options o = mc.options;
+        if (p.containsKey("atStep")) {
+            // Every client starts its input on the same server step (cross talk runs).
+            int at = Integer.parseInt(p.get("atStep"));
+            s.add((mc2, t) -> probe.mod.n.N.step() < 0 || probe.mod.n.N.step() >= at);
+            s.now(() -> s.note("startStep", probe.mod.n.N.step()));
+        }
         switch (op) {
             case "chat" -> {
                 String text = p.get("text");
@@ -399,6 +594,28 @@ public final class Input {
                     s.now(() -> mc.getConnection().send(new ServerboundCommandSuggestionPacket(4242, "/" + text)));
                 }
                 int[] waited = {0};
+                int retryAfter = i(p, "retry", 0);
+                if (retryAfter > 0 && keys) {
+                    // What a person does when no list shows: delete the last character and type it again.
+                    boolean[] got = {false};
+                    s.add((mc2, t) -> {
+                        waited[0]++;
+                        got[0] = suggestions(mc).contains(want);
+                        return got[0] || waited[0] >= retryAfter;
+                    });
+                    s.add((mc2, t) -> {
+                        if (!got[0]) {
+                            s.note("retried", true);
+                            k.key(BACKSPACE[0], BACKSPACE[1], true);
+                            k.key(BACKSPACE[0], BACKSPACE[1], false);
+                        }
+                        return true;
+                    });
+                    s.add((mc2, t) -> {
+                        if (!got[0]) k.text(text.substring(text.length() - 1));
+                        return true;
+                    });
+                }
                 s.until("suggestions", () -> {
                     waited[0]++;
                     return suggestions(mc).contains(want);
@@ -632,6 +849,41 @@ public final class Input {
                 s.waitTicks(i(p, "after", 6));
                 s.now(() -> s.note("pos", String.format(Locale.ROOT, "%.2f,%.2f,%.2f", mc.player.getX(), mc.player.getY(), mc.player.getZ())));
             }
+            case "cross" -> {
+                // Cross talk probe: a number key, a sneak held for a client specific time, a turn by a client
+                // specific angle, then a chat line with the client's token. Every client runs it at the same step.
+                int n = i(p, "n");
+                int hold = i(p, "hold");
+                double turn = d(p, "turn");
+                String tok = p.get("tok");
+                float[] yaw0 = {0};
+                press(s, k, digit(n));
+                s.waitTicks(2);
+                s.now(() -> k.key(SHIFT[0], SHIFT[1], true));
+                s.waitTicks(hold);
+                s.now(() -> k.key(SHIFT[0], SHIFT[1], false));
+                s.waitTicks(1);
+                s.now(() -> {
+                    yaw0[0] = mc.player.getYRot();
+                    if (!path.equals("XF")) k.motion(mc.mouseHandler.xpos(), mc.mouseHandler.ypos(), 0, 0);
+                    double ss = mc.options.sensitivity().get() * 0.6F + 0.2F;
+                    double dx = turn / (ss * ss * ss * 8.0 * 0.15);
+                    k.motion(mc.mouseHandler.xpos() + dx, mc.mouseHandler.ypos(), dx, 0);
+                });
+                s.waitTicks(2);
+                s.now(() -> s.note("turned", Math.round((mc.player.getYRot() - yaw0[0]) * 100) / 100.0));
+                press(s, k, T);
+                s.until("chat screen", () -> mc.gui.screen() instanceof ChatScreen, 10);
+                s.now(() -> k.text("x" + n + " " + tok));
+                press(s, k, ENTER);
+                s.waitTicks(2);
+                s.now(() -> {
+                    s.note("slot", mc.player.getInventory().getSelectedSlot());
+                    s.note("screenAfter", screenName(mc));
+                    s.note("focused", mc.getWindow().isFocused());
+                    s.note("grabbed", mc.mouseHandler.isMouseGrabbed());
+                });
+            }
             default -> throw new IllegalArgumentException("unknown op " + op);
         }
         return start(mc, s);
@@ -657,9 +909,9 @@ public final class Input {
             float dyaw = net.minecraft.util.Mth.wrapDegrees(yaw - mc.player.getYRot());
             float dpitch = pitch - mc.player.getXRot();
             switch (path) {
-                case "J1", "J2" -> {
+                case "J1", "J2", "XF", "XS", "XSf" -> {
                     // The first motion after a grab only sets the cursor (ignoreFirstMove); a person's mouse sends many.
-                    k.motion(mc.mouseHandler.xpos(), mc.mouseHandler.ypos(), 0, 0);
+                    if (!path.equals("XF")) k.motion(mc.mouseHandler.xpos(), mc.mouseHandler.ypos(), 0, 0);
                     double ss = mc.options.sensitivity().get() * 0.6F + 0.2F;
                     double perPixel = ss * ss * ss * 8.0 * 0.15;
                     double dx = dyaw / perPixel, dy = dpitch / perPixel;

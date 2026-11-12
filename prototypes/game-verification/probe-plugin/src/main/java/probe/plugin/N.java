@@ -56,6 +56,9 @@ final class N implements Listener {
     private static long limitMs = 1000;
     private static String subjectName;
     private static UUID subject;
+    /** In process input prototype: more clients in lockstep; the next tick waits for every one of them. */
+    private static final java.util.List<String> otherNames = new java.util.ArrayList<>();
+    private static final Map<UUID, Integer> ackedBy = new ConcurrentHashMap<>();
     private static int awaiting = -1, acked = -1, ackSeen, lastClientTicks;
     private static long quietSince, quietWaitNanos, ackWaitNanos, ackSince;
     private static int hung, stepsTotal, pingsSent, acksReceived;
@@ -101,6 +104,10 @@ final class N implements Listener {
 
     private static void onAck(Player player, int tick, int seen, int clientTicks) {
         acksReceived++;
+        if (!otherNames.isEmpty() && otherNames.contains(player.getName())) {
+            ackedBy.merge(player.getUniqueId(), tick, Math::max);
+            return;
+        }
         if (!player.getUniqueId().equals(subject)) return;
         acked = Math.max(acked, tick);
         lastClientTicks = clientTicks;
@@ -122,6 +129,19 @@ final class N implements Listener {
         ackSince = System.nanoTime();
         ((CraftPlayer) p).getHandle().connection.send(new ClientboundPingPacket(BASE + awaiting));
         pingsSent++;
+        for (String n : otherNames) {
+            Player o = Bukkit.getPlayerExact(n);
+            if (o != null) ((CraftPlayer) o).getHandle().connection.send(new ClientboundPingPacket(BASE + awaiting));
+        }
+    }
+
+    /** Every other subject that is online has acked the awaited tick. */
+    private static boolean othersAcked() {
+        for (String n : otherNames) {
+            Player o = Bukkit.getPlayerExact(n);
+            if (o != null && ackedBy.getOrDefault(o.getUniqueId(), -1) < awaiting) return false;
+        }
+        return true;
     }
 
     private static boolean subjectOnline() {
@@ -149,7 +169,7 @@ final class N implements Listener {
         if (!Step.on || Step.permits() > 0) return;
         if (run == null && !auto) return;
         boolean online = subjectOnline();
-        if (ack && online && acked < awaiting) return;
+        if (ack && online && (acked < awaiting || !othersAcked())) return;
         if (ackSince != 0) {
             ackWaitNanos += System.nanoTime() - ackSince;
             ackSince = 0;
@@ -211,8 +231,12 @@ final class N implements Listener {
                 if (q.containsKey("limitMs")) limitMs = Long.parseLong(q.get("limitMs"));
                 if (q.containsKey("lag")) Step.tickClock = "tick".equals(q.get("lag"));
                 if (q.containsKey("subject")) {
-                    subjectName = q.get("subject");
+                    String[] names = q.get("subject").split(",");
+                    subjectName = names[0];
                     subject = null;
+                    otherNames.clear();
+                    for (int i = 1; i < names.length; i++) otherNames.add(names[i]);
+                    ackedBy.clear();
                 }
                 if (q.containsKey("on")) {
                     boolean on = "1".equals(q.get("on"));
