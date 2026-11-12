@@ -74,8 +74,8 @@ jobs:
         env:
           MATRIX_REPEAT: ${{ matrix.repeat }}
           CI_BUDGET_S: "5100"
-          FRAMES_INSTANCES: "default;w=427x240"
-          FRAMES_ARGS: "--plan-default base@0.1,p@0.1,p+a4@0.1,f@0.1,f+a4@0.1,p@0.1,base@0.1,base@0,p@0,p+a4@0,f@0,base@0.3,p@0.3,p+a4@0.3,f@0.3 --plan-other base@0.1,p@0.1,p+a4@0.1,f@0.1,base@0.1"
+          FRAMES_INSTANCES: "default;w=427x240;w=320x180"
+          FRAMES_ARGS: "--warm 300 --plan-default base@0.1,p@0.1,p+a4@0.1,base@0.1,p+a4@0.1,p@0.1,base@0.1,base@0,p@0,p+a4@0,base@0,p+a4@0,p@0,base@0,base@0.3,p@0.3,p+a4@0.3,base@0.3,p+a4@0.3,p@0.3,base@0.3 --plan-other base@0.1,p@0.1,p+a4@0.1,base@0.1,p+a4@0.1,p@0.1,base@0.1,base@0,p@0,p+a4@0,base@0,p+a4@0,p@0,base@0,base@0.3,p@0.3,p+a4@0.3,base@0.3,p+a4@0.3,p@0.3,base@0.3"
         run: /usr/bin/python3 orchestrator/ci.py plan ${{ matrix.plan }} --backend ${{ matrix.backend }}
       - name: Upload results and frames
         if: always()
