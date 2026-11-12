@@ -29,8 +29,8 @@ HOTBAR_FB = "670,860,1050,960"
 
 
 class Ctx:
-    def __init__(self, s, rep, gate):
-        self.s, self.rep, self.gate = s, rep, gate
+    def __init__(self, s, rep, gate, perceive=False):
+        self.s, self.rep, self.gate, self.perceive = s, rep, gate, perceive
         self.S, self.C, self.p = s.S, s.C, s.p
         self.ping = 500000 + rep * 10000
         self.vals = {}
@@ -123,17 +123,33 @@ def world_runs(f, needle):
     return [w for w in f["world"] if needle in w["t"]]
 
 
-def a2(c, q, ctx):
+def a2p(c, q, ctx):
+    """A2 read from a perceive frame: extract and submit ran, the GPU draw did not (P11)."""
+    return a2(c, q, ctx, perceive=1)
+
+
+def a2r(c, q, ctx):
+    """The record's own legibility rules (Stream.snapshot) on the last perceive frame, for the text kinds."""
     k, t = q["kind"], q.get("t")
+    if k not in ("title", "chat", "bar", "boss", "sidebar", "any_text", "wtext"):
+        return None, {}
+    runs = c("st.judge")["runs"]
+    hit = [r for r in runs if t in r[1] and (k != "wtext" or r[0] in ("world", "nametag"))]
+    return bool(hit), {"runs": hit[:2]}
+
+
+def a2(c, q, ctx, perceive=0):
+    k, t = q["kind"], q.get("t")
+    pf = {"perceive": 1} if perceive else {}
     if k == "sound":
         since = ctx.vals.get("sound_since", 0)
         ss = [x for x in c("sounds", since=since)["sounds"] if q["id"] in x["id"]]
         return any(x["effective"] > 0.01 for x in ss), {"sounds": ss[:2]}
     if k == "block":
-        b = c("drawnBlock", x=q["x"], y=q["y"], z=q["z"], frames=1)
+        b = c("drawnBlock", x=q["x"], y=q["y"], z=q["z"], frames=1, **pf)
         v = b["state"] == q["block"] and b["compiled"] and b["sectionVisible"] and b["inFrustum"] and b["meshNewSinceChange"]
         return bool(v), b
-    f = c("drawn", frames=1)
+    f = c("drawn", frames=1, **pf)
     if k in ("title", "chat", "bar", "boss", "sidebar"):
         run = gui_run(f, t)
         if not run:
@@ -461,15 +477,32 @@ def run_scene(ctx, sc, shots):
     ctx.barrier()
     if sc.wait:
         time.sleep(sc.wait)
-    C("draw", frames=sc.settle)
     timing = {}
-    row = {"scene": sc.id, "name": sc.name, "truth": sc.truth, "rep": ctx.rep, "gate": ctx.gate, "verdicts": {}, "details": {}}
+    row = {"scene": sc.id, "name": sc.name, "truth": sc.truth, "rep": ctx.rep, "gate": ctx.gate, "perceive": ctx.perceive, "verdicts": {}, "details": {}}
+    if ctx.perceive:
+        # P11: the scene settles on perceive frames only, A2 and the record rules read a perceive frame first.
+        C("perceive", frames=sc.settle)
+        for name, fn in (("A2p", a2p), ("A2r", a2r)):
+            t0 = time.perf_counter()
+            try:
+                v, d = fn(c, q, ctx)
+            except Exception as e:
+                v, d = "error", {"error": str(e)}
+            timing[name] = (time.perf_counter() - t0) * 1000
+            row["verdicts"][name] = v
+            row["details"][name] = d
+    else:
+        C("draw", frames=sc.settle)
+    # Stale after skipped draws: the first drawn frame against the next one, both right away.
+    C("pix.grab", slot="first", frames=1)
+    C("pix.grab", slot="second", frames=1)
+    row["firstVsSecond"] = C("pix.diff", a="first", b="second", thr=8)["count"]
     t0 = time.perf_counter()
     C("pix.grab", slot="now", frames=1)
     timing["grab"] = (time.perf_counter() - t0) * 1000
     if shots and ctx.rep == 0:
         FRAMES.mkdir(parents=True, exist_ok=True)
-        tag = f"s{sc.id}" + (f"-gate{ctx.gate}" if ctx.gate else "")
+        tag = f"s{sc.id}" + (f"-gate{ctx.gate}" if ctx.gate else "") + ("-perceive" if ctx.perceive else "")
         C("pix.png", slot="now", path=str(FRAMES / f"{tag}.png"))
         C("pix.mask", a="base", b="now", path=str(FRAMES / f"{tag}-diffmask.png"))
     for name, fn in (("A1", a1), ("A2", a2), ("A3", a3), ("A4", a4)):
@@ -504,7 +537,7 @@ def cmd_battery(a):
     only = set(a.only.split(",")) if a.only else None
     scenes = [s for s in scene_list() if not only or s.id in only]
     rows = []
-    with Session(f"a-battery-gate{a.gate}", rd=3, max_runtime=3000, keep=a.keep) as s:
+    with Session(f"a-battery-gate{a.gate}{'-perceive' if a.perceive else ''}", rd=3, max_runtime=3000, keep=a.keep) as s:
         cat = s.C("category", src="HOSTILE", v=1)
         assert cat["master"] == 0.0, cat
         s.C("prio")
@@ -515,12 +548,13 @@ def cmd_battery(a):
             s.C("gate", mode=a.gate, parkMicros=2000)
         load0 = os.getloadavg()[0]
         for rep in range(a.reps):
-            ctx = Ctx(s, rep, a.gate)
+            ctx = Ctx(s, rep, a.gate, a.perceive)
             ctx.client = s.C
             for sc in scenes:
                 row = run_scene(ctx, sc, a.shots)
                 row["at"] = time.time()
                 row["load"] = os.getloadavg()[0]
+                row["label"] = a.label
                 rows.append(row)
                 ms = {k: round(v) for k, v in row["timing"].items()}
                 print(rep, sc.id.ljust(4), "truth", str(sc.truth).ljust(5), " ".join(f"{k}:{mark(v, sc.truth):2}" for k, v in row["verdicts"].items()), ms, flush=True)
@@ -532,19 +566,22 @@ def cmd_battery(a):
 
 def cmd_flex(a):
     scenes = [s for s in flex_list() if a.reps == 1 or s.id != "t1"]
-    with Session("a-flex", rd=3, keep=False) as s:
+    with Session(f"a-flex{'-perceive' if a.perceive else ''}", rd=3, keep=False) as s:
         s.C("prio")
         time.sleep(a.wait_toast)
         s.C("clearToasts")
         s.C("clearChat")
+        if a.gate:
+            s.C("gate", mode=a.gate, parkMicros=2000)
         for rep in range(a.reps):
-            ctx = Ctx(s, rep, 0)
+            ctx = Ctx(s, rep, a.gate, a.perceive)
             ctx.client = s.C
             for sc in scenes:
                 row = run_scene(ctx, sc, a.shots)
                 row["at"] = time.time()
                 row["load"] = os.getloadavg()[0]
                 row["set"] = "flex"
+                row["label"] = a.label
                 print(rep, sc.id.ljust(4), "truth", str(sc.truth).ljust(5), " ".join(f"{k}:{mark(v, sc.truth):2}" for k, v in row["verdicts"].items()), {k: round(v) for k, v in row["timing"].items()}, flush=True)
                 with open(OUT, "a") as f:
                     f.write(json.dumps(row) + "\n")
@@ -797,8 +834,13 @@ def main():
     b.add_argument("--shots", action="store_true")
     b.add_argument("--keep", action="store_true")
     b.add_argument("--wait-toast", type=float, default=8)
+    b.add_argument("--perceive", action="store_true")
+    b.add_argument("--label", default="mac")
     f = sub.add_parser("flex")
     f.add_argument("--reps", type=int, default=1)
+    f.add_argument("--gate", type=int, default=0)
+    f.add_argument("--perceive", action="store_true")
+    f.add_argument("--label", default="mac")
     f.add_argument("--shots", action="store_true")
     f.add_argument("--wait-toast", type=float, default=2)
     r = sub.add_parser("ride")

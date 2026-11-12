@@ -42,7 +42,14 @@ VARIANTS = {
     "dirty": dict(stream=True, every=1, wake=0, dirty=1, verdict="stream"),
     "demand+dirty": dict(stream=True, every=0, wake=0, dirty=1, verdict="stream"),
     "demand+dirty+wake": dict(stream=True, every=0, wake=1, dirty=1, verdict="stream"),
+    # Perceive without drawing (P11): every tick runs extract and submit, no GPU draw.
+    "p": dict(stream=True, every=1, wake=0, nodraw=1, verdict="stream"),
+    # As p, and 10 percent of requirements ask A4 once: pixels the token owns (a drawn frame with and without it).
+    "p+a4": dict(stream=True, every=1, wake=0, nodraw=1, a4=0.1, verdict="stream"),
+    # A frame every tick, and the same 10 percent ask A4 (the pair costs two more drawn frames).
+    "f+a4": dict(stream=True, every=1, wake=0, a4=0.1, verdict="stream"),
 }
+A4_MIN_PX = 30  # spike A: pixels that must differ to call a thing present
 HDR = struct.Struct(">qiqqqqqqqq")  # seq tick clientTick frameNo tickEnd frameStart frameEnd build a4 sent
 
 
@@ -82,11 +89,12 @@ class ClientStream:
         self.srv.bind(("127.0.0.1", 0))
         self.srv.listen(2)
         self.port = self.srv.getsockname()[1]
-        self.label, self.token, self.n, self.ticks = None, None, 0, []
+        self.label, self.token, self.n, self.ticks, self.need_px = None, None, 0, [], False
         self.seen = None  # (records until seen, tick, text, recv ns)
         self.echo = {}  # barrier id -> (recv ns, client handled ns, records so far, seen so far)
         self.log = []  # (tick, recv ns, client tickEnd, frameStart, sent, nbytes)
         self.records = self.bytes = self.resets = 0
+        self.px = []
         threading.Thread(target=self.accept, daemon=True).start()
 
     def accept(self):
@@ -115,7 +123,9 @@ class ClientStream:
                         self.echo[bid] = (t, at, self.n, self.seen is not None)
                     elif typ == 3:
                         self.label, _ = utf(b, 0)
-                        self.token = self.label.split(":", 1)[1] if ":" in self.label else None
+                        parts = self.label.split(":")
+                        self.token = parts[1] if len(parts) > 1 else None
+                        self.need_px = len(parts) > 2 and parts[2] == "a4"
                         self.n, self.seen, self.ticks = 0, None, []
                         self.resets += 1
                     G.notify_all()
@@ -131,12 +141,18 @@ class ClientStream:
         self.log.append((h[1], t, h[4], h[5], h[9], len(b) + 5))
         if self.seen is None and self.token:
             i = HDR.size
+            px = struct.unpack_from(">i", b, i)[0]
+            i += 4
             runs = struct.unpack_from(">h", b, i)[0]
             i += 2
             for _ in range(runs):
                 tag, i = utf(b, i)
                 text, i = utf(b, i)
                 if tag == "chat" and self.token in text:
+                    if self.need_px:
+                        self.px.append(px)
+                        if px < A4_MIN_PX:
+                            break  # drawn legibly but owns no visible pixels: not seen
                     self.seen = (self.n, h[1], text, t)
                     break
 
@@ -211,7 +227,7 @@ class FShared(T.Shared):
                 c.C("st.on", port=self.streams[c.name].port, a4=0)
             elif not v["stream"] and self.stream_on:
                 c.C("st.off")
-            c.C("st.mode", every=v["every"], dirty=v.get("dirty", 0))
+            c.C("st.mode", every=v["every"], dirty=v.get("dirty", 0), nodraw=v.get("nodraw", 0))
             c.C("n.wake", barriers=v["wake"])
         self.stream_on = v["stream"]
         self.variant = v
@@ -226,10 +242,14 @@ class FShared(T.Shared):
     def attempt_stream(self, cs, req):
         S = self.S
         tok = f"t{req['id']}x{random.randrange(10**9)}"
-        label = f"{req['id']}:{tok}"
+        ask = bool(self.variant.get("a4")) and req["id"] % 10 == 7  # exactly 10 percent, the same ids in every job
+        label = f"{req['id']}:{tok}" + (":a4" if ask else "")
         for c in cs:
             S.D("k.wipe", player=c.name, scope="full")
-            c.C("st.begin", name=label)
+            if ask:
+                c.C("st.begin", name=label, a4=tok)
+            else:
+                c.C("st.begin", name=label)
         streams = [self.streams[c.name] for c in cs]
         out = {}
 
@@ -283,7 +303,7 @@ class FShared(T.Shared):
         seen_ticks = [(s.seen[1] - r["startTick"]) if s.seen and s.label == label else None for s in streams]
         texts = [s.seen[2] if s.seen and s.label == label else None for s in streams]
         rec_ticks = [[t - r["startTick"] for t in s.ticks[:k]] for s, k in zip(streams, counts)]
-        return {"pass": verdict, "ticks": r["endTick"] - r["startTick"], "counts": counts, "seen_ticks": seen_ticks,
+        return {"pass": verdict, "a4": ask, "ticks": r["endTick"] - r["startTick"], "counts": counts, "seen_ticks": seen_ticks,
                 "texts": texts, "rec_ticks": rec_ticks, "echo_ms": echo_ms, "lost_quiet_ms": r["lostQuietMicros"] / 1000, "lost_ack_ms": r["lostAckMicros"] / 1000}
 
 
@@ -304,6 +324,8 @@ def measure(topo, inst, vname, mix, seed, n, keep_rows):
     cpu0 = {k: T.proc_cpu(p) for k, p in pids.items()}
     rec0 = {k: (s.records, s.bytes) for k, s in topo.streams.items()}
     cs0 = {c.name: c.C("st.stats") for c in topo.clients} if topo.stream_on else {}
+    fs0 = {c.name: c.C("frames.stats") for c in topo.clients}
+    px0 = {k: len(s.px) for k, s in topo.streams.items()}
     b0 = T.machine_busy()
     for c in topo.clients:
         c.C("n.packets", clear=1)
@@ -339,11 +361,24 @@ def measure(topo, inst, vname, mix, seed, n, keep_rows):
     )
     if topo.stream_on:
         cs1 = {c.name: c.C("st.stats") for c in topo.clients}
-        s["client_stats"] = {k: {f: cs1[k][f] - cs0[k].get(f, 0) for f in ("records", "skipped", "framesDrawn", "barriersEchoed", "buildNanos")} for k in cs1}
+        s["client_stats"] = {k: {f: cs1[k].get(f, 0) - cs0[k].get(f, 0) for f in ("records", "skipped", "framesDrawn", "barriersEchoed", "buildNanos", "a4Pairs", "a4Draws", "a4Nanos")} for k in cs1}
         s["frames_per_step"] = round(sum(v["framesDrawn"] for v in s["client_stats"].values()) / 4 / max(1, steps), 3)
     s["cores"] = {k: (round(v / wall, 2) if v is not None else None) for k, v in s["cpu_s"].items()}
+    fs1 = {c.name: c.C("frames.stats") for c in topo.clients}
+    fr = {}
+    for kind in ("skip", "perceive", "draw", "extract"):
+        cnt = sum(fs1[k][kind][0] - fs0[k][kind][0] for k in fs1)
+        ns = sum(fs1[k][kind][1] - fs0[k][kind][1] for k in fs1)
+        fr[kind] = {"per_step": round(cnt / 4 / max(1, steps), 3), "ms": round(ns / max(1, cnt) / 1e6, 3), "n": cnt}
+    nd = {f: sum(fs1[k]["nodraw"][f] - fs0[k]["nodraw"][f] for k in fs1) for f in ("frames", "nanos", "submitNanos", "compileNanos", "occlusionNanos")}
+    fr["nodraw_ms"] = {f: round(nd[f] / max(1, nd["frames"]) / 1e6, 3) for f in ("nanos", "submitNanos", "compileNanos", "occlusionNanos")}
+    s["frames"] = fr
+    cli = [v for k, v in s["cpu_s"].items() if k != "paper" and v is not None]
+    s["client_cpu_ms_per_step"] = round(sum(cli) / max(1, len(cli)) * 1000 / max(1, steps), 3) if cli else None
+    s["a4_asked"] = sum(1 for r in ok if r.get("a4"))
+    s["a4_px"] = stat([x for k, st in topo.streams.items() for x in st.px[px0[k]:]], 0)
     # Per requirement, compact: id, pass, wrong, seconds, records until the verdict per member, seen tick per member, text.
-    s["rows"] = [[r["id"], r.get("pass"), r.get("wrong"), r["s"], r.get("counts"), r.get("seen_ticks"), r.get("texts"), r.get("rec_ticks")] for r in sorted(ok, key=lambda r: r["id"])] if keep_rows else None
+    s["rows"] = [[r["id"], r.get("pass"), r.get("wrong"), r["s"], r.get("counts"), r.get("seen_ticks"), r.get("texts"), r.get("rec_ticks"), r.get("a4")] for r in sorted(ok, key=lambda r: r["id"])] if keep_rows else None
     return s
 
 

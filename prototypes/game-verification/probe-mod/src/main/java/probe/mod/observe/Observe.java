@@ -41,6 +41,19 @@ public final class Observe {
         get(f);
     }
 
+    /** Perceive frames: extract and submit without the GPU draw. */
+    private static void perceive(int frames) throws Exception {
+        if (frames <= 0) return;
+        CompletableFuture<Void> f = new CompletableFuture<>();
+        Speed.perceiveThen(frames, () -> f.complete(null));
+        get(f);
+    }
+
+    private static void frames(Map<String, String> p) throws Exception {
+        if ("1".equals(p.get("perceive"))) perceive(i(p, "frames", 1));
+        else draw(i(p, "frames", 1));
+    }
+
     private static BlockPos pos(Map<String, String> p) {
         return new BlockPos(Integer.parseInt(p.get("x")), Integer.parseInt(p.get("y")), Integer.parseInt(p.get("z")));
     }
@@ -65,16 +78,20 @@ public final class Observe {
         return switch (name) {
             case "held" -> onClient(mc, () -> Held.json(mc));
             case "heldBlock" -> onClient(mc, () -> Held.block(mc, pos(p)));
+            case "perceive" -> {
+                perceive(i(p, "frames", 1));
+                yield "{\"ok\":true" + ms(t0) + "}";
+            }
             case "draw" -> {
                 draw(i(p, "frames", 1));
                 yield "{\"ok\":true" + ms(t0) + "}";
             }
             case "drawn" -> {
-                draw(i(p, "frames", 1));
+                frames(p);
                 yield Drawn.frameJson();
             }
             case "drawnBlock" -> {
-                draw(i(p, "frames", 1));
+                frames(p);
                 yield onClient(mc, () -> Drawn.blockJson(mc, pos(p)));
             }
             case "sounds" -> Drawn.soundsJson(Long.parseLong(p.getOrDefault("since", "0")));

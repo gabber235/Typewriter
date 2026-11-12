@@ -46,7 +46,7 @@ import probe.mod.streammix.ChatScreenAccessor;
  */
 public final class Stream {
     public static final byte RECORD = 1, BARRIER = 2, RESET = 3;
-    private static final int IDLE = 0, BASE = 1, A4 = 2;
+    private static final int IDLE = 0, BASE = 1, A4 = 2, A4BASE = 3;
 
     static volatile boolean on;
     static volatile boolean a4;
@@ -56,6 +56,11 @@ public final class Stream {
     static volatile boolean demand;
     // dirty: a tick draws only when a game packet was handled since the last frame drawn.
     static volatile boolean dirty;
+    // Perceive without drawing: record frames run extract and submit only; A4 pairs are the only drawn frames.
+    static volatile boolean nodraw;
+    // A4 asked by the current requirement's check, once: pixels owned by the first legible run holding this text.
+    static volatile String a4Text;
+    static long a4Pairs, a4Draws;
     public static volatile long processed;
     private static long drawnUpTo;
     static volatile int[] watchIds = new int[0];
@@ -79,7 +84,8 @@ public final class Stream {
     private static Frames.Img[] hideImgs;
     private static volatile int grabsDone;
     private static int hideIdx;
-    private static boolean hideWanted, hideDrawing;
+    private static boolean hideWanted, hideDrawing, hideIsText;
+    private static String hideTextNow;
     private static long a4Start;
 
     // Input helpers driven at client tick end.
@@ -107,6 +113,7 @@ public final class Stream {
         final List<String> suggestions = new ArrayList<>();
         final List<EntRow> ents = new ArrayList<>();
         int[] pixels;
+        int textPx = -1;
         List<Integer> barriers;
         List<Long> barrierAt;
     }
@@ -146,56 +153,69 @@ public final class Stream {
 
     /** Step grants wait while an A4 pair is in flight, so both frames see the same tick. */
     public static boolean holding() {
-        return on && state == A4;
+        return on && (state == A4 || state == A4BASE);
     }
 
-    /** Speed.decideFrame: does the stream need this frame drawn. */
-    public static boolean frameWanted() {
-        if (!on) return false;
+    /** Speed.decideFrame: what the stream needs from this frame (Speed.SKIP, PERCEIVE or DRAW). */
+    public static int frameWanted() {
+        if (!on) return probe.mod.speed.Speed.SKIP;
         if (state == IDLE && want) {
             want = false;
             state = BASE;
             drawnUpTo = processed;
             frameStartNanos = System.nanoTime();
-            return true;
+            return nodraw ? probe.mod.speed.Speed.PERCEIVE : probe.mod.speed.Speed.DRAW;
+        }
+        if (state == A4BASE) {
+            // The record frame held something an A4 check asks about: draw the same tick for real.
+            state = BASE;
+            a4Draws++;
+            return probe.mod.speed.Speed.DRAW;
         }
         if (state == A4 && hideWanted) {
             hideWanted = false;
             hideDrawing = true;
-            Drawn.hideEntity = hideIds[hideIdx];
-            return true;
+            if (hideIsText) Drawn.hideText = hideTextNow;
+            else Drawn.hideEntity = hideIds[hideIdx];
+            a4Draws++;
+            return probe.mod.speed.Speed.DRAW;
         }
-        return false;
+        return probe.mod.speed.Speed.SKIP;
     }
 
-    /** Speed.afterFrame, after Drawn.endFrame, every loop. */
-    public static void afterFrame(Minecraft mc, boolean rendered) {
+    /** Speed.afterFrame, after Drawn.endFrame, every loop. outcome is Speed.SKIP, PERCEIVE or DRAW. */
+    public static void afterFrame(Minecraft mc, int outcome) {
         if (!on) return;
+        boolean drawn = outcome == probe.mod.speed.Speed.DRAW, seen = outcome != probe.mod.speed.Speed.SKIP;
         if (state == A4) {
-            if (rendered && hideDrawing) {
+            if (drawn && hideDrawing) {
                 hideDrawing = false;
                 Drawn.hideEntity = Integer.MIN_VALUE;
+                Drawn.hideText = null;
                 int k = hideIdx++;
                 Frames.grab(mc, img -> {
                     hideImgs[k] = img;
                     grabsDone++;
                 });
-                if (hideIdx < hideIds.length) hideWanted = true;
+                if (hideIdx < hideImgs.length) hideWanted = true;
             }
-            if (baseImg != null && grabsDone == hideIds.length) {
-                int[] px = new int[hideIds.length];
+            if (baseImg != null && grabsDone == hideImgs.length) {
+                int[] px = new int[hideImgs.length];
                 for (int i = 0; i < px.length; i++) px[i] = Frames.diff(baseImg, hideImgs[i], 8, null).count();
-                snap.pixels = px;
-                a4NanosSum += System.nanoTime() - a4Start;
+                if (hideIsText) snap.textPx = px[0];
+                else snap.pixels = px;
                 long a4n = System.nanoTime() - a4Start;
+                a4NanosSum += a4n;
+                a4Pairs++;
                 finish(snap, a4n);
                 snap = null;
                 baseImg = null;
+                hideIsText = false;
                 state = IDLE;
             }
             return;
         }
-        if (!rendered || (state != BASE && state != IDLE)) return;
+        if (!seen || state != BASE) return;
         framesDrawn++;
         long t0 = System.nanoTime();
         Snap s = snapshot(mc);
@@ -205,19 +225,38 @@ public final class Stream {
         barriers.clear();
         barrierAt.clear();
         s.buildNanos = System.nanoTime() - t0;
+        String ask = a4Text;
+        boolean textHit = false;
+        if (ask != null) for (Run r : s.runs) if (r.text.contains(ask)) textHit = true;
         List<Integer> drawnIds = new ArrayList<>();
         if (a4) for (EntRow e : s.ents) if (e.drawn) drawnIds.add(e.id);
-        if (drawnIds.isEmpty()) {
+        if (!textHit && drawnIds.isEmpty()) {
             finish(s, 0);
             state = IDLE;
             return;
         }
+        if (!drawn) {
+            // Perceived only: put the barriers back, drop this record and draw the same tick (step grants wait).
+            barriers.addAll(0, s.barriers);
+            barrierAt.addAll(0, s.barrierAt);
+            a4Start = System.nanoTime();
+            state = A4BASE;
+            return;
+        }
         snap = s;
-        hideIds = drawnIds.stream().mapToInt(Integer::intValue).toArray();
-        hideImgs = new Frames.Img[hideIds.length];
+        if (textHit) {
+            a4Text = null; // asked once
+            hideIsText = true;
+            hideTextNow = ask;
+            hideIds = new int[0];
+            hideImgs = new Frames.Img[1];
+        } else {
+            hideIds = drawnIds.stream().mapToInt(Integer::intValue).toArray();
+            hideImgs = new Frames.Img[hideIds.length];
+        }
         grabsDone = 0;
         hideIdx = 0;
-        a4Start = System.nanoTime();
+        if (!nodraw) a4Start = System.nanoTime();
         baseImg = null;
         Frames.grab(mc, img -> baseImg = img);
         hideWanted = true;
@@ -360,6 +399,7 @@ public final class Stream {
     private static byte[] content(Minecraft mc, Snap s) throws IOException {
         ByteArrayOutputStream bo = new ByteArrayOutputStream(512);
         DataOutputStream o = new DataOutputStream(bo);
+        o.writeInt(s.textPx);
         o.writeShort(s.runs.size());
         for (Run r : s.runs) {
             o.writeUTF(r.tag);
@@ -464,7 +504,7 @@ public final class Stream {
     private static String stats() {
         return "{\"records\":" + records + ",\"skipped\":" + skipped + ",\"contentBytes\":" + contentBytes + ",\"buildNanos\":" + buildNanosSum
             + ",\"a4Nanos\":" + a4NanosSum + ",\"framesDrawn\":" + framesDrawn + ",\"barriersEchoed\":" + barriersEchoed + ",\"seq\":" + seq
-            + ",\"queued\":" + queue.size() + "}";
+            + ",\"queued\":" + queue.size() + ",\"a4Pairs\":" + a4Pairs + ",\"a4Draws\":" + a4Draws + ",\"nodraw\":" + nodraw + "}";
     }
 
     public static String handle(String name, Map<String, String> p, Minecraft mc) throws Exception {
@@ -486,7 +526,7 @@ public final class Stream {
                     chat.clear();
                     barriers.clear();
                     barrierAt.clear();
-                    records = skipped = contentBytes = buildNanosSum = a4NanosSum = framesDrawn = barriersEchoed = 0;
+                    records = skipped = contentBytes = buildNanosSum = a4NanosSum = framesDrawn = barriersEchoed = a4Pairs = a4Draws = 0;
                     on = true;
                     return 0;
                 });
@@ -495,12 +535,15 @@ public final class Stream {
             case "st.mode" -> {
                 every = !"0".equals(p.get("every"));
                 dirty = "1".equals(p.get("dirty"));
-                return "{\"ok\":true,\"every\":" + every + ",\"dirty\":" + dirty + "}";
+                nodraw = "1".equals(p.get("nodraw"));
+                return "{\"ok\":true,\"every\":" + every + ",\"dirty\":" + dirty + ",\"nodraw\":" + nodraw + "}";
             }
             case "st.begin" -> {
                 // A requirement starts on this client: clear the chat, reset the stream, draw from now on.
                 String label = p.getOrDefault("name", "");
+                String ask = p.get("a4");
                 onClient(mc, () -> {
+                    a4Text = ask == null || ask.isEmpty() ? null : ask;
                     mc.gui.hud.getChat().clearMessages(false);
                     chat.clear();
                     lastContent = null;
@@ -564,7 +607,9 @@ public final class Stream {
                 onClient(mc, () -> {
                     on = false;
                     state = IDLE;
+                    a4Text = null;
                     Drawn.hideEntity = Integer.MIN_VALUE;
+                    Drawn.hideText = null;
                     return 0;
                 });
                 queue.add(STOP);
@@ -575,6 +620,18 @@ public final class Stream {
             }
             case "st.stats" -> {
                 return stats();
+            }
+            case "st.judge" -> {
+                // The record's legible runs, built from the last perceived or drawn frame (what a record would carry).
+                return onClient(mc, () -> {
+                    Snap sn = snapshot(mc);
+                    StringBuilder b = new StringBuilder("{\"frame\":" + sn.frameNo + ",\"runs\":[");
+                    for (int i = 0; i < sn.runs.size(); i++) {
+                        if (i > 0) b.append(',');
+                        b.append("[").append(J.q(sn.runs.get(i).tag())).append(',').append(J.q(sn.runs.get(i).text())).append(']');
+                    }
+                    return b.append("]}").toString();
+                });
             }
             case "st.walk" -> {
                 double blocks = Double.parseDouble(p.getOrDefault("blocks", "4"));

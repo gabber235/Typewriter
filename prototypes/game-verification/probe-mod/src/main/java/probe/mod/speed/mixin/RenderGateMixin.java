@@ -11,7 +11,8 @@ import probe.mod.speed.Speed;
 
 /**
  * Render gate inside Minecraft.renderFrame. No acquired surface texture makes blit and present skip
- * themselves (both check isAcquired). Gate mode 1 skips render only, mode 2 also skips extract.
+ * themselves (both check isAcquired). Gate mode 1 skips render only, mode 2 also skips extract. A perceive
+ * frame runs extract and Nodraw.render (submit, section compile, occlusion) instead of the GPU draw.
  */
 @Mixin(Minecraft.class)
 public class RenderGateMixin {
@@ -27,12 +28,18 @@ public class RenderGateMixin {
 
     @Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;extract(Lnet/minecraft/client/DeltaTracker;Z)V"))
     private void probe$extract(GameRenderer renderer, DeltaTracker delta, boolean advance) {
-        if (!Speed.skipExtract()) renderer.extract(delta, advance);
+        if (!Speed.skipExtract()) {
+            long t0 = System.nanoTime();
+            renderer.extract(delta, advance);
+            Speed.onExtract(System.nanoTime() - t0);
+        }
     }
 
     @Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render()V"))
     private void probe$render(GameRenderer renderer) {
-        if (!Speed.skipRender()) {
+        if (Speed.perceiveOnly()) {
+            probe.mod.nodraw.Nodraw.render((Minecraft) (Object) this);
+        } else if (!Speed.skipRender()) {
             renderer.render();
             probe.mod.video.Video.afterRender((Minecraft) (Object) this);
             probe.mod.ready.Ready.afterRender((Minecraft) (Object) this);

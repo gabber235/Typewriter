@@ -64,12 +64,26 @@ public final class Speed {
         t.start();
     }
 
-    /** Decides once per frame, at the acquire call, whether this frame draws. */
+    /** Frame outcomes: nothing, extract and submit without the GPU draw (perceive), or a whole drawn frame. */
+    public static final int SKIP = 0, PERCEIVE = 1, DRAW = 2;
+    private static int outcome = DRAW;
+    private static volatile int perceiveFrames;
+    private static volatile Runnable afterPerceived;
+    private static long frameT0;
+    public static final long[] frameCount = new long[3], frameNanos = new long[3];
+    public static long extractNanos, extractCount;
+
+    /** Decides once per frame, at the acquire call, what this frame does. True: do not acquire the swapchain. */
     public static boolean decideFrame() {
-        boolean render = probe.mod.observe.Stream.frameWanted() | gateMode == 0 || framesToRender > 0;
+        frameT0 = System.nanoTime();
+        int want = probe.mod.observe.Stream.frameWanted();
+        boolean draw = want == DRAW || gateMode == 0 || framesToRender > 0;
         if (framesToRender > 0) framesToRender--;
-        thisFrameSkipped = !render;
-        return thisFrameSkipped;
+        boolean perceive = !draw && (want == PERCEIVE || perceiveFrames > 0);
+        if (perceive && perceiveFrames > 0) perceiveFrames--;
+        outcome = draw ? DRAW : perceive ? PERCEIVE : SKIP;
+        thisFrameSkipped = outcome == SKIP;
+        return outcome != DRAW;
     }
 
     public static boolean skipExtract() {
@@ -80,20 +94,43 @@ public final class Speed {
         return thisFrameSkipped;
     }
 
+    public static boolean perceiveOnly() {
+        return outcome == PERCEIVE;
+    }
+
+    /** Perceives n frames from now (extract and submit, no draw; a draw in gate 0), then runs r on the client thread. */
+    public static void perceiveThen(int frames, Runnable r) {
+        perceiveFrames = frames;
+        afterPerceived = r;
+    }
+
+    public static void onExtract(long nanos) {
+        extractNanos += nanos;
+        extractCount++;
+    }
+
     /** End of renderFrame. Publishes state, finishes on demand captures, paces a gated loop. */
     public static void afterFrame(Minecraft mc, long frame, long tick, String perceived) {
+        boolean seen = outcome != SKIP, drawn = outcome == DRAW;
+        frameCount[outcome]++;
+        frameNanos[outcome] += System.nanoTime() - frameT0;
         publish(frame, tick, perceived);
-        probe.mod.observe.Drawn.endFrame(mc, !thisFrameSkipped);
-        probe.mod.observe.Stream.afterFrame(mc, !thisFrameSkipped);
-        probe.mod.observe.Ride.onFrame(mc, !thisFrameSkipped);
-        probe.mod.ready.Ready.afterFrame(mc, frame, tick, perceived, !thisFrameSkipped);
+        probe.mod.observe.Drawn.endFrame(mc, seen);
+        probe.mod.observe.Stream.afterFrame(mc, outcome);
+        probe.mod.observe.Ride.onFrame(mc, seen);
+        probe.mod.ready.Ready.afterFrame(mc, frame, tick, perceived, drawn);
         Runnable r = afterRendered;
-        if (r != null && !thisFrameSkipped && framesToRender == 0) {
+        if (r != null && drawn && framesToRender == 0) {
             afterRendered = null;
             r.run();
         }
+        Runnable q = afterPerceived;
+        if (q != null && seen && perceiveFrames == 0) {
+            afterPerceived = null;
+            q.run();
+        }
         if (thisFrameSkipped && parkNanos > 0) LockSupport.parkNanos(parkNanos);
-        if (!thisFrameSkipped) probe.mod.video.Video.afterFrame();
+        if (drawn) probe.mod.video.Video.afterFrame();
     }
 
     /** Draws n whole frames from now, in any gate mode, then runs r on the client thread. */
@@ -176,6 +213,11 @@ public final class Speed {
                     ConnectScreen.startConnecting(new TitleScreen(), mc, ServerAddress.parseString(addr), data, false, null);
                 });
                 yield "{\"ok\":true}";
+            }
+            case "frames.stats" -> {
+                String out = "{\"skip\":[" + frameCount[0] + "," + frameNanos[0] + "],\"perceive\":[" + frameCount[1] + "," + frameNanos[1] + "],\"draw\":[" + frameCount[2] + "," + frameNanos[2]
+                    + "],\"extract\":[" + extractCount + "," + extractNanos + "],\"nodraw\":" + probe.mod.nodraw.Nodraw.stats() + "}";
+                yield out;
             }
             case "stats" -> "{\"fps\":" + mc.getFps() + ",\"frame\":" + latest.frame() + ",\"tick\":" + latest.tick() + ",\"at\":" + micros() + "}";
             default -> {
