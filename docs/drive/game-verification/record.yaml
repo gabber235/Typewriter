@@ -178,7 +178,7 @@ pieces:
 
   - id: input
     status: figuring-out
-    open: Moving XTest from the runner into the client mod (through Java's foreign function API) is untried
+    open: "Lost suggestion replies: a 1 thread suggestion pool on the test Paper, or a retype inside the window like a player would. Mac run of the SDL path under stepped ticks"
     tries:
       - id: j-packets-and-game-actions
         what: Send packets, or call the game's own actions
@@ -191,6 +191,20 @@ pieces:
         taught: Same server events as direct handler calls on all 17 inputs, gated or rendered; typed suggestions sometimes get no reply
         state: picked
         evidence: [docs/design/game-verification/spikes/j-input.md, CI runs 42211818480 42215647584 42218505138]
+      - id: input-from-the-client
+        parent: j-window-events
+        what: The client mod sends the window input itself; the pool process sends only commands
+        taught: >-
+          P10: works. Linux: XTest from inside the client through the foreign function API, with one
+          Xvfb display per client; on a shared display every key goes to the focused window. Mac: the
+          SDL queue push, which also works on Linux. Both match direct calls on all 18 inputs, 100 of
+          100, gated and rendered, under stepped ticks, always exactly one tick later. 4 clients at the
+          same step: 0 inputs on the wrong client. XTest needs a one pixel nudge after the grab. Sent X
+          events to the own window fail on pointer motion. Lost suggestion replies (4 to 6%) come from
+          Paper's 4 thread suggestion pool reordering requests; a 1 thread pool or a retype after 6
+          ticks fixes it. Mac run not done (devenv shell hung).
+        state: working
+        evidence: ["branch proto/gv-input 85d06340e: prototypes/game-verification/RESULTS.md", CI runs 43306835761 43309694858 43311267445]
 
   - id: client-pool
     status: figuring-out
@@ -448,4 +462,4 @@ open:
 
 slices: []
 
-next: P8, P9 and P10 running. Check in with each result; then show the overall direction and propose the first build slice.
+next: P8 and P9 running; P10 recorded. Check in with each result; then show the overall direction and propose the first build slice.
