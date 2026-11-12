@@ -242,6 +242,10 @@ final class N implements Listener {
                     boolean on = "1".equals(q.get("on"));
                     if (on && !Step.on) {
                         acked = awaiting = MinecraftServer.getServer().getTickCount();
+                        for (String n : otherNames) {
+                            Player o = Bukkit.getPlayerExact(n);
+                            if (o != null) ackedBy.put(o.getUniqueId(), awaiting);
+                        }
                         Step.on = true;
                     } else if (!on && Step.on) {
                         Step.on = false;

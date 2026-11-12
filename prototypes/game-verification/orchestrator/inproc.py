@@ -361,6 +361,34 @@ CI_ROWS = {
         "cross --path J1 --setup fake --n 3 --display shared",
         "sug --paths J2,J1,XF --setup real --n 10",
     ],
+    # Cross talk first: the cheap rows tell whether the long ones are worth their time.
+    "crossown": [
+        "cross --path XF --setup real --n 50 --display own",
+        "cross --path J1 --setup fake --n 50 --display own",
+        "cross --path XSf --setup fake --n 30 --display own",
+    ],
+    "crossshared": [
+        "cross --path XF --setup real --n 30 --display shared",
+        "cross --path XSf --setup fake --n 30 --display shared",
+        "cross --path J1 --setup fake --n 50 --display shared",
+    ],
+    "fidxf": ["fid --paths J2,XF --setup real --ops all --n 100 --gates 2"],
+    "fidj1": ["fid --paths J2,J1 --setup fake --ops all --n 100 --gates 2"],
+    "fidxs": [
+        "fid --paths J2,XS --setup send --ops all --n 30 --gates 2",
+        "fid --paths J2,XSf --setup fakegrab --ops all --n 30 --gates 2",
+    ],
+    "rendered": [
+        "fid --paths J2,XF --setup real --ops all --n 20 --gates 0",
+        "fid --paths J2,J1 --setup fake --ops all --n 20 --gates 0",
+        "fid --paths J2,XS --setup send --ops all --n 10 --gates 0",
+    ],
+    "sug": [
+        "sug --paths J2,J1,XF --setup real --n 300 --pool 4",
+        "sug --paths J2,J1,XF --setup real --n 300 --pool 1",
+        "sug --paths J2,J1,XF --setup real --n 200 --pool 4 --retry 6",
+        "sug --paths J2,J1,XF --setup real --n 100 --pool 4 --gate 0",
+    ],
 }
 
 

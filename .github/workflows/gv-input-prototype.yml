@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        row: [smoke]
+        row: [crossown, crossshared, fidxf, fidj1, fidxs, rendered, sug]
     defaults:
       run:
         working-directory: prototypes/game-verification
