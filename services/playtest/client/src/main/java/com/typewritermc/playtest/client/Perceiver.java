@@ -65,9 +65,14 @@ final class Perceiver {
 
     private Perceiver() {}
 
-    /** A new attempt: forget the chat and the watches so far and send a fresh record, then confirm the reset. */
+    /**
+     * A new attempt: forget the chat, the toasts and the watches so far and send a fresh record, then
+     * confirm the reset. A toast lasts seconds of real time, such as the one joining shows, so without
+     * this it would cover the start of the next attempts.
+     */
     static void reset(Minecraft mc) {
         mc.gui.hud.getChat().clearMessages(false);
+        mc.gui.toastManager().clear();
         chat.clear();
         watchedBlocks.clear();
         watchedEntities.clear();

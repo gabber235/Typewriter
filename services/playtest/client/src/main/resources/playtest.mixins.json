@@ -21,6 +21,7 @@
     "PacketProcessorMixin",
     "PingMixin",
     "SuggestionsListMixin",
+    "ToastManagerMixin",
     "WindowMixin"
   ],
   "injectors": {
