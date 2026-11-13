@@ -8,96 +8,102 @@ class _QueryBarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ManagedActionSet(
-      shortcuts: controller.shortcuts,
-      child: AnimatedSize(
-        duration: motionTimeline(context, MotionToken.surfaceIn).duration,
-        reverseDuration: motionTimeline(context, MotionToken.panelOut).duration,
-        curve: motionTimeline(context, MotionToken.surfaceIn).curve,
-        alignment: Alignment.topCenter,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: context.spacing.space1,
-          children: [
-            Actions(
-              actions: {
-                if (bar.onCancel case final cancel?)
-                  CancelIntent: CallbackAction<CancelIntent>(
-                    onInvoke: (_) {
-                      cancel();
-                      return null;
-                    },
-                  ),
-              },
-              child: AnchoredOverlayPortal(
-                visible: controller.popupVisible,
-                config: const AnchoredOverlayConfig(
-                  preferredSide: AnchoredOverlaySide.bottom,
-                  spacing: 4,
-                  sharedAxisConstraintMode:
-                      SharedAxisConstraintMode.matchAnchor,
+    final grow = motionTimeline(context, MotionToken.surfaceIn);
+    final shrink = motionTimeline(context, MotionToken.panelOut);
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: context.spacing.space1,
+      children: [
+        Actions(
+          actions: {
+            if (bar.onCancel case final cancel?)
+              CancelIntent: CallbackAction<CancelIntent>(
+                onInvoke: (_) {
+                  cancel();
+                  return null;
+                },
+              ),
+          },
+          child: AnchoredOverlayPortal(
+            visible: controller.popupVisible,
+            config: const AnchoredOverlayConfig(
+              preferredSide: AnchoredOverlaySide.bottom,
+              spacing: 4,
+              sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
+            ),
+            child: _LoadingEdge(
+              label: bar.loadingLabel,
+              child: EditorTextField(
+                inputFieldController: controller.inputFieldController,
+                controller: controller.textController,
+                style: bar.style,
+                textAlign: bar.textAlign,
+                autofocus: bar.autofocus,
+                decoration: bar.inputDecoration.copyWith(
+                  errorText:
+                      controller.parseResult.issues.isNotEmpty ||
+                          bar.validationIssues.isNotEmpty
+                      ? [
+                          ...controller.parseResult.issues,
+                          ...bar.validationIssues,
+                        ].first.message
+                      : null,
+                  contentPadding:
+                      bar.inputDecoration.contentPadding ??
+                      EdgeInsets.symmetric(
+                        vertical: context.spacing.space3,
+                        horizontal: context.spacing.space2,
+                      ),
                 ),
-                child: _LoadingEdge(
-                  label: bar.loadingLabel,
-                  child: EditorTextField(
-                    inputFieldController: controller.inputFieldController,
-                    controller: controller.textController,
-                    style: bar.style,
-                    textAlign: bar.textAlign,
-                    autofocus: bar.autofocus,
-                    decoration: bar.inputDecoration.copyWith(
-                      errorText:
-                          controller.parseResult.issues.isNotEmpty ||
-                              bar.validationIssues.isNotEmpty
-                          ? [
-                              ...controller.parseResult.issues,
-                              ...bar.validationIssues,
-                            ].first.message
-                          : null,
-                      contentPadding:
-                          bar.inputDecoration.contentPadding ??
-                          EdgeInsets.symmetric(
-                            vertical: context.spacing.space3,
-                            horizontal: context.spacing.space2,
-                          ),
-                    ),
-                    maxLines: null,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
-                    ],
-                    textFieldActions: [
-                      ...?bar.textFieldActions,
-                      ...controller.shortcuts,
-                    ],
-                    selectAllOnFocus: bar.selectAllOnFocus,
-                    enabled: bar.enabled,
-                    readOnly: bar.readOnly,
-                    onInputFocus: bar.onInputFocus,
-                    onDismiss: bar.onDismiss,
-                    onChanged: controller.onQueryChanged,
-                    onDone: bar.onDone,
-                    onEditingComplete: bar.onEditingComplete,
-                    onSubmitted: controller.onSubmitted,
-                  ),
-                ),
-                overlayBuilder: (context, _) => _buildSuggestionPanel(
-                  context: context,
-                  suggestions: controller.suggestions,
-                  warning: controller.completionWarning,
-                  activeSuggestionIndex: controller.activeSuggestionIndex,
-                  onTapSuggestion: controller.applySuggestion,
-                  onHoverIndex: controller.onHoverIndex,
-                ),
+                maxLines: null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
+                ],
+                textFieldActions: [
+                  ...?bar.textFieldActions,
+                  ...controller.shortcuts,
+                ],
+                selectAllOnFocus: bar.selectAllOnFocus,
+                enabled: bar.enabled,
+                readOnly: bar.readOnly,
+                onInputFocus: bar.onInputFocus,
+                onDismiss: bar.onDismiss,
+                onChanged: controller.onQueryChanged,
+                onDone: bar.onDone,
+                onEditingComplete: bar.onEditingComplete,
+                onSubmitted: controller.onSubmitted,
               ),
             ),
-            _QueryBarHelperRow(
-              visible: controller.helperVisible,
-              badges: controller.helperBadges,
+            overlayBuilder: (context, _) => _buildSuggestionPanel(
+              context: context,
+              suggestions: controller.suggestions,
+              warning: controller.completionWarning,
+              activeSuggestionIndex: controller.activeSuggestionIndex,
+              onTapSuggestion: controller.applySuggestion,
+              onHoverIndex: controller.onHoverIndex,
             ),
-          ],
+          ),
         ),
-      ),
+        _QueryBarHelperRow(
+          visible: controller.helperVisible,
+          badges: controller.helperBadges,
+        ),
+      ],
+    );
+    return ManagedActionSet(
+      shortcuts: controller.shortcuts,
+      // Without motion the size follows the content at once. A zero duration
+      // AnimatedSize completes its animation inside its own layout and fails.
+      child: grow.duration == Duration.zero
+          ? content
+          : AnimatedSize(
+              duration: grow.duration,
+              reverseDuration: shrink.duration,
+              curve: grow.curve,
+              alignment: Alignment.topCenter,
+              child: content,
+            ),
     );
   }
 }

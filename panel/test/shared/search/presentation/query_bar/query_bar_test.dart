@@ -109,6 +109,17 @@ void main() {
       expect(bar.showsHelper, isFalse);
     });
 
+    testWidgets("with reduced motion the helper line opens at once", (
+      tester,
+    ) async {
+      final bar = await tester.showQueryBar(traits: const [reducedMotion]);
+
+      await bar.focus();
+
+      expect(bar.showsHelper, isTrue);
+      expect(bar.helperMentions("status:"), 1);
+    });
+
     testWidgets("opening suggestions keeps the query bar's height", (
       tester,
     ) async {

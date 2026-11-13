@@ -7,10 +7,8 @@ import "package:widgetbook_workspace/support/story.dart";
 /// The query field of every search: selectors such as `kind:` and `#` are
 /// highlighted and completed as the user types. While the first results
 /// load a thin bar runs along its bottom edge; a value the source rejects
-/// shows under the field.
-///
-/// Reduced motion is left out: under it the bar throws "RenderAnimatedSize
-/// was mutated in its own performLayout" (query_bar_view.dart:13).
+/// shows under the field. Under reduced motion the bar takes its new
+/// height at once.
 @widgetbook.UseCase(name: "Default", type: QueryBar)
 Widget queryBarDefaultUseCase(BuildContext context) {
   final initial = context.knobs.string(
@@ -30,7 +28,7 @@ Widget queryBarDefaultUseCase(BuildContext context) {
   );
   final width = context.knobs.width(const {"Wide": 520, "Narrow": 240});
   return Story(
-    const [],
+    context.knobs.motion(),
     at: PanelLocation.component(
       SizedBox(
         width: width,

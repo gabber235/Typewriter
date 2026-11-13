@@ -8,11 +8,8 @@ import "package:widgetbook_workspace/support/story.dart";
 /// A whole search inside its root, as the search overlay and inline fields
 /// show it: the focused query field, the outcome of the last command, the
 /// result tree, the key hints and the preview. Typing narrows the pages;
-/// Enter opens the highlighted one.
-///
-/// Reduced motion is left out: under it the query bar throws
-/// "RenderAnimatedSize was mutated in its own performLayout"
-/// (query_bar_view.dart:13).
+/// Enter opens the highlighted one. Under reduced motion every change
+/// lands at once.
 @widgetbook.UseCase(name: "Default", type: SearchBody)
 Widget searchBodyUseCase(BuildContext context) {
   final snapshot = context.knobs.searchResults();
@@ -24,7 +21,7 @@ Widget searchBodyUseCase(BuildContext context) {
   );
   final width = context.knobs.width(const {"Overlay": 880, "Narrow": 360});
   return Story(
-    const [],
+    context.knobs.motion(),
     at: PanelLocation.component(
       SizedBox(
         width: width,
