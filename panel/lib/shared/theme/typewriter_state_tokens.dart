@@ -17,6 +17,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
     this.disabledContainerOpacity = 0.12,
     this.splashOpacity = 0.26,
     this.splashOnFillOpacity = 0.45,
+    this.holdOpacity = 0.16,
+    this.holdOnFilledOpacity = 0.28,
   });
 
   final double hoverOpacity;
@@ -30,6 +32,12 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
 
   /// The press splash on a strong fill, in the fill's label colour.
   final double splashOnFillOpacity;
+
+  /// The red a hold fills a row, or a flat or outlined button, with.
+  final double holdOpacity;
+
+  /// The black a hold fills a filled button with.
+  final double holdOnFilledOpacity;
 
   /// Resolves the interaction layer for a set of [WidgetState] values.
   ///
@@ -64,6 +72,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
     double? disabledContainerOpacity,
     double? splashOpacity,
     double? splashOnFillOpacity,
+    double? holdOpacity,
+    double? holdOnFilledOpacity,
   }) => TypewriterStateTokens(
     hoverOpacity: hoverOpacity ?? this.hoverOpacity,
     pressedOpacity: pressedOpacity ?? this.pressedOpacity,
@@ -74,6 +84,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
         disabledContainerOpacity ?? this.disabledContainerOpacity,
     splashOpacity: splashOpacity ?? this.splashOpacity,
     splashOnFillOpacity: splashOnFillOpacity ?? this.splashOnFillOpacity,
+    holdOpacity: holdOpacity ?? this.holdOpacity,
+    holdOnFilledOpacity: holdOnFilledOpacity ?? this.holdOnFilledOpacity,
   );
 
   @override
@@ -94,6 +106,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
       ),
       splashOpacity: l(splashOpacity, other.splashOpacity),
       splashOnFillOpacity: l(splashOnFillOpacity, other.splashOnFillOpacity),
+      holdOpacity: l(holdOpacity, other.holdOpacity),
+      holdOnFilledOpacity: l(holdOnFilledOpacity, other.holdOnFilledOpacity),
     );
   }
 }

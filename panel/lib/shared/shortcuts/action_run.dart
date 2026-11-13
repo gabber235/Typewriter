@@ -12,6 +12,23 @@ sealed class ActionRun with _$ActionRun {
   const factory ActionRun.hold(HoldPlan<Object> plan) = HoldRun;
 }
 
+/// How heavy a hold is; a heavier action holds longer.
+enum HoldWeight {
+  /// Loses only the user's own unsent work: Discard, Use saved.
+  light(MotionToken.holdLight),
+
+  /// Makes someone else act again: Remove member, Decline, Revoke, Unbind.
+  heavy(MotionToken.holdHeavy),
+
+  /// Nothing can recover it: deleting a Realm resource.
+  permanent(MotionToken.holdPermanent);
+
+  const HoldWeight(this.token);
+
+  /// The motion token that times and draws a hold of this weight.
+  final MotionToken<HoldLanding> token;
+}
+
 /// What a hold does to its targets, typed by their identity [K].
 ///
 /// [rows] are explicit: target order, the sending look, refusals and focus
@@ -25,6 +42,7 @@ final class HoldPlan<K extends Object> {
   /// row is sending for the whole run (one call), and the refused ones are
   /// refused on their entries afterwards.
   const HoldPlan({
+    required this.weight,
     required this.verb,
     required this._targets,
     required this._outcome,
@@ -36,6 +54,7 @@ final class HoldPlan<K extends Object> {
   /// target at a time (a Realm operation). It has no rows; a failure jams
   /// the command's buttons.
   const HoldPlan.all({
+    required this.weight,
     required this.verb,
     required this._targets,
     required this._outcome,
@@ -43,6 +62,9 @@ final class HoldPlan<K extends Object> {
   }) : _each = null,
        _all = work,
        rows = null;
+
+  /// How long the hold takes.
+  final HoldWeight weight;
 
   /// The word that types itself first in the outcome line: Remove.
   final String verb;
@@ -77,6 +99,7 @@ final class HoldPlan<K extends Object> {
     final all = _all;
     return HoldTry(
       ids: ids,
+      weight: weight,
       verb: verb,
       outcome: _outcome(ids.toSet()),
       rows: rows,
@@ -112,6 +135,7 @@ abstract interface class HoldRows {
 final class HoldTry {
   const HoldTry({
     required this.ids,
+    required this.weight,
     required this.verb,
     required this.outcome,
     required this.rows,
@@ -120,6 +144,7 @@ final class HoldTry {
   });
 
   final List<Object> ids;
+  final HoldWeight weight;
   final String verb;
   final String outcome;
   final HoldRows? rows;

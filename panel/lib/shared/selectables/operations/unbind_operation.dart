@@ -26,6 +26,12 @@ class UnbindOperation extends IntentShortcutOperation {
   Type get intent => DeleteIntent;
 
   @override
+  OperationSection get section => OperationSection.destructive;
+
+  @override
+  OperationEmphasis get emphasis => OperationEmphasis.filled;
+
+  @override
   bool canExecuteOn(List<Selectable> selection) =>
       selection.allHaveCapability<UnbindSelectionCapability>();
 
@@ -34,6 +40,8 @@ class UnbindOperation extends IntentShortcutOperation {
   @override
   ActionRun get run => ActionRun.hold(
     HoldPlan<SelectableIdentifier>(
+      // The service must be bound again.
+      weight: HoldWeight.heavy,
       // A selection that failed to resolve offers nothing to unbind; the
       // preview runs while the button builds, so it never throws.
       targets: (ref) => {
@@ -80,10 +88,13 @@ class UnbindOperation extends IntentShortcutOperation {
   }
 
   @override
-  Widget inspectorButton(List<Selectable> selection) {
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) {
     return CommandButton(
       command: shortcut,
-      face: ButtonFace.filled,
+      face: emphasis.face,
       icon: const Icon(Icons.link_off, size: 16),
       label: selection.length > 1 ? "Unbind ${selection.length}" : "Unbind",
     );

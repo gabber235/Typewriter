@@ -30,6 +30,12 @@ class OpenOperation extends IntentShortcutOperation {
   Type get intent => PrimaryActionIntent;
 
   @override
+  OperationSection get section => OperationSection.navigation;
+
+  @override
+  OperationEmphasis get emphasis => OperationEmphasis.filled;
+
+  @override
   bool canExecuteOn(List<Selectable> selection) {
     if (!selection.allHaveCapability<OpenSelectionCapability>()) return false;
 
@@ -63,9 +69,12 @@ class OpenOperation extends IntentShortcutOperation {
   }
 
   @override
-  Widget inspectorButton(List<Selectable> selection) => CommandButton(
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => CommandButton(
     command: shortcut,
-    face: ButtonFace.filled,
+    face: emphasis.face,
     icon: const Icon(Icons.open_in_new, size: 16),
     label: selection.length > 1 ? "Open (${selection.length})" : "Open",
     busyLabel: "Opening",

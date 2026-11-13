@@ -242,7 +242,6 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
                 keys: {...?intent.activator.triggers},
                 focus: FocusManager.instance.primaryFocus,
               ),
-              motion: resolveMotion(context, MotionToken.hold),
             ),
           ),
           for (final action in presses.whereType<IntentActionShortcut>())

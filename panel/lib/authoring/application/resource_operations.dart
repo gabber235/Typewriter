@@ -91,7 +91,8 @@ skir.OperationInvocation captureResourceOperationInvocation({
 }
 
 /// The client navigation entries, then the catalog operations in the order
-/// the Realm resolved them: by group, then order.
+/// the Realm resolved them: by group, then order. The inspector and menus
+/// section them by [SelectionOperation.section].
 List<SelectionOperation> resourceSelectionOperationsFor(
   WidgetRef ref,
   AuthoringScope scope,
@@ -141,9 +142,6 @@ List<SelectionOperation> resourceSelectionOperationsFor(
         ),
   ];
 }
-
-/// Menu sections of resource affordances, in display order.
-enum ResourceOperationMenuGroup { navigation, edit, organize, destructive }
 
 /// Carries immutable targets into menus, inspector controls and shortcuts.
 /// Every catalog operation prepares an authored edit through its capability.
@@ -198,11 +196,21 @@ class ResourceSelectionOperation extends ShortcutableOperation {
       operation.definition.presentation.inspector !=
       skir.OperationInspector.hidden;
   @override
-  Object get menuGroup => switch (operation.definition.presentation.group) {
-    skir.OperationGroup.organize => ResourceOperationMenuGroup.organize,
-    skir.OperationGroup.destructive => ResourceOperationMenuGroup.destructive,
-    _ => ResourceOperationMenuGroup.edit,
-  };
+  OperationSection get section =>
+      switch (operation.definition.presentation.group) {
+        skir.OperationGroup.organize => OperationSection.organize,
+        skir.OperationGroup.destructive => OperationSection.destructive,
+        _ => OperationSection.edit,
+      };
+  @override
+  int get order => operation.definition.presentation.order;
+  @override
+  OperationEmphasis get emphasis =>
+      switch (operation.definition.presentation.emphasis) {
+        skir.OperationEmphasis.filled => OperationEmphasis.filled,
+        skir.OperationEmphasis.outline => OperationEmphasis.outline,
+        _ => OperationEmphasis.flat,
+      };
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
 
@@ -257,6 +265,12 @@ class ResourceSelectionOperation extends ShortcutableOperation {
       // reports its own failures.
       final confirmation? => ActionRun.hold(
         HoldPlan<skir.ResourceId>.all(
+          weight: switch (confirmation.weight) {
+            skir.OperationWeight.light => HoldWeight.light,
+            skir.OperationWeight.permanent => HoldWeight.permanent,
+            // A Realm that sends no weight holds as heavy, the middle.
+            _ => HoldWeight.heavy,
+          },
           targets: (_) => invocation.targets.toSet(),
           verb: name,
           outcome: (targets) => targets.length == 1
@@ -303,8 +317,12 @@ class ResourceSelectionOperation extends ShortcutableOperation {
   );
 
   @override
-  Widget inspectorButton(List<Selectable> selection) => ResourceOperationButton(
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => ResourceOperationButton(
     presentation: operation.definition.presentation,
+    emphasis: emphasis,
     disabledReason: disabledReason,
     command: shortcut,
   );
@@ -324,7 +342,7 @@ final class ResourceOpenOperation extends IntentShortcutOperation {
   @override
   Type get intent => PrimaryActionIntent;
   @override
-  Object get menuGroup => ResourceOperationMenuGroup.navigation;
+  OperationSection get section => OperationSection.navigation;
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
   @override
@@ -336,10 +354,14 @@ final class ResourceOpenOperation extends IntentShortcutOperation {
     onPressed: () => executeOn(ref),
   );
   @override
-  Widget inspectorButton(List<Selectable> selection) => Consumer(
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => Consumer(
     builder: (context, ref, _) => PanelTooltip(
       message: description,
       child: Button(
+        face: emphasis.face,
         icon: const Icon(Icons.open_in_new, size: 16),
         label: name,
         onPressed: () => executeOn(ref),
@@ -362,7 +384,7 @@ final class ResourceInspectOperation extends SelectionOperation {
   @override
   bool get showInInspector => false;
   @override
-  Object get menuGroup => ResourceOperationMenuGroup.navigation;
+  OperationSection get section => OperationSection.navigation;
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
   @override
@@ -381,7 +403,10 @@ final class ResourceInspectOperation extends SelectionOperation {
     onPressed: () => executeOn(ref),
   );
   @override
-  Widget inspectorButton(List<Selectable> selection) => const SizedBox.shrink();
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => const SizedBox.shrink();
 }
 
 /// Opens the nearest surface of [resource], as the Open entry does.
@@ -407,7 +432,10 @@ final class _UnavailableResourceOperation extends SelectionOperation {
   @override
   MenuItem menuItem(WidgetRef ref) => MenuItem(label: name);
   @override
-  Widget inspectorButton(List<Selectable> selection) => Text(name);
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => Text(name);
 }
 
 /// Supplies the reserved action context without reading global selection.

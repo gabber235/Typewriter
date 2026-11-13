@@ -363,6 +363,7 @@ final _document = realmDocument(
                   confirmation: null,
                   inspector: skir.OperationInspector.hidden,
                   shortcut: null,
+                  emphasis: skir.OperationEmphasis.flat,
                 ),
               ),
           ])

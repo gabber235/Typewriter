@@ -5,6 +5,41 @@ const coreSelectionOperations = <SelectionOperation>[
   UnbindOperation(),
 ];
 
+/// The sections operations sit in, in display order. The inspector and the
+/// context menu draw a divider between sections.
+enum OperationSection {
+  /// Going to the thing: Open, Inspect.
+  navigation,
+
+  /// Changing the thing itself.
+  edit,
+
+  /// Moving, linking and copying.
+  organize,
+
+  /// Removing or disconnecting; always held.
+  destructive,
+}
+
+/// How strongly an operation's inspector button stands out.
+enum OperationEmphasis {
+  /// Most operations.
+  flat,
+
+  /// The likely next step.
+  outline,
+
+  /// The pane's main action; at most one per pane.
+  filled;
+
+  /// The button face this emphasis paints.
+  ButtonFace get face => switch (this) {
+    OperationEmphasis.flat => ButtonFace.quiet,
+    OperationEmphasis.outline => ButtonFace.outlined,
+    OperationEmphasis.filled => ButtonFace.filled,
+  };
+}
+
 /// Defines an action available for the current resolved selection.
 ///
 /// Instances are registered through a [SelectionOperationSource]. Availability is
@@ -24,9 +59,17 @@ abstract class SelectionOperation {
   /// Whether this operation is offered among the inspector controls.
   bool get showInInspector => true;
 
-  /// The menu section this operation belongs to. Menus separate neighboring
-  /// operations of different groups; null groups operations together.
-  Object? get menuGroup => null;
+  /// The section this operation sits in, in the inspector and the context
+  /// menu alike.
+  OperationSection get section => OperationSection.edit;
+
+  /// The position inside its [section]; lower comes first, and equal ones
+  /// keep the order their source gave.
+  int get order => 0;
+
+  /// How strongly its inspector button wants to stand out. The inspector
+  /// shows only the first filled operation filled.
+  OperationEmphasis get emphasis => OperationEmphasis.flat;
 
   /// Returns whether this operation is valid for [selection].
   ///
@@ -52,11 +95,15 @@ abstract class SelectionOperation {
   /// cheap and side effect free; the callback may perform the actual work.
   MenuItem menuItem(WidgetRef ref);
 
-  /// Builds the inspector control for this operation and [selection].
+  /// Builds the inspector control for this operation and [selection], in
+  /// the [emphasis] the inspector gives it.
   ///
   /// The selection supplies presentation details such as the item count. The
   /// control invokes [executeOn] through its [WidgetRef] when activated.
-  Widget inspectorButton(List<Selectable> selection);
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  });
 }
 
 abstract class ShortcutableOperation extends SelectionOperation {
@@ -142,20 +189,74 @@ List<SelectionOperation> availableSelectionOperations(
       .toList();
 }
 
-/// Menu items for [operations] in their order, with a divider at every change
-/// of [SelectionOperation.menuGroup].
+/// Menu items for [operations] in their sections, with a divider between
+/// sections: the same list the inspector shows.
 List<MenuItem> selectionOperationMenuItems(
   Iterable<SelectionOperation> operations,
   WidgetRef ref,
-) {
-  final items = <MenuItem>[];
-  Object? group;
-  for (final (index, operation) in operations.indexed) {
-    if (index > 0 && operation.menuGroup != group) {
-      items.add(const MenuItem.divider());
+) => [
+  for (final (index, section) in operations.sections.indexed) ...[
+    if (index > 0) const MenuItem.divider(),
+    for (final operation in section) operation.menuItem(ref),
+  ],
+];
+
+/// Operation names already reported for asking to be a second filled
+/// button, so a rebuild does not report them again.
+final _reportedSecondFilled = <String>{};
+
+/// Sections and emphasis of an operation list.
+extension SelectionOperationSections on Iterable<SelectionOperation> {
+  /// The operations ordered by section, then order, then the order given,
+  /// split into their non empty sections.
+  List<List<SelectionOperation>> get sections {
+    final ordered = indexed.toList()
+      ..sort((a, b) {
+        final bySection = a.$2.section.index.compareTo(b.$2.section.index);
+        if (bySection != 0) return bySection;
+        final byOrder = a.$2.order.compareTo(b.$2.order);
+        return byOrder != 0 ? byOrder : a.$1.compareTo(b.$1);
+      });
+    final sections = <List<SelectionOperation>>[];
+    OperationSection? current;
+    for (final (_, operation) in ordered) {
+      if (operation.section != current) sections.add([]);
+      current = operation.section;
+      sections.last.add(operation);
     }
-    group = operation.menuGroup;
-    items.add(operation.menuItem(ref));
+    return sections;
   }
-  return items;
+
+  /// The emphasis each operation shows with, in this order: the first one
+  /// asking to be filled is filled, and every later one is flat, reported
+  /// once, since a pane has at most one filled button.
+  List<OperationEmphasis> get shownEmphases {
+    final firstFilled = indexed
+        .firstWhereOrNull((entry) => entry.$2.emphasis.isFilled)
+        ?.$1;
+    return [
+      for (final (index, operation) in indexed)
+        if (operation.emphasis.isFilled && index != firstFilled)
+          operation._flatInstead()
+        else
+          operation.emphasis,
+    ];
+  }
+}
+
+extension on OperationEmphasis {
+  bool get isFilled => this == OperationEmphasis.filled;
+}
+
+extension on SelectionOperation {
+  /// Flat, for a second filled operation, reported once per name.
+  OperationEmphasis _flatInstead() {
+    if (_reportedSecondFilled.add(name)) {
+      debugPrint(
+        "Operation $name asks to be filled, but the pane already has a "
+        "filled button; it shows flat.",
+      );
+    }
+    return OperationEmphasis.flat;
+  }
 }

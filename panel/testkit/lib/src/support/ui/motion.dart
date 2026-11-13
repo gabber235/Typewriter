@@ -266,7 +266,7 @@ final class HoldStage extends HookWidget {
       () => HoldClock(vsync: vsync, onComplete: () => removed.value++),
     );
     useEffect(() => clock.dispose, [clock]);
-    final hold = resolveMotion(context, MotionToken.hold);
+    final hold = resolveMotion(context, MotionToken.holdHeavy);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -576,9 +576,10 @@ extension MotionProbeDriving on WidgetTester {
 
 /// Holding the "Remove" box of a [HoldStage].
 extension HoldDriving on WidgetTester {
-  /// The hold token's time, read from the table.
+  /// The time of the hold token a [HoldStage] holds with, read from the
+  /// table.
   Future<Duration> holdTime() async =>
-      (await resolveMotionIn(this, MotionToken.hold)).motion.duration;
+      (await resolveMotionIn(this, MotionToken.holdHeavy)).motion.duration;
 
   /// Mounts a [HoldStage], with reduced motion when [reduced], and presses
   /// its "Remove" box down.

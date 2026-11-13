@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
@@ -9,29 +11,30 @@ void main() {
   const move = RealmOperation.moveTo();
   const delete = RealmOperation.delete();
 
-  testWidgets("menus lead with Open and Inspect, then list the operations by "
-      "group", (tester) async {
+  testWidgets("menus lead with Open and Inspect, then list the operations in "
+      "a section per group with a divider between sections", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
       operations(const [reveal, move, delete]),
     ]);
 
-    final entries = await panel.resources.row("First").operations.open();
+    final sections = await panel.resources
+        .row("First")
+        .operations
+        .openSections();
 
     // Delete holds, so it is heard as the outcome it states.
-    expect(entries, [
-      "Open",
-      "Inspect",
-      "Duplicate",
-      "Move to",
-      "Delete this resource and what it owns?",
+    expect(sections, [
+      ["Open", "Inspect"],
+      ["Duplicate"],
+      ["Move to"],
+      ["Delete this resource and what it owns?"],
     ]);
   });
 
-  testWidgets("the inspector offers the operations declared as buttons", (
-    tester,
-  ) async {
+  testWidgets("the inspector offers the operations declared as buttons in "
+      "the sections of the menu", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
@@ -42,8 +45,110 @@ void main() {
 
     // Delete holds, so it is heard as the outcome it states.
     const heardDelete = "Delete this resource and what it owns?";
-    expect(panel.inspector.operations, ["Open", "Duplicate", heardDelete]);
+    expect(panel.inspector.operationSections, [
+      ["Open"],
+      ["Duplicate"],
+      [heardDelete],
+    ]);
     expect(panel.inspector.isEnabled(heardDelete), isTrue);
+  });
+
+  testWidgets("operations sent out of order are listed by group, then order, "
+      "in the menu and the inspector alike", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [
+        delete,
+        RealmOperation("Tag", group: skir.OperationGroup.organize, order: 20),
+        RealmOperation("Pin", group: skir.OperationGroup.organize, order: 10),
+        reveal,
+      ]),
+    ]);
+    const heardDelete = "Delete this resource and what it owns?";
+
+    await panel.resources.row("First").select();
+    final inspector = panel.inspector.operationSections;
+    final menu = await panel.resources.row("First").operations.openSections();
+
+    expect(menu, [
+      ["Open", "Inspect"],
+      ["Duplicate"],
+      ["Pin", "Tag"],
+      [heardDelete],
+    ]);
+    expect(inspector, [
+      ["Open"],
+      ["Duplicate"],
+      ["Pin", "Tag"],
+      [heardDelete],
+    ]);
+  });
+
+  testWidgets("a second operation declared filled shows flat beside the "
+      "first", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [
+        RealmOperation(
+          "Duplicate",
+          group: skir.OperationGroup.edit,
+          emphasis: skir.OperationEmphasis.filled,
+        ),
+        delete,
+      ]),
+    ]);
+
+    await panel.resources.row("First").select();
+
+    expect(panel.inspector.faceOf("Duplicate"), ButtonFace.filled);
+    expect(panel.inspector.faceOf("Delete"), ButtonFace.quiet);
+  });
+
+  testWidgets("Delete held by D lasts a permanent hold: kept just before it "
+      "ends, deleted once it ends", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+    await panel.resources.row("First").select();
+    final permanent = panel.holdDurationOf(HoldWeight.permanent);
+
+    await panel.keyDown(LogicalKeyboardKey.keyD);
+    await panel.holdForTime(permanent - const Duration(milliseconds: 100));
+    expect(panel.world.requireRealm.prepares, 0);
+    await panel.holdForTime(const Duration(milliseconds: 150));
+    await panel.keyUp(LogicalKeyboardKey.keyD);
+
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
+  });
+
+  testWidgets("Delete held by the pointer on the inspector button lasts a "
+      "permanent hold", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+    await panel.resources.row("First").select();
+    final permanent = panel.holdDurationOf(HoldWeight.permanent);
+
+    final pointer = await panel.pressButton(
+      "Delete this resource and what it owns?",
+    );
+    await panel.holdForTime(permanent - const Duration(milliseconds: 100));
+    expect(panel.world.requireRealm.prepares, 0);
+    await panel.holdForTime(const Duration(milliseconds: 150));
+    await pointer.up();
+    await panel.settle();
+
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
   });
 
   final openings = <String, Future<void> Function(PanelDriver panel)>{

@@ -65,6 +65,18 @@ sealed class Landing with _$Landing {
   /// someone else made.
   const factory Landing.ink({required Duration byOthers}) = InkLanding;
 
+  /// A held button sinks from [sinkFrom] px to [sink] px and shrinks to
+  /// [scale] as the hold fills. Between [trembleFrom] and [trembleTo] of the
+  /// hold's time it trembles once, [tremble] px to each side.
+  const factory Landing.hold({
+    required double sinkFrom,
+    required double sink,
+    required double scale,
+    required double trembleFrom,
+    required double trembleTo,
+    required double tremble,
+  }) = HoldLanding;
+
   /// The jam swings [amplitude] px; its red flash fades over [flash].
   const factory Landing.jam({
     required double amplitude,
@@ -114,7 +126,15 @@ final class MotionToken<L extends Landing> {
   static const panelOut = MotionToken<NoLanding>._("panelOut");
   static const dialogOut = MotionToken<NoLanding>._("dialogOut");
   static const listOut = MotionToken<NoLanding>._("listOut");
-  static const hold = MotionToken<NoLanding>._("hold");
+
+  /// A hold that loses only the user's own unsent work: Discard.
+  static const holdLight = MotionToken<HoldLanding>._("holdLight");
+
+  /// A hold that makes someone else act again: Remove member, Revoke.
+  static const holdHeavy = MotionToken<HoldLanding>._("holdHeavy");
+
+  /// A hold nothing can recover from: deleting a Realm resource.
+  static const holdPermanent = MotionToken<HoldLanding>._("holdPermanent");
   static const ripple = MotionToken<LetterLanding>._("ripple");
   static const skeleton = MotionToken<NoLanding>._("skeleton");
   static const wave = MotionToken<LetterLanding>._("wave");
@@ -141,7 +161,9 @@ final class MotionToken<L extends Landing> {
     panelOut,
     dialogOut,
     listOut,
-    hold,
+    holdLight,
+    holdHeavy,
+    holdPermanent,
     ripple,
     skeleton,
     wave,
@@ -176,6 +198,32 @@ MapEntry<MotionToken<Landing>, MotionSpec<Landing>> _row<L extends Landing>(
   MotionToken<L> token,
   MotionSpec<L> spec,
 ) => MapEntry(token, spec);
+
+/// A hold row: the fill springs over the whole hold and leads the clock;
+/// the clock decides. Every weight shares the look and differs in time.
+MapEntry<MotionToken<Landing>, MotionSpec<Landing>> _holdRow(
+  MotionToken<HoldLanding> token,
+  Duration duration,
+) => _row(
+  token,
+  MotionSpec(
+    HoldMotion(
+      // candidate ratio: the skill gives only the settle time.
+      fill: SpringMotion.settling(duration, dampingRatio: 0.8),
+      duration: duration,
+    ),
+    // candidate tremble: the skill names its window, not its size.
+    const HoldLanding(
+      sinkFrom: 1,
+      sink: 4,
+      scale: 0.95,
+      trembleFrom: 0.86,
+      trembleTo: 0.96,
+      tremble: 2,
+    ),
+    reduced: ReducedKind.paced,
+  ),
+);
 
 /// The panel's motion tokens, installed by `buildTheme`.
 @immutable
@@ -346,21 +394,9 @@ class TypewriterMotion extends ThemeExtension<TypewriterMotion> {
           reduced: ReducedKind.jump,
         ),
       ),
-      _row(
-        MotionToken.hold,
-        MotionSpec(
-          HoldMotion(
-            // candidate ratio: the skill gives only the 800 ms.
-            fill: SpringMotion.settling(
-              Duration(milliseconds: 800),
-              dampingRatio: 0.8,
-            ),
-            duration: Duration(milliseconds: 800),
-          ),
-          const NoLanding(),
-          reduced: ReducedKind.paced,
-        ),
-      ),
+      _holdRow(MotionToken.holdLight, const Duration(milliseconds: 1200)),
+      _holdRow(MotionToken.holdHeavy, const Duration(milliseconds: 1800)),
+      _holdRow(MotionToken.holdPermanent, const Duration(milliseconds: 2600)),
       _row(
         MotionToken.ripple,
         const MotionSpec(

@@ -17,6 +17,8 @@ ActionShortcut discardWork({
     show: false,
     run: ActionRun.hold(
       HoldPlan<WorkEntryId>(
+        // Only the user's own draft is lost.
+        weight: HoldWeight.light,
         targets: (_) => {entry},
         verb: "Discard",
         outcome: (_) => "Discard $label? Your unsaved changes are lost.",

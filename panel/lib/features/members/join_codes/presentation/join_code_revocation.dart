@@ -21,6 +21,8 @@ ActionShortcut joinCodeRevocation({
     priority: priority,
     run: ActionRun.hold(
       HoldPlan<skir.RecordId>(
+        // Whoever holds the code needs a new one.
+        weight: HoldWeight.heavy,
         rows: rows,
         targets: (_) => targets(),
         verb: "Revoke",

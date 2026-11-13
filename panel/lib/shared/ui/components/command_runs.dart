@@ -145,18 +145,15 @@ final class CommandRuns implements CommandRunner {
     return false;
   }
 
-  /// Starts or continues the hold of [command] from [input].
+  /// Starts or continues the hold of [command] from [input], timed by
+  /// the weight of its plan as resolved for [ref]'s widget.
   @override
-  void start(
-    ActionShortcut command,
-    WidgetRef ref,
-    HoldInput input, {
-    required ResolvedMotion<NoLanding> motion,
-  }) {
+  void start(ActionShortcut command, WidgetRef ref, HoldInput input) {
     final run = command.run;
     if (run is! HoldRun) {
       throw ArgumentError.value(command.id, "command", "is not a hold");
     }
+    final motion = resolveMotion(ref.context, run.plan.weight.token);
     final current = _session.value;
     if (current != null) {
       if (current.phase == HoldPhase.running) return;
@@ -199,7 +196,7 @@ final class CommandRuns implements CommandRunner {
     clock.release();
   }
 
-  void _press(HoldInput input, ResolvedMotion<NoLanding> motion) =>
+  void _press(HoldInput input, ResolvedMotion<HoldLanding> motion) =>
       input is AssistiveHoldInput
       ? clock.completeNow(motion)
       : clock.press(motion);

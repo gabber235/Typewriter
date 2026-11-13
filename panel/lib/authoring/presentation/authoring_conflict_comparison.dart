@@ -42,6 +42,8 @@ final class AuthoringConflictComparison extends HookWidget {
         show: false,
         run: ActionRun.hold(
           HoldPlan<AuthoringConflictReview>(
+            // Only the unsent changes are lost.
+            weight: HoldWeight.light,
             targets: (_) => {review},
             verb: "Use saved",
             outcome: (_) => review.comparisonFacts.length == 1

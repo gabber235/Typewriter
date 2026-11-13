@@ -103,6 +103,22 @@ Landing _scaleLanding(Landing landing, double strength) => switch (landing) {
     originScale: 1 - (1 - originScale) * strength,
     behindScale: 1 - (1 - behindScale) * strength,
   ),
+  HoldLanding(
+    :final sinkFrom,
+    :final sink,
+    :final scale,
+    :final trembleFrom,
+    :final trembleTo,
+    :final tremble,
+  ) =>
+    HoldLanding(
+      sinkFrom: sinkFrom * strength,
+      sink: sink * strength,
+      scale: 1 - (1 - scale) * strength,
+      trembleFrom: trembleFrom,
+      trembleTo: trembleTo,
+      tremble: tremble * strength,
+    ),
   InkLanding() || NoLanding() => landing,
 };
 
@@ -141,6 +157,8 @@ String describeMotion(MotionSpec<Landing> spec) {
     JamLanding(:final amplitude) => "${amplitude.toStringAsFixed(1)} px",
     SurfaceLanding(:final originScale, :final behindScale) =>
       "starts at $originScale, page behind $behindScale",
+    HoldLanding(:final sinkFrom, :final sink, :final scale, :final tremble) =>
+      "sinks $sinkFrom to $sink px, scale $scale, trembles $tremble px",
     InkLanding() || NoLanding() => "",
   };
   return [
@@ -253,7 +271,11 @@ class _TokenDemo extends StatelessWidget {
       MotionToken.loadIn => const _LoadDemo(),
       MotionToken.listOut => const _RemoveDemo(),
       MotionToken.focusMove => const _RingDemo(),
-      MotionToken.hold => const _HoldDemo(),
+      MotionToken.holdLight ||
+      MotionToken.holdHeavy ||
+      MotionToken.holdPermanent => _HoldDemo(
+        token: token as MotionToken<HoldLanding>,
+      ),
       _ => _ValueDemo(token: token),
     };
   }
@@ -505,9 +527,12 @@ class _RingDemo extends HookWidget {
   }
 }
 
-/// A member row that fills while Hold to remove is held down.
+/// A member row that fills while Hold to remove is held down, for as long
+/// as [token] holds.
 class _HoldDemo extends HookWidget {
-  const _HoldDemo();
+  const _HoldDemo({required this.token});
+
+  final MotionToken<HoldLanding> token;
 
   @override
   Widget build(BuildContext context) {
@@ -517,7 +542,7 @@ class _HoldDemo extends HookWidget {
       () => HoldClock(vsync: vsync, onComplete: () => removed.value = true),
     );
     useEffect(() => clock.dispose, [clock]);
-    final hold = resolveMotion(context, MotionToken.hold);
+    final hold = resolveMotion(context, token);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

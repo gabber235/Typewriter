@@ -28,13 +28,9 @@ abstract interface class CommandRunner {
   /// Runs [command]'s press once; false when it is refused.
   bool press(ActionShortcut command, WidgetRef ref);
 
-  /// Starts or continues the hold of [command] from [input].
-  void start(
-    ActionShortcut command,
-    WidgetRef ref,
-    HoldInput input, {
-    required ResolvedMotion<NoLanding> motion,
-  });
+  /// Starts or continues the hold of [command] from [input], as long as
+  /// the weight of its plan.
+  void start(ActionShortcut command, WidgetRef ref, HoldInput input);
 }
 
 /// Hands the panel's [CommandRunner] to the action sets below it.

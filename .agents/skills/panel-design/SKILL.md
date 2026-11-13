@@ -58,7 +58,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | When | Then | Sev |
 |---|---|---|
 | An action can be undone | One press, no question. The thing stays in place, struck through, with Undo. Its background drains with `drain`, the inverse of a hold. Focus moves on. When time runs out it collapses with `listOut` | 4 |
-| An action loses the user's work or makes someone else act again, and cannot be undone (Discard, Use saved, Decline, Remove member, Revoke, Unbind, a Realm declared confirmation) | Hold to confirm with `hold`. The row grows a fill on a spring, the key cap glows, and one line states the outcome and count in reserved space: its verb types itself and the rest arrives whole on a bounce, all in the first third of the hold. Show the hold only once that text is known. Releasing, leaving the button, or moving focus cancels; pressing again continues from the fill. A screen reader hears the line and "Long press to confirm", and its long press confirms. No setting replaces the hold yet; it arrives with account settings | 4 |
+| An action loses the user's work or makes someone else act again, and cannot be undone (Discard, Use saved, Decline, Remove member, Revoke, Unbind, a Realm declared confirmation) | Hold to confirm, as long as its weight: `holdLight` when only the user's own unsent work is lost (Discard, Use saved), `holdHeavy` when someone else must act again (Remove member, Decline, Revoke, Unbind), `holdPermanent` when nothing recovers it (deleting a Realm resource). Every hold declares its weight; a Realm operation declares it in Kotlin. The row or button grows a fill from its start edge on a spring, the key cap glows, and one line states the outcome and count in reserved space: its verb types itself and the rest arrives whole on a bounce, all in the first third of the hold. A held button sinks from 1 to 4 px and shrinks to 0.95 over the hold, trembles once between 86 and 96 percent of it, and on completion springs back and types its done word. A filled button fills black at 28 percent; a row, a flat or an outlined button fills red at 16 percent. Show the hold only once that text is known. Releasing, leaving the button, or moving focus cancels; pressing again continues from the fill. A screen reader hears the line and "Long press to confirm", and its long press confirms at once. No setting replaces the hold yet; it arrives with account settings | 4 |
 | An action can simply be done again and loses nothing (Publish, cancelling one's own request) | One press, no hold and no question. Its key works only where the action is shown | 2 |
 | Anything would skip those rules | Remove it | 4 |
 
@@ -112,7 +112,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 |---|---|---|
 | Setting any visual value | Use a token from the tables below or the theme. Add a missing one beside `panel/lib/shared/theme/typewriter_spacing.dart`. Never write a literal | 2 |
 | Showing a state | Each signal has one meaning: fill is selected, ring is focus, brighter surface is the active pane, status colour is that status, filled button is the pane's main action. Signals combine and stay distinct | 3 |
-| Choosing an action's weight | One filled button per pane at most: its main action, placed with the operations it belongs to, never floating over content. The rest are flat, or outlined for the likely next step, each with its icon. Operations sit in sections by group; danger tone gets its own section. Row actions show on hover and focus, and in the context menu | 2 |
+| Choosing an action's weight | One filled button per pane at most: its main action, placed with the operations it belongs to, never floating over content. The rest are flat, or outlined for the likely next step, each with its icon. Kotlin declares each operation's emphasis (flat, outline, filled); when two ask to be filled, the panel fills the first and shows the rest flat. Operations are ordered by group, then order, and each group is a section with a divider between, the same list in the inspector and the context menu; danger tone gets its own section and is held. Row actions show on hover and focus, and in the context menu | 2 |
 | Placing content | A title and its content share one left edge. Table rows are about 42 px, and at least 44 px on touch | 2 |
 | Showing many things that have details | Use a table with an inspector. The table scans, and the selected thing appears large in the inspector with its details, actions, and keys | 2 |
 | Designing or simplifying anything a user sees | Keep its character: things look like what they are (a book is a stacked cover that springs when chosen), a thing's title is large and in its colour, the mascot and playful lines appear where nothing depends on them. When a change removes something, name the character that replaces it. Professional and fun; never sterile or corporate | 3 |
@@ -183,7 +183,9 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | `panelOut` | Exit | 200 ms | None | jump |
 | `dialogOut` | Exit | 150 ms | None | jump |
 | `listOut` | Spring | Stiffness 380, damping 30 | Height, vertical scale, and opacity go to 0 together | jump |
-| `hold` | Spring | Settles in 800 ms | The fill leads and settles; the clock decides | paced: fills in place |
+| `holdLight` | Spring | Settles in 1.2 s | The fill leads and settles; the clock decides. The button sinks 1 to 4 px, scales to 0.95, and trembles 2 px once between 86 and 96 percent | paced: fills in place |
+| `holdHeavy` | Spring | Settles in 1.8 s | As `holdLight` | paced: fills in place |
+| `holdPermanent` | Spring | Settles in 2.6 s | As `holdLight` | paced: fills in place |
 | `ripple` | Ease in and out | 620 ms, 42 ms between letters | Letters rise 3 px, looping | still |
 | `skeleton` | Linear | 1000 ms per sweep | A skeleton's shimmer, looping | still: placeholders stay still |
 | `wave` | Spring per letter | Settles in 420 ms, 34 ms between letters | Each letter rises 4 px, turns brand blue, and switches as it passes | jump |
@@ -239,7 +241,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A sheet | `showPanelSheet` | `showModalBottomSheet` |
 | A row that grows | `GrowingCard` (on `Expansible`) | `ExpansionTile`, `Expansible` with its own style |
 | A wait before something happens | `context.timing` | A literal `Duration` |
-| A permanent action | `ActionRun.hold` on the command, rows from `useAnimatedRows` (the entry carries the hold), `CommandButton` for its buttons | `showConfirmationDialogue`, `AlertDialog`, a second confirm path |
+| A permanent action | `ActionRun.hold` with a `HoldPlan` of its `HoldWeight` on the command, rows from `useAnimatedRows` (the entry carries the hold), `CommandButton` for its buttons | `showConfirmationDialogue`, `AlertDialog`, a second confirm path, a hold without a weight |
 | A failure or a message | `context.reportFailure` with a retry when one helps, `context.reportSuccess`; the shell's `Toaster` shows them and failures land in Activity | `ScaffoldMessenger`, `SnackBar` |
 | A heading | `PageHeading`, `SectionTitle` at theme sizes | Local size or weight overrides |
 | A status | `StatusIndicator`, one chip | `TypeBadge`, `SmallChip`, `PresetChip` as separate styles |

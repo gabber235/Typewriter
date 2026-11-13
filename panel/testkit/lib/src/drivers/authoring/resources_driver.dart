@@ -70,6 +70,10 @@ final class ResourceOperationsDriver {
   /// Opens the context menu and returns its entries.
   Future<List<String>> open() async => (await _row.contextMenu()).entries;
 
+  /// Opens the context menu and returns its entries in their sections.
+  Future<List<List<String>>> openSections() async =>
+      (await _row.contextMenu()).sections;
+
   /// Opens the context menu and chooses [label].
   Future<void> choose(String label) async {
     final menu = await _row.contextMenu();

@@ -31,9 +31,13 @@ void main() {
     expect(row.reduced, ReducedKind.jump);
     expect(row.motion.simulate(from: 0, to: 1).x(0), 1);
 
-    final hold = await resolveMotionIn(tester, MotionToken.hold, reduced: true);
+    final hold = await resolveMotionIn(
+      tester,
+      MotionToken.holdLight,
+      reduced: true,
+    );
     expect(hold.reduced, ReducedKind.paced);
-    final full = await resolveMotionIn(tester, MotionToken.hold);
+    final full = await resolveMotionIn(tester, MotionToken.holdLight);
     expect(hold.motion.duration, full.motion.duration);
     expect((hold.motion as HoldMotion).fill.dampingRatio, closeTo(1, 1e-9));
   });
@@ -58,7 +62,7 @@ void main() {
 
     final hold = await resolveMotionIn(
       tester,
-      MotionToken.hold,
+      MotionToken.holdLight,
       override: const MotionOverride(duration: Duration(milliseconds: 1200)),
       reduced: true,
     );

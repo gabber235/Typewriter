@@ -53,7 +53,10 @@ final class RecordingSelectionOperation extends SelectionOperation {
       MenuItem(label: name, onPressed: () => executeOn(ref));
 
   @override
-  Widget inspectorButton(List<Selectable> selection) => const SizedBox.shrink();
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => const SizedBox.shrink();
 }
 
 /// A selectable card offering one recorded action, as features build them.
@@ -122,7 +125,10 @@ final class RecordingShortcutOperation extends ActivatorShortcutOperation {
   void executeOn(WidgetRef ref) => executions++;
 
   @override
-  Widget inspectorButton(List<Selectable> selection) => const SizedBox.shrink();
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => const SizedBox.shrink();
 
   @override
   MenuItem menuItem(WidgetRef ref) =>
@@ -149,8 +155,10 @@ final class ShortcutTestOperation extends ActivatorShortcutOperation {
   FutureOr<void> executeOn(WidgetRef ref) {}
 
   @override
-  Widget inspectorButton(List<Selectable> selection) =>
-      throw UnimplementedError();
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => throw UnimplementedError();
 
   @override
   MenuItem menuItem(WidgetRef ref) => throw UnimplementedError();

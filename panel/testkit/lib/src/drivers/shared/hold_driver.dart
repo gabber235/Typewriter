@@ -7,15 +7,39 @@ const _frame = Duration(milliseconds: 16);
 
 /// Holding keys and buttons the way a user does, in frames.
 ///
-/// Durations come from the `hold` token as the mounted panel resolves it, so
-/// a token change needs no test edit.
+/// Durations come from the hold token of the running hold's weight as the
+/// mounted panel resolves it, so a token change needs no test edit.
 extension HoldDriver on PanelDriver {
-  /// How long the mounted panel's `hold` takes to fill, reduced motion
-  /// included.
-  Duration get holdDuration => resolveMotion(
+  /// How long the hold in progress takes to fill, reduced motion included.
+  /// With nothing held, the longest weight's time, so a hold that never
+  /// starts is waited out in full.
+  Duration get holdDuration => switch (_runs.session.value) {
+    final session? => holdDurationOf(session.attempt.weight),
+    null => holdDurationOf(HoldWeight.permanent),
+  };
+
+  /// How long a hold of [weight] takes to fill in the mounted panel.
+  Duration holdDurationOf(HoldWeight weight) => resolveMotion(
     tester.element(find.byType(CommandRunsScope)),
-    MotionToken.hold,
+    weight.token,
   ).motion.duration;
+
+  /// The weight of the hold in progress, or null when nothing is held.
+  HoldWeight? get holdWeight => _runs.session.value?.attempt.weight;
+
+  /// The panel's one owner of holds, found the way the panel installs it.
+  CommandRuns get _runs =>
+      tester
+              .widget<CommandRunnerScope>(find.byType(CommandRunnerScope).first)
+              .runner
+          as CommandRuns;
+
+  /// Lets [time] pass in frames while whatever is down stays down.
+  Future<void> holdForTime(Duration time) async {
+    for (var elapsed = Duration.zero; elapsed < time; elapsed += _frame) {
+      await tester.pump(_frame);
+    }
+  }
 
   /// Holds [key] for [share] of the hold (a full hold plus a frame when
   /// [share] is 1), then releases it and lets the panel settle.
@@ -43,18 +67,14 @@ extension HoldDriver on PanelDriver {
   /// down.
   Future<void> holdFor(double share) async {
     final duration = share >= 1 ? holdDuration + _frame : holdDuration * share;
-    for (var elapsed = Duration.zero; elapsed < duration; elapsed += _frame) {
-      await tester.pump(_frame);
-    }
+    await holdForTime(duration);
   }
 
-  /// Holds the pointer on the button [label] for [share] of the hold, then
-  /// lifts it, or drags it [drift] away first when given.
-  Future<void> holdButton(
+  /// Puts the pointer down on the button [label] and returns the gesture
+  /// still down, for a test that times the hold itself.
+  Future<TestGesture> pressButton(
     String label, {
-    double share = 1,
     PointerDeviceKind kind = PointerDeviceKind.mouse,
-    Offset? drift,
   }) async {
     final gesture = await tester.startGesture(
       // The last one a pointer can reach: a toast may cover another.
@@ -67,6 +87,18 @@ extension HoldDriver on PanelDriver {
       kind: kind,
     );
     await tester.pump();
+    return gesture;
+  }
+
+  /// Holds the pointer on the button [label] for [share] of the hold, then
+  /// lifts it, or drags it [drift] away first when given.
+  Future<void> holdButton(
+    String label, {
+    double share = 1,
+    PointerDeviceKind kind = PointerDeviceKind.mouse,
+    Offset? drift,
+  }) async {
+    final gesture = await pressButton(label, kind: kind);
     if (drift != null) {
       await gesture.moveBy(drift);
       await tester.pump();

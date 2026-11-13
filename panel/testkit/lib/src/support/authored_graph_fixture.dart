@@ -214,11 +214,10 @@ final class AuthoredGraphFixture {
               _ => null,
             },
             presentation: skir.OperationPresentation(
-              inspector: skir.OperationInspector.wrapButton(
-                operation == "delete"
-                    ? skir.ButtonVariant.filled
-                    : skir.ButtonVariant.outlined,
-              ),
+              inspector: skir.OperationInspector.shown,
+              emphasis: operation == "delete"
+                  ? skir.OperationEmphasis.filled
+                  : skir.OperationEmphasis.outline,
               shortcut: operation == "delete"
                   ? skir.OperationShortcut.delete
                   : null,

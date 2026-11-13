@@ -91,6 +91,32 @@ final class InspectorDriver extends ComponentDriver {
   /// The operations the inspector offers as buttons, in reading order.
   List<String> get operations => [for (final button in _buttons) button.spoken];
 
+  /// The operations in the sections the inspector's divider lines split
+  /// them into.
+  List<List<String>> get operationSections => splitAtSeparators(_buttons);
+
+  /// How the operation button labeled [label] stands out: its face, which
+  /// only its look shows. A held button is heard as its outcome line, so
+  /// this takes the label it shows.
+  ButtonFace faceOf(String label) {
+    final buttons = find
+        .descendant(
+          of: find.byType(InspectorOperations),
+          matching: find.byWidgetPredicate(
+            (widget) => widget is Button && widget.label == label,
+          ),
+        )
+        .evaluate()
+        .map((element) => element.widget as Button)
+        .toList();
+    return switch (buttons) {
+      [final button] => button.face,
+      _ => throw TestFailure(
+        "Expected one button labeled $label, found ${buttons.length}",
+      ),
+    };
+  }
+
   /// Whether the operation button [label] can be pressed.
   bool isEnabled(String label) => _button(label).isEnabled;
 

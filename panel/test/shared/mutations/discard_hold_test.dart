@@ -33,6 +33,24 @@ void main() {
     );
   });
 
+  testWidgets("Discard lasts a light hold: kept just before it ends, thrown "
+      "away once it ends", (tester) async {
+    final (:panel, :draft) = await tester.openDraftActivity(host);
+    final light = panel.holdDurationOf(HoldWeight.light);
+
+    final pointer = await panel.pressButton("Discard");
+    await panel.holdForTime(light - const Duration(milliseconds: 100));
+    expect(draft.value(editorRootPath).valueOrNull, edited);
+    await panel.holdForTime(const Duration(milliseconds: 150));
+    await pointer.up();
+    await panel.settle();
+
+    expect(
+      draft.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("original"),
+    );
+  });
+
   testWidgets("an edit that starts saving during the hold is kept", (
     tester,
   ) async {

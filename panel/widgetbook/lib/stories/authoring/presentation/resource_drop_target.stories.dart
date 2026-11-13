@@ -208,5 +208,6 @@ skir.ResourceOperationDefinition _definition(
     confirmation: null,
     inspector: skir.OperationInspector.hidden,
     shortcut: null,
+    emphasis: skir.OperationEmphasis.flat,
   ),
 );

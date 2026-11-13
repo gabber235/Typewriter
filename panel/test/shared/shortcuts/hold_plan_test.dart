@@ -11,6 +11,7 @@ void main() {
     final source = await tester.showAnimatedItems(numberedItems(3));
     final first = Completer<void>();
     final plan = HoldPlan<String>(
+      weight: HoldWeight.heavy,
       verb: "Remove",
       rows: source.rows,
       targets: (_) => {"2", "0", "1"},

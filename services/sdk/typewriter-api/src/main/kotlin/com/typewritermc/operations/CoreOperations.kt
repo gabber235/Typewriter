@@ -5,9 +5,9 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypewriterType
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationGroup
-import skirout.editor.v1.operation.OperationInspector
+import skirout.editor.v1.operation.OperationEmphasis
 import skirout.editor.v1.operation.OperationShortcut
-import skirout.editor.v1.presentation.ButtonVariant
+import skirout.editor.v1.operation.OperationWeight
 
 /** Deletes the selected resources together with everything they own. Singletons cannot be deleted. */
 object Delete : ResourceOperation<Unit> {
@@ -15,9 +15,10 @@ object Delete : ResourceOperation<Unit> {
         appearance {
             icon("mdi:delete-outline")
             group(OperationGroup.DESTRUCTIVE)
-            inspector(OperationInspector.ButtonWrapper(ButtonVariant.FILLED))
+            emphasis(OperationEmphasis.FILLED)
         }
         confirm(
+            OperationWeight.PERMANENT,
             one = "Delete this resource and what it owns?",
             many = "Delete {count} resources and what they own?",
         )

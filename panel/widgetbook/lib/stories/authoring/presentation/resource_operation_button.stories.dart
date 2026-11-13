@@ -19,17 +19,13 @@ Widget resourceOperationButtonStory(BuildContext context) {
     label: "Long extension label",
     initialValue: false,
   );
-  final variant = context.knobs.object.dropdown(
-    label: "Button variant",
-    options: [
-      skir.ButtonVariant.filled,
-      skir.ButtonVariant.outlined,
-      skir.ButtonVariant.text,
-    ],
+  final emphasis = context.knobs.object.dropdown(
+    label: "Emphasis",
+    options: OperationEmphasis.values,
     labelBuilder: (value) => switch (value) {
-      skir.ButtonVariant.filled => "Filled",
-      skir.ButtonVariant.outlined => "Outlined",
-      _ => "Text",
+      OperationEmphasis.filled => "Filled",
+      OperationEmphasis.outline => "Outline",
+      OperationEmphasis.flat => "Flat",
     },
   );
   final destructive = context.knobs.boolean(label: "Destructive tone");
@@ -39,8 +35,14 @@ Widget resourceOperationButtonStory(BuildContext context) {
       SizedBox(
         width: 260,
         child: ResourceOperationButton(
+          emphasis: emphasis,
           presentation: skir.OperationPresentation(
-            inspector: skir.OperationInspector.wrapButton(variant),
+            inspector: skir.OperationInspector.shown,
+            emphasis: switch (emphasis) {
+              OperationEmphasis.filled => skir.OperationEmphasis.filled,
+              OperationEmphasis.outline => skir.OperationEmphasis.outline,
+              OperationEmphasis.flat => skir.OperationEmphasis.flat,
+            },
             shortcut: destructive ? skir.OperationShortcut.delete : null,
             label: longLabel
                 ? "Generate dialogue variations for this selection"

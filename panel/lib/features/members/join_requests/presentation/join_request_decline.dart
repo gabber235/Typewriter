@@ -21,6 +21,8 @@ ActionShortcut joinRequestDecline({
     priority: priority,
     run: ActionRun.hold(
       HoldPlan<skir.RecordId>(
+        // They must ask again to join.
+        weight: HoldWeight.heavy,
         rows: rows,
         targets: (_) => targets(),
         verb: "Decline",

@@ -16,12 +16,13 @@ import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
 import skirout.editor.v1.operation.OperationConfirmation
+import skirout.editor.v1.operation.OperationEmphasis
 import skirout.editor.v1.operation.OperationGroup
 import skirout.editor.v1.operation.OperationInspector
 import skirout.editor.v1.operation.OperationPresentation
 import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.operation.OperationWeight
 import skirout.editor.v1.operation.ResourceOperationId
-import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -171,7 +172,8 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
     private var icon: String? = null
     private var group: OperationGroup = OperationGroup.EDIT
     private var order = 0
-    private var inspector: OperationInspector = OperationInspector.ButtonWrapper(ButtonVariant.OUTLINED)
+    private var inspector: OperationInspector = OperationInspector.SHOWN
+    private var emphasis: OperationEmphasis = OperationEmphasis.FLAT
     private var shortcut: OperationShortcut? = null
     private var confirmation: OperationConfirmation? = null
     private var cardinality: OperationCardinality = OperationCardinality.SELECTION
@@ -183,11 +185,12 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
     override fun appearance(body: OperationAppearanceScope.() -> Unit) = body()
 
     override fun confirm(
+        weight: OperationWeight,
         one: String,
         many: String,
     ) {
         require(confirmation == null) { "An operation declares at most one confirmation." }
-        confirmation = OperationConfirmation(outcomeOne = one, outcomeMany = many).requireValid()
+        confirmation = OperationConfirmation(outcomeOne = one, outcomeMany = many, weight = weight).requireValid()
     }
 
     override fun input(body: OperationInputScope<D, I>.() -> Unit) = body()
@@ -234,6 +237,10 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
         inspector = value
     }
 
+    override fun emphasis(value: OperationEmphasis) {
+        emphasis = value
+    }
+
     override fun form(presentation: PresentationReference) {
         form = presentation
     }
@@ -275,6 +282,7 @@ private class OperationSpecBuilder<D : ResourceDraft, I>(
                     confirmation = confirmation,
                     inspector = inspector,
                     shortcut = shortcut,
+                    emphasis = emphasis,
                 ).requireValid(),
             cardinality = cardinality,
             form = form,

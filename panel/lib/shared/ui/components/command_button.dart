@@ -13,9 +13,9 @@ final _activators = {
 ///
 /// A press command runs on tap through [CommandRuns]. A hold command never
 /// runs on tap: a pointer, or Enter or Space on the focused button, held for
-/// the whole `hold` runs it, and a screen reader's long press confirms it at
-/// once. Without a run, or when not
-/// [enabled], it is unavailable.
+/// the hold token of its weight runs it, and a screen reader's long press
+/// confirms it at once. Without a run, or when not [enabled], it is
+/// unavailable. While held it gives way with [HoldPress].
 class CommandButton extends HookConsumerWidget {
   const CommandButton({
     required this.command,
@@ -66,6 +66,16 @@ class CommandButton extends HookConsumerWidget {
     final holding = useListenableSelector(
       runs.session,
       () => runs.session.value?.command == command.id,
+    );
+    // The button gives way only while the user holds; on completion it
+    // springs back.
+    final giving = useListenableSelector(
+      runs.session,
+      () => switch (runs.session.value) {
+        final session? =>
+          session.command == command.id && session.phase == HoldPhase.holding,
+        null => false,
+      },
     );
     final keys = command.canInvoke && command.registerShortcut
         ? command.shortcuts
@@ -141,12 +151,7 @@ class CommandButton extends HookConsumerWidget {
           }
           down.value = event.position;
           pointer.value = event.pointer;
-          runs.start(
-            command,
-            ref,
-            HoldInput.pointer(event.pointer),
-            motion: resolveMotion(context, MotionToken.hold),
-          );
+          runs.start(command, ref, HoldInput.pointer(event.pointer));
         }
 
         // Starts on the Button's key down, with the keys held then.
@@ -154,12 +159,7 @@ class CommandButton extends HookConsumerWidget {
           final keys = HardwareKeyboard.instance.logicalKeysPressed
               .intersection(_activators);
           if (keys.isEmpty) return;
-          runs.start(
-            command,
-            ref,
-            HoldInput.key(keys: keys, focus: focus),
-            motion: resolveMotion(context, MotionToken.hold),
-          );
+          runs.start(command, ref, HoldInput.key(keys: keys, focus: focus));
         }
 
         return Semantics(
@@ -174,12 +174,7 @@ class CommandButton extends HookConsumerWidget {
           tooltip: state.lastError,
           onLongPress: busy
               ? null
-              : () => runs.start(
-                  command,
-                  ref,
-                  const HoldInput.assistive(),
-                  motion: resolveMotion(context, MotionToken.hold),
-                ),
+              : () => runs.start(command, ref, const HoldInput.assistive()),
           child: ExcludeSemantics(
             child: Listener(
               onPointerDown: start,
@@ -202,16 +197,26 @@ class CommandButton extends HookConsumerWidget {
               },
               onPointerUp: (event) => runs.release(event.pointer),
               onPointerCancel: (event) => runs.release(event.pointer),
-              child: HoldFill(
-                fill: holding ? runs.fill : null,
-                // With rows, the rows show the run; the button shows it
-                // only for a hold that paints on itself.
-                pressed: busy && hold.plan.rows == null,
-                // The Listener owns a pointer hold and keyHold a key hold;
-                // the face never runs work on a press.
-                child: faceWith(
-                  busy ? null : () {},
-                  onKeyPressStart: busy ? null : keyHold,
+              child: HoldPress(
+                fill: giving ? runs.fill : null,
+                share: runs.clock.share,
+                motion: runs.clock.motion,
+                child: HoldFill(
+                  fill: holding ? runs.fill : null,
+                  // Red shows on a flat or outlined face; a filled face
+                  // darkens.
+                  color: face == ButtonFace.filled
+                      ? context.holdFillOnFilledColor
+                      : null,
+                  // With rows, the rows show the run; the button shows it
+                  // only for a hold that paints on itself.
+                  pressed: busy && hold.plan.rows == null,
+                  // The Listener owns a pointer hold and keyHold a key
+                  // hold; the face never runs work on a press.
+                  child: faceWith(
+                    busy ? null : () {},
+                    onKeyPressStart: busy ? null : keyHold,
+                  ),
                 ),
               ),
             ),

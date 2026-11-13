@@ -424,13 +424,22 @@ class InspectorOperations extends HookConsumerWidget {
 
     if (operations.isEmpty) return const SizedBox.shrink();
 
+    // The sections and order of the context menu; the pane keeps one filled
+    // button at most.
+    final sections = operations.sections;
+    final emphases = sections.flattened.shownEmphases;
+    var index = 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       spacing: context.spacing.space3,
       children: [
         const SectionTitle(title: "Operations"),
-        for (final operation in operations) operation.inspectorButton(selected),
+        for (final (number, section) in sections.indexed) ...[
+          if (number > 0) const Separator(),
+          for (final operation in section)
+            operation.inspectorButton(selected, emphasis: emphases[index++]),
+        ],
       ],
     );
   }

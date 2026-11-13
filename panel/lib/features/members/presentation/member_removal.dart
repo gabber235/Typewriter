@@ -24,6 +24,8 @@ ActionShortcut memberRemoval({
     priority: priority,
     run: ActionRun.hold(
       HoldPlan<skir.RecordId>(
+        // The member must ask to join again.
+        weight: HoldWeight.heavy,
         rows: rows,
         targets: (_) => targets(),
         verb: "Remove",

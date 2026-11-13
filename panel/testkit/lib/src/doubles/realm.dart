@@ -15,7 +15,9 @@ final class RealmOperation {
     this.name, {
     required this.group,
     String? label,
-    this.inspector = RealmOperationInspector.outlined,
+    this.order = 0,
+    this.inspector = RealmOperationInspector.shown,
+    this.emphasis = skir.OperationEmphasis.flat,
     this.shortcut,
     this.confirmation,
     this.effect,
@@ -41,17 +43,19 @@ final class RealmOperation {
         disabledBecause: disabledBecause,
       );
 
-  /// Deletes the selected resources once the user holds; bound to the
-  /// delete key and shown as a destructive filled button.
+  /// Deletes the selected resources once the user holds as long as a
+  /// permanent action; bound to the delete key and shown as a destructive
+  /// filled button.
   const RealmOperation.delete({String? disabledBecause})
     : this(
         "Delete",
         group: skir.OperationGroup.destructive,
-        inspector: RealmOperationInspector.filled,
+        emphasis: skir.OperationEmphasis.filled,
         shortcut: skir.OperationShortcut.delete,
         confirmation: const RealmConfirmation(
           one: "Delete this resource and what it owns?",
           many: "Delete {count} resources and what they own?",
+          weight: skir.OperationWeight.permanent,
         ),
         effect: _delete,
         disabledBecause: disabledBecause,
@@ -61,7 +65,13 @@ final class RealmOperation {
   final String name;
   final String label;
   final skir.OperationGroup group;
+
+  /// The position inside its group.
+  final int order;
   final RealmOperationInspector inspector;
+
+  /// How its inspector button asks to stand out.
+  final skir.OperationEmphasis emphasis;
   final skir.OperationShortcut? shortcut;
   final RealmConfirmation? confirmation;
   final void Function(AuthoringEdit edit, List<skir.ResourceId> targets)?
@@ -101,7 +111,7 @@ final class RealmOperation {
           description: "$name the resource",
           icon: "",
           group: group,
-          order: 0,
+          order: order,
           tone: group == skir.OperationGroup.destructive
               ? skir.HeaderActionTone.destructive
               : skir.HeaderActionTone.neutral,
@@ -110,16 +120,15 @@ final class RealmOperation {
             final confirmation => skir.OperationConfirmation(
               outcomeOne: confirmation.one,
               outcomeMany: confirmation.many,
+              weight: confirmation.weight,
             ),
           },
           inspector: switch (inspector) {
             RealmOperationInspector.hidden => skir.OperationInspector.hidden,
-            RealmOperationInspector.outlined =>
-              skir.OperationInspector.wrapButton(skir.ButtonVariant.outlined),
-            RealmOperationInspector.filled =>
-              skir.OperationInspector.wrapButton(skir.ButtonVariant.filled),
+            RealmOperationInspector.shown => skir.OperationInspector.shown,
           },
           shortcut: shortcut,
+          emphasis: emphasis,
         ),
       );
 
@@ -127,16 +136,22 @@ final class RealmOperation {
   String toString() => name;
 }
 
-/// How the inspector shows an operation.
-enum RealmOperationInspector { hidden, outlined, filled }
+/// Whether the inspector shows an operation.
+enum RealmOperationInspector { hidden, shown }
 
 /// The outcome line a Realm declares for a held operation: [one] for one
-/// target, [many] for several with "{count}" for their number.
+/// target, [many] for several with "{count}" for their number, held as long
+/// as its [weight].
 final class RealmConfirmation {
-  const RealmConfirmation({required this.one, required this.many});
+  const RealmConfirmation({
+    required this.one,
+    required this.many,
+    required this.weight,
+  });
 
   final String one;
   final String many;
+  final skir.OperationWeight weight;
 }
 
 /// The authoring side of one Realm: its saved document, the saves it
