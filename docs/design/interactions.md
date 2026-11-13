@@ -124,15 +124,15 @@ fun Added<CameraHold>.spectate(player: PaperPlayer) = ...
 
 ### Snapshot and restore
 
-A Hold type that changes real game state declares how to put it back, through two handlers. They are handlers and not methods because a handler can ask for several small traits: a camera needs `HasLocation`, `HasFlight`, and `HasVelocity`.
+A Hold type that changes real game state declares how to put it back, through two handlers. They are handlers and not methods because a handler can ask for several small traits: a camera needs `HasLocation` and `HasVelocity`.
 
 ```kotlin
 @Handler
-fun TakeSnapshot<CameraHold>.save(location: HasLocation, flight: HasFlight, velocity: HasVelocity) =
-    CameraSnapshot(location.location, flight.flying, velocity.velocity)
+fun TakeSnapshot<CameraHold>.save(location: HasLocation, velocity: HasVelocity) =
+    CameraSnapshot(location.location, velocity.velocity)
 
 @Handler
-fun RestoreSnapshot<CameraHold>.back(location: HasLocation, flight: HasFlight, velocity: HasVelocity,
+fun RestoreSnapshot<CameraHold>.back(location: HasLocation, velocity: HasVelocity,
     snapshot: CameraSnapshot) = ...
 ```
 
@@ -224,7 +224,7 @@ A display is a node in the audience tree, so it has its own `InAudience`, and a 
 
 ### Holds: not proven
 
-- **Nothing ran.** All Kotlin here is a sketch, and `TrackedGraph` exists only in design records, not in `services/` or `backend/`.
+- **Nothing ran.** All Kotlin here is a sketch. `TrackedGraph` was built in layer 1 for realm checks (`runtime/formula`); its engine inputs and observers come with layers 6 to 8.
 - **Slow loading.** If a formula's values take longer than the grace on rejoin, the restore fires too early and then the Hold returns. The grace may need to start once formulas settle, and a formula that never gets a value then needs a limit.
 - **Restore on another server.** A saved location may name a world that server does not have.
 - **Restore order.** Two Holds touching the same game state restore in an unknown order.
@@ -977,7 +977,7 @@ A mirror updates at its poll rate. An extension that needs a change at once adds
 | Group entry deleted | All its groups end: memberships and values keyed by them are removed. A variable keyed by its type and a `JoinGroup` pointing at it are errors that block publishing until fixed. |
 | Leaving a group you are not in | Nothing happens. |
 
-Not proven: `dynamic()` and `bind` are not built, and `bind` is planned after groups, so the layer order needs checking in the plan; how a key of any allowed type is written as a stable row key; narrowing a watched formula to one entry is already open for the plan; which engine writes when a key reads a mirror and a player is held by two engines; the cost of one watched formula per online player per formula group.
+Not proven: `dynamic()` is built with `scope` and `exports` only (layer 1), and `bind` comes in its own node 1b before groups ([build-graph.md](build-graph.md)); how a key of any allowed type is written as a stable row key; narrowing a watched formula to one entry is already open for the plan; which engine writes when a key reads a mirror and a player is held by two engines; the cost of one watched formula per online player per formula group.
 
 ### Widening
 

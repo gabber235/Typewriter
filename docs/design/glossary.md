@@ -28,6 +28,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## A
 
+**`ActionBarSent`**: event for an action bar packet the server sends to a player, with the player and the message. See [packets.md](packets.md#1-a-typed-event-with-no-paper-in-it).
+
+**`ActionBarSource`**: source that turns outgoing action bar packets into `ActionBarSent` through the wire. See [packets.md](packets.md#2-a-source-the-same-shape-as-a-paper-event-source).
+
 **Action entry**: an instant entry whose handler on `Triggered<E>` does its work and fires its links without becoming a step. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
 **`Added<T>`**: lifecycle event fired when a stored value, hold, or mirror appears for a set of keys. See [stored-data.md](stored-data.md#lifecycle-events).
@@ -50,15 +54,29 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Audience**: an `AudienceEntry` tree whose criteria are formulas over mirrors and whose membership is the `InAudience` mirror. See [live-data.md](live-data.md#audiences).
 
+**`AudienceContext`**: what an audience criterion sees: the protagonist, the engine, and the members already considered. See [live-data.md](live-data.md#audiences).
+
+**`AudienceMember`**: one protagonist in an audience, with when they entered and whether they are on this engine. See [live-data.md](live-data.md#audiences).
+
+**`AuthoringCatalog`**: the checked catalog of one generation as an authoring client sees it, resolving types, schemas, and concrete forms. See [authoring-writes.md](authoring-writes.md#kotlin-api).
+
 **`AuthoringCommit`**: one record of the realm commit history: id, actor, session, and a `ValueChange` (before and after) per changed value; it stores attribution and drives undo. See [panel-engine-communication.md](panel-engine-communication.md) question 12.
+
+**`AuthoringTransaction`**: the `EditContext` of an authored write block, adding untyped reads and writes by path that are checked before commit. See [authoring-writes.md](authoring-writes.md#kotlin-api).
 
 ## B
 
 **`Because`**: field on every `Added` and `Removed` saying whether the value really changed (`Value`) or tracking started or stopped (`Tracking`). See [live-data.md](live-data.md#added-changed-removed-and-because).
 
+**`BezierCameraSegment`**: camera segment shaped like a Blender curve, whose points carry handles that set direction and flow. See [scenes.md](scenes.md#3-camera-kinds).
+
+**`BezierPoint`**: point of a Bezier camera segment: a position, an outgoing handle, an optional incoming handle, and an `Ease` toward the next point. See [scenes.md](scenes.md#3-camera-kinds).
+
 **`bind`**: `dynamic()` builder that derives a generic type parameter from content, so a bound parameter needs no picker. See [formula-language.md](formula-language.md#bind).
 
 **Book**: a `Resource` (not an entry) that carries variables, instances, and imports. See [formula-language.md](formula-language.md#book).
+
+**Build graph**: the graph of nodes (layers and the parts split from them) with their needs, which decides what can be built side by side. See [build-graph.md](build-graph.md).
 
 **`BookContext`**: formula context of a book's `condition`: `protagonist` and `engine`, with book variables through scope. See [book-composition.md](book-composition.md#1-the-books).
 
@@ -88,9 +106,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`CameraPath`**: a camera segment's path with its formulas resolved for one member: a world and a position per frame. See [scenes.md](scenes.md#3-camera-kinds).
 
+**`CameraPoint`**: keyframe of a Catmull-Rom camera segment: a position the path passes through at its frame. See [scenes.md](scenes.md#3-camera-kinds).
+
 **`CameraRig`**: `Runtime` holding the fake entity a protagonist's client looks through during a scene. See [scenes.md](scenes.md#4-the-rig-as-legacy).
 
 **`CameraSegment`**: interface for camera segments on a camera track; kinds are fixed, Catmull-Rom, and Bezier, each owning its own points. See [scenes.md](scenes.md#3-camera-kinds).
+
+**`CameraSnapshot`**: what a camera hold saves for restore: the player's location and velocity, with no flight. See [scenes.md](scenes.md#6-landing).
+
+**`CameraTrackEntry`**: scene entry whose segments each give one camera path; the current segment becomes the `CameraHold`. See [scenes.md](scenes.md#3-camera-kinds).
 
 **`CancelableEvent`**: interface of an event a verdict can deny, such as `BlockBreak`. See [events-and-handlers.md](events-and-handlers.md#event-entries).
 
@@ -103,6 +127,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`Capture`**: core event that runs a formula on a player and writes the result into a field; `captureButton` sends it from a presentation. See [capture.md](capture.md).
 
 **`CaptureContext`**: core formula context of a `Capture` formula, providing `protagonist` and `engine`. See [capture.md](capture.md).
+
+**`CatmullRomCameraSegment`**: camera segment that passes through every one of its `CameraPoint`s, as legacy cinematics do. See [scenes.md](scenes.md#3-camera-kinds).
 
 **Chain**: entries linked by triggers, where links fire explicitly and carry a growing context. See [events-and-handlers.md](events-and-handlers.md#chain).
 
@@ -122,11 +148,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Checks**: the one list of build time (KSP) and realm findings, where errors block publication and warnings and info never do. See [live-data.md](live-data.md#checks).
 
+**`Chosen`**: chain record an option dialogue adds to its context: the 1 based index of the option picked. See [dialogue.md](dialogue.md#1-the-entry).
+
 **`ChosenTarget`**: stored value `ChosenTarget(user, target)` naming the protagonist a panel user acts on, so the choice follows the user across devices. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
 **Clash**: what happens when an incoming step needs a hold type another interaction holds for the same protagonist. See [interactions.md](interactions.md#clashes).
 
 **`ClientLoaded`**: wire event from `ServerboundPlayerLoadedPacket`: the client has loaded its world, also after a world change. See [scenes.md](scenes.md#7-preparation-waits).
+
+**`ClientLoadedSource`**: source that turns the client's loaded packet into `ClientLoaded`, which releases a scene's readiness wait. See [scenes.md](scenes.md#7-preparation-waits).
 
 **`ClientPosition`**: example wire event that is only a fake view, kept separate from `PlayerMove` because its effect differs. See [events-and-handlers.md](events-and-handlers.md#event).
 
@@ -147,6 +177,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Configured event**: an event with a configuration type parameter (`Tick<Config : TickConfig>`) whose source only emits for configurations some handler can run for. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
 **`ConfiguredSource<E, Config>`**: source interface whose `open(demand: Demand<Config>, sink: Sink<E>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+
+**`ConfirmationKey`**: the key a protagonist presses to confirm: jump, sneak, swap hands, left click, or right click. See [dialogue.md](dialogue.md#6-the-key).
 
 **`ContentCommandRan`**: event a content command node runs; its handler fires the node's triggers with the arguments as context. See [commands.md](commands.md#end-to-end-in-content).
 
@@ -172,6 +204,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`CueKeyframe`**: keyframe on a cue track whose links fire once when the playhead reaches or passes it, guarded by `CueFired`. See [scenes.md](scenes.md#8-skip-and-cues).
 
+**`CueReached`**: live value for a cue keyframe whose frame the playhead has reached or skipped past; its handler fires the cue's links once. See [scenes.md](scenes.md#8-skip-and-cues).
+
+**`CueTrackEntry`**: scene entry holding cue keyframes, each of which fires links once the playhead reaches it. See [scenes.md](scenes.md#8-skip-and-cues).
+
 ## D
 
 **Decision phase**: the phase of handlers returning a `Verdict`; pure, never suspending, taking part in allow, deny, change, or pass. See [events-and-handlers.md](events-and-handlers.md#return-value-decides-the-phase).
@@ -196,9 +232,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`DialogueView`**: `Live` interface shared by the dialogue kinds, with `doneAt` and `render`; not core. See [dialogue.md](dialogue.md#3-the-dialogue-package).
 
+**`DomainCheck`**: realm check that warns when a domain value or formula use names an id that no engine reports. See [domains.md](domains.md#8-the-realm-check-looks-for-typos).
+
 **`Domain<T>`**: the formula type of a name such as `minecraft.item`; any name on it gives a `T`, such as `ItemType("diamond")`. See [domains.md](domains.md).
 
 **`DomainValue`**: interface of a type whose valid values live elsewhere (`World`, `ItemType`, `MythicSkill`), so one picker and one check serve them all; `OpenDomainValue` makes an unknown value a warning. See [domains.md](domains.md).
+
+**`DomainValuePicker`**: the one presentation on `DomainValue` that gives every domain a searchable id picker. See [domains.md](domains.md#4-the-creator-picks-it).
 
 **Dry run**: a read only evaluation of a migration against real stored values on every edit. See [migrations.md](migrations.md#checks-while-editing).
 
@@ -208,7 +248,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## E
 
+**`Ease`**: speed curve toward the next point of a Bezier camera segment: `Linear`, `In`, `Out`, or `InOut`. See [scenes.md](scenes.md#3-camera-kinds).
+
 **`EditExpectation.exists`**: authoring guard that a value location exists or not; it replaces `resource_exists`, and list operations guard only the items they name with it. See [panel-engine-communication.md](panel-engine-communication.md) question 12.
+
+**`EditOutcome`**: result of an authored write block: `Committed` with the block's result, or `Refused` with a message and problems. See [authoring-writes.md](authoring-writes.md#kotlin-api).
 
 **`EmbedBook<V, I, O>`**: entry that places a book inside another book; `instance` picks a new or listed instance, `inlets` and `outlets` come from the book's relays through `bind`. See [book-composition.md](book-composition.md#3-the-embed).
 
@@ -223,6 +267,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`EnginePart`**: marker for a class an extension adds to an engine; KSP finds it by supertype and it joins the deployment's Koin. See [events-and-handlers.md](events-and-handlers.md#engine-parts).
 
 **Entry record**: a chain context record keyed by producing entry plus type, add only. See [events-and-handlers.md](events-and-handlers.md#context).
+
+**`Evaluation`**: result of evaluating a formula: a `Value`, or `Failed` with the location and a `FormulaFailure`. See [formula-language.md](formula-language.md#exceptions).
 
 **Event**: a plain Kotlin type saying one thing happened, one type per meaning; every event is a `@TypewriterType`, so it crosses engines as its catalog value. See [events-and-handlers.md](events-and-handlers.md#event).
 
@@ -248,19 +294,27 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## F
 
-**`FakeEntity`**: a per viewer entity that exists only on the wire, so a crash leaves nothing; its base is in layer 18, NPCs build on it in 21. See [scenes.md](scenes.md#4-the-rig-as-legacy).
+**`FakeEntity`**: a per viewer entity that exists only on the wire, so a crash leaves nothing; its base is node 14b; the camera (18b) and NPCs (21) build on it. See [scenes.md](scenes.md#4-the-rig-as-legacy).
 
 **Finder**: a `Live` type plus producing handlers that finds a value for a handler, such as the nearest NPC. See [live-data.md](live-data.md#finders-are-mirrors).
 
 **`fire(context)`**: fires a link set, emitting one `Triggered<E>` per linked entry; `for = group` widens it. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
+**`FixedCameraSegment`**: camera segment for a still shot at one position; with an aim of `At` it pans to follow a spot. See [scenes.md](scenes.md#3-camera-kinds).
+
 **Follow up**: a block on a verdict (`allow { }`, `deny { }`, `pass { }`) that runs when the final outcome matches it. See [events-and-handlers.md](events-and-handlers.md#follow-ups-and-cancel).
 
 **Formula**: a creator or extension expression in its own typed language with its own interpreter, separate from v1 portable expressions. See [formula-language.md](formula-language.md).
 
+**`FormulaAudienceEntry`**: the one formula audience: a protagonist is in while its `criterion` is true, and it can have child audiences. See [live-data.md](live-data.md#audiences).
+
+**`FormulaFailure`**: why one formula evaluation failed: a provider threw, overflow, division by zero, not finite, recursion limit, or no value. See [formula-language.md](formula-language.md#exceptions).
+
 **Formula kind**: Pure, Stored, or Live, the strongest kind a formula calls, which decides where it can run. See [formula-language.md](formula-language.md#where-formulas-run).
 
 **`FormulaReads`**: what a formula or part can read, computed by the checker at publish. It decides the formula's kind and its memo key, so a formula is identified by what it reads, not by who asked. See [formula-language.md](formula-language.md#what-a-formula-reads).
+
+**`FormulaReference`**: one reference in formula source: a text span and the resource it points at. See [formula-language.md](formula-language.md#the-formula-primitive-in-kotlin).
 
 **Formula start**: a chain start that fires when a formula turns true or whenever its output changes. See [formula-language.md](formula-language.md#formula-starts).
 
@@ -271,6 +325,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Function typed field**: a `Var` whose `T` is a function type (`FunctionTypeTemplate`); its text is the body with the parameters in scope. See [formula-language.md](formula-language.md#function-typed-fields).
 
 ## G
+
+**`GaveUp`**: live value for a queued step whose `giveUp` rule is true or whose book no longer applies; its handler leaves the queue. See [interactions.md](interactions.md#the-queue).
 
 **`GeneratedProviderLoader`**: loads the KSP generated formula providers. See [formula-language.md](formula-language.md#members-and-providers).
 
@@ -304,9 +360,15 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Handler**: a Kotlin function with the event as receiver; parameters decide when and where it runs, the return type decides its phase. See [events-and-handlers.md](events-and-handlers.md#handler).
 
+**`HasBlock`**: part interface for types with block coordinates, with `withBlock` returning the receiver's own type. See [minecraft-types.md](minecraft-types.md#part-interfaces).
+
 **`HasChat`, `HasInventory`, `HasHealth`**: example live capability traits an engine provides for its identities, each small and for one capability. See [live-data.md](live-data.md#live-capability-traits).
 
 **`HasAttributes`**: Minecraft capability trait that sets and removes keyed, transient attribute modifiers. See [interactions.md](interactions.md#gesture-ways-out).
+
+**`HasRotation`**: part interface for types with yaw and pitch, with `withRotation` returning the receiver's own type. See [minecraft-types.md](minecraft-types.md#part-interfaces).
+
+**`HasVector`**: part interface for types with x, y, and z, with `withVector` returning the receiver's own type. See [minecraft-types.md](minecraft-types.md#part-interfaces).
 
 **`Held`**: core `Live` value per protagonist naming which interaction holds each Hold type, and which steps have settled. See [interactions.md](interactions.md#clashes).
 
@@ -364,7 +426,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## J
 
+**`JoinGroupEntry`**: action that puts a protagonist in a manual group under a key. See [interactions.md](interactions.md#groupings-and-membership).
+
 **`JumpLock`**: hold that weakens jumping while Jump is the offered key, restored after a crash. See [dialogue.md](dialogue.md#6-the-key).
+
+**`JumpLocked`**: snapshot record of the `JumpLock` hold; nothing needs saving, so it only marks the lock for restore after a crash. See [dialogue.md](dialogue.md#6-the-key).
 
 ## K
 
@@ -394,6 +460,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Leash`**, **`LeashCenter`**, **`LeashEntry`**: the walk away way out: a hold under an audience, its snapshot of where the player stood, and the entry with its radius. See [interactions.md](interactions.md#gesture-ways-out).
 
+**`LeaveGroupEntry`**: action that takes a protagonist out of a manual group, for one key or for every group of the entry. See [interactions.md](interactions.md#groupings-and-membership).
+
 **Lifecycle events**: `Added<T>`, `Changed<T>(old, new)`, and `Removed<T>`, fired for every stored value, hold, and mirror. See [stored-data.md](stored-data.md#lifecycle-events).
 
 **Link query**: a link field in formula mode, returning references at publish (`page.elements.filter { it is StepEntry }`). See [formula-language.md](formula-language.md#link-fields-as-queries).
@@ -413,6 +481,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`ManualGroupEntry`**: grouping changed only through the `JoinGroup` and `LeaveGroup` actions, so creators build parties with data. See [interactions.md](interactions.md#groupings-and-membership).
 
 **`MemberContext`**: core formula context evaluated per member, adding `protagonist` to `InteractionContext`. See [formula-language.md](formula-language.md#formula-contexts).
+
+**`MinecraftItem`**: the item form built from an item type, an amount, and a set of components. See [minecraft-types.md](minecraft-types.md#item-forms).
 
 **`Partial<T>`**: a type with `T`'s fields, each nullable; every configuration layer is one. See [configurations.md](configurations.md).
 
@@ -440,6 +510,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`NearestNpc`, `NearbyNpcs`**: example finder mirrors; the second shows an entry reference as a parameter key. See [live-data.md](live-data.md#finders-are-mirrors).
 
+**`NoOptions`**: live value for an option dialogue where no one has an option shown; the step moves on. See [dialogue.md](dialogue.md#7-choosing).
+
 **`NotReadyEntry`**: way out for a member whose scene preparation ended `Failed` or `TimedOut`; when leaving is blocked, the member plays on. See [scenes.md](scenes.md#7-preparation-waits).
 
 **`now`**: the time, fixed per evaluation; in a `Changes` field it is the realm commit time. See [formula-language.md](formula-language.md#time-and-randomness).
@@ -464,11 +536,19 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Once`**: core `Schedule` for one fixed time; a time in the past means never. See [stored-data.md](stored-data.md#due).
 
+**`OnClash`**: step rule for a start that meets a running step: `Drop`, `Queue`, or `Replace`. See [interactions.md](interactions.md#steps).
+
 **`OnlinePlayer`**: `Live` mirror in the Minecraft capability with an online protagonist's name and its `Engine`, read by the panel's target list. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
 **`onRejoin`**: step rule: `Drop` (default), `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#leaving-and-rejoining).
 
+**`OnRejoin`**: step rule for a protagonist who returns: `Drop`, `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#steps).
+
 **`OnWrite<K, T>`**: variable reaction that runs inside every write's own transaction. See [stored-data.md](stored-data.md#reactions).
+
+**`OptionDialogueEntry`**: step entry that shows a speaker, a text, and options, and chains to the chosen option. See [dialogue.md](dialogue.md#1-the-entry).
+
+**`OptionView`**: the view of an option dialogue: its format, text, options, selection, and typing times, which render to chat. See [dialogue.md](dialogue.md#4-what-the-option-dialogue-asks-for).
 
 **Origin**: who caused an occurrence (session and `PrincipalId`), filled by the source beside the event, never an event field; handlers ask for it as the `Origin` parameter. See [events-and-handlers.md](events-and-handlers.md).
 
@@ -512,6 +592,12 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Portable kernels**: the Kotlin and Dart implementations of `operations.yaml` that keep panel and realm expression results equal; formula stdlib providers may call the Kotlin ones as a library. See [formula-language.md](formula-language.md#standard-library).
 
+**`PotionHold`**: hold keyed by protagonist and effect that applies one potion effect at a level. See [interactions.md](interactions.md#end-to-end).
+
+**`PotionSegment`**: segment of a potion track: the effect and its level over a frame range. See [scenes.md](scenes.md#2-a-track-derives-a-hold-that-exists).
+
+**`PotionTrackEntry`**: scene entry whose active segments each derive a `PotionHold`, so one track plays several effects. See [scenes.md](scenes.md#2-a-track-derives-a-hold-that-exists).
+
 **`Prepared`**: stored row with how a member came through a preparation wait (`Readiness`), kept until the step ends. See [scenes.md](scenes.md#7-preparation-waits).
 
 **Preview**: adds a `Simulating(mode)` stored value to the previewed step; handlers run for real unless they check it. See [interactions.md](interactions.md#preview-and-recording).
@@ -546,6 +632,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Queue (clash)**: an incoming step waits until it can start, giving up through a formula, when its book stops applying, or when its interaction ends. See [interactions.md](interactions.md#clashes).
 
+**`QueuedContext`**: member context of a queued step that adds how long it has waited. See [interactions.md](interactions.md#steps).
+
 **`Queued<E>`**: stored row of a step waiting for its holds. See [interactions.md](interactions.md#the-queue).
 
 ## R
@@ -553,6 +641,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`random(...)`**: formula randomness seeded by (run, place), so rechecking agrees and a new run rolls again; the run is the chain's seed record, the write, or the event, depending on the context. See [formula-language.md](formula-language.md#time-and-randomness).
 
 **`Readiness`**: the result of a preparation wait: `Ready`, `Failed(reason)`, or `TimedOut`. See [scenes.md](scenes.md#7-preparation-waits).
+
+**`RealmAuthoring`**: one realm seen by one principal, with catalog, scoped read, prepare, and commit; routed or in process. See [authoring-writes.md](authoring-writes.md#kotlin-api).
 
 **`resource.relay`**: relation family of relays; an endpoint in it accepts any resource, and a link through a relay is valid when every link it becomes after rewiring is valid. See [book-composition.md](book-composition.md#2-inlets-and-outlets).
 
@@ -598,6 +688,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`scopeAt(field)`**: query graph step computing the scope a field's formulas see. See [formula-language.md](formula-language.md#query-graph).
 
+**`Selected`**: live value for the option a protagonist has selected: its index among the options shown. See [dialogue.md](dialogue.md#4-what-the-option-dialogue-asks-for).
+
 **Server move**: a leave plus a rejoin; the session is kept and everything else follows its own rule. See [live-data.md](live-data.md#multiple-servers).
 
 **`Session`**: identity for one connection of a protagonist, `Session(protagonist, id: SessionId)`. See [live-data.md](live-data.md#session).
@@ -612,9 +704,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Settable<T>`**: generated reader and write target for a `stored()` declaration, with keys filled from scope. See [stored-data.md](stored-data.md#reading).
 
+**`ShownOptions`**: live value listing the option indices that are available to one protagonist. See [dialogue.md](dialogue.md#4-what-the-option-dialogue-asks-for).
+
 **`SidebarHold`**: example display hold derived from `InAudience`, with its text as a tracked parameter and a handler on `Changed<SidebarHold>`. See [live-data.md](live-data.md#audiences).
 
 **`Simulating(mode)`**: stored value marking a previewed step. See [interactions.md](interactions.md#preview-and-recording).
+
+**`SkipSegment`**: segment of a skip track in which a confirm jumps the playhead to the segment's end. See [scenes.md](scenes.md#8-skip-and-cues).
 
 **`SkipTrackEntry`**: scene track whose segments offer a key that jumps the playhead past the segment. See [scenes.md](scenes.md#8-skip-and-cues).
 
@@ -631,6 +727,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Static entry**: an entry that declares data and is never triggered (`Variable`, `Definition`, `GroupEntry`). See [stored-data.md](stored-data.md#variables).
 
 **Step**: an entry that takes time inside an interaction, started by firing into a `StepEntry`, and an identity with a new id at each start. See [interactions.md](interactions.md#steps).
+
+**`StepContext`**: member context of a running step that adds how long it has run. See [interactions.md](interactions.md#steps).
 
 **`StepEntry`**: entry that takes time; firing into it starts a step. See [interactions.md](interactions.md#steps).
 
@@ -652,7 +750,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`TakeSnapshot<H>`**: core event that runs when a hold starts and has no stored snapshot; its one handler returns the snapshot. See [interactions.md](interactions.md#snapshot-and-restore).
 
+**`TeleportSource`**: source that turns Paper teleports into `Teleport`, ignoring the ones Typewriter makes itself. See [scenes.md](scenes.md#5-typewriters-own-moves).
+
 **Template**: string template sugar where the expected type picks the `template` provider. See [formula-language.md](formula-language.md#text-templates).
+
+**`TextSpan`**: a start and an end in UTF-16 units, used for formula references and diagnostic details. See [formula-language.md](formula-language.md#formula-checks).
 
 **Thin copy**: a book copy that shares its decoded data with every other copy and owns only its key and the leaves rebound at load (formulas that read `book`, links). See [formula-language.md](formula-language.md#copies-at-publish).
 
@@ -661,6 +763,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Tick pipeline**: how chains run: starts queue and merge during a tick, one worker runs them at tick end, world changes share one owner visit, and only `require` guards wait for the realm. See [events-and-handlers.md](events-and-handlers.md#tick-pipeline).
 
 **`Tick<Config : TickConfig>`**: configured capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+
+**`TrackedGraph`**: the shared query graph of inputs and memoized queries that records reads, cuts off early, and drives observers. See [formula-language.md](formula-language.md#interpreter).
 
 **Trigger**: an ordinary handler on a world event that fires an entry's links. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
@@ -682,6 +786,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`TypeSelection`**: keeps an unbound type parameter creator picked. See [formula-language.md](formula-language.md#bind).
 
+**`TypingSkipped`**: live value that marks when a protagonist skipped the typing of an option dialogue. See [dialogue.md](dialogue.md#4-what-the-option-dialogue-asks-for).
+
 ## U
 
 **Union**: a closed record (`RecordForm.closed`) that lists its cases in order, narrowed with `is`, smart casts, and exhaustive `when`. An open record accepts any subtype that names it in `parents`, and `when` over it needs `else`. See [formula-language.md](formula-language.md#unions-and-errors).
@@ -694,7 +800,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`value_location`**: the representation and `DataValue` variant for a place in authored content, the portable form of `BoundPath<T>`; named so it never reads as the Minecraft `Location`. See [panel-engine-communication.md](panel-engine-communication.md#emit-without-extension-code-in-the-panel-engine-2026-11-01).
 
-**`Var<T, C>`**: the one formula field kind; `T` decides what the text may be and `C` what it sees. See [formula-language.md](formula-language.md#vart-c-the-one-field-kind).
+**`ValueResult`**: result of converting portable JSON to a `DataValue`: `Valid` with the value, or `Invalid` with problems. See [authoring-writes.md](authoring-writes.md#kotlin-api).
+
+**`Var<T, C>`**: the one formula field kind, a closed record of `Value` (a plain value) and `Computed` (a formula); `T` decides what the text may be and `C` what it sees. See [formula-language.md](formula-language.md#vart-c-the-one-field-kind).
 
 **`Variable<K, T>`**: creator declared stored data as a static entry with name, keys, type, default, and reactions. See [stored-data.md](stored-data.md#variables).
 
@@ -719,6 +827,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Way out**, **`WayOut`**: an explicit way for the player to leave an interaction: a gesture (an audience child hold, such as the leash) or the `LeaveEntry` action. Replaces legacy interaction bounds. See [interactions.md](interactions.md#ways-out).
 
 **Widening**: explicitly firing a chain for a group instead of one protagonist, making one shared interaction. See [interactions.md](interactions.md#widening).
+
+**`WireHandler`**: the one channel handler Typewriter adds to a pipeline; it answers wanted packets with a verdict and passes the rest through. See [packets.md](packets.md#4-the-wire-underneath).
 
 **Wire verdict**: a verdict on a packet event; it may read only network safe data, never live traits. See [events-and-handlers.md](events-and-handlers.md#threads).
 

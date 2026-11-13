@@ -2,7 +2,7 @@
 
 Living records of design decisions, one file per workstream. The vision (`docs/vision/`) says what Typewriter should be; these records say how it will work and in what order it gets built. Worktrees that implement a part read the matching record first.
 
-Read `overview.md` first; it introduces the seven primitives and links to the rest.
+Read `overview.md` first; it introduces the seven primitives. The table below lists every record.
 
 | File | Covers |
 | --- | --- |
@@ -27,9 +27,10 @@ Read `overview.md` first; it introduces the seven primitives and links to the re
 | [authoring-writes.md](authoring-writes.md) | How any client (panel, engine, MCP service) writes authored state: actor, generic SDK, generated helpers |
 | [panel-engine-communication.md](panel-engine-communication.md) | Panel and engine communication: scenarios, target choice, emit actions, engine reports, results |
 | [glossary.md](glossary.md) | Every type and term, one line each |
-| [closed-beta-roadmap.md](closed-beta-roadmap.md) | The stacked PR order toward the closed beta, with what each layer needs |
+| [closed-beta-roadmap.md](closed-beta-roadmap.md) | What each layer contains and demos, and the decisions behind the plan toward the closed beta |
+| [build-graph.md](build-graph.md) | Which work can start once other work is done: nodes, their needs, waves, and status |
 
-The topic files describe the current design only. Each ends with its own Open list. The roadmap and panel-engine-communication.md keep the record format below.
+The topic files describe the current design only. Each ends with what is still open or not proven. The roadmap and panel-engine-communication.md keep the record format below.
 
 Those records have four sections:
 

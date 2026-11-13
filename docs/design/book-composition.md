@@ -237,7 +237,7 @@ Bo clicks the smith: `smith_question` runs, but `fire` skips `ask_line@["fetch_i
 
 Nothing compiled or ran. Checked against code: KSP accepts a universal endpoint (`universal_resource_endpoint.kt:19`, compile only); the hard link checks run before `accepts` (`ResourceValueMapper.kt:191-213`); `isReadableAs(_, Resource)` is false (`KspTypeGraphConverter.kt:281`); the engine keys by the full `CompiledResourceKey`, so copies never collide (`CompiledResourceGraph.kt:25-39`).
 
-- **`bind`, `dynamic()`, and `Book<V>` are not built** (`LibraryModel.kt:79-86` has no variables). Layer 31 waits on layers 11 and 13.
+- **`bind` and `Book<V>` are not built**; `dynamic()` is built with `scope` and `exports` only (layer 1), and the `Book` record has no variables yet. Layer 31 waits on 1b (`bind`) and 13 ([build-graph.md](build-graph.md)).
 - **The id of `I` and `O`.** A derived type's id is the location of the field the bind reads; `I` and `O` come from many relay resources, so the rule needs to name the field the bind is declared on.
 - **`book.contents<BookOutlet>()` inside `dynamic()`.** Only `ref.resolve()` and field reads are designed as tracked reads; this is a chain of field reads over pages.
 - **`Book<V>` as a reference target** in `Ref<EmbeddedBook.Embed, Book<V>>`.

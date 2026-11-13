@@ -220,5 +220,5 @@ The key is an `Engine` today. Asset ids and realm known names (server names from
 - **`realmCallback`** exists (`SearchControls.kt:68`) but nothing calls it yet.
 - **Finding the values.** `each(anyResource)` exists (`ResourceTypeMatch.AnyResource`, `RealmSelections.kt`), but it needs a walk over typed values in a resource. `domainUses()` is unbuilt.
 - **One spelling.** `ItemType("minecraft:diamond")` must be rejected, or it does not equal `ItemType("diamond")`. A value class can reject it in `init` but cannot rewrite it.
-- **Generic providers.** KSP has no formula providers yet, so `typeOf<T>()` and `Domain<T>` as a provider result are design only.
+- **Generic providers.** Layer 1 generates formula providers (`GeneratedFormulaProvider`), but not generic ones, so `typeOf<T>()` and `Domain<T>` as a provider result are design only.
 - **Measured:** the largest sets in the 1.21.4 API are 1651 sounds, 1385 items, and 1095 blocks. 21 of the 33 registry id types are Paper registries; the other 12 need their own lister.

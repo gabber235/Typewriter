@@ -579,7 +579,7 @@ Of the 30 legacy events, 24 use the shared entry. `PlayerDamaged`, `PlayerKillPl
 | 8 Mirrors | `FactChange` | |
 | 10 Minecraft types | `BlockPlace`, `ConsumeItem`, `CraftItem`, `DropItem`, `PickupItem`, `Fish`, `Interact`, `InteractBlock`, `ChangeWorld`, `Teleport`, `PlayerRespawn`, `PlayerMove`; `BlockBreak` gains its fields | `GiveItem`, `RemoveItem`, `RemoveItemFromSlot`, `SetItem`, `DropItem`, `Teleport`, `ApplyVelocity`, `BurnPlayer`, `AddPotionEffect`, `RemovePotionEffect`, `SwitchServer` |
 | 16 Dialogue | | `Message`, `ActionBarSimpleMessage`, `ShowTitle`, `SendToast` |
-| 18 Scenes | `PlayerDamaged`, `ClientLoaded` | `PlaySound`, `StopSound`, `SpawnParticle`, `Firework`, `SetBlock`, `Cinematic` |
+| 18 Scenes | `PlayerDamaged`, `ClientLoaded` | `PlaySound`, `StopSound`, `SpawnParticle`, `Firework`, `SetBlock`; legacy `Cinematic` becomes the `PlaySceneEntry` step |
 | 20 Assets | `ResourcePack` | |
 | 21 Entities | `LeashEntity`, `PlayerHitEntity`, `PlayerKillEntity`, `PlayerKillPlayer`, `PlayerProjectileHitBlock`, `PlayerProjectileHitEntity` | |
 | 22 Regions, rules | `PlayerDeath` | |

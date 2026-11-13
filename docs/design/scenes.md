@@ -247,7 +247,7 @@ The camera works the way legacy's does (`CameraCinematicEntry.kt` on `origin/dev
 | Damage and targeting cancelled (`:258` to `:270`) | The body stands in the open | Verdicts |
 | Hidden from other players | Others do not see the body follow the camera | By packets, so nothing is persisted |
 
-The base of per viewer entities therefore lands in this layer, as the first demo that needs it. Layer 21 builds NPCs on top of it: viewer audiences, tracking range, skins, equipment, behaviour.
+The base of per viewer entities is node 14b ([build-graph.md](build-graph.md)), built before the camera so NPCs need not wait on scenes. Layer 21 builds NPCs on top of it: viewer audiences, tracking range, skins, equipment, behaviour.
 
 ```kotlin
 // Exists only on the wire. The entity data per version lives in the version layers.
