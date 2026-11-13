@@ -94,6 +94,9 @@ pub enum Suite {
     /// A fresh CI cluster with this commit's backend deployed, and the panel web scenarios
     /// against its real Authentik, operator mode NATS and runtime operator.
     Full,
+    /// The game requirements (`gameTest` source sets) against real Minecraft clients on a
+    /// stepped Paper, which the game pool boots on this machine.
+    Game,
 }
 
 impl Suite {
@@ -134,7 +137,67 @@ pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
         Suite::Panel => scenarios::<WorktreeStack>(ctx, args, Device::Desktop),
         Suite::PanelWeb => scenarios::<WorktreeStack>(ctx, args, Device::Chrome),
         Suite::Full => scenarios::<CiCluster>(ctx, args, Device::Chrome),
+        Suite::Game => game(ctx, args),
     }
+}
+
+/// Runs every game requirement once and reports the run the game pool wrote. Paper, the client and
+/// the Gradle build that starts them all run on this machine, so the whole run is one heavy build.
+fn game(ctx: &Context, args: &E2eArgs) -> Result<()> {
+    if !args.only.is_empty() || args.repeat.get() != 1 {
+        bail!(
+            "the game suite runs every requirement exactly once; it takes no --only or --repeat yet"
+        );
+    }
+    // The pool writes its run with the generated Skir types.
+    generate::generate(ctx, None)?;
+    let shown = Path::new(evidence::RESULTS).join("game");
+    let evidence = ctx.root.join(&shown);
+    let commit = ctx
+        .tool(".", "git", &["rev-parse", "HEAD"])
+        .output_text()?
+        .trim()
+        .to_owned();
+    let quarantine = Quarantine::load(ctx)?;
+    let _lock = take_turn(Path::new(lock::HEAVY_LOCK), "e2e game", &evidence)?;
+    let gradle = ctx
+        .tool(
+            "services",
+            "./gradlew",
+            &["--console=plain", ":playtest:gameTest"],
+        )
+        .status()
+        .context("cannot start Gradle for the game suite")?;
+    let file = evidence.join("test_run.json");
+    // The pool writes the run when the last test JVM ends its session; without it no session ran.
+    if !file.exists() {
+        bail!(
+            "game: no run was written to {} (Gradle exited with {gradle}); see services/build/playtest/pool/",
+            file.display()
+        );
+    }
+    let run = TestRun {
+        commit,
+        ..results::read(&file)?
+    };
+    results::write(&run, &file)?;
+    verdict(
+        "game",
+        &file,
+        &run,
+        &quarantine,
+        &shown,
+        &mut std::io::stderr(),
+    )?;
+    if !gradle.success() {
+        bail!("game: every reported requirement passed, but Gradle failed with {gradle}");
+    }
+    println!(
+        "game: {} requirements passed ({})",
+        run.cases.len(),
+        file.display()
+    );
+    Ok(())
 }
 
 /// What a suite runs against: brought up before the stack starts, the stack built on top of it,
