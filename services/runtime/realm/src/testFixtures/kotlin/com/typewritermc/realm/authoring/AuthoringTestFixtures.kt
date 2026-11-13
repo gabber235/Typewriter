@@ -9,6 +9,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.ResourceTypeMatch
+import com.typewritermc.discovery.CollectedDynamics
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedConfiguration
 import com.typewritermc.discovery.OwnedNativeBinding
@@ -140,7 +141,7 @@ internal class TestCatalogLease private constructor(
         ): ExtensionCatalog =
             (
                 collected
-                    ?: CollectedExtensions { collectExtensions(checks, configuration, providers) }.also { collected = it }
+                    ?: CollectedExtensions { collectExtensions(checks, configuration, CollectedDynamics.NONE, providers) }.also { collected = it }
             ).value
 
         @Synchronized

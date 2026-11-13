@@ -4,13 +4,17 @@ import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.FieldPath
 import com.typewritermc.checking.DraftType
 import com.typewritermc.dsl.TypewriterDsl
+import com.typewritermc.types.catalog.BindKey
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 
 /**
- * Says what content means: which names the formulas of a resource can see, and what others get when they name it.
- * Hooks register per draft type, as realm checks do, so a hook on a parent contract also runs for its subtypes in
- * other artifacts. A provider object carries `@TypewriterDynamicProvider`, and codegen emits its adapter.
+ * Says what content means: which names the formulas of a resource can see, what others get when they name it, and
+ * which type parameters its content computes. Registration runs once when the extension loads, on the realm and on
+ * every engine; only the registered blocks read content. Hooks register per draft type, as realm checks do, so a hook
+ * on a parent contract also runs for its subtypes in other artifacts. A provider object carries
+ * `@TypewriterDynamicProvider`, and codegen emits its adapter.
  */
 interface DynamicProvider {
     fun Dynamics.register()
@@ -31,6 +35,28 @@ interface Dynamics {
     fun each(
         definition: TypeDefinitionId,
         dynamic: DynamicBuilder.(ResourceId) -> Unit,
+    )
+
+    /**
+     * Computes the type parameter [key] names from the content of each resource of exactly its type, read through
+     * [type]. Registering it makes the parameter computed, so a creator never chooses it; a parameter without a bind
+     * stays creator chosen. Only the artifact that declares the type may bind it.
+     */
+    fun <D> bind(
+        key: BindKey,
+        type: DraftType<D>,
+        bind: BindBuilder.(D) -> Unit,
+    )
+}
+
+/** The record type one bind block computes for one resource. It reads authored content through its own receiver. */
+@TypewriterDsl
+interface BindBuilder : AuthoredReads {
+    /** A field [name] of the computed record holding [type]; [hasDefault] lets a value leave it out. */
+    fun field(
+        name: String,
+        type: TypeUse,
+        hasDefault: Boolean = false,
     )
 }
 

@@ -173,7 +173,7 @@ class RealmCatalogStore : AutoCloseable {
 
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)
         val extensions =
-            CollectedExtensions { collectExtensions(incarnation.assembly.checks, incarnation.assembly.configuration, providers) }
+            CollectedExtensions { collectExtensions(incarnation.assembly.checks, incarnation.assembly.configuration, incarnation.assembly.dynamics, providers) }
         var leases = 0
 
         override fun close() {

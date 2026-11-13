@@ -28,7 +28,7 @@ import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.extensions
 import com.typewritermc.realm.authoring.ownershipRelations
 import com.typewritermc.realm.authoring.tracked
-import com.typewritermc.realm.catalog.DynamicHook
+import com.typewritermc.discovery.DynamicHook
 import com.typewritermc.discovery.runExtension
 import com.typewritermc.types.field
 import skirout.editor.v1.checking.CheckEvidence

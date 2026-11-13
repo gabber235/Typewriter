@@ -106,6 +106,8 @@ data class CatalogAssembly(
     val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
     val callbackFailures: List<CatalogCallbackFailure> = emptyList(),
     val displays: com.typewritermc.authoring.ResourceDisplayCatalog = com.typewritermc.authoring.ResourceDisplayCatalog(),
+    /** What the dynamic providers registered at load: their hooks, their binds, and the registrations load rejected. */
+    val dynamics: CollectedDynamics = CollectedDynamics.NONE,
 ) {
     /** The published relations. */
     val relations: List<RelationContract> get() = editorCatalog.relations
@@ -151,7 +153,9 @@ data class CatalogCallbackFailure(
  */
 fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssembly {
     val standardDeclarations = StandardTypes.definitions.map { OwnedTypeDeclaration(STANDARD_TYPE_ORIGIN, it) }
-    val assembledDeclarations = standardDeclarations + declarations
+    // Binds decide which parameters are computed, so they register before any catalog reads a definition.
+    val collectedDynamics = collectDynamics(dynamics, declarations)
+    val assembledDeclarations = standardDeclarations + declarations.map { it.withBinds(collectedDynamics.bound) }
     val definitions = assembledDeclarations.map(OwnedTypeDeclaration::definition)
     val declarationGroups = assembledDeclarations.groupBy { it.definition.id }
     val definitionIndex = declarationGroups.mapNotNull { (id, owned) -> owned.singleOrNull()?.definition?.let { id to it } }.toMap()
@@ -333,6 +337,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             (configurationFailures.map { it.evidence } + materialCollection.callbackFailures + displayCollection.callbackFailures)
                 .immutableListCopy(),
         displays = com.typewritermc.authoring.ResourceDisplayCatalog(displayCollection.displays, published),
+        dynamics = collectedDynamics,
     )
 }
 
