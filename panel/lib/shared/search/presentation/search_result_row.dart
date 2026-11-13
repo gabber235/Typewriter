@@ -43,7 +43,9 @@ final class SearchResultRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = accent ?? Theme.of(context).colorScheme.primary;
-    final heading = title == null ? null : SearchResultTitle(title: title!);
+    final heading = title == null
+        ? null
+        : SearchResultTitle(title: title!, working: row.loading);
     final details = [?body, ?footer];
     final content = switch ((heading, details)) {
       (final heading?, []) => heading,
@@ -74,15 +76,7 @@ final class SearchResultRow extends StatelessWidget {
           dense: true,
           selected: row.selected,
           selectedColor: color,
-          leading: row.loading
-              ? const SizedBox.square(
-                  dimension: 20,
-                  child: CircularProgressIndicator(
-                    semanticsLabel: searchResultWorkingSemanticLabel,
-                    strokeWidth: 2,
-                  ),
-                )
-              : leading == null
+          leading: leading == null
               ? null
               : decorative(
                   IconTheme.merge(
@@ -110,13 +104,12 @@ final class SearchResultRow extends StatelessWidget {
       selected: row.selected,
       focused: row.focused,
       onTap: row.onTap,
-      prefix: leading == null && !row.loading
+      prefix: leading == null
           ? null
           : SearchResultIconTile(
               color: color,
               onColor: color.on(context),
-              loading: row.loading,
-              icon: decorative(leading ?? const SizedBox.shrink()),
+              icon: decorative(leading!),
             ),
       content: decorative(content),
       suffix: SearchResultSuffix(

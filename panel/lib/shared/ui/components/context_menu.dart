@@ -228,15 +228,7 @@ class _MenuItems extends StatelessWidget {
         for (final item in section.items) _item(context, item),
       ],
     ),
-    MenuItemDivider() => Padding(
-      padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
-      child: SizedBox(
-        height: 1,
-        child: ColoredBox(
-          color: context.colors.contentSecondary.withValues(alpha: 0.2),
-        ),
-      ),
-    ),
+    MenuItemDivider() => const Separator(),
     final _MenuItem entry => PanelMenuItem(
       label: entry.label,
       leading: entry.icon,

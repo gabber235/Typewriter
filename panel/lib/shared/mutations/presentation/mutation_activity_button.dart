@@ -32,22 +32,12 @@ class MutationActivityView extends StatelessWidget {
 
   Future<void> _showMobileActivity(BuildContext context) =>
       context.showPanelSheet<void>(
-        (context) => SafeArea(
-          minimum: EdgeInsets.all(context.spacing.space3),
-          child: Material(
-            color: context.theme.colorScheme.surfaceContainer,
-            borderRadius: context.shapes.largeBorderRadius,
-            clipBehavior: Clip.antiAlias,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
-              ),
-              child: _ActivityDetails(
-                state: state,
-                controller: controller,
-                onClose: () => Navigator.pop(context),
-              ),
-            ),
+        (context) => SheetCard(
+          maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
+          child: _ActivityDetails(
+            state: state,
+            controller: controller,
+            onClose: () => Navigator.pop(context),
           ),
         ),
       );

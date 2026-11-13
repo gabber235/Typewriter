@@ -60,10 +60,9 @@ class MembersTabletList extends HookConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Checkbox(
+                    SelectionCheck(
                       value: allSelected ? true : (someSelected ? null : false),
-                      tristate: true,
-                      onChanged: (_) => handleSelectAll(),
+                      onChanged: handleSelectAll,
                     ),
                     Text(
                       "Select all",

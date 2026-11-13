@@ -105,21 +105,11 @@ class RealmInboxButton extends HookConsumerWidget {
           context
               .showPanelSheet<void>((context) {
                 sheetContext = context;
-                return SafeArea(
-                  minimum: EdgeInsets.all(context.spacing.space3),
-                  child: Material(
-                    color: context.theme.colorScheme.surfaceContainer,
-                    borderRadius: context.shapes.largeBorderRadius,
-                    clipBehavior: Clip.antiAlias,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.sizeOf(context).height * .8,
-                      ),
-                      child: RealmInboxContent(
-                        scope: scope,
-                        onClose: () => Navigator.pop(context),
-                      ),
-                    ),
+                return SheetCard(
+                  maxHeight: MediaQuery.sizeOf(context).height * .8,
+                  child: RealmInboxContent(
+                    scope: scope,
+                    onClose: () => Navigator.pop(context),
                   ),
                 );
               })

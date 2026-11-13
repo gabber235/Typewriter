@@ -1,0 +1,20 @@
+id: dart-material-widget
+language: dart
+severity: error
+message: The panel is moving off Material; a changed line may not add a Material widget or Material helper.
+note: Use the panel's own component (Button, CommandButton, Surface, the popups and fields in shared/ui). When none fits yet, build it in shared/ui with a story, then use it here.
+files:
+  - panel/lib/**
+  - panel/testkit/lib/**
+  - panel/widgetbook/lib/**
+ignores:
+  # The text field brings the clear Material Flutter's text input needs, so no other code must.
+  - panel/lib/shared/ui/input/editor_text_field.dart
+rule:
+  # A constructor or function call names an identifier, a type argument a type identifier.
+  # Text input, selection, Scaffold, MaterialApp and tabs stay allowed: Flutter has no widgets
+  # layer primitive for them (see the panel-design skill, Building).
+  any:
+    - kind: identifier
+    - kind: type_identifier
+  regex: ^(ScaffoldMessenger|Material|InkWell|InkResponse|ElevatedButton|FilledButton|OutlinedButton|TextButton|IconButton|FloatingActionButton|SegmentedButton|ListTile|CheckboxListTile|SwitchListTile|ExpansionTile|AlertDialog|SimpleDialog|Dialog|showDialog|showModalBottomSheet|BottomSheet|SnackBar|Card|AppBar|Drawer|NavigationRail|NavigationBar|Chip|ActionChip|FilterChip|InputChip|ChoiceChip|Badge|Checkbox|Radio|Switch|Slider|Tooltip|PopupMenuButton|PopupMenuItem|DropdownButton|DropdownMenu|MenuAnchor|SearchBar|SearchAnchor|DataTable|Stepper|Divider|VerticalDivider|LinearProgressIndicator|CircularProgressIndicator)$

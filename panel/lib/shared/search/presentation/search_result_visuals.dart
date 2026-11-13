@@ -3,16 +3,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// What assistive technology reads while a command runs on a result.
 const searchResultWorkingSemanticLabel = "Working";
 
-/// Shows the icon or loading state that identifies a search result.
+/// Shows the icon that identifies a search result.
 ///
-/// [icon] is supplied by the result renderer. [loading] replaces the icon
-/// without changing row identity.
+/// [icon] is supplied by the result renderer.
 class SearchResultIconTile extends StatelessWidget {
   const SearchResultIconTile({
     required this.color,
     required this.onColor,
     required this.icon,
-    this.loading = false,
     this.padding,
     super.key,
   });
@@ -20,7 +18,6 @@ class SearchResultIconTile extends StatelessWidget {
   final Color color;
   final Color onColor;
   final Widget icon;
-  final bool loading;
 
   final EdgeInsets? padding;
 
@@ -43,17 +40,9 @@ class SearchResultIconTile extends StatelessWidget {
         ],
       ),
       padding: padding ?? EdgeInsets.all(context.spacing.space2),
-      child: ElasticSwitcher(
-        child: loading
-            ? CircularProgressIndicator(
-                semanticsLabel: searchResultWorkingSemanticLabel,
-                color: onColor,
-                padding: EdgeInsets.all(context.spacing.space1),
-              )
-            : IconTheme(
-                data: IconThemeData(color: onColor),
-                child: icon,
-              ),
+      child: IconTheme(
+        data: IconThemeData(color: onColor),
+        child: icon,
       ),
     );
   }
@@ -61,17 +50,22 @@ class SearchResultIconTile extends StatelessWidget {
 
 /// Displays the primary result label, truncating it to one line.
 ///
+/// While a command runs on the result, [working] ripples the label's letters
+/// and assistive technology hears that it is working.
+///
 /// Deprecated definitions remain discoverable but receive a wavy strike through. The widget
 /// does not decide whether a result is deprecated; its caller maps domain metadata to [deprecated].
 class SearchResultTitle extends StatelessWidget {
   const SearchResultTitle({
     required this.title,
     this.deprecated = false,
+    this.working = false,
     super.key,
   });
 
   final String title;
   final bool deprecated;
+  final bool working;
 
   @override
   Widget build(BuildContext context) {
@@ -82,17 +76,24 @@ class SearchResultTitle extends StatelessWidget {
     final color = matchBrightness
         ? theme.colorScheme.onSurface
         : surfaceColor.on(context);
+    final style = Theme.of(context).textTheme.labelLarge?.copyWith(
+      color: color,
+      fontSize: 14,
+      height: 1.1,
+      decoration: deprecated ? TextDecoration.lineThrough : null,
+      decorationThickness: 2.8,
+      decorationColor: Theme.of(context).colorScheme.surface,
+      decorationStyle: TextDecorationStyle.wavy,
+    );
+    if (working) {
+      return Semantics(
+        label: searchResultWorkingSemanticLabel,
+        child: MotionLabel(title, rippling: true, style: style),
+      );
+    }
     return Text(
       title,
-      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: color,
-        fontSize: 14,
-        height: 1.1,
-        decoration: deprecated ? TextDecoration.lineThrough : null,
-        decorationThickness: 2.8,
-        decorationColor: Theme.of(context).colorScheme.surface,
-        decorationStyle: TextDecorationStyle.wavy,
-      ),
+      style: style,
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
     );

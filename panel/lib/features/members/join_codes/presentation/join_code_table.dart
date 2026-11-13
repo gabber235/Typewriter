@@ -119,9 +119,9 @@ class JoinCodesTable extends HookConsumerWidget {
               role: RowRole.stop,
               // The row stop takes Space through the row's shortcuts.
               ExcludeFocus(
-                child: Checkbox(
+                child: SelectionCheck(
                   value: isSelected,
-                  onChanged: (_) => toggleSelection(),
+                  onChanged: toggleSelection,
                 ),
               ),
             ),

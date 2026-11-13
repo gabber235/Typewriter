@@ -168,8 +168,8 @@ class _QueryBarHelperRow extends StatelessWidget {
   }
 }
 
-/// Lays a thin progress bar along the bottom edge of [child] while [label] is
-/// set. The bar stays inside the straight part of the edge, so it never meets
+/// Lays a [WorkingLine] along the bottom edge of [child] while [label] is
+/// set. The line stays inside the straight part of the edge, so it never meets
 /// the rounded corners or the focus ring around them.
 class _LoadingEdge extends StatelessWidget {
   const _LoadingEdge({required this.label, required this.child});
@@ -189,14 +189,7 @@ class _LoadingEdge extends StatelessWidget {
           left: corner,
           right: corner,
           bottom: 0,
-          child: Semantics(
-            container: true,
-            child: LinearProgressIndicator(
-              semanticsLabel: label,
-              minHeight: 2,
-              backgroundColor: context.colors.clear,
-            ),
-          ),
+          child: WorkingLine(label: label),
         ),
       ],
     );

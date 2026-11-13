@@ -94,12 +94,11 @@ class JoinRequestsList extends HookConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Checkbox(
+                          SelectionCheck(
                             value: allSelected
                                 ? true
                                 : (someSelected ? null : false),
-                            tristate: true,
-                            onChanged: (value) => handleSelectAll(),
+                            onChanged: handleSelectAll,
                           ),
                           Text(
                             "Select all",

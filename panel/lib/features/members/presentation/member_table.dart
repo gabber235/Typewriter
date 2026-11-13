@@ -108,24 +108,20 @@ class MembersTable extends HookConsumerWidget {
                 horizontal: context.spacing.space2,
                 vertical: context.spacing.space3,
               ),
-              child: Material(
-                color: Colors.transparent,
-                shape: CircleBorder(),
-                // The row stop takes Space; the avatar is no second stop.
-                child: ExcludeFocus(
-                  child: Button(
-                    face: ButtonFace.bare,
-                    label: isSelected
-                        ? "Deselect ${member.name ?? member.email ?? "member"}"
-                        : "Select ${member.name ?? member.email ?? "member"}",
-                    onPressed: toggleSelection,
-                    child: SelectableAvatar(
-                      avatarUrl:
-                          member.avatarUrl?.nullIfEmpty ??
-                          "$userIconUrl&seed=${member.userId}",
-                      isSelected: isSelected,
-                      radius: 16,
-                    ),
+              // The row stop takes Space; the avatar is no second stop.
+              child: ExcludeFocus(
+                child: Button(
+                  face: ButtonFace.bare,
+                  label: isSelected
+                      ? "Deselect ${member.name ?? member.email ?? "member"}"
+                      : "Select ${member.name ?? member.email ?? "member"}",
+                  onPressed: toggleSelection,
+                  child: SelectableAvatar(
+                    avatarUrl:
+                        member.avatarUrl?.nullIfEmpty ??
+                        "$userIconUrl&seed=${member.userId}",
+                    isSelected: isSelected,
+                    radius: 16,
                   ),
                 ),
               ),
@@ -134,49 +130,45 @@ class MembersTable extends HookConsumerWidget {
         ),
         TableCell(
           child: withShortcuts(
-            Material(
-              color: Colors.transparent,
-              borderRadius: context.shapes.mediumBorderRadius,
-              child: ExcludeFocus(
-                child: Button(
-                  face: ButtonFace.bare,
-                  label: "",
-                  onPressed: toggleSelection,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.space2,
-                      vertical: context.spacing.space3,
-                    ),
-                    // Read the theme here, inside the row, so a sending row's
-                    // struck text theme reaches the name and email.
-                    child: Builder(
-                      builder: (context) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (member.name != null)
-                            Text(
-                              member.name!,
+            ExcludeFocus(
+              child: Button(
+                face: ButtonFace.bare,
+                label: "",
+                onPressed: toggleSelection,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.space2,
+                    vertical: context.spacing.space3,
+                  ),
+                  // Read the theme here, inside the row, so a sending row's
+                  // struck text theme reaches the name and email.
+                  child: Builder(
+                    builder: (context) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (member.name != null)
+                          Text(
+                            member.name!,
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(fontWeight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (member.email != null)
+                          BlurReveal(
+                            blurSigma: 3,
+                            child: Text(
+                              member.email!,
                               style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(fontWeight: FontWeight.w500),
+                                  .copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 13,
+                                  ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          if (member.email != null)
-                            BlurReveal(
-                              blurSigma: 3,
-                              child: Text(
-                                member.email!,
-                                style: Theme.of(context).textTheme.bodyMedium!
-                                    .copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                      fontSize: 13,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

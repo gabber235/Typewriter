@@ -23,6 +23,7 @@ export "ui/animated_items.dart";
 export "ui/probes.dart";
 export "ui/motion.dart";
 export "ui/reduced_motion.dart";
+export "ui/selection_check.dart";
 export "ui/skeleton.dart";
 export "ui/surface_motion.dart";
 export "ui/resizable_pane.dart";

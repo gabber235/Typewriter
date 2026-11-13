@@ -220,7 +220,7 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
                 children: [
                   for (final item in menu.items)
                     if (item.separator)
-                      const Divider()
+                      const Separator()
                     else
                       item.renderConfigured(childScope, close: close),
                 ],

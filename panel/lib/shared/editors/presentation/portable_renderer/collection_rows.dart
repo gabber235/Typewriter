@@ -476,15 +476,28 @@ class CollectionSequence extends HookWidget {
           AnimatedBuilder(
             animation: animation,
             child: child,
-            builder: (context, child) => Material(
-              elevation:
-                  6 *
-                  motionTimeline(
-                    context,
-                    MotionToken.press,
-                  ).curve.transform(animation.value),
-              child: child,
-            ),
+            builder: (context, child) {
+              final lift = motionTimeline(
+                context,
+                MotionToken.press,
+              ).curve.transform(animation.value);
+              // The row lifts off the list while it is dragged.
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: context.shapes.mediumBorderRadius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.colors.shadow.withValues(
+                        alpha: .24 * lift,
+                      ),
+                      blurRadius: 16 * lift,
+                      offset: Offset(0, 6 * lift),
+                    ),
+                  ],
+                ),
+                child: child,
+              );
+            },
           ),
         ),
         onReorderStart: (_) => dragging.value = true,

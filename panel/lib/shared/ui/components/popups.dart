@@ -46,22 +46,22 @@ Future<T?> showAdvancedDialog<T>({
   );
 }
 
-/// The panel's one bottom sheet: surfaceIn up from the bottom edge,
-/// panelOut back down, with the caller's provider scope.
+/// The panel's one bottom sheet, a [PanelSheetRoute] with the caller's
+/// provider scope.
 extension PanelSheet on BuildContext {
   Future<T?> showPanelSheet<T>(WidgetBuilder builder) {
     final container = ProviderScope.containerOf(this);
-    return showModalBottomSheet<T>(
-      context: this,
-      isScrollControlled: true,
-      backgroundColor: colors.surface.withValues(alpha: 0),
-      sheetAnimationStyle: motionTimeline(
-        this,
-        MotionToken.surfaceIn,
-      ).styleWith(motionTimeline(this, MotionToken.panelOut)),
-      builder: (sheetContext) => UncontrolledProviderScope(
-        container: container,
-        child: builder(sheetContext),
+    final navigator = Navigator.of(this);
+    return navigator.push(
+      PanelSheetRoute<T>(
+        arrive: motionTimeline(this, MotionToken.surfaceIn),
+        leave: motionTimeline(this, MotionToken.panelOut),
+        barrierColor: colors.scrim,
+        themes: InheritedTheme.capture(from: this, to: navigator.context),
+        builder: (sheetContext) => UncontrolledProviderScope(
+          container: container,
+          child: builder(sheetContext),
+        ),
       ),
     );
   }

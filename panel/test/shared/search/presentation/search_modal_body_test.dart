@@ -135,7 +135,7 @@ void main() {
           matching: find.byType(EditorTextField),
         ),
       );
-      final progress = tester.getRect(find.byType(LinearProgressIndicator));
+      final progress = tester.getRect(find.byType(WorkingLine));
       final corner = tester
           .element(find.byType(QueryBar))
           .shapes

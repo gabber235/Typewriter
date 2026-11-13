@@ -31,8 +31,7 @@ final class PopoverChip extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(40),
         child: AnchoredPopup(
-          builder: (context, show) =>
-              TextButton(onPressed: show, child: const Text("Running")),
+          builder: (context, show) => Button(label: "Running", onPressed: show),
           popupBuilder: (context, close) =>
               const SizedBox(width: 200, height: 120, child: Text("Stopped")),
         ),
@@ -41,8 +40,9 @@ final class PopoverChip extends StatelessWidget {
   );
 }
 
-/// A "Page heading" over an "Open" button whose dialog says "Dialog title",
-/// the page sinking back behind it.
+/// A "Page heading" over an "Open" button, focused at once, whose dialog
+/// "Dialog title" says "Dialog words" and has a focused "Close", the page
+/// sinking back behind it.
 final class DialogBackdropPage extends StatelessWidget {
   const DialogBackdropPage({super.key});
 
@@ -54,12 +54,23 @@ final class DialogBackdropPage extends StatelessWidget {
         children: [
           const Text("Page heading"),
           Builder(
-            builder: (context) => TextButton(
+            builder: (context) => Button(
+              label: "Open",
+              autofocus: true,
               onPressed: () => showAdvancedDialog<void>(
                 context: context,
-                builder: (_) => const Dialog(child: Text("Dialog title")),
+                builder: (context) => PanelDialog(
+                  title: "Dialog title",
+                  content: const Text("Dialog words"),
+                  actions: [
+                    Button(
+                      label: "Close",
+                      autofocus: true,
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text("Open"),
             ),
           ),
         ],
@@ -182,3 +193,27 @@ DirectionalContentSwitcher switcherPage(int index, {double height = 80}) =>
         child: Text("Page $index"),
       ),
     );
+
+/// An "Open sheet" button, focused at once, whose sheet holds a 300 high
+/// box with "Sheet line".
+final class SheetOpener extends StatelessWidget {
+  const SheetOpener({super.key});
+
+  /// The box inside the sheet.
+  static const sheetKey = ValueKey("sheet");
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Button(
+      label: "Open sheet",
+      autofocus: true,
+      onPressed: () => context.showPanelSheet<void>(
+        (_) => const SizedBox(
+          key: sheetKey,
+          height: 300,
+          child: Text("Sheet line"),
+        ),
+      ),
+    ),
+  );
+}

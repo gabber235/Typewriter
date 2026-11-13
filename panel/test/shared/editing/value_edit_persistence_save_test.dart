@@ -144,38 +144,35 @@ void main() {
     expect(reports, isEmpty);
   });
 
-  test(
-    "uncertain delivery retains the reservation and replays the captured "
-    "request",
-    () async {
-      final workspace = testWorkSession();
-      final resource = UncertainSaveResource(
-        key: _key,
-        current: savedTitleSnapshot(),
-      );
-      final source = titleDraft(workspace, resource);
-      expect(await source.flush(), isA<MutationUncertain>());
-      var acquired = false;
+  test("uncertain delivery retains the reservation and replays the captured "
+      "request", () async {
+    final workspace = testWorkSession();
+    final resource = UncertainSaveResource(
+      key: _key,
+      current: savedTitleSnapshot(),
+    );
+    final source = titleDraft(workspace, resource);
+    expect(await source.flush(), isA<MutationUncertain>());
+    var acquired = false;
 
-      final next = workspace.coordinator.reserve(resource.reservations).then((
-        lease,
-      ) {
-        acquired = true;
-        return lease;
-      });
-      await pumpEventQueue();
-      expect(acquired, isFalse);
-      expect(await source.flush(), isA<MutationSuccess>());
-      (await next).release();
-      // The capture read once; the replay sent the captured request without
-      // reading again. The second read follows its reply, which arrived
-      // outside the save lane, as every such reply that carries a state does.
-      expect(resource.reads, 2);
+    final next = workspace.coordinator.reserve(resource.reservations).then((
+      lease,
+    ) {
+      acquired = true;
+      return lease;
+    });
+    await pumpEventQueue();
+    expect(acquired, isFalse);
+    expect(await source.flush(), isA<MutationSuccess>());
+    (await next).release();
+    // The capture read once; the replay sent the captured request without
+    // reading again. The second read follows its reply, which arrived
+    // outside the save lane, as every such reply that carries a state does.
+    expect(resource.reads, 2);
 
-      expect(resource.sends, 2);
-      expect(resource.requests[0], same(resource.requests[1]));
-    },
-  );
+    expect(resource.sends, 2);
+    expect(resource.requests[0], same(resource.requests[1]));
+  });
 
   test("an autosave whose reply was lost reports an unknown outcome while "
       "it is sent again, and is saved once the resend is answered", () async {

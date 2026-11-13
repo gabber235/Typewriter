@@ -43,41 +43,46 @@ void main() {
     });
   });
 
-  testWidgets("a busy row shows its work beside its kind and shortcut", (
-    tester,
-  ) async {
-    final busy = ValueNotifier(false);
-    addTearDown(busy.dispose);
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        SizedBox(
-          width: 360,
-          child: ValueListenableBuilder(
-            valueListenable: busy,
-            builder: (context, loading, _) => SearchResultRow(
-              row: searchRowContext(loading: loading),
-              density: SearchResultDensity.card,
-              kindLabel: "page",
-              title: "Meet the Mayor",
+  for (final density in SearchResultDensity.values) {
+    testWidgets(
+      "a busy ${density.name} row ripples its name and is heard as working",
+      (tester) async {
+        final busy = ValueNotifier(false);
+        addTearDown(busy.dispose);
+        final panel = await tester.pumpPanel(
+          const [],
+          at: PanelLocation.component(
+            SizedBox(
+              width: 360,
+              child: ValueListenableBuilder(
+                valueListenable: busy,
+                builder: (context, loading, _) => SearchResultRow(
+                  row: searchRowContext(loading: loading),
+                  density: density,
+                  kindLabel: "page",
+                  title: "Meet the Mayor",
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+
+        // The ripple never settles, so the row turns busy after the panel did.
+        busy.value = true;
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+
+        expect(find.text("Meet the Mayor"), findsNothing);
+        expect(panel.search.result("Meet the Mayor").lines, [
+          searchResultWorkingSemanticLabel,
+          "Meet the Mayor",
+          "PAGE",
+          "1",
+        ]);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+      },
     );
-
-    // The spinner never settles, so the row turns busy after the panel did.
-    busy.value = true;
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-
-    expect(panel.search.result("Meet the Mayor").lines, [
-      searchResultWorkingSemanticLabel,
-      "Meet the Mayor",
-      "PAGE",
-      "1",
-    ]);
-  });
+  }
 
   for (final density in SearchResultDensity.values) {
     testWidgets(

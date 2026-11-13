@@ -37,14 +37,11 @@ class AnimatedSectionsStory extends HookWidget {
         children: [
           Row(
             children: [
-              TextButton(
+              Button(
+                label: "Add request",
                 onPressed: () => items.value = [...items.value, next.value++],
-                child: const Text("Add request"),
               ),
-              TextButton(
-                onPressed: () => items.value = [],
-                child: const Text("Clear"),
-              ),
+              Button(label: "Clear", onPressed: () => items.value = []),
             ],
           ),
           Expanded(
@@ -61,14 +58,16 @@ class AnimatedSectionsStory extends HookWidget {
                     AnimatedSliverList<int>(
                       items: items.value,
                       identity: (item) => item,
-                      itemBuilder: (context, item) => ListTile(
+                      itemBuilder: (context, item) => PanelRow(
                         title: Text("Join request $item"),
-                        trailing: IconButton(
+                        trailing: Button(
+                          face: ButtonFace.icon,
+                          icon: const Icon(Icons.close),
+                          label: "Remove",
                           tooltip: "Remove",
                           onPressed: () => items.value = items.value
                               .where((value) => value != item)
                               .toList(),
-                          icon: const Icon(Icons.close),
                         ),
                       ),
                     ),

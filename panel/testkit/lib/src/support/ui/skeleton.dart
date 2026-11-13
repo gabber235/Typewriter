@@ -11,12 +11,21 @@ final class ShownSkeleton {
   final WidgetTester _tester;
 
   /// How far the skeleton gradient is slid across a 100 px wide placeholder.
-  double get sweep {
-    final shimmer = find.ancestor(
-      of: find.byType(ShimmerLoading),
-      matching: find.byType(Shimmer),
-    );
-    final gradient = _tester.state<ShimmerState>(shimmer.first).gradient;
+  double get sweep => _tester._sweepOf(find.byType(ShimmerLoading));
+}
+
+/// Reading a sweeping [Shimmer] on screen.
+extension ShimmerSweep on WidgetTester {
+  /// How far the sweep of the [WorkingLine] on screen has slid across a
+  /// 100 px wide line.
+  double get workingLineSweep => _sweepOf(find.byType(WorkingLine));
+
+  double _sweepOf(Finder within) {
+    final shimmer = find.descendant(of: within, matching: find.byType(Shimmer));
+    final owner = shimmer.evaluate().isEmpty
+        ? find.ancestor(of: within, matching: find.byType(Shimmer))
+        : shimmer;
+    final gradient = state<ShimmerState>(owner.first).gradient;
     final slide = gradient.transform!.transform(
       const Rect.fromLTWH(0, 0, 100, 1),
     )!;

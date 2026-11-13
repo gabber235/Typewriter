@@ -71,10 +71,9 @@ class SelectionTable<T> extends StatelessWidget {
                   verticalAlignment: TableCellVerticalAlignment.middle,
                   child: Padding(
                     padding: cellPadding,
-                    child: Checkbox(
+                    child: SelectionCheck(
                       value: allSelected ? true : (someSelected ? null : false),
-                      tristate: true,
-                      onChanged: (_) =>
+                      onChanged: () =>
                           selectedIds.value = allSelected || someSelected
                           ? {}
                           : items.map(idOf).toSet(),

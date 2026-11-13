@@ -146,6 +146,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | No rule or demo settles how something should feel | Build three live options and let a maintainer pick. Add what you learn here as a general rule, not as that element's design | 2 |
 | You must break a rule | Ask a maintainer. If approved, add it to the exceptions in the `panel-review` skill | 3 |
 | Building a control | Build it on Flutter's widgets layer: `FocusableActionDetector`, `WidgetStatesController`, `Semantics`, gestures, its own painting. Use Material only where Flutter has no primitive: text input, selection, `Scaffold`, tabs | 2 |
+| A change touches a line that uses a Material widget | Replace it with the panel's own component, or build that component in `panel/lib/shared/ui` with a story first. The `dart-material-widget` rule fails added lines that use one | 2 |
 
 ## Values
 
