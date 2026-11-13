@@ -369,6 +369,7 @@ pub fn runner_name(runner: &Runner) -> &'static str {
         Runner::PanelWeb => "panel-web",
         Runner::Step => "step",
         Runner::Junit => "junit",
+        Runner::Game => "game",
         Runner::Unknown(_) => "unknown",
     }
 }

@@ -71,6 +71,8 @@ enum Runner(85010007) {
   step;
   // The JUnit XML a step's test tasks wrote, one case per test (the Gradle services suites).
   junit;
+  // The game verification pool: requirements run against real Minecraft clients on a stepped Paper.
+  game;
 }
 
 enum Demonstrates(85010008) {
