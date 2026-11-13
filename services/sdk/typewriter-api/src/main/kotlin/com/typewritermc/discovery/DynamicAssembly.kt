@@ -4,6 +4,7 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.formula.BindBuilder
+import com.typewritermc.formula.BindParameter
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.Dynamics
 import com.typewritermc.types.catalog.BindKey
@@ -68,7 +69,7 @@ class CollectedDynamics internal constructor(
 
 /**
  * Runs the registration of every provider in [dynamics]. A bind must name a parameter of a type its own artifact
- * declares among [declarations], and read it through a draft of exactly that type; load drops any other bind.
+ * declares among [declarations]; load drops any other bind. A bind matches exactly the type its parameter belongs to.
  */
 internal fun collectDynamics(
     dynamics: List<OwnedDynamic>,
@@ -115,18 +116,9 @@ private fun BindHook.rejection(
             "bind_unknown_parameter" to "No declared type ${key.owner} has a type parameter ${key.name}."
         owners.none { it.origin.artifact == owned.origin.artifact } ->
             "bind_foreign_type" to "Only the artifact that declares ${key.owner} may bind its parameter ${key.name}."
-        !match.isExactly(key.owner) ->
-            "bind_type_mismatch" to "The bind for ${key.owner} parameter ${key.name} must read a draft of exactly that type."
         else -> null
     }
 }
-
-private fun ResourceTypeMatch.isExactly(definition: TypeDefinitionId): Boolean =
-    when (this) {
-        is ResourceTypeMatch.Definition -> id == definition
-        is ResourceTypeMatch.Application -> use.definition == definition
-        ResourceTypeMatch.AnyResource -> false
-    }
 
 private class DynamicCollector(
     private val owned: OwnedDynamic,
@@ -149,10 +141,10 @@ private class DynamicCollector(
     }
 
     override fun <D> bind(
-        key: BindKey,
-        type: DraftType<D>,
+        parameter: BindParameter<D>,
         bind: BindBuilder.(D) -> Unit,
     ) {
-        binds += BindHook(owned.ruleOrigin, key, type.match) { binding -> bind(type.bind(binding)) }
+        val key = parameter.key
+        binds += BindHook(owned.ruleOrigin, key, ResourceTypeMatch.Definition(key.owner)) { binding -> bind(parameter.draft.bind(binding)) }
     }
 }

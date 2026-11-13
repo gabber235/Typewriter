@@ -6,6 +6,8 @@ import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.formula.BindBuilder
+import com.typewritermc.formula.BindParameter
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.Dynamics
 import com.typewritermc.formula.DynamicProvider
@@ -46,6 +48,11 @@ class ExportRecordingDynamics : Dynamics {
     ) {
         definitions += definition
     }
+
+    override fun <D> bind(
+        parameter: BindParameter<D>,
+        bind: BindBuilder.(D) -> Unit,
+    ) = Unit
 }
 
 /** The hook registers by the generic resource's definition, and its export is the generated field path. */

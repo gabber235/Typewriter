@@ -1,8 +1,10 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.DraftBinding
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.ResourceTypeMatch
+import com.typewritermc.formula.BindParameter
 import com.typewritermc.formula.DynamicProvider
 import com.typewritermc.formula.Dynamics
 import com.typewritermc.testkit.origin
@@ -21,13 +23,12 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 
 private val BOARD = TypeDefinitionId.qualified("bind", "Board")
-private val NOTE = TypeDefinitionId.qualified("bind", "Note")
 private val BOARD_ARTIFACT = origin("board types", artifact = "test:board")
 private val OTHER_ARTIFACT = origin("other types", artifact = "test:other")
 
 val BindRegistrationTest by testSuite {
     test("a registered bind makes its parameter computed in the catalog editors and engines read") {
-        val assembly = assembleBoard(binder(BOARD_ARTIFACT) { bind(BindKey(BOARD, "V"), draftOf(BOARD)) {} })
+        val assembly = assembleBoard(binder(BOARD_ARTIFACT) { bind(parameter("V")) {} })
 
         assembly.checkedParameters() shouldBe listOf("T" to false, "V" to true)
         assembly.publishedParameters() shouldBe listOf("T" to false, "V" to true)
@@ -35,21 +36,14 @@ val BindRegistrationTest by testSuite {
     }
 
     test("a bind on a type another artifact declares is rejected at load and leaves the parameter chosen") {
-        val assembly = assembleBoard(binder(OTHER_ARTIFACT) { bind(BindKey(BOARD, "V"), draftOf(BOARD)) {} })
+        val assembly = assembleBoard(binder(OTHER_ARTIFACT) { bind(parameter("V")) {} })
 
         assembly.dynamics.failures.map { it.code } shouldBe listOf("bind_foreign_type")
         assembly.checkedParameters() shouldBe listOf("T" to false, "V" to false)
     }
 
-    test("a bind whose draft type reads another type than its key names is rejected at load") {
-        val assembly = assembleBoard(binder(BOARD_ARTIFACT) { bind(BindKey(BOARD, "V"), draftOf(NOTE)) {} })
-
-        assembly.dynamics.failures.map { it.code } shouldBe listOf("bind_type_mismatch")
-        assembly.checkedParameters() shouldBe listOf("T" to false, "V" to false)
-    }
-
     test("a bind for a parameter its type does not have is rejected at load") {
-        val assembly = assembleBoard(binder(BOARD_ARTIFACT) { bind(BindKey(BOARD, "W"), draftOf(BOARD)) {} })
+        val assembly = assembleBoard(binder(BOARD_ARTIFACT) { bind(parameter("W")) {} })
 
         assembly.dynamics.failures.map { it.code } shouldBe listOf("bind_unknown_parameter")
         assembly.checkedParameters() shouldBe listOf("T" to false, "V" to false)
@@ -65,7 +59,7 @@ val BindRegistrationTest by testSuite {
 
 private fun assembleBoard(vararg dynamics: OwnedDynamic): CatalogAssembly =
     CatalogContributions(
-        declarations = listOf(OwnedTypeDeclaration(BOARD_ARTIFACT, board()), OwnedTypeDeclaration(BOARD_ARTIFACT, record(NOTE))),
+        declarations = listOf(OwnedTypeDeclaration(BOARD_ARTIFACT, board())),
         dynamics = dynamics.toList(),
     ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "binds")))
 
@@ -81,12 +75,17 @@ private fun binder(
         },
 )
 
-private fun draftOf(definition: TypeDefinitionId) =
-    object : DraftType<DraftBinding> {
-        override val match = ResourceTypeMatch.Definition(definition)
+/** The board's parameter [name] as codegen would hand it out, reading the board as its bare binding. */
+@OptIn(GeneratedSdkApi::class)
+private fun parameter(name: String) =
+    BindParameter(
+        BindKey(BOARD, name),
+        object : DraftType<DraftBinding> {
+            override val match = ResourceTypeMatch.Definition(BOARD)
 
-        override fun bind(binding: DraftBinding) = binding
-    }
+            override fun bind(binding: DraftBinding) = binding
+        },
+    )
 
 private fun CatalogAssembly.checkedParameters(): List<Pair<String, Boolean>> =
     (checked.declaration(BOARD) as Resolution.Ready).value.parameters.map { it.name to it.derived }

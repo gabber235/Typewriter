@@ -4,6 +4,7 @@ package fixture
 
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.formula.BindParameter
 import com.typewritermc.types.catalog.BindKey
 import io.kotest.matchers.shouldBe
 
@@ -23,12 +24,12 @@ data class Duo<T>(
 )
 
 /**
- * Every type parameter of a resource gets a handle naming its owner, and code leaves each one creator chosen: only a
- * registered bind makes a parameter computed.
+ * Every type parameter of a resource gets a handle naming its owner, with a draft of the board for its bind block to
+ * read, and code leaves each one creator chosen: only a registered bind makes a parameter computed.
  */
 fun main(args: Array<String>) {
     BoardDefinition.definition.parameters.map { it.name to it.derived } shouldBe listOf("T" to false, "V" to false)
-    BoardBind.T shouldBe BindKey(BoardDefinition.id, "T")
-    BoardBind.V shouldBe BindKey(BoardDefinition.id, "V")
+    val handles: List<BindParameter<BoardDraft<Nothing, Nothing>>> = listOf(BoardBind.T, BoardBind.V)
+    handles.map { it.key } shouldBe listOf(BindKey(BoardDefinition.id, "T"), BindKey(BoardDefinition.id, "V"))
     runCatching { Class.forName("fixture.DuoBind") }.isFailure shouldBe true
 }

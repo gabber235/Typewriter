@@ -14,6 +14,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -80,6 +81,19 @@ interface ReadProjection<V> {
     context(reads: AuthoredReads)
     fun read(location: ValueLocation): Availability<V>
 }
+
+/**
+ * The projection of the type parameter [parameter] in a bind block's draft: nothing is known of its type yet, so every
+ * value of it reads as unavailable. Its expected type is the parameter's opaque stand in.
+ */
+@GeneratedSdkApi
+fun <V> unboundReadProjection(parameter: ParameterKey): ReadProjection<V> =
+    object : ReadProjection<V> {
+        override val expected: TypeUse = com.typewritermc.discovery.opaqueParameterUse(parameter)
+
+        context(reads: AuthoredReads)
+        override fun read(location: ValueLocation): Availability<V> = Availability.Unavailable(listOf(location))
+    }
 
 @GeneratedSdkApi
 fun <V> nativeReadProjection(expected: TypeUse): ReadProjection<V> =

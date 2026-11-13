@@ -2,6 +2,7 @@ package com.typewritermc.formula
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.FieldPath
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.checking.DraftType
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.types.catalog.BindKey
@@ -38,16 +39,27 @@ interface Dynamics {
     )
 
     /**
-     * Computes the type parameter [key] names from the content of each resource of exactly its type, read through
-     * [type]. Registering it makes the parameter computed, so a creator never chooses it; a parameter without a bind
+     * Computes [parameter] from the content of each resource of exactly its type, read through the draft the handle
+     * carries. Registering it makes the parameter computed, so a creator never chooses it; a parameter without a bind
      * stays creator chosen. Only the artifact that declares the type may bind it.
      */
     fun <D> bind(
-        key: BindKey,
-        type: DraftType<D>,
+        parameter: BindParameter<D>,
         bind: BindBuilder.(D) -> Unit,
     )
 }
+
+/**
+ * A type parameter of a resource type that a bind may compute, with the draft its bind block reads. Codegen emits one
+ * per type parameter in `XBind`. The draft reads every field whose type holds a type parameter as unavailable, so a bind
+ * computes from concrete content alone.
+ */
+class BindParameter<D>
+    @GeneratedSdkApi
+    constructor(
+        val key: BindKey,
+        internal val draft: DraftType<D>,
+    )
 
 /** The record type one bind block computes for one resource. It reads authored content through its own receiver. */
 @TypewriterDsl

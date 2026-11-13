@@ -6,6 +6,7 @@ import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -34,7 +35,7 @@ internal class OpaqueParameters(
     private val keys: Map<ParameterKey, TypeDefinitionId> =
         definitions
             .flatMap { definition -> definition.parameters.map { it.key } }
-            .associateWith { key -> TypeDefinitionId.qualified(OPAQUE_PARAMETER_NAMESPACE, "${key.owner.canonicalText}#${key.index}") }
+            .associateWith(::opaqueParameterId)
     private val parameters: Map<TypeDefinitionId, ParameterKey> = keys.entries.associate { (key, id) -> id to key }
 
     /** One open record per parameter, to join the declarations a presentation checker resolves against. */
@@ -76,3 +77,10 @@ internal class OpaqueParameters(
             (id.typeId as? TypeId.QualifiedWrapper)?.value?.namespace == OPAQUE_PARAMETER_NAMESPACE
     }
 }
+
+/** The id of the opaque stand in for the type parameter [key]. */
+internal fun opaqueParameterId(key: ParameterKey): TypeDefinitionId =
+    TypeDefinitionId.qualified(OPAQUE_PARAMETER_NAMESPACE, "${key.owner.canonicalText}#${key.index}")
+
+/** The opaque stand in for the type parameter [key] as a type use. */
+internal fun opaqueParameterUse(key: ParameterKey): TypeUse = opaqueParameterId(key).use()
