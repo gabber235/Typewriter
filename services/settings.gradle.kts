@@ -6,6 +6,7 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         google()
+        maven("https://maven.fabricmc.net/") { name = "Fabric" }
     }
 }
 
@@ -69,3 +70,5 @@ includeProject("conformance-extension", "extensions/conformance")
 
 includeProject("typewriter-test-kit", "testing/typewriter-test-kit")
 includeProject("realm-route-fixtures", "testing/realm-route-fixtures")
+
+includeProject("playtest-wire", "playtest/wire")

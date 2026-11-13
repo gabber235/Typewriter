@@ -6,7 +6,7 @@ import java.nio.file.StandardCopyOption
 plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
-    id("xyz.jpenilla.run-paper") version "3.1.0"
+    id("xyz.jpenilla.run-paper")
 }
 
 val loaderPlugin =
