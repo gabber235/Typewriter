@@ -72,4 +72,13 @@ extension ShownLetters on WidgetTester {
   String get visibleText => widgetList<Text>(
     find.descendant(of: find.byType(MotionLabel), matching: find.byType(Text)),
   ).map((text) => text.data ?? "").join();
+
+  /// The letters of a [TypedParagraph] typed so far.
+  String typedTextOf(Finder paragraph) {
+    final text = widget<Text>(
+      find.descendant(of: paragraph, matching: find.byType(Text)),
+    );
+    final typed = (text.textSpan! as TextSpan).children!.first;
+    return typed.toPlainText();
+  }
 }

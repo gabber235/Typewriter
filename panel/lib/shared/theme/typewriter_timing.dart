@@ -10,6 +10,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
     this.longPressDelay = const Duration(milliseconds: 180),
     this.typeAheadReset = const Duration(milliseconds: 700),
     this.doneShow = const Duration(milliseconds: 900),
+    this.problemWait = const Duration(milliseconds: 350),
   });
 
   /// How long a hover opened popup stays after the pointer leaves it.
@@ -27,8 +28,13 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
   /// How long after the last typed letter a menu's type ahead starts over.
   final Duration typeAheadReset;
 
-  /// How long a toast shows that its retry worked before it leaves.
+  /// How long a done word shows before it leaves: a toast whose retry
+  /// worked, a field message saying Fixed.
   final Duration doneShow;
+
+  /// How long a field waits after its value changed before it says what is
+  /// wrong with it, so typing does not flash a problem at every letter.
+  final Duration problemWait;
 
   @override
   TypewriterTiming copyWith({
@@ -38,6 +44,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
     Duration? longPressDelay,
     Duration? typeAheadReset,
     Duration? doneShow,
+    Duration? problemWait,
   }) {
     return TypewriterTiming(
       hoverExitDelay: hoverExitDelay ?? this.hoverExitDelay,
@@ -46,6 +53,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
       longPressDelay: longPressDelay ?? this.longPressDelay,
       typeAheadReset: typeAheadReset ?? this.typeAheadReset,
       doneShow: doneShow ?? this.doneShow,
+      problemWait: problemWait ?? this.problemWait,
     );
   }
 

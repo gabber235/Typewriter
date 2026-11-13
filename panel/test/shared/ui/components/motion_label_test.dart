@@ -44,4 +44,28 @@ void main() {
     await panel.settle();
     expect(tester.binding.hasScheduledFrame, isFalse);
   });
+
+  testWidgets("a typed paragraph types a new text at the height of the "
+      "whole text and reads it whole at once", (tester) async {
+    const message = "A line needs a speaker before the dialogue can play.";
+    final panel = await tester.showComponent(
+      const SizedBox(width: 120, child: TypedParagraph("Use three letters.")),
+    );
+    await tester.showComponent(
+      const SizedBox(width: 120, child: TypedParagraph(message)),
+      settle: false,
+    );
+    await tester.pump(const Duration(milliseconds: 40));
+    final typing = tester.getSize(find.byType(TypedParagraph)).height;
+
+    expect(
+      tester.typedTextOf(find.byType(TypedParagraph)).length,
+      lessThan(message.length),
+    );
+    expect(panel.reads(message), isTrue);
+
+    await panel.settle();
+    expect(tester.typedTextOf(find.byType(TypedParagraph)), message);
+    expect(tester.getSize(find.byType(TypedParagraph)).height, typing);
+  });
 }

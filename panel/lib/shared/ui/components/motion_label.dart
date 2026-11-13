@@ -87,6 +87,41 @@ class MotionLabel extends HookWidget {
   }
 }
 
+/// A message that types in with the `type` token and wraps like its whole
+/// text from the first frame: the letters not typed yet lay out clear, so
+/// nothing below it moves. Assistive technology reads the whole text at
+/// once; under reduced motion it shows whole.
+class TypedParagraph extends HookWidget {
+  const TypedParagraph(this.text, {this.style, super.key});
+
+  final String text;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final typed = useTyping(text, typesIn: true);
+    return Semantics(
+      label: text,
+      child: ExcludeSemantics(
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: text.substring(0, typed)),
+              TextSpan(
+                text: text.substring(typed),
+                style: DefaultTextStyle.of(context).style
+                    .merge(style)
+                    .copyWith(color: context.colors.clear),
+              ),
+            ],
+          ),
+          style: style,
+        ),
+      ),
+    );
+  }
+}
+
 /// An icon that ripples as one letter while [rippling]: the busy sign of a
 /// button with no busy word.
 class RippleGlyph extends HookWidget {

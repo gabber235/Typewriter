@@ -21,6 +21,49 @@ void main() {
     expect(panel.field("Title").isFocused, isTrue);
   });
 
+  testWidgets("a title made too short says why only once typing pauses", (
+    tester,
+  ) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+    await panel.field("Title").type("Find the lantern");
+    await tester.runStory();
+
+    // One keystroke, then a pause shorter than the edit's own debounce
+    // plus the wait before a problem shows.
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: "Fi",
+        selection: TextSelection.collapsed(offset: 2),
+      ),
+    );
+    await tester.runStory(duration: const Duration(milliseconds: 450));
+    expect(panel.shows(_shortTitle), isFalse);
+
+    await tester.runStory();
+    expect(panel.shows(_shortTitle), isTrue);
+  });
+
+  testWidgets("a corrected title says Fixed, then its message closes", (
+    tester,
+  ) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+
+    await panel.field("Title").focus();
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: "Find the lantern",
+        selection: TextSelection.collapsed(offset: 16),
+      ),
+    );
+    await tester.runStory(duration: const Duration(milliseconds: 400));
+    expect(panel.shows("Fixed"), isTrue);
+    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+
+    await tester.runStory(duration: const Duration(seconds: 2));
+    expect(panel.shows("Fixed"), isFalse);
+    expect(panel.shows(_shortTitle), isFalse);
+  });
+
   testWidgets("a collapsed quest still reports its field diagnostic and "
       "expands to the same draft", (tester) async {
     final panel = await tester.pumpStory(portableFieldValidationUseCase);

@@ -65,92 +65,97 @@ class PortableDiagnosticFrame extends HookWidget {
         ],
         diagnostics: local,
       ),
-      builder: (context, summary, owner) {
-        final direct = {...summary.direct, ...local}.toList();
-        final effective = PortableDiagnosticSummary(
-          direct: direct,
-          descendants: summary.descendants,
-        );
-        final severity = effective.highestSeverity;
-        final color = severity?.color(context);
-        final colors = context.theme.colorScheme;
-        final fill = severity == skir.DiagnosticSeverity.error
-            ? colors.errorContainer
-            : color?.withValues(alpha: 0.18);
-        final hasLabel =
-            (label != null && label!.isNotEmpty) ||
-            (description != null && description!.isNotEmpty);
-        final nativeInteraction = PresentationInteractionScope.of(context);
-        _PortableControlStyle? style;
-        try {
-          style = scope == null
-              ? null
-              : _controlStyle(
-                  context,
-                  scope!,
-                  appearance,
-                  environment: PresentationValueEnvironment.of(context)
-                      .copyWith(
-                        interaction: nativeInteraction.copyWith(
-                          invalid: severity == skir.DiagnosticSeverity.error,
+      builder: (context, summary, owner) => HookBuilder(
+        builder: (context) {
+          final direct = {...summary.direct, ...local}.toList();
+          // The tint and label colour wait with the message.
+          final effective = PortableDiagnosticSummary(
+            direct: useRevealedDiagnostics(context, direct).shown,
+            descendants: summary.descendants,
+          );
+          final severity = effective.highestSeverity;
+          final color = severity?.color(context);
+          final colors = context.theme.colorScheme;
+          final fill = severity == skir.DiagnosticSeverity.error
+              ? colors.errorContainer
+              : color?.withValues(alpha: 0.18);
+          final hasLabel =
+              (label != null && label!.isNotEmpty) ||
+              (description != null && description!.isNotEmpty);
+          final nativeInteraction = PresentationInteractionScope.of(context);
+          _PortableControlStyle? style;
+          try {
+            style = scope == null
+                ? null
+                : _controlStyle(
+                    context,
+                    scope!,
+                    appearance,
+                    environment: PresentationValueEnvironment.of(context)
+                        .copyWith(
+                          interaction: nativeInteraction.copyWith(
+                            invalid: severity == skir.DiagnosticSeverity.error,
+                          ),
                         ),
+                  );
+          } on PresentationValueFailure catch (failure) {
+            return _diagnostic(failure.message);
+          }
+          final authoredLabelColor =
+              appearance?.labelStyle?.color != null ||
+              (scope?.appearanceLayers.any(
+                    (layer) => layer.appearance.labelStyle?.color != null,
+                  ) ??
+                  false);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ExcludeSemantics(
+                child: LabeledMessage(
+                  label: label,
+                  message: description,
+                  labelStyle:
+                      style?.labelStyle.copyWith(
+                        color: authoredLabelColor
+                            ? style.labelStyle.color
+                            : color ?? style.labelStyle.color,
+                      ) ??
+                      context.theme.textTheme.labelLarge?.copyWith(
+                        color: color,
                       ),
-                );
-        } on PresentationValueFailure catch (failure) {
-          return _diagnostic(failure.message);
-        }
-        final authoredLabelColor =
-            appearance?.labelStyle?.color != null ||
-            (scope?.appearanceLayers.any(
-                  (layer) => layer.appearance.labelStyle?.color != null,
-                ) ??
-                false);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ExcludeSemantics(
-              child: LabeledMessage(
-                label: label,
-                message: description,
-                labelStyle:
-                    style?.labelStyle.copyWith(
-                      color: authoredLabelColor
-                          ? style.labelStyle.color
-                          : color ?? style.labelStyle.color,
-                    ) ??
-                    context.theme.textTheme.labelLarge?.copyWith(color: color),
-                messageStyle: style?.descriptionStyle,
+                  messageStyle: style?.descriptionStyle,
+                ),
               ),
-            ),
-            if (hasLabel) const SizedBox(height: 6),
-            AnimatedContainer(
-              duration: motionTimeline(context, MotionToken.ink).duration,
-              curve: motionTimeline(context, MotionToken.ink).curve,
-              decoration: BoxDecoration(
-                color: fill ?? context.colors.surface.withValues(alpha: 0),
-                borderRadius: context.shapes.mediumBorderRadius,
+              if (hasLabel) const SizedBox(height: 6),
+              AnimatedContainer(
+                duration: motionTimeline(context, MotionToken.ink).duration,
+                curve: motionTimeline(context, MotionToken.ink).curve,
+                decoration: BoxDecoration(
+                  color: fill ?? context.colors.surface.withValues(alpha: 0),
+                  borderRadius: context.shapes.mediumBorderRadius,
+                ),
+                padding: severity == null
+                    ? EdgeInsets.zero
+                    : EdgeInsets.all(context.spacing.space2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PortableControlDiagnostics(
+                      identity: identity,
+                      invalid: severity == skir.DiagnosticSeverity.error,
+                      onValidationChanged: reportParseMessage,
+                      child: child,
+                    ),
+                    PortableDiagnosticMessages(diagnostics: direct),
+                  ],
+                ),
               ),
-              padding: severity == null
-                  ? EdgeInsets.zero
-                  : EdgeInsets.all(context.spacing.space2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PortableControlDiagnostics(
-                    identity: identity,
-                    invalid: severity == skir.DiagnosticSeverity.error,
-                    onValidationChanged: reportParseMessage,
-                    child: child,
-                  ),
-                  PortableDiagnosticMessages(diagnostics: direct),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -175,48 +180,141 @@ class PortableControlDiagnostics extends InheritedWidget {
       onValidationChanged != old.onValidationChanged;
 }
 
-class PortableDiagnosticMessages extends StatelessWidget {
+/// What a control shows of its [direct] diagnostics. New or changed ones
+/// show once the value has rested for the `problemWait` timing, so typing
+/// never flashes a problem at every letter; diagnostics that clear leave
+/// [fixed] true for the `doneShow` timing. The first diagnostics show at
+/// once.
+({List<PortablePresentationDiagnostic> shown, bool fixed})
+useRevealedDiagnostics(
+  BuildContext context,
+  List<PortablePresentationDiagnostic> direct,
+) {
+  final timing = context.timing;
+  final shown = useState(direct);
+  final fixed = useState(false);
+  final pending = useRef(direct);
+  // Controllers rather than timers, so a settling test steps through them.
+  final wait = useAnimationController(duration: timing.problemWait);
+  final linger = useAnimationController(duration: timing.doneShow);
+  useEffect(() {
+    void waited(AnimationStatus status) {
+      if (status == AnimationStatus.completed) shown.value = pending.value;
+    }
+
+    void lingered(AnimationStatus status) {
+      if (status == AnimationStatus.completed) fixed.value = false;
+    }
+
+    wait.addStatusListener(waited);
+    linger.addStatusListener(lingered);
+    return () {
+      wait.removeStatusListener(waited);
+      linger.removeStatusListener(lingered);
+    };
+  }, [wait, linger]);
+
+  final key = PortableDiagnosticSummary(direct: direct);
+  useEffect(() {
+    if (key == PortableDiagnosticSummary(direct: shown.value)) {
+      wait.stop();
+      return null;
+    }
+    // Schedule after this frame: state changes may not run during build.
+    Future.microtask(() {
+      if (!context.mounted) return;
+      if (direct.isEmpty) {
+        wait.stop();
+        shown.value = const [];
+        fixed.value = true;
+        linger.forward(from: 0);
+      } else {
+        fixed.value = false;
+        linger.stop();
+        pending.value = direct;
+        wait.forward(from: 0);
+      }
+    });
+    return null;
+  }, [key]);
+  return (shown: shown.value, fixed: fixed.value);
+}
+
+/// The messages under a control: each diagnostic types in once its value
+/// rests, and a cleared one says Fixed in the success colour before the
+/// messages close.
+class PortableDiagnosticMessages extends HookWidget {
   const PortableDiagnosticMessages({required this.diagnostics, super.key});
   final List<PortablePresentationDiagnostic> diagnostics;
   @override
   Widget build(BuildContext context) {
+    final (:shown, :fixed) = useRevealedDiagnostics(context, diagnostics);
+    final padding = EdgeInsets.only(
+      top: context.spacing.space1,
+      left: context.spacing.space2,
+      right: context.spacing.space2,
+    );
     return ElasticMessageSwitcher(
-      child: diagnostics.isEmpty
-          ? const SizedBox.shrink()
-          : Padding(
-              key: ValueKey(PortableDiagnosticSummary(direct: diagnostics)),
-              padding: EdgeInsets.only(
-                top: context.spacing.space1,
-                left: context.spacing.space2,
-                right: context.spacing.space2,
-              ),
-              child: Semantics(
-                liveRegion: true,
-                label: diagnostics.map((item) => item.message).join("\n"),
-                child: ExcludeSemantics(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final diagnostic in diagnostics)
-                        Text(
-                          diagnostic.message,
-                          style: context.text.sentenceSmall.copyWith(
-                            color: Color.alphaBlend(
-                              diagnostic.severity
-                                  .color(context)
-                                  .withValues(
-                                    alpha: context.isDarkMode ? 0.4 : 0.9,
-                                  ),
-                              Surface.colorOf(context).on(context),
-                            ),
-                          ),
-                        ),
-                    ],
+      child: switch (shown) {
+        [] when fixed => Padding(
+          key: const ValueKey("fixed"),
+          padding: padding,
+          child: Semantics(
+            liveRegion: true,
+            label: "Fixed",
+            child: ExcludeSemantics(
+              child: Row(
+                spacing: context.spacing.space1,
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: context.colors.success,
                   ),
-                ),
+                  MotionLabel(
+                    "Fixed",
+                    typesIn: true,
+                    style: context.text.sentenceSmall.copyWith(
+                      color: context.colors.successText,
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
+        ),
+        [] => const SizedBox.shrink(),
+        _ => Padding(
+          key: ValueKey(PortableDiagnosticSummary(direct: shown)),
+          padding: padding,
+          child: Semantics(
+            liveRegion: true,
+            label: shown.map((item) => item.message).join("\n"),
+            child: ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final diagnostic in shown)
+                    TypedParagraph(
+                      diagnostic.message,
+                      style: context.text.sentenceSmall.copyWith(
+                        color: Color.alphaBlend(
+                          diagnostic.severity
+                              .color(context)
+                              .withValues(
+                                alpha: context.isDarkMode ? 0.4 : 0.9,
+                              ),
+                          Surface.colorOf(context).on(context),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      },
     );
   }
 }
