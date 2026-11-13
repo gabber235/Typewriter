@@ -540,11 +540,23 @@ slices:
       to declare demonstrates yet); no run file when the game cannot boot; RunRecords was not built
       test first; commits need the devenv shell for rustfmt.
   - id: input-from-the-client
-    status: building
+    status: done
     what: type, click, look and use through XTest per display and SDL on the Mac; retype for lost suggestions
-    green: spike J's 18 inputs as requirements
+    green: spike J's 18 inputs as requirements, plus PROBE-2 (a probe is done once the client holds its effect)
+    evidence: [commits 61a922c3e a0563d116, "cargo xtask e2e game on a0563d116: 21 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      Non text results are checked on the camera, GUI items, watched blocks and watched entities.
+      A probe's done waits until a tick ends with nothing left to send to its player (chunks within
+      the client's view distance, Paper's command sending pool idle), then a marker task. Probes let
+      time pass, so the void world needs a bedrock layer. Flipping one expectation in eight
+      requirements made seven fail with a clear report. Gaps: the Linux XTest path is built but
+      unproven until slice 9; tests first slipped for Aim, Retype and the GUI item rule; each
+      requirement hand picks its spot coordinates (regions in slice 3 should make spots relative);
+      a dead client stops acking and lockstep waits forever (slice 4); the pool's view distance 10
+      makes Paper send chunks a distance 2 client never draws; the game suite has no --only or
+      --repeat (slice 5); heavy lock waits make each check 15 to 35 minutes.
   - id: pool-of-four-and-groups
-    status: queued
+    status: next
     what: claims, regions, full wipe, leave like the pause menu, rotation between test JVMs
     green: a group of 3; no leak in 17 kinds
   - id: done-and-hung-work
@@ -572,4 +584,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 2 (input from the client) is building on feat/game-verification-slice-2. Accept it on evidence, then check in and start slice 3.
+next: Slice 2 done. Confirm its last built decisions, then start slice 3 (pool of 4, groups, regions with relative spots, wipe).
