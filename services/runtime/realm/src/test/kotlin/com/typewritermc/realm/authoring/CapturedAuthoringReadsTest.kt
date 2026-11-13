@@ -53,15 +53,6 @@ import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 import java.math.BigInteger
 
-/** A generic record type with one parameter and no fields: a selection that leaves its parameter unchosen is a partial type. */
-private val PENDING_GENERIC = TypeDefinitionId.qualified("test", "pending_generic")
-private val PENDING_GENERIC_DEFINITION =
-    TypeDefinition.partial(
-        id = PENDING_GENERIC,
-        parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = PENDING_GENERIC, index = 0), name = "T")),
-        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
-    )
-
 val CapturedAuthoringReadsTest by testSuite {
     val derivedType = TypeDefinitionId.qualified("test", "derived")
 

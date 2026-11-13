@@ -53,6 +53,8 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
+import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -315,3 +317,12 @@ internal val TEST_DEFINITIONS =
             parameters = listOf(TypeParameter.partial(key = LIST_PARAMETER, name = "T")),
         )
     }
+
+/** A generic record type with one parameter and no fields: a selection that leaves its parameter unchosen is a partial type. */
+internal val PENDING_GENERIC = TypeDefinitionId.qualified("test", "pending_generic")
+internal val PENDING_GENERIC_DEFINITION =
+    TypeDefinition.partial(
+        id = PENDING_GENERIC,
+        parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = PENDING_GENERIC, index = 0), name = "T")),
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    )

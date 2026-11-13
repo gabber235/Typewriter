@@ -53,9 +53,9 @@ import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 
-private val OWNER = ResourceId(value = "owner")
-
 val TypeSystemFoundationTest by testSuite {
+    val ownerResource = ResourceId(value = "owner")
+
     test("definitions and complete uses remain distinct") {
         val weighted = weightedDefinition()
         val catalog = catalog(weighted)
@@ -259,7 +259,7 @@ val TypeSystemFoundationTest by testSuite {
                     "value" to DataValue.named(resourceUse, DataValue.record(mapOf("name" to DataValue.StringValueWrapper("Broad")))),
                 ),
             )
-        (wrongWrite.validateStructure(OWNER, catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
+        (wrongWrite.validateStructure(ownerResource, catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
             listOf("unreadable_actual_type")
     }
 
@@ -529,7 +529,7 @@ val TypeSystemFoundationTest by testSuite {
         val variable = variableDefinition(resource.id)
         val catalog = catalog(resource, variable)
 
-        val partial = (catalog.typeOf(OWNER, TypeSelection.of(variable.id)) as Resolution.Ready).value as ResourceType.Partial
+        val partial = (catalog.typeOf(ownerResource, TypeSelection.of(variable.id)) as Resolution.Ready).value as ResourceType.Partial
 
         partial.schema.knownFields.map { it.key } shouldContainExactly listOf("name")
         partial.schema.dependentFields.map { it.owner.name } shouldContainExactly listOf("value")
@@ -540,7 +540,7 @@ val TypeSystemFoundationTest by testSuite {
         val variable = variableDefinition(resource.id)
         val catalog = catalog(resource, variable)
 
-        val type = (catalog.typeOf(OWNER, TypeSelection.of(variable.id, mapOf(0 to resource.id.use()))) as Resolution.Ready).value
+        val type = (catalog.typeOf(ownerResource, TypeSelection.of(variable.id, mapOf(0 to resource.id.use()))) as Resolution.Ready).value
 
         (type as ResourceType.Complete).checked.use shouldBe variable.id.use(listOf(resource.id.use()))
         type.knownFields.map { it.key } shouldContainExactly listOf("name", "value")
@@ -551,7 +551,7 @@ val TypeSystemFoundationTest by testSuite {
         val variable = variableDefinition(resource.id)
         val catalog = catalog(resource, variable)
 
-        val type = catalog.typeOf(OWNER, TypeSelection.of(variable.id, mapOf(1 to resource.id.use())))
+        val type = catalog.typeOf(ownerResource, TypeSelection.of(variable.id, mapOf(1 to resource.id.use())))
 
         (type as Resolution.Invalid).diagnostics.map { it.code } shouldContainExactly listOf("argument_arity")
     }
@@ -641,7 +641,7 @@ val TypeSystemFoundationTest by testSuite {
                 mapOf("name" to DataValue.StringValueWrapper("ok"), "extra" to DataValue.StringValueWrapper("no")),
             )
 
-        (record.validateStructure(OWNER, catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
+        (record.validateStructure(ownerResource, catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
             listOf("unknown_field")
     }
 

@@ -64,3 +64,10 @@ fun RealmFixture.setColumns(
 
 /** The row type [board]'s columns compute: its derived `V`. */
 fun rowsOf(board: ResourceId): TypeUse = TypeDefinitionId.derived(board, "V").use()
+
+/** The fields of [board]'s row type with their types, in the saved view's catalog. */
+fun RealmFixture.rowFields(board: ResourceId): List<Pair<String, TypeUse>> =
+    resolvedSchema(rowsOf(board)).schema.fields.map { it.key to it.type }
+
+/** What [board] wrote down for its types: the declarations it holds and the arguments its selection chose. */
+fun RealmFixture.writtenFor(board: ResourceId): List<Any> = record(board).let { it.types + it.configuration.arguments }

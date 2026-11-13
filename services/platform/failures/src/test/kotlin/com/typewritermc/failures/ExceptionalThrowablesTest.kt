@@ -11,7 +11,7 @@ val ExceptionalThrowablesTest by testSuite {
     test("finds every exceptional throwable kind directly") {
         listOf(
             CancellationException("cancelled"),
-            TestVirtualMachineError(),
+            object : VirtualMachineError("fatal") {},
             ThreadDeath(),
             LinkageError("linkage"),
         ).forEach { it.findExceptional() shouldBeSameInstanceAs it }
@@ -46,5 +46,3 @@ val ExceptionalThrowablesTest by testSuite {
         shouldThrow<Throwable> { wrapper.rethrowExceptional() } shouldBeSameInstanceAs exceptional
     }
 }
-
-private class TestVirtualMachineError : VirtualMachineError("fatal")
