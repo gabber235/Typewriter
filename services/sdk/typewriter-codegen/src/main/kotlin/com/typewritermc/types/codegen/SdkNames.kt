@@ -22,7 +22,7 @@ internal class SdkNames private constructor(
 
     val file: String = "${base.simpleName}TypewriterSdk"
     val fields = base.suffixed("Fields")
-    val derived = base.suffixed("Derived")
+    val bind = base.suffixed("Bind")
     val expressions = base.suffixed("Expressions")
     val expressionsImpl = base.suffixed("ExpressionsImpl")
     val expressionsFactory = base.suffixed("ExpressionsFactory")

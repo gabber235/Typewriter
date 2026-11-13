@@ -21,7 +21,7 @@ struct MemberTypeId(84180003) {
 /// Names a type a resource declares. A written declaration always has a generated key, which
 /// survives a reorder, a rename and a retype. A field key appears only in a use and means whatever
 /// that field of the resource holds: a declaration by its generated key, or a plain type such as an
-/// alias. A derived key names a type the resource's derive blocks compute from its content, by a
+/// alias. A derived key names a type the resource's bind blocks compute from its content, by a
 /// name code chooses, so editing content changes the type behind the same id and nothing stores it.
 enum ContentKey(84180004) {
   generated: string = 1;

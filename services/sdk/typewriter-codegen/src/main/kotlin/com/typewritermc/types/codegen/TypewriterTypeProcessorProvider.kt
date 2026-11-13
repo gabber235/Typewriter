@@ -53,9 +53,9 @@ import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
 import com.typewritermc.formula.codegen.DynamicProviderProcessor
 import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
+import com.typewritermc.types.Bind
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
-import com.typewritermc.types.Derived
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Many
@@ -72,10 +72,10 @@ import com.typewritermc.types.TypewriterRelationFamily
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
 import com.typewritermc.types.catalog.referencedDefinitions
+import com.typewritermc.types.codegen.emit.BindEmitter
 import com.typewritermc.types.codegen.emit.CheckEmitter
 import com.typewritermc.types.codegen.emit.ConfigurationEmitter
 import com.typewritermc.types.codegen.emit.DefinitionEmitter
-import com.typewritermc.types.codegen.emit.DerivedEmitter
 import com.typewritermc.types.codegen.emit.DisplayEmitter
 import com.typewritermc.types.codegen.emit.DraftEmitter
 import com.typewritermc.types.codegen.emit.ExpressionsEmitter
@@ -126,7 +126,7 @@ class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
 internal val SDK_EMITTERS: List<SdkEmitter> =
     listOf(
         FieldsEmitter,
-        DerivedEmitter,
+        BindEmitter,
         ExpressionsEmitter,
         ConfigurationEmitter,
         OperationEmitter,
@@ -208,10 +208,10 @@ private class TypewriterTypeProcessor(
             .filterIsInstance<KSClassDeclaration>()
             .forEach { relation -> if (relation.validate()) generateRelation(relation) else deferred += relation }
         resolver
-            .getSymbolsWithAnnotation(Derived::class)
+            .getSymbolsWithAnnotation(Bind::class)
             .filterIsInstance<KSTypeParameter>()
             .filterNot { parameter -> (parameter.parentDeclaration as? KSClassDeclaration)?.isFinalResourceClass() == true }
-            .forEach { parameter -> logger.error("@Derived marks only a type parameter of a final class that implements Resource.", parameter) }
+            .forEach { parameter -> logger.error("@Bind marks only a type parameter of a final class that implements Resource.", parameter) }
         val directlyAnnotated = resolver.getSymbolsWithAnnotation(TypewriterType::class).filterIsInstance<KSClassDeclaration>().toList()
         val nestedAnnotated =
             directlyAnnotated
@@ -247,8 +247,8 @@ private class TypewriterTypeProcessor(
     }
 
     /**
-     * Whether this declaration may have a derived parameter: a final class that implements Resource. A parent contract
-     * would meet the parameter under another index in each implementation, so only the resource type itself derives.
+     * Whether this declaration may have a `@Bind` parameter: a final class that implements Resource. A parent contract
+     * would meet the parameter under another index in each implementation, so only the resource type itself binds.
      */
     private fun KSClassDeclaration.isFinalResourceClass(): Boolean =
         classKind == ClassKind.CLASS &&

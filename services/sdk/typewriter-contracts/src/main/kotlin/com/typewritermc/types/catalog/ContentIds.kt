@@ -35,7 +35,7 @@ import skirout.kernel.v1.resource_id.ResourceId
  * on that resource; a field key, which only a use holds, means whatever that field of the resource holds.
  */
 
-/** The content types of one view, from both origins: what resources write and what their derive blocks compute. */
+/** The content types of one view, from both origins: what resources write and what their bind blocks compute. */
 interface ContentTypes {
     /** The declarations [owner]'s `types` list holds; empty when it holds none or does not exist. */
     fun written(owner: ResourceId): List<TypeDefinition>
@@ -46,7 +46,7 @@ interface ContentTypes {
         field: String,
     ): TypeUse?
 
-    /** What [owner]'s derive blocks compute under [key]. */
+    /** What [owner]'s bind blocks compute under [key]. */
     fun derived(
         owner: ResourceId,
         key: String,
@@ -128,7 +128,7 @@ fun TypeDefinitionId.Companion.content(
         revision = 1,
     )
 
-/** The id of the type [resource]'s derive blocks compute under [key]. */
+/** The id of the type [resource]'s bind blocks compute under [key]. */
 fun TypeDefinitionId.Companion.derived(
     resource: ResourceId,
     key: String,

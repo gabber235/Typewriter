@@ -11,15 +11,15 @@ import skirout.kernel.v1.resource_id.ResourceId
  * and nothing is written back.
  */
 
-/** The name under which a resource derives a type; the generated `XDerived` object holds one per derived parameter. */
+/** The name under which a bind block derives a type; the generated `XBind` object holds one per `@Bind` parameter. */
 @JvmInline
-value class DerivedKey(
+value class BindKey(
     val name: String,
 )
 
 /** Where derived types come from in one view. */
 fun interface DerivedOrigin {
-    /** What [owner]'s derive blocks compute under [key]. */
+    /** What [owner]'s bind blocks compute under [key]. */
     fun derived(
         owner: ResourceId,
         key: String,
@@ -54,12 +54,12 @@ sealed interface DerivedTarget {
 sealed interface DerivedFailure {
     val code: String
 
-    /** No derive block of the resource computes this key. */
+    /** No bind block of the resource computes this key. */
     data object NoBlock : DerivedFailure {
         override val code: String = "derived_type_missing"
     }
 
-    /** More than one derive block computes this key. */
+    /** More than one bind block computes this key. */
     data class Conflict(
         val origins: List<RuleOrigin>,
     ) : DerivedFailure {
@@ -73,7 +73,7 @@ sealed interface DerivedFailure {
         override val code: String = "derived_type_loop"
     }
 
-    /** The derive block at [origin] threw. */
+    /** The bind block at [origin] threw. */
     data class Failed(
         val origin: RuleOrigin,
         val message: String,

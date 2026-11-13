@@ -1092,7 +1092,7 @@ private class ContentLayer(
 
     /**
      * The one walk for every content id: a generated key on its owner's written list, a field key through its chain, a
-     * derived key through its owner's derive blocks, and a member through its owner.
+     * derived key through its owner's bind blocks, and a member through its owner.
      */
     fun target(
         id: TypeDefinitionId,
