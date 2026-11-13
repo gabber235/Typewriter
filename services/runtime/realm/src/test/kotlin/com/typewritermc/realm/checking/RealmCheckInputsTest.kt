@@ -84,7 +84,7 @@ val RealmCheckInputsTest by testSuite {
             )
         val record =
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
+                TypeSelection.of(TEST_TYPE.namedUse()),
                 mapOf(
                     "mapping" to
                         DataValue.named(

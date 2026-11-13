@@ -534,10 +534,9 @@ void main() {
     final base = TagGraph();
     final original = base.scope.catalog!.snapshot;
     final record = base.document.resources.values.first;
-    final type = switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) => value.definition,
-      _ => throw StateError("The nested collection fixture must be complete"),
-    };
+    final type =
+        completeUseOf(null, record.configuration)?.definition ??
+        (throw StateError("The nested collection fixture must be complete"));
     final nestedProvider = skir.PresentationId(
       namespace: "test",
       name: "nested.collections",

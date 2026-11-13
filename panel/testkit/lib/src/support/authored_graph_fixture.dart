@@ -269,7 +269,7 @@ final class AuthoredGraphFixture {
       id: id,
       content: skir.AuthoringRecord(
         types: const [],
-        configuration: skir.TypeSelection.wrapComplete(use(type)),
+        configuration: selectionOfUse(use(type)),
         fields: fields,
       ),
     );

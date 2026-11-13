@@ -2,7 +2,6 @@ package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root

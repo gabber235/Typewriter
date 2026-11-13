@@ -560,10 +560,7 @@ skir.AuthoringResource _resource(
   id: id,
   content: skir.AuthoringRecord(
     types: const [],
-    configuration: skir.TypeSelection.createComplete(
-      definition: type,
-      arguments: const [],
-    ),
+    configuration: skir.TypeSelection(definition: type, arguments: const []),
     fields: [
       for (final entry in fields.entries)
         skir.FieldValue(name: entry.key, value: entry.value),

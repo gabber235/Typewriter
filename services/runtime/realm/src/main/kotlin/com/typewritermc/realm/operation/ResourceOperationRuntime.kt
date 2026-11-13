@@ -7,10 +7,8 @@ import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.complete
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.operations.AuthoringGraphFacts
@@ -33,6 +31,8 @@ import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.closedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceIds
@@ -55,7 +55,6 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ResourceTarget
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -326,18 +325,17 @@ private fun AuthoringRecord.matches(
     target: NamedTypeTemplate,
     view: AuthoringView,
 ): Boolean =
-    when (val actual = configuration) {
-        is TypeSelection.CompleteWrapper -> {
-            target.template.closedUse?.let { closed -> view.catalog.checked.isReadableAs(actual.use.use, closed) } == true
+    when (val type = (view.catalog.checked.authoredTypeOf(configuration) as? Resolution.Ready)?.value) {
+        null -> {
+            false
         }
 
-        is TypeSelection.PendingWrapper -> {
-            target.arguments.isEmpty() &&
-                view.catalog.checked.isNominalSubtype(actual.definition, target.definition)
+        is ResourceType.Complete -> {
+            target.template.closedUse?.let { closed -> view.catalog.checked.isReadableAs(type.checked.use, closed) } == true
         }
 
-        else -> {
-            unknownVariant(actual)
+        is ResourceType.Partial -> {
+            target.arguments.isEmpty() && view.catalog.checked.isNominalSubtype(type.definition, target.definition)
         }
     }
 

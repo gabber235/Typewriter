@@ -14,13 +14,11 @@ import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.RouteResult
 import com.typewritermc.authoring.UnresolvedLink
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
@@ -28,11 +26,12 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.operations.HostFailure
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.record
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
@@ -42,7 +41,6 @@ import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationFamilyId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -287,37 +285,25 @@ private class CapturedGraph(
                 }
 
                 is ResourceTypeMatch.Definition -> {
-                    when (val actual = record.configuration) {
-                        is TypeSelection.CompleteWrapper -> {
-                            root.catalog.checked.isNominalSubtype(actual.use.definition, requested.id)
-                        }
-
-                        is TypeSelection.PendingWrapper -> {
-                            root.catalog.checked.isNominalSubtype(actual.definition, requested.id)
-                        }
-
-                        else -> {
-                            unknownVariant(actual)
-                        }
-                    }
+                    root.catalog.checked.isNominalSubtype(record.configuration.definition, requested.id)
                 }
 
                 is ResourceTypeMatch.Application -> {
-                    when (val actual = record.configuration) {
-                        is TypeSelection.CompleteWrapper -> {
-                            actual.use == requested.use
+                    when (val actual = (root.catalog.checked.authoredTypeOf(record.configuration) as? Resolution.Ready)?.value) {
+                        null -> {
+                            false
                         }
 
-                        is TypeSelection.PendingWrapper -> {
+                        is ResourceType.Complete -> {
+                            actual.checked.use == requested.use.use
+                        }
+
+                        is ResourceType.Partial -> {
                             return if (actual.definition == requested.use.definition) {
                                 BoundMatch.Undecided(UndecidedCandidate(resource.toResourceId(), listOf(location)))
                             } else {
                                 BoundMatch.No
                             }
-                        }
-
-                        else -> {
-                            unknownVariant(actual)
                         }
                     }
                 }

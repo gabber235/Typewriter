@@ -1,7 +1,6 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.SubmissionKey
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.requireValid
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringEditCommit

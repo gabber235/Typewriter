@@ -114,7 +114,7 @@ final class LinkChoicesFixture {
       emptyTarget: skir.ResourceId(value: "resource:empty"),
       nestedLinkPath: valueAt("resource:source", ["wrapper", "back"]).path,
       wrapperUse: typeUse("Wrapper"),
-      wrapperSelection: skir.TypeSelection.wrapComplete(typeUse("Wrapper")),
+      wrapperSelection: selectionOfUse(typeUse("Wrapper")),
     );
   }
 

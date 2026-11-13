@@ -314,7 +314,7 @@ internal data class Evaluate(
         val authored = tracked()
         val catalog = authored.viewCatalog.checked
         val record = authored.record(at.resource) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
-        val (type, value) = record.storedAt(at.path, catalog) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
+        val (type, value) = record.storedAt(at.resource, at.path, catalog) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
         if (value == DataValue.UNFILLED) throw FailedEvaluation(FormulaFailure.Unfilled(at))
         val plain = (value as? DataValue.NamedWrapper)?.value?.takeIf { it.actualType.definition == VarValueDefinition.id }
         if (plain == null) {

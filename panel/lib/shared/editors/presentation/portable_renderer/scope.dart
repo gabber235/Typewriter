@@ -668,10 +668,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       _ => null,
     };
     if (checked == null || named == null) return null;
-    return switch (checked.valueTypeAt(
-      skir.TypeSelection.wrapComplete(named),
-      path,
-    )) {
+    return switch (checked.valueTypeAt(selectionOfUse(named), path)) {
       final use? => CompletePortablePresentationBinding(use),
       null => null,
     };
@@ -745,14 +742,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
             .toExpressionBinding(),
         configuredValueBindingId: PortableExpressionBinding(
           value: projected.value,
-          schema: switch (projected.configuration) {
-            skir.TypeSelection_completeWrapper(:final value) =>
-              CompletePortablePresentationBinding(
-                skir.TypeUse.wrapNamed(value),
-              ),
-            skir.TypeSelection_pendingWrapper() =>
-              PartialPortablePresentationBinding(projected.configuration),
-            _ => null,
+          schema: switch (completeUseOf(catalog, projected.configuration)) {
+            final value? => CompletePortablePresentationBinding(
+              skir.TypeUse.wrapNamed(value),
+            ),
+            null => PartialPortablePresentationBinding(projected.configuration),
           },
           location: location,
         ),

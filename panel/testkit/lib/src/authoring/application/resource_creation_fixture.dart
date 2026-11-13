@@ -138,11 +138,9 @@ final class ResourceCreationFixture {
       skir.NamedTypeTemplate(definition: _id(name), arguments: const []);
   skir.TypeTemplate _named(String name) =>
       skir.TypeTemplate.wrapNamed(_template(name));
-  skir.TypeSelection _selection(String name) =>
-      skir.TypeSelection.createComplete(
-        definition: _id(name),
-        arguments: const [],
-      );
+  skir.TypeSelection _selection(String name) => selectionOfUse(
+    skir.NamedTypeUse(definition: _id(name), arguments: const []),
+  );
   ResourceCreationRequest request(String name) =>
       ResourceCreationRequest(type: _id(name), configuration: _selection(name));
 

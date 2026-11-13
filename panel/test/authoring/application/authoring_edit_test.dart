@@ -197,9 +197,7 @@ void main() {
   test("counterpart resolution distinguishes direct, ambiguous, collection and invalid", () {
     final fixture = PageCreationFixture();
     final checked = fixture.draft.catalog!;
-    final pageConfiguration = skir.TypeSelection.wrapComplete(
-      fixture.sequenceUse,
-    );
+    final pageConfiguration = selectionOfUse(fixture.sequenceUse);
     final pageEndpoint = skir.EndpointId(value: "page.book");
     expect(
       checked.resolveScalarCounterpart(
@@ -443,7 +441,7 @@ void main() {
       "inside it", () {
     final fixture = CollectionRepairFixture();
     final item = skir.ItemId(value: "item:record");
-    final selection = skir.TypeSelection.wrapComplete(fixture.itemType);
+    final selection = selectionOfUse(fixture.itemType);
     final request = skir.ValuePreparationRequest(
       catalog: fixture.draft.generation,
       target: skir.PreparationTarget.wrapRecord(selection),
@@ -550,7 +548,7 @@ void main() {
             skir.ResourceId(value: "resource:1"),
             skir.AuthoringRecord(
               types: const [],
-              configuration: skir.TypeSelection.wrapComplete(
+              configuration: selectionOfUse(
                 listTypeOf(skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
               ),
               fields: record.fields,
@@ -919,9 +917,7 @@ void main() {
     expect(requests, hasLength(1), reason: "No child fallback is prepared");
     expect(requests.single.recordSuppliedFields, isEmpty);
     expect(
-      (requests.single.recordSelection as skir.TypeSelection_completeWrapper)
-          .value
-          .definition,
+      completeUseOf(null, requests.single.recordSelection)!.definition,
       testTypeId("Action"),
     );
     final style =
@@ -1080,7 +1076,7 @@ void main() {
       concurrent,
       skir.AuthoringRecord(
         types: const [],
-        configuration: skir.TypeSelection.wrapComplete(
+        configuration: selectionOfUse(
           skir.NamedTypeUse(
             definition: testTypeId("Action"),
             arguments: const [],

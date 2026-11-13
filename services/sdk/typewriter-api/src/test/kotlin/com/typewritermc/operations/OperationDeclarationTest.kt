@@ -209,7 +209,7 @@ val OperationDeclarationTest by testSuite {
                         content =
                             PreparedContent.RecordWrapper(
                                 AuthoringRecord.of(
-                                    TypeSelection.CompleteWrapper(target.namedUse()),
+                                    TypeSelection.of(target.namedUse()),
                                     mapOf("name" to DataValue.StringValueWrapper(name)),
                                 ),
                             ),
@@ -244,7 +244,7 @@ val OperationDeclarationTest by testSuite {
                 containing = location,
                 prepared =
                     PreparedValue(
-                        content = PreparedContent.RecordWrapper(AuthoringRecord.of(TypeSelection.CompleteWrapper(type), emptyMap())),
+                        content = PreparedContent.RecordWrapper(AuthoringRecord.of(TypeSelection.of(type), emptyMap())),
                         findings = emptyList(),
                     ),
             )

@@ -165,23 +165,17 @@ class _TypeArgumentEditor extends HookWidget {
     final catalog = useMemoized(() => _catalog(twoArguments: twoArguments), [
       twoArguments,
     ]);
-    final selection = useMemoized(
-      () => skir.TypeSelection.createPending(
-        definition: _variable,
-        arguments: [
-          if (chosen)
-            skir.ArgumentSelection.wrapChosen(
+    final selection = useMemoized(() {
+      final pending = selectionOfDefinition(_variable);
+      return chosen
+          ? pending.withChosen(
+              0,
               skir.TypeUse.wrapNamed(
                 skir.NamedTypeUse(definition: _coins, arguments: const []),
               ),
             )
-          else
-            skir.ArgumentSelection.unfilled,
-          if (twoArguments) skir.ArgumentSelection.unfilled,
-        ],
-      ),
-      [twoArguments, chosen],
-    );
+          : pending;
+    }, [twoArguments, chosen]);
     final status = useState("No type change staged");
     return SizedBox(
       width: width,

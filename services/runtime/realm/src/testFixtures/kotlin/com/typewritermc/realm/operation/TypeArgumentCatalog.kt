@@ -25,7 +25,6 @@ import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
@@ -201,30 +200,27 @@ internal val bundleItem = ItemId(value = "bundle")
 
 /** A pending dual selection: the first argument chosen as coin, the second left open. */
 internal val pendingCoin =
-    TypeSelection.createPending(
-        definition = DUAL,
-        arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
-    )
+    TypeSelection.of(DUAL, mapOf(0 to COIN_USE.use))
 
 /** A container of rewards whose one bundle holds a gem, and whose own reward is a coin. */
 internal val rewardContainer =
     mapOf(container to containerRecord(CONTAINER_REWARD, LIST_BUNDLE_REWARD, BUNDLE_REWARD, gemValue()))
 
 /** A dual of coin and gem with a name and both values filled. */
-internal val coinGemDual = mapOf(dual to dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)))
+internal val coinGemDual = mapOf(dual to dualRecord(TypeSelection.of(DUAL_COIN_GEM)))
 
 /** The coin and gem dual linked to a gem resource through its second argument. */
 internal val linkedDual =
     mapOf(
         dual to
-            dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)).with(
+            dualRecord(TypeSelection.of(DUAL_COIN_GEM)).with(
                 "target",
                 DataValue.named(
                     LINK_GEM,
                     DataValue.createLink(endpoint = SOURCE_ENDPOINT, target = LinkTarget(resource = gem, opposite = null)),
                 ),
             ),
-        gem to AuthoringRecord.of(TypeSelection.CompleteWrapper(GEM_USE), emptyMap()),
+        gem to AuthoringRecord.of(TypeSelection.of(GEM_USE), emptyMap()),
     )
 
 internal val REPAIR_CATALOG = DefinitionCatalog(REPAIR_DEFINITIONS, listOf(DUAL_RELATION))
@@ -272,7 +268,7 @@ internal fun containerRecord(
     value: DataValue,
 ): AuthoringRecord =
     AuthoringRecord.of(
-        configuration = TypeSelection.CompleteWrapper(configuration),
+        configuration = TypeSelection.of(configuration),
         fields =
             mapOf(
                 "bundles" to

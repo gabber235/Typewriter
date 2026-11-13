@@ -1,6 +1,5 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of

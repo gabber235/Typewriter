@@ -342,10 +342,10 @@ extension _AuthoringLinkStaging on AuthoringEdit {
     if (choice.containing.resource != target) return null;
     final targetRecord = _resources[target];
     if (targetRecord == null) return null;
-    final actual = switch (choice.prepared.recordContent.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => null,
-    };
+    final actual = completeUseOf(
+      catalog,
+      choice.prepared.recordContent.configuration,
+    );
     if (actual == null) return null;
     final materialized = skir.DataValue.createNamed(
       actualType: actual,

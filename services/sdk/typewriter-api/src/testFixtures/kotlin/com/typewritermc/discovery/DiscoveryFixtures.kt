@@ -16,7 +16,6 @@ import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationProvider
@@ -448,7 +447,7 @@ internal fun endpoint(
 
 internal fun book(title: String) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(BookDefinition.use),
+        TypeSelection.of(BookDefinition.use),
         mapOf(
             "title" to DataValue.StringValueWrapper(title),
             "icon" to DataValue.UNFILLED,
@@ -497,9 +496,13 @@ internal fun assemble(
 internal fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
     editorCatalog.diagnostics.filter { it.affected == type }.map { it.code }
 
-internal fun CatalogAssembly.label(record: AuthoringRecord): String? =
+/** The display label of [record], held by a resource named [owner]. */
+internal fun CatalogAssembly.label(
+    record: AuthoringRecord,
+    owner: skirout.kernel.v1.resource_id.ResourceId = skirout.kernel.v1.resource_id.ResourceId(value = "labelled"),
+): String? =
     with(com.typewritermc.expression.FixtureReads) {
-        displays.label(record, checked)
+        displays.label(owner, record, checked)
     }
 
 internal fun artifact(

@@ -1,13 +1,11 @@
 package com.typewritermc.realm.publication
 
 import com.typewritermc.authoring.CompilationUnitDefinition
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.descendants
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.text
-import com.typewritermc.authoring.use
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
 import com.typewritermc.engine.ResourceGraphCompileResult
@@ -20,6 +18,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.completeTypeOf
 import com.typewritermc.types.catalog.mapTypeUses
 import com.typewritermc.types.catalog.runtimeDefinitions
 import com.typewritermc.types.endpoint
@@ -45,7 +44,6 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -155,7 +153,7 @@ internal class OwnershipClosureCompiler(
                         "Resource readiness belongs to another captured catalog."
                     }
                     val actual =
-                        (record.configuration as? TypeSelection.CompleteWrapper)?.use
+                        snapshot.catalog.checked.completeTypeOf(id, record.configuration)?.use?.named
                             ?: error("Ready resource has a pending configuration.")
                     check(
                         actual == state.binding.actual &&
@@ -223,12 +221,15 @@ internal class OwnershipClosureCompiler(
 
 /** Whether this resource is a complete compilation unit, which the resource graph producer compiles as a root. */
 context(snapshot: AuthoringView)
-internal fun ResourceId.isCompilationUnit(): Boolean = snapshot.resources[this]?.isCompilationUnit(snapshot.catalog.checked) == true
+internal fun ResourceId.isCompilationUnit(): Boolean = snapshot.resources[this]?.isCompilationUnit(this, snapshot.catalog.checked) == true
 
 /** Whether this record is a complete compilation unit, which the resource graph producer compiles as a root. */
-internal fun AuthoringRecord.isCompilationUnit(catalog: CheckedCatalog): Boolean {
-    val selection = configuration as? TypeSelection.CompleteWrapper ?: return false
-    return catalog.isNominalSubtype(selection.use.definition, CompilationUnitDefinition.id)
+internal fun AuthoringRecord.isCompilationUnit(
+    owner: ResourceId,
+    catalog: CheckedCatalog,
+): Boolean {
+    val type = catalog.completeTypeOf(owner, configuration) ?: return false
+    return catalog.isNominalSubtype(checkNotNull(type.use.named).definition, CompilationUnitDefinition.id)
 }
 
 context(snapshot: AuthoringView)
@@ -238,7 +239,7 @@ private fun AuthoringRecord.compile(
 ): CompiledResource {
     // An artifact never holds a field key: the resource's actual type and every actual type and held type inside are expanded.
     val checked = snapshot.catalog.checked
-    val actual = (checked.expand((configuration as TypeSelection.CompleteWrapper).use.use) as TypeUse.NamedWrapper).value
+    val actual = checkNotNull(checked.completeTypeOf(id, configuration)?.use?.named) { "A ready resource has a complete type." }
     val binding = readiness.binding
     return CompiledResource(
         key = CompiledResourceKey(source = id, context = CompilationContext.Root),

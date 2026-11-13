@@ -1,7 +1,6 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.name
@@ -10,6 +9,7 @@ import com.typewritermc.configuration.name
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -26,9 +26,9 @@ internal fun expectedType(
     catalog: CheckedCatalog,
 ): TypeUse? {
     var cursor: TypeCursor =
-        when (val expected = subject.expected) {
-            is DraftExpectation.Complete -> TypeCursor.Checked(expected.type)
-            is DraftExpectation.PartialRoot -> TypeCursor.Partial(expected.schema)
+        when (val type = subject.type) {
+            is ResourceType.Complete -> TypeCursor.Checked(type.checked)
+            is ResourceType.Partial -> TypeCursor.Partial(type.schema)
         }
     path.segments.forEach { segment ->
         cursor =

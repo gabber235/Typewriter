@@ -98,7 +98,7 @@ val OwnershipClosureCompilerTest by testSuite {
     test("a resource whose type the catalog no longer declares blocks its shard with unresolved_type") {
         val unavailable =
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("removed", "page").namedUse()),
+                TypeSelection.of(TypeDefinitionId.qualified("removed", "page").namedUse()),
                 mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
             )
         val result = compileOwnershipClosure(mapOf(pageId to unavailable), pageId) as ResourceGraphCompileResult.Blocked

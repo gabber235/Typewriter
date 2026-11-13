@@ -146,7 +146,7 @@ void main() {
   test("sets an absent direct field without creating unrelated fields", () {
     final record = skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.unknown,
+      configuration: skir.TypeSelection.defaultInstance,
       fields: [
         skir.FieldValue(
           name: "title",
@@ -168,7 +168,7 @@ void main() {
   test("nested writes require explicit parent initialization", () {
     final record = skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.unknown,
+      configuration: skir.TypeSelection.defaultInstance,
       fields: const [],
     );
     final path = skir.ValuePath(
@@ -243,7 +243,7 @@ void main() {
     ];
     final record = skir.AuthoringRecord(
       types: declared,
-      configuration: skir.TypeSelection.unknown,
+      configuration: skir.TypeSelection.defaultInstance,
       fields: [
         skir.FieldValue(
           name: "title",

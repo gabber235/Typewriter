@@ -192,7 +192,7 @@ internal fun node(
     nestedSecond: DataValue = DataValue.UNFILLED,
     label: String = "",
 ) = AuthoringRecord.of(
-    TypeSelection.CompleteWrapper(NODE.namedUse()),
+    TypeSelection.of(NODE.namedUse()),
     mapOf(
         "first" to first,
         "second" to second,
@@ -271,7 +271,7 @@ internal fun newWrapper(containing: ValueLocation) =
             PreparedValue(
                 content =
                     PreparedContent.RecordWrapper(
-                        AuthoringRecord.of(TypeSelection.CompleteWrapper(WRAPPER.namedUse()), mapOf("inner" to DataValue.UNFILLED)),
+                        AuthoringRecord.of(TypeSelection.of(WRAPPER.namedUse()), mapOf("inner" to DataValue.UNFILLED)),
                     ),
                 findings = emptyList(),
             ),

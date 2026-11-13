@@ -1,10 +1,5 @@
 package com.typewritermc.types.catalog
 
-import com.typewritermc.authoring.arguments
-import com.typewritermc.authoring.definition
-import com.typewritermc.authoring.type
-import com.typewritermc.authoring.use
-import com.typewritermc.authoring.validateStructure
 import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.MAX_TYPE_DEPTH
 import com.typewritermc.types.catalog.of
@@ -31,11 +26,8 @@ import com.typewritermc.types.use
 import com.typewritermc.types.walk
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
-import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.AppliedSchema
 import skirout.editor.v1.type_catalog.ArgumentLocation
-import skirout.editor.v1.type_catalog.ArgumentSelection
-import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DependentField
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -102,8 +94,26 @@ interface CheckedCatalog {
 
     fun resolve(candidate: TypeUse): Resolution<CheckedType>
 
-    fun resolvePartial(selection: TypeSelection): Resolution<PartialSchema>
+    /**
+     * What [owner]'s configured [selection] means here: the creator's choices with every argument derived from the
+     * owner's content filled. Complete when every parameter has an argument, partial while one has none. This is what a
+     * resource's values mean; readers ask it and never read the stored selection.
+     */
+    fun typeOf(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<ResourceType>
 
+    /**
+     * What the creator's choices in [selection] make, with no argument derived from content: the answer for which
+     * resources a selection is (matching, discovery) and for content that is on no resource yet.
+     */
+    fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType>
+
+    /**
+     * The applications the creator's choices in [selection] are known to read as: a complete type and its ancestors, or
+     * the ancestors a partial type already fixes. Empty when the selection does not resolve.
+     */
     fun knownApplications(selection: TypeSelection): Set<NamedTypeUse>
 
     fun isReadableAs(
@@ -124,8 +134,6 @@ interface CheckedCatalog {
     ): Boolean
 
     fun concreteForms(expected: CheckedType): List<CheckedType>
-
-    fun validateAuthoring(record: AuthoringRecord): StructuralResult
 
     /**
      * The code catalog plus what [source] declares. Cheap: it validates and caches only what it reaches, so [source]
@@ -319,75 +327,56 @@ class DefaultCheckedCatalog private constructor(
             ?.named
             ?.definition
 
-    override fun resolvePartial(selection: TypeSelection): Resolution<PartialSchema> =
-        when (val expanded = expandSelection(selection)) {
-            is TypeSelection.CompleteWrapper -> {
-                when (val resolved = resolve(expanded.use.use)) {
-                    is Resolution.Invalid -> {
-                        resolved
+    override fun typeOf(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<ResourceType> = authoredTypeOf(selection)
+
+    override fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType> {
+        val availability = status(selection.definition)
+        if (availability is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(availability.reasons)
+        val definition = checkNotNull(lookup(selection.definition))
+        val chosen = chosenArguments(selection, definition) ?: return invalid(selection.definition, "argument_arity")
+        if (chosen.size == definition.parameters.size) {
+            return when (val resolved = resolve(selection.definition.namedUse(definition.parameters.map { chosen.getValue(it.key) }).use)) {
+                is Resolution.Invalid -> resolved
+                is Resolution.Ready -> Resolution.Ready(ResourceType.Complete(resolved.value))
+            }
+        }
+        return resolvePartial(definition, chosen.mapValues { expand(it.value) })
+    }
+
+    override fun knownApplications(selection: TypeSelection): Set<NamedTypeUse> =
+        when (val type = authoredTypeOf(selection)) {
+            is Resolution.Invalid -> {
+                emptySet()
+            }
+
+            is Resolution.Ready -> {
+                when (val resolved = type.value) {
+                    is ResourceType.Complete -> {
+                        linkedSetOf(checkNotNull(resolved.checked.use.named)).apply { addAll(resolved.checked.schema.ancestors) }
                     }
 
-                    is Resolution.Ready -> {
-                        Resolution.Ready(
-                            PartialSchema(
-                                knownFields = resolved.value.schema.fields,
-                                dependentFields = emptyList(),
-                                pendingArguments = emptyList(),
-                            ),
-                        )
+                    is ResourceType.Partial -> {
+                        val definition = checkNotNull(lookup(selection.definition))
+                        knownPartialApplications(definition, checkNotNull(chosenArguments(selection, definition)).mapValues { expand(it.value) })
                     }
                 }
             }
-
-            is TypeSelection.PendingWrapper -> {
-                resolvePending(expanded)
-            }
-
-            else -> {
-                unknownVariant(expanded)
-            }
         }
 
-    override fun knownApplications(selection: TypeSelection): Set<NamedTypeUse> =
-        when (val expanded = expandSelection(selection)) {
-            is TypeSelection.CompleteWrapper -> {
-                val resolved = resolve(expanded.use.use) as? Resolution.Ready
-                if (resolved == null) emptySet() else linkedSetOf(expanded.use).apply { addAll(resolved.value.schema.ancestors) }
-            }
-
-            is TypeSelection.PendingWrapper -> {
-                knownPendingApplications(expanded)
-            }
-
-            else -> {
-                unknownVariant(expanded)
-            }
+    /** The arguments a creator chose for [definition], by parameter key. Null when a choice names a parameter [definition] does not have, or names one twice. */
+    private fun chosenArguments(
+        selection: TypeSelection,
+        definition: TypeDefinition,
+    ): Map<ParameterKey, TypeUse>? {
+        val chosen = linkedMapOf<ParameterKey, TypeUse>()
+        for (argument in selection.arguments) {
+            val parameter = definition.parameters.getOrNull(argument.parameter) ?: return null
+            if (chosen.put(parameter.key, argument.type) != null) return null
         }
-
-    /** [selection] with every field key replaced by where its chain leads; a key with nowhere to lead stays. */
-    private fun expandSelection(selection: TypeSelection): TypeSelection {
-        if (content == null) return selection
-        return when (selection) {
-            is TypeSelection.CompleteWrapper -> {
-                val use = expand(selection.value.use)
-                (use as? TypeUse.NamedWrapper)?.let { TypeSelection.CompleteWrapper(it.value) } ?: selection
-            }
-
-            is TypeSelection.PendingWrapper -> {
-                TypeSelection.createPending(
-                    definition = selection.value.definition,
-                    arguments =
-                        selection.value.arguments.map { argument ->
-                            (argument as? ArgumentSelection.ChosenWrapper)?.let { ArgumentSelection.ChosenWrapper(expand(it.value)) }
-                                ?: argument
-                        },
-                )
-            }
-
-            else -> {
-                selection
-            }
-        }
+        return chosen
     }
 
     /** [template] with every field key replaced by where its chain leads. A field key names no parameters, so it expands as a use. */
@@ -462,20 +451,11 @@ class DefaultCheckedCatalog private constructor(
             }
     }
 
-    override fun validateAuthoring(record: AuthoringRecord): StructuralResult = record.validateStructure(this)
-
-    private fun knownPendingApplications(selection: TypeSelection.PendingWrapper): Set<NamedTypeUse> {
-        if (status(selection.definition) != DeclarationStatus.READY) return emptySet()
-        val root = checkNotNull(lookup(selection.definition))
-        if (selection.arguments.size != root.parameters.size) return emptySet()
-        val bindings =
-            root.parameters
-                .zip(selection.arguments)
-                .mapNotNull { (parameter, argument) ->
-                    val chosen = argument as? ArgumentSelection.ChosenWrapper ?: return@mapNotNull null
-                    if (resolve(chosen.type) !is Resolution.Ready) return@mapNotNull null
-                    parameter.key to chosen.type
-                }.toMap()
+    private fun knownPartialApplications(
+        root: TypeDefinition,
+        chosen: Map<ParameterKey, TypeUse>,
+    ): Set<NamedTypeUse> {
+        val bindings = chosen.filterValues { resolve(it) is Resolution.Ready }
         val applications = linkedSetOf<NamedTypeUse>()
         val visited = mutableSetOf<Pair<TypeDefinitionId, Map<ParameterKey, TypeUse>>>()
 
@@ -638,34 +618,16 @@ class DefaultCheckedCatalog private constructor(
         return Resolution.Ready(CheckedType(generation, use, schema, this))
     }
 
-    private fun resolvePending(selection: TypeSelection.PendingWrapper): Resolution<PartialSchema> {
-        val availability = status(selection.definition)
-        if (availability is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(availability.reasons)
-        val definition = checkNotNull(lookup(selection.definition))
-        if (selection.arguments.size != definition.parameters.size) return invalid(selection.definition, "argument_arity")
-        val bindings = mutableMapOf<ParameterKey, TypeUse>()
-        val pending = mutableListOf<ArgumentLocation>()
-        selection.arguments.forEachIndexed { index, argument ->
-            when (argument) {
-                is ArgumentSelection.ChosenWrapper -> {
-                    val resolution = resolve(argument.type)
-                    if (resolution is Resolution.Invalid) return resolution
-                    bindings[definition.parameters[index].key] = argument.type
-                }
-
-                ArgumentSelection.UNFILLED -> {
-                    pending += ArgumentLocation(index = index)
-                }
-
-                else -> {
-                    unknownVariant(argument)
-                }
-            }
+    /** The partial type of [definition] under the [bindings] a creator chose, while at least one parameter has none. */
+    private fun resolvePartial(
+        definition: TypeDefinition,
+        bindings: Map<ParameterKey, TypeUse>,
+    ): Resolution<ResourceType> {
+        for (argument in bindings.values) {
+            val resolution = resolve(argument)
+            if (resolution is Resolution.Invalid) return resolution
         }
-        if (pending.isEmpty()) {
-            val complete = selection.definition.namedUse(definition.parameters.map { bindings.getValue(it.key) })
-            return resolvePartial(TypeSelection.CompleteWrapper(complete))
-        }
+        val pending = definition.parameters.withIndex().filter { it.value.key !in bindings }.map { ArgumentLocation(index = it.index) }
         for (parameter in definition.parameters) {
             val actual = bindings[parameter.key] ?: continue
             for (bound in parameter.bounds) {
@@ -700,7 +662,9 @@ class DefaultCheckedCatalog private constructor(
                 dependent += DependentField(owner = field.owner, type = field.type, missing = missing)
             }
         }
-        return Resolution.Ready(PartialSchema(knownFields = known, dependentFields = dependent, pendingArguments = pending))
+        return Resolution.Ready(
+            ResourceType.Partial(definition.id, PartialSchema(knownFields = known, dependentFields = dependent, pendingArguments = pending)),
+        )
     }
 
     private fun resolveRepresentation(

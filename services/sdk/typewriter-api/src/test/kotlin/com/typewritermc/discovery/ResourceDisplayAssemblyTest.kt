@@ -9,7 +9,6 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
@@ -100,7 +99,7 @@ val ResourceDisplayAssemblyTest by testSuite {
         displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
         assembly.label(
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(fixturePage.namedUse()),
+                TypeSelection.of(fixturePage.namedUse()),
                 mapOf("name" to DataValue.StringValueWrapper("Intro")),
             ),
         ) shouldBe

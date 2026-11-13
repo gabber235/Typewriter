@@ -7,6 +7,7 @@ import com.typewritermc.testkit.rejectionOf
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ChosenArgument
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
@@ -68,6 +69,17 @@ val TypeValidationTest by testSuite {
                 Rejection("Unknown type use variant.") { ownerType.use(listOf(TypeUse.UNKNOWN)).requireValid() },
             "an unknown integer width" to Rejection("Unknown integer width.") { integerScalar(IntegerWidth.UNKNOWN).use.requireValid() },
             "an unknown representation" to Rejection("Unknown representation template.") { RepresentationTemplate.UNKNOWN.requireValid() },
+            "a type selection that chooses one parameter twice" to
+                Rejection("Type argument parameter 0 is chosen twice.") {
+                    TypeSelection(
+                        definition = ownerType,
+                        arguments = listOf(ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use), ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use)),
+                    ).requireValid()
+                },
+            "a type selection that chooses a negative parameter" to
+                Rejection("Type argument parameter -1 is negative.") {
+                    TypeSelection(definition = ownerType, arguments = listOf(ChosenArgument(parameter = -1, type = ScalarKind.TEXT.use))).requireValid()
+                },
         )
 
     test("declared ids parse into one canonical form and reject any other text") {
@@ -93,7 +105,7 @@ val TypeValidationTest by testSuite {
     }
 
     test("an authored record read back from readable Skir JSON keeps its configuration") {
-        val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(ownerType.namedUse(listOf(ScalarKind.TEXT.use))))
+        val record = AuthoringRecord.of(TypeSelection.of(ownerType.namedUse(listOf(ScalarKind.TEXT.use))))
         val encoded = AuthoringRecord.serializer.toJson(record, JsonFlavor.READABLE)
 
         AuthoringRecord.serializer
@@ -104,10 +116,7 @@ val TypeValidationTest by testSuite {
     test("an authored record read from JSON with a zero revision is rejected") {
         val invalid =
             AuthoringRecord.of(
-                TypeSelection.createPending(
-                    definition = TypeDefinitionId.qualified("test", "type", revision = 0),
-                    arguments = emptyList(),
-                ),
+                TypeSelection.of(TypeDefinitionId.qualified("test", "type", revision = 0)),
             )
         val decoded = AuthoringRecord.serializer.fromJson(AuthoringRecord.serializer.toJson(invalid, JsonFlavor.READABLE))
 

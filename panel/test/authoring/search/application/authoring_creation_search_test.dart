@@ -9,26 +9,14 @@ void main() {
     final type = testTypeId("Book");
     final first = AuthoringCreationOption(
       type: type,
-      configuration: skir.TypeSelection.createPending(
-        definition: type,
-        arguments: [
-          skir.ArgumentSelection.wrapChosen(
-            skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          ),
-        ],
-      ),
+      configuration: selectionOfDefinition(type)
+          .withChosen(0, skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
       label: "Book",
     );
     final second = AuthoringCreationOption(
       type: type,
-      configuration: skir.TypeSelection.createPending(
-        definition: type,
-        arguments: [
-          skir.ArgumentSelection.wrapChosen(
-            skir.TypeUse.wrapScalar(skir.ScalarKind.boolean),
-          ),
-        ],
-      ),
+      configuration: selectionOfDefinition(type)
+          .withChosen(0, skir.TypeUse.wrapScalar(skir.ScalarKind.boolean)),
       label: "Book",
     );
 
@@ -54,9 +42,11 @@ void main() {
       for (final type in ["Book", "SimpleMessage"]) {
         expect(
           controller.creationOption(testTypeId(type)).configuration,
-          skir.TypeSelection.createComplete(
-            definition: testTypeId(type),
-            arguments: const [],
+          selectionOfUse(
+            skir.NamedTypeUse(
+              definition: testTypeId(type),
+              arguments: const [],
+            ),
           ),
         );
       }
@@ -179,9 +169,11 @@ void main() {
     expect(option.type, testTypeId("ZMessage"));
     expect(
       option.configuration,
-      skir.TypeSelection.createComplete(
-        definition: testTypeId("ZMessage"),
-        arguments: const [],
+      selectionOfUse(
+        skir.NamedTypeUse(
+          definition: testTypeId("ZMessage"),
+          arguments: const [],
+        ),
       ),
     );
   });

@@ -525,9 +525,7 @@ skir.DataValue? seedDropInput(
       ?.input;
   final actual = input == null ? null : document.catalog.namedUse(input.type);
   if (drop == null || actual == null) return null;
-  final fields = document.catalog.fields(
-    skir.TypeSelection.wrapComplete(actual),
-  );
+  final fields = document.catalog.fields(selectionOfUse(actual));
   final record = skir.DataValue.createRecord(
     fields: [
       for (final field in fields)

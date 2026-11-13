@@ -38,7 +38,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
                 id: resource,
                 content: skir.AuthoringRecord(
                   types: const [],
-                  configuration: skir.TypeSelection.wrapComplete(ownerType),
+                  configuration: selectionOfUse(ownerType),
                   fields: [
                     skir.FieldValue(
                       name: "entries",

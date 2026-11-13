@@ -9,6 +9,7 @@ import com.typewritermc.formula.VarComputedDefinition
 import com.typewritermc.formula.VarValueDefinition
 import com.typewritermc.formula.check.StoredFormula
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.completeTypeOf
 import com.typewritermc.types.field
 import com.typewritermc.types.named
 import com.typewritermc.types.use
@@ -18,7 +19,6 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FunctionTypeUse
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -46,12 +46,13 @@ internal fun AuthoringRecord.formulaSites(
     owner: ResourceId,
     catalog: CheckedCatalog,
 ): List<FormulaSite> {
-    val selection = configuration as? TypeSelection.CompleteWrapper ?: return emptyList()
+    val type = catalog.completeTypeOf(owner, configuration) ?: return emptyList()
+    val use = checkNotNull(type.use.named)
     val sites = mutableListOf<FormulaSite>()
     val visitor = FormulaSitesVisitor(sites)
     val walk = ValueWalk(catalog, visitor)
     visitor.walk = walk
-    walk.walk(DataValue.named(selection.value, DataValue.RecordWrapper(payload)), selection.value.use, ValueLocation.of(owner))
+    walk.walk(DataValue.named(use, DataValue.RecordWrapper(payload)), type.use, ValueLocation.of(owner))
     return sites
 }
 

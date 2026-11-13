@@ -194,7 +194,7 @@ val RealmGraphReadsTest by testSuite {
         val target = ResourceId(value = "pending_target")
         val pending =
             graphRecord(target, emptyList())
-                .copy(configuration = TypeSelection.createPending(definition = graphDefinition("missing"), arguments = emptyList()))
+                .copy(configuration = TypeSelection.of(graphDefinition("missing")))
         graphReads(mapOf(source to graphRecord(source, listOf(target)), target to pending)) {
             val incoming = RealmGraphReads.incomingResources(target, RelationFamilyId(value = "selected"))
 

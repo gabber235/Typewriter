@@ -10,9 +10,8 @@ final configuredValueBinding = skir.ExpressionBindingId(
 
 /// The complete selection of [definition] without type arguments.
 skir.TypeSelection completeSelection(skir.TypeDefinitionId definition) =>
-    skir.TypeSelection.createComplete(
-      definition: definition,
-      arguments: const [],
+    selectionOfUse(
+      skir.NamedTypeUse(definition: definition, arguments: const []),
     );
 
 /// A reference to the field [field] of [binding].

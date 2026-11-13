@@ -150,9 +150,8 @@ final class BoundPage {
           types: const [],
           configuration:
               configuration ??
-              skir.TypeSelection.createComplete(
-                definition: type,
-                arguments: const [],
+              selectionOfUse(
+                skir.NamedTypeUse(definition: type, arguments: const []),
               ),
           fields: [
             skir.FieldValue(

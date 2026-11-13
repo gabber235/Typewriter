@@ -384,9 +384,8 @@ final class AuthoredDraft {
     final resource = skir.ResourceId(value: "message:one");
     final record = skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.createComplete(
-        definition: definition,
-        arguments: const [],
+      configuration: selectionOfUse(
+        skir.NamedTypeUse(definition: definition, arguments: const []),
       ),
       fields: [
         skir.FieldValue(
@@ -522,9 +521,8 @@ final class AuthoredDraft {
     final resource = skir.ResourceId(value: "repeating:one");
     final record = skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.createComplete(
-        definition: definition,
-        arguments: const [],
+      configuration: selectionOfUse(
+        skir.NamedTypeUse(definition: definition, arguments: const []),
       ),
       fields: [
         skir.FieldValue(
@@ -615,9 +613,8 @@ final class AuthoredDraft {
     final resource = skir.ResourceId(value: "page:empty");
     final record = skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.createComplete(
-        definition: definition,
-        arguments: const [],
+      configuration: selectionOfUse(
+        skir.NamedTypeUse(definition: definition, arguments: const []),
       ),
       fields: [
         skir.FieldValue(name: "elements", value: skir.DataValue.unfilled),
@@ -779,9 +776,8 @@ final class AuthoredDraft {
           id: resource,
           content: skir.AuthoringRecord(
             types: const [],
-            configuration: skir.TypeSelection.createComplete(
-              definition: tag,
-              arguments: const [],
+            configuration: selectionOfUse(
+              skir.NamedTypeUse(definition: tag, arguments: const []),
             ),
             fields: [
               skir.FieldValue(

@@ -3,7 +3,6 @@ package com.typewritermc.realm
 import build.skir.Serializer
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
@@ -438,12 +437,12 @@ val RealmLifecycleTest by testSuite {
             val unavailableResource = ResourceId(value = "unavailable")
             val availableRecord =
                 AuthoringRecord.of(
-                    TypeSelection.CompleteWrapper(valid.namedUse()),
+                    TypeSelection.of(valid.namedUse()),
                     mapOf("name" to DataValue.StringValueWrapper("Book")),
                 )
             val unavailableRecord =
                 AuthoringRecord.of(
-                    TypeSelection.CompleteWrapper(unavailable.namedUse()),
+                    TypeSelection.of(unavailable.namedUse()),
                     mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(availableResource to availableRecord, unavailableResource to unavailableRecord)

@@ -118,8 +118,8 @@ abstract class ResourceIssues with _$ResourceIssues {
           ),
         ),
       );
-      switch (record.configuration) {
-        case skir.TypeSelection_completeWrapper(:final value):
+      switch (document.catalog.completeUse(record.configuration)) {
+        case final value?:
           if (!document.catalog.isReadyApplication(value)) {
             local(
               "unresolved_type",
@@ -145,7 +145,7 @@ abstract class ResourceIssues with _$ResourceIssues {
               problem.path,
             );
           }
-        default:
+        case null:
           local(
             "pending_type",
             "Resource ${id.value} has incomplete type arguments.",

@@ -9,7 +9,6 @@ import com.typewritermc.types.declared
 import com.typewritermc.types.mapTypes
 import com.typewritermc.types.member
 import com.typewritermc.types.named
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.ContentKey
 import skirout.editor.v1.type_catalog.ContentTypeId
@@ -297,30 +296,10 @@ fun DataValue.mapTypeUses(transform: (TypeUse) -> TypeUse): DataValue =
 fun AuthoringRecord.remappingContent(copies: Map<ResourceId, ResourceId>): AuthoringRecord =
     AuthoringRecord(
         configuration =
-            when (val selection = configuration) {
-                is TypeSelection.CompleteWrapper -> {
-                    TypeSelection.CompleteWrapper(selection.value.remappingContent(copies))
-                }
-
-                is TypeSelection.PendingWrapper -> {
-                    TypeSelection.createPending(
-                        definition = selection.value.definition,
-                        arguments =
-                            selection.value.arguments.map { argument ->
-                                (argument as? ArgumentSelection.ChosenWrapper)?.let {
-                                    ArgumentSelection.ChosenWrapper(
-                                        it.value.remappingContent(copies),
-                                    )
-                                }
-                                    ?: argument
-                            },
-                    )
-                }
-
-                else -> {
-                    selection
-                }
-            },
+            TypeSelection(
+                definition = configuration.definition.remappingContent(copies),
+                arguments = configuration.arguments.map { it.copy(type = it.type.remappingContent(copies)) },
+            ),
         fields = fields.map { it.copy(value = it.value.remappingContent(copies)) },
         types = types.map { it.remappingContent(copies) },
     )

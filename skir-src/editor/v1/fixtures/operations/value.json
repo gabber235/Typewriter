@@ -2342,68 +2342,56 @@
         "available": {
           "named": {
             "namespace": "skir",
-            "name": "editor/v1/type_catalog.skir:TypeSelection.complete",
+            "name": "editor/v1/type_catalog.skir:TypeSelection",
             "revision": 1,
             "arguments": [],
             "payload": {
               "record": {
-                "value": {
+                "arguments": {"list": []},
+                "definition": {
                   "named": {
                     "namespace": "skir",
-                    "name": "editor/v1/type_catalog.skir:NamedTypeUse",
+                    "name": "editor/v1/type_catalog.skir:TypeDefinitionId",
                     "revision": 1,
                     "arguments": [],
                     "payload": {
                       "record": {
-                        "arguments": {"list": []},
-                        "definition": {
+                        "revision": {"integer": "1"},
+                        "type_id": {
                           "named": {
                             "namespace": "skir",
-                            "name": "editor/v1/type_catalog.skir:TypeDefinitionId",
+                            "name": "editor/v1/type_catalog.skir:TypeId.member",
                             "revision": 1,
                             "arguments": [],
                             "payload": {
                               "record": {
-                                "revision": {"integer": "1"},
-                                "type_id": {
+                                "value": {
                                   "named": {
                                     "namespace": "skir",
-                                    "name": "editor/v1/type_catalog.skir:TypeId.member",
+                                    "name": "editor/v1/type_catalog.skir:MemberTypeId",
                                     "revision": 1,
                                     "arguments": [],
                                     "payload": {
                                       "record": {
-                                        "value": {
+                                        "name": {"string": "Red"},
+                                        "owner": {
                                           "named": {
                                             "namespace": "skir",
-                                            "name": "editor/v1/type_catalog.skir:MemberTypeId",
+                                            "name": "editor/v1/type_catalog.skir:TypeId.qualified",
                                             "revision": 1,
                                             "arguments": [],
                                             "payload": {
                                               "record": {
-                                                "name": {"string": "Red"},
-                                                "owner": {
+                                                "value": {
                                                   "named": {
                                                     "namespace": "skir",
-                                                    "name": "editor/v1/type_catalog.skir:TypeId.qualified",
+                                                    "name": "editor/v1/type_catalog.skir:QualifiedTypeId",
                                                     "revision": 1,
                                                     "arguments": [],
                                                     "payload": {
                                                       "record": {
-                                                        "value": {
-                                                          "named": {
-                                                            "namespace": "skir",
-                                                            "name": "editor/v1/type_catalog.skir:QualifiedTypeId",
-                                                            "revision": 1,
-                                                            "arguments": [],
-                                                            "payload": {
-                                                              "record": {
-                                                                "name": {"string": "Color"},
-                                                                "namespace": {"string": "fixture"}
-                                                              }
-                                                            }
-                                                          }
-                                                        }
+                                                        "name": {"string": "Color"},
+                                                        "namespace": {"string": "fixture"}
                                                       }
                                                     }
                                                   }

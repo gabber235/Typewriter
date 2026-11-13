@@ -874,8 +874,7 @@ skir.TypeDefinitionId _definition(String name) =>
     );
 skir.NamedTypeUse _use(String name) =>
     skir.NamedTypeUse(definition: _definition(name), arguments: const []);
-skir.TypeSelection _selection(String name) =>
-    skir.TypeSelection.wrapComplete(_use(name));
+skir.TypeSelection _selection(String name) => selectionOfUse(_use(name));
 skir.NamedTypeTemplate _namedTemplate(String name) =>
     skir.NamedTypeTemplate(definition: _definition(name), arguments: const []);
 skir.TypeTemplate _template(String name) =>

@@ -116,7 +116,7 @@ internal class OperationRealmPresentationSearchSource(
                                     .mapNotNull { id ->
                                         active.ensureActive()
                                         val record = baseline.resources[id.toSkir()] ?: return@mapNotNull null
-                                        val label = with(reads) { baseline.catalog.displays.label(record, baseline.catalog.checked) }
+                                        val label = with(reads) { baseline.catalog.displays.label(id.toSkir(), record, baseline.catalog.checked) }
                                         OperationResourceOption(id, label ?: "Unnamed resource")
                                     }.filter { query.isEmpty() || query in it.label.lowercase() }
                                     .take(MAX_RESULTS + 1)

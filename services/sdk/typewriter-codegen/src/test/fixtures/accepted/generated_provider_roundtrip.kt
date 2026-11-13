@@ -3,6 +3,59 @@
 package fixture
 
 import build.skir.JsonFlavor
+import com.typewritermc.authoring.CaptureResult
+import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.defaultLabel
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.configuration.name
+import com.typewritermc.discovery.CatalogAssemblyContext
+import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.GeneratedProviderArtifact
+import com.typewritermc.discovery.GeneratedProviderKind
+import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.discovery.assemble
+import com.typewritermc.expression.eq
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.orElse
+import com.typewritermc.expression.shortcuts.orIfBlank
+import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.presentation.CollectionProjection
+import com.typewritermc.presentation.DefaultPresentationRuntime
+import com.typewritermc.presentation.PresentationRuntime
+import com.typewritermc.presentation.TypewriterCollectionProjection
+import com.typewritermc.presentation.collectionProjection
+import com.typewritermc.presentation.projectedCollectionSource
+import com.typewritermc.types.DeletionPolicy
+import com.typewritermc.types.Many
+import com.typewritermc.types.One
+import com.typewritermc.types.Owning
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ReferenceContract
+import com.typewritermc.types.RelationDeletePolicy
+import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeDisplay
+import com.typewritermc.types.TypewriterDisplay
+import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.TypewriterTypeImports
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.items
+import com.typewritermc.types.member
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.record
+import com.typewritermc.types.template
+import com.typewritermc.types.type
+import com.typewritermc.types.use
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
@@ -12,83 +65,31 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.catalog.PreparationTarget
-import skirout.editor.v1.catalog.ValuePreparationRequest
-import com.typewritermc.types.type
-import skirout.editor.v1.type_catalog.ResourceTarget
-import com.typewritermc.configuration.name
-import skirout.editor.v1.type_catalog.CatalogGeneration
-import com.typewritermc.authoring.root
-import com.typewritermc.types.fields
-import com.typewritermc.types.items
-import com.typewritermc.types.integer
-import com.typewritermc.types.record
-import com.typewritermc.types.named
-import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.field
-import com.typewritermc.authoring.fieldMap
 import skirout.editor.v1.catalog.PreparedContent
-import skirout.editor.v1.type_catalog.TypeSelection
-import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.IntegerWidth
-import java.math.BigInteger
-import kotlinx.serialization.Transient
-import kotlinx.serialization.SerialName
-import com.typewritermc.authoring.CaptureResult
-import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.complete
-import com.typewritermc.types.member
-import com.typewritermc.discovery.CatalogAssemblyContext
-import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.GeneratedProviderArtifact
-import com.typewritermc.discovery.GeneratedProviderKind
-import com.typewritermc.discovery.GeneratedProviderLoader
-import com.typewritermc.discovery.assemble
-import com.typewritermc.expression.literal
-import com.typewritermc.expression.eq
-import com.typewritermc.expression.orElse
-import skirout.editor.v1.type_catalog.ValuePath
-import skirout.editor.v1.expression.ExpressionNode
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.presentation.CollectionProjection
-import com.typewritermc.presentation.DefaultPresentationRuntime
-import com.typewritermc.presentation.PresentationRuntime
-import com.typewritermc.presentation.TypewriterCollectionProjection
-import com.typewritermc.presentation.collectionProjection
-import com.typewritermc.presentation.projectedCollectionSource
 import skirout.editor.v1.catalog.PresentationRole
-import skirout.editor.v1.type_catalog.RepresentationTemplate
-import com.typewritermc.types.DeletionPolicy
-import com.typewritermc.types.Many
-import com.typewritermc.types.One
-import com.typewritermc.types.Owning
-import com.typewritermc.types.Ref
-import com.typewritermc.types.ReferenceContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.Resource
-import com.typewritermc.authoring.defaultLabel
-import com.typewritermc.expression.shortcuts.orIfBlank
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypewriterDisplay
-import com.typewritermc.types.TypewriterType
-import com.typewritermc.types.TypewriterTypeImports
-import com.typewritermc.types.catalog.Resolution
-import java.nio.file.Path
+import skirout.editor.v1.catalog.ValuePreparationRequest
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import com.typewritermc.types.use
-import com.typewritermc.types.template
-import com.typewritermc.types.namedTemplate
-import com.typewritermc.types.integerScalar
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
+import java.math.BigInteger
+import java.nio.file.Path
 
 /** Names an Example by its title, keeping the type display accent and icon. */
 object ExampleNaming : ExampleDisplay {
@@ -398,7 +399,7 @@ fun main(args: Array<String>) {
                 initializer.prepareNow(
                     ValuePreparationRequest(
                         catalog = assembly.checked.generation,
-                        target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(type)),
+                        target = PreparationTarget.RecordWrapper(TypeSelection.of(type)),
                         suppliedValue = DataValue.record(fields),
                     ),
                 )
@@ -471,7 +472,7 @@ fun main(args: Array<String>) {
                     replacementInitializer.prepareNow(
                         ValuePreparationRequest(
                             catalog = replacement.checked.generation,
-                            target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(type)),
+                            target = PreparationTarget.RecordWrapper(TypeSelection.of(type)),
                             suppliedValue = DataValue.record(fields),
                         ),
                     )

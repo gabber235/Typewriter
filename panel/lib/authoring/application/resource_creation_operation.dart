@@ -50,7 +50,7 @@ final class _ResourceCreationOperation {
       if (chosen == null) throw const _CreationCancelled();
       request = request.copyWith(configuration: chosen);
     }
-    if (request.configuration is! skir.TypeSelection_completeWrapper ||
+    if (catalog.completeUse(request.configuration) == null ||
         !catalog
             .nominalDefinitions(request.configuration)
             .contains(request.type) ||
@@ -203,7 +203,7 @@ final class _ResourceCreationOperation {
     }
     final named = catalog.namedUse(input.expected);
     if (named != null) {
-      final expected = skir.TypeSelection.wrapComplete(named);
+      final expected = selectionOfUse(named);
       if (catalog.isAbstractRecordSelection(expected)) {
         final selection = await _chooseConcreteType(expected);
         _checkCurrent();
@@ -218,12 +218,13 @@ final class _ResourceCreationOperation {
           location,
           creationContext,
           publish: (step) {
-            _values[location] = step.materialized.recordContent
-                .toCreationValue();
+            _values[location] = step.materialized.recordContent.toCreationValue(
+              catalog,
+            );
           },
         );
         _values.remove(location);
-        return prepared.recordContent.toCreationValue();
+        return prepared.recordContent.toCreationValue(catalog);
       }
     }
     throw StateError("No value can be prepared for ${location.path}");
@@ -476,7 +477,7 @@ final class _ResourceCreationOperation {
     final expected = catalog.namedUse(plan.targetType);
     for (final type in catalog.creatableTypes) {
       final configuration = catalog.beginSelection(type);
-      final complete = configuration is skir.TypeSelection_completeWrapper;
+      final complete = catalog.completeUse(configuration) != null;
       if (complete
           ? !catalog.selectionMatches(configuration, plan.targetType)
           : expected == null ||
@@ -543,7 +544,7 @@ final class _ResourceCreationOperation {
           catalog.valueTypeAt(
             owner.configuration,
             slot.containing.path,
-            value: owner.toCreationValue(),
+            value: owner.toCreationValue(catalog),
           ),
         ) !=
         null;
@@ -782,7 +783,6 @@ final class _ResourceCreationOperation {
     CreationContext creationContext,
   ) {
     final type = record.configuration.definition;
-    if (type == null) return null;
     final ownerships = [
       for (final ownership in catalog.ownershipRelations)
         if (catalog.isNominalSubtype(
@@ -1014,11 +1014,10 @@ final class _ResourceCreationOperation {
 }
 
 extension on skir.AuthoringRecord {
-  skir.DataValue toCreationValue() {
-    final actual = switch (configuration) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => throw StateError("A prepared record must have a concrete type"),
-    };
+  skir.DataValue toCreationValue(CheckedEditorCatalog catalog) {
+    final actual =
+        catalog.completeUse(configuration) ??
+        (throw StateError("A prepared record must have a concrete type"));
     return skir.DataValue.createNamed(
       actualType: actual,
       payload: skir.DataValue.createRecord(fields: fields),

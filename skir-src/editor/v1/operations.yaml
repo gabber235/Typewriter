@@ -186,7 +186,6 @@ host_failures:
   value_depth_limit: The authored value nests too deeply.
   resource_binding_failed: The resource could not be bound to its captured catalog.
   unresolved_type: A type does not resolve in the captured catalog.
-  unresolved_partial_type: A pending type selection does not resolve in the captured catalog.
   inconsistent_graph_projection: The declared graph projection is inconsistent.
   read_context_mismatch: The draft view belongs to a different snapshot or catalog generation.
   unexpected_null: A nonnullable collection contains null.

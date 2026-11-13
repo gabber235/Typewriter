@@ -172,7 +172,7 @@ internal fun record(
     numbers: List<Pair<String, Int>> = emptyList(),
 ): AuthoringRecord =
     AuthoringRecord.of(
-        configuration = TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
+        configuration = TypeSelection.of(TEST_TYPE.namedUse()),
         fields =
             mapOf(
                 "name" to DataValue.StringValueWrapper(name),

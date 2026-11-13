@@ -424,8 +424,8 @@ skir.AuthoringResource authoredRecord(
   content: skir.AuthoringRecord(
     types: const [],
     configuration: type == null
-        ? skir.TypeSelection.unknown
-        : skir.TypeSelection.wrapComplete(type),
+        ? skir.TypeSelection.defaultInstance
+        : selectionOfUse(type),
     fields: [
       for (final MapEntry(:key, :value) in fields.entries)
         skir.FieldValue(name: key, value: value),

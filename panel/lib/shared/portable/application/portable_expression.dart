@@ -746,7 +746,7 @@ bool _selectionMatches(
   skir.TypeSelection selection,
   skir.TypeUse expected,
 ) {
-  if (selection is skir.TypeSelection_completeWrapper) {
+  if (catalog.completeUse(selection) != null) {
     return catalog.selectionMatches(selection, expected);
   }
   final named = catalog.namedUse(expected);
@@ -754,14 +754,14 @@ bool _selectionMatches(
       !catalog.nominalDefinitions(selection).contains(named.definition)) {
     return false;
   }
-  if (selection case skir.TypeSelection_pendingWrapper(:final value)
-      when value.definition == named.definition) {
-    if (value.arguments.length != named.arguments.length) return false;
-    for (final (index, argument) in value.arguments.indexed) {
-      if (argument case skir.ArgumentSelection_chosenWrapper(:final value)) {
-        if (!catalog.isReadableAs(value, named.arguments.elementAt(index))) {
-          return false;
-        }
+  if (selection.definition == named.definition) {
+    if (catalog.published(selection.definition)?.definition.parameters.length !=
+        named.arguments.length) {
+      return false;
+    }
+    for (final (index, argument) in named.arguments.indexed) {
+      if (selection.chosenAt(index) case final value?) {
+        if (!catalog.isReadableAs(value, argument)) return false;
       }
     }
   }

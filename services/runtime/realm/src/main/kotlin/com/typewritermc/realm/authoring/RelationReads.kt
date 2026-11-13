@@ -3,13 +3,13 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.graphLinkRelationIds
 import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.completeTypeOf
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
@@ -26,7 +26,6 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -137,10 +136,10 @@ internal class RelationReads(
     ): Boolean {
         val sourceRecord = resources[source.source] ?: return false
         val destination = resources[target] ?: return false
-        val actual = (destination.configuration as? TypeSelection.CompleteWrapper)?.use ?: return false
+        val actual = catalog.checked.completeTypeOf(target, destination.configuration) ?: return false
         val expected =
             ResourceValueMapper.expectedTarget(source, sourceRecord, catalog.checked) ?: run {
-                val type = sourceRecord.authoredTypeAt(source.id.location.path, catalog.checked) ?: return false
+                val type = sourceRecord.authoredTypeAt(source.source, source.id.location.path, catalog.checked) ?: return false
                 val checked = catalog.checked.resolve(type) as? Resolution.Ready ?: return false
                 (checked.value.schema.representation as? ResolvedRepresentation.LinkWrapper)?.value?.target ?: return false
             }

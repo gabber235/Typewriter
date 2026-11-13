@@ -4,6 +4,7 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
+import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.expectRefused
 import com.typewritermc.realm.testing.itemIds
@@ -12,6 +13,8 @@ import com.typewritermc.realm.testing.linkOrNull
 import com.typewritermc.realm.testing.linkTargets
 import com.typewritermc.realm.testing.links
 import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.testkit.definitions
+import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.nulls.shouldBeNull
@@ -32,6 +35,9 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -425,7 +431,11 @@ val RelationSynchronizationTest by testSuite {
     }
 
     test("a new inverse whose type is still pending is refused at its collection") {
-        RealmFixture.of(wrapperCatalog, mapOf(source to node(), target to node())).use { realm ->
+        val generic = TypeDefinitionId.qualified("test", "generic_wrapper")
+        val genericWrapper =
+            definitions { record(generic, parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T"))) }
+        val catalog = DefinitionCatalog(nodeDefinitions(childItem = WRAPPER) + genericWrapper, listOf(nestedRelation(EndpointCardinality.MANY)))
+        RealmFixture.of(catalog, mapOf(source to node(), target to node())).use { realm ->
             val pending =
                 CounterpartChoice.createNew(
                     containing = at(target, "children"),
@@ -434,7 +444,7 @@ val RelationSynchronizationTest by testSuite {
                             content =
                                 PreparedContent.RecordWrapper(
                                     AuthoringRecord.of(
-                                        TypeSelection.createPending(definition = WRAPPER, arguments = emptyList()),
+                                        TypeSelection.of(generic),
                                         emptyMap(),
                                     ),
                                 ),

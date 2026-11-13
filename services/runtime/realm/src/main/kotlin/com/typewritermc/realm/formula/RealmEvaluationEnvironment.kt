@@ -1,7 +1,6 @@
 package com.typewritermc.realm.formula
 
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.formula.Deferred
@@ -15,6 +14,7 @@ import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.formulaTypeNames
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.named
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.type_catalog.DataValue
@@ -46,7 +46,7 @@ internal class RealmEvaluationEnvironment private constructor(
         val id = resource.toSkir()
         val at = ValueLocation.of(id).field(field)
         val binding = (reader.resourceBinding(id) as? Availability.Available)?.value ?: throw dependency(at)
-        val type = (binding.expected as? DraftExpectation.Complete)?.type ?: throw dependency(at)
+        val type = (binding.type as? ResourceType.Complete)?.checked ?: throw dependency(at)
         val declared =
             type.schema.fields
                 .singleOrNull { it.key == field }

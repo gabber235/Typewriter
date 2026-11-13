@@ -10,9 +10,7 @@ void main() {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
   final entry = skir.AuthoringRecord(
     types: const [],
-    configuration: skir.TypeSelection.wrapComplete(
-      compiledSdkElementValue.authoredActualType!,
-    ),
+    configuration: selectionOfUse(compiledSdkElementValue.authoredActualType!),
     fields: compiledSdkElementValue.authoredRecord!.fields,
   );
 
@@ -59,7 +57,7 @@ void main() {
   test("a resource without a typed display uses the default display", () {
     final cue = skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.wrapComplete(
+      configuration: selectionOfUse(
         skir.NamedTypeUse(definition: _cueDefinition, arguments: const []),
       ),
       fields: const [],

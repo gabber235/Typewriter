@@ -144,7 +144,7 @@ final class _PortableValueInspector {
           return;
         }
         payload(
-          skir.TypeSelection.wrapComplete(named.actualType),
+          selectionOfUse(named.actualType),
           catalog
               .published(named.actualType.definition)!
               .definition

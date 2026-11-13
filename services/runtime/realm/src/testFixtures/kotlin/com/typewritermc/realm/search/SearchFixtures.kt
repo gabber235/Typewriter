@@ -11,9 +11,7 @@ import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
-import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
-import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.setValue
@@ -22,7 +20,6 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring.EditIntent
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
@@ -43,5 +40,5 @@ internal fun create(
     type: skirout.editor.v1.type_catalog.NamedTypeUse,
 ) = EditIntent.createCreateResource(
     id = ResourceId(value = id),
-    record = AuthoringRecord.of(TypeSelection.CompleteWrapper(type), emptyMap()),
+    record = AuthoringRecord.of(TypeSelection.of(type), emptyMap()),
 )

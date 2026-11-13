@@ -86,11 +86,12 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
     final queries = PortableExpressionQueries(catalog: this);
     final bindings = {
       configuredValueBindingId: PortableExpressionBinding(
-        value: _subjectValue(record),
-        schema: switch (record.configuration) {
-          skir.TypeSelection_completeWrapper(:final value) =>
-            CompletePortablePresentationBinding(skir.TypeUse.wrapNamed(value)),
-          final selection => PartialPortablePresentationBinding(selection),
+        value: _subjectValue(this, record),
+        schema: switch (completeUse(record.configuration)) {
+          final value? => CompletePortablePresentationBinding(
+            skir.TypeUse.wrapNamed(value),
+          ),
+          null => PartialPortablePresentationBinding(record.configuration),
         },
       ),
     };
@@ -148,12 +149,17 @@ skir.ResourceAppearance? resourceAppearanceIn(
   null => null,
 };
 
-skir.DataValue _subjectValue(skir.AuthoringRecord record) {
+skir.DataValue _subjectValue(
+  CheckedEditorCatalog catalog,
+  skir.AuthoringRecord record,
+) {
   final payload = skir.DataValue.createRecord(fields: record.fields);
-  return switch (record.configuration) {
-    skir.TypeSelection_completeWrapper(:final value) =>
-      skir.DataValue.createNamed(actualType: value, payload: payload),
-    _ => payload,
+  return switch (catalog.completeUse(record.configuration)) {
+    final value? => skir.DataValue.createNamed(
+      actualType: value,
+      payload: payload,
+    ),
+    null => payload,
   };
 }
 

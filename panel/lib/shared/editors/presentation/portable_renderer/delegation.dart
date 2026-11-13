@@ -54,7 +54,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     for (final argument in invocation.arguments) {
       final value = nested.read(argument.binding);
       if (target == null && value is skir.DataValue_namedWrapper) {
-        target = skir.TypeSelection.wrapComplete(value.value.actualType);
+        target = selectionOfUse(value.value.actualType);
       }
       final rebound = nested.withArgument(argument.binding, argument.input);
       if (rebound == null) {
@@ -68,7 +68,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
         .bindings[configuredValueBindingId]
         ?.value
         .authoredActualType) {
-      final actual? => skir.TypeSelection.wrapComplete(actual),
+      final actual? => selectionOfUse(actual),
       null => null,
     };
     final host = caller.host;
@@ -235,7 +235,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     }
     final generated = _defaultElement(
       controlScope.expectedType(element.control.binding) ??
-          _typeUseForSelection(selection),
+          _typeUseForSelection(checked, selection),
       element.control,
       controlScope,
     );
@@ -323,21 +323,24 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     PortablePresentationScope childScope,
   ) {
     final actual = childScope.read(reference)?.authoredActualType;
-    if (actual != null) return skir.TypeSelection.wrapComplete(actual);
+    if (actual != null) return selectionOfUse(actual);
     final expected = childScope.expectedType(reference).withoutNullableWrappers;
     return switch (expected) {
-      skir.TypeUse_namedWrapper(:final value) =>
-        skir.TypeSelection.wrapComplete(value),
+      skir.TypeUse_namedWrapper(:final value) => selectionOfUse(value),
       _ => null,
     };
   }
 
-  skir.TypeUse? _typeUseForSelection(skir.TypeSelection? selection) =>
-      switch (selection) {
-        skir.TypeSelection_completeWrapper(:final value) =>
-          skir.TypeUse.wrapNamed(value),
-        _ => null,
-      };
+  skir.TypeUse? _typeUseForSelection(
+    CheckedEditorCatalog? catalog,
+    skir.TypeSelection? selection,
+  ) => switch (selection) {
+    final selection? => switch (completeUseOf(catalog, selection)) {
+      final value? => skir.TypeUse.wrapNamed(value),
+      null => null,
+    },
+    null => null,
+  };
 
   skir.PresentationElement? _defaultElement(
     skir.TypeUse? declared,
@@ -377,7 +380,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
           ?.published(value.definition)
           ?.definition
           .representation;
-      final selection = skir.TypeSelection.wrapComplete(value);
+      final selection = selectionOfUse(value);
       // Generated controls declare the applied element types of [value]; a
       // type the catalog cannot apply stays unknown.
       skir.BindingDeclaration declared(String id, skir.TypeTemplate? element) =>

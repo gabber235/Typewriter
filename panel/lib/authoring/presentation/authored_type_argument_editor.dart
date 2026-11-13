@@ -59,11 +59,11 @@ final class _AuthoredTypeArgumentEditorState
     final published = widget.catalog.selected(_selection);
     final parameters = published?.definition.parameters.toList() ?? const [];
     if (parameters.isEmpty) return const SizedBox.shrink();
-    final arguments = argumentSelections(_selection, parameters.length);
     final changed = _selection != widget.selection;
-    final pending = arguments.any(
-      (argument) => argument == skir.ArgumentSelection.unfilled,
-    );
+    final pending = [
+      for (var index = 0; index < parameters.length; index++)
+        _selection.chosenAt(index),
+    ].any((argument) => argument == null);
     return Card(
       margin: EdgeInsets.only(bottom: context.spacing.space3),
       child: Padding(
@@ -81,7 +81,7 @@ final class _AuthoredTypeArgumentEditorState
                 context,
                 index: item.$1,
                 parameter: item.$2,
-                argument: arguments[item.$1],
+                argument: _selection.chosenAt(item.$1),
               ),
             if (pending)
               Padding(
@@ -130,12 +130,9 @@ final class _AuthoredTypeArgumentEditorState
     BuildContext context, {
     required int index,
     required skir.TypeParameter parameter,
-    required skir.ArgumentSelection argument,
+    required skir.TypeUse? argument,
   }) {
-    final chosen = switch (argument) {
-      skir.ArgumentSelection_chosenWrapper(:final value) => value,
-      _ => null,
-    };
+    final chosen = argument;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
       child: Row(

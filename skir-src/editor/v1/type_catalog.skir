@@ -273,85 +273,84 @@ enum DataValue(84180049) {
   type_use: TypeUse = 18;
 }
 
-enum ArgumentSelection(84180050) {
-  chosen: TypeUse = 1;
-  unfilled = 2;
+/// The type a creator chose for one parameter of a configured definition, by the parameter's index.
+struct ChosenArgument(84180050) {
+  parameter: int32 = 0;
+  type: TypeUse = 1;
 }
-struct PendingTypeSelection(84180051) {
+/// A resource's configured type as stored: its definition and the arguments a creator chose. A parameter
+/// without a choice is unfilled. Whether the type is complete is the catalog's answer
+/// (CheckedCatalog.typeOf), never a stored state; partial resolution exposes the fields that need no
+/// missing argument.
+struct TypeSelection(84180051) {
   definition: TypeDefinitionId = 0;
-  arguments: [ArgumentSelection] = 1;
-}
-/// A resource configuration can retain unfinished generic arguments without inventing a closed type.
-/// Partial schema resolution exposes known fields while dependent fields await those arguments.
-enum TypeSelection(84180052) {
-  complete: NamedTypeUse = 1;
-  pending: PendingTypeSelection = 2;
+  arguments: [ChosenArgument|parameter] = 1;
 }
 /// Canonical authored configuration and fields for one resource, before native construction.
 /// It can be structurally valid while containing unfinished input that blocks publication.
-struct AuthoringRecord(84180053) {
+struct AuthoringRecord(84180052) {
   configuration: TypeSelection = 0;
   fields: [FieldValue|name] = 1;
   /// The types this resource declares, each with a content id on this resource.
   types: [TypeDefinition] = 2;
 }
 
-struct PresentationId(84180054) {
+struct PresentationId(84180053) {
   namespace: string = 0;
   name: string = 1;
 }
-struct ConversionId(84180055) {
+struct ConversionId(84180054) {
   namespace: string = 0;
   name: string = 1;
 }
-struct CapabilityId(84180056) {
+struct CapabilityId(84180055) {
   value: string = 0;
 }
 /// Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;
 /// resource observations and publication identities have separate lifecycles.
-struct CatalogGeneration(84180057) {
+struct CatalogGeneration(84180056) {
   value: string = 0;
 }
-struct InputToken(84180058) {
+struct InputToken(84180057) {
   value: string = 0;
 }
-struct ExpressionBindingId(84180059) {
+struct ExpressionBindingId(84180058) {
   value: string = 0;
 }
-struct RuleOrigin(84180060) {
+struct RuleOrigin(84180059) {
   owner: TypeDefinitionId = 0;
   ordinal: int32 = 1;
 }
-struct RuleId(84180061) {
+struct RuleId(84180060) {
   origin: RuleOrigin = 0;
   local_index: int32 = 1;
 }
 
 /// Exact path within one resource or bound value. Collection segments use stable item identity,
 /// and map_key or map_value selects a branch after the map row item segment.
-struct ValuePath(84180062) {
+struct ValuePath(84180061) {
   segments: [PathSegment] = 0;
 }
-struct FieldPathSegment(84180063) {
+struct FieldPathSegment(84180062) {
   name: string = 0;
 }
-struct ItemPathSegment(84180064) {
+struct ItemPathSegment(84180063) {
   id: ItemId = 0;
 }
-enum PathSegment(84180065) {
+enum PathSegment(84180064) {
   field: FieldPathSegment = 1;
   item: ItemPathSegment = 2;
   map_key = 3;
   map_value = 4;
 }
-struct ValueLocation(84180066) {
+struct ValueLocation(84180065) {
   resource: ResourceId = 0;
   path: ValuePath = 1;
 }
-struct NamedFieldPatternSegment(84180067) {
+struct NamedFieldPatternSegment(84180066) {
   name: string = 0;
 }
-enum FieldPatternSegment(84180068) {
+enum FieldPatternSegment(84180067) {
   field: NamedFieldPatternSegment = 1;
   items = 2;
   keys = 3;
@@ -359,66 +358,66 @@ enum FieldPatternSegment(84180068) {
 }
 /// Schema pattern expanded against an owning occurrence. Collection wildcards describe many
 /// concrete value paths and do not themselves identify an editable item.
-struct RelativeFieldPattern(84180069) {
+struct RelativeFieldPattern(84180068) {
   segments: [FieldPatternSegment] = 0;
 }
-struct NativeBindingId(84180070) {
+struct NativeBindingId(84180069) {
   value: string = 0;
 }
-struct DiagnosticId(84180071) {
+struct DiagnosticId(84180070) {
   value: string = 0;
 }
-struct SelectionId(84180072) {
+struct SelectionId(84180071) {
   value: string = 0;
 }
-struct PublicationId(84180073) {
+struct PublicationId(84180072) {
   value: string = 0;
 }
-struct CanonicalValueHash(84180074) {
+struct CanonicalValueHash(84180073) {
   value: string = 0;
 }
-struct RelationId(84180075) {
+struct RelationId(84180074) {
   value: string = 0;
 }
-struct RelationFamilyId(84180076) {
+struct RelationFamilyId(84180075) {
   value: string = 0;
 }
 
-struct ScalarResolvedRepresentation(84180077) {
+struct ScalarResolvedRepresentation(84180076) {
   kind: ScalarKind = 0;
 }
-struct ResolvedClosedCases(84180078) {
+struct ResolvedClosedCases(84180077) {
   cases: [NamedTypeUse] = 0;
 }
-enum ResolvedRecordForm(84180079) {
+enum ResolvedRecordForm(84180078) {
   concrete = 1;
   open = 2;
   closed: ResolvedClosedCases = 3;
 }
-struct RecordResolvedRepresentation(84180080) {
+struct RecordResolvedRepresentation(84180079) {
   fields: [ResolvedField|key] = 0;
   form: ResolvedRecordForm = 1;
 }
-struct SequenceResolvedRepresentation(84180081) {
+struct SequenceResolvedRepresentation(84180080) {
   item: TypeUse = 0;
   kind: CollectionKind = 1;
 }
-struct MappingResolvedRepresentation(84180082) {
+struct MappingResolvedRepresentation(84180081) {
   key: TypeUse = 0;
   value: TypeUse = 1;
 }
-struct LinkResolvedRepresentation(84180083) {
+struct LinkResolvedRepresentation(84180082) {
   endpoint: EndpointId = 0;
   target: TypeUse = 1;
 }
-enum ResolvedRepresentation(84180084) {
+enum ResolvedRepresentation(84180083) {
   scalar: ScalarResolvedRepresentation = 1;
   record: RecordResolvedRepresentation = 2;
   sequence: SequenceResolvedRepresentation = 3;
   mapping: MappingResolvedRepresentation = 4;
   link: LinkResolvedRepresentation = 5;
 }
-struct ResolvedField(84180085) {
+struct ResolvedField(84180084) {
   key: string = 0;
   declaration_owner: TypeDefinitionId = 1;
   type: TypeUse = 2;
@@ -426,7 +425,7 @@ struct ResolvedField(84180085) {
   /// Whether a constructor may leave this field out, from the declaration that resolved it.
   has_constructor_default: bool = 4;
 }
-struct AppliedSchema(84180086) {
+struct AppliedSchema(84180085) {
   use: TypeUse = 0;
   representation: ResolvedRepresentation = 1;
   fields: [ResolvedField|key] = 2;
@@ -434,48 +433,48 @@ struct AppliedSchema(84180086) {
 }
 /// Applied type evidence bound to a specific checked catalog generation.
 /// A resolved schema is separate from proving that a particular authored value is complete.
-struct CheckedType(84180087) {
+struct CheckedType(84180086) {
   catalog: CatalogGeneration = 0;
   use: TypeUse = 1;
   schema: AppliedSchema = 2;
 }
-struct ArgumentLocation(84180088) {
+struct ArgumentLocation(84180087) {
   index: int32 = 0;
 }
-struct DependentField(84180089) {
+struct DependentField(84180088) {
   owner: FieldOwner = 0;
   type: TypeTemplate = 1;
   missing: [ParameterKey] = 2;
 }
-struct PartialSchema(84180090) {
+struct PartialSchema(84180089) {
   known_fields: [ResolvedField|key] = 0;
   dependent_fields: [DependentField] = 1;
   pending_arguments: [ArgumentLocation] = 2;
 }
 
-struct ContributionSourceId(84180091) {
+struct ContributionSourceId(84180090) {
   value: string = 0;
 }
-struct ProducerId(84180092) {
+struct ProducerId(84180091) {
   value: string = 0;
 }
-struct ContributionName(84180093) {
+struct ContributionName(84180092) {
   value: string = 0;
 }
-struct ContributionKey(84180094) {
+struct ContributionKey(84180093) {
   source: ContributionSourceId = 0;
   source_part: string = 1;
   producer: ProducerId = 2;
   name: ContributionName = 3;
 }
-struct DeclarationOwner(84180095) {
+struct DeclarationOwner(84180094) {
   source: ContributionKey = 0;
   local_identity: string = 1;
 }
 
 /// Which resources a display or operation applies to: every application of one type template,
 /// or every resource when nothing more specific is declared.
-enum ResourceTarget(84180096) {
+enum ResourceTarget(84180095) {
   type: TypeTemplate = 1;
   any_resource = 2;
 }

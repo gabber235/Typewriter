@@ -27,7 +27,7 @@ AuthoringDocument compiledEntryNodeDocument({
     ),
     arguments: const [],
   );
-  final pageSelection = skir.TypeSelection.wrapComplete(pageType);
+  final pageSelection = selectionOfUse(pageType);
   if (graphEditor) {
     final selected = catalog.selectPresentation(
       pageSelection,
@@ -62,11 +62,8 @@ AuthoringDocument compiledEntryNodeDocument({
     entries: const {},
     links: const [],
   );
-  final elementSelection = skir.TypeSelection.wrapComplete(elementType);
-  final bookType =
-      (compiledSdkBookRecord.configuration
-              as skir.TypeSelection_completeWrapper)
-          .value;
+  final elementSelection = selectionOfUse(elementType);
+  final bookType = completeUseOf(null, compiledSdkBookRecord.configuration)!;
   final bookSelection = compiledSdkBookRecord.configuration;
   final bookPath = editorRootPath.field("book");
   skir.ValuePath bookMembershipPath(skir.ResourceId id) => skir.ValuePath(
@@ -140,11 +137,9 @@ AuthoringDocument compiledEntryNodeDocument({
     id: id,
     content: skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.wrapComplete(type),
+      configuration: selectionOfUse(type),
       fields: [
-        for (final field in catalog.fields(
-          skir.TypeSelection.wrapComplete(type),
-        ))
+        for (final field in catalog.fields(selectionOfUse(type)))
           skir.FieldValue(
             name: field.template.key,
             value:

@@ -38,6 +38,8 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
+private val HOLDER = ResourceId(value = "holder")
+
 val TypedPositionTest by testSuite {
     val int = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
     val prize = id("prize")
@@ -80,7 +82,7 @@ val TypedPositionTest by testSuite {
         )
     val record =
         AuthoringRecord.of(
-            TypeSelection.CompleteWrapper(holder.namedUse()),
+            TypeSelection.of(holder.namedUse()),
             mapOf(
                 "prize" to DataValue.named(gem.namedUse(), DataValue.record("carat" to DataValue.integer(3))),
                 "items" to
@@ -111,14 +113,14 @@ val TypedPositionTest by testSuite {
             ),
         )
     test("every location the value walk visits is found by typedAt, with the type the walk read there") {
-        val root = ValueLocation.of(ResourceId(value = "holder"))
+        val root = ValueLocation.of(HOLDER)
         val walk = walked(catalog, DataValue.named(holder.namedUse(), DataValue.RecordWrapper(record.payload)), holder.use(), root)
 
         val schemaOf = { use: TypeUse -> (catalog.resolve(use) as? Resolution.Ready)?.value?.schema }
         walk.reported.shouldBeEmpty()
         val disagreeing =
             walk.visited.filter { visited ->
-                val position = record.typedAt(visited.at.path, catalog) as? TypedPosition.Value
+                val position = record.typedAt(HOLDER, visited.at.path, catalog) as? TypedPosition.Value
                 position == null || (visited.actual != null && schemaOf(position.actual) != schemaOf(visited.actual))
             }
         disagreeing shouldBe emptyList()
@@ -127,19 +129,19 @@ val TypedPositionTest by testSuite {
     test("a field of a union case is found under the case its value names, and the other case's field is not") {
         val prizePath = ValuePath.root.field("prize")
 
-        (record.typedAt(prizePath.field("carat"), catalog) as TypedPosition.Value).declared shouldBe int.use
-        record.typedAt(prizePath.field("worth"), catalog) shouldBe null
+        (record.typedAt(HOLDER, prizePath.field("carat"), catalog) as TypedPosition.Value).declared shouldBe int.use
+        record.typedAt(HOLDER, prizePath.field("worth"), catalog) shouldBe null
     }
 
     test("a nullable field keeps its nullable declared type while it holds a value") {
-        (record.typedAt(ValuePath.root.field("spare"), catalog) as TypedPosition.Value).declared shouldBe coin.use().nullable()
-        record.authoredTypeAt(ValuePath.root.field("spare"), catalog) shouldBe coin.use()
+        (record.typedAt(HOLDER, ValuePath.root.field("spare"), catalog) as TypedPosition.Value).declared shouldBe coin.use().nullable()
+        record.authoredTypeAt(HOLDER, ValuePath.root.field("spare"), catalog) shouldBe coin.use()
     }
 
     test("an item of a map stops at its row until a key or value segment picks a part") {
         val row = ValuePath.root.field("table").item(ItemId(value = "r"))
 
-        record.authoredTypeAt(row, catalog) shouldBe null
-        (record.typedAt(row.mapValue(), catalog) as TypedPosition.Value).value shouldBe DataValue.integer(2)
+        record.authoredTypeAt(HOLDER, row, catalog) shouldBe null
+        (record.typedAt(HOLDER, row.mapValue(), catalog) as TypedPosition.Value).value shouldBe DataValue.integer(2)
     }
 }

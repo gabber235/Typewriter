@@ -90,9 +90,11 @@ repeatedParameterCatalog({required bool repeated}) {
   );
   return (
     catalog: CheckedEditorCatalog(snapshot),
-    actual: skir.TypeSelection.createComplete(
-      definition: pair,
-      arguments: repeated ? [stringUse, stringUse] : [stringUse, listUse],
+    actual: selectionOfUse(
+      skir.NamedTypeUse(
+        definition: pair,
+        arguments: repeated ? [stringUse, stringUse] : [stringUse, listUse],
+      ),
     ),
     first: first,
     second: second,

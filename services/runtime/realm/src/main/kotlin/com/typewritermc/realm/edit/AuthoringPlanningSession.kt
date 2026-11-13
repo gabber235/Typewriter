@@ -1,6 +1,7 @@
 package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.authoredTypeAt
+import com.typewritermc.authoring.chosenUse
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
@@ -10,7 +11,6 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.text
-import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
@@ -52,7 +52,6 @@ import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -237,12 +236,12 @@ internal class AuthoringPlanningSession(
                     val record =
                         (requested.value.prepared.content as? PreparedContent.RecordWrapper)?.record
                             ?: error("A counterpart must be a prepared record")
-                    val configured =
-                        (record.configuration as? TypeSelection.CompleteWrapper)?.use ?: error("The counterpart type is incomplete")
+                    // The relation synchronizer refuses a counterpart whose type is partial before planning gets here.
+                    val configured = record.configuration.chosenUse
                     val value = DataValue.named(configured, DataValue.RecordWrapper(record.payload))
                     val existing = target.valueAt(requested.value.containing.path)
                     val catalog = stagedCatalog.checked
-                    val declared = target.authoredTypeAt(requested.value.containing.path, catalog)
+                    val declared = target.authoredTypeAt(requested.value.containing.resource, requested.value.containing.path, catalog)
                     val schema = declared?.let { catalog.resolve(it) } as? Resolution.Ready
                     val embedded =
                         if (schema?.value?.schema?.representation is ResolvedRepresentation.SequenceWrapper) {

@@ -1,7 +1,6 @@
 package com.typewritermc.realm.formula
 
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.formula.VarValueDefinition
@@ -18,6 +17,7 @@ import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.field
 import com.typewritermc.types.toResourceId
@@ -29,7 +29,6 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -74,9 +73,8 @@ internal data class NamedAs(
     context(reads: RealmReads)
     override fun compute(): TypeUse? {
         val binding = (tracked().resourceBinding(target) as? Availability.Available)?.value ?: return null
-        val actual = (binding.actual as? TypeSelection.CompleteWrapper)?.value ?: return null
-        val export = reads.read(DynamicOf(target)).exports ?: return CONTENT_REFERENCE.use(listOf(actual.use))
-        val resource = (binding.expected as? DraftExpectation.Complete)?.type ?: return null
+        val resource = (binding.type as? ResourceType.Complete)?.checked ?: return null
+        val export = reads.read(DynamicOf(target)).exports ?: return CONTENT_REFERENCE.use(listOf(resource.use))
         return resource.fieldType(export.path.segments)?.let(::readType)
     }
 }

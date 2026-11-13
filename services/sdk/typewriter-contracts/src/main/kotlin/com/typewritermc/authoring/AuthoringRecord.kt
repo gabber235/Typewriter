@@ -1,8 +1,9 @@
 package com.typewritermc.authoring
 
+import com.typewritermc.types.namedUse
 import com.typewritermc.types.with
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ChosenArgument
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FieldValue
@@ -17,9 +18,9 @@ import skirout.editor.v1.type_catalog.TypeUse
 
 /*
  * A resource's authored content is the generated Skir AuthoringRecord: its type selection, kept separately from its
- * field payload so partially configured records remain editable, and its fields. A pending selection retains an
- * unfilled argument without inventing a concrete type; a complete one describes filled type arguments, not completed
- * field values or a successful catalog check. Nested nominal values still carry their own actual types.
+ * field payload so partially configured records remain editable, and its fields. The selection holds only the arguments
+ * a creator chose, so an unfilled one invents no concrete type; whether the chosen ones make a complete type is the
+ * catalog's answer (CheckedCatalog.typeOf), not a stored state. Nested nominal values still carry their own actual types.
  *
  * Record fields are kept in name order, so two records with the same fields are equal and encode to the same bytes.
  * The factory below establishes that order, and requireValid restores it for records that enter from outside.
@@ -56,19 +57,34 @@ fun AuthoringRecord.with(
     value: DataValue,
 ): AuthoringRecord = copy(fields = payload.with(name, value).fields)
 
-val TypeSelection.CompleteWrapper.use: NamedTypeUse get() = value
+/** The selection of [use], with every argument chosen. */
+fun TypeSelection.Companion.of(use: NamedTypeUse): TypeSelection =
+    of(use.definition, use.arguments.withIndex().associate { it.index to it.value })
 
-val TypeSelection.PendingWrapper.definition: TypeDefinitionId get() = value.definition
+/** A selection of [definition] with the [chosen] arguments by parameter index; a parameter without one is unfilled. */
+fun TypeSelection.Companion.of(
+    definition: TypeDefinitionId,
+    chosen: Map<Int, TypeUse> = emptyMap(),
+): TypeSelection =
+    TypeSelection(
+        definition = definition,
+        arguments = chosen.entries.sortedBy { it.key }.map { (parameter, type) -> ChosenArgument(parameter = parameter, type = type) },
+    )
 
-val TypeSelection.PendingWrapper.arguments: List<ArgumentSelection> get() = value.arguments
+/** The argument a creator chose for the parameter at [parameter], or null while it is unfilled. */
+fun TypeSelection.chosen(parameter: Int): TypeUse? = arguments.findByKey(parameter)?.type
 
-val ArgumentSelection.ChosenWrapper.type: TypeUse get() = value
+/**
+ * The use the chosen arguments name, in parameter order. It is the configured type only when every parameter has a
+ * choice, which the catalog decides (CheckedCatalog.authoredTypeOf); read it only after asking.
+ */
+val TypeSelection.chosenUse: NamedTypeUse get() = definition.namedUse(arguments.map { it.type })
 
-/** The selected type, complete or pending. */
-val TypeSelection.definition: TypeDefinitionId
-    get() =
-        when (this) {
-            is TypeSelection.CompleteWrapper -> value.definition
-            is TypeSelection.PendingWrapper -> value.definition
-            else -> throw IllegalArgumentException("Unknown type selection variant.")
-        }
+/** The chosen arguments by parameter index. */
+val TypeSelection.chosenArguments: Map<Int, TypeUse> get() = arguments.associate { it.parameter to it.type }
+
+/** This selection with [type] chosen for the parameter at [parameter], or that parameter unfilled when [type] is null. */
+fun TypeSelection.choosing(
+    parameter: Int,
+    type: TypeUse?,
+): TypeSelection = TypeSelection.of(definition, chosenArguments - parameter + listOfNotNull(type?.let { parameter to it }))

@@ -2,7 +2,6 @@ package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
@@ -22,8 +21,7 @@ import com.typewritermc.realm.authoring.ViewReadLimits
 import com.typewritermc.realm.authoring.location
 import com.typewritermc.realm.authoring.record
 import com.typewritermc.testkit.ready
-import com.typewritermc.types.named
-import com.typewritermc.types.namedUse
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.use
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.diagnostic.DiagnosticTemplate
@@ -33,7 +31,6 @@ import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -54,8 +51,7 @@ internal fun evaluate(
                     catalog.generation,
                     ReadContext(catalog.generation),
                     ValueLocation.of(RESOURCE),
-                    DraftExpectation.Complete(catalog.checked.ready(TEST_TYPE.use())),
-                    TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
+                    ResourceType.Complete(catalog.checked.ready(TEST_TYPE.use())),
                 )
             with(reads) {
                 RealmCheckInputs().evaluate(

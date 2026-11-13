@@ -598,7 +598,7 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
         );
         final named = catalog.namedUse(field.type);
         if (named == null) return;
-        yield* visit(next, skir.TypeSelection.wrapComplete(named), index + 1);
+        yield* visit(next, selectionOfUse(named), index + 1);
       case final value when value == skir.FieldPatternSegment.items:
         final collectionType = path.segments.isEmpty
             ? null
@@ -609,7 +609,7 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
         if (named.definition == binding.template.valueOwner) {
           yield PortableNewCounterpartChoice(
             containing: skir.ValueLocation(resource: resource, path: path),
-            selection: skir.TypeSelection.wrapComplete(named),
+            selection: selectionOfUse(named),
           );
         }
         final items = switch (record.readAt(path)) {
@@ -624,7 +624,7 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
                 skir.PathSegment.createItem(id: item.id),
               ],
             ),
-            skir.TypeSelection.wrapComplete(named),
+            selectionOfUse(named),
             index + 1,
           );
         }

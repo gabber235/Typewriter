@@ -410,7 +410,7 @@ void main() {
         created,
         skir.AuthoringRecord(
           types: const [],
-          configuration: skir.TypeSelection.unknown,
+          configuration: skir.TypeSelection.defaultInstance,
           fields: [
             skir.FieldValue(
               name: "name",
@@ -434,7 +434,7 @@ void main() {
         created,
         skir.AuthoringRecord(
           types: const [],
-          configuration: skir.TypeSelection.unknown,
+          configuration: skir.TypeSelection.defaultInstance,
           fields: [
             skir.FieldValue(
               name: "name",
@@ -942,7 +942,7 @@ void main() {
         created,
         skir.AuthoringRecord(
           types: const [],
-          configuration: skir.TypeSelection.unknown,
+          configuration: skir.TypeSelection.defaultInstance,
           fields: [
             skir.FieldValue(
               name: "name",

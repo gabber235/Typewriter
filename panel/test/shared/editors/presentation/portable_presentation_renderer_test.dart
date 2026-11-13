@@ -828,9 +828,7 @@ void main() {
               icon: skir.Icon.wrapIconify("material-symbols:category"),
             ),
             value: skir.DataValue.createNamed(
-              actualType:
-                  (record.configuration as skir.TypeSelection_completeWrapper)
-                      .value,
+              actualType: completeUseOf(null, record.configuration)!,
               payload: skir.DataValue.createRecord(fields: record.fields),
             ),
           ),
@@ -2304,7 +2302,7 @@ void main() {
         resources: {
           RendererWorkspace.resource: skir.AuthoringRecord(
             types: const [],
-            configuration: skir.TypeSelection.unknown,
+            configuration: skir.TypeSelection.defaultInstance,
             fields: [
               skir.FieldValue(name: "icon", value: skir.DataValue.unfilled),
             ],
@@ -2412,10 +2410,7 @@ void main() {
       await tester.tap(find.text("Iconify").last);
       await tester.pumpAndSettle();
 
-      expect(
-        request?.recordSelection,
-        skir.TypeSelection.wrapComplete(_iconifyType),
-      );
+      expect(request?.recordSelection, selectionOfUse(_iconifyType));
       expect(
         document.workspace.document
             .resource(RendererWorkspace.resource)!

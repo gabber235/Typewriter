@@ -2,7 +2,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.append
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.descendants
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.id
@@ -14,11 +13,11 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.isSelectionReadableAs
 import com.typewritermc.types.closedUse
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
@@ -32,7 +31,6 @@ import com.typewritermc.types.storedUse
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
@@ -48,7 +46,6 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -246,7 +243,7 @@ internal object ResourceValueMapper {
                     slotsByLocation
                         .getOrPut(
                             occurrence.source,
-                        ) { sourceRecord.linkSlots(catalog).groupBy { it.location } }[occurrence.id.location.path]
+                        ) { sourceRecord.linkSlots(occurrence.source, catalog).groupBy { it.location } }[occurrence.id.location.path]
                         ?.singleOrNull()
                 if (declared != null && declared.endpoint == occurrence.id.endpoint) {
                     val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.MANY
@@ -257,7 +254,7 @@ internal object ResourceValueMapper {
                     }
                 } else if (structurallyValid.getOrPut(
                         occurrence.source,
-                    ) { sourceRecord.validateStructure(catalog) == StructuralResult.VALID }
+                    ) { sourceRecord.validateStructure(occurrence.source, catalog) == StructuralResult.VALID }
                 ) {
                     // A record whose structure fits but holds a link its schema has no slot for still does not fit.
                     fit += ValueProblem(location = occurrence.id.location, code = "endpoint_location_not_declared")
@@ -317,7 +314,7 @@ internal object ResourceValueMapper {
         val values = linkedSetOf<ValuePath>()
         val memberships = linkedSetOf<ValuePath>()
         val forms = linkedSetOf<ValuePath>()
-        val fields = record.resolvedFields(catalog)
+        val fields = record.resolvedFields(resource, catalog)
         fields.forEach { field ->
             collectLinkEvidence(
                 declared = field.type,
@@ -344,7 +341,7 @@ internal object ResourceValueMapper {
         record: AuthoringRecord,
         catalog: CheckedCatalog,
     ): CounterpartBinding {
-        val slots = record.linkSlots(catalog).filter { it.endpoint == endpoint }
+        val slots = record.linkSlots(resource, catalog).filter { it.endpoint == endpoint }
         val directCollections = slots.mapNotNull(LinkSchemaSlot::directCollection).distinct()
         val scalarLocations = slots.filterNot(LinkSchemaSlot::containsCollection).mapNotNull(LinkSchemaSlot::location).distinct()
         val choices =
@@ -365,7 +362,7 @@ internal object ResourceValueMapper {
         catalog: CheckedCatalog,
     ): TypeUse? =
         record
-            .linkSlots(catalog)
+            .linkSlots(occurrence.source, catalog)
             .singleOrNull { it.location == occurrence.id.location.path && it.endpoint == occurrence.id.endpoint }
             ?.target
 }
@@ -378,9 +375,12 @@ private data class LinkSchemaSlot(
     val directCollection: ValuePath?,
 )
 
-private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaSlot> {
+private fun AuthoringRecord.linkSlots(
+    owner: ResourceId,
+    catalog: CheckedCatalog,
+): List<LinkSchemaSlot> {
     val slots = mutableListOf<LinkSchemaSlot>()
-    resolvedFields(catalog).forEach { field ->
+    resolvedFields(owner, catalog).forEach { field ->
         collectLinkSlots(
             declared = field.type,
             value = this.field(field.key) ?: DataValue.UNFILLED,
@@ -394,24 +394,10 @@ private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaS
     return slots.distinct()
 }
 
-private fun AuthoringRecord.resolvedFields(catalog: CheckedCatalog) =
-    when (val selected = configuration) {
-        is TypeSelection.CompleteWrapper -> {
-            val resolved = catalog.resolve(selected.use.use) as? Resolution.Ready
-            val record =
-                resolved?.value?.schema?.representation as? ResolvedRepresentation.RecordWrapper
-            record?.value?.fields.orEmpty()
-        }
-
-        is TypeSelection.PendingWrapper -> {
-            val partial = catalog.resolvePartial(selected) as? Resolution.Ready
-            partial?.value?.knownFields.orEmpty()
-        }
-
-        else -> {
-            unknownVariant(selected)
-        }
-    }
+private fun AuthoringRecord.resolvedFields(
+    owner: ResourceId,
+    catalog: CheckedCatalog,
+) = (catalog.typeOf(owner, configuration) as? Resolution.Ready)?.value?.knownFields.orEmpty()
 
 private fun collectLinkEvidence(
     declared: TypeUse,
@@ -634,43 +620,14 @@ private fun collectLinkSlots(
 private fun AuthoringRecord.matches(
     expected: TypeUse,
     catalog: CheckedCatalog,
-): Boolean =
-    when (val selected = configuration) {
-        is TypeSelection.CompleteWrapper -> {
-            catalog.isReadableAs(selected.use.use, expected)
-        }
-
-        is TypeSelection.PendingWrapper -> {
-            catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application.use, expected) }
-        }
-
-        else -> {
-            unknownVariant(selected)
-        }
-    }
+): Boolean = catalog.isSelectionReadableAs(configuration, expected)
 
 private fun AuthoringRecord.matches(
     expected: NamedTypeTemplate,
     catalog: CheckedCatalog,
-): Boolean {
-    val expectedUse = expected.template.closedUse
-    return when (val selected = configuration) {
-        is TypeSelection.CompleteWrapper -> {
-            expectedUse?.let { catalog.isReadableAs(selected.use.use, it) }
-                ?: catalog.isNominalSubtype(selected.use.definition, expected.definition)
-        }
-
-        is TypeSelection.PendingWrapper -> {
-            expectedUse?.let { concrete ->
-                catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application.use, concrete) }
-            } ?: catalog.isNominalSubtype(selected.definition, expected.definition)
-        }
-
-        else -> {
-            unknownVariant(selected)
-        }
-    }
-}
+): Boolean =
+    expected.template.closedUse?.let { matches(it, catalog) }
+        ?: catalog.isNominalSubtype(configuration.definition, expected.definition)
 
 private fun occurrenceKey(value: LinkOccurrence): String =
     "${value.id.endpoint.value}:${value.source.value}:${ValuePath.serializer.toJsonCode(

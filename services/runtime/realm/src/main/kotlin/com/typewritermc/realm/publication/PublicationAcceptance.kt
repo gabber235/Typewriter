@@ -6,7 +6,6 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.diagnostics
 import com.typewritermc.checking.locations
 import com.typewritermc.checking.reason
@@ -19,6 +18,7 @@ import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.named
@@ -46,7 +46,6 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -194,8 +193,8 @@ internal class AuthoringAcceptance(
                         )
                     own.forEach { evidence[it.id] = witness }
                 }
-                val actual = (record.configuration as? TypeSelection.CompleteWrapper)?.use
-                if (actual == null) {
+                val type = snapshot.root.catalog.checked.typeOf(id, record.configuration)
+                if ((type as? Resolution.Ready)?.value is ResourceType.Partial) {
                     findings +=
                         publicationDiagnostic(
                             "pending_type",
@@ -205,10 +204,7 @@ internal class AuthoringAcceptance(
                     blocked()
                     return@forEach
                 }
-                val resolved =
-                    snapshot.root.catalog.checked
-                        .resolve(actual.use)
-                val checked = (resolved as? Resolution.Ready)?.value
+                val checked = ((type as? Resolution.Ready)?.value as? ResourceType.Complete)?.checked
                 if (checked == null) {
                     findings +=
                         publicationDiagnostic(
@@ -219,6 +215,7 @@ internal class AuthoringAcceptance(
                     blocked()
                     return@forEach
                 }
+                val actual = checkNotNull(checked.use.named)
                 val value = DataValue.named(actual, DataValue.RecordWrapper(record.payload))
                 when (val complete = checked.complete(value)) {
                     is CompletenessResult.Unfinished -> {

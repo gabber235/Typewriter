@@ -6,6 +6,7 @@ import com.typewritermc.types.bits
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.contentOwner
 import com.typewritermc.types.catalog.referencedDefinitions
 import com.typewritermc.types.catalog.unavailableCode
@@ -15,6 +16,7 @@ import com.typewritermc.types.fields
 import com.typewritermc.types.identityKey
 import com.typewritermc.types.isCanonicalDecimal
 import com.typewritermc.types.items
+import com.typewritermc.types.named
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
@@ -32,12 +34,12 @@ import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.LinkResolvedRepresentation
 import skirout.editor.v1.type_catalog.MappingResolvedRepresentation
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.RecordResolvedRepresentation
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
@@ -81,8 +83,11 @@ data class Misfit(
 }
 
 /** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
-fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult {
-    val problems = inspectStructure(catalog).problems
+fun AuthoringRecord.validateStructure(
+    owner: SkirResourceId,
+    catalog: CheckedCatalog,
+): StructuralResult {
+    val problems = inspectStructure(owner, catalog).problems
     return if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
 }
 
@@ -91,33 +96,32 @@ fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult
  * as its own misfit at its location: a named value's actual type or a stored type use.
  */
 fun AuthoringRecord.structuralMisfits(
-    owner: skirout.kernel.v1.resource_id.ResourceId,
+    owner: SkirResourceId,
     catalog: CheckedCatalog,
 ): List<Misfit> {
-    val inspection = inspectStructure(catalog)
+    val inspection = inspectStructure(owner, catalog)
     return (inspection.problems.map { Misfit(it) } + inspection.typed).map { misfit ->
         misfit.copy(problem = misfit.problem.copy(location = misfit.problem.location.copy(resource = owner)))
     }
 }
 
-private fun AuthoringRecord.inspectStructure(catalog: CheckedCatalog): ValueInspection {
+private fun AuthoringRecord.inspectStructure(
+    owner: SkirResourceId,
+    catalog: CheckedCatalog,
+): ValueInspection {
     val root = ValueLocation.of(AUTHORING_ROOT)
     val inspection = ValueInspection()
     val walk = ValueWalk(catalog, inspection)
-    when (val configuration = configuration) {
-        is TypeSelection.CompleteWrapper -> {
-            when (val resolved = catalog.resolve(configuration.use.use)) {
-                is Resolution.Invalid -> inspection.problems += resolved.diagnostics.map { it.asValueProblem(root) }
-                is Resolution.Ready -> walk.walkPayload(DataValue.RecordWrapper(payload), resolved.value, root)
+    when (val type = catalog.typeOf(owner, configuration)) {
+        is Resolution.Invalid -> {
+            inspection.problems += type.diagnostics.map { it.asValueProblem(root) }
+        }
+
+        is Resolution.Ready -> {
+            when (val resolved = type.value) {
+                is ResourceType.Complete -> walk.walkPayload(DataValue.RecordWrapper(payload), resolved.checked, root)
+                is ResourceType.Partial -> inspectPartial(resolved.schema, walk, inspection, root)
             }
-        }
-
-        is TypeSelection.PendingWrapper -> {
-            inspectPending(configuration, catalog, walk, inspection, root)
-        }
-
-        else -> {
-            unknownVariant(configuration)
         }
     }
     return inspection
@@ -135,21 +139,14 @@ fun CheckedType.complete(value: DataValue): CompletenessResult {
     }
 }
 
-private fun AuthoringRecord.inspectPending(
-    selection: TypeSelection.PendingWrapper,
-    catalog: CheckedCatalog,
+private fun AuthoringRecord.inspectPartial(
+    partial: PartialSchema,
     walk: ValueWalk<Unit>,
     inspection: ValueInspection,
     root: ValueLocation,
 ) {
-    val partial = catalog.resolvePartial(selection)
-    if (partial is Resolution.Invalid) {
-        inspection.problems += partial.diagnostics.map { it.asValueProblem(root) }
-        return
-    }
-    partial as Resolution.Ready
-    val known = partial.value.knownFields.associateBy { it.key }
-    val dependent = partial.value.dependentFields.associateBy { it.owner.name }
+    val known = partial.knownFields.associateBy { it.key }
+    val dependent = partial.dependentFields.associateBy { it.owner.name }
     val expectedKeys = known.keys + dependent.keys
     val problems = mutableListOf<ValueProblem>()
     val present = fields.mapView.keys

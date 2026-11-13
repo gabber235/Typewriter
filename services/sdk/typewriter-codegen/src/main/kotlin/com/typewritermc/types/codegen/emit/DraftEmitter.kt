@@ -29,7 +29,6 @@ import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.template
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import com.typewritermc.codegen.TypewriterApi as Api
 
@@ -88,14 +87,11 @@ internal object DraftEmitter : SdkEmitter {
                     .initializer(
                         CodeBlock
                             .builder()
-                            .beginControlFlow("when (val selected = binding.actual)")
-                            .addStatement("is %T·->♢%T(selected.value)", TypeSelection.CompleteWrapper::class, Api.AvailabilityAvailable)
                             .addStatement(
-                                "is %T·->♢%T(listOf(binding.location))",
-                                TypeSelection.PendingWrapper::class,
+                                "binding.actualType?.let·{·%T(it)·}·?:·%T(listOf(binding.location))",
+                                Api.AvailabilityAvailable,
                                 Api.AvailabilityUnavailable,
-                            ).addStatement("else·->♢%M(selected)", UNKNOWN_VARIANT)
-                            .endControlFlow()
+                            )
                             .build(),
                     ).build(),
             ).apply {
@@ -291,5 +287,4 @@ internal object DraftEmitter : SdkEmitter {
             .build()
 }
 
-private val UNKNOWN_VARIANT = MemberName("com.typewritermc.types", "unknownVariant")
 private val TO_RESOURCE_ID = MemberName("com.typewritermc.types", "toResourceId", isExtension = true)

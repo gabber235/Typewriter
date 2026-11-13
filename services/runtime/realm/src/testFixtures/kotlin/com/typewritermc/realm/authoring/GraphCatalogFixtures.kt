@@ -67,7 +67,7 @@ internal fun graphRecord(
     badTarget: ResourceId? = null,
 ): AuthoringRecord =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(NODE_USE),
+        TypeSelection.of(NODE_USE),
         mapOf(
             "outgoing" to
                 DataValue.named(

@@ -401,7 +401,7 @@ val SurrealAuthoringRepositoryTest by testSuite {
             val storage = SurrealAuthoringStorage(database)
             val edges =
                 AuthoringRecord.of(
-                    TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
+                    TypeSelection.of(TEST_TYPE.namedUse()),
                     mapOf(
                         "empty" to DataValue.UNFILLED,
                         "nullable" to DataValue.NULL,

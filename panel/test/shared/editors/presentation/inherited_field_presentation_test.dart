@@ -346,7 +346,7 @@ void main() {
               rows: [
                 PortableCollectionRowProjection(
                   resource: skir.ResourceId(value: "shared:row"),
-                  configuration: skir.TypeSelection.unknown,
+                  configuration: skir.TypeSelection.defaultInstance,
                   label: "Row",
                   row: skir.DataValue.wrapStringValue(
                     "Row of ${definition.relations.single.relationId}",

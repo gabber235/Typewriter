@@ -26,7 +26,6 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring.EditIntent
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -52,8 +51,8 @@ val LinkAuthorizationTest by testSuite {
     val secondEndpoint = EndpointId(value = "typed:second")
 
     /*
-     * A generic base<T> holds a link to a T; derived<T> inherits it. A source still pending as derived<target> may link a
-     * target, but not a sibling type both share a common parent with.
+     * A generic base<T> holds a link to a T; derived<T, Unused> inherits it. A source still pending as derived<target, _>
+     * may link a target, but not a sibling type both share a common parent with.
      */
     val genericBase = TypeDefinitionId.qualified("test", "generic_base")
 
@@ -79,7 +78,11 @@ val LinkAuthorizationTest by testSuite {
                     }
                     record(
                         genericDerived,
-                        parameters = listOf(TypeParameter.partial(key = derived, name = "T")),
+                        parameters =
+                            listOf(
+                                TypeParameter.partial(key = derived, name = "T"),
+                                TypeParameter.partial(key = ParameterKey(owner = genericDerived, index = 1), name = "Unused"),
+                            ),
                         parents = listOf(genericBase.namedTemplate(listOf(derived.template))),
                     )
                     record(anyTarget, form = RecordForm.OPEN)
@@ -99,10 +102,10 @@ val LinkAuthorizationTest by testSuite {
             )
         }
 
-    /** A source still pending as `derived<target>`, whose `link` points at [target]. */
+    /** A source still pending as `derived<target, _>`, whose `link` points at [target]. */
     val pendingDerived =
         AuthoringRecord.of(
-            TypeSelection.createPending(definition = genericDerived, arguments = listOf(ArgumentSelection.ChosenWrapper(targetType.use()))),
+            TypeSelection.of(genericDerived, mapOf(0 to targetType.use())),
             mapOf("link" to linkValue(genericLink.namedUse(listOf(targetType.use())), firstEndpoint, target)),
         )
 
@@ -163,10 +166,7 @@ val LinkAuthorizationTest by testSuite {
 
         listOf(integer, text).forEach { chosen ->
             val pending =
-                TypeSelection.createPending(
-                    definition = config,
-                    arguments = listOf(ArgumentSelection.ChosenWrapper(chosen), ArgumentSelection.UNFILLED),
-                )
+                TypeSelection.of(config, mapOf(0 to chosen))
             RealmFixture.of(catalog, mapOf(target to AuthoringRecord.of(pending, emptyMap()))).use { realm ->
                 realm
                     .expectRefused(EditIntent.createCreateResource(id = source, record = completeRecord(sourceType, "target" to link)))
@@ -210,10 +210,7 @@ val LinkAuthorizationTest by testSuite {
                 ),
             )
         val pending =
-            TypeSelection.createPending(
-                definition = derived,
-                arguments = listOf(ArgumentSelection.ChosenWrapper(ScalarKind.TEXT.use), ArgumentSelection.UNFILLED),
-            )
+            TypeSelection.of(derived, mapOf(0 to ScalarKind.TEXT.use))
         RealmFixture.of(catalog, mapOf(target to AuthoringRecord.of(pending, emptyMap()))).use { realm ->
             val link = linkValue(linkType.namedUse(listOf(view.use(listOf(ScalarKind.TEXT.use)))), firstEndpoint, target)
 

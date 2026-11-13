@@ -232,14 +232,16 @@ void main() {
             box,
             skir.AuthoringRecord(
               types: [contentRecordDeclaration(reward)],
-              configuration: skir.TypeSelection.createComplete(
-                definition: typeDefinition("Box"),
-                arguments: [
-                  skir.TypeUse.createNamed(
-                    definition: reward,
-                    arguments: const [],
-                  ),
-                ],
+              configuration: selectionOfUse(
+                skir.NamedTypeUse(
+                  definition: typeDefinition("Box"),
+                  arguments: [
+                    skir.TypeUse.createNamed(
+                      definition: reward,
+                      arguments: const [],
+                    ),
+                  ],
+                ),
               ),
               fields: const [],
             ),

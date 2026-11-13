@@ -36,6 +36,6 @@ class CatalogEncoder(
     ): AuthoringRecord {
         val encoded = encode(type, value) as DataValue.NamedWrapper
         val payload = encoded.payload as DataValue.RecordWrapper
-        return AuthoringRecord.of(TypeSelection.CompleteWrapper(encoded.actualType), payload.value)
+        return AuthoringRecord.of(TypeSelection.of(encoded.actualType), payload.value)
     }
 }

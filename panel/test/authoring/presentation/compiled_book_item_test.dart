@@ -37,10 +37,7 @@ void main() {
           value: compiledSdkBookValue,
           location: skir.ValueLocation(resource: book, path: editorRootPath),
           schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapNamed(
-              (record.configuration as skir.TypeSelection_completeWrapper)
-                  .value,
-            ),
+            skir.TypeUse.wrapNamed(completeUseOf(null, record.configuration)!),
           ),
         ),
         presentationSubjectIdentifierBindingId: book.toExpressionBinding(),

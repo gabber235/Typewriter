@@ -93,7 +93,7 @@ Widget authoringCreationResultUseCase(BuildContext context) {
   final page = document.entry(skir.ResourceId(value: "rich:page"))!;
   final configuration = page.content.configuration;
   final option = AuthoringCreationOption(
-    type: configuration.definition!,
+    type: configuration.definition,
     configuration: configuration,
     label: document.catalog.typeSelectionName(configuration),
     display: document.catalog.selectionDisplay(configuration),

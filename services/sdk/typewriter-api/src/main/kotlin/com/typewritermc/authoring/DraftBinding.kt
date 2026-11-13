@@ -3,7 +3,8 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.types.catalog.CheckedType
+import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.named
 import com.typewritermc.types.nullable
 import com.typewritermc.types.use
 import skirout.editor.v1.expression.EvaluationDiagnostic
@@ -11,9 +12,7 @@ import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -24,24 +23,16 @@ class ReadContext(
     val catalog: CatalogGeneration,
 )
 
-sealed interface DraftExpectation {
-    data class Complete(
-        val type: CheckedType,
-    ) : DraftExpectation
-
-    data class PartialRoot(
-        val schema: PartialSchema,
-    ) : DraftExpectation
-}
-
-/** Binds a draft to its observation and location while retaining both the expected schema and actual type selection. */
+/** Binds a draft to its observation and location, with the type the value there has: complete, or a resource's partial type. */
 data class DraftBinding(
     val catalog: CatalogGeneration,
     val readContext: ReadContext,
     val location: ValueLocation,
-    val expected: DraftExpectation,
-    val actual: TypeSelection,
-)
+    val type: ResourceType,
+) {
+    /** The named type of the bound value, or null while it is a resource's partial type. */
+    val actualType: NamedTypeUse? get() = (type as? ResourceType.Complete)?.checked?.use?.named
+}
 
 context(reads: AuthoredReads)
 fun <V> DraftBinding.read(

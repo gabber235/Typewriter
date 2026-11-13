@@ -52,7 +52,7 @@ skir.DataValue _decodePortableJsonNamed(
     }
     throw _invalidPortableJson(path, "a declared enum case", source);
   }
-  final containing = skir.TypeSelection.wrapComplete(expected);
+  final containing = selectionOfUse(expected);
   final payload = switch (published.definition.representation) {
     skir.RepresentationTemplate_scalarWrapper(:final value) =>
       _decodePortableJsonScalar(source, value.kind, path),

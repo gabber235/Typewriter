@@ -1,6 +1,5 @@
 package com.typewritermc.realm.operation
 
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
@@ -8,7 +7,6 @@ import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -22,6 +20,8 @@ import com.typewritermc.realm.edit.requiredExpectations
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.catalog.isSelectionReadableAs
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.closedCases
 import com.typewritermc.types.closedUse
@@ -108,9 +108,9 @@ internal class DefaultTypeArgumentOperations(
                 listOf(DeclarationDiagnostic.of(requestedDefinition, "type_argument_definition_changed")),
             )
         }
-        val next = root.catalog.checked.resolvePartial(requested)
+        val next = root.catalog.checked.typeOf(resource, requested)
         if (next is Resolution.Invalid) return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(next.diagnostics)
-        val old = root.catalog.checked.resolvePartial(previous)
+        val old = root.catalog.checked.typeOf(resource, previous)
         if (old is Resolution.Invalid) return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(old.diagnostics)
         old as Resolution.Ready
         next as Resolution.Ready
@@ -141,7 +141,7 @@ internal class DefaultTypeArgumentOperations(
                 )
             }
         }
-        next.value.dependentFields.forEach { field ->
+        (next.value as? ResourceType.Partial)?.schema?.dependentFields.orEmpty().forEach { field ->
             val location = rootLocation.field(field.owner.name)
             inspected += InputIdentity.Value(location)
             if (record.field(field.owner.name) != DataValue.UNFILLED) cleared += location
@@ -498,12 +498,7 @@ private fun AuthoringRecord.proposedIf(
 private fun AuthoringRecord.matches(
     expected: TypeUse,
     catalog: CheckedCatalog,
-): Boolean =
-    when (val selected = configuration) {
-        is TypeSelection.CompleteWrapper -> catalog.isReadableAs(selected.use.use, expected)
-        is TypeSelection.PendingWrapper -> catalog.knownApplications(selected).any { catalog.isReadableAs(it.use, expected) }
-        else -> unknownVariant(selected)
-    }
+): Boolean = catalog.isSelectionReadableAs(configuration, expected)
 
 private fun AuthoringRecord.matches(
     expected: NamedTypeTemplate,

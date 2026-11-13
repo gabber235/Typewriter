@@ -102,7 +102,7 @@ final class OperationInputDraft extends ChangeNotifier {
     final named = catalog.namedUse(type);
     final fields = named == null
         ? const <AppliedEditorField>[]
-        : catalog.fields(skir.TypeSelection.wrapComplete(named));
+        : catalog.fields(selectionOfUse(named));
     return _node(
       "operation.input",
       skir.PresentationElement.wrapChildren(

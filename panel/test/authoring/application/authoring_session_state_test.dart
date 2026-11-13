@@ -16,7 +16,7 @@ void main() {
           id: resource,
           content: skir.AuthoringRecord(
             types: const [],
-            configuration: skir.TypeSelection.unknown,
+            configuration: skir.TypeSelection.defaultInstance,
             fields: const [],
           ),
         ),

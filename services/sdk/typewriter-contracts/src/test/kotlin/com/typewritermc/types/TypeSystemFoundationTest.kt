@@ -14,6 +14,7 @@ import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.of
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.reasons
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -27,7 +28,6 @@ import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.diagnostic.StructuralResult
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -51,6 +51,9 @@ import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.kernel.v1.resource_id.ResourceId
+
+private val OWNER = ResourceId(value = "owner")
 
 val TypeSystemFoundationTest by testSuite {
     test("definitions and complete uses remain distinct") {
@@ -250,13 +253,13 @@ val TypeSystemFoundationTest by testSuite {
 
         val wrongWrite =
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(actual),
+                TypeSelection.of(actual),
                 mapOf(
                     "name" to DataValue.StringValueWrapper("Variable"),
                     "value" to DataValue.named(resourceUse, DataValue.record(mapOf("name" to DataValue.StringValueWrapper("Broad")))),
                 ),
             )
-        (wrongWrite.validateStructure(catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
+        (wrongWrite.validateStructure(OWNER, catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
             listOf("unreadable_actual_type")
     }
 
@@ -525,13 +528,31 @@ val TypeSystemFoundationTest by testSuite {
         val variable = variableDefinition(resource.id)
         val catalog = catalog(resource, variable)
 
-        val partial =
-            catalog.resolvePartial(
-                TypeSelection.createPending(definition = variable.id, arguments = listOf(ArgumentSelection.UNFILLED)),
-            ) as Resolution.Ready
+        val partial = (catalog.typeOf(OWNER, TypeSelection.of(variable.id)) as Resolution.Ready).value as ResourceType.Partial
 
-        partial.value.knownFields.map { it.key } shouldContainExactly listOf("name")
-        partial.value.dependentFields.map { it.owner.name } shouldContainExactly listOf("value")
+        partial.schema.knownFields.map { it.key } shouldContainExactly listOf("name")
+        partial.schema.dependentFields.map { it.owner.name } shouldContainExactly listOf("value")
+    }
+
+    test("a selection with an argument chosen for every parameter is the complete type") {
+        val resource = resourceDefinition()
+        val variable = variableDefinition(resource.id)
+        val catalog = catalog(resource, variable)
+
+        val type = (catalog.typeOf(OWNER, TypeSelection.of(variable.id, mapOf(0 to resource.id.use()))) as Resolution.Ready).value
+
+        (type as ResourceType.Complete).checked.use shouldBe variable.id.use(listOf(resource.id.use()))
+        type.knownFields.map { it.key } shouldContainExactly listOf("name", "value")
+    }
+
+    test("a choice for a parameter the definition does not have is an arity problem") {
+        val resource = resourceDefinition()
+        val variable = variableDefinition(resource.id)
+        val catalog = catalog(resource, variable)
+
+        val type = catalog.typeOf(OWNER, TypeSelection.of(variable.id, mapOf(1 to resource.id.use())))
+
+        (type as Resolution.Invalid).diagnostics.map { it.code } shouldContainExactly listOf("argument_arity")
     }
 
     test("known applications include only fully bound selected and inherited uses") {
@@ -560,22 +581,12 @@ val TypeSystemFoundationTest by testSuite {
             )
         val catalog = catalog(base, marker, derived)
 
-        catalog.knownApplications(
-            TypeSelection.createPending(
-                definition = derivedId,
-                arguments = listOf(ArgumentSelection.ChosenWrapper(TEXT), ArgumentSelection.UNFILLED),
-            ),
-        ) shouldBe
+        catalog.knownApplications(TypeSelection.of(derivedId, mapOf(0 to TEXT))) shouldBe
             setOf(
                 baseId.namedUse(listOf(TEXT)),
                 marker.id.namedUse(),
             )
-        catalog.knownApplications(
-            TypeSelection.createPending(
-                definition = derivedId,
-                arguments = listOf(ArgumentSelection.ChosenWrapper(TEXT), ArgumentSelection.ChosenWrapper(ScalarKind.BOOLEAN.use)),
-            ),
-        ) shouldBe
+        catalog.knownApplications(TypeSelection.of(derivedId, mapOf(0 to TEXT, 1 to ScalarKind.BOOLEAN.use))) shouldBe
             setOf(
                 derivedId.namedUse(listOf(TEXT, ScalarKind.BOOLEAN.use)),
                 baseId.namedUse(listOf(TEXT)),
@@ -625,11 +636,11 @@ val TypeSystemFoundationTest by testSuite {
         val catalog = catalog(simple)
         val record =
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(simple.id.namedUse()),
+                TypeSelection.of(simple.id.namedUse()),
                 mapOf("name" to DataValue.StringValueWrapper("ok"), "extra" to DataValue.StringValueWrapper("no")),
             )
 
-        (record.validateStructure(catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
+        (record.validateStructure(OWNER, catalog) as StructuralResult.InvalidWrapper).value.map { it.code } shouldContainExactly
             listOf("unknown_field")
     }
 
@@ -794,7 +805,7 @@ val TypeSystemFoundationTest by testSuite {
         val root =
             shouldThrow<IllegalArgumentException> {
                 AuthoringRecord(
-                    configuration = TypeSelection.CompleteWrapper(id("duplicate_record").namedUse()),
+                    configuration = TypeSelection.of(id("duplicate_record").namedUse()),
                     fields = fields,
                     types = emptyList(),
                 ).requireValid()

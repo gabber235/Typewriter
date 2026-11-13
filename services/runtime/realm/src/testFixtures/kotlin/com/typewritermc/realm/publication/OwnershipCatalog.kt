@@ -63,7 +63,7 @@ internal fun ownershipChildPath(index: Int) =
 /** A complete compiler page that owns [targets] through its children list, one item per target in order. */
 internal fun ownershipPageRecord(targets: List<ResourceId>) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(PAGE_USE),
+        TypeSelection.of(PAGE_USE),
         mapOf(
             "children" to
                 DataValue.named(
@@ -90,14 +90,14 @@ internal fun ownershipPageRecord(targets: List<ResourceId>) =
 /** A complete compiler child whose text value is [value]. */
 internal fun ownershipChildRecord(value: String) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(CHILD_USE),
+        TypeSelection.of(CHILD_USE),
         mapOf("value" to DataValue.StringValueWrapper(value)),
     )
 
 /** A child that is a compilation unit itself. */
 internal fun ownershipNestedRecord() =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(NESTED_USE),
+        TypeSelection.of(NESTED_USE),
         mapOf("value" to DataValue.StringValueWrapper("nested")),
     )
 

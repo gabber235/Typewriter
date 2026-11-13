@@ -7,14 +7,11 @@ import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.StructuralStep
 import com.typewritermc.authoring.append
-import com.typewritermc.authoring.arguments
 import com.typewritermc.authoring.complete
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.links
@@ -25,8 +22,6 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.resourceIds
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.type
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
@@ -45,6 +40,7 @@ import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -64,7 +60,6 @@ import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.FailureId
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -258,31 +253,14 @@ class CapturedAuthoringReads internal constructor(
                 .isEmpty()
         ) {
             val record = view.resources[path.location.resource] ?: return unavailable(path.location)
-            val selection = record.configuration
-            val readable =
-                when (selection) {
-                    is TypeSelection.CompleteWrapper -> {
-                        typeCatalog
-                            .isReadableAs(selection.use.use, path.expected)
-                    }
-
-                    is TypeSelection.PendingWrapper -> {
-                        pendingBindingReadableAs(selection, path.expected)
-                    }
-
-                    else -> {
-                        unknownVariant(selection)
-                    }
-                }
-            if (!readable) {
+            if (!readableAs(record.configuration, path.expected)) {
                 return failed(
                     HostFailure.UnreadableBinding,
                     "The authored value is not readable as the requested draft type.",
                     listOf(path.location),
                 )
             }
-            val checked = (selection as? TypeSelection.CompleteWrapper)?.let { resolve(it.use.use, path.location) }
-            return binding(path.location, selection, checked)
+            return resourceBinding(path.location.resource, record)
                 ?.let { Availability.Available(it) }
                 ?: Availability.Failed(failures.last())
         }
@@ -314,15 +292,7 @@ class CapturedAuthoringReads internal constructor(
                     )
                 }
                 val checked = resolve(named.actualType.use, path.location) ?: return Availability.Failed(failures.last())
-                Availability.Available(
-                    DraftBinding(
-                        catalog,
-                        readContext,
-                        path.location,
-                        DraftExpectation.Complete(checked),
-                        TypeSelection.CompleteWrapper(named.actualType),
-                    ),
-                )
+                Availability.Available(DraftBinding(catalog, readContext, path.location, ResourceType.Complete(checked)))
             }
         }
     }
@@ -420,15 +390,15 @@ class CapturedAuthoringReads internal constructor(
             observeResource(resource)
             val root = ValueLocation.of(resource)
             observe(InputIdentity.Form(root))
-            when (val match = match(record.configuration, query.type.match)) {
+            when (match(record.configuration, query.type.match)) {
                 TypeMatch.No -> {}
 
                 TypeMatch.Undecided -> {
                     undecided += UndecidedCandidate(resource.toResourceId(), listOf(root))
                 }
 
-                is TypeMatch.Yes -> {
-                    val binding = binding(root, record.configuration, match.checked)
+                TypeMatch.Yes -> {
+                    val binding = resourceBinding(resource, record)
                     if (binding == null) {
                         undecided += UndecidedCandidate(resource.toResourceId(), listOf(root))
                         continue
@@ -541,14 +511,7 @@ class CapturedAuthoringReads internal constructor(
                             .takeIf { it.definition.couldRepresent(owner) }
                             ?.let { resolve(it.use, at) }
                     if (checked != null && checked.represents(owner)) {
-                        occurrences +=
-                            DraftBinding(
-                                catalog,
-                                readContext,
-                                at,
-                                DraftExpectation.Complete(checked),
-                                TypeSelection.CompleteWrapper(value.actualType),
-                            )
+                        occurrences += DraftBinding(catalog, readContext, at, ResourceType.Complete(checked))
                     }
                     visit(resource, value.payload, at)
                 }
@@ -581,35 +544,7 @@ class CapturedAuthoringReads internal constructor(
         view.resources.entries.sortedBy { it.key.value }.forEach { (resource, record) ->
             observeResource(resource)
             val root = ValueLocation.of(resource)
-            when (val selection = record.configuration) {
-                is TypeSelection.CompleteWrapper -> {
-                    val checked =
-                        selection.use
-                            .takeIf { it.definition.couldRepresent(owner) }
-                            ?.let { resolve(it.use, root) }
-                    if (checked != null && checked.represents(owner)) {
-                        occurrences += DraftBinding(catalog, readContext, root, DraftExpectation.Complete(checked), selection)
-                    }
-                }
-
-                is TypeSelection.PendingWrapper -> {
-                    if (typeCatalog
-                            .isNominalSubtype(selection.definition, owner)
-                    ) {
-                        val partial =
-                            typeCatalog
-                                .resolvePartial(selection)
-                        if (partial is Resolution.Ready) {
-                            occurrences +=
-                                DraftBinding(catalog, readContext, root, DraftExpectation.PartialRoot(partial.value), selection)
-                        }
-                    }
-                }
-
-                else -> {
-                    unknownVariant(selection)
-                }
-            }
+            if (representsAuthored(record.configuration, owner)) resourceBinding(resource, record)?.let { occurrences += it }
             record.fields.forEach { field -> visit(resource, field.value, root.field(field.name)) }
         }
         return occurrences
@@ -622,9 +557,8 @@ class CapturedAuthoringReads internal constructor(
             observeResource(resource)
             val root = ValueLocation.of(resource)
             observe(InputIdentity.Form(root))
-            val result = match(record.configuration, type.match)
-            if (result !is TypeMatch.Yes) return@mapNotNull null
-            binding(root, record.configuration, result.checked)
+            if (match(record.configuration, type.match) != TypeMatch.Yes) return@mapNotNull null
+            resourceBinding(resource, record)
         }
     }
 
@@ -666,9 +600,7 @@ class CapturedAuthoringReads internal constructor(
         val record = view.resources[resource] ?: return unavailable(ValueLocation.of(resource))
         val location = ValueLocation.of(resource)
         observe(InputIdentity.Form(location))
-        val checked = (record.configuration as? TypeSelection.CompleteWrapper)?.let { resolve(it.use.use, location) }
-        val binding = binding(location, record.configuration, checked)
-        return binding?.let { Availability.Available(it) }
+        return resourceBinding(resource, record)?.let { Availability.Available(it) }
             ?: failed(HostFailure.ResourceBindingFailed, "The resource could not be bound to its captured catalog.", listOf(location))
     }
 
@@ -681,8 +613,8 @@ class CapturedAuthoringReads internal constructor(
         observe(InputIdentity.Catalog(catalog))
         observe(InputIdentity.Form(location))
         val record = view.resources[location.resource] ?: return null
-        val match = match(record.configuration, requested) as? TypeMatch.Yes ?: return null
-        return binding(location, record.configuration, match.checked)
+        if (match(record.configuration, requested) != TypeMatch.Yes) return null
+        return resourceBinding(location.resource, record)
     }
 
     internal fun bindOccurrence(
@@ -694,36 +626,15 @@ class CapturedAuthoringReads internal constructor(
         if (location.path.segments.isEmpty()) {
             val record = view.resources[location.resource] ?: return null
             observe(InputIdentity.Form(location))
-            val selection = record.configuration
-            val checked =
-                when (selection) {
-                    is TypeSelection.CompleteWrapper -> resolve(selection.use.use, location)
-                    is TypeSelection.PendingWrapper -> null
-                    else -> unknownVariant(selection)
-                }
-            if (
-                checked?.represents(owner) != true &&
-                (selection as? TypeSelection.PendingWrapper)?.let {
-                    typeCatalog
-                        .isNominalSubtype(it.definition, owner)
-                } != true
-            ) {
-                return null
-            }
-            return binding(location, selection, checked)
+            if (!representsAuthored(record.configuration, owner)) return null
+            return resourceBinding(location.resource, record)
         }
         val located = valueAt(location) as? LocatedValue.Available ?: return null
         observe(InputIdentity.Form(location))
         val named = located.value as? DataValue.NamedWrapper ?: return null
         val checked = resolve(named.actualType.use, location) ?: return null
         if (!checked.represents(owner)) return null
-        return DraftBinding(
-            catalog,
-            readContext,
-            location,
-            DraftExpectation.Complete(checked),
-            TypeSelection.CompleteWrapper(named.actualType),
-        )
+        return DraftBinding(catalog, readContext, location, ResourceType.Complete(checked))
     }
 
     internal fun matchesRepresentation(
@@ -780,8 +691,9 @@ class CapturedAuthoringReads internal constructor(
     private fun valueAt(location: ValueLocation): LocatedValue {
         val record = view.resources[location.resource] ?: return LocatedValue.Missing(location)
         if (location.path.segments.isEmpty()) {
-            val selection = record.configuration as? TypeSelection.CompleteWrapper ?: return LocatedValue.Missing(location)
-            return LocatedValue.Available(DataValue.named(selection.use, DataValue.RecordWrapper(record.payload)))
+            val type = typeCatalog.typeOf(location.resource, record.configuration) as? Resolution.Ready
+            val use = (type?.value as? ResourceType.Complete)?.checked?.use?.named ?: return LocatedValue.Missing(location)
+            return LocatedValue.Available(DataValue.named(use, DataValue.RecordWrapper(record.payload)))
         }
         val result =
             DataValue.RecordWrapper(record.payload).locate(location.path) { step ->
@@ -867,64 +779,43 @@ class CapturedAuthoringReads internal constructor(
         }
     }
 
+    /** Whether the creator's choices in [selection] make a resource that [requested] selects: which resources, never what they hold. */
     private fun match(
         selection: TypeSelection,
         requested: ResourceTypeMatch,
-    ): TypeMatch =
-        when (requested) {
+    ): TypeMatch {
+        if (requested == ResourceTypeMatch.AnyResource) return TypeMatch.Yes
+        val type = (typeCatalog.authoredTypeOf(selection) as? Resolution.Ready)?.value ?: return TypeMatch.No
+        return when (requested) {
             ResourceTypeMatch.AnyResource -> {
-                when (selection) {
-                    is TypeSelection.CompleteWrapper -> TypeMatch.Yes(resolve(selection.use.use, null))
-                    is TypeSelection.PendingWrapper -> TypeMatch.Yes(null)
-                    else -> unknownVariant(selection)
-                }
+                TypeMatch.Yes
             }
 
             is ResourceTypeMatch.Definition -> {
-                when (selection) {
-                    is TypeSelection.CompleteWrapper -> {
-                        if (!selection.use.definition.couldRepresent(requested.id)) return TypeMatch.No
-                        val checked = resolve(selection.use.use, null)
-                        if (checked?.represents(requested.id) == true) TypeMatch.Yes(checked) else TypeMatch.No
-                    }
-
-                    is TypeSelection.PendingWrapper -> {
-                        if (typeCatalog
-                                .isNominalSubtype(selection.definition, requested.id)
-                        ) {
-                            TypeMatch.Yes(null)
-                        } else {
-                            TypeMatch.No
-                        }
-                    }
-
-                    else -> {
-                        unknownVariant(selection)
-                    }
-                }
+                if (type.represents(requested.id)) TypeMatch.Yes else TypeMatch.No
             }
 
             is ResourceTypeMatch.Application -> {
-                when (selection) {
-                    is TypeSelection.CompleteWrapper -> {
-                        if (selection.use != requested.use) return TypeMatch.No
-                        val checked = resolve(selection.use.use, null)
-                        TypeMatch.Yes(checked)
-                    }
-
-                    is TypeSelection.PendingWrapper -> {
-                        if (selection.definition == requested.use.definition) {
-                            TypeMatch.Undecided
-                        } else {
-                            TypeMatch.No
-                        }
-                    }
-
-                    else -> {
-                        unknownVariant(selection)
-                    }
+                when (type) {
+                    is ResourceType.Complete -> if (type.checked.use == requested.use.use) TypeMatch.Yes else TypeMatch.No
+                    is ResourceType.Partial -> if (type.definition == requested.use.definition) TypeMatch.Undecided else TypeMatch.No
                 }
             }
+        }
+    }
+
+    /** Whether the creator's choices in [selection] make a resource that a draft of [owner] binds. */
+    private fun representsAuthored(
+        selection: TypeSelection,
+        owner: TypeDefinitionId,
+    ): Boolean =
+        selection.definition.couldRepresent(owner) &&
+            (typeCatalog.authoredTypeOf(selection) as? Resolution.Ready)?.value?.represents(owner) == true
+
+    private fun ResourceType.represents(owner: TypeDefinitionId): Boolean =
+        when (this) {
+            is ResourceType.Complete -> checked.represents(owner)
+            is ResourceType.Partial -> typeCatalog.isNominalSubtype(definition, owner)
         }
 
     private fun TypeDefinitionId.couldRepresent(expected: TypeDefinitionId): Boolean =
@@ -932,70 +823,53 @@ class CapturedAuthoringReads internal constructor(
             typeCatalog
                 .isNominalSubtype(this, expected)
 
-    private fun pendingBindingReadableAs(
-        selection: TypeSelection.PendingWrapper,
-        expected: TypeUse,
-    ): Boolean {
-        val expectedNamed = expected as? TypeUse.NamedWrapper
-        if (expectedNamed != null && selection.definition == expectedNamed.value.definition) {
-            if (selection.arguments.size != expectedNamed.value.arguments.size) return false
-            return selection.arguments.zip(expectedNamed.value.arguments).all { (actual, required) ->
-                when (actual) {
-                    is ArgumentSelection.ChosenWrapper -> {
-                        typeCatalog
-                            .isReadableAs(actual.type, required)
-                    }
-
-                    ArgumentSelection.UNFILLED -> {
-                        true
-                    }
-
-                    else -> {
-                        unknownVariant(actual)
-                    }
-                }
-            }
-        }
-        return typeCatalog
-            .knownApplications(selection)
-            .any { application ->
-                typeCatalog
-                    .isReadableAs(application.use, expected)
-            }
-    }
-
-    private fun binding(
-        location: ValueLocation,
+    /**
+     * Whether the creator's choices in [selection] are readable as [expected]. A partial type of the expected
+     * definition reads when every chosen argument does; any other partial type reads through what it already fixes.
+     */
+    private fun readableAs(
         selection: TypeSelection,
-        checked: CheckedType?,
-    ): DraftBinding? =
-        when (selection) {
-            is TypeSelection.CompleteWrapper -> {
-                val resolved = checked ?: resolve(selection.use.use, location) ?: return null
-                DraftBinding(catalog, readContext, location, DraftExpectation.Complete(resolved), selection)
+        expected: TypeUse,
+    ): Boolean =
+        when (val type = (typeCatalog.authoredTypeOf(selection) as? Resolution.Ready)?.value) {
+            null -> {
+                false
             }
 
-            is TypeSelection.PendingWrapper -> {
-                when (
-                    val partial =
-                        typeCatalog
-                            .resolvePartial(selection)
-                ) {
-                    is Resolution.Ready -> {
-                        DraftBinding(catalog, readContext, location, DraftExpectation.PartialRoot(partial.value), selection)
-                    }
+            is ResourceType.Complete -> {
+                typeCatalog.isReadableAs(type.checked.use, expected)
+            }
 
-                    is Resolution.Invalid -> {
-                        failed(HostFailure.UnresolvedPartialType, partial.diagnostics.joinToString { it.code }, listOf(location))
-                        null
+            is ResourceType.Partial -> {
+                val expectedNamed = expected.named
+                if (expectedNamed != null && type.definition == expectedNamed.definition) {
+                    selection.arguments.all { chosen ->
+                        val required = expectedNamed.arguments.getOrNull(chosen.parameter)
+                        required != null && typeCatalog.isReadableAs(chosen.type, required)
                     }
+                } else {
+                    typeCatalog.knownApplications(selection).any { typeCatalog.isReadableAs(it.use, expected) }
                 }
             }
+        }
 
-            else -> {
-                unknownVariant(selection)
+    /** The binding of [resource]'s root to its type, or null with a failure recorded when that type does not resolve. */
+    private fun resourceBinding(
+        resource: ResourceId,
+        record: AuthoringRecord,
+    ): DraftBinding? {
+        val location = ValueLocation.of(resource)
+        return when (val type = typeCatalog.typeOf(resource, record.configuration)) {
+            is Resolution.Ready -> {
+                DraftBinding(catalog, readContext, location, type.value)
+            }
+
+            is Resolution.Invalid -> {
+                failed(HostFailure.UnresolvedType, type.diagnostics.joinToString { it.code }, listOf(location))
+                null
             }
         }
+    }
 
     private fun resolve(
         use: TypeUse,
@@ -1102,9 +976,7 @@ private sealed interface TypeMatch {
 
     data object Undecided : TypeMatch
 
-    data class Yes(
-        val checked: CheckedType?,
-    ) : TypeMatch
+    data object Yes : TypeMatch
 }
 
 private enum class CollectionPart {

@@ -125,7 +125,7 @@ extension PortableFieldPresentationScope on PortablePresentationScope {
   skir.TypeSelection? get configuredSelection {
     final configured = bindings[configuredValueBindingId];
     final actual = configured?.value.authoredActualType;
-    if (actual != null) return skir.TypeSelection.wrapComplete(actual);
+    if (actual != null) return selectionOfUse(actual);
     switch (configured?.schema) {
       case PartialPortablePresentationBinding(:final selection):
         return selection;
@@ -133,7 +133,7 @@ extension PortableFieldPresentationScope on PortablePresentationScope {
         if (use.withoutNullableWrappers case skir.TypeUse_namedWrapper(
           :final value,
         )) {
-          return skir.TypeSelection.wrapComplete(value);
+          return selectionOfUse(value);
         }
       case null:
         break;

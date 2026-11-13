@@ -20,6 +20,7 @@ import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.INT_USE
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.LIST_TYPE
 import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
@@ -606,7 +607,7 @@ val RealmCheckRuntimeTest by testSuite {
                 )
             val authored =
                 AuthoringRecord.of(
-                    TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
+                    TypeSelection.of(TEST_TYPE.namedUse()),
                     mapOf(
                         "values" to
                             DataValue.named(
@@ -676,9 +677,20 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("a resource with a pending type selection blocks captured acceptance until it is edited") {
         runTest {
-            val pending =
-                record(name = "ready").copy(configuration = TypeSelection.createPending(definition = TEST_TYPE, arguments = emptyList()))
-            val catalog = DefinitionCatalog(TEST_DEFINITIONS, nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
+            // The test resource's fields under a type with a parameter nobody chose.
+            val generic = TypeDefinitionId.qualified("test", "generic_resource")
+            val parameter = TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T")
+            val genericDefinitions =
+                definitions {
+                    record(generic, parameters = listOf(parameter)) {
+                        field("name", ScalarKind.TEXT.template)
+                        field("count", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)
+                        field("numbers", LIST_TYPE.template(listOf(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)))
+                    }
+                }
+            val pending = record(name = "ready").copy(configuration = TypeSelection.of(generic))
+            val catalog =
+                DefinitionCatalog(TEST_DEFINITIONS + genericDefinitions, nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
             checking(catalog, mapOf(firstResource to pending), StandardTestDispatcher(testScheduler)) { realm, runtime ->
                 val assessment = capturedAcceptance(realm.views, runtime)
                 val blocker = assessment.findings.single()

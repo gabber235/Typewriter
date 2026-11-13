@@ -1,6 +1,5 @@
 package com.typewritermc.realm.testing
 
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
@@ -76,7 +75,7 @@ fun RealmFixture.linkedPairs(): Set<Pair<String, String>> =
 fun completeRecord(
     type: TypeDefinitionId,
     vararg fields: Pair<String, DataValue>,
-): AuthoringRecord = AuthoringRecord.of(TypeSelection.CompleteWrapper(type.namedUse()), fields.toMap())
+): AuthoringRecord = AuthoringRecord.of(TypeSelection.of(type.namedUse()), fields.toMap())
 
 /** The record of [type] that [value] encodes to, with its top level field [field] left unfilled, as an author prepares it. */
 fun RealmFixture.unfilledRecord(

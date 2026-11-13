@@ -580,27 +580,28 @@ extension CheckedFieldPresentationCatalog on CheckedEditorCatalog {
         return true;
       }
     }
-    if (actual case skir.TypeSelection_pendingWrapper(:final value)) {
-      if (target.definition != value.definition ||
-          target.arguments.length != value.arguments.length) {
+    if (completeUse(actual) == null) {
+      final parameterCount = published(actual.definition)
+          ?.definition
+          .parameters
+          .length;
+      if (target.definition != actual.definition ||
+          target.arguments.length != parameterCount) {
         return false;
       }
       final bindings = <skir.ParameterKey, skir.TypeUse>{};
       final expectedArguments = target.arguments.toList();
-      final actualArguments = value.arguments.toList();
       for (var index = 0; index < expectedArguments.length; index++) {
-        switch (actualArguments[index]) {
-          case skir.ArgumentSelection_chosenWrapper(:final value):
+        switch (actual.chosenAt(index)) {
+          case final value?:
             if (!_templateMatches(expectedArguments[index], value, bindings)) {
               return false;
             }
-          case final argument when argument == skir.ArgumentSelection.unfilled:
+          case null:
             if (expectedArguments[index]
                 is! skir.TypeTemplate_parameterWrapper) {
               return false;
             }
-          default:
-            return false;
         }
       }
       return true;

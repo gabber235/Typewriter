@@ -26,7 +26,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     if (representation is! skir.RepresentationTemplate_linkWrapper) return null;
     final target = applyTemplate(
       representation.value.target,
-      skir.TypeSelection.wrapComplete(use),
+      selectionOfUse(use),
     );
     return target == null
         ? null
@@ -106,7 +106,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     final use = namedUse(type);
     if (use == null || visited.contains(use)) return false;
     if (visited.length >= _maximumCheckedTypeDepth) return true;
-    final selection = skir.TypeSelection.wrapComplete(use);
+    final selection = selectionOfUse(use);
     final next = {...visited, use};
     final representation = published(use.definition)?.definition.representation;
     return switch (representation) {
@@ -149,23 +149,21 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
   ) {
     if (value case skir.DataValue_namedWrapper(:final value)) {
       final actual = value.actualType;
-      final compatible = switch (declared) {
-        skir.TypeSelection_completeWrapper(:final value) => isReadableAs(
+      final compatible = switch (completeUse(declared)) {
+        final value? => isReadableAs(
           skir.TypeUse.wrapNamed(actual),
           skir.TypeUse.wrapNamed(value),
         ),
-        skir.TypeSelection_pendingWrapper() =>
-          knownApplications(skir.TypeSelection.wrapComplete(actual)).any(
-            (candidate) => knownApplications(declared).any(
-              (expected) => isReadableAs(
-                skir.TypeUse.wrapNamed(candidate),
-                skir.TypeUse.wrapNamed(expected),
-              ),
+        null => knownApplications(selectionOfUse(actual)).any(
+          (candidate) => knownApplications(declared).any(
+            (expected) => isReadableAs(
+              skir.TypeUse.wrapNamed(candidate),
+              skir.TypeUse.wrapNamed(expected),
             ),
           ),
-        _ => false,
+        ),
       };
-      return compatible ? skir.TypeSelection.wrapComplete(actual) : null;
+      return compatible ? selectionOfUse(actual) : null;
     }
     return declared;
   }
@@ -181,9 +179,9 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
       )) {
         return null;
       }
-      return skir.TypeSelection.wrapComplete(value.actualType);
+      return selectionOfUse(value.actualType);
     }
-    return skir.TypeSelection.wrapComplete(declared);
+    return selectionOfUse(declared);
   }
 
   skir.DataValue? _namedPayload(skir.DataValue? value) => switch (value) {

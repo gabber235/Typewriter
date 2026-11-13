@@ -28,7 +28,7 @@ val TypeArgumentOperationsTest by testSuite {
     test("previewing a type of another definition is refused with type_argument_definition_changed") {
         RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
             realm
-                .preview(container, TypeSelection.CompleteWrapper(BUNDLE_COIN))
+                .preview(container, TypeSelection.of(BUNDLE_COIN))
                 .shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper>()
                 .value
                 .map { it.code } shouldBe listOf("type_argument_definition_changed")
@@ -38,7 +38,7 @@ val TypeArgumentOperationsTest by testSuite {
     test("previewing a change for a missing resource is refused with resource_missing") {
         RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
             realm
-                .preview(ResourceId(value = "missing"), TypeSelection.CompleteWrapper(CONTAINER_COIN))
+                .preview(ResourceId(value = "missing"), TypeSelection.of(CONTAINER_COIN))
                 .shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper>()
                 .value
                 .map { it.code } shouldBe listOf("resource_missing")
@@ -48,14 +48,14 @@ val TypeArgumentOperationsTest by testSuite {
     test("an undeclared field a record already holds does not block previewing a change, which leaves it in place") {
         val invalid = rewardContainer.mapValues { (_, record) -> record.with("unknown", DataValue.StringValueWrapper("retained")) }
         RealmFixture.of(REPAIR_CATALOG, invalid).use { realm ->
-            realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady().clearedLocations shouldNotContain
+            realm.preview(container, TypeSelection.of(CONTAINER_COIN)).shouldBeReady().clearedLocations shouldNotContain
                 location(container, "unknown")
         }
     }
 
     test("narrowing a type argument retags its containers, clears incompatible leaves and keeps compatible values") {
         RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
-            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            val preview = realm.preview(container, TypeSelection.of(CONTAINER_COIN)).shouldBeReady()
             preview.clearedLocations shouldBe listOf(bundleValue())
 
             realm.commit(realm.prepare(preview).shouldBePrepared()).shouldBeCommitted()
@@ -67,7 +67,7 @@ val TypeArgumentOperationsTest by testSuite {
 
     test("a confirmed change is refused with expectation_conflict when a value it keeps changed after the preview") {
         RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
-            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            val preview = realm.preview(container, TypeSelection.of(CONTAINER_COIN)).shouldBeReady()
             realm.commit(EditIntent.createSetValue(at = location(container, "reward"), value = gemValue())).shouldBeCommitted()
 
             realm.prepare(preview).refusalCodes() shouldBe listOf("expectation_conflict")
@@ -76,7 +76,7 @@ val TypeArgumentOperationsTest by testSuite {
 
     test("a confirmed change is refused with catalog_changed once the Realm runs another catalog") {
         RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
-            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            val preview = realm.preview(container, TypeSelection.of(CONTAINER_COIN)).shouldBeReady()
             realm.restart()
 
             realm.prepare(preview).refusalCodes() shouldBe listOf("catalog_changed")
@@ -85,7 +85,7 @@ val TypeArgumentOperationsTest by testSuite {
 
     test("a preview without guards whose resource is gone by confirmation is refused as no longer valid") {
         RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
-            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            val preview = realm.preview(container, TypeSelection.of(CONTAINER_COIN)).shouldBeReady()
             realm.commit(EditIntent.createDeleteResource(id = container)).shouldBeCommitted()
 
             realm.prepare(preview.copy(edit = preview.edit.copy(expectations = emptyList()))).refusalCodes() shouldBe
@@ -104,7 +104,7 @@ val TypeArgumentOperationsTest by testSuite {
             partial.value("first") shouldBe DataValue.record(emptyMap())
             partial.value("second") shouldBe DataValue.UNFILLED
 
-            val complete = TypeSelection.CompleteWrapper(DUAL_COIN_COIN)
+            val complete = TypeSelection.of(DUAL_COIN_COIN)
             realm.commit(realm.prepare(realm.preview(dual, complete).shouldBeReady()).shouldBePrepared()).shouldBeCommitted()
 
             val completed = realm.resources.getValue(dual)
@@ -125,7 +125,7 @@ val TypeArgumentOperationsTest by testSuite {
                                 listOf(
                                     EditIntent.createConfigureResource(
                                         resource = dual,
-                                        configuration = TypeSelection.CompleteWrapper(DUAL_COIN_COIN),
+                                        configuration = TypeSelection.of(DUAL_COIN_COIN),
                                     ),
                                 ),
                         ),

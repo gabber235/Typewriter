@@ -151,8 +151,7 @@ final class BoundPresentationHost extends ChangeNotifier
     if (root == null) return null;
     if (reference.path.segments.isEmpty) return root;
     final selection = switch (root) {
-      skir.TypeUse_namedWrapper(:final value) =>
-        skir.TypeSelection.wrapComplete(value),
+      skir.TypeUse_namedWrapper(:final value) => selectionOfUse(value),
       _ => null,
     };
     return selection == null

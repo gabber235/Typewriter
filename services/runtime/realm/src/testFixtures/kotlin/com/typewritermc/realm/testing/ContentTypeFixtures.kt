@@ -8,6 +8,7 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.boundPath
+import com.typewritermc.authoring.chosen
 import com.typewritermc.authoring.exactEditablePath
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
@@ -34,6 +35,7 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.catalog.unavailableCode
@@ -541,7 +543,7 @@ private fun RealmFixture.definitionRecord(
             Definition(Ref(AuthorResourceId(page.value)), GraphPlacement(), name, Var.Value(0)),
         )
     return template.copy(
-        configuration = TypeSelection.CompleteWrapper(definitionOf(type)),
+        configuration = TypeSelection.of(definitionOf(type)),
         fields = template.fields.map { if (it.name == "value") it.copy(value = value) else it },
         types = types,
     )
@@ -570,7 +572,10 @@ fun RealmFixture.declaredTypes(resource: ResourceId): List<TypeDefinition> = rec
 
 /** The schema of [resource]'s configuration, resolved by the saved view's catalog. */
 fun RealmFixture.schemaOf(resource: ResourceId): Resolution<CheckedType> =
-    viewCatalog.resolve(TypeUse.NamedWrapper((record(resource).configuration as TypeSelection.CompleteWrapper).value))
+    when (val type = viewCatalog.typeOf(resource, record(resource).configuration)) {
+        is Resolution.Invalid -> type
+        is Resolution.Ready -> Resolution.Ready(type.value.shouldBeInstanceOf<ResourceType.Complete>().checked)
+    }
 
 /** Asserts whether this resolution is ready. */
 infix fun Resolution<*>.shouldBeReady(ready: Boolean) {
@@ -589,7 +594,7 @@ fun RealmFixture.resolvedSchema(use: TypeUse): CheckedType =
 
 /** The type argument of the Definition [resource]. */
 fun RealmFixture.typeArgumentOf(resource: ResourceId): TypeUse =
-    (record(resource).configuration as TypeSelection.CompleteWrapper).value.arguments.single()
+    checkNotNull(record(resource).configuration.chosen(0))
 
 /** The saved view's catalog: the code catalog plus every saved declaration. */
 val RealmFixture.viewCatalog: CheckedCatalog get() = views.read { view -> view.catalog.checked }

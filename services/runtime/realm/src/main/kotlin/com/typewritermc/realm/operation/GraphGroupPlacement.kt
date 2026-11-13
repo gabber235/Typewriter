@@ -6,17 +6,16 @@ import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.GraphPlacementDraft
 import com.typewritermc.authoring.GraphPlacementDraftProjection
 import com.typewritermc.authoring.PlacementAnchor
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.use
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.actualType
+import com.typewritermc.types.catalog.completeTypeOf
+import com.typewritermc.types.named
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 import kotlin.math.abs
@@ -112,7 +111,7 @@ internal fun AuthoringCatalogLease.placementLocation(
     id: ResourceId,
     record: AuthoringRecord,
 ): ValueLocation? {
-    val type = (record.configuration as? TypeSelection.CompleteWrapper)?.use?.definition ?: return null
+    val type = checked.completeTypeOf(id, record.configuration)?.use?.named?.definition ?: return null
     return placementFields[type]?.let { ValueLocation.of(id, it) }
 }
 

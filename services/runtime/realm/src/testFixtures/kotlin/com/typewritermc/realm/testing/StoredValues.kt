@@ -5,7 +5,7 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.with
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.completeTypeOf
 import com.typewritermc.types.integer
 import com.typewritermc.types.named
 import com.typewritermc.types.use
@@ -14,7 +14,6 @@ import io.kotest.property.PropTestConfig
 import io.kotest.property.arbitrary.arbitrary
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 import kotlin.random.Random
@@ -103,7 +102,6 @@ suspend fun RealmFixture.storeByHand(
     val held = commitDefinition(name, plainType(case.declared)).created()
     saveByHand(mapOf(held to record(held).with("value", plainVar(case.declared, case.value))))
     val record = record(held)
-    val actual = (record.configuration as TypeSelection.CompleteWrapper).value
-    val checked = (viewCatalog.resolve(TypeUse.NamedWrapper(actual)) as Resolution.Ready).value
-    return held to checked.complete(DataValue.named(actual, DataValue.RecordWrapper(record.payload)))
+    val checked = checkNotNull(viewCatalog.completeTypeOf(held, record.configuration))
+    return held to checked.complete(DataValue.named(checkNotNull(checked.use.named), DataValue.RecordWrapper(record.payload)))
 }

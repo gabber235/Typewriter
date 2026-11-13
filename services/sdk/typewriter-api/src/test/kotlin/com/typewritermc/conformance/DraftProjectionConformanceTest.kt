@@ -7,7 +7,6 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.DraftView
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.MapDraft
@@ -22,7 +21,6 @@ import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.nativeReadProjection
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.library.TagDefinition
@@ -32,6 +30,7 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.actualType
 import com.typewritermc.types.bigInteger
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.field
 import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
@@ -57,7 +56,6 @@ import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
@@ -101,10 +99,10 @@ val DraftProjectionConformanceTest by testSuite {
                 generation,
                 original.readContext,
                 root,
-                DraftExpectation.PartialRoot(
+                ResourceType.Partial(
+                    TagDefinition.use.definition,
                     PartialSchema(knownFields = emptyList(), dependentFields = emptyList(), pendingArguments = emptyList()),
                 ),
-                TypeSelection.CompleteWrapper(TagDefinition.use),
             )
         val tag = TagDraftType.bind(binding)
 

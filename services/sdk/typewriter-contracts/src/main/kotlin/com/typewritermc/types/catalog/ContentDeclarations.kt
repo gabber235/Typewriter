@@ -10,7 +10,6 @@ import com.typewritermc.types.closedCases
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.ValueProblem
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -157,18 +156,13 @@ fun AuthoringRecord.misfiledDeclarations(owner: ResourceId): List<ValueProblem> 
         }.distinct()
         .map { ValueProblem(location = ValueLocation.of(owner), code = it) }
 
-/** The use the configuration names, with each chosen argument of a pending one; null for a pending one with none chosen. */
-fun TypeSelection.uses(): List<TypeUse> =
-    when (this) {
-        is TypeSelection.CompleteWrapper -> listOf(value.use)
-        is TypeSelection.PendingWrapper -> value.arguments.mapNotNull { (it as? ArgumentSelection.ChosenWrapper)?.value }
-        else -> emptyList()
-    }
+/** Every definition the configuration names: the configured one and each one its chosen arguments name. */
+fun TypeSelection.referencedDefinitions(): Sequence<TypeDefinitionId> =
+    sequenceOf(definition) + arguments.asSequence().flatMap { it.type.referencedDefinitions() }
 
-/** Every TypeUse this record stores in its configuration and values (type_use and actual_type): the roots of reachability. */
+/** Every TypeUse this record stores in its values (type_use and actual_type). */
 fun AuthoringRecord.storedUses(): Sequence<TypeUse> =
     sequence {
-        yieldAll(configuration.uses())
         val pending = ArrayDeque(fields.map { it.value })
         while (pending.isNotEmpty()) {
             val value = pending.removeFirst()
@@ -194,7 +188,11 @@ private fun DataValue.children(): List<DataValue> =
 
 /** Every definition this record names, in what it stores and inside its declarations. */
 fun AuthoringRecord.referencedDefinitions(): Sequence<TypeDefinitionId> =
-    storedUses().flatMap { it.referencedDefinitions() } + types.asSequence().flatMap { it.referencedDefinitions() }
+    storedDefinitions() + types.asSequence().flatMap { it.referencedDefinitions() }
+
+/** Every definition the configuration and the stored values name: the roots of reachability. */
+private fun AuthoringRecord.storedDefinitions(): Sequence<TypeDefinitionId> =
+    configuration.referencedDefinitions() + storedUses().flatMap { it.referencedDefinitions() }
 
 /**
  * This record without the declarations nothing it stores reaches. Reachability starts at the configuration and every
@@ -204,7 +202,7 @@ fun AuthoringRecord.withoutUnreachableTypes(): AuthoringRecord {
     if (types.isEmpty()) return this
     val byId = types.associateBy { it.id }
     val reachable = linkedSetOf<TypeDefinitionId>()
-    val pending = ArrayDeque(storedUses().flatMap { it.referencedDefinitions() }.toList())
+    val pending = ArrayDeque(storedDefinitions().toList())
     while (pending.isNotEmpty()) {
         val id = pending.removeFirst()
         if (!reachable.add(id)) continue
@@ -227,11 +225,11 @@ fun AuthoringRecord.missingContent(
     catalog: CheckedCatalog,
 ): List<Misfit> =
     configuration
-        .uses()
-        .flatMap { it.referencedDefinitions() }
+        .referencedDefinitions()
         .distinct()
         .filter { it.contentOwner() != null }
         .mapNotNull { id -> catalog.unavailableCode(id)?.let { Misfit(ValueProblem(location = ValueLocation.of(owner), code = it), id) } }
+        .toList()
 
 /**
  * Every way this record does not fit its current schema, each problem at its own location, on any record. Under a

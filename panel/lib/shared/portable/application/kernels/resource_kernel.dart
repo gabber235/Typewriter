@@ -29,7 +29,10 @@ final class PanelResourceKernel implements skir.ResourceKernel {
   skir.PortableMaybe<skir.DataValue> value(
     skir.LinkValue reference,
     skir.PortableResources resources,
-  ) => _linked(reference, resources).map(_configuredValue);
+  ) => _linked(
+    reference,
+    resources,
+  ).map((record) => _configuredValue(record, resources));
 
   @override
   skir.PortableMaybe<skir.DataValue> valueOf(
@@ -41,7 +44,7 @@ final class PanelResourceKernel implements skir.ResourceKernel {
     if (record == null || !resources.selects(record.configuration, tType)) {
       return skir.PortableMaybeMissing([_root(identity)]);
     }
-    return skir.PortableMaybeValue(_configuredValue(record));
+    return skir.PortableMaybeValue(_configuredValue(record, resources));
   }
 }
 
@@ -62,12 +65,26 @@ skir.PortableMaybe<skir.AuthoringRecord> _linked(
 
 /// The configured value of [record]: its fields as a record, named by its
 /// type once the configuration is complete.
-skir.DataValue _configuredValue(skir.AuthoringRecord record) {
+skir.DataValue _configuredValue(
+  skir.AuthoringRecord record,
+  skir.PortableResources resources,
+) {
   final payload = skir.DataValue.createRecord(fields: record.fields);
-  return switch (record.configuration) {
-    skir.TypeSelection_completeWrapper(:final value) =>
-      skir.DataValue.createNamed(actualType: value, payload: payload),
-    _ => payload,
+  final configuration = record.configuration;
+  final complete = configuration.completeUse(
+    resources
+            .declaration(configuration.definition)
+            ?.definition
+            .parameters
+            .length ??
+        configuration.arguments.length,
+  );
+  return switch (complete) {
+    final value? => skir.DataValue.createNamed(
+      actualType: value,
+      payload: payload,
+    ),
+    null => payload,
   };
 }
 

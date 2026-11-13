@@ -50,9 +50,11 @@ void main() {
       final document = boundPage.document(
         catalog,
         "Different",
-        configuration: skir.TypeSelection.createComplete(
-          definition: boundPage.otherType,
-          arguments: const [],
+        configuration: selectionOfUse(
+          skir.NamedTypeUse(
+            definition: boundPage.otherType,
+            arguments: const [],
+          ),
         ),
       );
       final result = PortableExpressionEvaluator.located(
@@ -76,10 +78,7 @@ void main() {
     final document = boundPage.document(
       catalog,
       "Pending",
-      configuration: skir.TypeSelection.createPending(
-        definition: boundPage.type,
-        arguments: const [skir.ArgumentSelection.unfilled],
-      ),
+      configuration: selectionOfDefinition(boundPage.type),
     );
     final name = fieldExpression(boundPage.valueOf(generic: true), "name");
     expect(
@@ -228,9 +227,11 @@ void main() {
           id: other,
           content: skir.AuthoringRecord(
             types: const [],
-            configuration: skir.TypeSelection.createComplete(
-              definition: boundPage.otherType,
-              arguments: const [],
+            configuration: selectionOfUse(
+              skir.NamedTypeUse(
+                definition: boundPage.otherType,
+                arguments: const [],
+              ),
             ),
             fields: [
               skir.FieldValue(
@@ -379,9 +380,11 @@ void main() {
                 id: id,
                 content: skir.AuthoringRecord(
                   types: const [],
-                  configuration: skir.TypeSelection.createComplete(
-                    definition: boundPage.type,
-                    arguments: const [],
+                  configuration: selectionOfUse(
+                    skir.NamedTypeUse(
+                      definition: boundPage.type,
+                      arguments: const [],
+                    ),
                   ),
                   fields: [
                     skir.FieldValue(
@@ -572,13 +575,8 @@ void main() {
       );
       expect(canonicalReadModels.decodeTypeUse(encoded), value);
     }
-    final selection = skir.TypeSelection.createPending(
-      definition: boundPage.type,
-      arguments: [
-        skir.ArgumentSelection.wrapChosen(_text),
-        skir.ArgumentSelection.unfilled,
-      ],
-    );
+    final selection = selectionOfDefinition(boundPage.type)
+        .withChosen(0, _text);
     final encoded = canonicalReadModels.project(
       selection,
       skir.TypeSelection.serializer.typeDescriptor,
@@ -608,9 +606,8 @@ void main() {
               ])
             .toFrozen(),
       );
-      final selection = skir.TypeSelection.createComplete(
-        definition: boundPage.type,
-        arguments: const [],
+      final selection = selectionOfUse(
+        skir.NamedTypeUse(definition: boundPage.type, arguments: const []),
       );
       final encoded = canonicalReadModels.project(
         selection,
@@ -756,7 +753,7 @@ void main() {
       canonicalReadModels.decodeTypeSelection(
         (result as PortableExpressionAvailable).value,
       ),
-      skir.TypeSelection.wrapComplete(use),
+      selectionOfUse(use),
     );
     final reads = [
       skir.ValueLocation(resource: boundPage.resource, path: _namePath),

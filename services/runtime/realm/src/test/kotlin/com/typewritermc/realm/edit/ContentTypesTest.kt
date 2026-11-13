@@ -1,6 +1,7 @@
 package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
 import com.typewritermc.engine.pages.Definition
 import com.typewritermc.engine.pages.DefinitionDefinition
@@ -778,7 +779,7 @@ val ContentTypesTest by testSuite {
             val catalog = viewCatalog
             catalog.isReadableAs(viaAlias.use(), declared.use()) shouldBe true
             catalog.isNominalSubtype(viaAlias, declared) shouldBe true
-            catalog.knownApplications(TypeSelection.CompleteWrapper(viaAlias.namedUse())) shouldContain declared.namedUse()
+            catalog.knownApplications(TypeSelection.of(viaAlias.namedUse())) shouldContain declared.namedUse()
             catalog.definition(viaAlias) shouldBe DeclarationStatus.READY
         }
     }

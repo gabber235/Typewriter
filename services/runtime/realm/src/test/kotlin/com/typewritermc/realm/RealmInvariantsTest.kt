@@ -6,7 +6,6 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.boundCollectionPath
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
 import com.typewritermc.library.Book

@@ -70,10 +70,12 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    final complete = switch (picked.result) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => throw TestFailure("Expected a complete resource selection"),
-    };
+    final complete =
+        switch (picked.result) {
+          final selection? => completeUseOf(null, selection),
+          null => null,
+        } ??
+        (throw TestFailure("Expected a complete resource selection"));
     expect(complete.definition, testTypeId("ManifestPage"));
   });
 
@@ -172,10 +174,7 @@ void main() {
       at: PanelLocation.component(
         Scaffold(
           body: AuthoredTypeArgumentEditor(
-            selection: skir.TypeSelection.createPending(
-              definition: testTypeId("Variable"),
-              arguments: [skir.ArgumentSelection.unfilled],
-            ),
+            selection: selectionOfDefinition(testTypeId("Variable")),
             catalog: _variableOfReward,
             preview: (next) async {
               requested = next;
@@ -212,15 +211,15 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
     await tester.pumpAndSettle();
 
-    final complete = switch (requested) {
-      final skir.TypeSelection_completeWrapper value => value,
-      _ => throw TestFailure("Expected a complete selection"),
-    };
-    expect(complete.value.definition, testTypeId("Variable"));
+    final complete =
+        switch (requested) {
+          final selection? => _variableOfReward.completeUse(selection),
+          null => null,
+        } ??
+        (throw TestFailure("Expected a complete selection"));
+    expect(complete.definition, testTypeId("Variable"));
     expect(
-      (complete.value.arguments.single as skir.TypeUse_namedWrapper)
-          .value
-          .definition,
+      (complete.arguments.single as skir.TypeUse_namedWrapper).value.definition,
       testTypeId("CoinReward"),
     );
     expect(find.text("Values cleared: 1"), findsOne);
@@ -252,13 +251,7 @@ void main() {
       at: PanelLocation.component(
         Scaffold(
           body: AuthoredTypeArgumentEditor(
-            selection: skir.TypeSelection.createPending(
-              definition: testTypeId("Variable"),
-              arguments: [
-                skir.ArgumentSelection.unfilled,
-                skir.ArgumentSelection.unfilled,
-              ],
-            ),
+            selection: selectionOfDefinition(testTypeId("Variable")),
             catalog: catalog,
             preview: (next) async {
               requested = next;
@@ -277,15 +270,12 @@ void main() {
     await tester.pumpAndSettle();
 
     final pending = switch (requested) {
-      final skir.TypeSelection_pendingWrapper value => value,
+      final selection? when catalog.completeUse(selection) == null => selection,
       _ => throw TestFailure("Expected a pending selection"),
     };
-    expect(pending.value.definition, testTypeId("Variable"));
-    expect(
-      pending.value.arguments.first,
-      isA<skir.ArgumentSelection_chosenWrapper>(),
-    );
-    expect(pending.value.arguments.last, skir.ArgumentSelection.unfilled);
+    expect(pending.definition, testTypeId("Variable"));
+    expect(pending.chosenAt(0), isNotNull);
+    expect(pending.chosenAt(1), isNull);
     expect(find.textContaining("Unfilled"), findsOneWidget);
   });
 }
