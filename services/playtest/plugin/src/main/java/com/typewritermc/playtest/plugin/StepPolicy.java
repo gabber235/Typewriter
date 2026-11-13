@@ -2,18 +2,20 @@ package com.typewritermc.playtest.plugin;
 
 import com.typewritermc.playtest.agent.Step;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
 /**
  * Decides when the stepped Paper runs its next tick. Main thread only, between ticks.
  *
- * <p>While a player waits in a window, the next tick runs once every waiting player's client acked the
- * tick that ended last, so server and client move one tick at a time. Once a window's last tick ended
- * and was acked, the player gets the window's barrier. With no window open Paper still ticks once a
- * second, or its watchdog stops it and keepalives stop.
+ * <p>While a player waits in a window, or its client runs an input that needs ticks, the next tick runs
+ * once every such player's client acked the tick that ended last, so server and client move one tick
+ * at a time. Once a window's last tick ended and was acked, the player gets the window's barrier. With
+ * neither, Paper still ticks once a second, or its watchdog stops it and keepalives stop.
  */
 final class StepPolicy {
     /** Step pings carry the tick plus this, so they never collide with a barrier. */
@@ -25,6 +27,7 @@ final class StepPolicy {
 
     private final Map<UUID, Window> windows = new HashMap<>();
     private final Map<UUID, Integer> acked = new HashMap<>();
+    private final Set<UUID> busy = new HashSet<>();
     private final BiConsumer<UUID, Integer> sendBarrier;
     private int lastEnded = -1;
     private long lastIdleTick;
@@ -42,8 +45,11 @@ final class StepPolicy {
         lastEnded = tick;
     }
 
-    void acked(UUID player, int tick) {
+    /** The player's client ran and perceived [tick]; [busy] while it runs an input that needs further ticks. */
+    void acked(UUID player, int tick, boolean busy) {
         acked.merge(player, tick, Math::max);
+        if (busy) this.busy.add(player);
+        else this.busy.remove(player);
     }
 
     void stepUntil(UUID player, int tick, int barrier) {
@@ -57,7 +63,7 @@ final class StepPolicy {
     /** One idle pass between ticks: grants the next tick or sends barriers. */
     void run() {
         if (Step.pending()) return;
-        if (windows.isEmpty()) {
+        if (windows.isEmpty() && busy.isEmpty()) {
             long now = System.nanoTime();
             if (now - lastIdleTick >= IDLE_TICK_NANOS) {
                 lastIdleTick = now;
@@ -68,6 +74,9 @@ final class StepPolicy {
         for (UUID player : windows.keySet()) {
             if (acked.getOrDefault(player, -1) < lastEnded) return;
         }
+        for (UUID player : busy) {
+            if (acked.getOrDefault(player, -1) < lastEnded) return;
+        }
         for (Iterator<Map.Entry<UUID, Window>> open = windows.entrySet().iterator(); open.hasNext(); ) {
             var window = open.next();
             if (lastEnded >= window.getValue().until()) {
@@ -75,6 +84,6 @@ final class StepPolicy {
                 open.remove();
             }
         }
-        if (!windows.isEmpty()) Step.grant();
+        if (!windows.isEmpty() || !busy.isEmpty()) Step.grant();
     }
 }

@@ -22,9 +22,32 @@ internal class Part(
     val log: Path,
 )
 
+/** A virtual X display and the Xvfb process that serves it. */
+internal class Display(
+    val name: String,
+    val part: Part,
+)
+
 /**
- * The game the pool runs: one stepped Paper and one client, each in a fresh folder of the pool folder,
- * on free loopback ports. [Pool] hears from both over the wire once they are up.
+ * How the client's input enters its window: on Linux XTest on a virtual display of its own, elsewhere SDL
+ * events pushed into the client's own queue, since the developer's desktop must never receive input.
+ */
+internal enum class InputPath(
+    val property: String,
+) {
+    SDL("sdl"),
+    XTEST("xtest"),
+    ;
+
+    companion object {
+        fun here(): InputPath = if (System.getProperty("os.name").startsWith("Linux")) XTEST else SDL
+    }
+}
+
+/**
+ * The game the pool runs: one stepped Paper and one client (on Linux with a virtual display of its own),
+ * each in a fresh folder of the pool folder, on free loopback ports. [Pool] hears from both over the wire
+ * once they are up.
  */
 internal class Game private constructor(
     val paperPort: Int,
@@ -46,8 +69,38 @@ internal class Game private constructor(
         ): Game {
             val paperPort = freePort()
             val paper = startPaper(settings, poolPort, paperPort)
-            val client = runCatching { startClient(settings, poolPort, player) }.onFailure { paper.process.destroyForcibly() }.getOrThrow()
-            return Game(paperPort, listOf(paper, client))
+            val started = mutableListOf(paper)
+            runCatching {
+                val input = InputPath.here()
+                val display = if (input == InputPath.XTEST) startDisplay(settings).also { started += it.part } else null
+                started += startClient(settings, poolPort, player, input, display)
+            }.onFailure { started.forEach { it.process.destroyForcibly() } }.getOrThrow()
+            return Game(paperPort, started)
+        }
+
+        /**
+         * A virtual X display of the client's own, so the input XTest sends there reaches no other window.
+         * Xvfb picks a free display number and writes it to its standard output.
+         */
+        private fun startDisplay(settings: PoolSettings): Display {
+            val dir = freshDir(settings.poolDir.resolve("display"))
+            val log = dir.resolve("console.log")
+            val process =
+                ProcessBuilder("Xvfb", "-displayfd", "1", "-screen", "0", "1280x720x24", "-nolisten", "tcp")
+                    .directory(dir.toFile())
+                    .redirectError(log.toFile())
+                    .redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
+                    .start()
+            val number =
+                process.inputStream
+                    .bufferedReader()
+                    .readLine()
+                    ?.trim()
+            if (number.isNullOrEmpty() || number.toIntOrNull() == null) {
+                process.destroyForcibly()
+                error("Xvfb started no display; see $log")
+            }
+            return Display(":$number", Part("Display", process, log))
         }
 
         private fun startPaper(
@@ -80,6 +133,8 @@ internal class Game private constructor(
             settings: PoolSettings,
             poolPort: Int,
             player: String,
+            input: InputPath,
+            display: Display?,
         ): Part {
             val dir = freshDir(settings.poolDir.resolve("client"))
             dir.resolve("options.txt").writeText(resource("options.txt"))
@@ -93,6 +148,7 @@ internal class Game private constructor(
                     addAll(strings("jvmArgs").filterNot { it.startsWith("@") })
                     add("-Dplaytest.pool.port=$poolPort")
                     add("-Dplaytest.player=$player")
+                    add("-Dplaytest.input=${input.property}")
                     add("-cp")
                     add(strings("classpath").joinToString(File.pathSeparator))
                     add(launch.getValue("main").jsonPrimitive.content)
@@ -111,8 +167,14 @@ internal class Game private constructor(
                         ),
                     )
                 }
-            // A background app on macOS: the window never takes focus from the developer.
-            return launch("Client", command, dir, mapOf("SDL_MAC_BACKGROUND_APP" to "1"))
+            val environment =
+                when (input) {
+                    // A background app on macOS: the window never takes focus from the developer.
+                    InputPath.SDL -> mapOf("SDL_MAC_BACKGROUND_APP" to "1")
+
+                    InputPath.XTEST -> mapOf("DISPLAY" to checkNotNull(display).name)
+                }
+            return launch("Client", command, dir, environment)
         }
 
         private fun launch(

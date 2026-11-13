@@ -1,7 +1,10 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Message
+import com.typewritermc.playtest.wire.Message.InputStep
 import com.typewritermc.playtest.wire.Message.Perception
+import com.typewritermc.playtest.wire.Message.ProbeAction
+import com.typewritermc.playtest.wire.Message.Watch
 import kotlinx.coroutines.channels.Channel
 import java.net.URL
 
@@ -52,10 +55,23 @@ internal class Attempt(
 
     fun nextBarrier(): Int = session.nextBarrier()
 
-    suspend fun probeChat(
-        to: GamePlayer,
-        text: String,
-    ): Mark = Mark(session.probeChat(to, text))
+    /** Paper runs [action] for [player]; the mark is the tick after which it ran. */
+    suspend fun probe(
+        player: GamePlayer,
+        action: ProbeAction,
+    ): Mark = Mark(session.probe(player, action))
+
+    /** [player]'s client runs [steps]; the mark is the tick after which its first event reached the client. */
+    suspend fun input(
+        player: GamePlayer,
+        steps: List<InputStep>,
+    ): Mark = Mark(session.input(player, steps))
+
+    /** Every leased player's client watches these from now on. */
+    fun watch(
+        blocks: List<BlockRef>,
+        entities: List<EntityRef>,
+    ) = send(Watch(blocks.map { it.at.wire() }, entities.map { it.uuid }))
 
     /** The first frame of [trace] in the requirement's own code, as `File.kt:line`. */
     fun requirementLine(trace: Array<StackTraceElement>): String? =

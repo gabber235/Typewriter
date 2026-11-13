@@ -5,7 +5,7 @@ import com.typewritermc.playtest.agent.Step;
 import com.typewritermc.playtest.wire.Link;
 import com.typewritermc.playtest.wire.Message;
 import com.typewritermc.playtest.wire.Message.Hello;
-import com.typewritermc.playtest.wire.Message.ProbeChat;
+import com.typewritermc.playtest.wire.Message.Probe;
 import com.typewritermc.playtest.wire.Message.ProbeDone;
 import com.typewritermc.playtest.wire.Message.Role;
 import com.typewritermc.playtest.wire.Message.StepUntil;
@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.TreeSet;
 import java.util.UUID;
-import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.Bukkit;
@@ -27,13 +26,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * The framework's side of a Paper the game pool booted: the step policy that grants ticks, the step
- * pings and barriers each client follows, and the chat probe. Every message from the pool runs on the
+ * pings and barriers each client follows, and the probes. Every message from the pool runs on the
  * main thread between ticks.
  */
 public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private static final String STEP_ACK = "playtest:step";
 
     private final StepPolicy policy = new StepPolicy(this::sendBarrier);
+    private final Probes probes = new Probes();
     private Link pool;
 
     @Override
@@ -48,10 +48,13 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         int port = Integer.getInteger("playtest.pool.port", -1);
         if (port < 0) throw new IllegalStateException("playtest.pool.port is not set: only the game pool runs this plugin");
         Bukkit.getPluginManager().registerEvents(this, this);
+        Bukkit.getPluginManager().registerEvents(probes, this);
         Bukkit.getMessenger().registerIncomingPluginChannel(this, STEP_ACK, (channel, player, bytes) -> {
             UUID id = player.getUniqueId();
-            int tick = ByteBuffer.wrap(bytes).getInt();
-            onMainThread(() -> policy.acked(id, tick));
+            var ack = ByteBuffer.wrap(bytes);
+            int tick = ack.getInt();
+            boolean busy = ack.get() != 0;
+            onMainThread(() -> policy.acked(id, tick, busy));
         });
         Step.policy = policy::run;
         // The first tick runs once the server is done starting, so the pool hears from a Paper players can join.
@@ -69,10 +72,10 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private void receive(Message message) {
         switch (message) {
             case Stepping stepping -> Step.on = true;
-            case ProbeChat probe -> {
+            case Probe probe -> {
                 Player player = Bukkit.getPlayer(probe.player());
-                if (player != null) player.sendMessage(Component.text(probe.text()));
-                pool.send(new ProbeDone(probe.request(), policy.lastEnded()));
+                String failure = player == null ? "the player " + probe.player() + " is not online" : probes.run(player, probe.action());
+                pool.send(new ProbeDone(probe.request(), policy.lastEnded(), failure));
             }
             case StepUntil step -> policy.stepUntil(step.player(), step.tick(), step.barrier());
             case StopStepping stop -> policy.stop(stop.player());

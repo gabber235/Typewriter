@@ -2,6 +2,7 @@ package com.typewritermc.playtest.client.mixin;
 
 import com.typewritermc.playtest.client.Hooks;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import net.minecraft.client.renderer.state.gui.GuiItemRenderState;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.renderer.state.gui.GuiTextRenderState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,6 +21,11 @@ abstract class GuiRenderStateMixin {
     @Inject(method = "addGuiElement", at = @At("HEAD"))
     private void playtest$element(GuiElementRenderState state, CallbackInfo ci) {
         Hooks.guiElement(state);
+    }
+
+    @Inject(method = "addItem", at = @At("HEAD"))
+    private void playtest$item(GuiItemRenderState state, CallbackInfo ci) {
+        Hooks.guiItem(state);
     }
 
     @Inject(method = "blurBeforeThisStratum", at = @At("HEAD"))

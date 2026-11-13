@@ -1,11 +1,35 @@
 package com.typewritermc.playtest
 
+import com.typewritermc.playtest.wire.Message
+import com.typewritermc.playtest.wire.Message.AimAtBlockStep
+import com.typewritermc.playtest.wire.Message.AimAtEntityStep
+import com.typewritermc.playtest.wire.Message.ButtonStep
+import com.typewritermc.playtest.wire.Message.InputStep
+import com.typewritermc.playtest.wire.Message.KeyStep
+import com.typewritermc.playtest.wire.Message.PointAtSlotStep
+import com.typewritermc.playtest.wire.Message.ScrollStep
 import com.typewritermc.playtest.wire.Message.StepUntil
 import com.typewritermc.playtest.wire.Message.StopStepping
+import com.typewritermc.playtest.wire.Message.TypeInChatStep
+import com.typewritermc.playtest.wire.Message.WaitStep
+import com.typewritermc.playtest.wire.Message.WalkToStep
+
+/** A key a requirement presses, named as the default key bindings name it. */
+typealias Key = Message.Key
+
+/** A mouse button. */
+enum class Button(
+    internal val number: Int,
+) {
+    LEFT(1),
+    MIDDLE(2),
+    RIGHT(3),
+}
 
 /**
- * What a requirement's body sees during one attempt: its leased [players], the Paper [probe], and
- * [within] for every check. Every window counts from the last stimulus.
+ * What a requirement's body sees during one attempt: its leased [players], the Paper [probe], the
+ * players' hands, and [within] for every check. Every window counts from the last stimulus: a probe
+ * call, or an input from the tick it reached the client.
  */
 class RequirementScope internal constructor(
     val players: List<GamePlayer>,
@@ -14,19 +38,60 @@ class RequirementScope internal constructor(
     /** The attempt's only player, for requirements that lease one. */
     val player: GamePlayer get() = players.single()
 
-    /** Stimuli that run inside Paper, between ticks. */
-    val probe: Probe = Probe()
-
     private var anchor: Mark? = null
 
-    /** The framework's Paper probe; each call becomes the anchor of the windows after it. */
-    inner class Probe internal constructor() {
-        /** Paper sends [text] to [to] as a chat line. */
-        suspend fun chat(
-            to: GamePlayer,
-            text: String,
-        ): Mark = attempt.probeChat(to, text).also { anchor = it }
-    }
+    /** Arrangements and stimuli that run inside Paper, between ticks. */
+    val probe: Probe = Probe(attempt) { anchor = it }
+
+    /**
+     * Opens the chat with its key when it is closed and types [text], as one burst of keys between two
+     * ticks. While the chat stays open with that text, a suggestion request that got no answer for 6
+     * ticks makes the client retype the last character, as a person does when no list shows.
+     */
+    suspend fun GamePlayer.typeInChat(text: String): Mark = input(TypeInChatStep(text))
+
+    /** Presses and releases [key]. */
+    suspend fun GamePlayer.press(key: Key): Mark = input(KeyStep(key, true), KeyStep(key, false))
+
+    /** Holds [key] down for [ticks] client ticks. */
+    suspend fun GamePlayer.hold(
+        key: Key,
+        ticks: Ticks,
+    ): Mark = input(KeyStep(key, true), WaitStep(ticks.count), KeyStep(key, false))
+
+    /** Presses and releases [button]. */
+    suspend fun GamePlayer.click(button: Button): Mark = input(ButtonStep(button.number, true), ButtonStep(button.number, false))
+
+    /** Holds [button] down for [ticks] client ticks. */
+    suspend fun GamePlayer.hold(
+        button: Button,
+        ticks: Ticks,
+    ): Mark = input(ButtonStep(button.number, true), WaitStep(ticks.count), ButtonStep(button.number, false))
+
+    /** Turns the mouse wheel by [notches]; negative scrolls down, toward the next hotbar slot. */
+    suspend fun GamePlayer.scroll(notches: Int): Mark = input(ScrollStep(notches))
+
+    /** Turns the view with the mouse until the crosshair rests on [entity]; fails when it lands elsewhere. */
+    suspend fun GamePlayer.aimAt(entity: EntityRef): Mark = input(AimAtEntityStep(entity.uuid))
+
+    /** Turns the view with the mouse until the crosshair rests on [block]; fails when it lands elsewhere. */
+    suspend fun GamePlayer.aimAt(block: BlockRef): Mark = input(AimAtBlockStep(block.at.wire()))
+
+    /** Moves the pointer over the open screen's slot for the player's inventory [slot] and clicks it. */
+    suspend fun GamePlayer.clickInventorySlot(slot: Int): Mark =
+        input(PointAtSlotStep(slot), ButtonStep(Button.LEFT.number, true), ButtonStep(Button.LEFT.number, false))
+
+    /**
+     * Faces [x], [z] and holds the forward key until the player stands within half a block of it, or
+     * [limit] ticks passed.
+     */
+    suspend fun GamePlayer.walkTo(
+        x: Double,
+        z: Double,
+        limit: Ticks = 80.ticks,
+    ): Mark = input(WalkToStep(x, z, limit.count))
+
+    private suspend fun GamePlayer.input(vararg steps: InputStep): Mark = attempt.input(this, steps.toList()).also { anchor = it }
 
     /**
      * Passes once every check of [checks] held in a tick of the window, the [window] ticks after the

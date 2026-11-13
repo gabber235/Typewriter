@@ -8,4 +8,5 @@ dependencies {
     api(project(":playtest-wire"))
     api(libs.test.balloon)
     implementation(libs.kotlin.coroutines.core)
+    testImplementation(testFixtures(project(":playtest-wire")))
 }

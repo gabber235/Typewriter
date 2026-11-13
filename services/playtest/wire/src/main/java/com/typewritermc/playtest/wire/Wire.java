@@ -1,29 +1,58 @@
 package com.typewritermc.playtest.wire;
 
+import com.typewritermc.playtest.wire.Message.AimAtBlockStep;
+import com.typewritermc.playtest.wire.Message.AimAtEntityStep;
 import com.typewritermc.playtest.wire.Message.BarrierSeen;
+import com.typewritermc.playtest.wire.Message.Block;
+import com.typewritermc.playtest.wire.Message.BlockPos;
+import com.typewritermc.playtest.wire.Message.ButtonStep;
+import com.typewritermc.playtest.wire.Message.Camera;
 import com.typewritermc.playtest.wire.Message.ChatLine;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.End;
 import com.typewritermc.playtest.wire.Message.Ended;
+import com.typewritermc.playtest.wire.Message.Entity;
 import com.typewritermc.playtest.wire.Message.Hello;
+import com.typewritermc.playtest.wire.Message.Input;
+import com.typewritermc.playtest.wire.Message.InputDone;
+import com.typewritermc.playtest.wire.Message.InputStep;
+import com.typewritermc.playtest.wire.Message.Item;
 import com.typewritermc.playtest.wire.Message.Joined;
+import com.typewritermc.playtest.wire.Message.Key;
+import com.typewritermc.playtest.wire.Message.KeyStep;
 import com.typewritermc.playtest.wire.Message.Lease;
 import com.typewritermc.playtest.wire.Message.Perceived;
 import com.typewritermc.playtest.wire.Message.Perception;
 import com.typewritermc.playtest.wire.Message.Player;
+import com.typewritermc.playtest.wire.Message.PointAtSlotStep;
+import com.typewritermc.playtest.wire.Message.Probe;
+import com.typewritermc.playtest.wire.Message.ProbeAction;
+import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking;
 import com.typewritermc.playtest.wire.Message.ProbeChat;
+import com.typewritermc.playtest.wire.Message.ProbeCommand;
 import com.typewritermc.playtest.wire.Message.ProbeDone;
+import com.typewritermc.playtest.wire.Message.ProbeFill;
+import com.typewritermc.playtest.wire.Message.ProbeGameMode;
+import com.typewritermc.playtest.wire.Message.ProbeGive;
+import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
+import com.typewritermc.playtest.wire.Message.ProbeSpawn;
+import com.typewritermc.playtest.wire.Message.ProbeTeleport;
 import com.typewritermc.playtest.wire.Message.Ready;
 import com.typewritermc.playtest.wire.Message.Refused;
 import com.typewritermc.playtest.wire.Message.Reset;
 import com.typewritermc.playtest.wire.Message.ResetDone;
 import com.typewritermc.playtest.wire.Message.Result;
 import com.typewritermc.playtest.wire.Message.Role;
+import com.typewritermc.playtest.wire.Message.ScrollStep;
 import com.typewritermc.playtest.wire.Message.StepUntil;
 import com.typewritermc.playtest.wire.Message.Stepping;
 import com.typewritermc.playtest.wire.Message.StopStepping;
 import com.typewritermc.playtest.wire.Message.Submit;
 import com.typewritermc.playtest.wire.Message.Text;
+import com.typewritermc.playtest.wire.Message.TypeInChatStep;
+import com.typewritermc.playtest.wire.Message.WaitStep;
+import com.typewritermc.playtest.wire.Message.WalkToStep;
+import com.typewritermc.playtest.wire.Message.Watch;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -81,14 +110,32 @@ public final class Wire {
                 string(body, end.run());
                 string(body, end.testRunFile());
             }
-            case ProbeChat probe -> {
+            case Probe probe -> {
                 body.writeLong(probe.request());
                 uuid(body, probe.player());
-                string(body, probe.text());
+                action(body, probe.action());
             }
             case ProbeDone done -> {
                 body.writeLong(done.request());
                 body.writeInt(done.tick());
+                optional(body, done.failure());
+            }
+            case Input input -> {
+                body.writeLong(input.request());
+                uuid(body, input.player());
+                body.writeInt(input.steps().size());
+                for (InputStep step : input.steps()) step(body, step);
+            }
+            case InputDone done -> {
+                body.writeLong(done.request());
+                body.writeInt(done.tick());
+                optional(body, done.failure());
+            }
+            case Watch watch -> {
+                body.writeInt(watch.blocks().size());
+                for (BlockPos block : watch.blocks()) blockPos(body, block);
+                body.writeInt(watch.entities().size());
+                for (UUID entity : watch.entities()) uuid(body, entity);
             }
             case StepUntil step -> {
                 uuid(body, step.player());
@@ -102,17 +149,7 @@ public final class Wire {
             }
             case Perceived perceived -> {
                 string(body, perceived.player());
-                body.writeInt(perceived.perception().tick());
-                body.writeInt(perceived.perception().texts().size());
-                for (Text text : perceived.perception().texts()) {
-                    string(body, text.element());
-                    string(body, text.text());
-                }
-                body.writeInt(perceived.perception().chat().size());
-                for (ChatLine line : perceived.perception().chat()) {
-                    body.writeInt(line.tick());
-                    string(body, line.text());
-                }
+                perception(body, perceived.perception());
             }
             case BarrierSeen seen -> {
                 string(body, seen.player());
@@ -172,7 +209,7 @@ public final class Wire {
             case Result m -> 4;
             case End m -> 5;
             case Ended m -> 6;
-            case ProbeChat m -> 7;
+            case Probe m -> 7;
             case ProbeDone m -> 8;
             case StepUntil m -> 9;
             case StopStepping m -> 10;
@@ -184,6 +221,9 @@ public final class Wire {
             case Perceived m -> 16;
             case BarrierSeen m -> 17;
             case Joined m -> 18;
+            case Input m -> 19;
+            case InputDone m -> 20;
+            case Watch m -> 21;
         };
     }
 
@@ -202,8 +242,8 @@ public final class Wire {
             case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in));
             case 5 -> new End(string(in), string(in));
             case 6 -> new Ended();
-            case 7 -> new ProbeChat(in.readLong(), uuid(in), string(in));
-            case 8 -> new ProbeDone(in.readLong(), in.readInt());
+            case 7 -> new Probe(in.readLong(), uuid(in), action(in));
+            case 8 -> new ProbeDone(in.readLong(), in.readInt(), optional(in));
             case 9 -> new StepUntil(uuid(in), in.readInt(), in.readInt());
             case 10 -> new StopStepping(uuid(in));
             case 11 -> new Stepping();
@@ -211,19 +251,27 @@ public final class Wire {
             case 13 -> new Ready();
             case 14 -> new Reset();
             case 15 -> new ResetDone();
-            case 16 -> {
-                String player = string(in);
-                int tick = in.readInt();
-                int count = count(in);
-                var texts = new ArrayList<Text>(count);
-                for (int i = 0; i < count; i++) texts.add(new Text(string(in), string(in)));
-                int lines = count(in);
-                var chat = new ArrayList<ChatLine>(lines);
-                for (int i = 0; i < lines; i++) chat.add(new ChatLine(in.readInt(), string(in)));
-                yield new Perceived(player, new Perception(tick, List.copyOf(texts), List.copyOf(chat)));
-            }
+            case 16 -> new Perceived(string(in), perception(in));
             case 17 -> new BarrierSeen(string(in), in.readInt());
             case 18 -> new Joined();
+            case 19 -> {
+                long request = in.readLong();
+                UUID player = uuid(in);
+                int count = count(in);
+                var steps = new ArrayList<InputStep>(count);
+                for (int i = 0; i < count; i++) steps.add(step(in));
+                yield new Input(request, player, List.copyOf(steps));
+            }
+            case 20 -> new InputDone(in.readLong(), in.readInt(), optional(in));
+            case 21 -> {
+                int blockCount = count(in);
+                var blocks = new ArrayList<BlockPos>(blockCount);
+                for (int i = 0; i < blockCount; i++) blocks.add(blockPos(in));
+                int entityCount = count(in);
+                var entities = new ArrayList<UUID>(entityCount);
+                for (int i = 0; i < entityCount; i++) entities.add(uuid(in));
+                yield new Watch(List.copyOf(blocks), List.copyOf(entities));
+            }
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -239,6 +287,239 @@ public final class Wire {
         int count = in.readInt();
         if (count < 0 || count > in.available()) throw new WireException("a list of " + count + " items does not fit its frame");
         return count;
+    }
+
+    private static void action(DataOutputStream out, ProbeAction action) throws IOException {
+        switch (action) {
+            case ProbeChat chat -> {
+                out.writeByte(0);
+                string(out, chat.text());
+            }
+            case ProbeGameMode mode -> {
+                out.writeByte(1);
+                string(out, mode.mode());
+            }
+            case ProbeTeleport teleport -> {
+                out.writeByte(2);
+                out.writeDouble(teleport.x());
+                out.writeDouble(teleport.y());
+                out.writeDouble(teleport.z());
+                out.writeFloat(teleport.yaw());
+                out.writeFloat(teleport.pitch());
+            }
+            case ProbeGive give -> {
+                out.writeByte(3);
+                out.writeInt(give.slot());
+                string(out, give.item());
+                out.writeInt(give.count());
+            }
+            case ProbeSelectSlot select -> {
+                out.writeByte(4);
+                out.writeInt(select.slot());
+            }
+            case ProbeFill fill -> {
+                out.writeByte(5);
+                blockPos(out, fill.from());
+                blockPos(out, fill.to());
+                string(out, fill.block());
+            }
+            case ProbeSpawn spawn -> {
+                out.writeByte(6);
+                uuid(out, spawn.uuid());
+                string(out, spawn.type());
+                out.writeDouble(spawn.x());
+                out.writeDouble(spawn.y());
+                out.writeDouble(spawn.z());
+                out.writeFloat(spawn.yaw());
+                out.writeBoolean(spawn.packetOnly());
+                optional(out, spawn.onHit());
+                optional(out, spawn.onClick());
+            }
+            case ProbeCancelBreaking cancel -> {
+                out.writeByte(7);
+                blockPos(out, cancel.at());
+            }
+            case ProbeCommand command -> {
+                out.writeByte(8);
+                string(out, command.name());
+                strings(out, command.suggestions());
+                string(out, command.answer());
+            }
+        }
+    }
+
+    private static ProbeAction action(DataInputStream in) throws IOException {
+        int kind = in.readUnsignedByte();
+        return switch (kind) {
+            case 0 -> new ProbeChat(string(in));
+            case 1 -> new ProbeGameMode(string(in));
+            case 2 -> new ProbeTeleport(in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), in.readFloat());
+            case 3 -> new ProbeGive(in.readInt(), string(in), in.readInt());
+            case 4 -> new ProbeSelectSlot(in.readInt());
+            case 5 -> new ProbeFill(blockPos(in), blockPos(in), string(in));
+            case 6 -> new ProbeSpawn(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), in.readBoolean(), optional(in), optional(in));
+            case 7 -> new ProbeCancelBreaking(blockPos(in));
+            case 8 -> new ProbeCommand(string(in), strings(in), string(in));
+            default -> throw new WireException("probe action " + kind + " is no action this build knows");
+        };
+    }
+
+    private static void step(DataOutputStream out, InputStep step) throws IOException {
+        switch (step) {
+            case KeyStep key -> {
+                out.writeByte(0);
+                out.writeByte(key.key().ordinal());
+                out.writeBoolean(key.down());
+            }
+            case ButtonStep button -> {
+                out.writeByte(1);
+                out.writeInt(button.button());
+                out.writeBoolean(button.down());
+            }
+            case ScrollStep scroll -> {
+                out.writeByte(2);
+                out.writeInt(scroll.amount());
+            }
+            case TypeInChatStep type -> {
+                out.writeByte(3);
+                string(out, type.text());
+            }
+            case WaitStep wait -> {
+                out.writeByte(4);
+                out.writeInt(wait.ticks());
+            }
+            case AimAtEntityStep aim -> {
+                out.writeByte(5);
+                uuid(out, aim.entity());
+            }
+            case AimAtBlockStep aim -> {
+                out.writeByte(6);
+                blockPos(out, aim.block());
+            }
+            case PointAtSlotStep point -> {
+                out.writeByte(7);
+                out.writeInt(point.slot());
+            }
+            case WalkToStep walk -> {
+                out.writeByte(8);
+                out.writeDouble(walk.x());
+                out.writeDouble(walk.z());
+                out.writeInt(walk.maxTicks());
+            }
+        }
+    }
+
+    private static InputStep step(DataInputStream in) throws IOException {
+        int kind = in.readUnsignedByte();
+        return switch (kind) {
+            case 0 -> new KeyStep(key(in.readUnsignedByte()), in.readBoolean());
+            case 1 -> new ButtonStep(in.readInt(), in.readBoolean());
+            case 2 -> new ScrollStep(in.readInt());
+            case 3 -> new TypeInChatStep(string(in));
+            case 4 -> new WaitStep(in.readInt());
+            case 5 -> new AimAtEntityStep(uuid(in));
+            case 6 -> new AimAtBlockStep(blockPos(in));
+            case 7 -> new PointAtSlotStep(in.readInt());
+            case 8 -> new WalkToStep(in.readDouble(), in.readDouble(), in.readInt());
+            default -> throw new WireException("input step " + kind + " is no step this build knows");
+        };
+    }
+
+    private static Key key(int ordinal) throws WireException {
+        var keys = Key.values();
+        if (ordinal >= keys.length) throw new WireException("key " + ordinal + " is no key this build knows");
+        return keys[ordinal];
+    }
+
+    private static void perception(DataOutputStream out, Perception perception) throws IOException {
+        out.writeInt(perception.tick());
+        out.writeInt(perception.texts().size());
+        for (Text text : perception.texts()) {
+            string(out, text.element());
+            string(out, text.text());
+        }
+        out.writeInt(perception.chat().size());
+        for (ChatLine line : perception.chat()) {
+            out.writeInt(line.tick());
+            string(out, line.text());
+        }
+        Camera camera = perception.camera();
+        out.writeBoolean(camera != null);
+        if (camera != null) {
+            out.writeDouble(camera.x());
+            out.writeDouble(camera.y());
+            out.writeDouble(camera.z());
+            out.writeFloat(camera.yaw());
+            out.writeFloat(camera.pitch());
+            out.writeFloat(camera.fov());
+            out.writeBoolean(camera.scoped());
+        }
+        out.writeInt(perception.items().size());
+        for (Item item : perception.items()) {
+            string(out, item.element());
+            out.writeInt(item.slot());
+            out.writeBoolean(item.selected());
+            string(out, item.item());
+            out.writeInt(item.count());
+        }
+        out.writeInt(perception.blocks().size());
+        for (Block block : perception.blocks()) {
+            blockPos(out, block.at());
+            string(out, block.block());
+            out.writeBoolean(block.seen());
+            out.writeInt(block.changed());
+        }
+        out.writeInt(perception.entities().size());
+        for (Entity entity : perception.entities()) {
+            uuid(out, entity.uuid());
+            out.writeBoolean(entity.hurt());
+            optional(out, entity.name());
+        }
+    }
+
+    private static Perception perception(DataInputStream in) throws IOException {
+        int tick = in.readInt();
+        int textCount = count(in);
+        var texts = new ArrayList<Text>(textCount);
+        for (int i = 0; i < textCount; i++) texts.add(new Text(string(in), string(in)));
+        int lineCount = count(in);
+        var chat = new ArrayList<ChatLine>(lineCount);
+        for (int i = 0; i < lineCount; i++) chat.add(new ChatLine(in.readInt(), string(in)));
+        Camera camera = in.readBoolean()
+                ? new Camera(in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), in.readFloat(), in.readFloat(), in.readBoolean())
+                : null;
+        int itemCount = count(in);
+        var items = new ArrayList<Item>(itemCount);
+        for (int i = 0; i < itemCount; i++) items.add(new Item(string(in), in.readInt(), in.readBoolean(), string(in), in.readInt()));
+        int blockCount = count(in);
+        var blocks = new ArrayList<Block>(blockCount);
+        for (int i = 0; i < blockCount; i++) blocks.add(new Block(blockPos(in), string(in), in.readBoolean(), in.readInt()));
+        int entityCount = count(in);
+        var entities = new ArrayList<Entity>(entityCount);
+        for (int i = 0; i < entityCount; i++) entities.add(new Entity(uuid(in), in.readBoolean(), optional(in)));
+        return new Perception(tick, List.copyOf(texts), List.copyOf(chat), camera, List.copyOf(items), List.copyOf(blocks), List.copyOf(entities));
+    }
+
+    private static void blockPos(DataOutputStream out, BlockPos pos) throws IOException {
+        out.writeInt(pos.x());
+        out.writeInt(pos.y());
+        out.writeInt(pos.z());
+    }
+
+    private static BlockPos blockPos(DataInputStream in) throws IOException {
+        return new BlockPos(in.readInt(), in.readInt(), in.readInt());
+    }
+
+    private static void strings(DataOutputStream out, List<String> values) throws IOException {
+        out.writeInt(values.size());
+        for (String value : values) string(out, value);
+    }
+
+    private static List<String> strings(DataInputStream in) throws IOException {
+        int count = count(in);
+        var values = new ArrayList<String>(count);
+        for (int i = 0; i < count; i++) values.add(string(in));
+        return List.copyOf(values);
     }
 
     private static void string(DataOutputStream out, String value) throws IOException {

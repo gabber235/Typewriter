@@ -14,7 +14,7 @@ internal data class Check(
  * A check holds at the first tick inside the window whose perception shows its fact. A client sends a
  * record only when what the player perceives changed, so a record stands for every tick up to the
  * next one: a record from before the window shows the window's first tick until a later record or the
- * barrier arrives. Paper sends
+ * barrier arrives. A fact about a change compares with the record that stood at the anchor. Paper sends
  * [barrier] to every checked player once the window's last tick ran, and the client echoes it after
  * every record of those ticks, so a barrier with a check still open is the failure.
  */
@@ -33,6 +33,7 @@ internal class Window(
     private val open = checks.toMutableList()
     private val waitingFor = checks.map { it.player }.toMutableSet()
     private val lastSeen = mutableMapOf<GamePlayer, Perception>()
+    private val atStimulus = mutableMapOf<GamePlayer, Perception>()
     private var heldUntil = anchor
     private var verdict: Verdict = Verdict.Open
 
@@ -56,7 +57,10 @@ internal class Window(
     ): Verdict {
         if (verdict != Verdict.Open || perception.tick() > end) return verdict
         val carried = lastSeen.put(player, perception)
-        if (perception.tick() <= anchor) return verdict
+        if (perception.tick() <= anchor) {
+            atStimulus[player] = perception
+            return verdict
+        }
         if (carried != null && carried.tick() <= anchor && perception.tick() > anchor + 1) hold(player, carried, at = anchor + 1)
         if (verdict == Verdict.Open) hold(player, perception, at = perception.tick())
         return verdict
@@ -81,7 +85,8 @@ internal class Window(
         perception: Perception,
         at: Int,
     ) {
-        val held = open.filter { it.player == player && it.fact.shownIn(perception, since = anchor) }
+        val stimulus = Stimulus(anchor, atStimulus[player])
+        val held = open.filter { it.player == player && it.fact.shownIn(perception, stimulus) }
         if (held.isEmpty()) return
         open -= held
         heldUntil = maxOf(heldUntil, at)

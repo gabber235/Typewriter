@@ -5,10 +5,18 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-/** Client to Paper: the client ran and perceived server tick {@code tick}. The body is the bare int. */
-record StepAck(int tick) implements CustomPacketPayload {
+/**
+ * Client to Paper: the client ran and perceived server tick {@code tick}; {@code busy} while it runs an
+ * input that needs further ticks, so Paper keeps stepping. The body is the int and one byte.
+ */
+record StepAck(int tick, boolean busy) implements CustomPacketPayload {
     static final Type<StepAck> TYPE = new Type<>(Identifier.parse("playtest:step"));
-    static final StreamCodec<ByteBuf, StepAck> CODEC = StreamCodec.of((buf, ack) -> buf.writeInt(ack.tick), buf -> new StepAck(buf.readInt()));
+    static final StreamCodec<ByteBuf, StepAck> CODEC = StreamCodec.of(
+            (buf, ack) -> {
+                buf.writeInt(ack.tick);
+                buf.writeBoolean(ack.busy);
+            },
+            buf -> new StepAck(buf.readInt(), buf.readBoolean()));
 
     @Override
     public Type<StepAck> type() {

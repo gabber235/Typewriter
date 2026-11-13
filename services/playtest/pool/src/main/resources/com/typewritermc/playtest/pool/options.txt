@@ -22,3 +22,6 @@ narrator:0
 onboardAccessibility:false
 skipMultiplayerWarning:true
 joinedFirstServer:true
+prioritizeChunkUpdates:2
+autoJump:false
+mouseSensitivity:0.5

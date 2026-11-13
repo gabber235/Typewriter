@@ -34,7 +34,7 @@ final class Frames {
     /** After the frame's draw or perceive step. */
     static void end() {
         if (mode == Mode.SKIP) return;
-        if (mode == Mode.PERCEIVE || Perceiver.forced()) Perceiver.endFrame(Stepper.lastRan());
+        if (mode == Mode.PERCEIVE || Perceiver.forced()) Perceiver.endFrame(Minecraft.getInstance(), Stepper.lastRan());
         if (mode == Mode.PERCEIVE) Stepper.perceived();
     }
 }

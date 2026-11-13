@@ -2,6 +2,7 @@ package com.typewritermc.playtest.client
 
 import com.typewritermc.playtest.client.GuiFrame.Kind.FILL
 import com.typewritermc.playtest.client.GuiFrame.Kind.IMAGE
+import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -76,5 +77,54 @@ val GuiFrameTest by testSuite {
         frame.text("chat", "  ", 2, 200, 40, 209, opaqueWhite)
 
         frame.legibleTexts() shouldBe listOf()
+    }
+
+    test("an item on screen is seen with its element, slot and count") {
+        val frame = GuiFrame(427, 240)
+        frame.item("offhand", -1, "minecraft:spyglass", 1, 110, 221, 126, 237)
+
+        frame.visibleItems() shouldBe listOf(Item("offhand", -1, false, "minecraft:spyglass", 1))
+    }
+
+    test("the hotbar item inside the selection frame is the selected one") {
+        val frame = GuiFrame(427, 240)
+        frame.selection(141, 217, 165, 240)
+        frame.item("hotbar", 0, "minecraft:spyglass", 1, 145, 221, 161, 237)
+        frame.item("hotbar", 1, "minecraft:stick", 1, 165, 221, 181, 237)
+
+        frame.visibleItems() shouldBe
+            listOf(Item("hotbar", 0, true, "minecraft:spyglass", 1), Item("hotbar", 1, false, "minecraft:stick", 1))
+    }
+
+    test("only a hotbar item can be selected, and none without a selection frame") {
+        val frame = GuiFrame(427, 240)
+        frame.item("hotbar", 0, "minecraft:spyglass", 1, 145, 221, 161, 237)
+        frame.selection(141, 17, 165, 40)
+        frame.item("screen", 9, "minecraft:stick", 16, 145, 21, 161, 37)
+
+        frame.visibleItems() shouldBe
+            listOf(Item("hotbar", 0, false, "minecraft:spyglass", 1), Item("screen", 9, false, "minecraft:stick", 16))
+    }
+
+    test("an item behind a blur, mostly off screen, or covered by a later image is not seen") {
+        val frame = GuiFrame(427, 240)
+        frame.item("hotbar", 0, "minecraft:spyglass", 1, 145, 221, 161, 237)
+        frame.blur()
+        frame.item("screen", 9, "minecraft:stick", 16, 420, 21, 436, 37)
+        frame.item("screen", 10, "minecraft:compass", 1, 100, 21, 116, 37)
+        frame.element(IMAGE, 100, 21, 116, 37, opaqueWhite)
+        frame.item("carried", -1, "minecraft:stick", 16, 200, 100, 216, 116)
+
+        frame.visibleItems() shouldBe listOf(Item("carried", -1, false, "minecraft:stick", 16))
+    }
+
+    test("an item does not hide text, and text does not hide an item") {
+        val frame = GuiFrame(427, 240)
+        frame.text("chat", "Hello", 145, 221, 161, 230, opaqueWhite)
+        frame.item("hotbar", 0, "minecraft:spyglass", 1, 145, 221, 161, 237)
+        frame.text(null, "64", 150, 230, 161, 237, opaqueWhite)
+
+        frame.legibleTexts() shouldBe listOf(Text("chat", "Hello"), Text("other", "64"))
+        frame.visibleItems() shouldBe listOf(Item("hotbar", 0, false, "minecraft:spyglass", 1))
     }
 }

@@ -3,16 +3,27 @@
   "package": "com.typewritermc.playtest.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "AbstractContainerScreenAccessor",
+    "AbstractContainerScreenMixin",
     "ChatComponentMixin",
+    "ChatScreenAccessor",
+    "CommandSuggestionsAccessor",
     "GameRendererInvoker",
+    "GuiGraphicsExtractorMixin",
     "GuiRenderStateMixin",
     "GuiTextRenderStateAccessor",
     "HudMixin",
+    "LevelExtractorMixin",
     "LevelRendererInvoker",
     "MinecraftMixin",
+    "MouseHandlerAccessor",
     "MouseHandlerMixin",
     "PacketProcessorMixin",
-    "PingMixin"
+    "PingMixin",
+    "SuggestionsListMixin",
+    "WindowMixin"
   ],
-  "injectors": { "defaultRequire": 1 }
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

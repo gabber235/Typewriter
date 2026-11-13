@@ -6,11 +6,13 @@ import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Hello
+import com.typewritermc.playtest.wire.Message.Input
+import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Player
-import com.typewritermc.playtest.wire.Message.ProbeChat
+import com.typewritermc.playtest.wire.Message.Probe
 import com.typewritermc.playtest.wire.Message.ProbeDone
 import com.typewritermc.playtest.wire.Message.Ready
 import com.typewritermc.playtest.wire.Message.Refused
@@ -22,6 +24,7 @@ import com.typewritermc.playtest.wire.Message.StepUntil
 import com.typewritermc.playtest.wire.Message.Stepping
 import com.typewritermc.playtest.wire.Message.StopStepping
 import com.typewritermc.playtest.wire.Message.Submit
+import com.typewritermc.playtest.wire.Message.Watch
 import com.typewritermc.playtest.wire.Wire
 import java.io.BufferedInputStream
 import java.io.DataInputStream
@@ -119,6 +122,7 @@ internal class Pool(
     private val sessions = mutableSetOf<Peer>()
     private val waiting = ArrayDeque<Pair<Peer, Submit>>()
     private val probes = mutableMapOf<Long, Routed<Long>>()
+    private val inputs = mutableMapOf<Long, Routed<Long>>()
     private val barriers = mutableMapOf<Int, Routed<Int>>()
     private lateinit var game: Game
     private var paper: Peer? = null
@@ -129,6 +133,7 @@ internal class Pool(
     private var lease: Leased? = null
     private var sawSession = false
     private var nextProbe = 0L
+    private var nextInput = 0L
     private var nextBarrier = 0
 
     fun run() {
@@ -233,26 +238,49 @@ internal class Pool(
                 release()
             }
 
-            is ProbeChat -> {
-                forPaper(session) {
-                    ProbeChat(++nextProbe, player.uuid(), message.text()).also {
-                        probes[it.request()] =
-                            Routed(session, message.request())
-                    }
-                }
+            else -> {
+                toGame(session, message)
+            }
+        }
+    }
+
+    /**
+     * What a session sends the game while it holds the lease: probes and steps for Paper, inputs and
+     * watches for the client. A session without the lease reaches neither.
+     */
+    private fun toGame(
+        session: Peer,
+        message: Message,
+    ) {
+        val leased = lease?.session == session
+        when (message) {
+            is Probe -> {
+                if (!leased) return
+                val routed = Probe(++nextProbe, player.uuid(), message.action())
+                probes[routed.request()] = Routed(session, message.request())
+                paper?.send(routed)
             }
 
             is StepUntil -> {
-                forPaper(session) {
-                    StepUntil(player.uuid(), message.tick(), ++nextBarrier).also {
-                        barriers[it.barrier()] =
-                            Routed(session, message.barrier())
-                    }
-                }
+                if (!leased) return
+                val routed = StepUntil(player.uuid(), message.tick(), ++nextBarrier)
+                barriers[routed.barrier()] = Routed(session, message.barrier())
+                paper?.send(routed)
             }
 
             is StopStepping -> {
-                forPaper(session) { StopStepping(player.uuid()) }
+                if (leased) paper?.send(StopStepping(player.uuid()))
+            }
+
+            is Input -> {
+                if (!leased) return
+                val routed = Input(++nextInput, player.uuid(), message.steps())
+                inputs[routed.request()] = Routed(session, message.request())
+                client?.send(routed)
+            }
+
+            is Watch -> {
+                if (leased) client?.send(message)
             }
 
             else -> {
@@ -261,18 +289,9 @@ internal class Pool(
         }
     }
 
-    /** Hands a session's stimulus or step to Paper, but only while the session holds the lease. */
-    private fun forPaper(
-        session: Peer,
-        message: () -> Message,
-    ) {
-        if (lease?.session != session) return
-        paper?.send(message())
-    }
-
     private fun fromPaper(message: Message) {
         when (message) {
-            is ProbeDone -> probes.remove(message.request())?.let { it.session.send(ProbeDone(it.id, message.tick())) }
+            is ProbeDone -> probes.remove(message.request())?.let { it.session.send(ProbeDone(it.id, message.tick(), message.failure())) }
             else -> System.err.println("Paper sent ${message.javaClass.simpleName}, which Paper never sends")
         }
     }
@@ -298,6 +317,10 @@ internal class Pool(
 
             is BarrierSeen -> {
                 lease?.let { barrierSeen(it, message) }
+            }
+
+            is InputDone -> {
+                inputs.remove(message.request())?.let { it.session.send(InputDone(it.id, message.tick(), message.failure())) }
             }
 
             else -> {

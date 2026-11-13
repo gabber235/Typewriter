@@ -12,6 +12,9 @@ import io.kotest.matchers.string.shouldContain
 
 val WindowRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("WINDOW-1", "a check that never holds fails after its window, naming the tick and what the player perceived") {
+        // An empty hand draws no item name above the hotbar, so the report names the chat line first.
+        probe.selectSlot(player, 0)
+        probe.give(player, slot = 0, item = "air")
         val hello = probe.chat(player, "Hello")
 
         val missed = shouldThrow<WindowMissed> { within(5.ticks) { player sees chat("Goodbye") } }
@@ -19,7 +22,7 @@ val WindowRequirements by testSuite(compartment = { GameCompartment }) {
         val (first, last) = hello.tick + 1 to hello.tick + 5
         missed.report shouldContain "${player.name} did not see chat \"Goodbye\" within 5 ticks (ticks $first to $last)"
         missed.report shouldContain "At tick $last ${player.name} perceived chat \"Hello\""
-        missed.at shouldBe "WindowRequirements.kt:17"
+        missed.at shouldBe "WindowRequirements.kt:20"
         within(10.ticks) { player sees chat("Hello") }
     }
 }

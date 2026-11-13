@@ -3,8 +3,13 @@ package com.typewritermc.playtest.client;
 import com.typewritermc.playtest.wire.Message.BarrierSeen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import net.minecraft.client.renderer.state.gui.GuiItemRenderState;
 import net.minecraft.client.renderer.state.gui.GuiTextRenderState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 
 /** The one door from the mixins into the client: every game hook lands here and is handed on. */
 public final class Hooks {
@@ -15,7 +20,7 @@ public final class Hooks {
     }
 
     public static void afterTick(Minecraft mc) {
-        Stepper.afterTick();
+        Stepper.afterTick(mc);
         Session.afterTick(mc);
     }
 
@@ -72,5 +77,41 @@ public final class Hooks {
 
     public static void leave() {
         Perceiver.leave();
+    }
+
+    public static boolean pretendsFocus() {
+        return Inputs.pretendsFocus();
+    }
+
+    public static void itemStack(ItemStack stack) {
+        Perceiver.onItemStack(stack);
+    }
+
+    public static void guiItem(GuiItemRenderState state) {
+        Perceiver.onItem(state);
+    }
+
+    public static void itemSlot(String element, int slot) {
+        Perceiver.itemSlot(element, slot);
+    }
+
+    public static void itemSlotDone() {
+        Perceiver.itemSlot(null, -1);
+    }
+
+    public static void selectionFrame(boolean drawing) {
+        Perceiver.selectionFrame(drawing);
+    }
+
+    public static void scoped() {
+        Perceiver.onSpyglass();
+    }
+
+    public static void blockChanged(BlockPos pos) {
+        Perceiver.onBlockChanged(pos);
+    }
+
+    public static void entityDrawn(Entity entity, EntityRenderState state) {
+        Perceiver.onEntity(entity, state);
     }
 }

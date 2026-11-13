@@ -44,6 +44,14 @@ final class Stepper {
         return lastPinged + 1;
     }
 
+    /**
+     * The server tick a change made now belongs to: the tick running, or, between ticks, the tick
+     * something arriving now shows in.
+     */
+    static int currentTick() {
+        return running != null ? running : arrivalTick();
+    }
+
     /** The last server tick this client ran. */
     static int lastRan() {
         return lastRan;
@@ -86,15 +94,19 @@ final class Stepper {
         if (next != null) {
             running = next;
             virtualNanos += TICK_NANOS;
+        } else {
+            // No tick runs in this pass, so this is a point between ticks where input may start.
+            Inputs.betweenTicks(mc, false);
         }
     }
 
     /** Tail of {@code Minecraft.tick}. */
-    static void afterTick() {
+    static void afterTick(Minecraft mc) {
         if (running == null) return;
         lastRan = running;
         running = null;
         perceiveDue = true;
+        Inputs.betweenTicks(mc, true);
     }
 
     /** Whether this frame runs at all: while stepping, only to perceive a tick that ran or a forced record. */
@@ -106,6 +118,14 @@ final class Stepper {
     static void perceived() {
         if (!perceiveDue) return;
         perceiveDue = false;
-        ClientPlayNetworking.send(new StepAck(lastRan));
+        ClientPlayNetworking.send(new StepAck(lastRan, Inputs.busy()));
+    }
+
+    /**
+     * An input that needs ticks started while no ack is due, so Paper, idle until now, hears at once
+     * that this client needs it to step.
+     */
+    static void needTicks() {
+        if (stepping && !perceiveDue) ClientPlayNetworking.send(new StepAck(lastRan, true));
     }
 }

@@ -4,8 +4,10 @@ import com.typewritermc.playtest.wire.Link;
 import com.typewritermc.playtest.wire.Message;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.Hello;
+import com.typewritermc.playtest.wire.Message.Input;
 import com.typewritermc.playtest.wire.Message.Reset;
 import com.typewritermc.playtest.wire.Message.Role;
+import com.typewritermc.playtest.wire.Message.Watch;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import net.fabricmc.api.ClientModInitializer;
@@ -50,7 +52,12 @@ public final class PlaytestClient implements ClientModInitializer {
         Minecraft mc = Minecraft.getInstance();
         switch (message) {
             case Connect connect -> mc.execute(() -> Session.connect(connect.host(), connect.port()));
-            case Reset reset -> mc.execute(() -> Perceiver.reset(mc));
+            case Reset reset -> mc.execute(() -> {
+                Inputs.reset(mc);
+                Perceiver.reset(mc);
+            });
+            case Watch watch -> mc.execute(() -> Perceiver.watch(watch));
+            case Input input -> Inputs.arrive(input);
             default -> LOG.error("The game pool sent {}, which the client never receives", message);
         }
         Stepper.wake();

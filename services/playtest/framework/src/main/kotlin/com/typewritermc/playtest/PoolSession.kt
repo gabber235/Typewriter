@@ -5,9 +5,13 @@ import com.typewritermc.playtest.wire.Message.BarrierSeen
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Hello
+import com.typewritermc.playtest.wire.Message.Input
+import com.typewritermc.playtest.wire.Message.InputDone
+import com.typewritermc.playtest.wire.Message.InputStep
 import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.Perceived
-import com.typewritermc.playtest.wire.Message.ProbeChat
+import com.typewritermc.playtest.wire.Message.Probe
+import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.ProbeDone
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Result
@@ -34,6 +38,16 @@ class GameUnavailable(
     cause: Throwable? = null,
 ) : IllegalStateException(message, cause)
 
+/** A probe could not arrange what the requirement asked for; [message] says why. */
+class ProbeFailed(
+    message: String,
+) : AssertionError(message)
+
+/** The client could not perform an input as a person would; [message] says which step failed. */
+class InputFailed(
+    message: String,
+) : AssertionError(message)
+
 /**
  * One test JVM's connection to the game pool. Requirements submit through it, and it routes what the
  * pool sends back: leases to the waiting submission, probe replies to the waiting call, and each
@@ -48,7 +62,8 @@ internal class PoolSession private constructor(
     private val requests = AtomicLong()
     private val barriers = AtomicInteger()
     private val leases = ConcurrentHashMap<Long, Leasing>()
-    private val probes = ConcurrentHashMap<Long, CompletableDeferred<Int>>()
+    private val probes = ConcurrentHashMap<Long, CompletableDeferred<ProbeDone>>()
+    private val inputs = ConcurrentHashMap<Long, CompletableDeferred<InputDone>>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val ended = CompletableDeferred<Unit>()
 
@@ -121,13 +136,26 @@ internal class PoolSession private constructor(
         failure?.let { throw it }
     }
 
-    /** Paper runs the chat probe; returns the tick after which it ran. */
-    suspend fun probeChat(
-        to: GamePlayer,
-        text: String,
+    /** Paper runs [action] for [player]; returns the tick after which it ran. */
+    suspend fun probe(
+        player: GamePlayer,
+        action: ProbeAction,
     ): Int {
         val request = requests.incrementAndGet()
-        return waitFor(probes, request) { send(ProbeChat(request, to.uuid, text)) }
+        val done = waitFor(probes, request) { send(Probe(request, player.uuid, action)) }
+        done.failure()?.let { throw ProbeFailed(it) }
+        return done.tick()
+    }
+
+    /** [player]'s client runs [steps]; returns the tick after which their first event reached the client. */
+    suspend fun input(
+        player: GamePlayer,
+        steps: List<InputStep>,
+    ): Int {
+        val request = requests.incrementAndGet()
+        val done = waitFor(inputs, request) { send(Input(request, player.uuid, steps)) }
+        done.failure()?.let { throw InputFailed(it) }
+        return done.tick()
     }
 
     /** Ends the session: the pool writes this session's cases into the run file. */
@@ -173,7 +201,11 @@ internal class PoolSession private constructor(
             }
 
             is ProbeDone -> {
-                probes[message.request()]?.complete(message.tick())
+                probes[message.request()]?.complete(message)
+            }
+
+            is InputDone -> {
+                inputs[message.request()]?.complete(message)
             }
 
             is Perceived -> {
@@ -210,6 +242,7 @@ internal class PoolSession private constructor(
         broken = cause
         leases.values.forEach { it.attempt.completeExceptionally(cause) }
         probes.values.forEach { it.completeExceptionally(cause) }
+        inputs.values.forEach { it.completeExceptionally(cause) }
         attempts.values.forEach { it.fail(cause) }
         ended.completeExceptionally(cause)
     }
