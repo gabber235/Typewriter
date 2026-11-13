@@ -548,4 +548,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Build slice 1 (walking skeleton), failing framework test first. Check in with each result; then show the overall direction and propose the first build slice.
+next: Slice 1 (walking skeleton) is building on feat/game-verification-slice-1. Accept it on evidence, then check in and start slice 2.
