@@ -137,64 +137,64 @@ class SmallErrorScreen extends ErrorScreen {
   @override
   Widget build(BuildContext context) {
     return EnterRun(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        spacing: context.spacing.space2,
-        children: [
-          if (withIcon)
-            MouseRegion(
-              cursor: SystemMouseCursors.zoomIn,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final size = constraints.maxWidth == double.infinity
-                      ? constraints.maxHeight
-                      : constraints.maxWidth;
-                  return SizedBox(
-                    width: size,
-                    height: size,
-                    child: const RiveAsset(
-                      asset: "assets/robot_island.riv",
-                      stateMachineName: "Motion",
-                    ),
-                  );
-                },
-              ),
-            ),
-          Enter(
-            token: MotionToken.loadIn,
-            child: Text(
-              title.isEmpty ? ErrorScreen.defaultTitle : title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: context.responsive(
-                  mobile: 14,
-                  tablet: 16,
-                  desktop: 18,
-                ),
-                fontWeight: FontWeight.bold,
-                color: context.colors.dangerText,
-              ),
-            ),
-          ),
-          Enter(
-            token: MotionToken.loadIn,
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: context.text.sentence.copyWith(
-                fontSize: context.responsive(
-                  mobile: 10,
-                  tablet: 12,
-                  desktop: 14,
-                ),
-                color: context.colors.contentSecondary,
-              ),
-            ),
-          ),
-          if (child != null) Enter(token: MotionToken.loadIn, child: child!),
-        ],
+      child: withIcon
+          ? LayoutBuilder(
+              builder: (context, constraints) {
+                return _buildContent(context, constraints.hasBoundedHeight);
+              },
+            )
+          : _buildContent(context, false),
+    );
+  }
+
+  /// The illustration is a square as wide as the space allows. When the
+  /// height is [bounded] it shrinks to the height the text leaves free, so
+  /// the title and message always fit.
+  Widget _buildContent(BuildContext context, bool bounded) {
+    const illustration = MouseRegion(
+      cursor: SystemMouseCursors.zoomIn,
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: RiveAsset(
+          asset: "assets/robot_island.riv",
+          stateMachineName: "Motion",
+        ),
       ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      spacing: context.spacing.space2,
+      children: [
+        if (withIcon && bounded)
+          const Flexible(child: illustration)
+        else if (withIcon)
+          illustration,
+        Enter(
+          token: MotionToken.loadIn,
+          child: Text(
+            title.isEmpty ? ErrorScreen.defaultTitle : title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              fontSize: context.responsive(mobile: 14, tablet: 16, desktop: 18),
+              fontWeight: FontWeight.bold,
+              color: context.colors.dangerText,
+            ),
+          ),
+        ),
+        Enter(
+          token: MotionToken.loadIn,
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: context.text.sentence.copyWith(
+              fontSize: context.responsive(mobile: 10, tablet: 12, desktop: 14),
+              color: context.colors.contentSecondary,
+            ),
+          ),
+        ),
+        if (child != null) Enter(token: MotionToken.loadIn, child: child!),
+      ],
     );
   }
 }

@@ -40,4 +40,25 @@ void main() {
       expect(panel.shows(ErrorScreen.defaultTitle), isTrue);
     });
   }
+
+  testWidgets("a small error with its illustration fits a square card", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: const PanelLocation.component(
+        SizedBox(
+          width: 320,
+          height: 320,
+          child: ErrorScreen.small(
+            title: "",
+            message: "No preview renderer found for type Page",
+            withIcon: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(panel.shows("No preview renderer found for type Page"), isTrue);
+  });
 }

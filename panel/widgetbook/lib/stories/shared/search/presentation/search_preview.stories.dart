@@ -6,15 +6,14 @@ import "package:widgetbook_workspace/data/shared/search.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
 /// The preview of the highlighted result: its renderer while the preview
-/// loads, with its data, or with the failure.
-///
-/// A result whose kind has no preview renderer is left out: its message
-/// overflows a 320 px preview card by 62 px (search_preview.dart:45).
+/// loads, with its data, or with the failure. A result whose kind has no
+/// preview renderer says so, its illustration shrinking to fit the card.
 @widgetbook.UseCase(name: "Default", type: SearchPreview)
 Widget searchPreviewUseCase(BuildContext context) {
+  const noRenderer = "No renderer";
   final answer = context.knobs.object.segmented(
     label: "Preview",
-    options: storyPreviewAnswers.keys.toList(),
+    options: [...storyPreviewAnswers.keys, noRenderer],
     initialOption: "Data",
   );
   final width = context.knobs.width(const {"Card": 320, "Narrow": 220});
@@ -28,7 +27,11 @@ Widget searchPreviewUseCase(BuildContext context) {
           snapshot: storySearchSnapshots["Few"]!,
           previewed: storyFirstResultId,
           previewAnswer: storyPreviewAnswers[answer],
-          child: SearchPreview(previewRenderers: storySearchPreviewRenderers),
+          child: SearchPreview(
+            previewRenderers: answer == noRenderer
+                ? const {}
+                : storySearchPreviewRenderers,
+          ),
         ),
       ),
     ),
