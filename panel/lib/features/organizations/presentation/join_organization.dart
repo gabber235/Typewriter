@@ -167,12 +167,12 @@ class _JoinOrganization extends HookConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showSuccessSnackBar(context, "Join request submitted successfully.");
+      context.reportSuccess("Join request sent");
     } on Exception catch (error) {
       if (!context.mounted) {
         return;
       }
-      showErrorSnackBar(context, "Failed to submit join request: $error");
+      context.reportFailure("Join request failed", detail: "$error");
     }
   }
 
@@ -186,7 +186,7 @@ class _JoinOrganization extends HookConsumerWidget {
         .read(userJoinRequestsProvider.notifier)
         .cancelRequest(request.requestId);
     if (!context.mounted) return;
-    showSuccessSnackBar(context, "Join request canceled.");
+    context.reportSuccess("Join request canceled");
   }
 }
 

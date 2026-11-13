@@ -1,6 +1,6 @@
 part of "mutation_activity_button.dart";
 
-class _ActivityDetails extends StatelessWidget {
+class _ActivityDetails extends ConsumerWidget {
   const _ActivityDetails({
     required this.state,
     required this.controller,
@@ -33,8 +33,13 @@ class _ActivityDetails extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final drafts = state.entries.values.toList();
+    final notices = ref.read(noticesProvider.notifier);
+    final failures = [
+      for (final notice in ref.watch(noticesProvider))
+        if (notice.tone == NoticeTone.failure && !notice.toasting) notice,
+    ];
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,6 +85,31 @@ class _ActivityDetails extends StatelessWidget {
               context.spacing.space3,
             ),
             children: [
+              for (final failure in failures.reversed)
+                _ActivityCard(
+                  key: ValueKey(("failure", failure.id)),
+                  title: failure.title,
+                  message: failure.progress == NoticeProgress.resolved
+                      ? "Done"
+                      : failure.detail ?? "Failed",
+                  phase: failure.progress == NoticeProgress.resolved
+                      ? MutationActivityPhase.saved
+                      : MutationActivityPhase.needsAttention,
+                  actions: [
+                    if (failure.retry != null &&
+                        failure.progress != NoticeProgress.resolved)
+                      Button(
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: "Retry",
+                        busyLabel: "Retrying",
+                        onPressed: () => notices.retry(failure.id),
+                      ),
+                    Button(
+                      label: "Dismiss",
+                      onPressed: () => notices.remove(failure.id),
+                    ),
+                  ],
+                ),
               for (final resource in drafts)
                 Builder(
                   builder: (context) {
@@ -194,7 +224,9 @@ class _ActivityDetails extends StatelessWidget {
                       ),
                   ],
                 ),
-              if (drafts.isEmpty && state.submissions.isEmpty)
+              if (failures.isEmpty &&
+                  drafts.isEmpty &&
+                  state.submissions.isEmpty)
                 Padding(
                   padding: EdgeInsets.all(context.spacing.space4),
                   child: Text(

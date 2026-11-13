@@ -12,7 +12,7 @@ part "secret_field_view.dart";
 /// and optional expiry; the value is copied automatically when [copyOnGenerate]
 /// is true. Expiry is checked on generation and by a timer every second;
 /// it conceals the local value without revoking it upstream. Exceptions during
-/// generation or automatic copying become an error state and an error snackbar.
+/// generation or automatic copying become an error state and a failure toast.
 class SecretField extends HookWidget {
   const SecretField({
     required this.title,
@@ -23,8 +23,8 @@ class SecretField extends HookWidget {
     this.regenerateButtonText = "Regenerate",
     this.copyButtonText = "Copy",
     this.expiredText = "Expired",
-    this.copyFailedSnackbarText = "Could not copy to the clipboard",
-    this.errorSnackbarText = "Failed to generate",
+    this.copyFailedText = "Could not copy to the clipboard",
+    this.errorText = "Failed to generate",
     this.copyOnGenerate = true,
     this.onCopied,
     this.onExpired,
@@ -56,10 +56,10 @@ class SecretField extends HookWidget {
   final String expiredText;
 
   /// Error message shown when the clipboard refuses the write.
-  final String copyFailedSnackbarText;
+  final String copyFailedText;
 
   /// Prefix for the exception message shown when generation fails.
-  final String errorSnackbarText;
+  final String errorText;
 
   /// Whether a successful generation also writes the complete value to the clipboard.
   final bool copyOnGenerate;

@@ -135,7 +135,7 @@ class _CreateOrganization extends HookConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showErrorSnackBar(context, "$error");
+      context.reportFailure("Create organization failed", detail: "$error");
     }
   }
 }

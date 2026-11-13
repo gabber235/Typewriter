@@ -27,7 +27,7 @@ class AppRequiredWidgets extends HookWidget {
                 child: CommandRunsScope(
                   child: GlobalModeShortcut(
                     child: GlobalOperationShortcuts(
-                      child: Shimmer(child: child),
+                      child: Toaster(child: Shimmer(child: child)),
                     ),
                   ),
                 ),

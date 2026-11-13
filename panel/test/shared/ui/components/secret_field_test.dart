@@ -55,8 +55,9 @@ void main() {
     await panel.tapOn(find.text("Generate"));
 
     await panel.eventually(() => expect(panel.reads(secret), isTrue));
-    expect(panel.shows("Could not copy to the clipboard"), isTrue);
-    expect(panel.shows("Failed to generate"), isFalse);
+    expect(panel.failures, [
+      "Generate failed. Could not copy to the clipboard",
+    ]);
     expect(find.text("Copied"), findsNothing);
     expect(find.text("Copy"), findsOneWidget);
   });

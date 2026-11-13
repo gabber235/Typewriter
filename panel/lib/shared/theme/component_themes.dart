@@ -99,12 +99,6 @@ ThemeData applyComponentThemes(
       modalBarrierColor: colors.scrim,
       shape: shapes.largeShape,
     ),
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: colors.surfaceEmphasized,
-      contentTextStyle: text.sentence.copyWith(color: colors.contentPrimary),
-      shape: shapes.mediumShape,
-      behavior: SnackBarBehavior.floating,
-    ),
     dividerTheme: DividerThemeData(color: colors.divider, thickness: 1),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: colors.selection,

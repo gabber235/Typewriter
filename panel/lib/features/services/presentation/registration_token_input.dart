@@ -47,9 +47,8 @@ class RegistrationTokenInput extends HookConsumerWidget {
       loading.bind(
         onPressed: bind,
         onError: (error) {
-          if (context.mounted && ScaffoldMessenger.maybeOf(context) != null) {
-            showErrorSnackBar(context, error);
-          }
+          if (!context.mounted) return;
+          context.reportFailure("Connect failed", detail: error, retry: bind);
         },
       );
       return null;

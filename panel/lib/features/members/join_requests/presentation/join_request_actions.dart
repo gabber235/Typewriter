@@ -50,7 +50,9 @@ class BulkJoinRequestActions extends HookConsumerWidget {
           if (setEquals(selectedIds, ids)) onClearSelection();
         }
       } on ApiException catch (error) {
-        if (context.mounted) showErrorSnackBar(context, error.message);
+        if (context.mounted) {
+          context.reportFailure("Accept failed", detail: error.message);
+        }
       } on SubmissionException {
         // The shared activity retains unresolved delivery.
       } finally {

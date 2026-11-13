@@ -51,7 +51,9 @@ class BulkMemberActions extends HookConsumerWidget {
           onUnselect(ids);
         }
       } on ApiException catch (error) {
-        if (context.mounted) showErrorSnackBar(context, error.message);
+        if (context.mounted) {
+          context.reportFailure("Assign roles failed", detail: error.message);
+        }
       } on SubmissionException {
         // The shared activity retains unresolved delivery.
       } finally {

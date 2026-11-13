@@ -25,8 +25,8 @@ class TypewriterPanel extends HookConsumerWidget {
       secondaryForeground: context.colors.contentSecondary,
       child: AppOverlay(
         child: Scaffold(
-          body: AppRequiredWidgets(
-            child: Responsive(
+          body: Responsive(
+            child: AppRequiredWidgets(
               child: RequiredNatsConnection(
                 child: child ?? const SizedBox.shrink(),
               ),

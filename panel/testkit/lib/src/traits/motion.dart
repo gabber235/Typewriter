@@ -34,3 +34,19 @@ extension OneRoundLoops on TypewriterMotion {
     return table;
   }
 }
+
+/// How long a toast drains in a test world: inside the time settling waits,
+/// so settling ends with every toast landed in Activity.
+const testDrain = Duration(seconds: 2);
+
+/// This table with the toast drain shortened to [testDrain], as the test
+/// world installs it.
+extension ShortDrain on TypewriterMotion {
+  TypewriterMotion get shortDrain {
+    final spec = this.spec(MotionToken.drain);
+    return withSpec(
+      MotionToken.drain,
+      spec.copyWith(motion: const CurveMotion(Curves.linear, testDrain)),
+    );
+  }
+}

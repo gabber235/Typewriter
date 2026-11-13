@@ -74,7 +74,7 @@ void main() {
       }
 
       // The Publish button leaves while the publication is read again, so
-      // the reason shows in a snackbar.
+      // the reason is reported as a failure toast.
       await panel.eventually(
         () => expect(panel.shows("The Realm refused to publish"), isTrue),
       );

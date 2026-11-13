@@ -57,7 +57,7 @@ extension HoldDriver on PanelDriver {
     Offset? drift,
   }) async {
     final gesture = await tester.startGesture(
-      // The last one a pointer can reach: a snackbar may cover another.
+      // The last one a pointer can reach: a toast may cover another.
       tester.getCenter(
         find
             .bySemanticsLabel(RegExp("^${RegExp.escape(label)}"))

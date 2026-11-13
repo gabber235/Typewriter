@@ -31,7 +31,7 @@ Future<HoldResult> runHold(HoldTry attempt, WidgetRef Function() ref) async {
         // Uncertain delivery belongs to the save status.
         continue;
       } on Object catch (error, stack) {
-        failures[id] = holdFailureMessage(error, stack);
+        failures[id] = failureMessage(error, stack);
       }
     }
   }
@@ -45,20 +45,4 @@ Future<HoldResult> runHold(HoldTry attempt, WidgetRef Function() ref) async {
     if (failures.isNotEmpty) rows.refuse(failures);
   }
   return HoldResult(failures: failures);
-}
-
-/// The sentence shown for a refusal: the service's own words when it gave
-/// any, else a plain sentence. Anything else is logged with its stack, never
-/// shown raw.
-String holdFailureMessage(Object error, StackTrace stack) {
-  if (error is ShownFailure) return error.message;
-  FlutterError.reportError(
-    FlutterErrorDetails(
-      exception: error,
-      stack: stack,
-      library: "Typewriter hold",
-      context: ErrorDescription("running a held action"),
-    ),
-  );
-  return "This did not go through. Try again.";
 }

@@ -43,7 +43,7 @@ _SecretFieldController _useSecretFieldController(
     } on PlatformException {
       // A browser can refuse the page the clipboard. The value stays on
       // screen and the pressed button jams with this message.
-      throw _SecretFieldFailure(field.copyFailedSnackbarText);
+      throw _SecretFieldFailure(field.copyFailedText);
     }
     field.onCopied?.call();
   }
@@ -59,7 +59,7 @@ _SecretFieldController _useSecretFieldController(
       final message = error.toString();
       state.value = SecretFieldError(message: message);
       // The generate button jams and shows this; it never says Copied.
-      throw _SecretFieldFailure("${field.errorSnackbarText}: $message");
+      throw _SecretFieldFailure("${field.errorText}: $message");
     }
     // The generate button then says Copied, or jams when the browser refuses.
     if (field.copyOnGenerate) await copy();

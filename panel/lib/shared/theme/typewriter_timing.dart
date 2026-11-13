@@ -9,6 +9,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
     this.tooltipShow = const Duration(milliseconds: 1500),
     this.longPressDelay = const Duration(milliseconds: 180),
     this.typeAheadReset = const Duration(milliseconds: 700),
+    this.doneShow = const Duration(milliseconds: 900),
   });
 
   /// How long a hover opened popup stays after the pointer leaves it.
@@ -26,6 +27,9 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
   /// How long after the last typed letter a menu's type ahead starts over.
   final Duration typeAheadReset;
 
+  /// How long a toast shows that its retry worked before it leaves.
+  final Duration doneShow;
+
   @override
   TypewriterTiming copyWith({
     Duration? hoverExitDelay,
@@ -33,6 +37,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
     Duration? tooltipShow,
     Duration? longPressDelay,
     Duration? typeAheadReset,
+    Duration? doneShow,
   }) {
     return TypewriterTiming(
       hoverExitDelay: hoverExitDelay ?? this.hoverExitDelay,
@@ -40,6 +45,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
       tooltipShow: tooltipShow ?? this.tooltipShow,
       longPressDelay: longPressDelay ?? this.longPressDelay,
       typeAheadReset: typeAheadReset ?? this.typeAheadReset,
+      doneShow: doneShow ?? this.doneShow,
     );
   }
 

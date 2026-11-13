@@ -132,9 +132,12 @@ final class CommandRuns implements CommandRunner {
           },
           onError: (error) {
             final context = _live(ref).context;
-            if (context.mounted && ScaffoldMessenger.maybeOf(context) != null) {
-              showErrorSnackBar(context, error);
-            }
+            if (!context.mounted) return;
+            context.reportFailure(
+              "${command.label} failed",
+              detail: error,
+              retry: () async => invoke(_live(ref)),
+            );
           },
         );
       return run.trigger();
@@ -216,7 +219,7 @@ final class CommandRuns implements CommandRunner {
           try {
             result = await runHold(attempt, () => _live(current.ref));
           } on Object catch (error, stack) {
-            final message = holdFailureMessage(error, stack);
+            final message = failureMessage(error, stack);
             result = HoldResult(
               failures: {for (final id in attempt.ids) id: message},
             );

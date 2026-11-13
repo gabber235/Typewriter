@@ -194,7 +194,7 @@ class RealmInboxContent extends ConsumerWidget {
           openRealmInboxLocationProvider(scope, location).future,
         );
         if (!opened && context.mounted) {
-          showErrorSnackBar(context, "This resource is no longer available");
+          context.reportFailure("This resource is no longer available");
         }
       },
     );

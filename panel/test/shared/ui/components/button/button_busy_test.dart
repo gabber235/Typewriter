@@ -20,7 +20,7 @@ void main() {
           ),
         );
 
-        await tester.tap(find.byType(Button));
+        await tester.tap(find.byType(Button).first);
         await panel.eventually(() {
           expect(panel.says("Publishing"), isTrue);
           expect(find.byType(CircularProgressIndicator), findsNothing);
@@ -47,23 +47,23 @@ void main() {
               },
             ),
           );
-          final rest = tester.getTopLeft(find.byType(ButtonContent)).dx;
+          final rest = tester.getTopLeft(find.byType(ButtonContent).first).dx;
 
-          await tester.tap(find.byType(Button));
+          await tester.tap(find.byType(Button).first);
           final offsets = <double>[];
           for (var frame = 0; frame < 12; frame++) {
             await tester.pump(const Duration(milliseconds: 16));
             offsets.add(
-              tester.getTopLeft(find.byType(ButtonContent)).dx - rest,
+              tester.getTopLeft(find.byType(ButtonContent).first).dx - rest,
             );
           }
           expect(offsets.any((dx) => dx.abs() > 1), isTrue);
 
           await panel.settle();
-          expect(tester.getTopLeft(find.byType(ButtonContent)).dx, rest);
+          expect(tester.getTopLeft(find.byType(ButtonContent).first).dx, rest);
           expect(panel.reads("Publish"), isTrue);
 
-          await tester.tap(find.byType(Button));
+          await tester.tap(find.byType(Button).first);
           await panel.settle();
           expect(runs, 2);
         },
@@ -82,18 +82,38 @@ void main() {
               ),
             ),
           );
-          final rest = tester.getTopLeft(find.byType(ButtonContent)).dx;
+          final rest = tester.getTopLeft(find.byType(ButtonContent).first).dx;
 
-          await tester.tap(find.byType(Button));
+          await tester.tap(find.byType(Button).first);
           for (var frame = 0; frame < 12; frame++) {
             await tester.pump(const Duration(milliseconds: 16));
-            expect(tester.getTopLeft(find.byType(ButtonContent)).dx, rest);
+            expect(
+              tester.getTopLeft(find.byType(ButtonContent).first).dx,
+              rest,
+            );
           }
           await panel.settle();
         },
       );
     });
   }
+
+  testWidgets("a press whose outcome is unknown leaves the report to the "
+      "save status", (tester) async {
+    final panel = await tester.showComponent(
+      busyButton(
+        ButtonFace.filled,
+        label: "Save",
+        busyLabel: "Saving",
+        onPressed: () => throw const UnknownOutcome(),
+      ),
+    );
+
+    await panel.tapOn(find.byType(Button).first);
+
+    expect(panel.failures, isEmpty);
+    expect(panel.reads("Save"), isTrue);
+  });
 
   testWidgets("a failed press reports its error in plain words", (
     tester,
@@ -107,9 +127,11 @@ void main() {
       ),
     );
 
-    await panel.tapOn(find.byType(Button));
+    await panel.tapOn(find.byType(Button).first);
 
-    expect(panel.shows("Exception: The realm did not answer."), isTrue);
+    expect(panel.failures, [
+      "Publish failed. Exception: The realm did not answer.",
+    ]);
   });
 
   group("ButtonController", () {
@@ -238,7 +260,7 @@ void main() {
           ),
         );
 
-        await tester.tap(find.byType(Button));
+        await tester.tap(find.byType(Button).first);
         await tester.pump();
         expect(asked, 1);
         expect(action.steps, isEmpty, reason: "the button never binds it");

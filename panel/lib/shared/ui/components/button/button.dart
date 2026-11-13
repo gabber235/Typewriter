@@ -70,7 +70,7 @@ class Button extends HookWidget {
 
   /// The word it types once [onPressed] finished, such as Copied; it stays
   /// long enough to read, then the label returns. Feedback stays at the
-  /// button instead of a snackbar.
+  /// button instead of a toast.
   final String? doneLabel;
 
   /// Sync or async. While a returned Future runs the button is busy and
@@ -135,9 +135,13 @@ class Button extends HookWidget {
       owned.bind(
         onPressed: onPressed,
         onError: (error) {
-          if (context.mounted && ScaffoldMessenger.maybeOf(context) != null) {
-            showErrorSnackBar(context, error);
-          }
+          final press = onPressed;
+          if (!context.mounted) return;
+          context.reportFailure(
+            "$label failed",
+            detail: error,
+            retry: press == null ? null : () async => press(),
+          );
         },
       );
       return null;

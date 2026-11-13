@@ -237,7 +237,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A row that grows | `GrowingCard` (on `Expansible`) | `ExpansionTile`, `Expansible` with its own style |
 | A wait before something happens | `context.timing` | A literal `Duration` |
 | A permanent action | `ActionRun.hold` on the command, rows from `useAnimatedRows` (the entry carries the hold), `CommandButton` for its buttons | `showConfirmationDialogue`, `AlertDialog`, a second confirm path |
-| A message | Snackbar helpers | `ScaffoldMessenger` |
+| A failure or a message | `context.reportFailure` with a retry when one helps, `context.reportSuccess`; the shell's `Toaster` shows them and failures land in Activity | `ScaffoldMessenger`, `SnackBar` |
 | A heading | `PageHeading`, `SectionTitle` at theme sizes | Local size or weight overrides |
 | A status | `StatusIndicator`, one chip | `TypeBadge`, `SmallChip`, `PresetChip` as separate styles |
 | A pane | `Pane` | Local pane colours |

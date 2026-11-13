@@ -136,11 +136,12 @@ final class World {
         if (!_builder.liveAnimations) const FakeRive().override,
         if (_builder.motionTable case final table?)
           motionTableProvider.overrideWithValue(table)
-        // A busy word plays one round, so settling ends while it shows; a
-        // browser story keeps the panel's endless loops.
+        // A busy word plays one round and a toast drains in time, so
+        // settling ends while the word shows and with the toast landed; a
+        // browser story keeps the panel's endless loops and full drain.
         else if (!_builder.liveAnimations)
           motionTableProvider.overrideWithValue(
-            TypewriterMotion.standard().oneRoundLoops,
+            TypewriterMotion.standard().oneRoundLoops.shortDrain,
           ),
         ...?realm?.overrides,
         ..._builder.overrides,

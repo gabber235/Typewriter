@@ -71,9 +71,15 @@ class ButtonController extends ChangeNotifier {
     try {
       await _onPressed!();
       _successes++;
+    } on UnconfirmedFailure {
+      // The save status reports a failure whose outcome is unknown; the
+      // button only jams.
+      _failures++;
+      if (hasListeners) notifyListeners();
     } on Exception catch (error) {
       _failures++;
-      _setError(error.toString());
+      // A failure written for the user reads as it is, without its code.
+      _setError(error is ShownFailure ? error.message : error.toString());
     } finally {
       _setLoading(false);
     }

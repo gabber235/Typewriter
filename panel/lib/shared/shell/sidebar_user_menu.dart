@@ -89,7 +89,7 @@ class UserMenu extends HookConsumerWidget {
             await ref.signOutVoluntarily(context);
           } on Object catch (_) {
             if (!context.mounted) return;
-            showErrorSnackBar(context, "Could not sign out. Please try again.");
+            context.reportFailure("Sign out failed", detail: "Try again.");
           }
         },
       ),

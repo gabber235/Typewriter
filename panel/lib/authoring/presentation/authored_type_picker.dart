@@ -258,8 +258,7 @@ final class _TypeUseCompositionPickerState
       case TypeArgumentAccepted(:final selection):
         setState(() => _selection = selection);
       case TypeArgumentRejected(:final message):
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(message)));
+        context.reportFailure("Type refused", detail: message);
     }
   }
 }
