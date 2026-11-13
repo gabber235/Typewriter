@@ -521,6 +521,12 @@ decided:
   - id: keep-slice-2-last-decisions
     what: "Keep, start slice 3 (Recommended)"
     why: Probes wait for chunks within the client's view distance, a bedrock layer under the void world, only the command sending pool watched as an async sender; slice 3 also takes relative spots, a matched view distance and the chat toast
+  - id: wipe-proof-back-to-back
+    what: "A. Back to back in the kit (Recommended)"
+    why: A test fixture runs two attempts on the same clients through the pool; no public ordering API
+  - id: wipe-split-by-owner
+    what: "A. Split by owner (Recommended)"
+    why: The framework wipes vanilla and Paper player state (spike K's kinds plus recipes and advancements); each plugin resets what it owns (stored values, attached permissions, metadata it set, sessions, mail) through a reset hook the framework calls, later Typewriter's realm purge; no reflection; unseen kinds are proven by a query probe only the framework's own tests use
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
