@@ -1,10 +1,12 @@
 package com.typewritermc.playtest.wire
 
 import com.typewritermc.playtest.wire.Message.BarrierSeen
+import com.typewritermc.playtest.wire.Message.ChatLine
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Hello
+import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Perception
@@ -44,7 +46,7 @@ val WireTest by testSuite {
             listOf<Message>(
                 Hello(Role.CLIENT, "gv-1"),
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
-                Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1),
+                Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1"),
                 Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2)))),
                 Result(7, 1_250, null, null),
                 Result(8, 90, "gv-1 did not see chat \"Hello\"", "ProbeRequirements.kt:14"),
@@ -56,11 +58,12 @@ val WireTest by testSuite {
                 StopStepping(player),
                 Stepping(),
                 Connect("127.0.0.1", 25_565),
+                Joined(),
                 Ready(),
                 Reset(),
                 ResetDone(),
-                Perceived("gv-1", Perception(1_205, listOf(Text("chat", "Hello"), Text("other", "")))),
-                Perceived("gv-1", Perception(0, listOf())),
+                Perceived("gv-1", Perception(1_205, listOf(Text("chat", "Hello"), Text("other", "")), listOf(ChatLine(1_205, "Hello")))),
+                Perceived("gv-1", Perception(0, listOf(), listOf())),
                 BarrierSeen("gv-1", 5),
             )
 
@@ -70,14 +73,14 @@ val WireTest by testSuite {
     test("text in any script and of any length reads back unchanged") {
         val text = Arb.string(0..2_000, Arb.codepoints().filterNot { it.value in Char.MIN_SURROGATE.code..Char.MAX_SURROGATE.code })
         checkAll(PropTestConfig(seed = 2_611_131_947L, iterations = 200), Arb.list(text, 0..5), Arb.int(0..1_000_000)) { texts, tick ->
-            val perceived = Perceived("gv-1", Perception(tick, texts.map { Text("chat", it) }))
+            val perceived = Perceived("gv-1", Perception(tick, texts.map { Text("chat", it) }, texts.map { ChatLine(tick, it) }))
 
             framed(perceived).readFrames() shouldBe listOf(perceived)
         }
     }
 
     test("a text longer than 64 KB reads back unchanged") {
-        val perceived = Perceived("gv-1", Perception(1, listOf(Text("chat", "é".repeat(40_000)))))
+        val perceived = Perceived("gv-1", Perception(1, listOf(Text("chat", "é".repeat(40_000))), listOf()))
 
         framed(perceived).readFrames() shouldBe listOf(perceived)
     }
@@ -108,7 +111,7 @@ val WireTest by testSuite {
     }
 
     test("a stream that ends inside a frame is refused as cut off") {
-        val whole = framed(Perceived("gv-1", Perception(4, listOf(Text("chat", "Hello")))))
+        val whole = framed(Perceived("gv-1", Perception(4, listOf(Text("chat", "Hello")), listOf(ChatLine(4, "Hello")))))
 
         shouldThrow<WireException> { whole.copyOf(whole.size - 2).readFrames() }
         shouldThrow<WireException> { whole.copyOf(2).readFrames() }

@@ -1,10 +1,12 @@
 package com.typewritermc.playtest.wire;
 
 import com.typewritermc.playtest.wire.Message.BarrierSeen;
+import com.typewritermc.playtest.wire.Message.ChatLine;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.End;
 import com.typewritermc.playtest.wire.Message.Ended;
 import com.typewritermc.playtest.wire.Message.Hello;
+import com.typewritermc.playtest.wire.Message.Joined;
 import com.typewritermc.playtest.wire.Message.Lease;
 import com.typewritermc.playtest.wire.Message.Perceived;
 import com.typewritermc.playtest.wire.Message.Perception;
@@ -60,7 +62,6 @@ public final class Wire {
                 body.writeLong(submit.submission());
                 string(body, submit.testId());
                 string(body, submit.requirement());
-                body.writeInt(submit.players());
             }
             case Lease lease -> {
                 body.writeLong(lease.submission());
@@ -107,12 +108,18 @@ public final class Wire {
                     string(body, text.element());
                     string(body, text.text());
                 }
+                body.writeInt(perceived.perception().chat().size());
+                for (ChatLine line : perceived.perception().chat()) {
+                    body.writeInt(line.tick());
+                    string(body, line.text());
+                }
             }
             case BarrierSeen seen -> {
                 string(body, seen.player());
                 body.writeInt(seen.barrier());
             }
             case Ended ended -> {}
+            case Joined joined -> {}
             case Stepping stepping -> {}
             case Ready ready -> {}
             case Reset reset -> {}
@@ -176,6 +183,7 @@ public final class Wire {
             case ResetDone m -> 15;
             case Perceived m -> 16;
             case BarrierSeen m -> 17;
+            case Joined m -> 18;
         };
     }
 
@@ -183,7 +191,7 @@ public final class Wire {
         return switch (type) {
             case 0 -> new Hello(role(in.readUnsignedByte()), string(in));
             case 1 -> new Refused(string(in));
-            case 2 -> new Submit(in.readLong(), string(in), string(in), in.readInt());
+            case 2 -> new Submit(in.readLong(), string(in), string(in));
             case 3 -> {
                 long submission = in.readLong();
                 int count = count(in);
@@ -209,9 +217,13 @@ public final class Wire {
                 int count = count(in);
                 var texts = new ArrayList<Text>(count);
                 for (int i = 0; i < count; i++) texts.add(new Text(string(in), string(in)));
-                yield new Perceived(player, new Perception(tick, List.copyOf(texts)));
+                int lines = count(in);
+                var chat = new ArrayList<ChatLine>(lines);
+                for (int i = 0; i < lines; i++) chat.add(new ChatLine(in.readInt(), string(in)));
+                yield new Perceived(player, new Perception(tick, List.copyOf(texts), List.copyOf(chat)));
             }
             case 17 -> new BarrierSeen(string(in), in.readInt());
+            case 18 -> new Joined();
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }

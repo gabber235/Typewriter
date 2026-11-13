@@ -1,0 +1,8 @@
+# Paper fills in every other setting with its default and rewrites this file on start.
+_version: 31
+packet-limiter:
+  all-packets:
+    action: KICK
+    interval: 7.0
+    # Off: a stepped client answers every tick with a ping reply and an ack, far above the wall clock limit.
+    max-packet-rate: 0.0

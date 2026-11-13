@@ -18,8 +18,8 @@ public sealed interface Message {
     /** Pool to session: the game cannot run; every requirement of the session fails with this reason. */
     record Refused(String reason) implements Message {}
 
-    /** Session to pool: run one attempt of a requirement once this many players are free. */
-    record Submit(long submission, String testId, String requirement, int players) implements Message {}
+    /** Session to pool: run one attempt of a requirement once a player is free. */
+    record Submit(long submission, String testId, String requirement) implements Message {}
 
     /** One player a lease hands to an attempt. */
     record Player(String name, UUID uuid) {}
@@ -63,7 +63,10 @@ public sealed interface Message {
     /** Pool to client: join the Paper at this address. */
     record Connect(String host, int port) implements Message {}
 
-    /** Client to pool: the player is in the world and nothing covers the game. */
+    /** Client to pool: the player is in the world and nothing covers the game, so Paper may start stepping. */
+    record Joined() implements Message {}
+
+    /** Client to pool: the client steps with Paper, so everything it receives from now on has a tick; it can serve a lease. */
     record Ready() implements Message {}
 
     /** Pool to client: a new attempt starts; forget what earlier attempts showed and perceive afresh. */
@@ -81,9 +84,16 @@ public sealed interface Message {
      */
     record BarrierSeen(String player, int barrier) implements Message {}
 
-    /** Everything a player perceives after one tick, complete: the client sends it whole or not at all. */
-    record Perception(int tick, List<Text> texts) {}
+    /**
+     * Everything a player perceives after one tick, complete: the client sends it whole or not at all.
+     * {@code texts} is every legible run of text on screen; {@code chat} every chat line that arrived
+     * since the attempt's reset, whether it still shows or not.
+     */
+    record Perception(int tick, List<Text> texts, List<ChatLine> chat) {}
 
     /** One legible run of text and the game element that drew it, for example {@code chat}. */
     record Text(String element, String text) {}
+
+    /** A chat line and the tick in which it arrived. */
+    record ChatLine(int tick, String text) {}
 }

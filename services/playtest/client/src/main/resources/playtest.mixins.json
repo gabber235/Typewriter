@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "com.typewritermc.playtest.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "ChatComponentMixin",
+    "GameRendererInvoker",
+    "GuiRenderStateMixin",
+    "GuiTextRenderStateAccessor",
+    "HudMixin",
+    "LevelRendererInvoker",
+    "MinecraftMixin",
+    "MouseHandlerMixin",
+    "PacketProcessorMixin",
+    "PingMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}
