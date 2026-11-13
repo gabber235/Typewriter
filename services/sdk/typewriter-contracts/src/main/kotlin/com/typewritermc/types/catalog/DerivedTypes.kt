@@ -2,6 +2,7 @@ package com.typewritermc.types.catalog
 
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -11,9 +12,13 @@ import skirout.kernel.v1.resource_id.ResourceId
  * and nothing is written back.
  */
 
-/** The name under which a bind block derives a type; the generated `XBind` object holds one per `@Bind` parameter. */
-@JvmInline
-value class BindKey(
+/**
+ * One type parameter of the resource type [owner], named like the parameter, that a bind block may compute. The
+ * generated `XBind` object holds one per type parameter of a concrete resource class; registering a bind for it makes
+ * that parameter computed.
+ */
+data class BindKey(
+    val owner: TypeDefinitionId,
     val name: String,
 )
 

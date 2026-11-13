@@ -53,7 +53,6 @@ import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
 import com.typewritermc.formula.codegen.DynamicProviderProcessor
 import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
-import com.typewritermc.types.Bind
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
 import com.typewritermc.types.EndpointSlot
@@ -207,11 +206,6 @@ private class TypewriterTypeProcessor(
             .getSymbolsWithAnnotation(ReferenceContract::class)
             .filterIsInstance<KSClassDeclaration>()
             .forEach { relation -> if (relation.validate()) generateRelation(relation) else deferred += relation }
-        resolver
-            .getSymbolsWithAnnotation(Bind::class)
-            .filterIsInstance<KSTypeParameter>()
-            .filterNot { parameter -> (parameter.parentDeclaration as? KSClassDeclaration)?.isFinalResourceClass() == true }
-            .forEach { parameter -> logger.error("@Bind marks only a type parameter of a final class that implements Resource.", parameter) }
         val directlyAnnotated = resolver.getSymbolsWithAnnotation(TypewriterType::class).filterIsInstance<KSClassDeclaration>().toList()
         val nestedAnnotated =
             directlyAnnotated
@@ -245,15 +239,6 @@ private class TypewriterTypeProcessor(
     override fun finish() {
         output.finish()
     }
-
-    /**
-     * Whether this declaration may have a `@Bind` parameter: a final class that implements Resource. A parent contract
-     * would meet the parameter under another index in each implementation, so only the resource type itself binds.
-     */
-    private fun KSClassDeclaration.isFinalResourceClass(): Boolean =
-        classKind == ClassKind.CLASS &&
-            modifiers.none { it == Modifier.OPEN || it == Modifier.ABSTRACT || it == Modifier.SEALED } &&
-            implements(Resource::class)
 
     /** Whether this compilation emits the SDK of [declaration]: its own sources and the dependencies it claims. */
     private fun isEmittedHere(declaration: KSClassDeclaration): Boolean =

@@ -23,7 +23,6 @@ import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.codegen.rawAnnotation
 import com.typewritermc.codegen.serialName
 import com.typewritermc.codegen.valueClassScalarKind
-import com.typewritermc.types.Bind
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes
@@ -419,7 +418,7 @@ class KspTypeGraphConverter(
                                     template(bound, declaration, path + parameter.name.asString())
                                 }
                             }.toList(),
-                    derived = parameter.annotation<Bind>() != null,
+                    derived = false,
                 )
             }
         val parents =

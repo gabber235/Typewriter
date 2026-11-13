@@ -29,14 +29,6 @@ annotation class TypewriterType(
     val revision: Int = 1,
 )
 
-/**
- * Marks a type parameter a bind block fills: its argument is always the type the resource derives from its own content
- * under the parameter's name, so a creator never chooses it. Only a final class that implements Resource may have one.
- */
-@Target(AnnotationTarget.TYPE_PARAMETER)
-@Retention(AnnotationRetention.BINARY)
-annotation class Bind
-
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterTypeImports(

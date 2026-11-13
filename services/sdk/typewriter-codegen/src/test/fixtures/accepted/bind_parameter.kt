@@ -2,22 +2,33 @@
 
 package fixture
 
-import com.typewritermc.types.Bind
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.catalog.BindKey
 import io.kotest.matchers.shouldBe
 
-/** A board whose value type its own content derives, next to an item type a creator chooses. */
+/** A generic board: a bind block may compute any of its parameters from its content. */
 @TypewriterType(id = "b1b00000000000000000000000000001")
-data class Board<T, @Bind V>(
+data class Board<T, V>(
     val title: String = "",
     val items: List<T> = emptyList(),
     val values: List<V> = emptyList(),
 ) : Resource
 
-/** The catalog marks only the bound parameter as derived, and its handle names the parameter. */
+/** A generic type that is not a resource: nothing can bind it, so it has no handles. */
+@TypewriterType(id = "b1b00000000000000000000000000002")
+data class Duo<T>(
+    val first: T,
+    val second: T,
+)
+
+/**
+ * Every type parameter of a resource gets a handle naming its owner, and code leaves each one creator chosen: only a
+ * registered bind makes a parameter computed.
+ */
 fun main(args: Array<String>) {
-    BoardDefinition.definition.parameters.map { it.name to it.derived } shouldBe listOf("T" to false, "V" to true)
-    BoardBind.V shouldBe BindKey("V")
+    BoardDefinition.definition.parameters.map { it.name to it.derived } shouldBe listOf("T" to false, "V" to false)
+    BoardBind.T shouldBe BindKey(BoardDefinition.id, "T")
+    BoardBind.V shouldBe BindKey(BoardDefinition.id, "V")
+    runCatching { Class.forName("fixture.DuoBind") }.isFailure shouldBe true
 }
