@@ -164,7 +164,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Space | 4, 8, 12, 16, 20, 24, 32, 40, 48 |
 | Radius | Pane 12, control 8, key cap and small chip 4 |
 | Shadow | Menus and toasts, then dialogs. Nothing else |
-| Icons | Material Symbols, bundled. 16 px inline, 20 px in controls |
+| Icons | Material Symbols, bundled. 16 px inline, 20 px in controls. Never a Unicode emoji, in the panel or its mocks: always an icon, so it can take colour and weight |
 
 | Token | Curve | Duration | Landing | Reduced |
 |---|---|---|---|---|
