@@ -6,7 +6,7 @@ goal: Prove what a player experiences in a real Minecraft client, as tests that 
 
 pieces:
   - id: paper-topology
-    status: figuring-out
+    status: building
     open: none; a restart Paper runs bestq (AOT cache trained in the same job, C1 only, SerialGC, clients gated while it boots)
     tries:
       - id: d1-one-client
@@ -90,7 +90,7 @@ pieces:
         evidence: ["branch proto/gv-restore a7f4aaff0: prototypes/game-verification/RESULTS.md", CI run 42432909519]
 
   - id: stepped-ticks
-    status: figuring-out
+    status: building
     open: Stepping is proven for one subject. How it behaves with several attempts depends on paper-topology
     tries:
       - id: c2-faster-rate
@@ -119,7 +119,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/n-stepped-ticks.md, CI runs 42304863563 42310014228]
 
   - id: perception
-    status: figuring-out
+    status: building
     open: "How A4 asks stay cheap (smaller window for A4 frames, or fewer asks); live gaps: fades, wrapped chat lines, grey completion text, cursor blink"
     tries:
       - id: a1-client-state
@@ -183,7 +183,7 @@ pieces:
         evidence: ["branch proto/gv-nodraw 25ed99f98: prototypes/game-verification/RESULTS.md", CI runs 43330492175 43333247905]
 
   - id: readiness-and-done
-    status: figuring-out
+    status: building
     open: Which side counts Typewriter's work for the done signal (Paper only, or Paper plus a test side hook); decided with layers 3 and 6
     tries:
       - id: e-bare-barrier-and-chunk-signals
@@ -205,7 +205,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/d-clients.md, docs/design/game-verification/spikes/i-coverage.md]
 
   - id: input
-    status: figuring-out
+    status: building
     open: "Lost suggestion replies: a 1 thread suggestion pool on the test Paper, or a retype inside the window like a player would. Mac run of the SDL path under stepped ticks"
     tries:
       - id: j-packets-and-game-actions
@@ -235,7 +235,7 @@ pieces:
         evidence: ["branch proto/gv-input 85d06340e: prototypes/game-verification/RESULTS.md", CI runs 43306835761 43309694858 43311267445]
 
   - id: client-pool
-    status: figuring-out
+    status: building
     open: How a claim moves clients between Papers depends on paper-topology
     tries:
       - id: fresh-client-per-requirement
@@ -263,7 +263,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/k-restarts.md]
 
   - id: requirement-shape
-    status: figuring-out
+    status: building
     open: "Pool process design: detach it on purpose, replace a stale idle pool, a lease deadline, a report that survives a pool crash; IDE single runs unchecked"
     tries:
       - id: fabric-client-gametest
@@ -330,7 +330,7 @@ pieces:
         evidence: [docs/plans/game-verification/directions.md, "branch proto/gv-testballoon 7a77e7ba3: services/prototypes/gv-testballoon/FINDINGS.md"]
 
   - id: video
-    status: figuring-out
+    status: building
     open: "30 or 60 fps for clips; how a window treats facts the client smooths between ticks (one tick margin at the deadline)"
     tries:
       - id: b2-window-capture
@@ -365,7 +365,7 @@ pieces:
         evidence: ["branch proto/gv-video f1bb8683a: prototypes/game-verification/RESULTS.md", CI run 43312553335]
 
   - id: goldens
-    status: figuring-out
+    status: building
     open: CI setup cost of the devenv e2e shell (300 to 480 s per job on an uncached branch)
     tries:
       - id: tolerant-compare
@@ -392,7 +392,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/f-goldens.md]
 
   - id: coverage
-    status: figuring-out
+    status: building
     open: Attribution with several attempts on one Paper is approximate; exact with a Paper per attempt (paper-topology)
     tries:
       - id: plain-or-tcp-dump
@@ -408,7 +408,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/i-coverage.md, CI run 42162248604]
 
   - id: results-and-ci
-    status: figuring-out
+    status: building
     open: none beyond the pieces above; the TestRun additions follow from them
     tries:
       - id: xtask-reruns
@@ -424,7 +424,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/h-ci-runner.md]
 
   - id: build
-    status: figuring-out
+    status: building
     open: Which of P3's build file fixes to adopt, and how CI caches Loom (about 700 MB) and the patched Paper (about 216 MB)
     tries:
       - id: one-services-build
@@ -497,6 +497,12 @@ decided:
   - id: perception-no-drawing
     what: "A. No drawing (Recommended)"
     why: P8, a frame every tick is +408%, +53% with every lever
+  - id: build-in-nine-slices
+    what: "Yes, start slice 1 (Recommended)"
+    why: Every piece has a proven direction; the walking skeleton proves the parts fit end to end
+  - id: p3-build-fixes-in-slice-1
+    what: "Yes, in slice 1 (Recommended)"
+    why: run-task in build-logic, Kover skips gameTest, coverage merge takes only Kover projects
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -504,6 +510,42 @@ open:
   - id: quiet-hook
     ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
 
-slices: []
+slices:
+  - id: walking-skeleton
+    status: building
+    what: 1 client, stepped Paper, perceive stream, within and sees chat, pool process, TestRun, cargo xtask e2e game
+    green: PROBE-1 passes; its broken twin fails with a clear message
+  - id: input-from-the-client
+    status: queued
+    what: type, click, look and use through XTest per display and SDL on the Mac; retype for lost suggestions
+    green: spike J's 18 inputs as requirements
+  - id: pool-of-four-and-groups
+    status: queued
+    what: claims, regions, full wipe, leave like the pause menu, rotation between test JVMs
+    green: a group of 3; no leak in 17 kinds
+  - id: done-and-hung-work
+    status: queued
+    what: per player quiet in the step, 1 s hung report
+    green: an async lookup passes; a hung one is reported
+  - id: retries-and-results
+    status: queued
+    what: retries at the queue end, Flaky, quarantine, xtask gate on TestRun
+    green: a flaky probe blocks the run
+  - id: pixels
+    status: queued
+    what: A4 on demand, goldens on devenv Mesa
+    green: an entity behind a wall is not seen; a sidebar golden
+  - id: restart-paper
+    status: queued
+    what: fast boot flags, AOT cache training, clients gated during boot
+    green: a deposit survives a killed Paper
+  - id: coverage-and-clips
+    status: queued
+    what: coverage per requirement, demo reruns with clips
+    green: a touched requirement gets its clip
+  - id: ci-and-pool-lifecycle
+    status: queued
+    what: CI job and caches; detach, stale pool, lease deadline
+    green: the suite runs on a pull request
 
-next: Check in with P11, show the overall direction and propose the first build slice. Check in with each result; then show the overall direction and propose the first build slice.
+next: Build slice 1 (walking skeleton), failing framework test first. Check in with each result; then show the overall direction and propose the first build slice.
