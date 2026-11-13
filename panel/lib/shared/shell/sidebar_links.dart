@@ -14,13 +14,10 @@ class SidebarHeader extends StatelessWidget {
         left: context.spacing.space3,
         right: context.spacing.space3,
       ),
-      child: Row(
-        children: [
-          Text(
-            text.toUpperCase(),
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
+      // A long label wraps within the sidebar width.
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall,
       ),
     );
   }

@@ -56,3 +56,59 @@ AuthoringResourceIdentifier _resource(skir.ResourceId resource) =>
       realmId: skir.recordId("realm_instance:main"),
       resourceId: resource,
     );
+
+/// The traits of a Realm with [_lostVillage] and [_quest], selecting what
+/// the Selection knob names.
+List<Trait> _selection(BuildContext context, {String initial = "One Book"}) => [
+  signedIn(ada, organization: acme),
+  realm(books: [_lostVillage], tags: [_quest]),
+  ...context.knobs.traits("Selection", {
+    "Nothing": const [],
+    "One Book": [
+      selected([_resource(_lostVillage.bookId)]),
+    ],
+    "One Tag": [
+      selected([_resource(_quest.tagId)]),
+    ],
+    "A Book and a Tag": [
+      selected([_resource(_lostVillage.bookId), _resource(_quest.tagId)]),
+    ],
+  }, initial: initial),
+];
+
+/// The [DesktopInspector] pane beside the content of a wide window: it
+/// arrives when something is selected and leaves when nothing is. Drag its
+/// edge to resize it; it never grows past three eighths of the window.
+@widgetbook.UseCase(name: "Default", type: DesktopInspector)
+Widget desktopInspectorUseCase(BuildContext context) {
+  return Story([
+    ..._selection(context),
+    ...context.knobs.traits("Window", {
+      "Desktop": const [],
+      "Wide": [window(const Size(1920, 1080))],
+      "Narrow": [window(const Size(1000, 720))],
+    }),
+  ]);
+}
+
+/// The [MobileInspector] bottom sheet of a narrow window: it peeks when
+/// something is selected, drags up to fill the window, and clears the
+/// selection when dragged shut.
+@widgetbook.UseCase(name: "Default", type: MobileInspector)
+Widget mobileInspectorUseCase(BuildContext context) {
+  return Story([
+    ..._selection(context),
+    ...context.knobs.traits("Window", {
+      "Compact": const [compact],
+      "Phone": [window(const Size(360, 720))],
+    }),
+  ]);
+}
+
+/// [InspectorOperations] for what is selected: only the operations that
+/// accept the whole selection appear, so a Book, a Tag and both together
+/// each list their own.
+@widgetbook.UseCase(name: "Default", type: InspectorOperations)
+Widget inspectorOperationsUseCase(BuildContext context) {
+  return Story(_selection(context));
+}
