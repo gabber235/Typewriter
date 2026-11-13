@@ -1,6 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
@@ -125,7 +124,7 @@ class CapturedAuthoringReads internal constructor(
             val revision = (view as? AuthoredReadView.Working)?.revision ?: 0L
             builtCatalog?.takeIf { it.first == revision }?.let { return it.second }
             val resources = view.resources
-            return ViewCatalogLease(view.original.catalog.code, contentTypesOf(resources::get, DerivedOrigin.NONE, ::observe)).also {
+            return ViewCatalogLease(view.original.catalog.code, contentTypesOf(resources::get, recorder.derivedTypes(this), ::observe)).also {
                 builtCatalog =
                     revision to it
             }
@@ -915,6 +914,38 @@ class CapturedAuthoringReads internal constructor(
     internal fun record(id: ResourceId): AuthoringRecord? {
         observe(InputIdentity.Resource(id))
         return view.resources[id]
+    }
+
+    private val binding = mutableSetOf<TypeDefinitionId>()
+
+    /**
+     * Runs [run] as the bind that computes [id] on this reader, or answers [onLoop] when that bind already runs here: a
+     * bind that needs what it computes, directly or through other binds, would read through itself.
+     */
+    internal fun <T> running(
+        id: TypeDefinitionId,
+        onLoop: () -> T,
+        run: () -> T,
+    ): T {
+        if (!binding.add(id)) return onLoop()
+        return try {
+            run()
+        } finally {
+            binding -= id
+        }
+    }
+
+    /**
+     * [resource]'s root bound to the type its creator's choices give, with every computed parameter left open, so a
+     * bind reads its resource without the type it computes. Null when that type does not resolve.
+     */
+    internal fun authoredBinding(resource: ResourceId): DraftBinding? {
+        val location = ValueLocation.of(resource)
+        observe(InputIdentity.Catalog(catalog))
+        observe(InputIdentity.Form(location))
+        val record = view.resources[resource] ?: return null
+        val type = (typeCatalog.authoredTypeOf(record.configuration) as? Resolution.Ready)?.value ?: return null
+        return DraftBinding(catalog, readContext, location, type)
     }
 
     private fun unavailable(location: ValueLocation): Availability.Unavailable =

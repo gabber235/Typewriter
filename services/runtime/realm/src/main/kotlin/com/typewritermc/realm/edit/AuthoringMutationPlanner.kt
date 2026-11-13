@@ -1,6 +1,5 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
@@ -12,6 +11,7 @@ import com.typewritermc.realm.authoring.LinkSlice
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.after
+import com.typewritermc.realm.authoring.boundTypesOver
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -98,9 +98,9 @@ internal class AuthoringMutationPlanner(
                 addAll(removed)
                 resources.forEach { (id, record) -> if (latestResources[id] != record) add(id) }
             }
-        val final = resources.toMap().let { state -> catalog.withContent(contentTypesOf(state::get, DerivedOrigin.NONE)) }
+        val final = resources.toMap().let { state -> catalog.withContent(contentTypesOf(state::get, saved.boundTypesOver(state))) }
         val links = TouchedLinks(saved, resources, affected, contracts, final)
-        val validator = AuthoringSnapshotValidator(final, catalog, contracts)
+        val validator = AuthoringSnapshotValidator(final, catalog, contracts, saved::boundTypesOver)
         problems += validator.validate(latestResources, resources, affected, links) { saved.judged(it).fit }
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
@@ -149,7 +149,7 @@ internal class AuthoringMutationPlanner(
             if (problems.isNotEmpty()) return@forEachIndexed
             if (index < deletionRunEnd) return@forEachIndexed
             // An overlay caches what it reaches, and any intent can change what a content type means, so each intent reads a fresh one.
-            val catalog = this.catalog.withContent(contentTypesOf(resources::get, DerivedOrigin.NONE))
+            val catalog = this.catalog.withContent(contentTypesOf(resources::get, saved.boundTypesOver(resources)))
             val relations = RelationValueSynchronizer(catalog, contracts)
             when (intent) {
                 is EditIntent.CreateResourceWrapper -> {

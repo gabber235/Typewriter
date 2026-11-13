@@ -13,6 +13,7 @@ import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.formula.graph.UntrackedEnvironment
 import com.typewritermc.realm.catalog.ExtensionCatalog
 import com.typewritermc.realm.catalog.code
+import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.ownsResources
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring_facts.EditExpectation
@@ -242,6 +243,9 @@ internal class TrackedRecorder(
 
     override fun graphLinks(reads: CapturedAuthoringReads): GraphLinks =
         GraphLinks { resource, selection -> this.reads.read(LinksAt(resource, selection)) }
+
+    override fun derivedTypes(reads: CapturedAuthoringReads): DerivedOrigin =
+        DerivedOrigin { owner, key -> this.reads.read(DerivedTypeOf(owner, key)) }
 }
 
 /** A lease on one view and reads pinned to it, taken together. The view's catalog stays open with the lease. */

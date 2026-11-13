@@ -4,6 +4,7 @@ import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.TimelineEntryPlacement
+import com.typewritermc.authoring.orNull
 import com.typewritermc.capability.RealmCapabilities
 import com.typewritermc.capability.RealmCapability
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
@@ -28,6 +29,10 @@ import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.capability.NotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction
 
@@ -153,6 +158,42 @@ data class FixtureStockEntry(
 object FixtureStockExports : DynamicProvider {
     override fun Dynamics.register() {
         each(FixtureStockEntryDefinition.id) { exports { value(FixtureStockEntryFields.stock) } }
+    }
+}
+
+/** One column of a [FixtureBoard]: a row field named [name] that holds a number, or a text when [number] is false. */
+@TypewriterType(id = "9a1d4c7e2b5f4e08a3c6d9f1b2e4a7c0")
+data class FixtureColumn(
+    val name: String = "",
+    val number: Boolean = false,
+)
+
+/** An entry whose row type its own columns compute through a bind, so a creator never chooses it. */
+@TypewriterType(id = "4b8e2f6a1c3d4e5f9a0b7c2d4e6f8a1b")
+data class FixtureBoard<V>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val columns: List<FixtureColumn> = emptyList(),
+    val rows: List<V> = emptyList(),
+) : StaticEntry
+
+/** The column name that makes [FixtureBoardRows] fail, as an extension's own bug would. */
+const val FAILING_COLUMN = "fail"
+
+/** A board's row type: one field per named column. A column without a name adds nothing; [FAILING_COLUMN] throws. */
+@TypewriterDynamicProvider
+object FixtureBoardRows : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureBoardBind.V) { board ->
+            val columns = board.columns.orNull() ?: return@bind
+            columns.items().orNull().orEmpty().forEach { item ->
+                val column = columns.item(item).orNull() ?: return@forEach
+                val name = column.name.orNull()?.takeIf { it.isNotBlank() } ?: return@forEach
+                check(name != FAILING_COLUMN) { "The fixture bind fails on this column." }
+                field(name, if (column.number.orNull() == true) integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use else ScalarKind.TEXT.use)
+            }
+        }
     }
 }
 

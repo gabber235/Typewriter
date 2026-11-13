@@ -1,5 +1,6 @@
 package com.typewritermc.realm.catalog
 
+import com.typewritermc.discovery.BindHook
 import com.typewritermc.discovery.CollectedDynamics
 import com.typewritermc.discovery.DynamicHook
 import com.typewritermc.discovery.OwnedCheckRecipe
@@ -18,6 +19,8 @@ import skirout.editor.v1.catalog.ConfigurationRecipe
 class ExtensionCatalog internal constructor(
     internal val plans: List<CheckPlan>,
     internal val hooks: List<DynamicHook>,
+    /** The binds the extensions registered, each computing one type parameter of one resource type. */
+    internal val binds: List<BindHook>,
     /** The loaded formula providers' functions and the core functions, by name. */
     internal val functions: Map<String, List<FormulaFunction>>,
     private val leases: List<ProviderLease>,
@@ -44,6 +47,7 @@ internal fun collectExtensions(
         ExtensionCatalog(
             plans = plans + dynamicFailures + CheckPlan.Content(CONTENT_RULE),
             hooks = dynamics.hooks,
+            binds = dynamics.binds,
             functions = (formulas.map { it.function } + CoreFormulas.functions).groupBy { it.name },
             leases = leases,
         )

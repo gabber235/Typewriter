@@ -2,6 +2,7 @@ package com.typewritermc.realm.edit
 
 import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.contentTypesOf
+import com.typewritermc.authoring.Misfit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.id
@@ -10,6 +11,8 @@ import com.typewritermc.authoring.root
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.contentOwner
+import com.typewritermc.types.catalog.derivedKey
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.misfits
 import com.typewritermc.types.isAcyclic
@@ -34,6 +37,8 @@ internal class AuthoringSnapshotValidator(
     private val catalog: CheckedCatalog,
     private val savedCatalog: CheckedCatalog,
     private val contracts: List<RelationContract>,
+    /** What binds compute over a set of resources, read against the view the change started from. */
+    private val boundTypesOver: (Map<ResourceId, AuthoringRecord>) -> DerivedOrigin,
 ) {
     /**
      * Validates the same affected graph boundary for replay and caller supplied working overlays. [before] holds the
@@ -64,14 +69,20 @@ internal class AuthoringSnapshotValidator(
                             if (previous.types == record.types) {
                                 catalog
                             } else {
-                                catalog.withContent(contentTypesOf((resources + (id to record.copy(types = previous.types)))::get, DerivedOrigin.NONE))
+                                val asBefore = resources + (id to record.copy(types = previous.types))
+                                catalog.withContent(contentTypesOf(asBefore::get, boundTypesOver(asBefore)))
                             }
                         val alone = projectAlone(id, previous, resources, ownAsBefore)
                         previous.misfits(id, savedCatalog) { savedFit(id) } +
                             previous.misfits(id, ownAsBefore) { alone.fit.on(id) }
                     }.orEmpty()
                     .toSet()
-            problems += record.misfits(id, catalog) { touching.fit.on(id) }.filter { it.isNewAgainst(baseline) }.map { it.problem }
+            problems +=
+                record
+                    .misfits(id, catalog) { touching.fit.on(id) }
+                    .withoutOwnBinds(id)
+                    .filter { it.isNewAgainst(baseline) }
+                    .map { it.problem }
         }
         problems += touching.problems
         validateOwnership(links, contracts, problems)
@@ -95,6 +106,16 @@ internal class AuthoringSnapshotValidator(
 
 /** The problems located on [resource]. */
 private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = filter { it.location.resource == resource }
+
+/**
+ * These misfits without the ones a type [owner]'s own binds compute causes: that type is extension output, not a choice
+ * the write made, so its failure shows as a finding on [owner] and blocks publish but never refuses the write. A use of
+ * another resource's computed type is a choice, and stays refused like a use of any missing type.
+ */
+private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {
+    val own = filter { misfit -> misfit.type?.let { it.derivedKey() != null && it.contentOwner() == owner } == true }.map { it.problem }.toSet()
+    return filterNot { it.problem in own }
+}
 
 /** A resource with more than one owner, where one of its ownership links has an affected end. */
 private fun validateOwnership(

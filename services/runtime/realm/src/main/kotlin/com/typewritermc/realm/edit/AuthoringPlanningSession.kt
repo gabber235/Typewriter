@@ -14,6 +14,7 @@ import com.typewritermc.authoring.text
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.boundTypesOver
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.over
@@ -83,7 +84,7 @@ internal class AuthoringPlanningSession(
     val stagedCatalog: AuthoringCatalogLease get() = catalogWith(emptyMap())
 
     /** The catalog over what is staged now with [upserts] written over it, for a record whose values need its own declarations. */
-    fun catalogWith(upserts: Map<ResourceId, AuthoringRecord>): AuthoringCatalogLease = baseline.catalog.over(staged + upserts)
+    fun catalogWith(upserts: Map<ResourceId, AuthoringRecord>): AuthoringCatalogLease = (staged + upserts).let { resources -> baseline.catalog.over(resources, baseline.boundTypesOver(resources)) }
 
     private val removed = linkedSetOf<ResourceId>()
     val resources: Map<ResourceId, AuthoringRecord> = Collections.unmodifiableMap(staged)

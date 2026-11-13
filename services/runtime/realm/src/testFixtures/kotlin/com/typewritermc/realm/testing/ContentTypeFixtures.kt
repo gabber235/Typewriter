@@ -24,6 +24,7 @@ import com.typewritermc.realm.authoring.RealmGraphReads
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.RelationReads
+import com.typewritermc.realm.authoring.boundTypesOver
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.code
 import com.typewritermc.realm.catalog.over
@@ -602,7 +603,7 @@ val RealmFixture.viewCatalog: CheckedCatalog get() = views.read { view -> view.c
 /** The catalog a view of the saved state with [upserts] replaced would have, without admitting that state. */
 fun RealmFixture.catalogOver(upserts: Map<ResourceId, AuthoringRecord>): CheckedCatalog =
     views.read { view ->
-        view.catalog.over(view.resources + upserts).checked
+        (view.resources + upserts).let { resources -> view.catalog.over(resources, view.boundTypesOver(resources)).checked }
     }
 
 /** The code catalog alone, without any declaration a resource holds. */

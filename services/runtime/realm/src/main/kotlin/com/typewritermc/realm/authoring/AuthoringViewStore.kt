@@ -6,6 +6,7 @@ import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.ViewCatalogLease
 import com.typewritermc.realm.catalog.over
 import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.immutableMapCopy
@@ -404,7 +405,9 @@ class InMemoryAuthoringViewStore(
         val catalog = before.catalog.retain()
         try {
             val immutable = merged.immutableMapCopy()
-            return AuthoringView(catalog.over(immutable), immutable, links, linkSlices = slices.immutableMapCopy(), scopes = scopes)
+            return viewOver(catalog, immutable) { viewCatalog ->
+                AuthoringView(viewCatalog, immutable, links, linkSlices = slices.immutableMapCopy(), scopes = scopes)
+            }
         } catch (failure: Throwable) {
             catalog.closeAfter(failure)
             throw failure
@@ -418,7 +421,9 @@ class InMemoryAuthoringViewStore(
         try {
             val immutable = immutableResources(resources)
             return RootRetention(
-                AuthoringView(catalog.over(immutable), immutable, discoverLinks(immutable).immutableMapCopy(), scopes = scopes),
+                viewOver(catalog, immutable) { viewCatalog ->
+                    AuthoringView(viewCatalog, immutable, discoverLinks(immutable).immutableMapCopy(), scopes = scopes)
+                },
             )
         } catch (failure: Throwable) {
             catalog.closeAfter(failure)
@@ -475,6 +480,20 @@ private class DefaultAuthoringLease(
     override fun close() {
         if (closed.compareAndSet(false, true)) release()
     }
+}
+
+/**
+ * The view [build] makes from a catalog over [resources] whose binds read that same view. A view needs its catalog to
+ * exist, and its binds need the view, so the catalog asks for the view only when a bind first runs.
+ */
+private fun viewOver(
+    catalog: AuthoringCatalogLease,
+    resources: Map<ResourceId, AuthoringRecord>,
+    build: (ViewCatalogLease) -> AuthoringView,
+): AuthoringView {
+    lateinit var view: AuthoringView
+    view = build(catalog.over(resources) { owner, key -> view.boundType(owner, key) })
+    return view
 }
 
 private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<LinkOccurrenceId, LinkOccurrence> =

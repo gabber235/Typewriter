@@ -27,6 +27,8 @@ internal class ViewCatalogLease(
 /** The code catalog of this lease, without any view's content. */
 internal val AuthoringCatalogLease.code: AuthoringCatalogLease get() = (this as? ViewCatalogLease)?.code ?: this
 
-/** The code catalog plus what [resources] declare. */
-internal fun AuthoringCatalogLease.over(resources: Map<ResourceId, AuthoringRecord>): ViewCatalogLease =
-    ViewCatalogLease(code, contentTypesOf(resources::get, DerivedOrigin.NONE))
+/** The code catalog plus what [resources] declare and what [derived] computes for them. */
+internal fun AuthoringCatalogLease.over(
+    resources: Map<ResourceId, AuthoringRecord>,
+    derived: DerivedOrigin,
+): ViewCatalogLease = ViewCatalogLease(code, contentTypesOf(resources::get, derived))
