@@ -81,6 +81,17 @@ extension StoryKnobs on KnobsBuilder {
     return options[chosen]!;
   }
 
+  /// The Width segments over [widths], each a width by the name the knob
+  /// shows; returns the chosen width, the first one at start.
+  double width(Map<String, double> widths) {
+    final chosen = object.segmented<String>(
+      label: "Width",
+      options: widths.keys.toList(),
+      initialOption: widths.keys.first,
+    );
+    return widths[chosen]!;
+  }
+
   /// The seed story data is generated from; another seed reshuffles it, the
   /// same seed shows the same data on every reload.
   int seed({int initialValue = 1}) => this.int.slider(

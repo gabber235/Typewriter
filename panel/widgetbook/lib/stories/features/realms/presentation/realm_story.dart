@@ -22,7 +22,7 @@ Widget realmStory(
   return Story(
     [
       signedIn(ada, organization: acme),
-      showcaseRealm(),
+      ...context.knobs.showcaseContent(),
       ...traits,
       ...context.knobs.traits("Realm", {
         "Online": const [],
@@ -38,13 +38,34 @@ Widget realmStory(
           realmDocumentFails(StateError("The Realm did not answer")),
         ],
       }),
-      ...context.knobs.traits("Window", {
-        "Desktop": const [],
-        "Compact": const [compact],
-      }),
+      ...context.knobs.window(),
     ],
     at: PanelLocation.route(
       const RealmRouteTree().surface(showcaseScope, target),
     ),
   );
+}
+
+/// Knobs that choose what the showcase Realm holds.
+extension ShowcaseContentKnobs on KnobsBuilder {
+  /// The Content knob: the [showcaseRealm] as it is, with long names, or
+  /// with many Books.
+  List<Trait> showcaseContent() => traits("Content", {
+    "Showcase": [showcaseRealm()],
+    "Long names": [showcaseRealm(longNames: true)],
+    "Many books": [showcaseRealm(extraBooks: 30)],
+  });
+
+  /// The Motion knob: the panel's motion, or the reduced motion a user
+  /// asked the platform for.
+  List<Trait> motion() => traits("Motion", {
+    "Full": const [],
+    "Reduced": const [reducedMotion],
+  });
+
+  /// The Window knob: a desktop window, or a compact one.
+  List<Trait> window() => traits("Window", {
+    "Desktop": const [],
+    "Compact": const [compact],
+  });
 }
