@@ -43,12 +43,6 @@ extension MembershipStoryKnobs on KnobsBuilder {
     "Compact": const [compact],
     "Phone": [window(phoneWindow)],
   });
-
-  /// Full or reduced motion.
-  List<Trait> motion() => traits("Motion", {
-    "Full": const [],
-    "Reduced": const [reducedMotion],
-  });
 }
 
 /// The ids of [items] a selection knob value picks: none, the first two, or

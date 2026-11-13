@@ -194,3 +194,28 @@ class RowFocusStory extends HookWidget {
         ),
       );
 }
+
+/// Card rows that are one [RowStop] each: Tab enters the list on the
+/// focused card, the arrow keys move between cards, and Remove focused
+/// hands focus to the next card.
+@widgetbook.UseCase(name: "Card stops", type: RowStop)
+Widget rowStopUseCase(BuildContext context) {
+  return Story(
+    context.knobs.motion(),
+    at: const PanelLocation.component(
+      RowFocusStory(layout: RowFocusLayout.cards),
+    ),
+  );
+}
+
+/// Editor rows that hold controls: focus lands on each row's
+/// [RowLanding], its name button, never on Remove.
+@widgetbook.UseCase(name: "Editor rows", type: RowLanding)
+Widget rowLandingUseCase(BuildContext context) {
+  return Story(
+    context.knobs.motion(),
+    at: const PanelLocation.component(
+      RowFocusStory(layout: RowFocusLayout.editor),
+    ),
+  );
+}

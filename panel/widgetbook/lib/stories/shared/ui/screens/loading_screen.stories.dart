@@ -22,3 +22,14 @@ Widget loadingScreenUseCase(BuildContext context) {
     at: PanelLocation.component(LoadingScreen(title: title)),
   );
 }
+
+/// The status line under the [LoadingScreen] heading as a
+/// [ConnectionScroller]: it ripples while the connection is pending, and
+/// stays level under reduced motion.
+@widgetbook.UseCase(name: "Default", type: ConnectionScroller)
+Widget connectionScrollerUseCase(BuildContext context) {
+  return Story(
+    context.knobs.motion(),
+    at: const PanelLocation.component(ConnectionScroller()),
+  );
+}

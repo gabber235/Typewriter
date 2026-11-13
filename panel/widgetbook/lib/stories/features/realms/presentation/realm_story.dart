@@ -56,13 +56,6 @@ extension ShowcaseContentKnobs on KnobsBuilder {
     "Many books": [showcaseRealm(extraBooks: 30)],
   });
 
-  /// The Motion knob: the panel's motion, or the reduced motion a user
-  /// asked the platform for.
-  List<Trait> motion() => traits("Motion", {
-    "Full": const [],
-    "Reduced": const [reducedMotion],
-  });
-
   /// The Window knob: a desktop window, or a compact one.
   List<Trait> window() => traits("Window", {
     "Desktop": const [],

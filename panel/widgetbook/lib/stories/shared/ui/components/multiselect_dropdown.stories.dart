@@ -69,3 +69,33 @@ class _RolePicker extends HookWidget {
     );
   }
 }
+
+/// A [SmallChip] for each role, as a selected value in a multiselect field;
+/// without Removable the chips have no remove button.
+@widgetbook.UseCase(name: "Roles", type: SmallChip)
+Widget smallChipUseCase(BuildContext context) {
+  final removable = context.knobs.boolean(
+    label: "Removable",
+    initialValue: true,
+  );
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: 360,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final MapEntry(key: role, value: color) in _roles.entries)
+              SmallChip(
+                label: role,
+                color: color,
+                onDelete: removable ? () {} : null,
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

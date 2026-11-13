@@ -50,3 +50,17 @@ Widget typedParagraphUseCase(BuildContext context) {
     ),
   );
 }
+
+/// The busy sign of an icon button with no busy word: a [RippleGlyph]
+/// rising and settling like one letter while Rippling. Under reduced motion
+/// it stays level.
+@widgetbook.UseCase(name: "Busy icon", type: RippleGlyph)
+Widget rippleGlyphUseCase(BuildContext context) {
+  final rippling = context.knobs.boolean(label: "Rippling", initialValue: true);
+  return Story(
+    context.knobs.motion(),
+    at: PanelLocation.component(
+      RippleGlyph(rippling: rippling, child: const Icon(Icons.refresh)),
+    ),
+  );
+}

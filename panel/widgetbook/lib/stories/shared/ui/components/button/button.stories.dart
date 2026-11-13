@@ -132,3 +132,21 @@ Widget pressSplashUseCase(BuildContext context) {
     ),
   );
 }
+
+/// The bubble a [Button] shows on hover or focus when it has a tooltip, as a
+/// [ButtonTooltip] faded in by Opacity; a long message stays one line.
+@widgetbook.UseCase(name: "Default", type: ButtonTooltip)
+Widget buttonTooltipUseCase(BuildContext context) {
+  final opacity = context.knobs.fraction("Opacity", initialValue: 1);
+  final message = context.knobs.object.segmented(
+    label: "Message",
+    options: const ["Refresh", "Copy the join code to the clipboard"],
+    initialOption: "Refresh",
+  );
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      ButtonTooltip(message: message, animation: opacity),
+    ),
+  );
+}

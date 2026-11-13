@@ -67,3 +67,70 @@ Widget singleShortcutDisplayUseCase(BuildContext context) {
     ),
   );
 }
+
+/// Single keys as [LogicalKeyBoardDisplay] shows them: modifiers and named
+/// keys as their familiar symbol, letters upper case.
+@widgetbook.UseCase(name: "Keys", type: LogicalKeyBoardDisplay)
+Widget logicalKeyBoardDisplayUseCase(BuildContext context) {
+  final outline = context.knobs.boolean(label: "Outline");
+  final size = context.knobs.double.slider(
+    label: "Size",
+    initialValue: 12,
+    min: 10,
+    max: 24,
+  );
+  final style = outline ? const KeyStyle.outline() : const KeyStyle.solid();
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final key in [
+            LogicalKeyboardKey.meta,
+            LogicalKeyboardKey.control,
+            LogicalKeyboardKey.shift,
+            LogicalKeyboardKey.alt,
+            LogicalKeyboardKey.enter,
+            LogicalKeyboardKey.escape,
+            LogicalKeyboardKey.arrowUp,
+            LogicalKeyboardKey.backspace,
+            LogicalKeyboardKey.keyK,
+            LogicalKeyboardKey.slash,
+          ])
+            LogicalKeyBoardDisplay(keyBoardKey: key, style: style, size: size),
+        ],
+      ),
+    ),
+  );
+}
+
+/// A hint teaching every binding of one move: [RotatingShortcuts] shows the
+/// arrow, the letter and the Tab binding in turn.
+@widgetbook.UseCase(name: "Rotating", type: RotatingShortcuts)
+Widget rotatingShortcutsUseCase(BuildContext context) {
+  final count = context.knobs.object.segmented(
+    label: "Shortcuts",
+    options: const [0, 1, 3],
+    initialOption: 3,
+  );
+  const shortcuts = [
+    SingleActivator(LogicalKeyboardKey.arrowDown),
+    SingleActivator(LogicalKeyboardKey.keyJ),
+    SingleActivator(LogicalKeyboardKey.tab),
+  ];
+  return Story(
+    context.knobs.motion(),
+    at: PanelLocation.component(
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 8,
+        children: [
+          const Text("Next row"),
+          RotatingShortcuts(shortcuts: shortcuts.take(count).toList()),
+        ],
+      ),
+    ),
+  );
+}
