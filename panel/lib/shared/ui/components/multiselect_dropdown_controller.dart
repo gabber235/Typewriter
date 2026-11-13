@@ -173,7 +173,7 @@ _MultiselectDropdownController<T> _useMultiselectDropdownController<
   }, [popupController, focusNode]);
 
   useEffect(() {
-    textController.value = textController.value.copyWith(text: currentLabel);
+    textController.showLabels(currentLabel);
     return null;
   }, [currentLabel, randomSeed.value]);
   useFocusedChange(focusNode, ({required hasFocus}) {

@@ -90,6 +90,23 @@ void main() {
       expect(panel.shows("2 selected"), isFalse);
     });
 
+    testWidgets("Grace and Linus both get the Writer role from the "
+        "selection bar", (tester) async {
+      final panel = await tester.pumpPanel(page, at: membersPage());
+
+      await panel.tapOn(panel.labeled("Select Grace"));
+      await panel.tapOn(panel.labeled("Select Linus"));
+      await panel.tapOn(find.text("Assign roles"));
+      await panel.tapOn(find.text("Writer").last);
+      await panel.tapOn(find.text("Current Members"));
+      await panel.tapOn(find.text("Apply roles"));
+
+      await panel.eventually(
+        () => expect(find.text("Writer"), findsNWidgets(2)),
+      );
+      expect(panel.shows("2 selected"), isFalse);
+    });
+
     testWidgets("holding a member's remove icon removes that member", (
       tester,
     ) async {
