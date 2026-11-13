@@ -236,7 +236,7 @@ pieces:
 
   - id: client-pool
     status: building
-    open: How a claim moves clients between Papers depends on paper-topology
+    open: The client shows a "Chat messages can't be verified" toast after joining; a toast check could see it (slice 1)
     tries:
       - id: fresh-client-per-requirement
         what: Boot a client per requirement
@@ -512,11 +512,20 @@ open:
 
 slices:
   - id: walking-skeleton
-    status: building
+    status: done
     what: 1 client, stepped Paper, perceive stream, within and sees chat, pool process, TestRun, cargo xtask e2e game
-    green: PROBE-1 passes; its broken twin fails with a clear message
+    green: PROBE-1 passes; WINDOW-1 proves a check that never holds fails after its window, naming the tick and what the player perceived
+    evidence: [commits d855a4f70 5808d8113 bd431c724 3234d522f, "cargo xtask e2e game on 5d519e4b8: 2 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      A seventh project, :playtest-wire, holds the wire every part shares. A record stands for every
+      tick until the next one, so a record from before a window shows the window's first tick. The
+      client signals Joined (Paper starts stepping) apart from Ready (it takes a lease); without it the
+      first lease after boot raced the first step ping. Paperclip cannot see the agent's classes, so
+      the agent puts its jar on the bootstrap path. Gaps: every case is written as happy_path (no way
+      to declare demonstrates yet); no run file when the game cannot boot; RunRecords was not built
+      test first; commits need the devenv shell for rustfmt.
   - id: input-from-the-client
-    status: queued
+    status: next
     what: type, click, look and use through XTest per display and SDL on the Mac; retype for lost suggestions
     green: spike J's 18 inputs as requirements
   - id: pool-of-four-and-groups
@@ -548,4 +557,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 1 (walking skeleton) is building on feat/game-verification-slice-1. Accept it on evidence, then check in and start slice 2.
+next: Slice 1 done. Confirm its built decisions with the developer, then start slice 2 (input from the client).
