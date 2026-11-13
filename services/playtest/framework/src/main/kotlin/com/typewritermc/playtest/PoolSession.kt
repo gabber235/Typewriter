@@ -136,7 +136,7 @@ internal class PoolSession private constructor(
         failure?.let { throw it }
     }
 
-    /** Paper runs [action] for [player]; returns the tick after which it ran. */
+    /** Paper runs [action] for [player]; returns, once [player]'s client holds its effect, the tick after which it ran. */
     suspend fun probe(
         player: GamePlayer,
         action: ProbeAction,

@@ -194,6 +194,8 @@ internal class Game private constructor(
             return Part(name, builder.start(), log)
         }
 
+        // An empty world over one bedrock layer: a player waits at spawn while probes step Paper, so the
+        // spawn needs ground to stand on.
         private fun serverProperties(port: Int) =
             listOf(
                 "online-mode=false",
@@ -207,7 +209,7 @@ internal class Game private constructor(
                 "gamemode=creative",
                 "pause-when-empty-seconds=-1",
                 "level-type=minecraft\\:flat",
-                """generator-settings={"layers":[{"block":"minecraft:air","height":1}],"biome":"minecraft:the_void"}""",
+                """generator-settings={"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:the_void"}""",
                 "generate-structures=false",
             ).joinToString("\n", postfix = "\n")
 

@@ -15,9 +15,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.ThreadPoolExecutor;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ChunkTrackingView;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -32,7 +36,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private static final String STEP_ACK = "playtest:step";
 
-    private final StepPolicy policy = new StepPolicy(this::sendBarrier);
+    private final StepPolicy policy = new StepPolicy(this::sendBarrier, PlaytestPlugin::nothingLeftToSend, task -> MinecraftServer.getServer().scheduleOnMain(task));
     private final Probes probes = new Probes();
     private Link pool;
 
@@ -74,8 +78,11 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             case Stepping stepping -> Step.on = true;
             case Probe probe -> {
                 Player player = Bukkit.getPlayer(probe.player());
+                int ranAfter = policy.lastEnded();
                 String failure = player == null ? "the player " + probe.player() + " is not online" : probes.run(player, probe.action());
-                pool.send(new ProbeDone(probe.request(), policy.lastEnded(), failure));
+                // A probe is done once its player's client has what it caused, so the next stimulus finds it there.
+                if (failure == null) policy.deliver(probe.player(), () -> pool.send(new ProbeDone(probe.request(), ranAfter, null)));
+                else pool.send(new ProbeDone(probe.request(), ranAfter, failure));
             }
             case StepUntil step -> policy.stepUntil(step.player(), step.tick(), step.barrier());
             case StopStepping stop -> policy.stop(stop.player());
@@ -94,6 +101,29 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private void sendBarrier(UUID id, int barrier) {
         Player player = Bukkit.getPlayer(id);
         if (player != null) ((CraftPlayer) player).getHandle().connection.send(new ClientboundPingPacket(barrier));
+    }
+
+    /**
+     * Whether Paper has sent the player everything the client shows: every chunk around the player within
+     * the client's own view distance, and the command tree, which Paper builds on a pool of its own and
+     * sends from a task that pool queues on the main thread once done. Paper may send chunks further out,
+     * nearest first; the client draws none of them.
+     */
+    private static boolean nothingLeftToSend(UUID id) {
+        Player player = Bukkit.getPlayer(id);
+        if (player == null) return true;
+        var commands = (ThreadPoolExecutor) Commands.COMMAND_SENDING_POOL;
+        if (commands.getActiveCount() > 0 || !commands.getQueue().isEmpty()) return false;
+        // The test Paper's chunk loader applies around the player's chunk, at the distance the client draws.
+        int radius = Math.min(player.getSendViewDistance(), player.getClientViewDistance());
+        int centerX = player.getLocation().getBlockX() >> 4;
+        int centerZ = player.getLocation().getBlockZ() >> 4;
+        for (int x = centerX - radius - 1; x <= centerX + radius + 1; x++) {
+            for (int z = centerZ - radius - 1; z <= centerZ + radius + 1; z++) {
+                if (ChunkTrackingView.isWithinDistance(centerX, centerZ, radius, x, z, true) && !player.isChunkSent(Chunk.getChunkKey(x, z))) return false;
+            }
+        }
+        return true;
     }
 
     /**

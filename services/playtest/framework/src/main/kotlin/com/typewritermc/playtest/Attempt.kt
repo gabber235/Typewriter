@@ -55,7 +55,7 @@ internal class Attempt(
 
     fun nextBarrier(): Int = session.nextBarrier()
 
-    /** Paper runs [action] for [player]; the mark is the tick after which it ran. */
+    /** Paper runs [action] for [player] and returns once [player]'s client holds its effect; the mark is the tick after which it ran. */
     suspend fun probe(
         player: GamePlayer,
         action: ProbeAction,

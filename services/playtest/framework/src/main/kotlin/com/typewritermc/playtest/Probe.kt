@@ -18,7 +18,8 @@ enum class GameMode { SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR }
 
 /**
  * The framework's Paper probe: arrangements and stimuli that run inside Paper, between ticks. Each call
- * becomes the anchor of the windows after it. Until the attempt's wipe exists, a requirement arranges
+ * returns once the player's client holds what it caused, so the next stimulus finds it there, and becomes
+ * the anchor of the windows after it. Until the attempt's wipe exists, a requirement arranges
  * everything it relies on, since earlier attempts leave their arrangements behind.
  */
 class Probe internal constructor(

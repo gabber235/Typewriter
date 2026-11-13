@@ -47,7 +47,8 @@ public sealed interface Message {
 
     /**
      * Paper to session: the probe ran after {@code tick} ended, so its effects can show from the next
-     * tick. {@code failure} is null when it ran, or says why it could not.
+     * tick, and its player's client now holds all it caused. {@code failure} is null when it ran, or says
+     * why it could not.
      */
     record ProbeDone(long request, int tick, String failure) implements Message {}
 
