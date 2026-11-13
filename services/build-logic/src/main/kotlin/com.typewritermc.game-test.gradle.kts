@@ -38,6 +38,16 @@ val agentPart = gamePart("playtestAgent", ":playtest-agent", "runtimeElements")
 val pluginPart = gamePart("playtestPlugin", ":playtest-plugin", "playtestPlugin")
 val clientLaunchPart = gamePart("playtestClientLaunch", ":playtest-client", "playtestClientLaunch")
 
+/**
+ * One run per build: every gameTest task of the build, in whichever project, reports into the same run
+ * file, as their test JVMs share one pool.
+ */
+abstract class GameRun : BuildService<BuildServiceParameters.None> {
+    val id: String = UUID.randomUUID().toString()
+}
+
+val gameRun = gradle.sharedServices.registerIfAbsent("playtestGameRun", GameRun::class) {}
+
 /** The `-Dplaytest.*` properties the session reads and forwards to the pool it starts. */
 abstract class GameParts : CommandLineArgumentProvider {
     @get:Classpath abstract val pool: ConfigurableFileCollection
@@ -52,6 +62,11 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     @get:Input abstract val java: Property<String>
 
+    /** How many warm clients the pool keeps. */
+    @get:Input abstract val clients: Property<Int>
+
+    @get:Internal abstract val runId: Property<String>
+
     @get:Internal abstract val poolDir: Property<String>
 
     @get:Internal abstract val testRun: Property<String>
@@ -65,8 +80,8 @@ abstract class GameParts : CommandLineArgumentProvider {
             "agent" to agent.singleFile.path,
             "plugin" to plugin.singleFile.path,
             "clientLaunch" to clientLaunch.singleFile.path,
-            // One run per invocation: every test JVM of this task reports into the same run file.
-            "run" to UUID.randomUUID().toString(),
+            "clients" to clients.get().toString(),
+            "run" to runId.get(),
             "testRun" to testRun.get(),
         ).map { (name, value) -> "-Dplaytest.$name=$value" }
 }
@@ -78,6 +93,7 @@ tasks.register<Test>("gameTest") {
     classpath = gameTest.runtimeClasspath
     // The game's state lives outside Gradle's view, so a game run is never up to date.
     outputs.upToDateWhen { false }
+    usesService(gameRun)
     jvmArgumentProviders +=
         objects.newInstance<GameParts>().apply {
             pool.from(poolPart)
@@ -86,6 +102,9 @@ tasks.register<Test>("gameTest") {
             plugin.from(pluginPart)
             clientLaunch.from(clientLaunchPart)
             java.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }.map { it.executablePath.asFile.path })
+            // `-Pplaytest.clients=1` runs the suite on a pool of one client.
+            clients.set(providers.gradleProperty("playtest.clients").map(String::toInt).orElse(4))
+            runId.set(gameRun.map { it.id })
             poolDir.set(servicesDirectory.resolve("build/playtest/pool").path)
             testRun.set(xtaskResults.resolve("game/test_run.json").path)
         }

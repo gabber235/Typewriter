@@ -143,6 +143,7 @@ pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
 
 /// Runs every game requirement once and reports the run the game pool wrote. Paper, the client and
 /// the Gradle build that starts them all run on this machine, so the whole run is one heavy build.
+/// Every project's `gameTest` task runs at once, so their test JVMs share the one game pool.
 fn game(ctx: &Context, args: &E2eArgs) -> Result<()> {
     if !args.only.is_empty() || args.repeat.get() != 1 {
         bail!(
@@ -164,7 +165,7 @@ fn game(ctx: &Context, args: &E2eArgs) -> Result<()> {
         .tool(
             "services",
             "./gradlew",
-            &["--console=plain", ":playtest:gameTest"],
+            &["--console=plain", "--parallel", "gameTest"],
         )
         .status()
         .context("cannot start Gradle for the game suite")?;
