@@ -90,6 +90,7 @@ final class BoundPage {
                 key: skir.ParameterKey(owner: type, index: 0),
                 name: "T",
                 bounds: const [],
+                derived: false,
               ),
             ]
           : const [],

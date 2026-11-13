@@ -23,7 +23,9 @@ import com.typewritermc.types.ResourceDefinition
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.ContentSource
+import com.typewritermc.types.catalog.ContentTypes
+import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.DerivedTarget
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.content
@@ -129,8 +131,8 @@ private val codeCatalog: DefaultCheckedCatalog =
 /** The code catalog plus Prize, its alias, an alias of that alias, aliases of code types, and Tally. */
 val evaluationCatalog: CheckedCatalog =
     codeCatalog.withContent(
-        object : ContentSource {
-            override fun declarations(owner: ResourceId): List<TypeDefinition> =
+        object : ContentTypes {
+            override fun written(owner: ResourceId): List<TypeDefinition> =
                 if (owner ==
                     contentOwner
                 ) {
@@ -151,6 +153,11 @@ val evaluationCatalog: CheckedCatalog =
                     field == "chest" -> BoxDefinition.id.use(listOf(RewardDefinition.id.use()))
                     else -> null
                 }
+
+            override fun derived(
+                owner: ResourceId,
+                key: String,
+            ): DerivedTarget = DerivedOrigin.NONE.derived(owner, key)
         },
     )
 

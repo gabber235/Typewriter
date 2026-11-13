@@ -256,7 +256,7 @@ private val boundedProviders: List<FormulaFunction> =
         val result = if (name == "loudest") t else int.toTemplate()
         FormulaFunction(
             name = name,
-            typeParameters = listOf(TypeParameter(key = key, name = "T", bounds = listOf(entityId.template()))),
+            typeParameters = listOf(TypeParameter(key = key, name = "T", bounds = listOf(entityId.template()), derived = false)),
             signature = FunctionTypeTemplate(context = context, parameters = parameters, result = result),
             defaulted = emptySet(),
         ) { error("The checker test world does not run providers.") }

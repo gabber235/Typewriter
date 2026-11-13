@@ -161,7 +161,7 @@ fun variableDefinition(resource: TypeDefinitionId): TypeDefinition {
     val parameter = ParameterKey(owner = id, index = 0)
     return TypeDefinition(
         id = id,
-        parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(resource.template()))),
+        parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(resource.template()), derived = false)),
         representation =
             RepresentationTemplate.createRecord(
                 fields =

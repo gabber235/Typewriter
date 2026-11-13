@@ -134,6 +134,7 @@ skir.PublishedType declaredRecord(
           key: skir.ParameterKey(owner: id, index: index),
           name: parameter,
           bounds: [for (final bound in bounds) typeTemplateOf(bound)],
+          derived: false,
         ),
     ],
     parents: [for (final parent in parents) _named(parent)],

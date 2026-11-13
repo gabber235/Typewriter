@@ -942,7 +942,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val generic =
             TypeDefinition.partial(
                 id = genericId,
-                parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(baseId.template()))),
+                parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(baseId.template()), derived = false)),
                 representation =
                     RepresentationTemplate.createRecord(
                         fields =

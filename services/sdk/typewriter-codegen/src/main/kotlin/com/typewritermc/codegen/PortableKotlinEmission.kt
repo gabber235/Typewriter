@@ -375,11 +375,12 @@ internal fun TypeTemplate.appliedNamedUseCode(): CodeBlock {
 context(_: DefinitionReferences)
 internal fun TypeParameter.kotlinCode(): CodeBlock =
     CodeBlock.of(
-        "%T(key·=·%L,♢name·=·%S,♢bounds·=·%L)",
+        "%T(key·=·%L,♢name·=·%S,♢bounds·=·%L,♢derived·=·%L)",
         TypeParameter::class,
         key.kotlinCode(),
         name,
         bounds.map { it.kotlinCode() }.listCode(),
+        derived,
     )
 
 context(_: DefinitionReferences)

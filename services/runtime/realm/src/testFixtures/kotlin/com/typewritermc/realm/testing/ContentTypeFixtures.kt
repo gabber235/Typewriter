@@ -206,7 +206,7 @@ class TypeDefinitionBuilder internal constructor(
                     index,
                     name,
                     ->
-                    TypeParameter(key = ParameterKey(owner = id, index = index), name = name, bounds = emptyList())
+                    TypeParameter(key = ParameterKey(owner = id, index = index), name = name, bounds = emptyList(), derived = false)
                 },
             representation =
                 if (unitWhenEmpty && fields.isEmpty() && form == RecordForm.CONCRETE) {

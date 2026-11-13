@@ -1339,12 +1339,77 @@
                 },
                 "revision": 1
               }
+            },
+            {
+              "definition": {
+                "type_id": {
+                  "kind": "qualified",
+                  "value": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:ContentKey.derived"
+                  }
+                },
+                "revision": 1
+              }
             }
           ]
         }
       }
     }
   }
+},
+{
+  "id": {
+    "type_id": {
+      "kind": "qualified",
+      "value": {
+        "namespace": "skir",
+        "name": "editor/v1/type_catalog.skir:ContentKey.derived"
+      }
+    },
+    "revision": 1
+  },
+  "representation": {
+    "kind": "record",
+    "value": {
+      "fields": [
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:ContentKey.derived"
+                }
+              },
+              "revision": 1
+            },
+            "name": "value"
+          },
+          "type": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        }
+      ],
+      "form": "concrete"
+    }
+  },
+  "parents": [
+    {
+      "definition": {
+        "type_id": {
+          "kind": "qualified",
+          "value": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:ContentKey"
+          }
+        },
+        "revision": 1
+      }
+    }
+  ]
 },
 {
   "id": {
@@ -6839,6 +6904,25 @@
                 }
               ]
             }
+          }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/type_catalog.skir:TypeParameter"
+                }
+              },
+              "revision": 1
+            },
+            "name": "derived"
+          },
+          "type": {
+            "kind": "scalar",
+            "value": "boolean"
           }
         }
       ],

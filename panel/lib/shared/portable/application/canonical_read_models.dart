@@ -578,6 +578,7 @@ final _frameworkReadDefinitions = List<skir.TypeDefinition>.unmodifiable(
           key: skir.ParameterKey(owner: _readListId, index: 0),
           name: "T",
           bounds: const [],
+          derived: false,
         ),
       ],
       representation: skir.RepresentationTemplate.createSequence(

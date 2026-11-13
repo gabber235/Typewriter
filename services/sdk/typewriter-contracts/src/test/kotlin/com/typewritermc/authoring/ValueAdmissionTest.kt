@@ -1,7 +1,9 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.catalog.ContentSource
+import com.typewritermc.types.catalog.ContentTypes
+import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.DerivedTarget
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
@@ -57,8 +59,8 @@ val ValueAdmissionTest by testSuite {
         )
     val catalog =
         DefaultCheckedCatalog(CatalogGeneration(value = "walk"), StandardTypes.definitions).withContent(
-            object : ContentSource {
-                override fun declarations(owner: ResourceId): List<TypeDefinition> =
+            object : ContentTypes {
+                override fun written(owner: ResourceId): List<TypeDefinition> =
                     if (owner.value ==
                         "prizes"
                     ) {
@@ -71,6 +73,11 @@ val ValueAdmissionTest by testSuite {
                     owner: ResourceId,
                     field: String,
                 ): TypeUse? = if (field == "alias") prize.use() else null
+
+                override fun derived(
+                    owner: ResourceId,
+                    key: String,
+                ): DerivedTarget = DerivedOrigin.NONE.derived(owner, key)
             },
         )
     val at = ValueLocation.of(ResourceId(value = "holder"))

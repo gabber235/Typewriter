@@ -9,6 +9,7 @@ import com.typewritermc.types.declared
 import com.typewritermc.types.mapTypes
 import com.typewritermc.types.member
 import com.typewritermc.types.named
+import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.ContentKey
 import skirout.editor.v1.type_catalog.ContentTypeId
@@ -16,6 +17,7 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -33,25 +35,32 @@ import skirout.kernel.v1.resource_id.ResourceId
  * on that resource; a field key, which only a use holds, means whatever that field of the resource holds.
  */
 
-/** What the realm's resources say about types. Two reads, so a tracked source records a declaration and a held value as separate facts. */
-interface ContentSource {
-    /** The declarations [owner] holds; empty when it holds none or does not exist. */
-    fun declarations(owner: ResourceId): List<TypeDefinition>
+/** The content types of one view, from both origins: what resources write and what their derive blocks compute. */
+interface ContentTypes {
+    /** The declarations [owner]'s `types` list holds; empty when it holds none or does not exist. */
+    fun written(owner: ResourceId): List<TypeDefinition>
 
     /** The plain type held directly at [field] of [owner], such as an alias's value. Null when there is none. */
     fun heldType(
         owner: ResourceId,
         field: String,
     ): TypeUse?
+
+    /** What [owner]'s derive blocks compute under [key]. */
+    fun derived(
+        owner: ResourceId,
+        key: String,
+    ): DerivedTarget
 }
 
-/** The one source over a record lookup. [observe] records each read; the default records nothing. */
-fun contentSourceOf(
+/** The content types over a record lookup, deriving through [derived]. [observe] records each read; the default records nothing. */
+fun contentTypesOf(
     records: (ResourceId) -> AuthoringRecord?,
+    derived: DerivedOrigin,
     observe: (InputIdentity) -> Unit = {},
-): ContentSource =
-    object : ContentSource {
-        override fun declarations(owner: ResourceId): List<TypeDefinition> {
+): ContentTypes =
+    object : ContentTypes {
+        override fun written(owner: ResourceId): List<TypeDefinition> {
             observe(InputIdentity.Types(owner))
             return records(owner)?.types.orEmpty()
         }
@@ -63,19 +72,32 @@ fun contentSourceOf(
             observe(InputIdentity.Value(ValueLocation.of(owner, ValuePath.root.field(field))))
             return records(owner)?.heldTypeAt(field)
         }
+
+        override fun derived(
+            owner: ResourceId,
+            key: String,
+        ): DerivedTarget = derived.derived(owner, key)
     }
 
-/** A source over declarations alone, as a compiled artifact carries them. It holds no values, so a field key finds nothing. */
-fun contentSourceOf(declarations: List<TypeDefinition>): ContentSource =
-    object : ContentSource {
+/** The content types a compiled artifact carries: declarations alone. It holds no values, so a field key finds nothing. */
+fun contentTypesOf(
+    declarations: List<TypeDefinition>,
+    derived: DerivedOrigin,
+): ContentTypes =
+    object : ContentTypes {
         private val byOwner = declarations.groupBy { checkNotNull(it.id.contentOwner()) { "Only content declarations have an owner." } }
 
-        override fun declarations(owner: ResourceId): List<TypeDefinition> = byOwner[owner].orEmpty()
+        override fun written(owner: ResourceId): List<TypeDefinition> = byOwner[owner].orEmpty()
 
         override fun heldType(
             owner: ResourceId,
             field: String,
         ): TypeUse? = null
+
+        override fun derived(
+            owner: ResourceId,
+            key: String,
+        ): DerivedTarget = derived.derived(owner, key)
     }
 
 /** The case of Var that holds a value as written. */
@@ -106,6 +128,16 @@ fun TypeDefinitionId.Companion.content(
         revision = 1,
     )
 
+/** The id of the type [resource]'s derive blocks compute under [key]. */
+fun TypeDefinitionId.Companion.derived(
+    resource: ResourceId,
+    key: String,
+): TypeDefinitionId =
+    TypeDefinitionId(
+        typeId = TypeId.ContentWrapper(ContentTypeId(resource = resource, key = ContentKey.DerivedWrapper(key))),
+        revision = 1,
+    )
+
 /** The id that means whatever the field [field] of [resource] holds. Only a use holds one. */
 fun TypeDefinitionId.Companion.contentField(
     resource: ResourceId,
@@ -130,14 +162,31 @@ private fun TypeId.contentOwner(): ResourceId? =
 fun TypeDefinitionId.fieldKey(): String? = ((typeId as? TypeId.ContentWrapper)?.value?.key as? ContentKey.FieldWrapper)?.value
 
 /** Whether this id, or the owner of a member, names a field key, so a case of a union named through a field is covered. */
-fun TypeDefinitionId.namesFieldKey(): Boolean = typeId.namesFieldKey()
+fun TypeDefinitionId.namesFieldKey(): Boolean = typeId.rootKey() is ContentKey.FieldWrapper
 
-private fun TypeId.namesFieldKey(): Boolean =
+/** The derived key this id names directly, or null. */
+fun TypeDefinitionId.derivedKey(): String? = ((typeId as? TypeId.ContentWrapper)?.value?.key as? ContentKey.DerivedWrapper)?.value
+
+/** Whether this id, or the owner of a member, names a derived key, so a case of a derived union is covered. */
+fun TypeDefinitionId.namesDerivedKey(): Boolean = typeId.rootKey() is ContentKey.DerivedWrapper
+
+/**
+ * Whether this id, or the owner of a member, names a key the content layer computes rather than one a resource lists:
+ * a field key or a derived key. Only such an id can be an alias, so only such an id expands.
+ */
+fun TypeDefinitionId.namesIndirectKey(): Boolean = namesFieldKey() || namesDerivedKey()
+
+/** The content key at the root of this id, through the owner of a member; null for a code id. */
+private fun TypeId.rootKey(): ContentKey? =
     when (this) {
-        is TypeId.ContentWrapper -> value.key is ContentKey.FieldWrapper
-        is TypeId.MemberWrapper -> value.owner.namesFieldKey()
-        else -> false
+        is TypeId.ContentWrapper -> value.key
+        is TypeId.MemberWrapper -> value.owner.rootKey()
+        else -> null
     }
+
+/** The argument of each derived parameter of this definition on [owner]: the type [owner] derives under its name. */
+fun TypeDefinition.derivedArguments(owner: ResourceId): Map<ParameterKey, TypeUse> =
+    parameters.filter { it.derived }.associate { it.key to TypeDefinitionId.derived(owner, it.name).use() }
 
 /** Whether this use names a content type anywhere. */
 fun TypeUse.mentionsContent(): Boolean = referencedDefinitions().any { it.contentOwner() != null }

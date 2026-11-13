@@ -149,6 +149,7 @@ val RuntimeCompilationEncodingTest by testSuite {
                             key = ParameterKey(owner = TypeDefinitionId.content(admissionPage, "k1"), index = 0),
                             name = "T",
                             bounds = emptyList(),
+                            derived = false,
                         ),
                     ),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),

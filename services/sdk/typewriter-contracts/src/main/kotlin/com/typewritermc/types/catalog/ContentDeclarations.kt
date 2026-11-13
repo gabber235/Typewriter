@@ -35,6 +35,10 @@ val CONTENT_TYPE_PROBLEMS: Set<String> =
     setOf(
         "content_type_missing",
         "content_alias_loop",
+        "derived_type_missing",
+        "derived_type_conflict",
+        "derived_type_loop",
+        "derived_type_failed",
         "declaration_owner_mismatch",
         "declaration_revision",
         "declaration_has_parameters",
@@ -116,8 +120,8 @@ fun List<TypeDefinition>.declarationProblems(owner: ResourceId): Map<TypeDefinit
                         if (definition.id.contentOwner() != owner) add("declaration_owner_mismatch")
                         if (definition.id.revision != 1) add("declaration_revision")
                         if (definition.parameters.isNotEmpty()) add("declaration_has_parameters")
-                        // A field key only appears in a use, where it means what that field holds.
-                        if (definition.id.namesFieldKey()) add("declaration_key")
+                        // A field key only appears in a use, where it means what that field holds; a derived key is computed, never written.
+                        if (definition.id.namesIndirectKey()) add("declaration_key")
                         // A parent is only a closed union declared on this resource; the shared rules check that it lists this case.
                         if (definition.parents.any { it.definition !in unions }) add("declaration_parent")
                         if (definition.recordForm() == RecordForm.OPEN) add("declaration_open_form")
@@ -144,14 +148,15 @@ private fun TypeDefinition.closedCases(): List<NamedTypeTemplate>? = representat
 
 /**
  * One problem at the root of [owner] per declaration this record may not store, used or not: an id that names another
- * resource (declaration_owner_mismatch) or a field key, which only a use may name (declaration_key).
+ * resource (declaration_owner_mismatch), or a field key, which only a use may name, or a derived key, which only derive
+ * blocks produce (declaration_key).
  */
 fun AuthoringRecord.misfiledDeclarations(owner: ResourceId): List<ValueProblem> =
     types
         .flatMap { definition ->
             buildList {
                 if (definition.id.contentOwner() != owner) add("declaration_owner_mismatch")
-                if (definition.id.namesFieldKey()) add("declaration_key")
+                if (definition.id.namesIndirectKey()) add("declaration_key")
             }
         }.distinct()
         .map { ValueProblem(location = ValueLocation.of(owner), code = it) }
@@ -219,17 +224,28 @@ fun CheckedCatalog.unavailableCode(id: TypeDefinitionId): String? =
         ?.firstOrNull { it.code in CONTENT_TYPE_PROBLEMS }
         ?.code
 
-/** One misfit per type the configuration names that is gone or invalid, at the root, each carrying its id. */
+/**
+ * One misfit per type the resource's type names that is gone or invalid, at the root, each carrying its id: the ones
+ * the configuration names and the ones [owner] derives for the configured definition's derived parameters.
+ */
 fun AuthoringRecord.missingContent(
     owner: ResourceId,
     catalog: CheckedCatalog,
 ): List<Misfit> =
-    configuration
-        .referencedDefinitions()
+    (configuration.referencedDefinitions() + derivedDefinitions(owner, catalog))
         .distinct()
         .filter { it.contentOwner() != null }
         .mapNotNull { id -> catalog.unavailableCode(id)?.let { Misfit(ValueProblem(location = ValueLocation.of(owner), code = it), id) } }
         .toList()
+
+/** The types [owner] derives for the configured definition's derived parameters. */
+private fun AuthoringRecord.derivedDefinitions(
+    owner: ResourceId,
+    catalog: CheckedCatalog,
+): Sequence<TypeDefinitionId> {
+    val definition = (catalog.declaration(configuration.definition) as? Resolution.Ready)?.value ?: return emptySequence()
+    return definition.derivedArguments(owner).values.asSequence().flatMap { it.referencedDefinitions() }
+}
 
 /**
  * Every way this record does not fit its current schema, each problem at its own location, on any record. Under a

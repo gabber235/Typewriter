@@ -117,6 +117,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
                     arguments: const [],
                   ),
                 ],
+                derived: false,
               ),
           ],
         ),

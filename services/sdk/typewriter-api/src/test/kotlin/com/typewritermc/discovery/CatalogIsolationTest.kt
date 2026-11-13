@@ -67,6 +67,7 @@ val CatalogIsolationTest by testSuite {
                             key = ParameterKey(owner = TypeDefinitionId.qualified("isolation", "Generic"), index = 0),
                             name = "T",
                             bounds = listOf(bound.id.template()),
+                            derived = false,
                         ),
                     ),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),

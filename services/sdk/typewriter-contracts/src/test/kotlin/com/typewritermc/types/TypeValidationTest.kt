@@ -47,7 +47,7 @@ val TypeValidationTest by testSuite {
                 Rejection("Parameter index must not be negative.") { ParameterKey(owner = ownerType, index = -1).requireValid() },
             "a blank parameter name" to
                 Rejection("Type parameter name must not be blank.") {
-                    TypeParameter(key = ParameterKey(owner = ownerType, index = 0), name = "", bounds = emptyList()).requireValid()
+                    TypeParameter(key = ParameterKey(owner = ownerType, index = 0), name = "", bounds = emptyList(), derived = false).requireValid()
                 },
             "a blank field name" to
                 Rejection(

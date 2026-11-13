@@ -1,5 +1,7 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.id
@@ -8,7 +10,6 @@ import com.typewritermc.authoring.root
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.misfits
 import com.typewritermc.types.isAcyclic
@@ -63,7 +64,7 @@ internal class AuthoringSnapshotValidator(
                             if (previous.types == record.types) {
                                 catalog
                             } else {
-                                catalog.withContent(contentSourceOf((resources + (id to record.copy(types = previous.types)))::get))
+                                catalog.withContent(contentTypesOf((resources + (id to record.copy(types = previous.types)))::get, DerivedOrigin.NONE))
                             }
                         val alone = projectAlone(id, previous, resources, ownAsBefore)
                         previous.misfits(id, savedCatalog) { savedFit(id) } +

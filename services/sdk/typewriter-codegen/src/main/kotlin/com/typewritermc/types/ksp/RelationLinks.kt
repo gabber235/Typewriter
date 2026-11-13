@@ -27,7 +27,7 @@ fun relationLinkDefinition(
         id = id,
         parameters =
             listOf(
-                TypeParameter(key = target, name = "Target", bounds = listOf(RELATION_LINK_TARGET_BOUND.template(emptyList()))),
+                TypeParameter(key = target, name = "Target", bounds = listOf(RELATION_LINK_TARGET_BOUND.template(emptyList())), derived = false),
             ),
         representation = RepresentationTemplate.createLink(endpoint = endpoint, target = target.template),
         parents = emptyList(),

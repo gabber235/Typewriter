@@ -1,9 +1,10 @@
 package com.typewritermc.realm.catalog
 
+import com.typewritermc.types.catalog.ContentTypes
+import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.ContentSource
-import com.typewritermc.types.catalog.contentSourceOf
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -13,7 +14,7 @@ import skirout.kernel.v1.resource_id.ResourceId
  */
 internal class ViewCatalogLease(
     val code: AuthoringCatalogLease,
-    source: ContentSource,
+    source: ContentTypes,
 ) : AuthoringCatalogLease by code {
     override val checked: CheckedCatalog = code.checked.withContent(source)
 
@@ -28,4 +29,4 @@ internal val AuthoringCatalogLease.code: AuthoringCatalogLease get() = (this as?
 
 /** The code catalog plus what [resources] declare. */
 internal fun AuthoringCatalogLease.over(resources: Map<ResourceId, AuthoringRecord>): ViewCatalogLease =
-    ViewCatalogLease(code, contentSourceOf(resources::get))
+    ViewCatalogLease(code, contentTypesOf(resources::get, DerivedOrigin.NONE))

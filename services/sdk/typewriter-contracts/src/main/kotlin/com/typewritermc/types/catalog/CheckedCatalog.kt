@@ -139,7 +139,7 @@ interface CheckedCatalog {
      * The code catalog plus what [source] declares. Cheap: it validates and caches only what it reaches, so [source]
      * must not change while the result is in use.
      */
-    fun withContent(source: ContentSource): CheckedCatalog
+    fun withContent(source: ContentTypes): CheckedCatalog
 
     /** [use] with every field key replaced by where its chain leads. The code catalog has none, so it answers [use]. */
     fun expand(use: TypeUse): TypeUse
@@ -180,18 +180,18 @@ class DefaultCheckedCatalog private constructor(
     private val resolving = mutableSetOf<TypeUse>()
 
     /** Shares the code catalog's validated declarations, so an overlay costs nothing until it reaches a content id. */
-    override fun withContent(source: ContentSource): CheckedCatalog {
+    override fun withContent(source: ContentTypes): CheckedCatalog {
         val base = content?.base ?: this
         return DefaultCheckedCatalog(generation, base.validated, ContentLayer(base, source))
     }
 
     /** The code catalog plus [source] judged by the declaration rules alone, which a declaration's bound check resolves through. */
-    internal fun withDeclaredContent(source: ContentSource): DefaultCheckedCatalog =
+    internal fun withDeclaredContent(source: ContentTypes): DefaultCheckedCatalog =
         DefaultCheckedCatalog(generation, validated, ContentLayer(this, source, checksBounds = false))
 
     override fun expand(use: TypeUse): TypeUse {
         val layer = content ?: return use
-        return if (use.mentionsContent()) layer.expandFieldKeys(use, emptySet()) else use
+        return if (use.mentionsContent()) layer.expandIndirectKeys(use, emptySet()) else use
     }
 
     /** The public answer, and the only one that says why a content id stands in as the error type. */
@@ -201,7 +201,7 @@ class DefaultCheckedCatalog private constructor(
         return when (val target = layer.target(id)) {
             is ContentTarget.Declared -> {
                 layer
-                    .invalid(target.definition.id)
+                    .invalid(target)
                     .takeIf { it.isNotEmpty() }
                     ?.let { codes -> DeclarationStatus.UnavailableWrapper(codes.map { diagnostic(id, it) }) }
                     ?: DeclarationStatus.READY
@@ -216,8 +216,8 @@ class DefaultCheckedCatalog private constructor(
                     ?: DeclarationStatus.READY
             }
 
-            ContentTarget.Missing -> {
-                DeclarationStatus.UnavailableWrapper(listOf(diagnostic(id, "content_type_missing")))
+            is ContentTarget.Missing -> {
+                DeclarationStatus.UnavailableWrapper(listOf(diagnostic(id, target.code)))
             }
 
             ContentTarget.Loop -> {
@@ -254,10 +254,10 @@ class DefaultCheckedCatalog private constructor(
         if (id.contentOwner() == null) return null
         return when (val target = layer.target(id)) {
             is ContentTarget.Declared -> {
-                if (layer.invalid(target.definition.id).isEmpty()) layer.expandFields(target.definition) else errorRecord(id)
+                if (layer.invalid(target).isEmpty()) layer.expandFields(target.definition) else errorRecord(id)
             }
 
-            is ContentTarget.Plain, ContentTarget.Loop, ContentTarget.Missing -> {
+            is ContentTarget.Plain, ContentTarget.Loop, is ContentTarget.Missing -> {
                 errorRecord(id)
             }
         }
@@ -266,7 +266,7 @@ class DefaultCheckedCatalog private constructor(
     override fun resolve(candidate: TypeUse): Resolution<CheckedType> {
         val layer = content ?: return resolveHere(candidate)
         if (!candidate.mentionsContent()) return layer.base.resolve(candidate).resolvingHere()
-        return resolveHere(layer.expandFieldKeys(candidate, emptySet()))
+        return resolveHere(layer.expandIndirectKeys(candidate, emptySet()))
     }
 
     /**
@@ -330,20 +330,32 @@ class DefaultCheckedCatalog private constructor(
     override fun typeOf(
         owner: ResourceId,
         selection: TypeSelection,
-    ): Resolution<ResourceType> = authoredTypeOf(selection)
+    ): Resolution<ResourceType> = typeWith(selection) { definition -> definition.derivedArguments(owner) }
 
-    override fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType> {
+    override fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType> = typeWith(selection) { emptyMap() }
+
+    /**
+     * The type [selection] makes with the arguments [derived] answers for the definition's derived parameters: complete
+     * once every parameter has an argument, partial before. A derived parameter is never chosen, so a stored choice for
+     * one is refused.
+     */
+    private fun typeWith(
+        selection: TypeSelection,
+        derived: (TypeDefinition) -> Map<ParameterKey, TypeUse>,
+    ): Resolution<ResourceType> {
         val availability = status(selection.definition)
         if (availability is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(availability.reasons)
         val definition = checkNotNull(lookup(selection.definition))
         val chosen = chosenArguments(selection, definition) ?: return invalid(selection.definition, "argument_arity")
-        if (chosen.size == definition.parameters.size) {
-            return when (val resolved = resolve(selection.definition.namedUse(definition.parameters.map { chosen.getValue(it.key) }).use)) {
+        if (definition.parameters.any { it.derived && it.key in chosen }) return invalid(selection.definition, "derived_argument_chosen")
+        val arguments = chosen + derived(definition)
+        if (arguments.size == definition.parameters.size) {
+            return when (val resolved = resolve(selection.definition.namedUse(definition.parameters.map { arguments.getValue(it.key) }).use)) {
                 is Resolution.Invalid -> resolved
                 is Resolution.Ready -> Resolution.Ready(ResourceType.Complete(resolved.value))
             }
         }
-        return resolvePartial(definition, chosen.mapValues { expand(it.value) })
+        return resolvePartial(definition, arguments.mapValues { expand(it.value) })
     }
 
     override fun knownApplications(selection: TypeSelection): Set<NamedTypeUse> =
@@ -379,14 +391,14 @@ class DefaultCheckedCatalog private constructor(
         return chosen
     }
 
-    /** [template] with every field key replaced by where its chain leads. A field key names no parameters, so it expands as a use. */
+    /** [template] with every indirect key replaced by where it leads. An indirect key names no parameters, so it expands as a use. */
     private fun expandTemplate(template: TypeTemplate): TypeTemplate =
         if (content == null) {
             template
         } else {
             template.mapTypes { node ->
                 val named = node.named ?: return@mapTypes null
-                if (named.definition.namesFieldKey()) expand(named.definition.use()).toTemplate() else null
+                if (named.definition.namesIndirectKey()) expand(named.definition.use()).toTemplate() else null
             }
         }
 
@@ -1063,93 +1075,152 @@ private class ValidatedDeclarations(
     }
 }
 
-/** What a view's catalog adds to the code catalog: the declarations [source] holds, validated once per owner when first reached. */
+/**
+ * What a view's catalog adds to the code catalog: the content types [source] holds, written and derived, each validated
+ * once when first reached.
+ */
 private class ContentLayer(
     val base: DefaultCheckedCatalog,
-    val source: ContentSource,
+    val source: ContentTypes,
     private val checksBounds: Boolean = true,
 ) {
     private val problemsByOwner = ConcurrentHashMap<ResourceId, Map<TypeDefinitionId, List<String>>>()
+    private val problemsByDerived = ConcurrentHashMap<TypeDefinitionId, Map<TypeDefinitionId, List<String>>>()
 
     /** The same content without bound checks, so judging a declaration's bounds never asks for its own judgement. */
     private val declared by lazy { base.withDeclaredContent(source) }
 
-    /** The one walk for every content id: a field key through its chain, a member through its owner, a generated key on its owner. */
+    /**
+     * The one walk for every content id: a generated key on its owner's written list, a field key through its chain, a
+     * derived key through its owner's derive blocks, and a member through its owner.
+     */
     fun target(
         id: TypeDefinitionId,
         visiting: Set<TypeDefinitionId> = emptySet(),
     ): ContentTarget {
-        if (id.fieldKey() == null && id.namesFieldKey()) {
-            val member = (id.typeId as TypeId.MemberWrapper).value
+        val member = (id.typeId as? TypeId.MemberWrapper)?.value
+        if (member != null && id.namesIndirectKey()) {
             val owner = TypeDefinitionId(typeId = member.owner, revision = id.revision)
             return when (val found = target(owner, visiting)) {
-                is ContentTarget.Declared -> target(found.definition.id.member(member.name), visiting)
-                is ContentTarget.Plain -> ContentTarget.Missing
-                ContentTarget.Loop, ContentTarget.Missing -> found
+                is ContentTarget.Declared -> found.member(member.name)
+                is ContentTarget.Plain -> ContentTarget.Missing()
+                is ContentTarget.Missing, ContentTarget.Loop -> found
             }
         }
         val owner = checkNotNull(id.contentOwner())
-        val field =
-            id.fieldKey()
-                ?: return source.declarations(owner).firstOrNull { it.id == id }?.let(ContentTarget::Declared) ?: ContentTarget.Missing
-        if (id in visiting) return ContentTarget.Loop
-        val held = source.heldType(owner, field) ?: return ContentTarget.Missing
-        val next =
-            held.named?.definition?.takeIf { it.contentOwner() != null && held.named?.arguments.isNullOrEmpty() }
-                ?: return ContentTarget.Plain(held)
-        return target(next, visiting + id)
+        id.fieldKey()?.let { field ->
+            if (id in visiting) return ContentTarget.Loop
+            val held = source.heldType(owner, field) ?: return ContentTarget.Missing()
+            return follow(held, visiting + id)
+        }
+        id.derivedKey()?.let { key ->
+            if (id in visiting) return ContentTarget.Loop
+            return when (val derived = source.derived(owner, key)) {
+                is DerivedTarget.Declared -> ContentTarget.Declared(derived.definition, listOf(derived.definition) + derived.cases)
+                is DerivedTarget.Plain -> follow(derived.use, visiting + id)
+                is DerivedTarget.Missing -> ContentTarget.Missing(derived.failure.code)
+            }
+        }
+        return source.written(owner).firstOrNull { it.id == id }?.let { ContentTarget.Declared(it) } ?: ContentTarget.Missing()
     }
 
-    /** Replaces each field key by where its chain leads, all through the use. A key whose chain loops or ends at nothing stays. */
-    fun expandFieldKeys(
+    /** Where a held or derived [use] leads: on through a bare content id, or a plain alias of anything else. */
+    private fun follow(
+        use: TypeUse,
+        visiting: Set<TypeDefinitionId>,
+    ): ContentTarget {
+        val next =
+            use.named?.definition?.takeIf { it.contentOwner() != null && use.named?.arguments.isNullOrEmpty() }
+                ?: return ContentTarget.Plain(use)
+        return target(next, visiting)
+    }
+
+    /** The case [name] of a found union: among the declarations it was derived with, or on the written list. */
+    private fun ContentTarget.Declared.member(name: String): ContentTarget {
+        val id = definition.id.member(name)
+        if (!definition.id.namesDerivedKey()) return target(id)
+        return family.firstOrNull { it.id == id }?.let { ContentTarget.Declared(it, family) } ?: ContentTarget.Missing()
+    }
+
+    /** Replaces each indirect key by where it leads, all through the use. A key whose chain loops or ends at nothing stays. */
+    fun expandIndirectKeys(
         use: TypeUse,
         visiting: Set<TypeDefinitionId>,
     ): TypeUse =
         use.mapNamed { named ->
-            if (!named.definition.namesFieldKey() || named.definition in visiting) return@mapNamed null
+            if (!named.definition.namesIndirectKey() || named.definition in visiting) return@mapNamed null
             when (val found = target(named.definition)) {
                 is ContentTarget.Declared -> found.definition.id.use()
-                is ContentTarget.Plain -> expandFieldKeys(found.use, visiting + named.definition)
-                ContentTarget.Loop, ContentTarget.Missing -> null
+                is ContentTarget.Plain -> expandIndirectKeys(found.use, visiting + named.definition)
+                is ContentTarget.Missing, ContentTarget.Loop -> null
             }
         }
 
     /** The declared id an id stands for, or null when its chain does not end at a declaration. */
     fun expandId(id: TypeDefinitionId): TypeDefinitionId? =
-        if (!id.namesFieldKey()) id else (target(id) as? ContentTarget.Declared)?.definition?.id
+        if (!id.namesIndirectKey()) id else (target(id) as? ContentTarget.Declared)?.definition?.id
 
-    /** Why field keys stay in [use] after expansion from [id]: a key back to [id] or into a loop is an alias loop, a dead end is missing. */
+    /** Why indirect keys stay in [use] after expansion from [id]: a key back to [id] or into a loop is an alias loop, a dead end says why. */
     fun leftover(
         use: TypeUse,
         id: TypeDefinitionId,
     ): List<String> =
-        expandFieldKeys(use, setOf(id))
+        expandIndirectKeys(use, setOf(id))
             .referencedDefinitions()
-            .filter { it.namesFieldKey() }
-            .map { key -> if (key == id || target(key) == ContentTarget.Loop) "content_alias_loop" else "content_type_missing" }
-            .distinct()
+            .filter { it.namesIndirectKey() }
+            .mapNotNull { key ->
+                val found = target(key)
+                when {
+                    key == id || found == ContentTarget.Loop -> "content_alias_loop"
+                    found is ContentTarget.Declared -> null
+                    found is ContentTarget.Missing -> found.code
+                    else -> "content_type_missing"
+                }
+            }.distinct()
             .sorted()
 
-    /** The creator rules over the owner's whole list, once per owner: the boundary check for untrusted declarations. */
-    fun invalid(id: TypeDefinitionId): List<String> {
-        val owner = checkNotNull(id.contentOwner())
-        return problemsByOwner
-            .getOrPut(owner) {
-                val declarations = source.declarations(owner)
-                val problems = declarations.declarationProblems(owner)
-                if (!checksBounds) return@getOrPut problems
-                problems +
-                    declarations
-                        .filter { it.id !in problems }
-                        .associate { it.id to it.boundProblems() }
-                        .filterValues { it.isNotEmpty() }
-            }[id]
-            .orEmpty()
+    /**
+     * Why a found declaration stands in as the error type. A written one obeys the creator rules over its owner's whole
+     * list, the boundary check for untrusted declarations; a derived one, which code produced, obeys the structural rules
+     * over what it was derived with. Both are judged once.
+     */
+    fun invalid(found: ContentTarget.Declared): List<String> {
+        val id = found.definition.id
+        val problems =
+            if (id.namesDerivedKey()) {
+                val root = checkNotNull(found.family.firstOrNull()).id
+                problemsByDerived.getOrPut(root) { found.family.judged(found.family.derivedProblems()) }
+            } else {
+                val owner = checkNotNull(id.contentOwner())
+                problemsByOwner.getOrPut(owner) {
+                    val declarations = source.written(owner)
+                    declarations.judged(declarations.declarationProblems(owner))
+                }
+            }
+        return problems[id].orEmpty()
+    }
+
+    /** [problems] plus the bound problems of every declaration that has none yet, unless this layer skips bounds. */
+    private fun List<TypeDefinition>.judged(problems: Map<TypeDefinitionId, List<String>>): Map<TypeDefinitionId, List<String>> {
+        if (!checksBounds) return problems
+        return problems +
+            filter { it.id !in problems }
+                .associate { it.id to it.boundProblems() }
+                .filterValues { it.isNotEmpty() }
+    }
+
+    /** The rules a derived declaration obeys: the structural ones, and no parameters, since nothing applies a content type. */
+    private fun List<TypeDefinition>.derivedProblems(): Map<TypeDefinitionId, List<String>> {
+        val structural = structuralProblems()
+        return associate { definition ->
+            definition.id to
+                (structural[definition.id].orEmpty() + listOfNotNull("declaration_has_parameters".takeIf { definition.parameters.isNotEmpty() }))
+        }.filterValues { it.isNotEmpty() }
     }
 
     /**
      * `argument_bound` when a code type this declaration holds applies an argument outside its parameter's bound, as
-     * `Ref<Int>` and `Ref` to a content record do. Code declarations resolve each use when it is read; a creator's
+     * `Ref<Int>` and `Ref` to a content record do. Code declarations resolve each use when it is read; a content
      * declaration is refused up front.
      */
     private fun TypeDefinition.boundProblems(): List<String> =
@@ -1159,30 +1230,35 @@ private class ContentLayer(
             .any { use -> (declared.resolve(use) as? Resolution.Invalid)?.diagnostics?.any { it.code == "argument_bound" } == true }
             .let { if (it) listOf("argument_bound") else emptyList() }
 
-    /** The declaration with every field key in its templates replaced by where its chain leads. Content declarations take no parameters. */
+    /** The declaration with every indirect key in its templates replaced by where it leads. Content declarations take no parameters. */
     fun expandFields(definition: TypeDefinition): TypeDefinition =
         definition.mapTemplates { template ->
             template.mapTypes { node ->
                 val named = node.named ?: return@mapTypes null
-                if (named.definition.namesFieldKey()) expandFieldKeys(named.definition.use(), emptySet()).toTemplate() else null
+                if (named.definition.namesIndirectKey()) expandIndirectKeys(named.definition.use(), emptySet()).toTemplate() else null
             }
         }
 }
 
 /** Where a content id leads. resolve and definition both ask this one walk. */
 private sealed interface ContentTarget {
+    /** A declaration; [family] holds the declarations derived with it, so a derived union finds its cases. */
     data class Declared(
         val definition: TypeDefinition,
+        val family: List<TypeDefinition> = emptyList(),
     ) : ContentTarget
 
-    /** An alias: a held type with no content id at its top. */
+    /** An alias: a held or derived type with no content id at its top. */
     data class Plain(
         val use: TypeUse,
     ) : ContentTarget
 
     data object Loop : ContentTarget
 
-    data object Missing : ContentTarget
+    /** Nothing there; [code] says why the id stands in as the error type. */
+    data class Missing(
+        val code: String = "content_type_missing",
+    ) : ContentTarget
 }
 
 /** The error type: an empty concrete record with no parents. definition(id) says why it stands in. */

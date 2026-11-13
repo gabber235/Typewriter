@@ -72,8 +72,18 @@ repeatedParameterCatalog({required bool repeated}) {
           form: skir.RecordForm.concrete,
         ),
         parameters: [
-          skir.TypeParameter(key: firstParameter, name: "A", bounds: const []),
-          skir.TypeParameter(key: secondParameter, name: "B", bounds: const []),
+          skir.TypeParameter(
+            key: firstParameter,
+            name: "A",
+            bounds: const [],
+            derived: false,
+          ),
+          skir.TypeParameter(
+            key: secondParameter,
+            name: "B",
+            bounds: const [],
+            derived: false,
+          ),
         ],
       ),
     ],
@@ -115,8 +125,14 @@ dependentParameterCatalog() {
         key: first,
         name: "T",
         bounds: [skir.TypeTemplate.wrapParameter(second)],
+        derived: false,
       ),
-      skir.TypeParameter(key: second, name: "U", bounds: const []),
+      skir.TypeParameter(
+        key: second,
+        name: "U",
+        bounds: const [],
+        derived: false,
+      ),
     ],
   );
   return (
@@ -172,7 +188,12 @@ inheritedPresentationCatalog() {
       form: skir.RecordForm.concrete,
     ),
     parameters: [
-      skir.TypeParameter(key: rootParameter, name: "T", bounds: const []),
+      skir.TypeParameter(
+        key: rootParameter,
+        name: "T",
+        bounds: const [],
+        derived: false,
+      ),
     ],
     parents: [
       skir.NamedTypeTemplate(
@@ -293,6 +314,7 @@ skir.PublishedType opaqueType(
         key: parameters[index],
         name: "T$index",
         bounds: const [],
+        derived: false,
       ),
   ],
   display: display ?? defaultTypeDisplay(""),

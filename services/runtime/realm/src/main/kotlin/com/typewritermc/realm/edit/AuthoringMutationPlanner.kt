@@ -1,5 +1,7 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
@@ -13,7 +15,6 @@ import com.typewritermc.realm.authoring.after
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.withoutUnreachableTypes
 import com.typewritermc.types.endpoint
@@ -97,7 +98,7 @@ internal class AuthoringMutationPlanner(
                 addAll(removed)
                 resources.forEach { (id, record) -> if (latestResources[id] != record) add(id) }
             }
-        val final = resources.toMap().let { state -> catalog.withContent(contentSourceOf(state::get)) }
+        val final = resources.toMap().let { state -> catalog.withContent(contentTypesOf(state::get, DerivedOrigin.NONE)) }
         val links = TouchedLinks(saved, resources, affected, contracts, final)
         val validator = AuthoringSnapshotValidator(final, catalog, contracts)
         problems += validator.validate(latestResources, resources, affected, links) { saved.judged(it).fit }
@@ -148,7 +149,7 @@ internal class AuthoringMutationPlanner(
             if (problems.isNotEmpty()) return@forEachIndexed
             if (index < deletionRunEnd) return@forEachIndexed
             // An overlay caches what it reaches, and any intent can change what a content type means, so each intent reads a fresh one.
-            val catalog = this.catalog.withContent(contentSourceOf(resources::get))
+            val catalog = this.catalog.withContent(contentTypesOf(resources::get, DerivedOrigin.NONE))
             val relations = RelationValueSynchronizer(catalog, contracts)
             when (intent) {
                 is EditIntent.CreateResourceWrapper -> {

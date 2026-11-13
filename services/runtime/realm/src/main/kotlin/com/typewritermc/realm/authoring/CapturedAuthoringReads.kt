@@ -1,5 +1,7 @@
 package com.typewritermc.realm.authoring
 
+import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
@@ -41,7 +43,6 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
-import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
@@ -124,7 +125,7 @@ class CapturedAuthoringReads internal constructor(
             val revision = (view as? AuthoredReadView.Working)?.revision ?: 0L
             builtCatalog?.takeIf { it.first == revision }?.let { return it.second }
             val resources = view.resources
-            return ViewCatalogLease(view.original.catalog.code, contentSourceOf(resources::get, ::observe)).also {
+            return ViewCatalogLease(view.original.catalog.code, contentTypesOf(resources::get, DerivedOrigin.NONE, ::observe)).also {
                 builtCatalog =
                     revision to it
             }

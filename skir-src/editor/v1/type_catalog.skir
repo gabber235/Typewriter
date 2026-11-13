@@ -18,12 +18,15 @@ struct MemberTypeId(84180003) {
   owner: TypeId = 0;
   name: string = 1;
 }
-/// Names a type a resource declares. A declaration always has a generated key, which survives a
-/// reorder, a rename and a retype. A field key appears only in a use and means whatever that field
-/// of the resource holds: a declaration by its generated key, or a plain type such as an alias.
+/// Names a type a resource declares. A written declaration always has a generated key, which
+/// survives a reorder, a rename and a retype. A field key appears only in a use and means whatever
+/// that field of the resource holds: a declaration by its generated key, or a plain type such as an
+/// alias. A derived key names a type the resource's derive blocks compute from its content, by a
+/// name code chooses, so editing content changes the type behind the same id and nothing stores it.
 enum ContentKey(84180004) {
   generated: string = 1;
   field: string = 2;
+  derived: string = 3;
 }
 /// A type declared by content: the resource that declares it and its key there.
 struct ContentTypeId(84180005) {
@@ -134,10 +137,13 @@ enum TypeUse(84180023) {
   function: FunctionTypeUse = 4;
 }
 
+/// A parameter of a definition. A derived parameter's argument is never chosen or stored: it is
+/// the type the resource derives under the parameter's name, `content(resource, derived(name))`.
 struct TypeParameter(84180024) {
   key: ParameterKey = 0;
   name: string = 1;
   bounds: [TypeTemplate] = 2;
+  derived: bool = 3;
 }
 struct FieldOwner(84180025) {
   definition: TypeDefinitionId = 0;

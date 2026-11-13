@@ -1,5 +1,7 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
@@ -10,7 +12,6 @@ import com.typewritermc.engine.decodeResourceGraphShard
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.contentOwner
-import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.RelationContract
@@ -49,7 +50,7 @@ class ResourceGraphContentGateway(
         val decoded = content.artifacts.map { it.decodedFacts() }
         // One catalog per publication: creator types travel with the content, and the overlay validates them as the realm's does.
         val declared = decoded.flatMap { it.types }.filter { it.id.contentOwner() != null }.distinct()
-        val published = if (declared.isEmpty()) catalog else catalog.withContent(contentSourceOf(declared))
+        val published = if (declared.isEmpty()) catalog else catalog.withContent(contentTypesOf(declared, DerivedOrigin.NONE))
         require(declared.all { published.definition(it.id) == DeclarationStatus.READY }) { "Compiled content declarations are invalid." }
         val publishedBindings = if (declared.isEmpty()) bindings else bindings.over(published)
         decoded.forEach { it.requireAccepted(published, relations) }

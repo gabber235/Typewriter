@@ -308,7 +308,7 @@ val LinkAuthorizationTest by testSuite {
                         linkType,
                         firstEndpoint,
                         parameter.template,
-                        parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(bound.template()))),
+                        parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(bound.template()), derived = false)),
                     )
                 },
                 listOf(oneToOneRelation("typed", firstEndpoint, secondEndpoint, bound.namedTemplate())),

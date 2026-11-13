@@ -177,6 +177,7 @@ class KspTypeGraphConverter(
                                 .filterNot { it.declaration.qualifiedName?.asString() == "kotlin.Any" }
                                 .mapNotNull { template(it, null, path + parameter.name.asString()) }
                                 .toList(),
+                        derived = false,
                     )
                 }
             val templates = positions.map { template(it.resolve(), null, path, it.explicitNullable) }
@@ -417,6 +418,7 @@ class KspTypeGraphConverter(
                                     template(bound, declaration, path + parameter.name.asString())
                                 }
                             }.toList(),
+                    derived = false,
                 )
             }
         val parents =
