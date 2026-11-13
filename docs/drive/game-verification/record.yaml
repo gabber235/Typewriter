@@ -503,6 +503,9 @@ decided:
   - id: p3-build-fixes-in-slice-1
     what: "Yes, in slice 1 (Recommended)"
     why: run-task in build-logic, Kover skips gameTest, coverage merge takes only Kover projects
+  - id: keep-slice-1-decisions
+    what: "Keep them, start slice 2 (Recommended)"
+    why: The wire project, records that hold until the next one, and separate Joined and Ready signals stay
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -525,7 +528,7 @@ slices:
       to declare demonstrates yet); no run file when the game cannot boot; RunRecords was not built
       test first; commits need the devenv shell for rustfmt.
   - id: input-from-the-client
-    status: next
+    status: building
     what: type, click, look and use through XTest per display and SDL on the Mac; retype for lost suggestions
     green: spike J's 18 inputs as requirements
   - id: pool-of-four-and-groups
@@ -557,4 +560,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 1 done. Confirm its built decisions with the developer, then start slice 2 (input from the client).
+next: Slice 2 (input from the client) is building on feat/game-verification-slice-2. Accept it on evidence, then check in and start slice 3.
