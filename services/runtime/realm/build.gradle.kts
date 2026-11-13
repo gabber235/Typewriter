@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.kotlin.coroutines.core)
     implementation(libs.logback)
     implementation(project(":internal-utils"))
+    implementation(project(":failures"))
     implementation(project(":telemetry"))
     implementation(project(":messaging"))
     implementation(project(":protocol-transport"))

@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":protocol-transport"))
     api(project(":telemetry"))
     api(project(":internal-utils"))
+    api(project(":failures"))
     api(platform(libs.koin.bom))
     api(platform(libs.opentelemetry.bom))
     api(libs.koin.core)

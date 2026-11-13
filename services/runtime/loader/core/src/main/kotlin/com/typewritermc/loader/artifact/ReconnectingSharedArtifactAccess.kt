@@ -21,7 +21,7 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull

@@ -1,7 +1,7 @@
 package com.typewritermc.services.libs.communicator.nats
 
-import com.typewritermc.services.libs.utils.findExceptional
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.findExceptional
+import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart

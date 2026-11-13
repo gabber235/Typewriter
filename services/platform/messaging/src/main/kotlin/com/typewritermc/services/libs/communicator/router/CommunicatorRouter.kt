@@ -41,8 +41,8 @@ import com.typewritermc.services.libs.telemetry.MessagingAttributeKeys
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SluggedException
 import com.typewritermc.services.libs.telemetry.consumerSpan
-import com.typewritermc.services.libs.utils.findExceptional
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.findExceptional
+import com.typewritermc.failures.rethrowExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators

@@ -8,7 +8,7 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.Dynamics
-import com.typewritermc.services.libs.utils.runExtension
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.types.qualified
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin

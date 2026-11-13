@@ -8,7 +8,7 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.services.libs.utils.findExceptional
+import com.typewritermc.failures.findExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
 import kotlinx.coroutines.CompletableDeferred

@@ -1,10 +1,10 @@
-package com.typewritermc.services.libs.utils
+package com.typewritermc.failures
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import kotlinx.coroutines.CancellationException
+import java.util.concurrent.CancellationException
 
 @Suppress("DEPRECATION")
 val ExceptionalThrowablesTest by testSuite {
@@ -46,3 +46,5 @@ val ExceptionalThrowablesTest by testSuite {
         shouldThrow<Throwable> { wrapper.rethrowExceptional() } shouldBeSameInstanceAs exceptional
     }
 }
+
+private class TestVirtualMachineError : VirtualMachineError("fatal")

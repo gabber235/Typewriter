@@ -12,7 +12,7 @@ import com.typewritermc.realm.operation.StaleOperationObservation
 import com.typewritermc.realm.operation.applicableIn
 import com.typewritermc.realm.operation.guarded
 import com.typewritermc.realm.operation.operationObservation
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.payload

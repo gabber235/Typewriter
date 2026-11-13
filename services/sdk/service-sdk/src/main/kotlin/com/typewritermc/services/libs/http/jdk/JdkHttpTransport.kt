@@ -7,7 +7,7 @@ import com.typewritermc.services.libs.http.core.HttpResponse
 import com.typewritermc.services.libs.http.core.HttpResult
 import com.typewritermc.services.libs.http.core.HttpTransport
 import com.typewritermc.services.libs.utils.await
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.ConnectException

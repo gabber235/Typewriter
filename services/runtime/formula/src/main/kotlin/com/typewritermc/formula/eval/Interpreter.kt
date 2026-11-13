@@ -37,7 +37,7 @@ import com.typewritermc.formula.check.TypeTest
 import com.typewritermc.formula.check.When
 import com.typewritermc.formula.graph.DeepStacks
 import com.typewritermc.formula.syntax.BinaryOperator
-import com.typewritermc.services.libs.utils.runExtension
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.types.EvaluationValues
 import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes

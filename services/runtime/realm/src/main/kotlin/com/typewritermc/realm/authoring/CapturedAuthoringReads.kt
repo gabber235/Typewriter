@@ -36,7 +36,7 @@ import com.typewritermc.configuration.name
 import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.realm.catalog.ViewCatalogLease
 import com.typewritermc.realm.catalog.code
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedCatalog

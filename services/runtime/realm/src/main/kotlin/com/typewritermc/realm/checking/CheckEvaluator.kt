@@ -7,7 +7,7 @@ import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.ViewReadHealth
 import com.typewritermc.realm.catalog.CheckPlan
 import com.typewritermc.realm.formula.ContentFinding
-import com.typewritermc.services.libs.utils.runExtension
+import com.typewritermc.discovery.runExtension
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.diagnostic.Diagnostic

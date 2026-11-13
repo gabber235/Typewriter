@@ -17,7 +17,7 @@ import com.typewritermc.realm.operation.OperationResolutionFailure
 import com.typewritermc.realm.operation.ResourceOperationRuntime
 import com.typewritermc.realm.operation.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.toResourceId

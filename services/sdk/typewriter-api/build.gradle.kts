@@ -14,6 +14,7 @@ kotlin {
 
 dependencies {
     api(project(":typewriter-contracts"))
+    implementation(project(":failures"))
     api(platform(libs.koin.bom))
     api(libs.koin.core)
     api(libs.kotlin.coroutines.core)

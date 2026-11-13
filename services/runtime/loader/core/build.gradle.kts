@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":telemetry"))
     implementation(project(":telemetry"))
     implementation(project(":internal-utils"))
+    implementation(project(":failures"))
     implementation(platform(libs.opentelemetry.bom))
     implementation(libs.opentelemetry.sdk)
     implementation(libs.opentelemetry.exporter.otlp)

@@ -24,7 +24,7 @@ import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
-import com.typewritermc.services.libs.utils.findExceptional
+import com.typewritermc.failures.findExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.unknownVariant
 import io.opentelemetry.api.OpenTelemetry

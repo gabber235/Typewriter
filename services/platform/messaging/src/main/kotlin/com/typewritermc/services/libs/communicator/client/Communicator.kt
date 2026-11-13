@@ -35,7 +35,7 @@ import com.typewritermc.services.libs.telemetry.childSpan
 import com.typewritermc.services.libs.telemetry.consumerSpan
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.mainSpanScope
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context

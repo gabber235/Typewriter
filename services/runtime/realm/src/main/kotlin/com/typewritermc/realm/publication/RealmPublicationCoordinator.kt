@@ -14,7 +14,7 @@ import com.typewritermc.realm.storage.encodeSkir
 import com.typewritermc.realm.storage.inTransaction
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanScope
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
 import io.opentelemetry.context.Context

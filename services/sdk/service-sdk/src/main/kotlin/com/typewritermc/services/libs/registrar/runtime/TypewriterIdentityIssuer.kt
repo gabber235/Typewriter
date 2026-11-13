@@ -17,7 +17,7 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import skirout.service.v1.identity.IssueServiceIdentityRequest
 import skirout.service.v1.identity.IssueServiceIdentityResponse
 import java.net.URI

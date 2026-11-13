@@ -14,7 +14,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CapturedCheckReport
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.catalog.Resolution

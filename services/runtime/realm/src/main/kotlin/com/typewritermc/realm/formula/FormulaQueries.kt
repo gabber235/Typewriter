@@ -29,7 +29,7 @@ import com.typewritermc.realm.authoring.extensions
 import com.typewritermc.realm.authoring.ownershipRelations
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.DynamicHook
-import com.typewritermc.services.libs.utils.runExtension
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.types.field
 import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.DataValue

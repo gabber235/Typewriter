@@ -30,7 +30,7 @@ import com.typewritermc.realm.authoring.RealmGraphFacts
 import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.closedUse
