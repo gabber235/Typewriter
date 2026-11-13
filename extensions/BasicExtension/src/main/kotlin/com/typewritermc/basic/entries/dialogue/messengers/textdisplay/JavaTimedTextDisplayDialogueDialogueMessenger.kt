@@ -11,6 +11,8 @@ import com.typewritermc.engine.paper.utils.asMiniWithResolvers
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerRespawnEvent
+import org.bukkit.event.EventHandler
 import java.time.Duration
 import kotlin.math.ceil
 
@@ -55,7 +57,6 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
     private var typingDuration = Duration.ZERO
     private var totalDuration = Duration.ZERO
     private var playedTime = Duration.ZERO
-    private var lastVisibleCharacters = -1
     private var lastTypingPhase = true
     private var lastRemainingSeconds = -1
     private var lastCanSkip = false
@@ -71,16 +72,16 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
         set(value) {
             if (!canSkip) return
             playedTime = if (value) typingDuration else Duration.ZERO
-            lastVisibleCharacters = -1
         }
 
+    @Synchronized
     override fun init() {
         super.init()
         val text = entry.text.get(player, context).parsePlaceholders(player)
-        typewriter = TextDisplayTypewriter(text)
+        typewriter = TextDisplayTypewriter(text, player)
         typingDurationConfig = entry.typingDuration.get(player, context)
         typingDuration = typingDurationType.totalDuration(typewriter.rawText, typingDurationConfig)
-        typingDuration = typingDuration.coerceAtLeast(Duration.ZERO)
+            .coerceAtLeast(Duration.ZERO)
         totalDuration = typingDuration + entry.waitDuration.get(player, context).coerceAtLeast(Duration.ZERO)
 
         refreshConfirmation()
@@ -95,6 +96,7 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
         refreshInstruction(true)
     }
 
+    @Synchronized
     override fun tick(context: TickContext) {
         if (state != MessengerState.RUNNING) return
 
@@ -107,10 +109,21 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
         }
 
         display?.tick(context.deltaTime, text)
+        if (display?.invalid == true) {
+            state = MessengerState.CANCELLED
+            return
+        }
         if (display?.ready == true && playedTime >= totalDuration) display?.close()
         if (display?.finished == true) state = MessengerState.FINISHED
     }
 
+    @EventHandler
+    @Synchronized
+    private fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        if (event.player.uniqueId == player.uniqueId) state = MessengerState.CANCELLED
+    }
+
+    @Synchronized
     override fun dispose() {
         super.dispose()
         confirmation?.dispose()
@@ -127,9 +140,11 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
             return
         }
         confirmation = player.awaitConfirmation {
-            if (state != MessengerState.RUNNING || !canSkip || display?.isClosing == true) return@awaitConfirmation
-            if (animationComplete) display?.close()
-            else animationComplete = true
+            synchronized(this) {
+                if (state != MessengerState.RUNNING || !canSkip || display?.isClosing == true) return@awaitConfirmation
+                if (animationComplete) display?.close()
+                else animationComplete = true
+            }
         }
     }
 
@@ -139,15 +154,7 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
         } else {
             typingDurationType.calculatePercentage(playedTime, typingDurationConfig, typewriter.rawText)
         }
-        val visibleCharacters = typewriter.visibleCharacters(percentage)
-        if (!force && visibleCharacters == lastVisibleCharacters) return null
-
-        lastVisibleCharacters = visibleCharacters
-
-        return timedTextDisplayFormat.asMiniWithResolvers(
-            player,
-            Placeholder.component("message", typewriter.component(percentage)),
-        )
+        return typewriter.render(timedTextDisplayFormat, percentage, force)
     }
 
     private fun refreshInstruction(force: Boolean = false) {
@@ -177,7 +184,7 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
         val format = when {
             typing && canSkip -> timedTextDisplayTypingWithSkip
             typing -> timedTextDisplayTypingWithoutSkip
-            seconds < 1 -> timedTextDisplayTypingWithoutSkip
+            seconds < 1 -> return Component.empty()
             canSkip -> timedTextDisplayWaitingWithSkip
             else -> timedTextDisplayWaitingWithoutSkip
         }

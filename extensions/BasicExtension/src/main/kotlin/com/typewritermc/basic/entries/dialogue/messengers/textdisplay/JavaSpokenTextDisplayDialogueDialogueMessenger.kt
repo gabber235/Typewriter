@@ -9,8 +9,9 @@ import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.asMiniWithResolvers
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerRespawnEvent
+import org.bukkit.event.EventHandler
 import java.time.Duration
 
 private val spokenTextDisplayFormat: String by snippet(
@@ -33,26 +34,27 @@ class JavaSpokenTextDisplayDialogueDialogueMessenger(
     private var duration = Duration.ZERO
     private var typingDuration = Duration.ZERO
     private var playedTime = Duration.ZERO
-    private var lastVisibleCharacters = -1
 
     override var animationComplete: Boolean
         get() = playedTime >= typingDuration
         set(value) {
             playedTime = if (value) typingDuration else Duration.ZERO
-            lastVisibleCharacters = -1
         }
 
+    @Synchronized
     override fun init() {
         super.init()
         val text = entry.text.get(player, context).parsePlaceholders(player)
-        typewriter = TextDisplayTypewriter(text)
+        typewriter = TextDisplayTypewriter(text, player)
         duration = entry.duration.get(player, context)
         typingDuration = typingDurationType.totalDuration(typewriter.rawText, duration).coerceAtLeast(Duration.ZERO)
 
         confirmation = player.awaitConfirmation {
-            if (state != MessengerState.RUNNING || display?.isClosing == true) return@awaitConfirmation
-            if (animationComplete) display?.close()
-            else animationComplete = true
+            synchronized(this) {
+                if (state != MessengerState.RUNNING || display?.isClosing == true) return@awaitConfirmation
+                if (animationComplete) display?.close()
+                else animationComplete = true
+            }
         }
         display = TextDisplayDialogueDisplay(
             player,
@@ -65,6 +67,7 @@ class JavaSpokenTextDisplayDialogueDialogueMessenger(
         }
     }
 
+    @Synchronized
     override fun tick(context: TickContext) {
         if (state != MessengerState.RUNNING) return
 
@@ -74,9 +77,20 @@ class JavaSpokenTextDisplayDialogueDialogueMessenger(
         }
 
         display?.tick(context.deltaTime, text)
+        if (display?.invalid == true) {
+            state = MessengerState.CANCELLED
+            return
+        }
         if (display?.finished == true) state = MessengerState.FINISHED
     }
 
+    @EventHandler
+    @Synchronized
+    private fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        if (event.player.uniqueId == player.uniqueId) state = MessengerState.CANCELLED
+    }
+
+    @Synchronized
     override fun dispose() {
         super.dispose()
         confirmation?.dispose()
@@ -91,13 +105,6 @@ class JavaSpokenTextDisplayDialogueDialogueMessenger(
         } else {
             typingDurationType.calculatePercentage(playedTime, duration, typewriter.rawText)
         }
-        val visibleCharacters = typewriter.visibleCharacters(percentage)
-        if (!force && visibleCharacters == lastVisibleCharacters) return null
-        lastVisibleCharacters = visibleCharacters
-
-        return spokenTextDisplayFormat.asMiniWithResolvers(
-            player,
-            Placeholder.component("message", typewriter.component(percentage)),
-        )
+        return typewriter.render(spokenTextDisplayFormat, percentage, force)
     }
 }

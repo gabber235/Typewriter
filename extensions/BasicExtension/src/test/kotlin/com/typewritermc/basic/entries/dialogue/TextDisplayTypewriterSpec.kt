@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -20,6 +21,7 @@ class TextDisplayTypewriterSpec : FunSpec({
     beforeSpec {
         mockkStatic("com.typewritermc.engine.paper.utils.MiniMessagesKt")
         every { any<String>().asMini() } answers { MiniMessage.miniMessage().deserialize(firstArg<String>()) }
+        every { any<String>().asMini(any<Audience>()) } answers { MiniMessage.miniMessage().deserialize(firstArg<String>()) }
         val snippets = mockk<SnippetDatabase>(relaxed = true)
         every { snippets.getSnippet(any(), String::class, any(), any()) } answers { thirdArg<String>() }
         every { snippets.getSnippet(any(), Int::class, any(), any()) } answers { thirdArg<Int>() }
@@ -32,7 +34,7 @@ class TextDisplayTypewriterSpec : FunSpec({
     }
 
     test("long multiline dialogue keeps every line and reserves its height throughout typing") {
-        val typewriter = TextDisplayTypewriter("one\ntwo\nthree\nfour\nfive")
+        val typewriter = TextDisplayTypewriter("one\ntwo\nthree\nfour\nfive", Audience.empty())
         for (step in 0..20) {
             val lines = typewriter.component(step / 20.0).plainText().lines()
             lines.size shouldBe 5
@@ -41,14 +43,14 @@ class TextDisplayTypewriterSpec : FunSpec({
     }
 
     test("formatting tags do not consume typing characters") {
-        val typewriter = TextDisplayTypewriter("<red>abcd</red>")
+        val typewriter = TextDisplayTypewriter("<red>abcd</red>", Audience.empty())
         typewriter.visibleCharacters(0.5) shouldBe 2
         typewriter.component(0.5).plainText() shouldBe "ab"
         typewriter.component(1.0).plainText() shouldBe "abcd"
     }
 
     test("empty dialogue remains a valid single line") {
-        val typewriter = TextDisplayTypewriter("")
+        val typewriter = TextDisplayTypewriter("", Audience.empty())
         typewriter.component(0.0).plainText() shouldBe ""
         typewriter.component(1.0).plainText() shouldBe ""
     }
@@ -56,7 +58,7 @@ class TextDisplayTypewriterSpec : FunSpec({
     test("paragraphs wrap before typing without changing their reserved height") {
         val text = "A quiet village waits beyond the bridge and the old mill.\n" +
             "Follow the river until you reach the lantern beside the gate."
-        val typewriter = TextDisplayTypewriter(text)
+        val typewriter = TextDisplayTypewriter(text, Audience.empty())
         val complete = typewriter.component(1.0).plainText()
         complete.lines().all { it.length <= 24 } shouldBe true
         for (step in 0..20) {

@@ -93,12 +93,13 @@ class BedrockOptionTextDisplayDialogueDialogueMessenger(
                 }
                 .validResultHandler { response ->
                     if (state != MessengerState.RUNNING) return@validResultHandler
-                    val option = usableOptions.getOrNull(response.asDropdown()) ?: return@validResultHandler
+                    val index = response.asDropdown()
+                    val option = usableOptions.getOrNull(index) ?: return@validResultHandler
                     if (!option.criteria.matches(player, context)) {
                         sendForm()
                         return@validResultHandler
                     }
-                    selectedIndex = response.asDropdown()
+                    selectedIndex = index
                     state = MessengerState.FINISHED
                 }
         )

@@ -70,8 +70,14 @@ internal class TextDisplayDialogueDisplay(
     private val origin: Var<Position>,
     private val orientation: TextDisplayOrientation = TextDisplayOrientation.BILLBOARD,
 ) {
-    private val contentEntity = createEntity(textDisplayScale, textDisplayLineWidth)
-    private val instructionEntity = createEntity(textDisplayInstructionScale, textDisplayInstructionLineWidth)
+    private val bodyScale = textDisplayScale.coerceIn(0.1, 4.0)
+    private val instructionScale = textDisplayInstructionScale.coerceIn(0.1, 4.0)
+    private val instructionGap = textDisplayInstructionGap.coerceAtLeast(0.0)
+    private val optionInstructionGap = textDisplayOptionInstructionGap.coerceAtLeast(0.0)
+    private val optionGap = textDisplayOptionGap.coerceAtLeast(0.0)
+    private val bodyWidth = maxOf(textDisplayLineWidth, (textDisplayMaxLineLength.coerceIn(1, 120) + 8) * 8)
+    private val contentEntity = createEntity(bodyScale, bodyWidth)
+    private val instructionEntity = createEntity(instructionScale, textDisplayInstructionLineWidth)
     private val fixedPosition = (origin as? ConstVar)?.value
     private var body: Component = Component.empty()
     private var instruction: Component? = null
@@ -89,13 +95,13 @@ internal class TextDisplayDialogueDisplay(
     private var instructionDirty = true
     private var lastPosition: Position? = null
     private var positionUpdateTicks = 0
-    private var entranceStep = 0
+    private var entrance = Entrance.PREPARING
     private var elapsed = Duration.ZERO
     private var closeTime: Duration? = null
     private var instantlyClosed = false
 
     val ready: Boolean
-        get() = elapsed.toTicks() >= enterTicks() + 2
+        get() = entrance == Entrance.PLAYING && elapsed.toTicks() >= enterTicks()
 
     val isClosing: Boolean
         get() = closeTime != null || instantlyClosed
@@ -103,20 +109,27 @@ internal class TextDisplayDialogueDisplay(
     val finished: Boolean
         get() = instantlyClosed || closeTime?.toTicks()?.let { it >= exitTicks() } == true
 
+    var invalid = false
+        private set
+
     fun spawn(text: Component) {
         body = text
         val position = position()
+        if (position.world.identifier != player.world.uid.toString()) {
+            invalid = true
+            return
+        }
         lastPosition = position
         val content = body
         contentLines = content.plainText().lineCount
         contentEntity.meta<TextDisplayMeta> {
             this.text = content
-            textOpacity = 0
+            textOpacity = HIDDEN_OPACITY.toByte()
             translation = translation(contentOffset(textDisplayEnterScale) + textDisplayEnterOffset)
         }
         instructionEntity.meta<TextDisplayMeta> {
             this.text = instruction ?: Component.empty()
-            textOpacity = 0
+            textOpacity = HIDDEN_OPACITY.toByte()
             translation = instructionTranslation(textDisplayEnterScale, textDisplayEnterOffset)
         }
         lastContent = content
@@ -131,10 +144,15 @@ internal class TextDisplayDialogueDisplay(
     }
 
     fun tick(deltaTime: Duration, text: Component? = null) {
-        if (deltaTime.isZero || finished) return
+        if (invalid || deltaTime.isZero || finished) return
+        if (lastPosition?.world?.identifier != player.world.uid.toString()) {
+            invalid = true
+            return
+        }
         elapsed += deltaTime
         closeTime = closeTime?.plus(deltaTime)
         if (!isClosing && fixedPosition == null) updatePosition()
+        if (invalid) return
         if (text != null) {
             body = text
             contentDirty = true
@@ -161,7 +179,7 @@ internal class TextDisplayDialogueDisplay(
         layoutDirty = layoutDirty || optionEntities.size != slots || optionLines != rowLines.coerceAtLeast(1)
         while (optionEntities.size > slots) dispose(optionEntities.removeAt(optionEntities.lastIndex))
         while (optionEntities.size < slots) {
-            val entity = createEntity(textDisplayScale, textDisplayLineWidth)
+            val entity = createEntity(bodyScale, bodyWidth)
             optionEntities.add(entity)
             if (spawned) spawn(entity, lastPosition!!)
         }
@@ -172,7 +190,7 @@ internal class TextDisplayDialogueDisplay(
     }
 
     fun close() {
-        if (isClosing) return
+        if (!spawned || invalid || isClosing) return
         if (exitTicks() <= 0) {
             instantlyClosed = true
             return
@@ -182,30 +200,30 @@ internal class TextDisplayDialogueDisplay(
         optionEntities.forEachIndexed { index, entity ->
             entity.meta<TextDisplayMeta> {
                 animate(
-                    textDisplayScale,
+                    bodyScale,
                     textDisplayExitScale,
                     optionOffset(index, textDisplayExitScale) + textDisplayExitOffset,
                     exitTicks(),
-                    0,
+                    HIDDEN_OPACITY,
                 )
             }
         }
         contentEntity.meta<TextDisplayMeta> {
             animate(
-                textDisplayScale,
+                bodyScale,
                 textDisplayExitScale,
                 contentOffset(textDisplayExitScale) + textDisplayExitOffset,
                 exitTicks(),
-                0,
+                HIDDEN_OPACITY,
             )
         }
         instructionEntity.meta<TextDisplayMeta> {
             animate(
-                textDisplayInstructionScale,
+                instructionScale,
                 textDisplayExitScale,
                 instructionOffset(textDisplayExitScale) + textDisplayExitOffset,
                 exitTicks(),
-                0,
+                HIDDEN_OPACITY,
             )
         }
     }
@@ -228,7 +246,7 @@ internal class TextDisplayDialogueDisplay(
 
     private fun updateOptions() {
         if (!optionsDirty) return
-        if (layoutDirty && entranceStep == 2 && !ready) return
+        if (layoutDirty && entrance == Entrance.PLAYING && !ready) return
         optionEntities.forEachIndexed { index, entity ->
             entity.meta<TextDisplayMeta> {
                 val optionText = options.getOrNull(index)?.minimalLines(optionLines) ?: Component.empty()
@@ -238,8 +256,8 @@ internal class TextDisplayDialogueDisplay(
                 if (text != optionText) text = optionText
                 if (backgroundColor != background) backgroundColor = background
                 if (!layoutDirty) return@meta
-                if (entranceStep == 2) {
-                    scale = scale(textDisplayScale, 1.0)
+                if (entrance == Entrance.PLAYING) {
+                    scale = scale(bodyScale, 1.0)
                     translation = translation(optionOffset(index))
                     textOpacity = configuredOpacity().toByte()
                 } else {
@@ -249,7 +267,7 @@ internal class TextDisplayDialogueDisplay(
         }
         if (layoutDirty) {
             instructionEntity.meta<TextDisplayMeta> {
-                translation = if (entranceStep == 2) instructionTranslation() else {
+                translation = if (entrance == Entrance.PLAYING) instructionTranslation() else {
                     instructionTranslation(textDisplayEnterScale, textDisplayEnterOffset)
                 }
             }
@@ -269,28 +287,30 @@ internal class TextDisplayDialogueDisplay(
     }
 
     private fun animateEntrance() {
-        when (entranceStep) {
-            0 -> {
+        when (entrance) {
+            Entrance.PREPARING -> {
                 prepareAnimation(contentEntity)
                 prepareAnimation(instructionEntity)
                 optionEntities.forEach { prepareAnimation(it) }
-                entranceStep = 1
+                entrance = Entrance.PREPARED
             }
-            1 -> {
+            Entrance.PREPARED -> {
                 contentEntity.meta<TextDisplayMeta> {
                     backgroundColor = textDisplayBackground
-                    animate(textDisplayScale, 1.0, contentOffset(), enterTicks())
+                    animate(bodyScale, 1.0, contentOffset(), enterTicks())
                 }
                 instructionEntity.meta<TextDisplayMeta> {
-                    animate(textDisplayInstructionScale, 1.0, instructionOffset(), enterTicks())
+                    animate(instructionScale, 1.0, instructionOffset(), enterTicks())
                 }
                 optionEntities.forEachIndexed { index, entity ->
                     entity.meta<TextDisplayMeta> {
-                        animate(textDisplayScale, 1.0, optionOffset(index), enterTicks())
+                        animate(bodyScale, 1.0, optionOffset(index), enterTicks())
                     }
                 }
-                entranceStep = 2
+                elapsed = Duration.ZERO
+                entrance = Entrance.PLAYING
             }
+            Entrance.PLAYING -> Unit
         }
     }
 
@@ -300,6 +320,10 @@ internal class TextDisplayDialogueDisplay(
         positionUpdateTicks = 0
 
         val position = position()
+        if (position.world.identifier != player.world.uid.toString()) {
+            invalid = true
+            return
+        }
         val previous = lastPosition
         if (previous?.isInRange(position, textDisplayPositionUpdateThreshold.coerceAtLeast(0.0)) == true &&
             previous.yaw == position.yaw && previous.pitch == position.pitch
@@ -326,7 +350,7 @@ internal class TextDisplayDialogueDisplay(
             }
             backgroundColor = 0
             isUseDefaultBackground = false
-            textOpacity = 0
+            textOpacity = HIDDEN_OPACITY.toByte()
             isShadow = textDisplayShadow
             isSeeThrough = textDisplaySeeThrough
             isAlignLeft = textDisplayAlignment.equals("LEFT", true)
@@ -346,6 +370,7 @@ internal class TextDisplayDialogueDisplay(
         duration: Int,
         opacity: Int = configuredOpacity(),
     ) {
+        // Change the prepared delay so the client starts interpolation on receipt.
         interpolationDelay = -1
         transformationInterpolationDuration = duration
         scale = scale(displayScale, scaleMultiplier)
@@ -363,27 +388,21 @@ internal class TextDisplayDialogueDisplay(
 
     private fun instructionOffset(scaleMultiplier: Double = 1.0): Double {
         val contentHeight = contentHeight()
-        val instructionHeight = TEXT_LINE_HEIGHT * textDisplayInstructionScale.coerceIn(0.1, 4.0)
-        val gap = if (optionEntities.isEmpty()) textDisplayInstructionGap.coerceAtLeast(0.0) else {
-            textDisplayOptionInstructionGap.coerceAtLeast(0.0)
-        }
-        val optionsHeight = if (optionEntities.isEmpty()) 0.0 else {
-            textDisplayOptionGap.coerceAtLeast(0.0) +
-                optionEntities.size * (optionHeight() + textDisplayOptionGap.coerceAtLeast(0.0))
-        }
+        val instructionHeight = TEXT_LINE_HEIGHT * instructionScale
+        val gap = if (optionEntities.isEmpty()) instructionGap else optionInstructionGap
+        val optionsHeight = optionEntities.size * (optionHeight() + optionGap)
         return contentHeight / 2.0 -
-            scaleMultiplier * (contentHeight + optionsHeight + instructionHeight / 2.0 + gap)
+            scaleMultiplier * (contentHeight / 2.0 + optionsHeight + instructionHeight + gap)
     }
 
-    private fun optionHeight(): Double = optionLines * TEXT_LINE_HEIGHT * textDisplayScale.coerceIn(0.1, 4.0)
+    private fun optionHeight(): Double = optionLines * TEXT_LINE_HEIGHT * bodyScale
 
     private fun optionOffset(index: Int, scaleMultiplier: Double = 1.0): Double {
-        val gap = textDisplayOptionGap.coerceAtLeast(0.0)
-        return contentHeight() / 2.0 - scaleMultiplier *
-            (contentHeight() + gap + index * (optionHeight() + gap) + optionHeight() / 2.0)
+        val halfBodyHeight = contentHeight() / 2.0
+        return halfBodyHeight - scaleMultiplier * (halfBodyHeight + (index + 1) * (optionHeight() + optionGap))
     }
 
-    private fun contentHeight(): Double = contentLines * TEXT_LINE_HEIGHT * textDisplayScale.coerceIn(0.1, 4.0)
+    private fun contentHeight(): Double = contentLines * TEXT_LINE_HEIGHT * bodyScale
 
     private fun spawn(entity: WrapperEntity, position: Position) {
         entity.spawn(position.toPacketLocation())
@@ -402,8 +421,11 @@ internal class TextDisplayDialogueDisplay(
         }
     }
 
+    private enum class Entrance { PREPARING, PREPARED, PLAYING }
+
     private companion object {
-        const val TEXT_LINE_HEIGHT = 9.0 / 40.0
+        const val TEXT_LINE_HEIGHT = 10.0 / 40.0
+        const val HIDDEN_OPACITY = 4
     }
 }
 
@@ -418,7 +440,7 @@ private fun exitTicks(): Int = animationTicks(textDisplayExitTicks)
 private fun animationTicks(ticks: Int): Int = ticks.coerceIn(0, 59)
 
 private fun scale(displayScale: Double, multiplier: Double): Vector3f {
-    val scale = (displayScale.coerceIn(0.1, 4.0) * multiplier).toFloat()
+    val scale = (displayScale * multiplier).toFloat()
     return Vector3f(scale, scale, scale)
 }
 

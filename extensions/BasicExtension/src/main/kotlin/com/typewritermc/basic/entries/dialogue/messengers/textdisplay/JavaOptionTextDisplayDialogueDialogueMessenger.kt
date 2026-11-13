@@ -21,6 +21,7 @@ import com.typewritermc.engine.paper.utils.stripped
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerRespawnEvent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerItemHeldEvent
 import java.time.Duration
@@ -74,7 +75,6 @@ class JavaOptionTextDisplayDialogueDialogueMessenger(
         }
     private val selected: Option?
         get() = usableOptions.getOrNull(selectedIndex)
-    private var lastVisibleCharacters = -1
     private var lastShowingOptions = -1
     private var optionLines = 1
 
@@ -88,10 +88,10 @@ class JavaOptionTextDisplayDialogueDialogueMessenger(
         get() = playTime >= totalDuration
         set(value) {
             playTime = if (value) totalDuration else Duration.ZERO
-            lastVisibleCharacters = -1
             lastShowingOptions = -1
         }
 
+    @Synchronized
     override fun init() {
         super.init()
         usableOptions = entry.options.filter { it.criteria.matches(player, context) }
@@ -102,16 +102,18 @@ class JavaOptionTextDisplayDialogueDialogueMessenger(
 
         selectedIndex = 0
         val text = entry.text.get(player, context).parsePlaceholders(player)
-        typewriter = TextDisplayTypewriter(text)
+        typewriter = TextDisplayTypewriter(text, player)
         typeDuration = entry.duration.get(player, context)
         typingDuration = typingDurationType.totalDuration(typewriter.rawText, typeDuration).coerceAtLeast(Duration.ZERO)
         updateTotalDuration()
         updateOptionLines()
 
         confirmation = player.awaitConfirmation {
-            if (state != MessengerState.RUNNING || display?.isClosing == true) return@awaitConfirmation
-            if (animationComplete) display?.close()
-            else animationComplete = true
+            synchronized(this) {
+                if (state != MessengerState.RUNNING || display?.isClosing == true) return@awaitConfirmation
+                if (animationComplete) display?.close()
+                else animationComplete = true
+            }
         }
         display = TextDisplayDialogueDisplay(
             player,
@@ -126,6 +128,7 @@ class JavaOptionTextDisplayDialogueDialogueMessenger(
     }
 
     @EventHandler
+    @Synchronized
     private fun onPlayerItemHeld(event: PlayerItemHeldEvent) {
         if (event.player.uniqueId != player.uniqueId || state != MessengerState.RUNNING) return
         if (usableOptions.isEmpty() || display?.isClosing == true) return
@@ -139,6 +142,7 @@ class JavaOptionTextDisplayDialogueDialogueMessenger(
         refreshDisplayedOptions(true)
     }
 
+    @Synchronized
     override fun tick(context: TickContext) {
         if (state != MessengerState.RUNNING) return
 
@@ -151,9 +155,20 @@ class JavaOptionTextDisplayDialogueDialogueMessenger(
         }
 
         display?.tick(context.deltaTime, text)
+        if (display?.invalid == true) {
+            state = MessengerState.CANCELLED
+            return
+        }
         if (display?.finished == true) state = MessengerState.FINISHED
     }
 
+    @EventHandler
+    @Synchronized
+    private fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        if (event.player.uniqueId == player.uniqueId) state = MessengerState.CANCELLED
+    }
+
+    @Synchronized
     override fun dispose() {
         super.dispose()
         confirmation?.dispose()
@@ -191,14 +206,7 @@ class JavaOptionTextDisplayDialogueDialogueMessenger(
         } else {
             typingDurationType.calculatePercentage(playTime, typeDuration, typewriter.rawText)
         }
-        val visibleCharacters = typewriter.visibleCharacters(percentage)
-        if (!force && visibleCharacters == lastVisibleCharacters) return null
-        lastVisibleCharacters = visibleCharacters
-
-        return optionTextDisplayFormat.asMiniWithResolvers(
-            player,
-            Placeholder.component("message", typewriter.component(percentage)),
-        )
+        return typewriter.render(optionTextDisplayFormat, percentage, force)
     }
 
     private fun refreshDisplayedOptions(force: Boolean = false) {
