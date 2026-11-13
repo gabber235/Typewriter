@@ -512,6 +512,12 @@ decided:
   - id: general-probes
     what: "A. General probes (Recommended)"
     why: probe.give, probe.gameMode, probe.block and the like live in the framework plugin. Every requirement shows what it sets up, and extensions build on the same probes
+  - id: probe-done-at-client
+    what: "A. Client has the effect (Recommended)"
+    why: A probe returns only once its effect reached the client (chunks sent, command tree sent); Paper steps until then, so requirement code never waits for readiness
+  - id: keep-slice-2-built-decisions
+    what: "Keep them (Recommended)"
+    why: Busy flag on the step ack, input window from the tick before its first event, watches only for probe placed things, name tag reactions, becomes and gone need a change, prioritizeChunkUpdates 2, a floor per requirement, ProbeFailed and InputFailed, retype in the client
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
