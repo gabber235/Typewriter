@@ -11,6 +11,12 @@ import skirout.kernel.v1.resource_id.ResourceId
  * and nothing is written back.
  */
 
+/** The name under which a resource derives a type; the generated `XDerived` object holds one per derived parameter. */
+@JvmInline
+value class DerivedKey(
+    val name: String,
+)
+
 /** Where derived types come from in one view. */
 fun interface DerivedOrigin {
     /** What [owner]'s derive blocks compute under [key]. */

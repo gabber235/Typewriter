@@ -55,6 +55,7 @@ import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
+import com.typewritermc.types.Derived
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Many
@@ -74,6 +75,7 @@ import com.typewritermc.types.catalog.referencedDefinitions
 import com.typewritermc.types.codegen.emit.CheckEmitter
 import com.typewritermc.types.codegen.emit.ConfigurationEmitter
 import com.typewritermc.types.codegen.emit.DefinitionEmitter
+import com.typewritermc.types.codegen.emit.DerivedEmitter
 import com.typewritermc.types.codegen.emit.DisplayEmitter
 import com.typewritermc.types.codegen.emit.DraftEmitter
 import com.typewritermc.types.codegen.emit.ExpressionsEmitter
@@ -124,6 +126,7 @@ class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
 internal val SDK_EMITTERS: List<SdkEmitter> =
     listOf(
         FieldsEmitter,
+        DerivedEmitter,
         ExpressionsEmitter,
         ConfigurationEmitter,
         OperationEmitter,
@@ -204,6 +207,11 @@ private class TypewriterTypeProcessor(
             .getSymbolsWithAnnotation(ReferenceContract::class)
             .filterIsInstance<KSClassDeclaration>()
             .forEach { relation -> if (relation.validate()) generateRelation(relation) else deferred += relation }
+        resolver
+            .getSymbolsWithAnnotation(Derived::class)
+            .filterIsInstance<KSTypeParameter>()
+            .filterNot { parameter -> (parameter.parentDeclaration as? KSClassDeclaration)?.isFinalResourceClass() == true }
+            .forEach { parameter -> logger.error("@Derived marks only a type parameter of a final class that implements Resource.", parameter) }
         val directlyAnnotated = resolver.getSymbolsWithAnnotation(TypewriterType::class).filterIsInstance<KSClassDeclaration>().toList()
         val nestedAnnotated =
             directlyAnnotated
@@ -237,6 +245,15 @@ private class TypewriterTypeProcessor(
     override fun finish() {
         output.finish()
     }
+
+    /**
+     * Whether this declaration may have a derived parameter: a final class that implements Resource. A parent contract
+     * would meet the parameter under another index in each implementation, so only the resource type itself derives.
+     */
+    private fun KSClassDeclaration.isFinalResourceClass(): Boolean =
+        classKind == ClassKind.CLASS &&
+            modifiers.none { it == Modifier.OPEN || it == Modifier.ABSTRACT || it == Modifier.SEALED } &&
+            implements(Resource::class)
 
     /** Whether this compilation emits the SDK of [declaration]: its own sources and the dependencies it claims. */
     private fun isEmittedHere(declaration: KSClassDeclaration): Boolean =

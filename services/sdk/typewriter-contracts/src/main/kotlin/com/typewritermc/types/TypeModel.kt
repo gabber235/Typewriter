@@ -29,6 +29,15 @@ annotation class TypewriterType(
     val revision: Int = 1,
 )
 
+/**
+ * Marks a type parameter whose argument a resource always derives from its own content, so a creator never chooses it.
+ * Only a final class that implements Resource may have one; its argument is the type the resource derives under the
+ * parameter's name.
+ */
+@Target(AnnotationTarget.TYPE_PARAMETER)
+@Retention(AnnotationRetention.BINARY)
+annotation class Derived
+
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterTypeImports(
