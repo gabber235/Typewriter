@@ -48,7 +48,8 @@ void main() {
 
   for (final key in [LogicalKeyboardKey.space, LogicalKeyboardKey.enter]) {
     testWidgets(
-      "${key.keyLabel} on a focused button presses it in and runs it once",
+      "${key.keyLabel} on a focused button presses it in and runs it once "
+      "when let go",
       (tester) async {
         var runs = 0;
         final panel = await tester.showComponent(
@@ -64,7 +65,7 @@ void main() {
           tester.getRect(find.byType(ButtonContent)).width,
           lessThan(at.width),
         );
-        expect(runs, 1);
+        expect(runs, 0);
 
         await tester.sendKeyUpEvent(key);
         await panel.settle();

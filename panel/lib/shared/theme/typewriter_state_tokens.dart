@@ -15,6 +15,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
     this.draggedOpacity = 0.16,
     this.disabledForegroundOpacity = 0.38,
     this.disabledContainerOpacity = 0.12,
+    this.splashOpacity = 0.26,
+    this.splashOnFillOpacity = 0.45,
   });
 
   final double hoverOpacity;
@@ -22,6 +24,12 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
   final double draggedOpacity;
   final double disabledForegroundOpacity;
   final double disabledContainerOpacity;
+
+  /// The press splash on a soft or clear face, in the face's accent.
+  final double splashOpacity;
+
+  /// The press splash on a strong fill, in the fill's label colour.
+  final double splashOnFillOpacity;
 
   /// Resolves the interaction layer for a set of [WidgetState] values.
   ///
@@ -54,6 +62,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
     double? draggedOpacity,
     double? disabledForegroundOpacity,
     double? disabledContainerOpacity,
+    double? splashOpacity,
+    double? splashOnFillOpacity,
   }) => TypewriterStateTokens(
     hoverOpacity: hoverOpacity ?? this.hoverOpacity,
     pressedOpacity: pressedOpacity ?? this.pressedOpacity,
@@ -62,6 +72,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
         disabledForegroundOpacity ?? this.disabledForegroundOpacity,
     disabledContainerOpacity:
         disabledContainerOpacity ?? this.disabledContainerOpacity,
+    splashOpacity: splashOpacity ?? this.splashOpacity,
+    splashOnFillOpacity: splashOnFillOpacity ?? this.splashOnFillOpacity,
   );
 
   @override
@@ -80,6 +92,8 @@ class TypewriterStateTokens extends ThemeExtension<TypewriterStateTokens> {
         disabledContainerOpacity,
         other.disabledContainerOpacity,
       ),
+      splashOpacity: l(splashOpacity, other.splashOpacity),
+      splashOnFillOpacity: l(splashOnFillOpacity, other.splashOnFillOpacity),
     );
   }
 }

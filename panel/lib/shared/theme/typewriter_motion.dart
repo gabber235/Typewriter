@@ -109,6 +109,7 @@ final class MotionToken<L extends Landing> {
   static const loadIn = MotionToken<EnterLanding>._("loadIn");
   static const rowIn = MotionToken<EnterLanding>._("rowIn");
   static const press = MotionToken<PressLanding>._("press");
+  static const splash = MotionToken<NoLanding>._("splash");
   static const hoverOut = MotionToken<NoLanding>._("hoverOut");
   static const panelOut = MotionToken<NoLanding>._("panelOut");
   static const dialogOut = MotionToken<NoLanding>._("dialogOut");
@@ -135,6 +136,7 @@ final class MotionToken<L extends Landing> {
     loadIn,
     rowIn,
     press,
+    splash,
     hoverOut,
     panelOut,
     dialogOut,
@@ -301,6 +303,14 @@ class TypewriterMotion extends ThemeExtension<TypewriterMotion> {
         const MotionSpec(
           SpringMotion(stiffness: 300, damping: 12),
           PressLanding(sink: 4, scale: 0.93),
+          reduced: ReducedKind.still,
+        ),
+      ),
+      _row(
+        MotionToken.splash,
+        const MotionSpec(
+          CurveMotion(Cubic(0.2, 0.9, 0.3, 1), Duration(milliseconds: 450)),
+          NoLanding(),
           reduced: ReducedKind.still,
         ),
       ),

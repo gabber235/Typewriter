@@ -12,6 +12,7 @@ class ButtonContent extends StatelessWidget {
     this.label,
     this.content,
     this.dense = false,
+    this.ink,
     super.key,
   });
 
@@ -31,6 +32,9 @@ class ButtonContent extends StatelessWidget {
 
   /// A compact face: 8 px smaller each way, as authored compact density.
   final bool dense;
+
+  /// The press splash, painted over the fill and under the label.
+  final PressInk? ink;
 
   @override
   Widget build(BuildContext context) {
@@ -66,26 +70,32 @@ class ButtonContent extends StatelessWidget {
       ),
       child: DecoratedBox(
         decoration: ShapeDecoration(shape: face.shapeIn(context), color: fill),
-        child: Padding(
-          padding: dense ? padding - EdgeInsets.all(shrink / 2) : padding,
-          child: IconTheme.merge(
-            data: IconThemeData(color: foreground, size: 20),
-            child: DefaultTextStyle.merge(
-              style: context.theme.textTheme.labelLarge?.copyWith(
-                color: foreground,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: context.spacing.space2,
-                children: [
-                  if (content case final content?)
-                    Flexible(child: content)
-                  else ...[
-                    ?icon,
-                    if (label case final label?) Flexible(child: label),
-                  ],
-                ],
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: face.shapeIn(context)),
+          child: CustomPaint(
+            painter: ink,
+            child: Padding(
+              padding: dense ? padding - EdgeInsets.all(shrink / 2) : padding,
+              child: IconTheme.merge(
+                data: IconThemeData(color: foreground, size: 20),
+                child: DefaultTextStyle.merge(
+                  style: context.theme.textTheme.labelLarge?.copyWith(
+                    color: foreground,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: context.spacing.space2,
+                    children: [
+                      if (content case final content?)
+                        Flexible(child: content)
+                      else ...[
+                        ?icon,
+                        if (label case final label?) Flexible(child: label),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

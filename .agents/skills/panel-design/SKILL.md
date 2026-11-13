@@ -178,6 +178,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | `loadIn` | Strike | 190 ms per row | Rises 14 px; the last visible row starts within 150 ms | jump |
 | `rowIn` | Carriage | 280 ms | 6% recoil, hit at `h = 0.42` | jump |
 | `press` | Spring | Stiffness 300, damping 12 | Sinks 4 px, scale 0.93, big bounce back | still: a control darkens while down |
+| `splash` | Ease out | 450 ms | A press splash grows from the press point (a key: the middle) to cover the control; it stays while held and drains with `panelOut` | still: no splash |
 | `hoverOut` | Exit | 90 ms | None | still |
 | `panelOut` | Exit | 200 ms | None | jump |
 | `dialogOut` | Exit | 150 ms | None | jump |

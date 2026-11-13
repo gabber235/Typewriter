@@ -103,3 +103,32 @@ Widget jamUseCase(BuildContext context) {
     },
   );
 }
+
+/// Every face splashing from where it is pressed: hold to keep the splash,
+/// let go inside to act, slide off or press Escape to cancel. Filled and
+/// danger faces splash light, the rest in the brand colour.
+@widgetbook.UseCase(name: "Press splash", type: PressInk)
+Widget pressSplashUseCase(BuildContext context) {
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      Builder(
+        builder: (context) => Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            Button(label: "Copy", autofocus: true, onPressed: () {}),
+            Button(face: ButtonFace.outlined, label: "Open", onPressed: () {}),
+            Button(face: ButtonFace.filled, label: "Publish", onPressed: () {}),
+            Button(
+              face: ButtonFace.filled,
+              color: context.colors.danger,
+              label: "Delete",
+              onPressed: () {},
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

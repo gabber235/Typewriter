@@ -110,19 +110,21 @@ class CommandButton extends HookConsumerWidget {
 
     // Bound to the command: the Button reads the command's run state from
     // CommandRuns and keeps no controller of its own.
-    Widget faceWith(VoidCallback? onPressed) => Button(
-      label: label,
-      busyLabel: busyLabel,
-      doneLabel: doneLabel,
-      icon: shownIcon,
-      face: face,
-      color: color,
-      hint: hint,
-      tooltip: tooltip,
-      controller: state,
-      focusNode: focus,
-      onPressed: onPressed,
-    );
+    Widget faceWith(VoidCallback? onPressed, {VoidCallback? onKeyPressStart}) =>
+        Button(
+          label: label,
+          busyLabel: busyLabel,
+          doneLabel: doneLabel,
+          icon: shownIcon,
+          face: face,
+          color: color,
+          hint: hint,
+          tooltip: tooltip,
+          controller: state,
+          focusNode: focus,
+          onPressed: onPressed,
+          onKeyPressStart: onKeyPressStart,
+        );
 
     switch (run) {
       case null:
@@ -147,8 +149,7 @@ class CommandButton extends HookConsumerWidget {
           );
         }
 
-        // The Button activates on key down; a pointer tap also lands here
-        // after the Listener already owned it, so only keys start a hold.
+        // Starts on the Button's key down, with the keys held then.
         void keyHold() {
           final keys = HardwareKeyboard.instance.logicalKeysPressed
               .intersection(_activators);
@@ -207,8 +208,11 @@ class CommandButton extends HookConsumerWidget {
                 // only for a hold that paints on itself.
                 pressed: busy && hold.plan.rows == null,
                 // The Listener owns a pointer hold and keyHold a key hold;
-                // the face never runs work on tap.
-                child: faceWith(busy ? null : keyHold),
+                // the face never runs work on a press.
+                child: faceWith(
+                  busy ? null : () {},
+                  onKeyPressStart: busy ? null : keyHold,
+                ),
               ),
             ),
           ),

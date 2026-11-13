@@ -55,6 +55,7 @@ class Button extends HookWidget {
     this.statesController,
     this.child,
     this.dense = false,
+    this.onKeyPressStart,
     super.key,
   });
 
@@ -77,6 +78,10 @@ class Button extends HookWidget {
   /// refuses another press; an Exception jams it and is reported. Null makes
   /// the button unavailable.
   final FutureOr<void> Function()? onPressed;
+
+  /// Runs when Space or Enter goes down on the focused button, before
+  /// [onPressed] runs on key up; a hold starts here.
+  final VoidCallback? onKeyPressStart;
   final ButtonFace face;
   final Widget? icon;
   final String? tooltip;
@@ -173,16 +178,68 @@ class Button extends HookWidget {
       }
     }
 
-    // Keys: pressed from key down to key up; the intent runs on key down.
+    // The press splash grows from the press point while held and drains
+    // when the press ends, whether it acted or was cancelled.
+    final splash = resolveMotion(context, MotionToken.splash);
+    final drainMotion = resolveMotion(context, MotionToken.panelOut);
+    final grow = useMotionController();
+    final drain = useMotionController(initial: 1);
+    final inkAt = useRef(Offset.zero);
+    void splashFrom(Offset at) {
+      if (!splash.travels || face == ButtonFace.bare) return;
+      inkAt.value = at;
+      drain.jumpTo(0);
+      grow
+        ..jumpTo(0)
+        ..to(1, splash);
+    }
+
+    void splashEnds() => drain.to(1, drainMotion);
+
+    // Keys: Space or Enter down presses and splashes from the middle; key up
+    // acts; Escape while held cancels. With a modifier held the key belongs
+    // to a shortcut, such as Ctrl+Enter publishing.
+    final keyHeld = useRef(false);
     KeyEventResult keys(FocusNode node, KeyEvent event) {
+      final key = event.logicalKey;
       final activator =
-          event.logicalKey == LogicalKeyboardKey.space ||
-          event.logicalKey == LogicalKeyboardKey.enter ||
-          event.logicalKey == LogicalKeyboardKey.numpadEnter;
-      if (activator) {
-        states.update(WidgetState.pressed, event is! KeyUpEvent && enabled);
+          key == LogicalKeyboardKey.space ||
+          key == LogicalKeyboardKey.enter ||
+          key == LogicalKeyboardKey.numpadEnter;
+      if (key == LogicalKeyboardKey.escape && keyHeld.value) {
+        if (event is KeyDownEvent) {
+          keyHeld.value = false;
+          states.update(WidgetState.pressed, false);
+          splashEnds();
+        }
+        return KeyEventResult.handled;
       }
-      return KeyEventResult.ignored;
+      if (!activator || !enabled) return KeyEventResult.ignored;
+      final keyboard = HardwareKeyboard.instance;
+      final modified =
+          keyboard.isControlPressed ||
+          keyboard.isMetaPressed ||
+          keyboard.isAltPressed ||
+          keyboard.isShiftPressed;
+      switch (event) {
+        case KeyDownEvent() when modified:
+          return KeyEventResult.ignored;
+        case KeyDownEvent():
+          keyHeld.value = true;
+          onKeyPressStart?.call();
+          states.update(WidgetState.pressed, true);
+          final box = context.findRenderObject();
+          splashFrom(
+            box is RenderBox ? box.size.center(Offset.zero) : Offset.zero,
+          );
+        case KeyUpEvent() when keyHeld.value:
+          keyHeld.value = false;
+          states.update(WidgetState.pressed, false);
+          splashEnds();
+          activate();
+        case _:
+      }
+      return KeyEventResult.handled;
     }
 
     final press = resolveMotion(context, MotionToken.press);
@@ -229,6 +286,24 @@ class Button extends HookWidget {
             dense: dense,
             color: color,
             unavailable: unavailable,
+            ink: PressInk(
+              center: inkAt.value,
+              color: switch (face) {
+                // The label colour on a strong fill, the accent on a soft
+                // or clear one.
+                ButtonFace.filled || ButtonFace.floating =>
+                  (color ?? context.colors.brand)
+                      .on(context)
+                      .withValues(
+                        alpha: context.stateTokens.splashOnFillOpacity,
+                      ),
+                _ => (color ?? context.colors.brand).withValues(
+                  alpha: context.stateTokens.splashOpacity,
+                ),
+              },
+              grow: grow,
+              drain: drain,
+            ),
             content: child,
             icon: icon == null
                 ? null
@@ -272,13 +347,22 @@ class Button extends HookWidget {
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
             onTapDown: enabled
-                ? (_) => states.update(WidgetState.pressed, true)
+                ? (details) {
+                    states.update(WidgetState.pressed, true);
+                    splashFrom(details.localPosition);
+                  }
                 : null,
             onTapCancel: enabled
-                ? () => states.update(WidgetState.pressed, false)
+                ? () {
+                    states.update(WidgetState.pressed, false);
+                    splashEnds();
+                  }
                 : null,
             onTapUp: enabled
-                ? (_) => states.update(WidgetState.pressed, false)
+                ? (_) {
+                    states.update(WidgetState.pressed, false);
+                    splashEnds();
+                  }
                 : null,
             onTap: enabled ? activate : null,
             child: Semantics(
