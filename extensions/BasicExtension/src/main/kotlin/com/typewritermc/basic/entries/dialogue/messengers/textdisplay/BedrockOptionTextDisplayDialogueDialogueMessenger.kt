@@ -1,6 +1,7 @@
 package com.typewritermc.basic.entries.dialogue.messengers.textdisplay
 
 import com.typewritermc.basic.entries.dialogue.Option
+import com.typewritermc.basic.entries.dialogue.messengers.sendDialogueOptions
 import com.typewritermc.basic.entries.dialogue.OptionContextKeys
 import com.typewritermc.basic.entries.dialogue.OptionTextDisplayDialogueEntry
 import com.typewritermc.core.interaction.InteractionBoundState
@@ -63,45 +64,32 @@ class BedrockOptionTextDisplayDialogueDialogueMessenger(
             return
         }
 
-        org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(
-            player.uniqueId,
-            org.geysermc.cumulus.form.CustomForm.builder()
-                .title(
-                    optionTextDisplayTitle.parsePlaceholders(player).legacy(
-                        Placeholder.parsed(
-                            "speaker",
-                            entry.speakerDisplayName.get(player, context).parsePlaceholders(player),
-                        )
-                    )
-                )
-                .label(
-                    optionTextDisplayDescription.parsePlaceholders(player).legacy(
-                        Placeholder.parsed("message", entry.text.get(player, context).parsePlaceholders(player))
-                    )
-                )
-                .dropdown(
-                    optionTextDisplaySelect.parsePlaceholders(player).legacy(),
-                    usableOptions.map { it.text.get(player, context).parsePlaceholders(player).legacy() },
-                )
-                .label("\n\n\n\n")
-                .closedOrInvalidResultHandler { _, _ ->
-                    if (state != MessengerState.RUNNING) return@closedOrInvalidResultHandler
-                    when (player.boundState) {
-                        InteractionBoundState.BLOCKING -> sendForm()
-                        else -> state = MessengerState.CANCELLED
-                    }
+        player.sendDialogueOptions(
+            optionTextDisplayTitle.parsePlaceholders(player).legacy(
+                Placeholder.parsed("speaker", entry.speakerDisplayName.get(player, context).parsePlaceholders(player)),
+            ),
+            optionTextDisplayDescription.parsePlaceholders(player).legacy(
+                Placeholder.parsed("message", entry.text.get(player, context).parsePlaceholders(player)),
+            ),
+            optionTextDisplaySelect.parsePlaceholders(player).legacy(),
+            usableOptions.map { it.text.get(player, context).parsePlaceholders(player).legacy() },
+            onClose = onClose@{
+                if (state != MessengerState.RUNNING) return@onClose
+                when (player.boundState) {
+                    InteractionBoundState.BLOCKING -> sendForm()
+                    else -> state = MessengerState.CANCELLED
                 }
-                .validResultHandler { response ->
-                    if (state != MessengerState.RUNNING) return@validResultHandler
-                    val index = response.asDropdown()
-                    val option = usableOptions.getOrNull(index) ?: return@validResultHandler
-                    if (!option.criteria.matches(player, context)) {
-                        sendForm()
-                        return@validResultHandler
-                    }
-                    selectedIndex = index
-                    state = MessengerState.FINISHED
+            },
+            onSelect = onSelect@{ index ->
+                if (state != MessengerState.RUNNING) return@onSelect
+                val option = usableOptions.getOrNull(index) ?: return@onSelect
+                if (!option.criteria.matches(player, context)) {
+                    sendForm()
+                    return@onSelect
                 }
+                selectedIndex = index
+                state = MessengerState.FINISHED
+            },
         )
     }
 }

@@ -1,6 +1,7 @@
 package com.typewritermc.basic.entries.dialogue.messengers.spoken
 
 import com.typewritermc.basic.entries.dialogue.SpokenDialogueEntry
+import com.typewritermc.basic.entries.dialogue.messengers.sendDialogueForm
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
@@ -25,29 +26,23 @@ class BedrockSpokenDialogueDialogueMessenger(player: Player, context: Interactio
     }
 
     fun sendForm() {
-        org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(
-            player.uniqueId,
-            org.geysermc.cumulus.form.SimpleForm.builder()
-                .title(
-                    spokenTitle.parsePlaceholders(player).legacy(
-                        Placeholder.parsed("speaker", entry.speakerDisplayName.get(player).parsePlaceholders(player))
-                    )
-                )
-                .content(
-                    spokenContent.parsePlaceholders(player).legacy(
-                        Placeholder.parsed("message", entry.text.get(player).parsePlaceholders(player))
-                    )
-                )
-                .button(spokenButton.parsePlaceholders(player).legacy())
-                .closedOrInvalidResultHandler { _, _ ->
-                    when (player.boundState) {
-                        InteractionBoundState.BLOCKING -> sendForm()
-                        else -> state = MessengerState.CANCELLED
-                    }
+        player.sendDialogueForm(
+            spokenTitle.parsePlaceholders(player).legacy(
+                Placeholder.parsed("speaker", entry.speakerDisplayName.get(player).parsePlaceholders(player)),
+            ),
+            spokenContent.parsePlaceholders(player).legacy(
+                Placeholder.parsed("message", entry.text.get(player).parsePlaceholders(player)),
+            ),
+            spokenButton.parsePlaceholders(player).legacy(),
+            onClose = {
+                when (player.boundState) {
+                    InteractionBoundState.BLOCKING -> sendForm()
+                    else -> state = MessengerState.CANCELLED
                 }
-                .validResultHandler { _, _ ->
-                    state = MessengerState.FINISHED
-                }
+            },
+            onConfirm = {
+                state = MessengerState.FINISHED
+            },
         )
     }
 

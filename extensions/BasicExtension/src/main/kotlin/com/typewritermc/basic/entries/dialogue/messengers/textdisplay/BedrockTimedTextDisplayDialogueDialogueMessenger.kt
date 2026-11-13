@@ -1,6 +1,7 @@
 package com.typewritermc.basic.entries.dialogue.messengers.textdisplay
 
 import com.typewritermc.basic.entries.dialogue.TimedTextDisplayDialogueEntry
+import com.typewritermc.basic.entries.dialogue.messengers.sendDialogueForm
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
@@ -57,39 +58,30 @@ class BedrockTimedTextDisplayDialogueDialogueMessenger(
 
     private fun sendForm() {
         if (state != MessengerState.RUNNING) return
-        org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(
-            player.uniqueId,
-            org.geysermc.cumulus.form.SimpleForm.builder()
-                .title(
-                    timedTextDisplayTitle.parsePlaceholders(player).legacy(
-                        Placeholder.parsed(
-                            "speaker",
-                            entry.speakerDisplayName.get(player, context).parsePlaceholders(player),
-                        )
-                    )
-                )
-                .content(
-                    timedTextDisplayContent.parsePlaceholders(player).legacy(
-                        Placeholder.parsed("message", entry.text.get(player, context).parsePlaceholders(player))
-                    )
-                )
-                .button(timedTextDisplayButton.parsePlaceholders(player).legacy())
-                .closedOrInvalidResultHandler { _, _ ->
-                    if (state != MessengerState.RUNNING) return@closedOrInvalidResultHandler
-                    if (!entry.allowSkip.get(player, context)) {
-                        sendForm()
-                        return@closedOrInvalidResultHandler
-                    }
-                    when (player.boundState) {
-                        InteractionBoundState.BLOCKING -> sendForm()
-                        else -> state = MessengerState.CANCELLED
-                    }
+        player.sendDialogueForm(
+            timedTextDisplayTitle.parsePlaceholders(player).legacy(
+                Placeholder.parsed("speaker", entry.speakerDisplayName.get(player, context).parsePlaceholders(player)),
+            ),
+            timedTextDisplayContent.parsePlaceholders(player).legacy(
+                Placeholder.parsed("message", entry.text.get(player, context).parsePlaceholders(player)),
+            ),
+            timedTextDisplayButton.parsePlaceholders(player).legacy(),
+            onClose = onClose@{
+                if (state != MessengerState.RUNNING) return@onClose
+                if (!entry.allowSkip.get(player, context)) {
+                    sendForm()
+                    return@onClose
                 }
-                .validResultHandler { _, _ ->
-                    if (state != MessengerState.RUNNING) return@validResultHandler
-                    if (entry.allowSkip.get(player, context)) state = MessengerState.FINISHED
-                    else sendForm()
+                when (player.boundState) {
+                    InteractionBoundState.BLOCKING -> sendForm()
+                    else -> state = MessengerState.CANCELLED
                 }
+            },
+            onConfirm = onConfirm@{
+                if (state != MessengerState.RUNNING) return@onConfirm
+                if (entry.allowSkip.get(player, context)) state = MessengerState.FINISHED
+                else sendForm()
+            },
         )
     }
 }

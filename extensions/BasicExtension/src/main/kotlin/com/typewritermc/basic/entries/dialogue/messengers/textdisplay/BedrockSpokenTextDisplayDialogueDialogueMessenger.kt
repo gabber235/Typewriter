@@ -1,6 +1,7 @@
 package com.typewritermc.basic.entries.dialogue.messengers.textdisplay
 
 import com.typewritermc.basic.entries.dialogue.SpokenTextDisplayDialogueEntry
+import com.typewritermc.basic.entries.dialogue.messengers.sendDialogueForm
 import com.typewritermc.core.interaction.InteractionBoundState
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
@@ -37,33 +38,24 @@ class BedrockSpokenTextDisplayDialogueDialogueMessenger(
 
     private fun sendForm() {
         if (state != MessengerState.RUNNING) return
-        org.geysermc.floodgate.api.FloodgateApi.getInstance().sendForm(
-            player.uniqueId,
-            org.geysermc.cumulus.form.SimpleForm.builder()
-                .title(
-                    spokenTextDisplayTitle.parsePlaceholders(player).legacy(
-                        Placeholder.parsed(
-                            "speaker",
-                            entry.speakerDisplayName.get(player, context).parsePlaceholders(player),
-                        )
-                    )
-                )
-                .content(
-                    spokenTextDisplayContent.parsePlaceholders(player).legacy(
-                        Placeholder.parsed("message", entry.text.get(player, context).parsePlaceholders(player))
-                    )
-                )
-                .button(spokenTextDisplayButton.parsePlaceholders(player).legacy())
-                .closedOrInvalidResultHandler { _, _ ->
-                    if (state != MessengerState.RUNNING) return@closedOrInvalidResultHandler
-                    when (player.boundState) {
-                        InteractionBoundState.BLOCKING -> sendForm()
-                        else -> state = MessengerState.CANCELLED
-                    }
+        player.sendDialogueForm(
+            spokenTextDisplayTitle.parsePlaceholders(player).legacy(
+                Placeholder.parsed("speaker", entry.speakerDisplayName.get(player, context).parsePlaceholders(player)),
+            ),
+            spokenTextDisplayContent.parsePlaceholders(player).legacy(
+                Placeholder.parsed("message", entry.text.get(player, context).parsePlaceholders(player)),
+            ),
+            spokenTextDisplayButton.parsePlaceholders(player).legacy(),
+            onClose = onClose@{
+                if (state != MessengerState.RUNNING) return@onClose
+                when (player.boundState) {
+                    InteractionBoundState.BLOCKING -> sendForm()
+                    else -> state = MessengerState.CANCELLED
                 }
-                .validResultHandler { _, _ ->
-                    if (state == MessengerState.RUNNING) state = MessengerState.FINISHED
-                }
+            },
+            onConfirm = {
+                if (state == MessengerState.RUNNING) state = MessengerState.FINISHED
+            },
         )
     }
 }
