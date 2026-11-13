@@ -120,7 +120,7 @@ pieces:
 
   - id: perception
     status: figuring-out
-    open: "Stepped back after P8: drawing frames in the gated suite is too slow. A2 reads only the extract and submit stages, so perceiving without rasterizing is the lead idea. Live gaps: fades, wrapped chat lines, grey completion text, cursor blink"
+    open: "How A4 asks stay cheap (smaller window for A4 frames, or fewer asks); live gaps: fades, wrapped chat lines, grey completion text, cursor blink"
     tries:
       - id: a1-client-state
         what: Read the client's state
@@ -170,9 +170,17 @@ pieces:
       - id: perceive-without-drawing
         parent: live-stream
         what: Clients run the extract and submit stages each tick and skip the GPU draw; pixels only for A4 checks, goldens and clips
-        taught: Not tried (P11 running)
-        state: trying
-        evidence: []
+        taught: >-
+          P11: works. +7%, +15% and +10% per 1,000 at 0, 10 and 30% groups (P8's frame every tick on the
+          same jobs: +374 to +580%); runs after the warm up drift are +8 to +11%. A perceive frame is
+          about 1 ms against about 40 ms drawn; window size no longer matters. It must keep the submit
+          stage, section compile, buffer upload and occlusion update from LevelRenderer.render; only the
+          GPU work is cut. 0 wrong in 249,000; the lying scene battery gave 0 flips in 238 runs; nothing
+          stale for a later drawn frame. A4 on demand is now the cost: 10% of requirements asking once
+          adds 6 to 27 points (smaller window helps), because each ask holds the shared Paper for two
+          drawn frames.
+        state: working
+        evidence: ["branch proto/gv-nodraw 25ed99f98: prototypes/game-verification/RESULTS.md", CI runs 43330492175 43333247905]
 
   - id: readiness-and-done
     status: figuring-out
@@ -498,4 +506,4 @@ open:
 
 slices: []
 
-next: P11 perceive without drawing running. Check in with its result; then show the overall direction and propose the first build slice. Check in with each result; then show the overall direction and propose the first build slice.
+next: Check in with P11, show the overall direction and propose the first build slice. Check in with each result; then show the overall direction and propose the first build slice.
