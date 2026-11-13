@@ -4,8 +4,8 @@ import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypewriterType
 import skirout.editor.v1.operation.OperationAvailability
-import skirout.editor.v1.operation.OperationGroup
 import skirout.editor.v1.operation.OperationEmphasis
+import skirout.editor.v1.operation.OperationGroup
 import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.OperationWeight
 

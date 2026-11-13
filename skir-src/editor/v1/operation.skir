@@ -3,9 +3,7 @@
 // current availability against a working observation. Authoring preparation stays separate from
 // labels, grouping, gestures, and drop metadata.
 
-import {
-  HeaderActionTone,
-} from "editor/v1/presentation.skir";
+import { HeaderActionTone } from "editor/v1/presentation.skir";
 import {
   CapabilityId,
   PresentationId,

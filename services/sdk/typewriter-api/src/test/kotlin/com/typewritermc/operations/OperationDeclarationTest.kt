@@ -134,7 +134,11 @@ val OperationDeclarationTest by testSuite {
         definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
         definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
         // Deleting a resource and what it owns cannot be recovered.
-        definitions.getValue("Delete").presentation.confirmation?.weight shouldBe OperationWeight.PERMANENT
+        definitions
+            .getValue("Delete")
+            .presentation
+            .confirmation
+            ?.weight shouldBe OperationWeight.PERMANENT
         val searches =
             assembly.editorCatalog.capabilities.mapNotNull { capability ->
                 (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId
