@@ -128,8 +128,9 @@ class DialogBackdrop extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final backdrop = ref.watch(pageBackdropProvider);
     useListenable(backdrop);
-    final travel = backdrop.top;
-    if (travel == null) return child;
+    // One tree shape open or not, so the page keeps its state and focus
+    // when a dialog opens over it.
+    final travel = backdrop.top ?? kAlwaysDismissedAnimation;
     final behind = context.motion
         .spec(MotionToken.dialogIn)
         .landing

@@ -34,13 +34,18 @@ bool selectionShortcutsEnabled(Ref ref) =>
     !ref.watch(interactionSuspendedProvider) &&
     ref.watch(currentInteractionModeProvider) is NormalMode;
 
-/// The shortcut that clears the selection while selection shortcuts apply.
+/// The shortcut that clears the selection while selection shortcuts apply
+/// and something is selected.
 ///
 /// [GlobalOperationShortcuts] offers it, and the app offers it in dialogs
-/// through [dialogShortcutsProvider].
+/// through [dialogShortcutsProvider]. With nothing selected it is not
+/// offered, so Escape reaches what is around it, such as a dialog that
+/// closes.
 @riverpod
 List<ActionShortcut> selectionClearingShortcuts(Ref ref) => [
-  if (ref.watch(selectionShortcutsEnabledProvider)) _unselectSelection,
+  if (ref.watch(selectionShortcutsEnabledProvider) &&
+      ref.watch(selectionProvider.select((selection) => selection.isNotEmpty)))
+    _unselectSelection,
 ];
 
 /// Clears the selection, or narrows a multi selection to the focused item.

@@ -36,6 +36,11 @@ void main() {
 
     expect(panel.container.read(selectionProvider), isEmpty);
     expect(find.text("Inside"), findsOneWidget);
+
+    // With nothing left to clear, the next Escape closes the dialog.
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text("Inside"), findsNothing);
   });
 
   testWidgets("the page behind a dialog sinks back and returns", (
