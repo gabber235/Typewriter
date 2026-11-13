@@ -21,7 +21,6 @@ import net.kyori.adventure.text.Component
 import org.bukkit.entity.Player
 import java.time.Duration
 
-private val textDisplayLineWidth: Int by snippet("dialogue.textDisplay.style.lineWidth", 140)
 private val textDisplayAlignment: String by snippet("dialogue.textDisplay.style.alignment", "LEFT")
 private val textDisplayScale: Double by snippet("dialogue.textDisplay.style.scale", 0.58)
 private val textDisplayInstructionLineWidth: Int by snippet(
@@ -32,6 +31,7 @@ private val textDisplayInstructionScale: Double by snippet("dialogue.textDisplay
 private val textDisplayInstructionGap: Double by snippet("dialogue.textDisplay.style.instructionGap", 0.20)
 private val textDisplayBackground: Int by snippet("dialogue.textDisplay.style.backgroundColor", 1476395008)
 private val textDisplayOpacity: Int by snippet("dialogue.textDisplay.style.opacity", -1)
+private const val HIDDEN_OPACITY = 4
 private val textDisplayShadow: Boolean by snippet("dialogue.textDisplay.style.shadow", true)
 private val textDisplaySeeThrough: Boolean by snippet("dialogue.textDisplay.style.seeThrough", false)
 private val textDisplayInterpolationTicks: Int by snippet("dialogue.textDisplay.placement.interpolationTicks", 3)
@@ -75,7 +75,7 @@ internal class TextDisplayDialogueDisplay(
     private val instructionGap = textDisplayInstructionGap.coerceAtLeast(0.0)
     private val optionInstructionGap = textDisplayOptionInstructionGap.coerceAtLeast(0.0)
     private val optionGap = textDisplayOptionGap.coerceAtLeast(0.0)
-    private val bodyWidth = maxOf(textDisplayLineWidth, (textDisplayMaxLineLength.coerceIn(1, 120) + 8) * 8)
+    private val bodyWidth = (textDisplayMaxLineLength + 8) * 8
     private val contentEntity = createEntity(bodyScale, bodyWidth)
     private val instructionEntity = createEntity(instructionScale, textDisplayInstructionLineWidth)
     private val fixedPosition = (origin as? ConstVar)?.value
@@ -370,8 +370,8 @@ internal class TextDisplayDialogueDisplay(
         duration: Int,
         opacity: Int = configuredOpacity(),
     ) {
-        // Change the prepared delay so the client starts interpolation on receipt.
-        interpolationDelay = -1
+        // Send a different delay for exit so the client restarts interpolation.
+        interpolationDelay = if (isClosing && entrance == Entrance.PLAYING) 0 else -1
         transformationInterpolationDuration = duration
         scale = scale(displayScale, scaleMultiplier)
         translation = translation(height)
@@ -425,12 +425,11 @@ internal class TextDisplayDialogueDisplay(
 
     private companion object {
         const val TEXT_LINE_HEIGHT = 10.0 / 40.0
-        const val HIDDEN_OPACITY = 4
     }
 }
 
 private fun configuredOpacity(): Int {
-    return if (textDisplayOpacity < 0) 255 else textDisplayOpacity.coerceIn(0, 255)
+    return if (textDisplayOpacity < 0) 255 else textDisplayOpacity.coerceIn(HIDDEN_OPACITY, 255)
 }
 
 private fun enterTicks(): Int = animationTicks(textDisplayEnterTicks)

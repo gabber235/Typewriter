@@ -2,17 +2,11 @@ package com.typewritermc.basic.entries.dialogue.messengers.textdisplay
 
 import com.typewritermc.basic.entries.dialogue.TimedTextDisplayDialogueEntry
 import com.typewritermc.core.interaction.InteractionContext
-import com.typewritermc.engine.paper.entry.dialogue.*
-import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
-import com.typewritermc.engine.paper.interaction.Confirmation
-import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.asMiniWithResolvers
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
-import org.bukkit.event.player.PlayerRespawnEvent
-import org.bukkit.event.EventHandler
 import java.time.Duration
 import kotlin.math.ceil
 
@@ -45,124 +39,38 @@ private val timedTextDisplaySeconds: String by snippet(
     "seconds",
 )
 
-class JavaTimedTextDisplayDialogueDialogueMessenger(
+internal class JavaTimedTextDisplayDialogueDialogueMessenger(
     player: Player,
     context: InteractionContext,
     entry: TimedTextDisplayDialogueEntry,
-) : DialogueMessenger<TimedTextDisplayDialogueEntry>(player, context, entry) {
-    private var confirmation: Confirmation? = null
-    private var display: TextDisplayDialogueDisplay? = null
-    private lateinit var typewriter: TextDisplayTypewriter
-    private var typingDurationConfig = Duration.ZERO
-    private var typingDuration = Duration.ZERO
-    private var totalDuration = Duration.ZERO
-    private var playedTime = Duration.ZERO
+) : JavaTextDisplayDialogueMessenger<TimedTextDisplayDialogueEntry>(
+    player, context, entry, entry.text, entry.typingDuration, entry.origin, entry.orientation,
+    timedTextDisplayFormat,
+) {
+    override val canConfirm: Boolean get() = entry.allowSkip.get(player, context)
+    override val autoContinue: Boolean get() = true
+    override var completionTime: Duration = Duration.ZERO
+        private set
     private var lastTypingPhase = true
     private var lastRemainingSeconds = -1
     private var lastCanSkip = false
 
-    private val canSkip: Boolean
-        get() = entry.allowSkip.get(player, context)
+    override val animationEnd: Duration get() = typingDuration
 
-    override var animationComplete: Boolean
-        get() {
-            if (!canSkip) return state == MessengerState.FINISHED
-            return playedTime >= typingDuration
-        }
-        set(value) {
-            if (!canSkip) return
-            playedTime = if (value) typingDuration else Duration.ZERO
-        }
-
-    @Synchronized
-    override fun init() {
-        super.init()
-        val text = entry.text.get(player, context).parsePlaceholders(player)
-        typewriter = TextDisplayTypewriter(text, player)
-        typingDurationConfig = entry.typingDuration.get(player, context)
-        typingDuration = typingDurationType.totalDuration(typewriter.rawText, typingDurationConfig)
-            .coerceAtLeast(Duration.ZERO)
-        totalDuration = typingDuration + entry.waitDuration.get(player, context).coerceAtLeast(Duration.ZERO)
-
-        refreshConfirmation()
-        display = TextDisplayDialogueDisplay(
-            player,
-            context,
-            entry.origin,
-            entry.orientation,
-        ).also {
-            it.spawn(displayText(true)!!)
-        }
-        refreshInstruction(true)
+    override fun prepareDialogue(): Boolean {
+        completionTime = typingDuration + entry.waitDuration.get(player, context).coerceAtLeast(Duration.ZERO)
+        return true
     }
 
-    @Synchronized
-    override fun tick(context: TickContext) {
-        if (state != MessengerState.RUNNING) return
-
-        val text = if (display?.isClosing == true) null else {
-            if (display?.ready == true) playedTime += context.deltaTime
-            refreshConfirmation()
-            displayText().also {
-                refreshInstruction()
-            }
-        }
-
-        display?.tick(context.deltaTime, text)
-        if (display?.invalid == true) {
-            state = MessengerState.CANCELLED
-            return
-        }
-        if (display?.ready == true && playedTime >= totalDuration) display?.close()
-        if (display?.finished == true) state = MessengerState.FINISHED
+    override fun updateDialogue() {
+        refreshInstruction()
     }
 
-    @EventHandler
-    @Synchronized
-    private fun onPlayerRespawn(event: PlayerRespawnEvent) {
-        if (event.player.uniqueId == player.uniqueId) state = MessengerState.CANCELLED
-    }
-
-    @Synchronized
-    override fun dispose() {
-        super.dispose()
-        confirmation?.dispose()
-        confirmation = null
-        display?.dispose()
-        display = null
-    }
-
-    private fun refreshConfirmation() {
-        if (canSkip == (confirmation != null)) return
-        if (!canSkip) {
-            confirmation?.dispose()
-            confirmation = null
-            return
-        }
-        confirmation = player.awaitConfirmation {
-            synchronized(this) {
-                if (state != MessengerState.RUNNING || !canSkip || display?.isClosing == true) return@awaitConfirmation
-                if (animationComplete) display?.close()
-                else animationComplete = true
-            }
-        }
-    }
-
-    private fun displayText(force: Boolean = false): Component? {
-        val percentage = if (typingDuration.toMillis() <= 0) {
-            1.0
-        } else {
-            typingDurationType.calculatePercentage(playedTime, typingDurationConfig, typewriter.rawText)
-        }
-        return typewriter.render(timedTextDisplayFormat, percentage, force)
-    }
-
-    private fun refreshInstruction(force: Boolean = false) {
+    private fun refreshInstruction() {
         val typingPhase = playedTime < typingDuration
         val remainingSeconds = if (typingPhase) -1 else remainingSeconds()
-        val canSkip = confirmation != null
-        if (!force &&
-            typingPhase == lastTypingPhase &&
+        val canSkip = canConfirm
+        if (typingPhase == lastTypingPhase &&
             remainingSeconds == lastRemainingSeconds &&
             canSkip == lastCanSkip
         ) {
@@ -176,7 +84,7 @@ class JavaTimedTextDisplayDialogueDialogueMessenger(
     }
 
     private fun remainingSeconds(): Int {
-        val remainingMillis = (totalDuration - playedTime).toMillis().coerceAtLeast(0)
+        val remainingMillis = (completionTime - playedTime).toMillis().coerceAtLeast(0)
         return ceil(remainingMillis / 1000.0).toInt()
     }
 

@@ -16,11 +16,13 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import kotlin.math.floor
 
 private val textDisplayLinePadding: String by snippet("dialogue.textDisplay.style.linePadding", "")
-internal val textDisplayMaxLineLength: Int by snippet("dialogue.textDisplay.style.maxLineLength", 24)
+private val configuredMaxLineLength: Int by snippet("dialogue.textDisplay.style.maxLineLength", 24)
+internal val textDisplayMaxLineLength: Int
+    get() = configuredMaxLineLength.coerceIn(1, 120)
 
 internal class TextDisplayTypewriter(text: String, private val audience: Audience) {
     private val message = text.lines().joinToString("\n") {
-        it.limitLineLength(textDisplayMaxLineLength.coerceAtLeast(1))
+        it.limitLineLength(textDisplayMaxLineLength)
     }.asMini(audience)
     private val plainMessage = message.plainText()
     private val lineCount = plainMessage.lineCount
