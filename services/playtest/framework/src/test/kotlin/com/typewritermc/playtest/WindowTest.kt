@@ -4,6 +4,7 @@ import com.typewritermc.playtest.Window.Verdict.Missed
 import com.typewritermc.playtest.Window.Verdict.Open
 import com.typewritermc.playtest.Window.Verdict.Passed
 import com.typewritermc.playtest.wire.Message.ChatLine
+import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Text
 import com.typewritermc.playtest.wire.camera
 import com.typewritermc.playtest.wire.perception
@@ -17,6 +18,9 @@ import java.util.UUID
 val WindowTest by testSuite {
     val steve = GamePlayer("gv-1", UUID(0, 1))
     val alex = GamePlayer("gv-2", UUID(0, 2))
+    val steveSeesBank = Check(steve, chat("Bank: 1"))
+    val alexHearsNothing = Check(alex, anyChat())
+    val bankArrived = perception(102, listOf(Text("chat", "Bank: 1")), listOf(ChatLine(102, "Bank: 1")))
 
     test("a chat line that arrives after the stimulus and is drawn passes at the tick it shows") {
         val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(Check(steve, chat("Hello"))))
@@ -128,7 +132,7 @@ val WindowTest by testSuite {
                 checks = listOf(Check(steve, chat("Bank: 1")), Check(alex, chat("Bank: 1"))),
             )
 
-        window.perceived(steve, perception(102, listOf(Text("chat", "Bank: 1")), listOf(ChatLine(102, "Bank: 1")))) shouldBe Open
+        window.perceived(steve, bankArrived) shouldBe Open
         window.perceived(alex, perception(104, listOf(Text("chat", "Bank: 1")), listOf(ChatLine(104, "Bank: 1")))) shouldBe Passed(104)
     }
 
@@ -179,6 +183,70 @@ val WindowTest by testSuite {
 
     test("a window without a check is refused, since it could never fail") {
         val refusal = shouldThrow<IllegalArgumentException> { Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf()) }
+
+        refusal.message shouldContain "positive check"
+    }
+
+    test("a never check fails at the first tick its fact shows, naming what the player saw and when") {
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(steveSeesBank), nevers = listOf(alexHearsNothing))
+
+        window.perceived(steve, bankArrived) shouldBe Open
+        val broken = window.perceived(alex, perception(103, listOf(Text("chat", "Bank: 1")), listOf(ChatLine(103, "Bank: 1"))))
+
+        broken.shouldBeInstanceOf<Missed>().report shouldContain "gv-2 saw chat \"Bank: 1\" at tick 3 of the 10 tick window (tick 103)"
+    }
+
+    test("a window with a never check passes only once every checked player's barrier arrived, at the tick its checks held") {
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(steveSeesBank), nevers = listOf(alexHearsNothing))
+
+        window.perceived(steve, bankArrived) shouldBe Open
+        window.perceived(alex, perception(105)) shouldBe Open
+        window.barrierSeen(steve, 1) shouldBe Open
+        window.barrierSeen(alex, 1) shouldBe Passed(102)
+    }
+
+    test("a never check of the same player as a positive one keeps the window open until the barrier") {
+        val holdsStick = Check(steve, held("stick"))
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(steveSeesBank), nevers = listOf(holdsStick))
+
+        window.perceived(steve, bankArrived) shouldBe Open
+        window.barrierSeen(steve, 1) shouldBe Passed(102)
+    }
+
+    test("a never check passes over a line that arrived before the stimulus, even while it is still drawn") {
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(steveSeesBank), nevers = listOf(alexHearsNothing))
+
+        window.perceived(steve, bankArrived)
+        window.perceived(alex, perception(104, listOf(Text("chat", "Old")), listOf(ChatLine(99, "Old")))) shouldBe Open
+        window.barrierSeen(steve, 1)
+        window.barrierSeen(alex, 1) shouldBe Passed(102)
+    }
+
+    test("a record from before the window that shows a never fact breaks it at the window's first tick") {
+        val stick = listOf(Item("hotbar", 0, true, "minecraft:stick", 1))
+        val holdsStick = Check(alex, held("stick"))
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(steveSeesBank), nevers = listOf(holdsStick))
+
+        window.perceived(alex, perception(99, items = stick)) shouldBe Open
+        val broken = window.barrierSeen(alex, 1)
+
+        broken.shouldBeInstanceOf<Missed>().report shouldContain "gv-2 saw held stick at tick 1 of the 10 tick window (tick 101)"
+    }
+
+    test("a fact a never check names after the window's last tick does not break it") {
+        val window = Window(anchor = 100, length = 5.ticks, barrier = 1, checks = listOf(steveSeesBank), nevers = listOf(alexHearsNothing))
+
+        window.perceived(steve, bankArrived)
+        window.perceived(alex, perception(106, listOf(Text("chat", "Late")), listOf(ChatLine(106, "Late")))) shouldBe Open
+        window.barrierSeen(steve, 1)
+        window.barrierSeen(alex, 1) shouldBe Passed(102)
+    }
+
+    test("a window with only never checks is refused, since a requirement needs one positive check") {
+        val refusal =
+            shouldThrow<IllegalArgumentException> {
+                Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf(), nevers = listOf(alexHearsNothing))
+            }
 
         refusal.message shouldContain "positive check"
     }

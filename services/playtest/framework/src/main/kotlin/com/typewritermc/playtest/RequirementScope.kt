@@ -29,12 +29,16 @@ enum class Button(
 /**
  * What a requirement's body sees during one attempt: its leased [players], the Paper [probe], the
  * players' hands, and [within] for every check. Every window counts from the last stimulus: a probe
- * call, or an input from the tick it reached the client.
+ * call, or an input from the tick it reached the client. Every position counts from the middle of the
+ * attempt's region, where the players stand when the body starts: `BlockPos(0, 101, 2)` is two blocks
+ * south of it, whichever part of the world the region lies in.
  */
 class RequirementScope internal constructor(
-    val players: List<GamePlayer>,
     private val attempt: Attempt,
 ) {
+    /** The players the attempt claimed, in a fixed order: `val (member, partner, outsider) = players`. */
+    val players: List<GamePlayer> = attempt.players
+
     /** The attempt's only player, for requirements that lease one. */
     val player: GamePlayer get() = players.single()
 
@@ -75,7 +79,7 @@ class RequirementScope internal constructor(
     suspend fun GamePlayer.aimAt(entity: EntityRef): Mark = input(AimAtEntityStep(entity.uuid))
 
     /** Turns the view with the mouse until the crosshair rests on [block]; fails when it lands elsewhere. */
-    suspend fun GamePlayer.aimAt(block: BlockRef): Mark = input(AimAtBlockStep(block.at.wire()))
+    suspend fun GamePlayer.aimAt(block: BlockRef): Mark = input(AimAtBlockStep(attempt.region.world(block.at)))
 
     /** Moves the pointer over the open screen's slot for the player's inventory [slot] and clicks it. */
     suspend fun GamePlayer.clickInventorySlot(slot: Int): Mark =
@@ -89,7 +93,7 @@ class RequirementScope internal constructor(
         x: Double,
         z: Double,
         limit: Ticks = 80.ticks,
-    ): Mark = input(WalkToStep(x, z, limit.count))
+    ): Mark = input(WalkToStep(attempt.region.worldX(x), attempt.region.worldZ(z), limit.count))
 
     private suspend fun GamePlayer.input(vararg steps: InputStep): Mark = attempt.input(this, steps.toList()).also { anchor = it }
 
@@ -104,9 +108,9 @@ class RequirementScope internal constructor(
     ) {
         val at = attempt.requirementLine(Throwable().stackTrace)
         val mark = checkNotNull(anchor) { "within needs a stimulus before it; its window counts from the last one" }
-        val declared = WindowChecks().apply(checks).checks
-        val rules = Window(mark.tick, window, attempt.nextBarrier(), declared)
-        val checked = declared.map { it.player }.distinct()
+        val declared = WindowChecks().apply(checks)
+        val rules = Window(mark.tick, window, attempt.nextBarrier(), declared.checks, declared.nevers)
+        val checked = (declared.checks + declared.nevers).map { it.player }.distinct()
         // What the players perceived since the attempt began counts too: a window opened late still
         // sees the records of every tick after its stimulus.
         var verdict: Window.Verdict = Window.Verdict.Open
@@ -130,9 +134,27 @@ class RequirementScope internal constructor(
 /** The checks one window declares. */
 class WindowChecks internal constructor() {
     internal val checks = mutableListOf<Check>()
+    internal val nevers = mutableListOf<Check>()
 
     /** The player perceives [fact] in some tick of the window. */
     infix fun GamePlayer.sees(fact: Perceivable) {
         checks += Check(this, fact)
+    }
+
+    /**
+     * The player perceives a fact in no tick of the window: `outsider.never sees anyChat()`. The window
+     * then runs all its ticks, and still needs a positive check.
+     */
+    val GamePlayer.never: Absence get() = Absence(this, nevers)
+}
+
+/** A player that must not perceive a fact in a window; see [WindowChecks.never]. */
+class Absence internal constructor(
+    private val player: GamePlayer,
+    private val nevers: MutableList<Check>,
+) {
+    /** The player perceives [fact] in no tick of the window. */
+    infix fun sees(fact: Perceivable) {
+        nevers += Check(player, fact)
     }
 }

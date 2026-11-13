@@ -4,15 +4,21 @@ import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.typewritermc.playtest.agent.Step;
 import com.typewritermc.playtest.wire.Link;
 import com.typewritermc.playtest.wire.Message;
+import com.typewritermc.playtest.wire.Message.Claim;
+import com.typewritermc.playtest.wire.Message.Claimed;
 import com.typewritermc.playtest.wire.Message.Hello;
 import com.typewritermc.playtest.wire.Message.Probe;
 import com.typewritermc.playtest.wire.Message.ProbeDone;
+import com.typewritermc.playtest.wire.Message.Region;
+import com.typewritermc.playtest.wire.Message.Release;
 import com.typewritermc.playtest.wire.Message.Role;
 import com.typewritermc.playtest.wire.Message.StepUntil;
 import com.typewritermc.playtest.wire.Message.Stepping;
 import com.typewritermc.playtest.wire.Message.StopStepping;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -22,22 +28,26 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ChunkTrackingView;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 /**
- * The framework's side of a Paper the game pool booted: the step policy that grants ticks, the step
- * pings and barriers each client follows, and the probes. Every message from the pool runs on the
- * main thread between ticks.
+ * The framework's side of a Paper the game pool booted: the attempts sharing it, the step policy that
+ * grants ticks, the step pings and barriers each client follows, and the probes. Every message from the
+ * pool runs on the main thread between ticks.
  */
 public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private static final String STEP_ACK = "playtest:step";
 
     private final StepPolicy policy = new StepPolicy(this::sendBarrier, PlaytestPlugin::nothingLeftToSend, task -> MinecraftServer.getServer().scheduleOnMain(task));
     private final Probes probes = new Probes();
+    private final Attempts attempts = new Attempts(this);
     private Link pool;
 
     @Override
@@ -53,6 +63,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         if (port < 0) throw new IllegalStateException("playtest.pool.port is not set: only the game pool runs this plugin");
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(probes, this);
+        Bukkit.getPluginManager().registerEvents(attempts, this);
         Bukkit.getMessenger().registerIncomingPluginChannel(this, STEP_ACK, (channel, player, bytes) -> {
             UUID id = player.getUniqueId();
             var ack = ByteBuffer.wrap(bytes);
@@ -76,18 +87,60 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private void receive(Message message) {
         switch (message) {
             case Stepping stepping -> Step.on = true;
+            case Claim claim -> claim(claim);
+            case Release release -> policy.release(attempts.release(release.attempt()));
             case Probe probe -> {
-                Player player = Bukkit.getPlayer(probe.player());
                 int ranAfter = policy.lastEnded();
-                String failure = player == null ? "the player " + probe.player() + " is not online" : probes.run(player, probe.action());
-                // A probe is done once its player's client has what it caused, so the next stimulus finds it there.
-                if (failure == null) policy.deliver(probe.player(), () -> pool.send(new ProbeDone(probe.request(), ranAfter, null)));
+                var players = online(probe.players());
+                String failure = players.failure() != null ? players.failure() : probes.run(players.online(), probe.action());
+                // A probe is done once its players' clients have what it caused, so the next stimulus finds it there.
+                if (failure == null) policy.deliver(probe.players(), () -> pool.send(new ProbeDone(probe.request(), ranAfter, null)));
                 else pool.send(new ProbeDone(probe.request(), ranAfter, failure));
             }
             case StepUntil step -> policy.stepUntil(step.player(), step.tick(), step.barrier());
             case StopStepping stop -> policy.stop(stop.player());
             default -> getLogger().severe("The game pool sent " + message + ", which Paper never receives");
         }
+    }
+
+    /**
+     * Gives the attempt its players: they hold back every tick from now on, see only one another, lose
+     * what earlier probes gave them alone, and stand at the middle of the attempt's region. The claim is
+     * done once each of their clients holds all of it.
+     */
+    private void claim(Claim claim) {
+        var players = online(claim.players());
+        if (players.failure() != null) {
+            pool.send(new Claimed(claim.attempt(), players.failure()));
+            return;
+        }
+        attempts.claim(claim.attempt(), claim.players());
+        policy.claim(claim.players());
+        probes.forget(players.online());
+        Location middle = middle(players.online().getFirst().getWorld(), claim.region());
+        for (Player player : players.online()) {
+            player.setVelocity(new Vector());
+            player.setFallDistance(0);
+            player.teleport(middle);
+        }
+        policy.deliver(claim.players(), () -> pool.send(new Claimed(claim.attempt(), null)));
+    }
+
+    /** Where a claim puts the attempt's players: on the ground at the middle of the region. */
+    private static Location middle(World world, Region region) {
+        return new Location(world, region.x() + 0.5, world.getHighestBlockYAt(region.x(), region.z()) + 1, region.z() + 0.5);
+    }
+
+    private record Online(List<Player> online, String failure) {}
+
+    private static Online online(List<UUID> ids) {
+        var online = new ArrayList<Player>(ids.size());
+        for (UUID id : ids) {
+            Player player = Bukkit.getPlayer(id);
+            if (player == null) return new Online(List.of(), "the player " + id + " is not online");
+            online.add(player);
+        }
+        return new Online(List.copyOf(online), null);
     }
 
     @EventHandler

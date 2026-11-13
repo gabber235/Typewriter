@@ -8,7 +8,10 @@ import com.typewritermc.playtest.wire.Message.BlockPos
 import com.typewritermc.playtest.wire.Message.ButtonStep
 import com.typewritermc.playtest.wire.Message.Camera
 import com.typewritermc.playtest.wire.Message.ChatLine
+import com.typewritermc.playtest.wire.Message.Claim
+import com.typewritermc.playtest.wire.Message.Claimed
 import com.typewritermc.playtest.wire.Message.Connect
+import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Entity
@@ -32,11 +35,14 @@ import com.typewritermc.playtest.wire.Message.ProbeDone
 import com.typewritermc.playtest.wire.Message.ProbeFill
 import com.typewritermc.playtest.wire.Message.ProbeGameMode
 import com.typewritermc.playtest.wire.Message.ProbeGive
+import com.typewritermc.playtest.wire.Message.ProbePacketEntity
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
 import com.typewritermc.playtest.wire.Message.ProbeTeleport
 import com.typewritermc.playtest.wire.Message.Ready
 import com.typewritermc.playtest.wire.Message.Refused
+import com.typewritermc.playtest.wire.Message.Region
+import com.typewritermc.playtest.wire.Message.Release
 import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Result
@@ -73,24 +79,30 @@ val WireTest by testSuite {
             listOf<Message>(
                 Hello(Role.CLIENT, "gv-1"),
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
-                Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1"),
-                Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2)))),
+                Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1),
+                Submit(8, "GROUP-1 a line sent to the members of a group reaches each member", "GROUP-1", 3),
+                Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
+                Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048)),
                 Result(7, 1_250, null, null),
                 Result(8, 90, "gv-1 did not see chat \"Hello\"", "ProbeRequirements.kt:14"),
                 End("run-1", "/tmp/results/test_run.json"),
                 Ended(),
-                Probe(3, player, ProbeChat("Hello")),
-                Probe(4, player, ProbeGameMode("survival")),
-                Probe(5, player, ProbeTeleport(16.5, 100.0, -3.5, 180f, -12.5f)),
-                Probe(6, player, ProbeGive(40, "minecraft:spyglass", 1)),
-                Probe(7, player, ProbeSelectSlot(8)),
-                Probe(8, player, ProbeFill(BlockPos(-2, 99, -2), BlockPos(2, 99, 6), "minecraft:oak_leaves[persistent=true]")),
-                Probe(9, player, ProbeSpawn(UUID(3, 4), "minecraft:villager", 0.5, 100.0, 3.5, 180f, true, "Ouch", null)),
-                Probe(10, player, ProbeSpawn(UUID(5, 6), "minecraft:pig", 0.5, 100.0, 3.5, 0f, false, null, "Oink")),
-                Probe(11, player, ProbeCancelBreaking(BlockPos(0, 101, 2))),
-                Probe(12, player, ProbeCommand("warp", listOf("spawn", "spire", "shop"), "Warping to")),
+                Probe(3, listOf(player, UUID(1, 2)), ProbeChat("Hello")),
+                Probe(4, listOf(player), ProbeGameMode("survival")),
+                Probe(5, listOf(player), ProbeTeleport(16.5, 100.0, -3.5, 180f, -12.5f)),
+                Probe(6, listOf(player), ProbeGive(40, "minecraft:spyglass", 1)),
+                Probe(7, listOf(player), ProbeSelectSlot(8)),
+                Probe(8, listOf(player), ProbeFill(BlockPos(-2, 99, -2), BlockPos(2, 99, 6), "minecraft:oak_leaves[persistent=true]")),
+                Probe(9, listOf(player), ProbePacketEntity(UUID(3, 4), "minecraft:villager", 0.5, 100.0, 3.5, 180f, "Ouch", null)),
+                Probe(10, listOf(player), ProbeSpawn(UUID(5, 6), "minecraft:pig", 0.5, 100.0, 3.5, 0f, null, "Oink")),
+                Probe(11, listOf(player), ProbeCancelBreaking(BlockPos(0, 101, 2))),
+                Probe(12, listOf(player), ProbeCommand("warp", listOf("spawn", "spire", "shop"), "Warping to")),
                 ProbeDone(3, 1_204, null),
                 ProbeDone(4, 1_205, "no item minecraft:spyglas"),
+                Claim(9, listOf(player, UUID(1, 2)), Region(1_024, -1_024)),
+                Claimed(9, null),
+                Claimed(10, "the player gv-2 is not online"),
+                Release(9),
                 StepUntil(player, 1_214, 5),
                 StopStepping(player),
                 Stepping(),
@@ -117,7 +129,7 @@ val WireTest by testSuite {
                 ),
                 InputDone(13, 1_220, null),
                 InputDone(14, 1_221, "gv-1 aimed at the villager, but the crosshair is on the block at 0 101 2"),
-                Watch(listOf(BlockPos(0, 101, 2)), listOf(UUID(3, 4))),
+                Watch(player, listOf(BlockPos(0, 101, 2)), listOf(UUID(3, 4))),
                 Perceived(
                     "gv-1",
                     Perception(

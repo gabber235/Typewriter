@@ -2,7 +2,7 @@ package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Message.Perception
 
-/** One positive check of a window: [player] perceives [fact] at some tick of it. */
+/** One check of a window: [player] perceives [fact] at some tick of it, or, as a never check, at none. */
 internal data class Check(
     val player: GamePlayer,
     val fact: Perceivable,
@@ -17,12 +17,18 @@ internal data class Check(
  * barrier arrives. A fact about a change compares with the record that stood at the anchor. Paper sends
  * [barrier] to every checked player once the window's last tick ran, and the client echoes it after
  * every record of those ticks, so a barrier with a check still open is the failure.
+ *
+ * A never check fails at the first tick inside the window whose perception shows its fact. A window
+ * with never checks can pass only once every checked player's barrier arrived, since a later tick could
+ * still show it; it needs a positive check all the same, so a requirement always proves something
+ * happened.
  */
 internal class Window(
     private val anchor: Int,
     private val length: Ticks,
     val barrier: Int,
     checks: List<Check>,
+    nevers: List<Check> = listOf(),
 ) {
     init {
         require(checks.isNotEmpty()) { "a window needs a positive check: without one it could never fail" }
@@ -31,7 +37,8 @@ internal class Window(
     val end: Int = anchor + length.count
 
     private val open = checks.toMutableList()
-    private val waitingFor = checks.map { it.player }.toMutableSet()
+    private val nevers = nevers.toList()
+    private val waitingFor = (checks + nevers).map { it.player }.toMutableSet()
     private val lastSeen = mutableMapOf<GamePlayer, Perception>()
     private val atStimulus = mutableMapOf<GamePlayer, Perception>()
     private var heldUntil = anchor
@@ -61,8 +68,8 @@ internal class Window(
             atStimulus[player] = perception
             return verdict
         }
-        if (carried != null && carried.tick() <= anchor && perception.tick() > anchor + 1) hold(player, carried, at = anchor + 1)
-        if (verdict == Verdict.Open) hold(player, perception, at = perception.tick())
+        if (carried != null && carried.tick() <= anchor && perception.tick() > anchor + 1) judge(player, carried, at = anchor + 1)
+        if (verdict == Verdict.Open) judge(player, perception, at = perception.tick())
         return verdict
     }
 
@@ -72,25 +79,37 @@ internal class Window(
         id: Int,
     ): Verdict {
         if (verdict != Verdict.Open || id != barrier) return verdict
-        lastSeen[player]?.takeIf { it.tick() <= anchor }?.let { hold(player, it, at = anchor + 1) }
+        lastSeen[player]?.takeIf { it.tick() <= anchor }?.let { judge(player, it, at = anchor + 1) }
         if (verdict != Verdict.Open) return verdict
         waitingFor -= player
-        if (waitingFor.isEmpty()) verdict = Verdict.Missed(report())
+        if (waitingFor.isEmpty()) verdict = if (open.isEmpty()) Verdict.Passed(heldUntil) else Verdict.Missed(report())
         return verdict
     }
 
-    /** The checks of [player] that [perception] shows hold from tick [at]. */
-    private fun hold(
+    /** What [perception], shown to [player] from tick [at], decides: a never check it breaks, or the checks it holds. */
+    private fun judge(
         player: GamePlayer,
         perception: Perception,
         at: Int,
     ) {
         val stimulus = Stimulus(anchor, atStimulus[player])
+        val broken = nevers.firstOrNull { it.player == player && it.fact.shownIn(perception, stimulus) }
+        if (broken != null) {
+            verdict =
+                Verdict.Missed(
+                    "${player.name} saw ${broken.fact.shownAs(
+                        perception,
+                        stimulus,
+                    )} at tick ${at - anchor} of the ${length.count} tick window " +
+                        "(tick $at); it must never see ${broken.fact.description}.",
+                )
+            return
+        }
         val held = open.filter { it.player == player && it.fact.shownIn(perception, stimulus) }
         if (held.isEmpty()) return
         open -= held
         heldUntil = maxOf(heldUntil, at)
-        if (open.isEmpty()) verdict = Verdict.Passed(heldUntil)
+        if (open.isEmpty() && nevers.isEmpty()) verdict = Verdict.Passed(heldUntil)
     }
 
     private fun report(): String =

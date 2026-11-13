@@ -1,6 +1,7 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Message.Block
+import com.typewritermc.playtest.wire.Message.ChatLine
 import com.typewritermc.playtest.wire.Message.Entity
 import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Text
@@ -132,5 +133,14 @@ val FactsTest by testSuite {
 
         entity(pig).hurt().shownIn(other, before) shouldBe false
         entity(pig).named("Oink").shownIn(other, before) shouldBe false
+    }
+
+    test("any chat is a line that arrived after the stimulus, drawn or not, and is named by that line") {
+        val arrived = perception(103, chat = listOf(ChatLine(99, "Old"), ChatLine(103, "Bank: 1")))
+        val onlyOld = perception(103, texts = listOf(Text("chat", "Old")), chat = listOf(ChatLine(99, "Old")))
+
+        anyChat().shownIn(arrived, before) shouldBe true
+        anyChat().shownAs(arrived, before) shouldBe "chat \"Bank: 1\""
+        anyChat().shownIn(onlyOld, before) shouldBe false
     }
 }

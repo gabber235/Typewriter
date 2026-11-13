@@ -45,9 +45,9 @@ internal enum class InputPath(
 }
 
 /**
- * The game the pool runs: one stepped Paper and one client (on Linux with a virtual display of its own),
- * each in a fresh folder of the pool folder, on free loopback ports. [Pool] hears from both over the wire
- * once they are up.
+ * The game the pool runs: one stepped Paper and a client per player (on Linux each with a virtual display
+ * of its own), each in a fresh folder of the pool folder, on free loopback ports. [Pool] hears from all of
+ * them over the wire once they are up.
  */
 internal class Game private constructor(
     val paperPort: Int,
@@ -65,15 +65,17 @@ internal class Game private constructor(
         fun start(
             settings: PoolSettings,
             poolPort: Int,
-            player: String,
+            players: List<String>,
         ): Game {
             val paperPort = freePort()
             val paper = startPaper(settings, poolPort, paperPort)
             val started = mutableListOf(paper)
             runCatching {
                 val input = InputPath.here()
-                val display = if (input == InputPath.XTEST) startDisplay(settings).also { started += it.part } else null
-                started += startClient(settings, poolPort, player, input, display)
+                for (player in players) {
+                    val display = if (input == InputPath.XTEST) startDisplay(settings, player).also { started += it.part } else null
+                    started += startClient(settings, poolPort, player, input, display)
+                }
             }.onFailure { started.forEach { it.process.destroyForcibly() } }.getOrThrow()
             return Game(paperPort, started)
         }
@@ -82,8 +84,11 @@ internal class Game private constructor(
          * A virtual X display of the client's own, so the input XTest sends there reaches no other window.
          * Xvfb picks a free display number and writes it to its standard output.
          */
-        private fun startDisplay(settings: PoolSettings): Display {
-            val dir = freshDir(settings.poolDir.resolve("display"))
+        private fun startDisplay(
+            settings: PoolSettings,
+            player: String,
+        ): Display {
+            val dir = freshDir(settings.poolDir.resolve("display-$player"))
             val log = dir.resolve("console.log")
             val process =
                 ProcessBuilder("Xvfb", "-displayfd", "1", "-screen", "0", "1280x720x24", "-nolisten", "tcp")
@@ -100,7 +105,7 @@ internal class Game private constructor(
                 process.destroyForcibly()
                 error("Xvfb started no display; see $log")
             }
-            return Display(":$number", Part("Display", process, log))
+            return Display(":$number", Part("Display of $player", process, log))
         }
 
         private fun startPaper(
@@ -136,7 +141,7 @@ internal class Game private constructor(
             input: InputPath,
             display: Display?,
         ): Part {
-            val dir = freshDir(settings.poolDir.resolve("client"))
+            val dir = freshDir(settings.poolDir.resolve("client-$player"))
             dir.resolve("options.txt").writeText(resource("options.txt"))
             val launch = Json.parseToJsonElement(Files.readString(settings.clientLaunch)).jsonObject
 
@@ -174,7 +179,7 @@ internal class Game private constructor(
 
                     InputPath.XTEST -> mapOf("DISPLAY" to checkNotNull(display).name)
                 }
-            return launch("Client", command, dir, environment)
+            return launch("Client $player", command, dir, environment)
         }
 
         private fun launch(
@@ -194,10 +199,11 @@ internal class Game private constructor(
             return Part(name, builder.start(), log)
         }
 
-        // An empty world over one bedrock layer: a player waits at spawn while probes step Paper, so the
-        // spawn needs ground to stand on.
+        // An empty world over one bedrock layer: a player waits on the ground while probes step Paper. Paper
+        // sends chunks only as far as the clients draw them.
         private fun serverProperties(port: Int) =
             listOf(
+                "view-distance=${clientRenderDistance()}",
                 "online-mode=false",
                 "server-port=$port",
                 "server-ip=127.0.0.1",
@@ -212,6 +218,15 @@ internal class Game private constructor(
                 """generator-settings={"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:the_void"}""",
                 "generate-structures=false",
             ).joinToString("\n", postfix = "\n")
+
+        /** The render distance every client's options set, so Paper sends no chunk a client never draws. */
+        private fun clientRenderDistance(): Int =
+            resource("options.txt")
+                .lines()
+                .first { it.startsWith("renderDistance:") }
+                .substringAfter(':')
+                .trim()
+                .toInt()
 
         /** Empties [dir]. Links into the patched Paper are removed, never followed. */
         @OptIn(ExperimentalPathApi::class)

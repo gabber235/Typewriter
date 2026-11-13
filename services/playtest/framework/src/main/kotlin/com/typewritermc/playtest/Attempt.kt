@@ -4,17 +4,21 @@ import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.InputStep
 import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.ProbeAction
+import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.Watch
 import kotlinx.coroutines.channels.Channel
 import java.net.URL
 
 /**
  * One attempt of one requirement while it holds its lease: the players' perception streams in arrival
- * order, kept whole as the attempt's timeline, and the session it talks to the pool through.
+ * order, kept whole as the attempt's timeline, and the session it talks to the pool through. Positions
+ * the requirement names count from the middle of the attempt's [region]; the attempt turns them into
+ * world positions on the way out and turns what the players perceive back on the way in.
  */
 internal class Attempt(
     private val session: PoolSession,
     val players: List<GamePlayer>,
+    val region: Region,
     private val requirementCode: URL?,
 ) {
     /** One event of a leased player's stream. */
@@ -40,7 +44,7 @@ internal class Attempt(
 
     /** Hands an event of one of [players] to the attempt; called by the session's reader. */
     fun deliver(event: Event) {
-        incoming.trySend(event)
+        incoming.trySend(if (event is Event.Perceived) event.copy(perception = region.local(event.perception)) else event)
     }
 
     /** Ends the streams: the connection to the pool broke with [cause]. */
@@ -55,11 +59,11 @@ internal class Attempt(
 
     fun nextBarrier(): Int = session.nextBarrier()
 
-    /** Paper runs [action] for [player] and returns once [player]'s client holds its effect; the mark is the tick after which it ran. */
+    /** Paper runs [action] for [players] and returns once each of their clients holds its effect; the mark is the tick after which it ran. */
     suspend fun probe(
-        player: GamePlayer,
+        players: List<GamePlayer>,
         action: ProbeAction,
-    ): Mark = Mark(session.probe(player, action))
+    ): Mark = Mark(session.probe(players, action))
 
     /** [player]'s client runs [steps]; the mark is the tick after which its first event reached the client. */
     suspend fun input(
@@ -71,7 +75,7 @@ internal class Attempt(
     fun watch(
         blocks: List<BlockRef>,
         entities: List<EntityRef>,
-    ) = send(Watch(blocks.map { it.at.wire() }, entities.map { it.uuid }))
+    ) = players.forEach { send(Watch(it.uuid, blocks.map { block -> region.world(block.at) }, entities.map { entity -> entity.uuid })) }
 
     /** The first frame of [trace] in the requirement's own code, as `File.kt:line`. */
     fun requirementLine(trace: Array<StackTraceElement>): String? =

@@ -11,8 +11,8 @@ import de.infix.testBalloon.framework.core.testSuite
 
 val InventoryRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("INV-1", "a click on an inventory slot picks its item up on the pointer") {
-        probe.fill(BlockPos(118, 99, -2), BlockPos(122, 99, 8), "stone")
-        probe.teleport(player, 120.5, 100.0, 0.5)
+        probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
+        probe.teleport(player, 0.5, 100.0, 0.5)
         probe.gameMode(player, GameMode.SURVIVAL)
         probe.give(player, slot = 9, item = "stick", count = 16)
 

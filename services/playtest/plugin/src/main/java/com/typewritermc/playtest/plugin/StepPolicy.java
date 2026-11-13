@@ -2,6 +2,7 @@ package com.typewritermc.playtest.plugin;
 
 import com.typewritermc.playtest.agent.Step;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,10 +18,11 @@ import java.util.function.Predicate;
  * Decides when the stepped Paper runs its next tick. Main thread only, between ticks.
  *
  * <p>While a player waits in a window, its client runs an input that needs ticks, or a probe's effect is
- * on its way to it, the next tick runs once every such player's client acked the tick that ended last,
- * so server and client move one tick at a time. Once a window's last tick ended and was acked, the
- * player gets the window's barrier. With none of these, Paper still ticks once a second, or its watchdog
- * stops it and keepalives stop.
+ * on its way to it, the next tick runs once every claimed player's client, and every such player's,
+ * acked the tick that ended last, so server and every attempt's clients move one tick at a time and a
+ * claimed client never lags behind. Once a window's last tick ended and was acked, the player gets the
+ * window's barrier. With none of these, Paper still ticks once a second, or its watchdog stops it and
+ * keepalives stop.
  *
  * <p>A probe's effect reached its player once a tick after the probe ended with nothing left to send to
  * that player, the main thread ran every task queued before that, and the client acked a tick whose
@@ -35,21 +37,21 @@ final class StepPolicy {
 
     private record Window(int until, int barrier) {}
 
-    /** A probe that ran after tick [ranAfter], waiting until its effect reached [player]'s client. */
+    /** Work that ran after tick [ranAfter], waiting until its effect reached the clients of [waiting]. */
     private static final class Delivery {
-        final UUID player;
+        final Set<UUID> waiting;
         final int ranAfter;
         final Runnable done;
-        boolean draining;
-        int confirmedBy = UNCONFIRMED;
+        final Map<UUID, Integer> confirmedBy = new HashMap<>();
 
-        Delivery(UUID player, int ranAfter, Runnable done) {
-            this.player = player;
+        Delivery(Collection<UUID> players, int ranAfter, Runnable done) {
+            this.waiting = new HashSet<>(players);
             this.ranAfter = ranAfter;
             this.done = done;
         }
     }
 
+    private final Set<UUID> claimed = new HashSet<>();
     private final Map<UUID, Window> windows = new HashMap<>();
     private final Map<UUID, Integer> acked = new HashMap<>();
     private final Set<UUID> busy = new HashSet<>();
@@ -79,10 +81,13 @@ final class StepPolicy {
     void tickEnded(int tick) {
         lastEnded = tick;
         for (Delivery delivery : deliveries) {
-            if (delivery.draining || tick <= delivery.ranAfter || !nothingLeftToSend.test(delivery.player)) continue;
-            delivery.draining = true;
-            // The next step ping goes out after every packet the tasks queued so far send.
-            queueOnMain.accept(() -> delivery.confirmedBy = lastEnded + 1);
+            if (tick <= delivery.ranAfter) continue;
+            for (UUID player : delivery.waiting) {
+                if (delivery.confirmedBy.containsKey(player) || !nothingLeftToSend.test(player)) continue;
+                delivery.confirmedBy.put(player, UNCONFIRMED);
+                // The next step ping goes out after every packet the tasks queued so far send.
+                queueOnMain.accept(() -> delivery.confirmedBy.put(player, lastEnded + 1));
+            }
         }
     }
 
@@ -93,6 +98,17 @@ final class StepPolicy {
         else this.busy.remove(player);
     }
 
+    /** [players] belong to an attempt: from now on no tick runs before each of their clients ran the one before. */
+    void claim(Collection<UUID> players) {
+        claimed.addAll(players);
+    }
+
+    /** [players]' attempt ended: they hold back no tick and their windows close without a barrier. */
+    void release(Collection<UUID> players) {
+        claimed.removeAll(players);
+        players.forEach(windows::remove);
+    }
+
     void stepUntil(UUID player, int tick, int barrier) {
         windows.put(player, new Window(tick, barrier));
     }
@@ -101,18 +117,19 @@ final class StepPolicy {
         windows.remove(player);
     }
 
-    /** A probe for [player] just ran; [done] runs once its effect reached the player's client. */
-    void deliver(UUID player, Runnable done) {
-        deliveries.add(new Delivery(player, lastEnded, done));
+    /** Work for [players] just ran; [done] runs once its effect reached each of their clients. */
+    void deliver(Collection<UUID> players, Runnable done) {
+        deliveries.add(new Delivery(players, lastEnded, done));
     }
 
     /** One idle pass between ticks: finishes deliveries, grants the next tick or sends barriers. */
     void run() {
         if (Step.pending()) return;
-        for (Iterator<Delivery> waiting = deliveries.iterator(); waiting.hasNext(); ) {
-            Delivery delivery = waiting.next();
-            if (acked.getOrDefault(delivery.player, -1) < delivery.confirmedBy) continue;
-            waiting.remove();
+        for (Iterator<Delivery> open = deliveries.iterator(); open.hasNext(); ) {
+            Delivery delivery = open.next();
+            delivery.waiting.removeIf(player -> acked.getOrDefault(player, -1) >= delivery.confirmedBy.getOrDefault(player, UNCONFIRMED));
+            if (!delivery.waiting.isEmpty()) continue;
+            open.remove();
             delivery.done.run();
         }
         if (windows.isEmpty() && busy.isEmpty() && deliveries.isEmpty()) {
@@ -123,9 +140,9 @@ final class StepPolicy {
             }
             return;
         }
-        if (!allAcked(windows.keySet()) || !allAcked(busy)) return;
+        if (!allAcked(claimed) || !allAcked(windows.keySet()) || !allAcked(busy)) return;
         for (Delivery delivery : deliveries) {
-            if (acked.getOrDefault(delivery.player, -1) < lastEnded) return;
+            if (!allAcked(delivery.waiting)) return;
         }
         for (Iterator<Map.Entry<UUID, Window>> open = windows.entrySet().iterator(); open.hasNext(); ) {
             var window = open.next();

@@ -5,6 +5,7 @@ import com.typewritermc.playtest.wire.Message.Entity
 import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Perception
 import kotlin.math.hypot
+import com.typewritermc.playtest.wire.Message.BlockPos as WireBlockPos
 
 /** Something a player can perceive, judged from one perception record. */
 interface Perceivable {
@@ -16,6 +17,12 @@ interface Perceivable {
         perception: Perception,
         stimulus: Stimulus,
     ): Boolean
+
+    /** How a report names what [perception] shows of this; a broad fact names the instance it found. */
+    fun shownAs(
+        perception: Perception,
+        stimulus: Stimulus,
+    ): String = description
 }
 
 /**
@@ -32,6 +39,27 @@ fun chat(text: String): Perceivable =
     fact("chat \"$text\"") { perception, stimulus ->
         perception.chat().any { it.tick() > stimulus.tick && text in it.text() } &&
             perception.texts().any { it.element() == "chat" && text in it.text() }
+    }
+
+/** Any chat line that arrived after the window's stimulus, drawn or not: `outsider.never sees anyChat()`. */
+fun anyChat(): Perceivable =
+    object : Perceivable {
+        override val description = "any chat"
+
+        override fun shownIn(
+            perception: Perception,
+            stimulus: Stimulus,
+        ) = arrived(perception, stimulus) != null
+
+        override fun shownAs(
+            perception: Perception,
+            stimulus: Stimulus,
+        ) = arrived(perception, stimulus)?.let { "chat \"${it.text()}\"" } ?: description
+
+        private fun arrived(
+            perception: Perception,
+            stimulus: Stimulus,
+        ) = perception.chat().firstOrNull { it.tick() > stimulus.tick }
     }
 
 /** The command suggestion list shows exactly [names], top to bottom. */
@@ -100,7 +128,7 @@ class BlockFacts internal constructor(
         id: String,
     ): Perceivable =
         fact(description) { perception, stimulus ->
-            val at = block.at.wire()
+            val at = WireBlockPos(block.at.x, block.at.y, block.at.z)
             perception.blocks().any { it.at() == at && it.block() == id && it.seen() && it.changed() > stimulus.tick }
         }
 }

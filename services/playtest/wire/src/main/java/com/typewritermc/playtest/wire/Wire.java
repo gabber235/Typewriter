@@ -8,7 +8,10 @@ import com.typewritermc.playtest.wire.Message.BlockPos;
 import com.typewritermc.playtest.wire.Message.ButtonStep;
 import com.typewritermc.playtest.wire.Message.Camera;
 import com.typewritermc.playtest.wire.Message.ChatLine;
+import com.typewritermc.playtest.wire.Message.Claim;
+import com.typewritermc.playtest.wire.Message.Claimed;
 import com.typewritermc.playtest.wire.Message.Connect;
+import com.typewritermc.playtest.wire.Message.Declined;
 import com.typewritermc.playtest.wire.Message.End;
 import com.typewritermc.playtest.wire.Message.Ended;
 import com.typewritermc.playtest.wire.Message.Entity;
@@ -34,11 +37,14 @@ import com.typewritermc.playtest.wire.Message.ProbeDone;
 import com.typewritermc.playtest.wire.Message.ProbeFill;
 import com.typewritermc.playtest.wire.Message.ProbeGameMode;
 import com.typewritermc.playtest.wire.Message.ProbeGive;
+import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
 import com.typewritermc.playtest.wire.Message.ProbeTeleport;
 import com.typewritermc.playtest.wire.Message.Ready;
 import com.typewritermc.playtest.wire.Message.Refused;
+import com.typewritermc.playtest.wire.Message.Region;
+import com.typewritermc.playtest.wire.Message.Release;
 import com.typewritermc.playtest.wire.Message.Reset;
 import com.typewritermc.playtest.wire.Message.ResetDone;
 import com.typewritermc.playtest.wire.Message.Result;
@@ -91,6 +97,11 @@ public final class Wire {
                 body.writeLong(submit.submission());
                 string(body, submit.testId());
                 string(body, submit.requirement());
+                body.writeInt(submit.players());
+            }
+            case Declined declined -> {
+                body.writeLong(declined.submission());
+                string(body, declined.reason());
             }
             case Lease lease -> {
                 body.writeLong(lease.submission());
@@ -99,6 +110,7 @@ public final class Wire {
                     string(body, player.name());
                     uuid(body, player.uuid());
                 }
+                region(body, lease.region());
             }
             case Result result -> {
                 body.writeLong(result.submission());
@@ -112,9 +124,19 @@ public final class Wire {
             }
             case Probe probe -> {
                 body.writeLong(probe.request());
-                uuid(body, probe.player());
+                uuids(body, probe.players());
                 action(body, probe.action());
             }
+            case Claim claim -> {
+                body.writeLong(claim.attempt());
+                uuids(body, claim.players());
+                region(body, claim.region());
+            }
+            case Claimed claimed -> {
+                body.writeLong(claimed.attempt());
+                optional(body, claimed.failure());
+            }
+            case Release release -> body.writeLong(release.attempt());
             case ProbeDone done -> {
                 body.writeLong(done.request());
                 body.writeInt(done.tick());
@@ -132,6 +154,7 @@ public final class Wire {
                 optional(body, done.failure());
             }
             case Watch watch -> {
+                uuid(body, watch.player());
                 body.writeInt(watch.blocks().size());
                 for (BlockPos block : watch.blocks()) blockPos(body, block);
                 body.writeInt(watch.entities().size());
@@ -224,6 +247,10 @@ public final class Wire {
             case Input m -> 19;
             case InputDone m -> 20;
             case Watch m -> 21;
+            case Claim m -> 22;
+            case Claimed m -> 23;
+            case Release m -> 24;
+            case Declined m -> 25;
         };
     }
 
@@ -231,18 +258,18 @@ public final class Wire {
         return switch (type) {
             case 0 -> new Hello(role(in.readUnsignedByte()), string(in));
             case 1 -> new Refused(string(in));
-            case 2 -> new Submit(in.readLong(), string(in), string(in));
+            case 2 -> new Submit(in.readLong(), string(in), string(in), in.readInt());
             case 3 -> {
                 long submission = in.readLong();
                 int count = count(in);
                 var players = new ArrayList<Player>(count);
                 for (int i = 0; i < count; i++) players.add(new Player(string(in), uuid(in)));
-                yield new Lease(submission, List.copyOf(players));
+                yield new Lease(submission, List.copyOf(players), region(in));
             }
             case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in));
             case 5 -> new End(string(in), string(in));
             case 6 -> new Ended();
-            case 7 -> new Probe(in.readLong(), uuid(in), action(in));
+            case 7 -> new Probe(in.readLong(), uuids(in), action(in));
             case 8 -> new ProbeDone(in.readLong(), in.readInt(), optional(in));
             case 9 -> new StepUntil(uuid(in), in.readInt(), in.readInt());
             case 10 -> new StopStepping(uuid(in));
@@ -264,14 +291,19 @@ public final class Wire {
             }
             case 20 -> new InputDone(in.readLong(), in.readInt(), optional(in));
             case 21 -> {
+                UUID player = uuid(in);
                 int blockCount = count(in);
                 var blocks = new ArrayList<BlockPos>(blockCount);
                 for (int i = 0; i < blockCount; i++) blocks.add(blockPos(in));
                 int entityCount = count(in);
                 var entities = new ArrayList<UUID>(entityCount);
                 for (int i = 0; i < entityCount; i++) entities.add(uuid(in));
-                yield new Watch(List.copyOf(blocks), List.copyOf(entities));
+                yield new Watch(player, List.copyOf(blocks), List.copyOf(entities));
             }
+            case 22 -> new Claim(in.readLong(), uuids(in), region(in));
+            case 23 -> new Claimed(in.readLong(), optional(in));
+            case 24 -> new Release(in.readLong());
+            case 25 -> new Declined(in.readLong(), string(in));
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -331,9 +363,19 @@ public final class Wire {
                 out.writeDouble(spawn.y());
                 out.writeDouble(spawn.z());
                 out.writeFloat(spawn.yaw());
-                out.writeBoolean(spawn.packetOnly());
                 optional(out, spawn.onHit());
                 optional(out, spawn.onClick());
+            }
+            case ProbePacketEntity entity -> {
+                out.writeByte(9);
+                uuid(out, entity.uuid());
+                string(out, entity.type());
+                out.writeDouble(entity.x());
+                out.writeDouble(entity.y());
+                out.writeDouble(entity.z());
+                out.writeFloat(entity.yaw());
+                optional(out, entity.onHit());
+                optional(out, entity.onClick());
             }
             case ProbeCancelBreaking cancel -> {
                 out.writeByte(7);
@@ -357,9 +399,10 @@ public final class Wire {
             case 3 -> new ProbeGive(in.readInt(), string(in), in.readInt());
             case 4 -> new ProbeSelectSlot(in.readInt());
             case 5 -> new ProbeFill(blockPos(in), blockPos(in), string(in));
-            case 6 -> new ProbeSpawn(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), in.readBoolean(), optional(in), optional(in));
+            case 6 -> new ProbeSpawn(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), optional(in), optional(in));
             case 7 -> new ProbeCancelBreaking(blockPos(in));
             case 8 -> new ProbeCommand(string(in), strings(in), string(in));
+            case 9 -> new ProbePacketEntity(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), optional(in), optional(in));
             default -> throw new WireException("probe action " + kind + " is no action this build knows");
         };
     }
@@ -508,6 +551,27 @@ public final class Wire {
 
     private static BlockPos blockPos(DataInputStream in) throws IOException {
         return new BlockPos(in.readInt(), in.readInt(), in.readInt());
+    }
+
+    private static void region(DataOutputStream out, Region region) throws IOException {
+        out.writeInt(region.x());
+        out.writeInt(region.z());
+    }
+
+    private static Region region(DataInputStream in) throws IOException {
+        return new Region(in.readInt(), in.readInt());
+    }
+
+    private static void uuids(DataOutputStream out, List<UUID> values) throws IOException {
+        out.writeInt(values.size());
+        for (UUID value : values) uuid(out, value);
+    }
+
+    private static List<UUID> uuids(DataInputStream in) throws IOException {
+        int count = count(in);
+        var values = new ArrayList<UUID>(count);
+        for (int i = 0; i < count; i++) values.add(uuid(in));
+        return List.copyOf(values);
     }
 
     private static void strings(DataOutputStream out, List<String> values) throws IOException {

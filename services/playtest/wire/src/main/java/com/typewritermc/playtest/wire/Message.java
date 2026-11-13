@@ -18,14 +18,30 @@ public sealed interface Message {
     /** Pool to session: the game cannot run; every requirement of the session fails with this reason. */
     record Refused(String reason) implements Message {}
 
-    /** Session to pool: run one attempt of a requirement once a player is free. */
-    record Submit(long submission, String testId, String requirement) implements Message {}
+    /** Session to pool: run one attempt of a requirement once {@code players} players are free. */
+    record Submit(long submission, String testId, String requirement, int players) implements Message {}
+
+    /** Pool to session: the pool can never run the submission; {@code reason} says why. */
+    record Declined(long submission, String reason) implements Message {}
 
     /** One player a lease hands to an attempt. */
     record Player(String name, UUID uuid) {}
 
-    /** Pool to session: these players belong to the submission's attempt until its {@link Result}. */
-    record Lease(long submission, List<Player> players) implements Message {}
+    /**
+     * An attempt's own part of the world: the blocks within {@link #RADIUS} of {@code x}, {@code z} across
+     * the ground, at every height. No other attempt of the pool ever uses it, and regions lie
+     * {@link #SPACING} blocks apart, so nothing one attempt places, spawns or plays reaches another.
+     */
+    record Region(int x, int z) {
+        public static final int SPACING = 1024;
+        public static final int RADIUS = SPACING / 2;
+    }
+
+    /**
+     * Pool to session: these players belong to the submission's attempt until its {@link Result}, each
+     * wiped and standing in the attempt's {@code region}.
+     */
+    record Lease(long submission, List<Player> players, Region region) implements Message {}
 
     /**
      * Session to pool: the attempt ended and its players are free again. {@code failure} is null for a
@@ -40,14 +56,15 @@ public sealed interface Message {
     record Ended() implements Message {}
 
     /**
-     * Session to Paper: run {@code action} for {@code player}, between ticks. Paper answers with
-     * {@link ProbeDone}.
+     * Session to Paper: run {@code action} between ticks. An action on a player runs for each of
+     * {@code players}; an action on the world runs once, in the region of their attempt. Paper answers
+     * with {@link ProbeDone} once the client of each of {@code players} holds what it caused.
      */
-    record Probe(long request, UUID player, ProbeAction action) implements Message {}
+    record Probe(long request, List<UUID> players, ProbeAction action) implements Message {}
 
     /**
      * Paper to session: the probe ran after {@code tick} ended, so its effects can show from the next
-     * tick, and its player's client now holds all it caused. {@code failure} is null when it ran, or says
+     * tick, and its players' clients now hold all it caused. {@code failure} is null when it ran, or says
      * why it could not.
      */
     record ProbeDone(long request, int tick, String failure) implements Message {}
@@ -60,6 +77,22 @@ public sealed interface Message {
 
     /** Session to Paper: the player's window is decided; run no more ticks for it. */
     record StopStepping(UUID player) implements Message {}
+
+    /**
+     * Pool to Paper: {@code players} belong to attempt {@code attempt} from now on. Paper wipes each of
+     * them, puts them in the attempt's {@code region}, shows them only to one another, and from now on
+     * runs a tick only once each of their clients ran the tick before. It answers with {@link Claimed}.
+     */
+    record Claim(long attempt, List<UUID> players, Region region) implements Message {}
+
+    /**
+     * Paper to pool: the attempt's players are wiped and in its region, and their clients hold all of
+     * it. {@code failure} is null when it worked, or says why it could not.
+     */
+    record Claimed(long attempt, String failure) implements Message {}
+
+    /** Pool to Paper: the attempt ended; its players no longer hold back ticks and their windows close. */
+    record Release(long attempt) implements Message {}
 
     /** Pool to Paper: from now on a tick runs only when the step policy grants it. */
     record Stepping() implements Message {}
@@ -97,10 +130,10 @@ public sealed interface Message {
     record InputDone(long request, int tick, String failure) implements Message {}
 
     /**
-     * Session to client: from now on every record also carries these blocks and entities, which an
-     * arrangement put in front of the player. A reset ends every watch.
+     * Session to the player's client: from now on every record also carries these blocks and entities,
+     * which an arrangement put in front of the player. A reset ends every watch.
      */
-    record Watch(List<BlockPos> blocks, List<UUID> entities) implements Message {}
+    record Watch(UUID player, List<BlockPos> blocks, List<UUID> entities) implements Message {}
 
     /** Client to session: what the player perceives changed. */
     record Perceived(String player, Perception perception) implements Message {}
@@ -117,41 +150,52 @@ public sealed interface Message {
     /** What a probe does on Paper. Names of items, blocks and entity types are Minecraft ids such as {@code minecraft:stick}. */
     sealed interface ProbeAction {}
 
+    /** An action on a player: it runs for each player of its probe. */
+    sealed interface PlayerAction extends ProbeAction {}
+
+    /** An action on the world: it runs once, in the world of its probe's players. */
+    sealed interface WorldAction extends ProbeAction {}
+
     /** Paper sends {@code text} to the player as a chat line. */
-    record ProbeChat(String text) implements ProbeAction {}
+    record ProbeChat(String text) implements PlayerAction {}
 
     /** The player's game mode becomes {@code mode}: survival, creative, adventure or spectator. */
-    record ProbeGameMode(String mode) implements ProbeAction {}
+    record ProbeGameMode(String mode) implements PlayerAction {}
 
     /** The player stands at this position, looking this way. */
-    record ProbeTeleport(double x, double y, double z, float yaw, float pitch) implements ProbeAction {}
+    record ProbeTeleport(double x, double y, double z, float yaw, float pitch) implements PlayerAction {}
 
     /** The player's inventory slot {@code slot} (0 to 8 hotbar, 9 to 35 the rest, 40 the off hand) holds {@code count} of {@code item}. */
-    record ProbeGive(int slot, String item, int count) implements ProbeAction {}
+    record ProbeGive(int slot, String item, int count) implements PlayerAction {}
 
     /** The player holds hotbar slot {@code slot}, 0 to 8. */
-    record ProbeSelectSlot(int slot) implements ProbeAction {}
+    record ProbeSelectSlot(int slot) implements PlayerAction {}
+
+    /**
+     * An entity {@code uuid} of {@code type} that only the player's client knows, as Paper never holds
+     * it, stands still at this position, facing {@code yaw}. It reacts as a {@link ProbeSpawn} entity.
+     */
+    record ProbePacketEntity(UUID uuid, String type, double x, double y, double z, float yaw, String onHit, String onClick) implements PlayerAction {}
+
+    /**
+     * The player may run the command {@code /name}, which exists for no player a probe did not give it
+     * to: its argument suggests every entry of {@code suggestions} that starts with what is typed, and
+     * running it answers with a chat line of {@code answer}, a space and the arguments.
+     */
+    record ProbeCommand(String name, List<String> suggestions, String answer) implements PlayerAction {}
 
     /** Every block from {@code from} to {@code to}, both included, becomes {@code block}, a block state such as {@code minecraft:oak_leaves[persistent=true]}. */
-    record ProbeFill(BlockPos from, BlockPos to, String block) implements ProbeAction {}
+    record ProbeFill(BlockPos from, BlockPos to, String block) implements WorldAction {}
 
     /**
-     * An entity {@code uuid} of {@code type} stands still at this position, facing {@code yaw}. A
-     * packet only entity exists for the player's client alone, as Paper never holds it. When the player
-     * hits it, its name tag shows {@code onHit}; when the player uses it, {@code onClick}; null leaves
-     * that reaction out.
+     * An entity {@code uuid} of {@code type} stands still at this position, facing {@code yaw}. When a
+     * player hits it, its name tag shows {@code onHit}; when a player uses it, {@code onClick}; null
+     * leaves that reaction out.
      */
-    record ProbeSpawn(UUID uuid, String type, double x, double y, double z, float yaw, boolean packetOnly, String onHit, String onClick) implements ProbeAction {}
+    record ProbeSpawn(UUID uuid, String type, double x, double y, double z, float yaw, String onHit, String onClick) implements WorldAction {}
 
     /** Paper cancels every break of the block at {@code at}, as a protection plugin would. */
-    record ProbeCancelBreaking(BlockPos at) implements ProbeAction {}
-
-    /**
-     * The command {@code /name} exists: its argument suggests every entry of {@code suggestions} that
-     * starts with what is typed, and running it answers with a chat line of {@code answer}, a space
-     * and the arguments.
-     */
-    record ProbeCommand(String name, List<String> suggestions, String answer) implements ProbeAction {}
+    record ProbeCancelBreaking(BlockPos at) implements WorldAction {}
 
     /** One step of an {@link Input}. Keys are named as {@link Key} names them. */
     sealed interface InputStep {}

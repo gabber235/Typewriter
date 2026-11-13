@@ -34,19 +34,22 @@ private var currentSession: Result<PoolSession>? = null
 
 /**
  * Registers one requirement as one testBalloon test named "[id] [sentence]". Its body runs in this
- * test JVM on a leased player once the pool has one free.
+ * test JVM once the pool has [players] free, each wiped and standing in a region of the world that is
+ * the attempt's own.
  */
 @TestRegistering
 fun TestSuiteScope.requirement(
     @TestElementName id: String,
     sentence: String,
+    players: Int = 1,
     body: suspend RequirementScope.() -> Unit,
 ) {
+    require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
     test("$id $sentence") {
         val session =
             checkNotNull(
                 currentSession,
             ) { "$id is not in the GameCompartment: register requirements in testSuite(compartment = { GameCompartment })" }
-        session.getOrThrow().attempt(testId = "$id $sentence", requirement = id, body = body)
+        session.getOrThrow().attempt(testId = "$id $sentence", requirement = id, players = players, body = body)
     }
 }

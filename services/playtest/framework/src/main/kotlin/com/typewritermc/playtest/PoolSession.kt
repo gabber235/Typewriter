@@ -2,6 +2,7 @@ package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.BarrierSeen
+import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Hello
@@ -37,6 +38,11 @@ class GameUnavailable(
     message: String,
     cause: Throwable? = null,
 ) : IllegalStateException(message, cause)
+
+/** The pool can never run this requirement, for example since it claims more players than the pool holds. */
+class RequirementDeclined(
+    message: String,
+) : AssertionError(message)
 
 /** A probe could not arrange what the requirement asked for; [message] says why. */
 class ProbeFailed(
@@ -91,6 +97,7 @@ internal class PoolSession private constructor(
     suspend fun attempt(
         testId: String,
         requirement: String,
+        players: Int,
         body: suspend RequirementScope.() -> Unit,
     ) {
         val submission = submissions.incrementAndGet()
@@ -103,7 +110,7 @@ internal class PoolSession private constructor(
         broken?.let { leasing.attempt.completeExceptionally(it) }
         val attempt =
             try {
-                send(Submit(submission, testId, requirement))
+                send(Submit(submission, testId, requirement, players))
                 leasing.attempt.await()
             } finally {
                 leases.remove(submission)
@@ -111,7 +118,7 @@ internal class PoolSession private constructor(
         val started = System.nanoTime()
         val failure =
             try {
-                RequirementScope(attempt.players, attempt).body()
+                RequirementScope(attempt).body()
                 null
             } catch (cancelled: CancellationException) {
                 cancelled
@@ -136,13 +143,13 @@ internal class PoolSession private constructor(
         failure?.let { throw it }
     }
 
-    /** Paper runs [action] for [player]; returns, once [player]'s client holds its effect, the tick after which it ran. */
+    /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */
     suspend fun probe(
-        player: GamePlayer,
+        players: List<GamePlayer>,
         action: ProbeAction,
     ): Int {
         val request = requests.incrementAndGet()
-        val done = waitFor(probes, request) { send(Probe(request, player.uuid, action)) }
+        val done = waitFor(probes, request) { send(Probe(request, players.map { it.uuid }, action)) }
         done.failure()?.let { throw ProbeFailed(it) }
         return done.tick()
     }
@@ -200,6 +207,10 @@ internal class PoolSession private constructor(
                 leases[message.submission()]?.let { leasing -> leasing.attempt.complete(start(message, leasing)) }
             }
 
+            is Declined -> {
+                leases[message.submission()]?.attempt?.completeExceptionally(RequirementDeclined(message.reason()))
+            }
+
             is ProbeDone -> {
                 probes[message.request()]?.complete(message)
             }
@@ -209,19 +220,11 @@ internal class PoolSession private constructor(
             }
 
             is Perceived -> {
-                attempts[message.player()]?.let {
-                    it.deliver(
-                        Attempt.Event.Perceived(it.player(message.player()), message.perception()),
-                    )
-                }
+                deliver(message.player()) { Attempt.Event.Perceived(it, message.perception()) }
             }
 
             is BarrierSeen -> {
-                attempts[message.player()]?.let {
-                    it.deliver(
-                        Attempt.Event.Barrier(it.player(message.player()), message.barrier()),
-                    )
-                }
+                deliver(message.player()) { Attempt.Event.Barrier(it, message.barrier()) }
             }
 
             is Refused -> {
@@ -238,6 +241,14 @@ internal class PoolSession private constructor(
         }
     }
 
+    /** Hands the attempt that holds [player] the event [of] builds for that player; nobody holds a released player. */
+    private fun deliver(
+        player: String,
+        of: (GamePlayer) -> Attempt.Event,
+    ) {
+        attempts[player]?.let { it.deliver(of(it.player(player))) }
+    }
+
     private fun fail(cause: GameUnavailable) {
         broken = cause
         leases.values.forEach { it.attempt.completeExceptionally(cause) }
@@ -251,7 +262,7 @@ internal class PoolSession private constructor(
         lease: Lease,
         leasing: Leasing,
     ): Attempt {
-        val attempt = Attempt(this, lease.players().map { GamePlayer(it.name(), it.uuid()) }, leasing.requirementCode)
+        val attempt = Attempt(this, lease.players().map { GamePlayer(it.name(), it.uuid()) }, lease.region(), leasing.requirementCode)
         attempt.players.forEach { attempts[it.name] = attempt }
         return attempt
     }

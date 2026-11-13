@@ -2,6 +2,7 @@ package com.typewritermc.playtest.plugin;
 
 import com.destroystokyo.paper.event.player.PlayerUseUnknownEntityEvent;
 import com.typewritermc.playtest.wire.Message.BlockPos;
+import com.typewritermc.playtest.wire.Message.PlayerAction;
 import com.typewritermc.playtest.wire.Message.ProbeAction;
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking;
 import com.typewritermc.playtest.wire.Message.ProbeChat;
@@ -9,9 +10,11 @@ import com.typewritermc.playtest.wire.Message.ProbeCommand;
 import com.typewritermc.playtest.wire.Message.ProbeFill;
 import com.typewritermc.playtest.wire.Message.ProbeGameMode;
 import com.typewritermc.playtest.wire.Message.ProbeGive;
+import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
 import com.typewritermc.playtest.wire.Message.ProbeTeleport;
+import com.typewritermc.playtest.wire.Message.WorldAction;
 import io.papermc.paper.adventure.PaperAdventure;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,9 +23,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -56,7 +61,9 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The arrangements a requirement asks Paper for. Main thread only. Each runs at once and returns null,
- * or returns why it could not; what it leaves behind stays until the attempt's wipe exists.
+ * or returns why it could not. What a probe gives a player (a command, an entity only its client knows)
+ * is that player's alone, and a claim takes it away again; what it places in the world stays in the
+ * attempt's region, which no later attempt uses.
  */
 final class Probes implements Listener {
     private static final int MAX_FILL = 4_096;
@@ -75,8 +82,35 @@ final class Probes implements Listener {
     private final Set<Location> unbreakable = new HashSet<>();
     private final Map<String, SuggestingCommand> commands = new HashMap<>();
 
-    /** Runs [action] for [player]; null when it ran, else why not. */
-    @Nullable String run(Player player, ProbeAction action) {
+    /**
+     * Runs [action]: an action on a player for each of [players], an action on the world once, in their
+     * world. Null when it ran, else why not.
+     */
+    @Nullable String run(List<Player> players, ProbeAction action) {
+        return switch (action) {
+            case WorldAction world -> run(players.getFirst().getWorld(), world);
+            case PlayerAction each -> {
+                for (Player player : players) {
+                    String failure = run(player, each);
+                    if (failure != null) yield failure;
+                }
+                yield null;
+            }
+        };
+    }
+
+    private @Nullable String run(World world, WorldAction action) {
+        return switch (action) {
+            case ProbeFill fill -> fill(world, fill);
+            case ProbeSpawn spawn -> spawn(world, spawn);
+            case ProbeCancelBreaking cancel -> {
+                unbreakable.add(location(world, cancel.at()));
+                yield null;
+            }
+        };
+    }
+
+    private @Nullable String run(Player player, PlayerAction action) {
         return switch (action) {
             case ProbeChat chat -> {
                 player.sendMessage(Component.text(chat.text()));
@@ -95,14 +129,23 @@ final class Probes implements Listener {
                 player.getInventory().setHeldItemSlot(select.slot());
                 yield null;
             }
-            case ProbeFill fill -> fill(player.getWorld(), fill);
-            case ProbeSpawn spawn -> spawn.packetOnly() ? packetEntity(player, spawn) : spawn(player.getWorld(), spawn);
-            case ProbeCancelBreaking cancel -> {
-                unbreakable.add(location(player.getWorld(), cancel.at()));
-                yield null;
-            }
-            case ProbeCommand command -> command(command);
+            case ProbePacketEntity entity -> packetEntity(player, entity);
+            case ProbeCommand command -> command(player, command);
         };
+    }
+
+    /**
+     * Takes from [players] what earlier probes gave them alone: every probe command and every entity only
+     * their clients know.
+     */
+    void forget(List<Player> players) {
+        for (Player player : players) {
+            for (SuggestingCommand command : commands.values()) command.answers.remove(player.getUniqueId());
+            var known = packetEntities.entrySet().stream().filter(entry -> entry.getValue().viewer().equals(player.getUniqueId())).map(Map.Entry::getKey).toList();
+            if (!known.isEmpty()) send(player, new ClientboundRemoveEntitiesPacket(known.stream().mapToInt(Integer::intValue).toArray()));
+            known.forEach(packetEntities::remove);
+            player.updateCommands();
+        }
     }
 
     private static @Nullable String gameMode(Player player, String mode) {
@@ -160,7 +203,7 @@ final class Probes implements Listener {
         return null;
     }
 
-    private @Nullable String packetEntity(Player viewer, ProbeSpawn spawn) {
+    private @Nullable String packetEntity(Player viewer, ProbePacketEntity spawn) {
         var key = Identifier.tryParse(spawn.type());
         var type = key == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(key).orElse(null);
         if (type == null) return "no entity type " + spawn.type();
@@ -172,17 +215,17 @@ final class Probes implements Listener {
         return null;
     }
 
-    private @Nullable String command(ProbeCommand probe) {
+    /** [player] may run `/name`, which suggests and answers as [probe] says, for it alone. */
+    private @Nullable String command(Player player, ProbeCommand probe) {
         SuggestingCommand command = commands.get(probe.name());
         if (command == null) {
             command = new SuggestingCommand(probe.name());
             commands.put(probe.name(), command);
             Bukkit.getCommandMap().register("playtest", command);
+            ((CraftServer) Bukkit.getServer()).syncCommands();
         }
-        command.suggestions = List.copyOf(probe.suggestions());
-        command.answer = probe.answer();
-        ((CraftServer) Bukkit.getServer()).syncCommands();
-        for (Player online : Bukkit.getOnlinePlayers()) online.updateCommands();
+        command.answers.put(player.getUniqueId(), new SuggestingCommand.Answer(List.copyOf(probe.suggestions()), probe.answer()));
+        player.updateCommands();
         return null;
     }
 
@@ -230,25 +273,37 @@ final class Probes implements Listener {
         return new Location(world, at.x(), at.y(), at.z());
     }
 
-    /** A command a probe made: suggests what it was given and answers with what was typed. */
+    /**
+     * A command probes made: exists only for the players a probe gave it to, and for each suggests what
+     * that probe named and answers with what was typed. Suggestions run on Paper's own threads.
+     */
     private static final class SuggestingCommand extends Command {
-        volatile List<String> suggestions = List.of();
-        volatile String answer = "";
+        record Answer(List<String> suggestions, String answer) {}
+
+        final Map<UUID, Answer> answers = new ConcurrentHashMap<>();
 
         SuggestingCommand(String name) {
             super(name);
         }
 
         @Override
+        public boolean testPermissionSilent(CommandSender sender) {
+            return sender instanceof Player player && answers.containsKey(player.getUniqueId());
+        }
+
+        @Override
         public boolean execute(CommandSender sender, String label, String[] args) {
-            sender.sendMessage(Component.text(answer + " " + String.join(" ", args)));
+            Answer answer = sender instanceof Player player ? answers.get(player.getUniqueId()) : null;
+            if (answer != null) sender.sendMessage(Component.text(answer.answer() + " " + String.join(" ", args)));
             return true;
         }
 
         @Override
         public List<String> tabComplete(CommandSender sender, String alias, String[] args) {
+            Answer answer = sender instanceof Player player ? answers.get(player.getUniqueId()) : null;
+            if (answer == null) return List.of();
             String typed = args.length == 0 ? "" : args[args.length - 1];
-            return suggestions.stream().filter(it -> it.startsWith(typed)).toList();
+            return answer.suggestions().stream().filter(it -> it.startsWith(typed)).toList();
         }
     }
 }

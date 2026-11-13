@@ -18,11 +18,12 @@ val ProbeRequirements by testSuite(compartment = { GameCompartment }) {
     }
 
     requirement("PROBE-2", "the first input after a far teleport acts on the world around the new spot") {
-        // Far from every other spot, so no chunk around it was loaded or sent before this teleport.
-        probe.fill(BlockPos(100_006, 99, 1), BlockPos(100_010, 99, 9), "stone")
-        probe.teleport(player, 100_008.5, 100.0, 2.5)
+        // Far from the middle of the region, where the claim put the player, so no chunk around it was
+        // loaded or sent before this teleport.
+        probe.fill(BlockPos(298, 99, 1), BlockPos(302, 99, 9), "stone")
+        probe.teleport(player, 300.5, 100.0, 2.5)
         probe.gameMode(player, GameMode.CREATIVE)
-        val target = probe.block(BlockPos(100_008, 101, 5), "stone")
+        val target = probe.block(BlockPos(300, 101, 5), "stone")
 
         player.aimAt(target)
         player.click(Button.LEFT)
