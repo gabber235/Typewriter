@@ -506,6 +506,12 @@ decided:
   - id: keep-slice-1-decisions
     what: "Keep them, start slice 2 (Recommended)"
     why: The wire project, records that hold until the next one, and separate Joined and Ready signals stay
+  - id: non-text-perception
+    what: "D. Stream more perception (Recommended)"
+    why: Inputs whose result is not drawn text are checked on camera, items, blocks and entities from A2. Checks read what the player perceives; a Paper event channel would be a second source of truth
+  - id: general-probes
+    what: "A. General probes (Recommended)"
+    why: probe.give, probe.gameMode, probe.block and the like live in the framework plugin. Every requirement shows what it sets up, and extensions build on the same probes
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
