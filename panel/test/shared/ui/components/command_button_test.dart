@@ -166,7 +166,8 @@ void main() {
     (ButtonFace.outlined, false),
   ]) {
     testWidgets("a held ${face.name} button fills "
-        "${black ? "black" : "red"}", (tester) async {
+        "${black ? "black" : "red"} and shows no press splash, by pointer "
+        "and by key", (tester) async {
       final panel = await tester.pumpPanel(
         const [],
         at: PanelLocation.component(
@@ -187,70 +188,20 @@ void main() {
 
       expect(tester.renderObject(button), paints..rect(color: fill));
       expect(tester.renderObject(button), isNot(paints..rect(color: other)));
-      await gesture.up();
-      await panel.settle();
-    });
-  }
-
-  for (final face in [ButtonFace.filled, ButtonFace.outlined]) {
-    testWidgets("a held ${face.name} hold button shows only its fill, no "
-        "press splash, by pointer and by key", (tester) async {
-      final panel = await tester.pumpPanel(
-        const [],
-        at: PanelLocation.component(
-          CommandButton(
-            command: removeHoldCommand(),
-            face: face,
-            label: "Remove",
-          ),
-        ),
-      );
-      final button = find.byType(CommandButton);
-
-      final gesture = await panel.pressButton("Remove");
-      await panel.holdFor(0.4);
       expect(tester.inkOf(button), isNull, reason: "pointer");
       await gesture.up();
       await panel.settle();
 
       await panel.tabTo("Remove it? It does not come back.");
       await panel.keyDown(LogicalKeyboardKey.enter);
-      await panel.holdFor(0.4);
+      await panel.holdFor(0.5);
       expect(tester.inkOf(button), isNull, reason: "key");
       await panel.keyUp(LogicalKeyboardKey.enter);
-      await panel.settle();
     });
   }
 
-  testWidgets("a press command button splashes when held", (tester) async {
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        CommandButton(
-          command: ActionShortcut(
-            id: "run",
-            label: "Run",
-            description: "Run it",
-            activators: const [SingleActivator(LogicalKeyboardKey.keyR)],
-            priority: 1,
-            run: ActionRun.press((_) {}),
-          ),
-          face: ButtonFace.filled,
-          label: "Run",
-        ),
-      ),
-    );
-
-    final gesture = await panel.pressButton("Run");
-    await tester.pump(tester.settleTimeOf(MotionToken.splash));
-    expect(tester.inkOf(find.byType(CommandButton)), isNotNull);
-    await gesture.up();
-    await panel.settle();
-  });
-
-  testWidgets("a press command runs once on tap and shows its key cap", (
-    tester,
-  ) async {
+  testWidgets("a press command splashes while held, runs once when let go "
+      "and shows its key cap", (tester) async {
     var runs = 0;
     final panel = await tester.pumpPanel(
       const [],
@@ -269,7 +220,12 @@ void main() {
       ),
     );
 
-    await panel.tapOn(find.text("Run"));
+    final gesture = await panel.pressButton("Run");
+    await tester.pump(tester.settleTimeOf(MotionToken.splash));
+    expect(tester.inkOf(find.byType(CommandButton)), isNotNull);
+    expect(runs, 0);
+    await gesture.up();
+    await panel.settle();
 
     expect(runs, 1);
     expect(panel.shows("R"), isTrue);
