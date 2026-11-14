@@ -261,6 +261,21 @@ pieces:
         taught: The earlier client side close made Paper keep the old player for about 30 s
         state: picked
         evidence: [docs/design/game-verification/spikes/k-restarts.md]
+      - id: lease-time
+        what: Split the 1.2 s from grant to lease into timed parts
+        taught: >-
+          Paper's wall clock chunk send cap (player-max-chunk-send-rate 75, unchanged in the test Paper)
+          is about 1.08 s of the 1.13 s median: the claim waits for 81 chunks (radius 3 plus the edge ring,
+          while the client draws render distance 2). The wipe itself costs 1.4 ms; the synchronous claim
+          18 ms, mostly generating the centre chunk. Cap removed: 499 ms; plus regions loaded ahead: 291
+          ms; render distance 4: 1661 ms. Every region is fresh. What remains without the cap is 11 to 13
+          stepped ticks, with the moving client acking about 28 ms late (guess: section compiles, not
+          timed). A separate 8 to 17 s tail (3 or 4 claims per run): a free player holds back no ticks, its
+          client falls up to 235 ticks behind, and once claimed every attempt waits for it to catch up
+          (StepPolicy allAcked(claimed)). Why the client reports view distance 3 with render distance 2,
+          and why Paper sends only about 10 chunks per tick without the cap, are unknown.
+        state: working
+        evidence: ["branch proto/gv-lease-time 056013429: services/playtest/lease-time/", "4 full suite runs, 82 passed each"]
 
   - id: requirement-shape
     status: building
@@ -663,4 +678,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 (pixels) builds on feat/game-verification-slice-6; beside it, proto/gv-lease-time splits the 1.2 s grant to lease into timed parts and only reports.
+next: Slice 6 builds. Choose which lease time fixes to build (send cap off, wait only for drawn chunks, regions ahead) and how to remove the catch up tail.
